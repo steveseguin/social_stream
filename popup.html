@@ -113,6 +113,14 @@
     opacity: 0.8;
 }
 
+.events-transparent-option > span[data-translate="force-transparent-background"] {
+    display: none;
+}
+
+.events-transparent-option > .obs-transparent-note::before {
+    content: "Transparent background ";
+}
+
 
 .source-list-container {
     max-height: 80px;
@@ -4136,8 +4144,8 @@ input:checked + .slider:before {
                                 <i><small>Note: Remote OBS control requires the dock.html to be added to OBS as a browser source, with full permissions enabled for it.</small></i>
                             </div>
                         </div>
-                    </div>
                 </div>
+            </div>
 				
             </div>
 			<div style="color:white;font">
@@ -5431,6 +5439,13 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
+										<input type="checkbox" data-param25="hidemedia" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide GIF / media attachments</span>
+								</div>
+								<div>
+									<label class="switch">
 										<input type="checkbox" data-param25="hidesource" />
 										<span class="slider round"></span>
 									</label>
@@ -5544,18 +5559,18 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
-								<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;">
-									<button type="button" id="multi-alert-preview-follow" class="overlayButton">Preview Follow</button>
-									<button type="button" id="multi-alert-preview-sub" class="overlayButton">Preview Sub</button>
-									<button type="button" id="multi-alert-preview-dono" class="overlayButton">Preview Donation</button>
-									<button type="button" id="multi-alert-preview-bits" class="overlayButton">Preview Bits</button>
-									<button type="button" id="multi-alert-preview-raid" class="overlayButton">Preview Raid</button>
-									<button type="button" id="multi-alert-preview-clear" class="overlayButton">Clear</button>
+								<div style="display: flex; flex-wrap: nowrap; gap: 6px; margin-bottom: 14px;">
+									<button type="button" id="multi-alert-preview-follow" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Follow</button>
+									<button type="button" id="multi-alert-preview-sub" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Sub</button>
+									<button type="button" id="multi-alert-preview-dono" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Donation</button>
+									<button type="button" id="multi-alert-preview-bits" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Bits</button>
+									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Raid</button>
+									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Clear</button>
 								</div>
 								<div style="width: 100%; height: 280px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(10,12,18,0.94), rgba(19,24,35,0.92));">
 									<iframe id="multi-alerts-preview-frame" title="Multi alert preview" style="width: 100%; height: 100%; border: 0; background: transparent;" loading="lazy"></iframe>
 								</div>
-								<small style="display: block; margin-top: 10px; opacity: 0.8;">This preview uses the real multi-alert overlay renderer in a local iframe, so theme and timing changes match the live browser source.</small>
+								<small style="display: block; margin-top: 10px; opacity: 0.8;">This preview uses the real multi-alert overlay renderer in a local iframe, so theme, visibility, disabled categories, media, and timing changes match the live browser source.</small>
 							</div>
 						</div>
 					</div>
@@ -8651,6 +8666,13 @@ input:checked + .slider:before {
 									<span data-translate="light-theme">☀️ Use light theme instead of dark</span>
 								</div>
 
+								<div class="events-transparent-option">
+									<label class="switch">
+										<input type="checkbox" data-param17="transparent" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="force-transparent-background">â­• Force transparent background </span><span class="obs-transparent-note"> (Useful for standalone pop-out overlays)</span>
+								</div>
 								<div data-keywords="font size zoom scale enlarge shrink">
 									<label class="switch">
 										<input type="checkbox" data-param17="scale" />
@@ -9648,13 +9670,18 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group flowactions">
-                                <div class="textInputContainer" style="width: 95%;" title="OBS WebSocket server URL (default: ws://localhost:4455)">
-                                    <input type="text" id="obsWebSocketUrl" class="textInput instant" autocomplete="off" placeholder="ws://localhost:4455" data-textparam18="obsws" />
+                                <div class="textInputContainer" style="width: 95%;" title="OBS WebSocket server URL (default: ws://127.0.0.1:4455)">
+                                    <input type="text" id="obsWebSocketUrl" class="textInput instant" autocomplete="off" placeholder="ws://127.0.0.1:4455" data-textparam18="obsws" />
                                     <label for="obsWebSocketUrl"><span data-translate="obs-websocket-url">&gt; OBS WebSocket URL</span></label>
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="OBS WebSocket password for authentication">
                                     <input type="password" id="obsWebSocketPassword" class="textInput instant" autocomplete="off" placeholder="Enter your OBS password" data-textparam18="obspw" />
                                     <label for="obsWebSocketPassword"><span data-translate="obs-websocket-password">&gt; OBS WebSocket Password</span></label>
+                                </div>
+                                <div style="margin-top: 8px;">
+                                    <small>Flow Actions use OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; leave it blank if OBS does not require one.</small><br>
+                                    <small>For a live status badge on the overlay itself, append <code>&amp;obsdebug=1</code> to the <code>actions.html</code> URL.</small><br>
+                                    <a href="./obs-websocket-test.html" target="_blank" rel="noopener">Open OBS WebSocket Tester</a>
                                 </div>
                                 <div style="margin-top: 10px; padding: 10px; background-color: var(--color-accent-subtle); border-radius: 5px;">
                                     <small data-translate="obs-websocket-info">💡 Configure your OBS WebSocket settings here to enable Flow Actions to control OBS. Make sure OBS WebSocket Server is enabled in OBS: Tools → WebSocket Server Settings</small>

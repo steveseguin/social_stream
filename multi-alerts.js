@@ -108,6 +108,11 @@ function readSettings() {
     disabledCategories[category] = urlParams.has(paramName);
   });
 
+  const remoteServerUrl =
+    normalizeText(urlParams.get('server')) ||
+    normalizeText(urlParams.get('server2')) ||
+    normalizeText(urlParams.get('server3'));
+
   return {
     roomID: normalizeText(urlParams.get('session')),
     password: normalizeText(urlParams.get('password')) || 'false',
@@ -120,6 +125,7 @@ function readSettings() {
     customBeep: normalizeText(urlParams.get('custombeep')),
     compact: urlParams.has('compact'),
     hideAvatar: urlParams.has('hideavatar'),
+    hideMedia: urlParams.has('hidemedia'),
     hideSource: urlParams.has('hidesource'),
     hideAmount: urlParams.has('hideamount'),
     hideSubtitle: urlParams.has('hidesubtitle'),
@@ -135,8 +141,8 @@ function readSettings() {
     previewOnly: urlParams.has('preview'),
     showStatus: urlParams.has('showstatus') || urlParams.has('debug') || urlParams.has('preview'),
     debug: urlParams.has('debug'),
-    useSocket: urlParams.has('server') || urlParams.has('server2') || urlParams.has('localserver'),
-    serverURL: normalizeText(urlParams.get('server') || urlParams.get('server2')) || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja'),
+    useSocket: urlParams.has('server') || urlParams.has('server2') || urlParams.has('server3') || urlParams.has('localserver'),
+    serverURL: remoteServerUrl || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja'),
     styles,
     disabledCategories
   };
@@ -262,6 +268,12 @@ function handlePreviewMessage(previewMessage) {
 
   const model = buildAlertViewModel(payload);
   if (!model) {
+    return;
+  }
+
+  if (settings.disabledCategories[model.category]) {
+    clearAlert({ clearQueue: true, preserveCooldown: true });
+    updateStatus(`${CATEGORY_LABELS[model.category] || 'This alert type'} is disabled`);
     return;
   }
 
@@ -397,8 +409,10 @@ function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
 function renderAlert(model) {
   const article = document.createElement('article');
   const styleKey = settings.styles[model.category] || DEFAULT_ALERT_STYLE;
+  const accentRgb = toAccentRgbTriplet(model.accent);
   article.className = `alert-card theme-${styleKey} category-${model.category}`;
   article.style.setProperty('--alert-accent', model.accent);
+  article.style.setProperty('--alert-accent-rgb', accentRgb);
   article.style.setProperty('--progress-duration', `${settings.showTime}ms`);
 
   if (settings.compact) {
@@ -414,14 +428,18 @@ function renderAlert(model) {
   header.appendChild(titleBadge);
 
   if (!settings.hideSource) {
+    const spacer = document.createElement('div');
+    spacer.className = 'alert-header-spacer';
+    header.appendChild(spacer);
+
     const sourceBadge = buildSourceBadge(model);
     if (sourceBadge) {
       header.appendChild(sourceBadge);
     }
   }
 
-  const body = document.createElement('div');
-  body.className = 'alert-body';
+  const shell = document.createElement('div');
+  shell.className = 'alert-shell';
 
   if (!settings.hideAvatar && normalizeText(model.avatar)) {
     const avatarWrap = document.createElement('div');
@@ -430,8 +448,13 @@ function renderAlert(model) {
     avatarImg.src = model.avatar;
     avatarImg.alt = model.actor;
     avatarImg.loading = 'eager';
+    avatarImg.onerror = () => {
+      avatarWrap.remove();
+      shell.classList.remove('has-avatar');
+    };
     avatarWrap.appendChild(avatarImg);
-    body.appendChild(avatarWrap);
+    shell.appendChild(avatarWrap);
+    shell.classList.add('has-avatar');
   }
 
   const copy = document.createElement('div');
@@ -487,9 +510,18 @@ function renderAlert(model) {
     copy.appendChild(metaRow);
   }
 
-  body.appendChild(copy);
+  shell.appendChild(copy);
+
+  if (!settings.hideMedia && normalizeText(model.mediaUrl)) {
+    const media = buildAlertMedia(model, shell);
+    if (media) {
+      shell.appendChild(media);
+      shell.classList.add('has-media');
+    }
+  }
+
   article.appendChild(header);
-  article.appendChild(body);
+  article.appendChild(shell);
 
   const progress = document.createElement('div');
   progress.className = 'alert-progress';
@@ -518,6 +550,39 @@ function buildSourceBadge(model) {
   return badge;
 }
 
+function buildAlertMedia(model, shell) {
+  const mediaUrl = normalizeText(model.mediaUrl);
+  if (!mediaUrl) {
+    return null;
+  }
+
+  const mediaWrap = document.createElement('div');
+  mediaWrap.className = 'alert-media';
+
+  const tagName = model.mediaType === 'video' ? 'video' : 'img';
+  const mediaElement = document.createElement(tagName);
+  mediaElement.src = mediaUrl;
+
+  if (tagName === 'video') {
+    mediaElement.autoplay = true;
+    mediaElement.muted = true;
+    mediaElement.loop = true;
+    mediaElement.playsInline = true;
+    mediaElement.setAttribute('playsinline', '');
+  } else {
+    mediaElement.loading = 'eager';
+    mediaElement.alt = `${model.title} media`;
+  }
+
+  mediaElement.onerror = () => {
+    mediaWrap.remove();
+    shell.classList.remove('has-media');
+  };
+
+  mediaWrap.appendChild(mediaElement);
+  return mediaWrap;
+}
+
 function shouldRenderBodyText(model) {
   const bodyText = normalizeText(model.bodyText);
   if (!bodyText) {
@@ -530,6 +595,22 @@ function shouldRenderBodyText(model) {
 function updateStatus(text) {
   if (!elements.status) return;
   elements.status.textContent = text;
+}
+
+function toAccentRgbTriplet(colorValue) {
+  const trimmed = normalizeText(colorValue).replace(/^#/, '');
+  const expanded = trimmed.length === 3
+    ? trimmed.split('').map((char) => char + char).join('')
+    : trimmed.slice(0, 6);
+
+  if (!/^[0-9a-fA-F]{6}$/.test(expanded)) {
+    return '139, 92, 246';
+  }
+
+  const r = parseInt(expanded.slice(0, 2), 16);
+  const g = parseInt(expanded.slice(2, 4), 16);
+  const b = parseInt(expanded.slice(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
 }
 
 async function playAlertSound(model) {

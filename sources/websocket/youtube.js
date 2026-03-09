@@ -424,6 +424,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				mergeEmotes();
 				return;
 			}
+			if (request.type === 'SOURCE_CONTROL') {
+				window.dispatchEvent(new CustomEvent('sourceControlMessage', {
+					detail: request,
+					bubbles: true
+				}));
+				sendResponse(true);
+				return;
+			}
 			if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
 				window.dispatchEvent(new CustomEvent('sendExtensionMessage', {
 					detail: { message: request.message },
@@ -477,6 +485,13 @@ window.addEventListener('message', function(event) {
 	if (!event.data.__ssappSendToTab) return;
 
 	var request = event.data.__ssappSendToTab;
+	if (request.type === 'SOURCE_CONTROL') {
+		window.dispatchEvent(new CustomEvent('sourceControlMessage', {
+			detail: request,
+			bubbles: true
+		}));
+		return;
+	}
 	if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
 		window.dispatchEvent(new CustomEvent('sendExtensionMessage', {
 			detail: { message: request.message },

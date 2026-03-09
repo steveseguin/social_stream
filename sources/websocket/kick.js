@@ -120,6 +120,7 @@ const TOKEN_KEY = 'kickApiTokens';
 const CODE_VERIFIER_KEY = 'kickPkceVerifier';
 const STATE_KEY = 'kickOAuthState';
 const KICK_SCOUT_TOKEN_STORAGE_KEY = 'kickScoutBridgeToken';
+const KICK_ADVANCED_CONTROLS_STORAGE_KEY = 'kickAdvancedControls';
 
 const DEFAULT_CONFIG = {
     clientId: '01KDYJ7WYZB2NMHZBE4ZZX61XR',
@@ -199,6 +200,10 @@ const state = {
     chat: {
         sending: false,
         type: 'user'
+    },
+    advancedControls: {
+        syncDeleteMessages: false,
+        syncBlockUsers: false
     }
 };
 
@@ -1717,6 +1722,15 @@ function initExtensionBridge() {
                     if (Object.prototype.hasOwnProperty.call(request, 'state')) {
                         extension.enabled = Boolean(request.state);
                     }
+                    if (request.type === 'SOURCE_CONTROL') {
+                        handleSourceControlRequest(request)
+                            .then(result => sendResponse(Boolean(result)))
+                            .catch(err => {
+                                console.error('Kick SOURCE_CONTROL failed', err);
+                                sendResponse(false);
+                            });
+                        return true;
+                    }
                     if (request.settings) {
                         applyExtensionSettings(request.settings || {});
                         sendResponse(true);
@@ -1784,8 +1798,47 @@ function initElements() {
         chatMessage: q('chat-message'),
         chatType: q('chat-send-type'),
         sendChat: q('send-chat'),
-        chatStatus: q('chat-status')
+        chatStatus: q('chat-status'),
+        syncDeleteMessages: q('sync-delete-messages'),
+        syncBlockUsers: q('sync-block-users'),
+        streamTitle: q('stream-title'),
+        streamCategory: q('stream-category'),
+        refreshStreamInfo: q('refresh-stream-info'),
+        updateStreamInfo: q('update-stream-info')
     });
+}
+
+function loadAdvancedControls() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(KICK_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
+        state.advancedControls.syncDeleteMessages = !!parsed.syncDeleteMessages;
+        state.advancedControls.syncBlockUsers = !!parsed.syncBlockUsers;
+    } catch (_) {
+        state.advancedControls.syncDeleteMessages = false;
+        state.advancedControls.syncBlockUsers = false;
+    }
+    if (els.syncDeleteMessages) {
+        els.syncDeleteMessages.checked = state.advancedControls.syncDeleteMessages;
+    }
+    if (els.syncBlockUsers) {
+        els.syncBlockUsers.checked = state.advancedControls.syncBlockUsers;
+    }
+}
+
+function persistAdvancedControls() {
+    const payload = {
+        syncDeleteMessages: !!state.advancedControls.syncDeleteMessages,
+        syncBlockUsers: !!state.advancedControls.syncBlockUsers
+    };
+    localStorage.setItem(KICK_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+}
+
+function normalizeSourceControlPlatform(type) {
+    const normalized = typeof type === 'string' ? type.trim().toLowerCase() : '';
+    if (normalized === 'youtubeshorts') {
+        return 'youtube';
+    }
+    return normalized;
 }
 
 function setChannelSlug(value, options = {}) {
@@ -2305,6 +2358,34 @@ function bindEvents() {
     }
     if (els.signOut) {
         els.signOut.addEventListener('click', signOut);
+    }
+    if (els.syncDeleteMessages) {
+        els.syncDeleteMessages.addEventListener('change', () => {
+            state.advancedControls.syncDeleteMessages = !!els.syncDeleteMessages.checked;
+            persistAdvancedControls();
+        });
+    }
+    if (els.syncBlockUsers) {
+        els.syncBlockUsers.addEventListener('change', () => {
+            state.advancedControls.syncBlockUsers = !!els.syncBlockUsers.checked;
+            persistAdvancedControls();
+        });
+    }
+    if (els.refreshStreamInfo) {
+        els.refreshStreamInfo.addEventListener('click', () => {
+            refreshKickStreamInfo().catch((err) => {
+                console.error('Failed to refresh Kick stream info', err);
+                log(`Unable to refresh stream info: ${err.message}`, 'warning');
+            });
+        });
+    }
+    if (els.updateStreamInfo) {
+        els.updateStreamInfo.addEventListener('click', () => {
+            updateKickStreamInfoFromInputs().catch((err) => {
+                console.error('Failed to update Kick stream info', err);
+                log(`Unable to update stream info: ${err.message}`, 'error');
+            });
+        });
     }
     if (els.chatType) {
         els.chatType.addEventListener('change', () => {
@@ -3278,7 +3359,7 @@ async function startAuthFlow() {
         response_type: 'code',
         client_id: state.clientId,
         redirect_uri: redirectUri,
-        scope: 'user:read channel:read chat:write events:subscribe',
+        scope: 'user:read channel:read channel:write chat:write events:subscribe moderation:ban moderation:chat_message:manage',
         code_challenge: challenge,
         code_challenge_method: 'S256',
         state: stateParam
@@ -3310,7 +3391,7 @@ async function startExternalAuthFlow() {
         logKickWs('Starting external Kick OAuth flow.');
         const result = await startOAuthFn({
             clientId: state.clientId,
-            scopes: ['user:read', 'channel:read', 'chat:write', 'events:subscribe']
+            scopes: ['user:read', 'channel:read', 'channel:write', 'chat:write', 'events:subscribe', 'moderation:ban', 'moderation:chat_message:manage']
         });
 
         if (!result || !result.success || !result.code) {
@@ -3619,6 +3700,171 @@ async function apiFetch(path, options = {}, retry = true) {
         return res.json();
     }
     return res.text();
+}
+
+function updateKickStreamEditorFields(channel) {
+    if (!channel || typeof channel !== 'object') {
+        return;
+    }
+    const title = pickFirstString(
+        [
+            channel.stream_title,
+            channel.stream?.title,
+            channel.stream?.stream_title
+        ],
+        ''
+    );
+    const category = pickFirstString(
+        [
+            channel.category?.name,
+            channel.category_name,
+            channel.category?.slug
+        ],
+        ''
+    );
+    if (els.streamTitle) {
+        els.streamTitle.value = title;
+    }
+    if (els.streamCategory) {
+        els.streamCategory.value = category;
+    }
+}
+
+async function fetchCurrentKickChannelInfo() {
+    let path = '/public/v1/channels';
+    if (state.channelId != null) {
+        path += `?broadcaster_user_id=${encodeURIComponent(String(state.channelId))}`;
+    } else if (state.channelSlug) {
+        path += `?slug=${encodeURIComponent(normalizeChannel(state.channelSlug))}`;
+    }
+    const data = await apiFetch(path);
+    return pickKickChannelBySlug(
+        unwrapKickChannelPayload(data),
+        normalizeChannel(state.channelSlug),
+        { allowSingletonWithoutSlug: true }
+    );
+}
+
+async function refreshKickStreamInfo() {
+    const channel = await fetchCurrentKickChannelInfo();
+    if (!channel) {
+        throw new Error('Unable to load current Kick channel information.');
+    }
+    updateKickStreamEditorFields(channel);
+    log('Loaded current Kick stream title/category.', 'info');
+    return channel;
+}
+
+async function resolveKickCategoryId(value) {
+    const query = typeof value === 'string' ? value.trim() : '';
+    if (!query) {
+        return null;
+    }
+    if (/^\d+$/.test(query)) {
+        return Number(query);
+    }
+    const data = await apiFetch(`/public/v2/categories?name=${encodeURIComponent(query)}&limit=25`);
+    const items = Array.isArray(data?.data) ? data.data : [];
+    const exactMatch = items.find(item => (item?.name || '').toLowerCase() === query.toLowerCase());
+    const match = exactMatch || items[0];
+    return match?.id ?? null;
+}
+
+async function updateKickStreamInfoFromInputs() {
+    const title = els.streamTitle ? els.streamTitle.value.trim() : '';
+    const category = els.streamCategory ? els.streamCategory.value.trim() : '';
+    const payload = {};
+    if (title) {
+        payload.stream_title = title;
+    }
+    if (category) {
+        const categoryId = await resolveKickCategoryId(category);
+        if (!categoryId) {
+            throw new Error(`Unable to resolve Kick category: ${category}`);
+        }
+        payload.category_id = Number(categoryId);
+    }
+    if (!Object.keys(payload).length) {
+        throw new Error('Nothing to update.');
+    }
+    await apiFetch('/public/v1/channels', {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+    });
+    log('Kick stream title/category updated.', 'info');
+    await refreshKickStreamInfo();
+    return true;
+}
+
+function resolveKickUserIdForSourceControl(payload = {}) {
+    const directUserId = normalizeKickNumericId(payload.userid || payload.userId || payload.user_id);
+    if (directUserId) {
+        return directUserId;
+    }
+    const username = normalizeChannel(payload.chatname || payload.username || '');
+    if (!username) {
+        return null;
+    }
+    const cached = getCachedProfile({ username });
+    const cachedUserId = normalizeKickNumericId(
+        cached?.profile?.user_id ||
+        cached?.profile?.id ||
+        cached?.profile?.user?.user_id
+    );
+    return cachedUserId || null;
+}
+
+async function deleteKickChatMessage(messageId) {
+    if (!messageId) {
+        return false;
+    }
+    await apiFetch(`/public/v1/chat/${encodeURIComponent(String(messageId))}`, {
+        method: 'DELETE'
+    });
+    return true;
+}
+
+async function banKickUser(payload = {}) {
+    const userId = resolveKickUserIdForSourceControl(payload);
+    if (!userId) {
+        throw new Error(`Unable to resolve Kick user for ${payload.chatname || payload.username || 'unknown user'}.`);
+    }
+    if (state.channelId == null) {
+        await resolveChannelId();
+    }
+    await apiFetch('/public/v1/moderation/bans', {
+        method: 'POST',
+        body: JSON.stringify({
+            broadcaster_user_id: Number(state.channelId),
+            user_id: Number(userId),
+            reason: 'Blocked from Social Stream Ninja'
+        })
+    });
+    return true;
+}
+
+async function handleSourceControlRequest(request) {
+    const payload = request?.payload || {};
+    if (normalizeSourceControlPlatform(request?.platform || payload?.type) !== 'kick') {
+        return false;
+    }
+    if (request.control === 'deleteMessage') {
+        if (!state.advancedControls.syncDeleteMessages) {
+            return false;
+        }
+        await deleteKickChatMessage(payload.id);
+        log('Synced dock delete to Kick.', 'info');
+        return true;
+    }
+    if (request.control === 'blockUser') {
+        if (!state.advancedControls.syncBlockUsers) {
+            return false;
+        }
+        await banKickUser(payload);
+        log(`Synced dock block to Kick for ${payload.chatname || payload.username || payload.userid}.`, 'info');
+        return true;
+    }
+    return false;
 }
 
 function getKickApiErrorStatus(error) {
@@ -4275,6 +4521,9 @@ async function resolveChannelId(force = false) {
     persistConfig();
     log(`Resolved channel: ${state.channelName} (ID: ${state.channelId})`);
     updateInputsFromState();
+    refreshKickStreamInfo().catch((err) => {
+        logKickWs(`Unable to refresh Kick stream info after channel resolve: ${err?.message || err}`, 'warning');
+    });
     if (force || state.channelId !== previousId || previousSlug !== slugLower) {
         requestThirdPartyEmotes({ force: true });
     }
@@ -6543,6 +6792,7 @@ async function bootstrap() {
     applyKickCoreFallbacks();
     try {
         initElements();
+        loadAdvancedControls();
         loadKickProfileCache();
         initExtensionBridge();
         updateBridgeState();
@@ -6605,6 +6855,12 @@ window.addEventListener('message', function(event) {
     if (!event.data.__ssappSendToTab) return;
 
     var request = event.data.__ssappSendToTab;
+    if (request.type === 'SOURCE_CONTROL') {
+        handleSourceControlRequest(request).catch(function(err) {
+            console.error('Kick SOURCE_CONTROL via postMessage failed', err);
+        });
+        return;
+    }
     if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
         sendChatFromExtension(request.message).catch(function(err) {
             console.error('Kick SEND_MESSAGE via postMessage failed', err);

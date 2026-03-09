@@ -160,6 +160,27 @@
                 <h4>Recent Events</h4>
                 <div id="events-list"></div>
             </div>
+            <div class="recent-events" style="margin-top:15px;">
+                <h4>Advanced Controls</h4>
+                <div style="display:grid; gap:8px;">
+                    <label class="auth-method-option" style="display:flex;">
+                        <input type="checkbox" id="sync-delete-messages">
+                        <span>Sync dock deletes to YouTube</span>
+                    </label>
+                    <label class="auth-method-option" style="display:flex;">
+                        <input type="checkbox" id="sync-block-users">
+                        <span>Sync dock blocks to YouTube bans</span>
+                    </label>
+                    <input type="text" id="stream-title" class="channel-input" placeholder="Video title">
+                    <input type="text" id="stream-description" class="channel-input" placeholder="Video description">
+                    <input type="text" id="stream-category" class="channel-input" placeholder="Video category name or ID">
+                    <div class="credentials-actions">
+                        <button id="refresh-stream-info" class="connect-button" style="background:#5f6368;">Refresh Current</button>
+                        <button id="update-stream-info" class="connect-button" style="background:#1a73e8;">Update Metadata</button>
+                    </div>
+                    <div class="credentials-note">YouTube uses a video category, not a Twitch/Kick game category.</div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -317,6 +338,7 @@ try {
 	var currentStream = null;
 	var messageQueue = [];
 	var queueDrainTimeout = null;
+	const YT_ADVANCED_CONTROLS_STORAGE_KEY = 'youtubeAdvancedControls';
     var pendingRelayMessages = [];
     const MAX_CACHED_CHAT_MESSAGES = 500;
     var messageContextCache = new Map();
@@ -681,6 +703,37 @@ function enableBackgroundKeepAlive() {
 			return null;
 		}
 		return messageContextCache.get(String(messageId)) || null;
+	}
+
+	function loadAdvancedControlSettings() {
+		try {
+			const parsed = JSON.parse(localStorage.getItem(YT_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
+			return {
+				syncDeleteMessages: !!parsed.syncDeleteMessages,
+				syncBlockUsers: !!parsed.syncBlockUsers
+			};
+		} catch (_) {
+			return {
+				syncDeleteMessages: false,
+				syncBlockUsers: false
+			};
+		}
+	}
+
+	function saveAdvancedControlSettings() {
+		const payload = {
+			syncDeleteMessages: !!document.getElementById('sync-delete-messages')?.checked,
+			syncBlockUsers: !!document.getElementById('sync-block-users')?.checked
+		};
+		localStorage.setItem(YT_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+	}
+
+	function normalizeSourceControlPlatform(type) {
+		type = (type || '').toLowerCase();
+		if (type === 'youtubeshorts') {
+			return 'youtube';
+		}
+		return type;
 	}
 
 	// Treat the presence of the excludeReplyingTo key as an opt-out toggle, regardless of its stored value.
@@ -2457,6 +2510,195 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 
+	async function fetchCurrentVideoSnippet(videoIdToUse = null) {
+		const token = getStoredToken();
+		const targetVideoId = videoIdToUse || (currentStream && currentStream.id) || videoId;
+		if (!token || !targetVideoId) {
+			return null;
+		}
+		try {
+			const response = await fetchWithTimeout(
+				`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${encodeURIComponent(targetVideoId)}`,
+				5000,
+				{ 'Authorization': `Bearer ${token}` }
+			);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const data = await response.json();
+			return data.items && data.items.length ? data.items[0] : null;
+		} catch (error) {
+			console.error('Error fetching YouTube video snippet:', error);
+			return null;
+		}
+	}
+
+	async function refreshCurrentVideoMetadata() {
+		const videoDetails = await fetchCurrentVideoSnippet();
+		if (!videoDetails || !videoDetails.snippet) {
+			return null;
+		}
+		const titleInput = document.getElementById('stream-title');
+		const descriptionInput = document.getElementById('stream-description');
+		const categoryInput = document.getElementById('stream-category');
+		if (titleInput) {
+			titleInput.value = videoDetails.snippet.title || '';
+		}
+		if (descriptionInput) {
+			descriptionInput.value = videoDetails.snippet.description || '';
+		}
+		if (categoryInput) {
+			categoryInput.value = videoDetails.snippet.categoryId || '';
+		}
+		return videoDetails;
+	}
+
+	async function resolveVideoCategoryId(value) {
+		const query = (value || '').trim();
+		if (!query) {
+			return null;
+		}
+		if (/^\d+$/.test(query)) {
+			return query;
+		}
+		const token = getStoredToken();
+		if (!token) {
+			return null;
+		}
+		try {
+			const response = await fetchWithTimeout(
+				'https://www.googleapis.com/youtube/v3/videoCategories?part=snippet&regionCode=US',
+				5000,
+				{ 'Authorization': `Bearer ${token}` }
+			);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const data = await response.json();
+			const categories = Array.isArray(data.items) ? data.items : [];
+			const exactMatch = categories.find((item) => (item?.snippet?.title || '').toLowerCase() === query.toLowerCase());
+			const partialMatch = categories.find((item) => (item?.snippet?.title || '').toLowerCase().includes(query.toLowerCase()));
+			return (exactMatch || partialMatch || {}).id || null;
+		} catch (error) {
+			console.error('Error resolving YouTube category:', error);
+			return null;
+		}
+	}
+
+	async function updateCurrentVideoMetadata(payload = {}) {
+		const token = getStoredToken();
+		const targetVideoId = (currentStream && currentStream.id) || videoId;
+		if (!token || !targetVideoId) {
+			return false;
+		}
+		const existingVideo = await fetchCurrentVideoSnippet(targetVideoId);
+		if (!existingVideo || !existingVideo.snippet) {
+			return false;
+		}
+		const updatedSnippet = { ...existingVideo.snippet };
+		const title = (payload.title || '').trim();
+		const description = typeof payload.description === 'string' ? payload.description : '';
+		const category = (payload.category || '').trim();
+		if (title) {
+			updatedSnippet.title = title;
+		}
+		if (typeof payload.description === 'string' && payload.description.trim()) {
+			updatedSnippet.description = description;
+		}
+		if (category) {
+			const resolvedCategoryId = await resolveVideoCategoryId(category);
+			if (!resolvedCategoryId) {
+				console.warn('Unable to resolve YouTube category:', category);
+				return false;
+			}
+			updatedSnippet.categoryId = String(resolvedCategoryId);
+		}
+		try {
+			const response = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					id: targetVideoId,
+					snippet: updatedSnippet
+				})
+			});
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				console.error('Error updating YouTube metadata:', errorData);
+				return false;
+			}
+			await refreshCurrentVideoMetadata();
+			return true;
+		} catch (error) {
+			console.error('Error updating YouTube metadata:', error);
+			return false;
+		}
+	}
+
+	async function deleteLiveChatMessage(messageId) {
+		const token = getStoredToken();
+		if (!token || !messageId) {
+			return false;
+		}
+		try {
+			const response = await fetch(`https://www.googleapis.com/youtube/v3/liveChat/messages?id=${encodeURIComponent(messageId)}`, {
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			});
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				console.error('Error deleting live chat message:', errorData);
+				return false;
+			}
+			return true;
+		} catch (error) {
+			console.error('Error deleting live chat message:', error);
+			return false;
+		}
+	}
+
+	async function banLiveChatAuthor(payload = {}) {
+		const token = getStoredToken();
+		const messageId = payload.messageId || payload.id || '';
+		const messageContext = lookupChatMessage(messageId);
+		const channelId = payload.userid || payload.userId || messageContext?.authorChannelId || '';
+		if (!token || !liveChatId || !channelId) {
+			return false;
+		}
+		try {
+			const response = await fetch('https://www.googleapis.com/youtube/v3/liveChat/bans?part=snippet', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					snippet: {
+						liveChatId: liveChatId,
+						type: 'permanent',
+						bannedUserDetails: {
+							channelId: String(channelId)
+						}
+					}
+				})
+			});
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				console.error('Error banning live chat user:', errorData);
+				return false;
+			}
+			return true;
+		} catch (error) {
+			console.error('Error banning live chat user:', error);
+			return false;
+		}
+	}
+
 	function notifyVideoChange(videoId, channelId) {
 		window.dispatchEvent(new CustomEvent('youtubeVideoChanged', {
 			detail: {
@@ -2865,6 +3107,9 @@ function enableBackgroundKeepAlive() {
                     getChannelStats(effectiveChannelIdToUse);
                 }, 30 * 60 * 1000); // 30 minutes
             }
+            refreshCurrentVideoMetadata().catch(error => {
+                console.warn('Failed to refresh current YouTube metadata fields:', error);
+            });
             console.log('Connection process complete for target:', channelDisplayNameToUse);
 			const channelInput = document.getElementById('channel-input');
             if (channelInput.value && channelToUse) channelInput.value = '';
@@ -3617,6 +3862,55 @@ function enableBackgroundKeepAlive() {
 			signOutButton.addEventListener('click', signOut);
 			registerCleanup(() => signOutButton.removeEventListener('click', signOut));
 		}
+		const advancedControlSettings = loadAdvancedControlSettings();
+		const syncDeleteMessages = document.getElementById('sync-delete-messages');
+		const syncBlockUsers = document.getElementById('sync-block-users');
+		if (syncDeleteMessages) {
+			syncDeleteMessages.checked = advancedControlSettings.syncDeleteMessages;
+			syncDeleteMessages.addEventListener('change', saveAdvancedControlSettings);
+			registerCleanup(() => syncDeleteMessages.removeEventListener('change', saveAdvancedControlSettings));
+		}
+		if (syncBlockUsers) {
+			syncBlockUsers.checked = advancedControlSettings.syncBlockUsers;
+			syncBlockUsers.addEventListener('change', saveAdvancedControlSettings);
+			registerCleanup(() => syncBlockUsers.removeEventListener('change', saveAdvancedControlSettings));
+		}
+		const refreshStreamInfoButton = document.getElementById('refresh-stream-info');
+		if (refreshStreamInfoButton) {
+			const refreshStreamInfoHandler = function() {
+				refreshCurrentVideoMetadata().then((videoDetails) => {
+					if (videoDetails) {
+						addEvent('Loaded current YouTube metadata');
+					}
+				}).catch((error) => {
+					console.error('Failed to refresh YouTube metadata:', error);
+					addEvent('Failed to load current YouTube metadata');
+				});
+			};
+			refreshStreamInfoButton.addEventListener('click', refreshStreamInfoHandler);
+			registerCleanup(() => refreshStreamInfoButton.removeEventListener('click', refreshStreamInfoHandler));
+		}
+		const updateStreamInfoButton = document.getElementById('update-stream-info');
+		if (updateStreamInfoButton) {
+			const updateStreamInfoHandler = function() {
+				updateCurrentVideoMetadata({
+					title: document.getElementById('stream-title')?.value || '',
+					description: (document.getElementById('stream-description')?.value || '').trim(),
+					category: document.getElementById('stream-category')?.value || ''
+				}).then((ok) => {
+					if (ok) {
+						addEvent('YouTube title/description/category updated');
+					} else {
+						addEvent('YouTube metadata update failed');
+					}
+				}).catch((error) => {
+					console.error('Failed to update YouTube metadata:', error);
+					addEvent('YouTube metadata update failed');
+				});
+			};
+			updateStreamInfoButton.addEventListener('click', updateStreamInfoHandler);
+			registerCleanup(() => updateStreamInfoButton.removeEventListener('click', updateStreamInfoHandler));
+		}
 		// Auth method selector setup
 		const authMethodSelector = document.getElementById('auth-method-selector');
 		const isElectron = isDesktopYouTubeContext();
@@ -3778,6 +4072,46 @@ function enableBackgroundKeepAlive() {
 		};
 		window.addEventListener('sendExtensionMessage', extensionMessageHandler);
 		registerCleanup(() => window.removeEventListener('sendExtensionMessage', extensionMessageHandler));
+	}
+
+	{
+		const sourceControlHandler = function(e) {
+			const detail = e.detail || {};
+			const payload = detail.payload || {};
+			const controls = loadAdvancedControlSettings();
+			if (normalizeSourceControlPlatform(detail.platform || payload.type) !== 'youtube') {
+				return;
+			}
+			if (detail.control === 'deleteMessage') {
+				if (!controls.syncDeleteMessages) {
+					return;
+				}
+				deleteLiveChatMessage(payload.id).then((ok) => {
+					if (ok) {
+						addEvent('Synced dock delete to YouTube');
+					}
+				}).catch((error) => {
+					console.error('Failed to sync YouTube delete:', error);
+					addEvent('Failed to sync dock delete to YouTube');
+				});
+				return;
+			}
+			if (detail.control === 'blockUser') {
+				if (!controls.syncBlockUsers) {
+					return;
+				}
+				banLiveChatAuthor(payload).then((ok) => {
+					if (ok) {
+						addEvent(`Synced dock block to YouTube: ${payload.chatname || payload.userid || 'viewer'}`);
+					}
+				}).catch((error) => {
+					console.error('Failed to sync YouTube block:', error);
+					addEvent('Failed to sync dock block to YouTube');
+				});
+			}
+		};
+		window.addEventListener('sourceControlMessage', sourceControlHandler);
+		registerCleanup(() => window.removeEventListener('sourceControlMessage', sourceControlHandler));
 	}
 
 	function applyApiKeyOverride(rawUrl) {

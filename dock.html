@@ -6770,47 +6770,48 @@
 					return;
 				} else if ("blockUser" in data) {
 					try {
-						if (data.blockUser.username && data.blockUser.type) {
+						const blockName = data.blockUser.chatname || data.blockUser.username;
+						if (blockName && data.blockUser.type) {
 							if (!localBlockUserList) {
 								localBlockUserList = {};
 							}
-							if (localBlockUserList[data.blockUser.username]) {
-								if (!localBlockUserList[data.blockUser.username].includes(data.blockUser.type)) {
-									localBlockUserList[data.blockUser.username].push(data.blockUser.type);
+							if (localBlockUserList[blockName]) {
+								if (!localBlockUserList[blockName].includes(data.blockUser.type)) {
+									localBlockUserList[blockName].push(data.blockUser.type);
 								}
 							} else {
-								localBlockUserList[data.blockUser.username] = [data.blockUser.type];
+								localBlockUserList[blockName] = [data.blockUser.type];
 							}
-							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
+							document.querySelectorAll("[data-chatname='" + blockName + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
 								ele.remove();
 							});
-							
-							if (data.blockUser.type=="youtube"){
-								if (!localBlockUserList[data.blockUser.username].includes("youtubeshorts")) {
-									localBlockUserList[data.blockUser.username].push("youtubeshorts");
+
+							if (data.blockUser.type == "youtube") {
+								if (!localBlockUserList[blockName].includes("youtubeshorts")) {
+									localBlockUserList[blockName].push("youtubeshorts");
 								}
-								document.querySelectorAll("[data-chatname='" + data.blockUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+								document.querySelectorAll("[data-chatname='" + blockName + "'][data-source-type='youtubeshorts']").forEach(ele => {
 									ele.remove();
 								});
 							}
-							
+
 							// Remove user from local block list after 10 seconds
 							setTimeout(() => {
-								if (localBlockUserList && localBlockUserList[data.blockUser.username]) {
-									const typeIndex = localBlockUserList[data.blockUser.username].indexOf(data.blockUser.type);
+								if (localBlockUserList && localBlockUserList[blockName]) {
+									const typeIndex = localBlockUserList[blockName].indexOf(data.blockUser.type);
 									if (typeIndex !== -1) {
-										localBlockUserList[data.blockUser.username].splice(typeIndex, 1);
+										localBlockUserList[blockName].splice(typeIndex, 1);
 									}
-									
+
 									if (data.blockUser.type == "youtube") {
-										const shortsIndex = localBlockUserList[data.blockUser.username].indexOf("youtubeshorts");
+										const shortsIndex = localBlockUserList[blockName].indexOf("youtubeshorts");
 										if (shortsIndex !== -1) {
-											localBlockUserList[data.blockUser.username].splice(shortsIndex, 1);
+											localBlockUserList[blockName].splice(shortsIndex, 1);
 										}
 									}
-									
-									if (localBlockUserList[data.blockUser.username].length === 0) {
-										delete localBlockUserList[data.blockUser.username];
+
+									if (localBlockUserList[blockName].length === 0) {
+										delete localBlockUserList[blockName];
 									}
 								}
 							}, 10000);
@@ -7527,6 +7528,7 @@
 					}
 				});
 			}
+
 			///////////
 			let obsState = {};
 			const modal = document.getElementById('obsControlModal');
@@ -8048,8 +8050,57 @@
 				applyHiddenState(element);
 			}
 
+			function normalizeSourceControlType(type) {
+				type = (type || "").toLowerCase();
+				if (type === "youtubeshorts") {
+					return "youtube";
+				}
+				return type;
+			}
+
+			function buildSourceControlPayload(element) {
+				if (!element) {
+					return null;
+				}
+				const rawContents = element.rawContents || {};
+				const type = normalizeSourceControlType(element.dataset.sourceType || rawContents.type || "");
+				const messageId = element.dataset.mid || rawContents.id || rawContents.messageId || "";
+				if (!type || !messageId) {
+					return null;
+				}
+				const payload = {
+					type: type,
+					id: String(messageId)
+				};
+				const sourceTabId = rawContents.tid;
+				const chatName = element.dataset.chatname || rawContents.chatname || "";
+				const userId = rawContents.userid || rawContents.userId || rawContents.authorChannelId || "";
+				const chatImg = element.dataset.chatimg || rawContents.chatimg || "";
+				if (sourceTabId !== undefined && sourceTabId !== null && sourceTabId !== "") {
+					payload.tid = sourceTabId;
+				}
+				if (chatName) {
+					payload.chatname = chatName;
+				}
+				if (userId) {
+					payload.userid = userId;
+				}
+				if (chatImg) {
+					payload.chatimg = chatImg;
+				}
+				return payload;
+			}
+
 			function deleteMessage(element) {
 				syncDataAny({ deleteMessage: element.dataset.mid }, false, true);
+				try {
+					const payload = buildSourceControlPayload(element);
+					if (payload) {
+						send2Extension({ action: "deleteSourceMessage", value: payload });
+					}
+				} catch (e) {
+					console.error(e);
+				}
 				element.remove();
 			}
 
@@ -8076,15 +8127,19 @@
 						document.querySelectorAll("[data-chatname='" + chatName + "'][data-source-type='" + type + "']").forEach(ele => {
 							ele.remove();
 						});
-						
+
 						let sendBlob = {};
 						sendBlob.chatname = chatName;
 						sendBlob.type = type;
-						
-						if (element.rawContents && element.rawContents.userid){
-							sendBlob.userid = element.rawContents.userid;
+						sendBlob.messageId = element.dataset.mid || "";
+						if (element.rawContents && element.rawContents.tid !== undefined && element.rawContents.tid !== null && element.rawContents.tid !== "") {
+							sendBlob.tid = element.rawContents.tid;
 						}
-						if (chatImg){
+
+						if (element.rawContents && (element.rawContents.userid || element.rawContents.userId || element.rawContents.authorChannelId)) {
+							sendBlob.userid = element.rawContents.userid || element.rawContents.userId || element.rawContents.authorChannelId;
+						}
+						if (chatImg) {
 							sendBlob.chatimg = chatImg;
 						}
 						
