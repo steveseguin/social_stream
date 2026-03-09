@@ -231,6 +231,7 @@
                     <li>Donation-style events include a descriptive object: for example <code>{ amount, currency, supporter }</code> for Kick, <code>{ bits }</code> for Twitch cheers, <code>{ supporter, eventType }</code> for YouTube memberships.</li>
                     <li>Raids and hosts pass <code>{ fromId, fromLogin, viewers }</code> so overlays can display both streamer name and audience size.</li>
                     <li>Channel point redemptions expose <code>{ rewardId, cost, alias }</code> alongside the prepared chat message.</li>
+                    <li>Chat transports that support source-control delete sync should expose the platform-native chat identifier as <code>meta.messageId</code> instead of relying on the dock's internal <code>data-mid</code> value.</li>
                     <li>Event Flow can request a highlight by setting <code>meta.featured = true</code> on the chat payload, which auto-features the message in dock/featured overlays.</li>
                     <li>If a platform exposes multiple counters together, prefer a structured object with explicit keys (<code>meta.viewer_count</code>, <code>meta.follower_count</code>) instead of overloading strings.</li>
                     <li>Commerce overlays should use snapshot objects under <code>meta</code> (for example <code>auction_update</code> and <code>commerce_update</code>) and avoid ad-hoc top-level fields.</li>
@@ -304,7 +305,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Membership blocks also set <code>membership</code> for moderator/member chat, while <code>subtitle</code> carries either month counts or tier names. <code>sourceName</code>/<code>sourceImg</code> populate once <code>getChannelInfo</code> succeeds.</p>
+                    <p class="field-highlights">Membership blocks also set <code>membership</code> for moderator/member chat, while <code>subtitle</code> carries either month counts or tier names. <code>sourceName</code>/<code>sourceImg</code> populate once <code>getChannelInfo</code> succeeds. Standard DOM chat now includes <code>meta.messageId</code> when YouTube exposes a native live-chat message ID, which the dock uses for delete sync.</p>
                 </article>
 
                 <article class="platform-card" id="youtube-ws">
@@ -387,7 +388,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Chat relays from the API reuse <code>meta.plainText</code> for sanitized content so future adapters can render emote-free summaries. Membership badges fall back to emoji (<code>⭐</code>, <code>💝</code>, <code>🏅</code>, etc.) to remain consistent with DOM capture.</p>
+                    <p class="field-highlights">Chat relays from the API reuse <code>meta.plainText</code> for sanitized content so future adapters can render emote-free summaries. Membership badges fall back to emoji (<code>⭐</code>, <code>💝</code>, <code>🏅</code>, etc.) to remain consistent with DOM capture. Regular chat payloads also include <code>meta.messageId</code> so dock-side delete actions can round-trip back to the YouTube moderation API.</p>
 
                     <div class="alert-note">
                         <strong>YouTube Subscriber Alerts (<code>new_follower</code>)</strong>
@@ -883,7 +884,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in "kicks", the bridge converts them into <code>meta.amount</code> with <code>currency</code> fallback to "KICK".</p>
+                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in "kicks", the bridge converts them into <code>meta.amount</code> with <code>currency</code> fallback to "KICK". Chat payloads include <code>meta.messageId</code> when the bridge exposes a native Kick message ID so delete sync can target the correct message.</p>
 
                     <h4>Kick Websocket: Event Quick Reference</h4>
                     <table class="field-table">

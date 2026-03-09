@@ -109,6 +109,14 @@
 })();
 // --- END APPEND-ONLY BLOCK ---
 
+function isTrustedTabBridgeEvent(event) {
+	if (!event || event.source !== window) return false;
+	if (event.origin && typeof window !== 'undefined' && window.location && event.origin !== window.location.origin) {
+		return false;
+	}
+	return true;
+}
+
 var settings = {};
 
 // Relay queue and throttling (avoid clobbering page globals)
@@ -481,6 +489,7 @@ console.log("INJECTED YOUTUBE INTEGRATION");
 // Handle messages from preload-mock.js which uses window.postMessage instead of chrome.runtime
 // This is needed when chrome.runtime is deleted for Kasada bypass
 window.addEventListener('message', function(event) {
+	if (!isTrustedTabBridgeEvent(event)) return;
 	if (!event.data || typeof event.data !== 'object') return;
 	if (!event.data.__ssappSendToTab) return;
 

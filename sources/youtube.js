@@ -1150,6 +1150,9 @@
 		}
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube"; 
+		if (ele.id) {
+			data.meta = Object.assign({}, data.meta, { messageId: ele.id });
+		}
 		
 		if (channelName){
 			data.sourceName = channelName;

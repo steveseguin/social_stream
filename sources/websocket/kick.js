@@ -1860,6 +1860,16 @@ function resolveKickDeleteMessageId(payload = {}) {
     return pickFirstString([payload.id], '');
 }
 
+function isTrustedTabBridgeEvent(event) {
+    if (!event || event.source !== window) {
+        return false;
+    }
+    if (event.origin && typeof window !== 'undefined' && window.location && event.origin !== window.location.origin) {
+        return false;
+    }
+    return true;
+}
+
 function setChannelSlug(value, options = {}) {
     const { persist = true, source = 'manual', force = false } = options;
     const slug = (value || '').trim();
@@ -5205,6 +5215,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
             return;
         }
         const rawMessageId = message?.id || payload.message_id || payload.id || null;
+        const nativeMessageId = rawMessageId == null ? '' : String(rawMessageId).trim();
         const bridgeMessageId = bridgeMeta?.messageId || null;
         const resolvedId = rawMessageId ?? bridgeMessageId;
         const profileSources = [
@@ -5323,6 +5334,9 @@ async function forwardChatMessage(evt, bridgeMeta) {
         if (resolvedId != null) {
             const normalizedId = typeof resolvedId === 'string' ? resolvedId : String(resolvedId);
             messagePayload.id = normalizedId;
+        }
+        if (nativeMessageId) {
+            messagePayload.meta = { messageId: nativeMessageId };
         }
         if (ids?.userId) {
             messagePayload.userId = ids.userId;
@@ -6875,6 +6889,7 @@ if (!window.__kickWsBootstrapped) {
 // Handle messages from preload-mock.js which uses window.postMessage instead of chrome.runtime
 // This is needed when chrome.runtime is deleted for Kasada bypass
 window.addEventListener('message', function(event) {
+    if (!isTrustedTabBridgeEvent(event)) return;
     if (!event.data || typeof event.data !== 'object') return;
     if (!event.data.__ssappSendToTab) return;
 

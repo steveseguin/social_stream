@@ -8058,20 +8058,28 @@
 				return type;
 			}
 
-			function buildSourceControlPayload(element) {
-				if (!element) {
-					return null;
+			function getNativeSourceControlMessageId(rawContents) {
+				if (!rawContents || typeof rawContents !== "object") {
+					return "";
 				}
-				const rawContents = element.rawContents || {};
-				const type = normalizeSourceControlType(element.dataset.sourceType || rawContents.type || "");
-				const nativeMessageId =
+				return (
 					rawContents.messageId ||
 					rawContents.message_id ||
 					rawContents.meta?.messageId ||
 					rawContents.meta?.message_id ||
 					rawContents.nativeMessageId ||
 					rawContents.native_message_id ||
-					"";
+					""
+				);
+			}
+
+			function buildSourceControlPayload(element) {
+				if (!element) {
+					return null;
+				}
+				const rawContents = element.rawContents || {};
+				const type = normalizeSourceControlType(element.dataset.sourceType || rawContents.type || "");
+				const nativeMessageId = getNativeSourceControlMessageId(rawContents);
 				const messageId = nativeMessageId || element.dataset.mid || rawContents.id || "";
 				if (!type || !messageId) {
 					return null;
@@ -8142,7 +8150,7 @@
 						let sendBlob = {};
 						sendBlob.chatname = chatName;
 						sendBlob.type = type;
-						sendBlob.messageId = element.dataset.mid || "";
+						sendBlob.messageId = getNativeSourceControlMessageId(element.rawContents || {}) || element.dataset.mid || "";
 						if (element.rawContents && element.rawContents.tid !== undefined && element.rawContents.tid !== null && element.rawContents.tid !== "") {
 							sendBlob.tid = element.rawContents.tid;
 						}

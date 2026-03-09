@@ -736,6 +736,22 @@ function enableBackgroundKeepAlive() {
 		return type;
 	}
 
+	function resolveYouTubeDeleteMessageId(payload = {}) {
+		const explicitMessageId =
+			payload.messageId ||
+			payload.message_id ||
+			payload.nativeMessageId ||
+			payload.native_message_id ||
+			'';
+		if (explicitMessageId) {
+			return String(explicitMessageId);
+		}
+		if (payload.tid !== undefined && payload.tid !== null && payload.tid !== '') {
+			return '';
+		}
+		return payload.id ? String(payload.id) : '';
+	}
+
 	// Treat the presence of the excludeReplyingTo key as an opt-out toggle, regardless of its stored value.
 	function repliesAreExcluded() {
 		return Object.prototype.hasOwnProperty.call(settings, 'excludeReplyingTo');
@@ -2664,7 +2680,7 @@ function enableBackgroundKeepAlive() {
 
 	async function banLiveChatAuthor(payload = {}) {
 		const token = getStoredToken();
-		const messageId = payload.messageId || payload.id || '';
+		const messageId = resolveYouTubeDeleteMessageId(payload);
 		const messageContext = lookupChatMessage(messageId);
 		const channelId = payload.userid || payload.userId || messageContext?.authorChannelId || '';
 		if (!token || !liveChatId || !channelId) {
@@ -3281,10 +3297,16 @@ function enableBackgroundKeepAlive() {
 						outgoingMessage.reply = textOnlyMode ? basePlainText : messageWithEmojis;
 					}
 					if (messageData.meta && typeof messageData.meta === 'object') {
-						const { raw: _raw, reply: _reply, ...safeMeta } = messageData.meta;
+						const { raw: _raw, reply: _reply, ...safeMetaBase } = messageData.meta;
+						const safeMeta = { ...safeMetaBase };
+						if (messageData.messageId && !safeMeta.messageId) {
+							safeMeta.messageId = String(messageData.messageId);
+						}
 						if (Object.keys(safeMeta).length > 0) {
 							outgoingMessage.meta = safeMeta;
 						}
+					} else if (messageData.messageId) {
+						outgoingMessage.meta = { messageId: String(messageData.messageId) };
 					}
 					pushMessage(applySourceIdentity(outgoingMessage));
 				}
@@ -4086,7 +4108,12 @@ function enableBackgroundKeepAlive() {
 				if (!controls.syncDeleteMessages) {
 					return;
 				}
-				deleteLiveChatMessage(payload.id).then((ok) => {
+				const messageId = resolveYouTubeDeleteMessageId(payload);
+				if (!messageId) {
+					addEvent('Skipped dock delete: missing native YouTube message ID');
+					return;
+				}
+				deleteLiveChatMessage(messageId).then((ok) => {
 					if (ok) {
 						addEvent('Synced dock delete to YouTube');
 					}
