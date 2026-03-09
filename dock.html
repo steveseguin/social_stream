@@ -8072,9 +8072,13 @@
 					type: type,
 					id: String(messageId)
 				};
+				const sourceTabId = rawContents.tid;
 				const chatName = element.dataset.chatname || rawContents.chatname || "";
 				const userId = rawContents.userid || rawContents.userId || rawContents.authorChannelId || "";
 				const chatImg = element.dataset.chatimg || rawContents.chatimg || "";
+				if (sourceTabId !== undefined && sourceTabId !== null && sourceTabId !== "") {
+					payload.tid = sourceTabId;
+				}
 				if (chatName) {
 					payload.chatname = chatName;
 				}
@@ -8128,6 +8132,9 @@
 						sendBlob.chatname = chatName;
 						sendBlob.type = type;
 						sendBlob.messageId = element.dataset.mid || "";
+						if (element.rawContents && element.rawContents.tid !== undefined && element.rawContents.tid !== null && element.rawContents.tid !== "") {
+							sendBlob.tid = element.rawContents.tid;
+						}
 
 						if (element.rawContents && (element.rawContents.userid || element.rawContents.userId || element.rawContents.authorChannelId)) {
 							sendBlob.userid = element.rawContents.userid || element.rawContents.userId || element.rawContents.authorChannelId;

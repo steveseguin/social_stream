@@ -9960,20 +9960,43 @@ function getWebsocketSourcePlatformFromUrl(url) {
 	return "";
 }
 
-function forwardSourceControlToWebsocketPages(control, payload) {
-	if (!payload || typeof payload !== "object") {
+function sendSourceControlMessageToTab(tabId, message, platforms, onMiss = null) {
+	if (!tabId || !message || !platforms || !platforms.size) {
+		if (typeof onMiss === "function") {
+			onMiss();
+		}
 		return;
 	}
-	const platforms = new Set(getSourceControlPlatforms(payload.type || payload.platform || ""));
-	if (!platforms.size) {
+	try {
+		chrome.tabs.get(tabId, function (tab) {
+			if (chrome.runtime.lastError || !tab || !tab.id) {
+				if (typeof onMiss === "function") {
+					onMiss();
+				}
+				return;
+			}
+			const platform = getWebsocketSourcePlatformFromUrl(tab.url);
+			if (!platform || !platforms.has(platform)) {
+				if (typeof onMiss === "function") {
+					onMiss();
+				}
+				return;
+			}
+			chrome.tabs.sendMessage(tab.id, message, function () {
+				chrome.runtime.lastError;
+			});
+		});
+	} catch (e) {
+		if (typeof onMiss === "function") {
+			onMiss();
+		}
+	}
+}
+
+function broadcastSourceControlMessageToWebsocketPages(message, platforms) {
+	if (!message || !platforms || !platforms.size) {
 		return;
 	}
-	const message = {
-		type: "SOURCE_CONTROL",
-		control: control,
-		platform: normalizeSourceControlPlatform(payload.type || payload.platform || ""),
-		payload: payload
-	};
 	chrome.tabs.query({}, function (tabs) {
 		chrome.runtime.lastError;
 		(tabs || []).forEach((tab) => {
@@ -9991,6 +10014,30 @@ function forwardSourceControlToWebsocketPages(control, payload) {
 			} catch (e) {}
 		});
 	});
+}
+
+function forwardSourceControlToWebsocketPages(control, payload) {
+	if (!payload || typeof payload !== "object") {
+		return;
+	}
+	const platforms = new Set(getSourceControlPlatforms(payload.type || payload.platform || ""));
+	if (!platforms.size) {
+		return;
+	}
+	const message = {
+		type: "SOURCE_CONTROL",
+		control: control,
+		platform: normalizeSourceControlPlatform(payload.type || payload.platform || ""),
+		payload: payload
+	};
+	const tabId = Number(payload.tid || payload.tabId || 0);
+	if (Number.isInteger(tabId) && tabId > 0) {
+		sendSourceControlMessageToTab(tabId, message, platforms, function () {
+			broadcastSourceControlMessageToWebsocketPages(message, platforms);
+		});
+		return;
+	}
+	broadcastSourceControlMessageToWebsocketPages(message, platforms);
 }
 
 function blockUser(data){
@@ -10030,6 +10077,9 @@ function blockUser(data){
 		}
 		if (data.messageId) {
 			userToBlock.messageId = data.messageId;
+		}
+		if (data.tid !== undefined && data.tid !== null && data.tid !== "") {
+			userToBlock.tid = data.tid;
 		}
 		
 		if (data.chatimg && !data.chatimg.endsWith("/unknown.png")){
