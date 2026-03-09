@@ -2,6 +2,30 @@
 'use strict';
 
 const globalScope = typeof window !== 'undefined' ? window : globalThis;
+const STREAMING_DEBUG_ENABLED = (() => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  try {
+    const params = new URLSearchParams(window.location.search || '');
+    const raw = params.get('debug');
+    if (raw === null) {
+      return false;
+    }
+    const normalized = String(raw).trim().toLowerCase();
+    return !normalized || !['0', 'false', 'off', 'no'].includes(normalized);
+  } catch (_) {
+    return false;
+  }
+})();
+const OPTIONAL_DEBUG_LOGGER = STREAMING_DEBUG_ENABLED ? console : null;
+
+function debugLog(...args) {
+  if (!STREAMING_DEBUG_ENABLED) {
+    return;
+  }
+  console.debug(...args);
+}
 
 const YT_CORE_EXTENSION_PATH = 'providers/youtube/liveChat.js';
 const YT_CORE_RELATIVE_PATH = '../../providers/youtube/liveChat.js';
@@ -172,7 +196,7 @@ function replaceEmotesWithImages(text) {
 
   if (replaced > 0) {
     try {
-      console.debug('Replaced emotes in YouTube streaming message', { replaced });
+      debugLog('Replaced emotes in YouTube streaming message', { replaced });
     } catch (_) {
       // ignore debug failures
     }
@@ -747,20 +771,20 @@ class YoutubeStreamingApp {
   }
 
   async init() {
-    console.debug('[YT Streaming] Initialising app');
+    debugLog('[YT Streaming] Initialising app');
     await modulesReady;
     this.cacheElements();
     this.bindEvents();
     this.applyQuotaOverrides();
     loadEmojiData().catch((error) => console.warn('Failed to preload emoji data', error));
-    console.debug('[YT Streaming] Processing OAuth response');
+    debugLog('[YT Streaming] Processing OAuth response');
     await this.processOAuthResponse();
-    console.debug('[YT Streaming] Hydrating stored token');
+    debugLog('[YT Streaming] Hydrating stored token');
     await this.hydrateStoredToken();
-    console.debug('[YT Streaming] Restoring context from URL parameters');
+    debugLog('[YT Streaming] Restoring context from URL parameters');
     this.restoreFromParams();
     await this.fetchCurrentUser().catch(() => {});
-    console.debug('[YT Streaming] Current app state after init', {
+    debugLog('[YT Streaming] Current app state after init', {
       hasToken: Boolean(this.state.token?.accessToken),
       liveChatId: this.state.liveChatId,
       videoId: this.state.videoId,
@@ -770,11 +794,11 @@ class YoutubeStreamingApp {
     this.updateStatusText('Disconnected', 'disconnected');
     await this.maybeAutoConnectFromState('init');
     window.youtubeStreamingApp = this;
-    console.debug('[YT Streaming] App initialised');
+    debugLog('[YT Streaming] App initialised');
   }
 
   cacheElements() {
-    console.debug('[YT Streaming] Caching DOM elements');
+    debugLog('[YT Streaming] Caching DOM elements');
     this.elements = {
       authSection: document.getElementById('auth-section'),
       streamSection: document.getElementById('stream-section'),
@@ -797,7 +821,7 @@ class YoutubeStreamingApp {
   }
 
   bindEvents() {
-    console.debug('[YT Streaming] Binding UI events');
+    debugLog('[YT Streaming] Binding UI events');
     if (this.elements.connectButton) {
       this.elements.connectButton.addEventListener('click', () => this.connect());
     }
@@ -823,7 +847,7 @@ class YoutubeStreamingApp {
 
   applyQuotaOverrides() {
     try {
-      console.debug('[YT Streaming] Applying API key override (if any)');
+      debugLog('[YT Streaming] Applying API key override (if any)');
       const storedKey = localStorage.getItem('ytApiKeyOverride');
       const searchParams = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
@@ -940,19 +964,19 @@ class YoutubeStreamingApp {
 
   ensureStreamClient() {
     if (this.streamClient) {
-      console.debug('[YT Streaming] Reusing existing stream client', {
+      debugLog('[YT Streaming] Reusing existing stream client', {
         chatId: this.state.liveChatId,
         videoId: this.state.videoId
       });
       return this.streamClient;
     }
-    console.debug('[YT Streaming] Creating new stream client', {
+    debugLog('[YT Streaming] Creating new stream client', {
       chatId: this.state.liveChatId,
       videoId: this.state.videoId
     });
     const client = createYouTubeLiveChat({
       mode: 'stream',
-      logger: console,
+      logger: OPTIONAL_DEBUG_LOGGER,
       tokenProvider: async () => {
         await this.ensureValidToken();
         return this.state.token;
@@ -984,7 +1008,7 @@ class YoutubeStreamingApp {
     }
     this.contextResolver = createYouTubeLiveChatContextResolver({
       fetchImplementation: (...args) => fetch(...args),
-      logger: console
+      logger: OPTIONAL_DEBUG_LOGGER
     });
     return this.contextResolver;
   }
@@ -1063,7 +1087,7 @@ class YoutubeStreamingApp {
     if (!hasToken || !hasTarget) {
       return;
     }
-    console.debug('[YT Streaming] Attempting auto-connect', {
+    debugLog('[YT Streaming] Attempting auto-connect', {
       reason,
       liveChatId: this.state.liveChatId,
       videoId: this.state.videoId,
@@ -1175,14 +1199,14 @@ class YoutubeStreamingApp {
     let resolved = resolvedContext || null;
 
     if (resolved) {
-      console.debug('[YT Streaming] Using provided live chat context', resolved);
+      debugLog('[YT Streaming] Using provided live chat context', resolved);
     } else {
       try {
         resolved = await this.resolveLiveChatContext({
           explicitInput: inputValue || null,
           requireLiveChat: true
         });
-        console.debug('[YT Streaming] Live chat context resolved', resolved);
+        debugLog('[YT Streaming] Live chat context resolved', resolved);
       } catch (error) {
         const message =
           error?.resolved?.reason === 'CHAT_NOT_READY'
@@ -1208,7 +1232,7 @@ class YoutubeStreamingApp {
     client.stop({ suppressStatus: true });
     this.clearChatLog();
     this.updateStatusText('Connecting…', 'connecting');
-    console.debug('[YT Streaming] Starting streaming client', {
+    debugLog('[YT Streaming] Starting streaming client', {
       liveChatId: this.state.liveChatId,
       videoId: this.state.videoId,
       reason
@@ -1221,7 +1245,7 @@ class YoutubeStreamingApp {
           token: this.state.token
         })
         .then(() => {
-          console.debug('[YT Streaming] Streaming client completed');
+          debugLog('[YT Streaming] Streaming client completed');
         })
         .catch((error) => {
           this.handleStreamError(error);
@@ -1263,7 +1287,7 @@ class YoutubeStreamingApp {
 
   clearChatLog() {
     if (this.elements.chatLog) {
-      console.debug('[YT Streaming] Clearing chat log');
+      debugLog('[YT Streaming] Clearing chat log');
       this.elements.chatLog.innerHTML = '';
     }
   }
@@ -1376,7 +1400,7 @@ class YoutubeStreamingApp {
       console.warn('[YT Streaming] Refresh requested without refresh token');
       return false;
     }
-    console.debug('[YT Streaming] Refreshing access token');
+    debugLog('[YT Streaming] Refreshing access token');
     try {
       const res = await fetch(`${AUTH_BASE_URL}/refresh`, {
         method: 'POST',
@@ -1388,7 +1412,7 @@ class YoutubeStreamingApp {
       }
       const data = await res.json();
       this.storeTokenResponse(data, { refreshToken });
-      console.debug('[YT Streaming] Access token refreshed');
+      debugLog('[YT Streaming] Access token refreshed');
       return true;
     } catch (error) {
       console.error('YouTube token refresh failed', error);
@@ -1534,7 +1558,7 @@ class YoutubeStreamingApp {
   }
 
   async ensureValidToken(options = {}) {
-    console.debug('[YT Streaming] Validating token', {
+    debugLog('[YT Streaming] Validating token', {
       force: Boolean(options.force),
       hasAccessToken: Boolean(this.state.token?.accessToken),
       hasRefreshToken: Boolean(this.state.refreshToken)
@@ -1579,7 +1603,7 @@ class YoutubeStreamingApp {
       if (resolved.liveChatId && resolved.status === 'live') {
         this.updateStatusText('Live chat ID resolved.', 'connected');
         if (this.state.token?.accessToken) {
-          console.debug('[YT Streaming] Auto-connecting after resolve button', {
+          debugLog('[YT Streaming] Auto-connecting after resolve button', {
             liveChatId: resolved.liveChatId
           });
           this.connect({
@@ -1605,7 +1629,7 @@ class YoutubeStreamingApp {
   }
 
   handleStreamStatus(status, meta) {
-    console.debug('[YT Streaming] Status event', { status, meta });
+    debugLog('[YT Streaming] Status event', { status, meta });
     this.state.status = status;
     if (status === YOUTUBE_LIVE_CHAT_STATUS.RUNNING) {
       this.updateStatusText('Streaming', 'connected');
@@ -1655,10 +1679,10 @@ class YoutubeStreamingApp {
   }
 
   handleStreamChat(chat) {
-    console.debug('YouTube streaming chat event', chat);
+    debugLog('YouTube streaming chat event', chat);
     const rawItem = this.resolveChatRaw(chat);
     if (!rawItem) {
-      console.debug('YouTube streaming received chat without raw payload', chat);
+      debugLog('YouTube streaming received chat without raw payload', chat);
       return;
     }
     try {
@@ -1675,11 +1699,11 @@ class YoutubeStreamingApp {
 
   resolveChatRaw(chat) {
     if (!chat) {
-      console.debug('[YT Streaming] resolveChatRaw called without chat payload');
+      debugLog('[YT Streaming] resolveChatRaw called without chat payload');
       return null;
     }
     if (chat.raw && chat.raw.snippet) {
-      console.debug('[YT Streaming] Using chat.raw for normalization', {
+      debugLog('[YT Streaming] Using chat.raw for normalization', {
         id: chat.raw.id,
         hasSnippet: Boolean(chat.raw.snippet),
         hasAuthor: Boolean(chat.raw.authorDetails)
@@ -1687,7 +1711,7 @@ class YoutubeStreamingApp {
       return chat.raw;
     }
     if (chat.rawChunk && chat.rawChunk.snippet && chat.rawChunk.authorDetails) {
-      console.debug('[YT Streaming] Building payload from rawChunk');
+      debugLog('[YT Streaming] Building payload from rawChunk');
       return {
         ...chat.rawChunk,
         snippet: chat.rawChunk.snippet,
@@ -1695,7 +1719,7 @@ class YoutubeStreamingApp {
       };
     }
     if (chat.snippet && (chat.author || chat.rawChunk?.authorDetails)) {
-      console.debug('[YT Streaming] Building payload from snippet/author fallbacks', {
+      debugLog('[YT Streaming] Building payload from snippet/author fallbacks', {
         id: chat.id || chat.rawChunk?.id || null,
         hasAuthor: Boolean(chat.author || chat.rawChunk?.authorDetails)
       });
@@ -1751,7 +1775,7 @@ class YoutubeStreamingApp {
         channelId: message.userid || null
       });
     }
-    console.debug('[YT Streaming] Built message payload', {
+    debugLog('[YT Streaming] Built message payload', {
       sourceId: message.sourceId,
       chatname: message.chatname,
       previewText: message.previewText,
@@ -1764,7 +1788,7 @@ class YoutubeStreamingApp {
     if (!this.elements.chatLog) {
       return;
     }
-    console.debug('[YT Streaming] Rendering chat message', {
+    debugLog('[YT Streaming] Rendering chat message', {
       sourceId: message.sourceId,
       chatname: message.chatname
     });
@@ -1833,7 +1857,7 @@ class YoutubeStreamingApp {
     if (this.elements.statusIndicator) {
       this.elements.statusIndicator.dataset.state = state || 'idle';
     }
-    console.debug('[YT Streaming] Status text updated', { text, state });
+    debugLog('[YT Streaming] Status text updated', { text, state });
   }
 
   toggleConnectedView(isConnected) {
@@ -1858,7 +1882,7 @@ class YoutubeStreamingApp {
     if (this.elements.inputText) {
       this.elements.inputText.disabled = !isConnected;
     }
-    console.debug('[YT Streaming] Updated connected view', { isConnected });
+    debugLog('[YT Streaming] Updated connected view', { isConnected });
   }
 }
 

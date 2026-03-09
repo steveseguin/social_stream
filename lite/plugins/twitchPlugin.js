@@ -30,6 +30,17 @@ const TMI_SOURCES = [
 
 let tmiLoaderPromise = null;
 
+function buildCanonicalRedirectUri() {
+  try {
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.hash = '';
+    return url.toString();
+  } catch (err) {
+    return `${window.location.origin}${window.location.pathname}`;
+  }
+}
+
 export class TwitchPlugin extends BasePlugin {
   constructor(options) {
     super({
@@ -196,7 +207,7 @@ export class TwitchPlugin extends BasePlugin {
     const clientId = storedClientId || DEFAULT_CLIENT_ID;
     storage.set(CLIENT_ID_KEY, clientId);
 
-    const redirectUri = new URL(window.location.href.split('#')[0]).toString();
+    const redirectUri = buildCanonicalRedirectUri();
     const state = `${this.id}:${randomSessionId()}`;
     storage.set(STATE_KEY, state);
 
