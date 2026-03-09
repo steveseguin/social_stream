@@ -405,6 +405,37 @@ try{
 		return type;
 	}
 
+	function pickSourceControlMessageId(...candidates) {
+		for (const candidate of candidates) {
+			if (candidate === undefined || candidate === null) {
+				continue;
+			}
+			const normalized = String(candidate).trim();
+			if (normalized) {
+				return normalized;
+			}
+		}
+		return '';
+	}
+
+	function isValidTwitchMessageId(value) {
+		return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+	}
+
+	function resolveTwitchDeleteMessageId(payload = {}) {
+		const explicitMessageId = pickSourceControlMessageId(
+			payload.messageId,
+			payload.message_id,
+			payload.nativeMessageId,
+			payload.native_message_id
+		);
+		if (explicitMessageId && isValidTwitchMessageId(explicitMessageId)) {
+			return explicitMessageId;
+		}
+		const fallbackMessageId = pickSourceControlMessageId(payload.id);
+		return isValidTwitchMessageId(fallbackMessageId) ? fallbackMessageId : '';
+	}
+
 
 	var urlParams = new URLSearchParams(window.location.search);
 	var hashParams = new URLSearchParams(window.location.hash.slice(1));
@@ -1448,7 +1479,12 @@ async function ensureChatClientInstance() {
 			if (!isAdvancedControlEnabled('syncDeleteMessages')) {
 				return false;
 			}
-			const ok = await deleteChatMessage(payload.id);
+			const messageId = resolveTwitchDeleteMessageId(payload);
+			if (!messageId) {
+				addEvent('Skipped dock delete: missing native Twitch message ID');
+				return false;
+			}
+			const ok = await deleteChatMessage(messageId);
 			if (ok) {
 				addEvent('Synced dock delete to Twitch');
 			}

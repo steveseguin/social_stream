@@ -8064,7 +8064,15 @@
 				}
 				const rawContents = element.rawContents || {};
 				const type = normalizeSourceControlType(element.dataset.sourceType || rawContents.type || "");
-				const messageId = element.dataset.mid || rawContents.id || rawContents.messageId || "";
+				const nativeMessageId =
+					rawContents.messageId ||
+					rawContents.message_id ||
+					rawContents.meta?.messageId ||
+					rawContents.meta?.message_id ||
+					rawContents.nativeMessageId ||
+					rawContents.native_message_id ||
+					"";
+				const messageId = nativeMessageId || element.dataset.mid || rawContents.id || "";
 				if (!type || !messageId) {
 					return null;
 				}
@@ -8072,6 +8080,9 @@
 					type: type,
 					id: String(messageId)
 				};
+				if (nativeMessageId) {
+					payload.messageId = String(nativeMessageId);
+				}
 				const sourceTabId = rawContents.tid;
 				const chatName = element.dataset.chatname || rawContents.chatname || "";
 				const userId = rawContents.userid || rawContents.userId || rawContents.authorChannelId || "";

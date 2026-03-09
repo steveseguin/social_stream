@@ -196,6 +196,16 @@ function setupBridgeIframe() {
   document.body.appendChild(state.iframe);
 }
 
+function scheduleSocketReconnect(delay = 1200) {
+  if (state.reconnectTimer) {
+    return;
+  }
+  state.reconnectTimer = window.setTimeout(() => {
+    state.reconnectTimer = null;
+    setupSocket();
+  }, delay);
+}
+
 function setupSocket() {
   teardownSocket();
   state.socket = new WebSocket(settings.serverURL);
@@ -220,17 +230,18 @@ function setupSocket() {
 
   state.socket.onerror = (error) => {
     console.error('Multi-alert socket error:', error);
-    teardownSocket();
+    scheduleSocketReconnect();
+    teardownSocket({ keepReconnectTimer: true });
   };
 
   state.socket.onclose = () => {
     teardownSocket();
-    state.reconnectTimer = window.setTimeout(setupSocket, 1200);
+    scheduleSocketReconnect();
   };
 }
 
-function teardownSocket() {
-  if (state.reconnectTimer) {
+function teardownSocket({ keepReconnectTimer = false } = {}) {
+  if (!keepReconnectTimer && state.reconnectTimer) {
     window.clearTimeout(state.reconnectTimer);
     state.reconnectTimer = null;
   }

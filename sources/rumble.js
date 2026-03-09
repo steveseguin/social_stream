@@ -328,6 +328,10 @@
 		rumblePopupResolver.pending = true;
 		rumblePopupResolver.lastAttemptKey = requestKey;
 		rumblePopupResolver.lastAttemptAt = now;
+		if ((typeof chrome === "undefined") || !chrome.runtime || !chrome.runtime.id || !chrome.runtime.sendMessage){
+			rumblePopupResolver.pending = false;
+			return false;
+		}
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, {
 				cmd: "resolveRumblePopupUrl",
@@ -347,9 +351,13 @@
 					rumblePopupResolver.lastErrorKey = errorKey;
 					console.warn("Rumble popup resolution failed", response && response.error ? response.error : response);
 				}
+				if (shouldAttemptPopupResolution()){
+					tryResolvePopupViaDom();
+				}
 			});
 		} catch(e){
 			rumblePopupResolver.pending = false;
+			return false;
 		}
 		return true;
 	}

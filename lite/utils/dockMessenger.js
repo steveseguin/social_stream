@@ -126,7 +126,7 @@ export class DockMessenger {
     }
 
     this.dispatch({
-      kind: 'raw',
+      kind: 'overlay',
       payload: { delete: message }
     });
   }

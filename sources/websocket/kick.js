@@ -1841,6 +1841,25 @@ function normalizeSourceControlPlatform(type) {
     return normalized;
 }
 
+function resolveKickDeleteMessageId(payload = {}) {
+    const explicitMessageId = pickFirstString(
+        [
+            payload.messageId,
+            payload.message_id,
+            payload.nativeMessageId,
+            payload.native_message_id
+        ],
+        ''
+    );
+    if (explicitMessageId) {
+        return explicitMessageId;
+    }
+    if (payload.tid !== undefined && payload.tid !== null && payload.tid !== '') {
+        return '';
+    }
+    return pickFirstString([payload.id], '');
+}
+
 function setChannelSlug(value, options = {}) {
     const { persist = true, source = 'manual', force = false } = options;
     const slug = (value || '').trim();
@@ -3852,7 +3871,12 @@ async function handleSourceControlRequest(request) {
         if (!state.advancedControls.syncDeleteMessages) {
             return false;
         }
-        await deleteKickChatMessage(payload.id);
+        const messageId = resolveKickDeleteMessageId(payload);
+        if (!messageId) {
+            log('Skipped dock delete: missing native Kick message ID.', 'warning');
+            return false;
+        }
+        await deleteKickChatMessage(messageId);
         log('Synced dock delete to Kick.', 'info');
         return true;
     }

@@ -724,6 +724,9 @@
         let selected = null;
 
         if (!streams.length) {
+            if (desiredId) {
+                throw new Error('Configured stream ID "' + desiredId + '" was not found in the API response.');
+            }
             return { stream: null, livestreams: [] };
         }
 
@@ -732,13 +735,8 @@
                 return String(item && item.id ? item.id : '').toLowerCase() === desiredId.toLowerCase();
             }) || null;
             if (!selected) {
-                selected = streams.find(function (item) {
-                    return !!(item && item.is_live);
-                }) || streams[0] || null;
-                if (selected && state.warnedStreamFallbackFor !== desiredId) {
-                    state.warnedStreamFallbackFor = desiredId;
-                    log('Configured stream ID "' + desiredId + '" was not found in the API response. Falling back to ' + String(selected.id || 'the first stream') + '.', 'warn');
-                }
+                state.warnedStreamFallbackFor = '';
+                throw new Error('Configured stream ID "' + desiredId + '" was not found in the API response.');
             } else {
                 state.warnedStreamFallbackFor = '';
             }
