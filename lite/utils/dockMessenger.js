@@ -117,16 +117,18 @@ export class DockMessenger {
       throw new Error('Cannot send message without an active session.');
     }
 
-    if (!this.ready || !this.frame.contentWindow) {
-      this.pending.push(message);
-      this.debugLog('Queued message until dock is ready', {
-        pending: this.pending.length,
-        message
-      });
-      return;
+    this.dispatch({ kind: 'overlay', payload: message });
+  }
+
+  sendDelete(message) {
+    if (!this.sessionId) {
+      throw new Error('Cannot send delete message without an active session.');
     }
 
-    this.post(message);
+    this.dispatch({
+      kind: 'raw',
+      payload: { delete: message }
+    });
   }
 
   scheduleFlush(delay = 400) {
@@ -139,9 +141,31 @@ export class DockMessenger {
     }, delay);
   }
 
-  post(message) {
+  dispatch(entry) {
+    if (!entry || typeof entry !== 'object') {
+      return;
+    }
+
+    if (!this.ready || !this.frame.contentWindow) {
+      this.pending.push(entry);
+      this.debugLog('Queued dock payload until iframe is ready', {
+        pending: this.pending.length,
+        entry
+      });
+      return;
+    }
+
+    this.post(entry);
+  }
+
+  post(entry) {
     try {
-      const payload = { sendData: { overlayNinja: message }, type: 'pcs' };
+      const kind = entry.kind || 'overlay';
+      const message = entry.payload;
+      const payload =
+        kind === 'raw'
+          ? message
+          : { sendData: { overlayNinja: message }, type: 'pcs' };
       this.debugLog('Posting message to dock iframe', { payload });
       this.frame.contentWindow.postMessage(payload, '*');
 
@@ -155,33 +179,33 @@ export class DockMessenger {
       if (target) {
         try {
           if (typeof target.processInput === 'function') {
-            target.processInput(message);
+            target.processInput(payload);
           } else if (typeof target.processData === 'function') {
-            target.processData({ contents: message });
+            target.processData(kind === 'raw' ? payload : { contents: message });
           }
         } catch (err) {
           this.debugLog('Direct dock relay unavailable', { error: err?.message || err });
         }
       }
-      this.notifyMessage(message);
-      this.retryCounts.delete(message);
+      this.notifyMessage(payload);
+      this.retryCounts.delete(entry);
     } catch (err) {
       console.error('Failed to post message to dock iframe', err);
-      const attempts = this.retryCounts.get(message) || 0;
+      const attempts = this.retryCounts.get(entry) || 0;
       if (attempts < 3) {
         const nextAttempts = attempts + 1;
-        this.retryCounts.set(message, nextAttempts);
-        this.pending.unshift(message);
+        this.retryCounts.set(entry, nextAttempts);
+        this.pending.unshift(entry);
         this.debugLog('Re-queued message after post failure', { attempts: nextAttempts });
         this.scheduleFlush(Math.min(1200, 400 * nextAttempts));
         return;
       }
-      this.retryCounts.delete(message);
+      this.retryCounts.delete(entry);
       if (this.onDebug) {
         try {
           this.onDebug({
             plugin: 'system',
-            message: '[warn] Dock relay unavailable for test message.',
+            message: '[warn] Dock relay unavailable.',
             detail: { error: err?.message || err },
             timestamp: Date.now(),
           });
@@ -200,8 +224,8 @@ export class DockMessenger {
       this.debugLog('Flushing queued messages to dock', { count: this.pending.length });
     }
     while (this.pending.length) {
-      const msg = this.pending.shift();
-      this.post(msg);
+      const entry = this.pending.shift();
+      this.post(entry);
       if (!this.ready) {
         break;
       }
