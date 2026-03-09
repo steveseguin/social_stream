@@ -165,11 +165,18 @@
                             <td>Viewer count polls only</td>
                         </tr>
                         <tr>
-                            <td><strong>Rumble</strong></td>
+                            <td><strong>Rumble &ndash; DOM capture</strong></td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
                             <td>Viewer count polls only</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rumble &ndash; Websocket/API URL</strong></td>
+                            <td>New subs and gifted subs</td>
+                            <td>Follow alerts + follower total</td>
+                            <td>Rants/tips (amount + currency)</td>
+                            <td>Viewer totals, subscriber totals, live status, and read-only chat feed</td>
                         </tr>
                     </tbody>
                 </table>
@@ -970,8 +977,8 @@
                     </table>
                 </article>
 
-                <article class="platform-card" id="rumble">
-                    <h3>Rumble</h3>
+                <article class="platform-card" id="rumble-dom">
+                    <h3>Rumble - Standard DOM Capture</h3>
                     <p class="source-note">Implementation: <code>sources/rumble.js</code></p>
                     <ul class="requirements">
                         <li>Requires authenticated session cookies so the <code>service.php</code> viewer API responds.</li>
@@ -993,6 +1000,74 @@
                             </tr>
                         </tbody>
                     </table>
+                </article>
+
+                <article class="platform-card" id="rumble-ws">
+                    <h3>Rumble - Websocket/API URL</h3>
+                    <p class="source-note">Implementation: <code>sources/websocket/rumble.js</code></p>
+                    <ul class="requirements">
+                        <li>Requires the creator-owned Live Stream API URL from <code>https://rumble.com/account/livestream-api</code>. Rumble documents that this URL includes the live stream key, does not require separate authentication, and should only be shared with trusted third parties.</li>
+                        <li>Read-only transport. The public Rumble Live Stream API docs do not describe an official chat-send endpoint, so this source relays messages/events into Social Stream but does not send chat back to Rumble.</li>
+                        <li><code>livestreams[].chat</code> only populates while the selected stream is live. Use <code>?streamId=...</code> to pin a specific stream when the API exposes more than one.</li>
+                        <li>The page also resolves <code>https://rumble.com/chat/popup/&lt;livestreams[].id&gt;</code> so you can open the normal injected popup chat directly without first loading the broadcaster's <code>/live</code> page.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New entries appear in <code>livestreams[].chat.recent_messages</code>.</td>
+                                <td>Standard chat payload. <code>meta.source</code> is <code>live_stream_api</code>; badge labels are normalized into display-friendly badge chips.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>donation</code></td>
+                                <td>New rant entries appear in <code>livestreams[].chat.recent_rants</code>.</td>
+                                <td><code>hasDonation</code> carries the USD-formatted amount; <code>meta</code> includes <code>amount_cents</code>, <code>amount_dollars</code>, and <code>expiresOn</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td>New entries appear in <code>followers.recent_followers</code>.</td>
+                                <td>System event with <code>chatname</code> set to the follower username and timestamp under <code>meta.followedOn</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>new_subscriber</code></td>
+                                <td>New entries appear in <code>subscribers.recent_subscribers</code>.</td>
+                                <td><code>membership</code> is set to <code>SUBSCRIBER</code>; <code>subtitle</code> mirrors the documented USD amount when Rumble provides it.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>subscription_gift</code></td>
+                                <td>New entries appear in <code>gifted_subs.recent_gifted_subs</code>.</td>
+                                <td><code>chatname</code> is the gifter, <code>hasDonation</code> becomes <code>N Gifted</code>, and <code>meta</code> includes <code>totalGifted</code>, <code>remainingGifts</code>, <code>giftType</code>, and <code>videoId</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>follower_update</code></td>
+                                <td>Whenever <code>followers.num_followers</code> changes.</td>
+                                <td><code>meta</code> integer follower count.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>subscriber_update</code></td>
+                                <td>Whenever <code>subscribers.num_subscribers</code> changes.</td>
+                                <td><code>meta</code> integer subscriber count.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
+                                <td>When the selected livestream switches between live and offline states.</td>
+                                <td><code>meta</code> includes a sanitized subset of stream fields (<code>id</code>, <code>title</code>, <code>createdOn</code>, category labels, likes/dislikes, and viewer totals). Sensitive values such as <code>stream_key</code> are intentionally not forwarded.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Whenever <code>livestreams[].watching_now</code> changes for the selected stream.</td>
+                                <td><code>meta</code> integer concurrent viewer count; emits <code>0</code> when the selected stream goes offline to clear stale counters.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="field-highlights">This transport is intended for channels you own or manage. Because the API URL contains a live stream key, do not expose it in overlays, logs, screenshots, or shared browser profiles.</p>
                 </article>
             </section>
 

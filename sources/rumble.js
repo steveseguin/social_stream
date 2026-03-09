@@ -235,6 +235,133 @@
 		}
 	});
 
+	function normalizeSettingText(value){
+		try {
+			if (typeof value === "string"){
+				return value.trim();
+			}
+			if (value == null){
+				return "";
+			}
+			return String(value).trim();
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getRumbleApiUrlSetting(){
+		try {
+			if (settings && settings.rumble_api_url && settings.rumble_api_url.textsetting){
+				return normalizeSettingText(settings.rumble_api_url.textsetting);
+			}
+		} catch(e){}
+		return "";
+	}
+
+	function getRumbleStreamIdSetting(){
+		try {
+			if (settings && settings.rumble_stream_id && settings.rumble_stream_id.textsetting){
+				return normalizeSettingText(settings.rumble_stream_id.textsetting);
+			}
+		} catch(e){}
+		return "";
+	}
+
+	function isPopupPage(){
+		try {
+			return /\/chat\/popup\//.test(window.location.pathname);
+		} catch(e){
+			return window.location.href.indexOf("/chat/popup/") !== -1;
+		}
+	}
+
+	function isVideoPage(){
+		try {
+			return /^\/v[0-9a-z]+/i.test(window.location.pathname || "");
+		} catch(e){
+			return false;
+		}
+	}
+
+	function isChannelPage(){
+		try {
+			return /^\/(c|user)\//i.test(window.location.pathname || "");
+		} catch(e){
+			return false;
+		}
+	}
+
+	function isLivePage(){
+		try {
+			return /\/live(?:[\/?#]|$)/.test(window.location.pathname + window.location.search + window.location.hash);
+		} catch(e){
+			return window.location.href.endsWith("/live");
+		}
+	}
+
+	function shouldAttemptPopupResolution(){
+		return !isPopupPage() && (isLivePage() || isVideoPage() || isChannelPage());
+	}
+
+	var rumblePopupResolver = {
+		pending: false,
+		lastAttemptKey: "",
+		lastAttemptAt: 0,
+		lastErrorKey: ""
+	};
+
+	function tryResolvePopupViaBackground(){
+		var apiUrl = getRumbleApiUrlSetting();
+		var streamId = getRumbleStreamIdSetting();
+		var pageUrl = normalizeSettingText(window.location.href);
+		var requestKey = apiUrl + "::" + streamId + "::" + pageUrl;
+		var now = Date.now();
+		if (!shouldAttemptPopupResolution()){
+			return false;
+		}
+		if (rumblePopupResolver.pending){
+			return true;
+		}
+		if ((rumblePopupResolver.lastAttemptKey === requestKey) && ((now - rumblePopupResolver.lastAttemptAt) < 10000)){
+			return true;
+		}
+		rumblePopupResolver.pending = true;
+		rumblePopupResolver.lastAttemptKey = requestKey;
+		rumblePopupResolver.lastAttemptAt = now;
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				cmd: "resolveRumblePopupUrl",
+				apiUrl: apiUrl,
+				streamId: streamId,
+				pageUrl: pageUrl
+			}, function(response){
+				rumblePopupResolver.pending = false;
+				if (response && response.ok && response.popupUrl){
+					if (window.location.href !== response.popupUrl){
+						window.location.href = response.popupUrl;
+					}
+					return;
+				}
+				var errorKey = requestKey + "::" + ((response && response.error) || "unknown");
+				if (rumblePopupResolver.lastErrorKey !== errorKey){
+					rumblePopupResolver.lastErrorKey = errorKey;
+					console.warn("Rumble popup resolution failed", response && response.error ? response.error : response);
+				}
+			});
+		} catch(e){
+			rumblePopupResolver.pending = false;
+		}
+		return true;
+	}
+
+	function tryResolvePopupViaDom(){
+		if (!document.querySelector('img[src="/img/astronaut-404.png"]') && shouldAttemptPopupResolution() && document.querySelector('[data-video-id]')){
+			window.location.href = "https://rumble.com/chat/popup/"+document.querySelector('[data-video-id]').dataset.videoId;
+			return true;
+		}
+		return false;
+	}
+
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
@@ -348,25 +475,27 @@
 				//	processMessage(ele);
 				//});
 			} 
-			if (!document.querySelector('img[src="/img/astronaut-404.png"]') && window.location.href.endsWith("/live") && document.querySelector('[data-video-id]')){
-				window.location.href = "https://rumble.com/chat/popup/"+document.querySelector('[data-video-id]').dataset.videoId;
+			if (!isPopupPage() && !tryResolvePopupViaBackground()){
+				tryResolvePopupViaDom();
 			}
 			
 		} else {
-			if (window.location.href.endsWith("/live") && document.querySelector('img[src="/img/astronaut-404.png"]')){
-				if (window.location.href.includes("/user/")){
-					window.location.href = window.location.href.replace("/user/","/");
-				} else if (window.location.href.includes("/c/")){
-					window.location.href = window.location.href.replace("/c/","/user/");
+			if (!tryResolvePopupViaBackground()){
+				if (isLivePage() && document.querySelector('img[src="/img/astronaut-404.png"]')){
+					if (window.location.href.includes("/user/")){
+						window.location.href = window.location.href.replace("/user/","/");
+					} else if (window.location.href.includes("/c/")){
+						window.location.href = window.location.href.replace("/c/","/user/");
+					}
+					
+				} else {
+					tryResolvePopupViaDom();
 				}
-				
-			} else if (!document.querySelector('img[src="/img/astronaut-404.png"]') && window.location.href.endsWith("/live") && document.querySelector('[data-video-id]')){
-				window.location.href = "https://rumble.com/chat/popup/"+document.querySelector('[data-video-id]').dataset.videoId;
 			}
 		}
 		
 		
-		if (document.querySelector('video') && !document.querySelector('video').p && document.querySelector('video').played){
+		if (isPopupPage() && document.querySelector('video') && !document.querySelector('video').p && document.querySelector('video').played){
 			document.querySelector('video').p = "true";
 			document.querySelector('video').pause();
 		}

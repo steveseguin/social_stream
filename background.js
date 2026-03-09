@@ -4454,6 +4454,41 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				sendResponse({ ok: false, error: error && error.message ? error.message : "VPZone fetch failed" });
 			}
 			return true;
+		} else if (request.cmd && request.cmd === "rumbleFetchJson") {
+			try {
+				const rumbleResponse = await fetchRumbleJsonResponse(request.url);
+				sendResponse({ ok: true, status: rumbleResponse.status, data: rumbleResponse.data });
+			} catch (error) {
+				sendResponse({
+					ok: false,
+					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+					error: error && error.message ? error.message : "Rumble fetch failed"
+				});
+			}
+			return true;
+		} else if (request.cmd && request.cmd === "resolveRumblePopupUrl") {
+			try {
+				const resolved = await resolveRumblePopup(request);
+				sendResponse({
+					ok: true,
+					status: resolved.status,
+					popupUrl: resolved.popupUrl,
+					streamId: normalizeRumbleSettingText(resolved.stream && resolved.stream.id),
+					streamTitle: normalizeRumbleSettingText(resolved.stream && resolved.stream.title),
+					isLive: !!(resolved.stream && resolved.stream.is_live),
+					chatId: normalizeRumbleSettingText(resolved.chatId),
+					videoId: normalizeRumbleSettingText(resolved.videoId),
+					pageUrl: normalizeRumbleSettingText(resolved.pageUrl),
+					username: normalizeRumbleSettingText(resolved.username)
+				});
+			} catch (error) {
+				sendResponse({
+					ok: false,
+					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+					error: error && error.message ? error.message : "Rumble popup resolution failed"
+				});
+			}
+			return true;
 		} else if ("getSettings" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
@@ -8217,6 +8252,428 @@ function enableYouTube() {
 
 const pendingRequests = new Map();
 
+function normalizeRumbleSettingText(value) {
+	if (typeof value === "string") {
+		return value.trim();
+	}
+	if (value == null) {
+		return "";
+	}
+	return String(value).trim();
+}
+
+function normalizeRumbleApiUrlValue(value) {
+	let raw = normalizeRumbleSettingText(value);
+	let parsed;
+	if (!raw) {
+		return "";
+	}
+	if (!/^[a-z]+:\/\//i.test(raw) && raw.indexOf("rumble.com") >= 0) {
+		raw = "https://" + raw.replace(/^\/+/, "");
+	}
+	try {
+		parsed = new URL(raw);
+	} catch (error) {
+		return raw;
+	}
+	parsed.hash = "";
+	return parsed.toString();
+}
+
+async function fetchRumbleJsonResponse(url) {
+	const parsedUrl = new URL(url);
+	if (parsedUrl.protocol !== "https:" || !["rumble.com", "www.rumble.com"].includes(parsedUrl.hostname)) {
+		throw new Error("Rumble fetch URL not allowed");
+	}
+	const rumbleResponse = await fetch(parsedUrl.toString(), {
+		method: "GET",
+		cache: "no-store",
+		credentials: "omit",
+		headers: {
+			Accept: "application/json,text/plain;q=0.9,*/*;q=0.8"
+		}
+	});
+	const responseText = await rumbleResponse.text();
+	let responseJson = {};
+	try {
+		responseJson = responseText ? JSON.parse(responseText) : {};
+	} catch (error) {
+		if (responseText && /^\s*</.test(responseText)) {
+			const htmlError = new Error("Rumble returned HTML instead of JSON. Paste the generated API feed URL, not the dashboard page.");
+			htmlError.status = rumbleResponse.status;
+			throw htmlError;
+		}
+		const jsonError = new Error("Invalid JSON response from Rumble");
+		jsonError.status = rumbleResponse.status;
+		throw jsonError;
+	}
+	if (!rumbleResponse.ok) {
+		const httpError = new Error((responseJson && (responseJson.error || responseJson.message)) || `HTTP ${rumbleResponse.status}`);
+		httpError.status = rumbleResponse.status;
+		httpError.data = responseJson;
+		throw httpError;
+	}
+	return {
+		status: rumbleResponse.status,
+		data: responseJson
+	};
+}
+
+function selectRumbleLivestreamFromSnapshot(snapshot, preferredStreamId = "") {
+	const desiredId = normalizeRumbleSettingText(preferredStreamId).toLowerCase();
+	const streams = Array.isArray(snapshot && snapshot.livestreams) ? snapshot.livestreams : [];
+	let selected = null;
+	if (!streams.length) {
+		return null;
+	}
+	if (desiredId) {
+		selected = streams.find(stream => String(stream && stream.id ? stream.id : "").toLowerCase() === desiredId) || null;
+	}
+	if (!selected) {
+		selected = streams.find(stream => !!(stream && stream.is_live)) || streams[0] || null;
+	}
+	return selected;
+}
+
+function buildRumblePopupUrlFromStream(stream) {
+	const streamId = normalizeRumbleSettingText(stream && stream.id);
+	if (!streamId) {
+		return "";
+	}
+	return "https://rumble.com/chat/popup/" + encodeURIComponent(streamId);
+}
+
+function buildRumblePopupUrlFromChatId(chatId) {
+	const normalized = normalizeRumbleSettingText(chatId);
+	if (!normalized) {
+		return "";
+	}
+	return "https://rumble.com/chat/popup/" + encodeURIComponent(normalized);
+}
+
+async function fetchRumbleHtmlResponse(url) {
+	const parsedUrl = new URL(url);
+	if (parsedUrl.protocol !== "https:" || !["rumble.com", "www.rumble.com"].includes(parsedUrl.hostname)) {
+		throw new Error("Rumble fetch URL not allowed");
+	}
+	const rumbleResponse = await fetch(parsedUrl.toString(), {
+		method: "GET",
+		cache: "no-store",
+		credentials: "omit",
+		headers: {
+			Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+		}
+	});
+	const responseText = await rumbleResponse.text();
+	if (!rumbleResponse.ok) {
+		const httpError = new Error(`HTTP ${rumbleResponse.status}`);
+		httpError.status = rumbleResponse.status;
+		throw httpError;
+	}
+	return {
+		status: rumbleResponse.status,
+		url: rumbleResponse.url || parsedUrl.toString(),
+		html: responseText
+	};
+}
+
+function extractRumbleIdentifiersFromHtml(html) {
+	if (!html || typeof html !== "string") {
+		return {
+			chatId: null,
+			videoId: null,
+			fullPath: null
+		};
+	}
+
+	const buildVideoInfoFromCandidate = (candidate) => {
+		if (!candidate || typeof candidate !== "string") {
+			return {
+				videoId: null,
+				fullPath: null
+			};
+		}
+		try {
+			const parsed = candidate.startsWith("http")
+				? new URL(candidate)
+				: new URL(candidate, "https://rumble.com");
+			const pathname = (parsed.pathname || "").trim();
+			const match = pathname.match(/\/((?:v|p)[a-zA-Z0-9]+[^\/]*\.html?)/i);
+			if (!match || !match[1]) {
+				return {
+					videoId: null,
+					fullPath: null
+				};
+			}
+			const fullPath = match[1];
+			const idMatch = fullPath.match(/^((?:v|p)[a-zA-Z0-9]+)/i);
+			return {
+				videoId: idMatch && idMatch[1] ? idMatch[1] : null,
+				fullPath
+			};
+		} catch (_) {
+			return {
+				videoId: null,
+				fullPath: null
+			};
+		}
+	};
+
+	const directChatPatterns = [
+		/chat\/popup\/(\d+)/i,
+		/data-chat-id=["'](\d+)["']/i,
+		/["']chatId["']\s*[:=]\s*["']?(\d+)/i,
+		/(?:^|[^a-z])video_id\s*[:=]\s*["']?(\d+)/i,
+		/["']video_id["']\s*[:=]\s*["']?(\d+)/i,
+		/data-video-id=["'](\d+)["']/i
+	];
+
+	let chatId = null;
+	for (const regex of directChatPatterns) {
+		const match = html.match(regex);
+		if (match && match[1] && /^\d+$/.test(match[1])) {
+			chatId = match[1];
+			break;
+		}
+	}
+
+	const pageUrlPatterns = [
+		/<link[^>]+rel=["']?canonical["']?[^>]*href=["']?([^"' >]+)/i,
+		/<meta[^>]+property=["']?og:url["']?[^>]*content=["']?([^"' >]+)/i,
+		/<meta[^>]+name=["']?twitter:url["']?[^>]*content=["']?([^"' >]+)/i,
+		/<meta[^>]+itemprop=["']?url["']?[^>]*content=["']?([^"' >]+)/i
+	];
+
+	for (const regex of pageUrlPatterns) {
+		const match = html.match(regex);
+		if (match && match[1]) {
+			const info = buildVideoInfoFromCandidate(match[1]);
+			if (info.videoId || info.fullPath) {
+				return {
+					chatId,
+					videoId: info.videoId,
+					fullPath: info.fullPath
+				};
+			}
+		}
+	}
+
+	const liveTilePatterns = [
+		/<div[^>]+data-video-id=["'](\d+)["'][\s\S]{0,1800}?(?:thumbnail__thumb--live|videostream__footer--live)[\s\S]{0,1200}?href=["']\/([^"']+\.html)/i,
+		/<div[^>]+data-video-id=["'](\d+)["'][\s\S]{0,1800}?(?:thumbnail__thumb--live|videostream__status--live|videostream__footer--live)/i
+	];
+
+	for (const regex of liveTilePatterns) {
+		const match = html.match(regex);
+		if (!match || !match[1] || !/^\d+$/.test(match[1])) {
+			continue;
+		}
+		const info = match[2]
+			? buildVideoInfoFromCandidate(match[2])
+			: { videoId: null, fullPath: null };
+		return {
+			chatId: match[1],
+			videoId: info.videoId,
+			fullPath: info.fullPath
+		};
+	}
+
+	return {
+		chatId,
+		videoId: null,
+		fullPath: null
+	};
+}
+
+function normalizeRumbleVideoTarget(value) {
+	let target = normalizeRumbleSettingText(value);
+	if (!target) {
+		return {
+			popupUrl: "",
+			url: ""
+		};
+	}
+
+	const popupMatch = target.match(/chat\/popup\/(\d+)/i);
+	if (popupMatch && popupMatch[1]) {
+		return {
+			popupUrl: buildRumblePopupUrlFromChatId(popupMatch[1]),
+			url: ""
+		};
+	}
+
+	if (/^\d+$/.test(target)) {
+		return {
+			popupUrl: buildRumblePopupUrlFromChatId(target),
+			url: ""
+		};
+	}
+
+	if (/^https?:\/\//i.test(target)) {
+		try {
+			const parsed = new URL(target);
+			parsed.hash = "";
+			return {
+				popupUrl: "",
+				url: parsed.toString()
+			};
+		} catch (error) {}
+	}
+
+	target = target.replace(/^https?:\/\//i, "").replace(/^rumble\.com\/+/i, "").replace(/^www\.rumble\.com\/+/i, "");
+	target = target.replace(/^\/+/, "");
+
+	if (!target) {
+		return {
+			popupUrl: "",
+			url: ""
+		};
+	}
+
+	if (/^chat\/popup\/\d+/i.test(target)) {
+		return {
+			popupUrl: buildRumblePopupUrlFromChatId(target.split("/").pop()),
+			url: ""
+		};
+	}
+
+	if (/^(?:v|p)[a-z0-9]+$/i.test(target)) {
+		return {
+			popupUrl: "",
+			url: `https://rumble.com/${target}`
+		};
+	}
+
+	return {
+		popupUrl: "",
+		url: `https://rumble.com/${target}`
+	};
+}
+
+async function resolveRumblePopupFromVideoTarget(videoTarget) {
+	const normalized = normalizeRumbleVideoTarget(videoTarget);
+	let fetched;
+	let identifiers;
+	if (normalized.popupUrl) {
+		return {
+			status: 200,
+			popupUrl: normalized.popupUrl,
+			chatId: normalizeRumbleSettingText(normalized.popupUrl.split("/").pop()),
+			videoId: null,
+			pageUrl: ""
+		};
+	}
+	if (!normalized.url) {
+		throw new Error("Missing Rumble video target");
+	}
+	fetched = await fetchRumbleHtmlResponse(normalized.url);
+	identifiers = extractRumbleIdentifiersFromHtml(fetched.html);
+	if (!identifiers.chatId) {
+		throw new Error("Could not find a Rumble popup chat ID for that video.");
+	}
+	return {
+		status: fetched.status,
+		popupUrl: buildRumblePopupUrlFromChatId(identifiers.chatId),
+		chatId: identifiers.chatId,
+		videoId: identifiers.videoId,
+		pageUrl: fetched.url
+	};
+}
+
+function buildRumbleUsernameCandidates(username) {
+	const normalized = normalizeRumbleSettingText(username).replace(/^@+/, "");
+	if (!normalized) {
+		return [];
+	}
+	const encoded = encodeURIComponent(normalized);
+	if (/^(c|user)\//i.test(normalized)) {
+		return [
+			`https://rumble.com/${normalized}/live`,
+			`https://rumble.com/${normalized}`
+		];
+	}
+	return [
+		`https://rumble.com/c/${encoded}/live`,
+		`https://rumble.com/c/${encoded}`,
+		`https://rumble.com/user/${encoded}/live`,
+		`https://rumble.com/user/${encoded}`
+	];
+}
+
+async function resolveRumblePopupFromUsername(username) {
+	const candidates = buildRumbleUsernameCandidates(username);
+	let lastError = null;
+	for (const candidate of candidates) {
+		try {
+			const resolved = await resolveRumblePopupFromVideoTarget(candidate);
+			if (resolved && resolved.popupUrl) {
+				return Object.assign({}, resolved, { username: normalizeRumbleSettingText(username) });
+			}
+		} catch (error) {
+			lastError = error;
+		}
+	}
+	if (lastError) {
+		throw lastError;
+	}
+	throw new Error("Could not resolve a live Rumble popup chat for that username.");
+}
+
+async function resolveRumblePopup(request = {}) {
+	const apiUrl = normalizeRumbleApiUrlValue(request.apiUrl);
+	const streamId = normalizeRumbleSettingText(request.streamId);
+	const videoTarget = normalizeRumbleSettingText(request.videoTarget || request.videoId);
+	const pageUrl = normalizeRumbleSettingText(request.pageUrl);
+	const username = normalizeRumbleSettingText(request.username);
+
+	if (apiUrl) {
+		try {
+			return await resolveRumblePopupFromApi(apiUrl, streamId);
+		} catch (error) {
+			if (!videoTarget && !pageUrl && !username) {
+				throw error;
+			}
+		}
+	}
+
+	if (videoTarget) {
+		return resolveRumblePopupFromVideoTarget(videoTarget);
+	}
+
+	if (pageUrl) {
+		return resolveRumblePopupFromVideoTarget(pageUrl);
+	}
+
+	if (username) {
+		return resolveRumblePopupFromUsername(username);
+	}
+
+	throw new Error("Missing Rumble username, video ID, page URL, or API URL");
+}
+
+async function resolveRumblePopupFromApi(apiUrl, preferredStreamId = "") {
+	const normalizedApiUrl = normalizeRumbleApiUrlValue(apiUrl);
+	let rumbleResponse;
+	let selectedStream;
+	if (!normalizedApiUrl) {
+		throw new Error("Missing Rumble API URL");
+	}
+	rumbleResponse = await fetchRumbleJsonResponse(normalizedApiUrl);
+	if (!rumbleResponse.data || typeof rumbleResponse.data !== "object") {
+		throw new Error("The Rumble API response was empty.");
+	}
+	selectedStream = selectRumbleLivestreamFromSnapshot(rumbleResponse.data, preferredStreamId);
+	if (!selectedStream) {
+		throw new Error("No Rumble livestreams were found in the API response.");
+	}
+	return {
+		status: rumbleResponse.status,
+		data: rumbleResponse.data,
+		stream: selectedStream,
+		popupUrl: buildRumblePopupUrlFromStream(selectedStream)
+	};
+}
+
 // Helper to clean up old pending requests
 function cleanupPendingRequests() {
     const now = Date.now();
@@ -8337,6 +8794,34 @@ async function openchat(target = null, force = false) {
 		}
 	}
 
+	async function openRumbleLiveChat(settings) {
+		const username = normalizeRumbleSettingText(settings.rumble_username && settings.rumble_username.textsetting);
+		const videoTarget = normalizeRumbleSettingText(settings.rumble_video_id && settings.rumble_video_id.textsetting);
+		const apiUrl = normalizeRumbleApiUrlValue(settings.rumble_api_url && settings.rumble_api_url.textsetting);
+		const preferredStreamId = normalizeRumbleSettingText(settings.rumble_stream_id && settings.rumble_stream_id.textsetting);
+		if (!username && !videoTarget && !apiUrl) {
+			return false;
+		}
+		try {
+			const request = {
+				username: username,
+				videoTarget: videoTarget
+			};
+			if (!videoTarget && !username && apiUrl) {
+				request.apiUrl = apiUrl;
+				request.streamId = preferredStreamId;
+			}
+			const resolved = await resolveRumblePopup(request);
+			if (resolved && resolved.popupUrl) {
+				openURL(resolved.popupUrl, true);
+				return true;
+			}
+		} catch (error) {
+			console.error("Rumble resolution error:", error);
+		}
+		return false;
+	}
+
 	async function fallbackYouTubeLiveChat(settings) {
 		try {
 			// Try first URL format
@@ -8376,6 +8861,17 @@ async function openchat(target = null, force = false) {
 	if ((target == "kick" || !target) && settings.kick_username) {
 		let url = "https://kick.com/" + settings.kick_username.textsetting + "/chatroom";
 		openURL(url);
+	}
+
+	if ((target == "rumble" || !target) && (
+		(settings.rumble_username && settings.rumble_username.textsetting) ||
+		(settings.rumble_video_id && settings.rumble_video_id.textsetting) ||
+		(settings.rumble_api_url && settings.rumble_api_url.textsetting)
+	)) {
+		const openedRumble = await openRumbleLiveChat(settings);
+		if (target == "rumble" && openedRumble) {
+			return;
+		}
 	}
 
 	if (target == "joystickws") {

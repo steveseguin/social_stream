@@ -328,7 +328,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>Use the pop out chat</li>
                     <li>URL: https://rumble.com/chat/popup/*</li>
                 </ul>
-            `
+            `,
+            notes: 'A creator-owned API-backed source is also available at <code>sources/websocket/rumble.html?apiUrl=...</code>.'
+        },
+        {
+            name: 'Rumble API URL',
+            icon: 'rumble.png',
+            description: 'Read-only creator API bridge for Rumble chat and stream events.',
+            type: 'websocket',
+            instructions: `
+                <ul>
+                    <li>URL: https://socialstream.ninja/sources/websocket/rumble.html</li>
+                    <li>Paste the Live Stream API URL from https://rumble.com/account/livestream-api</li>
+                </ul>
+            `,
+            notes: 'Read-only mode. The API URL is secret and includes your live stream key; Rumble currently documents no separate OAuth requirement for reading it. The page can also resolve the normal <code>https://rumble.com/chat/popup/&lt;stream-id&gt;</code> URL so you can open the injected popup directly without first scraping the <code>/live</code> page.'
         },
         {
             name: 'Dlive.tv',
