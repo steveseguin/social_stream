@@ -462,7 +462,7 @@
                                 <td><code>chatmessage</code> is the system line, enabling overlays to highlight gifter campaigns.</td>
                             </tr>
                             <tr>
-                                <td class="membership-event"><code>sponsorship</code></td>
+                                <td class=”membership-event”><code>subscription_gift</code></td>
                                 <td>Gifted subscription notices (“User gifted a Sub to …”).</td>
                                 <td>Marks the event for highlight filters; <code>membership</code> remains the recipient badge label.</td>
                             </tr>
@@ -668,12 +668,13 @@
                 </article>
 
 
-<h3>TikTok Live</h3>
-                    <p class="source-note">Implementation: <code>sources/tiktok.js</code></p>
+<h3>TikTok Live &ndash; Standard DOM Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/tiktok.js</code> (extension content script). SSApp has a native TikTok integration with richer event support (see SSApp docs).</p>
                     <ul class="requirements">
                         <li>Works on the broadcaster's live page. Gift/like/follow banners only populate when the session is authenticated.</li>
                         <li>TikTok provides many events via DOM detection <strong>without requiring WebSocket mode</strong> &ndash; gifts, follows, joins, and likes are captured automatically.</li>
                         <li>No additional API authentication required.</li>
+                        <li><strong>SSApp native mode</strong> connects directly via tiktok-live-connector and adds events not available through DOM scraping: <code>subscribe</code>, <code>question_new</code>, <code>envelope</code>, <code>emote</code>, <code>shared</code>, and <code>viewer_update</code>.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -797,7 +798,7 @@
                     <p class="source-note">Implementation: <code>sources/kick.js</code></p>
                     <ul class="requirements">
                         <li>Needs an authenticated session to resolve profile images and subscriber badges.</li>
-                        <li>No dedicated event detection; relies on chat text and badges only (viewer counts still work when the toggle is enabled).</li>
+                        <li>Limited event detection via chat text matching and badges; viewer counts still work when the toggle is enabled.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -809,13 +810,24 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td class="membership-event"><code>gift</code></td>
+                                <td>Gift sub events detected via chat text matching.</td>
+                                <td><code>chatmessage</code> contains the system line; basic gift detection only.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>reward</code></td>
+                                <td>Channel point redemptions ("has redeemed …").</td>
+                                <td><code>chatmessage</code> contains redemption text.</td>
+                            </tr>
+                            <tr>
+                                <td><code>true</code> (boolean)</td>
+                                <td>Generic system notices that don&rsquo;t match gift or reward patterns.</td>
+                                <td>Use <code>chatmessage</code> content to decide presentation; boolean <code>true</code> indicates "system event &ndash; type unknown".</td>
+                            </tr>
+                            <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Polls Kick&rsquo;s channel API every 30 seconds (only when viewer stats are enabled).</td>
                                 <td><code>meta</code> integer viewer count; for subs, follows, or tips use the Kick bridge below.</td>
-                            </tr>
-                            <tr>
-                                <td>&mdash;</td>
-                                <td colspan="2">Only standard chat messages are forwarded; Kick&rsquo;s public DOM does not expose membership, follower, or donation alerts.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1222,24 +1234,24 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>sources/twitch.js</code> vs <code>sources/websocket/twitch.js</code></td>
-                            <td>DOM uses legacy system markers (<code>reward</code>, <code>giftpurchase</code>, <code>sponsorship</code>, boolean <code>true</code>, <code>knock</code>) while websocket uses EventSub-style names (<code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, <code>raid</code>, etc.). Websocket path currently does not emit delete payloads.</td>
-                            <td>Trigger rules can diverge during migration unless they key off both vocabularies or normalize upstream.</td>
+                            <td>Twitch: Standard vs Websocket</td>
+                            <td>Shared: <code>subscription_gift</code>, <code>viewer_update</code>. Standard-only: <code>reward</code>, <code>giftpurchase</code>, <code>knock</code>, <code>community_highlight</code>. Websocket-only: <code>new_subscriber</code>, <code>resub</code>, <code>cheer</code>, <code>channel_points</code>, <code>raid</code>, <code>new_follower</code>, <code>follower_update</code>, <code>subscriber_update</code>.</td>
+                            <td>Trigger rules should handle both vocabularies; <code>subscription_gift</code> is aligned across both.</td>
                         </tr>
                         <tr>
-                            <td><code>sources/kick.js</code> vs <code>sources/websocket/kick.js</code></td>
-                            <td>DOM chat emits lightweight event markers (<code>gift</code>, <code>reward</code>, sometimes boolean <code>true</code>). Websocket adds channel-level events (<code>new_follower</code>, <code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, <code>donation</code>, <code>stream_online</code>/<code>stream_offline</code>, <code>follower_update</code>).</td>
-                            <td>Websocket mode is richer; automation built around DOM-only event names should be reviewed when switching transports.</td>
+                            <td>Kick: Standard vs Websocket</td>
+                            <td>Standard emits lightweight markers (<code>gift</code>, <code>reward</code>, boolean <code>true</code>, <code>viewer_update</code>). Websocket adds full event support: <code>new_follower</code>, <code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, <code>donation</code>, <code>stream_online</code>/<code>stream_offline</code>, <code>follower_update</code>.</td>
+                            <td>Websocket mode is richer; automation built around Standard-only event names should be reviewed when switching.</td>
                         </tr>
                         <tr>
-                            <td><code>sources/youtube.js</code> vs <code>sources/websocket/youtube.js</code></td>
-                            <td><code>websocket/youtube.js</code> is a relay shim; event vocabulary and donation/membership shaping come from the injected YouTube capture layer, not from this wrapper file itself.</td>
-                            <td>Code audits must inspect both layers to validate emitted payload shape.</td>
+                            <td>YouTube: Standard vs Websocket</td>
+                            <td>Shared: <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>donation</code>, <code>viewer_update</code>. Standard-only: <code>jeweldonation</code>, <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>.</td>
+                            <td>Core event names are aligned across both.</td>
                         </tr>
                         <tr>
-                            <td>All source scripts</td>
-                            <td><code>89</code> files populate <code>hasDonation</code> but do not set <code>data.event</code>.</td>
-                            <td>This is generally correct behavior; donation rendering should key off <code>hasDonation</code>, with <code>data.event</code> reserved for explicit system/event semantics.</td>
+                            <td>All surfaces</td>
+                            <td>Many sources populate <code>hasDonation</code> without setting <code>data.event</code>.</td>
+                            <td>This is correct; donation rendering should key off <code>hasDonation</code>, with <code>data.event</code> reserved for system/event semantics.</td>
                         </tr>
                     </tbody>
                 </table>
