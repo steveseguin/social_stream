@@ -677,16 +677,16 @@ body.light-mode .meta-value.badge {
 		donation: 'Donation',
 		supersticker: 'Super Sticker',
 		thankyou: 'Thank You',
-		// Legacy event names — older extension versions may still emit these
-		subscription: 'New Subscriber',
-		subgift: 'Gifted Subs',
-		membership: 'Membership',
-		new_member: 'Membership',
-		new_membership: 'Membership',
-		newmember: 'Membership',
-		upgraded_membership: 'Resub',
-		membership_upgrade: 'Resub',
-		membership_milestone: 'Member Milestone'
+		// Deprecated — kept for backward compat with older extension versions
+		subscription: 'New Subscriber',       // → new_subscriber
+		subgift: 'Gifted Subs',               // → subscription_gift
+		membership: 'Membership',             // → sponsorship
+		new_member: 'Membership',             // → sponsorship
+		new_membership: 'Membership',         // → sponsorship
+		newmember: 'Membership',              // → sponsorship
+		upgraded_membership: 'Resub',         // → resub
+		membership_upgrade: 'Resub',          // → resub
+		membership_milestone: 'Member Milestone' // → membermilestone
 	};
 
 	const STATUS_EVENT_TYPES = new Set(['viewer_update', 'follower_update', 'subscriber_update', 'view_update', 'likes_update']);
@@ -698,18 +698,18 @@ body.light-mode .meta-value.badge {
 		'giftredemption',
 		'subscription_gift',
 		'sponsorship',
-		// Legacy event names — older extension versions may still emit these
-		'gift_membership',
-		'giftmemberships',
-		'gifted_membership',
-		'gifted_memberships',
-		'subgift',
-		'membership_gift',
-		'community_gift'
+		// Deprecated — kept for backward compat with older extension versions
+		'gift_membership',     // → giftpurchase or giftredemption
+		'giftmemberships',     // → giftpurchase
+		'gifted_membership',   // → giftredemption
+		'gifted_memberships',  // → giftpurchase
+		'subgift',             // → subscription_gift
+		'membership_gift',     // → giftpurchase
+		'community_gift'       // → giftpurchase
 	]);
 	const NO_META_EVENT_TYPES = new Set([
 		'follow', 'new_follower', 'shared', 'share', 'share_live',
-		'followed' // Legacy TikTok event name
+		'followed' // Deprecated TikTok alias → new_follower
 	]);
 
 	function normalizeEventKey(event) {

@@ -1257,6 +1257,41 @@
                 </table>
             </section>
 
+            <section class="deprecated-events">
+                <h2>Deprecated Event Names</h2>
+                <p>The following event names were replaced during the event-naming unification. Sources no longer emit them, but downstream pages (dock, featured, events, leaderboard, multi-alerts) still accept them for backward compatibility with older extension versions. <strong>Do not use these in new code.</strong></p>
+                <table class="field-table">
+                    <thead>
+                        <tr>
+                            <th>Deprecated Name</th>
+                            <th>Canonical Replacement</th>
+                            <th>Context</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>subscription</code></td><td><code>new_subscriber</code></td><td>Twitch/Kick new sub</td></tr>
+                        <tr><td><code>subgift</code></td><td><code>subscription_gift</code></td><td>Twitch gifted sub</td></tr>
+                        <tr><td><code>membership</code></td><td><code>sponsorship</code></td><td>YouTube new member (generic)</td></tr>
+                        <tr><td><code>new_member</code></td><td><code>sponsorship</code></td><td>YouTube new member</td></tr>
+                        <tr><td><code>new_membership</code></td><td><code>sponsorship</code></td><td>YouTube new member</td></tr>
+                        <tr><td><code>newmember</code></td><td><code>sponsorship</code></td><td>YouTube new member</td></tr>
+                        <tr><td><code>new-membership</code></td><td><code>sponsorship</code></td><td>YouTube DOM scraper (hyphenated variant)</td></tr>
+                        <tr><td><code>upgraded_membership</code></td><td><code>resub</code></td><td>YouTube tier upgrade</td></tr>
+                        <tr><td><code>upgraded-membership</code></td><td><code>resub</code></td><td>YouTube DOM scraper (hyphenated variant)</td></tr>
+                        <tr><td><code>membership_upgrade</code></td><td><code>resub</code></td><td>YouTube tier upgrade</td></tr>
+                        <tr><td><code>membership_milestone</code></td><td><code>membermilestone</code></td><td>YouTube milestone chat</td></tr>
+                        <tr><td><code>member_milestone</code></td><td><code>membermilestone</code></td><td>YouTube milestone chat (underscore variant)</td></tr>
+                        <tr><td><code>gift_membership</code></td><td><code>giftpurchase</code></td><td>YouTube gift bundle</td></tr>
+                        <tr><td><code>membership_gift</code></td><td><code>giftpurchase</code></td><td>YouTube gift bundle</td></tr>
+                        <tr><td><code>giftmemberships</code></td><td><code>giftpurchase</code></td><td>YouTube gift bundle (plural variant)</td></tr>
+                        <tr><td><code>gifted_membership</code></td><td><code>giftredemption</code></td><td>YouTube gift received</td></tr>
+                        <tr><td><code>gifted_memberships</code></td><td><code>giftpurchase</code></td><td>YouTube gift bundle (plural variant)</td></tr>
+                        <tr><td><code>community_gift</code></td><td><code>giftpurchase</code></td><td>Community gift bundle</td></tr>
+                        <tr><td><code>followed</code></td><td><code>new_follower</code></td><td>TikTok follow event</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
             <section class="usage-notes">
                 <h2>Using This Reference</h2>
                 <ul>
