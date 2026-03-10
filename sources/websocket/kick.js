@@ -56,13 +56,13 @@ function applyKickCoreFallbacks() {
                 return 'message';
             }
             if (lower.includes('gift')) {
-                return 'gift';
+                return 'subscription_gift';
             }
             if (lower.includes('tip') || lower.includes('donation')) {
                 return 'donation';
             }
             if (lower.includes('sub')) {
-                return 'subscription';
+                return 'new_subscriber';
             }
             if (lower.includes('ban') || lower.includes('moderation')) {
                 return 'moderation';
@@ -5416,7 +5416,7 @@ function mapKickChatEventToSocialStream(rawType, plainMessage = '', donationLabe
         return 'reward';
     }
     if (/gift/.test(typeLower)) {
-        return 'gift';
+        return 'subscription_gift';
     }
 
     // Chat payloads should not leak Kick-native type names as `data.event`.
@@ -5434,7 +5434,7 @@ function mapKickChatEventToSocialStream(rawType, plainMessage = '', donationLabe
 
     // Keep donation parsing compatible with legacy payload expectations.
     if (donationLabel && /donat|tip|support|kick/.test(typeLower)) {
-        return 'gift';
+        return 'donation';
     }
 
     // Legacy DOM source emits `true` for generic non-chat system notices.
