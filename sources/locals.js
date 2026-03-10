@@ -140,6 +140,130 @@ function toDataURL(url, callback) {
 		}
 	}
 
+	function isLikelyMemberProfileHref(href){
+		try {
+			href = (href || "").trim();
+			if (!href){return false;}
+			return /(?:^\/member\/|https?:\/\/[^/]*locals\.com\/member\/|[?&]username=)/i.test(href);
+		} catch(e){
+			return false;
+		}
+	}
+
+	function closestMemberProfileLink(node){
+		try {
+			let probe = node;
+			while (probe && probe.nodeType === 1){
+				if ((probe.tagName || "").toUpperCase() === "A"){
+					let href = probe.getAttribute("href") || probe.href || "";
+					if (isLikelyMemberProfileHref(href)){
+						return probe;
+					}
+				}
+				probe = probe.parentElement;
+			}
+		} catch(e){}
+		return null;
+	}
+
+	function findMemberProfileLinks(root){
+		try {
+			if (!root || !root.querySelectorAll){return [];}
+			return Array.from(root.querySelectorAll("a[href]")).filter(link=>{
+				let href = "";
+				try {
+					href = link.getAttribute("href") || link.href || "";
+				} catch(e){}
+				return isLikelyMemberProfileHref(href);
+			});
+		} catch(e){}
+		return [];
+	}
+
+	function findFirstMemberProfileLink(root){
+		try {
+			let links = findMemberProfileLinks(root);
+			return links.length ? links[0] : null;
+		} catch(e){}
+		return null;
+	}
+
+	function extractUsernameFromLink(link){
+		try {
+			if (!link){return "";}
+			let text = (link.textContent || "").replace(/\s+/g, " ").trim();
+			let textHandle = text.match(/@([A-Za-z0-9_.-]+)/);
+			if (textHandle && textHandle[1]){
+				return textHandle[1].trim();
+			}
+			let href = link.getAttribute("href") || link.href || "";
+			let match = href.match(/\/member\/([^/?#]+)/i);
+			if (match && match[1]){
+				return decodeURIComponent(match[1]).trim();
+			}
+			let legacyMatch = href.match(/[?&]username=([^&#]+)/i);
+			if (legacyMatch && legacyMatch[1]){
+				return decodeURIComponent(legacyMatch[1]).trim();
+			}
+		} catch(e){}
+		return "";
+	}
+
+	function isClockTimestampText(text){
+		try {
+			text = (text || "").replace(/\s+/g, " ").trim();
+			if (!text){return false;}
+			return /^\d{1,2}:\d{2}(?::\d{2})?\s*(AM|PM)?$/i.test(text);
+		} catch(e){
+			return false;
+		}
+	}
+
+	function getMessageContentRoot(ele){
+		try {
+			if (!ele || !ele.children || !ele.children.length){return ele;}
+			for (let i=0; i<ele.children.length; i++){
+				let child = ele.children[i];
+				if (!child || (child.tagName || "").toUpperCase() !== "DIV"){continue;}
+				if (findFirstMemberProfileLink(child)){return child;}
+				if (child.querySelector && child.querySelector(".msg-text, .message-attachments, img[src]")){
+					return child;
+				}
+			}
+		} catch(e){}
+		return ele;
+	}
+
+	function findReplyPreviewRoot(root){
+		try {
+			if (!root || !root.querySelectorAll){return null;}
+			let probeNodes = Array.from(root.querySelectorAll("div, p, span")).reverse();
+			for (let i=0; i<probeNodes.length; i++){
+				let node = probeNodes[i];
+				let text = (node.textContent || "").replace(/\s+/g, " ").trim();
+				if (/^replying to\b/i.test(text)){
+					return node;
+				}
+			}
+		} catch(e){}
+		return null;
+	}
+
+	function isLikelyMessageRow(ele){
+		try {
+			if (!ele || ele.nodeType !== 1){return false;}
+			let directId = (ele.id || "").trim();
+			if (/^chat-message-/i.test(directId)){return true;}
+			let messageId = (ele.getAttribute("data-message-id") || ele.getAttribute("data-chat-message-id") || "").trim();
+			if (messageId){return true;}
+			let uuid = (ele.getAttribute("data-uuid") || "").trim();
+			let senderUuid = (ele.getAttribute("data-sender-unique-id") || "").trim();
+			let userUuid = (ele.getAttribute("data-user-uuid") || "").trim();
+			if (uuid && (senderUuid || userUuid)){return true;}
+		} catch(e){}
+		return false;
+	}
+
 	function extractLastUsefulText(root){
 		try {
 			if (!root || !root.querySelectorAll){return "";}
@@ -150,11 +274,13 @@ function toDataURL(url, callback) {
 				if (!node || (node.children && node.children.length)){continue;}
 				let tag = (node.tagName || "").toUpperCase();
 				if (tag === "TIME" || tag === "BUTTON" || tag === "SVG" || tag === "PATH" || tag === "IMG"){continue;}
-				if (node.closest && node.closest("button, a[href*='username=']")){continue;}
+				if ((node.closest && node.closest("button")) || closestMemberProfileLink(node)){continue;}
 				let text = (node.textContent || "").replace(/\s+/g, " ").trim();
 				if (!text){continue;}
 				if (/^(this minute|\d+\s+(seconds?|minutes?|hours?|days?)\s+ago)$/i.test(text)){continue;}
+				if (isClockTimestampText(text)){continue;}
 				if (text.charAt(0) === "@" && text.length <= 80){continue;}
+				if (/^replying to\b/i.test(text)){continue;}
 				last = text;
 			}
 			return last;
@@ -174,7 +300,6 @@ function toDataURL(url, callback) {
 				let src = img.src;
 				if (isLikelyUserAvatarSrc(src)){return;}
 				if (/\/images\/answers\//i.test(src)){return;}
-				if (img.closest && img.closest("a[href*='username=']")){return;}
 				let isLikelyBadge = isLikelyBadgeSrc(src) || /supporter|member|subscriber|moderator|admin/i.test(alt);
 				if (!isLikelyBadge){return;}
 				if (!badges.includes(src)){
@@ -201,8 +326,31 @@ function toDataURL(url, callback) {
 		let donationText = "";
 		let donationValue = "";
 		try {
+			let textNodes = ele.querySelectorAll("div, span, p");
+			for (let i=0; i<textNodes.length; i++){
+				let node = textNodes[i];
+				let text = (node.textContent || "").replace(/\s+/g, " ").trim();
+				if (!text){continue;}
+				let match = text.match(/sent a\s+(.+?)\s+tip!?$/i);
+				if (!match || !match[1]){continue;}
+				donationText = match[1].trim();
+				break;
+			}
+		} catch(e){}
+
+		if (!donationText){
+			try {
+				let rowText = (ele.textContent || "").replace(/\s+/g, " ").trim();
+				let rowMatch = rowText.match(/sent a\s+(.+?)\s+tip!?/i);
+				if (rowMatch && rowMatch[1]){
+					donationText = rowMatch[1].trim();
+				}
+			} catch(e){}
+		}
+
+		try {
 			var donationPath = ele.querySelector("svg path[d^='M1.36193 6.26802']");
-			if (donationPath){
+			if (!donationText && donationPath){
 				var donationSvg = donationPath.closest("svg");
 				var donationSpan = "";
 				if (donationSvg && donationSvg.nextElementSibling){
@@ -237,52 +385,34 @@ function toDataURL(url, callback) {
 
 	function extractReplyMeta(ele){
 		try {
-			let replyCard = null;
-			let replyIcon = ele.querySelector("svg path[d^='M5.921 11.9']");
-			if (replyIcon){
-				let probe = replyIcon.parentElement;
-				while (probe && probe !== ele){
-					let hasProfile = !!probe.querySelector("a[href*='username=']");
-					let hasTimestamp = !!probe.querySelector("time[datetime]");
-					if (hasProfile && hasTimestamp){
-						replyCard = probe;
-						break;
-					}
-					probe = probe.parentElement;
-				}
-			}
+			let contentRoot = getMessageContentRoot(ele);
+			let replyCard = findReplyPreviewRoot(contentRoot);
 			if (!replyCard){return null;}
 
 			let replyUser = "";
 			try {
-				let replyUserNode = replyCard.querySelector("a[href*='username=']");
-				if (replyUserNode && replyUserNode.textContent){
-					replyUser = replyUserNode.textContent.replace(/^@/, "").trim();
-				}
-				if (!replyUser && replyUserNode && replyUserNode.href){
-					replyUser = replyUserNode.href.split("username=").pop().split("&")[0].trim();
+				replyUser = extractUsernameFromLink(findFirstMemberProfileLink(replyCard));
+				if (!replyUser){
+					let replyMatch = ((replyCard.textContent || "").replace(/\s+/g, " ").trim()).match(/Replying to\s+@?([A-Za-z0-9_.-]+)/i);
+					if (replyMatch && replyMatch[1]){
+						replyUser = replyMatch[1].trim();
+					}
 				}
 			} catch(e){}
 
 			let replyText = "";
 			try {
-				replyText = extractLastUsefulText(replyCard);
+				replyText = extractLastUsefulText(replyCard.parentElement || replyCard);
 			} catch(e){}
 
 			let replyImage = "";
 			try {
-				let replyStyleImage = replyCard.querySelector("[style*='background-image']");
-				if (replyStyleImage && replyStyleImage.getAttribute("style")){
-					let styleValue = replyStyleImage.getAttribute("style");
-					let match = styleValue.match(/background-image:\s*url\((['"]?)(.*?)\1\)/i);
-					if (match && match[2]){
-						replyImage = match[2].trim();
-					}
-				}
-				if (!replyImage){
-					let replyImageNode = replyCard.querySelector("img[src]");
+				let replyImages = replyCard.querySelectorAll("img[src]");
+				for (let i=0; i<replyImages.length; i++){
+					let replyImageNode = replyImages[i];
 					if (replyImageNode && replyImageNode.src && !isLikelyUserAvatarSrc(replyImageNode.src) && !isLikelyBadgeSrc(replyImageNode.src)){
 						replyImage = replyImageNode.src;
+						break;
 					}
 				}
 			} catch(e){}
@@ -310,6 +440,8 @@ function toDataURL(url, callback) {
 		} catch(e){}
 
 		try {
+			let contentRoot = getMessageContentRoot(ele);
+			let replyPreviewRoot = findReplyPreviewRoot(contentRoot);
 			let donationContainer = null;
 			try {
 				let donPath = ele.querySelector("svg path[d^='M1.36193 6.26802']");
@@ -321,28 +453,20 @@ function toDataURL(url, callback) {
 				}
 			} catch(e){}
 
-			let leaves = ele.querySelectorAll("*");
+			let leaves = contentRoot.querySelectorAll("*");
 			let bestNode = null;
 			for (let i=0; i<leaves.length; i++){
 				let candidate = leaves[i];
 				if (!candidate || (candidate.children && candidate.children.length)){continue;}
 				let tag = (candidate.tagName || "").toUpperCase();
 				if (tag === "TIME" || tag === "BUTTON" || tag === "SVG" || tag === "PATH" || tag === "IMG"){continue;}
-				if (candidate.closest && candidate.closest("button, a[href*='username=']")){continue;}
+				if ((candidate.closest && candidate.closest("button")) || closestMemberProfileLink(candidate)){continue;}
+				if (replyPreviewRoot && replyPreviewRoot.contains(candidate)){continue;}
 				let text = (candidate.textContent || "").replace(/\s+/g, " ").trim();
 				if (!text){continue;}
 				if (/^(this minute|\d+\s+(seconds?|minutes?|hours?|days?)\s+ago)$/i.test(text)){continue;}
+				if (isClockTimestampText(text)){continue;}
 				if (text.charAt(0) === "@" && text.length <= 80){continue;}
-				let inReplySnippet = false;
-				let probe = candidate.parentElement;
-				while (probe && probe !== ele){
-					if (probe.querySelector && probe.querySelector("svg path[d^='M5.921 11.9']") && probe.querySelector("time[datetime]") && probe.querySelector("a[href*='username=']")){
-						inReplySnippet = true;
-						break;
-					}
-					probe = probe.parentElement;
-				}
-				if (inReplySnippet){continue;}
 				if (donationContainer && donationContainer.contains(candidate)){continue;}
 				bestNode = candidate;
 			}
@@ -354,13 +478,16 @@ function toDataURL(url, callback) {
 	function extractContentImage(ele){
 		var firstCandidate = "";
 		try {
-			let images = ele.querySelectorAll("img[src]");
+			let contentRoot = getMessageContentRoot(ele);
+			let replyPreviewRoot = findReplyPreviewRoot(contentRoot);
+			let images = contentRoot.querySelectorAll("img[src]");
 			for (let i=0; i<images.length; i++){
 				let img = images[i];
 				if (!img || !img.src){continue;}
 				if (isLikelyUserAvatarSrc(img.src)){continue;}
 				if (isLikelyBadgeSrc(img.src)){continue;}
-				if (img.closest && img.closest("a[href*='username=']")){continue;}
+				if (closestMemberProfileLink(img)){continue;}
+				if (replyPreviewRoot && replyPreviewRoot.contains(img)){continue;}
 				let altText = (img.alt || "").toLowerCase();
 				if (/\/images\/answers\//i.test(img.src)){
 					return img.src;
@@ -417,6 +544,43 @@ function toDataURL(url, callback) {
 					}
 				}
 			}
+
+			let liveChatBlock = document.querySelector("#live-chat-block");
+			if (liveChatBlock){
+				let explicitViewerNodes = liveChatBlock.querySelectorAll(".pcountusers__num, .pcountusers, [class*='countusers'] [class*='num'], [class*='countusers']");
+				for (let i=0; i<explicitViewerNodes.length; i++){
+					let explicitNode = explicitViewerNodes[i];
+					if (!explicitNode || !explicitNode.textContent){continue;}
+					let explicitCount = parseCountText(explicitNode.textContent);
+					if (explicitCount !== null){
+						return explicitCount;
+					}
+				}
+
+				let headerRoots = [];
+				let child = liveChatBlock.firstElementChild;
+				while (child){
+					if (child.id === "chat-window"){break;}
+					headerRoots.push(child);
+					child = child.nextElementSibling;
+				}
+				if (!headerRoots.length){
+					headerRoots.push(liveChatBlock);
+				}
+				for (let i=0; i<headerRoots.length; i++){
+					let nodes = headerRoots[i].querySelectorAll("span, div");
+					for (let j=0; j<nodes.length; j++){
+						let node = nodes[j];
+						if (!node || !node.textContent){continue;}
+						let raw = node.textContent.replace(/\s+/g, " ").trim();
+						if (!raw || raw.length > 10){continue;}
+						let parsed = parseCountText(raw);
+						if (parsed !== null){
+							return parsed;
+						}
+					}
+				}
+			}
 		} catch(e){}
 		return null;
 	}
@@ -453,6 +617,8 @@ function toDataURL(url, callback) {
 	function getMessageRowId(ele){
 		try {
 			if (!ele || ele.nodeType !== 1){return "";}
+			let dataUuid = (ele.getAttribute("data-uuid") || "").trim();
+			if (dataUuid){return dataUuid;}
 			let directId = (ele.id || "").trim();
 			if (directId){return directId;}
 			let dataId = (ele.getAttribute("data-message-id") || ele.getAttribute("data-chat-message-id") || "").trim();
@@ -466,13 +632,22 @@ function toDataURL(url, callback) {
 		let rows = [];
 		try {
 			if (!root || !root.querySelectorAll){return rows;}
-			let selector = "div[id^='chat-message-'], [data-message-id], [data-chat-message-id]";
-			if (root.matches && root.matches(selector)){
+			let selector = "[data-uuid], div[id^='chat-message-'], [data-message-id], [data-chat-message-id]";
+			if (root.matches && root.matches(selector) && isLikelyMessageRow(root)){
 				rows.push(root);
 			}
 			let found = root.querySelectorAll(selector);
 			for (let i=0; i<found.length; i++){
-				rows.push(found[i]);
+				if (isLikelyMessageRow(found[i])){
+					rows.push(found[i]);
+				}
+			}
+			if (!rows.length && root.id === "chat-history" && root.children){
+				for (let i=0; i<root.children.length; i++){
+					if (isLikelyMessageRow(root.children[i])){
+						rows.push(root.children[i]);
+					}
+				}
 			}
 			rows = Array.from(new Set(rows));
 		} catch(e){}
@@ -524,14 +699,8 @@ function toDataURL(url, callback) {
 		
 		if (!name){
 			try {
-				var nameNode = ele.querySelector("a[href*='username=']");
-				if (nameNode && nameNode.textContent){
-					name = nameNode.textContent.trim();
-				}
-				if (!name){
-					name = nameNode.href.split("username=").pop();
-					
-				}
+				var nameNode = findFirstMemberProfileLink(getMessageContentRoot(ele));
+				name = extractUsernameFromLink(nameNode);
 			} catch(e){}
 		}
 		
@@ -592,7 +761,15 @@ function toDataURL(url, callback) {
 		if (!chatimg){
 			try {
 				let avatar = "";
-				let avatarFromProfile = ele.querySelector("a[href*='username='] img[src]");
+				let avatarFromProfile = null;
+				let profileLinks = findMemberProfileLinks(ele);
+				for (let i=0; i<profileLinks.length; i++){
+					let probe = profileLinks[i].querySelector("img[src]");
+					if (probe && probe.src){
+						avatarFromProfile = probe;
+						break;
+					}
+				}
 				if (avatarFromProfile && avatarFromProfile.src){
 					avatar = avatarFromProfile.src;
 				}
@@ -753,8 +930,39 @@ function toDataURL(url, callback) {
 		} catch(e){}
 	}
 
+	function bootstrapRecentMessages(chatContainer){
+		try {
+			if (!chatContainer || !chatContainer.querySelectorAll){return;}
+			let rows = getMessageRows(chatContainer);
+			if (!rows.length){return;}
+			let recentLimit = 15;
+			let startIndex = Math.max(0, rows.length - recentLimit);
+			for (let i=0; i<rows.length; i++){
+				let row = rows[i];
+				if (!row){continue;}
+				let rowId = getMessageRowId(row);
+				if (i < startIndex){
+					if (rowId){
+						rememberMessageId(rowId);
+					} else {
+						row.skip = true;
+					}
+					try { pendingMessageNodes.delete(row); } catch(e){}
+					try { messageRetryCounts.delete(row); } catch(e){}
+					continue;
+				}
+				scheduleProcessMessage(row, 100 + ((i - startIndex) * 25));
+			}
+		} catch(e){}
+	}
+
 	function resolveLiveChatSection(){
 		try {
+			let directLiveChat = document.querySelector("#live-chat-block");
+			if (directLiveChat && getMessageRows(directLiveChat).length){
+				return directLiveChat;
+			}
+
 			let headings = document.querySelectorAll("h1, h2, [role='heading']");
 			for (let i=0; i<headings.length; i++){
 				let heading = headings[i];
@@ -771,9 +979,9 @@ function toDataURL(url, callback) {
 				}
 			}
 
-			let row = document.querySelector("div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
+			let row = document.querySelector("[data-uuid], div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
 			if (row){
-				let section = row.closest("section, #chat-history, #chatscroller");
+				let section = row.closest("#chat-history, #chat-window, #live-chat-block, section, #chatscroller");
 				if (section){
 					return section;
 				}
@@ -792,14 +1000,14 @@ function toDataURL(url, callback) {
 				return liveChatSection;
 			}
 
-			let directContainer = document.querySelector("#chat-history, #chatscroller");
+			let directContainer = document.querySelector("#chat-history, #chat-window, #live-chat-block, #chatscroller");
 			if (directContainer){
 				return directContainer;
 			}
 
-			let row = document.querySelector("div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
+			let row = document.querySelector("[data-uuid], div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
 			if (row && row.parentElement){
-				let rowSection = row.closest("section");
+				let rowSection = row.closest("#chat-history, #chat-window, #live-chat-block, section");
 				return rowSection || row.parentElement;
 			}
 		} catch(e){}
@@ -832,8 +1040,13 @@ function toDataURL(url, callback) {
 			try{
 				if ("getSource" == request){sendResponse("locals");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('#chat-message-value').focus();
-					sendResponse(true);
+					let chatInput = document.querySelector("#chat-message-value, textarea, [contenteditable='true']");
+					if (chatInput && chatInput.focus){
+						chatInput.focus();
+						sendResponse(true);
+						return;
+					}
+					sendResponse(false);
 					return;
 				}
 				if (typeof request === "object"){
@@ -898,7 +1111,7 @@ function toDataURL(url, callback) {
 			return true;
 		}
 		try {
-			return !!document.querySelector("#chat-history, #chatscroller, div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
+			return !!document.querySelector("#live-chat-block, #chat-history, #chat-window, #chatscroller, [data-uuid], div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
 		} catch(e){}
 		return false;
 	}
@@ -923,18 +1136,18 @@ function toDataURL(url, callback) {
 		}
 
 		var chatContainer = resolveChatContainer();
-		if (chatContainer){
-			if (!chatContainer.marked){
-				chatContainer.marked=true;
-				chatContainer.bootstrapComplete = false;
-				setTimeout(function(){
-					var chatContainer = resolveChatContainer();
-					if (!chatContainer){return;}
-					markExistingMessagesAsSkipped(chatContainer);
-					onElementInserted(chatContainer);
-					chatContainer.bootstrapComplete = true;
-				},3000);
-			}
+			if (chatContainer){
+				if (!chatContainer.marked){
+					chatContainer.marked=true;
+					chatContainer.bootstrapComplete = false;
+					setTimeout(function(){
+						var chatContainer = resolveChatContainer();
+						if (!chatContainer){return;}
+						bootstrapRecentMessages(chatContainer);
+						onElementInserted(chatContainer);
+						chatContainer.bootstrapComplete = true;
+					},3000);
+				}
 			if (chatContainer.bootstrapComplete){
 				scanChatMessages(chatContainer);
 			}
