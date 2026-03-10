@@ -4683,7 +4683,7 @@
 				// &filterevents=joined,otherkeyword
 				filterEvents = urlParams.get("filterevents") || false;
 				if (filterEvents) {
-					filterEvents = filterEvents.split(",");
+					filterEvents = filterEvents.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
 				}
 			}
 
@@ -9568,9 +9568,10 @@
 						}
 					}
 
-					if (filterEvents && data.event && data.chatmessage) {
-						const messageText = data.textContent || data.chatmessage;
-						if (filterEvents.some(v => messageText.includes(v))) {
+					if (filterEvents && data.event) {
+						const eventName = typeof data.event === "string" ? data.event.trim().toLowerCase() : "";
+						const messageText = (data.textContent || data.chatmessage || "").toLowerCase();
+						if (filterEvents.some(v => (eventName && eventName === v) || (messageText && messageText.includes(v)))) {
 							return;
 						}
 					}

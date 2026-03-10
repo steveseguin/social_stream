@@ -141,6 +141,21 @@
     width: 150px;
 }
 
+.add-source-container select {
+    width: 190px;
+}
+
+.add-source-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.add-source-container button {
+    cursor: pointer;
+}
+
 .username-list-container {
 	max-height: 80px;
 	overflow-y: auto;
@@ -3249,6 +3264,10 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="hide-all-events">🧯 Hide all stream events </span>
                                 </div>
+                                <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
+                                    <input type="text" id="dockfilterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textparam1="filterevents" data-tag-presets="events" />
+                                    <label for="dockfilterevents"><span data-translate="hide-specific-events">&gt; Hide specific events</span> <a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">Event names</a></label>
+                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="firstnames" />
@@ -4933,7 +4952,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param2="hideevents" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-all-events">ðŸ§¯ Hide all stream events </span>
+                                    <span data-translate="hide-all-events">🧯 Hide all stream events </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5043,6 +5062,11 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="shorten-links-in-messages">🤏🔗 Shorten long links ... </span>
+                                </div>
+
+                                <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
+                                    <input type="text" id="featuredfilterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textparam2="filterevents" data-tag-presets="events" />
+                                    <label for="featuredfilterevents"><span data-translate="hide-specific-events">&gt; Hide specific events</span> <a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">Event names</a></label>
                                 </div>
 
                                 <div class="textInputContainer" style="display: inline-block; width: 250px;">
@@ -5945,9 +5969,9 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="filtereventstoggle" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; values that match a word in the event will be rejected. eg: joined,banned,gifted">
-                                        <input type="text" id="filterevents" class="textInput" autocomplete="off" placeholder="Text to match for.." data-textsetting="filterevents" />
-                                        <label for="filterevents"><span data-translate="hide-specific-events">&gt; Hide specific events</span></label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
+                                        <input type="text" id="filterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textsetting="filterevents" data-tag-presets="events" />
+                                        <label for="filterevents"><span data-translate="hide-specific-events">&gt; Hide specific events</span> <a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">Event names</a></label>
                                     </div>
                                 </div>
 								<div title="Remove links when sending messages to Tiktok from SocialStreamNinja">

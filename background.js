@@ -5353,9 +5353,11 @@ async function sendToDestinations(message) {
 			message.nameColor = adjustColorForOverlay(message.nameColor)
 		}
 
-		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.chatmessage && message.event) {
-			const messageText = message.textContent || message.chatmessage;
-			if (settings.filterevents.textsetting.split(",").some(v => (v.trim() && messageText.includes(v)))) {
+		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.event) {
+			const blockedEvents = settings.filterevents.textsetting.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
+			const eventName = typeof message.event === "string" ? message.event.trim().toLowerCase() : "";
+			const messageText = (message.textContent || message.chatmessage || "").toLowerCase();
+			if (blockedEvents.some(v => (eventName && eventName === v) || (messageText && messageText.includes(v)))) {
 				return false;
 			}
 		}

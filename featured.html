@@ -1460,8 +1460,7 @@
 				hideFrom = parseListParam(urlParams.get("hidefrom") || urlParams.get("exclude"));
 			}
 
-			var onlyEventTypes = parseListParam(urlParams.get("onlyeventtypes") || urlParams.get("eventtypesonly"));
-			var hideEventTypes = parseListParam(urlParams.get("hideeventtypes") || urlParams.get("excludeevents"));
+			var filterEvents = parseListParam(urlParams.get("filterevents"));
 
 			// beepwords is now handled by TTS.configure()
 			
@@ -2457,10 +2456,8 @@
 					if (hideEvents && rawEventType) {
 						return false;
 					}
-					if (hideEventTypes && contentEventType && hideEventTypes.includes(contentEventType)) {
-						return false;
-					}
-					if (onlyEventTypes && (!contentEventType || !onlyEventTypes.includes(contentEventType))) {
+					const eventMessageText = (data.contents.textContent || data.contents.chatmessage || "").toLowerCase();
+					if (filterEvents && rawEventType && filterEvents.some(v => (contentEventType && contentEventType === v) || (eventMessageText && eventMessageText.includes(v)))) {
 						return false;
 					}
 					

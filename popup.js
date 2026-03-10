@@ -1121,11 +1121,67 @@ function normalizeCommaValues(value) {
         .filter(item => item);
 }
 
-function updateCommaTagList(inputId) {
+const commaTagPresetOptions = {
+    events: [
+        { value: 'new_follower', label: 'new_follower - Follow' },
+        { value: 'new_subscriber', label: 'new_subscriber - New sub' },
+        { value: 'resub', label: 'resub - Renewal' },
+        { value: 'subscription_gift', label: 'subscription_gift - Gift subs' },
+        { value: 'cheer', label: 'cheer - Bits/Cheers' },
+        { value: 'donation', label: 'donation - Donation' },
+        { value: 'superchat', label: 'superchat - Super Chat' },
+        { value: 'supersticker', label: 'supersticker - Super Sticker' },
+        { value: 'membership', label: 'membership - YouTube member (streaming)' },
+        { value: 'membership_upgrade', label: 'membership_upgrade - YouTube upgrade (streaming)' },
+        { value: 'membership_milestone', label: 'membership_milestone - YouTube milestone (streaming)' },
+        { value: 'membership_gift', label: 'membership_gift - YouTube gift (streaming)' },
+        { value: 'membership_gift_received', label: 'membership_gift_received - YouTube received gift (streaming)' },
+        { value: 'membership_gift_redeemed', label: 'membership_gift_redeemed - YouTube redeemed gift (streaming)' },
+        { value: 'membership_reward_redeemed', label: 'membership_reward_redeemed - YouTube reward (streaming)' },
+        { value: 'membership_announcement', label: 'membership_announcement - YouTube announcement (streaming)' },
+        { value: 'membership_levels_updated', label: 'membership_levels_updated - YouTube levels updated (streaming)' },
+        { value: 'channel_points', label: 'channel_points - Channel points' },
+        { value: 'raid', label: 'raid - Raid' },
+        { value: 'stream_online', label: 'stream_online - Stream online' },
+        { value: 'stream_offline', label: 'stream_offline - Stream offline' },
+        { value: 'viewer_update', label: 'viewer_update - Viewer count' },
+        { value: 'follower_update', label: 'follower_update - Follower count' },
+        { value: 'subscriber_update', label: 'subscriber_update - Subscriber count' },
+        { value: 'sponsorship', label: 'sponsorship - Membership/Gift' },
+        { value: 'giftpurchase', label: 'giftpurchase - Gift purchase' },
+        { value: 'giftredemption', label: 'giftredemption - Gift redemption' },
+        { value: 'reward', label: 'reward - Reward/Event' },
+        { value: 'gift', label: 'gift - TikTok gift' },
+        { value: 'joined', label: 'joined - TikTok join' },
+        { value: 'followed', label: 'followed - TikTok follow' },
+        { value: 'liked', label: 'liked - TikTok like' }
+    ]
+};
+
+function getCommaTagInput(inputId) {
     let input = document.getElementById(inputId);
     if (!input) {
         input = document.querySelector(`[data-textsetting="${inputId}"]`);
     }
+    return input;
+}
+
+function refreshCommaTagInput(inputOrKey) {
+    if (!inputOrKey) {
+        return;
+    }
+    const input = typeof inputOrKey === 'string' ? getCommaTagInput(inputOrKey) : inputOrKey;
+    if (!input) {
+        return;
+    }
+    const inputId = input.id || input.dataset.textsetting;
+    if (inputId) {
+        updateCommaTagList(inputId);
+    }
+}
+
+function updateCommaTagList(inputId) {
+    const input = getCommaTagInput(inputId);
     const list = document.getElementById(`${inputId}List`);
     if (!input || !list) return;
 
@@ -1140,10 +1196,7 @@ function updateCommaTagList(inputId) {
 }
 
 function addCommaTagValue(inputId, value) {
-    let input = document.getElementById(inputId);
-    if (!input) {
-        input = document.querySelector(`[data-textsetting="${inputId}"]`);
-    }
+    const input = getCommaTagInput(inputId);
     if (!input || !value) return;
 
     const trimmedValue = value.trim();
@@ -1161,10 +1214,7 @@ function addCommaTagValue(inputId, value) {
 }
 
 function removeCommaTagValue(inputId, value) {
-    let input = document.getElementById(inputId);
-    if (!input) {
-        input = document.querySelector(`[data-textsetting="${inputId}"]`);
-    }
+    const input = getCommaTagInput(inputId);
     if (!input || !value) return;
 
     const values = normalizeCommaValues(input.value);
@@ -1175,10 +1225,7 @@ function removeCommaTagValue(inputId, value) {
 }
 
 function setupCommaTagInput(inputId) {
-    let input = document.getElementById(inputId);
-    if (!input) {
-        input = document.querySelector(`[data-textsetting="${inputId}"]`);
-    }
+    const input = getCommaTagInput(inputId);
     if (!input) return;
 
     const container = input.closest('.textInputContainer');
@@ -1199,9 +1246,18 @@ function setupCommaTagInput(inputId) {
 
     const addContainer = document.createElement('div');
     addContainer.className = 'add-source-container';
+    const presetOptions = commaTagPresetOptions[input.dataset.tagPresets] || [];
+    const presetMarkup = presetOptions.length ? `
+        <select id="preset${inputId}Tag">
+            <option value="" selected>Common events</option>
+            ${presetOptions.map(option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join('')}
+        </select>
+        <button id="addPreset${inputId}Tag">Add preset</button>
+    ` : '';
     addContainer.innerHTML = `
         <input type="text" id="new${inputId}Tag" placeholder="Add value">
         <button id="add${inputId}Tag">Add</button>
+        ${presetMarkup}
     `;
 
     container.parentNode.classList.add('isolate');
@@ -1228,6 +1284,15 @@ function setupCommaTagInput(inputId) {
                 addCommaTagValue(inputId, addInput.value);
                 addInput.value = '';
             }
+        });
+    }
+
+    const addPresetButton = addContainer.querySelector(`#addPreset${inputId}Tag`);
+    const presetSelect = addContainer.querySelector(`#preset${inputId}Tag`);
+    if (addPresetButton && presetSelect) {
+        addPresetButton.addEventListener('click', () => {
+            addCommaTagValue(inputId, presetSelect.value);
+            presetSelect.value = '';
         });
     }
 
@@ -1841,7 +1906,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 }
 
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
-const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents'];
+const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
 
@@ -2431,6 +2496,9 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 if (key === 'blockedwords') {
                     updateBlockedWordsList();
                 }
+                if (commaTagInputs.includes(ele.id) || commaTagInputs.includes(key)) {
+                    refreshCommaTagInput(ele.id || key);
+                }
             }
         }
 
@@ -2613,6 +2681,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 updateSourceTypeList(key);
             } else if (commaTagInputs.includes(key)) {
                 updateCommaTagList(key);
+            } else if (commaTagInputs.includes(ele.id)) {
+                refreshCommaTagInput(ele.id);
             }
         }
     }
@@ -2957,17 +3027,26 @@ function processParam(key, paramNum, settingObj, sync) {
 // Handle legacy settings format
 function processLegacySetting(key, value, sync) {
     // Process simple settings
-    var ele = document.querySelector(`input[data-setting='${key}'], input[data-param1='${key}'], input[data-param2='${key}']`);
+    var ele = document.querySelector(`input[data-setting='${key}']`);
+    if (!ele) {
+        ele = document.querySelector(`input[data-param1='${key}'], input[data-param2='${key}']`);
+    }
     if (ele) {
         ele.checked = value;
         updateSettings(ele, sync);
     }
     
     // Process text settings
-    var ele = document.querySelector(`input[data-textsetting='${key}'], input[data-textparam1='${key}'], textarea[data-textsetting='${key}'], textarea[data-textparam1='${key}']`);
+    ele = document.querySelector(`input[data-textsetting='${key}'], textarea[data-textsetting='${key}']`);
+    if (!ele) {
+        ele = document.querySelector(`input[data-textparam1='${key}'], textarea[data-textparam1='${key}']`);
+    }
     if (ele) {
         ele.value = value;
         updateSettings(ele, sync);
+        if (commaTagInputs.includes(ele.id) || commaTagInputs.includes(key)) {
+            refreshCommaTagInput(ele.id || key);
+        }
     }
 }
 

@@ -338,7 +338,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 
 | Parameter | Values | Description |
 |-----------|---------|-------------|
-| `filterevents` | comma-separated strings | List of event types to filter |
+| `filterevents` | comma-separated strings | Exact event names or text keywords to filter when `data.event` is present |
 | `trivialevents` | boolean | Allows background shading for minor events |
 | `showonlyevents` | boolean | Shows only stream events |
 | `hideallevents` | boolean | Hides all stream events |
