@@ -1435,11 +1435,11 @@
 		} else if (data.chatmessage.includes(" gifting ") && data.chatmessage.includes(" Sub")) {
 			data.event = "giftpurchase";
 		} else if (data.chatmessage.includes(" gifted ") && data.chatmessage.includes(" Sub")) {
-			data.event = "sponsorship";
+			data.event = "subscription_gift";
 		}
 
 		if (settings.limitedtwitchmemberchat) {
-			const isMembershipNotice = (data.event === "giftpurchase") || (data.event === "sponsorship") || isSubscriptionNoticeText(data.chatmessage);
+			const isMembershipNotice = (data.event === "giftpurchase") || (data.event === "subscription_gift") || isSubscriptionNoticeText(data.chatmessage);
 			if (isMembershipNotice) {
 				data.membership = getTranslation("subscriber", "SUBSCRIBER");
 			}

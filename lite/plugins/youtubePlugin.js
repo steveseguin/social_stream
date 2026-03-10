@@ -1051,7 +1051,7 @@ export class YoutubePlugin extends BasePlugin {
       chatmessage: sanitizedMessage,
       chatimg: author.profileImageUrl || '',
       timestamp,
-      hasDonation: Boolean(snippet.superChatDetails || snippet.superStickerDetails),
+      hasDonation: snippet.superChatDetails?.amountDisplayString || (snippet.superStickerDetails ? 'Super Sticker' : ''),
       donationAmount: snippet.superChatDetails?.amountDisplayString,
       donationCurrency: snippet.superChatDetails?.currency,
       isModerator: !!author.isChatModerator,
