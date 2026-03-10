@@ -720,26 +720,6 @@
 			position: absolute;
 		}
 
-		/* Auto-scroll for overflowing messages */
-		.hl-message.auto-scroll-container {
-			overflow: hidden;
-		}
-		.hl-message .auto-scroll-inner {
-			display: block;
-			animation: none;
-		}
-		.hl-message .auto-scroll-inner.scrolling {
-			animation: autoScrollUp var(--auto-scroll-duration, 8s) linear var(--auto-scroll-delay, 1.5s) infinite alternate;
-		}
-		@keyframes autoScrollUp {
-			0%, 10% {
-				transform: translateY(0);
-			}
-			90%, 100% {
-				transform: translateY(var(--auto-scroll-distance, 0px));
-			}
-		}
-
 		/* Keep donations/membership badges properly positioned */
 		.hl-c-cont.highlight-chat.stacked .donation,
 		.hl-c-cont.highlight-chat.stacked .membership {
@@ -1580,23 +1560,6 @@
 			if (urlParams.has("showtime")) {
 				timeoutDelay = parseInt(urlParams.get("showtime"));
 				if (isNaN(timeoutDelay)) { timeoutDelay = 20000; }
-			}
-
-			var autoScroll = false;
-			var autoScrollSpeed = 50; // pixels per second
-			var autoScrollDelay = 1.5; // seconds before scroll starts
-			if (urlParams.has("autoscroll")) {
-				autoScroll = true;
-				var scrollSpeedParam = parseInt(urlParams.get("autoscroll"));
-				if (!isNaN(scrollSpeedParam) && scrollSpeedParam > 0) {
-					autoScrollSpeed = scrollSpeedParam;
-				}
-			}
-			if (urlParams.has("autoscrolldelay")) {
-				var delayParam = parseFloat(urlParams.get("autoscrolldelay"));
-				if (!isNaN(delayParam) && delayParam >= 0) {
-					autoScrollDelay = delayParam;
-				}
 			}
 
 			var borderRadius = 0;
@@ -2618,44 +2581,6 @@
 				rotateTimer = setTimeout(rotateNext, rotateTime);
 			}
 
-			function applyAutoScroll(msgElement) {
-				if (!msgElement) return;
-				// Use requestAnimationFrame to ensure layout is complete
-				requestAnimationFrame(function() {
-					requestAnimationFrame(function() {
-						var maxHeight = msgElement.parentElement ? msgElement.parentElement.clientHeight : window.innerHeight;
-						// Set a max-height on the message container based on available space
-						if (!msgElement.style.maxHeight) {
-							var availableHeight = window.innerHeight - msgElement.getBoundingClientRect().top;
-							if (availableHeight > 50) {
-								msgElement.style.maxHeight = availableHeight + "px";
-							}
-						}
-
-						// Wrap existing content in a scrollable inner div
-						var inner = document.createElement('span');
-						inner.className = 'auto-scroll-inner';
-						while (msgElement.firstChild) {
-							inner.appendChild(msgElement.firstChild);
-						}
-						msgElement.appendChild(inner);
-						msgElement.classList.add('auto-scroll-container');
-
-						// Check if content overflows
-						var overflowAmount = inner.scrollHeight - msgElement.clientHeight;
-						if (overflowAmount > 5) {
-							var scrollDuration = overflowAmount / autoScrollSpeed;
-							if (scrollDuration < 2) scrollDuration = 2;
-
-							inner.style.setProperty('--auto-scroll-distance', '-' + overflowAmount + 'px');
-							inner.style.setProperty('--auto-scroll-duration', scrollDuration + 's');
-							inner.style.setProperty('--auto-scroll-delay', autoScrollDelay + 's');
-							inner.classList.add('scrolling');
-						}
-					});
-				});
-			}
-
 			function showmessage(contents) {
 			  try {
 				clearTimeout(timeoutTimer);
@@ -3148,17 +3073,6 @@
 					  } catch (e) {}
 					}
 					document.getElementById("output").classList.remove(transitionType);
-
-					// Auto-scroll long messages that overflow their container
-					if (autoScroll) {
-						var scrollTarget = document.getElementById("message");
-						if (!scrollTarget) {
-							// In stacking mode, find the last added message
-							var allMessages = document.querySelectorAll('.hl-message');
-							if (allMessages.length) scrollTarget = allMessages[allMessages.length - 1];
-						}
-						applyAutoScroll(scrollTarget);
-					}
 
 					// Handle TTS if enabled
 					if (TTS.speech) {
