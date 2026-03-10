@@ -43,7 +43,11 @@ const SUBSCRIPTION_EVENTS = new Set([
   'sponsorship',
   'giftpurchase',
   'giftredemption',
-  'membermilestone'
+  'membermilestone',
+  // Legacy event names — older extension versions may still emit these
+  'subscription', 'subgift', 'membership', 'new_member', 'new_membership',
+  'newmember', 'upgraded_membership', 'membership_upgrade', 'membership_milestone',
+  'member_milestone', 'gift_membership', 'membership_gift', 'community_gift'
 ]);
 const DONATION_EVENTS = new Set([
   'donation',

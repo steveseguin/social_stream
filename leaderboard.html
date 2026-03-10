@@ -895,23 +895,35 @@
             'giftpurchase',
             'giftredemption',
             'subscription_gift',
+            'sponsorship',
+            'reward',
+            'community_gift',
+            // Legacy event names — older extension versions may still emit these
             'gift_membership',
             'giftmemberships',
             'gifted_membership',
             'gifted_memberships',
-            'sponsorship',
-            'reward',
-            'community_gift'
+            'subgift',
+            'membership_gift'
         ]);
-        
+
         const MEMBERSHIP_EVENT_TYPES = new Set([
             'sponsorship',
             'membermilestone',
             'member_milestone',
             'new_subscriber',
-            'resub'
+            'resub',
+            // Legacy event names — older extension versions may still emit these
+            'subscription',
+            'membership',
+            'new_member',
+            'new_membership',
+            'newmember',
+            'upgraded_membership',
+            'membership_upgrade',
+            'membership_milestone'
         ]);
-        
+
         const CONTRIBUTION_EVENT_TYPES = new Set([
             'raid',
             'host',
@@ -931,7 +943,15 @@
             'membermilestone',
             'member_milestone',
             'new_subscriber',
-            'resub'
+            'resub',
+            // Legacy event names — older extension versions may still emit these
+            'subscription',
+            'subgift',
+            'membership',
+            'new_member',
+            'membership_gift',
+            'upgraded_membership',
+            'followed'
         ]);
         
         function normalizeEventType(event) {
