@@ -360,7 +360,7 @@ export function createTwitchChatClient(options = {}) {
       null
     );
     return {
-      id: resolveMessageId(channelName, userstate, eventType || 'subscription'),
+      id: resolveMessageId(channelName, userstate, eventType || 'new_subscriber'),
       platform: 'twitch',
       type: 'twitch',
       chatname: displayName,
@@ -368,7 +368,7 @@ export function createTwitchChatClient(options = {}) {
       chatimg: formatters.avatarUrl(twitchLogin || displayName),
       timestamp: Number(userstate?.['tmi-sent-ts'] || formatters.now()),
       hasDonation: false,
-      event: eventType || 'subscription',
+      event: eventType || 'new_subscriber',
       months: cumulative,
       methods: methods || null,
       raw: { channel: channelName, userstate, message }
@@ -384,14 +384,14 @@ export function createTwitchChatClient(options = {}) {
       : normalizeTwitchChannel(userstate?.username || userstate?.login || gifter);
     const summary = `${gifter} gifted a sub to ${recipient}!`;
     return {
-      id: resolveMessageId(channelName, userstate, 'subgift'),
+      id: resolveMessageId(channelName, userstate, 'subscription_gift'),
       platform: 'twitch',
       type: 'twitch',
       chatname: gifter,
       chatmessage: formatters.sanitize(summary),
       chatimg: anonymous ? '' : formatters.avatarUrl(gifterLogin || gifter),
       timestamp: Number(userstate?.['tmi-sent-ts'] || formatters.now()),
-      event: 'subgift',
+      event: 'subscription_gift',
       hasDonation: true,
       raw: { channel: channelName, recipient, userstate }
     };
@@ -548,7 +548,7 @@ export function createTwitchChatClient(options = {}) {
     bind('subscription', (chan, username, method, message, userstate) => {
       emitter.emit(
         EVENTS.MEMBERSHIP,
-        normalizeSubscription(channelName, username, method, message, userstate, 'subscription')
+        normalizeSubscription(channelName, username, method, message, userstate, 'new_subscriber')
       );
     });
 

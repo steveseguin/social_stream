@@ -1007,7 +1007,7 @@ export class KickPlugin extends BasePlugin {
         message.mod = true;
       }
 
-      if (event === 'gift') {
+      if (event === 'subscription_gift') {
         const gift = payload.gift || payload.meta?.gift;
         if (gift) {
           const summary = [gift.name || gift.title || 'Gift'];
@@ -1034,7 +1034,7 @@ export class KickPlugin extends BasePlugin {
           message.chatmessage = safeHtml(payload.meta.message);
         }
         message.previewText = htmlToText(message.chatmessage);
-      } else if (event === 'subscription') {
+      } else if (event === 'new_subscriber') {
         const tier = payload.meta?.tier || payload.subscription_tier;
         const textValue = tier ? `Subscribed (${tier})` : 'Subscribed';
         message.chatmessage = safeHtml(textValue);
@@ -1688,7 +1688,7 @@ export class KickPlugin extends BasePlugin {
     }
 
     if (eventName === 'App\\Events\\GiftPurchaseEvent' || eventName === 'App\\Events\\GiftedSubscriptionsEvent') {
-      if (data?.event === 'gift' || data?.gift || eventName.includes('Gifted')) {
+      if (data?.event === 'subscription_gift' || data?.gift || eventName.includes('Gifted')) {
         this.emitMessage(data);
       }
       return;
@@ -1702,7 +1702,7 @@ export class KickPlugin extends BasePlugin {
         chatmessage: data?.message || 'Subscribed',
         hasDonation: 'Subscribed',
         timestamp: Date.now(),
-        event: 'subscription'
+        event: 'new_subscriber'
       });
       return;
     }

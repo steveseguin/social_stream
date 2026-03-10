@@ -21,369 +21,251 @@ body {
     display: flex;
     height: 100vh;
     box-sizing: border-box;
-    font-family: system-ui, -apple-system, sans-serif;
-    background: #1a1a1a;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #121212;
     color: #e0e0e0;
-    position: relative;
 }
-.github-link {
-    position: fixed;
-    bottom: 15px;
-    right: 15px;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-.github-link:hover {
-    opacity: 1;
-}
-p {
-    display: inline-block;
-}
+
 .left-panel {
-    width: 50%;
+    width: 450px;
+    min-width: 450px;
     padding-right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
 }
+
 .right-panel {
-    width: 50%;
+    flex: 1;
     display: flex;
     flex-direction: column;
     height: 100%;
 }
+
 .controls {
-    margin-bottom: 20px;
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 12px;
 }
-.preview {
-    width: 100%;
-    max-height: calc(100vh - 300px);
-    object-fit: contain;
+
+.control-group {
+    background: #1e1e1e;
+    border: 1px solid #333;
     border-radius: 12px;
-    background: #2a2a2a;
-}
-#error {
-    color: #ff6b6b;
-    margin: 10px 0;
-}
-select, button, .api-key, .message-input {
-    background: #2a2a2a;
-    border: 1px solid #404040;
-    color: #e0e0e0;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-select:hover, button:hover {
-    background: #333;
-    border-color: #505050;
-}
-button {
-    cursor: pointer;
-    background: #404eed;
-    border: none;
-    font-weight: 500;
-}
-button:hover {
-    background: #5865f2;
-}
-#startButton {
-    background: #22c55e;
-    font-size: 16px;
-    padding: 10px 20px;
-    font-weight: 600;
-    animation: pulse 2s infinite;
-}
-#startButton:hover {
-    background: #16a34a;
-}
-#startButton {
-    background: #22c55e;
-    font-size: 16px;
-    padding: 10px 20px;
-    font-weight: 600;
-    animation: pulse 2s infinite;
-}
-#startButton[data-started="true"] {
-    background: #c5225e;
-}
-#startButton[data-started="true"]:hover {
-    background: #a3164a;
-}
-select:disabled, button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: #251f1f;
-}
-
-#realtime-device-notice {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 13px;
-    margin-top: 8px;
-    color: #a0a0a0;
-    text-align: center;
-}
-
-/* Optional: Add a subtle visual indicator of disabled selectors */
-select:disabled {
-    position: relative;
-}
-
-select:disabled::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.1);
-    pointer-events: none;
-}
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-.api-key.highlight {
-    border-color: #ff6b6b;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.3);
-}
-.api-key-container {
+    padding: 16px;
     display: flex;
-    flex-direction: row;
-    gap: 8px;
+    flex-direction: column;
+    gap: 12px;
 }
-.model-override {
-    width: 100%;
+
+.control-group-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
 }
-.diagnostics-panel {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid #404040;
-    border-radius: 8px;
-    padding: 8px 10px;
-    background: #232323;
-    font-size: 12px;
+
+summary.control-group-header {
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
 }
-.diagnostics-header {
-    color: #d0d0d0;
-    font-weight: 600;
-    margin-bottom: 6px;
+
+summary.control-group-header::before {
+    content: '\25B6';
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 9px;
+    transition: transform 0.15s ease;
 }
-.diagnostics-grid {
+
+details[open] > summary.control-group-header::before {
+    transform: rotate(90deg);
+}
+
+.control-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4px 10px;
-}
-.diagnostics-line {
-    display: flex;
-    gap: 6px;
-    min-width: 0;
-}
-.diagnostics-actions {
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.diagnostics-copy-button {
-    border: 1px solid #4a4a4a;
-    background: #2f2f2f;
-    color: #e0e0e0;
-    padding: 4px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-}
-.diagnostics-copy-button:hover {
-    background: #3a3a3a;
-}
-.diagnostics-copy-status {
-    color: #9aa0a6;
-    font-size: 11px;
-}
-.diag-label {
-    color: #8f8f8f;
-}
-.diag-value {
-    color: #d9d9d9;
-    overflow-wrap: anywhere;
-}
-.voice-preview-line {
-    margin-top: 6px;
-}
-.voice-preview {
-    display: inline-block;
-    min-height: 1.2em;
-    white-space: pre-wrap;
-}
-.api-key-info {
-    font-size: 13px;
-    color: #a0a0a0;
-	margin: auto;
-}
-.api-key-info a {
-    color: #5865f2;
-    text-decoration: none;
-}
-.api-key-info a:hover {
-    text-decoration: underline;
-}
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: #251f1f;
-}
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background: #2a2a2a;
-    border-radius: 12px;
-    overflow: hidden;
-}
-.responses {
-    flex-grow: 1;
-    padding: 16px;
-    background: #2a2a2a;
-    overflow-y: auto;
-    margin-bottom: 10px;
-}
-.input-container {
-    display: flex;
     gap: 10px;
-    padding: 16px;
-    background: #232323;
-    border-top: 1px solid #404040;
 }
-.message {
-    margin: 8px 0;
-    padding: 12px;
+
+select, button, .api-key, .message-input, textarea, .model-override {
+    background: #2a2a2a;
+    border: 1px solid #404040;
+    color: #e0e0e0;
+    padding: 10px 12px;
     border-radius: 8px;
-    line-height: 1.5;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
 }
-.user-message {
+
+#providerSelect {
     background: #404eed;
-    margin-left: 20px;
-    color: #fff;
-}
-.assistant-message {
-    background: #333;
-    margin-right: 20px;
-}
-.markdown-content {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-.markdown-content li {
-    margin-left: 20px;
-    margin-bottom: 5px;
-}
-.markdown-content code {
-    background: #232323;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: ui-monospace, monospace;
-    font-size: 0.9em;
-}
-.responses::-webkit-scrollbar {
-    width: 8px;
-}
-.responses::-webkit-scrollbar-track {
-    background: #232323;
-    border-radius: 4px;
-}
-.responses::-webkit-scrollbar-thumb {
-    background: #404040;
-    border-radius: 4px;
-}
-.responses::-webkit-scrollbar-thumb:hover {
-    background: #505050;
+    border-color: #5865f2;
+    font-weight: 600;
 }
 
-
-.mute-button:hover {
-    background: #333;
-    border-color: #505050;
+#startButton {
+    background: #22c55e;
+    font-size: 16px;
+    padding: 14px;
+    font-weight: 700;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
 }
 
-.mute-button.muted {
-    background: #c5225e;
-    border-color: #a3164a;
+#startButton:hover {
+    background: #16a34a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
 }
 
-.mute-button.muted:hover {
-    background: #a3164a;
+#startButton[data-started="true"] {
+    background: #ef4444;
+}
+
+#startButton[data-started="true"]:hover {
+    background: #dc2626;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 .mute-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    height: 35px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
 }
 
 .mute-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
     background: #2a2a2a;
-    border: 1px solid #404040;
-    color: #e0e0e0;
-    padding: 8px;
-    height: 35px;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.mute-icon {
-    width: 20px;
-    height: 20px;
-    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: auto;
+    height: 40px;
 }
 
-.mute-icon::before {
-    content: '';
-    position: absolute;
+.mute-button.muted {
+    background: #ef4444;
+    border-color: #dc2626;
+}
+
+.preview {
     width: 100%;
+    border-radius: 12px;
+    background: #000;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border: 1px solid #333;
+}
+
+.diagnostics-panel {
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 11px;
+}
+
+.diagnostics-header {
+    color: #666;
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.diagnostics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.diag-label { color: #555; }
+.diag-value { color: #aaa; }
+
+.chat-container {
+    background: #1e1e1e;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
     height: 100%;
-    background-size: contain;
-    background-repeat: no-repeat;
+    border: 1px solid #333;
+    overflow: hidden;
 }
 
-.mic-icon::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z'/%3E%3Cpath d='M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z'/%3E%3C/svg%3E");
+.responses {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.mic-icon.muted::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9l4.19 4.18L21 20.73 4.27 3z'/%3E%3C/svg%3E");
+.message {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 15px;
+    line-height: 1.5;
 }
 
-.speaker-icon::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E");
+.user-message {
+    align-self: flex-end;
+    background: #404eed;
+    color: white;
+    border-bottom-right-radius: 4px;
 }
 
-.speaker-icon.muted::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z'/%3E%3C/svg%3E");
+.assistant-message {
+    align-self: flex-start;
+    background: #2a2a2a;
+    color: #e0e0e0;
+    border-bottom-left-radius: 4px;
+    border: 1px solid #383838;
 }
 
-.video-icon::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'/%3E%3C/svg%3E");
+.input-container {
+    padding: 16px;
+    background: #181818;
+    border-top: 1px solid #333;
+    display: flex;
+    gap: 12px;
 }
 
-.video-icon.muted::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23e0e0e0' viewBox='0 0 24 24'%3E%3Cpath d='M21 6.5l-4 4V7c0-.55-.45-1-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2z'/%3E%3C/svg%3E");
+.message-input {
+    flex: 1;
+    background: #252525;
+}
+
+#sendButton {
+    width: auto;
+    padding: 0 24px;
+    background: #404eed;
+}
+
+.github-link {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 100;
+}
+
+#clearHistoryButton {
+    background: #333;
+    border: 1px solid #444;
+    font-size: 12px;
+    padding: 8px;
+    margin-top: 10px;
 }
 
 :root {
@@ -1039,7 +921,7 @@ button:disabled {
 	overflow: hidden;
 }
 #apiKey {
-	webkitTextSecurity:disc{	
+	-webkit-text-security: disc;
 }
 
 </style>
@@ -1047,32 +929,43 @@ button:disabled {
 <body>
     <div class="left-panel">
         <div class="controls">
-			<select id="videoSource"></select>
-			<select id="audioSource"></select>
-			<div class="mute-controls" style="display: flex; gap: 10px;">
-				<button id="muteMic" class="mute-button">
-					<div class="mute-icon mic-icon"></div>
-				</button>
-				<button id="muteAudio" class="mute-button">
-					<div class="mute-icon speaker-icon"></div>
-				</button>
-				<button id="muteVideo" class="mute-button">
-					<div class="mute-icon video-icon"></div>
-				</button>
+			<div class="control-group">
+				<div class="control-group-header">Media Devices</div>
+				<div class="control-row">
+					<select id="videoSource"></select>
+					<select id="audioSource"></select>
+				</div>
+				<div class="mute-controls">
+					<button id="muteMic" class="mute-button">
+						<div class="mute-icon mic-icon"></div>
+					</button>
+					<button id="muteAudio" class="mute-button">
+						<div class="mute-icon speaker-icon"></div>
+					</button>
+					<button id="muteVideo" class="mute-button">
+						<div class="mute-icon video-icon"></div>
+					</button>
+				</div>
 			</div>
-			<button id="startButton">Start and Connect</button>
-			<select id="responseType">
-				<option value="audio" selected>Audio Response</option>
-				<option value="text">Text Response</option>
-			</select>
-			<select id="voiceSelect" style="display: none;">
-				<option value="Aoede">Female Voice 1 (Aoede)</option>
-				<option value="Kore">Female Voice 2 (Kore)</option>
-				<option value="Puck">Male Voice 1 (Puck)</option>
-				<option value="Charon">Male Voice 2 (Charon)</option>
-				<option value="Fenrir">Male Voice 3 (Fenrir)</option>
-			</select>
-			<textarea placeholder="This is where you can specify an initial instruction prompt." id="systemPrompt" rows="4" style="width: 100%; background: #2a2a2a; color: #e0e0e0; border: 1px solid #404040; border-radius: 8px; padding: 8px; font-family: inherit;"></textarea>
+
+			<div class="control-group">
+				<div class="control-group-header">AI Provider Settings</div>
+				<div class="control-row">
+					<select id="responseType">
+						<option value="audio" selected>Audio Response</option>
+						<option value="text">Text Response</option>
+					</select>
+					<select id="voiceSelect" style="display: none;">
+						<option value="Puck">Puck (Conversational)</option>
+						<option value="Charon">Charon (Deep)</option>
+						<option value="Kore">Kore (Neutral)</option>
+						<option value="Fenrir">Fenrir (Warm)</option>
+						<option value="Aoede">Aoede (Bright)</option>
+						<option value="Leda">Leda (Soft)</option>
+						<option value="Orus">Orus (Composed)</option>
+						<option value="Zephyr">Zephyr (Light)</option>
+					</select>
+				</div>
 				<div class="api-key-container">
 					<input type="password" id="apiKey" placeholder="Enter Gemini API Key" size="15" class="api-key">
 					<div class="api-key-info" id="apikeyinfo">
@@ -1086,33 +979,42 @@ button:disabled {
 				<select id="customModelSelect" style="display:none; width:100%;"></select>
 				<div class="api-key-info" id="customEndpointInfo" style="display:none; width:100%;"></div>
 				<input type="text" id="modelOverride" placeholder="Optional model override" class="model-override">
-			<div id="connectionDiagnostics" class="diagnostics-panel">
-				<div class="diagnostics-header">Connection Diagnostics</div>
-				<div class="diagnostics-grid">
-					<div class="diagnostics-line"><span class="diag-label">Provider:</span><span id="diagProvider" class="diag-value">-</span></div>
-					<div class="diagnostics-line"><span class="diag-label">State:</span><span id="diagState" class="diag-value">idle</span></div>
-					<div class="diagnostics-line"><span class="diag-label">Model:</span><span id="diagModel" class="diag-value">-</span></div>
-					<div class="diagnostics-line"><span class="diag-label">Connected:</span><span id="diagConnected" class="diag-value">no</span></div>
-					<div class="diagnostics-line"><span class="diag-label">Last Event:</span><span id="diagEvent" class="diag-value">-</span></div>
-					<div class="diagnostics-line"><span class="diag-label">Updated:</span><span id="diagUpdated" class="diag-value">-</span></div>
-				</div>
-				<div class="diagnostics-line" style="margin-top:6px;"><span class="diag-label">Last Error:</span><span id="diagError" class="diag-value">-</span></div>
-				<div class="diagnostics-actions">
-					<button type="button" id="diagCopyButton" class="diagnostics-copy-button">Copy Diagnostics</button>
-					<span id="diagCopyStatus" class="diagnostics-copy-status" aria-live="polite"></span>
-				</div>
 			</div>
-			<div id="voiceDiagnostics" class="diagnostics-panel">
-				<div class="diagnostics-header">Voice Activity</div>
-				<div class="diagnostics-grid">
-					<div class="diagnostics-line"><span class="diag-label">Input Mode:</span><span id="voiceInputMode" class="diag-value">-</span></div>
-					<div class="diagnostics-line"><span class="diag-label">Input State:</span><span id="voiceInputState" class="diag-value">idle</span></div>
-					<div class="diagnostics-line"><span class="diag-label">Output State:</span><span id="voiceOutputState" class="diag-value">idle</span></div>
-					<div class="diagnostics-line"><span class="diag-label">Updated:</span><span id="voiceUpdated" class="diag-value">-</span></div>
-				</div>
-				<div class="diagnostics-line voice-preview-line"><span class="diag-label">Heard:</span><span id="voiceInputPreview" class="diag-value voice-preview">-</span></div>
-				<div class="diagnostics-line voice-preview-line"><span class="diag-label">Speaking:</span><span id="voiceOutputPreview" class="diag-value voice-preview">-</span></div>
+
+			<div class="control-group">
+				<div class="control-group-header">System Instructions</div>
+				<textarea placeholder="This is where you can specify an initial instruction prompt." id="systemPrompt" rows="4"></textarea>
 			</div>
+
+			<button id="startButton">Start and Connect</button>
+
+			<details class="control-group">
+				<summary class="control-group-header">Diagnostics</summary>
+				<div id="connectionDiagnostics" class="diagnostics-panel">
+					<div class="diagnostics-grid">
+						<div class="diagnostics-line"><span class="diag-label">Prov:</span><span id="diagProvider" class="diag-value">-</span></div>
+						<div class="diagnostics-line"><span class="diag-label">State:</span><span id="diagState" class="diag-value">idle</span></div>
+						<div class="diagnostics-line"><span class="diag-label">Model:</span><span id="diagModel" class="diag-value">-</span></div>
+						<div class="diagnostics-line"><span class="diag-label">Conn:</span><span id="diagConnected" class="diag-value">no</span></div>
+						<div class="diagnostics-line"><span class="diag-label">Event:</span><span id="diagEvent" class="diag-value">-</span></div>
+						<div class="diagnostics-line"><span class="diag-label">Time:</span><span id="diagUpdated" class="diag-value">-</span></div>
+					</div>
+					<div class="diagnostics-line" style="margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><span class="diag-label">Err:</span><span id="diagError" class="diag-value">-</span></div>
+					<div class="diagnostics-actions" style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+						<button type="button" id="diagCopyButton" style="padding:4px 8px; font-size:10px; width:auto;">Copy JSON</button>
+						<span id="diagCopyStatus" class="diagnostics-copy-status" style="font-size:10px;"></span>
+					</div>
+				</div>
+				<div id="voiceDiagnostics" class="diagnostics-panel" style="margin-top:8px;">
+					<div class="diagnostics-grid">
+						<div class="diagnostics-line"><span class="diag-label">In:</span><span id="voiceInputState" class="diag-value">idle</span></div>
+						<div class="diagnostics-line"><span class="diag-label">Out:</span><span id="voiceOutputState" class="diag-value">idle</span></div>
+						<div class="diagnostics-line" style="display:none;"><span id="voiceInputMode"></span><span id="voiceUpdated"></span></div>
+					</div>
+					<div class="diagnostics-line voice-preview-line" style="margin-top:4px;"><span class="diag-label">Heard:</span><span id="voiceInputPreview" class="diag-value voice-preview">-</span></div>
+					<div class="diagnostics-line voice-preview-line"><span class="diag-label">AI:</span><span id="voiceOutputPreview" class="diag-value voice-preview">-</span></div>
+				</div>
+			</details>
 		</div>
         <div id="error"></div>
         <video class="preview" id="preview" autoplay muted></video>
@@ -2058,14 +1960,24 @@ class LocalBrowserPublisher {
                 });
             }
             if (finalTranscript) {
-                this.finalTranscript = finalTranscript;
-                this.sendPrompt(finalTranscript, 'speech').catch((err) => {
-                    if (this.shouldSilencePromptError(err, 'speech')) {
-                        return;
+                if (typeof this.pendingSpeechTranscript === 'undefined') this.pendingSpeechTranscript = '';
+                this.pendingSpeechTranscript += (this.pendingSpeechTranscript ? ' ' : '') + finalTranscript;
+                
+                if (this.speechDebounceTimer) clearTimeout(this.speechDebounceTimer);
+                this.speechDebounceTimer = setTimeout(() => {
+                    const textToSend = this.pendingSpeechTranscript.trim();
+                    if (textToSend) {
+                        this.sendPrompt(textToSend, 'speech').catch((err) => {
+                            if (this.shouldSilencePromptError(err, 'speech')) {
+                                return;
+                            }
+                            console.error('Local speech prompt failed:', err);
+                            showError(`Failed to send speech prompt: ${err.message}`);
+                        });
                     }
-                    console.error('Local speech prompt failed:', err);
-                    showError(`Failed to send speech prompt: ${err.message}`);
-                });
+                    this.pendingSpeechTranscript = '';
+                }, 800);
+                
                 this.finalTranscript = '';
                 this.interimTranscript = '';
             }
@@ -2529,15 +2441,26 @@ class OpenAICompatiblePublisher {
                 });
             }
             if (finalTranscript) {
-                this.finalTranscript = finalTranscript;
-                this.sendPrompt(finalTranscript).catch((err) => {
-                    showError(`Failed to send speech prompt: ${err.message}`);
-                });
+                if (typeof this.pendingSpeechTranscript === 'undefined') this.pendingSpeechTranscript = '';
+                this.pendingSpeechTranscript += (this.pendingSpeechTranscript ? ' ' : '') + finalTranscript;
+                
+                if (this.speechDebounceTimer) clearTimeout(this.speechDebounceTimer);
+                this.speechDebounceTimer = setTimeout(() => {
+                    const textToSend = this.pendingSpeechTranscript.trim();
+                    if (textToSend) {
+                        this.sendPrompt(textToSend).catch((err) => {
+                            console.error('Speech prompt failed:', err);
+                            showError(`Failed to send speech prompt: ${err.message}`);
+                        });
+                    }
+                    this.pendingSpeechTranscript = '';
+                }, 800);
+                
                 this.finalTranscript = '';
                 this.interimTranscript = '';
             }
             if (interimTranscript || finalTranscript) {
-                avatar.setEmotion('listening', true);
+                avatar.setEmotion('listening', false);
                 clearTimeout(this.recognitionTimeout);
                 this.recognitionTimeout = setTimeout(() => {
                     if (!this.interimTranscript) {
@@ -2567,7 +2490,11 @@ class OpenAICompatiblePublisher {
         if (this.stopped || !this.recognition || micMuted) return;
         setTimeout(() => {
             if (!this.isRecognizing && !this.stopped && !micMuted) {
-                this.recognition.start();
+                try {
+                    this.recognition.start();
+                } catch (_e) {
+                    // Already started — ignore race condition
+                }
             }
         }, 300);
     }
@@ -3053,13 +2980,18 @@ class RealtimePublisher {
             }
             this.interimTranscript = interimTranscript;
             if (finalTranscript) {
-                this.finalTranscript = finalTranscript;
-                console.log('Final transcript:', finalTranscript);
-                updateVoiceTelemetry({
-                    inputState: 'Sending transcript',
-                    inputPreview: finalTranscript
-                });
-                this.sendPrompt(finalTranscript);
+                if (typeof this.pendingSpeechTranscript === 'undefined') this.pendingSpeechTranscript = '';
+                this.pendingSpeechTranscript += (this.pendingSpeechTranscript ? ' ' : '') + finalTranscript;
+                
+                if (this.speechDebounceTimer) clearTimeout(this.speechDebounceTimer);
+                this.speechDebounceTimer = setTimeout(() => {
+                    const textToSend = this.pendingSpeechTranscript.trim();
+                    if (textToSend) {
+                        this.sendPrompt(textToSend);
+                    }
+                    this.pendingSpeechTranscript = '';
+                }, 800);
+                
                 this.finalTranscript = '';
                 this.interimTranscript = '';
             } else if (interimTranscript) {
@@ -3069,7 +3001,7 @@ class RealtimePublisher {
                 });
             }
             if (interimTranscript || finalTranscript) {
-                avatar.setEmotion('listening', true);
+                avatar.setEmotion('listening', false);
                 clearTimeout(this.recognitionTimeout);
                 this.recognitionTimeout = setTimeout(() => {
                     if (!this.interimTranscript) {
@@ -3112,16 +3044,15 @@ class RealtimePublisher {
     }
     restartRecognition() {
         if (this.stopped || !this.recognition || micMuted) return;
-        try {
-            setTimeout(() => {
-                if (!this.isRecognizing && !this.stopped && !micMuted) {
-                    console.log('Restarting speech recognition...');
+        setTimeout(() => {
+            if (!this.isRecognizing && !this.stopped && !micMuted) {
+                try {
                     this.recognition.start();
+                } catch (_e) {
+                    // Already started — ignore race condition
                 }
-            }, 300);
-        } catch (err) {
-            console.error('Failed to restart speech recognition:', err);
-        }
+            }
+        }, 300);
     }
     sendPrompt(text) {
         if (!this.isConnected()) {
@@ -3271,7 +3202,7 @@ class GoogleLivePublisher {
         this.videoProcessor = null;
         this.canvasContext = null;
         this.lastImageTime = 0;
-        this.imageInterval = 200;
+        this.imageInterval = 1000;
         this.imageWidth = 640;
         this.imageHeight = 360;
         this.handleMessage = this.handleMessage.bind(this);
@@ -3503,25 +3434,19 @@ class GoogleLivePublisher {
                 
                 parts.forEach(part => {
                     if (part.text) {
-                        console.log('Model response:', part.text);
-                        modelTextResponse += part.text; // Accumulate text
-                        
-                        const event = new CustomEvent('modelResponse', {
-                            detail: {
-                                text: part.text
-                            }
-                        });
-                        window.dispatchEvent(event);
+                        modelTextResponse += part.text;
+
+                        window.dispatchEvent(new CustomEvent('modelResponse', {
+                            detail: { text: part.text }
+                        }));
                     }
                     if (part.inlineData && part.inlineData.mimeType.startsWith('audio/')) {
                         hasAudioParts = true;
-                        console.log('Received audio response with mime type:', part.inlineData.mimeType);
                         try {
                             const rateMatch = part.inlineData.mimeType.match(/rate=(\d+)/);
                             const sampleRate = rateMatch ? parseInt(rateMatch[1]) : 24000;
                             this.audioPlayer.resume();
                             const audioData = base64ToArrayBuffer(part.inlineData.data);
-                            console.log('Processing audio chunk of size:', audioData.byteLength);
                             this.audioPlayer.addPCM16(new Uint8Array(audioData));
                         } catch (err) {
                             console.error('Error processing audio:', err);
@@ -3535,8 +3460,13 @@ class GoogleLivePublisher {
                 }
                 
                 // After processing all parts, add to history if response is complete
-                if (modelTextResponse && response.serverContent.turnComplete) {
-                    this.addAssistantMessage(modelTextResponse);
+                if (response.serverContent.turnComplete) {
+                    if (modelTextResponse) {
+                        this.addAssistantMessage(modelTextResponse);
+                    }
+                    if (messageFormatter && !messageFormatter.messageComplete) {
+                        messageFormatter.finalizeMessage();
+                    }
                     updateDiagnostics({
                         state: 'connected',
                         connected: 'yes',
@@ -3609,7 +3539,7 @@ class GoogleLivePublisher {
                     turnComplete: true
                 }
             };
-            console.log('Sending prompt:', message);
+            console.log('Sending prompt');
             this.ws.send(JSON.stringify(message));
             updateDiagnostics({
                 state: 'connected',
@@ -3780,10 +3710,10 @@ class GoogleLivePublisher {
 					this.attemptReconnect();
 					errorMsg += ' Attempting to reconnect...';
 				}
-			} else if (event.code === 1011 || 
-				 (event.reason && event.reason.includes('quota') || 
-				  event.reason.includes('resource_exhausted') || 
-				  event.reason.includes('exceeded'))) {
+			} else if (event.code === 1011 ||
+				 (event.reason && (event.reason.includes('quota') ||
+				  event.reason.includes('resource_exhausted') ||
+				  event.reason.includes('exceeded')))) {
 				
 				// Show error message
 				showError('API quota exceeded. Please try again manually.');
@@ -3858,7 +3788,7 @@ class GoogleLivePublisher {
                         }
                     }
                 };
-                console.log('Sending setup message:', setupMessage);
+                console.log('Sending setup message');
                 this.ws.send(JSON.stringify(setupMessage));
                 updateDiagnostics({
                     state: 'connected',
@@ -4108,29 +4038,9 @@ class GoogleLivePublisher {
 	stop() {
 		this.stopped = true;
 		this.clearAllTimers();
-		if (this.ws) {
-			this.ws.close();
-			this.ws = null;
-		}
 		this._reconnectPromise = null;
-		if (this.reconnectTimeout) {
-			clearTimeout(this.reconnectTimeout);
-			this.reconnectTimeout = null;
-		}
-		if (this.pingInterval) {
-			clearInterval(this.pingInterval);
-			this.pingInterval = null;
-		}
-		if (this.connectionWatchdog) {
-			clearInterval(this.connectionWatchdog);
-			this.connectionWatchdog = null;
-		}
-		if (this.keepaliveInterval) {
-			clearInterval(this.keepaliveInterval);
-			this.keepaliveInterval = null;
-		}
 		if (this.ws) {
-			this.ws.close();
+			try { this.ws.close(); } catch (_e) {}
 			this.ws = null;
 		}
 		if (this.audioContext) {
@@ -4191,11 +4101,12 @@ class AudioPlayer {
             if (this.samples.length > 0) {
                 this.play();
             } else if (this.completeCalled) {
+                this.completeCalled = false;
                 avatar.setEmotion('happy', false);
             } else {
                 this.clearAndSetTimeout(() => {
                     avatar.setEmotion('happy', false);
-                }, 20);
+                }, 200);
             }
         };
         this.clearAndSetTimeout(null);
@@ -4308,13 +4219,6 @@ class MessageFormatter {
         }
         const contentDiv = this.currentMessageElement.querySelector('.markdown-content');
         contentDiv.innerHTML = this.formatMarkdown(this.messageBuffer);
-        if (
-            this.messageBuffer.match(/\n\n$/) ||
-            this.messageBuffer.match(/[.!?]\s+$/) ||
-            this.messageBuffer.match(/\n\s*[-*]\s.*\n\n$/)
-        ) {
-            this.finalizeMessage();
-        }
         this.scrollToBottom();
     }
     replaceCurrentMessage(text) {
@@ -4370,12 +4274,40 @@ const AudioProcessingWorklet = `
 		  }
 		}`;
 const messageFormatter = new MessageFormatter();
+let modelResponseTalkingTimer = null;
 window.addEventListener('modelResponse', (event) => {
-    console.log(event.detail.text);
     messageFormatter.appendMessage(event.detail.text);
+    if (window.avatar) {
+        const isAudioProvider = publisher && (
+            publisher instanceof GoogleLivePublisher ||
+            (publisher instanceof RealtimePublisher && document.getElementById('responseType')?.value === 'audio')
+        );
+        if (!isAudioProvider) {
+            avatar.setTalking(true);
+            if (modelResponseTalkingTimer) clearTimeout(modelResponseTalkingTimer);
+            modelResponseTalkingTimer = setTimeout(() => {
+                avatar.setTalking(false);
+                modelResponseTalkingTimer = null;
+            }, 600);
+        }
+    }
 });
 window.addEventListener('modelResponseReplace', (event) => {
     messageFormatter.replaceCurrentMessage(event.detail?.text || '');
+    if (window.avatar) {
+        const isAudioProvider = publisher && (
+            publisher instanceof GoogleLivePublisher ||
+            (publisher instanceof RealtimePublisher && document.getElementById('responseType')?.value === 'audio')
+        );
+        if (!isAudioProvider) {
+            avatar.setTalking(true);
+            if (modelResponseTalkingTimer) clearTimeout(modelResponseTalkingTimer);
+            modelResponseTalkingTimer = setTimeout(() => {
+                avatar.setTalking(false);
+                modelResponseTalkingTimer = null;
+            }, 600);
+        }
+    }
 });
 let stream = null;
 const videoSelect = document.getElementById('videoSource');
@@ -4660,6 +4592,7 @@ startButton.addEventListener('click', async () => {
             startButton.dataset.started = "false";
             startButton.disabled = false;
             sendButton.disabled = true;
+            sendButton.title = 'You must Start the Stream before you can interact with the AI';
             document.getElementById('systemPrompt').disabled = false;
             updateDiagnostics({
                 state: 'stopped',
@@ -4689,6 +4622,7 @@ startButton.addEventListener('click', async () => {
         startButton.dataset.started = "true";
         startButton.disabled = false;
         sendButton.disabled = false;
+        sendButton.title = 'Send a message to the AI';
         document.getElementById('systemPrompt').disabled = true;
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
@@ -5205,8 +5139,6 @@ if (!navigator.mediaDevices?.getUserMedia) {
 const messageInput = document.querySelector('.message-input');
 const sendButton = document.querySelector('#sendButton');
 sendButton.disabled = true;
-responsesDiv.parentElement.insertBefore(messageInput, responsesDiv);
-responsesDiv.parentElement.insertBefore(sendButton, responsesDiv);
 sendButton.addEventListener('click', async () => {
     if (!publisher || sendButton.disabled) {
         showError('Please start the stream first');
@@ -5255,6 +5187,7 @@ async function restartActivePublisher() {
         startButton.disabled = false;
 		startButton.dataset.started = "true";
 		sendButton.disabled = false;
+		sendButton.title = 'Send a message to the AI';
         document.getElementById('systemPrompt').disabled = true;
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
@@ -5277,6 +5210,7 @@ async function restartActivePublisher() {
         startButton.disabled = false;
 		startButton.dataset.started = "false";
 		sendButton.disabled = true;
+		sendButton.title = 'You must Start the Stream before you can interact with the AI';
 		document.getElementById('systemPrompt').disabled = false;
         updateDiagnostics({
             state: 'error',
@@ -5387,8 +5321,12 @@ function updateRealtimeDeviceNotice(text) {
         deviceNotice.style.padding = '6px';
         deviceNotice.style.background = '#333';
         deviceNotice.style.borderRadius = '6px';
-        const deviceContainer = document.querySelector('.controls');
-        deviceContainer.insertBefore(deviceNotice, muteMicButton.parentElement.nextSibling);
+        const muteControlGroup = muteMicButton.closest('.control-group');
+        if (muteControlGroup) {
+            muteControlGroup.appendChild(deviceNotice);
+        } else {
+            document.querySelector('.controls').appendChild(deviceNotice);
+        }
     }
     deviceNotice.innerHTML = text;
 }
@@ -5405,8 +5343,8 @@ function getVoiceModeSummary(providerName) {
     switch (providerName) {
         case 'gemini':
             return {
-                inputMode: 'Direct audio stream',
-                outputState: responseTypeValue === 'audio' ? 'Provider audio ready' : 'Text response only'
+                inputMode: 'Native audio + video stream',
+                outputState: responseTypeValue === 'audio' ? 'Native audio response' : 'Text response only'
             };
         case 'localqwen':
             return {
@@ -5863,14 +5801,27 @@ function addClearHistoryButton() {
     clearButton.style.marginLeft = '10px';
     clearButton.style.background = '#6c1c1c';
     
+    let clearConfirmPending = false;
     clearButton.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear the conversation history?')) {
-            if (publisher && typeof publisher.clearConversationHistory === 'function') {
-                publisher.clearConversationHistory();
-            } else {
-                localStorage.removeItem('conversationHistory');
-                document.getElementById('responses').innerHTML = '';
-            }
+        if (!clearConfirmPending) {
+            clearConfirmPending = true;
+            clearButton.textContent = 'Click Again to Confirm';
+            clearButton.style.background = '#ef4444';
+            setTimeout(() => {
+                clearConfirmPending = false;
+                clearButton.textContent = 'Clear Chat History';
+                clearButton.style.background = '#6c1c1c';
+            }, 3000);
+            return;
+        }
+        clearConfirmPending = false;
+        clearButton.textContent = 'Clear Chat History';
+        clearButton.style.background = '#6c1c1c';
+        if (publisher && typeof publisher.clearConversationHistory === 'function') {
+            publisher.clearConversationHistory();
+        } else {
+            localStorage.removeItem('conversationHistory');
+            document.getElementById('responses').innerHTML = '';
         }
     });
     

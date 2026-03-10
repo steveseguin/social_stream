@@ -1237,11 +1237,6 @@
                             <td>Code audits must inspect both layers to validate emitted payload shape.</td>
                         </tr>
                         <tr>
-                            <td><code>sources/websocket/youtube_streaming.js</code></td>
-                            <td>Streaming mode relays shared normalizer output (membership-family names such as <code>membership</code>, <code>membership_upgrade</code>, <code>membership_milestone</code>, <code>membership_gift</code>) which differs from legacy YouTube naming (<code>sponsorship</code>, <code>giftpurchase</code>, <code>giftredemption</code>, etc.).</td>
-                            <td>Streaming and legacy YouTube captures are not yet event-name equivalent; downstream triggers should account for both until unified.</td>
-                        </tr>
-                        <tr>
                             <td>All source scripts</td>
                             <td><code>89</code> files populate <code>hasDonation</code> but do not set <code>data.event</code>.</td>
                             <td>This is generally correct behavior; donation rendering should key off <code>hasDonation</code>, with <code>data.event</code> reserved for explicit system/event semantics.</td>

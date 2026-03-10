@@ -39,20 +39,12 @@ const COUNT_EVENTS = new Set([
 const FOLLOW_EVENTS = new Set(['new_follower', 'follow', 'followed']);
 const SUBSCRIPTION_EVENTS = new Set([
   'new_subscriber',
-  'subscription',
   'subscription_gift',
   'resub',
   'sponsorship',
   'giftpurchase',
   'giftredemption',
-  'membermilestone',
-  'membership',
-  'new_member',
-  'renewed_member',
-  'upgraded_member',
-  'gift_giver',
-  'gift_recipient',
-  'new_sponsor'
+  'membermilestone'
 ]);
 const DONATION_EVENTS = new Set([
   'donation',
@@ -327,7 +319,7 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount) {
       if (eventKey === 'giftredemption') {
         return { lead: actor, tail: 'received a gifted membership' };
       }
-      if (eventKey === 'resub' || eventKey === 'renewed_member') {
+      if (eventKey === 'resub') {
         return { lead: actor, tail: 'renewed their support' };
       }
       if (eventKey === 'membermilestone') {

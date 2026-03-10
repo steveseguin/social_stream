@@ -13104,9 +13104,6 @@ async function applyBotActions(data, tab = false) {
 		}
 		if (forwardCommandDestinations.length && data.type && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid && !data.bot && data.chatmessage.startsWith("!")) {
 			let sourceType = String(data.type).toLowerCase();
-			if (sourceType === "youtube_streaming") {
-				sourceType = "youtube";
-			}
 
 			if (data.reflection && forwardCommandDestinations.includes(sourceType)) {
 				return null;

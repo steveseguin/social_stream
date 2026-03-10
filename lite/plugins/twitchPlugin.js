@@ -473,7 +473,7 @@ export class TwitchPlugin extends BasePlugin {
     };
 
     switch (payload.event) {
-      case 'subscription':
+      case 'new_subscriber':
       case 'resub':
         this.debugLog('Received Twitch subscription', {
           channel,
@@ -486,7 +486,7 @@ export class TwitchPlugin extends BasePlugin {
           note: payload.event === 'resub' ? 'Twitch resubscription' : 'New Twitch subscription'
         });
         break;
-      case 'subgift':
+      case 'subscription_gift':
         this.debugLog('Received Twitch gifted sub', {
           channel,
           recipient: payload.raw?.recipient,
