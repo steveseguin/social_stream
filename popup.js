@@ -1123,31 +1123,33 @@ function normalizeCommaValues(value) {
 
 const commaTagPresetOptions = {
     events: [
+        // Cross-platform
         { value: 'new_follower', label: 'new_follower - Follow' },
         { value: 'new_subscriber', label: 'new_subscriber - New sub' },
-        { value: 'resub', label: 'resub - Renewal' },
+        { value: 'resub', label: 'resub - Renewal/upgrade' },
         { value: 'subscription_gift', label: 'subscription_gift - Gift subs' },
-        { value: 'cheer', label: 'cheer - Bits/Cheers' },
-        { value: 'donation', label: 'donation - Donation' },
-        { value: 'superchat', label: 'superchat - Super Chat' },
-        { value: 'supersticker', label: 'supersticker - Super Sticker' },
-        { value: 'sponsorship', label: 'sponsorship - New member/sponsor' },
-        { value: 'resub', label: 'resub - Renewal' },
-        { value: 'membermilestone', label: 'membermilestone - Member milestone' },
-        { value: 'giftpurchase', label: 'giftpurchase - Gift purchase' },
-        { value: 'giftredemption', label: 'giftredemption - Gift redemption' },
-        { value: 'channel_points', label: 'channel_points - Channel points' },
+        { value: 'donation', label: 'donation - Donation/Super Chat' },
         { value: 'raid', label: 'raid - Raid' },
+        // Twitch
+        { value: 'cheer', label: 'cheer - Bits/Cheers (Twitch)' },
+        { value: 'channel_points', label: 'channel_points - Channel points (Twitch)' },
+        // YouTube
+        { value: 'sponsorship', label: 'sponsorship - New member (YouTube)' },
+        { value: 'membermilestone', label: 'membermilestone - Member milestone (YouTube)' },
+        { value: 'giftpurchase', label: 'giftpurchase - Gift purchase (YouTube)' },
+        { value: 'giftredemption', label: 'giftredemption - Gift redemption (YouTube)' },
+        { value: 'supersticker', label: 'supersticker - Super Sticker (YouTube)' },
+        // TikTok
+        { value: 'gift', label: 'gift - Gift (TikTok/Kick DOM)' },
+        { value: 'joined', label: 'joined - Join (TikTok)' },
+        { value: 'liked', label: 'liked - Like (TikTok)' },
+        // Status/system
         { value: 'stream_online', label: 'stream_online - Stream online' },
         { value: 'stream_offline', label: 'stream_offline - Stream offline' },
         { value: 'viewer_update', label: 'viewer_update - Viewer count' },
         { value: 'follower_update', label: 'follower_update - Follower count' },
         { value: 'subscriber_update', label: 'subscriber_update - Subscriber count' },
-        { value: 'reward', label: 'reward - Reward/Event' },
-        { value: 'gift', label: 'gift - TikTok gift' },
-        { value: 'joined', label: 'joined - TikTok join' },
-        { value: 'followed', label: 'followed - TikTok follow' },
-        { value: 'liked', label: 'liked - TikTok like' }
+        { value: 'reward', label: 'reward - Redemption (Twitch/Kick DOM)' }
     ]
 };
 
