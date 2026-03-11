@@ -3163,7 +3163,6 @@ function handlePusherMessage(event) {
         const channels = [];
         if (state.socket.chatroomId) {
             channels.push(`chatrooms.${state.socket.chatroomId}.v2`);
-            channels.push(`chatrooms.${state.socket.chatroomId}`);
         }
         if (state.socket.channelId) {
             channels.push(`channel.${state.socket.channelId}`);

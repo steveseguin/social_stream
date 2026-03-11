@@ -299,6 +299,11 @@
                                 <td>Keeps <code>hasDonation</code> and auto-injects “Thank you for your donation!” for overlays.</td>
                             </tr>
                             <tr>
+                                <td class="status-event"><code>redirect</code></td>
+                                <td>YouTube redirect banner appears in live chat (the closest equivalent to a raid notice).</td>
+                                <td>DOM-only capture from <code>yt-live-chat-banner-redirect-renderer</code>. Sets <code>event</code> to <code>redirect</code> and uses <code>membership</code> as the label so overlays render it like other system notices.</td>
+                            </tr>
+                            <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>30s poll of Social Stream’s viewer endpoint (fallback to page scrape on quota errors).</td>
                                 <td><code>meta</code> is the live viewer integer; contributes to aggregated <code>viewer_updates</code> in the background script.</td>
@@ -316,6 +321,7 @@
                         <li>Channel statistics respect the per-setting toggles (<code>showsubscount</code>, <code>showviewercount</code>).</li>
                         <li>The API cannot deliver custom badge imagery; badge fallbacks use emoji icons noted below.</li>
                         <li>New subscriber alerts use the <code>myRecentSubscribers</code> API (polled every 5 minutes). Note: YouTube API has up to 4-hour delay and only shows subscribers with public subscription lists.</li>
+                        <li>YouTube redirect banners are not exposed by the Data API, so <code>redirect</code> remains available only from Standard DOM capture.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
