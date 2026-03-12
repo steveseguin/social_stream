@@ -147,7 +147,9 @@ const state = {
   cooldownTimer: null,
   reconnectTimer: null,
   blockedUntil: 0,
-  audioContext: null
+  audioContext: null,
+  activeOscillator: null,
+  activeGain: null
 };
 
 const elements = {
@@ -756,12 +758,23 @@ function handlePreviewMessage(previewMessage) {
     return;
   }
 
+  const isEnvelope =
+    previewMessage &&
+    typeof previewMessage === 'object' &&
+    previewMessage.__multiAlertsPreviewEnvelope === true;
+
+  const previewOptions = isEnvelope
+    ? { silent: Boolean(previewMessage.silent) }
+    : { silent: false };
+
+  const previewDescriptor = isEnvelope ? previewMessage.payload : previewMessage;
+
   const payload =
-    typeof previewMessage === 'string'
-      ? createMockAlertPayload(previewMessage)
-      : previewMessage?.category && !previewMessage?.event
-        ? createMockAlertPayload(previewMessage.category, previewMessage.overrides || {})
-        : previewMessage;
+    typeof previewDescriptor === 'string'
+      ? createMockAlertPayload(previewDescriptor)
+      : previewDescriptor?.category && !previewDescriptor?.event
+        ? createMockAlertPayload(previewDescriptor.category, previewDescriptor.overrides || {})
+        : previewDescriptor;
 
   if (!payload) {
     return;
@@ -779,7 +792,7 @@ function handlePreviewMessage(previewMessage) {
   }
 
   clearAlert({ clearQueue: true, preserveCooldown: true });
-  displayAlert(model);
+  displayAlert(model, previewOptions);
   updateStatus(`Previewing ${CATEGORY_LABELS[model.category] || 'alert'}`);
 }
 
@@ -835,13 +848,15 @@ function queueAlert(model) {
   displayAlert(model);
 }
 
-function displayAlert(model) {
+function displayAlert(model, options = {}) {
   const card = renderAlert(model);
   state.currentAlert = model;
   elements.stage.innerHTML = '';
   elements.stage.appendChild(card);
   elements.stage.classList.add('has-alert');
-  playAlertSound(model);
+  if (!options.silent) {
+    playAlertSound(model);
+  }
   updateStatus(model.title);
 
   const hideLead = Math.min(550, Math.max(280, Math.round(settings.showTime * 0.16)));
@@ -899,6 +914,7 @@ function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
   if (clearQueue) {
     state.queue = [];
   }
+  stopActiveAlertSound();
   state.currentAlert = null;
   elements.stage.innerHTML = '';
   elements.stage.classList.remove('has-alert');
@@ -1098,6 +1114,55 @@ function updateStatus(text) {
   elements.status.textContent = text;
 }
 
+function clearActiveGeneratedSound(oscillator = null, gain = null) {
+  const activeOscillator = oscillator || state.activeOscillator;
+  const activeGain = gain || state.activeGain;
+
+  if (activeOscillator) {
+    if (state.activeOscillator === activeOscillator) {
+      state.activeOscillator = null;
+    }
+    try {
+      activeOscillator.onended = null;
+      activeOscillator.disconnect();
+    } catch (error) {
+      log('oscillator cleanup failed', error);
+    }
+  }
+
+  if (activeGain) {
+    if (state.activeGain === activeGain) {
+      state.activeGain = null;
+    }
+    try {
+      activeGain.disconnect();
+    } catch (error) {
+      log('gain cleanup failed', error);
+    }
+  }
+}
+
+function stopActiveAlertSound() {
+  if (elements.audio) {
+    try {
+      elements.audio.pause();
+      elements.audio.currentTime = 0;
+    } catch (error) {
+      log('custom audio cleanup failed', error);
+    }
+  }
+
+  if (state.activeOscillator) {
+    try {
+      state.activeOscillator.stop();
+    } catch (error) {
+      log('oscillator stop failed', error);
+    }
+  }
+
+  clearActiveGeneratedSound();
+}
+
 function toAccentRgbTriplet(colorValue) {
   const trimmed = normalizeText(colorValue).replace(/^#/, '');
   const expanded = trimmed.length === 3
@@ -1118,6 +1183,8 @@ async function playAlertSound(model) {
   if (!settings.beep) {
     return;
   }
+
+  stopActiveAlertSound();
 
   if (settings.customBeep && elements.audio) {
     try {
@@ -1147,6 +1214,8 @@ async function playAlertSound(model) {
     const gain = state.audioContext.createGain();
     oscillator.connect(gain);
     gain.connect(state.audioContext.destination);
+    state.activeOscillator = oscillator;
+    state.activeGain = gain;
 
     const baseFrequency = ({
       [ALERT_CATEGORIES.FOLLOW]: 540,
@@ -1165,9 +1234,13 @@ async function playAlertSound(model) {
     gain.gain.exponentialRampToValueAtTime(Math.max(0.001, settings.beepVolume), now + 0.04);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
 
+    oscillator.onended = () => {
+      clearActiveGeneratedSound(oscillator, gain);
+    };
     oscillator.start(now);
     oscillator.stop(now + 0.32);
   } catch (error) {
     log('beep generation failed', error);
+    clearActiveGeneratedSound();
   }
 }
