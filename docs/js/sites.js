@@ -1265,6 +1265,18 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'CI.ME',
+			icon: 'cime.png',
+			description: 'Korean live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://ci.me/@USERNAME/live</li>
+					<li>Keep the on-page chat visible; no pop out needed</li>
+				</ul>
+			`
+		},
+		{
 			name: 'Castr',
 			icon: 'castr.png',
 			description: 'Live streaming platform.',

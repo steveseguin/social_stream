@@ -1122,10 +1122,10 @@ async function ensureChatClientInstance() {
 		if (payload.event === 'cheer' && activeSubscriptions.has('channel.cheer')) {
 			return;
 		}
-		if (payload.event === 'sub' && activeSubscriptions.has('channel.subscribe')) {
+		if (payload.event === 'new_subscriber' && activeSubscriptions.has('channel.subscribe')) {
 			return;
 		}
-		if ((payload.event === 'subgift' || payload.event === 'anonsubgift')
+		if (payload.event === 'subscription_gift'
 			&& activeSubscriptions.has('channel.subscription.gift')) {
 			return;
 		}
