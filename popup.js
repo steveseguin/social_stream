@@ -4941,7 +4941,7 @@ function syncOverlayPreview(previewKey) {
 
     const nextUrl = buildOverlayPreviewUrl(previewKey);
     if (frame.dataset.currentPreviewUrl === nextUrl) {
-        replayOverlayPreview(previewKey);
+        replayOverlayPreview(previewKey, { silent: true });
         return;
     }
 
@@ -4949,7 +4949,7 @@ function syncOverlayPreview(previewKey) {
     frame.src = nextUrl;
 }
 
-function replayOverlayPreview(previewKey) {
+function replayOverlayPreview(previewKey, options = {}) {
     const config = overlayPreviewConfigs[previewKey];
     const state = overlayPreviewState[previewKey];
     if (!config || !state) {
@@ -4970,7 +4970,15 @@ function replayOverlayPreview(previewKey) {
     frame.contentWindow.postMessage({ [config.messageKey]: false }, '*');
     state.timer = setTimeout(() => {
         if (frame.contentWindow) {
-            frame.contentWindow.postMessage({ [config.messageKey]: payload }, '*');
+            const messagePayload =
+                payload === false
+                    ? false
+                    : {
+                        __multiAlertsPreviewEnvelope: true,
+                        payload,
+                        silent: Boolean(options.silent)
+                    };
+            frame.contentWindow.postMessage({ [config.messageKey]: messagePayload }, '*');
         }
         state.timer = null;
     }, 40);
@@ -5000,7 +5008,7 @@ function sendOverlayPreview(previewKey, descriptor) {
         return;
     }
 
-    replayOverlayPreview(previewKey);
+    replayOverlayPreview(previewKey, { silent: false });
 }
 
 function syncMultiAlertsPreview() {
@@ -5024,7 +5032,7 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
     const frame = document.getElementById(config.frameId);
     if (frame) {
         frame.addEventListener('load', () => {
-            replayOverlayPreview(previewKey);
+            replayOverlayPreview(previewKey, { silent: true });
         });
     }
 
