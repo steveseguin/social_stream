@@ -132,7 +132,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `attachmentsonly` | boolean | Displays only messages that include an attached image or clip |
 | `hidequestions` | boolean | Hides cards flagged as questions |
 | `onlyquestions` | boolean | Shows only messages that contain question metadata |
-| `hidenumbers` | boolean | Hides numerical message counters on cards |
+| `hidenumbers` | boolean | Hides messages that contain only digits |
 | `showsourcename` | boolean | Displays the originating platform label on each card |
 | `showviewercount` | boolean | Shows the current viewer count indicator |
 | `nocolon` | boolean | Removes the colon between username and message body |

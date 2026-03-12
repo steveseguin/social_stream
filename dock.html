@@ -9780,7 +9780,8 @@
 						}
 					}
 
-					if (hideNumbers && data.chatmessage && !data.contentimg && !data.hasDonation && data.chatmessage === parseFloat(data.chatmessage)) {
+					const plainChatMessage = (data.textContent || data.chatmessage || "").replace(/<[^>]*>/g, "").trim();
+					if (hideNumbers && plainChatMessage && !data.contentimg && !data.hasDonation && /^\d+$/.test(plainChatMessage)) {
 						return;
 					}
 					

@@ -865,7 +865,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "hidenumbers"
             ],
             "values": "boolean",
-            "description": "Hides numerical message counters on cards"
+            "description": "Hides messages that contain only digits"
           },
           {
             "key": "showsourcename",
