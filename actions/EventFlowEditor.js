@@ -2889,7 +2889,7 @@ class EventFlowEditor {
 				break;
 			case 'fromSource':
 				const isCustomSource = node.config.source && !['*', 'afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
-  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk',
+  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
   'kiwiirc', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
@@ -2906,7 +2906,7 @@ class EventFlowEditor {
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
 						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
 						    ${['afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
-  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk',
+  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
   'kiwiirc', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
@@ -4508,6 +4508,11 @@ class EventFlowEditor {
 							value="${node.config.sceneName || ''}" placeholder="e.g., Game Scene, Starting Soon">
 						<div class="property-help">The exact name of the OBS scene to switch to</div>
 					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>OBS WebSocket option:</strong><br>
+						This action can also use OBS WebSocket v5 on OBS 28+ (default port 4455, password optional).<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Set your Browser Source permissions to "Advanced Access Level" to enable OBS control.
@@ -4531,12 +4536,17 @@ class EventFlowEditor {
 						</select>
 						<div class="property-help">Set whether to show, hide, or toggle the source</div>
 					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Version note:</strong><br>
+						This action requires OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; only add <code>&obspw=...</code> if OBS requires one.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
 						1. Enable in OBS: Tools → WebSocket Server Settings<br>
-						2. Note your password (required by OBS)<br>
-						3. Add to actions.html URL: <code>&obspw=yourpassword</code><br>
-						Example: <code>actions.html?session=test&obspw=abc123</code>
+						2. Add a password only if your OBS server requires one<br>
+						3. Flow Actions expects OBS WebSocket v5 on OBS 28+ (default port 4455)<br>
+						Example: <code>actions.html?session=test&obsws=ws://127.0.0.1:4455</code>
 					</div>`;
 				break;
 				
@@ -4562,10 +4572,15 @@ class EventFlowEditor {
 							<option value="false" ${node.config.enabled === false || node.config.enabled === 'false' ? 'selected' : ''}>Disable</option>
 						</select>
 					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Version note:</strong><br>
+						This action requires OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; only add <code>&obspw=...</code> if OBS requires one.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
 						1. Enable in OBS: Tools → WebSocket Server Settings<br>
-						2. Add password to actions.html URL: <code>&obspw=yourpassword</code>
+						2. Add <code>&obspw=...</code> only if your OBS server requires a password
 					</div>`;
 				break;
 				
@@ -4585,10 +4600,15 @@ class EventFlowEditor {
 							<option value="false" ${node.config.muted === false || node.config.muted === 'false' ? 'selected' : ''}>Unmute</option>
 						</select>
 					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Version note:</strong><br>
+						This action requires OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; only add <code>&obspw=...</code> if OBS requires one.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
 						1. Enable in OBS: Tools → WebSocket Server Settings<br>
-						2. Add password to actions.html URL: <code>&obspw=yourpassword</code>
+						2. Add <code>&obspw=...</code> only if your OBS server requires a password
 					</div>`;
 				break;
 				
@@ -4596,6 +4616,11 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<div class="property-help">Starts recording in OBS. Make sure recording is configured in OBS settings.</div>
+					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Connection order:</strong><br>
+						Event Flow now tries OBS WebSocket v5 first, then falls back to the OBS Browser Source API if the page is running inside OBS.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
 					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
@@ -4608,6 +4633,11 @@ class EventFlowEditor {
 					<div class="property-group">
 						<div class="property-help">Stops the current recording in OBS.</div>
 					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Connection order:</strong><br>
+						Event Flow now tries OBS WebSocket v5 first, then falls back to the OBS Browser Source API if the page is running inside OBS.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Browser Source needs "Advanced Access Level" permissions.
@@ -4618,6 +4648,11 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<div class="property-help">Starts streaming in OBS. Make sure stream settings are configured.</div>
+					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Connection order:</strong><br>
+						Event Flow now tries OBS WebSocket v5 first, then falls back to the OBS Browser Source API if the page is running inside OBS.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
 					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
@@ -4630,6 +4665,11 @@ class EventFlowEditor {
 					<div class="property-group">
 						<div class="property-help">Stops the current stream in OBS.</div>
 					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Connection order:</strong><br>
+						Event Flow now tries OBS WebSocket v5 first, then falls back to the OBS Browser Source API if the page is running inside OBS.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Browser Source needs "Advanced Access Level" permissions.
@@ -4640,6 +4680,11 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<div class="property-help">Saves the replay buffer. Replay buffer must be enabled and running in OBS.</div>
+					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Connection order:</strong><br>
+						Event Flow now tries OBS WebSocket v5 first, then falls back to the OBS Browser Source API if the page is running inside OBS.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
 					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>

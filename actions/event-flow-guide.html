@@ -228,6 +228,24 @@
                     <li>Play sounds (TTS, audio clips) locally so viewers hear them.</li>
                     <li>Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, replay buffer, etc.).</li>
                 </ul>
+                <div class="panel">
+                    <strong>OBS control modes:</strong>
+                    <ul>
+                        <li><strong>Browser Source API:</strong> available only when <code>actions.html</code> is running inside OBS Browser Source with <em>Advanced Access Level</em>. Scene switching works here, and recording / streaming / replay buffer actions can fall back to it.</li>
+                        <li><strong>OBS WebSocket:</strong> recommended for consistent control. Social Stream Ninja Flow Actions use the OBS WebSocket v5 API from OBS 28+ and expect the modern request set on port <code>4455</code>.</li>
+                        <li><strong>Password:</strong> optional. Only append <code>&amp;obspw=...</code> to the Flow Actions URL if your OBS server is configured to require authentication.</li>
+                        <li><strong>Overlay diagnostics:</strong> append <code>&amp;obsdebug=1</code> to <code>actions.html</code> if you want a small live OBS connection badge on the overlay while troubleshooting.</li>
+                        <li><strong>Old 4.x installs:</strong> if you are still using obs-websocket 4.x / port <code>4444</code>, source / filter / mute actions will not work until OBS / obs-websocket is upgraded.</li>
+                    </ul>
+                </div>
+                <div class="panel">
+                    <strong>Recommended diagnostic path:</strong>
+                    <ol>
+                        <li>Open <a href="../obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
+                        <li>Confirm <code>GetVersion</code>, <code>GetCurrentProgramScene</code>, and <code>GetSceneList</code> succeed.</li>
+                        <li>Run the matching action check there before testing the full Event Flow automation.</li>
+                    </ol>
+                </div>
                 <div class="panel warn">
                     <strong>Keep the overlay open.</strong> Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.
                 </div>

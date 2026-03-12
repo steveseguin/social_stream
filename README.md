@@ -980,7 +980,7 @@ There is a toggle that lets you show the source of the chat messages.
   - ie: dock.html?session=aaaaa,bbbbb
 
 - You can filter out certain messages marked as "events" in the dock using &filterevents
-  - ie: dock.html?session=xxx&filterevents=joined
+  - ie: dock.html?session=xxx&filterevents=subscription_gift,new_follower,gifted
 
 - the Filter option in the dock supports `!` to denote opposite, such as `source:!youtube`, so only filter for sources that are not youtube.
 

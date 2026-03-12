@@ -132,7 +132,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `attachmentsonly` | boolean | Displays only messages that include an attached image or clip |
 | `hidequestions` | boolean | Hides cards flagged as questions |
 | `onlyquestions` | boolean | Shows only messages that contain question metadata |
-| `hidenumbers` | boolean | Hides numerical message counters on cards |
+| `hidenumbers` | boolean | Hides messages that contain only digits |
 | `showsourcename` | boolean | Displays the originating platform label on each card |
 | `showviewercount` | boolean | Shows the current viewer count indicator |
 | `nocolon` | boolean | Removes the colon between username and message body |
@@ -191,6 +191,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `disabletimeout` | boolean | Disables the auto-timeout on featured messages |
 | `altselect` | boolean | Keeps the Feature button visible when menus are hidden |
 | `autoscroll` | boolean | Scrolls to the latest message once and leaves scrolling unlocked |
+| `manualscroll` | boolean | Disables automatic near-bottom scrolling unless Force scroll is enabled |
 | `buffer` | boolean | Enables adaptive buffering for smoother message pacing |
 | `bufferdelay` | number | Base delay (ms) used when buffering messages |
 | `buffermin` | number | Minimum delay (ms) used when buffering messages |
@@ -337,7 +338,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 
 | Parameter | Values | Description |
 |-----------|---------|-------------|
-| `filterevents` | comma-separated strings | List of event types to filter |
+| `filterevents` | comma-separated strings | Exact event names or text keywords to filter when `data.event` is present |
 | `trivialevents` | boolean | Allows background shading for minor events |
 | `showonlyevents` | boolean | Shows only stream events |
 | `hideallevents` | boolean | Hides all stream events |

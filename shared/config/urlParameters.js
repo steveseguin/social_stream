@@ -188,6 +188,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Applies blur effect to messages (value in pixels)"
           },
           {
+            "key": "noblur",
+            "displayName": "noblur",
+            "aliases": [
+              "noblur"
+            ],
+            "values": "boolean",
+            "description": "Disables blur rendering (including hidden-source blur and timed-out blur)"
+          },
+          {
             "key": "compact",
             "displayName": "compact or overlaymode",
             "aliases": [
@@ -333,8 +342,8 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "strokecolor",
               "strokeColor"
             ],
-            "values": "hex color (supports 8-digit or rgba)",
-            "description": "Color applied to the text stroke effect; alpha transparency supported"
+            "values": "hex color (alpha supported)",
+            "description": "Color applied to the text stroke effect (accepts 8-digit hex/rgba for transparency)"
           },
           {
             "key": "border",
@@ -380,6 +389,51 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "number",
             "description": "Sets donation amount margin-right in pixels"
+          },
+          {
+            "key": "bubbleopacity",
+            "displayName": "bubbleopacity",
+            "aliases": [
+              "bubbleopacity"
+            ],
+            "values": "0.0-1.0",
+            "description": "Sets message bubble background opacity"
+          },
+          {
+            "key": "namebubblecolor",
+            "displayName": "namebubblecolor",
+            "aliases": [
+              "namebubblecolor"
+            ],
+            "values": "hex/color",
+            "description": "Background color for the rounded name bubble"
+          },
+          {
+            "key": "namebubbletext",
+            "displayName": "namebubbletext",
+            "aliases": [
+              "namebubbletext"
+            ],
+            "values": "hex/color",
+            "description": "Text color for the rounded name bubble"
+          },
+          {
+            "key": "namebubbleradius",
+            "displayName": "namebubbleradius",
+            "aliases": [
+              "namebubbleradius"
+            ],
+            "values": "number or CSS length",
+            "description": "Border radius for the rounded name bubble"
+          },
+          {
+            "key": "namebubblepadding",
+            "displayName": "namebubblepadding",
+            "aliases": [
+              "namebubblepadding"
+            ],
+            "values": "CSS padding string",
+            "description": "Padding for the rounded name bubble"
           },
           {
             "key": "bolder",
@@ -524,6 +578,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Styles messages as chat bubbles"
           },
           {
+            "key": "namebubble",
+            "displayName": "namebubble",
+            "aliases": [
+              "namebubble"
+            ],
+            "values": "boolean",
+            "description": "Adds a separate rounded bubble behind usernames (bubble mode)"
+          },
+          {
             "key": "fadedtop",
             "displayName": "fadedtop",
             "aliases": [
@@ -630,13 +693,13 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Sets specific exit animation (see animate.css)"
           },
           {
-            "key": "animationspeed",
-            "displayName": "animationspeed",
+            "key": "typewriter",
+            "displayName": "typewriter",
             "aliases": [
-              "animationspeed"
+              "typewriter"
             ],
-            "values": "string",
-            "description": "Sets animation duration in seconds (default: 1). Lower values = faster animations"
+            "values": "boolean or number",
+            "description": "Types chat text letter-by-letter with a blinking cursor; optional numeric value sets the per-character delay (ms) while messages wait for the current typing to finish"
           }
         ]
       },
@@ -802,7 +865,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "hidenumbers"
             ],
             "values": "boolean",
-            "description": "Hides numerical message counters on cards"
+            "description": "Hides messages that contain only digits"
           },
           {
             "key": "showsourcename",
@@ -1258,6 +1321,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Scrolls to the latest message once and leaves scrolling unlocked"
           },
           {
+            "key": "manualscroll",
+            "displayName": "manualscroll",
+            "aliases": [
+              "manualscroll"
+            ],
+            "values": "boolean",
+            "description": "Disables automatic near-bottom scrolling unless Force scroll is enabled"
+          },
+          {
             "key": "buffer",
             "displayName": "buffer",
             "aliases": [
@@ -1570,15 +1642,6 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Hides names of hosts"
           },
           {
-            "key": "stripat",
-            "displayName": "stripat",
-            "aliases": [
-              "stripat"
-            ],
-            "values": "boolean",
-            "description": "Removes @ from the start of display names"
-          },
-          {
             "key": "nobeepbot",
             "displayName": "nobeepbot",
             "aliases": [
@@ -1674,15 +1737,6 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "URL",
             "description": "Custom sound file URL for notifications"
-          },
-          {
-            "key": "overlapbeep",
-            "displayName": "overlapbeep",
-            "aliases": [
-              "overlapbeep"
-            ],
-            "values": "boolean",
-            "description": "Enables overlapping beep sounds for rapid messages (experimental)"
           },
           {
             "key": "beepwords",
@@ -2145,7 +2199,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "filterevents"
             ],
             "values": "comma-separated strings",
-            "description": "List of event types to filter"
+            "description": "Exact event names or text keywords to filter when data.event is present"
           },
           {
             "key": "trivialevents",

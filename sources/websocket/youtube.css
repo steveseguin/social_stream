@@ -23,11 +23,25 @@ body {
     margin: 10px;
     max-height: 72px;
     overflow: hidden;
+    grid-column: 1 / -1;
 }
 .custom-cred-indicator {
     margin-top: 8px;
     font-size: 12px;
     color: #1967d2;
+}
+.guide-link-button {
+    background: transparent;
+    border: 1px solid #1a73e8;
+    color: #1a73e8;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    width: fit-content;
+}
+.guide-link-button:hover {
+    background: rgba(26, 115, 232, 0.08);
 }
 .auth-method-selector {
     margin-top: 12px;
@@ -87,11 +101,23 @@ body {
 	margin: 0 auto;
 	display: grid;
 	grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
 }
 
 /* When logged in, switch to two-column layout */
 body:has(.socket:not(.hidden)) .container {
 	grid-template-columns: 1fr 300px;
+}
+.main-content {
+    grid-column: 1 / -1;
+    grid-row: 2;
+}
+.sidebar {
+    grid-column: 2;
+    grid-row: 2;
+}
+body:has(.socket:not(.hidden)) .main-content {
+    grid-column: 1;
 }
 .socket > div {
 	margin: 5px;
@@ -241,6 +267,12 @@ body:has(.socket:not(.hidden)) .container {
 	justify-content: space-between;
 	align-items: center;
 	font-size: 13px;
+}
+.status-copy {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #5f6368;
+    margin-bottom: 10px;
 }
 .recent-events h4 {
 	margin: 0 0 8px 0;
@@ -588,7 +620,20 @@ stats-container
     border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-.credentials-form.inline input { width: 100%; }
+.credentials-container .credentials-details {
+    width: 100%;
+    max-width: none;
+}
+.credentials-container .credentials-details summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #FF0000;
+    margin-bottom: 6px;
+}
+.credentials-form.inline input {
+    width: auto;
+    min-width: 0;
+}
 
 .policy-footer {
 	position: fixed;
@@ -633,6 +678,13 @@ body:has(.auth:not(.hidden)) {
 	/* Stack layout on mobile when socket is visible */
 	body:has(.socket:not(.hidden)) .container {
 		grid-template-columns: 1fr;
+	}
+	.main-content,
+	.sidebar {
+		grid-column: 1 / -1;
+	}
+	.sidebar {
+		grid-row: 3;
 	}
 	.sidebar {
 		order: 2;
@@ -721,6 +773,16 @@ body:has(.auth:not(.hidden)) {
     .credentials-help code {
         background: #303030;
         color: #f1f1f1;
+    }
+    .guide-link-button {
+        color: #8ab4f8;
+        border-color: #8ab4f8;
+    }
+    .guide-link-button:hover {
+        background: rgba(138, 180, 248, 0.12);
+    }
+    .status-copy {
+        color: #aaaaaa;
     }
     .policy-footer {
         background: #212121;

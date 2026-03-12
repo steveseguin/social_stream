@@ -108,6 +108,20 @@
   animation: flash 0.5s linear 1;
 }
 
+.obs-transparent-note {
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+.events-transparent-option > span[data-translate="force-transparent-background"] {
+    display: none;
+}
+
+.events-transparent-option > .obs-transparent-note::before {
+    content: "Transparent background ";
+}
+
+
 .source-list-container {
     max-height: 80px;
     overflow-y: auto;
@@ -125,6 +139,21 @@
 
 .add-source-container input {
     width: 150px;
+}
+
+.add-source-container select {
+    width: 190px;
+}
+
+.add-source-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.add-source-container button {
+    cursor: pointer;
 }
 
 .username-list-container {
@@ -1182,6 +1211,45 @@ input:checked + .slider:before {
     box-sizing: border-box;
 }
 
+.sticky-action-row {
+    display: flex;
+    width: 100%;
+    padding: 0;
+    margin: 1px 0 0 0;
+    border: 0;
+    position: sticky;
+    background: var(--body-background-color);
+    gap: 1px;
+    overflow: clip;
+    isolation: isolate;
+}
+
+.sticky-action-row.top-35 {
+    top: 35px;
+    z-index: 99;
+}
+
+.sticky-action-row.top-67 {
+    top: 67px;
+    z-index: 98;
+}
+
+.sticky-action-row .glowingButton {
+    min-width: 0;
+    margin: 0 !important;
+    overflow: hidden;
+    contain: paint;
+}
+
+.sticky-action-row .glowingButton:hover:before,
+.sticky-action-row .glowingButton:hover:after {
+    inset: 0;
+}
+
+.sticky-action-row .glowingButton span {
+    padding: 4px 6px;
+}
+
 .textInputContainer {
     position: relative;
     width: 200px;
@@ -1716,13 +1784,13 @@ input:checked + .slider:before {
                 <span class="slider round"></span>
             </label>
         </button>
-        <div style="display: flex; width: 100%; padding: 0; margin: 1px 0 0 0; border: 0; position: sticky; top: 35px; z-index: 99; background: var(--body-background-color);">
-            <button class="glowingButton showalways" style="margin: 0 0 0 1px; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0;" data-action="fakemsg">
+        <div class="sticky-action-row top-35">
+            <button class="glowingButton showalways" style="flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0;" data-action="fakemsg">
                 <span data-translate="trigger-fake-message">Trigger a fake test message</span>
             </button>
             <button
                 class="glowingButton showalways"
-                style="margin: 0 1px 0 1px; width: unset; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0; max-width: 100px;"
+                style="width: unset; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0; max-width: 100px;"
                 data-action="cleardock"
                 title="Clears messages in the dock, excluding pinned messages. Hold CTRL while clicking to clear pinned messages as well."
             >
@@ -1878,7 +1946,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="transparent" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="force-transparent-background">⭕ Force transparent background </span>
+                                    <span data-translate="force-transparent-background">⭕ Force transparent background </span><span class="obs-transparent-note"> (OBS Browser Source is already transparent by default)</span>
                                 </div>
                                 <div title="This won't work in Chrome" data-keywords="opacity transparency fade dim ghost see-through brightness alpha slider">
                                     <label class="switch">
@@ -2050,6 +2118,13 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="messages-auto-scroll">🔽 Enable auto-scrolling to the bottom by default </span>
+                                </div>
+                                <div data-keywords="manual scroll lock pause autoscroll browse backlog">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="manualscroll" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🛑 Manual scroll mode (disable auto-scroll unless Force Scroll is enabled)</span>
                                 </div>
                                 <div data-keywords="align right flush right-justified rtl layout">
                                     <label class="switch">
@@ -3189,6 +3264,11 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="hide-all-events">🧯 Hide all stream events </span>
                                 </div>
+                                <div class="textInputContainer" style="display: inline-block; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
+                                    <input type="text" id="dockfilterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textparam1="filterevents" data-tag-presets="events" />
+                                    <label for="dockfilterevents" style="display: inline-block; margin: 0 0 6px 0;"><span data-translate="hide-specific-events">&gt; Hide specific events</span></label>
+                                    <div style="display: inline-block; margin: 0 0 6px 6px; font-size: 0.9em;"><a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">See the full list of event names</a></div>
+                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="firstnames" />
@@ -4084,8 +4164,8 @@ input:checked + .slider:before {
                                 <i><small>Note: Remote OBS control requires the dock.html to be added to OBS as a browser source, with full permissions enabled for it.</small></i>
                             </div>
                         </div>
-                    </div>
                 </div>
+            </div>
 				
             </div>
 			<div style="color:white;font">
@@ -4870,6 +4950,13 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
+                                        <input type="checkbox" data-param2="hideevents" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hide-all-events">🧯 Hide all stream events </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
                                         <input type="checkbox" data-param2="onlytwitch" />
                                         <span class="slider round"></span>
                                     </label>
@@ -4976,6 +5063,12 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="shorten-links-in-messages">🤏🔗 Shorten long links ... </span>
+                                </div>
+
+                                <div class="textInputContainer" style="display: inline-block; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
+                                    <input type="text" id="featuredfilterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textparam2="filterevents" data-tag-presets="events" />
+                                    <label for="featuredfilterevents" style="display: inline-block; margin: 0 0 6px 0;"><span data-translate="hide-specific-events">&gt; Hide specific events</span></label>
+                                    <div style="display: inline-block; margin: 0 0 6px 6px; font-size: 0.9em;"><a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">See the full list of event names</a></div>
                                 </div>
 
                                 <div class="textInputContainer" style="display: inline-block; width: 250px;">
@@ -5217,8 +5310,306 @@ input:checked + .slider:before {
 					</div>
 				</div>
 			</div>
-			
-			
+
+			<div class="link" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids.">
+				<h2 class="single_message_title">
+					<span class="title-group"><span class="emoji" aria-hidden="true">🚨</span><span>Multi-Stream Alert Box</span></span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#multi-alert-options" title="Jump to multi-alert overlay options."><span data-translate="options">[options]</span></a>
+				</h2>
+				<div id="multialerts" data-raw="" class="single_message"><a href="" id="multialertslink"></a></div>
+				<div class="help-tip" style="margin-top: 10px;">💡 <strong>Twitch-style setup:</strong> tune each alert type, copy the browser source URL, then test everything live in the preview panel below.</div>
+			</div>
+			<a href="" id="multi-alert-options"></a>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-types-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-types-options"><span>🎯 Alert Types</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="disablefollows" />
+										<span class="slider round"></span>
+									</label>
+									<span>Skip follow alerts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="disablesubs" />
+										<span class="slider round"></span>
+									</label>
+									<span>Skip subscription/member alerts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="disabledonos" />
+										<span class="slider round"></span>
+									</label>
+									<span>Skip donation alerts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="disablebits" />
+										<span class="slider round"></span>
+									</label>
+									<span>Skip bits/cheer alerts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="disableraids" />
+										<span class="slider round"></span>
+									</label>
+									<span>Skip raid/host alerts</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-variants-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-variants-options"><span>🎨 Variants / Presets</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div>
+									<label>Follow preset</label>
+									<select data-optionparam25="followstyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Subscription preset</label>
+									<select data-optionparam25="substyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Donation preset</label>
+									<select data-optionparam25="donostyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Bits/Cheer preset</label>
+									<select data-optionparam25="bitsstyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Raid preset</label>
+									<select data-optionparam25="raidstyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<small style="opacity: 0.8;">Each category maps all supported platforms into one shared alert style, while still keeping the source badge and event wording platform-aware.</small>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-layout-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-layout-options"><span>🖼️ Layout & Visibility</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="compact" />
+										<span class="slider round"></span>
+									</label>
+									<span>Compact alert cards</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="align=center" />
+										<span class="slider round"></span>
+									</label>
+									<span>Center align alert box</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="alignright" />
+										<span class="slider round"></span>
+									</label>
+									<span>Right align alert box</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="scale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔍 Scale multiplier
+										<input type="range" min="0.6" max="2.4" step="0.05" value="1" style="width: 150px;" data-numbersetting25="scale" data-range-display="multi-alert-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="multi-alert-scale-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hideavatar" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide avatars</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hidemedia" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide GIF / media attachments</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hidesource" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide source badges</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hidesubtitle" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide subtitle row</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hideamount" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide amount / value pills</span>
+								</div>
+								<div title="Use a solid page background instead of transparency.">
+									<label class="switch">
+										<input type="checkbox" data-param25="pagebg" />
+										<span class="slider round"></span>
+									</label>
+									<span>Solid page background</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" class="textInput instant" autocomplete="off" placeholder="rgba(7, 10, 16, 0.9)" data-textparam25="pagebg" />
+									<label><span>&gt; Page background color</span></label>
+								</div>
+								<div title="Set a green screen background for chroma key workflows.">
+									<label class="switch">
+										<input type="checkbox" data-param25="chroma=00ff00" />
+										<span class="slider round"></span>
+									</label>
+									<span>Green page background</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-sound-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-sound-options"><span>🔊 Sound & Timing</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="beep" />
+										<span class="slider round"></span>
+									</label>
+									<span>Play alert sound</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="beepvolume" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔉 Sound volume
+										<input type="range" min="0" max="100" step="5" value="35" style="width: 150px;" data-numbersetting25="beepvolume" data-range-display="multi-alert-beep-display" data-range-suffix="%" />
+										<span class="range-value" id="multi-alert-beep-display">35%</span>
+									</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" class="textInput instant" autocomplete="off" placeholder="https://example.com/alert.wav" data-textparam25="custombeep" />
+									<label><span>&gt; Custom sound URL</span></label>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="showtime" />
+										<span class="slider round"></span>
+									</label>
+									<span>⏲️ Show each alert for <input type="number" style="max-width: 8ch;" min="1000" max="60000" value="8000" data-numbersetting25="showtime" />ms</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="cooldown" />
+										<span class="slider round"></span>
+									</label>
+									<span>⏳ Cooldown between alerts <input type="number" style="max-width: 8ch;" min="0" max="30000" value="900" data-numbersetting25="cooldown" />ms</span>
+								</div>
+								<div title="Keep overlapping alerts in a queue instead of ignoring them while another alert is already visible.">
+									<label class="switch">
+										<input type="checkbox" data-param25="queue" />
+										<span class="slider round"></span>
+									</label>
+									<span>Queue overlapping alerts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="debug" />
+										<span class="slider round"></span>
+									</label>
+									<span>Debug mode (console logs)</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-preview-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-preview-options"><span>🧪 Preview & Test</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div style="display: flex; flex-wrap: nowrap; gap: 6px; margin-bottom: 14px;">
+									<button type="button" id="multi-alert-preview-follow" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Follow</button>
+									<button type="button" id="multi-alert-preview-sub" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Sub</button>
+									<button type="button" id="multi-alert-preview-dono" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Donation</button>
+									<button type="button" id="multi-alert-preview-bits" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Bits</button>
+									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Raid</button>
+									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Clear</button>
+								</div>
+								<div style="width: 100%; height: 280px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(10,12,18,0.94), rgba(19,24,35,0.92));">
+									<iframe id="multi-alerts-preview-frame" title="Multi alert preview" style="width: 100%; height: 100%; border: 0; background: transparent;" loading="lazy"></iframe>
+								</div>
+								<small style="display: block; margin-top: 10px; opacity: 0.8;">This preview uses the real multi-alert overlay renderer in a local iframe, so theme, visibility, disabled categories, media, and timing changes match the live browser source.</small>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
             <div class="generic_category_title">
                 <h2>
                     <span data-translate="global-settings-and-tools">🛠️ Global settings and tools </span>
@@ -5580,9 +5971,10 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="filtereventstoggle" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; values that match a word in the event will be rejected. eg: joined,banned,gifted">
-                                        <input type="text" id="filterevents" class="textInput" autocomplete="off" placeholder="Text to match for.." data-textsetting="filterevents" />
-                                        <label for="filterevents"><span data-translate="hide-specific-events">&gt; Hide specific events</span></label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
+                                        <input type="text" id="filterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textsetting="filterevents" data-tag-presets="events" />
+                                        <label for="filterevents" style="display: inline-block; margin: 0 0 6px 0;"><span data-translate="hide-specific-events">&gt; Hide specific events</span></label>
+                                        <div style="display: inline-block; margin: 0 0 6px 6px; font-size: 0.9em;"><a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">See the full list of event names</a></div>
                                     </div>
                                 </div>
 								<div title="Remove links when sending messages to Tiktok from SocialStreamNinja">
@@ -6775,6 +7167,32 @@ input:checked + .slider:before {
                                 </div>
                                 <center>
                                     <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="kick">
+                                        <span><span data-translate="open-chat">Open chat</span></span>
+                                    </button>
+                                </center>
+                                <br />
+
+                                <div class="textInputContainer" style="width: 95%;">
+                                    <input type="text" id="rumble_username" class="textInput" autocomplete="off" placeholder="Username or channel name" data-textsetting="rumble_username" />
+                                    <label for="rumble_username">&gt; Rumble username / channel</label>
+                                </div>
+                                <div class="textInputContainer" style="width: 95%;">
+                                    <input type="text" id="rumble_video_id" class="textInput" autocomplete="off" placeholder="Video URL, popup URL, v-id, or numeric chat ID" data-textsetting="rumble_video_id" />
+                                    <label for="rumble_video_id">&gt; Rumble video URL / ID</label>
+                                </div>
+                                <center>
+                                    <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="rumble">
+                                        <span><span data-translate="open-chat">Open chat</span></span>
+                                    </button>
+                                </center>
+                                <br />
+
+                                <div class="textInputContainer" style="width: 95%;">
+                                    <input type="text" id="joystick_username" class="textInput" autocomplete="off" placeholder="Channel name (optional)" data-textsetting="joystick_username" />
+                                    <label for="joystick_username">&gt; Joystick Bot WebSocket</label>
+                                </div>
+                                <center>
+                                    <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="joystickws">
                                         <span><span data-translate="open-chat">Open chat</span></span>
                                     </button>
                                 </center>
@@ -8280,6 +8698,14 @@ input:checked + .slider:before {
 									</label>
 									<span>🗂️ Hide metadata details under messages</span>
 								</div>
+
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="notime" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="hide-timestamp">🕘 Hide timestamp </span>
+								</div>
 								
 								<div>
 									<label class="switch">
@@ -8289,6 +8715,13 @@ input:checked + .slider:before {
 									<span data-translate="light-theme">☀️ Use light theme instead of dark</span>
 								</div>
 
+								<div class="events-transparent-option">
+									<label class="switch">
+										<input type="checkbox" data-param17="transparent" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="force-transparent-background">â­• Force transparent background </span><span class="obs-transparent-note"> (Useful for standalone pop-out overlays)</span>
+								</div>
 								<div data-keywords="font size zoom scale enlarge shrink">
 									<label class="switch">
 										<input type="checkbox" data-param17="scale" />
@@ -8603,7 +9036,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param4="transparent" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="force-transparent-background">⭕ Force transparent background </span>
+                                    <span data-translate="force-transparent-background">⭕ Force transparent background </span><span class="obs-transparent-note"> (OBS Browser Source is already transparent by default)</span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -8670,6 +9103,231 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
+			
+			<div class="link" title="Meta data bar for auction, commerce, and giveaway-style status updates">
+				<h2 class="meta_mode_title">
+					<span class="title-group"><span class="emoji" aria-hidden="true">📦</span><span>Meta Data Bar</span></span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#meta-bar" title="Jump to the meta bar link options."><span data-translate="options">[options]</span></a>
+					<label for="help-meta" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+				</h2>
+				<input type="checkbox" id="help-meta" class="link-help-toggle">
+				<div class="link-help-content">
+					<strong>Dedicated overlay for metadata-only events.</strong>
+					<p>Shows live values such as current item, bidder, bids, timer, product availability, giveaway counts, and viewer snapshots.</p>
+					<ul>
+						<li>Built for auction and commerce streams</li>
+						<li>Updates values in place as new meta events arrive</li>
+						<li>Toggle icon, label, and value visibility</li>
+						<li>Filter by event type (auction, commerce, viewers, other meta)</li>
+					</ul>
+					<div class="help-tip">💡 <strong>Tip:</strong> If no event filter is checked, the overlay defaults to auction + commerce + viewer meta.</div>
+				</div>
+					<h3>
+						<span>
+							Displays metadata-only events (no chat message required), such as auction status and catalog summaries.
+						</span>
+					</h3>
+					<div id="meta" data-raw="" class="streaming_chat"><a href="" id="metalink"></a></div>
+					<div class="sticky-action-row top-67">
+						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="auction" title="Send a fake auction_update meta event">
+							<span>Fake Auction Meta</span>
+						</button>
+						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="commerce" title="Send a fake commerce_update meta event">
+							<span>Fake Commerce Meta</span>
+						</button>
+						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="viewers" title="Send a fake viewer_updates meta event">
+							<span>Fake Viewer Meta</span>
+						</button>
+						<button class="glowingButton showalways" style="flex: 0 0 88px; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="random" title="Send a random fake meta event">
+							<span>Random</span>
+						</button>
+					</div>
+				</div>
+			<a href="" id="meta-bar"></a>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-meta-options" />
+					<label class="collapsible-label" for="wrapper-meta-options"><span>📊 Meta Overlay Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group meta">
+								<h3>Event Type Filters</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="auction" />
+										<span class="slider round"></span>
+									</label>
+									<span>🔨 Show auction updates</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="commerce" />
+										<span class="slider round"></span>
+									</label>
+									<span>🛍️ Show commerce/catalog updates</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="viewers" />
+										<span class="slider round"></span>
+									</label>
+									<span>👁️ Show viewer updates</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="othermeta" />
+										<span class="slider round"></span>
+									</label>
+									<span>🧩 Show other/debug meta events</span>
+								</div>
+								<div style="font-size: 0.9em; opacity: 0.85; margin-left: 34px;">
+									Includes miscellaneous fields like index/profile data from non-auction meta payloads.
+								</div>
+								<br>
+								<h3>Display Controls</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="noicon" />
+										<span class="slider round"></span>
+									</label>
+									<span>🙈 Hide icons</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="nolabel" />
+										<span class="slider round"></span>
+									</label>
+									<span>🙊 Hide labels</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="novalue" />
+										<span class="slider round"></span>
+									</label>
+									<span>🙉 Hide values</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="compact" />
+										<span class="slider round"></span>
+									</label>
+									<span>📏 Compact spacing</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="hideauctionextras" />
+										<span class="slider round"></span>
+									</label>
+									<span>🧹 Hide auction extra fields (seller/category/shipping/tags/action/source)</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="hidecommerceextras" />
+										<span class="slider round"></span>
+									</label>
+									<span>🧹 Hide commerce extra fields (navigation/live/upcoming breakdowns)</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="hideviewerplatforms" />
+										<span class="slider round"></span>
+									</label>
+									<span>👁️ Hide per-platform viewer rows (keep total only)</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="hidedebugmeta" />
+										<span class="slider round"></span>
+									</label>
+									<span>🛠️ Hide technical/debug fields (index/profile/url/source-mode/image)</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated keywords. Any matching field id/label will be hidden. Example: profile,index,shipping,tags,wallet,upcoming">
+									<input type="text" id="meta_hidefields" class="textInput instant" autocomplete="off" placeholder="e.g. profile,index,shipping,tags,wallet" data-textparam24="hidefields" />
+									<label for="meta_hidefields">&gt; Hide fields by keyword (comma-separated)</label>
+								</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param24="hidetitle" />
+											<span class="slider round"></span>
+										</label>
+										<span>🧹 Hide header title</span>
+									</div>
+									<div class="textInputContainer" style="width: 95%;" title="Optional title text for the overlay header. Leave blank to hide the header by default.">
+										<input type="text" id="meta_title_text" class="textInput instant" autocomplete="off" placeholder="Optional header title" data-textparam24="title" />
+										<label for="meta_title_text">&gt; Optional header title</label>
+									</div>
+									<br>
+									<h3>Layout and Appearance</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="alignright" />
+										<span class="slider round"></span>
+									</label>
+									<span>➡️ Align overlay to the right-side</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="align=center" />
+										<span class="slider round"></span>
+									</label>
+									<span>↔️ Align overlay to the center</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="scale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔍 Scale multiplier
+										<input type="range" id="meta-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting24="scale" data-range-display="meta-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="meta-scale-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="opacity" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										👻 Panel opacity
+										<input type="range" id="meta-opacity-range" min="0" max="1" step="0.05" value="1" style="width: 150px;" data-numbersetting24="opacity" data-range-display="meta-opacity-display" />
+										<span class="range-value" id="meta-opacity-display">1.00</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="nobg" />
+										<span class="slider round"></span>
+									</label>
+									<span>🧼 Transparent chip backgrounds</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="nooutline" />
+										<span class="slider round"></span>
+									</label>
+									<span>🔳 Disable text outlining</span>
+								</div>
+								<div title="Set the overall page background color (useful for OBS docks so the page is not transparent/white). Supports hex, rgba, and named colors.">
+									<label class="switch">
+										<input type="checkbox" data-param24="pagebg" />
+										<span class="slider round"></span>
+									</label>
+									<span>🎨 Custom page background color</span>
+								</div>
+								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
+										<input type="text" id="meta_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam24="pagebg" data-palette="meta_pagebg_palette" />
+										<label for="meta_pagebg">&gt; Page background color</label>
+									</div>
+									<input type="color" data-color="meta_pagebg" id="meta_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 			
 			
 			<div class="link" title="This link shows a tally of donations recieved">
@@ -8928,7 +9586,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param5="transparent" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="force-transparent-background">⭕ Force transparent background </span>
+                                    <span data-translate="force-transparent-background">⭕ Force transparent background </span><span class="obs-transparent-note"> (OBS Browser Source is already transparent by default)</span>
                                 </div>
 								<div title="Set the overall page background color (useful for OBS docks so the page is not transparent/white). Supports hex, rgba, and named colors.">
 									<label class="switch">
@@ -9061,13 +9719,18 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group flowactions">
-                                <div class="textInputContainer" style="width: 95%;" title="OBS WebSocket server URL (default: ws://localhost:4455)">
-                                    <input type="text" id="obsWebSocketUrl" class="textInput instant" autocomplete="off" placeholder="ws://localhost:4455" data-textparam18="obsws" />
+                                <div class="textInputContainer" style="width: 95%;" title="OBS WebSocket server URL (default: ws://127.0.0.1:4455)">
+                                    <input type="text" id="obsWebSocketUrl" class="textInput instant" autocomplete="off" placeholder="ws://127.0.0.1:4455" data-textparam18="obsws" />
                                     <label for="obsWebSocketUrl"><span data-translate="obs-websocket-url">&gt; OBS WebSocket URL</span></label>
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="OBS WebSocket password for authentication">
                                     <input type="password" id="obsWebSocketPassword" class="textInput instant" autocomplete="off" placeholder="Enter your OBS password" data-textparam18="obspw" />
                                     <label for="obsWebSocketPassword"><span data-translate="obs-websocket-password">&gt; OBS WebSocket Password</span></label>
+                                </div>
+                                <div style="margin-top: 8px;">
+                                    <small>Flow Actions use OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; leave it blank if OBS does not require one.</small><br>
+                                    <small>For a live status badge on the overlay itself, append <code>&amp;obsdebug=1</code> to the <code>actions.html</code> URL.</small><br>
+                                    <a href="./obs-websocket-test.html" target="_blank" rel="noopener">Open OBS WebSocket Tester</a>
                                 </div>
                                 <div style="margin-top: 10px; padding: 10px; background-color: var(--color-accent-subtle); border-radius: 5px;">
                                     <small data-translate="obs-websocket-info">💡 Configure your OBS WebSocket settings here to enable Flow Actions to control OBS. Make sure OBS WebSocket Server is enabled in OBS: Tools → WebSocket Server Settings</small>

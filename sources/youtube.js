@@ -922,7 +922,7 @@
 						if (subtextContent.toLowerCase().includes("upgraded")) {
 							chatmessage = subtextContent;
 							hasMembership = getTranslation("member-chat", "MEMBERSHIP");
-							eventType = "upgraded-membership";
+							eventType = "resub";
 							const tierMatch = subtextContent.match(/to\s+(.+?)(?:\s*!)?$/i);
 							if (tierMatch && tierMatch[1]) {
 								subtitle = tierMatch[1].trim();
@@ -930,7 +930,7 @@
 						} else if (subtextContent.toLowerCase().includes("welcome to") || subtextContent.toLowerCase().includes("willkommen bei")) {
 							chatmessage = subtextContent;
 							hasMembership = getTranslation("member-chat", "MEMBERSHIP");
-							eventType = "new-membership";
+							eventType = "sponsorship";
 							// Updated regex to handle both English and German patterns
 							const tierMatch = subtextContent.match(/(?:welcome to|willkommen bei)\s+(.+?)(?:\s*!)?$/i);
 							if (tierMatch && tierMatch[1]) {
@@ -941,7 +941,7 @@
 							// Only triggers for membership items with the specific structure
 							chatmessage = subtextContent;
 							hasMembership = getTranslation("member-chat", "MEMBERSHIP");
-							eventType = "new-membership";
+							eventType = "sponsorship";
 							// Try to extract channel/tier name - look for text after common prepositions
 							const tierMatch = subtextContent.match(/(?:to|bei|à|a|para|для|へ|に|에|у|na|في|में)\s+(.+?)(?:\s*[!.。！])?$/i);
 							if (tierMatch && tierMatch[1]) {
@@ -1150,6 +1150,9 @@
 		}
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube"; 
+		if (ele.id) {
+			data.meta = Object.assign({}, data.meta, { messageId: ele.id });
+		}
 		
 		if (channelName){
 			data.sourceName = channelName;

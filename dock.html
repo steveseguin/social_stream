@@ -3110,6 +3110,7 @@
 			var darkmode = null;
 			var scale = 1;
 			var forceAutoscroll = false;
+			var manualScrollMode = urlParams.has("manualscroll");
 			var triggerState = true;
 			var emojis = true;
 			var pauseState = false;
@@ -4006,7 +4007,17 @@
 
 			var reversed = false;
 
-			if (urlParams.has("autoscroll")) {
+			function shouldAutoScrollToBottom(scrollHeight, scrollTop, clientHeight, threshold) {
+				if (forceAutoscroll) {
+					return true;
+				}
+				if (manualScrollMode) {
+					return false;
+				}
+				return scrollHeight < scrollTop + clientHeight + threshold;
+			}
+
+			if (urlParams.has("autoscroll") && !manualScrollMode) {
 				forceAutoscroll = false;
 				jumptoBottom();
 			}
@@ -4672,7 +4683,7 @@
 				// &filterevents=joined,otherkeyword
 				filterEvents = urlParams.get("filterevents") || false;
 				if (filterEvents) {
-					filterEvents = filterEvents.split(",");
+					filterEvents = filterEvents.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
 				}
 			}
 
@@ -5261,7 +5272,7 @@
 						if (getById("output").lastChild) {
 							delta = parseInt(getById("output").lastChild.clientHeight);
 						}
-						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch + delta || forceAutoscroll) {
+						if (shouldAutoScrollToBottom(getById("output").scrollHeight, getById("output").scrollTop, getById("output").clientHeight, autoScrollCatch + delta)) {
 							jumptoBottom2()
 						}
 					}
@@ -5275,7 +5286,7 @@
 						if (getById("output").lastChild) {
 							delta = parseInt(getById("output").lastChild.clientHeight);
 						}
-						if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch + delta || forceAutoscroll) {
+						if (shouldAutoScrollToBottom(document.body.scrollHeight, document.body.scrollTop, document.body.clientHeight, autoScrollCatch + delta)) {
 							jumptoBottom2()
 						}
 					}
@@ -6104,7 +6115,7 @@
 					selector = `[data-chatname='${data.delete.chatname}']`;
 				}
 
-				if (deleteOnlyLast) {
+				if (deleteOnlyLast || data.delete.onlyLast) {
 					const elements = Array.from(document.querySelectorAll(selector));
 					if (elements.length) {
 						const newest = elements.reduce((a, b) => 
@@ -6250,6 +6261,8 @@
 				}
 				if (clearBeforeReload) {
 					mainOutputWindow.innerHTML = "";
+					resetHorizontalTicker();
+					odd = false;
 				}
 				sentBefore = false;
 				historyReturnSyncPending = true;
@@ -6757,47 +6770,48 @@
 					return;
 				} else if ("blockUser" in data) {
 					try {
-						if (data.blockUser.username && data.blockUser.type) {
+						const blockName = data.blockUser.chatname || data.blockUser.username;
+						if (blockName && data.blockUser.type) {
 							if (!localBlockUserList) {
 								localBlockUserList = {};
 							}
-							if (localBlockUserList[data.blockUser.username]) {
-								if (!localBlockUserList[data.blockUser.username].includes(data.blockUser.type)) {
-									localBlockUserList[data.blockUser.username].push(data.blockUser.type);
+							if (localBlockUserList[blockName]) {
+								if (!localBlockUserList[blockName].includes(data.blockUser.type)) {
+									localBlockUserList[blockName].push(data.blockUser.type);
 								}
 							} else {
-								localBlockUserList[data.blockUser.username] = [data.blockUser.type];
+								localBlockUserList[blockName] = [data.blockUser.type];
 							}
-							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
+							document.querySelectorAll("[data-chatname='" + blockName + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
 								ele.remove();
 							});
-							
-							if (data.blockUser.type=="youtube"){
-								if (!localBlockUserList[data.blockUser.username].includes("youtubeshorts")) {
-									localBlockUserList[data.blockUser.username].push("youtubeshorts");
+
+							if (data.blockUser.type == "youtube") {
+								if (!localBlockUserList[blockName].includes("youtubeshorts")) {
+									localBlockUserList[blockName].push("youtubeshorts");
 								}
-								document.querySelectorAll("[data-chatname='" + data.blockUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+								document.querySelectorAll("[data-chatname='" + blockName + "'][data-source-type='youtubeshorts']").forEach(ele => {
 									ele.remove();
 								});
 							}
-							
+
 							// Remove user from local block list after 10 seconds
 							setTimeout(() => {
-								if (localBlockUserList && localBlockUserList[data.blockUser.username]) {
-									const typeIndex = localBlockUserList[data.blockUser.username].indexOf(data.blockUser.type);
+								if (localBlockUserList && localBlockUserList[blockName]) {
+									const typeIndex = localBlockUserList[blockName].indexOf(data.blockUser.type);
 									if (typeIndex !== -1) {
-										localBlockUserList[data.blockUser.username].splice(typeIndex, 1);
+										localBlockUserList[blockName].splice(typeIndex, 1);
 									}
-									
+
 									if (data.blockUser.type == "youtube") {
-										const shortsIndex = localBlockUserList[data.blockUser.username].indexOf("youtubeshorts");
+										const shortsIndex = localBlockUserList[blockName].indexOf("youtubeshorts");
 										if (shortsIndex !== -1) {
-											localBlockUserList[data.blockUser.username].splice(shortsIndex, 1);
+											localBlockUserList[blockName].splice(shortsIndex, 1);
 										}
 									}
-									
-									if (localBlockUserList[data.blockUser.username].length === 0) {
-										delete localBlockUserList[data.blockUser.username];
+
+									if (localBlockUserList[blockName].length === 0) {
+										delete localBlockUserList[blockName];
 									}
 								}
 							}, 10000);
@@ -7194,8 +7208,10 @@
 					if (data.action == "clear" || data.action == "clearAll") {
 						// clears all except pinned messages
 						getById("output").innerHTML = "";
+						resetHorizontalTicker();
 						autoShowQueue = [];
 						selectedQueue = [];
+						odd = false;
 						if (data.ctrl) {
 							getById("pinned").innerHTML = "";
 						}
@@ -7512,6 +7528,7 @@
 					}
 				});
 			}
+
 			///////////
 			let obsState = {};
 			const modal = document.getElementById('obsControlModal');
@@ -8033,8 +8050,76 @@
 				applyHiddenState(element);
 			}
 
+			function normalizeSourceControlType(type) {
+				type = (type || "").toLowerCase();
+				if (type === "youtubeshorts") {
+					return "youtube";
+				}
+				return type;
+			}
+
+			function getNativeSourceControlMessageId(rawContents) {
+				if (!rawContents || typeof rawContents !== "object") {
+					return "";
+				}
+				return (
+					rawContents.messageId ||
+					rawContents.message_id ||
+					rawContents.meta?.messageId ||
+					rawContents.meta?.message_id ||
+					rawContents.nativeMessageId ||
+					rawContents.native_message_id ||
+					""
+				);
+			}
+
+			function buildSourceControlPayload(element) {
+				if (!element) {
+					return null;
+				}
+				const rawContents = element.rawContents || {};
+				const type = normalizeSourceControlType(element.dataset.sourceType || rawContents.type || "");
+				const nativeMessageId = getNativeSourceControlMessageId(rawContents);
+				const messageId = nativeMessageId || element.dataset.mid || rawContents.id || "";
+				if (!type || !messageId) {
+					return null;
+				}
+				const payload = {
+					type: type,
+					id: String(messageId)
+				};
+				if (nativeMessageId) {
+					payload.messageId = String(nativeMessageId);
+				}
+				const sourceTabId = rawContents.tid;
+				const chatName = element.dataset.chatname || rawContents.chatname || "";
+				const userId = rawContents.userid || rawContents.userId || rawContents.authorChannelId || "";
+				const chatImg = element.dataset.chatimg || rawContents.chatimg || "";
+				if (sourceTabId !== undefined && sourceTabId !== null && sourceTabId !== "") {
+					payload.tid = sourceTabId;
+				}
+				if (chatName) {
+					payload.chatname = chatName;
+				}
+				if (userId) {
+					payload.userid = userId;
+				}
+				if (chatImg) {
+					payload.chatimg = chatImg;
+				}
+				return payload;
+			}
+
 			function deleteMessage(element) {
 				syncDataAny({ deleteMessage: element.dataset.mid }, false, true);
+				try {
+					const payload = buildSourceControlPayload(element);
+					if (payload) {
+						send2Extension({ action: "deleteSourceMessage", value: payload });
+					}
+				} catch (e) {
+					console.error(e);
+				}
 				element.remove();
 			}
 
@@ -8061,15 +8146,19 @@
 						document.querySelectorAll("[data-chatname='" + chatName + "'][data-source-type='" + type + "']").forEach(ele => {
 							ele.remove();
 						});
-						
+
 						let sendBlob = {};
 						sendBlob.chatname = chatName;
 						sendBlob.type = type;
-						
-						if (element.rawContents && element.rawContents.userid){
-							sendBlob.userid = element.rawContents.userid;
+						sendBlob.messageId = getNativeSourceControlMessageId(element.rawContents || {}) || element.dataset.mid || "";
+						if (element.rawContents && element.rawContents.tid !== undefined && element.rawContents.tid !== null && element.rawContents.tid !== "") {
+							sendBlob.tid = element.rawContents.tid;
 						}
-						if (chatImg){
+
+						if (element.rawContents && (element.rawContents.userid || element.rawContents.userId || element.rawContents.authorChannelId)) {
+							sendBlob.userid = element.rawContents.userid || element.rawContents.userId || element.rawContents.authorChannelId;
+						}
+						if (chatImg) {
 							sendBlob.chatimg = chatImg;
 						}
 						
@@ -8604,10 +8693,10 @@
 				}
 				if (!(reversed && !forceAutoscroll)) {
 					if (alignbottom || fadetop) {
-						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch || forceAutoscroll) {
+						if (shouldAutoScrollToBottom(getById("output").scrollHeight, getById("output").scrollTop, getById("output").clientHeight, autoScrollCatch)) {
 							jumptoBottom2()
 						}
-					} else if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch || forceAutoscroll) {
+					} else if (shouldAutoScrollToBottom(document.body.scrollHeight, document.body.scrollTop, document.body.clientHeight, autoScrollCatch)) {
 						jumptoBottom2()
 					}
 				}
@@ -8969,6 +9058,29 @@
 				horizontalPruneMessages();
 			}
 
+			function horizontalTickerIsMounted() {
+				if (!horizontalTickerState || !horizontalTickerState.viewport || !horizontalTickerState.track || !mainOutputWindow) {
+					return false;
+				}
+				return horizontalTickerState.viewport.parentNode === mainOutputWindow &&
+					horizontalTickerState.track.parentNode === horizontalTickerState.viewport &&
+					horizontalTickerState.viewport.isConnected &&
+					horizontalTickerState.track.isConnected;
+			}
+
+			function resetHorizontalTicker() {
+				if (!horizontalTickerState) {
+					return;
+				}
+				if (horizontalTickerState.resizeHandler) {
+					window.removeEventListener("resize", horizontalTickerState.resizeHandler);
+				}
+				horizontalTickerState.viewport = null;
+				horizontalTickerState.track = null;
+				horizontalTickerState.currentTranslate = 0;
+				horizontalTickerState.resizeHandler = null;
+			}
+
 			function horizontalGetGap() {
 				if (!horizontalTickerState || !horizontalTickerState.track) {
 					return 0;
@@ -9034,6 +9146,27 @@
 				horizontalTickerState.currentTranslate = value;
 			}
 
+			function horizontalNextFrame(callback) {
+				if (typeof callback !== "function") {
+					return;
+				}
+				var fired = false;
+				var run = function() {
+					if (fired) {
+						return;
+					}
+					fired = true;
+					callback();
+				};
+				var fallback = setTimeout(run, 34);
+				if (typeof requestAnimationFrame === "function") {
+					requestAnimationFrame(function () {
+						clearTimeout(fallback);
+						run();
+					});
+				}
+			}
+
 			function horizontalCalculateTarget() {
 				if (!horizontalTickerState || !horizontalTickerState.track || !horizontalTickerState.viewport) {
 					return 0;
@@ -9059,15 +9192,15 @@
 					return;
 				}
 				var current = horizontalCaptureCurrentTranslate();
-				if (!isFinite(target) || target === current || target >= current) {
-					horizontalSetImmediateTransform(target);
-					return;
+					if (!isFinite(target) || target === current || target >= current) {
+						horizontalSetImmediateTransform(target);
+						return;
+					}
+					horizontalSetImmediateTransform(current);
+					horizontalNextFrame(function () {
+						horizontalAnimateTo(target);
+					});
 				}
-				horizontalSetImmediateTransform(current);
-				requestAnimationFrame(function () {
-					horizontalAnimateTo(target);
-				});
-			}
 
 			function horizontalGetMessages() {
 				if (!horizontalTickerState || !horizontalTickerState.track) {
@@ -9146,7 +9279,7 @@
 			}
 
 			function horizontalAddNodeToTicker(node) {
-				if (!horizontalTickerState) {
+				if (!horizontalTickerIsMounted()) {
 					initializeHorizontalTicker();
 				}
 				if (!horizontalTickerState || !horizontalTickerState.track) {
@@ -9185,7 +9318,7 @@
 						var current = horizontalCaptureCurrentTranslate();
 						var target = horizontalCalculateTarget();
 						horizontalSetImmediateTransform(current);
-						requestAnimationFrame(function () {
+						horizontalNextFrame(function () {
 							horizontalAnimateTo(target);
 						});
 					} else {
@@ -9199,12 +9332,12 @@
 						var shift = width + (hasSibling ? gap : 0);
 						var target = horizontalCalculateTarget();
 						horizontalSetImmediateTransform(current - shift);
-						requestAnimationFrame(function () {
+						horizontalNextFrame(function () {
 							horizontalAnimateTo(target);
 						});
 					}
 
-					requestAnimationFrame(function () {
+					horizontalNextFrame(function () {
 						node.classList.remove("horizontal-ticker-pending");
 						node.style.opacity = "";
 					});
@@ -9435,9 +9568,10 @@
 						}
 					}
 
-					if (filterEvents && data.event && data.chatmessage) {
-						const messageText = data.textContent || data.chatmessage;
-						if (filterEvents.some(v => messageText.includes(v))) {
+					if (filterEvents && data.event) {
+						const eventName = typeof data.event === "string" ? data.event.trim().toLowerCase() : "";
+						const messageText = (data.textContent || data.chatmessage || "").toLowerCase();
+						if (filterEvents.some(v => (eventName && eventName === v) || (messageText && messageText.includes(v)))) {
 							return;
 						}
 					}
@@ -9646,7 +9780,8 @@
 						}
 					}
 
-					if (hideNumbers && data.chatmessage && !data.contentimg && !data.hasDonation && data.chatmessage === parseFloat(data.chatmessage)) {
+					const plainChatMessage = (data.textContent || data.chatmessage || "").replace(/<[^>]*>/g, "").trim();
+					if (hideNumbers && plainChatMessage && !data.contentimg && !data.hasDonation && /^\d+$/.test(plainChatMessage)) {
 						return;
 					}
 					
@@ -11335,8 +11470,10 @@
 			
 			function clearAll(relay){
 				getById("output").innerHTML = "";
+				resetHorizontalTicker();
 				autoShowQueue = [];
 				selectedQueue = [];
+				odd = false;
 				sendDataP2P(false);
 				updateQueueButton();
 				TTS.clearQueue();

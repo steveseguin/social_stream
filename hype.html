@@ -1079,7 +1079,28 @@ function processInput(data) {
         console.error("hype.html: 'parentHolder' element not found!");
         return;
     }
+    const viewerSources = (data.hype.viewers && typeof data.hype.viewers === "object") ? data.hype.viewers : {};
+    const chatterSources = (data.hype.chatters && typeof data.hype.chatters === "object") ? data.hype.chatters : {};
     let combinedData = data.hype.combined || {};
+
+    // Viewer-only and chatter-only modes should start from their dedicated payloads.
+    if (showViewers && !showChatters) {
+        combinedData = {};
+        Object.keys(viewerSources).forEach(sourceType => {
+            combinedData[sourceType] = {
+                chatters: 0,
+                viewers: parseInt(viewerSources[sourceType]) || 0
+            };
+        });
+    } else if (showChatters && !showViewers) {
+        combinedData = {};
+        Object.keys(chatterSources).forEach(sourceType => {
+            combinedData[sourceType] = {
+                chatters: parseInt(chatterSources[sourceType]) || 0,
+                viewers: 0
+            };
+        });
+    }
     
     // Apply combination logic based on URL parameters
     if (combineAll) {

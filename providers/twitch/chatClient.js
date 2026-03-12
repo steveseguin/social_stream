@@ -149,7 +149,7 @@ function ensureNumber(value, fallback = null) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function extractBadges(tags) {
+function extractBadgeMap(tags) {
   if (!tags) {
     return {};
   }
@@ -158,6 +158,29 @@ function extractBadges(tags) {
     return {};
   }
   return { ...badges };
+}
+
+const BADGE_LABELS = {
+  broadcaster: '📡',
+  moderator: '🛡️',
+  vip: '💎',
+  subscriber: '⭐',
+  premium: '👑',
+  turbo: '⚡',
+  partner: '✓',
+  staff: '🔧',
+  admin: '🔑'
+};
+
+function badgeMapToChatBadges(badgeMap) {
+  const result = [];
+  for (const key of Object.keys(badgeMap)) {
+    const label = BADGE_LABELS[key];
+    if (label) {
+      result.push({ type: 'text', text: label });
+    }
+  }
+  return result;
 }
 
 export function createTwitchChatClient(options = {}) {
@@ -318,7 +341,7 @@ export function createTwitchChatClient(options = {}) {
     const twitchLogin = normalizeTwitchChannel(tags?.username || tags?.login);
     const displayName = tags?.['display-name'] || twitchLogin || 'Twitch User';
     const sanitizedMessage = formatters.sanitize(message ?? '');
-    const badges = extractBadges(tags);
+    const badgeMap = extractBadgeMap(tags);
     const normalizedType = messageType || tags?.['message-type'] || null;
     const event = tags?.bits
       ? 'bits'
@@ -334,12 +357,12 @@ export function createTwitchChatClient(options = {}) {
       chatmessage: sanitizedMessage,
       chatimg: formatters.avatarUrl(twitchLogin || displayName),
       timestamp: Number(tags?.['tmi-sent-ts'] || formatters.now()),
-      badges,
-      hasDonation: Boolean(tags?.bits),
+      chatbadges: badgeMapToChatBadges(badgeMap),
+      hasDonation: tags?.bits ? (parseInt(tags.bits) === 1 ? '1 bit' : `${tags.bits} bits`) : '',
       bits: ensureNumber(tags?.bits, 0),
-      isModerator: tags?.mod === true || tags?.mod === '1' || Boolean(badges?.moderator),
-      isOwner: Boolean(badges?.broadcaster),
-      isSubscriber: Boolean(badges?.subscriber),
+      isModerator: tags?.mod === true || tags?.mod === '1' || Boolean(badgeMap?.moderator),
+      isOwner: Boolean(badgeMap?.broadcaster),
+      isSubscriber: Boolean(badgeMap?.subscriber),
       userId: tags?.['user-id'] || null,
       event,
       isSelf: Boolean(isSelf),
@@ -360,15 +383,15 @@ export function createTwitchChatClient(options = {}) {
       null
     );
     return {
-      id: resolveMessageId(channelName, userstate, eventType || 'subscription'),
+      id: resolveMessageId(channelName, userstate, eventType || 'new_subscriber'),
       platform: 'twitch',
       type: 'twitch',
       chatname: displayName,
       chatmessage: sanitizedMessage,
       chatimg: formatters.avatarUrl(twitchLogin || displayName),
       timestamp: Number(userstate?.['tmi-sent-ts'] || formatters.now()),
-      hasDonation: false,
-      event: eventType || 'subscription',
+      hasDonation: '',
+      event: eventType || 'new_subscriber',
       months: cumulative,
       methods: methods || null,
       raw: { channel: channelName, userstate, message }
@@ -384,15 +407,15 @@ export function createTwitchChatClient(options = {}) {
       : normalizeTwitchChannel(userstate?.username || userstate?.login || gifter);
     const summary = `${gifter} gifted a sub to ${recipient}!`;
     return {
-      id: resolveMessageId(channelName, userstate, 'subgift'),
+      id: resolveMessageId(channelName, userstate, 'subscription_gift'),
       platform: 'twitch',
       type: 'twitch',
       chatname: gifter,
       chatmessage: formatters.sanitize(summary),
       chatimg: anonymous ? '' : formatters.avatarUrl(gifterLogin || gifter),
       timestamp: Number(userstate?.['tmi-sent-ts'] || formatters.now()),
-      event: 'subgift',
-      hasDonation: true,
+      event: 'subscription_gift',
+      hasDonation: `${gifter} gifted a sub to ${recipient}`,
       raw: { channel: channelName, recipient, userstate }
     };
   }
@@ -409,7 +432,7 @@ export function createTwitchChatClient(options = {}) {
       chatimg: formatters.avatarUrl(login || username),
       timestamp: formatters.now(),
       event: 'raid',
-      hasDonation: false,
+      hasDonation: '',
       viewers: ensureNumber(viewers, null),
       raw: { channel: channelName, username, viewers }
     };
@@ -427,7 +450,7 @@ export function createTwitchChatClient(options = {}) {
       chatimg: formatters.avatarUrl(login || username),
       timestamp: formatters.now(),
       event: 'host',
-      hasDonation: false,
+      hasDonation: '',
       viewers: ensureNumber(viewers, null),
       raw: { channel: channelName, username, viewers }
     };
@@ -445,7 +468,7 @@ export function createTwitchChatClient(options = {}) {
       chatmessage: sanitizedMessage,
       chatimg: login ? formatters.avatarUrl(login) : formatters.avatarUrl(displayName),
       timestamp: Number(userstate?.['tmi-sent-ts'] || formatters.now()),
-      hasDonation: true,
+      hasDonation: userstate?.bits ? (parseInt(userstate.bits) === 1 ? '1 bit' : `${userstate.bits} bits`) : '',
       bits: ensureNumber(userstate?.bits, 0),
       event: 'cheer',
       rawMessage: typeof message === 'string' ? message : '',
@@ -548,7 +571,7 @@ export function createTwitchChatClient(options = {}) {
     bind('subscription', (chan, username, method, message, userstate) => {
       emitter.emit(
         EVENTS.MEMBERSHIP,
-        normalizeSubscription(channelName, username, method, message, userstate, 'subscription')
+        normalizeSubscription(channelName, username, method, message, userstate, 'new_subscriber')
       );
     });
 

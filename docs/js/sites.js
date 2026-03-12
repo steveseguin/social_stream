@@ -188,6 +188,19 @@ document.addEventListener('DOMContentLoaded', function() {
             notes: 'See this video for help with toggled integrations: <a href="https://www.youtube.com/watch?v=L3l0_8V1t0Q" target="_blank">https://www.youtube.com/watch?v=L3l0_8V1t0Q</a>'
         },
         {
+            name: 'VPZone.tv',
+            icon: 'vpzone.png',
+            description: 'Live streaming platform with on-page chat capture and a read-only API page option.',
+            type: 'standard',
+            instructions: `
+                <ul>
+                    <li>Open the regular stream page with the chat column visible</li>
+                    <li>URL: https://vpzone.tv/stream/USERNAME</li>
+                </ul>
+            `,
+            notes: 'A read-only API-backed source is also available at <code>sources/websocket/vpzone.html?channel=USERNAME</code>.'
+        },
+        {
             name: 'Slack',
             icon: 'slack.png',
             description: 'Business communication platform.',
@@ -270,6 +283,18 @@ document.addEventListener('DOMContentLoaded', function() {
             `
         },
         {
+            name: 'Joystick Bot WebSocket',
+            icon: 'joystick.png',
+            description: 'WebSocket connection using your own Joystick bot credentials.',
+            type: 'websocket',
+            instructions: `
+                <ul>
+                    <li>URL: https://socialstream.ninja/sources/websocket/joystick</li>
+                    <li>Enter your bot client ID/client secret, then connect to GatewayChannel</li>
+                </ul>
+            `
+        },
+        {
             name: 'IRC WebSocket',
             icon: 'irc.png',
             description: 'WebSocket connection to IRC networks.',
@@ -303,7 +328,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>Use the pop out chat</li>
                     <li>URL: https://rumble.com/chat/popup/*</li>
                 </ul>
-            `
+            `,
+            notes: 'A creator-owned API-backed source is also available at <code>sources/websocket/rumble.html?apiUrl=...</code>.'
+        },
+        {
+            name: 'Rumble API URL',
+            icon: 'rumble.png',
+            description: 'Read-only creator API bridge for Rumble chat and stream events.',
+            type: 'websocket',
+            instructions: `
+                <ul>
+                    <li>URL: https://socialstream.ninja/sources/websocket/rumble.html</li>
+                    <li>Paste the Live Stream API URL from https://rumble.com/account/livestream-api</li>
+                </ul>
+            `,
+            notes: 'Read-only mode. The API URL is secret and includes your live stream key; Rumble currently documents no separate OAuth requirement for reading it. The page can also resolve the normal <code>https://rumble.com/chat/popup/&lt;stream-id&gt;</code> URL so you can open the injected popup directly without first scraping the <code>/live</code> page.'
         },
         {
             name: 'Dlive.tv',
@@ -1222,6 +1261,18 @@ document.addEventListener('DOMContentLoaded', function() {
 				<ul>
 					<li>URL: https://beamstream.gg/*/chat</li>
 					<li>Open https://beamstream.gg/USERNAME/chat (*note the /chat added at the end)</li>
+				</ul>
+			`
+		},
+		{
+			name: 'CI.ME',
+			icon: 'cime.png',
+			description: 'Korean live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://ci.me/@USERNAME/live</li>
+					<li>Keep the on-page chat visible; no pop out needed</li>
 				</ul>
 			`
 		},

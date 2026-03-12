@@ -195,7 +195,6 @@ function toDataURL(url, callback) {
 		} catch(e){}
 	}
 
-
 	var settings = {};
 	// settings.textonlymode
 	// settings.captureevents
@@ -214,8 +213,13 @@ function toDataURL(url, callback) {
 			try{
 				if ("getSource" == request){sendResponse("mixcloud");	return;	}
 				if ("focusChat" == request){
-					document.querySelector("textarea").focus();
-					sendResponse(true);
+					var input = document.querySelector("textarea[placeholder='Send a message'], textarea");
+					if (input){
+						input.focus();
+						sendResponse(true);
+						return;
+					}
+					sendResponse(false);
 					return;
 				}
 				if (typeof request === "object"){

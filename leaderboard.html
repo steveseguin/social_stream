@@ -895,27 +895,35 @@
             'giftpurchase',
             'giftredemption',
             'subscription_gift',
-            'gift_membership',
-            'giftmemberships',
-            'gifted_membership',
-            'gifted_memberships',
-            'membership_gift',
             'sponsorship',
             'reward',
-            'community_gift'
+            'community_gift',
+            // Deprecated — kept for backward compat with older extension versions
+            'gift_membership',     // → giftpurchase or giftredemption
+            'giftmemberships',     // → giftpurchase
+            'gifted_membership',   // → giftredemption
+            'gifted_memberships',  // → giftpurchase
+            'subgift',             // → subscription_gift
+            'membership_gift'      // → giftpurchase
         ]);
-        
+
         const MEMBERSHIP_EVENT_TYPES = new Set([
             'sponsorship',
             'membermilestone',
             'member_milestone',
-            'new_member',
-            'new_membership',
-            'upgraded_membership',
             'new_subscriber',
-            'resub'
+            'resub',
+            // Deprecated — kept for backward compat with older extension versions
+            'subscription',        // → new_subscriber
+            'membership',          // → sponsorship
+            'new_member',          // → sponsorship
+            'new_membership',      // → sponsorship
+            'newmember',           // → sponsorship
+            'upgraded_membership', // → resub
+            'membership_upgrade',  // → resub
+            'membership_milestone' // → membermilestone
         ]);
-        
+
         const CONTRIBUTION_EVENT_TYPES = new Set([
             'raid',
             'host',
@@ -935,7 +943,15 @@
             'membermilestone',
             'member_milestone',
             'new_subscriber',
-            'resub'
+            'resub',
+            // Deprecated — kept for backward compat with older extension versions
+            'subscription',        // → new_subscriber
+            'subgift',             // → subscription_gift
+            'membership',          // → sponsorship
+            'new_member',          // → sponsorship
+            'membership_gift',     // → giftpurchase
+            'upgraded_membership', // → resub
+            'followed'             // → new_follower
         ]);
         
         function normalizeEventType(event) {

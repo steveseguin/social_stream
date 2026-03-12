@@ -35,6 +35,13 @@
 
 	const hideContentInParentheses = str => str.replace(/\(.*?\)/g, "");
 
+	function normalizeDisplayName(name) {
+		if (!name) {
+			return "";
+		}
+		return hideContentInParentheses(escapeHtml(name)).trim();
+	}
+
 	function getTwitchAvatarImage(username) {
 		fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username=" + encodeURIComponent(username))
 			.then(response => {
@@ -153,6 +160,90 @@
 		chatBadges: "img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun, img.chat-badge[src]",
 		messageContainer: ".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper, .room-message"
 	};
+	const trackedTwitchMessageIds = new Map();
+	const MAX_TRACKED_TWITCH_MESSAGE_IDS = 500;
+
+	function getMessageContainer(ele) {
+		if (!ele || ele.nodeType !== 1) {
+			return null;
+		}
+		if (ele.matches?.(SELECTORS.messageContainer)) {
+			return ele;
+		}
+		return ele.closest?.(SELECTORS.messageContainer) || ele.querySelector?.(SELECTORS.messageContainer) || null;
+	}
+
+	function getTrackedMessageKey(ele, fallbackChatname = "", fallbackMessage = "") {
+		const ariaLabel = ele?.getAttribute?.("aria-label") || "";
+		if (ariaLabel) {
+			return ariaLabel.trim();
+		}
+		const textMessage = stripHtmlContent(fallbackMessage);
+		if (fallbackChatname && textMessage) {
+			return `${fallbackChatname}: ${textMessage}`.trim();
+		}
+		return "";
+	}
+
+	function rememberTrackedMessageId(ele, id, fallbackChatname = "", fallbackMessage = "") {
+		if (!ele || !id) {
+			return;
+		}
+		ele.dataset.mid = id;
+		const key = getTrackedMessageKey(ele, fallbackChatname, fallbackMessage);
+		if (!key) {
+			return;
+		}
+		if (trackedTwitchMessageIds.has(key)) {
+			trackedTwitchMessageIds.delete(key);
+		}
+		trackedTwitchMessageIds.set(key, id);
+		if (trackedTwitchMessageIds.size > MAX_TRACKED_TWITCH_MESSAGE_IDS) {
+			const oldestKey = trackedTwitchMessageIds.keys().next().value;
+			if (oldestKey) {
+				trackedTwitchMessageIds.delete(oldestKey);
+			}
+		}
+	}
+
+	function getTrackedMessageId(ele) {
+		const midSource = ele?.dataset?.mid
+			? ele
+			: ele?.querySelector?.("[data-mid]") || ele?.closest?.("[data-mid]") || null;
+		if (midSource?.dataset?.mid) {
+			const parsedId = parseInt(midSource.dataset.mid, 10);
+			return isNaN(parsedId) ? null : parsedId;
+		}
+		const key = getTrackedMessageKey(ele);
+		if (!key || !trackedTwitchMessageIds.has(key)) {
+			return null;
+		}
+		const parsedId = parseInt(trackedTwitchMessageIds.get(key), 10);
+		return isNaN(parsedId) ? null : parsedId;
+	}
+
+	function getDeleteChatName(ele) {
+		const displayNameEle = ele?.querySelector?.(SELECTORS.displayName);
+		if (displayNameEle?.innerText) {
+			return normalizeDisplayName(displayNameEle.innerText);
+		}
+		const ariaLabel = ele?.getAttribute?.("aria-label") || "";
+		if (ariaLabel.includes(":")) {
+			return normalizeDisplayName(ariaLabel.split(":")[0]);
+		}
+		return "";
+	}
+
+	function isDeletedMessageNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return false;
+		}
+		const dataTarget = node.dataset?.aTarget || node.getAttribute?.("data-a-target") || "";
+		if (dataTarget === "chat-deleted-message-placeholder" || node.classList?.contains("chat-line__message--deleted-notice")) {
+			return true;
+		}
+		return !!node.querySelector?.("[data-a-target='chat-deleted-message-placeholder'], .chat-line__message--deleted-notice");
+	}
 
 	const KNOCK_PRIMARY_PATTERNS = [/wants to collaborate/i];
 	const KNOCK_FALLBACK_PATTERNS = [/stream together/i, /co-?stream/i];
@@ -661,11 +752,12 @@
 		
 		if (settings.delaytwitch){
 		  await sleep(3000);
-		  if (!ele){return;}
-		  if (ele.querySelector(".deleted, [data-a-target='chat-deleted-message-placeholder']")) {
-			  // already deleted.
-			  return;  
-		  }
+	    }
+	  
+	    if (!ele){return;}
+	    if (isDeletedMessageNode(ele) || ele.querySelector(".deleted, [data-a-target='chat-deleted-message-placeholder'], .chat-line__message--deleted-notice")) {
+		  // already deleted.
+		  return;
 	    }
 	  
 	    if (!ele.isConnected){
@@ -691,9 +783,7 @@
 			}
 
 			username = escapeHtml(username);
-			displayName = escapeHtml(displayName);
-
-			displayName = hideContentInParentheses(displayName);
+			displayName = normalizeDisplayName(displayName);
 
 			try {
 				nameColor = displayNameEle.style.color || ele.querySelector(".seventv-chat-user, .chat-line__username").style.color;
@@ -1119,7 +1209,7 @@
 				},
 				function (e) {
 					if (e?.id){
-						ele.dataset.mid = e.id;
+						rememberTrackedMessageId(ele, e.id, data.chatname, data.chatmessage);
 					}
 				}
 			);
@@ -1321,8 +1411,7 @@
 		if (displayNameEle){
 			displayName = displayNameEle.innerText;
 			if (displayName){
-				displayName = escapeHtml(displayName);
-				displayName = hideContentInParentheses(displayName).trim();
+				displayName = normalizeDisplayName(displayName);
 			}
 		}
 		data.chatname = displayName;
@@ -1346,11 +1435,11 @@
 		} else if (data.chatmessage.includes(" gifting ") && data.chatmessage.includes(" Sub")) {
 			data.event = "giftpurchase";
 		} else if (data.chatmessage.includes(" gifted ") && data.chatmessage.includes(" Sub")) {
-			data.event = "sponsorship";
+			data.event = "subscription_gift";
 		}
 
 		if (settings.limitedtwitchmemberchat) {
-			const isMembershipNotice = (data.event === "giftpurchase") || (data.event === "sponsorship") || isSubscriptionNoticeText(data.chatmessage);
+			const isMembershipNotice = (data.event === "giftpurchase") || (data.event === "subscription_gift") || isSubscriptionNoticeText(data.chatmessage);
 			if (isMembershipNotice) {
 				data.membership = getTranslation("subscriber", "SUBSCRIBER");
 			}
@@ -1379,54 +1468,46 @@
 
 	function deleteThis(ele) {
 		try {
-			ele.dataset.ignore = true;
-			if (ele.deleted) {
+			const messageEle = getMessageContainer(ele) || ele;
+			if (!messageEle || messageEle.nodeType !== 1) {
 				return;
 			}
-			ele.deleted = true;
-			
-			var chatname = ele.querySelector(SELECTORS.displayName);
-			if (chatname) {
-				var data = {};
-				data.chatname = escapeHtml(chatname.innerText);
-				data.type = "twitch";
-				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
-				
-				try {
-					chrome.runtime.sendMessage(
-						chrome.runtime.id,
-						{
-							delete: data
-						},
-						function (e) {}
-					);
-				} catch (e) {
-					//
-				}
+			messageEle.dataset.ignore = true;
+			if (messageEle.deleted) {
 				return;
 			}
-			chatname = ele.parentNode.querySelector(SELECTORS.displayName);
+			messageEle.deleted = true;
+
+			var data = {};
+			data.type = "twitch";
+
+			const trackedId = getTrackedMessageId(messageEle);
+			if (trackedId !== null) {
+				data.id = trackedId;
+			}
+
+			const chatname = getDeleteChatName(messageEle) || getDeleteChatName(ele);
 			if (chatname) {
-				ele.parentNode.dataset.ignore = true;
-				if (ele.parentNode.deleted) {
-					return;
-				}
-				ele.parentNode.deleted = true;
-				var data = {};
-				data.chatname = escapeHtml(chatname.innerText);
-				data.type = "twitch";
-				try {
-					chrome.runtime.sendMessage(
-						chrome.runtime.id,
-						{
-							delete: data
-						},
-						function (e) {}
-					);
-				} catch (e) {
-					//
-				}
+				data.chatname = chatname;
+			}
+
+			if (!data.id && !data.chatname) {
 				return;
+			}
+			if (!data.id) {
+				data.onlyLast = true;
+			}
+
+			try {
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					{
+						delete: data
+					},
+					function (e) {}
+				);
+			} catch (e) {
+				//
 			}
 		} catch (e) {}
 	}
@@ -1458,10 +1539,9 @@
 				if (mutation.target === target) continue;
 				
 				if (mutation.type === "attributes") {
-					if (mutation.attributeName === "class" && mutation.target.classList.contains("deleted")) {
+					if (mutation.attributeName === "class" && (mutation.target.classList.contains("deleted") || isDeletedMessageNode(mutation.target))) {
 						deleteThis(mutation.target);
-					} else if (mutation.attributeName === "data-a-target" && 
-							  mutation.target.data?.aTarget === "chat-deleted-message-placeholder") {
+					} else if (mutation.attributeName === "data-a-target" && isDeletedMessageNode(mutation.target)) {
 						deleteThis(mutation.target);
 					}
 					continue;
@@ -1477,8 +1557,7 @@
 					if (!node || !node.dataset || node.nodeType === 3) continue;
 					
 					try {
-						if ((node.dataset?.aTarget === "chat-deleted-message-placeholder") || 
-							node.querySelector('[data-a-target="chat-deleted-message-placeholder"]')) {
+						if (isDeletedMessageNode(node)) {
 							deleteThis(node);
 							continue;
 						}
@@ -1526,23 +1605,13 @@
 			};
 		}
 
-		if (document.querySelector("seventv-container")) {
-			var config = {
-				childList: true, // Observe the addition of new child nodes
-				subtree: true, // Observe the target node and its descendants
-				attributes: true, // Observe attributes changes
-				attributeOldValue: true, // Optionally capture the old value of the attribute
-				attributeFilter: ["data-a-target", "class"] // Only observe changes to 'is-deleted' attribute
-			};
-		} else {
-			var config = {
-				childList: true, // Observe the addition of new child nodes
-				subtree: true, // Observe the target node and its descendants
-				attributes: true, // Observe attributes changes
-				attributeOldValue: true, // Optionally capture the old value of the attribute
-				attributeFilter: ["data-a-target"] // Only observe changes to 'is-deleted' attribute
-			};
-		}
+		var config = {
+			childList: true, // Observe the addition of new child nodes
+			subtree: true, // Observe the target node and its descendants
+			attributes: true, // Observe attributes changes
+			attributeOldValue: true, // Optionally capture the old value of the attribute
+			attributeFilter: ["data-a-target", "class"] // Observe Twitch delete markers on current and legacy DOMs
+		};
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
