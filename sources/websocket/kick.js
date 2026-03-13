@@ -5492,12 +5492,51 @@ function resolveChannelBranding() {
     };
 }
 
+function looksLikeKickRewardMessage(messageText = '', rawType = '') {
+    const normalizedText = typeof messageText === 'string'
+        ? messageText
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+        : '';
+    const normalizedType = typeof rawType === 'string'
+        ? rawType
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+        : '';
+
+    if (/\b(redeem|reward|channel[_ .-]?points?|loyalty[_ .-]?points?)\b/i.test(normalizedType)) {
+        return true;
+    }
+
+    if (!normalizedText) {
+        return false;
+    }
+
+    const rewardPatterns = [
+        /^(?:has redeemed|redeemed)\b/,
+        /^(?:ha canjeado|canjeo)\b/,
+        /^(?:rescatou|resgatou)\b/,
+        /^(?:ha riscattato)\b/,
+        /^(?:a echange|a rachete)\b/,
+        /^hat .+ eingelost\b/,
+        /^heeft .+ ingewisseld\b/
+    ];
+
+    return rewardPatterns.some(pattern => pattern.test(normalizedText));
+}
+
 function mapKickChatEventToSocialStream(rawType, plainMessage = '', donationLabel = '') {
     const typeLower = typeof rawType === 'string' ? rawType.trim().toLowerCase() : '';
     const textLower = typeof plainMessage === 'string' ? plainMessage.trim().toLowerCase() : '';
 
     // Match the legacy DOM source semantics first.
-    if (textLower.startsWith('has redeemed ') || /redeem|reward/.test(typeLower)) {
+    if (looksLikeKickRewardMessage(textLower, typeLower)) {
         return 'reward';
     }
     if (/gift/.test(typeLower)) {

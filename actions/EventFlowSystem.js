@@ -1334,6 +1334,44 @@ class EventFlowSystem {
         const normalizedMessage = this.normalizeEventType(messageEventType);
         return !!normalizedTarget && normalizedMessage === normalizedTarget;
     }
+
+    looksLikeRewardRedemption(message) {
+        if (!message || typeof message !== 'object') {
+            return false;
+        }
+
+        const directRewardName = String(message.rewardTitle || message.rewardName || '').trim();
+        if (directRewardName) {
+            return true;
+        }
+
+        const shouldUseTextHeuristics = message.type === 'kick' || message.event === true;
+        if (!shouldUseTextHeuristics) {
+            return false;
+        }
+
+        const text = String(message.chatmessage || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        if (!text) {
+            return false;
+        }
+
+        const rewardPatterns = [
+            /^(?:has redeemed|redeemed)\b/,
+            /^(?:ha canjeado|canjeo)\b/,
+            /^(?:rescatou|resgatou)\b/,
+            /^(?:ha riscattato)\b/,
+            /^(?:a echange|a rachete)\b/,
+            /^hat .+ eingelost\b/,
+            /^heeft .+ ingewisseld\b/
+        ];
+
+        return rewardPatterns.some(pattern => pattern.test(text));
+    }
     
     async evaluateTrigger(triggerNode, message) {
         const { triggerType, config } = triggerNode;
@@ -1470,7 +1508,7 @@ class EventFlowSystem {
 
             case 'channelPointRedemption':
                 // Check if this is a reward/redemption event
-                if (message.event !== 'reward') {
+                if (message.event !== 'reward' && !this.looksLikeRewardRedemption(message)) {
                     return false;
                 }
                 // If a specific reward name is configured, check it
