@@ -7858,27 +7858,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			if (this.value) {
 				// A game was selected
 				const gameUrl = baseURL + this.value;
-				
+
 				// Extract existing parameters from current URL
 				let existingParams = '';
 				if (overlayDiv.raw && overlayDiv.raw.includes('?')) {
 					existingParams = overlayDiv.raw.split('?')[1];
 				}
-				
-				// Extract session parameter to preserve it
-				let sessionParam = '';
-				if (existingParams) {
-					const params = new URLSearchParams(existingParams);
-					const session = params.get('session') || params.get('s');
-					if (session) {
-						sessionParam = session;
-					}
-				}
-				
-				// Construct new URL with game
+
+				// Construct new URL preserving all existing parameters
 				let newUrl = gameUrl;
-				if (sessionParam) {
-					newUrl += '?session=' + sessionParam;
+				if (existingParams) {
+					newUrl += '?' + existingParams;
 				}
 				
 				// Update the overlay URL
