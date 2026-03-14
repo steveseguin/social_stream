@@ -4745,6 +4745,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 
 			triggerFakeRandomMessage();
+		} else if (request.cmd && request.cmd === "testAlert") {
+			sendResponse({ state: isExtensionOn });
+			if (request.payload && typeof request.payload === "object") {
+				sendToDestinations(request.payload);
+			}
 		} else if (request.cmd && request.cmd === "fakemeta") {
 			sendResponse({ state: isExtensionOn });
 

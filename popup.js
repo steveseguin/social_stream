@@ -2809,6 +2809,11 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
+        // Load profiles if they weren't loaded during init (e.g., due to startup timing)
+        if (typeof ProfileManager !== 'undefined' && ProfileManager.loadProfilesFromResponse) {
+            ProfileManager.loadProfilesFromResponse(response);
+        }
+
         if (response.handleStatus) {
             mergeHandleStatusFromBackground(response.handleStatus);
         }
@@ -5023,6 +5028,48 @@ function sendMultiAlertsPreview(payload) {
     sendOverlayPreview('multialerts', payload);
 }
 
+function buildTestAlertPayload(category) {
+    const payloads = {
+        follow: {
+            type: 'twitch',
+            event: 'new_follower',
+            chatname: 'TestUser',
+            chatmessage: 'TestUser has started following'
+        },
+        subscription: {
+            type: 'twitch',
+            event: 'new_subscriber',
+            chatname: 'TestUser',
+            chatmessage: 'Welcome to the squad!',
+            membership: 'Tier 1',
+            subtitle: 'Tier 1 subscription'
+        },
+        donation: {
+            type: 'twitch',
+            event: 'donation',
+            chatname: 'TestUser',
+            chatmessage: 'Keep up the great work!',
+            hasDonation: '$10.00'
+        },
+        bits: {
+            type: 'twitch',
+            event: 'cheer',
+            chatname: 'TestUser',
+            chatmessage: 'Cheer train incoming!',
+            hasDonation: '500 bits',
+            meta: { bits: 500 }
+        },
+        raid: {
+            type: 'twitch',
+            event: 'raid',
+            chatname: 'TestUser',
+            chatmessage: 'Raiding with 42 viewers!',
+            meta: { viewers: 42 }
+        }
+    };
+    return payloads[category] || null;
+}
+
 function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
     const config = overlayPreviewConfigs[previewKey];
     if (!config) {
@@ -5043,6 +5090,12 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
         }
         button.addEventListener('click', () => {
             sendOverlayPreview(previewKey, descriptor);
+            if (previewKey === 'multialerts' && descriptor && descriptor.category) {
+                const payload = buildTestAlertPayload(descriptor.category);
+                if (payload) {
+                    chrome.runtime.sendMessage({ cmd: 'testAlert', payload });
+                }
+            }
         });
     });
 }
