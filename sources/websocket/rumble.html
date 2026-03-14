@@ -340,6 +340,29 @@
             color: var(--muted);
         }
 
+        .steps {
+            margin: 0;
+            padding: 4px 0 0 20px;
+            list-style: decimal;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .advanced-toggle {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 14px;
+            background: rgba(8, 12, 18, 0.45);
+        }
+
+        .advanced-toggle summary {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
         .popup-resolver {
             margin-top: 14px;
             padding: 14px 16px;
@@ -377,39 +400,23 @@
                     <button id="open-docs" class="ghost" type="button">Open Official Docs</button>
                 </div>
             </div>
+            <ol class="steps">
+                <li>Open the <strong>Rumble API Dashboard</strong> (or click "Open API Dashboard" above)</li>
+                <li>Generate your Live Stream API URL and <strong>copy</strong> it</li>
+                <li>Paste it into the field below</li>
+                <li>Click <strong>Connect</strong></li>
+            </ol>
             <div class="secret-note">
-                This API URL is secret. Rumble's documentation says it includes your live stream key and does not require separate authentication, so only use it with trusted tools and reset it in Rumble if it is exposed.
+                This API URL is secret. It includes your live stream key and does not require separate authentication, so only share it with trusted tools. You can reset it from the Rumble dashboard if it is exposed.
             </div>
             <div class="grid">
                 <div style="grid-column: 1 / -1;">
                     <label for="api-url">Live Stream API URL</label>
                     <input id="api-url" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Paste the Rumble Live Stream API URL from rumble.com/account/livestream-api" />
-                    <div class="hint">The page is read-only. Rumble's public docs do not describe an official chat-send endpoint.</div>
-                </div>
-                <div>
-                    <label for="channel-label">Display Label</label>
-                    <input id="channel-label" type="text" autocomplete="off" placeholder="Optional channel or profile label" />
-                    <div class="hint">Used only for page labels and the document title. You can also pass <code>?channel=...</code>.</div>
-                </div>
-                <div>
-                    <label for="stream-id">Stream ID</label>
-                    <input id="stream-id" type="text" autocomplete="off" placeholder="Optional livestream id from the API response" />
-                    <div class="hint">Leave empty to follow the first live stream in the response. Invalid IDs now fail instead of silently switching streams.</div>
-                </div>
-                <div>
-                    <label for="poll-ms">Poll Interval (ms)</label>
-                    <input id="poll-ms" type="number" min="1500" max="15000" step="250" />
-                    <div class="hint">The Rumble API says it updates in real time, but this page polls to mirror the existing websocket page pattern.</div>
+                    <div class="hint">This source captures chat, rants, followers, subscribers, and viewer counts. Sending messages is not supported via the API.</div>
                 </div>
             </div>
             <div class="row">
-                <label class="checkbox">
-                    <input id="replay-history" type="checkbox" />
-                    <span>Replay the current recent history on first connect</span>
-                </label>
-            </div>
-            <div class="row">
-                <button id="save-config" type="button">Save</button>
                 <button id="connect" class="alt" type="button">Connect</button>
                 <button id="disconnect" class="warn" type="button">Disconnect</button>
                 <button id="refresh" class="ghost" type="button">Refresh Now</button>
@@ -422,15 +429,42 @@
                 <span id="follower-chip" class="chip">Followers: -</span>
                 <span id="subscriber-chip" class="chip">Subscribers: -</span>
             </div>
-            <div class="popup-resolver">
-                <label for="popup-url">Resolved Popup Chat URL</label>
-                <input id="popup-url" type="text" readonly value="" placeholder="Connect to resolve https://rumble.com/chat/popup/<stream-id>" />
-                <div class="hint">This uses the selected <code>livestreams[].id</code> from the API response so you can open the normal Rumble popup chat page without first loading the creator's <code>/live</code> page.</div>
-                <div class="row">
-                    <button id="open-popup" class="alt" type="button">Open Popup Chat</button>
-                    <button id="copy-popup" class="ghost" type="button">Copy Popup URL</button>
+            <details id="advanced-section" class="advanced-toggle">
+                <summary>Advanced options</summary>
+                <div class="grid" style="margin-top:10px;">
+                    <div>
+                        <label for="channel-label">Display Label</label>
+                        <input id="channel-label" type="text" autocomplete="off" placeholder="Optional channel or profile label" />
+                        <div class="hint">Used only for page labels and the document title. You can also pass <code>?channel=...</code>.</div>
+                    </div>
+                    <div>
+                        <label for="stream-id">Stream ID</label>
+                        <input id="stream-id" type="text" autocomplete="off" placeholder="Optional livestream id from the API response" />
+                        <div class="hint">Leave empty to follow the first live stream in the response.</div>
+                    </div>
+                    <div>
+                        <label for="poll-ms">Poll Interval (ms)</label>
+                        <input id="poll-ms" type="number" min="1500" max="15000" step="250" />
+                        <div class="hint">How often to poll the API. Default is 3000ms.</div>
+                    </div>
                 </div>
-            </div>
+                <div class="row" style="margin-top:10px;">
+                    <label class="checkbox">
+                        <input id="replay-history" type="checkbox" />
+                        <span>Replay the current recent history on first connect</span>
+                    </label>
+                </div>
+                <div class="popup-resolver">
+                    <label for="popup-url">Resolved Popup Chat URL</label>
+                    <input id="popup-url" type="text" readonly value="" placeholder="Connect to resolve https://rumble.com/chat/popup/<stream-id>" />
+                    <div class="hint">Uses the stream ID from the API response to build the Rumble popup chat URL.</div>
+                    <div class="row">
+                        <button id="open-popup" class="alt" type="button">Open Popup Chat</button>
+                        <button id="copy-popup" class="ghost" type="button">Copy Popup URL</button>
+                    </div>
+                </div>
+                <button id="save-config" class="ghost" type="button" style="margin-top:10px;">Save Settings</button>
+            </details>
         </section>
 
         <section class="split">
