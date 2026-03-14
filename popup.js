@@ -8216,6 +8216,35 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		};
 	}
 
+	// Handle per-type alert sound upload buttons
+	const alertSoundUploads = [
+		{ btnId: 'uploadFollowSoundBtn', inputId: 'multi-alert-followsound' },
+		{ btnId: 'uploadSubSoundBtn', inputId: 'multi-alert-subsound' },
+		{ btnId: 'uploadDonoSoundBtn', inputId: 'multi-alert-donosound' },
+		{ btnId: 'uploadBitsSoundBtn', inputId: 'multi-alert-bitssound' },
+		{ btnId: 'uploadRaidSoundBtn', inputId: 'multi-alert-raidsound' }
+	];
+	alertSoundUploads.forEach(({ btnId, inputId }) => {
+		const btn = document.getElementById(btnId);
+		if (btn) {
+			btn.onclick = function() {
+				window.open('https://fileuploads.socialstream.ninja/popup/upload', btnId, 'width=640,height=640');
+				window.addEventListener('message', function handleMessage(event) {
+					if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+					if (event.data && event.data.type === 'media-uploaded') {
+						const input = document.getElementById(inputId);
+						if (input) {
+							input.value = event.data.url;
+							input.dispatchEvent(new Event('input', { bubbles: true }));
+							input.dispatchEvent(new Event('change', { bubbles: true }));
+						}
+						window.removeEventListener('message', handleMessage);
+					}
+				});
+			};
+		}
+	});
+
 	const uploadFeaturedFallbackBtn = document.getElementById('uploadFeaturedFallbackBtn');
 	if (uploadFeaturedFallbackBtn) {
 		uploadFeaturedFallbackBtn.onclick = function() {

@@ -5549,8 +5549,38 @@ input:checked + .slider:before {
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="text" class="textInput instant" autocomplete="off" placeholder="https://example.com/alert.wav" data-textparam25="custombeep" />
-									<label><span>&gt; Custom sound URL</span></label>
+									<label><span>&gt; Custom sound URL (all alerts)</span></label>
 								</div>
+								<details style="width: 95%; margin-top: 4px;">
+									<summary style="cursor: pointer; opacity: 0.8; font-size: 0.9em;">Per-type custom sounds (override above)</summary>
+									<div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+										<div class="textInputContainer" style="width: 100%; position: relative;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Follow sound URL (.ogg, .mp3, .wav)" data-textparam25="followsound" id="multi-alert-followsound" />
+											<label><span>&gt; 💖 Follow sound</span></label>
+											<button type="button" id="uploadFollowSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #ff68b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+										</div>
+										<div class="textInputContainer" style="width: 100%; position: relative;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Sub sound URL (.ogg, .mp3, .wav)" data-textparam25="subsound" id="multi-alert-subsound" />
+											<label><span>&gt; 💜 Subscription sound</span></label>
+											<button type="button" id="uploadSubSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+										</div>
+										<div class="textInputContainer" style="width: 100%; position: relative;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Donation sound URL (.ogg, .mp3, .wav)" data-textparam25="donosound" id="multi-alert-donosound" />
+											<label><span>&gt; 💚 Donation sound</span></label>
+											<button type="button" id="uploadDonoSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #14f195; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+										</div>
+										<div class="textInputContainer" style="width: 100%; position: relative;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Bits sound URL (.ogg, .mp3, .wav)" data-textparam25="bitssound" id="multi-alert-bitssound" />
+											<label><span>&gt; 💙 Bits/Cheer sound</span></label>
+											<button type="button" id="uploadBitsSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #38bdf8; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+										</div>
+										<div class="textInputContainer" style="width: 100%; position: relative;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Raid sound URL (.ogg, .mp3, .wav)" data-textparam25="raidsound" id="multi-alert-raidsound" />
+											<label><span>&gt; 🧡 Raid sound</span></label>
+											<button type="button" id="uploadRaidSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #f59e0b; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+										</div>
+									</div>
+								</details>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="showtime" />

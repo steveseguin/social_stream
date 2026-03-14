@@ -120,6 +120,14 @@ const CATEGORY_DISABLE_PARAMS = {
   [ALERT_CATEGORIES.RAID]: 'disableraids'
 };
 
+const CATEGORY_SOUND_PARAMS = {
+  [ALERT_CATEGORIES.FOLLOW]: 'followsound',
+  [ALERT_CATEGORIES.SUBSCRIPTION]: 'subsound',
+  [ALERT_CATEGORIES.DONATION]: 'donosound',
+  [ALERT_CATEGORIES.BITS]: 'bitssound',
+  [ALERT_CATEGORIES.RAID]: 'raidsound'
+};
+
 const SOURCE_ICON_MAP = {
   amazon: './sources/images/amazon.png',
   facebook: './sources/images/facebook.png',
@@ -617,6 +625,9 @@ function readSettings() {
     beep: urlParams.has('beep'),
     beepVolume: Math.max(0, Math.min(1, parseNumberParam('beepvolume', 35) / 100)),
     customBeep: normalizeText(urlParams.get('custombeep')),
+    categorySounds: Object.fromEntries(
+      Object.entries(CATEGORY_SOUND_PARAMS).map(([cat, param]) => [cat, normalizeText(urlParams.get(param))])
+    ),
     compact: urlParams.has('compact'),
     hideAvatar: urlParams.has('hideavatar'),
     hideMedia: urlParams.has('hidemedia'),
@@ -1188,9 +1199,12 @@ async function playAlertSound(model) {
 
   stopActiveAlertSound();
 
-  if (settings.customBeep && elements.audio) {
+  const categorySound = model.category && settings.categorySounds[model.category];
+  const customSrc = categorySound || settings.customBeep;
+
+  if (customSrc && elements.audio) {
     try {
-      elements.audio.src = settings.customBeep;
+      elements.audio.src = customSrc;
       elements.audio.volume = settings.beepVolume;
       elements.audio.currentTime = 0;
       await elements.audio.play();
