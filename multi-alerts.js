@@ -160,7 +160,9 @@ const elements = {
 
 applyPagePresentation();
 attachWindowListeners();
-updateStatus(settings.previewOnly ? 'Preview ready' : (settings.roomID ? 'Waiting for alerts' : 'Add ?session=YOURID to connect'));
+if (settings.previewOnly) {
+  updateStatus('Preview ready');
+}
 
 if (!settings.previewOnly && settings.roomID) {
   setupBridgeIframe();
