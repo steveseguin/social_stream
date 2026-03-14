@@ -4160,6 +4160,7 @@ async function fetchKickChannelBySlug(slugInput, options = {}) {
     }
     const encodedSlug = encodeURIComponent(slugLower);
     const fallbackPaths = [
+        `/public/v1/channels?slug[]=${encodedSlug}`,
         `/public/v1/channels?slug=${encodedSlug}`,
         `/channels/${encodedSlug}`,
         `/public/v1/channels/${encodedSlug}`
@@ -4184,7 +4185,9 @@ async function fetchKickChannelBySlug(slugInput, options = {}) {
                 allowSingletonWithoutSlug: !path.includes('?slug=')
             });
             if (channel && typeof channel === 'object') {
-                if (path.includes('?slug=')) {
+                if (path.includes('?slug[]=')) {
+                    preferredKickChannelLookupPath = '/public/v1/channels?slug[]={slug}';
+                } else if (path.includes('?slug=')) {
                     preferredKickChannelLookupPath = '/public/v1/channels?slug={slug}';
                 } else if (path.includes('/public/v1/channels/')) {
                     preferredKickChannelLookupPath = '/public/v1/channels/{slug}';
