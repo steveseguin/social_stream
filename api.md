@@ -579,11 +579,13 @@ The featured page offers several filtering options that can be controlled via th
 
 1. `onlyshowdonos`: Only show messages with donations
 2. `hideDonations`: Hide donation information
-3. `hideTwitch`: Hide messages from Twitch
-4. `onlyTwitch`: Only show messages from Twitch
-5. `onlyFrom`: Only show messages from a specific source
-6. `hideFrom`: Hide messages from specific sources
-7. `filterfeaturedusers`: Only show messages from approved listed users
+3. `hideevents`: Hide all event payloads that include an `event` type
+4. `filterevents`: Hide specific events by exact event name or matching event text
+5. `hideTwitch`: Hide messages from Twitch
+6. `onlyTwitch`: Only show messages from Twitch
+7. `onlyFrom`: Only show messages from a specific source
+8. `hideFrom`: Hide messages from specific sources
+9. `filterfeaturedusers`: Only show messages from approved listed users
 
 ### API Actions
 

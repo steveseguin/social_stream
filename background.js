@@ -4103,6 +4103,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "collecttwitchpoints") {
 				pushSettingChange();
 			}
+			if (request.setting == "kickchatroomscout") {
+				pushSettingChange();
+			}
 			if (request.setting == "detweet") {
 				pushSettingChange();
 			}
@@ -4406,6 +4409,86 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					});
 				}
 			}
+		} else if (request.cmd && request.cmd === "vpzoneFetchJson") {
+			let parsedUrl;
+			try {
+				parsedUrl = new URL(request.url);
+			} catch (error) {
+				sendResponse({ ok: false, error: "Invalid VPZone URL" });
+				return response;
+			}
+			if (!["vpzone.tv", "www.vpzone.tv"].includes(parsedUrl.hostname) || !parsedUrl.pathname.startsWith("/api/")) {
+				sendResponse({ ok: false, error: "VPZone fetch URL not allowed" });
+				return response;
+			}
+			try {
+				const vpzoneResponse = await fetch(parsedUrl.toString(), {
+					method: "GET",
+					cache: "no-store",
+					credentials: "omit",
+					headers: {
+						Accept: "application/json"
+					}
+				});
+				const responseText = await vpzoneResponse.text();
+				let responseJson = {};
+				try {
+					responseJson = responseText ? JSON.parse(responseText) : {};
+				} catch (error) {
+					responseJson = null;
+				}
+				if (!vpzoneResponse.ok) {
+					sendResponse({
+						ok: false,
+						status: vpzoneResponse.status,
+						error: (responseJson && (responseJson.error || responseJson.message)) || `HTTP ${vpzoneResponse.status}`
+					});
+					return response;
+				}
+				if (responseJson == null) {
+					sendResponse({ ok: false, status: vpzoneResponse.status, error: "Invalid JSON response" });
+					return response;
+				}
+				sendResponse({ ok: true, status: vpzoneResponse.status, data: responseJson });
+			} catch (error) {
+				sendResponse({ ok: false, error: error && error.message ? error.message : "VPZone fetch failed" });
+			}
+			return true;
+		} else if (request.cmd && request.cmd === "rumbleFetchJson") {
+			try {
+				const rumbleResponse = await fetchRumbleJsonResponse(request.url);
+				sendResponse({ ok: true, status: rumbleResponse.status, data: rumbleResponse.data });
+			} catch (error) {
+				sendResponse({
+					ok: false,
+					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+					error: error && error.message ? error.message : "Rumble fetch failed"
+				});
+			}
+			return true;
+		} else if (request.cmd && request.cmd === "resolveRumblePopupUrl") {
+			try {
+				const resolved = await resolveRumblePopup(request);
+				sendResponse({
+					ok: true,
+					status: resolved.status,
+					popupUrl: resolved.popupUrl,
+					streamId: normalizeRumbleSettingText(resolved.stream && resolved.stream.id),
+					streamTitle: normalizeRumbleSettingText(resolved.stream && resolved.stream.title),
+					isLive: !!(resolved.stream && resolved.stream.is_live),
+					chatId: normalizeRumbleSettingText(resolved.chatId),
+					videoId: normalizeRumbleSettingText(resolved.videoId),
+					pageUrl: normalizeRumbleSettingText(resolved.pageUrl),
+					username: normalizeRumbleSettingText(resolved.username)
+				});
+			} catch (error) {
+				sendResponse({
+					ok: false,
+					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+					error: error && error.message ? error.message : "Rumble popup resolution failed"
+				});
+			}
+			return true;
 		} else if ("getSettings" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
@@ -4662,13 +4745,20 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 
 			triggerFakeRandomMessage();
+		} else if (request.cmd && request.cmd === "fakemeta") {
+			sendResponse({ state: isExtensionOn });
+
+			triggerFakeMetaMessage(request.value);
 
 		} else if (request.cmd && request.cmd === "creditsStart") {
 			sendResponse({ state: isExtensionOn });
+			// credits.html currently listens on the dock feed for chat collection.
 			sendTargetP2P({ creditsCommand: "start" }, "credits");
+			sendTargetP2P({ creditsCommand: "start" }, "dock");
 		} else if (request.cmd && request.cmd === "creditsPreview") {
 			sendResponse({ state: isExtensionOn });
 			sendTargetP2P({ creditsCommand: "preview" }, "credits");
+			sendTargetP2P({ creditsCommand: "preview" }, "dock");
 		} else if (request.action === "startReplay") {
 			// Handle replay messages from timestamp
 			console.log('Received startReplay request:', request);
@@ -4794,25 +4884,37 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			
 			if (spotify && request.code) {
 				(async () => {
-					try {
-						const success = await spotify.handleAuthCallback(request.code, request.state, request.redirectUri);
-						const warning = (success && spotify && typeof spotify.consumeAuthWarning === 'function')
-							? spotify.consumeAuthWarning()
-							: null;
-						sendResponse({
-							success: success,
-							warning: warning || undefined,
-							message: warning ? `Connected to Spotify, but playback access is limited: ${warning}` : undefined
-						});
-					} catch (error) {
-						console.error("Spotify callback error:", error);
-						sendResponse({success: false, error: error.message});
-					}
-				})();
-				return true; // Keep the message channel open for async response
-			} else {
-				sendResponse({success: false, error: "Spotify not initialized or no code provided"});
-			}
+						try {
+							const success = await spotify.handleAuthCallback(request.code, request.state, request.redirectUri);
+							const warning = (success && spotify && typeof spotify.consumeAuthWarning === 'function')
+								? spotify.consumeAuthWarning()
+								: null;
+							sendResponse({
+								success: success,
+								warning: warning || undefined,
+								message: warning ? `Connected to Spotify, but playback access is limited: ${warning}` : undefined
+							});
+						} catch (error) {
+							const errorCode = error?.errorCode || error?.code || 'SPOTIFY_OAUTH_ERROR';
+							console.error("Spotify callback error:", errorCode, error);
+							sendResponse({
+								success: false,
+								errorCode,
+								error: error?.message || String(error),
+								message: error?.message || 'Spotify callback failed.',
+								redirectUriAttempted: error?.redirectUriAttempted,
+								expectedRedirectUris: error?.expectedRedirectUris
+							});
+						}
+					})();
+					return true; // Keep the message channel open for async response
+				} else {
+					sendResponse({
+						success: false,
+						errorCode: "INVALID_CALLBACK",
+						error: "Spotify not initialized or no code provided"
+					});
+				}
 		} else if (request.cmd && request.cmd === "spotifyAuth") {
 			// Start Spotify OAuth flow
 			console.log("Spotify auth request received");
@@ -4863,29 +4965,44 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					return;
 				}
 
-				if (normalized.waitingForManualCallback || normalized.waitingForCallback) {
-					const manual = !!normalized.waitingForManualCallback;
-					sendResponse({
-						success: false,
-						waitingForManualCallback: manual,
-						waitingForCallback: !manual,
-						manualAuthUrl: normalized.manualAuthUrl,
-						error: normalized.error,
-						message: normalized.message || (manual
-							? "After authorizing Spotify, copy the callback URL and paste it into Social Stream Ninja to finish sign-in."
-							: "Waiting for Spotify to redirect back with authorization. Leave the popup open until the flow completes.")
-					});
-					return;
+					if (normalized.waitingForManualCallback || normalized.waitingForCallback) {
+						const manual = !!normalized.waitingForManualCallback;
+						sendResponse({
+							success: false,
+							waitingForManualCallback: manual,
+							waitingForCallback: !manual,
+							manualAuthUrl: normalized.manualAuthUrl,
+							errorCode: normalized.errorCode,
+							error: normalized.error,
+							redirectUriAttempted: normalized.redirectUriAttempted,
+							expectedRedirectUris: normalized.expectedRedirectUris,
+							message: normalized.message || (manual
+								? "After authorizing Spotify, copy the callback URL and paste it into Social Stream Ninja to finish sign-in."
+								: "Waiting for Spotify to redirect back with authorization. Leave the popup open until the flow completes.")
+						});
+						return;
 				}
 
-				sendResponse({
-					success: false,
-					error: normalized.error || "Failed to start Spotify authorization."
+					sendResponse({
+						success: false,
+						errorCode: normalized.errorCode || 'SPOTIFY_OAUTH_ERROR',
+						error: normalized.error || "Failed to start Spotify authorization.",
+						message: normalized.message || normalized.error || "Failed to start Spotify authorization.",
+						redirectUriAttempted: normalized.redirectUriAttempted,
+						expectedRedirectUris: normalized.expectedRedirectUris
+					});
+				}).catch(error => {
+					const errorCode = error?.errorCode || error?.code || 'SPOTIFY_OAUTH_ERROR';
+					console.error("Spotify auth error:", errorCode, error);
+					sendResponse({
+						success: false,
+						errorCode,
+						error: error?.message || error?.toString(),
+						message: error?.message || "Failed to start Spotify authorization.",
+						redirectUriAttempted: error?.redirectUriAttempted,
+						expectedRedirectUris: error?.expectedRedirectUris
+					});
 				});
-			}).catch(error => {
-				console.error("Spotify auth error:", error);
-				sendResponse({success: false, error: error.message || error.toString()});
-			});
 			
 			return true; // Keep the message channel open for async response
 		} else if (request.cmd && request.cmd === "spotifyManualCallback") {
@@ -4908,9 +5025,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						await new Promise(resolve => setTimeout(resolve, 500));
 					}
 					
-					if (!spotify) {
-						throw new Error("Failed to initialize Spotify integration");
-					}
+						if (!spotify) {
+							throw new Error("Failed to initialize Spotify integration");
+						}
 					
 					// Parse the callback URL
 					const url = new URL(request.url);
@@ -4921,12 +5038,18 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					
 					console.log("Parsed OAuth callback - code:", code ? "present" : "missing", "state:", state, "error:", error);
 					
-						if (error) {
-							sendResponse({success: false, error: error});
-						} else if (code) {
-							console.log("Processing Spotify callback with code...");
-							// Process the callback
-							const success = await spotify.handleAuthCallback(code, state, request.redirectUri || redirectUri);
+							if (error) {
+								sendResponse({
+									success: false,
+									errorCode: "SPOTIFY_AUTH_ERROR",
+									error: error,
+									message: `Spotify authorization failed: ${error}`,
+									redirectUriAttempted: request.redirectUri || redirectUri
+								});
+							} else if (code) {
+								console.log("Processing Spotify callback with code...");
+								// Process the callback
+								const success = await spotify.handleAuthCallback(code, state, request.redirectUri || redirectUri);
 							console.log("Spotify callback completed, success:", success);
 							const warning = (success && spotify && typeof spotify.consumeAuthWarning === 'function')
 								? spotify.consumeAuthWarning()
@@ -4943,19 +5066,31 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 								});
 							}
 							
-							sendResponse({
-								success: success,
-								warning: warning || undefined,
-								message: warning ? `Connected to Spotify, but playback access is limited: ${warning}` : undefined
-							});
-						} else {
-							sendResponse({success: false, error: "No authorization code found in URL"});
-						}
-				} catch (error) {
-					console.error("Manual callback error:", error);
-					sendResponse({success: false, error: error.message || error.toString()});
-				}
-			})();
+								sendResponse({
+									success: success,
+									warning: warning || undefined,
+									message: warning ? `Connected to Spotify, but playback access is limited: ${warning}` : undefined
+								});
+							} else {
+								sendResponse({
+									success: false,
+									errorCode: "INVALID_CALLBACK",
+									error: "No authorization code found in URL"
+								});
+							}
+					} catch (error) {
+						const errorCode = error?.errorCode || error?.code || 'SPOTIFY_OAUTH_ERROR';
+						console.error("Manual callback error:", errorCode, error);
+						sendResponse({
+							success: false,
+							errorCode,
+							error: error?.message || error?.toString(),
+							message: error?.message || "Manual Spotify callback failed.",
+							redirectUriAttempted: error?.redirectUriAttempted || request.redirectUri,
+							expectedRedirectUris: error?.expectedRedirectUris
+						});
+					}
+				})();
 			
 			return true; // Keep message channel open for async response
 		} else if (request.cmd && request.cmd === "spotifySignOut") {
@@ -5218,9 +5353,11 @@ async function sendToDestinations(message) {
 			message.nameColor = adjustColorForOverlay(message.nameColor)
 		}
 
-		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.chatmessage && message.event) {
-			const messageText = message.textContent || message.chatmessage;
-			if (settings.filterevents.textsetting.split(",").some(v => (v.trim() && messageText.includes(v)))) {
+		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.event) {
+			const blockedEvents = settings.filterevents.textsetting.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
+			const eventName = typeof message.event === "string" ? message.event.trim().toLowerCase() : "";
+			const messageText = (message.textContent || message.chatmessage || "").toLowerCase();
+			if (blockedEvents.some(v => (eventName && eventName === v) || (messageText && messageText.includes(v)))) {
 				return false;
 			}
 		}
@@ -5277,8 +5414,10 @@ async function sendToDestinations(message) {
 					if (settings.hypemode) {
 						updateViewerCount({event: "viewer_updates", meta: viewerCounts}); // updateViewerCount already calls combineHypeData and sends
 					}
-					
-					sendDataP2P({event: "viewer_updates", meta: viewerCounts});
+
+					var viewerUpdateEvent = {event: "viewer_updates", meta: viewerCounts};
+					sendDataP2P(viewerUpdateEvent);
+					sendTargetP2P(viewerUpdateEvent, "meta");
 				}
 				
 				return true;
@@ -5288,6 +5427,13 @@ async function sendToDestinations(message) {
 	
 	try {
 		sendDataP2P(message); 
+	} catch (e) {
+		console.error(e);
+	}
+	try {
+		if (message && typeof message === "object" && Object.prototype.hasOwnProperty.call(message, "meta")) {
+			sendTargetP2P(message, "meta");
+		}
 	} catch (e) {
 		console.error(e);
 	}
@@ -8108,6 +8254,428 @@ function enableYouTube() {
 
 const pendingRequests = new Map();
 
+function normalizeRumbleSettingText(value) {
+	if (typeof value === "string") {
+		return value.trim();
+	}
+	if (value == null) {
+		return "";
+	}
+	return String(value).trim();
+}
+
+function normalizeRumbleApiUrlValue(value) {
+	let raw = normalizeRumbleSettingText(value);
+	let parsed;
+	if (!raw) {
+		return "";
+	}
+	if (!/^[a-z]+:\/\//i.test(raw) && raw.indexOf("rumble.com") >= 0) {
+		raw = "https://" + raw.replace(/^\/+/, "");
+	}
+	try {
+		parsed = new URL(raw);
+	} catch (error) {
+		return raw;
+	}
+	parsed.hash = "";
+	return parsed.toString();
+}
+
+async function fetchRumbleJsonResponse(url) {
+	const parsedUrl = new URL(url);
+	if (parsedUrl.protocol !== "https:" || !["rumble.com", "www.rumble.com"].includes(parsedUrl.hostname)) {
+		throw new Error("Rumble fetch URL not allowed");
+	}
+	const rumbleResponse = await fetch(parsedUrl.toString(), {
+		method: "GET",
+		cache: "no-store",
+		credentials: "omit",
+		headers: {
+			Accept: "application/json,text/plain;q=0.9,*/*;q=0.8"
+		}
+	});
+	const responseText = await rumbleResponse.text();
+	let responseJson = {};
+	try {
+		responseJson = responseText ? JSON.parse(responseText) : {};
+	} catch (error) {
+		if (responseText && /^\s*</.test(responseText)) {
+			const htmlError = new Error("Rumble returned HTML instead of JSON. Paste the generated API feed URL, not the dashboard page.");
+			htmlError.status = rumbleResponse.status;
+			throw htmlError;
+		}
+		const jsonError = new Error("Invalid JSON response from Rumble");
+		jsonError.status = rumbleResponse.status;
+		throw jsonError;
+	}
+	if (!rumbleResponse.ok) {
+		const httpError = new Error((responseJson && (responseJson.error || responseJson.message)) || `HTTP ${rumbleResponse.status}`);
+		httpError.status = rumbleResponse.status;
+		httpError.data = responseJson;
+		throw httpError;
+	}
+	return {
+		status: rumbleResponse.status,
+		data: responseJson
+	};
+}
+
+function selectRumbleLivestreamFromSnapshot(snapshot, preferredStreamId = "") {
+	const desiredId = normalizeRumbleSettingText(preferredStreamId).toLowerCase();
+	const streams = Array.isArray(snapshot && snapshot.livestreams) ? snapshot.livestreams : [];
+	let selected = null;
+	if (!streams.length) {
+		return null;
+	}
+	if (desiredId) {
+		selected = streams.find(stream => String(stream && stream.id ? stream.id : "").toLowerCase() === desiredId) || null;
+	}
+	if (!selected) {
+		selected = streams.find(stream => !!(stream && stream.is_live)) || streams[0] || null;
+	}
+	return selected;
+}
+
+function buildRumblePopupUrlFromStream(stream) {
+	const streamId = normalizeRumbleSettingText(stream && stream.id);
+	if (!streamId) {
+		return "";
+	}
+	return "https://rumble.com/chat/popup/" + encodeURIComponent(streamId);
+}
+
+function buildRumblePopupUrlFromChatId(chatId) {
+	const normalized = normalizeRumbleSettingText(chatId);
+	if (!normalized) {
+		return "";
+	}
+	return "https://rumble.com/chat/popup/" + encodeURIComponent(normalized);
+}
+
+async function fetchRumbleHtmlResponse(url) {
+	const parsedUrl = new URL(url);
+	if (parsedUrl.protocol !== "https:" || !["rumble.com", "www.rumble.com"].includes(parsedUrl.hostname)) {
+		throw new Error("Rumble fetch URL not allowed");
+	}
+	const rumbleResponse = await fetch(parsedUrl.toString(), {
+		method: "GET",
+		cache: "no-store",
+		credentials: "omit",
+		headers: {
+			Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+		}
+	});
+	const responseText = await rumbleResponse.text();
+	if (!rumbleResponse.ok) {
+		const httpError = new Error(`HTTP ${rumbleResponse.status}`);
+		httpError.status = rumbleResponse.status;
+		throw httpError;
+	}
+	return {
+		status: rumbleResponse.status,
+		url: rumbleResponse.url || parsedUrl.toString(),
+		html: responseText
+	};
+}
+
+function extractRumbleIdentifiersFromHtml(html) {
+	if (!html || typeof html !== "string") {
+		return {
+			chatId: null,
+			videoId: null,
+			fullPath: null
+		};
+	}
+
+	const buildVideoInfoFromCandidate = (candidate) => {
+		if (!candidate || typeof candidate !== "string") {
+			return {
+				videoId: null,
+				fullPath: null
+			};
+		}
+		try {
+			const parsed = candidate.startsWith("http")
+				? new URL(candidate)
+				: new URL(candidate, "https://rumble.com");
+			const pathname = (parsed.pathname || "").trim();
+			const match = pathname.match(/\/((?:v|p)[a-zA-Z0-9]+[^\/]*\.html?)/i);
+			if (!match || !match[1]) {
+				return {
+					videoId: null,
+					fullPath: null
+				};
+			}
+			const fullPath = match[1];
+			const idMatch = fullPath.match(/^((?:v|p)[a-zA-Z0-9]+)/i);
+			return {
+				videoId: idMatch && idMatch[1] ? idMatch[1] : null,
+				fullPath
+			};
+		} catch (_) {
+			return {
+				videoId: null,
+				fullPath: null
+			};
+		}
+	};
+
+	const directChatPatterns = [
+		/chat\/popup\/(\d+)/i,
+		/data-chat-id=["'](\d+)["']/i,
+		/["']chatId["']\s*[:=]\s*["']?(\d+)/i,
+		/(?:^|[^a-z])video_id\s*[:=]\s*["']?(\d+)/i,
+		/["']video_id["']\s*[:=]\s*["']?(\d+)/i,
+		/data-video-id=["'](\d+)["']/i
+	];
+
+	let chatId = null;
+	for (const regex of directChatPatterns) {
+		const match = html.match(regex);
+		if (match && match[1] && /^\d+$/.test(match[1])) {
+			chatId = match[1];
+			break;
+		}
+	}
+
+	const pageUrlPatterns = [
+		/<link[^>]+rel=["']?canonical["']?[^>]*href=["']?([^"' >]+)/i,
+		/<meta[^>]+property=["']?og:url["']?[^>]*content=["']?([^"' >]+)/i,
+		/<meta[^>]+name=["']?twitter:url["']?[^>]*content=["']?([^"' >]+)/i,
+		/<meta[^>]+itemprop=["']?url["']?[^>]*content=["']?([^"' >]+)/i
+	];
+
+	for (const regex of pageUrlPatterns) {
+		const match = html.match(regex);
+		if (match && match[1]) {
+			const info = buildVideoInfoFromCandidate(match[1]);
+			if (info.videoId || info.fullPath) {
+				return {
+					chatId,
+					videoId: info.videoId,
+					fullPath: info.fullPath
+				};
+			}
+		}
+	}
+
+	const liveTilePatterns = [
+		/<div[^>]+data-video-id=["'](\d+)["'][\s\S]{0,1800}?(?:thumbnail__thumb--live|videostream__footer--live)[\s\S]{0,1200}?href=["']\/([^"']+\.html)/i,
+		/<div[^>]+data-video-id=["'](\d+)["'][\s\S]{0,1800}?(?:thumbnail__thumb--live|videostream__status--live|videostream__footer--live)/i
+	];
+
+	for (const regex of liveTilePatterns) {
+		const match = html.match(regex);
+		if (!match || !match[1] || !/^\d+$/.test(match[1])) {
+			continue;
+		}
+		const info = match[2]
+			? buildVideoInfoFromCandidate(match[2])
+			: { videoId: null, fullPath: null };
+		return {
+			chatId: match[1],
+			videoId: info.videoId,
+			fullPath: info.fullPath
+		};
+	}
+
+	return {
+		chatId,
+		videoId: null,
+		fullPath: null
+	};
+}
+
+function normalizeRumbleVideoTarget(value) {
+	let target = normalizeRumbleSettingText(value);
+	if (!target) {
+		return {
+			popupUrl: "",
+			url: ""
+		};
+	}
+
+	const popupMatch = target.match(/chat\/popup\/(\d+)/i);
+	if (popupMatch && popupMatch[1]) {
+		return {
+			popupUrl: buildRumblePopupUrlFromChatId(popupMatch[1]),
+			url: ""
+		};
+	}
+
+	if (/^\d+$/.test(target)) {
+		return {
+			popupUrl: buildRumblePopupUrlFromChatId(target),
+			url: ""
+		};
+	}
+
+	if (/^https?:\/\//i.test(target)) {
+		try {
+			const parsed = new URL(target);
+			parsed.hash = "";
+			return {
+				popupUrl: "",
+				url: parsed.toString()
+			};
+		} catch (error) {}
+	}
+
+	target = target.replace(/^https?:\/\//i, "").replace(/^rumble\.com\/+/i, "").replace(/^www\.rumble\.com\/+/i, "");
+	target = target.replace(/^\/+/, "");
+
+	if (!target) {
+		return {
+			popupUrl: "",
+			url: ""
+		};
+	}
+
+	if (/^chat\/popup\/\d+/i.test(target)) {
+		return {
+			popupUrl: buildRumblePopupUrlFromChatId(target.split("/").pop()),
+			url: ""
+		};
+	}
+
+	if (/^(?:v|p)[a-z0-9]+$/i.test(target)) {
+		return {
+			popupUrl: "",
+			url: `https://rumble.com/${target}`
+		};
+	}
+
+	return {
+		popupUrl: "",
+		url: `https://rumble.com/${target}`
+	};
+}
+
+async function resolveRumblePopupFromVideoTarget(videoTarget) {
+	const normalized = normalizeRumbleVideoTarget(videoTarget);
+	let fetched;
+	let identifiers;
+	if (normalized.popupUrl) {
+		return {
+			status: 200,
+			popupUrl: normalized.popupUrl,
+			chatId: normalizeRumbleSettingText(normalized.popupUrl.split("/").pop()),
+			videoId: null,
+			pageUrl: ""
+		};
+	}
+	if (!normalized.url) {
+		throw new Error("Missing Rumble video target");
+	}
+	fetched = await fetchRumbleHtmlResponse(normalized.url);
+	identifiers = extractRumbleIdentifiersFromHtml(fetched.html);
+	if (!identifiers.chatId) {
+		throw new Error("Could not find a Rumble popup chat ID for that video.");
+	}
+	return {
+		status: fetched.status,
+		popupUrl: buildRumblePopupUrlFromChatId(identifiers.chatId),
+		chatId: identifiers.chatId,
+		videoId: identifiers.videoId,
+		pageUrl: fetched.url
+	};
+}
+
+function buildRumbleUsernameCandidates(username) {
+	const normalized = normalizeRumbleSettingText(username).replace(/^@+/, "");
+	if (!normalized) {
+		return [];
+	}
+	const encoded = encodeURIComponent(normalized);
+	if (/^(c|user)\//i.test(normalized)) {
+		return [
+			`https://rumble.com/${normalized}/live`,
+			`https://rumble.com/${normalized}`
+		];
+	}
+	return [
+		`https://rumble.com/c/${encoded}/live`,
+		`https://rumble.com/c/${encoded}`,
+		`https://rumble.com/user/${encoded}/live`,
+		`https://rumble.com/user/${encoded}`
+	];
+}
+
+async function resolveRumblePopupFromUsername(username) {
+	const candidates = buildRumbleUsernameCandidates(username);
+	let lastError = null;
+	for (const candidate of candidates) {
+		try {
+			const resolved = await resolveRumblePopupFromVideoTarget(candidate);
+			if (resolved && resolved.popupUrl) {
+				return Object.assign({}, resolved, { username: normalizeRumbleSettingText(username) });
+			}
+		} catch (error) {
+			lastError = error;
+		}
+	}
+	if (lastError) {
+		throw lastError;
+	}
+	throw new Error("Could not resolve a live Rumble popup chat for that username.");
+}
+
+async function resolveRumblePopup(request = {}) {
+	const apiUrl = normalizeRumbleApiUrlValue(request.apiUrl);
+	const streamId = normalizeRumbleSettingText(request.streamId);
+	const videoTarget = normalizeRumbleSettingText(request.videoTarget || request.videoId);
+	const pageUrl = normalizeRumbleSettingText(request.pageUrl);
+	const username = normalizeRumbleSettingText(request.username);
+
+	if (apiUrl) {
+		try {
+			return await resolveRumblePopupFromApi(apiUrl, streamId);
+		} catch (error) {
+			if (!videoTarget && !pageUrl && !username) {
+				throw error;
+			}
+		}
+	}
+
+	if (videoTarget) {
+		return resolveRumblePopupFromVideoTarget(videoTarget);
+	}
+
+	if (pageUrl) {
+		return resolveRumblePopupFromVideoTarget(pageUrl);
+	}
+
+	if (username) {
+		return resolveRumblePopupFromUsername(username);
+	}
+
+	throw new Error("Missing Rumble username, video ID, page URL, or API URL");
+}
+
+async function resolveRumblePopupFromApi(apiUrl, preferredStreamId = "") {
+	const normalizedApiUrl = normalizeRumbleApiUrlValue(apiUrl);
+	let rumbleResponse;
+	let selectedStream;
+	if (!normalizedApiUrl) {
+		throw new Error("Missing Rumble API URL");
+	}
+	rumbleResponse = await fetchRumbleJsonResponse(normalizedApiUrl);
+	if (!rumbleResponse.data || typeof rumbleResponse.data !== "object") {
+		throw new Error("The Rumble API response was empty.");
+	}
+	selectedStream = selectRumbleLivestreamFromSnapshot(rumbleResponse.data, preferredStreamId);
+	if (!selectedStream) {
+		throw new Error("No Rumble livestreams were found in the API response.");
+	}
+	return {
+		status: rumbleResponse.status,
+		data: rumbleResponse.data,
+		stream: selectedStream,
+		popupUrl: buildRumblePopupUrlFromStream(selectedStream)
+	};
+}
+
 // Helper to clean up old pending requests
 function cleanupPendingRequests() {
     const now = Date.now();
@@ -8228,6 +8796,34 @@ async function openchat(target = null, force = false) {
 		}
 	}
 
+	async function openRumbleLiveChat(settings) {
+		const username = normalizeRumbleSettingText(settings.rumble_username && settings.rumble_username.textsetting);
+		const videoTarget = normalizeRumbleSettingText(settings.rumble_video_id && settings.rumble_video_id.textsetting);
+		const apiUrl = normalizeRumbleApiUrlValue(settings.rumble_api_url && settings.rumble_api_url.textsetting);
+		const preferredStreamId = normalizeRumbleSettingText(settings.rumble_stream_id && settings.rumble_stream_id.textsetting);
+		if (!username && !videoTarget && !apiUrl) {
+			return false;
+		}
+		try {
+			const request = {
+				username: username,
+				videoTarget: videoTarget
+			};
+			if (!videoTarget && !username && apiUrl) {
+				request.apiUrl = apiUrl;
+				request.streamId = preferredStreamId;
+			}
+			const resolved = await resolveRumblePopup(request);
+			if (resolved && resolved.popupUrl) {
+				openURL(resolved.popupUrl, true);
+				return true;
+			}
+		} catch (error) {
+			console.error("Rumble resolution error:", error);
+		}
+		return false;
+	}
+
 	async function fallbackYouTubeLiveChat(settings) {
 		try {
 			// Try first URL format
@@ -8266,6 +8862,28 @@ async function openchat(target = null, force = false) {
 
 	if ((target == "kick" || !target) && settings.kick_username) {
 		let url = "https://kick.com/" + settings.kick_username.textsetting + "/chatroom";
+		openURL(url);
+	}
+
+	if ((target == "rumble" || !target) && (
+		(settings.rumble_username && settings.rumble_username.textsetting) ||
+		(settings.rumble_video_id && settings.rumble_video_id.textsetting) ||
+		(settings.rumble_api_url && settings.rumble_api_url.textsetting)
+	)) {
+		const openedRumble = await openRumbleLiveChat(settings);
+		if (target == "rumble" && openedRumble) {
+			return;
+		}
+	}
+
+	if (target == "joystickws") {
+		let url = "https://socialstream.ninja/sources/websocket/joystick.html";
+		if (settings.joystick_username && settings.joystick_username.textsetting) {
+			const joystickChannel = settings.joystick_username.textsetting.trim();
+			if (joystickChannel) {
+				url += "?channel=" + encodeURIComponent(joystickChannel);
+			}
+		}
 		openURL(url);
 	}
 
@@ -9750,6 +10368,10 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 			}
 		} else if (request.action === "blockUser") {
 			blockUser(request.value);
+		} else if (request.action === "deleteSourceMessage") {
+			if (request.value) {
+				forwardSourceControlToWebsocketPages("deleteMessage", request.value);
+			}
 		} else if (request.action === "obsCommand") {
 			if (isExtensionOn){
 				fowardOBSCommand(request);
@@ -9803,6 +10425,119 @@ function fowardOBSCommand(data){
 	}
 }
 
+function normalizeSourceControlPlatform(type) {
+	type = (type || "").toLowerCase();
+	if (type === "youtubeshorts") {
+		return "youtube";
+	}
+	return type;
+}
+
+function getSourceControlPlatforms(type) {
+	const normalized = normalizeSourceControlPlatform(type);
+	if (normalized === "*" || !normalized) {
+		return ["twitch", "kick", "youtube"];
+	}
+	return [normalized];
+}
+
+function getWebsocketSourcePlatformFromUrl(url) {
+	if (!url || !url.includes("/sources/websocket/")) {
+		return "";
+	}
+	const lowerUrl = url.toLowerCase();
+	if (lowerUrl.includes("/sources/websocket/twitch.html")) {
+		return "twitch";
+	}
+	if (lowerUrl.includes("/sources/websocket/kick.html")) {
+		return "kick";
+	}
+	if (lowerUrl.includes("/sources/websocket/youtube.html")) {
+		return "youtube";
+	}
+	return "";
+}
+
+function sendSourceControlMessageToTab(tabId, message, platforms, onMiss = null) {
+	if (!tabId || !message || !platforms || !platforms.size) {
+		if (typeof onMiss === "function") {
+			onMiss();
+		}
+		return;
+	}
+	try {
+		chrome.tabs.get(tabId, function (tab) {
+			if (chrome.runtime.lastError || !tab || !tab.id) {
+				if (typeof onMiss === "function") {
+					onMiss();
+				}
+				return;
+			}
+			const platform = getWebsocketSourcePlatformFromUrl(tab.url);
+			if (!platform || !platforms.has(platform)) {
+				if (typeof onMiss === "function") {
+					onMiss();
+				}
+				return;
+			}
+			chrome.tabs.sendMessage(tab.id, message, function () {
+				chrome.runtime.lastError;
+			});
+		});
+	} catch (e) {
+		if (typeof onMiss === "function") {
+			onMiss();
+		}
+	}
+}
+
+function broadcastSourceControlMessageToWebsocketPages(message, platforms) {
+	if (!message || !platforms || !platforms.size) {
+		return;
+	}
+	chrome.tabs.query({}, function (tabs) {
+		chrome.runtime.lastError;
+		(tabs || []).forEach((tab) => {
+			try {
+				if (!tab || !tab.id) {
+					return;
+				}
+				const platform = getWebsocketSourcePlatformFromUrl(tab.url);
+				if (!platform || !platforms.has(platform)) {
+					return;
+				}
+				chrome.tabs.sendMessage(tab.id, message, function () {
+					chrome.runtime.lastError;
+				});
+			} catch (e) {}
+		});
+	});
+}
+
+function forwardSourceControlToWebsocketPages(control, payload) {
+	if (!payload || typeof payload !== "object") {
+		return;
+	}
+	const platforms = new Set(getSourceControlPlatforms(payload.type || payload.platform || ""));
+	if (!platforms.size) {
+		return;
+	}
+	const message = {
+		type: "SOURCE_CONTROL",
+		control: control,
+		platform: normalizeSourceControlPlatform(payload.type || payload.platform || ""),
+		payload: payload
+	};
+	const tabId = Number(payload.tid || payload.tabId || 0);
+	if (Number.isInteger(tabId) && tabId > 0) {
+		sendSourceControlMessageToTab(tabId, message, platforms, function () {
+			broadcastSourceControlMessageToWebsocketPages(message, platforms);
+		});
+		return;
+	}
+	broadcastSourceControlMessageToWebsocketPages(message, platforms);
+}
+
 function blockUser(data){
 	// Initialize blacklist settings if not present
 	
@@ -9832,6 +10567,18 @@ function blockUser(data){
 		}
 
 		const userToBlock = { username: (data.userid || data.chatname), type: altSourceType };
+		if (data.chatname && (data.chatname !== userToBlock.username)) {
+			userToBlock.chatname = data.chatname;
+		}
+		if (data.userid) {
+			userToBlock.userid = data.userid;
+		}
+		if (data.messageId) {
+			userToBlock.messageId = data.messageId;
+		}
+		if (data.tid !== undefined && data.tid !== null && data.tid !== "") {
+			userToBlock.tid = data.tid;
+		}
 		
 		if (data.chatimg && !data.chatimg.endsWith("/unknown.png")){
 			userToBlock.chatimg = data.chatimg;
@@ -9854,6 +10601,7 @@ function blockUser(data){
 		if (isExtensionOn) {
 			sendToDestinations({ blockUser: userToBlock });
 		}
+		forwardSourceControlToWebsocketPages("blockUser", userToBlock);
 	} catch(e){
 		console.error(e);
 		return false;
@@ -11753,7 +12501,10 @@ async function applyBotActions(data, tab = false) {
 		messageCounter += 1;
 		data.id = messageCounter;
 	}
-	const hadOriginalChatMessage = typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";
+	const originalChatMessage =
+		typeof data.chatmessage === "string" && data.chatmessage.trim() !== ""
+			? data.chatmessage
+			: null;
 
 	// Normalize to seconds for last activity comparisons (accept sec/ms/micro inputs)
 	const normalizeTimestampToSeconds = (value) => {
@@ -12033,7 +12784,7 @@ async function applyBotActions(data, tab = false) {
 
 		if (settings.removeContentImage) {
 			data.contentimg = "";
-			if (!data.chatmessage && !data.hasDonation) {
+			if (!data.chatmessage && !data.hasDonation && !(data.event && ("meta" in data))) {
 				// there's no content worth sending I'm assuming
 				return false;
 			}
@@ -12211,7 +12962,7 @@ async function applyBotActions(data, tab = false) {
 		// Handle Spotify commands
 		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
 			// Pass message data for role-based permission checking
-			spotify.handleCommand(data.chatmessage, data).then(response => {
+			spotify.handleCommand(originalChatMessage || data.chatmessage, data).then(response => {
 				if (response) {
 					const botResponse = {
 						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
@@ -12353,9 +13104,6 @@ async function applyBotActions(data, tab = false) {
 		}
 		if (forwardCommandDestinations.length && data.type && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid && !data.bot && data.chatmessage.startsWith("!")) {
 			let sourceType = String(data.type).toLowerCase();
-			if (sourceType === "youtube_streaming") {
-				sourceType = "youtube";
-			}
 
 			if (data.reflection && forwardCommandDestinations.includes(sourceType)) {
 				return null;
@@ -13769,6 +14517,202 @@ function monitorFileChanges() {
 }
 // Add this variable at the top of your script file, outside any functions
 let lastRandomTestMessageData = null;
+
+function fakeMetaPick(values) {
+	if (!Array.isArray(values) || !values.length) {
+		return null;
+	}
+	return values[Math.floor(Math.random() * values.length)];
+}
+
+function fakeMetaInt(min, max) {
+	min = Math.ceil(Number(min) || 0);
+	max = Math.floor(Number(max) || 0);
+	if (max < min) {
+		return min;
+	}
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function buildFakeAuctionMeta() {
+	var items = [
+		{ title: "500 Spot Silver Slab Mega Set - #191", category: "Coins, U.S. currency", minPrice: 12, maxPrice: 220 },
+		{ title: "Bullion Item as Shown", category: "Bullion", minPrice: 1, maxPrice: 45 },
+		{ title: "MEGA ATOMIC SPONSOR A GIVEAWAY", category: "Giveaway", minPrice: 55, maxPrice: 240 },
+		{ title: "Auctioned Numismatic Coin - Item as Shown on Screen", category: "Numismatics", minPrice: 4, maxPrice: 125 }
+	];
+	var bidders = [
+		"redatv2004",
+		"richard23507",
+		"coinhunter77",
+		"stacking_silver",
+		"tonerking"
+	];
+	var shippingTexts = [
+		"Shipping + Taxes are extra",
+		"Combined shipping available",
+		"US shipping available",
+		"Shipping calculated at checkout"
+	];
+	var item = fakeMetaPick(items) || items[0];
+	var bidder = fakeMetaPick(bidders) || "guest_bidder";
+	var status = fakeMetaPick(["winning", "won", "sold"]) || "winning";
+	var bids = fakeMetaInt(1, 24);
+	var price = fakeMetaInt(item.minPrice, item.maxPrice);
+	var seconds = fakeMetaInt(3, 45);
+	var timer = "00:" + String(seconds).padStart(2, "0");
+	var statusText = bidder + " is Winning!";
+
+	if (status === "won") {
+		statusText = bidder + " won!";
+		timer = "00:00";
+	} else if (status === "sold") {
+		statusText = "Sold";
+		timer = "00:00";
+	}
+
+	return {
+		status: status,
+		statusText: statusText,
+		bidder: bidder,
+		title: item.title,
+		category: item.category,
+		price: price,
+		priceText: "$" + price.toLocaleString(),
+		bids: bids,
+		bidsText: bids + " Bids",
+		timer: timer,
+		shipping: fakeMetaPick(shippingTexts) || shippingTexts[0]
+	};
+}
+
+function buildFakeCommerceMeta() {
+	var productCatalog = [
+		{ title: "2017-S Medal American Liberty Set", price: 225, quantity: 1, action: "Buy Now" },
+		{ title: "BCW 2x2 Coin Snap Holder Large Dollar (38.1mm)", price: 55, quantity: 10, action: "Buy Now" },
+		{ title: "Copper/Other Numismatic Item", price: 1, quantity: 985, action: "Pre-bid" },
+		{ title: "SPONSOR A GIVEAWAY Supercharged", price: 85, quantity: 94, action: "Buy Now" },
+		{ title: "Trump Foil Note", price: 10, quantity: 10, action: "Save & Notify Me" },
+		{ title: "Whatnot Starter Kit Pro 5 with Whatty Plush", price: 175, quantity: 1, action: "Buy Now" },
+		{ title: "Guardhouse Tetra Snaplocks For SILVER EAGLES", price: 65, quantity: 5, action: "Buy Now" },
+		{ title: "Qty 1 Package of Qty 525 Avery 6737 Labels", price: 6, quantity: 91, action: "Buy Now" }
+	];
+	var giveawayTitles = [
+		"Slab, Silver and/or Numismatic on Screen #10",
+		"Slab, Silver and/or Numismatic on Screen #11",
+		"Slab, Silver and/or Numismatic on Screen #12",
+		"Slab, Silver and/or Numismatic on Screen #13",
+		"Slab, Silver and/or Numismatic on Screen #14",
+		"Slab, Silver and/or Numismatic on Screen #15"
+	];
+	var shuffled = productCatalog.slice().sort(function () {
+		return Math.random() - 0.5;
+	});
+	var productCount = fakeMetaInt(4, Math.min(7, shuffled.length));
+	var selected = shuffled.slice(0, productCount).map(function (item) {
+		var row = {
+			title: item.title,
+			price: item.price,
+			priceText: "$" + item.price.toLocaleString(),
+			quantity: item.quantity,
+			quantityText: "Qty. " + item.quantity.toLocaleString(),
+			action: item.action
+		};
+		if (item.action === "Pre-bid") {
+			var bids = fakeMetaInt(0, 9);
+			row.bids = bids;
+			row.bidsText = bids + (bids === 1 ? " bid" : " bids");
+		}
+		return row;
+	});
+
+	var giveaways = giveawayTitles.slice(0, fakeMetaInt(3, 6)).map(function (title) {
+		return {
+			title: title,
+			quantity: 1,
+			quantityText: "Qty. 1"
+		};
+	});
+
+	var spotsTotal = fakeMetaInt(200, 900);
+	var spotsRemaining = fakeMetaInt(0, spotsTotal);
+	var surpriseTitle = fakeMetaPick([
+		"500 Spot Silver Slab Mega Set",
+		"Mystery Numismatic Pull Game",
+		"Weekend Mega Breaker Lot"
+	]);
+
+	return {
+		products: {
+			total: selected.length,
+			items: selected
+		},
+		surpriseSets: {
+			total: 1,
+			items: [{
+				title: surpriseTitle,
+				progress: Math.max(0, Math.min(100, Math.round(((spotsTotal - spotsRemaining) / spotsTotal) * 100))),
+				remaining: spotsRemaining,
+				totalSpots: spotsTotal,
+				remainingText: spotsRemaining.toLocaleString() + " of " + spotsTotal.toLocaleString() + " left",
+				statusText: "Surprise Set Filling"
+			}]
+		},
+		upcomingGiveaways: {
+			total: giveaways.length,
+			items: giveaways
+		}
+	};
+}
+
+function buildFakeViewerUpdates() {
+	var allPlatforms = ["youtube", "twitch", "kick", "tiktok", "whatnot", "facebook"];
+	var shuffled = allPlatforms.slice().sort(function () {
+		return Math.random() - 0.5;
+	});
+	var count = fakeMetaInt(2, 5);
+	var selected = shuffled.slice(0, count);
+	var meta = {};
+	selected.forEach(function (platform) {
+		meta[platform] = fakeMetaInt(9, 1500);
+	});
+	return meta;
+}
+
+function triggerFakeMetaMessage(mode) {
+	var normalized = String(mode || "random").toLowerCase().trim();
+	if (!normalized || normalized === "random") {
+		normalized = fakeMetaPick(["auction", "commerce", "viewers"]) || "auction";
+	}
+
+	var payload = null;
+	if (normalized === "auction") {
+		payload = {
+			type: "whatnot",
+			event: "auction_update",
+			meta: buildFakeAuctionMeta()
+		};
+	} else if (normalized === "commerce") {
+		payload = {
+			type: "whatnot",
+			event: "commerce_update",
+			meta: buildFakeCommerceMeta()
+		};
+	} else if (normalized === "viewers" || normalized === "viewer" || normalized === "viewer_updates") {
+		payload = {
+			event: "viewer_updates",
+			meta: buildFakeViewerUpdates()
+		};
+	} else {
+		payload = {
+			type: "whatnot",
+			event: "auction_update",
+			meta: buildFakeAuctionMeta()
+		};
+	}
+
+	sendToDestinations(payload);
+}
 
 async function triggerFakeRandomMessage(){
 	var data = {};

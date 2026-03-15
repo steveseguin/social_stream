@@ -435,11 +435,55 @@
                 <button id="btn-ad-90" class="connect-button">Start 90s Ad</button>
                 <button id="btn-ad-schedule" class="connect-button" style="background:#555;">Fetch Ad Schedule</button>
             </div>
+            <div style="margin-top:12px; padding-top:12px; border-top:1px solid #eee;">
+                <h4 style="margin:0 0 8px 0;">Advanced Sync</h4>
+                <label class="auth-method-option" style="display:flex; margin-bottom:8px;">
+                    <input type="checkbox" id="sync-delete-messages">
+                    <span>Sync dock deletes to Twitch</span>
+                </label>
+                <label class="auth-method-option" style="display:flex; margin-bottom:12px;">
+                    <input type="checkbox" id="sync-block-users">
+                    <span>Sync dock blocks to Twitch bans</span>
+                </label>
+                <div class="moderation-input-grid">
+                    <input type="text" id="stream-title" class="channel-input" placeholder="Stream title">
+                    <input type="text" id="stream-category" class="channel-input" placeholder="Game / category">
+                    <div class="moderation-button-group">
+                        <button id="btn-update-channel" class="connect-button" style="background:#2255dd;">Update Title / Category</button>
+                        <button id="btn-refresh-channel" class="connect-button" style="background:#555;">Refresh Current</button>
+                    </div>
+                </div>
+                <div style="font-size:12px; color:#666; margin-top:8px;">Title/category editing requires the Twitch OAuth scope <code>channel:manage:broadcast</code>.</div>
+            </div>
         </div>
         </div>
     </div>
     <script>
         //console.log(".");
+		const TWITCH_ADVANCED_CONTROLS_STORAGE_KEY = 'twitchWsAdvancedControls';
+
+		function loadAdvancedControlSettings() {
+			try {
+				const parsed = JSON.parse(localStorage.getItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
+				return {
+					syncDeleteMessages: !!parsed.syncDeleteMessages,
+					syncBlockUsers: !!parsed.syncBlockUsers
+				};
+			} catch (_) {
+				return {
+					syncDeleteMessages: false,
+					syncBlockUsers: false
+				};
+			}
+		}
+
+		function saveAdvancedControlSettings() {
+			const payload = {
+				syncDeleteMessages: !!document.getElementById('sync-delete-messages')?.checked,
+				syncBlockUsers: !!document.getElementById('sync-block-users')?.checked
+			};
+			localStorage.setItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+		}
 
 		function signOut() {
 			localStorage.removeItem('twitchOAuthToken');
@@ -484,11 +528,22 @@
                 });
             }
 
-            const savedAlias = localStorage.getItem('twitchUserAlias');
+			const savedAlias = localStorage.getItem('twitchUserAlias');
             const aliasInput = document.getElementById('alias-input');
             if (savedAlias && aliasInput) {
                 aliasInput.value = savedAlias;
             }
+			const controlSettings = loadAdvancedControlSettings();
+			const syncDeleteMessages = document.getElementById('sync-delete-messages');
+			const syncBlockUsers = document.getElementById('sync-block-users');
+			if (syncDeleteMessages) {
+				syncDeleteMessages.checked = controlSettings.syncDeleteMessages;
+				syncDeleteMessages.addEventListener('change', saveAdvancedControlSettings);
+			}
+			if (syncBlockUsers) {
+				syncBlockUsers.checked = controlSettings.syncBlockUsers;
+				syncBlockUsers.addEventListener('change', saveAdvancedControlSettings);
+			}
 
             if (aliasInput) {
                 aliasInput.addEventListener('change', function() {
@@ -507,6 +562,24 @@
             g('btn-ad-60')?.addEventListener('click', () => post('ad', { length: 60 }));
             g('btn-ad-90')?.addEventListener('click', () => post('ad', { length: 90 }));
             g('btn-ad-schedule')?.addEventListener('click', () => post('ad_schedule', {}));
+            g('btn-update-channel')?.addEventListener('click', () => post('update_channel_info', {
+				title: g('stream-title')?.value,
+				category: g('stream-category')?.value
+			}));
+            g('btn-refresh-channel')?.addEventListener('click', () => post('refresh_channel_info', {}));
+			window.addEventListener('message', function(event) {
+				if (!event?.data || event.data.source !== 'twitch-ws-script') {
+					return;
+				}
+				if (event.data.action === 'channel_info' && event.data.payload) {
+					if (g('stream-title')) {
+						g('stream-title').value = event.data.payload.title || '';
+					}
+					if (g('stream-category')) {
+						g('stream-category').value = event.data.payload.category || '';
+					}
+				}
+			});
         });
 
         // The rest of your existing JavaScript code goes here

@@ -207,6 +207,8 @@
 	var processedMessages = new Set();
 	var maxTrackedMessages = 3;
 	var pastMessages = [];
+	var trackedKickMessageIds = new Map();
+	var maxTrackedKickMessageIds = 500;
 
 	// Persistent cache configuration
 	const CACHE_KEY = 'kick_user_profiles_cache';
@@ -649,35 +651,148 @@
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	
+	const KICK_MESSAGE_CONTAINER_SELECTOR = "[data-index], [data-chat-entry]";
+	const KICK_DELETE_TEXTS = new Set(["deleted by a moderator", "(deleted)"]);
+
+	function normalizeKickText(text) {
+		return (text || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+	}
+
+	function normalizeKickChatname(name) {
+		name = name || "";
+		name = name.replace("Channel Host", "");
+		name = name.replace(":", "");
+		return name.trim();
+	}
+
+	function getKickMessageContainer(ele) {
+		const base = ele?.nodeType === 1 ? ele : ele?.parentElement;
+		if (!base) {
+			return null;
+		}
+		if (base.matches?.(KICK_MESSAGE_CONTAINER_SELECTOR)) {
+			return base;
+		}
+		return base.closest?.(KICK_MESSAGE_CONTAINER_SELECTOR) || null;
+	}
+
+	function getKickMessageKey(ele) {
+		const messageEle = getKickMessageContainer(ele) || (ele?.nodeType === 1 ? ele : null);
+		if (!messageEle?.dataset) {
+			return "";
+		}
+		if (messageEle.dataset.chatEntry) {
+			return `entry:${messageEle.dataset.chatEntry}`;
+		}
+		if (messageEle.dataset.index) {
+			return `index:${messageEle.dataset.index}`;
+		}
+		return "";
+	}
+
+	function rememberKickTrackedMessageId(ele, id) {
+		if (!ele || !id) {
+			return;
+		}
+		ele.dataset.mid = id;
+		const key = getKickMessageKey(ele);
+		if (!key) {
+			return;
+		}
+		if (trackedKickMessageIds.has(key)) {
+			trackedKickMessageIds.delete(key);
+		}
+		trackedKickMessageIds.set(key, id);
+		if (trackedKickMessageIds.size > maxTrackedKickMessageIds) {
+			const oldestKey = trackedKickMessageIds.keys().next().value;
+			if (oldestKey) {
+				trackedKickMessageIds.delete(oldestKey);
+			}
+		}
+	}
+
+	function getKickTrackedMessageId(ele) {
+		const source = ele?.dataset?.mid
+			? ele
+			: ele?.querySelector?.("[data-mid]") || ele?.closest?.("[data-mid]") || null;
+		if (source?.dataset?.mid) {
+			const parsedId = parseInt(source.dataset.mid, 10);
+			return isNaN(parsedId) ? null : parsedId;
+		}
+		const key = getKickMessageKey(ele);
+		if (!key || !trackedKickMessageIds.has(key)) {
+			return null;
+		}
+		const parsedId = parseInt(trackedKickMessageIds.get(key), 10);
+		return isNaN(parsedId) ? null : parsedId;
+	}
+
+	function getKickDeleteChatname(ele) {
+		const rawName =
+			ele?.querySelector?.("button[title]")?.innerText ||
+			ele?.querySelector?.("button.font-bold.inline.text-white")?.innerText ||
+			ele?.querySelector?.(".chat-entry-username")?.innerText ||
+			"";
+		return escapeHtml(normalizeKickChatname(rawName));
+	}
+
+	function hasKickDeletedLabel(ele) {
+		return Array.from(ele?.querySelectorAll?.("span.font-semibold") || []).some((node) => {
+			const label = normalizeKickText(node.textContent).toLowerCase();
+			return KICK_DELETE_TEXTS.has(label);
+		});
+	}
+
+	function isDeletedKickMessage(ele) {
+		const messageEle = getKickMessageContainer(ele) || (ele?.nodeType === 1 ? ele : null);
+		if (!messageEle) {
+			return false;
+		}
+		if (messageEle.querySelector("[class^='deleted-message']")) {
+			return true;
+		}
+		if (messageEle.querySelector(".line-through")) {
+			return true;
+		}
+		return hasKickDeletedLabel(messageEle);
+	}
 	
 	function deleteThis(ele){
-		if (ele.querySelector("[class^='deleted-message']")){
-		  console.log("DELETEED");
-		  try {
-				var data = {};
-				data.chatname = escapeHtml(ele.querySelector(".chat-entry-username").innerText);
-				data.chatname = data.chatname.replace("Channel Host", "");
-				data.chatname = data.chatname.replace(":", "");
-				data.chatname = data.chatname.trim();
-
-				if (ele.dataset.mid) {
-					const parsedId = parseInt(ele.dataset.mid);
-					if (!isNaN(parsedId)) {
-						data.id = parsedId;
-					}
-				}
-				data.type = "kick";
-				
-				chrome.runtime.sendMessage(
-					chrome.runtime.id,
-					{
-						delete: data
-					},
-					function (e) {}
-				);
-			} catch (e) {
+		const messageEle = getKickMessageContainer(ele) || (ele?.nodeType === 1 ? ele : null);
+		if (!messageEle || !isDeletedKickMessage(messageEle)) {
+			return false;
+		}
+		if (messageEle.deleted) {
+			return true;
+		}
+		messageEle.deleted = true;
+		try {
+			var data = {};
+			const chatname = getKickDeleteChatname(messageEle) || getKickDeleteChatname(ele);
+			if (chatname) {
+				data.chatname = chatname;
 			}
-		 }
+			const parsedId = getKickTrackedMessageId(messageEle);
+			if (parsedId !== null) {
+				data.id = parsedId;
+			}
+			data.type = "kick";
+			if (!data.id && !data.chatname) {
+				return true;
+			}
+			if (!data.id) {
+				data.onlyLast = true;
+			}
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				{
+					delete: data
+				},
+				function (e) {}
+			);
+		} catch (e) {
+		}
+		return true;
 	}
 	
 	async function processMessageOld(ele){	// old chatroom format
@@ -687,16 +802,12 @@
 	  }
 	
 	  if (!ele){return;}
+	  if (deleteThis(ele)){return;}
 	  
 	  if (!ele.isConnected){return;}
 	  
 	  if (settings.customkickstate) {
 		return;
-	  }
-	  
-	   if (ele.querySelector("[class^='deleted-message']")){
-		  console.log("DELETEED");
-		  return;
 	  }
 		
 	  var chatsticker = false;
@@ -794,9 +905,7 @@
 	  var hasDonation = '';
 	
 	  
-	  chatname = chatname.replace("Channel Host", "");
-	  chatname = chatname.replace(":", "");
-	  chatname = chatname.trim();
+	  chatname = normalizeKickChatname(chatname);
 	  
 	  var chatimg = "";
 	  
@@ -849,7 +958,7 @@
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
 			if (ele && e && e.id){
-				ele.dataset.mid = e.id;
+				rememberKickTrackedMessageId(ele, e.id);
 			}
 		});
 	  } catch(e){
@@ -896,28 +1005,7 @@
 	
 	  if (!ele || !ele.isConnected) return;
 	  
-	  if (ele.querySelector(".line-through, .text-neutral>.font-semibold")){
-		 // console.log("DELETEED");
-		  try {
-				var data = {};
-				data.chatname = escapeHtml(ele.querySelector("button[title]").innerText);
-				data.chatname = data.chatname.replace("Channel Host", "");
-				data.chatname = data.chatname.replace(":", "");
-				data.chatname = data.chatname.trim();
-				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
-				data.type = "kick";
-				
-				chrome.runtime.sendMessage(
-					chrome.runtime.id,
-					{
-						delete: data
-					},
-					function (e) {}
-				);
-			} catch (e) {
-			}
-		return;
-	  }
+	  if (deleteThis(ele)) return;
 	  
 	  if (ele.dataset.matched){return;}
 	  ele.dataset.matched = true;
@@ -973,6 +1061,8 @@
 	  if (settings.delaykick){
 		  await sleep(3000);
 	  }
+	  if (!ele || !ele.isConnected) return;
+	  if (deleteThis(ele)) return;
 	  
 	  if (settings.customkickstate) {
 		return;
@@ -1098,9 +1188,7 @@
 
 	 
 	  
-	  chatname = chatname.replace("Channel Host", "");
-	  chatname = chatname.replace(":", "");
-	  chatname = chatname.trim();
+	  chatname = normalizeKickChatname(chatname);
 	  
 	  var chatimg = "";
 	  
@@ -1162,7 +1250,7 @@
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
 			if (e && ele){
-				ele.dataset.mid = e?.id;
+				rememberKickTrackedMessageId(ele, e?.id);
 			}
 		});
 	  } catch(e){
@@ -1263,9 +1351,19 @@
 	function onElementInsertedOld(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				if (mutation.type === "attributes" || mutation.type === "characterData") {
+					deleteThis(mutation.target);
+					return;
+				}
+				if (deleteThis(mutation.target)) {
+					return;
+				}
 				if (mutation.addedNodes.length) {
 					for (var i = 0; i < mutation.addedNodes.length; i++) {
 						try {
+							if (deleteThis(mutation.addedNodes[i])) {
+								continue;
+							}
 							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.chatEntry){
 								if (pastMessages.includes(mutation.addedNodes[i].dataset.chatEntry)){continue;}
 							
@@ -1290,7 +1388,7 @@
 				}
 			});
 		};
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -1299,14 +1397,25 @@
 	function onElementInsertedNew(target, subtree=false) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				if (mutation.type === "attributes" || mutation.type === "characterData") {
+					deleteThis(mutation.target);
+					return;
+				}
+				if (deleteThis(mutation.target)) {
+					return;
+				}
 				if (mutation.removedNodes.length) {
-					if (mutation.target.parentNode && mutation.target.parentNode.dataset.index){
-						processMessage(mutation.target.parentNode);
+					const row = getKickMessageContainer(mutation.target);
+					if (row && row.dataset.index){
+						processMessage(row);
 					}
 				} else if (mutation.target == target || subtree){
 					if (mutation.addedNodes.length) {
 						for (var i = 0; i < mutation.addedNodes.length; i++) {
 							try {
+								if (deleteThis(mutation.addedNodes[i])) {
+									continue;
+								}
 								if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
 									if (SevenTV){
 										setTimeout(function(ele){
@@ -1327,7 +1436,7 @@
 				} 
 			});
 		};
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);

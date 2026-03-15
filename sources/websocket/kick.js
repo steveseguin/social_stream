@@ -56,13 +56,13 @@ function applyKickCoreFallbacks() {
                 return 'message';
             }
             if (lower.includes('gift')) {
-                return 'gift';
+                return 'subscription_gift';
             }
             if (lower.includes('tip') || lower.includes('donation')) {
                 return 'donation';
             }
             if (lower.includes('sub')) {
-                return 'subscription';
+                return 'new_subscriber';
             }
             if (lower.includes('ban') || lower.includes('moderation')) {
                 return 'moderation';
@@ -119,6 +119,8 @@ const STORAGE_KEY = 'kickApiConfig';
 const TOKEN_KEY = 'kickApiTokens';
 const CODE_VERIFIER_KEY = 'kickPkceVerifier';
 const STATE_KEY = 'kickOAuthState';
+const KICK_SCOUT_TOKEN_STORAGE_KEY = 'kickScoutBridgeToken';
+const KICK_ADVANCED_CONTROLS_STORAGE_KEY = 'kickAdvancedControls';
 
 const DEFAULT_CONFIG = {
     clientId: '01KDYJ7WYZB2NMHZBE4ZZX61XR',
@@ -145,7 +147,6 @@ const PROFILE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 const state = {
     clientId: '',
-    clientSecret: '',
     redirectUri: '',
     channelSlug: '',
     channelSlugSource: '',
@@ -156,6 +157,7 @@ const state = {
     customEvents: '',
     tokens: null,
     refreshTimer: null,
+    refreshPromise: null,
     authUser: null,
     profilePromise: null,
     profileCache: new Map(),
@@ -175,7 +177,8 @@ const state = {
         retryTimer: null,
         status: 'disconnected',
         lastErrorLoggedAt: 0,
-        chatDisabled: false
+        chatDisabled: false,
+        chatroomCacheWriteDisabled: false
     },
     socket: {
         status: 'disconnected',
@@ -197,6 +200,10 @@ const state = {
     chat: {
         sending: false,
         type: 'user'
+    },
+    advancedControls: {
+        syncDeleteMessages: false,
+        syncBlockUsers: false
     }
 };
 
@@ -235,6 +242,8 @@ const extension = {
 const WSS_PLATFORM = 'kick';
 const KICK_VIEWER_HEARTBEAT_INTERVAL_MS = 30000;
 const KICK_VIEWER_DISCONNECT_EMIT_DEBOUNCE_MS = 1500;
+const KICK_CHAT_ECHO_TIMEOUT_MS = 10000;
+const KICK_CHAT_ECHO_STALE_MS = 60000;
 let extensionInitialized = false;
 let lastBridgeNotifyStatus = null;
 let lastAuthNotifyStatus = null;
@@ -256,6 +265,8 @@ const kickViewerHeartbeat = {
     lastAttemptAt: 0,
     lastSuccessAt: 0
 };
+let pendingKickChatEchoSeq = 0;
+const pendingKickChatEchoes = [];
 
 const LITE_MESSAGE_PREFIX = 'kick-lite-';
 let liteBridgeCoreReady = false;
@@ -1623,17 +1634,43 @@ function applyExtensionSettings(newSettings) {
     resetThirdPartyEmoteCache();
     mergeEmotes();
     requestThirdPartyEmotes({ force: true });
+    syncKickViewerHeartbeat(false);
+}
+
+function sendRuntimeMessageFireAndForget(payload) {
+    if (
+        typeof chrome === 'undefined' ||
+        !chrome.runtime ||
+        !chrome.runtime.id ||
+        typeof chrome.runtime.sendMessage !== 'function'
+    ) {
+        return false;
+    }
+    try {
+        chrome.runtime.sendMessage(chrome.runtime.id, payload, () => {
+            try {
+                if (chrome.runtime && chrome.runtime.lastError) {
+                    // Swallow async runtime port-close noise for fire-and-forget relays.
+                }
+            } catch (_) {}
+        });
+        return true;
+    } catch (_) {
+        return false;
+    }
 }
 
 function notifyApp(payload) {
-    // Try chrome.runtime.sendMessage first, with fallback to ninjafy
-    if (typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
+    // Prefer direct Electron bridge when available.
+    if (isElectronEnvironment() && window.ninjafy && window.ninjafy.sendMessage) {
         try {
-            chrome.runtime.sendMessage(chrome.runtime.id, payload, function() {});
+            window.ninjafy.sendMessage(null, payload, null, window.__SSAPP_TAB_ID__);
             return;
-        } catch (e) {
-            // Fall through to ninjafy
-        }
+        } catch (_) {}
+    }
+    // Try extension relay next.
+    if (sendRuntimeMessageFireAndForget(payload)) {
+        return;
     }
     // Fallback to ninjafy.sendMessage for Electron
     if (window.ninjafy && window.ninjafy.sendMessage) {
@@ -1685,6 +1722,15 @@ function initExtensionBridge() {
                     if (Object.prototype.hasOwnProperty.call(request, 'state')) {
                         extension.enabled = Boolean(request.state);
                     }
+                    if (request.type === 'SOURCE_CONTROL') {
+                        handleSourceControlRequest(request)
+                            .then(result => sendResponse(Boolean(result)))
+                            .catch(err => {
+                                console.error('Kick SOURCE_CONTROL failed', err);
+                                sendResponse(false);
+                            });
+                        return true;
+                    }
                     if (request.settings) {
                         applyExtensionSettings(request.settings || {});
                         sendResponse(true);
@@ -1716,6 +1762,7 @@ function initExtensionBridge() {
 
     try {
         chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, response => {
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) return;
             if (!response || typeof response !== 'object') return;
             if (Object.prototype.hasOwnProperty.call(response, 'state')) {
                 extension.enabled = Boolean(response.state);
@@ -1751,8 +1798,76 @@ function initElements() {
         chatMessage: q('chat-message'),
         chatType: q('chat-send-type'),
         sendChat: q('send-chat'),
-        chatStatus: q('chat-status')
+        chatStatus: q('chat-status'),
+        syncDeleteMessages: q('sync-delete-messages'),
+        syncBlockUsers: q('sync-block-users'),
+        streamTitle: q('stream-title'),
+        streamCategory: q('stream-category'),
+        refreshStreamInfo: q('refresh-stream-info'),
+        updateStreamInfo: q('update-stream-info')
     });
+}
+
+function loadAdvancedControls() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(KICK_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
+        state.advancedControls.syncDeleteMessages = !!parsed.syncDeleteMessages;
+        state.advancedControls.syncBlockUsers = !!parsed.syncBlockUsers;
+    } catch (_) {
+        state.advancedControls.syncDeleteMessages = false;
+        state.advancedControls.syncBlockUsers = false;
+    }
+    if (els.syncDeleteMessages) {
+        els.syncDeleteMessages.checked = state.advancedControls.syncDeleteMessages;
+    }
+    if (els.syncBlockUsers) {
+        els.syncBlockUsers.checked = state.advancedControls.syncBlockUsers;
+    }
+}
+
+function persistAdvancedControls() {
+    const payload = {
+        syncDeleteMessages: !!state.advancedControls.syncDeleteMessages,
+        syncBlockUsers: !!state.advancedControls.syncBlockUsers
+    };
+    localStorage.setItem(KICK_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+}
+
+function normalizeSourceControlPlatform(type) {
+    const normalized = typeof type === 'string' ? type.trim().toLowerCase() : '';
+    if (normalized === 'youtubeshorts') {
+        return 'youtube';
+    }
+    return normalized;
+}
+
+function resolveKickDeleteMessageId(payload = {}) {
+    const explicitMessageId = pickFirstString(
+        [
+            payload.messageId,
+            payload.message_id,
+            payload.nativeMessageId,
+            payload.native_message_id
+        ],
+        ''
+    );
+    if (explicitMessageId) {
+        return explicitMessageId;
+    }
+    if (payload.tid !== undefined && payload.tid !== null && payload.tid !== '') {
+        return '';
+    }
+    return pickFirstString([payload.id], '');
+}
+
+function isTrustedTabBridgeEvent(event) {
+    if (!event || event.source !== window) {
+        return false;
+    }
+    if (event.origin && typeof window !== 'undefined' && window.location && event.origin !== window.location.origin) {
+        return false;
+    }
+    return true;
 }
 
 function setChannelSlug(value, options = {}) {
@@ -1819,17 +1934,17 @@ function loadConfig() {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (!stored) return;
-        const cfg = JSON.parse(stored);
-        state.clientId = cfg.clientId || '';
-        state.clientSecret = cfg.clientSecret || '';
-        state.redirectUri = cfg.redirectUri || '';
+        const parsed = JSON.parse(stored);
+        const cfg = sanitizeStoredConfig(parsed);
+        if (!cfg || typeof cfg !== 'object') {
+            return;
+        }
         if (cfg.channelSlug) {
             setChannelSlug(cfg.channelSlug, { persist: false, source: 'storage', force: true });
         } else {
             state.channelSlug = '';
             state.channelSlugSource = '';
         }
-        state.bridgeUrl = cfg.bridgeUrl || '';
         state.customEvents = cfg.customEvents || '';
         if (cfg.siteApiBase) {
             state.socket.siteApiBase = cfg.siteApiBase;
@@ -1851,6 +1966,26 @@ function loadConfig() {
     }
 }
 
+function sanitizeStoredConfig(cfg) {
+    if (!cfg || typeof cfg !== 'object') {
+        return cfg;
+    }
+    const sanitized = { ...cfg };
+    let changed = false;
+    ['clientId', 'clientSecret', 'bridgeUrl', 'redirectUri'].forEach(key => {
+        if (Object.prototype.hasOwnProperty.call(sanitized, key)) {
+            delete sanitized[key];
+            changed = true;
+        }
+    });
+    if (changed) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+        } catch (_) {}
+    }
+    return sanitized;
+}
+
 function loadTokens() {
     try {
         const stored = localStorage.getItem(TOKEN_KEY);
@@ -1864,6 +1999,7 @@ function loadTokens() {
             return;
         }
         state.tokens = tokens;
+        syncKickScoutToken();
         logKickWs('Loaded Kick OAuth tokens from storage.');
     } catch (err) {
         console.error('Failed to load Kick tokens', err);
@@ -1926,8 +2062,21 @@ function applyUrlParams() {
 }
 
 function applyDefaultConfig() {
-    if (!state.clientId) {
-        state.clientId = DEFAULT_CONFIG.clientId;
+    try {
+        const host = String(window.location.hostname || '').toLowerCase();
+        const isOfficialHost =
+            host === 'socialstream.ninja' ||
+            host === 'beta.socialstream.ninja' ||
+            host.endsWith('.socialstream.ninja');
+        if (isOfficialHost) {
+            state.clientId = DEFAULT_CONFIG.clientId;
+        } else if (!state.clientId) {
+            state.clientId = DEFAULT_CONFIG.clientId;
+        }
+    } catch (_) {
+        if (!state.clientId) {
+            state.clientId = DEFAULT_CONFIG.clientId;
+        }
     }
     if (!state.redirectUri) {
         state.redirectUri = window.location.origin + window.location.pathname;
@@ -1949,11 +2098,7 @@ function appendBridgeParam(url, key, value) {
 
 function persistConfig() {
     const cfg = {
-        clientId: state.clientId,
-        clientSecret: state.clientSecret,
-        redirectUri: state.redirectUri,
         channelSlug: state.channelSlug,
-        bridgeUrl: state.bridgeUrl,
         customEvents: state.customEvents,
         chatType: state.chat?.type || 'user',
         chatroomId: state.socket.chatroomId || '',
@@ -1967,18 +2112,53 @@ function persistConfig() {
 function persistTokens() {
     if (!state.tokens) {
         localStorage.removeItem(TOKEN_KEY);
+        syncKickScoutToken();
         logKickWs('Cleared Kick OAuth tokens from storage.');
         return;
     }
     localStorage.setItem(TOKEN_KEY, JSON.stringify(state.tokens));
+    syncKickScoutToken();
     logKickWs('Saved Kick OAuth tokens to storage.');
+}
+
+function syncKickScoutToken() {
+    try {
+        if (
+            typeof chrome === 'undefined' ||
+            !chrome.storage ||
+            !chrome.storage.local ||
+            typeof chrome.storage.local.set !== 'function'
+        ) {
+            return;
+        }
+        const accessToken = typeof state.tokens?.access_token === 'string'
+            ? state.tokens.access_token
+            : '';
+        const expiresAt = Number.isFinite(Number(state.tokens?.expires_at))
+            ? Number(state.tokens.expires_at)
+            : 0;
+        const payload = {
+            accessToken,
+            expiresAt,
+            updatedAt: Date.now()
+        };
+        chrome.storage.local.set({
+            [KICK_SCOUT_TOKEN_STORAGE_KEY]: payload
+        }, () => {
+            try {
+                chrome.runtime?.lastError;
+            } catch (_) {}
+        });
+    } catch (_) {}
 }
 
 function signOut() {
     disconnectBridge();
     void disconnectLocalSocket();
+    clearPendingKickChatEchoes();
     resetAlertsFeed();
     resetKickViewerHeartbeatState();
+    state.bridge.chatroomCacheWriteDisabled = false;
     // Clear tokens
     state.tokens = null;
     state.authUser = null;
@@ -2208,6 +2388,34 @@ function bindEvents() {
     if (els.signOut) {
         els.signOut.addEventListener('click', signOut);
     }
+    if (els.syncDeleteMessages) {
+        els.syncDeleteMessages.addEventListener('change', () => {
+            state.advancedControls.syncDeleteMessages = !!els.syncDeleteMessages.checked;
+            persistAdvancedControls();
+        });
+    }
+    if (els.syncBlockUsers) {
+        els.syncBlockUsers.addEventListener('change', () => {
+            state.advancedControls.syncBlockUsers = !!els.syncBlockUsers.checked;
+            persistAdvancedControls();
+        });
+    }
+    if (els.refreshStreamInfo) {
+        els.refreshStreamInfo.addEventListener('click', () => {
+            refreshKickStreamInfo().catch((err) => {
+                console.error('Failed to refresh Kick stream info', err);
+                log(`Unable to refresh stream info: ${err.message}`, 'warning');
+            });
+        });
+    }
+    if (els.updateStreamInfo) {
+        els.updateStreamInfo.addEventListener('click', () => {
+            updateKickStreamInfoFromInputs().catch((err) => {
+                console.error('Failed to update Kick stream info', err);
+                log(`Unable to update stream info: ${err.message}`, 'error');
+            });
+        });
+    }
     if (els.chatType) {
         els.chatType.addEventListener('change', () => {
             state.chat.type = normalizeKickChatType(els.chatType.value);
@@ -2375,8 +2583,18 @@ function isKickViewerTransportConnected() {
     return state.bridge?.status === 'connected' || state.socket?.status === 'connected';
 }
 
+function shouldTrackKickViewerCount() {
+    return (
+        isSettingEnabled('showviewercount') ||
+        isSettingEnabled('hypemode')
+    );
+}
+
 function shouldRunKickViewerHeartbeat() {
     if (!state.channelSlug) {
+        return false;
+    }
+    if (!shouldTrackKickViewerCount()) {
         return false;
     }
     if (!isKickViewerTransportConnected()) {
@@ -2411,11 +2629,13 @@ function emitKickViewerUpdate(count) {
     kickViewerHeartbeat.hasKnownCount = true;
     kickViewerHeartbeat.lastSentAt = Date.now();
     updateKickViewerCountDisplay(normalizedCount);
-    pushMessage({
-        type: 'kick',
-        event: 'viewer_update',
-        meta: normalizedCount
-    });
+    if (shouldTrackKickViewerCount()) {
+        pushMessage({
+            type: 'kick',
+            event: 'viewer_update',
+            meta: normalizedCount
+        });
+    }
     return normalizedCount;
 }
 
@@ -2943,7 +3163,6 @@ function handlePusherMessage(event) {
         const channels = [];
         if (state.socket.chatroomId) {
             channels.push(`chatrooms.${state.socket.chatroomId}.v2`);
-            channels.push(`chatrooms.${state.socket.chatroomId}`);
         }
         if (state.socket.channelId) {
             channels.push(`channel.${state.socket.channelId}`);
@@ -3036,7 +3255,8 @@ async function resolveChannelForPusher() {
     if (!slug) return;
 
     // 1. If signed in, resolve channel metadata via official API (broadcaster_user_id, slug, etc)
-    if (state.tokens?.access_token) {
+    const canUseAuthenticatedLookup = Boolean(state.tokens?.access_token) && !isTokenExpired();
+    if (canUseAuthenticatedLookup) {
         try {
             await resolveChannelId();
         } catch (err) {
@@ -3054,7 +3274,7 @@ async function resolveChannelForPusher() {
             if (data.chatroom_id) {
                 state.socket.chatroomId = String(data.chatroom_id);
                 if (data.broadcaster_user_id && !state.channelId) {
-                    state.channelId = data.broadcaster_user_id;
+                    state.channelId = Number(data.broadcaster_user_id);
                     state.channelName = data.slug || slug;
                     state.lastResolvedSlug = normalizeChannel(slug);
                 }
@@ -3062,7 +3282,7 @@ async function resolveChannelForPusher() {
                 return;
             }
             if (data.broadcaster_user_id && !state.channelId) {
-                state.channelId = data.broadcaster_user_id;
+                state.channelId = Number(data.broadcaster_user_id);
                 state.channelName = data.slug || slug;
                 state.lastResolvedSlug = normalizeChannel(slug);
             }
@@ -3081,7 +3301,7 @@ async function resolveChannelForPusher() {
                 state.socket.chatroomId = String(chatroomId);
                 const broadcasterId = data?.user_id ?? data?.broadcaster_user_id;
                 if (broadcasterId && !state.channelId) {
-                    state.channelId = broadcasterId;
+                    state.channelId = Number(broadcasterId);
                     state.channelName = data?.slug || slug;
                     state.lastResolvedSlug = normalizeChannel(slug);
                 }
@@ -3100,6 +3320,7 @@ async function resolveChannelForPusher() {
 
 function postChatroomToCache(slug, chatroomId, broadcasterUserId) {
     if (!slug || !chatroomId || !broadcasterUserId) return;
+    if (state.bridge.chatroomCacheWriteDisabled) return;
     const token = state.tokens?.access_token;
     if (!token) return;
     try {
@@ -3118,9 +3339,13 @@ function postChatroomToCache(slug, chatroomId, broadcasterUserId) {
             body: JSON.stringify(body)
         }).then(resp => {
             if (resp.ok) {
+                state.bridge.chatroomCacheWriteDisabled = false;
                 log(`Cached chatroom ${chatroomId} for ${slug} on bridge.`);
             } else if (resp.status === 409) {
                 log(`Bridge cache for ${slug} already locked or mismatched.`);
+            } else if (resp.status === 401 || resp.status === 403) {
+                state.bridge.chatroomCacheWriteDisabled = true;
+                log(`Bridge cache write disabled for this session (HTTP ${resp.status}).`, 'warning');
             } else {
                 log(`Bridge cache POST returned ${resp.status}.`, 'warning');
             }
@@ -3162,7 +3387,7 @@ async function startAuthFlow() {
         response_type: 'code',
         client_id: state.clientId,
         redirect_uri: redirectUri,
-        scope: 'user:read channel:read chat:write events:subscribe',
+        scope: 'user:read channel:read channel:write chat:write events:subscribe moderation:ban moderation:chat_message:manage',
         code_challenge: challenge,
         code_challenge_method: 'S256',
         state: stateParam
@@ -3194,7 +3419,7 @@ async function startExternalAuthFlow() {
         logKickWs('Starting external Kick OAuth flow.');
         const result = await startOAuthFn({
             clientId: state.clientId,
-            scopes: ['user:read', 'channel:read', 'chat:write', 'events:subscribe']
+            scopes: ['user:read', 'channel:read', 'channel:write', 'chat:write', 'events:subscribe', 'moderation:ban', 'moderation:chat_message:manage']
         });
 
         if (!result || !result.success || !result.code) {
@@ -3241,22 +3466,24 @@ async function handleAuthCallback() {
     const url = new URL(window.location.href);
     const code = url.searchParams.get('code');
     const returnedState = url.searchParams.get('state');
-    if (!code) return;
+    if (!code) return false;
+
+    // Strip callback params immediately to avoid repeated exchanges on reload.
+    url.searchParams.delete('code');
+    url.searchParams.delete('state');
+    window.history.replaceState({}, document.title, url.toString());
 
     const expectedState = sessionStorage.getItem(STATE_KEY);
     if (!returnedState || returnedState !== expectedState) {
         log('State mismatch during OAuth callback.', 'error');
-        return;
+        // Validation failed, so bootstrap should continue with normal stored-token initialization.
+        return false;
     }
     const verifier = sessionStorage.getItem(CODE_VERIFIER_KEY);
     if (!verifier) {
         log('Missing PKCE verifier for OAuth exchange.', 'error');
-        return;
+        return false;
     }
-
-    url.searchParams.delete('code');
-    url.searchParams.delete('state');
-    window.history.replaceState({}, document.title, url.toString());
 
     sessionStorage.removeItem(STATE_KEY);
     sessionStorage.removeItem(CODE_VERIFIER_KEY);
@@ -3271,8 +3498,10 @@ async function handleAuthCallback() {
         connectLocalSocket(true);
     } catch (err) {
         console.error(err);
+        clearKickAuthState();
         log(`Token exchange failed: ${err.message}`, 'error');
     }
+    return true;
 }
 
 async function exchangeCodeForToken(code, verifier) {
@@ -3329,6 +3558,7 @@ async function exchangeCodeForToken(code, verifier) {
         ...data,
         expires_at: now + (data.expires_in || 0) * 1000
     };
+    state.bridge.chatroomCacheWriteDisabled = false;
     persistTokens();
     scheduleTokenRefresh();
     log('Kick OAuth tokens obtained.');
@@ -3351,43 +3581,89 @@ function scheduleTokenRefresh() {
     }, ttl);
 }
 
-async function refreshAccessToken() {
-    if (!state.tokens?.refresh_token) return;
-    const base = getBridgeBaseUrl().replace(/\/$/, '');
-    const response = await fetch(`${base}/kick/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-            grant_type: 'refresh_token',
-            refresh_token: state.tokens.refresh_token
-        })
-    });
-    const text = await response.text();
-    let data = {};
-    if (text) {
-        try {
-            data = JSON.parse(text);
-        } catch (err) {
-            console.error('Refresh parse error:', err);
-        }
-    }
+function isKickInvalidGrantError(data, text) {
+    const parts = [
+        data?.error,
+        data?.error_description,
+        text
+    ]
+        .filter(Boolean)
+        .map(value => String(value).toLowerCase());
+    return parts.some(part => part.includes('invalid_grant'));
+}
 
-    if (!response.ok || !data.access_token) {
-        log('Failed to refresh access token. You may need to sign in again.', 'error');
-        console.error('Refresh error body:', text);
-        return;
+function clearKickAuthState(reason = '') {
+    state.tokens = null;
+    state.authUser = null;
+    state.bridge.chatroomCacheWriteDisabled = false;
+    clearPendingKickChatEchoes();
+    if (state.refreshTimer) {
+        clearTimeout(state.refreshTimer);
+        state.refreshTimer = null;
     }
-
-    const now = Date.now();
-    state.tokens = {
-        ...(state.tokens || {}),
-        ...data,
-        expires_at: now + (data.expires_in || 0) * 1000
-    };
     persistTokens();
-    scheduleTokenRefresh();
     updateAuthStatus();
-    log('Access token refreshed.');
+    if (els.subscriptionSummary) {
+        els.subscriptionSummary.textContent = 'Sign in required';
+        els.subscriptionSummary.className = 'status-chip warning';
+    }
+    if (reason) {
+        log(reason, 'warning');
+    }
+}
+
+async function refreshAccessToken() {
+    if (!state.tokens?.refresh_token) {
+        throw new Error('Not authenticated.');
+    }
+    if (state.refreshPromise) {
+        return state.refreshPromise;
+    }
+    state.refreshPromise = (async () => {
+        const base = getBridgeBaseUrl().replace(/\/$/, '');
+        const response = await fetch(`${base}/kick/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+                grant_type: 'refresh_token',
+                refresh_token: state.tokens.refresh_token
+            })
+        });
+        const text = await response.text();
+        let data = {};
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch (err) {
+                console.error('Refresh parse error:', err);
+            }
+        }
+
+        if (!response.ok || !data.access_token) {
+            const message = data?.error_description || data?.error || text || `HTTP ${response.status}`;
+            if (response.status === 401 && isKickInvalidGrantError(data, text)) {
+                clearKickAuthState('Kick session expired or was revoked. Please sign in again.');
+                throw new Error(`Kick refresh rejected: ${message}`);
+            }
+            throw new Error(`Kick refresh failed (${response.status}): ${message}`);
+        }
+
+        const now = Date.now();
+        state.tokens = {
+            ...(state.tokens || {}),
+            ...data,
+            expires_at: now + (data.expires_in || 0) * 1000
+        };
+        persistTokens();
+        scheduleTokenRefresh();
+        updateAuthStatus();
+        log('Access token refreshed.');
+    })();
+    try {
+        return await state.refreshPromise;
+    } finally {
+        state.refreshPromise = null;
+    }
 }
 
 function isTokenExpired() {
@@ -3400,6 +3676,7 @@ async function ensureToken() {
     if (isTokenExpired()) {
         await refreshAccessToken();
     }
+    if (!state.tokens?.access_token) throw new Error('Not authenticated.');
     return state.tokens.access_token;
 }
 
@@ -3425,8 +3702,19 @@ async function apiFetch(path, options = {}, retry = true) {
     fetchOptions.headers = headers;
     const res = await fetch(`https://api.kick.com${path}`, fetchOptions);
     if (res.status === 401 && retry) {
+        if (!state.tokens?.refresh_token) {
+            clearKickAuthState('Kick session is no longer valid. Please sign in again.');
+            throw new Error('Not authenticated.');
+        }
         await refreshAccessToken();
+        if (!state.tokens?.access_token) {
+            throw new Error('Not authenticated.');
+        }
         return apiFetch(path, options, false);
+    }
+    if (res.status === 401) {
+        clearKickAuthState('Kick session is no longer valid. Please sign in again.');
+        throw new Error('Not authenticated.');
     }
     if (!res.ok) {
         const body = await res.text();
@@ -3440,6 +3728,176 @@ async function apiFetch(path, options = {}, retry = true) {
         return res.json();
     }
     return res.text();
+}
+
+function updateKickStreamEditorFields(channel) {
+    if (!channel || typeof channel !== 'object') {
+        return;
+    }
+    const title = pickFirstString(
+        [
+            channel.stream_title,
+            channel.stream?.title,
+            channel.stream?.stream_title
+        ],
+        ''
+    );
+    const category = pickFirstString(
+        [
+            channel.category?.name,
+            channel.category_name,
+            channel.category?.slug
+        ],
+        ''
+    );
+    if (els.streamTitle) {
+        els.streamTitle.value = title;
+    }
+    if (els.streamCategory) {
+        els.streamCategory.value = category;
+    }
+}
+
+async function fetchCurrentKickChannelInfo() {
+    let path = '/public/v1/channels';
+    if (state.channelId != null) {
+        path += `?broadcaster_user_id=${encodeURIComponent(String(state.channelId))}`;
+    } else if (state.channelSlug) {
+        path += `?slug=${encodeURIComponent(normalizeChannel(state.channelSlug))}`;
+    }
+    const data = await apiFetch(path);
+    return pickKickChannelBySlug(
+        unwrapKickChannelPayload(data),
+        normalizeChannel(state.channelSlug),
+        { allowSingletonWithoutSlug: true }
+    );
+}
+
+async function refreshKickStreamInfo() {
+    const channel = await fetchCurrentKickChannelInfo();
+    if (!channel) {
+        throw new Error('Unable to load current Kick channel information.');
+    }
+    updateKickStreamEditorFields(channel);
+    log('Loaded current Kick stream title/category.', 'info');
+    return channel;
+}
+
+async function resolveKickCategoryId(value) {
+    const query = typeof value === 'string' ? value.trim() : '';
+    if (!query) {
+        return null;
+    }
+    if (/^\d+$/.test(query)) {
+        return Number(query);
+    }
+    const data = await apiFetch(`/public/v2/categories?name=${encodeURIComponent(query)}&limit=25`);
+    const items = Array.isArray(data?.data) ? data.data : [];
+    const exactMatch = items.find(item => (item?.name || '').toLowerCase() === query.toLowerCase());
+    const match = exactMatch || items[0];
+    return match?.id ?? null;
+}
+
+async function updateKickStreamInfoFromInputs() {
+    const title = els.streamTitle ? els.streamTitle.value.trim() : '';
+    const category = els.streamCategory ? els.streamCategory.value.trim() : '';
+    const payload = {};
+    if (title) {
+        payload.stream_title = title;
+    }
+    if (category) {
+        const categoryId = await resolveKickCategoryId(category);
+        if (!categoryId) {
+            throw new Error(`Unable to resolve Kick category: ${category}`);
+        }
+        payload.category_id = Number(categoryId);
+    }
+    if (!Object.keys(payload).length) {
+        throw new Error('Nothing to update.');
+    }
+    await apiFetch('/public/v1/channels', {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+    });
+    log('Kick stream title/category updated.', 'info');
+    await refreshKickStreamInfo();
+    return true;
+}
+
+function resolveKickUserIdForSourceControl(payload = {}) {
+    const directUserId = normalizeKickNumericId(payload.userid || payload.userId || payload.user_id);
+    if (directUserId) {
+        return directUserId;
+    }
+    const username = normalizeChannel(payload.chatname || payload.username || '');
+    if (!username) {
+        return null;
+    }
+    const cached = getCachedProfile({ username });
+    const cachedUserId = normalizeKickNumericId(
+        cached?.profile?.user_id ||
+        cached?.profile?.id ||
+        cached?.profile?.user?.user_id
+    );
+    return cachedUserId || null;
+}
+
+async function deleteKickChatMessage(messageId) {
+    if (!messageId) {
+        return false;
+    }
+    await apiFetch(`/public/v1/chat/${encodeURIComponent(String(messageId))}`, {
+        method: 'DELETE'
+    });
+    return true;
+}
+
+async function banKickUser(payload = {}) {
+    const userId = resolveKickUserIdForSourceControl(payload);
+    if (!userId) {
+        throw new Error(`Unable to resolve Kick user for ${payload.chatname || payload.username || 'unknown user'}.`);
+    }
+    if (state.channelId == null) {
+        await resolveChannelId();
+    }
+    await apiFetch('/public/v1/moderation/bans', {
+        method: 'POST',
+        body: JSON.stringify({
+            broadcaster_user_id: Number(state.channelId),
+            user_id: Number(userId),
+            reason: 'Blocked from Social Stream Ninja'
+        })
+    });
+    return true;
+}
+
+async function handleSourceControlRequest(request) {
+    const payload = request?.payload || {};
+    if (normalizeSourceControlPlatform(request?.platform || payload?.type) !== 'kick') {
+        return false;
+    }
+    if (request.control === 'deleteMessage') {
+        if (!state.advancedControls.syncDeleteMessages) {
+            return false;
+        }
+        const messageId = resolveKickDeleteMessageId(payload);
+        if (!messageId) {
+            log('Skipped dock delete: missing native Kick message ID.', 'warning');
+            return false;
+        }
+        await deleteKickChatMessage(messageId);
+        log('Synced dock delete to Kick.', 'info');
+        return true;
+    }
+    if (request.control === 'blockUser') {
+        if (!state.advancedControls.syncBlockUsers) {
+            return false;
+        }
+        await banKickUser(payload);
+        log(`Synced dock block to Kick for ${payload.chatname || payload.username || payload.userid}.`, 'info');
+        return true;
+    }
+    return false;
 }
 
 function getKickApiErrorStatus(error) {
@@ -3495,6 +3953,27 @@ function unwrapKickLivestreamPayload(payload) {
     return result;
 }
 
+function extractKickChannelSlug(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return '';
+    }
+    const candidates = [
+        payload?.slug,
+        payload?.username,
+        payload?.user?.slug,
+        payload?.user?.username,
+        payload?.channel?.slug,
+        payload?.channel?.username
+    ];
+    for (const candidate of candidates) {
+        const normalized = normalizeChannel(candidate);
+        if (normalized) {
+            return normalized;
+        }
+    }
+    return '';
+}
+
 function normalizeKickNumericId(value) {
     if (typeof value === 'number' && Number.isFinite(value)) {
         return Math.max(0, Math.floor(value));
@@ -3511,10 +3990,17 @@ function normalizeKickNumericId(value) {
     return null;
 }
 
-function pickKickChannelBySlug(channels, slugLower) {
+function pickKickChannelBySlug(channels, slugLower, options = {}) {
     const list = Array.isArray(channels) ? channels : [];
     if (!list.length) return null;
-    return list.find(item => normalizeChannel(item?.slug) === slugLower) || list[0] || null;
+    const matched = list.find(item => extractKickChannelSlug(item) === slugLower);
+    if (matched) {
+        return matched;
+    }
+    if (options.allowSingletonWithoutSlug && list.length === 1 && !extractKickChannelSlug(list[0])) {
+        return list[0];
+    }
+    return null;
 }
 
 async function fetchKickLivestreamByBroadcasterId(broadcasterUserIdInput) {
@@ -3539,18 +4025,30 @@ async function fetchKickLivestreamByBroadcasterId(broadcasterUserIdInput) {
                 return null;
             }
             logKickViewerDebug(`Livestream lookup succeeded via ${path} with ${livestreams.length} row(s).`);
-            return (
-                livestreams.find(item => {
-                    const itemId = normalizeKickNumericId(
-                        item?.broadcaster_user_id ??
-                        item?.user_id ??
-                        item?.channel?.broadcaster_user_id
-                    );
-                    return itemId === broadcasterUserId;
-                }) ||
-                livestreams[0] ||
-                null
+            const matchedLivestream = livestreams.find(item => {
+                const itemId = normalizeKickNumericId(
+                    item?.broadcaster_user_id ??
+                    item?.user_id ??
+                    item?.channel?.broadcaster_user_id
+                );
+                return itemId === broadcasterUserId;
+            });
+            if (matchedLivestream) {
+                return matchedLivestream;
+            }
+            const returnedIds = livestreams
+                .map(item => normalizeKickNumericId(
+                    item?.broadcaster_user_id ??
+                    item?.user_id ??
+                    item?.channel?.broadcaster_user_id
+                ))
+                .filter(itemId => itemId != null)
+                .slice(0, 5);
+            logKickViewerDebug(
+                `Livestream lookup via ${path} returned ${livestreams.length} row(s), but none matched broadcaster id=${broadcasterUserId}. Sample ids=${returnedIds.length ? returnedIds.join(',') : 'none'}.`,
+                'warning'
             );
+            continue;
         } catch (err) {
             lastError = err;
             const status = getKickApiErrorStatus(err);
@@ -3596,7 +4094,9 @@ async function fetchKickChannelBySlug(slugInput, options = {}) {
                 logKickViewerDebug(`${debugContext}: request ${path}`);
             }
             const data = await apiFetch(path);
-            const channel = pickKickChannelBySlug(unwrapKickChannelPayload(data), slugLower);
+            const channel = pickKickChannelBySlug(unwrapKickChannelPayload(data), slugLower, {
+                allowSingletonWithoutSlug: !path.includes('?slug=')
+            });
             if (channel && typeof channel === 'object') {
                 if (path.includes('?slug=')) {
                     preferredKickChannelLookupPath = '/public/v1/channels?slug={slug}';
@@ -3609,6 +4109,9 @@ async function fetchKickChannelBySlug(slugInput, options = {}) {
                     logKickViewerDebug(`${debugContext}: success via ${path}`);
                 }
                 return channel;
+            }
+            if (debugContext) {
+                logKickViewerDebug(`${debugContext}: payload via ${path} did not match @${slugLower}.`, 'warning');
             }
         } catch (err) {
             lastError = err;
@@ -4051,6 +4554,9 @@ async function resolveChannelId(force = false) {
     persistConfig();
     log(`Resolved channel: ${state.channelName} (ID: ${state.channelId})`);
     updateInputsFromState();
+    refreshKickStreamInfo().catch((err) => {
+        logKickWs(`Unable to refresh Kick stream info after channel resolve: ${err?.message || err}`, 'warning');
+    });
     if (force || state.channelId !== previousId || previousSlug !== slugLower) {
         requestThirdPartyEmotes({ force: true });
     }
@@ -4071,6 +4577,10 @@ async function resolveChannelId(force = false) {
 }
 
 async function subscribeToEvents(options = {}) {
+    if (!state.tokens?.access_token) {
+        log('Sign in required before subscribing to Kick events.', 'warning');
+        return;
+    }
     const { events: presetEvents = null, skipListRefresh = false } = options || {};
     try {
         await resolveChannelId();
@@ -4110,6 +4620,13 @@ async function subscribeToEvents(options = {}) {
 }
 
 async function listSubscriptions() {
+    if (!state.tokens?.access_token) {
+        if (els.subscriptionSummary) {
+            els.subscriptionSummary.textContent = 'Sign in required';
+            els.subscriptionSummary.className = 'status-chip warning';
+        }
+        return [];
+    }
     try {
         const data = await apiFetch('/public/v1/events/subscriptions');
         const items = Array.isArray(data?.data) ? data.data : [];
@@ -4697,6 +5214,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
             return;
         }
         const rawMessageId = message?.id || payload.message_id || payload.id || null;
+        const nativeMessageId = rawMessageId == null ? '' : String(rawMessageId).trim();
         const bridgeMessageId = bridgeMeta?.messageId || null;
         const resolvedId = rawMessageId ?? bridgeMessageId;
         const profileSources = [
@@ -4772,6 +5290,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
             payload.message_type ||
             payload.event_type ||
             'chat';
+        resolvePendingKickChatEcho(resolvedId, content, rawEventType, ids);
         const chatmessageHtml = renderKickMessageHtml(message, content);
         const membership = actorProfile.membership || pickFirstString(
             [
@@ -4814,6 +5333,9 @@ async function forwardChatMessage(evt, bridgeMeta) {
         if (resolvedId != null) {
             const normalizedId = typeof resolvedId === 'string' ? resolvedId : String(resolvedId);
             messagePayload.id = normalizedId;
+        }
+        if (nativeMessageId) {
+            messagePayload.meta = { messageId: nativeMessageId };
         }
         if (ids?.userId) {
             messagePayload.userId = ids.userId;
@@ -4893,7 +5415,7 @@ function mapKickChatEventToSocialStream(rawType, plainMessage = '', donationLabe
         return 'reward';
     }
     if (/gift/.test(typeLower)) {
-        return 'gift';
+        return 'subscription_gift';
     }
 
     // Chat payloads should not leak Kick-native type names as `data.event`.
@@ -4911,7 +5433,7 @@ function mapKickChatEventToSocialStream(rawType, plainMessage = '', donationLabe
 
     // Keep donation parsing compatible with legacy payload expectations.
     if (donationLabel && /donat|tip|support|kick/.test(typeLower)) {
-        return 'gift';
+        return 'donation';
     }
 
     // Legacy DOM source emits `true` for generic non-chat system notices.
@@ -5550,6 +6072,156 @@ function setChatStatus(message, level = 'info') {
     els.chatStatus.style.color = colorMap[level] || colorMap.info;
 }
 
+function normalizeKickChatEchoContent(value) {
+    if (typeof value !== 'string') {
+        return '';
+    }
+    return value.replace(/\s+/g, ' ').trim();
+}
+
+function normalizeKickChatEchoType(value) {
+    if (typeof value !== 'string') {
+        return '';
+    }
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) {
+        return '';
+    }
+    if (normalized === 'user' || normalized === 'bot' || normalized === 'userbot') {
+        return normalizeKickChatType(normalized);
+    }
+    return '';
+}
+
+function extractKickChatResponseMessageId(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return '';
+    }
+    const candidates = [
+        payload.id,
+        payload.message_id,
+        payload.messageId,
+        payload.data?.id,
+        payload.data?.message_id,
+        payload.data?.messageId,
+        payload.message?.id,
+        payload.message?.message_id,
+        payload.message?.messageId
+    ];
+    for (const candidate of candidates) {
+        if (candidate == null) {
+            continue;
+        }
+        const normalized = String(candidate).trim();
+        if (normalized) {
+            return normalized;
+        }
+    }
+    return '';
+}
+
+function clearPendingKickChatEcho(entry) {
+    if (!entry) {
+        return;
+    }
+    if (entry.timeoutId) {
+        clearTimeout(entry.timeoutId);
+        entry.timeoutId = null;
+    }
+    const index = pendingKickChatEchoes.indexOf(entry);
+    if (index !== -1) {
+        pendingKickChatEchoes.splice(index, 1);
+    }
+}
+
+function clearPendingKickChatEchoes() {
+    pendingKickChatEchoes.slice().forEach(clearPendingKickChatEcho);
+}
+
+function prunePendingKickChatEchoes(now = Date.now()) {
+    pendingKickChatEchoes.slice().forEach(entry => {
+        if (!entry || (now - entry.createdAt) > KICK_CHAT_ECHO_STALE_MS) {
+            clearPendingKickChatEcho(entry);
+        }
+    });
+}
+
+function queuePendingKickChatEcho(content, messageType, response) {
+    prunePendingKickChatEchoes();
+    const entry = {
+        seq: ++pendingKickChatEchoSeq,
+        createdAt: Date.now(),
+        normalizedContent: normalizeKickChatEchoContent(content),
+        messageType: normalizeKickChatEchoType(messageType),
+        responseMessageId: extractKickChatResponseMessageId(response),
+        timeoutId: null
+    };
+    pendingKickChatEchoes.push(entry);
+    entry.timeoutId = setTimeout(() => {
+        if (!pendingKickChatEchoes.includes(entry)) {
+            return;
+        }
+        if (entry.seq === pendingKickChatEchoSeq) {
+            setChatStatus('Message submitted. Live chat confirmation is taking longer than expected.', 'warning');
+        }
+    }, KICK_CHAT_ECHO_TIMEOUT_MS);
+    return entry;
+}
+
+function resolvePendingKickChatEcho(messageId, content, messageType = '', senderIds = null) {
+    prunePendingKickChatEchoes();
+    const normalizedId = messageId == null ? '' : String(messageId).trim();
+    const normalizedContent = normalizeKickChatEchoContent(content);
+    const normalizedType = normalizeKickChatEchoType(messageType);
+    const normalizedSenderUserId = senderIds?.userId ? String(senderIds.userId).trim() : '';
+    const normalizedSenderUsername = senderIds?.username ? normalizeChannel(senderIds.username) : '';
+    let entry = null;
+
+    if (normalizedId) {
+        entry = pendingKickChatEchoes.find(candidate => candidate.responseMessageId === normalizedId) || null;
+    }
+    if (!entry && normalizedContent) {
+        const currentIds = resolveProfileIdentifiers(
+            state.authUser,
+            state.tokens?.profile,
+            state.tokens,
+            { id: state.channelId, username: state.channelSlug }
+        );
+        const currentUserId = currentIds?.userId ? String(currentIds.userId).trim() : '';
+        const currentUsername = currentIds?.username ? normalizeChannel(currentIds.username) : '';
+        const shouldRequireSenderMatch = Boolean(
+            (currentUserId || currentUsername) &&
+            (normalizedSenderUserId || normalizedSenderUsername)
+        );
+        entry = pendingKickChatEchoes.find(candidate => {
+            if (candidate.normalizedContent !== normalizedContent) {
+                return false;
+            }
+            if (normalizedType && candidate.messageType && candidate.messageType !== normalizedType) {
+                return false;
+            }
+            if (shouldRequireSenderMatch) {
+                const userIdMatches = currentUserId && normalizedSenderUserId && currentUserId === normalizedSenderUserId;
+                const usernameMatches = currentUsername && normalizedSenderUsername && currentUsername === normalizedSenderUsername;
+                if (!userIdMatches && !usernameMatches) {
+                    return false;
+                }
+            }
+            return true;
+        }) || null;
+    }
+    if (!entry) {
+        return false;
+    }
+
+    const wasLatest = entry.seq === pendingKickChatEchoSeq;
+    clearPendingKickChatEcho(entry);
+    if (wasLatest) {
+        setChatStatus('Message sent.', 'success');
+    }
+    return true;
+}
+
 async function sendChatFromExtension(message) {
     if (!els.chatMessage || typeof message !== 'string') {
         return false;
@@ -5594,25 +6266,24 @@ async function sendChatMessage() {
     try {
         updateChatSendingState(true);
         setChatStatus('Sending message…');
-        const payload = { content };
-        if (messageType === 'user') {
-            const channelId = await resolveChannelId();
-            payload.broadcaster_user_id = channelId;
-            payload.type = 'user';
-        } else {
-            payload.type = 'bot';
-        }
-        const response = await apiFetch('/public/v1/chat', {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
+        const response = await sendChatPayload(content, messageType, false);
+        queuePendingKickChatEcho(content, messageType, response);
         els.chatMessage.value = '';
-        setChatStatus('Message sent.', 'success');
-        log('[CHAT] Outbound message submitted.');
+        setChatStatus('Message submitted. Waiting for live chat confirmation...', 'info');
+        log('[CHAT] Outbound message submitted; waiting for live chat confirmation.');
         return response;
     } catch (err) {
         console.error('Chat send failed', err);
-        setChatStatus(`Failed to send: ${err.message}`, 'error');
+        const status = getKickApiErrorStatus(err);
+        if (status === 400) {
+            setChatStatus('Kick rejected the message — check account permissions.', 'error');
+        } else if (status === 401 || status === 403) {
+            setChatStatus('Authentication expired. Please sign in again.', 'error');
+        } else if (/failed to fetch/i.test(err?.message || '')) {
+            setChatStatus('Kick API unreachable. Try again in a moment.', 'error');
+        } else {
+            setChatStatus(`Failed to send: ${err.message}`, 'error');
+        }
         log(`Failed to send chat message: ${err.message}`, 'error');
         throw err;
     } finally {
@@ -5620,17 +6291,42 @@ async function sendChatMessage() {
     }
 }
 
-function pushMessage(data) {
-    // Try chrome.runtime.sendMessage first, with fallback to ninjafy
-    if (typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
-        try {
-            chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function() {});
-            return;
-        } catch (e) {
-            // Fall through to ninjafy
-        }
+async function sendChatPayload(content, messageType, isRetry) {
+    const payload = { content };
+    if (messageType === 'user') {
+        const channelId = isRetry
+            ? await resolveChannelId(true)
+            : await resolveChannelId();
+        payload.broadcaster_user_id = Number(channelId);
+        payload.type = 'user';
+    } else {
+        payload.type = 'bot';
     }
-    // Fallback to ninjafy.sendMessage for Electron
+    try {
+        return await apiFetch('/public/v1/chat', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+    } catch (err) {
+        if (!isRetry && getKickApiErrorStatus(err) === 400) {
+            log('Chat send got 400 — retrying with fresh channel resolution.', 'warning');
+            return sendChatPayload(content, messageType, true);
+        }
+        throw err;
+    }
+}
+
+function pushMessage(data) {
+    // Prefer direct Electron bridge when available.
+    if (isElectronEnvironment() && window.ninjafy && window.ninjafy.sendMessage) {
+        try {
+            window.ninjafy.sendMessage(null, { message: data }, null, window.__SSAPP_TAB_ID__);
+            return;
+        } catch (_) {}
+    }
+    if (sendRuntimeMessageFireAndForget({ message: data })) {
+        return;
+    }
     if (window.ninjafy && window.ninjafy.sendMessage) {
         try {
             window.ninjafy.sendMessage(null, { message: data }, null, window.__SSAPP_TAB_ID__);
@@ -5649,16 +6345,16 @@ function pushMessage(data) {
 }
 
 function pushDeleteMessage(data) {
-    // Try chrome.runtime.sendMessage first, with fallback to ninjafy
-    if (typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
+    // Prefer direct Electron bridge when available.
+    if (isElectronEnvironment() && window.ninjafy && window.ninjafy.sendMessage) {
         try {
-            chrome.runtime.sendMessage(chrome.runtime.id, { delete: data }, function() {});
+            window.ninjafy.sendMessage(null, { delete: data }, null, window.__SSAPP_TAB_ID__);
             return;
-        } catch (e) {
-            // Fall through to ninjafy
-        }
+        } catch (_) {}
     }
-    // Fallback to ninjafy.sendMessage for Electron
+    if (sendRuntimeMessageFireAndForget({ delete: data })) {
+        return;
+    }
     if (window.ninjafy && window.ninjafy.sendMessage) {
         try {
             window.ninjafy.sendMessage(null, { delete: data }, null, window.__SSAPP_TAB_ID__);
@@ -6133,6 +6829,7 @@ async function bootstrap() {
     applyKickCoreFallbacks();
     try {
         initElements();
+        loadAdvancedControls();
         loadKickProfileCache();
         initExtensionBridge();
         updateBridgeState();
@@ -6146,19 +6843,19 @@ async function bootstrap() {
         bindEvents();
         initLocalSocketBridge();
         updateSocketState();
+        const handledAuthCallback = await handleAuthCallback();
         // Connect Pusher chat immediately (no auth needed)
         if (state.channelSlug && !state.socket.chatroomId) {
             await resolveChannelForPusher();
         }
         connectPusherSocket();
         // Auth-dependent: subscriptions, bridge events, sending messages
-        if (state.tokens?.access_token) {
+        if (state.tokens?.access_token && !handledAuthCallback) {
             scheduleTokenRefresh();
             await loadAuthenticatedProfile();
             await maybeAutoStart();
             await listSubscriptions();
         }
-        await handleAuthCallback();
         connectLocalSocket();
         notifyLiteStatus('ready');
         if (isLiteEmbedded()) {
@@ -6191,10 +6888,17 @@ if (!window.__kickWsBootstrapped) {
 // Handle messages from preload-mock.js which uses window.postMessage instead of chrome.runtime
 // This is needed when chrome.runtime is deleted for Kasada bypass
 window.addEventListener('message', function(event) {
+    if (!isTrustedTabBridgeEvent(event)) return;
     if (!event.data || typeof event.data !== 'object') return;
     if (!event.data.__ssappSendToTab) return;
 
     var request = event.data.__ssappSendToTab;
+    if (request.type === 'SOURCE_CONTROL') {
+        handleSourceControlRequest(request).catch(function(err) {
+            console.error('Kick SOURCE_CONTROL via postMessage failed', err);
+        });
+        return;
+    }
     if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
         sendChatFromExtension(request.message).catch(function(err) {
             console.error('Kick SEND_MESSAGE via postMessage failed', err);

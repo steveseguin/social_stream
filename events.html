@@ -151,6 +151,10 @@ body, html {
     margin-top: 5px;
 }
 
+body.hide-timestamps .timestamp {
+    display: none;
+}
+
 .source-icon {
     width: 20px;
     height: 20px;
@@ -216,8 +220,24 @@ body.obsstudio-mode #header {
     display: none;
 }
 
-body.obsstudio-mode #chat-container {
+body.obsstudio-mode #chat-container,
+body.transparent-mode #chat-container,
+body.compact-height #chat-container {
     height: 100vh;
+}
+
+body.transparent-mode {
+    background-color: transparent;
+}
+
+body.transparent-mode #header,
+body.compact-height #header {
+    display: none;
+}
+
+body.transparent-mode #topbar,
+body.compact-height #topbar {
+    display: none;
 }
 
 #header {
@@ -577,14 +597,21 @@ body.light-mode .meta-value.badge {
 	var showUSD = urlParams.has("currency") ? true : false;
 	var highlightValue = urlParams.has("highlightvalue") ? true : false;
 	var lightMode = urlParams.has("lightmode");
+	var transparentMode = urlParams.has("transparent") || urlParams.has("transparency");
 	var hideMetaPanels = urlParams.has("hidemeta");
+	var hideTimestamps = urlParams.has("notime");
 	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
 	const showViewerCount = urlParams.has("showviewercount");
+	const compactHeightThreshold = 520;
 	const viewerBarBg = normalizeColorParam(urlParams.get("viewerbarbg") || urlParams.get("viewerbarbackground") || urlParams.get("topbarbg"));
 	if (viewerBarBg) {
 		document.documentElement.style.setProperty("--topbar-background", viewerBarBg);
+	}
+
+	function updateCompactHeightMode() {
+		document.body.classList.toggle("compact-height", window.innerHeight <= compactHeightThreshold);
 	}
 
 	// Apply scale if specified
@@ -601,6 +628,10 @@ body.light-mode .meta-value.badge {
 		document.documentElement.style.setProperty('--text-color', '#333');
 		document.documentElement.style.setProperty('--card-bg', '#fff');
 		document.documentElement.style.setProperty('--card-shadow', 'rgba(0, 0, 0, 0.1)');
+	}
+
+	if (hideTimestamps) {
+		document.body.classList.add("hide-timestamps");
 	}
 
 	// Apply custom font if specified
@@ -620,6 +651,15 @@ body.light-mode .meta-value.badge {
 		document.body.style.backgroundColor = '#13141A';
 		document.documentElement.style.setProperty('--bg-color', '#13141A');
 	}
+
+	if (transparentMode) {
+		document.body.classList.add("transparent-mode");
+		document.body.style.backgroundColor = "transparent";
+		document.documentElement.style.setProperty("--bg-color", "transparent");
+	}
+
+	updateCompactHeightMode();
+	window.addEventListener("resize", updateCompactHeightMode);
     
     const FRIENDLY_EVENT_LABELS = {
 		new_follower: 'New Follower',
@@ -636,7 +676,17 @@ body.light-mode .meta-value.badge {
 		cheer: 'Cheer',
 		donation: 'Donation',
 		supersticker: 'Super Sticker',
-		thankyou: 'Thank You'
+		thankyou: 'Thank You',
+		// Deprecated — kept for backward compat with older extension versions
+		subscription: 'New Subscriber',       // → new_subscriber
+		subgift: 'Gifted Subs',               // → subscription_gift
+		membership: 'Membership',             // → sponsorship
+		new_member: 'Membership',             // → sponsorship
+		new_membership: 'Membership',         // → sponsorship
+		newmember: 'Membership',              // → sponsorship
+		upgraded_membership: 'Resub',         // → resub
+		membership_upgrade: 'Resub',          // → resub
+		membership_milestone: 'Member Milestone' // → membermilestone
 	};
 
 	const STATUS_EVENT_TYPES = new Set(['viewer_update', 'follower_update', 'subscriber_update', 'view_update', 'likes_update']);
@@ -648,13 +698,19 @@ body.light-mode .meta-value.badge {
 		'giftredemption',
 		'subscription_gift',
 		'sponsorship',
-		'gift_membership',
-		'giftmemberships',
-		'gifted_membership',
-		'gifted_memberships',
-		'membership_gift'
+		// Deprecated — kept for backward compat with older extension versions
+		'gift_membership',     // → giftpurchase or giftredemption
+		'giftmemberships',     // → giftpurchase
+		'gifted_membership',   // → giftredemption
+		'gifted_memberships',  // → giftpurchase
+		'subgift',             // → subscription_gift
+		'membership_gift',     // → giftpurchase
+		'community_gift'       // → giftpurchase
 	]);
-	const NO_META_EVENT_TYPES = new Set(['follow', 'new_follower', 'shared', 'share', 'share_live']);
+	const NO_META_EVENT_TYPES = new Set([
+		'follow', 'new_follower', 'shared', 'share', 'share_live',
+		'followed' // Deprecated TikTok alias → new_follower
+	]);
 
 	function normalizeEventKey(event) {
 		if (typeof event !== 'string') return '';
@@ -1584,7 +1640,7 @@ body.light-mode .meta-value.badge {
 			<div class="text">${display.message || ''}</div>
 			${data.hasDonation ? `<div class="donation">💰 ${data.hasDonation}</div>` : ''}
 			${usdValue > 0 ? `<div class="usd-value">$${usdValue.toFixed(2)} USD</div>` : ''}
-			<div class="timestamp">${timeString}</div>
+			${hideTimestamps ? '' : `<div class="timestamp">${timeString}</div>`}
 		`;
 
 		const metaDetailsNode = hideMetaPanels ? null : createMetaDetailsNode(data);

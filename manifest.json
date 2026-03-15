@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.46.1",
+  "version": "3.47.0",
   "homepage_url": "http://socialstream.ninja/",
   "browser_specific_settings": {
     "gecko": {
@@ -37,7 +37,6 @@
         "providers/twitch/chatClient.js",
         "providers/youtube/liveChat.js",
         "providers/youtube/contextResolver.js",
-        "providers/youtube/messageNormalizer.js",
         "shared/utils/scriptLoader.js",
         "shared/utils/html.js",
         "shared/utils/twitchEmotes.js",
@@ -115,6 +114,8 @@
     "https://www.wix.com/*",
     "https://wix.com/*",
     "https://verticalpixelzone.com/*",
+    "https://vpzone.tv/*",
+    "https://www.vpzone.tv/*",
     "https://www.ebay.com/ebaylive/events/*",
     "https://www.ebay.co.uk/ebaylive/events/*",
     "https://www.ebay.de/ebaylive/events/*",
@@ -162,9 +163,8 @@
     "https://www.nimo.tv/popout/chat/*",
     "https://dashboard.nimo.tv/popout/chat/*",
     "https://demo.openstreamingplatform.com/view/*chatOnly=True*",
-    "https://*.locals.com/post/*",
-    "https://*.locals.com/feed/*",
-	"https://locals.com/*/feed?*",
+    "https://*.locals.com/*",
+    "https://locals.com/*",
     "https://bilibili.tv/*/live/*",
     "https://live.bilibili.com/*",
     "https://*.minnit.chat/*/Main",
@@ -173,7 +173,8 @@
     "https://piczel.tv/chat/*",
     "https://*.roll20.net/*",
     "https://roll20.net/*",
-    "https://rumble.com/chat/popup/*",
+    "https://rumble.com/*",
+    "https://www.rumble.com/*",
     "https://*.workplace.com/*",
     "https://multichat.livepush.io/*",
     "https://minnit.chat/*&popout",
@@ -243,6 +244,7 @@
     "https://*.loco.com/*",
     "https://loco.com/*",
     "https://joystick.tv/u/*/chat",
+    "https://joystick.tv/*",
     "https://www.buzzit.ca/event/*/chat",
     "https://*.floatplane.com/popout/livechat",
     "https://www.threads.net/*",
@@ -260,6 +262,7 @@
     "https://app.livestorm.co/*/live?*",
     "https://steamcommunity.com/broadcast/chatonly/*",
     "https://www.whatnot.com/live/*",
+    "https://whatnot.com/live/*",
     "https://www.whatnot.com/dashboard/live/*",
     "https://jaco.live/*",
     "https://www.younow.com/*",
@@ -284,7 +287,14 @@
     "https://pump.fun/coin/*",
     "https://retake.tv/*",
     "https://www.camsoda.com/*",
-    "https://portal.abs.xyz/stream/*"
+    "https://portal.abs.xyz/stream/*",
+    "https://stripchat.com/*",
+    "https://www.bongacams.com/*",
+    "https://bongacams.com/*",
+    "https://www.cam4.com/*",
+    "https://cam4.com/*",
+    "https://ci.me/*",
+    "https://www.ci.me/*"
   ],
   "content_scripts": [
     {
@@ -301,6 +311,32 @@
       ],
       "matches": [
         "https://www.camsoda.com/*"
+      ]
+    },
+    {
+      "js": [
+        "./sources/stripchat.js"
+      ],
+      "matches": [
+        "https://stripchat.com/*"
+      ]
+    },
+    {
+      "js": [
+        "./sources/bongacams.js"
+      ],
+      "matches": [
+        "https://www.bongacams.com/*",
+        "https://bongacams.com/*"
+      ]
+    },
+    {
+      "js": [
+        "./sources/cam4.js"
+      ],
+      "matches": [
+        "https://www.cam4.com/*",
+        "https://cam4.com/*"
       ]
     },
     {
@@ -607,6 +643,15 @@
     },
     {
       "js": [
+        "./sources/vpzone.js"
+      ],
+      "matches": [
+        "https://vpzone.tv/*",
+        "https://www.vpzone.tv/*"
+      ]
+    },
+    {
+      "js": [
         "./sources/mixlr.js"
       ],
       "matches": [
@@ -691,6 +736,7 @@
       ],
       "matches": [
         "https://www.whatnot.com/live/*",
+        "https://whatnot.com/live/*",
         "https://www.whatnot.com/dashboard/live/*"
       ]
     },
@@ -957,19 +1003,6 @@
     },
     {
       "js": [
-        "./sources/websocket/youtube_streaming.js"
-      ],
-      "matches": [
-        "https://socialstream.ninja/sources/websocket/youtube_streaming*",
-        "https://beta.socialstream.ninja/sources/websocket/youtube_streaming*",
-        "https://socialstream.ninja/beta/sources/websocket/youtube_streaming*",
-        "file:///C:/Users/steve/Code/social_stream/sources/websocket/youtube_streaming.html*",
-        "http://localhost:8080/*/youtube_streaming.html*",
-        "http://localhost:8181/*/youtube_streaming.html*"
-      ]
-    },
-    {
-      "js": [
         "./sources/static/youtube_static.js"
       ],
       "matches": [
@@ -1016,9 +1049,8 @@
         "./sources/locals.js"
       ],
       "matches": [
-        "https://*.locals.com/post/*",
-        "https://*.locals.com/feed/*",
-		"https://locals.com/*/feed?*"
+        "https://*.locals.com/*",
+        "https://locals.com/*"
       ]
     },
     {
@@ -1057,6 +1089,15 @@
         "https://kick.com/popout/*/chat",
         "https://kick.com/*/popout/*/chat"
       ]
+    },
+    {
+      "js": [
+        "./sources/static/kick_chatroom_scout.js"
+      ],
+      "matches": [
+        "https://kick.com/*"
+      ],
+      "run_at": "document_start"
     },
     {
       "js": [
@@ -1146,6 +1187,45 @@
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/kick.html*",
         "http://localhost:8080/*/kick.html*",
         "http://localhost:8181/*/kick.html*"
+      ]
+    },
+    {
+      "js": [
+        "./sources/websocket/rumble.js"
+      ],
+      "matches": [
+        "https://socialstream.ninja/sources/websocket/rumble*",
+        "https://beta.socialstream.ninja/sources/websocket/rumble*",
+        "https://socialstream.ninja/beta/sources/websocket/rumble*",
+        "file:///C:/Users/steve/Code/social_stream/sources/websocket/rumble.html*",
+        "http://localhost:8080/*/rumble.html*",
+        "http://localhost:8181/*/rumble.html*"
+      ]
+    },
+    {
+      "js": [
+        "./sources/websocket/joystick.js"
+      ],
+      "matches": [
+        "https://socialstream.ninja/sources/websocket/joystick*",
+        "https://beta.socialstream.ninja/sources/websocket/joystick*",
+        "https://socialstream.ninja/beta/sources/websocket/joystick*",
+        "file:///C:/Users/steve/Code/social_stream/sources/websocket/joystick.html*",
+        "http://localhost:8080/*/joystick.html*",
+        "http://localhost:8181/*/joystick.html*"
+      ]
+    },
+    {
+      "js": [
+        "./sources/websocket/vpzone.js"
+      ],
+      "matches": [
+        "https://socialstream.ninja/sources/websocket/vpzone*",
+        "https://beta.socialstream.ninja/sources/websocket/vpzone*",
+        "https://socialstream.ninja/beta/sources/websocket/vpzone*",
+        "file:///C:/Users/steve/Code/social_stream/sources/websocket/vpzone.html*",
+        "http://localhost:8080/*/vpzone.html*",
+        "http://localhost:8181/*/vpzone.html*"
       ]
     },
     {
@@ -1381,7 +1461,8 @@
         "https://www.vimeo.com/live*",
         "https://vimeo.com/live*",
         "https://vimeo.com/event/*"
-      ]
+      ],
+	  "all_frames": true
     },
     {
       "js": [
@@ -1525,7 +1606,10 @@
         "./sources/rumble.js"
       ],
       "matches": [
-        "https://rumble.com/chat/popup/*"
+        "https://rumble.com/chat/popup/*",
+        "https://rumble.com/*/live",
+        "https://www.rumble.com/chat/popup/*",
+        "https://www.rumble.com/*/live"
       ]
     },
     {
@@ -1542,6 +1626,15 @@
       ],
       "matches": [
         "https://app.chime.aws/meetings/*"
+      ]
+    },
+    {
+      "js": [
+        "./sources/cime.js"
+      ],
+      "matches": [
+        "https://ci.me/*",
+        "https://www.ci.me/*"
       ]
     },
     {

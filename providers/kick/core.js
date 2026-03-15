@@ -105,13 +105,13 @@ export function eventNameForType(type) {
     return 'message';
   }
   if (lower.includes('gift')) {
-    return 'gift';
+    return 'subscription_gift';
   }
   if (lower.includes('tip') || lower.includes('donation')) {
     return 'donation';
   }
   if (lower.includes('sub')) {
-    return 'subscription';
+    return 'new_subscriber';
   }
   if (lower.includes('ban') || lower.includes('moderation')) {
     return 'moderation';

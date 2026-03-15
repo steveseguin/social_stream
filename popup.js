@@ -195,12 +195,46 @@ function log(msg,a,b){
 	console.log(msg,a,b);
 }
 
-function getSpotifyAuthTroubleshootingText() {
-    return 'Please ensure:\n'
-        + '1. Spotify integration is enabled\n'
-        + '2. Client ID and Secret are filled in\n'
-        + '3. Your redirect URIs are configured in Spotify app settings\n'
-        + '4. The Spotify account is Premium and listed as an authorized Development Mode user (new app limits began February 11, 2026; existing app limits began March 9, 2026).';
+function showSpotifyAuthToast(level, title, message) {
+	const normalizedLevel = ['error', 'warning', 'info', 'success'].includes(level) ? level : 'info';
+	try {
+		if (typeof Toast !== 'undefined' && typeof Toast[normalizedLevel] === 'function') {
+			Toast[normalizedLevel](title, message);
+			return true;
+		}
+	} catch (_) {}
+	try {
+		if (window.parent && window.parent !== window && window.parent.Toast && typeof window.parent.Toast[normalizedLevel] === 'function') {
+			window.parent.Toast[normalizedLevel](title, message);
+			return true;
+		}
+	} catch (_) {}
+	return false;
+}
+
+function getSpotifyAuthTroubleshootingText(result = null) {
+	let text = 'Please ensure:\n'
+		+ '1. Spotify integration is enabled\n'
+		+ '2. Client ID and Secret are filled in\n'
+		+ '3. Your redirect URIs are configured in Spotify app settings\n'
+		+ '4. The app owner has active Premium, the playback account is Premium, and that account is listed as an authorized Development Mode user (new app limits began February 11, 2026; existing app limits began March 9, 2026).';
+	if (result?.errorCode) {
+		text += `\n5. OAuth error code: ${result.errorCode}`;
+	}
+	if (result?.redirectUriAttempted) {
+		text += `\n6. Redirect URI attempted: ${result.redirectUriAttempted}`;
+	}
+	if (Array.isArray(result?.expectedRedirectUris) && result.expectedRedirectUris.length) {
+		text += `\n7. Expected redirect URIs:\n- ${result.expectedRedirectUris.join('\n- ')}`;
+	}
+	return text;
+}
+
+function getSpotifyAuthErrorMessage(result) {
+	if (!result || typeof result !== 'object') {
+		return 'Unknown error';
+	}
+	return result.message || result.error || 'Unknown error';
 }
 
 function handleSpotifyAuthResultFromBackground(result) {
@@ -248,7 +282,9 @@ function handleSpotifyAuthResultFromBackground(result) {
 		if (result?.message) {
 			console.log(result.message);
 			if (result.waitingForManualCallback) {
-				alert(result.message);
+				if (!showSpotifyAuthToast('info', 'Spotify OAuth', result.message)) {
+					alert(result.message);
+				}
 			}
 		}
 
@@ -285,12 +321,15 @@ function handleSpotifyAuthResultFromBackground(result) {
         if (result?.warning) {
             alert('Spotify connected, but playback access is limited:\n\n' + result.warning);
         }
-	} else {
-		const errorMsg = result?.error || 'Unknown error';
-		console.error('Spotify auth failed (async result):', errorMsg);
-		alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\n' + getSpotifyAuthTroubleshootingText());
+		} else {
+			const errorCode = result?.errorCode || 'SPOTIFY_OAUTH_ERROR';
+			const errorMsg = getSpotifyAuthErrorMessage(result);
+			console.error(`Spotify auth failed (async result) [${errorCode}]:`, errorMsg, result);
+			const composed = `[${errorCode}] ${errorMsg}`;
+			showSpotifyAuthToast('error', 'Spotify OAuth Error', composed);
+			alert('Failed to connect to Spotify. Error: ' + composed + '\n\n' + getSpotifyAuthTroubleshootingText(result));
+		}
 	}
-}
 
 window.handleSpotifyAuthResultFromBackground = handleSpotifyAuthResultFromBackground;
 
@@ -795,6 +834,19 @@ function miniTranslate(ele, ident = false, direct=false) {
 			}
 		}
 	}
+	var obsTransparentNotes = ele.querySelectorAll('.obs-transparent-note');
+	obsTransparentNotes.forEach(function(ele2) {
+		ele2.innerHTML = getTranslation(
+			"obs-browser-source-is-already-transparent-by-default",
+			" (OBS Browser Source is already transparent by default)"
+		);
+	});
+	if (ele.classList && ele.classList.contains("obs-transparent-note")){
+		ele.innerHTML = getTranslation(
+			"obs-browser-source-is-already-transparent-by-default",
+			" (OBS Browser Source is already transparent by default)"
+		);
+	}
 }
 
 function isFontAvailable(fontName) {
@@ -1069,11 +1121,62 @@ function normalizeCommaValues(value) {
         .filter(item => item);
 }
 
-function updateCommaTagList(inputId) {
+const commaTagPresetOptions = {
+    events: [
+        // Cross-platform
+        { value: 'new_follower', label: 'new_follower - Follow' },
+        { value: 'new_subscriber', label: 'new_subscriber - New sub' },
+        { value: 'resub', label: 'resub - Renewal/upgrade' },
+        { value: 'subscription_gift', label: 'subscription_gift - Gift subs' },
+        { value: 'donation', label: 'donation - Donation/Super Chat' },
+        { value: 'raid', label: 'raid - Raid' },
+        // Twitch
+        { value: 'cheer', label: 'cheer - Bits/Cheers (Twitch)' },
+        { value: 'channel_points', label: 'channel_points - Channel points (Twitch)' },
+        // YouTube
+        { value: 'sponsorship', label: 'sponsorship - New member (YouTube)' },
+        { value: 'membermilestone', label: 'membermilestone - Member milestone (YouTube)' },
+        { value: 'giftpurchase', label: 'giftpurchase - Gift purchase (YouTube)' },
+        { value: 'giftredemption', label: 'giftredemption - Gift redemption (YouTube)' },
+        { value: 'supersticker', label: 'supersticker - Super Sticker (YouTube)' },
+        // TikTok
+        { value: 'gift', label: 'gift - Gift (TikTok/Kick DOM)' },
+        { value: 'joined', label: 'joined - Join (TikTok)' },
+        { value: 'liked', label: 'liked - Like (TikTok)' },
+        // Status/system
+        { value: 'stream_online', label: 'stream_online - Stream online' },
+        { value: 'stream_offline', label: 'stream_offline - Stream offline' },
+        { value: 'viewer_update', label: 'viewer_update - Viewer count' },
+        { value: 'follower_update', label: 'follower_update - Follower count' },
+        { value: 'subscriber_update', label: 'subscriber_update - Subscriber count' },
+        { value: 'reward', label: 'reward - Redemption (Twitch/Kick DOM)' }
+    ]
+};
+
+function getCommaTagInput(inputId) {
     let input = document.getElementById(inputId);
     if (!input) {
         input = document.querySelector(`[data-textsetting="${inputId}"]`);
     }
+    return input;
+}
+
+function refreshCommaTagInput(inputOrKey) {
+    if (!inputOrKey) {
+        return;
+    }
+    const input = typeof inputOrKey === 'string' ? getCommaTagInput(inputOrKey) : inputOrKey;
+    if (!input) {
+        return;
+    }
+    const inputId = input.id || input.dataset.textsetting;
+    if (inputId) {
+        updateCommaTagList(inputId);
+    }
+}
+
+function updateCommaTagList(inputId) {
+    const input = getCommaTagInput(inputId);
     const list = document.getElementById(`${inputId}List`);
     if (!input || !list) return;
 
@@ -1088,10 +1191,7 @@ function updateCommaTagList(inputId) {
 }
 
 function addCommaTagValue(inputId, value) {
-    let input = document.getElementById(inputId);
-    if (!input) {
-        input = document.querySelector(`[data-textsetting="${inputId}"]`);
-    }
+    const input = getCommaTagInput(inputId);
     if (!input || !value) return;
 
     const trimmedValue = value.trim();
@@ -1109,10 +1209,7 @@ function addCommaTagValue(inputId, value) {
 }
 
 function removeCommaTagValue(inputId, value) {
-    let input = document.getElementById(inputId);
-    if (!input) {
-        input = document.querySelector(`[data-textsetting="${inputId}"]`);
-    }
+    const input = getCommaTagInput(inputId);
     if (!input || !value) return;
 
     const values = normalizeCommaValues(input.value);
@@ -1123,10 +1220,7 @@ function removeCommaTagValue(inputId, value) {
 }
 
 function setupCommaTagInput(inputId) {
-    let input = document.getElementById(inputId);
-    if (!input) {
-        input = document.querySelector(`[data-textsetting="${inputId}"]`);
-    }
+    const input = getCommaTagInput(inputId);
     if (!input) return;
 
     const container = input.closest('.textInputContainer');
@@ -1147,9 +1241,18 @@ function setupCommaTagInput(inputId) {
 
     const addContainer = document.createElement('div');
     addContainer.className = 'add-source-container';
+    const presetOptions = commaTagPresetOptions[input.dataset.tagPresets] || [];
+    const presetMarkup = presetOptions.length ? `
+        <select id="preset${inputId}Tag">
+            <option value="" selected>Common events</option>
+            ${presetOptions.map(option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join('')}
+        </select>
+        <button id="addPreset${inputId}Tag">Add preset</button>
+    ` : '';
     addContainer.innerHTML = `
         <input type="text" id="new${inputId}Tag" placeholder="Add value">
         <button id="add${inputId}Tag">Add</button>
+        ${presetMarkup}
     `;
 
     container.parentNode.classList.add('isolate');
@@ -1176,6 +1279,15 @@ function setupCommaTagInput(inputId) {
                 addCommaTagValue(inputId, addInput.value);
                 addInput.value = '';
             }
+        });
+    }
+
+    const addPresetButton = addContainer.querySelector(`#addPreset${inputId}Tag`);
+    const presetSelect = addContainer.querySelector(`#preset${inputId}Tag`);
+    if (addPresetButton && presetSelect) {
+        addPresetButton.addEventListener('click', () => {
+            addCommaTagValue(inputId, presetSelect.value);
+            presetSelect.value = '';
         });
     }
 
@@ -1789,7 +1901,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 }
 
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
-const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents'];
+const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
 
@@ -2088,8 +2200,10 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   const pages = [
     { id: "dock", path: "dock.html" },
     { id: "overlay", path: "featured.html" },
+    { id: "multialerts", path: "multi-alerts.html" },
     { id: "emoteswall", path: "emotes.html" },
     { id: "hypemeter", path: "hype.html" },
+    { id: "meta", path: "meta.html" },
     { id: "waitlist", path: "waitlist.html" },
     { id: "tipjar", path: "tipjar.html" },
 	{ id: "leaderboard", path: "leaderboard.html" },
@@ -2153,6 +2267,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   if (remoteControlUrl) {
     remoteControlUrl.href = `${baseURL}sampleapi.html?session=${streamID}${password}${customParams}${versionParam}`;
   }
+
+  syncAllOverlayPreviews();
 }
 
 function applyFeaturedOverlayPreset(presetValue) {
@@ -2375,6 +2491,9 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 if (key === 'blockedwords') {
                     updateBlockedWordsList();
                 }
+                if (commaTagInputs.includes(ele.id) || commaTagInputs.includes(key)) {
+                    refreshCommaTagInput(ele.id || key);
+                }
             }
         }
 
@@ -2557,6 +2676,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 updateSourceTypeList(key);
             } else if (commaTagInputs.includes(key)) {
                 updateCommaTagList(key);
+            } else if (commaTagInputs.includes(ele.id)) {
+                refreshCommaTagInput(ele.id);
             }
         }
     }
@@ -2744,7 +2865,7 @@ function update(response, sync = true) {
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
-                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
+                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
 					'spotifylink','maplink'
@@ -2901,17 +3022,26 @@ function processParam(key, paramNum, settingObj, sync) {
 // Handle legacy settings format
 function processLegacySetting(key, value, sync) {
     // Process simple settings
-    var ele = document.querySelector(`input[data-setting='${key}'], input[data-param1='${key}'], input[data-param2='${key}']`);
+    var ele = document.querySelector(`input[data-setting='${key}']`);
+    if (!ele) {
+        ele = document.querySelector(`input[data-param1='${key}'], input[data-param2='${key}']`);
+    }
     if (ele) {
         ele.checked = value;
         updateSettings(ele, sync);
     }
     
     // Process text settings
-    var ele = document.querySelector(`input[data-textsetting='${key}'], input[data-textparam1='${key}'], textarea[data-textsetting='${key}'], textarea[data-textparam1='${key}']`);
+    ele = document.querySelector(`input[data-textsetting='${key}'], textarea[data-textsetting='${key}']`);
+    if (!ele) {
+        ele = document.querySelector(`input[data-textparam1='${key}'], textarea[data-textparam1='${key}']`);
+    }
     if (ele) {
         ele.value = value;
         updateSettings(ele, sync);
+        if (commaTagInputs.includes(ele.id) || commaTagInputs.includes(key)) {
+            refreshCommaTagInput(ele.id || key);
+        }
     }
 }
 
@@ -3456,6 +3586,8 @@ function getTargetMap() {
 		'scoreboard': 21,
 		'spotify': 22,
 		'map': 23,
+        'meta': 24,
+        'multialerts': 25,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -4612,6 +4744,305 @@ function validateRoomId(roomId) {
 	return sanitizedId;
 }
 
+let overlayPreviewSequence = 0;
+
+const overlayPreviewConfigs = Object.freeze({
+    multialerts: {
+        frameId: 'multi-alerts-preview-frame',
+        divId: 'multialerts',
+        localPath: 'multi-alerts.html',
+        previewUrlSource: 'local',
+        messageKey: 'multiAlertsPreview'
+    }
+});
+
+const overlayPreviewState = {
+    multialerts: { pending: null, timer: null }
+};
+
+function getLocalOverlayUrl(path) {
+    try {
+        if (chrome?.runtime?.getURL) {
+            return chrome.runtime.getURL(path);
+        }
+    } catch (error) {
+        console.warn('Unable to build local overlay URL via chrome.runtime.getURL', error);
+    }
+    try {
+        return new URL(path, window.location.href).toString();
+    } catch (error) {
+        console.warn('Unable to build local overlay URL via URL()', error);
+        return path;
+    }
+}
+
+function nextOverlayPreviewId(prefix) {
+    overlayPreviewSequence += 1;
+    return `${prefix}_${Date.now()}_${overlayPreviewSequence}`;
+}
+
+function createPreviewAvatarDataUri(label, bgColor, textColor = '#ffffff') {
+    const source = String(label || 'SS');
+    const initials = source
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join('') || 'SS';
+    const svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">',
+        `<rect width="128" height="128" rx="64" fill="${bgColor}"/>`,
+        `<text x="64" y="76" text-anchor="middle" font-family="Arial, sans-serif" font-size="46" font-weight="700" fill="${textColor}">${initials}</text>`,
+        '</svg>'
+    ].join('');
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function createPreviewMediaDataUri(label, bgColor) {
+    const safeLabel = String(label || 'Preview').slice(0, 18);
+    const svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">',
+        '<defs>',
+        `<linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">`,
+        `<stop offset="0%" stop-color="${bgColor}" stop-opacity="0.95"/>`,
+        '<stop offset="100%" stop-color="#05070d" stop-opacity="1"/>',
+        '</linearGradient>',
+        '</defs>',
+        '<rect width="320" height="180" rx="22" fill="url(#bg)"/>',
+        '<circle cx="58" cy="46" r="18" fill="rgba(255,255,255,0.18)"/>',
+        '<circle cx="112" cy="124" r="26" fill="rgba(255,255,255,0.12)"/>',
+        '<path d="M240 42l34 18v30l-34 18-34-18V60z" fill="rgba(255,255,255,0.18)"/>',
+        '<rect x="28" y="122" width="126" height="14" rx="7" fill="rgba(255,255,255,0.18)"/>',
+        '<rect x="28" y="144" width="176" height="10" rx="5" fill="rgba(255,255,255,0.12)"/>',
+        `<text x="214" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#ffffff">${safeLabel}</text>`,
+        '</svg>'
+    ].join('');
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function buildChatOverlayPreviewPayload(kind, overrides = {}) {
+    const presetMap = {
+        chat: {
+            type: 'youtube',
+            platform: 'youtube',
+            chatname: 'SapheusOwO',
+            chatmessage: 'This is how your overlay styling reads during a live chat moment.',
+            subtitle: 'First time chatter',
+            accent: '#ff4e45'
+        },
+        donation: {
+            type: 'twitch',
+            platform: 'twitch',
+            chatname: 'campa',
+            chatmessage: 'Keep up the great work!',
+            hasDonation: '$10.00',
+            subtitle: 'Sent from Twitch',
+            accent: '#14b8a6'
+        },
+        member: {
+            type: 'youtube',
+            platform: 'youtube',
+            chatname: 'steve',
+            chatmessage: 'Happy to be here for another stream.',
+            membership: 'New Member',
+            subtitle: 'Tier 1 membership',
+            accent: '#8b5cf6'
+        },
+        image: {
+            type: 'kick',
+            platform: 'kick',
+            chatname: 'pixelbot',
+            chatmessage: 'Media attachments and GIF-style content will appear like this.',
+            contentimg: createPreviewMediaDataUri('HYPE', '#38bdf8'),
+            subtitle: 'Shared a media reaction',
+            accent: '#38bdf8'
+        }
+    };
+
+    const preset = presetMap[kind] || presetMap.chat;
+    const accent = overrides.accent || preset.accent;
+    return {
+        id: overrides.id || nextOverlayPreviewId(kind),
+        timestamp: Date.now(),
+        chatimg: overrides.chatimg || createPreviewAvatarDataUri(overrides.chatname || preset.chatname, accent),
+        ...preset,
+        ...overrides
+    };
+}
+
+function buildOverlayPreviewPayload(previewKey, descriptor) {
+    if (descriptor === false) {
+        return false;
+    }
+
+    if (previewKey === 'multialerts') {
+        return descriptor;
+    }
+
+    const normalizedDescriptor =
+        typeof descriptor === 'string'
+            ? { kind: descriptor }
+            : descriptor || { kind: 'chat' };
+
+    return buildChatOverlayPreviewPayload(
+        normalizedDescriptor.kind || normalizedDescriptor.type || 'chat',
+        normalizedDescriptor.overrides || {}
+    );
+}
+
+function buildOverlayPreviewUrl(previewKey) {
+    const config = overlayPreviewConfigs[previewKey];
+    if (!config) {
+        return '';
+    }
+
+    const sourceDiv = document.getElementById(config.divId);
+    const rawUrl = typeof sourceDiv?.raw === 'string' ? sourceDiv.raw : '';
+    let rawPreviewUrl = null;
+    let rawParams = new URLSearchParams();
+
+    if (rawUrl) {
+        try {
+            rawPreviewUrl = new URL(rawUrl, window.location.href);
+            rawParams = new URLSearchParams(rawPreviewUrl.search);
+        } catch (error) {
+            console.warn('Unable to parse overlay preview raw URL', rawUrl, error);
+        }
+    }
+
+    let previewUrl = null;
+    if (config.previewUrlSource === 'raw' && rawPreviewUrl) {
+        previewUrl = new URL(rawPreviewUrl.toString());
+    } else {
+        previewUrl = new URL(getLocalOverlayUrl(config.localPath));
+    }
+
+    rawParams.set('preview', '1');
+    rawParams.set('embedded', '1');
+    if (!rawParams.get('session')) {
+        rawParams.set('session', 'preview');
+    }
+
+    previewUrl.hash = '';
+    previewUrl.search = rawParams.toString();
+    return previewUrl.toString();
+}
+
+function syncOverlayPreview(previewKey) {
+    const config = overlayPreviewConfigs[previewKey];
+    if (!config) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
+    if (!frame) {
+        return;
+    }
+
+    const nextUrl = buildOverlayPreviewUrl(previewKey);
+    if (frame.dataset.currentPreviewUrl === nextUrl) {
+        replayOverlayPreview(previewKey);
+        return;
+    }
+
+    frame.dataset.currentPreviewUrl = nextUrl;
+    frame.src = nextUrl;
+}
+
+function replayOverlayPreview(previewKey) {
+    const config = overlayPreviewConfigs[previewKey];
+    const state = overlayPreviewState[previewKey];
+    if (!config || !state) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
+    if (!frame || !frame.contentWindow || state.pending === null) {
+        return;
+    }
+
+    if (state.timer) {
+        clearTimeout(state.timer);
+        state.timer = null;
+    }
+
+    const payload = buildOverlayPreviewPayload(previewKey, state.pending);
+    frame.contentWindow.postMessage({ [config.messageKey]: false }, '*');
+    state.timer = setTimeout(() => {
+        if (frame.contentWindow) {
+            frame.contentWindow.postMessage({ [config.messageKey]: payload }, '*');
+        }
+        state.timer = null;
+    }, 40);
+}
+
+function sendOverlayPreview(previewKey, descriptor) {
+    const config = overlayPreviewConfigs[previewKey];
+    const state = overlayPreviewState[previewKey];
+    if (!config || !state) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
+    if (!frame) {
+        return;
+    }
+
+    state.pending = descriptor;
+    if (descriptor === false) {
+        if (state.timer) {
+            clearTimeout(state.timer);
+            state.timer = null;
+        }
+        if (frame.contentWindow) {
+            frame.contentWindow.postMessage({ [config.messageKey]: false }, '*');
+        }
+        return;
+    }
+
+    replayOverlayPreview(previewKey);
+}
+
+function syncMultiAlertsPreview() {
+    syncOverlayPreview('multialerts');
+}
+
+function replayMultiAlertsPreview() {
+    replayOverlayPreview('multialerts');
+}
+
+function sendMultiAlertsPreview(payload) {
+    sendOverlayPreview('multialerts', payload);
+}
+
+function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
+    const config = overlayPreviewConfigs[previewKey];
+    if (!config) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
+    if (frame) {
+        frame.addEventListener('load', () => {
+            replayOverlayPreview(previewKey);
+        });
+    }
+
+    buttonConfigs.forEach(({ id, descriptor }) => {
+        const button = document.getElementById(id);
+        if (!button) {
+            return;
+        }
+        button.addEventListener('click', () => {
+            sendOverlayPreview(previewKey, descriptor);
+        });
+    });
+}
+
+function syncAllOverlayPreviews() {
+    syncOverlayPreview('multialerts');
+}
+
 function refreshLinks(){
   let hideLinks = false;
   document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
@@ -4629,8 +5060,10 @@ function refreshLinks(){
     const linkIdToDivIdMap = {
       'docklink': 'dock',
       'overlaylink': 'overlay',
+      'multialertslink': 'multialerts',
       'emoteswalllink': 'emoteswall',
       'hypemeterlink': 'hypemeter',
+      'metalink': 'meta',
       'waitlistlink': 'waitlist',
       'tipjarlink': 'tipjar',
 	  'leaderboardlink': 'leaderboard',
@@ -4679,6 +5112,8 @@ function refreshLinks(){
   } catch (e) {
     console.error("Error cleaning TTS params from links:", e);
   }
+
+  syncAllOverlayPreviews();
 }
 
 function handleRangeInput(event) {
@@ -4726,13 +5161,13 @@ if (!chrome.browserAction){
 	  });
 	}
 
-	sendMessageToBackground({cmd: "getSettings"}, 20000).then(response => {
-		log("Received response:", response);
-		update(response, false);
-	  })
-	  .catch(error => {
-		console.error("Error:", error);
-	  });
+		sendMessageToBackground({cmd: "getSettings"}, 20000).then(response => {
+			log("Received response:", response);
+			update(response, false);
+		  })
+		  .catch(error => {
+			console.error("Error:", error);
+		  });
 	  
 }
 
@@ -6195,6 +6630,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	document.querySelectorAll("[data-copy]").forEach(ele=>{
 		ele.onclick = copyToClipboard;
 	});
+
+	attachOverlayPreviewControls('multialerts', [
+		{ id: 'multi-alert-preview-follow', descriptor: { category: 'follow' } },
+		{ id: 'multi-alert-preview-sub', descriptor: { category: 'subscription' } },
+		{ id: 'multi-alert-preview-dono', descriptor: { category: 'donation' } },
+		{ id: 'multi-alert-preview-bits', descriptor: { category: 'bits' } },
+		{ id: 'multi-alert-preview-raid', descriptor: { category: 'raid' } },
+		{ id: 'multi-alert-preview-clear', descriptor: false }
+	]);
 	
 	
 	try {
@@ -7047,21 +7491,27 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					cmd: "spotifyManualCallback",
 					url: callbackUrl,
 					redirectUri
-				}).then(response => {
-					console.log("Manual callback result:", response);
-					if (response && response.success) {
-						spotifyAuthStatus.style.display = 'inline';
-						spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
+					}).then(response => {
+						console.log("Manual callback result:", response);
+						if (response && response.success) {
+							spotifyAuthStatus.style.display = 'inline';
+							spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
 						if (spotifySignOutButton) {
 							spotifySignOutButton.style.display = 'inline-block';
+							}
+							callbackDiv.style.display = 'none';
+							document.getElementById('spotifyCallbackInput').value = '';
+							showSpotifyAuthToast('success', 'Spotify Connected', 'Spotify callback completed successfully.');
+							alert('Spotify connected successfully!');
+						} else {
+							const errorCode = response?.errorCode || 'SPOTIFY_OAUTH_ERROR';
+							const errorMsg = getSpotifyAuthErrorMessage(response);
+							console.error(`Manual Spotify callback failed [${errorCode}]:`, errorMsg, response);
+							const composed = `[${errorCode}] ${errorMsg}`;
+							showSpotifyAuthToast('error', 'Spotify Callback Error', composed);
+							alert('Failed to process callback: ' + composed + '\n\n' + getSpotifyAuthTroubleshootingText(response));
 						}
-						callbackDiv.style.display = 'none';
-						document.getElementById('spotifyCallbackInput').value = '';
-						alert('Spotify connected successfully!');
-					} else {
-						alert('Failed to process callback: ' + (response?.error || 'Unknown error'));
-					}
-				});
+					});
 			} else {
 				alert('Please paste the complete callback URL');
 			}
@@ -7184,13 +7634,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 							: 'Please finish the Spotify login in the newly opened tab.');
 
 						console.log(waitMessage);
+						showSpotifyAuthToast('info', 'Spotify OAuth', waitMessage);
 						if (waitingForManual) {
 							alert(waitMessage);
 						}
 					} else {
 						spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
-						const errorMsg = response?.error || 'Unknown error';
-						console.error('Spotify auth failed:', errorMsg);
+						const errorCode = response?.errorCode || 'SPOTIFY_OAUTH_ERROR';
+						const errorMsg = getSpotifyAuthErrorMessage(response);
+						console.error(`Spotify auth failed [${errorCode}]:`, errorMsg, response);
 
 						// Show manual callback input if the background specifically asked for manual completion.
 						if (callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
@@ -7213,7 +7665,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						}
 
 						if (errorMsg !== 'Already connected') {
-							alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\n' + getSpotifyAuthTroubleshootingText());
+							const composed = `[${errorCode}] ${errorMsg}`;
+							showSpotifyAuthToast('error', 'Spotify OAuth Error', composed);
+							alert('Failed to connect to Spotify. Error: ' + composed + '\n\n' + getSpotifyAuthTroubleshootingText(response));
 						}
 					}
 				}
@@ -7536,6 +7990,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
             if (wrapper) wrapper.style.display = '';
         });
 			}
+
+			refreshLinks();
 		});
 	}
 
@@ -7551,7 +8007,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 			
 			msg.value = this.dataset.value || null;
-			if (msg.cmd == "fakemsg"){
+			if (msg.cmd == "fakemsg" || msg.cmd == "fakemeta"){
 				chrome.runtime.sendMessage(msg, function (response) {
 					// actions have callbacks? maybe
 				});

@@ -302,6 +302,8 @@ function getColorFromType(source) {
             return "#2196F3";
         case "cherrytv":
             return "#FF6C6C";
+        case "cime":
+            return "#00C2FF";
         case "chime":
             return "#2F3C5C";
         case "chzzk":
