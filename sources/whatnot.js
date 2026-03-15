@@ -8,6 +8,16 @@
 	var lastViewerCount = null;
 	var lastAuctionSnapshot = "";
 	var lastCommerceSnapshot = "";
+	var lastWebSocketChatAt = 0;
+	var lastWebSocketViewerAt = 0;
+	var recentWebSocketMessageIds = [];
+	var recentWebSocketMessageLookup = Object.create(null);
+	var recentWebSocketActivityIds = [];
+	var recentWebSocketActivityLookup = Object.create(null);
+	var webSocketActivityWindowMs = 30000;
+	var lastWebSocketLivestreamState = "";
+	var lastWebSocketGiveawayState = "";
+	var webSocketSnapshotRefreshTimer = null;
 
 	function escapeHtml(unsafe) {
 		try {
@@ -322,6 +332,9 @@
 
 	function checkViewers(forceUpdate) {
 		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)) {
+			return;
+		}
+		if (hasRecentWebSocketViewer()) {
 			return;
 		}
 
@@ -699,6 +712,534 @@
 		return snapshot;
 	}
 
+	function hasRecentWebSocketChat() {
+		return lastWebSocketChatAt && (Date.now() - lastWebSocketChatAt < webSocketActivityWindowMs);
+	}
+
+	function hasRecentWebSocketViewer() {
+		return lastWebSocketViewerAt && (Date.now() - lastWebSocketViewerAt < webSocketActivityWindowMs);
+	}
+
+	function rememberRecentWebSocketId(collection, lookup, itemId, maxSize) {
+		if (!itemId) {
+			return false;
+		}
+		if (lookup[itemId]) {
+			return true;
+		}
+		collection.push(itemId);
+		lookup[itemId] = true;
+		if (collection.length > maxSize) {
+			var removedId = collection.shift();
+			if (removedId) {
+				delete lookup[removedId];
+			}
+		}
+		return false;
+	}
+
+	function rememberWebSocketMessageId(messageId) {
+		return rememberRecentWebSocketId(recentWebSocketMessageIds, recentWebSocketMessageLookup, messageId, 250);
+	}
+
+	function rememberWebSocketActivityId(activityId) {
+		return rememberRecentWebSocketId(recentWebSocketActivityIds, recentWebSocketActivityLookup, activityId, 500);
+	}
+
+	function normalizeWebSocketData(data) {
+		try {
+			if (typeof data === "string") {
+				return data;
+			}
+			if (typeof ArrayBuffer !== "undefined" && data instanceof ArrayBuffer) {
+				return new TextDecoder().decode(new Uint8Array(data));
+			}
+			if (typeof ArrayBuffer !== "undefined" && ArrayBuffer.isView && ArrayBuffer.isView(data)) {
+				return new TextDecoder().decode(data);
+			}
+		} catch (e) {}
+		return String(data || "");
+	}
+
+	function formatWebSocketMessageText(value) {
+		var text = value == null ? "" : String(value);
+		return settings.textonlymode ? text : escapeHtml(text);
+	}
+
+	function getMoneyDetails(value, magnitude) {
+		var amount = null;
+		var currency = "";
+		if (typeof value === "number") {
+			amount = value;
+		} else if (value && typeof value === "object") {
+			if (typeof value.amount === "number") {
+				amount = value.amount;
+			}
+			currency = value.currency || value.currencyCode || "";
+		}
+		if (!Number.isFinite(amount)) {
+			return null;
+		}
+		return {
+			amount: amount * (Number.isFinite(magnitude) ? magnitude : 0.01),
+			currency: currency
+		};
+	}
+
+	function formatMoneyValue(value, magnitude) {
+		var money = getMoneyDetails(value, magnitude);
+		if (!money) {
+			return "";
+		}
+		if (money.currency) {
+			try {
+				return new Intl.NumberFormat(undefined, {
+					style: "currency",
+					currency: money.currency
+				}).format(money.amount) + " " + money.currency;
+			} catch (e) {
+				return money.amount.toFixed(2) + " " + money.currency;
+			}
+		}
+		return String(money.amount);
+	}
+
+	function getShopStateTotalCount(shopState) {
+		if (!shopState || typeof shopState !== "object") {
+			return "";
+		}
+		if (typeof shopState.totalCount !== "undefined") {
+			return shopState.totalCount;
+		}
+		if (typeof shopState.total_count !== "undefined") {
+			return shopState.total_count;
+		}
+		return "";
+	}
+
+	function buildWebSocketMeta(wsChannel, eventType, payload, user) {
+		var meta = {
+			transport: "websocket",
+			websocketEvent: eventType
+		};
+		var topic = payload && payload.topic ? payload.topic : wsChannel;
+		if (topic) {
+			meta.topic = topic;
+		}
+		if (payload && payload.id) {
+			meta.messageId = payload.id;
+		}
+		if (payload && payload.type) {
+			meta.messageType = payload.type;
+		}
+		if (payload && payload.eventName) {
+			meta.activityEvent = payload.eventName;
+		}
+		if (payload && typeof payload.timestamp === "number") {
+			meta.timestamp = payload.timestamp;
+		}
+		if (payload && payload.livestreamId) {
+			meta.livestreamId = payload.livestreamId;
+		}
+		if (payload && Array.isArray(payload.taggedUsers) && payload.taggedUsers.length) {
+			meta.taggedUsers = payload.taggedUsers.map(function (taggedUser) {
+				return {
+					id: taggedUser && taggedUser.id ? taggedUser.id : "",
+					username: taggedUser && taggedUser.username ? taggedUser.username : ""
+				};
+			});
+		}
+		if (user && typeof user.daysSinceCreated === "number") {
+			meta.daysSinceCreated = user.daysSinceCreated;
+		}
+		if (user && user.username) {
+			meta.profile = "/user/" + encodeURIComponent(user.username);
+		}
+		if (user && user.isHost) {
+			meta.host = true;
+		}
+		if (user && user.isCohost) {
+			meta.cohost = true;
+		}
+		if (user && user.isTopBuyer) {
+			meta.topBuyer = true;
+		}
+		if (user && user.isNewUser) {
+			meta.newUser = true;
+		}
+		if (user && user.isBooster) {
+			meta.booster = true;
+		}
+		return meta;
+	}
+
+	function createWebSocketChatData(user, messageText) {
+		var data = {};
+		data.chatname = escapeHtml(user && user.username ? user.username : "");
+		data.chatbadges = [];
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.nameColor = "";
+		data.chatmessage = formatWebSocketMessageText(messageText);
+		data.chatimg = user && user.profileImage && user.profileImage.url ? user.profileImage.url : "";
+		data.hasDonation = "";
+		data.membership = "";
+		data.contentimg = "";
+		data.type = "whatnot";
+		if (user && user.id) {
+			data.userid = user.id;
+		}
+		if (user && user.loyaltyVisibilityStatusEnabled && user.loyaltyTierForSeller && user.loyaltyTierForSeller !== "NO_TIER") {
+			data.membership = user.loyaltyTierForSeller;
+		}
+		if (user && user.isNominatedModerator) {
+			data.moderator = true;
+		}
+		if (user && (user.isModerator || user.isEmployee)) {
+			data.admin = true;
+		}
+		return data;
+	}
+
+	function sendWebSocketViewerCount(count) {
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)) {
+			return;
+		}
+		var parsed = parseInt(count, 10);
+		if (!Number.isFinite(parsed)) {
+			return;
+		}
+		lastWebSocketViewerAt = Date.now();
+		if (lastViewerCount !== parsed) {
+			lastViewerCount = parsed;
+			sendViewerCount(parsed);
+		}
+	}
+
+	function scheduleWebSocketSnapshotRefresh() {
+		if (webSocketSnapshotRefreshTimer) {
+			clearTimeout(webSocketSnapshotRefreshTimer);
+		}
+		webSocketSnapshotRefreshTimer = setTimeout(function () {
+			webSocketSnapshotRefreshTimer = null;
+			checkAuctionUpdates();
+			checkCommerceUpdates();
+		}, 200);
+	}
+
+	function handleWebSocketLivestreamUpdate(payload) {
+		if (!payload || typeof payload !== "object") {
+			return;
+		}
+		if (typeof payload.activeViewers !== "undefined") {
+			sendWebSocketViewerCount(payload.activeViewers);
+		}
+		var snapshotKey = JSON.stringify({
+			status: payload.status || "",
+			title: payload.title || "",
+			pinnedProductId: payload.pinnedProductId || "",
+			activeGiveawayLiveProductId: payload.activeGiveawayLiveProductId || "",
+			totalCount: getShopStateTotalCount(payload.shopState),
+			shareCounts: typeof payload.shareCounts === "number" ? payload.shareCounts : ""
+		});
+		if (!snapshotKey || snapshotKey === lastWebSocketLivestreamState) {
+			return;
+		}
+		lastWebSocketLivestreamState = snapshotKey;
+		scheduleWebSocketSnapshotRefresh();
+	}
+
+	function handleWebSocketGiveawayEntryUpdate(payload) {
+		if (!payload || typeof payload !== "object") {
+			return;
+		}
+		var snapshotKey = JSON.stringify({
+			productId: payload.productId || "",
+			entryCount: typeof payload.entryCount === "number" ? payload.entryCount : payload.entryCount || ""
+		});
+		if (!snapshotKey || snapshotKey === lastWebSocketGiveawayState) {
+			return;
+		}
+		lastWebSocketGiveawayState = snapshotKey;
+		scheduleWebSocketSnapshotRefresh();
+	}
+
+	function createWebSocketActivityId(activity) {
+		var user = activity && activity.activityPerformingUser ? activity.activityPerformingUser : null;
+		var livestreamProduct = activity && activity.eventSpecificInfo && activity.eventSpecificInfo.livestreamProduct
+			? activity.eventSpecificInfo.livestreamProduct
+			: null;
+		return [
+			activity && activity.eventName ? activity.eventName : "",
+			activity && typeof activity.timestamp === "number" ? activity.timestamp : "",
+			activity && activity.livestreamId ? activity.livestreamId : "",
+			user && user.id ? user.id : "",
+			livestreamProduct && livestreamProduct.id ? livestreamProduct.id : ""
+		].join("|");
+	}
+
+	function handleWebSocketSnapshotPayload(payload) {
+		if (!payload || typeof payload !== "object") {
+			return;
+		}
+		if (payload.livestream && typeof payload.livestream === "object") {
+			handleWebSocketLivestreamUpdate(payload.livestream);
+		}
+		scheduleWebSocketSnapshotRefresh();
+	}
+
+	function handleWebSocketBoostContribution(activity, wsChannel) {
+		if (!activity || typeof activity !== "object") {
+			return;
+		}
+		var info = activity.eventSpecificInfo || {};
+		var user = activity.activityPerformingUser || {};
+		var messageText = info.contributionMessage || "Community boost";
+		var data = createWebSocketChatData(user, messageText);
+		var money = getMoneyDetails(info.contributionMoney);
+		data.event = "donation";
+		data.hasDonation = formatMoneyValue(info.contributionMoney);
+		if (money) {
+			data.donoValue = money.amount;
+		}
+		var meta = buildWebSocketMeta(wsChannel, activity.eventName || "COMMUNITY_BOOST_CONTRIBUTION_PURCHASED", activity, user);
+		meta.boost = true;
+		if (info.contributionMessage) {
+			meta.contributionMessage = info.contributionMessage;
+		}
+		if (money && money.currency) {
+			meta.currency = money.currency;
+		}
+		data.meta = meta;
+		if (settings.captureevents === false) {
+			return;
+		}
+		pushMessage(data);
+	}
+
+	function handleWebSocketActivityEvent(activity, wsChannel) {
+		if (!activity || typeof activity !== "object" || !activity.eventName) {
+			return false;
+		}
+		var activityId = createWebSocketActivityId(activity);
+		if (rememberWebSocketActivityId(activityId)) {
+			return false;
+		}
+
+		switch (activity.eventName) {
+			case "STREAM_HAS_BEEN_RAIDED":
+				handleWebSocketRaidEvent(activity, wsChannel, activity.eventName);
+				break;
+			case "COMMUNITY_BOOST_CONTRIBUTION_PURCHASED":
+				handleWebSocketBoostContribution(activity, wsChannel);
+				break;
+		}
+		return true;
+	}
+
+	function handleWebSocketPhxReply(payload, wsChannel) {
+		if (!payload || typeof payload !== "object" || payload.status !== "ok") {
+			return;
+		}
+		var response = payload.response;
+		if (!response || typeof response !== "object") {
+			return;
+		}
+		if (response.livestream && typeof response.livestream === "object") {
+			handleWebSocketLivestreamUpdate(response.livestream);
+		}
+		if (!Array.isArray(response.latestLiveActivityEvents) || !response.latestLiveActivityEvents.length) {
+			return;
+		}
+		var shouldRefreshSnapshots = false;
+		for (var i = 0; i < response.latestLiveActivityEvents.length; i++) {
+			if (handleWebSocketActivityEvent(response.latestLiveActivityEvents[i], wsChannel)) {
+				shouldRefreshSnapshots = true;
+			}
+		}
+		if (shouldRefreshSnapshots) {
+			scheduleWebSocketSnapshotRefresh();
+		}
+	}
+
+	function handleWebSocketChatMessage(payload, wsChannel) {
+		if (!payload || typeof payload !== "object") {
+			return;
+		}
+		if (rememberWebSocketMessageId(payload.id || "")) {
+			return;
+		}
+		var user = payload.user || {};
+		var messageText = payload.message == null ? "" : String(payload.message);
+		if (!user.username && !messageText) {
+			return;
+		}
+		lastWebSocketChatAt = Date.now();
+		var data = createWebSocketChatData(user, messageText);
+		var normalizedMessage = normalizeText(messageText);
+		data.event = /^joined\b/i.test(normalizedMessage) ? "joined" : false;
+		if (!data.event && messageText.indexOf("?") > -1) {
+			data.question = true;
+		}
+		if (payload.properties && payload.properties.adscb) {
+			data.hasDonation = formatMoneyValue(payload.properties.adscb);
+		}
+		var meta = buildWebSocketMeta(wsChannel, "new_msg", payload, user);
+		if (payload.type === "announcement") {
+			meta.announcement = true;
+		}
+		if (payload.properties && Object.keys(payload.properties).length) {
+			meta.properties = payload.properties;
+		}
+		data.meta = meta;
+		if (data.event && settings.captureevents === false) {
+			return;
+		}
+		pushMessage(data);
+	}
+
+	function handleWebSocketTipSent(payload, wsChannel) {
+		var tip = payload && payload.tip ? payload.tip : null;
+		if (!tip) {
+			return;
+		}
+		var user = tip.senderUser || {};
+		var data = createWebSocketChatData(user, tip.message || "");
+		data.event = "donation";
+		data.hasDonation = formatMoneyValue(tip.tipValue, tip.magnitude);
+		var money = getMoneyDetails(tip.tipValue, tip.magnitude);
+		if (money) {
+			data.donoValue = money.amount;
+		}
+		data.meta = buildWebSocketMeta(wsChannel, "tip_sent", payload, user);
+		if (settings.captureevents === false) {
+			return;
+		}
+		pushMessage(data);
+	}
+
+	function handleWebSocketLoyaltyLevelUp(payload, wsChannel) {
+		var user = payload && payload.user ? payload.user : null;
+		if (!user || !user.username) {
+			return;
+		}
+		var tier = user.loyaltyTierForSeller || "";
+		var data = createWebSocketChatData(user, "leveled up to " + tier + " loyalty");
+		data.event = "member";
+		data.membership = tier;
+		data.meta = buildWebSocketMeta(wsChannel, "user_loyalty_tier_level_up", payload, user);
+		if (settings.captureevents === false) {
+			return;
+		}
+		pushMessage(data);
+	}
+
+	function handleWebSocketRaidEvent(payload, wsChannel, eventType) {
+		var user = payload && payload.fromUser ? payload.fromUser : (payload && payload.activityPerformingUser ? payload.activityPerformingUser : null);
+		if (!user || !user.username) {
+			return;
+		}
+		var numRaiders = payload && payload.eventSpecificInfo && typeof payload.eventSpecificInfo.numRaiders === "number"
+			? payload.eventSpecificInfo.numRaiders
+			: (payload && typeof payload.numRaiders === "number" ? payload.numRaiders
+			: (payload && typeof payload.numUsers === "number" ? payload.numUsers : 0));
+		var messageText = (eventType === "has_been_raided" || eventType === "STREAM_HAS_BEEN_RAIDED")
+			? "is raiding with a party of " + numRaiders
+			: (eventType === "raid_started" ? "is raiding with " + numRaiders + " viewers" : "has started a raid");
+		var data = createWebSocketChatData(user, messageText);
+		data.event = "raid";
+		var meta = buildWebSocketMeta(wsChannel, eventType, payload, user);
+		if (typeof numRaiders === "number") {
+			meta.numRaiders = numRaiders;
+		}
+		data.meta = meta;
+		if (settings.captureevents === false) {
+			return;
+		}
+		pushMessage(data);
+	}
+
+	function handleWhatnotWebSocketFrame(rawData) {
+		var payloadText = normalizeWebSocketData(rawData);
+		if (!payloadText) {
+			return;
+		}
+		var parsedArray = null;
+		try {
+			parsedArray = JSON.parse(payloadText);
+		} catch (e) {
+			return;
+		}
+		if (!Array.isArray(parsedArray) || parsedArray.length < 5) {
+			return;
+		}
+		var wsChannel = parsedArray[2] || "";
+		var eventType = parsedArray[3] || "";
+		var payload = parsedArray[4] || {};
+
+		switch (eventType) {
+			case "new_msg":
+				handleWebSocketChatMessage(payload, wsChannel);
+				return;
+			case "tip_sent":
+				handleWebSocketTipSent(payload, wsChannel);
+				return;
+			case "raid_selected":
+			case "has_been_raided":
+			case "raid_started":
+				handleWebSocketRaidEvent(payload, wsChannel, eventType);
+				return;
+			case "user_loyalty_tier_level_up":
+				handleWebSocketLoyaltyLevelUp(payload, wsChannel);
+				return;
+			case "livestream_view_count_updated":
+				sendWebSocketViewerCount(payload && payload.viewCount);
+				return;
+			case "livestream_update":
+				handleWebSocketLivestreamUpdate(payload);
+				return;
+			case "giveaway_entry_count_updated":
+				handleWebSocketGiveawayEntryUpdate(payload);
+				return;
+			case "product_created":
+			case "product_updated":
+			case "product_deleted":
+			case "giveaway_started":
+			case "giveaway_won":
+			case "payment_failed":
+			case "user_joined":
+				handleWebSocketSnapshotPayload(payload);
+				return;
+			case "phx_reply":
+				handleWebSocketPhxReply(payload, wsChannel);
+				return;
+		}
+	}
+
+	function handleWhatnotWindowMessage(event) {
+		if (!event || event.source !== window || !event.data || event.data.source !== "whatnot-ws-interceptor") {
+			return;
+		}
+		if (event.data.type !== "receive") {
+			return;
+		}
+		handleWhatnotWebSocketFrame(event.data.data);
+	}
+
+	function registerElectronWebSocketListener() {
+		try {
+			if (!window.ninjafy || !window.ninjafy.onWebSocketMessage) {
+				return;
+			}
+			window.ninjafy.onWebSocketMessage(function (payload) {
+				if (!payload || payload.type !== "message") {
+					return;
+				}
+				handleWhatnotWebSocketFrame(payload.data);
+			});
+		} catch (e) {}
+	}
+
 	function sendMetaEvent(eventName, meta) {
 		if (!eventName || !meta) {
 			return;
@@ -749,7 +1290,7 @@
 	}
 
 	function processMessage(messageElement) {
-		if (!messageElement || processedMessageNodes.has(messageElement)) {
+		if (hasRecentWebSocketChat() || !messageElement || processedMessageNodes.has(messageElement)) {
 			return;
 		}
 
@@ -944,6 +1485,9 @@
 
 		sendResponse(false);
 	});
+
+	window.addEventListener("message", handleWhatnotWindowMessage);
+	registerElectronWebSocketListener();
 
 	console.log("social stream injected");
 

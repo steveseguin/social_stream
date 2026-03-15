@@ -725,8 +725,8 @@
                     <h3>Whatnot</h3>
                     <p class="source-note">Implementation: <code>sources/whatnot.js</code></p>
                     <ul class="requirements">
-                        <li>Open the live Whatnot show page with chat visible; product/giveaway metadata relies on DOM sections rendered in the show view.</li>
-                        <li><em>Capture Stream Events</em> controls auction/catalog metadata updates; viewer counts still follow the viewer/hype toggles.</li>
+                        <li>Open the live Whatnot show page with chat visible; websocket transport now assists chat, raids, donations, and fast viewer updates, while product/giveaway snapshots still rely on DOM sections rendered in the show view.</li>
+                        <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; viewer counts still follow the viewer/hype toggles.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -739,8 +739,18 @@
                         <tbody>
                             <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
-                                <td>Polled viewer count from the show header.</td>
+                                <td>Viewer count changes from websocket livestream updates, with DOM polling as a fallback.</td>
                                 <td><code>meta</code> is an integer viewer count.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>donation</code></td>
+                                <td>Whatnot websocket tips and community boost contribution events.</td>
+                                <td><code>hasDonation</code> contains the formatted amount; websocket-specific context stays under <code>meta</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><code>raid</code></td>
+                                <td>Whatnot websocket raid events, including backlog activity replies.</td>
+                                <td><code>meta.numRaiders</code> is included when Whatnot supplies it.</td>
                             </tr>
                             <tr>
                                 <td><code>joined</code></td>
@@ -749,17 +759,17 @@
                             </tr>
                             <tr>
                                 <td class="status-event"><code>auction_update</code></td>
-                                <td>When the live footer auction state changes (winner/winning text, title, bids, price, timer, sold state).</td>
+                                <td>When the live footer auction state changes (winner/winning text, title, bids, price, timer, sold state), often accelerated by websocket auction lifecycle packets.</td>
                                 <td>Metadata-only event. No <code>chatname</code>/<code>chatmessage</code>; data lives in <code>meta</code> (for example <code>meta.title</code>, <code>meta.bids</code>, <code>meta.price</code>, <code>meta.timer</code>, <code>meta.status</code>).</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>commerce_update</code></td>
-                                <td>When catalog sections change (products, surprise sets, upcoming giveaways).</td>
+                                <td>When catalog sections change (products, surprise sets, upcoming giveaways), often accelerated by websocket giveaway/product lifecycle packets.</td>
                                 <td>Metadata-only snapshot with section counts and item arrays under <code>meta.products</code>, <code>meta.surpriseSets</code>, and <code>meta.upcomingGiveaways</code>.</td>
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Auction/commerce updates are intended for dedicated overlays and automations; keep downstream rendering keyed off <code>data.event</code> + <code>data.meta</code>.</p>
+                    <p class="field-highlights">Auction/commerce updates are still DOM-backed snapshots; websocket packets mainly provide faster triggers and cleaner event metadata. Keep downstream rendering keyed off <code>data.event</code> + <code>data.meta</code>.</p>
                 </article>
 
                 <article class="platform-card" id="ebay">
