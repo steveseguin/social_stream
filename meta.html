@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--
+        ================================================================================
+        META OVERLAY CONTEXT FOR FUTURE CONTRIBUTORS / AI AGENTS
+        ================================================================================
+
+        Role of this page:
+        - This overlay is a dedicated renderer for metadata-only events (no chat bubble text
+          required), primarily for auction / commerce / giveaway style workflows.
+        - It acts like a compact status bar: values are updated in place as new meta events
+          arrive (for example auction status, current bidder, bids, timer, product counts).
+        - It is intentionally separate from message overlays (featured/dock) so streamers can
+          show "state" data independently of chat.
+
+        Why this exists:
+        - Some platforms emit important non-message updates under `data.meta`.
+        - Main chat overlays optimize for messages; this page optimizes for continuously
+          changing structured values.
+
+        Canonical event references:
+        - Event vocabulary and payload contract:
+            docs/event-reference.html
+        - Whatnot source that emits commerce/auction meta updates:
+            sources/whatnot.js
+        - Message pipeline/filtering behavior (important for metadata-only events):
+            background.js
+
+        Popup wiring (this page depends on it):
+        - Overlay section and controls:
+            popup.html  (search for "Meta Data Bar", id="meta", id="metalink")
+        - URL-generation + parameter plumbing:
+            popup.js
+            - setupPageLinks(): adds { id: "meta", path: "meta.html" }
+            - getTargetMap(): index 24 reserved for this overlay (`meta: 24`)
+            - refreshLinks()/cleanup maps include `metalink`
+        - Query params for this page are set via `data-param24`, `data-numbersetting24`,
+          and `data-textparam24` in popup.html.
+
+        Expected inbound payload shape:
+        - Standard Social Stream event object, with metadata in top-level `meta`.
+        - Common event names handled directly:
+            auction_update
+            commerce_update
+            viewer_update
+            viewer_updates
+        - Optional generic fallback for other meta events when enabled.
+
+        Guardrails / do not do:
+        - Do NOT change core event field names casually (`event`, `type`, `meta`) here.
+          If event schema changes, update docs/event-reference.html first.
+        - Do NOT assume `chatname` / `chatmessage` exists; this page is meta-first.
+        - Do NOT break zero values (for example `meta: 0` in viewer updates). Zero is a valid
+          state and must still render.
+        - Do NOT mutate outbound contracts from this page; it is a renderer only.
+        - Do NOT hardcode source-specific assumptions outside clearly isolated logic.
+
+        Extension + Electron compatibility notes:
+        - This page supports both transport styles:
+            1) session iframe/WebRTC bridge (`?session=...`)
+            2) websocket relay modes (`?server=...` or `?server2=...` / `?server3=...`)
+        - When server params are present, websocket mode is preferred to avoid duplicate
+          updates from simultaneous transports.
+        - Keep logic browser-safe and avoid extension-only APIs in this file.
+
+        Maintenance expectations:
+        - If you add support for new meta event types:
+            1) Add/adjust parsing here.
+            2) Verify popup controls if new toggles are needed.
+            3) Update docs/event-reference.html.
+            4) Run a syntax check on this script.
+        ================================================================================
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Overlay - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        :root {
+            --text-color: #f4f6ff;
+            --muted-color: #b8bfda;
+            --chip-bg: rgba(12, 16, 28, 0.88);
+            --chip-border: rgba(171, 183, 229, 0.28);
+            --title-bg: rgba(8, 12, 22, 0.76);
+            --outline: -0.5px -0.5px 0 #000, 0.5px -0.5px 0 #000, -0.5px 0.5px 0 #000, 0.5px 0.5px 0 #000;
+            --scale: 1;
+            --panel-opacity: 1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            color: var(--text-color);
+            font-family: "Sora", "Segoe UI", Roboto, Arial, sans-serif;
+            background: transparent;
+        }
+
+        body {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            text-shadow: var(--outline);
+        }
+
+        body.no-outline {
+            text-shadow: none;
+        }
+
+        body.align-right {
+            justify-content: flex-end;
+        }
+
+        body.align-center {
+            justify-content: center;
+        }
+
+        #root {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 14px;
+            width: min(96vw, 1800px);
+            transform: scale(var(--scale));
+            transform-origin: top left;
+            opacity: var(--panel-opacity);
+        }
+
+        body.align-right #root {
+            transform-origin: top right;
+        }
+
+        body.align-center #root {
+            transform-origin: top center;
+        }
+
+        #title {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            max-width: 100%;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: var(--title-bg);
+            border: 1px solid rgba(164, 178, 231, 0.4);
+            color: #dce3ff;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+
+        #bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            min-height: 36px;
+        }
+
+        .stat {
+            display: inline-flex;
+            align-items: center;
+            max-width: min(94vw, 460px);
+            gap: 6px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--chip-border);
+            background: var(--chip-bg);
+            backdrop-filter: blur(2px);
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .stat.category-auction {
+            border-color: rgba(255, 190, 88, 0.6);
+        }
+
+        .stat.category-commerce {
+            border-color: rgba(89, 214, 181, 0.55);
+        }
+
+        .stat.category-viewers {
+            border-color: rgba(130, 164, 255, 0.62);
+        }
+
+        .stat.category-othermeta {
+            border-color: rgba(208, 157, 255, 0.55);
+        }
+
+        .icon {
+            flex: 0 0 auto;
+            font-size: 15px;
+        }
+
+        .label {
+            color: var(--muted-color);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+
+        .value {
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .empty {
+            color: rgba(225, 231, 255, 0.78);
+            font-size: 15px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px dashed rgba(170, 185, 233, 0.45);
+            background: rgba(10, 14, 24, 0.58);
+        }
+
+        body.hide-icons .icon {
+            display: none;
+        }
+
+        body.hide-labels .label {
+            display: none;
+        }
+
+        body.hide-values .value {
+            display: none;
+        }
+
+        body.compact #bar {
+            gap: 5px;
+        }
+
+        body.compact .stat {
+            padding: 5px 8px;
+            gap: 5px;
+            font-size: 13px;
+        }
+
+        body.compact .label {
+            font-size: 11px;
+        }
+
+        body.no-bg .stat {
+            background: transparent;
+            border-color: transparent;
+            padding-left: 4px;
+            padding-right: 4px;
+            box-shadow: none;
+        }
+
+        body.no-bg #title {
+            background: transparent;
+            border-color: transparent;
+            padding-left: 0;
+            padding-right: 0;
+        }
+    </style>
+</head>
+<body>
+    <main id="root">
+        <div id="title"></div>
+        <div id="bar" aria-live="polite"></div>
+    </main>
+
+    <script>
+        (function () {
+            var urlParams = new URLSearchParams(window.location.search);
+
+            var showIcon = !urlParams.has("noicon");
+            var showLabel = !urlParams.has("nolabel");
+            var showValue = !urlParams.has("novalue");
+            if (!showIcon && !showLabel && !showValue) {
+                showValue = true;
+            }
+
+            var explicitFilter = {
+                auction: urlParams.has("auction"),
+                commerce: urlParams.has("commerce"),
+                viewers: urlParams.has("viewers"),
+                othermeta: urlParams.has("othermeta")
+            };
+            var hasExplicitFilter = explicitFilter.auction || explicitFilter.commerce || explicitFilter.viewers || explicitFilter.othermeta;
+            var hideAuctionExtras = urlParams.has("hideauctionextras");
+            var hideCommerceExtras = urlParams.has("hidecommerceextras");
+            var hideViewerPlatforms = urlParams.has("hideviewerplatforms");
+            var hideDebugMeta = urlParams.has("hidedebugmeta");
+            var hiddenFieldKeywords = String(urlParams.get("hidefields") || "")
+                .split(",")
+                .map(function (keyword) { return keyword.trim().toLowerCase(); })
+                .filter(Boolean);
+
+            var titleNode = document.getElementById("title");
+            var barNode = document.getElementById("bar");
+            var state = new Map();
+            var viewerCounts = Object.create(null);
+            var sequenceCounter = 0;
+            var iframe = null;
+            var sockets = [];
+            var hasServerMode = urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3");
+
+            var requestedTitle = String(urlParams.get("title") || "").trim();
+            if (requestedTitle) {
+                titleNode.textContent = requestedTitle;
+            } else {
+                titleNode.style.display = "none";
+            }
+            if (urlParams.has("hidetitle")) {
+                titleNode.style.display = "none";
+            }
+            if (!showIcon) {
+                document.body.classList.add("hide-icons");
+            }
+            if (!showLabel) {
+                document.body.classList.add("hide-labels");
+            }
+            if (!showValue) {
+                document.body.classList.add("hide-values");
+            }
+            if (urlParams.has("compact")) {
+                document.body.classList.add("compact");
+            }
+            if (urlParams.has("nobg") || urlParams.has("transparent")) {
+                document.body.classList.add("no-bg");
+            }
+            if (urlParams.has("nooutline")) {
+                document.body.classList.add("no-outline");
+            }
+
+            if (urlParams.has("alignright")) {
+                document.body.classList.add("align-right");
+            } else if ((urlParams.get("align") || "").toLowerCase() === "center") {
+                document.body.classList.add("align-center");
+            }
+
+            var scaleValue = parseFloat(urlParams.get("scale"));
+            if (Number.isFinite(scaleValue) && scaleValue > 0) {
+                document.documentElement.style.setProperty("--scale", String(Math.max(0.35, Math.min(4, scaleValue))));
+            }
+
+            var opacityValue = parseFloat(urlParams.get("opacity"));
+            if (Number.isFinite(opacityValue)) {
+                document.documentElement.style.setProperty("--panel-opacity", String(Math.max(0.05, Math.min(1, opacityValue))));
+            }
+
+            if (urlParams.has("pagebg")) {
+                var pageBg = (urlParams.get("pagebg") || "").trim();
+                if (pageBg) {
+                    document.body.style.background = pageBg;
+                }
+            }
+
+            function normalizeEventName(eventName) {
+                if (typeof eventName !== "string") return "";
+                return eventName
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, "_")
+                    .replace(/_+/g, "_")
+                    .replace(/^_+|_+$/g, "");
+            }
+
+            function getEventCategory(normalizedEventName) {
+                if (normalizedEventName === "auction_update") return "auction";
+                if (normalizedEventName === "commerce_update") return "commerce";
+                if (normalizedEventName === "viewer_update" || normalizedEventName === "viewer_updates") return "viewers";
+                return "othermeta";
+            }
+
+            function eventIsEnabled(normalizedEventName) {
+                var category = getEventCategory(normalizedEventName);
+                if (hasExplicitFilter) {
+                    return !!explicitFilter[category];
+                }
+                return category !== "othermeta";
+            }
+
+            function isPlainObject(value) {
+                return Object.prototype.toString.call(value) === "[object Object]";
+            }
+
+            function toDisplayLabel(rawKey) {
+                if (!rawKey || typeof rawKey !== "string") return "Value";
+                return rawKey
+                    .replace(/\./g, " ")
+                    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+                    .replace(/[_\-]+/g, " ")
+                    .trim()
+                    .replace(/\b\w/g, function (char) { return char.toUpperCase(); });
+            }
+
+            function formatCurrency(value) {
+                var numeric = Number(value);
+                if (!Number.isFinite(numeric)) return String(value);
+                var hasDecimals = Math.abs(numeric % 1) > 0;
+                return "$" + numeric.toLocaleString(undefined, {
+                    minimumFractionDigits: hasDecimals ? 2 : 0,
+                    maximumFractionDigits: hasDecimals ? 2 : 0
+                });
+            }
+
+            function formatValue(value) {
+                if (value === null || typeof value === "undefined") return "";
+                if (typeof value === "boolean") return value ? "Yes" : "No";
+                if (typeof value === "number") return Number.isFinite(value) ? value.toLocaleString() : String(value);
+                if (typeof value === "string") return value.trim();
+                if (Array.isArray(value)) {
+                    if (!value.length) return "";
+                    var primitiveOnly = value.every(function (item) {
+                        return item === null || ["string", "number", "boolean"].indexOf(typeof item) > -1;
+                    });
+                    if (primitiveOnly) {
+                        return value.map(formatValue).filter(Boolean).join(", ");
+                    }
+                    return value.length.toLocaleString() + " items";
+                }
+                if (isPlainObject(value)) {
+                    return Object.keys(value).length.toLocaleString() + " fields";
+                }
+                return String(value);
+            }
+
+            function trimValue(value, maxLength) {
+                var stringValue = String(value || "");
+                if (stringValue.length <= maxLength) return stringValue;
+                return stringValue.slice(0, maxLength - 1) + "…";
+            }
+
+            function iconForField(fieldKey, category) {
+                var key = String(fieldKey || "").toLowerCase();
+                if (/price|amount|cost|revenue|total/.test(key)) return "💲";
+                if (/bid/.test(key)) return "🔨";
+                if (/timer|time|countdown/.test(key)) return "⏱️";
+                if (/winner|bidder|winning|won|sold|status/.test(key)) return "🏆";
+                if (/seller|host/.test(key)) return "👤";
+                if (/schedule|reminder|date/.test(key)) return "📅";
+                if (/action|button|cta/.test(key)) return "🎯";
+                if (/title|name|product|item|listing/.test(key)) return "🏷️";
+                if (/category|type/.test(key)) return "📂";
+                if (/qty|quantity|stock|available|availability|left|remaining/.test(key)) return "📦";
+                if (/viewer|view/.test(key)) return "👁️";
+                if (/giveaway/.test(key)) return "🎁";
+                if (/surprise/.test(key)) return "🎲";
+                if (category === "auction") return "🔨";
+                if (category === "commerce") return "🛍️";
+                if (category === "viewers") return "👁️";
+                return "🧩";
+            }
+
+            function setEntry(id, label, value, fieldKey, category, order) {
+                if (!id) return;
+                if (shouldHideEntry(id, label, fieldKey, category)) return;
+                var formatted = trimValue(formatValue(value), 96);
+                if (!formatted) return;
+
+                var existing = state.get(id);
+                state.set(id, {
+                    id: id,
+                    label: label || toDisplayLabel(id),
+                    value: formatted,
+                    icon: iconForField(fieldKey || id, category),
+                    category: category || "othermeta",
+                    order: Number.isFinite(order) ? order : 500,
+                    sequence: existing ? existing.sequence : ++sequenceCounter
+                });
+            }
+
+            function shouldHideEntry(id, label, fieldKey, category) {
+                var fingerprint = [
+                    String(id || ""),
+                    String(label || ""),
+                    String(fieldKey || ""),
+                    String(category || "")
+                ].join(" ").toLowerCase();
+
+                if (hideDebugMeta) {
+                    var debugPattern = /(index|profile|href|url|source\s*mode|source|debug|raw|avatar|image|sellerurl|reminder|callback|trace|technical)/;
+                    if (debugPattern.test(fingerprint)) {
+                        return true;
+                    }
+                }
+
+                if (hiddenFieldKeywords.length) {
+                    for (var i = 0; i < hiddenFieldKeywords.length; i++) {
+                        if (!hiddenFieldKeywords[i]) continue;
+                        if (fingerprint.indexOf(hiddenFieldKeywords[i]) !== -1) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+            function removeEntriesByPrefix(prefix) {
+                Array.from(state.keys()).forEach(function (key) {
+                    if (key.indexOf(prefix) === 0) {
+                        state.delete(key);
+                    }
+                });
+            }
+
+            function parseNumber(value) {
+                if (typeof value === "number" && Number.isFinite(value)) {
+                    return value;
+                }
+                if (typeof value === "string") {
+                    var cleaned = value.replace(/[^0-9.-]/g, "");
+                    if (!cleaned) return null;
+                    var parsed = parseFloat(cleaned);
+                    return Number.isFinite(parsed) ? parsed : null;
+                }
+                return null;
+            }
+
+            function updateAuctionEntries(meta) {
+                var priceValue =
+                    meta.priceText ||
+                    meta.currentPriceText ||
+                    (typeof meta.price === "number" ? formatCurrency(meta.price) : "") ||
+                    (typeof meta.currentPrice === "number" ? formatCurrency(meta.currentPrice) : "");
+                var bidsValue = meta.bidsText || (typeof meta.bids === "number" ? meta.bids : "");
+                var shippingValue =
+                    meta.shipping ||
+                    meta.shippingPriceText ||
+                    (typeof meta.shippingPrice === "number" ? formatCurrency(meta.shippingPrice) : "");
+                var nextBidValue =
+                    meta.nextBidText ||
+                    (typeof meta.nextBid === "number" ? formatCurrency(meta.nextBid) : "");
+                var tagValue = Array.isArray(meta.tags) ? meta.tags.join(", ") : meta.tags;
+
+                setEntry("auction.status", "Status", meta.statusText || meta.status, "status", "auction", 10);
+                setEntry("auction.bidder", "Bidder", meta.bidder, "bidder", "auction", 20);
+                setEntry("auction.title", "Item", meta.title, "title", "auction", 30);
+                setEntry("auction.price", "Price", priceValue, "price", "auction", 50);
+                setEntry("auction.bids", "Bids", bidsValue, "bids", "auction", 60);
+                setEntry("auction.timer", "Timer", meta.timer, "timer", "auction", 70);
+
+                if (!hideAuctionExtras) {
+                    setEntry("auction.category", "Category", meta.category, "category", "auction", 40);
+                    setEntry("auction.seller", "Seller", meta.sellerName, "seller", "auction", 45);
+                    setEntry("auction.next_bid", "Next Bid", nextBidValue, "nextBid", "auction", 65);
+                    setEntry("auction.shipping", "Shipping", shippingValue, "shipping", "auction", 80);
+                    setEntry("auction.viewers", "Viewers", meta.viewerCount, "viewerCount", "auction", 85);
+                    setEntry("auction.action", "Action", meta.primaryActionText, "action", "auction", 90);
+                    setEntry("auction.tags", "Tags", tagValue, "tags", "auction", 95);
+                    setEntry("auction.mode", "Source", meta.sourceMode, "sourceMode", "auction", 100);
+                }
+            }
+
+            function sumField(items, fieldName) {
+                if (!Array.isArray(items)) return null;
+                var total = 0;
+                var foundAny = false;
+                for (var i = 0; i < items.length; i++) {
+                    var numeric = parseNumber(items[i] && items[i][fieldName]);
+                    if (numeric !== null) {
+                        total += numeric;
+                        foundAny = true;
+                    }
+                }
+                return foundAny ? total : null;
+            }
+
+            function updateCommerceEntries(meta) {
+                if (meta.products) {
+                    var products = meta.products;
+                    var productTotal = parseNumber(products.total);
+                    if (productTotal === null && Array.isArray(products.items)) {
+                        productTotal = products.items.length;
+                    }
+                    setEntry("commerce.products.total", "Products", productTotal, "products.total", "commerce", 110);
+
+                    if (Array.isArray(products.items) && products.items.length) {
+                        var firstProduct = products.items[0];
+                        setEntry("commerce.products.featured", "Featured", firstProduct.title || firstProduct.name, "products.featured", "commerce", 115);
+
+                        if (firstProduct.priceText || typeof firstProduct.price === "number") {
+                            setEntry(
+                                "commerce.products.featured_price",
+                                "Featured Price",
+                                firstProduct.priceText || formatCurrency(firstProduct.price),
+                                "products.featured_price",
+                                "commerce",
+                                116
+                            );
+                        }
+
+                        var totalStock = sumField(products.items, "quantity");
+                        setEntry("commerce.products.stock", "Stock", totalStock, "products.stock", "commerce", 118);
+                    }
+                }
+
+                if (meta.surpriseSets) {
+                    var surprise = meta.surpriseSets;
+                    var surpriseTotal = parseNumber(surprise.total);
+                    if (surpriseTotal === null && Array.isArray(surprise.items)) {
+                        surpriseTotal = surprise.items.length;
+                    }
+                    setEntry("commerce.surprise.total", "Surprise Sets", surpriseTotal, "surpriseSets.total", "commerce", 130);
+
+                    if (Array.isArray(surprise.items) && surprise.items.length) {
+                        var firstSurprise = surprise.items[0];
+                        if (typeof firstSurprise.remaining !== "undefined") {
+                            setEntry("commerce.surprise.remaining", "Surprise Remaining", firstSurprise.remaining, "surpriseSets.remaining", "commerce", 135);
+                        }
+                    }
+                }
+
+                if (meta.upcomingGiveaways) {
+                    var giveaways = meta.upcomingGiveaways;
+                    var giveawayTotal = parseNumber(giveaways.total);
+                    if (giveawayTotal === null && Array.isArray(giveaways.items)) {
+                        giveawayTotal = giveaways.items.length;
+                    }
+                    setEntry("commerce.giveaways.total", "Upcoming Giveaways", giveawayTotal, "upcomingGiveaways.total", "commerce", 150);
+                }
+
+                if (!hideCommerceExtras) {
+                    if (isPlainObject(meta.navigation)) {
+                        setEntry(
+                            "commerce.navigation.viewers",
+                            "Navigation Viewers",
+                            meta.navigation.viewerCountText || meta.navigation.viewerCount,
+                            "navigation.viewerCount",
+                            "commerce",
+                            160
+                        );
+                        setEntry(
+                            "commerce.navigation.items_button",
+                            "Items Button",
+                            meta.navigation.itemsButtonLabel,
+                            "navigation.itemsButtonLabel",
+                            "commerce",
+                            161
+                        );
+                        setEntry(
+                            "commerce.navigation.wallet_button",
+                            "Wallet Button",
+                            meta.navigation.walletButtonLabel,
+                            "navigation.walletButtonLabel",
+                            "commerce",
+                            162
+                        );
+                        setEntry(
+                            "commerce.navigation.current_event",
+                            "Current Event",
+                            meta.navigation.currentEventTitle,
+                            "navigation.currentEventTitle",
+                            "commerce",
+                            163
+                        );
+                    }
+
+                    if (isPlainObject(meta.playerCards)) {
+                        setEntry("commerce.player.total", "Auction Cards", meta.playerCards.total, "playerCards.total", "commerce", 170);
+                        setEntry("commerce.player.active", "Cards Active", meta.playerCards.active, "playerCards.active", "commerce", 171);
+                        setEntry("commerce.player.sold", "Cards Sold", meta.playerCards.sold, "playerCards.sold", "commerce", 172);
+                        setEntry("commerce.player.winning", "Cards Winning", meta.playerCards.winning, "playerCards.winning", "commerce", 173);
+                        if (Array.isArray(meta.playerCards.items) && meta.playerCards.items.length) {
+                            var leadCard = meta.playerCards.items[0];
+                            setEntry("commerce.player.lead_title", "Lead Auction Item", leadCard.title, "playerCards.items.title", "commerce", 174);
+                            setEntry(
+                                "commerce.player.lead_price",
+                                "Lead Price",
+                                leadCard.currentPriceText || leadCard.priceText || leadCard.currentPrice,
+                                "playerCards.items.currentPrice",
+                                "commerce",
+                                175
+                            );
+                        }
+                    }
+
+                    if (isPlainObject(meta.livePreview)) {
+                        setEntry("commerce.live.total", "Live Events", meta.livePreview.total, "livePreview.total", "commerce", 180);
+                        setEntry("commerce.live.live_count", "Live Count", meta.livePreview.liveCount, "livePreview.liveCount", "commerce", 181);
+                        setEntry(
+                            "commerce.live.watching_total",
+                            "Live Watching",
+                            meta.livePreview.watchingTotal,
+                            "livePreview.watchingTotal",
+                            "commerce",
+                            182
+                        );
+                        var liveCurrent = isPlainObject(meta.livePreview.current)
+                            ? meta.livePreview.current
+                            : (Array.isArray(meta.livePreview.items) && meta.livePreview.items.length ? meta.livePreview.items[0] : null);
+                        if (liveCurrent) {
+                            setEntry("commerce.live.current_title", "Live Item", liveCurrent.title, "livePreview.current.title", "commerce", 183);
+                            setEntry("commerce.live.current_seller", "Live Seller", liveCurrent.sellerName, "livePreview.current.sellerName", "commerce", 184);
+                            setEntry("commerce.live.current_viewers", "Live Viewers", liveCurrent.viewerCount, "livePreview.current.viewerCount", "commerce", 185);
+                            setEntry("commerce.live.current_tags", "Live Tags", Array.isArray(liveCurrent.tags) ? liveCurrent.tags.join(", ") : "", "livePreview.current.tags", "commerce", 186);
+                        }
+                    }
+
+                    if (isPlainObject(meta.currentEvent)) {
+                        setEntry("commerce.current.title", "Current Event", meta.currentEvent.title, "currentEvent.title", "commerce", 190);
+                        setEntry("commerce.current.seller", "Current Seller", meta.currentEvent.sellerName, "currentEvent.sellerName", "commerce", 191);
+                        setEntry("commerce.current.viewers", "Current Viewers", meta.currentEvent.viewerCount, "currentEvent.viewerCount", "commerce", 192);
+                        setEntry("commerce.current.schedule", "Current Schedule", meta.currentEvent.scheduleText, "currentEvent.scheduleText", "commerce", 193);
+                    }
+
+                    if (isPlainObject(meta.upcomingEvents)) {
+                        setEntry("commerce.upcoming.total", "Upcoming Events", meta.upcomingEvents.total, "upcomingEvents.total", "commerce", 200);
+                        if (Array.isArray(meta.upcomingEvents.items) && meta.upcomingEvents.items.length) {
+                            var nextEvent = meta.upcomingEvents.items[0];
+                            setEntry("commerce.upcoming.next", "Next Event", nextEvent.title, "upcomingEvents.items.title", "commerce", 201);
+                            setEntry("commerce.upcoming.next_time", "Next Time", nextEvent.scheduleText, "upcomingEvents.items.scheduleText", "commerce", 202);
+                        }
+                    }
+                }
+            }
+
+            function syncViewerEntries(replaceSnapshot) {
+                if (replaceSnapshot) {
+                    Array.from(state.keys()).forEach(function (key) {
+                        if (key.indexOf("viewers.platform.") === 0) {
+                            var platform = key.replace("viewers.platform.", "");
+                            if (!Object.prototype.hasOwnProperty.call(viewerCounts, platform)) {
+                                state.delete(key);
+                            }
+                        }
+                    });
+                }
+
+                var platforms = Object.keys(viewerCounts).sort();
+                var total = 0;
+                for (var i = 0; i < platforms.length; i++) {
+                    var platform = platforms[i];
+                    var count = parseNumber(viewerCounts[platform]);
+                    if (count === null) continue;
+                    total += count;
+                    if (!hideViewerPlatforms) {
+                        setEntry(
+                            "viewers.platform." + platform,
+                            platform.toUpperCase() + " Viewers",
+                            count,
+                            "viewers." + platform,
+                            "viewers",
+                            210 + i
+                        );
+                    } else {
+                        state.delete("viewers.platform." + platform);
+                    }
+                }
+
+                if (platforms.length) {
+                    setEntry("viewers.total", "Total Viewers", total, "viewers.total", "viewers", 205);
+                } else {
+                    state.delete("viewers.total");
+                }
+            }
+
+            function flattenMeta(value, prefix, depth, output) {
+                if (depth > 2 || value === null || typeof value === "undefined") return;
+
+                if (Array.isArray(value)) {
+                    if (!value.length) return;
+                    var primitiveOnly = value.every(function (item) {
+                        return item === null || ["string", "number", "boolean"].indexOf(typeof item) > -1;
+                    });
+                    if (primitiveOnly) {
+                        output.push([prefix, value.map(formatValue).filter(Boolean).join(", ")]);
+                    } else {
+                        output.push([prefix + ".count", value.length]);
+                    }
+                    return;
+                }
+
+                if (isPlainObject(value)) {
+                    var keys = Object.keys(value);
+                    for (var i = 0; i < keys.length && i < 12; i++) {
+                        var key = keys[i];
+                        var nextPrefix = prefix ? prefix + "." + key : key;
+                        flattenMeta(value[key], nextPrefix, depth + 1, output);
+                    }
+                    return;
+                }
+
+                output.push([prefix, value]);
+            }
+
+            function updateGenericMetaEntries(normalizedEventName, meta) {
+                var basePrefix = "othermeta." + normalizedEventName + ".";
+                var flattened = [];
+                flattenMeta(meta, "", 0, flattened);
+
+                if (!flattened.length) {
+                    setEntry(basePrefix + "value", toDisplayLabel(normalizedEventName), meta, normalizedEventName, "othermeta", 400);
+                    return;
+                }
+
+                var keep = Object.create(null);
+                var limit = 10;
+                for (var i = 0; i < flattened.length && i < limit; i++) {
+                    var pair = flattened[i];
+                    var key = pair[0] || "value";
+                    var id = basePrefix + key;
+                    keep[id] = true;
+                    setEntry(id, toDisplayLabel(key), pair[1], key, "othermeta", 410 + i);
+                }
+
+                Array.from(state.keys()).forEach(function (entryId) {
+                    if (entryId.indexOf(basePrefix) === 0 && !keep[entryId]) {
+                        state.delete(entryId);
+                    }
+                });
+            }
+
+            function render() {
+                var entries = Array.from(state.values()).sort(function (a, b) {
+                    if (a.order !== b.order) return a.order - b.order;
+                    return a.sequence - b.sequence;
+                });
+
+                barNode.textContent = "";
+                if (!entries.length) {
+                    var emptyNode = document.createElement("div");
+                    emptyNode.className = "empty";
+                    emptyNode.textContent = "Waiting for meta data events…";
+                    barNode.appendChild(emptyNode);
+                    return;
+                }
+
+                for (var i = 0; i < entries.length; i++) {
+                    var entry = entries[i];
+                    var chip = document.createElement("div");
+                    chip.className = "stat category-" + entry.category;
+
+                    if (showIcon) {
+                        var iconNode = document.createElement("span");
+                        iconNode.className = "icon";
+                        iconNode.textContent = entry.icon;
+                        chip.appendChild(iconNode);
+                    }
+
+                    if (showLabel) {
+                        var labelNode = document.createElement("span");
+                        labelNode.className = "label";
+                        labelNode.textContent = entry.label;
+                        chip.appendChild(labelNode);
+                    }
+
+                    if (showValue) {
+                        var valueNode = document.createElement("span");
+                        valueNode.className = "value";
+                        valueNode.textContent = entry.value;
+                        chip.appendChild(valueNode);
+                    }
+
+                    barNode.appendChild(chip);
+                }
+            }
+
+            function processPayload(data) {
+                if (!data || typeof data !== "object") return;
+                if (data.content && typeof data.content === "object") {
+                    data = data.content;
+                }
+
+                var normalizedEventName = normalizeEventName(data.event || data.type || "");
+                if (!normalizedEventName || typeof data.meta === "undefined" || data.meta === null) return;
+                if (!eventIsEnabled(normalizedEventName)) return;
+
+                var meta = data.meta;
+                var category = getEventCategory(normalizedEventName);
+
+                if (normalizedEventName === "auction_update" && isPlainObject(meta)) {
+                    updateAuctionEntries(meta);
+                } else if (normalizedEventName === "commerce_update" && isPlainObject(meta)) {
+                    updateCommerceEntries(meta);
+                } else if (normalizedEventName === "viewer_update") {
+                    var platformName = (data.type || data.platform || "").toString().toLowerCase();
+                    var singleCount = parseNumber(meta);
+                    if (platformName && singleCount !== null) {
+                        viewerCounts[platformName] = singleCount;
+                        syncViewerEntries(false);
+                    }
+                } else if (normalizedEventName === "viewer_updates" && isPlainObject(meta)) {
+                    viewerCounts = Object.create(null);
+                    Object.keys(meta).forEach(function (platform) {
+                        var numeric = parseNumber(meta[platform]);
+                        if (numeric !== null) {
+                            viewerCounts[platform] = numeric;
+                        }
+                    });
+                    syncViewerEntries(true);
+                } else if (category === "othermeta") {
+                    updateGenericMetaEntries(normalizedEventName, meta);
+                }
+
+                render();
+            }
+
+            function processIncomingData(raw) {
+                if (!raw || typeof raw !== "object") return;
+                if (raw.dataReceived && raw.dataReceived.overlayNinja) {
+                    processPayload(raw.dataReceived.overlayNinja);
+                    return;
+                }
+                if (raw.overlayNinja) {
+                    processPayload(raw.overlayNinja);
+                    return;
+                }
+                processPayload(raw);
+            }
+
+            function connectIframe() {
+                var sessionId = urlParams.get("session");
+                if (!sessionId || hasServerMode) return;
+
+                var password = encodeURIComponent(urlParams.get("password") || "false");
+                var lanonly = urlParams.has("lanonly") ? "&lanonly" : "";
+                iframe = document.createElement("iframe");
+                iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=" + password + lanonly + "&solo&view=" + encodeURIComponent(sessionId) + "&novideo&noaudio&label=meta&cleanoutput&room=" + encodeURIComponent(sessionId);
+                iframe.style.width = "0px";
+                iframe.style.height = "0px";
+                iframe.style.position = "fixed";
+                iframe.style.left = "-100px";
+                iframe.style.top = "-100px";
+                iframe.setAttribute("aria-hidden", "true");
+                document.body.appendChild(iframe);
+            }
+
+            function connectSocket(serverURL, roomId, outChannel, inChannel) {
+                if (!serverURL || !roomId) return;
+
+                var connection = {
+                    socket: null,
+                    attempts: 1,
+                    timer: null,
+                    closed: false
+                };
+                sockets.push(connection);
+
+                function scheduleReconnect() {
+                    if (connection.closed) return;
+                    var delay = Math.min(12000, 200 * connection.attempts);
+                    if (connection.timer) {
+                        clearTimeout(connection.timer);
+                    }
+                    connection.timer = setTimeout(function () {
+                        connection.attempts += 1;
+                        connectNow();
+                    }, delay);
+                }
+
+                function connectNow() {
+                    if (connection.closed) return;
+                    try {
+                        connection.socket = new WebSocket(serverURL);
+                    } catch (e) {
+                        scheduleReconnect();
+                        return;
+                    }
+
+                    connection.socket.onopen = function () {
+                        connection.attempts = 1;
+                        try {
+                            connection.socket.send(JSON.stringify({
+                                join: roomId,
+                                out: outChannel,
+                                in: inChannel
+                            }));
+                        } catch (e) {}
+                    };
+
+                    connection.socket.onmessage = function (event) {
+                        if (!event || !event.data) return;
+                        try {
+                            var parsed = JSON.parse(event.data);
+                            processIncomingData(parsed);
+                            if (parsed && parsed.get) {
+                                connection.socket.send(JSON.stringify({
+                                    callback: {
+                                        get: parsed.get,
+                                        result: true
+                                    }
+                                }));
+                            }
+                        } catch (e) {}
+                    };
+
+                    connection.socket.onerror = function () {
+                        try {
+                            connection.socket.close();
+                        } catch (e) {}
+                    };
+
+                    connection.socket.onclose = function () {
+                        scheduleReconnect();
+                    };
+                }
+
+                connectNow();
+            }
+
+            function connectServerModes() {
+                var roomId = (urlParams.get("session") || "").split(",")[0];
+                if (!roomId) return;
+
+                if (urlParams.has("server")) {
+                    var apiServerURL = urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+                    connectSocket(apiServerURL, roomId, 2, 1);
+                }
+
+                if (urlParams.has("server2") || urlParams.has("server3")) {
+                    var extensionServerURL = urlParams.has("server2")
+                        ? (urlParams.get("server2") || "wss://io.socialstream.ninja/extension")
+                        : (urlParams.get("server3") || "wss://io.socialstream.ninja/extension");
+                    connectSocket(extensionServerURL, roomId, 3, 4);
+                }
+            }
+
+            window.addEventListener("message", function (event) {
+                var payload = null;
+
+                if (event && event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+                    if (iframe && event.source !== iframe.contentWindow) {
+                        return;
+                    }
+                    payload = event.data.dataReceived.overlayNinja;
+                } else if (event && event.data && event.data.overlayNinja) {
+                    payload = event.data.overlayNinja;
+                }
+
+                if (payload) {
+                    processIncomingData(payload);
+                }
+            });
+
+            window.addEventListener("beforeunload", function () {
+                sockets.forEach(function (connection) {
+                    if (connection.timer) {
+                        clearTimeout(connection.timer);
+                    }
+                    connection.closed = true;
+                    if (connection.socket) {
+                        try {
+                            connection.socket.onclose = null;
+                            connection.socket.close();
+                        } catch (e) {}
+                    }
+                });
+            });
+
+            render();
+            connectServerModes();
+            connectIframe();
+        })();
+    </script>
+</body>
+</html>

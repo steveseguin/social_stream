@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS WebSocket Tester</title>
+    <script src="thirdparty/obs-websocket.min.js"></script>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #0b1220;
+            --panel: #111b31;
+            --panel-2: #16233f;
+            --text: #eef4ff;
+            --muted: #9db0d0;
+            --accent: #59d0ff;
+            --accent-2: #8bffb0;
+            --warn: #ffcb6b;
+            --danger: #ff8f8f;
+            --border: rgba(157, 176, 208, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(89, 208, 255, 0.16), transparent 28%),
+                radial-gradient(circle at top right, rgba(139, 255, 176, 0.12), transparent 26%),
+                linear-gradient(180deg, #09101d, #101a2c 46%, #0b1220);
+            color: var(--text);
+            padding: 28px;
+        }
+
+        .shell {
+            max-width: 1180px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+
+        .hero,
+        .panel {
+            background: rgba(17, 27, 49, 0.92);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+        }
+
+        .hero {
+            padding: 28px 30px;
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 4vw, 3rem);
+        }
+
+        .hero p,
+        .panel p,
+        .panel li {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .panel {
+            padding: 22px;
+        }
+
+        h2 {
+            margin: 0 0 14px;
+            font-size: 1.25rem;
+        }
+
+        .callout {
+            padding: 16px 18px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .callout strong {
+            color: var(--text);
+        }
+
+        .callout.warn {
+            border-color: rgba(255, 203, 107, 0.35);
+            background: rgba(255, 203, 107, 0.08);
+        }
+
+        .callout.danger {
+            border-color: rgba(255, 143, 143, 0.35);
+            background: rgba(255, 143, 143, 0.08);
+        }
+
+        label {
+            display: block;
+            margin: 0 0 8px;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        input,
+        textarea,
+        select,
+        button {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(8, 15, 30, 0.9);
+            color: var(--text);
+            padding: 12px 14px;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        button {
+            cursor: pointer;
+            background: linear-gradient(135deg, #163250, #1a4870);
+            transition: transform 0.12s ease, border-color 0.12s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(89, 208, 255, 0.45);
+        }
+
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .button-row button {
+            width: auto;
+            min-width: 160px;
+        }
+
+        .button-row.compact button {
+            min-width: 0;
+            flex: 1 1 180px;
+        }
+
+        .status {
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-weight: 600;
+        }
+
+        .status.idle {
+            background: rgba(157, 176, 208, 0.08);
+            color: var(--muted);
+        }
+
+        .status.ok {
+            background: rgba(139, 255, 176, 0.12);
+            color: var(--accent-2);
+            border-color: rgba(139, 255, 176, 0.3);
+        }
+
+        .status.warn {
+            background: rgba(255, 203, 107, 0.12);
+            color: var(--warn);
+            border-color: rgba(255, 203, 107, 0.3);
+        }
+
+        .status.error {
+            background: rgba(255, 143, 143, 0.12);
+            color: var(--danger);
+            border-color: rgba(255, 143, 143, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th,
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(157, 176, 208, 0.14);
+            vertical-align: top;
+            text-align: left;
+        }
+
+        th {
+            color: var(--text);
+        }
+
+        td {
+            color: var(--muted);
+        }
+
+        code,
+        pre {
+            font-family: Consolas, "Courier New", monospace;
+        }
+
+        code {
+            color: var(--accent);
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .log {
+            background: rgba(8, 15, 30, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            min-height: 240px;
+            max-height: 420px;
+            overflow: auto;
+        }
+
+        .small {
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 18px;
+            }
+
+            .hero,
+            .panel {
+                padding: 18px;
+            }
+
+            .button-row button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <section class="hero">
+            <h1>OBS WebSocket Tester</h1>
+            <p>Use this page to verify the OBS WebSocket requests that Social Stream Ninja Event Flow sends from <code>actions.html</code>. It is intended for diagnosing OBS scene, source, filter, mute, recording, streaming, and replay buffer actions before wiring them into a live flow.</p>
+        </section>
+
+        <div class="grid">
+            <section class="panel">
+                <h2>Compatibility</h2>
+                <div class="callout">
+                    <p><strong>Supported:</strong> OBS 28+ with the integrated OBS WebSocket v5 server. The default local server URL is <code>ws://127.0.0.1:4455</code>.</p>
+                    <p><strong>Password:</strong> optional. Leave it blank if your OBS WebSocket server does not require authentication.</p>
+                </div>
+                <div class="callout warn" style="margin-top: 14px;">
+                    <p><strong>Older installs:</strong> OBS 27 and the old obs-websocket 4.x plugin usually use port <code>4444</code>. Social Stream Ninja Flow Actions use the v5 request model, so <code>4444</code> setups are not compatible without upgrading OBS / obs-websocket.</p>
+                </div>
+                <div class="callout danger" style="margin-top: 14px;">
+                    <p><strong>Browser note:</strong> some external browsers block <code>ws://</code> from an <code>https://</code> page. If that happens, use this from OBS Browser Source or point it at a secure websocket endpoint.</p>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>Connection</h2>
+                <div class="form-grid">
+                    <div>
+                        <label for="obsUrl">OBS WebSocket URL</label>
+                        <input id="obsUrl" type="text" placeholder="ws://127.0.0.1:4455">
+                    </div>
+                    <div>
+                        <label for="obsPassword">Password</label>
+                        <input id="obsPassword" type="password" placeholder="Leave blank if OBS has no password">
+                    </div>
+                </div>
+                <div class="button-row" style="margin-top: 14px;">
+                    <button id="connectButton" type="button">Connect</button>
+                    <button id="disconnectButton" type="button">Disconnect</button>
+                    <button id="diagnosticsButton" type="button">Run Diagnostics</button>
+                </div>
+                <div id="connectionStatus" class="status idle" style="margin-top: 14px;">Idle. No OBS WebSocket connection yet.</div>
+            </section>
+        </div>
+
+        <section class="panel">
+            <h2>Flow Action Mapping</h2>
+            <p class="small">These are the OBS WebSocket calls the Event Flow OBS actions use after this update.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Flow action</th>
+                        <th>OBS WebSocket request(s)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Change Scene</td>
+                        <td><code>SetCurrentProgramScene</code></td>
+                    </tr>
+                    <tr>
+                        <td>Toggle Source</td>
+                        <td><code>GetCurrentProgramScene</code>, <code>GetSceneItemId</code>, <code>GetSceneItemEnabled</code>, <code>SetSceneItemEnabled</code></td>
+                    </tr>
+                    <tr>
+                        <td>Toggle Filter</td>
+                        <td><code>GetSourceFilter</code>, <code>SetSourceFilterEnabled</code></td>
+                    </tr>
+                    <tr>
+                        <td>Mute/Unmute Audio</td>
+                        <td><code>GetInputMute</code>, <code>SetInputMute</code></td>
+                    </tr>
+                    <tr>
+                        <td>Start / Stop Recording</td>
+                        <td><code>StartRecord</code>, <code>StopRecord</code></td>
+                    </tr>
+                    <tr>
+                        <td>Start / Stop Streaming</td>
+                        <td><code>StartStream</code>, <code>StopStream</code></td>
+                    </tr>
+                    <tr>
+                        <td>Save Replay Buffer</td>
+                        <td><code>SaveReplayBuffer</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <div class="grid">
+            <section class="panel">
+                <h2>Quick Diagnostics</h2>
+                <div class="button-row compact">
+                    <button id="getVersionButton" type="button">GetVersion</button>
+                    <button id="currentSceneButton" type="button">GetCurrentProgramScene</button>
+                    <button id="sceneListButton" type="button">GetSceneList</button>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>Flow Action Checks</h2>
+                <div class="form-grid">
+                    <div>
+                        <label for="sceneName">Scene Name</label>
+                        <input id="sceneName" type="text" placeholder="Starting Soon">
+                    </div>
+                    <div>
+                        <label for="sourceName">Source Name</label>
+                        <input id="sourceName" type="text" placeholder="Webcam">
+                    </div>
+                    <div>
+                        <label for="filterName">Filter Name</label>
+                        <input id="filterName" type="text" placeholder="Blur">
+                    </div>
+                    <div>
+                        <label for="inputName">Audio Input Name</label>
+                        <input id="inputName" type="text" placeholder="Mic/Aux">
+                    </div>
+                </div>
+                <div class="button-row compact" style="margin-top: 14px;">
+                    <button id="changeSceneButton" type="button">Change Scene</button>
+                    <button id="toggleSourceButton" type="button">Toggle Source</button>
+                    <button id="toggleFilterButton" type="button">Toggle Filter</button>
+                    <button id="toggleMuteButton" type="button">Toggle Mute</button>
+                </div>
+                <div class="button-row compact" style="margin-top: 12px;">
+                    <button id="startRecordButton" type="button">Start Record</button>
+                    <button id="stopRecordButton" type="button">Stop Record</button>
+                    <button id="startStreamButton" type="button">Start Stream</button>
+                    <button id="stopStreamButton" type="button">Stop Stream</button>
+                    <button id="saveReplayButton" type="button">Save Replay Buffer</button>
+                </div>
+            </section>
+        </div>
+
+        <div class="grid">
+            <section class="panel">
+                <h2>Custom Request</h2>
+                <label for="requestType">Request Type</label>
+                <input id="requestType" type="text" value="GetVersion">
+                <label for="requestPayload" style="margin-top: 14px;">Request Payload (JSON)</label>
+                <textarea id="requestPayload">{}</textarea>
+                <div class="button-row" style="margin-top: 14px;">
+                    <button id="runRequestButton" type="button">Run Request</button>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>Log</h2>
+                <div class="log"><pre id="logOutput">Ready.</pre></div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const searchParams = new URLSearchParams(window.location.search);
+        const elements = {
+            obsUrl: document.getElementById('obsUrl'),
+            obsPassword: document.getElementById('obsPassword'),
+            connectionStatus: document.getElementById('connectionStatus'),
+            sceneName: document.getElementById('sceneName'),
+            sourceName: document.getElementById('sourceName'),
+            filterName: document.getElementById('filterName'),
+            inputName: document.getElementById('inputName'),
+            requestType: document.getElementById('requestType'),
+            requestPayload: document.getElementById('requestPayload'),
+            logOutput: document.getElementById('logOutput')
+        };
+
+        let obs = null;
+
+        function getCompatibilityHint(url) {
+            const hints = [];
+            if (String(url || '').includes(':4444')) {
+                hints.push('Port 4444 usually indicates obs-websocket 4.x. This tester expects the v5 API from OBS 28+.');
+            }
+            if (window.location.protocol === 'https:' && /^ws:\/\//i.test(url || '')) {
+                hints.push('Some browsers block ws:// from an https:// page.');
+            }
+            return hints.join(' ');
+        }
+
+        function setStatus(level, message) {
+            elements.connectionStatus.className = `status ${level}`;
+            elements.connectionStatus.textContent = message;
+        }
+
+        function log(message, data) {
+            const timestamp = new Date().toLocaleTimeString();
+            let line = `[${timestamp}] ${message}`;
+            if (typeof data !== 'undefined') {
+                try {
+                    line += `\n${JSON.stringify(data, null, 2)}`;
+                } catch (error) {
+                    line += `\n${String(data)}`;
+                }
+            }
+
+            elements.logOutput.textContent = `${line}\n\n${elements.logOutput.textContent}`;
+        }
+
+        function readPayload() {
+            const raw = elements.requestPayload.value.trim();
+            if (!raw) {
+                return {};
+            }
+            return JSON.parse(raw);
+        }
+
+        async function connectOBS() {
+            if (typeof OBSWebSocket === 'undefined') {
+                setStatus('error', 'OBS WebSocket library not loaded.');
+                log('OBS WebSocket library not loaded.');
+                return null;
+            }
+
+            const url = elements.obsUrl.value.trim() || 'ws://127.0.0.1:4455';
+            const password = elements.obsPassword.value;
+
+            if (obs) {
+                try {
+                    await obs.disconnect();
+                } catch (error) {
+                    log('Previous OBS connection cleanup failed.', { error: error.message || String(error) });
+                }
+                obs = null;
+            }
+
+            setStatus('warn', `Connecting to ${url}...`);
+            log(`Connecting to ${url}${password ? ' with password.' : ' without password.'}`);
+
+            const client = new OBSWebSocket();
+            client.on('ConnectionClosed', (error) => {
+                const message = (error && error.message) || 'Connection closed';
+                setStatus('warn', `Connection closed. ${message}`);
+                log('OBS connection closed.', { error: message });
+                if (obs === client) {
+                    obs = null;
+                }
+            });
+            client.on('ConnectionError', (error) => {
+                const message = (error && error.message) || String(error);
+                setStatus('error', `Connection error. ${message}`);
+                log('OBS connection error.', { error: message });
+            });
+
+            try {
+                const connectInfo = await client.connect(url, password || undefined);
+                const version = await client.call('GetVersion');
+                obs = client;
+                setStatus(
+                    'ok',
+                    `Connected to ${url}. OBS ${version.obsVersion || 'unknown'}, WebSocket ${version.obsWebSocketVersion || connectInfo.obsWebSocketVersion || 'unknown'}, RPC ${connectInfo.negotiatedRpcVersion || connectInfo.rpcVersion || 'unknown'}.`
+                );
+                log('Connected to OBS.', {
+                    url,
+                    obsVersion: version.obsVersion || null,
+                    obsWebSocketVersion: version.obsWebSocketVersion || connectInfo.obsWebSocketVersion || null,
+                    rpcVersion: connectInfo.negotiatedRpcVersion || connectInfo.rpcVersion || null
+                });
+                if (getCompatibilityHint(url)) {
+                    log('Compatibility note.', { hint: getCompatibilityHint(url) });
+                }
+                return client;
+            } catch (error) {
+                obs = null;
+                const message = error && error.message ? error.message : String(error);
+                setStatus('error', `Failed to connect. ${message}`);
+                log('OBS connection failed.', {
+                    url,
+                    error: message,
+                    hint: getCompatibilityHint(url)
+                });
+                return null;
+            }
+        }
+
+        async function ensureOBS() {
+            if (obs) {
+                return obs;
+            }
+            return connectOBS();
+        }
+
+        async function disconnectOBS() {
+            if (!obs) {
+                setStatus('idle', 'No OBS WebSocket connection is active.');
+                log('Disconnect requested with no active OBS connection.');
+                return;
+            }
+
+            try {
+                await obs.disconnect();
+                setStatus('idle', 'Disconnected from OBS WebSocket.');
+                log('Disconnected from OBS.');
+            } catch (error) {
+                setStatus('error', `Disconnect failed. ${error.message || String(error)}`);
+                log('OBS disconnect failed.', { error: error.message || String(error) });
+            } finally {
+                obs = null;
+            }
+        }
+
+        async function callOBS(requestType, requestData = {}) {
+            const client = await ensureOBS();
+            if (!client) {
+                throw new Error('OBS WebSocket is not connected.');
+            }
+
+            const response = await client.call(requestType, requestData);
+            log(`OBS request succeeded: ${requestType}`, {
+                requestData,
+                response
+            });
+            return response;
+        }
+
+        async function resolveInputByName(inputName) {
+            if (!inputName) {
+                return null;
+            }
+
+            const inputList = await callOBS('GetInputList');
+            return (inputList.inputs || []).find((input) => input.inputName === inputName) || null;
+        }
+
+        async function runDiagnostics() {
+            try {
+                const version = await callOBS('GetVersion');
+                const currentScene = await callOBS('GetCurrentProgramScene');
+                const sceneList = await callOBS('GetSceneList');
+                log('Diagnostics complete.', {
+                    obsVersion: version.obsVersion || null,
+                    currentProgramSceneName: currentScene.currentProgramSceneName || null,
+                    sceneCount: Array.isArray(sceneList.scenes) ? sceneList.scenes.length : null
+                });
+            } catch (error) {
+                log('Diagnostics failed.', { error: error.message || String(error) });
+            }
+        }
+
+        async function changeScene() {
+            const sceneName = elements.sceneName.value.trim();
+            if (!sceneName) {
+                log('Scene name is required for Change Scene.');
+                return;
+            }
+            await callOBS('SetCurrentProgramScene', { sceneName });
+        }
+
+        async function toggleSource() {
+            const sourceName = elements.sourceName.value.trim();
+            if (!sourceName) {
+                log('Source name is required for Toggle Source.');
+                return;
+            }
+
+            const currentScene = await callOBS('GetCurrentProgramScene');
+            const sceneName = currentScene.currentProgramSceneName;
+            const item = await callOBS('GetSceneItemId', { sceneName, sourceName });
+            const currentState = await callOBS('GetSceneItemEnabled', {
+                sceneName,
+                sceneItemId: item.sceneItemId
+            });
+
+            await callOBS('SetSceneItemEnabled', {
+                sceneName,
+                sceneItemId: item.sceneItemId,
+                sceneItemEnabled: !currentState.sceneItemEnabled
+            });
+        }
+
+        async function toggleFilter() {
+            const sourceName = elements.sourceName.value.trim();
+            const filterName = elements.filterName.value.trim();
+            if (!sourceName || !filterName) {
+                log('Source name and filter name are required for Toggle Filter.');
+                return;
+            }
+
+            const inputRef = await resolveInputByName(sourceName);
+            const filterTarget = inputRef && inputRef.inputUuid
+                ? { sourceUuid: inputRef.inputUuid }
+                : { sourceName };
+
+            const currentState = await callOBS('GetSourceFilter', Object.assign({}, filterTarget, { filterName }));
+            await callOBS('SetSourceFilterEnabled', Object.assign({}, filterTarget, {
+                filterName,
+                filterEnabled: !currentState.filterEnabled
+            }));
+        }
+
+        async function toggleMute() {
+            const inputName = elements.inputName.value.trim();
+            if (!inputName) {
+                log('Audio input name is required for Toggle Mute.');
+                return;
+            }
+
+            const inputRef = await resolveInputByName(inputName);
+            const inputTarget = inputRef && inputRef.inputUuid
+                ? { inputUuid: inputRef.inputUuid }
+                : { inputName };
+
+            const currentState = await callOBS('GetInputMute', inputTarget);
+            await callOBS('SetInputMute', Object.assign({}, inputTarget, {
+                inputMuted: !currentState.inputMuted
+            }));
+        }
+
+        function bindButton(id, handler) {
+            document.getElementById(id).addEventListener('click', async () => {
+                try {
+                    await handler();
+                } catch (error) {
+                    log(`Action failed: ${id}`, { error: error.message || String(error) });
+                }
+            });
+        }
+
+        bindButton('connectButton', connectOBS);
+        bindButton('disconnectButton', disconnectOBS);
+        bindButton('diagnosticsButton', runDiagnostics);
+        bindButton('getVersionButton', () => callOBS('GetVersion'));
+        bindButton('currentSceneButton', () => callOBS('GetCurrentProgramScene'));
+        bindButton('sceneListButton', () => callOBS('GetSceneList'));
+        bindButton('changeSceneButton', changeScene);
+        bindButton('toggleSourceButton', toggleSource);
+        bindButton('toggleFilterButton', toggleFilter);
+        bindButton('toggleMuteButton', toggleMute);
+        bindButton('startRecordButton', () => callOBS('StartRecord'));
+        bindButton('stopRecordButton', () => callOBS('StopRecord'));
+        bindButton('startStreamButton', () => callOBS('StartStream'));
+        bindButton('stopStreamButton', () => callOBS('StopStream'));
+        bindButton('saveReplayButton', () => callOBS('SaveReplayBuffer'));
+        bindButton('runRequestButton', async () => {
+            const requestType = elements.requestType.value.trim();
+            if (!requestType) {
+                log('Request type is required.');
+                return;
+            }
+
+            const requestData = readPayload();
+            await callOBS(requestType, requestData);
+        });
+
+        elements.obsUrl.value = searchParams.get('obsws') || searchParams.get('obswebsocket') || 'ws://127.0.0.1:4455';
+        elements.obsPassword.value = searchParams.get('obspw') || searchParams.get('obspassword') || '';
+
+        if (searchParams.get('autoconnect') === '1') {
+            connectOBS();
+        }
+    </script>
+</body>
+</html>
