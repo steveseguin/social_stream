@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Stream - VPZone API Source</title>
+    <link rel="icon" href="https://vpzone.tv/favicon.ico" type="image/x-icon">
+    <style>
+        :root {
+            --bg: #0d1118;
+            --panel: #171c26;
+            --panel-alt: #1f2632;
+            --text: #eef3ff;
+            --muted: #9eabc7;
+            --line: #2d3647;
+            --accent: #12c7c2;
+            --accent-alt: #7c5cff;
+            --good: #6ee7b7;
+            --warn: #f9c86c;
+            --bad: #ff8e9c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(124, 92, 255, 0.18), transparent 36%),
+                radial-gradient(circle at top left, rgba(18, 199, 194, 0.14), transparent 32%),
+                linear-gradient(180deg, #111724 0%, var(--bg) 100%);
+        }
+
+        .wrap {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .card {
+            background: linear-gradient(160deg, var(--panel) 0%, var(--panel-alt) 100%);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+        }
+
+        h1, h2 {
+            margin: 0 0 8px 0;
+        }
+
+        h1 {
+            font-size: 26px;
+            letter-spacing: 0.02em;
+        }
+
+        h2 {
+            font-size: 17px;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        .grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: rgba(10, 14, 22, 0.7);
+            color: var(--text);
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        button {
+            border: 1px solid transparent;
+            border-radius: 9px;
+            padding: 9px 13px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            background: var(--accent);
+            color: #081115;
+        }
+
+        button.alt {
+            background: var(--accent-alt);
+            color: #fff;
+        }
+
+        button.ghost {
+            background: transparent;
+            color: var(--text);
+            border-color: var(--line);
+        }
+
+        button.warn {
+            background: var(--warn);
+            color: #1e1603;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .checkbox input {
+            accent-color: var(--accent);
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            padding: 6px 11px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(8, 12, 18, 0.55);
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chip.good {
+            border-color: rgba(110, 231, 183, 0.35);
+            color: var(--good);
+        }
+
+        .chip.warn {
+            border-color: rgba(249, 200, 108, 0.35);
+            color: var(--warn);
+        }
+
+        .chip.bad {
+            border-color: rgba(255, 142, 156, 0.35);
+            color: var(--bad);
+        }
+
+        .split {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 1.2fr 0.85fr;
+        }
+
+        .feed,
+        .log {
+            min-height: 320px;
+            max-height: 560px;
+            overflow: auto;
+            padding: 10px;
+            border-radius: 11px;
+            border: 1px solid var(--line);
+            background: rgba(8, 12, 18, 0.82);
+        }
+
+        .feed-entry,
+        .log-entry {
+            border-bottom: 1px dashed rgba(158, 171, 199, 0.16);
+            padding: 10px 0;
+        }
+
+        .feed-entry:first-child,
+        .log-entry:first-child {
+            padding-top: 0;
+        }
+
+        .feed-entry:last-child,
+        .log-entry:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .feed-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            flex: 0 0 28px;
+            background: #202733;
+            object-fit: cover;
+        }
+
+        .avatar.placeholder {
+            display: inline-block;
+        }
+
+        .feed-meta,
+        .log-meta {
+            font-size: 11px;
+            color: #8ab8ff;
+            margin-bottom: 3px;
+        }
+
+        .feed-name {
+            font-weight: 700;
+            color: #d4b5ff;
+            margin-right: 6px;
+        }
+
+        .badge-strip {
+            display: inline-flex;
+            gap: 4px;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        .badge-strip svg {
+            height: 15px;
+            width: auto;
+            vertical-align: middle;
+        }
+
+        .feed-message {
+            color: var(--text);
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .feed-message img.vpzone-emote {
+            width: 22px;
+            height: 22px;
+            vertical-align: middle;
+            margin: 0 1px;
+        }
+
+        .event-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(124, 92, 255, 0.14);
+            border: 1px solid rgba(124, 92, 255, 0.35);
+            color: #d8ccff;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .hint {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .link {
+            color: #8fe9e1;
+            text-decoration: none;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 920px) {
+            .split {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <section class="card">
+            <h1>VPZone API Source</h1>
+            <p>Read-only polling source for VPZone. It uses the public stream and persisted event endpoints, so it can replay recent chat history as well as new chat and event rows.</p>
+            <p class="hint">URL params supported: <code>?channel=AngelicAngel</code> and <code>?poll=3000</code>.</p>
+        </section>
+
+        <section class="card">
+            <h2>Connection</h2>
+            <div class="grid">
+                <div>
+                    <label for="channel-input">Channel</label>
+                    <input id="channel-input" type="text" autocomplete="off" placeholder="AngelicAngel or full VPZone stream URL" />
+                </div>
+                <div>
+                    <label for="poll-interval">Events Poll (ms)</label>
+                    <input id="poll-interval" type="number" min="1000" step="500" value="3000" />
+                </div>
+            </div>
+            <div class="row" style="margin-top:12px;">
+                <button id="save-config" class="alt">Save Config</button>
+                <button id="connect-btn">Connect</button>
+                <button id="disconnect-btn" class="ghost">Disconnect</button>
+                <button id="refresh-btn" class="warn">Refresh Now</button>
+                <label class="checkbox"><input id="replay-history" type="checkbox" checked> Replay recent history on first connect</label>
+            </div>
+            <div class="chips" style="margin-top:12px;">
+                <span id="socket-chip" class="chip bad">Poller: disconnected</span>
+                <span id="stream-chip" class="chip">Stream: unknown</span>
+                <span id="viewer-chip" class="chip">Viewers: -</span>
+                <span id="title-chip" class="chip">Title: -</span>
+                <span id="category-chip" class="chip">Category: -</span>
+            </div>
+            <p id="status-text" class="hint">Enter a VPZone channel and connect.</p>
+            <p class="hint">Open the real page in a second tab if you want to compare output: <a id="channel-link" class="link" href="https://vpzone.tv" target="_blank" rel="noopener">vpzone.tv</a></p>
+        </section>
+
+        <section class="split">
+            <section class="card">
+                <h2>Feed</h2>
+                <div id="feed" class="feed"></div>
+            </section>
+
+            <section class="card">
+                <h2>Diagnostics</h2>
+                <div id="log" class="log"></div>
+            </section>
+        </section>
+    </div>
+</body>
+</html>

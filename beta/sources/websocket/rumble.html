@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Stream - Rumble API Source</title>
+    <link rel="icon" href="https://rumble.com/favicon.ico" type="image/x-icon">
+    <style>
+        :root {
+            --bg: #081019;
+            --panel: #101c28;
+            --panel-alt: #142333;
+            --line: #294055;
+            --text: #f4f8fb;
+            --muted: #9fb2c3;
+            --accent: #5cd99a;
+            --accent-alt: #f6b64b;
+            --good: #7ff0ba;
+            --warn: #ffd37d;
+            --bad: #ff9b99;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(92, 217, 154, 0.18), transparent 32%),
+                radial-gradient(circle at top right, rgba(246, 182, 75, 0.18), transparent 30%),
+                linear-gradient(180deg, #09111a 0%, var(--bg) 100%);
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .wrap {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .card {
+            background: linear-gradient(160deg, var(--panel) 0%, var(--panel-alt) 100%);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
+        }
+
+        h1,
+        h2 {
+            margin: 0 0 8px 0;
+        }
+
+        h1 {
+            font-size: 28px;
+        }
+
+        h2 {
+            font-size: 17px;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        .hero {
+            display: grid;
+            gap: 14px;
+        }
+
+        .hero-top {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .secret-note {
+            border: 1px solid rgba(246, 182, 75, 0.35);
+            background: rgba(246, 182, 75, 0.08);
+            color: #ffdba0;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: rgba(8, 13, 20, 0.72);
+            color: var(--text);
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        .hint {
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .checkbox input {
+            accent-color: var(--accent);
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        button {
+            border: 1px solid transparent;
+            border-radius: 10px;
+            padding: 9px 13px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            background: var(--accent);
+            color: #081115;
+        }
+
+        button.alt {
+            background: var(--accent-alt);
+            color: #201406;
+        }
+
+        button.ghost {
+            background: transparent;
+            color: var(--text);
+            border-color: var(--line);
+        }
+
+        button.warn {
+            background: #e77752;
+            color: #fff;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            padding: 7px 11px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(8, 12, 18, 0.55);
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chip.good {
+            border-color: rgba(127, 240, 186, 0.35);
+            color: var(--good);
+        }
+
+        .chip.warn {
+            border-color: rgba(255, 211, 125, 0.35);
+            color: var(--warn);
+        }
+
+        .chip.bad {
+            border-color: rgba(255, 155, 153, 0.35);
+            color: var(--bad);
+        }
+
+        .split {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+        }
+
+        .feed,
+        .log {
+            min-height: 340px;
+            max-height: 620px;
+            overflow: auto;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: rgba(8, 12, 18, 0.82);
+        }
+
+        .feed-entry,
+        .log-entry {
+            border-bottom: 1px dashed rgba(159, 178, 195, 0.18);
+            padding: 10px 0;
+        }
+
+        .feed-entry:first-child,
+        .log-entry:first-child {
+            padding-top: 0;
+        }
+
+        .feed-entry:last-child,
+        .log-entry:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .feed-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            flex: 0 0 30px;
+            background: #223242;
+            display: inline-block;
+            object-fit: cover;
+        }
+
+        .feed-meta,
+        .log-meta {
+            font-size: 11px;
+            color: #8ecde5;
+            margin-bottom: 4px;
+        }
+
+        .feed-name {
+            font-weight: 700;
+            color: #d8f6e6;
+            margin-right: 6px;
+        }
+
+        .badge-strip {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            vertical-align: middle;
+        }
+
+        .badge-strip svg {
+            height: 15px;
+            width: auto;
+            vertical-align: middle;
+        }
+
+        .feed-message {
+            color: var(--text);
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .event-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: rgba(92, 217, 154, 0.12);
+            border: 1px solid rgba(92, 217, 154, 0.22);
+            color: #b7f4d2;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .event-pill.warn {
+            background: rgba(246, 182, 75, 0.12);
+            border-color: rgba(246, 182, 75, 0.28);
+            color: #ffd594;
+        }
+
+        .event-pill.bad {
+            background: rgba(231, 119, 82, 0.12);
+            border-color: rgba(231, 119, 82, 0.28);
+            color: #ffb4a7;
+        }
+
+        .empty {
+            color: var(--muted);
+            font-size: 13px;
+            padding: 10px 4px;
+        }
+
+        .footer-note {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .steps {
+            margin: 0;
+            padding: 4px 0 0 20px;
+            list-style: decimal;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .advanced-toggle {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 14px;
+            background: rgba(8, 12, 18, 0.45);
+        }
+
+        .advanced-toggle summary {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .popup-resolver {
+            margin-top: 14px;
+            padding: 14px 16px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .popup-resolver .row {
+            margin-top: 10px;
+        }
+
+        .popup-resolver input[readonly] {
+            background: rgba(0, 0, 0, 0.18);
+            color: var(--text);
+        }
+
+        @media (max-width: 960px) {
+            .split {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <section class="card hero">
+            <div class="hero-top">
+                <div>
+                    <h1>Rumble API Alerts for Social Stream</h1>
+                    <p>Paste your creator Live Stream API URL to relay Rumble chat, rants, followers, subscribers, gifted subs, and viewer counts without scraping the live page DOM.</p>
+                </div>
+                <div class="hero-actions">
+                    <button id="open-dashboard" class="alt" type="button">Open API Dashboard</button>
+                    <button id="open-docs" class="ghost" type="button">Open Official Docs</button>
+                </div>
+            </div>
+            <ol class="steps">
+                <li>Open the <strong>Rumble API Dashboard</strong> (or click "Open API Dashboard" above)</li>
+                <li>Generate your Live Stream API URL and <strong>copy</strong> it</li>
+                <li>Paste it into the field below</li>
+                <li>Click <strong>Connect</strong></li>
+            </ol>
+            <div class="secret-note">
+                This API URL is secret. It includes your live stream key and does not require separate authentication, so only share it with trusted tools. You can reset it from the Rumble dashboard if it is exposed.
+            </div>
+            <div class="grid">
+                <div style="grid-column: 1 / -1;">
+                    <label for="api-url">Live Stream API URL</label>
+                    <input id="api-url" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Paste the Rumble Live Stream API URL from rumble.com/account/livestream-api" />
+                    <div class="hint">This source captures chat, rants, followers, subscribers, and viewer counts. Sending messages is not supported via the API.</div>
+                </div>
+            </div>
+            <div class="row">
+                <button id="connect" class="alt" type="button">Connect</button>
+                <button id="disconnect" class="warn" type="button">Disconnect</button>
+                <button id="refresh" class="ghost" type="button">Refresh Now</button>
+            </div>
+            <div class="chips">
+                <span id="socket-chip" class="chip bad">Poller: disconnected</span>
+                <span id="source-chip" class="chip">Source: -</span>
+                <span id="stream-chip" class="chip">Stream: -</span>
+                <span id="viewer-chip" class="chip">Viewers: -</span>
+                <span id="follower-chip" class="chip">Followers: -</span>
+                <span id="subscriber-chip" class="chip">Subscribers: -</span>
+            </div>
+            <details id="advanced-section" class="advanced-toggle">
+                <summary>Advanced options</summary>
+                <div class="grid" style="margin-top:10px;">
+                    <div>
+                        <label for="channel-label">Display Label</label>
+                        <input id="channel-label" type="text" autocomplete="off" placeholder="Optional channel or profile label" />
+                        <div class="hint">Used only for page labels and the document title. You can also pass <code>?channel=...</code>.</div>
+                    </div>
+                    <div>
+                        <label for="stream-id">Stream ID</label>
+                        <input id="stream-id" type="text" autocomplete="off" placeholder="Optional livestream id from the API response" />
+                        <div class="hint">Leave empty to follow the first live stream in the response.</div>
+                    </div>
+                    <div>
+                        <label for="poll-ms">Poll Interval (ms)</label>
+                        <input id="poll-ms" type="number" min="1500" max="15000" step="250" />
+                        <div class="hint">How often to poll the API. Default is 3000ms.</div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top:10px;">
+                    <label class="checkbox">
+                        <input id="replay-history" type="checkbox" />
+                        <span>Replay the current recent history on first connect</span>
+                    </label>
+                </div>
+                <div class="popup-resolver">
+                    <label for="popup-url">Resolved Popup Chat URL</label>
+                    <input id="popup-url" type="text" readonly value="" placeholder="Connect to resolve https://rumble.com/chat/popup/<stream-id>" />
+                    <div class="hint">Uses the stream ID from the API response to build the Rumble popup chat URL.</div>
+                    <div class="row">
+                        <button id="open-popup" class="alt" type="button">Open Popup Chat</button>
+                        <button id="copy-popup" class="ghost" type="button">Copy Popup URL</button>
+                    </div>
+                </div>
+                <button id="save-config" class="ghost" type="button" style="margin-top:10px;">Save Settings</button>
+            </details>
+        </section>
+
+        <section class="split">
+            <section class="card">
+                <h2>Live Feed</h2>
+                <p>Recent chat and Rumble events appear here as they are normalized and relayed.</p>
+                <div id="feed" class="feed">
+                    <div id="feed-empty" class="empty">Nothing forwarded yet.</div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Status Log</h2>
+                <p>Connection changes, validation warnings, and poll diagnostics appear here.</p>
+                <div id="log" class="log">
+                    <div id="log-empty" class="empty">No log messages yet.</div>
+                </div>
+            </section>
+        </section>
+
+        <section class="card footer-note">
+            Supported URL parameters: <code>?apiUrl=...</code>, <code>?channel=...</code>, <code>?streamId=...</code>, <code>?poll=3000</code>, and <code>?replay=1</code>.
+        </section>
+    </div>
+    <script src="rumble.js"></script>
+</body>
+</html>

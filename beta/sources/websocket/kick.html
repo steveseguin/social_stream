@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Stream - Kick</title>
+    <link rel="icon" href="https://kick.com/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="kick.css">
+</head>
+<body>
+    <div class="container">
+        <header class="channel-header">
+            <div class="header-main-row">
+                <div class="header-copy">
+                    <h1>Kick Alerts for Social Stream</h1>
+                    <p class="subtitle">Sign in, keep this page open, and Kick alerts and chat will relay in real-time.</p>
+                </div>
+                <div class="status-row">
+                    <span id="channel-label" class="status-note">Channel: <span class="status-subtle">-</span></span>
+                    <span id="viewer-count" class="status-chip warning">Viewers: -</span>
+                    <span id="socket-state" class="status-chip warning">Chat socket disconnected</span>
+                    <span id="bridge-state" class="status-chip danger">Bridge disconnected</span>
+                    <span id="subscription-summary" class="status-chip warning">Subscriptions syncing</span>
+                </div>
+            </div>
+            <div class="auth-row">
+                <button id="start-auth">Sign in with Kick</button>
+                <button id="sign-out" class="button-secondary">Sign out</button>
+                <span id="auth-state" class="status-chip warning">Not signed in</span>
+                <div id="auth-method-selector" class="auth-method-selector hidden">
+                    <span class="auth-method-label">Sign-in method:</span>
+                    <label class="auth-method-option">
+                        <input type="radio" name="kick-auth-method" value="external" checked>
+                        <span>External browser</span>
+                    </label>
+                    <label class="auth-method-option">
+                        <input type="radio" name="kick-auth-method" value="local">
+                        <span>Local app</span>
+                    </label>
+                </div>
+            </div>
+        </header>
+
+        <div class="layout">
+            <main class="main-content">
+                <details class="panel chat-panel collapsible-panel" open>
+                    <summary class="panel-summary">
+                        <h2>Live Chat</h2>
+                        <span class="panel-summary-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="panel-body">
+                        <p class="hint">Incoming Kick chat messages appear here as they arrive.</p>
+                        <div id="chat-feed" class="chat-feed">
+                            <div id="chat-feed-empty" class="chat-feed-empty">No chat messages yet.</div>
+                        </div>
+                        <div class="chat-input-footer">
+                            <label for="chat-message">Send message</label>
+                            <textarea id="chat-message" placeholder="Say hello to chat"></textarea>
+                            <div class="button-row">
+                                <select id="chat-send-type" title="Choose how the message is delivered">
+                                    <option value="user">Send as broadcaster</option>
+                                    <option value="bot">Send as bot account</option>
+                                </select>
+                                <button id="send-chat">Send message</button>
+                            </div>
+                            <div id="chat-status" class="hint"></div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="panel collapsible-panel" open>
+                    <summary class="panel-summary">
+                        <h2>Live Event Feed</h2>
+                        <span class="panel-summary-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="panel-body">
+                        <p class="hint">Every webhook that reaches the bridge is echoed here.</p>
+                        <div id="event-log" class="log"></div>
+                    </div>
+                </details>
+            </main>
+
+            <aside class="sidebar">
+                <section class="panel">
+                    <h2>Followers & Donations</h2>
+                    <p class="hint">Latest Kick alerts appear here.</p>
+                    <div id="alerts-feed" class="alerts-feed">
+                        <div id="alerts-feed-empty" class="alerts-feed-empty">No follower or donation alerts yet.</div>
+                    </div>
+                </section>
+                <section class="panel">
+                    <h2>Advanced Controls</h2>
+                    <p class="hint">Optional source-side moderation sync and stream metadata editing.</p>
+                    <div class="admin-toggle-list">
+                        <label class="admin-toggle">
+                            <input type="checkbox" id="sync-delete-messages">
+                            <span>Sync dock deletes to Kick</span>
+                        </label>
+                        <label class="admin-toggle">
+                            <input type="checkbox" id="sync-block-users">
+                            <span>Sync dock blocks to Kick bans</span>
+                        </label>
+                    </div>
+                    <div class="admin-form-grid">
+                        <div>
+                            <label for="stream-title">Stream title</label>
+                            <input type="text" id="stream-title" placeholder="Kick stream title">
+                        </div>
+                        <div>
+                            <label for="stream-category">Category</label>
+                            <input type="text" id="stream-category" placeholder="Kick category name or ID">
+                        </div>
+                    </div>
+                    <div class="button-row admin-button-row">
+                        <button id="refresh-stream-info" class="button-secondary">Refresh current</button>
+                        <button id="update-stream-info">Update title/category</button>
+                    </div>
+                    <p class="hint">Kick requires the OAuth scopes <code>channel:write</code>, <code>moderation:ban</code>, and <code>moderation:chat_message:manage</code> for these controls.</p>
+                </section>
+            </aside>
+        </div>
+    </div>
+</body>
+</html>

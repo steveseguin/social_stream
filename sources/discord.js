@@ -1,0 +1,483 @@
+(function () {
+
+	var isExtensionOn = true;
+
+	function toDataURL(url, callback) {
+		var xhr = new XMLHttpRequest();
+		xhr.onload = function () {
+			var blob = xhr.response;
+
+			if (blob.size > 25 * 1024) {
+				callback(url); // Image size is larger than 25kb.
+				return;
+			}
+
+			var reader = new FileReader();
+			reader.onloadend = function () {
+				callback(reader.result);
+			};
+			reader.readAsDataURL(xhr.response);
+		};
+		xhr.open("GET", url);
+		xhr.responseType = "blob";
+		xhr.send();
+	}
+	
+	function escapeHtml(unsafe) {
+		try {
+			unsafe = unsafe.replace("\n", " ");
+			unsafe = unsafe.replace("\t", " ");
+			unsafe = unsafe.replace("\r", " ");
+			if (settings.textonlymode) { // we can escape things later, as needed instead I guess.
+				return unsafe;
+			}
+			return unsafe
+				.replace(/&/g, "&amp;") // i guess this counts as html
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#039;") || "";
+		} catch (e) {
+			return "";
+		}
+	}
+
+
+	function getAllContentNodes(element, textonly = settings.textonlymode) { // takes an element.
+		var resp = "";
+
+		if (!element) {
+			return resp;
+		}
+
+		if (!element.childNodes || !element.childNodes.length) {
+			if (element.textContent) {
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+
+		element.childNodes.forEach(node => {
+			if (node.childNodes.length) {
+				resp += getAllContentNodes(node, textonly);
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
+				resp += escapeHtml(node.textContent) + "";
+			} else if (node.nodeType === 1) {
+				if (!textonly) {
+					if (node && node.classList && node.classList.contains("zero-width-emote")) {
+						resp += "<span class='zero-width-parent'>" + node.outerHTML + "</span>";
+					} else if (node && node.tagName && (node.tagName == "IMG") && node.src) {
+						node.src = node.src + "";
+						resp += node.outerHTML;
+					} else {
+						resp += node.outerHTML;
+					}
+				}
+			}
+		});
+		return resp;
+	}
+
+	function getTranslation(key, value = false) {
+		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
+			// these are the proper translations
+			return settings.translation.innerHTML[key];
+		} else if (settings.translation && settings.translation.miscellaneous && key in settings.translation.miscellaneous) {
+			return settings.translation.miscellaneous[key];
+		} else if (value !== false) {
+			return value;
+		} else {
+			return key.replaceAll("-", " "); //
+		}
+	}
+
+	var lastMessage = "";
+	var textSettingsArray = [];
+
+	function parseTextSettingList(textSetting) {
+		if (!textSetting) {
+			return [];
+		}
+
+		return textSetting
+			.split(",")
+			.map(value => {
+				value = value.trim();
+				return value.split("/").pop();
+			})
+			.filter(value => value);
+	}
+
+	function isChannelAllowed() {
+		if (!textSettingsArray.length) {
+			return true;
+		}
+
+		var channel = document.location.pathname.split("/").pop();
+		return textSettingsArray.includes(channel);
+	}
+
+	function processMessage(ele){
+		var rawIdParts = ele.id.split("chat-messages-");
+		if (rawIdParts.length !== 2) {
+			return;
+		}
+
+		if (!settings.discord && !(window.ninjafy || window.electronApi)){
+			console.log("FAIL");
+			// discord isn't allowed via settings
+			return;
+		}
+
+		if (!isChannelAllowed()) {
+			return;
+		}
+
+		var midParts = rawIdParts[1].split("-");
+		var mid = midParts.length === 2 ? midParts[1] : midParts[0];
+
+		var nameColor = "";
+		var chatimg = "";
+		var avatar = ele.querySelector("img[class*='avatar'][src]");
+		if (avatar?.src) {
+			chatimg = avatar.src + "";
+		}
+
+		var bot = false;
+		var name = "";
+
+		var usernameSelector = "#message-username-" + mid + " [class*='username']";
+		var botTagSelector = "#message-username-" + mid + " [class^='botTag_']";
+
+		var usernameNode = ele.querySelector(usernameSelector);
+		if (usernameNode){
+			name = getAllContentNodes(usernameNode, true).trim();
+			nameColor = usernameNode?.style?.color || "";
+		}
+
+		if (ele.querySelector(botTagSelector)){
+			bot = true;
+		}
+
+		var msg = getAllContentNodes(ele.querySelector("#message-content-"+mid)).trim();
+
+		if (!msg){
+			msg = getAllContentNodes(
+				ele.querySelector("#message-accessories-"+mid+" [class^='embedDescription']")
+			).trim();
+		}
+
+		var contentimg = "";
+
+		// 1. normal images / video posters
+		var media = ele.querySelector(
+			"div[id^='message-accessories'] a div img[alt][src], " +
+				"div[class^='imageContent'] img[src], " +
+				"div[class^='imageContent'] video[src]"
+		);
+
+		if (media?.src) {
+			contentimg = media.src;
+		} else {
+			// 2. sticker image
+			var stickerImg = ele.querySelector("img[data-type='sticker']");
+			if (stickerImg?.src) {
+				contentimg = stickerImg.src;
+			} else {
+				// 3. sticker canvas fallback
+				var canvas = ele.querySelector("canvas[data-type='sticker']");
+				if (canvas) {
+					contentimg = canvas.toDataURL("image/png");
+				}
+			}
+		}
+
+		if (!name && !chatimg){
+			var cursor = ele;
+			for (var i=0; i<50;i++){
+				if (!cursor || !cursor.previousElementSibling) {
+					break;
+				}
+				cursor = cursor.previousElementSibling;
+
+				if (!name){
+					var previousNameNode = cursor.querySelector("[id^='message-username-'] [class*='username']");
+					if (previousNameNode){
+						name = getAllContentNodes(previousNameNode, true).trim();
+						nameColor = previousNameNode?.style?.color || "";
+					}
+				}
+
+				if (!chatimg){
+					var previousAvatar = cursor.querySelector("img[class*='avatar']");
+					if (previousAvatar?.src){
+						chatimg = previousAvatar.src + "";
+					}
+				}
+
+				if (name){break;}
+			}
+		}
+
+		if (name.includes(" @ ")){ // this is s relayed webhook that we can likely ignore.
+			return;
+		}
+
+		var data = {};
+		data.id = mid;
+		data.chatname = name;
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		if (bot){
+			data.bot = true;
+		}
+		if (!name){
+			data.event = true;
+		}
+		data.chatmessage = msg;
+		data.chatimg = chatimg;
+		data.nameColor = nameColor;
+		data.hasDonation = "";
+		data.membership = "";
+		data.contentimg = contentimg;
+		data.textonly = settings.textonlymode || false;
+		data.type = "discord";
+
+		if (nameColor && settings.discordmemberships){
+			data.membership = getTranslation("membership", "MEMBERSHIP");
+		}
+
+		var serialized = JSON.stringify(data);
+		if (lastMessage === serialized){ // prevent duplicates, as zoom is prone to it.
+			return;
+		}
+		lastMessage = serialized;
+
+		if (data.contentimg){
+			toDataURL(data.contentimg, function(dataUrl) {
+				data.contentimg = dataUrl;
+				if (data.chatimg){
+					toDataURL(data.chatimg, function(dataUrl2) {
+						data.chatimg = dataUrl2;
+						pushMessage(data);
+					});
+				} else {
+					pushMessage(data);
+				}
+			});
+			return;
+		}
+
+		if (data.chatimg){
+			toDataURL(data.chatimg, function(dataUrl) {
+				data.chatimg = dataUrl;
+				pushMessage(data);
+			});
+			return;
+		}
+
+		pushMessage(data);
+	}
+
+	function pushMessage(data){
+		try{
+			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		} catch(e){
+		}
+	}
+	
+	var settings = {};
+	// settings.textonlymode
+	// settings.captureevents
+	
+	
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
+		response = response || {};
+		if ("settings" in response){
+			settings = response.settings;
+			if (settings?.customdiscordchannel?.textsetting) {
+				textSettingsArray = parseTextSettingList(settings.customdiscordchannel.textsetting);
+			} else {
+				textSettingsArray = [];
+			}
+		}
+	});
+	
+	
+	
+	(function() {
+		var css = '.hidden123{display:none!important;} .unstyle123{inset:0 0 0 0!important;}',
+			head = document.head || document.getElementsByTagName('head')[0],
+			style = document.createElement('style');
+
+		style.type = 'text/css';
+		if (style.styleSheet) {
+			// This is required for IE8 and below.
+			style.styleSheet.cssText = css;
+		} else {
+			style.appendChild(document.createTextNode(css));
+		}
+
+		head.appendChild(style);
+
+		// Function to handle the visibility toggle
+		function toggleVisibility(hide) {
+			document.querySelectorAll("*:not(video):not([class^='overlayTitleText'])").forEach(x => {
+				if (x.querySelector && !x.querySelector("video,[class^='overlayTitleText']")) {
+					x.classList.toggle("hidden123", hide);
+				}
+				if (x.style && x.style.includes && x.style.includes("inset")) {
+					x.classList.toggle("unstyle123", hide);
+				}
+			});
+		}
+
+		// Add keydown event listener
+		document.addEventListener('keydown', function(event) {
+			if (event.ctrlKey && event.shiftKey) {
+				if (event.key === '<') {
+					console.log('CTRL + SHIFT + < pressed');
+					toggleVisibility(true);
+				} else if (event.key === '>') {
+					console.log('CTRL + SHIFT + > pressed');
+					toggleVisibility(false);
+				}
+			}
+		});
+
+		// MutationObserver to handle dynamically added elements
+		var visibilityObserver = new MutationObserver(function(mutationsList) {
+			for (const mutation of mutationsList) {
+				if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+					toggleVisibility(document.querySelector('.hidden123') !== null);
+				}
+			}
+		});
+
+		// Observe the entire body for changes
+		visibilityObserver.observe(document.body, { childList: true, subtree: true });
+
+	})();
+
+	chrome.runtime.onMessage.addListener(
+		function (request, sender, sendResponse) {
+			try{
+				if ("getSource" == request){sendResponse("discord");	return;	}
+				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+
+					if (!isChannelAllowed()) {
+						sendResponse(false);
+						return;
+					}
+
+					document.querySelector('div[class*="slateTextArea"]').focus();
+					sendResponse(true);
+					return;
+				}
+
+				if (typeof request === "object"){
+					if ("settings" in request){
+						settings = request.settings;
+						sendResponse(true);
+						if (settings.customdiscordchannel.textsetting) {
+							textSettingsArray = parseTextSettingList(settings.customdiscordchannel.textsetting);
+						} else {
+							textSettingsArray = [];
+						}
+
+						return;
+					}
+				}
+			} catch(e){}
+			sendResponse(false);
+		}
+	);
+
+	var lastURL = "";
+	var lastMessageID = 0;
+	var observer = null;
+	
+	function onElementInserted(containerSelector) {
+		if (observer){
+			try {
+				observer.disconnect();
+			} catch(e){}
+			observer = null;
+		}
+		var onMutationsObserved = function(mutations) {
+			var highestMessage = 0;
+			if (lastURL !== window.location.href){
+				lastURL = window.location.href;
+				lastMessageID = 0;
+			}
+			if (!window.location.href.includes("/channels/")){
+				if (observer){
+					try {
+						observer.disconnect();
+					} catch(e){}
+					observer = null;
+				}
+				return;
+			}
+			
+			mutations.forEach(function(mutation) {
+				if (mutation.addedNodes.length) {
+					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						if (mutation.addedNodes[i].id && !mutation.addedNodes[i].skip){
+							var mid = mutation.addedNodes[i].id.split("chat-messages-");
+							if (mid.length==2){
+								mid = parseInt(mid[1]);
+							} else {
+								continue;
+							}
+							if (highestMessage<mid){
+								highestMessage = mid;
+							} else {
+								continue;
+							}
+							setTimeout(function(id){
+								try{
+									var targetEle = document.getElementById(id);
+									if (!targetEle || targetEle.skip){return;}
+									targetEle.skip = true;
+									if (!targetEle.childNodes.length){return;}
+									processMessage(targetEle);
+								} catch(e){}
+							},500, mutation.addedNodes[i].id);
+						}
+					}
+					if (highestMessage>lastMessageID){
+						lastMessageID = highestMessage;
+					}
+				}
+			});
+		};
+		var target = document.querySelector(containerSelector);
+		if (!target){return;}
+		var config = { childList: true, subtree: true };
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		
+		observer = new MutationObserver(onMutationsObserved);
+		observer.observe(target, config);
+	}
+		
+	console.log("social stream injected -- MUST BE ENABLED VIA SETTING TOGGLE AS WELL TO USE!!!");
+
+	var chatListSelector = '[data-list-id="chat-messages"]';
+
+	setInterval(function(){
+		if (!window.location.href.includes("/channels/")){return;}
+
+		var chatList = document.querySelector(chatListSelector);
+		if (!chatList || chatList.marked){
+			return;
+		}
+
+		chatList.marked=true;
+		onElementInserted(chatListSelector);
+	},1000);
+
+})();

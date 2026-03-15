@@ -1,0 +1,173 @@
+name: AI Code Review
+
+# Disabled - GLM model produces too many false positives
+# on:
+#   pull_request:
+#     branches: [main]
+#     types: [opened, synchronize]
+on:
+  workflow_dispatch:  # Manual trigger only
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for auto-enhanced commit
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest commit message
+          COMMIT_MSG=$(gh api repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }} --jq '.commit.message')
+          if echo "$COMMIT_MSG" | grep -q "\[auto-enhanced\]"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping - commit was auto-enhanced"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout repository
+        if: steps.check.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        if: steps.check.outputs.skip != 'true'
+        id: diff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the diff between base and head
+          DIFF=$(gh pr diff ${{ github.event.pull_request.number }} --repo ${{ github.repository }})
+
+          # Truncate if too large (API has token limits)
+          MAX_CHARS=30000
+          if [ ${#DIFF} -gt $MAX_CHARS ]; then
+            DIFF="${DIFF:0:$MAX_CHARS}
+
+          ... [diff truncated due to size]"
+          fi
+
+          # Save to file to handle special characters
+          echo "$DIFF" > /tmp/pr_diff.txt
+
+      - name: Get PR info
+        if: steps.check.outputs.skip != 'true'
+        id: pr_info
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_TITLE=$(gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --json title -q '.title')
+          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --json body -q '.body')
+          echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "$PR_BODY" > /tmp/pr_body.txt
+
+      - name: Run AI Code Review
+        if: steps.check.outputs.skip != 'true'
+        id: review
+        env:
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+        run: |
+          DIFF=$(cat /tmp/pr_diff.txt)
+          PR_BODY=$(cat /tmp/pr_body.txt)
+
+          # Prepare the prompt
+          SYSTEM_PROMPT="You are a bug finder. Only report issues you can PROVE from the diff.
+
+          CRITICAL: If no provable bugs exist, respond with ONLY: NO_ISSUES_FOUND
+
+          ABSOLUTE RULES:
+          1. NEVER invent 'old code' - you can only see the diff, not history. Do NOT claim 'previously X did Y' or 'the old code had Z' unless the removed lines (-) explicitly show it.
+          2. NEVER claim 'this breaks existing behavior' unless the diff shows both the old AND new code.
+          3. Lines marked with + are NEW code. If there's no corresponding - line, there is NO 'old version' to compare against.
+          4. Do NOT infer what 'should' exist based on variable names or patterns.
+
+          ONLY report:
+          - Syntax errors that will crash
+          - Null/undefined access on lines shown in the diff
+          - Security issues (injection, XSS, exposed secrets)
+          - Logic errors provable from the code shown
+
+          Do NOT report:
+          - Style, formatting, whitespace
+          - 'Missing' fallbacks or features you think should exist
+          - Hypothetical regressions without proof in the diff
+          - Suggestions or improvements
+
+          If in doubt, say nothing."
+
+          USER_PROMPT="Find bugs ONLY. Do not invent what 'old code' looked like - you cannot see git history.
+
+          **PR:** ${{ steps.pr_info.outputs.title }}
+
+          **Context:** ${PR_BODY}
+
+          **Diff (+ = added, - = removed):**
+          \`\`\`diff
+          ${DIFF}
+          \`\`\`
+
+          Remember: If there are no - lines for a section, there is NO old code to compare against. Do not hallucinate previous behavior."
+
+          # Create JSON payload
+          jq -n \
+            --arg system "$SYSTEM_PROMPT" \
+            --arg user "$USER_PROMPT" \
+            '{
+              model: "glm-4.7",
+              messages: [
+                {role: "system", content: $system},
+                {role: "user", content: $user}
+              ],
+              temperature: 0.1,
+              stream: false
+            }' > /tmp/request.json
+
+          # Call Z.AI Coding API (uses Coding Plan quota)
+          RESPONSE=$(curl -s -X POST "https://api.z.ai/api/coding/paas/v4/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $ZAI_API_KEY" \
+            -d @/tmp/request.json)
+
+          # Extract the review content
+          REVIEW=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty')
+
+          if [ -z "$REVIEW" ]; then
+            echo "Error: Failed to get AI review"
+            echo "Response: $RESPONSE"
+            REVIEW="⚠️ AI review failed to generate. Please check the workflow logs."
+          fi
+
+          # Save review to file
+          echo "$REVIEW" > /tmp/review.txt
+
+      - name: Post review comment
+        if: steps.check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REVIEW=$(cat /tmp/review.txt)
+
+          # Skip posting if no issues found
+          if echo "$REVIEW" | grep -q "NO_ISSUES_FOUND"; then
+            echo "No issues found - skipping comment"
+            exit 0
+          fi
+
+          # Create the comment with header
+          COMMENT="## 🤖 AI Bug Check
+
+          $REVIEW
+
+          ---
+          <sub>Auto-check by [Z.AI GLM-4.7](https://z.ai/subscribe?ic=W4IQQ89PNZ) · Style/formatting ignored · Verify findings before acting</sub>"
+
+          # Post comment to PR
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "$COMMENT"

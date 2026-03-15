@@ -1,0 +1,332 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Stream - Joystick Bot WebSocket</title>
+    <link rel="icon" href="https://joystick.tv/favicon.ico" type="image/x-icon">
+    <style>
+        :root {
+            --bg: #121316;
+            --panel: #1d2026;
+            --panel-alt: #252933;
+            --text: #ecf0ff;
+            --muted: #b3bacd;
+            --accent: #31d2b0;
+            --accent-2: #2ea8ff;
+            --danger: #ff6b7a;
+            --warn: #f6c760;
+            --border: #343a49;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background: radial-gradient(circle at top right, #1e2638 0%, var(--bg) 42%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .wrap {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 18px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .card {
+            background: linear-gradient(160deg, var(--panel) 0%, var(--panel-alt) 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            letter-spacing: 0.02em;
+        }
+
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 17px;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        .grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: #171a20;
+            color: var(--text);
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 64px;
+            resize: vertical;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        button {
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #0f1116;
+            background: var(--accent);
+        }
+
+        button.alt {
+            background: var(--accent-2);
+            color: #fff;
+        }
+
+        button.warn {
+            background: var(--warn);
+        }
+
+        button.danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 12px;
+            color: var(--muted);
+            background: #171a20;
+        }
+
+        .chip.good {
+            border-color: #1e7f6a;
+            color: #81f2d7;
+        }
+
+        .chip.warn {
+            border-color: #7f6730;
+            color: #ffd983;
+        }
+
+        .chip.bad {
+            border-color: #7f3242;
+            color: #ff9eaa;
+        }
+
+        .feed,
+        .log {
+            background: #101216;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            min-height: 220px;
+            max-height: 360px;
+            overflow: auto;
+            padding: 10px;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
+        .entry {
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #2e3440;
+            padding-bottom: 8px;
+        }
+
+        .entry:last-child {
+            margin-bottom: 0;
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .entry .meta {
+            color: #89b6ff;
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+
+        .entry .name {
+            color: #81f2d7;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .split {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 1.2fr 1fr;
+        }
+
+        .method {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--muted);
+            margin-right: 12px;
+        }
+
+        .method input[type="radio"] {
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: none;
+            letter-spacing: normal;
+            margin: 0;
+        }
+
+        @media (max-width: 900px) {
+            .split {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <section class="card">
+            <h1>Joystick Bot WebSocket</h1>
+            <p>Bring your own Joystick bot credentials. This source connects to Joystick's GatewayChannel websocket and relays bot events/chat into Social Stream.</p>
+            <p class="hint">Important: this is bot API auth, not direct "chat as your user account" auth.</p>
+        </section>
+
+        <section class="card">
+            <h2>Bot Credentials</h2>
+            <div class="grid">
+                <div>
+                    <label for="client-id">Client ID</label>
+                    <input id="client-id" type="text" autocomplete="off" placeholder="Joystick bot client id" />
+                </div>
+                <div>
+                    <label for="client-secret">Client Secret</label>
+                    <input id="client-secret" type="password" autocomplete="off" placeholder="Joystick bot client secret" />
+                </div>
+                <div>
+                    <label for="channel-slug">Channel Filter (optional)</label>
+                    <input id="channel-slug" type="text" autocomplete="off" placeholder="streamer username / slug" />
+                </div>
+                <div>
+                    <label for="channel-id">Channel ID (optional)</label>
+                    <input id="channel-id" type="text" autocomplete="off" placeholder="auto-detected from events" />
+                </div>
+                <div>
+                    <label for="redirect-uri">OAuth Redirect URI (optional)</label>
+                    <input id="redirect-uri" type="text" autocomplete="off" placeholder="https://socialstream.ninja/sources/websocket/joystick.html" />
+                </div>
+                <div>
+                    <label for="auth-code">Authorization Code (optional)</label>
+                    <input id="auth-code" type="text" autocomplete="off" placeholder="Paste code from callback URL" />
+                </div>
+            </div>
+            <div class="row" style="margin-top:10px;">
+                <button id="save-config" class="alt">Save Config</button>
+                <button id="start-auth">Authorize Bot Install</button>
+                <button id="exchange-code" class="warn">Exchange Code</button>
+                <button id="refresh-token" class="alt">Refresh Token</button>
+                <button id="clear-auth" class="danger">Clear Tokens</button>
+            </div>
+            <div id="auth-method-selector" class="hidden" style="margin-top:10px;">
+                <label class="method"><input type="radio" name="joystick-auth-method" value="external" checked> External browser</label>
+                <label class="method"><input type="radio" name="joystick-auth-method" value="local"> Local redirect</label>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Connection</h2>
+            <div class="row" style="margin-bottom:10px;">
+                <button id="connect-btn">Connect WebSocket</button>
+                <button id="disconnect-btn" class="danger">Disconnect</button>
+                <label class="checkbox"><input id="auto-reconnect" type="checkbox" checked> Auto reconnect</label>
+            </div>
+            <div class="chips">
+                <span id="socket-chip" class="chip bad">Socket: disconnected</span>
+                <span id="auth-chip" class="chip warn">Token: not authorized</span>
+                <span id="channel-chip" class="chip">Channel: unknown</span>
+            </div>
+            <p id="status-text" class="hint" style="margin-top:10px;">Waiting for configuration.</p>
+        </section>
+
+        <section class="split">
+            <section class="card">
+                <h2>Live Feed</h2>
+                <div id="feed" class="feed"></div>
+                <div style="margin-top:10px;">
+                    <label for="chat-input">Send Chat Message</label>
+                    <textarea id="chat-input" placeholder="Type a message to send via bot"></textarea>
+                    <div class="row" style="margin-top:8px;">
+                        <button id="send-btn">Send Message</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Diagnostics</h2>
+                <div id="log" class="log"></div>
+            </section>
+        </section>
+    </div>
+</body>
+</html>
