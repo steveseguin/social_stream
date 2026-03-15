@@ -379,7 +379,7 @@ Event Payload ─▶ State Check (isAlertMuted)
                         <ul>
                             <li>The same payload unless the node edits it.</li>
                             <li>A recalculated gate bit (logic nodes) or passthrough bit (actions).</li>
-                            <li>Side effects (sending chat, awarding points) happen simultaneously but do not alter the payload.</li>
+                            <li>Most side effects (like sending chat) do not alter the payload, but points actions can attach status fields such as <code>pointsTotal</code> or <code>pointsSpendError</code> for downstream logic.</li>
                         </ul>
                     </div>
                     <div class="card">
@@ -430,7 +430,7 @@ Event Payload ─▶ State Check (isAlertMuted)
                         <tr><td><code>{userid}</code></td><td>User's platform ID</td><td>12345678</td></tr>
                         <tr><td><code>{chatimg}</code></td><td>User avatar URL</td><td>https://...</td></tr>
                         <tr><td><code>{contentimg}</code></td><td>Attached image URL</td><td>https://...</td></tr>
-                        <tr><td><code>{rewardTitle}</code></td><td>Channel point reward name</td><td>Highlight My Message</td></tr>
+                        <tr><td><code>{rewardTitle}</code></td><td>Reward name when the source exposes a top-level reward title field</td><td>Highlight My Message</td></tr>
                         <tr><td><code>{meta}</code></td><td>Structured event data (JSON)</td><td>{"viewers":100}</td></tr>
                     </tbody>
                 </table>

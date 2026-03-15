@@ -1326,6 +1326,10 @@ class EventFlowSystem {
         if (normalized === 'adbreak') {
             return 'ad_break';
         }
+        // Backward compatibility alias: legacy Twitch websocket channel point name.
+        if (normalized === 'channel_points') {
+            return 'reward';
+        }
         return normalized;
     }
 
@@ -1508,7 +1512,7 @@ class EventFlowSystem {
 
             case 'channelPointRedemption':
                 // Check if this is a reward/redemption event
-                if (message.event !== 'reward' && !this.looksLikeRewardRedemption(message)) {
+                if (!this.eventTypeMatches('reward', message.event) && !this.looksLikeRewardRedemption(message)) {
                     return false;
                 }
                 // If a specific reward name is configured, check it
