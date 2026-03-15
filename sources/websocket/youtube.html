@@ -132,6 +132,8 @@
         </div>
 
         <div class="sidebar hidden socket">
+            <button id="sidebar-toggle" class="sidebar-toggle" title="Collapse sidebar">&rsaquo;</button>
+            <div class="sidebar-content">
             <div class="permissions-container hidden" id="permissions-info"></div>
             <div class="credentials-container" id="credentials-container-signedin">
                 <details id="signedin-credentials-details" class="credentials-details">
@@ -181,9 +183,10 @@
                     <div class="credentials-note">YouTube uses a video category, not a Twitch/Kick game category.</div>
                 </div>
             </div>
+            </div>
         </div>
     </div>
-    
+
     <div class="policy-footer hidden">
         <a href="https://socialstream.ninja/TOS" target="_blank">Terms of Service</a>
         |
@@ -194,6 +197,22 @@
     
 <script>
 
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = toggle.closest('.sidebar');
+    var stored = localStorage.getItem('yt-sidebar-collapsed');
+    if (stored === 'true') {
+        sidebar.classList.add('collapsed');
+        toggle.innerHTML = '&lsaquo;';
+        toggle.title = 'Expand sidebar';
+    }
+    toggle.addEventListener('click', function() {
+        var collapsed = sidebar.classList.toggle('collapsed');
+        toggle.innerHTML = collapsed ? '&lsaquo;' : '&rsaquo;';
+        toggle.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        localStorage.setItem('yt-sidebar-collapsed', collapsed);
+    });
+})();
 
 try {
     /*
