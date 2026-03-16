@@ -4349,31 +4349,6 @@ const preview = document.getElementById('preview');
 const errorDisplay = document.getElementById('error');
 const responsesDiv = document.getElementById('responses');
 let publisher = null;
-async function tryGetInitialPermissions() {
-    try {
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-            .catch(err => {
-                console.log("Initial audio permission check failed:", err.message);
-                return null;
-            });
-        if (audioStream) {
-            audioStream.getTracks().forEach(track => track.stop());
-        }
-        const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true })
-            .catch(err => {
-                console.log("Initial video permission check failed:", err.message);
-                showError('Camera permission denied or unavailable: ' + err.message);
-                return null;
-            });
-        if (videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());
-        }
-        await getDevices();
-    } catch (err) {
-        console.warn("Initial permission checks failed:", err);
-        await getDevices();
-    }
-}
 const apiKeyInput = document.getElementById('apiKey');
 apiKeyInput.value = localStorage.getItem('apiKey') || '';
 const modelOverrideInput = document.getElementById('modelOverride');
@@ -4829,40 +4804,15 @@ async function getDevices() {
             }
         }
         if (!videoDeviceFound && videoDevices.length > 0) {
-            for (const device of videoDevices) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { deviceId: { exact: device.deviceId } }
-                    });
-                    stream.getTracks().forEach(track => track.stop());
-                    videoSelect.value = device.deviceId;
-                    videoDeviceFound = true;
-                    break;
-                } catch (err) {
-                    console.warn(`Video device ${device.label || device.deviceId} unavailable:`, err.message);
-                    showError(`Camera "${device.label || device.deviceId}" unavailable: ${err.message}`);
-                    continue;
-                }
-            }
+            videoSelect.value = videoDevices[0].deviceId;
+            videoDeviceFound = true;
         }
         if (!videoDeviceFound) {
             videoSelect.value = 'none';
         }
         if (!audioDeviceFound && audioDevices.length > 0) {
-            for (const device of audioDevices) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        audio: { deviceId: { exact: device.deviceId } }
-                    });
-                    stream.getTracks().forEach(track => track.stop());
-                    audioSelect.value = device.deviceId;
-                    audioDeviceFound = true;
-                    break;
-                } catch (err) {
-                    console.warn(`Audio device ${device.label || device.deviceId} unavailable:`, err.message);
-                    continue;
-                }
-            }
+            audioSelect.value = audioDevices[0].deviceId;
+            audioDeviceFound = true;
         }
         if (!audioDeviceFound) {
             audioSelect.value = 'none';
@@ -5151,6 +5101,15 @@ async function updateMediaStream() {
             preview.srcObject.getTracks().forEach(track => track.stop());
             preview.srcObject = null;
         }
+        micMuted = false;
+        audioMuted = false;
+        videoMuted = false;
+        muteMicButton.classList.remove('muted');
+        muteMicButton.querySelector('.mic-icon').classList.remove('muted');
+        muteAudioButton.classList.remove('muted');
+        muteAudioButton.querySelector('.speaker-icon').classList.remove('muted');
+        muteVideoButton.classList.remove('muted');
+        muteVideoButton.querySelector('.video-icon').classList.remove('muted');
         startButton.textContent = 'Start Stream';
         startButton.dataset.started = "false";
         startButton.disabled = false;
