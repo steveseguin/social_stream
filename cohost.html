@@ -5442,6 +5442,19 @@ function applyProviderUI(providerName, restoreKey = true) {
     const responseTypeValue = responseTypeSelect.value;
     videoSelect.disabled = config.disableCaptureSelection;
     audioSelect.disabled = config.disableCaptureSelection;
+    if (config.disableCaptureSelection) {
+        videoSelect.value = 'none';
+    } else {
+        const savedVideoId = localStorage.getItem('selectedVideoId');
+        if (savedVideoId) {
+            for (const option of videoSelect.options) {
+                if (option.value === savedVideoId) {
+                    videoSelect.value = savedVideoId;
+                    break;
+                }
+            }
+        }
+    }
     if (config.disableCaptureSelection && audioSelect.value === 'none') {
         const firstAudioOption = Array.from(audioSelect.options).find(option => option.value !== 'none');
         if (firstAudioOption) {
