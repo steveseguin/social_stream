@@ -4877,7 +4877,9 @@ async function getDevices() {
         } else {
             localStorage.removeItem('selectedAudioId');
         }
-        await updateMediaStream();
+        if (publisher) {
+            await updateMediaStream();
+        }
     } catch (err) {
         showError('Failed to get devices: ' + err.message);
     }
@@ -5093,6 +5095,7 @@ async function getStream() {
     }
 }
 async function updateMediaStream() {
+    if (!publisher) return;
     try {
         const previousMicMuted = micMuted;
         const previousAudioMuted = audioMuted;
@@ -5188,6 +5191,14 @@ if (!navigator.mediaDevices?.getUserMedia) {
                 });
             if (audioStream) {
                 audioStream.getTracks().forEach(track => track.stop());
+            }
+            const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true })
+                .catch(err => {
+                    console.log("Video permission check failed:", err.message);
+                    return null;
+                });
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
             }
             await getDevices();
         } catch (err) {
