@@ -5090,10 +5090,14 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
         }
         button.addEventListener('click', () => {
             sendOverlayPreview(previewKey, descriptor);
-            if (previewKey === 'multialerts' && descriptor && descriptor.category) {
-                const payload = buildTestAlertPayload(descriptor.category);
-                if (payload) {
-                    chrome.runtime.sendMessage({ cmd: 'testAlert', payload });
+            if (previewKey === 'multialerts') {
+                if (descriptor && descriptor.category) {
+                    const payload = buildTestAlertPayload(descriptor.category);
+                    if (payload) {
+                        chrome.runtime.sendMessage({ cmd: 'testAlert', payload });
+                    }
+                } else if (descriptor === false) {
+                    chrome.runtime.sendMessage({ cmd: 'clearAlerts' });
                 }
             }
         });

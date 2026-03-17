@@ -696,7 +696,7 @@ function setupBridgeIframe() {
   state.iframe = document.createElement('iframe');
   state.iframe.src =
     `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(settings.password)}` +
-    `&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(settings.roomID)}`;
+    `&push&label=alerts&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(settings.roomID)}`;
   state.iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;border:0;';
   document.body.appendChild(state.iframe);
 }
@@ -810,6 +810,11 @@ function handlePreviewMessage(previewMessage) {
 }
 
 function handleIncomingPayload(payload) {
+  if (payload && typeof payload === 'object' && payload.action === 'clearAlerts') {
+    clearAlert({ clearQueue: true });
+    updateStatus('Alerts cleared');
+    return;
+  }
   flattenPayloads(payload).forEach((entry) => {
     const model = buildAlertViewModel(entry);
     if (!model) {
@@ -868,7 +873,13 @@ function displayAlert(model, options = {}) {
   elements.stage.appendChild(card);
   elements.stage.classList.add('has-alert');
   if (!options.silent) {
-    playAlertSound(model);
+    playAlertSound(model).then(() => {
+      if (typeof TTS !== 'undefined' && TTS.speech && model.payload) {
+        TTS.speechMeta(model.payload);
+      }
+    });
+  } else if (typeof TTS !== 'undefined' && TTS.speech && model.payload) {
+    TTS.speechMeta(model.payload);
   }
   updateStatus(model.title);
 
@@ -928,6 +939,9 @@ function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
     state.queue = [];
   }
   stopActiveAlertSound();
+  if (typeof TTS !== 'undefined' && TTS.clearQueue) {
+    TTS.clearQueue();
+  }
   state.currentAlert = null;
   elements.stage.innerHTML = '';
   elements.stage.classList.remove('has-alert');
@@ -1207,6 +1221,19 @@ async function playAlertSound(model) {
       elements.audio.src = customSrc;
       elements.audio.volume = settings.beepVolume;
       elements.audio.currentTime = 0;
+      await new Promise((resolve, reject) => {
+        const ready = () => { cleanup(); resolve(); };
+        const fail = (e) => { cleanup(); reject(e); };
+        const timeout = setTimeout(() => { cleanup(); resolve(); }, 3000);
+        function cleanup() {
+          clearTimeout(timeout);
+          elements.audio.removeEventListener('canplaythrough', ready);
+          elements.audio.removeEventListener('error', fail);
+        }
+        elements.audio.addEventListener('canplaythrough', ready, { once: true });
+        elements.audio.addEventListener('error', fail, { once: true });
+        elements.audio.load();
+      });
       await elements.audio.play();
       return;
     } catch (error) {

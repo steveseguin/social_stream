@@ -4723,6 +4723,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch (e) {
 				console.error(e);
 			}
+		} else if (request.cmd && request.cmd === "clearAlerts") {
+			sendResponse({ state: isExtensionOn });
+			try {
+				sendTargetP2P({ action: "clearAlerts" }, "alerts");
+			} catch (e) {
+				console.error(e);
+			}
 		} else if (request.cmd && request.cmd === "uploadRAGfile") {
 			sendResponse({ state: isExtensionOn });
 			await importSettingsLLM(request.enhancedProcessing || false);
@@ -4749,6 +4756,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 			if (request.payload && typeof request.payload === "object") {
 				sendToDestinations(request.payload);
+				try { sendTargetP2P(request.payload, "alerts"); } catch(e) {}
 			}
 		} else if (request.cmd && request.cmd === "fakemeta") {
 			sendResponse({ state: isExtensionOn });
@@ -5461,6 +5469,14 @@ async function sendToDestinations(message) {
 	try {
 		if (settings.wordcloud){
 			sendTargetP2P(message, "wordcloud");
+		}
+	} catch (e) {
+		console.error(e);
+	}
+
+	try {
+		if (message && message.event && typeof message.event === "string") {
+			sendTargetP2P(message, "alerts");
 		}
 	} catch (e) {
 		console.error(e);

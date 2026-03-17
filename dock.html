@@ -5244,6 +5244,16 @@
 				hideAllEvents = true;
 			}
 
+			var hideAlertEvents = urlParams.has("hidealertevents");
+			var alertEventNames = new Set([
+				'new_follower','follow','followed',
+				'new_subscriber','subscription_gift','resub','sponsorship','giftpurchase','giftredemption','membermilestone',
+				'subscription','subgift','membership','new_member','new_membership','newmember','upgraded_membership','membership_upgrade','membership_milestone','member_milestone','gift_membership','membership_gift','community_gift',
+				'donation','supersticker','thankyou','jeweldonation','tip','support',
+				'cheer','bits',
+				'raid','host','hosting'
+			]);
+
 			var hideEmojiOnly = false;
 			var hideNotQueued = false;
 
@@ -9496,7 +9506,11 @@
 					if (hideAllEvents && data.event) {
 						return;
 					}
-					
+
+					if (hideAlertEvents && data.event && typeof data.event === "string" && alertEventNames.has(data.event.toLowerCase())) {
+						return;
+					}
+
 					if (privateOnly){
 						if (!data.private) {
 							return;

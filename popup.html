@@ -3264,6 +3264,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="hide-all-events">🧯 Hide all stream events </span>
                                 </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="hidealertevents" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🚨 Hide alert events (follows, subs, donations, bits, raids)</span>
+                                </div>
                                 <div class="textInputContainer" style="display: inline-block; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
                                     <input type="text" id="dockfilterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textparam1="filterevents" data-tag-presets="events" />
                                     <label for="dockfilterevents" style="display: inline-block; margin: 0 0 6px 0;"><span data-translate="hide-specific-events">&gt; Hide specific events</span></label>
@@ -5552,7 +5559,7 @@ input:checked + .slider:before {
 									<label><span>&gt; Custom sound URL (all alerts)</span></label>
 								</div>
 								<details style="width: 95%; margin-top: 4px;">
-									<summary style="cursor: pointer; opacity: 0.8; font-size: 0.9em;">Per-type custom sounds (override above)</summary>
+									<summary style="cursor: pointer; font-size: 0.95em; padding: 6px 10px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">Per-type custom sounds (override above)</summary>
 									<div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
 										<div class="textInputContainer" style="width: 100%; position: relative;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Follow sound URL (.ogg, .mp3, .wav)" data-textparam25="followsound" id="multi-alert-followsound" />
