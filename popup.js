@@ -5033,13 +5033,15 @@ function buildTestAlertPayload(category) {
         follow: {
             type: 'twitch',
             event: 'new_follower',
-            chatname: 'TestUser',
-            chatmessage: 'TestUser has started following'
+            chatname: 'Jess',
+            chatimg: 'https://socialstream.ninja/media/user1.jpg',
+            chatmessage: 'Jess has started following'
         },
         subscription: {
             type: 'twitch',
             event: 'new_subscriber',
-            chatname: 'TestUser',
+            chatname: 'Markus',
+            chatimg: 'https://socialstream.ninja/media/user2.jpg',
             chatmessage: 'Welcome to the squad!',
             membership: 'Tier 1',
             subtitle: 'Tier 1 subscription'
@@ -5047,14 +5049,16 @@ function buildTestAlertPayload(category) {
         donation: {
             type: 'twitch',
             event: 'donation',
-            chatname: 'TestUser',
+            chatname: 'Priya',
+            chatimg: 'https://socialstream.ninja/media/user3.jpg',
             chatmessage: 'Keep up the great work!',
             hasDonation: '$10.00'
         },
         bits: {
             type: 'twitch',
             event: 'cheer',
-            chatname: 'TestUser',
+            chatname: 'Ava',
+            chatimg: 'https://socialstream.ninja/media/user1.jpg',
             chatmessage: 'Cheer train incoming!',
             hasDonation: '500 bits',
             meta: { bits: 500 }
@@ -5062,7 +5066,8 @@ function buildTestAlertPayload(category) {
         raid: {
             type: 'twitch',
             event: 'raid',
-            chatname: 'TestUser',
+            chatname: 'CaptainSquawk',
+            chatimg: 'https://socialstream.ninja/media/user5.jpg',
             chatmessage: 'Raiding with 42 viewers!',
             meta: { viewers: 42 }
         }

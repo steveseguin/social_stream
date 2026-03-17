@@ -509,14 +509,34 @@ function buildAlertViewModel(payload = {}) {
   };
 }
 
+const MOCK_USERS = [
+  { name: 'Jess', img: './media/user1.jpg' },
+  { name: 'Markus', img: './media/user2.jpg' },
+  { name: 'Priya', img: './media/user3.jpg' },
+  { name: 'CaptainSquawk', img: './media/user5.jpg' }
+];
+
+function pickMockUser(category) {
+  const index = ({
+    [ALERT_CATEGORIES.FOLLOW]: 0,
+    [ALERT_CATEGORIES.SUBSCRIPTION]: 1,
+    [ALERT_CATEGORIES.DONATION]: 2,
+    [ALERT_CATEGORIES.BITS]: 0,
+    [ALERT_CATEGORIES.RAID]: 3
+  })[category] ?? 0;
+  return MOCK_USERS[index];
+}
+
 function createMockAlertPayload(category, overrides = {}) {
-  const baseName = overrides.chatname || 'SapheusOwO';
+  const mock = pickMockUser(category);
+  const baseName = overrides.chatname || mock.name;
+  const baseImg = overrides.chatimg || mock.img;
   const accent = CATEGORY_ACCENTS[category] || '#9146ff';
   const common = {
     type: 'twitch',
     platform: 'twitch',
     chatname: baseName,
-    chatimg: createAvatarDataUri(baseName, accent),
+    chatimg: baseImg,
     timestamp: Date.now(),
     meta: {}
   };
@@ -563,11 +583,9 @@ function createMockAlertPayload(category, overrides = {}) {
       payload = {
         ...common,
         event: 'raid',
-        chatname: 'campa',
-        chatimg: createAvatarDataUri('campa', accent),
         chatmessage: 'Raiding with 42 viewers!',
         contentimg: createMediaPreviewDataUri('RAID', accent),
-        meta: { viewers: 42, fromLogin: 'campa' }
+        meta: { viewers: 42, fromLogin: baseName.toLowerCase() }
       };
       break;
     default:
@@ -620,8 +638,9 @@ function readSettings() {
     password: normalizeText(urlParams.get('password')) || 'false',
     showTime: Math.max(1800, parseNumberParam('showtime', 8000)),
     cooldown: Math.max(0, parseNumberParam('cooldown', 900)),
-    queueEnabled: urlParams.has('queue'),
-    maxQueue: Math.max(1, Math.min(100, parseNumberParam('maxqueue', 25))),
+    queueEnabled: !urlParams.has('noqueue'),
+    maxQueue: Math.max(1, Math.min(100, parseNumberParam('maxqueue', 20))),
+    minShowTime: Math.max(1500, parseNumberParam('minshowtime', 3000)),
     beep: urlParams.has('beep'),
     beepVolume: Math.max(0, Math.min(1, parseNumberParam('beepvolume', 35) / 100)),
     customBeep: normalizeText(urlParams.get('custombeep')),
@@ -883,15 +902,23 @@ function displayAlert(model, options = {}) {
   }
   updateStatus(model.title);
 
-  const hideLead = Math.min(550, Math.max(280, Math.round(settings.showTime * 0.16)));
+  const queueLen = state.queue.length;
+  let effectiveShowTime = settings.showTime;
+  if (queueLen > 3) {
+    const ratio = Math.max(0, 1 - (queueLen - 3) / 10);
+    effectiveShowTime = Math.round(settings.minShowTime + ratio * (settings.showTime - settings.minShowTime));
+  }
+  card.style.setProperty('--progress-duration', `${effectiveShowTime}ms`);
+
+  const hideLead = Math.min(550, Math.max(280, Math.round(effectiveShowTime * 0.16)));
 
   state.showTimer = window.setTimeout(() => {
     card.classList.add('is-hiding');
-  }, Math.max(0, settings.showTime - hideLead));
+  }, Math.max(0, effectiveShowTime - hideLead));
 
   state.cleanupTimer = window.setTimeout(() => {
     finalizeAlert(card);
-  }, settings.showTime);
+  }, effectiveShowTime);
 }
 
 function finalizeAlert(card) {
@@ -901,9 +928,10 @@ function finalizeAlert(card) {
   state.currentAlert = null;
   elements.stage.classList.remove('has-alert');
 
-  if (settings.cooldown > 0) {
-    state.blockedUntil = Date.now() + settings.cooldown;
-    state.cooldownTimer = window.setTimeout(processQueue, settings.cooldown);
+  const effectiveCooldown = state.queue.length > 3 ? Math.min(settings.cooldown, 200) : settings.cooldown;
+  if (effectiveCooldown > 0) {
+    state.blockedUntil = Date.now() + effectiveCooldown;
+    state.cooldownTimer = window.setTimeout(processQueue, effectiveCooldown);
   } else {
     state.blockedUntil = 0;
     processQueue();
