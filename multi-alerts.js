@@ -1235,6 +1235,30 @@ function toAccentRgbTriplet(colorValue) {
   return `${r}, ${g}, ${b}`;
 }
 
+async function primeAudioPipeline() {
+  try {
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) return;
+    if (!state.audioContext) {
+      state.audioContext = new AudioContextCtor();
+    }
+    if (state.audioContext.state === 'suspended') {
+      await state.audioContext.resume();
+    }
+    const buf = state.audioContext.createBuffer(1, state.audioContext.sampleRate * 0.05, state.audioContext.sampleRate);
+    const src = state.audioContext.createBufferSource();
+    src.buffer = buf;
+    const gain = state.audioContext.createGain();
+    gain.gain.value = 0.001;
+    src.connect(gain);
+    gain.connect(state.audioContext.destination);
+    src.start();
+    await new Promise(resolve => setTimeout(resolve, 80));
+  } catch (e) {
+    log('audio prime failed', e);
+  }
+}
+
 async function playAlertSound(model) {
   if (!settings.beep) {
     return;
@@ -1263,6 +1287,7 @@ async function playAlertSound(model) {
         elements.audio.addEventListener('error', fail, { once: true });
         elements.audio.load();
       });
+      await primeAudioPipeline();
       await elements.audio.play();
       return;
     } catch (error) {
@@ -1271,16 +1296,7 @@ async function playAlertSound(model) {
   }
 
   try {
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextCtor) {
-      return;
-    }
-    if (!state.audioContext) {
-      state.audioContext = new AudioContextCtor();
-    }
-    if (state.audioContext.state === 'suspended') {
-      await state.audioContext.resume();
-    }
+    await primeAudioPipeline();
 
     const oscillator = state.audioContext.createOscillator();
     const gain = state.audioContext.createGain();
