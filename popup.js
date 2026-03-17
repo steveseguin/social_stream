@@ -4762,7 +4762,7 @@ const overlayPreviewConfigs = Object.freeze({
 });
 
 const overlayPreviewState = {
-    multialerts: { pending: null, timer: null }
+    multialerts: { pending: null, timer: null, muted: false }
 };
 
 function getLocalOverlayUrl(path) {
@@ -4981,7 +4981,7 @@ function replayOverlayPreview(previewKey, options = {}) {
                     : {
                         __multiAlertsPreviewEnvelope: true,
                         payload,
-                        silent: Boolean(options.silent)
+                        silent: Boolean(options.silent) || Boolean(state.muted)
                     };
             frame.contentWindow.postMessage({ [config.messageKey]: messagePayload }, '*');
         }
@@ -5058,7 +5058,6 @@ function buildTestAlertPayload(category) {
             type: 'twitch',
             event: 'cheer',
             chatname: 'Ava',
-            chatimg: 'https://socialstream.ninja/media/user1.jpg',
             chatmessage: 'Cheer train incoming!',
             hasDonation: '500 bits',
             meta: { bits: 500 }
@@ -6709,6 +6708,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ id: 'multi-alert-preview-raid', descriptor: { category: 'raid' } },
 		{ id: 'multi-alert-preview-clear', descriptor: false }
 	]);
+
+	var muteBtn = document.getElementById('multi-alert-preview-mute');
+	if (muteBtn) {
+		muteBtn.addEventListener('click', function() {
+			var state = overlayPreviewState.multialerts;
+			state.muted = !state.muted;
+			muteBtn.textContent = state.muted ? '🔇' : '🔊';
+			muteBtn.style.opacity = state.muted ? '1' : '0.6';
+		});
+	}
 	
 	
 	try {

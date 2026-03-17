@@ -513,7 +513,8 @@ const MOCK_USERS = [
   { name: 'Jess', img: './media/user1.jpg' },
   { name: 'Markus', img: './media/user2.jpg' },
   { name: 'Priya', img: './media/user3.jpg' },
-  { name: 'CaptainSquawk', img: './media/user5.jpg' }
+  { name: 'CaptainSquawk', img: './media/user5.jpg' },
+  { name: 'Ava', img: '' }
 ];
 
 function pickMockUser(category) {
@@ -521,7 +522,7 @@ function pickMockUser(category) {
     [ALERT_CATEGORIES.FOLLOW]: 0,
     [ALERT_CATEGORIES.SUBSCRIPTION]: 1,
     [ALERT_CATEGORIES.DONATION]: 2,
-    [ALERT_CATEGORIES.BITS]: 0,
+    [ALERT_CATEGORIES.BITS]: 4,
     [ALERT_CATEGORIES.RAID]: 3
   })[category] ?? 0;
   return MOCK_USERS[index];

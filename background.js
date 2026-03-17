@@ -4756,7 +4756,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 			if (request.payload && typeof request.payload === "object") {
 				sendToDestinations(request.payload);
-				try { sendTargetP2P(request.payload, "alerts"); } catch(e) {}
 			}
 		} else if (request.cmd && request.cmd === "fakemeta") {
 			sendResponse({ state: isExtensionOn });
