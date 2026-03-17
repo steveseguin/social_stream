@@ -1,0 +1,119 @@
+name: Unicode Security Scan
+
+on:
+  push:
+    branches: [main, beta]
+  pull_request:
+    branches: [main, beta]
+
+jobs:
+  scan-unicode:
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[ci skip]') && github.actor != 'github-pages[bot]'"
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Scan for malicious invisible Unicode characters
+      run: |
+        echo "Scanning for invisible/malicious Unicode characters..."
+        echo "=================================================="
+
+        # Build a regex character class covering dangerous invisible Unicode:
+        #
+        # Bidirectional overrides & isolates (Trojan Source - CVE-2021-42574):
+        #   U+202A-202E  (LRE, RLE, PDF, LRO, RLO)
+        #   U+2066-2069  (LRI, RLI, FSI, PDI)
+        #   U+200F       (RTL Mark)
+        #   U+200E       (LTR Mark)
+        #   U+061C       (Arabic Letter Mark)
+        #
+        # Zero-width / invisible characters (Glassworm-style attacks):
+        #   U+200B       (Zero Width Space)
+        #   U+200C       (Zero Width Non-Joiner)
+        #   U+200D       (Zero Width Joiner)
+        #   U+2060       (Word Joiner)
+        #   U+2063       (Invisible Separator)
+        #   U+FEFF       (Zero Width No-Break Space / BOM - suspicious mid-file)
+        #   U+00AD       (Soft Hyphen)
+        #   U+180E       (Mongolian Vowel Separator)
+        #   U+034F       (Combining Grapheme Joiner)
+        #
+        # Format characters that can hide payloads:
+        #   U+FE00-FE0F  (Variation Selectors 1-16)
+        #   U+E0100-E01EF (Variation Selectors 17-256)
+        #   U+E0001      (Language Tag)
+        #   U+E0020-E007F (Tag characters)
+        #
+        # Control characters (excluding TAB, LF, CR which are normal):
+        #   U+0000-0008, U+000B-000C, U+000E-001F  (C0 controls minus TAB/LF/CR)
+        #   U+007F-009F  (DEL + C1 controls)
+
+        PATTERN='[\x{0000}-\x{0008}\x{000B}\x{000C}\x{000E}-\x{001F}\x{007F}-\x{009F}\x{00AD}\x{034F}\x{061C}\x{180E}\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}\x{2063}\x{2066}-\x{2069}\x{FE00}-\x{FE0F}\x{FEFF}\x{E0001}\x{E0020}-\x{E007F}\x{E0100}-\x{E01EF}]'
+
+        # File extensions to scan (source code, configs, docs)
+        INCLUDES=(
+          --include='*.js'
+          --include='*.mjs'
+          --include='*.cjs'
+          --include='*.ts'
+          --include='*.tsx'
+          --include='*.jsx'
+          --include='*.json'
+          --include='*.html'
+          --include='*.htm'
+          --include='*.css'
+          --include='*.scss'
+          --include='*.less'
+          --include='*.svg'
+          --include='*.xml'
+          --include='*.yml'
+          --include='*.yaml'
+          --include='*.md'
+          --include='*.txt'
+          --include='*.sh'
+          --include='*.bash'
+          --include='*.py'
+          --include='*.rb'
+          --include='*.php'
+          --include='*.toml'
+          --include='*.cfg'
+          --include='*.ini'
+          --include='*.env.example'
+        )
+
+        # Directories to skip
+        EXCLUDES=(
+          --exclude-dir='.git'
+          --exclude-dir='node_modules'
+          --exclude-dir='vendor'
+          --exclude-dir='dist'
+          --exclude-dir='.next'
+          --exclude-dir='build'
+        )
+
+        FOUND=0
+
+        # Use grep with PCRE for Unicode support
+        if grep -rPn "${INCLUDES[@]}" "${EXCLUDES[@]}" "$PATTERN" . 2>/dev/null; then
+          FOUND=1
+        fi
+
+        echo "=================================================="
+
+        if [ "$FOUND" -eq 1 ]; then
+          echo ""
+          echo "::error::SECURITY: Invisible or malicious Unicode characters detected!"
+          echo ""
+          echo "This can indicate:"
+          echo "  - Trojan Source attacks (bidi overrides that reorder displayed code)"
+          echo "  - Prompt injection via invisible characters targeting AI systems"
+          echo "  - Hidden payloads encoded in zero-width or tag characters"
+          echo ""
+          echo "If these characters are intentional (e.g., in localization files),"
+          echo "add [skip ci] to your commit message or update the workflow excludes."
+          exit 1
+        else
+          echo "No malicious Unicode characters found."
+        fi
