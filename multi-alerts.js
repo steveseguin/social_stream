@@ -1251,8 +1251,8 @@ async function primeAudioPipeline(startup) {
     if (state.audioContext.state === 'suspended') {
       await state.audioContext.resume();
     }
-    var duration = startup ? 0.25 : 0.1;
-    var waitMs = startup ? 300 : 200;
+    var duration = startup ? 0.25 : 0.25;
+    var waitMs = startup ? 500 : 500;
     var buf = state.audioContext.createBuffer(1, state.audioContext.sampleRate * duration, state.audioContext.sampleRate);
     var src = state.audioContext.createBufferSource();
     src.buffer = buf;
