@@ -158,7 +158,8 @@ const state = {
   audioContext: null,
   activeOscillator: null,
   activeGain: null,
-  lastAudioTime: 0
+  lastAudioTime: 0,
+  audioKeepAlive: null
 };
 
 const elements = {
@@ -180,7 +181,11 @@ if (!settings.previewOnly && settings.roomID) {
   }
 }
 
-primeAudioPipeline(true);
+if (window.obsstudio) {
+  startAudioKeepAlive();
+} else {
+  primeAudioPipeline();
+}
 
 function log(...args) {
   if (settings.debug) {
@@ -1238,30 +1243,55 @@ function toAccentRgbTriplet(colorValue) {
   return `${r}, ${g}, ${b}`;
 }
 
-async function primeAudioPipeline(startup) {
-  var PRIME_STALE_MS = 3000;
-  var now = Date.now();
-  if (!startup && state.lastAudioTime && (now - state.lastAudioTime < PRIME_STALE_MS)) return;
+function ensureAudioContext() {
+  var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextCtor) return null;
+  if (!state.audioContext) {
+    state.audioContext = new AudioContextCtor();
+  }
+  if (state.audioContext.state === 'suspended') {
+    state.audioContext.resume();
+  }
+  return state.audioContext;
+}
+
+function audioKeepAliveBlip() {
   try {
-    var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextCtor) return;
-    if (!state.audioContext) {
-      state.audioContext = new AudioContextCtor();
-    }
-    if (state.audioContext.state === 'suspended') {
-      await state.audioContext.resume();
-    }
-    var duration = startup ? 0.25 : 0.25;
-    var waitMs = startup ? 750 : 500;
-    var buf = state.audioContext.createBuffer(1, state.audioContext.sampleRate * duration, state.audioContext.sampleRate);
-    var src = state.audioContext.createBufferSource();
+    var ctx = ensureAudioContext();
+    if (!ctx) return;
+    var buf = ctx.createBuffer(1, ctx.sampleRate * 0.02, ctx.sampleRate);
+    var src = ctx.createBufferSource();
     src.buffer = buf;
-    var gain = state.audioContext.createGain();
+    var gain = ctx.createGain();
     gain.gain.value = 0.001;
     src.connect(gain);
-    gain.connect(state.audioContext.destination);
+    gain.connect(ctx.destination);
     src.start();
-    await new Promise(resolve => setTimeout(resolve, waitMs));
+  } catch (e) {}
+}
+
+function startAudioKeepAlive() {
+  if (state.audioKeepAlive) return;
+  audioKeepAliveBlip();
+  state.audioKeepAlive = setInterval(audioKeepAliveBlip, 3000);
+}
+
+async function primeAudioPipeline() {
+  var PRIME_STALE_MS = 3000;
+  var now = Date.now();
+  if (state.lastAudioTime && (now - state.lastAudioTime < PRIME_STALE_MS)) return;
+  try {
+    var ctx = ensureAudioContext();
+    if (!ctx) return;
+    var buf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    var gain = ctx.createGain();
+    gain.gain.value = 0.001;
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start();
+    await new Promise(resolve => setTimeout(resolve, 80));
     state.lastAudioTime = Date.now();
   } catch (e) {
     log('audio prime failed', e);
