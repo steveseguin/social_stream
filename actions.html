@@ -324,6 +324,8 @@
         var iframe = null;
         var roomID = "test";
         var password = "false";
+        var globalVolume = urlParams.has("volume") ? Math.max(0, Math.min(1, parseFloat(urlParams.get("volume")))) : 1.0;
+        if (isNaN(globalVolume)) { globalVolume = 1.0; }
         var mediaContainer = document.getElementById('fullscreen-media-container');
         var statusMessage = document.getElementById('status-message');
         var obsStudio = null;
@@ -1547,14 +1549,14 @@
 		}
 
         // Function to play audio
-        async function playAudio(audioUrl, volume = 1.0) {
+        async function playAudio(audioUrl, volume) {
             try {
                 if (audioContext.state === 'suspended') {
                     await audioContext.resume();
                 }
-                
+
                 const audio = new Audio(audioUrl);
-                audio.volume = parseFloat(volume);
+                audio.volume = volume !== undefined ? parseFloat(volume) : globalVolume;
                 await audio.play();
                 console.log("Playing audio:", audioUrl);
             } catch (e) {
