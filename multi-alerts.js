@@ -157,7 +157,8 @@ const state = {
   blockedUntil: 0,
   audioContext: null,
   activeOscillator: null,
-  activeGain: null
+  activeGain: null,
+  audioPrimed: false
 };
 
 const elements = {
@@ -178,6 +179,8 @@ if (!settings.previewOnly && settings.roomID) {
     setupSocket();
   }
 }
+
+primeAudioPipeline(true);
 
 function log(...args) {
   if (settings.debug) {
@@ -1235,7 +1238,8 @@ function toAccentRgbTriplet(colorValue) {
   return `${r}, ${g}, ${b}`;
 }
 
-async function primeAudioPipeline() {
+async function primeAudioPipeline(startup) {
+  if (state.audioPrimed && !startup) return;
   try {
     const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextCtor) return;
@@ -1245,7 +1249,9 @@ async function primeAudioPipeline() {
     if (state.audioContext.state === 'suspended') {
       await state.audioContext.resume();
     }
-    const buf = state.audioContext.createBuffer(1, state.audioContext.sampleRate * 0.05, state.audioContext.sampleRate);
+    const duration = startup ? 0.25 : 0.05;
+    const waitMs = startup ? 300 : 80;
+    const buf = state.audioContext.createBuffer(1, state.audioContext.sampleRate * duration, state.audioContext.sampleRate);
     const src = state.audioContext.createBufferSource();
     src.buffer = buf;
     const gain = state.audioContext.createGain();
@@ -1253,7 +1259,8 @@ async function primeAudioPipeline() {
     src.connect(gain);
     gain.connect(state.audioContext.destination);
     src.start();
-    await new Promise(resolve => setTimeout(resolve, 80));
+    await new Promise(resolve => setTimeout(resolve, waitMs));
+    state.audioPrimed = true;
   } catch (e) {
     log('audio prime failed', e);
   }
