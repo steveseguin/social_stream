@@ -5437,8 +5437,12 @@ async function sendToDestinations(message) {
 		}
 	}
 	
+	var isAlertMessage = message && message.event;
+
 	try {
-		sendDataP2P(message); 
+		if (!(settings.excludeAlertsDock && isAlertMessage)) {
+			sendDataP2P(message);
+		}
 	} catch (e) {
 		console.error(e);
 	}
@@ -5464,7 +5468,7 @@ async function sendToDestinations(message) {
 	} catch (e) {
 		console.error(e);
 	}
-	
+
 	try {
 		if (settings.wordcloud){
 			sendTargetP2P(message, "wordcloud");
@@ -5474,7 +5478,7 @@ async function sendToDestinations(message) {
 	}
 
 	try {
-		if (message && message.event && typeof message.event === "string") {
+		if (isAlertMessage) {
 			sendTargetP2P(message, "alerts");
 		}
 	} catch (e) {
