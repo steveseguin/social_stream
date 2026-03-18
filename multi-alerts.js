@@ -158,7 +158,7 @@ const state = {
   audioContext: null,
   activeOscillator: null,
   activeGain: null,
-  audioPrimed: false
+  lastAudioTime: 0
 };
 
 const elements = {
@@ -1239,9 +1239,11 @@ function toAccentRgbTriplet(colorValue) {
 }
 
 async function primeAudioPipeline(startup) {
-  if (state.audioPrimed && !startup) return;
+  var PRIME_STALE_MS = 3000;
+  var now = Date.now();
+  if (!startup && state.lastAudioTime && (now - state.lastAudioTime < PRIME_STALE_MS)) return;
   try {
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextCtor) return;
     if (!state.audioContext) {
       state.audioContext = new AudioContextCtor();
@@ -1249,18 +1251,18 @@ async function primeAudioPipeline(startup) {
     if (state.audioContext.state === 'suspended') {
       await state.audioContext.resume();
     }
-    const duration = startup ? 0.25 : 0.05;
-    const waitMs = startup ? 300 : 80;
-    const buf = state.audioContext.createBuffer(1, state.audioContext.sampleRate * duration, state.audioContext.sampleRate);
-    const src = state.audioContext.createBufferSource();
+    var duration = startup ? 0.25 : 0.1;
+    var waitMs = startup ? 300 : 200;
+    var buf = state.audioContext.createBuffer(1, state.audioContext.sampleRate * duration, state.audioContext.sampleRate);
+    var src = state.audioContext.createBufferSource();
     src.buffer = buf;
-    const gain = state.audioContext.createGain();
+    var gain = state.audioContext.createGain();
     gain.gain.value = 0.001;
     src.connect(gain);
     gain.connect(state.audioContext.destination);
     src.start();
     await new Promise(resolve => setTimeout(resolve, waitMs));
-    state.audioPrimed = true;
+    state.lastAudioTime = Date.now();
   } catch (e) {
     log('audio prime failed', e);
   }
@@ -1296,6 +1298,7 @@ async function playAlertSound(model) {
       });
       await primeAudioPipeline();
       await elements.audio.play();
+      state.lastAudioTime = Date.now();
       return;
     } catch (error) {
       log('custom beep failed', error);
@@ -1334,6 +1337,7 @@ async function playAlertSound(model) {
     };
     oscillator.start(now);
     oscillator.stop(now + 0.32);
+    state.lastAudioTime = Date.now();
   } catch (error) {
     log('beep generation failed', error);
     clearActiveGeneratedSound();
