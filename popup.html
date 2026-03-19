@@ -9760,7 +9760,31 @@ input:checked + .slider:before {
                 </h3>
                 <div id="flowactions" data-raw="" class="flowactions_chat"><a href="" id="flowactionslink"></a></div>
             </div>
-			
+
+			<div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-general-options" />
+                    <label class="collapsible-label" for="wrapper-flowactions-general-options">⚙️ <span data-translate="flowactions-general-settings">General Settings</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group flowactions">
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param18="volume" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>
+                                        🔉 Media Volume
+                                        <input type="range" min="0" max="1" step="0.05" value="1" style="width: 150px;" data-numbersetting18="volume" data-range-display="flowactions-volume-display" data-range-suffix="" />
+                                        <span class="range-value" id="flowactions-volume-display">1.00</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 			<div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-obs-options" />
@@ -9795,22 +9819,6 @@ input:checked + .slider:before {
                     <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-tts-options" />
                     <label class="collapsible-label" for="wrapper-flowactions-tts-options">🔊 <span data-translate="tts-settings">Text-to-Speech Settings</span></label>
                     <div class="collapsible-text">
-                        <div class="options">
-                            <div class="options_group flowactions">
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-param18="volume" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="system-tts-volume">
-                                        🔉 Volume
-                                        <input type="range" min="0" max="1" step="0.05" value="1" style="width: 150px;" data-numbersetting18="volume" data-range-display="flowactions-volume-display" data-range-suffix="" />
-                                        <span class="range-value" id="flowactions-volume-display">1.00</span>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- TTS Provider Selection -->
                         <div class="tts-provider-selection" style="margin:0 10px 10px 10px">
                             <h3 data-translate="tts-service-provider">Text-to-Speech Service Provider</h3>
