@@ -5058,6 +5058,7 @@ function buildTestAlertPayload(category) {
             type: 'twitch',
             event: 'cheer',
             chatname: 'Ava',
+            chatimg: 'https://socialstream.ninja/media/user4.png',
             chatmessage: 'Cheer train incoming!',
             hasDonation: '500 bits',
             meta: { bits: 500 }

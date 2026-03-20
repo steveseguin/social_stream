@@ -522,7 +522,7 @@ const MOCK_USERS = [
   { name: 'Markus', img: './media/user2.jpg' },
   { name: 'Priya', img: './media/user3.jpg' },
   { name: 'CaptainSquawk', img: './media/user5.jpg' },
-  { name: 'Ava', img: '' }
+  { name: 'Ava', img: './media/user4.png' }
 ];
 
 function pickMockUser(category) {
