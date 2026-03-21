@@ -158,23 +158,24 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      min-height: 28px;
-      padding: 0 10px;
+      min-height: 36px;
+      padding: 2px 14px;
       border-radius: 999px;
-      background: rgba(7, 10, 16, 0.42);
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      color: rgba(241, 245, 249, 0.78);
-      font-size: 11px;
-      font-weight: 600;
+      background: var(--source-color, rgba(7, 10, 16, 0.42));
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     }
 
     .source-badge img {
-      width: 15px;
-      height: 15px;
+      width: 20px;
+      height: 20px;
       object-fit: contain;
     }
 
@@ -540,6 +541,7 @@
   <div id="alert-status" class="status-chip">Waiting for alerts</div>
   <audio id="custom-alert-audio" preload="auto"></audio>
   <script type="text/javascript" src="tts.js"></script>
+  <script type="text/javascript" src="./libs/colours.js"></script>
   <script type="module" src="./multi-alerts.js"></script>
 </body>
 </html>

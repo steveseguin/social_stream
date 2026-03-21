@@ -1115,6 +1115,13 @@ function buildSourceBadge(model) {
   const badge = document.createElement('div');
   badge.className = 'source-badge';
 
+  if (typeof getColorFromType === 'function' && model.sourceKey) {
+    const color = getColorFromType(model.sourceKey);
+    if (color) {
+      badge.style.setProperty('--source-color', color);
+    }
+  }
+
   const iconPath = SOURCE_ICON_MAP[model.sourceKey];
   if (iconPath) {
     const img = document.createElement('img');
