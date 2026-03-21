@@ -104,6 +104,14 @@
 		return String(value || "").replace(/\s+/g, " ").trim();
 	}
 
+	function isLikelyTimeLabel(value) {
+		const text = normalizeMessageKey(value).toLowerCase();
+		if (!text) {
+			return false;
+		}
+		return /^\d{1,2}:\d{2}\s?(am|pm)$/.test(text);
+	}
+
 	function rememberMessageKey(key) {
 		if (!key) {
 			return;
@@ -141,9 +149,40 @@
 		}
 	}
 
+	function getChatComposer(root) {
+		const scope = root && root.querySelector ? root : document;
+		try {
+			return scope.querySelector("textarea[aria-label='Send a message'], textarea[placeholder='Send a message'], textarea[inputmode='text']");
+		} catch(e) {
+			return null;
+		}
+	}
+
+	function getAvatarContainers(root) {
+		if (!root || !root.querySelectorAll) {
+			return [];
+		}
+		try {
+			return root.querySelectorAll("[data-testid^='UserAvatar-Container-']");
+		} catch(e) {
+			return [];
+		}
+	}
+
+	function getLegacyDisplayNameElement(ele) {
+		if (!ele || !ele.querySelector) {
+			return null;
+		}
+		try {
+			return ele.querySelector("span[style*='color']");
+		} catch(e) {
+			return null;
+		}
+	}
+
 	function getDisplayNameElement(ele) {
 		if (!ele || !ele.querySelectorAll) {
-			return null;
+			return getLegacyDisplayNameElement(ele);
 		}
 		try {
 			const candidates = ele.querySelectorAll("a[href^='/'] span");
@@ -159,12 +198,38 @@
 				return candidate;
 			}
 		} catch(e) {}
+		return getLegacyDisplayNameElement(ele);
+	}
+
+	function getLegacyMessageContentNode(ele) {
+		if (!ele) {
+			return null;
+		}
+		try {
+			if (ele.childNodes && (ele.childNodes.length > 1) && ele.childNodes[1]) {
+				return ele.childNodes[1];
+			}
+		} catch(e) {}
+		try {
+			const button = ele.querySelector ? ele.querySelector("button") : null;
+			if (button) {
+				return button;
+			}
+		} catch(e) {}
+		try {
+			if (ele.querySelectorAll) {
+				const spans = ele.querySelectorAll("span");
+				if (spans.length) {
+					return spans[spans.length - 1];
+				}
+			}
+		} catch(e) {}
 		return null;
 	}
 
 	function getMessageContentNode(ele) {
 		if (!ele || !ele.querySelectorAll) {
-			return null;
+			return getLegacyMessageContentNode(ele);
 		}
 		try {
 			const spans = ele.querySelectorAll("span");
@@ -196,9 +261,29 @@
 					candidate = span;
 				}
 			}
-			return candidate;
+			if (candidate) {
+				return candidate;
+			}
 		} catch(e) {}
-		return null;
+		return getLegacyMessageContentNode(ele);
+	}
+
+	function isLikelyLegacyMessageRow(ele) {
+		if (!ele || (ele.nodeType !== 1)) {
+			return false;
+		}
+		try {
+			if (!getLegacyDisplayNameElement(ele)) {
+				return false;
+			}
+			const messageNode = getLegacyMessageContentNode(ele);
+			if (!messageNode) {
+				return false;
+			}
+			const messageText = normalizeMessageKey(getAllContentNodes(messageNode));
+			return !!messageText;
+		} catch(e) {}
+		return false;
 	}
 
 	function isLikelyMessageRow(ele) {
@@ -220,10 +305,28 @@
 		return false;
 	}
 
+	function findLegacyMessageRow(ele) {
+		let current = ele;
+		while (current && (current.nodeType === 1)) {
+			if (isLikelyLegacyMessageRow(current)) {
+				return current;
+			}
+			const parent = current.parentElement;
+			if (!parent || (parent === document.body)) {
+				break;
+			}
+			if (getChatComposer(parent)) {
+				break;
+			}
+			current = parent;
+		}
+		return isLikelyLegacyMessageRow(ele) ? ele : null;
+	}
+
 	function getMessageRow(ele) {
 		const avatar = getAvatarContainer(ele);
 		if (!avatar) {
-			return null;
+			return findLegacyMessageRow(ele);
 		}
 		let current = avatar;
 		let lastMatch = null;
@@ -243,7 +346,7 @@
 			if (parent.matches && parent.matches('[data-testid="chatContainer"]')) {
 				break;
 			}
-			if (parent.querySelector && parent.querySelector("textarea[inputmode='text'], textarea[aria-label='Send a message']")) {
+			if (getChatComposer(parent)) {
 				break;
 			}
 			current = parent;
@@ -267,11 +370,20 @@
 		try {
 			const avatar = getAvatarContainer(row);
 			if (!avatar) {
-				return "";
+				throw new Error("Missing avatar container");
 			}
 			const avatarId = avatar.getAttribute("data-testid") || "";
 			if (avatarId.startsWith("UserAvatar-Container-")) {
 				return escapeHtml(avatarId.replace("UserAvatar-Container-", ""));
+			}
+		} catch(e) {}
+		try {
+			const nameElement = getDisplayNameElement(row);
+			if (nameElement && nameElement.parentNode && nameElement.parentNode.parentNode && nameElement.parentNode.parentNode.nextSibling) {
+				const fallbackUsername = escapeHtml(nameElement.parentNode.parentNode.nextSibling.textContent.trim());
+				if (fallbackUsername.startsWith("@")) {
+					return fallbackUsername.replace(/^@+/, "");
+				}
 			}
 		} catch(e) {}
 		return "";
@@ -290,6 +402,28 @@
 			String(username || chatname || "").toLowerCase(),
 			normalizeMessageKey(msg)
 		].join("|");
+	}
+
+	function buildMessageKeyFromRow(row) {
+		try {
+			if (!row || !row.querySelectorAll) {
+				return "";
+			}
+			const nameElement = getDisplayNameElement(row);
+			const messageNode = getMessageContentNode(row);
+			if (!nameElement || !messageNode) {
+				return "";
+			}
+			const chatname = escapeHtml((nameElement.textContent || "").trim().split(":")[0] || "");
+			const msg = normalizeMessageKey(getAllContentNodes(messageNode));
+			if (!chatname || !msg) {
+				return "";
+			}
+			const username = getUsernameFromRow(row);
+			return buildMessageKey(row, username, chatname, msg);
+		} catch(e) {
+			return "";
+		}
 	}
 
 	function scheduleProcessMessage(ele, delay) {
@@ -311,7 +445,7 @@
 		if (!container || !container.querySelectorAll) {
 			return;
 		}
-		const avatars = container.querySelectorAll("[data-testid^='UserAvatar-Container-']");
+		const avatars = getAvatarContainers(container);
 		const seenRows = new WeakSet();
 		for (let i = 0; i < avatars.length; i++) {
 			const row = getMessageRow(avatars[i]);
@@ -319,6 +453,10 @@
 				continue;
 			}
 			seenRows.add(row);
+			const rowKey = buildMessageKeyFromRow(row);
+			if (rowKey) {
+				rememberMessageKey(rowKey);
+			}
 			row.skip = true;
 			try {
 				pendingMessageNodes.delete(row);
@@ -327,6 +465,68 @@
 				messageRetryCounts.delete(row);
 			} catch(e) {}
 		}
+	}
+
+	function resolveChatContainer() {
+		try {
+			const direct = document.querySelector('[data-testid="chatContainer"]');
+			if (direct) {
+				return direct;
+			}
+		} catch(e) {}
+
+		try {
+			const composer = getChatComposer(document);
+			if (composer) {
+				const semanticContainer = composer.closest('[data-testid="chatContainer"]');
+				if (semanticContainer) {
+					return semanticContainer;
+				}
+				let current = composer.parentElement;
+				let bestMatch = null;
+				while (current && (current !== document.body)) {
+					const avatarCount = getAvatarContainers(current).length;
+					if (avatarCount) {
+						bestMatch = current;
+						if (avatarCount > 1) {
+							return current;
+						}
+					}
+					current = current.parentElement;
+				}
+				if (bestMatch) {
+					return bestMatch;
+				}
+			}
+		} catch(e) {}
+
+		try {
+			const avatar = document.querySelector("[data-testid^='UserAvatar-Container-']");
+			if (avatar) {
+				const row = getMessageRow(avatar);
+				if (row) {
+					const semanticContainer = row.closest('[data-testid="chatContainer"]');
+					if (semanticContainer) {
+						return semanticContainer;
+					}
+					let current = row.parentElement;
+					let bestMatch = row.parentElement || row;
+					while (current && (current !== document.body)) {
+						const avatarCount = getAvatarContainers(current).length;
+						if (avatarCount) {
+							bestMatch = current;
+						}
+						if (avatarCount > 1 && getChatComposer(current)) {
+							return current;
+						}
+						current = current.parentElement;
+					}
+					return bestMatch;
+				}
+			}
+		} catch(e) {}
+
+		return null;
 	}
 	
 	function processMessage(ele){
@@ -417,6 +617,11 @@
 			row.skip = true;
 			return;
 		}
+
+		if (isLikelyTimeLabel(msg)) {
+			row.skip = true;
+			return;
+		}
 		
 		const currentMsg = buildMessageKey(row, username, chatname, msg);
 		if (hasSeenMessageKey(currentMsg)) {
@@ -494,9 +699,12 @@
 						
 					}
 					if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-						document.querySelector('textarea').focus();
-						sendResponse(true);
-						return;
+						let composer = getChatComposer(document);
+						if (composer && composer.focus){
+							composer.focus();
+							sendResponse(true);
+							return;
+						}
 					}
 				}
 				if (typeof request === "object"){
@@ -685,31 +893,19 @@
 				} catch(e) {}
 				observedContainer = null;
 			}
-			if (document.querySelector('[data-testid="chatContainer"], main > div > div > div:nth-child(2)')){
-				//console.log("found it");
-				var container = document.querySelector('[data-testid="chatContainer"], main > div > div > div:nth-child(2)');
-				if (container && !container.marked){
-					container.marked=true;
-					setTimeout(function(container){
-						console.log("Social Stream started");
-						if (container && (observedContainer !== container)){
-							onElementInserted(container);
-						}
+			var container = resolveChatContainer();
+			if (!container) {
+				container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
+			}
+			if (container && !container.marked){
+				container.marked=true;
+				setTimeout(function(container){
+					console.log("Social Stream started");
+					if (container && (observedContainer !== container)){
+						onElementInserted(container);
+					}
 
-					},1000, container);
-				}
-			} else {
-				var container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);
-				if (container && !container.marked){
-					container.marked=true;
-					setTimeout(function(container){
-						console.log("Social Stream started");
-						if (container && (observedContainer !== container)){
-							onElementInserted(container);
-						}
-
-					},1000, container);
-				}
+				},1000, container);
 			}
 		} catch(e){
 			//console.warn(e);
