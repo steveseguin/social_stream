@@ -511,13 +511,8 @@ if (typeof chrome.runtime == "undefined") {
 		return;
 	  }
 
-	  const eventData = {
-		...c,
-		tab: a.tabId
-	  };
-
-	  // Preserve the exact Input.dispatchKeyEvent type
 	  if (b === "Input.dispatchKeyEvent") {
+		const eventData = { ...c, tab: a.tabId };
 		const response = await ipcRenderer.sendSync("sendInputToTab", eventData);
 		callback?.(response);
 	  } else {
@@ -580,6 +575,12 @@ if (typeof chrome.runtime == "undefined") {
 		log("FROM MAINS SENDER", args);
 
 		if (args.length) {
+			if (args[0] && typeof args[0] === "object" && (("response" in args[0]) || ("action" in args[0]))) {
+				Promise.resolve(processIncomingRequest(args[0])).catch((error) => {
+					console.error("fromMainSender-processIncomingRequest failed", error);
+				});
+				return;
+			}
 			if (args[1]) {
 				var sender = args[1];
 			} else {
