@@ -744,7 +744,7 @@
 	}
 
 	function isDeletedKickMessage(ele) {
-		const messageEle = getKickMessageContainer(ele) || (ele?.nodeType === 1 ? ele : null);
+		const messageEle = getKickMessageContainer(ele);
 		if (!messageEle) {
 			return false;
 		}
@@ -758,7 +758,8 @@
 	}
 	
 	function deleteThis(ele){
-		const messageEle = getKickMessageContainer(ele) || (ele?.nodeType === 1 ? ele : null);
+		// MutationObserver targets can be the chat list wrapper; only act on actual message rows.
+		const messageEle = getKickMessageContainer(ele);
 		if (!messageEle || !isDeletedKickMessage(messageEle)) {
 			return false;
 		}
