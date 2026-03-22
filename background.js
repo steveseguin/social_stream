@@ -511,13 +511,8 @@ if (typeof chrome.runtime == "undefined") {
 		return;
 	  }
 
-	  const eventData = {
-		...c,
-		tab: a.tabId
-	  };
-
-	  // Preserve the exact Input.dispatchKeyEvent type
 	  if (b === "Input.dispatchKeyEvent") {
+		const eventData = { ...c, tab: a.tabId };
 		const response = await ipcRenderer.sendSync("sendInputToTab", eventData);
 		callback?.(response);
 	  } else {
@@ -580,6 +575,12 @@ if (typeof chrome.runtime == "undefined") {
 		log("FROM MAINS SENDER", args);
 
 		if (args.length) {
+			if (args[0] && typeof args[0] === "object" && (("response" in args[0]) || ("action" in args[0]))) {
+				Promise.resolve(processIncomingRequest(args[0])).catch((error) => {
+					console.error("fromMainSender-processIncomingRequest failed", error);
+				});
+				return;
+			}
 			if (args[1]) {
 				var sender = args[1];
 			} else {
@@ -4723,6 +4724,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch (e) {
 				console.error(e);
 			}
+		} else if (request.cmd && request.cmd === "clearAlerts") {
+			sendResponse({ state: isExtensionOn });
+			try {
+				sendTargetP2P({ action: "clearAlerts" }, "alerts");
+			} catch (e) {
+				console.error(e);
+			}
 		} else if (request.cmd && request.cmd === "uploadRAGfile") {
 			sendResponse({ state: isExtensionOn });
 			await importSettingsLLM(request.enhancedProcessing || false);
@@ -4745,6 +4753,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 
 			triggerFakeRandomMessage();
+		} else if (request.cmd && request.cmd === "testAlert") {
+			sendResponse({ state: isExtensionOn });
+			if (request.payload && typeof request.payload === "object") {
+				sendToDestinations(request.payload);
+			}
 		} else if (request.cmd && request.cmd === "fakemeta") {
 			sendResponse({ state: isExtensionOn });
 
@@ -5425,8 +5438,12 @@ async function sendToDestinations(message) {
 		}
 	}
 	
+	var isAlertMessage = message && message.event;
+
 	try {
-		sendDataP2P(message); 
+		if (!(settings.excludeAlertsDock && isAlertMessage)) {
+			sendDataP2P(message);
+		}
 	} catch (e) {
 		console.error(e);
 	}
@@ -5452,10 +5469,18 @@ async function sendToDestinations(message) {
 	} catch (e) {
 		console.error(e);
 	}
-	
+
 	try {
 		if (settings.wordcloud){
 			sendTargetP2P(message, "wordcloud");
+		}
+	} catch (e) {
+		console.error(e);
+	}
+
+	try {
+		if (isAlertMessage) {
+			sendTargetP2P(message, "alerts");
 		}
 	} catch (e) {
 		console.error(e);
@@ -14723,19 +14748,20 @@ async function triggerFakeRandomMessage(){
 	// or until we've tried a reasonable number of times
 	do {
 		data = {};
-		data.chatname = "John Doe";
+		data.chatname = "Jess";
 		data.nameColor = "";
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
-		data.chatimg = "";
+		data.chatimg = "https://socialstream.ninja/media/user1.jpg";
 		data.type = "youtube";
-		
+
 		if (Math.random() > 0.9) {
 			data.hasDonation = "2500 gold";
 			data.membership = "";
-			data.chatname = "Bob";
+			data.chatname = "Markus";
+			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
 			data.chatbadges = [];
 			var html = {};
 			html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
@@ -14745,14 +14771,14 @@ async function triggerFakeRandomMessage(){
 			data.hasDonation = "3 hearts";
 			data.membership = "";
 			data.chatmessage = "";
-			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
-			data.chatname = "Lucy";
+			data.chatimg = "https://socialstream.ninja/media/user3.jpg";
+			data.chatname = "Priya";
 			data.type = "youtubeshorts";
 		} else if (Math.random() > 0.7) {
 			data.hasDonation = "";
 			data.membership = "";
-			data.chatimg = "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
-			data.chatname = "vdoninja";
+			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
+			data.chatname = "DanTheMan";
 			data.type = "twitch";
 			data.event = "test";
 			var score = parseInt(Math.random() * 378);
@@ -14760,9 +14786,9 @@ async function triggerFakeRandomMessage(){
 		} else if (Math.random() > 0.6) {
 			data.hasDonation = "";
 			data.membership = "";
-			data.chatimg = "https://socialstream.ninja/media/sampleavatar.png";
-			data.chatname = "Steve";
-			
+			data.chatimg = "https://socialstream.ninja/media/user5.jpg";
+			data.chatname = "CaptainSquawk";
+
 			data.vip = true;
 			var score = parseInt(Math.random() * 378);
 			data.chatmessage = '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦 https://vdo.ninja/';
@@ -14770,15 +14796,16 @@ async function triggerFakeRandomMessage(){
 			data.hasDonation = "";
 			data.nameColor = "#107516";
 			data.membership = "SPONSORSHIP";
-			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/media/sampleavatar.png";
-			data.chatname = "Steve_" + randomDigits();
+			data.chatimg = parseInt(Math.random() * 2) ? "https://socialstream.ninja/media/user1.jpg" : "https://socialstream.ninja/media/user3.jpg";
+			data.chatname = "Lily_" + randomDigits();
 			data.type = parseInt(Math.random() * 2) ? "slack" : "facebook";
 			data.chatmessage = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
 		} else if (Math.random() > 0.4) {
 			data.hasDonation = "";
 			data.highlightColor = "pink";
 			data.nameColor = "lightblue";
-			data.chatname = "NewGuest";
+			data.chatname = "Kai";
+			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
 			data.type = "twitch";
 			data.chatmessage = "hi";
 			data.chatbadges = ["https://vdo.ninja/media/icon.png","https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj","https://socialstream.ninja/icons/announcement.png"];
@@ -14790,6 +14817,7 @@ async function triggerFakeRandomMessage(){
 			data.nameColor = "";
 			data.private = true;
 			data.chatname = "Sir Drinks-a-lot";
+			data.chatimg = "https://socialstream.ninja/media/user5.jpg";
 			data.type = "discord";
 			data.chatmessage = "☕☕☕ COFFEE!";
 			data.chatbadges = ["https://socialstream.ninja/icons/bot.png","https://socialstream.ninja/icons/announcement.png"];
@@ -14798,7 +14826,7 @@ async function triggerFakeRandomMessage(){
 			data.membership = "";
 			data.chatmessage = "";
 			data.contentimg = "https://socialstream.ninja/media/logo.png";
-			data.chatname = "User123";
+			data.chatname = "Ava";
 			data.chatimg = "https://socialstream.ninja/media/user1.jpg";
 			data.type = "youtube";
 		} else if (Math.random() > 0.1) {
@@ -14807,11 +14835,12 @@ async function triggerFakeRandomMessage(){
 			data.question = true;
 			data.chatmessage = "Is this a test question?  🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓";
 			data.chatname = "Nich Lass";
-			data.chatimg = "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj";
+			data.chatimg = "https://socialstream.ninja/media/user3.jpg";
 			data.type = "zoom";
 		} else {
 			data.hasDonation = "";
 			data.membership = "SPONSORSHIP";
+			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
 		}
 		
 		attempts++;

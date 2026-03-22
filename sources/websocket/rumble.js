@@ -37,7 +37,8 @@
         lastSocketMessage: '',
         lastSelectedLabel: '',
         warnedStreamFallbackFor: '',
-        warnedMissingLivestreams: false
+        warnedMissingLivestreams: false,
+        consecutiveErrors: 0
     };
     const websocketProxy = {
         readyState: READY_STATE.CLOSED,
@@ -693,13 +694,20 @@
                 Accept: DIRECT_FETCH_ACCEPT
             }
         });
+        if (response.status === 429) {
+            var retryAfter = parseInt(response.headers.get('Retry-After'), 10);
+            var err = new Error('Rate limited by Rumble (HTTP 429). Backing off.');
+            err.rateLimited = true;
+            err.retryAfterSec = isFinite(retryAfter) ? retryAfter : null;
+            throw err;
+        }
         const text = await response.text();
         let data = null;
         try {
             data = text ? JSON.parse(text) : {};
         } catch (error) {
             if (text && /^\s*</.test(text)) {
-                throw new Error('Rumble returned HTML instead of JSON. Paste the generated API feed URL, not the dashboard page.');
+                throw new Error('Rumble returned an HTML page instead of JSON data. Make sure you copied the generated API URL, not the settings page URL.');
             }
             throw new Error('Rumble did not return valid JSON.');
         }
@@ -901,9 +909,12 @@
             maybeEmitCounterEvent('viewer_update', 0, 'lastViewerCount');
         }
 
+        if (initialLoad && Array.isArray(snapshot && snapshot.livestreams) && snapshot.livestreams.length === 0) {
+            log('No active livestream found. The API only shows chat data while you are live.', 'warn');
+        }
         if (!Array.isArray(snapshot && snapshot.livestreams) && !state.warnedMissingLivestreams) {
             state.warnedMissingLivestreams = true;
-            log('This API payload did not include a livestreams array. Chat and rant payloads only exist while the stream is live.', 'warn');
+            log('No active livestream found. The API only shows chat data while you are live.', 'warn');
         }
 
         sortByDate(recentFollowers, 'followed_on').forEach(function (item) {
@@ -981,6 +992,7 @@
     function clearTimers() {
         if (state.pollTimer) {
             clearInterval(state.pollTimer);
+            clearTimeout(state.pollTimer);
             state.pollTimer = null;
         }
     }
@@ -988,8 +1000,27 @@
     function startTimers() {
         clearTimers();
         state.pollTimer = setInterval(function () {
-            pollOnce(false).catch(function (error) {
-                const message = (error && error.message) || String(error || 'Unknown error');
+            pollOnce(false).then(function () {
+                if (state.consecutiveErrors > 0) {
+                    state.consecutiveErrors = 0;
+                    log('Poll recovered. Resuming normal interval.', 'success');
+                }
+            }).catch(function (error) {
+                state.consecutiveErrors += 1;
+                var message = (error && error.message) || String(error || 'Unknown error');
+                if (error && error.rateLimited) {
+                    var backoff = error.retryAfterSec
+                        ? error.retryAfterSec * 1000
+                        : Math.min(state.cfg.pollMs * Math.pow(2, state.consecutiveErrors), 60000);
+                    setSocketState('error', 'Rate limited. Waiting ' + Math.round(backoff / 1000) + 's before retrying.');
+                    log('HTTP 429 rate limit. Backing off ' + Math.round(backoff / 1000) + 's.', 'warn');
+                    clearTimers();
+                    state.pollTimer = setTimeout(function () {
+                        startTimers();
+                        pollOnce(false).catch(function () {});
+                    }, backoff);
+                    return;
+                }
                 setSocketState('error', 'Poll failed: ' + message);
                 log('Rumble poll failed: ' + message, 'error');
             });
@@ -1073,7 +1104,10 @@
     async function connect() {
         syncConfigFromUi();
         if (!state.cfg.apiUrl) {
-            throw new Error('A Rumble Live Stream API URL is required.');
+            throw new Error('A Rumble Live Stream API URL is required. Open the API Dashboard to generate one.');
+        }
+        if (/\/account\/livestream-api/i.test(state.cfg.apiUrl)) {
+            throw new Error('It looks like you pasted the settings page URL. Copy the generated API URL from that page instead.');
         }
         state.active = true;
         state.seenIds.clear();
@@ -1288,6 +1322,7 @@
         els.viewerChip = document.getElementById('viewer-chip');
         els.followerChip = document.getElementById('follower-chip');
         els.subscriberChip = document.getElementById('subscriber-chip');
+        els.advancedSection = document.getElementById('advanced-section');
         els.feed = document.getElementById('feed');
         els.feedEmpty = document.getElementById('feed-empty');
         els.log = document.getElementById('log');
@@ -1303,6 +1338,16 @@
         syncButtons();
         updatePopupControls(null);
         setSocketState('disconnected', 'Rumble API source is idle.');
+        if (els.advancedSection) {
+            try {
+                if (localStorage.getItem('rumbleAdvancedOpen') === '1') {
+                    els.advancedSection.open = true;
+                }
+            } catch (e) {}
+            els.advancedSection.addEventListener('toggle', function () {
+                try { localStorage.setItem('rumbleAdvancedOpen', els.advancedSection.open ? '1' : '0'); } catch (e) {}
+            });
+        }
         if (state.cfg.apiUrl) {
             connect().catch(function (error) {
                 const message = (error && error.message) || String(error || 'Unknown error');

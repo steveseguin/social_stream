@@ -661,7 +661,7 @@ body.light-mode .meta-value.badge {
 	updateCompactHeightMode();
 	window.addEventListener("resize", updateCompactHeightMode);
     
-    const FRIENDLY_EVENT_LABELS = {
+	const FRIENDLY_EVENT_LABELS = {
 		new_follower: 'New Follower',
 		new_subscriber: 'New Subscriber',
 		resub: 'Resub',
@@ -669,6 +669,7 @@ body.light-mode .meta-value.badge {
 		gift: 'Gift',
 		giftpurchase: 'Gift Purchase',
 		giftredemption: 'Gift Redemption',
+		reward: 'Channel Points',
 		sponsorship: 'Membership',
 		membermilestone: 'Member Milestone',
 		member_milestone: 'Member Milestone',
@@ -720,6 +721,7 @@ body.light-mode .meta-value.badge {
 			.replace(/__+/g, '_')
 			.replace(/^_+|_+$/g, '');
 		const aliasMap = {
+			channel_points: 'reward',
 			channel_subscription_gifts: 'subscription_gift',
 			channel_subscription_gift: 'subscription_gift',
 			channel_subscription_new: 'new_subscriber',
@@ -1041,7 +1043,7 @@ body.light-mode .meta-value.badge {
 			}
 		}
 
-		if (normalizedEvent === 'channel_points' && isPlainObject(data.reward)) {
+		if (normalizedEvent === 'reward' && isPlainObject(data.reward)) {
 			const reward = data.reward;
 			const rewardFields = [];
 			if (reward.title) {
@@ -1078,7 +1080,7 @@ body.light-mode .meta-value.badge {
 			addSection('Reward', rewardFields);
 		}
 
-		if (normalizedEvent === 'channel_points' && meta) {
+		if (normalizedEvent === 'reward' && meta) {
 			const metaFields = [];
 			if ('userId' in meta) {
 				metaFields.push({ label: 'User ID', value: meta.userId });

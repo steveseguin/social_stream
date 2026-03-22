@@ -3264,6 +3264,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="hide-all-events">🧯 Hide all stream events </span>
                                 </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="hidealertevents" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🚨 Hide alert events (follows, subs, donations, bits, raids)</span>
+                                </div>
                                 <div class="textInputContainer" style="display: inline-block; width: 400px;" title="Provide comma separated values. Matches exact event names or text inside event messages. eg: subscription_gift,new_follower,gifted">
                                     <input type="text" id="dockfilterevents" class="textInput" autocomplete="off" placeholder="Event name or text..." data-textparam1="filterevents" data-tag-presets="events" />
                                     <label for="dockfilterevents" style="display: inline-block; margin: 0 0 6px 0;"><span data-translate="hide-specific-events">&gt; Hide specific events</span></label>
@@ -5364,6 +5371,17 @@ input:checked + .slider:before {
 									</label>
 									<span>Skip raid/host alerts</span>
 								</div>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="excludeAlertsDock" />
+										<span class="slider round"></span>
+									</label>
+									<span>Exclude alert events from dock</span>
+								</div>
+								<small style="opacity: 0.75; display:block; margin-top:4px; margin-bottom:8px;">
+									When enabled, event messages (follows, subs, raids, etc.) are sent only to the multi-alert overlay and not to dock.html. Normal chat messages are unaffected.
+								</small>
 							</div>
 						</div>
 					</div>
@@ -5549,8 +5567,38 @@ input:checked + .slider:before {
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="text" class="textInput instant" autocomplete="off" placeholder="https://example.com/alert.wav" data-textparam25="custombeep" />
-									<label><span>&gt; Custom sound URL</span></label>
+									<label><span>&gt; Custom sound URL (all alerts)</span></label>
 								</div>
+								<details style="width: 95%; margin-top: 4px;">
+									<summary style="cursor: pointer; font-size: 0.95em; padding: 6px 10px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">Per-type custom sounds (override above)</summary>
+									<div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+										<div class="textInputContainer" style="width: 100%; position: relative;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Follow sound URL (.ogg, .mp3, .wav)" data-textparam25="followsound" id="multi-alert-followsound" />
+											<label><span>&gt; 💖 Follow sound</span></label>
+											<button type="button" id="uploadFollowSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #ff68b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+										</div>
+										<div class="textInputContainer" style="width: 100%; position: relative;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Sub sound URL (.ogg, .mp3, .wav)" data-textparam25="subsound" id="multi-alert-subsound" />
+											<label><span>&gt; 💜 Subscription sound</span></label>
+											<button type="button" id="uploadSubSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+										</div>
+										<div class="textInputContainer" style="width: 100%; position: relative;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Donation sound URL (.ogg, .mp3, .wav)" data-textparam25="donosound" id="multi-alert-donosound" />
+											<label><span>&gt; 💚 Donation sound</span></label>
+											<button type="button" id="uploadDonoSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #14f195; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+										</div>
+										<div class="textInputContainer" style="width: 100%; position: relative;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Bits sound URL (.ogg, .mp3, .wav)" data-textparam25="bitssound" id="multi-alert-bitssound" />
+											<label><span>&gt; 💙 Bits/Cheer sound</span></label>
+											<button type="button" id="uploadBitsSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #38bdf8; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+										</div>
+										<div class="textInputContainer" style="width: 100%; position: relative;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Raid sound URL (.ogg, .mp3, .wav)" data-textparam25="raidsound" id="multi-alert-raidsound" />
+											<label><span>&gt; 🧡 Raid sound</span></label>
+											<button type="button" id="uploadRaidSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #f59e0b; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+										</div>
+									</div>
+								</details>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param25="showtime" />
@@ -5599,11 +5647,12 @@ input:checked + .slider:before {
 									<button type="button" id="multi-alert-preview-bits" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Bits</button>
 									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Raid</button>
 									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Clear</button>
+									<button type="button" id="multi-alert-preview-mute" class="overlayButton" style="flex: 0 0 auto; min-width: 0; white-space: nowrap; opacity: 0.6;" title="Mute preview sound">🔊</button>
 								</div>
 								<div style="width: 100%; height: 280px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(10,12,18,0.94), rgba(19,24,35,0.92));">
 									<iframe id="multi-alerts-preview-frame" title="Multi alert preview" style="width: 100%; height: 100%; border: 0; background: transparent;" loading="lazy"></iframe>
 								</div>
-								<small style="display: block; margin-top: 10px; opacity: 0.8;">This preview uses the real multi-alert overlay renderer in a local iframe, so theme, visibility, disabled categories, media, and timing changes match the live browser source.</small>
+								<small style="display: block; margin-top: 10px; opacity: 0.8;">Use the buttons above to send test alerts into the preview. This uses the real multi-alert overlay renderer in a local iframe, so theme, visibility, disabled categories, media, and timing changes match the live browser source.</small>
 							</div>
 						</div>
 					</div>
@@ -9711,7 +9760,58 @@ input:checked + .slider:before {
                 </h3>
                 <div id="flowactions" data-raw="" class="flowactions_chat"><a href="" id="flowactionslink"></a></div>
             </div>
-			
+
+			<div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-general-options" />
+                    <label class="collapsible-label" for="wrapper-flowactions-general-options">⚙️ <span data-translate="flowactions-general-settings">General Settings</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group flowactions">
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param18="volume" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>
+                                        🔉 Media Volume
+                                        <input type="range" min="0" max="1" step="0.05" value="1" style="width: 150px;" data-numbersetting18="volume" data-range-display="flowactions-volume-display" data-range-suffix="" />
+                                        <span class="range-value" id="flowactions-volume-display">1.00</span>
+                                    </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param18="duration" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>
+                                        ⏱️ Default media duration (ms)
+                                        <input type="number" style="max-width: 8ch;" step="1000" max="300000" min="1000" value="10000" size="6" data-numbersetting18="duration" />
+                                    </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param18="css" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="textInputContainer" style="width: 80%; display: inline-block; vertical-align: middle;">
+                                        <input type="text" id="flowactionsCssUrl" class="textInput instant" autocomplete="off" placeholder="https://example.com/style.css" data-textparam18="css" />
+                                        <label for="flowactionsCssUrl">🎨 Custom CSS URL</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param18="obsdebug" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🔍 Show OBS connection status badge on overlay</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 			<div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-obs-options" />
@@ -9746,21 +9846,6 @@ input:checked + .slider:before {
                     <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-tts-options" />
                     <label class="collapsible-label" for="wrapper-flowactions-tts-options">🔊 <span data-translate="tts-settings">Text-to-Speech Settings</span></label>
                     <div class="collapsible-text">
-                        <div class="options">
-                            <div class="options_group flowactions">
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-param18="volume" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="system-tts-volume">
-                                        🔉 Volume of speech
-                                        <input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting18="volume" />
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- TTS Provider Selection -->
                         <div class="tts-provider-selection" style="margin:0 10px 10px 10px">
                             <h3 data-translate="tts-service-provider">Text-to-Speech Service Provider</h3>

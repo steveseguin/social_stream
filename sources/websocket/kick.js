@@ -144,6 +144,8 @@ const PROFILE_CACHE_STORAGE_VERSION = 2;
 const PROFILE_CACHE_SAVE_DEBOUNCE_MS = 1500;
 const PROFILE_CACHE_MAX_ENTRIES = 1200;
 const PROFILE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const KICK_WINDOW_BOUNDS_STORAGE_KEY = 'kickWindowBounds';
+const KICK_WINDOW_BOUNDS_SAVE_DEBOUNCE_MS = 250;
 
 const state = {
     clientId: '',
@@ -217,6 +219,7 @@ let cachedEventTypesFetchedAt = 0;
 let eventTypesUnavailableUntil = 0;
 let preferredKickChannelLookupPath = '';
 let profileCachePersistTimer = null;
+let kickWindowBoundsSaveTimer = null;
 
 // Queue for events that arrive before channelId is resolved
 const pendingBridgeEvents = [];
@@ -292,6 +295,89 @@ function isLiteEmbedded() {
         return false;
     }
     return window.parent && window.parent !== window;
+}
+
+function readStoredKickWindowBounds() {
+    if (typeof window === 'undefined' || isLiteEmbedded()) {
+        return null;
+    }
+    try {
+        const raw = localStorage.getItem(KICK_WINDOW_BOUNDS_STORAGE_KEY);
+        if (!raw) {
+            return null;
+        }
+        const parsed = JSON.parse(raw);
+        const width = Number(parsed?.width);
+        const height = Number(parsed?.height);
+        if (!Number.isFinite(width) || !Number.isFinite(height)) {
+            return null;
+        }
+        return { width, height };
+    } catch (error) {
+        console.warn('Failed to load Kick window bounds', error);
+        return null;
+    }
+}
+
+function getKickStandaloneWindowBounds() {
+    if (typeof window === 'undefined' || isLiteEmbedded()) {
+        return null;
+    }
+    const width = Number(window.outerWidth);
+    const height = Number(window.outerHeight);
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+        return null;
+    }
+    return {
+        width: Math.round(width),
+        height: Math.round(height)
+    };
+}
+
+function persistKickWindowBounds() {
+    const bounds = getKickStandaloneWindowBounds();
+    if (!bounds) {
+        return;
+    }
+    try {
+        localStorage.setItem(KICK_WINDOW_BOUNDS_STORAGE_KEY, JSON.stringify(bounds));
+    } catch (error) {
+        console.warn('Failed to save Kick window bounds', error);
+    }
+}
+
+function scheduleKickWindowBoundsSave() {
+    if (typeof window === 'undefined' || isLiteEmbedded()) {
+        return;
+    }
+    if (kickWindowBoundsSaveTimer) {
+        clearTimeout(kickWindowBoundsSaveTimer);
+    }
+    kickWindowBoundsSaveTimer = setTimeout(() => {
+        kickWindowBoundsSaveTimer = null;
+        persistKickWindowBounds();
+    }, KICK_WINDOW_BOUNDS_SAVE_DEBOUNCE_MS);
+}
+
+function restoreKickWindowBounds() {
+    if (typeof window === 'undefined' || isLiteEmbedded()) {
+        return;
+    }
+    const bounds = readStoredKickWindowBounds();
+    if (!bounds) {
+        return;
+    }
+    const screenWidth = Number(window.screen?.availWidth || window.screen?.width || 0) || 0;
+    const screenHeight = Number(window.screen?.availHeight || window.screen?.height || 0) || 0;
+    const widthLimit = screenWidth > 0 ? screenWidth : bounds.width;
+    const heightLimit = screenHeight > 0 ? screenHeight : bounds.height;
+    const nextWidth = Math.max(520, Math.min(widthLimit, Math.round(bounds.width)));
+    const nextHeight = Math.max(520, Math.min(heightLimit, Math.round(bounds.height)));
+    try {
+        window.resizeTo(nextWidth, nextHeight);
+    } catch (error) {
+        console.warn('Unable to restore Kick window size', error);
+    }
 }
 
 function sendLiteMessage(type, payload = {}, targetWindow = null, targetOrigin = null) {
@@ -5406,12 +5492,51 @@ function resolveChannelBranding() {
     };
 }
 
+function looksLikeKickRewardMessage(messageText = '', rawType = '') {
+    const normalizedText = typeof messageText === 'string'
+        ? messageText
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+        : '';
+    const normalizedType = typeof rawType === 'string'
+        ? rawType
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+        : '';
+
+    if (/\b(redeem|reward|channel[_ .-]?points?|loyalty[_ .-]?points?)\b/i.test(normalizedType)) {
+        return true;
+    }
+
+    if (!normalizedText) {
+        return false;
+    }
+
+    const rewardPatterns = [
+        /^(?:has redeemed|redeemed)\b/,
+        /^(?:ha canjeado|canjeo)\b/,
+        /^(?:rescatou|resgatou)\b/,
+        /^(?:ha riscattato)\b/,
+        /^(?:a echange|a rachete)\b/,
+        /^hat .+ eingelost\b/,
+        /^heeft .+ ingewisseld\b/
+    ];
+
+    return rewardPatterns.some(pattern => pattern.test(normalizedText));
+}
+
 function mapKickChatEventToSocialStream(rawType, plainMessage = '', donationLabel = '') {
     const typeLower = typeof rawType === 'string' ? rawType.trim().toLowerCase() : '';
     const textLower = typeof plainMessage === 'string' ? plainMessage.trim().toLowerCase() : '';
 
     // Match the legacy DOM source semantics first.
-    if (textLower.startsWith('has redeemed ') || /redeem|reward/.test(typeLower)) {
+    if (looksLikeKickRewardMessage(textLower, typeLower)) {
         return 'reward';
     }
     if (/gift/.test(typeLower)) {
@@ -6821,6 +6946,7 @@ async function createCodeChallenge(verifier) {
 
 async function bootstrap() {
     logKickWs('Bootstrap start.');
+    restoreKickWindowBounds();
     try {
         await kickCoreReady;
     } catch (error) {
@@ -6860,8 +6986,15 @@ async function bootstrap() {
         notifyLiteStatus('ready');
         if (isLiteEmbedded()) {
             sendLiteMessage('kick-lite-ready', { status: getLiteStatusSnapshot() });
+        } else {
+            window.addEventListener('resize', scheduleKickWindowBoundsSave);
         }
         window.addEventListener('beforeunload', () => {
+            if (kickWindowBoundsSaveTimer) {
+                clearTimeout(kickWindowBoundsSaveTimer);
+                kickWindowBoundsSaveTimer = null;
+            }
+            persistKickWindowBounds();
             if (profileCachePersistTimer) {
                 clearTimeout(profileCachePersistTimer);
                 profileCachePersistTimer = null;

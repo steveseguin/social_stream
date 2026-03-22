@@ -324,6 +324,10 @@
         var iframe = null;
         var roomID = "test";
         var password = "false";
+        var globalVolume = urlParams.has("volume") ? Math.max(0, Math.min(1, parseFloat(urlParams.get("volume")))) : 1.0;
+        if (isNaN(globalVolume)) { globalVolume = 1.0; }
+        var defaultDuration = urlParams.has("duration") ? Math.max(1000, parseInt(urlParams.get("duration"))) : 10000;
+        if (isNaN(defaultDuration)) { defaultDuration = 10000; }
         var mediaContainer = document.getElementById('fullscreen-media-container');
         var statusMessage = document.getElementById('status-message');
         var obsStudio = null;
@@ -1005,7 +1009,7 @@
                             useLayer: payload.useLayer,
                             clearFirst: payload.clearFirst
                         };
-                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration || 10000, opts);
+                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration || defaultDuration, opts);
                     } else {
                         console.warn("Play media action received without a URL.");
                     }
@@ -1428,7 +1432,8 @@
         }
 
         // Function to play media with optional positioned area (percent-based)
-		function playMediaFullscreen(url, mediaType, duration = 10000, opts = {}) {
+		function playMediaFullscreen(url, mediaType, duration, opts = {}) {
+			duration = duration || defaultDuration;
 			// Determine target container - use layer system if opts.useLayer is true
 			const useLayer = !!opts.useLayer;
 			const targetContainer = useLayer ? overlayLayers.media : mediaContainer;
@@ -1481,6 +1486,7 @@
 					mediaElement.style.overflow = 'hidden';
 					mediaElement.style.backgroundColor = 'transparent';
 				}
+				mediaElement.controls = false;
 				targetContainer.appendChild(mediaElement);
 				if (!useLayer) {
 					targetContainer.style.display = 'flex';
@@ -1526,6 +1532,7 @@
 				mediaElement.style.overflow = 'hidden';
 				mediaElement.style.backgroundColor = 'transparent';
 			}
+			mediaElement.controls = false;
 
 			wrapper.appendChild(mediaElement);
 			targetContainer.appendChild(wrapper);
@@ -1547,14 +1554,14 @@
 		}
 
         // Function to play audio
-        async function playAudio(audioUrl, volume = 1.0) {
+        async function playAudio(audioUrl, volume) {
             try {
                 if (audioContext.state === 'suspended') {
                     await audioContext.resume();
                 }
-                
+
                 const audio = new Audio(audioUrl);
-                audio.volume = parseFloat(volume);
+                audio.volume = volume !== undefined ? parseFloat(volume) : globalVolume;
                 await audio.play();
                 console.log("Playing audio:", audioUrl);
             } catch (e) {

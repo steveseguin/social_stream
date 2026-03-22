@@ -34,6 +34,10 @@ body {
     flex-direction: column;
     gap: 20px;
     overflow-y: auto;
+    scrollbar-width: none;
+}
+.left-panel::-webkit-scrollbar {
+    display: none;
 }
 
 .right-panel {
@@ -155,6 +159,35 @@ select, button, .api-key, .message-input, textarea, .model-override {
 .mute-button.muted {
     background: #ef4444;
     border-color: #dc2626;
+}
+
+.mute-icon {
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.mic-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e0e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z'/%3E%3Cpath d='M19 10v2a7 7 0 0 1-14 0v-2'/%3E%3Cline x1='12' y1='19' x2='12' y2='23'/%3E%3Cline x1='8' y1='23' x2='16' y2='23'/%3E%3C/svg%3E");
+}
+.mic-icon.muted {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='1' y1='1' x2='23' y2='23'/%3E%3Cpath d='M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6'/%3E%3Cpath d='M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.13 1.49-.35 2.17'/%3E%3Cline x1='12' y1='19' x2='12' y2='23'/%3E%3Cline x1='8' y1='23' x2='16' y2='23'/%3E%3C/svg%3E");
+}
+
+.speaker-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e0e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='11 5 6 9 2 9 2 15 6 15 11 19 11 5'/%3E%3Cpath d='M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07'/%3E%3C/svg%3E");
+}
+.speaker-icon.muted {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='11 5 6 9 2 9 2 15 6 15 11 19 11 5'/%3E%3Cline x1='23' y1='9' x2='17' y2='15'/%3E%3Cline x1='17' y1='9' x2='23' y2='15'/%3E%3C/svg%3E");
+}
+
+.video-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e0e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='23 7 16 12 23 17 23 7'/%3E%3Crect x='1' y='5' width='15' height='14' rx='2' ry='2'/%3E%3C/svg%3E");
+}
+.video-icon.muted {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10'/%3E%3Cline x1='1' y1='1' x2='23' y2='23'/%3E%3C/svg%3E");
 }
 
 .preview {
@@ -4316,30 +4349,6 @@ const preview = document.getElementById('preview');
 const errorDisplay = document.getElementById('error');
 const responsesDiv = document.getElementById('responses');
 let publisher = null;
-async function tryGetInitialPermissions() {
-    try {
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-            .catch(err => {
-                console.log("Initial audio permission check failed:", err.message);
-                return null;
-            });
-        if (audioStream) {
-            audioStream.getTracks().forEach(track => track.stop());
-        }
-        const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true })
-            .catch(err => {
-                console.log("Initial video permission check failed:", err.message);
-                return null;
-            });
-        if (videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());
-        }
-        await getDevices();
-    } catch (err) {
-        console.warn("Initial permission checks failed:", err);
-        await getDevices();
-    }
-}
 const apiKeyInput = document.getElementById('apiKey');
 apiKeyInput.value = localStorage.getItem('apiKey') || '';
 const modelOverrideInput = document.getElementById('modelOverride');
@@ -4588,6 +4597,15 @@ startButton.addEventListener('click', async () => {
                 currentAudioIndicator = null;
             }
             preview.srcObject = null;
+            micMuted = false;
+            audioMuted = false;
+            videoMuted = false;
+            muteMicButton.classList.remove('muted');
+            muteMicButton.querySelector('.mic-icon').classList.remove('muted');
+            muteAudioButton.classList.remove('muted');
+            muteAudioButton.querySelector('.speaker-icon').classList.remove('muted');
+            muteVideoButton.classList.remove('muted');
+            muteVideoButton.querySelector('.video-icon').classList.remove('muted');
             startButton.textContent = 'Start Stream';
             startButton.dataset.started = "false";
             startButton.disabled = false;
@@ -4748,7 +4766,7 @@ async function getDevices() {
         audioSelect.appendChild(new Option('No Audio', 'none'));
         videoSelect.appendChild(new Option('Screen Share', 'screen'));
         videoDevices.forEach(device => {
-            videoSelect.appendChild(new Option(device.label || `Camera ${videoSelect.length}`, device.deviceId));
+            videoSelect.appendChild(new Option(device.label || `Camera ${videoSelect.length - 1}`, device.deviceId));
         });
         audioDevices.forEach(device => {
             audioSelect.appendChild(new Option(device.label || `Microphone ${audioSelect.length}`, device.deviceId));
@@ -4786,46 +4804,32 @@ async function getDevices() {
             }
         }
         if (!videoDeviceFound && videoDevices.length > 0) {
-            for (const device of videoDevices) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { deviceId: { exact: device.deviceId } }
-                    });
-                    stream.getTracks().forEach(track => track.stop());
-                    videoSelect.value = device.deviceId;
-                    videoDeviceFound = true;
-                    break;
-                } catch (err) {
-                    console.warn(`Video device ${device.label || device.deviceId} unavailable:`, err.message);
-                    continue;
-                }
-            }
+            videoSelect.value = videoDevices[0].deviceId;
+            videoDeviceFound = true;
         }
         if (!videoDeviceFound) {
-            videoSelect.value = 'screen';
+            videoSelect.value = 'none';
         }
         if (!audioDeviceFound && audioDevices.length > 0) {
-            for (const device of audioDevices) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        audio: { deviceId: { exact: device.deviceId } }
-                    });
-                    stream.getTracks().forEach(track => track.stop());
-                    audioSelect.value = device.deviceId;
-                    audioDeviceFound = true;
-                    break;
-                } catch (err) {
-                    console.warn(`Audio device ${device.label || device.deviceId} unavailable:`, err.message);
-                    continue;
-                }
-            }
+            audioSelect.value = audioDevices[0].deviceId;
+            audioDeviceFound = true;
         }
         if (!audioDeviceFound) {
             audioSelect.value = 'none';
         }
-        localStorage.setItem('selectedVideoId', videoSelect.value);
-        localStorage.setItem('selectedAudioId', audioSelect.value);
-        await updateMediaStream();
+        if (videoDeviceFound) {
+            localStorage.setItem('selectedVideoId', videoSelect.value);
+        } else {
+            localStorage.removeItem('selectedVideoId');
+        }
+        if (audioDeviceFound) {
+            localStorage.setItem('selectedAudioId', audioSelect.value);
+        } else {
+            localStorage.removeItem('selectedAudioId');
+        }
+        if (publisher) {
+            await updateMediaStream();
+        }
     } catch (err) {
         showError('Failed to get devices: ' + err.message);
     }
@@ -4837,15 +4841,17 @@ const muteMicButton = document.getElementById('muteMic');
 const muteAudioButton = document.getElementById('muteAudio');
 const muteVideoButton = document.getElementById('muteVideo');
 muteVideoButton.addEventListener('click', () => {
-    if (stream) {
-        const videoTracks = stream.getVideoTracks();
-        videoTracks.forEach(track => {
-            track.enabled = videoMuted;
-        });
-        videoMuted = !videoMuted;
-        muteVideoButton.classList.toggle('muted');
-        muteVideoButton.querySelector('.video-icon').classList.toggle('muted');
+    if (!stream) {
+        showError('Start the stream before muting video');
+        return;
     }
+    const videoTracks = stream.getVideoTracks();
+    videoTracks.forEach(track => {
+        track.enabled = videoMuted;
+    });
+    videoMuted = !videoMuted;
+    muteVideoButton.classList.toggle('muted');
+    muteVideoButton.querySelector('.video-icon').classList.toggle('muted');
 });
 muteMicButton.addEventListener('click', () => {
     if (isRealtimeProvider(providerSelect.value) && publisher && publisher.recognition) {
@@ -4870,41 +4876,45 @@ muteMicButton.addEventListener('click', () => {
         muteMicButton.querySelector('.mic-icon').classList.toggle('muted');
         return;
     }
-    if (stream) {
-        let microphoneTracks = stream.getAudioTracks().filter(track =>
-            track.kind === 'audio' &&
-            (!track.label || !track.label.toLowerCase().includes('system'))
-        );
-        if (microphoneTracks.length === 0) {
-            console.warn('No microphone tracks found to mute/unmute');
-            return;
-        }
-        microphoneTracks.forEach(track => {
-            track.enabled = micMuted;
-        });
-        micMuted = !micMuted;
-        muteMicButton.classList.toggle('muted');
-        muteMicButton.querySelector('.mic-icon').classList.toggle('muted');
+    if (!stream) {
+        showError('Start the stream before muting microphone');
+        return;
     }
+    let microphoneTracks = stream.getAudioTracks().filter(track =>
+        track.kind === 'audio' &&
+        (!track.label || !track.label.toLowerCase().includes('system'))
+    );
+    if (microphoneTracks.length === 0) {
+        console.warn('No microphone tracks found to mute/unmute');
+        return;
+    }
+    microphoneTracks.forEach(track => {
+        track.enabled = micMuted;
+    });
+    micMuted = !micMuted;
+    muteMicButton.classList.toggle('muted');
+    muteMicButton.querySelector('.mic-icon').classList.toggle('muted');
 });
 muteAudioButton.addEventListener('click', () => {
-    if (stream) {
-        let systemTracks = stream.getAudioTracks().filter(track =>
-            track.kind === 'audio' &&
-            track.label &&
-            track.label.toLowerCase().includes('system')
-        );
-        if (systemTracks.length === 0) {
-            console.warn('No system audio tracks found to mute/unmute');
-            return;
-        }
-        systemTracks.forEach(track => {
-            track.enabled = audioMuted;
-        });
-        audioMuted = !audioMuted;
-        muteAudioButton.classList.toggle('muted');
-        muteAudioButton.querySelector('.speaker-icon').classList.toggle('muted');
+    if (!stream) {
+        showError('Start the stream before muting audio');
+        return;
     }
+    let systemTracks = stream.getAudioTracks().filter(track =>
+        track.kind === 'audio' &&
+        track.label &&
+        track.label.toLowerCase().includes('system')
+    );
+    if (systemTracks.length === 0) {
+        console.warn('No system audio tracks found to mute/unmute');
+        return;
+    }
+    systemTracks.forEach(track => {
+        track.enabled = audioMuted;
+    });
+    audioMuted = !audioMuted;
+    muteAudioButton.classList.toggle('muted');
+    muteAudioButton.querySelector('.speaker-icon').classList.toggle('muted');
 });
 let audioContext;
 async function getStream() {
@@ -4954,6 +4964,7 @@ async function getStream() {
                 }
             } catch (err) {
                 console.warn('Selected video device failed:', err);
+                showError('Camera failed to start: ' + err.message);
                 videoSelect.value = 'none';
             }
         }
@@ -5034,6 +5045,7 @@ async function getStream() {
     }
 }
 async function updateMediaStream() {
+    if (!publisher) return;
     try {
         const previousMicMuted = micMuted;
         const previousAudioMuted = audioMuted;
@@ -5071,6 +5083,9 @@ async function updateMediaStream() {
                 }
             });
         }
+        if (videoMuted) {
+            stream.getVideoTracks().forEach(track => { track.enabled = false; });
+        }
     } catch (err) {
         console.error('Failed to update media stream:', err);
         showError('Failed to update media stream: ' + err.message);
@@ -5086,6 +5101,15 @@ async function updateMediaStream() {
             preview.srcObject.getTracks().forEach(track => track.stop());
             preview.srcObject = null;
         }
+        micMuted = false;
+        audioMuted = false;
+        videoMuted = false;
+        muteMicButton.classList.remove('muted');
+        muteMicButton.querySelector('.mic-icon').classList.remove('muted');
+        muteAudioButton.classList.remove('muted');
+        muteAudioButton.querySelector('.speaker-icon').classList.remove('muted');
+        muteVideoButton.classList.remove('muted');
+        muteVideoButton.querySelector('.video-icon').classList.remove('muted');
         startButton.textContent = 'Start Stream';
         startButton.dataset.started = "false";
         startButton.disabled = false;
@@ -5126,6 +5150,14 @@ if (!navigator.mediaDevices?.getUserMedia) {
                 });
             if (audioStream) {
                 audioStream.getTracks().forEach(track => track.stop());
+            }
+            const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true })
+                .catch(err => {
+                    console.log("Video permission check failed:", err.message);
+                    return null;
+                });
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
             }
             await getDevices();
         } catch (err) {
@@ -5230,6 +5262,7 @@ document.getElementById('voiceSelect').addEventListener('change', async () => {
 document.getElementById('responseType').addEventListener('change', async function() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.style.display = providerSelect.value === 'gemini' && this.value === 'audio' ? 'block' : 'none';
+    localStorage.setItem(`responseType_${providerSelect.value}`, this.value);
     syncVoiceModeSummary(providerSelect.value);
     await restartActivePublisher();
 });
@@ -5399,10 +5432,29 @@ function applyProviderUI(providerName, restoreKey = true) {
         responseTypeSelect.disabled = true;
     } else {
         responseTypeSelect.disabled = false;
+        const savedResponseType = localStorage.getItem(`responseType_${providerName}`);
+        if (savedResponseType) {
+            responseTypeSelect.value = savedResponseType;
+        } else if (responseTypeSelect.value === 'text') {
+            responseTypeSelect.value = 'audio';
+        }
     }
     const responseTypeValue = responseTypeSelect.value;
     videoSelect.disabled = config.disableCaptureSelection;
     audioSelect.disabled = config.disableCaptureSelection;
+    if (config.disableCaptureSelection) {
+        videoSelect.value = 'none';
+    } else {
+        const savedVideoId = localStorage.getItem('selectedVideoId');
+        if (savedVideoId) {
+            for (const option of videoSelect.options) {
+                if (option.value === savedVideoId) {
+                    videoSelect.value = savedVideoId;
+                    break;
+                }
+            }
+        }
+    }
     if (config.disableCaptureSelection && audioSelect.value === 'none') {
         const firstAudioOption = Array.from(audioSelect.options).find(option => option.value !== 'none');
         if (firstAudioOption) {

@@ -2,12 +2,13 @@
 const ProfileManager = {
   profiles: [],
   currentProfileId: null,
+  profilesLoaded: false,
 
   init() {
     document.getElementById('profilesList').addEventListener('click', (e) => {
       const deleteButton = e.target.closest('.delete-profile');
       const activateButton = e.target.closest('.activate-profile');
-      
+
       if (deleteButton) {
         const profileItem = deleteButton.closest('.profile-item');
         const profileId = profileItem.dataset.profileId;
@@ -28,15 +29,21 @@ const ProfileManager = {
 
     // Load profiles from storage
     chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
-      if (response && response.settings && response.settings.savedProfiles && response.settings.savedProfiles.json) {
-        try {
-          this.profiles = JSON.parse(response.settings.savedProfiles.json);
-          this.updateProfilesList();
-        } catch(e) {
-          console.error("Error parsing saved profiles:", e);
-        }
-      }
+      this.loadProfilesFromResponse(response);
     });
+  },
+
+  loadProfilesFromResponse(response) {
+    if (this.profilesLoaded) return;
+    if (response && response.settings && response.settings.savedProfiles && response.settings.savedProfiles.json) {
+      try {
+        this.profiles = JSON.parse(response.settings.savedProfiles.json);
+        this.profilesLoaded = true;
+        this.updateProfilesList();
+      } catch(e) {
+        console.error("Error parsing saved profiles:", e);
+      }
+    }
   },
 
   async saveCurrentProfile() {
@@ -46,11 +53,16 @@ const ProfileManager = {
     chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
       const currentSettings = (response && response.settings) ? response.settings : {};
 
+      // Strip savedProfiles from the snapshot to prevent recursive data growth
+      // and to avoid overwriting the profiles list when loading a profile
+      const settingsSnapshot = Object.assign({}, currentSettings);
+      delete settingsSnapshot.savedProfiles;
+
       const newProfile = {
         id: Date.now().toString(),
         name: profileName,
         dateCreated: new Date().toISOString(),
-        settings: currentSettings
+        settings: settingsSnapshot
       };
 
       this.profiles.push(newProfile);
@@ -71,8 +83,9 @@ const ProfileManager = {
       return;
     }
 
-    // Apply the settings from the profile
+    // Apply the settings from the profile (skip savedProfiles to preserve current profiles list)
     for (const [key, settingObj] of Object.entries(profile.settings)) {
+      if (key === 'savedProfiles') continue;
       try {
         processObjectSetting(key, settingObj, true, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], {settings: profile.settings});
       } catch (e) {

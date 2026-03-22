@@ -744,7 +744,7 @@
 	}
 
 	function isDeletedKickMessage(ele) {
-		const messageEle = getKickMessageContainer(ele) || (ele?.nodeType === 1 ? ele : null);
+		const messageEle = getKickMessageContainer(ele);
 		if (!messageEle) {
 			return false;
 		}
@@ -758,7 +758,8 @@
 	}
 	
 	function deleteThis(ele){
-		const messageEle = getKickMessageContainer(ele) || (ele?.nodeType === 1 ? ele : null);
+		// MutationObserver targets can be the chat list wrapper; only act on actual message rows.
+		const messageEle = getKickMessageContainer(ele);
 		if (!messageEle || !isDeletedKickMessage(messageEle)) {
 			return false;
 		}
@@ -793,6 +794,35 @@
 		} catch (e) {
 		}
 		return true;
+	}
+
+	function looksLikeKickRewardMessage(messageText) {
+		if (!messageText || typeof messageText !== "string") {
+			return false;
+		}
+
+		const normalized = messageText
+			.toLowerCase()
+			.normalize("NFD")
+			.replace(/[\u0300-\u036f]/g, "")
+			.replace(/\s+/g, " ")
+			.trim();
+
+		if (!normalized) {
+			return false;
+		}
+
+		const rewardPatterns = [
+			/^(?:has redeemed|redeemed)\b/,
+			/^(?:ha canjeado|canjeo)\b/,
+			/^(?:rescatou|resgatou)\b/,
+			/^(?:ha riscattato)\b/,
+			/^(?:a echange|a rachete)\b/,
+			/^hat .+ eingelost\b/,
+			/^heeft .+ ingewisseld\b/
+		];
+
+		return rewardPatterns.some(pattern => pattern.test(normalized));
 	}
 	
 	async function processMessageOld(ele){	// old chatroom format
@@ -922,6 +952,9 @@
 			data.reply = originalMessage;
 		}
 		
+	  if (looksLikeKickRewardMessage(chatmessage)) {
+		data.event = "reward";
+	  }
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;
@@ -1205,10 +1238,8 @@
 			data.reply = originalMessage;
 		}
 		
-		if (eventName){
-			if (chatmessage.startsWith("has redeemed ")){
-				eventName = "reward";
-			}
+		if (eventName && looksLikeKickRewardMessage(chatmessage)){
+			eventName = "reward";
 		}
 	  data.event = eventName;
 	  data.chatname = chatname;

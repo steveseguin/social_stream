@@ -2809,6 +2809,11 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
+        // Load profiles if they weren't loaded during init (e.g., due to startup timing)
+        if (typeof ProfileManager !== 'undefined' && ProfileManager.loadProfilesFromResponse) {
+            ProfileManager.loadProfilesFromResponse(response);
+        }
+
         if (response.handleStatus) {
             mergeHandleStatusFromBackground(response.handleStatus);
         }
@@ -4757,7 +4762,7 @@ const overlayPreviewConfigs = Object.freeze({
 });
 
 const overlayPreviewState = {
-    multialerts: { pending: null, timer: null }
+    multialerts: { pending: null, timer: null, muted: false }
 };
 
 function getLocalOverlayUrl(path) {
@@ -4941,7 +4946,7 @@ function syncOverlayPreview(previewKey) {
 
     const nextUrl = buildOverlayPreviewUrl(previewKey);
     if (frame.dataset.currentPreviewUrl === nextUrl) {
-        replayOverlayPreview(previewKey);
+        replayOverlayPreview(previewKey, { silent: true });
         return;
     }
 
@@ -4949,7 +4954,7 @@ function syncOverlayPreview(previewKey) {
     frame.src = nextUrl;
 }
 
-function replayOverlayPreview(previewKey) {
+function replayOverlayPreview(previewKey, options = {}) {
     const config = overlayPreviewConfigs[previewKey];
     const state = overlayPreviewState[previewKey];
     if (!config || !state) {
@@ -4970,7 +4975,15 @@ function replayOverlayPreview(previewKey) {
     frame.contentWindow.postMessage({ [config.messageKey]: false }, '*');
     state.timer = setTimeout(() => {
         if (frame.contentWindow) {
-            frame.contentWindow.postMessage({ [config.messageKey]: payload }, '*');
+            const messagePayload =
+                payload === false
+                    ? false
+                    : {
+                        __multiAlertsPreviewEnvelope: true,
+                        payload,
+                        silent: Boolean(options.silent) || Boolean(state.muted)
+                    };
+            frame.contentWindow.postMessage({ [config.messageKey]: messagePayload }, '*');
         }
         state.timer = null;
     }, 40);
@@ -5000,7 +5013,7 @@ function sendOverlayPreview(previewKey, descriptor) {
         return;
     }
 
-    replayOverlayPreview(previewKey);
+    replayOverlayPreview(previewKey, { silent: false });
 }
 
 function syncMultiAlertsPreview() {
@@ -5015,6 +5028,53 @@ function sendMultiAlertsPreview(payload) {
     sendOverlayPreview('multialerts', payload);
 }
 
+function buildTestAlertPayload(category) {
+    const payloads = {
+        follow: {
+            type: 'twitch',
+            event: 'new_follower',
+            chatname: 'Jess',
+            chatimg: 'https://socialstream.ninja/media/user1.jpg',
+            chatmessage: 'Jess has started following'
+        },
+        subscription: {
+            type: 'twitch',
+            event: 'new_subscriber',
+            chatname: 'Markus',
+            chatimg: 'https://socialstream.ninja/media/user2.jpg',
+            chatmessage: 'Welcome to the squad!',
+            membership: 'Tier 1',
+            subtitle: 'Tier 1 subscription'
+        },
+        donation: {
+            type: 'twitch',
+            event: 'donation',
+            chatname: 'Priya',
+            chatimg: 'https://socialstream.ninja/media/user3.jpg',
+            chatmessage: 'Keep up the great work!',
+            hasDonation: '$10.00'
+        },
+        bits: {
+            type: 'twitch',
+            event: 'cheer',
+            chatname: 'Ava',
+            chatimg: 'https://socialstream.ninja/media/user4.png',
+            chatmessage: 'Cheer train incoming!',
+            hasDonation: '500 bits',
+            meta: { bits: 500 }
+        },
+        raid: {
+            type: 'twitch',
+            event: 'raid',
+            chatname: 'CaptainSquawk',
+            chatimg: 'https://socialstream.ninja/media/user5.jpg',
+            chatmessage: 'Raiding with 42 viewers!',
+            meta: { viewers: 42 }
+        }
+    };
+    return payloads[category] || null;
+}
+
 function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
     const config = overlayPreviewConfigs[previewKey];
     if (!config) {
@@ -5024,7 +5084,7 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
     const frame = document.getElementById(config.frameId);
     if (frame) {
         frame.addEventListener('load', () => {
-            replayOverlayPreview(previewKey);
+            replayOverlayPreview(previewKey, { silent: true });
         });
     }
 
@@ -5035,6 +5095,16 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
         }
         button.addEventListener('click', () => {
             sendOverlayPreview(previewKey, descriptor);
+            if (previewKey === 'multialerts') {
+                if (descriptor && descriptor.category) {
+                    const payload = buildTestAlertPayload(descriptor.category);
+                    if (payload) {
+                        chrome.runtime.sendMessage({ cmd: 'testAlert', payload });
+                    }
+                } else if (descriptor === false) {
+                    chrome.runtime.sendMessage({ cmd: 'clearAlerts' });
+                }
+            }
         });
     });
 }
@@ -6639,6 +6709,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ id: 'multi-alert-preview-raid', descriptor: { category: 'raid' } },
 		{ id: 'multi-alert-preview-clear', descriptor: false }
 	]);
+
+	var muteBtn = document.getElementById('multi-alert-preview-mute');
+	if (muteBtn) {
+		muteBtn.addEventListener('click', function() {
+			var state = overlayPreviewState.multialerts;
+			state.muted = !state.muted;
+			muteBtn.textContent = state.muted ? '🔇' : '🔊';
+			muteBtn.style.opacity = state.muted ? '1' : '0.6';
+		});
+	}
 	
 	
 	try {
@@ -7850,27 +7930,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			if (this.value) {
 				// A game was selected
 				const gameUrl = baseURL + this.value;
-				
+
 				// Extract existing parameters from current URL
 				let existingParams = '';
 				if (overlayDiv.raw && overlayDiv.raw.includes('?')) {
 					existingParams = overlayDiv.raw.split('?')[1];
 				}
-				
-				// Extract session parameter to preserve it
-				let sessionParam = '';
-				if (existingParams) {
-					const params = new URLSearchParams(existingParams);
-					const session = params.get('session') || params.get('s');
-					if (session) {
-						sessionParam = session;
-					}
-				}
-				
-				// Construct new URL with game
+
+				// Construct new URL preserving all existing parameters
 				let newUrl = gameUrl;
-				if (sessionParam) {
-					newUrl += '?session=' + sessionParam;
+				if (existingParams) {
+					newUrl += '?' + existingParams;
 				}
 				
 				// Update the overlay URL
@@ -8164,6 +8234,35 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 		};
 	}
+
+	// Handle per-type alert sound upload buttons
+	const alertSoundUploads = [
+		{ btnId: 'uploadFollowSoundBtn', inputId: 'multi-alert-followsound' },
+		{ btnId: 'uploadSubSoundBtn', inputId: 'multi-alert-subsound' },
+		{ btnId: 'uploadDonoSoundBtn', inputId: 'multi-alert-donosound' },
+		{ btnId: 'uploadBitsSoundBtn', inputId: 'multi-alert-bitssound' },
+		{ btnId: 'uploadRaidSoundBtn', inputId: 'multi-alert-raidsound' }
+	];
+	alertSoundUploads.forEach(({ btnId, inputId }) => {
+		const btn = document.getElementById(btnId);
+		if (btn) {
+			btn.onclick = function() {
+				window.open('https://fileuploads.socialstream.ninja/popup/upload', btnId, 'width=640,height=640');
+				window.addEventListener('message', function handleMessage(event) {
+					if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+					if (event.data && event.data.type === 'media-uploaded') {
+						const input = document.getElementById(inputId);
+						if (input) {
+							input.value = event.data.url;
+							input.dispatchEvent(new Event('input', { bubbles: true }));
+							input.dispatchEvent(new Event('change', { bubbles: true }));
+						}
+						window.removeEventListener('message', handleMessage);
+					}
+				});
+			};
+		}
+	});
 
 	const uploadFeaturedFallbackBtn = document.getElementById('uploadFeaturedFallbackBtn');
 	if (uploadFeaturedFallbackBtn) {

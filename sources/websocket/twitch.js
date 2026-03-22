@@ -2957,7 +2957,7 @@ async function cleanupCurrentConnection() {
 
 				pushMessage({
 					type: "twitch",
-					event: 'channel_points',
+					event: 'reward',
 					chatname: event.user_name,
 					userid: event.user_id,
 					chatmessage: rewardMessage,
@@ -2976,7 +2976,7 @@ async function cleanupCurrentConnection() {
 						userId: event.user_id,
 						rewardId: event.reward.id,
 						cost: rewardCost,
-						alias: 'reward'
+						alias: 'channel_points'
 					},
 					textonly: settings.textonlymode || false
 				});

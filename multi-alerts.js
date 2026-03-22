@@ -120,6 +120,14 @@ const CATEGORY_DISABLE_PARAMS = {
   [ALERT_CATEGORIES.RAID]: 'disableraids'
 };
 
+const CATEGORY_SOUND_PARAMS = {
+  [ALERT_CATEGORIES.FOLLOW]: 'followsound',
+  [ALERT_CATEGORIES.SUBSCRIPTION]: 'subsound',
+  [ALERT_CATEGORIES.DONATION]: 'donosound',
+  [ALERT_CATEGORIES.BITS]: 'bitssound',
+  [ALERT_CATEGORIES.RAID]: 'raidsound'
+};
+
 const SOURCE_ICON_MAP = {
   amazon: './sources/images/amazon.png',
   facebook: './sources/images/facebook.png',
@@ -147,7 +155,11 @@ const state = {
   cooldownTimer: null,
   reconnectTimer: null,
   blockedUntil: 0,
-  audioContext: null
+  audioContext: null,
+  activeOscillator: null,
+  activeGain: null,
+  lastAudioTime: 0,
+  audioKeepAlive: null
 };
 
 const elements = {
@@ -158,13 +170,21 @@ const elements = {
 
 applyPagePresentation();
 attachWindowListeners();
-updateStatus(settings.previewOnly ? 'Preview ready' : (settings.roomID ? 'Waiting for alerts' : 'Add ?session=YOURID to connect'));
+if (settings.previewOnly) {
+  updateStatus('Preview ready');
+}
 
 if (!settings.previewOnly && settings.roomID) {
   setupBridgeIframe();
   if (settings.useSocket) {
     setupSocket();
   }
+}
+
+if (window.obsstudio) {
+  startAudioKeepAlive();
+} else {
+  primeAudioPipeline();
 }
 
 function log(...args) {
@@ -497,14 +517,35 @@ function buildAlertViewModel(payload = {}) {
   };
 }
 
+const MOCK_USERS = [
+  { name: 'Jess', img: './media/user1.jpg' },
+  { name: 'Markus', img: './media/user2.jpg' },
+  { name: 'Priya', img: './media/user3.jpg' },
+  { name: 'CaptainSquawk', img: './media/user5.jpg' },
+  { name: 'Ava', img: './media/user4.png' }
+];
+
+function pickMockUser(category) {
+  const index = ({
+    [ALERT_CATEGORIES.FOLLOW]: 0,
+    [ALERT_CATEGORIES.SUBSCRIPTION]: 1,
+    [ALERT_CATEGORIES.DONATION]: 2,
+    [ALERT_CATEGORIES.BITS]: 4,
+    [ALERT_CATEGORIES.RAID]: 3
+  })[category] ?? 0;
+  return MOCK_USERS[index];
+}
+
 function createMockAlertPayload(category, overrides = {}) {
-  const baseName = overrides.chatname || 'SapheusOwO';
+  const mock = pickMockUser(category);
+  const baseName = overrides.chatname || mock.name;
+  const baseImg = overrides.chatimg || mock.img;
   const accent = CATEGORY_ACCENTS[category] || '#9146ff';
   const common = {
     type: 'twitch',
     platform: 'twitch',
     chatname: baseName,
-    chatimg: createAvatarDataUri(baseName, accent),
+    chatimg: baseImg,
     timestamp: Date.now(),
     meta: {}
   };
@@ -551,11 +592,9 @@ function createMockAlertPayload(category, overrides = {}) {
       payload = {
         ...common,
         event: 'raid',
-        chatname: 'campa',
-        chatimg: createAvatarDataUri('campa', accent),
         chatmessage: 'Raiding with 42 viewers!',
         contentimg: createMediaPreviewDataUri('RAID', accent),
-        meta: { viewers: 42, fromLogin: 'campa' }
+        meta: { viewers: 42, fromLogin: baseName.toLowerCase() }
       };
       break;
     default:
@@ -608,11 +647,15 @@ function readSettings() {
     password: normalizeText(urlParams.get('password')) || 'false',
     showTime: Math.max(1800, parseNumberParam('showtime', 8000)),
     cooldown: Math.max(0, parseNumberParam('cooldown', 900)),
-    queueEnabled: urlParams.has('queue'),
-    maxQueue: Math.max(1, Math.min(100, parseNumberParam('maxqueue', 25))),
+    queueEnabled: !urlParams.has('noqueue'),
+    maxQueue: Math.max(1, Math.min(100, parseNumberParam('maxqueue', 20))),
+    minShowTime: Math.max(1500, parseNumberParam('minshowtime', 3000)),
     beep: urlParams.has('beep'),
     beepVolume: Math.max(0, Math.min(1, parseNumberParam('beepvolume', 35) / 100)),
     customBeep: normalizeText(urlParams.get('custombeep')),
+    categorySounds: Object.fromEntries(
+      Object.entries(CATEGORY_SOUND_PARAMS).map(([cat, param]) => [cat, normalizeText(urlParams.get(param))])
+    ),
     compact: urlParams.has('compact'),
     hideAvatar: urlParams.has('hideavatar'),
     hideMedia: urlParams.has('hidemedia'),
@@ -681,7 +724,7 @@ function setupBridgeIframe() {
   state.iframe = document.createElement('iframe');
   state.iframe.src =
     `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(settings.password)}` +
-    `&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(settings.roomID)}`;
+    `&push&label=alerts&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(settings.roomID)}`;
   state.iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;border:0;';
   document.body.appendChild(state.iframe);
 }
@@ -756,12 +799,23 @@ function handlePreviewMessage(previewMessage) {
     return;
   }
 
+  const isEnvelope =
+    previewMessage &&
+    typeof previewMessage === 'object' &&
+    previewMessage.__multiAlertsPreviewEnvelope === true;
+
+  const previewOptions = isEnvelope
+    ? { silent: Boolean(previewMessage.silent) }
+    : { silent: false };
+
+  const previewDescriptor = isEnvelope ? previewMessage.payload : previewMessage;
+
   const payload =
-    typeof previewMessage === 'string'
-      ? createMockAlertPayload(previewMessage)
-      : previewMessage?.category && !previewMessage?.event
-        ? createMockAlertPayload(previewMessage.category, previewMessage.overrides || {})
-        : previewMessage;
+    typeof previewDescriptor === 'string'
+      ? createMockAlertPayload(previewDescriptor)
+      : previewDescriptor?.category && !previewDescriptor?.event
+        ? createMockAlertPayload(previewDescriptor.category, previewDescriptor.overrides || {})
+        : previewDescriptor;
 
   if (!payload) {
     return;
@@ -779,11 +833,16 @@ function handlePreviewMessage(previewMessage) {
   }
 
   clearAlert({ clearQueue: true, preserveCooldown: true });
-  displayAlert(model);
+  displayAlert(model, previewOptions);
   updateStatus(`Previewing ${CATEGORY_LABELS[model.category] || 'alert'}`);
 }
 
 function handleIncomingPayload(payload) {
+  if (payload && typeof payload === 'object' && payload.action === 'clearAlerts') {
+    clearAlert({ clearQueue: true });
+    updateStatus('Alerts cleared');
+    return;
+  }
   flattenPayloads(payload).forEach((entry) => {
     const model = buildAlertViewModel(entry);
     if (!model) {
@@ -835,24 +894,40 @@ function queueAlert(model) {
   displayAlert(model);
 }
 
-function displayAlert(model) {
+function displayAlert(model, options = {}) {
   const card = renderAlert(model);
   state.currentAlert = model;
   elements.stage.innerHTML = '';
   elements.stage.appendChild(card);
   elements.stage.classList.add('has-alert');
-  playAlertSound(model);
+  if (!options.silent) {
+    playAlertSound(model).then(() => {
+      if (typeof TTS !== 'undefined' && TTS.speech && model.payload) {
+        TTS.speechMeta(model.payload);
+      }
+    });
+  } else if (typeof TTS !== 'undefined' && TTS.speech && model.payload) {
+    TTS.speechMeta(model.payload);
+  }
   updateStatus(model.title);
 
-  const hideLead = Math.min(550, Math.max(280, Math.round(settings.showTime * 0.16)));
+  const queueLen = state.queue.length;
+  let effectiveShowTime = settings.showTime;
+  if (queueLen > 3) {
+    const ratio = Math.max(0, 1 - (queueLen - 3) / 10);
+    effectiveShowTime = Math.round(settings.minShowTime + ratio * (settings.showTime - settings.minShowTime));
+  }
+  card.style.setProperty('--progress-duration', `${effectiveShowTime}ms`);
+
+  const hideLead = Math.min(550, Math.max(280, Math.round(effectiveShowTime * 0.16)));
 
   state.showTimer = window.setTimeout(() => {
     card.classList.add('is-hiding');
-  }, Math.max(0, settings.showTime - hideLead));
+  }, Math.max(0, effectiveShowTime - hideLead));
 
   state.cleanupTimer = window.setTimeout(() => {
     finalizeAlert(card);
-  }, settings.showTime);
+  }, effectiveShowTime);
 }
 
 function finalizeAlert(card) {
@@ -862,9 +937,10 @@ function finalizeAlert(card) {
   state.currentAlert = null;
   elements.stage.classList.remove('has-alert');
 
-  if (settings.cooldown > 0) {
-    state.blockedUntil = Date.now() + settings.cooldown;
-    state.cooldownTimer = window.setTimeout(processQueue, settings.cooldown);
+  const effectiveCooldown = state.queue.length > 3 ? Math.min(settings.cooldown, 200) : settings.cooldown;
+  if (effectiveCooldown > 0) {
+    state.blockedUntil = Date.now() + effectiveCooldown;
+    state.cooldownTimer = window.setTimeout(processQueue, effectiveCooldown);
   } else {
     state.blockedUntil = 0;
     processQueue();
@@ -898,6 +974,10 @@ function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
   }
   if (clearQueue) {
     state.queue = [];
+  }
+  stopActiveAlertSound();
+  if (typeof TTS !== 'undefined' && TTS.clearQueue) {
+    TTS.clearQueue();
   }
   state.currentAlert = null;
   elements.stage.innerHTML = '';
@@ -986,7 +1066,7 @@ function renderAlert(model) {
   if (shouldRenderBodyText(model)) {
     const message = document.createElement('div');
     message.className = 'alert-message';
-    message.textContent = model.bodyText;
+    message.innerHTML = model.bodyText;
     copy.appendChild(message);
   }
 
@@ -1034,6 +1114,13 @@ function renderAlert(model) {
 function buildSourceBadge(model) {
   const badge = document.createElement('div');
   badge.className = 'source-badge';
+
+  if (typeof getColorFromType === 'function' && model.sourceKey) {
+    const color = getColorFromType(model.sourceKey);
+    if (color) {
+      badge.style.setProperty('--source-color', color);
+    }
+  }
 
   const iconPath = SOURCE_ICON_MAP[model.sourceKey];
   if (iconPath) {
@@ -1098,6 +1185,55 @@ function updateStatus(text) {
   elements.status.textContent = text;
 }
 
+function clearActiveGeneratedSound(oscillator = null, gain = null) {
+  const activeOscillator = oscillator || state.activeOscillator;
+  const activeGain = gain || state.activeGain;
+
+  if (activeOscillator) {
+    if (state.activeOscillator === activeOscillator) {
+      state.activeOscillator = null;
+    }
+    try {
+      activeOscillator.onended = null;
+      activeOscillator.disconnect();
+    } catch (error) {
+      log('oscillator cleanup failed', error);
+    }
+  }
+
+  if (activeGain) {
+    if (state.activeGain === activeGain) {
+      state.activeGain = null;
+    }
+    try {
+      activeGain.disconnect();
+    } catch (error) {
+      log('gain cleanup failed', error);
+    }
+  }
+}
+
+function stopActiveAlertSound() {
+  if (elements.audio) {
+    try {
+      elements.audio.pause();
+      elements.audio.currentTime = 0;
+    } catch (error) {
+      log('custom audio cleanup failed', error);
+    }
+  }
+
+  if (state.activeOscillator) {
+    try {
+      state.activeOscillator.stop();
+    } catch (error) {
+      log('oscillator stop failed', error);
+    }
+  }
+
+  clearActiveGeneratedSound();
+}
+
 function toAccentRgbTriplet(colorValue) {
   const trimmed = normalizeText(colorValue).replace(/^#/, '');
   const expanded = trimmed.length === 3
@@ -1114,17 +1250,92 @@ function toAccentRgbTriplet(colorValue) {
   return `${r}, ${g}, ${b}`;
 }
 
+function ensureAudioContext() {
+  var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextCtor) return null;
+  if (!state.audioContext) {
+    state.audioContext = new AudioContextCtor();
+  }
+  if (state.audioContext.state === 'suspended') {
+    state.audioContext.resume();
+  }
+  return state.audioContext;
+}
+
+function audioKeepAliveBlip() {
+  try {
+    var ctx = ensureAudioContext();
+    if (!ctx) return;
+    var buf = ctx.createBuffer(1, ctx.sampleRate * 0.02, ctx.sampleRate);
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    var gain = ctx.createGain();
+    gain.gain.value = 0.001;
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start();
+  } catch (e) {}
+}
+
+function startAudioKeepAlive() {
+  if (state.audioKeepAlive) return;
+  audioKeepAliveBlip();
+  state.audioKeepAlive = setInterval(audioKeepAliveBlip, 3000);
+}
+
+async function primeAudioPipeline() {
+  var PRIME_STALE_MS = 3000;
+  var now = Date.now();
+  if (state.lastAudioTime && (now - state.lastAudioTime < PRIME_STALE_MS)) return;
+  try {
+    var ctx = ensureAudioContext();
+    if (!ctx) return;
+    var buf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    var gain = ctx.createGain();
+    gain.gain.value = 0.001;
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start();
+    await new Promise(resolve => setTimeout(resolve, 80));
+    state.lastAudioTime = Date.now();
+  } catch (e) {
+    log('audio prime failed', e);
+  }
+}
+
 async function playAlertSound(model) {
   if (!settings.beep) {
     return;
   }
 
-  if (settings.customBeep && elements.audio) {
+  stopActiveAlertSound();
+
+  const categorySound = model.category && settings.categorySounds[model.category];
+  const customSrc = categorySound || settings.customBeep;
+
+  if (customSrc && elements.audio) {
     try {
-      elements.audio.src = settings.customBeep;
+      elements.audio.src = customSrc;
       elements.audio.volume = settings.beepVolume;
       elements.audio.currentTime = 0;
+      await new Promise((resolve, reject) => {
+        const ready = () => { cleanup(); resolve(); };
+        const fail = (e) => { cleanup(); reject(e); };
+        const timeout = setTimeout(() => { cleanup(); resolve(); }, 3000);
+        function cleanup() {
+          clearTimeout(timeout);
+          elements.audio.removeEventListener('canplaythrough', ready);
+          elements.audio.removeEventListener('error', fail);
+        }
+        elements.audio.addEventListener('canplaythrough', ready, { once: true });
+        elements.audio.addEventListener('error', fail, { once: true });
+        elements.audio.load();
+      });
+      await primeAudioPipeline();
       await elements.audio.play();
+      state.lastAudioTime = Date.now();
       return;
     } catch (error) {
       log('custom beep failed', error);
@@ -1132,21 +1343,14 @@ async function playAlertSound(model) {
   }
 
   try {
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextCtor) {
-      return;
-    }
-    if (!state.audioContext) {
-      state.audioContext = new AudioContextCtor();
-    }
-    if (state.audioContext.state === 'suspended') {
-      await state.audioContext.resume();
-    }
+    await primeAudioPipeline();
 
     const oscillator = state.audioContext.createOscillator();
     const gain = state.audioContext.createGain();
     oscillator.connect(gain);
     gain.connect(state.audioContext.destination);
+    state.activeOscillator = oscillator;
+    state.activeGain = gain;
 
     const baseFrequency = ({
       [ALERT_CATEGORIES.FOLLOW]: 540,
@@ -1165,9 +1369,14 @@ async function playAlertSound(model) {
     gain.gain.exponentialRampToValueAtTime(Math.max(0.001, settings.beepVolume), now + 0.04);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
 
+    oscillator.onended = () => {
+      clearActiveGeneratedSound(oscillator, gain);
+    };
     oscillator.start(now);
     oscillator.stop(now + 0.32);
+    state.lastAudioTime = Date.now();
   } catch (error) {
     log('beep generation failed', error);
+    clearActiveGeneratedSound();
   }
 }

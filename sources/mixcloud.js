@@ -195,6 +195,26 @@ function toDataURL(url, callback) {
 		} catch(e){}
 	}
 
+	function simulateFocus(element) {
+		if (!element) {
+			return;
+		}
+		try {
+			element.dispatchEvent(new FocusEvent("focusin", {
+				view: window,
+				bubbles: true,
+				cancelable: true
+			}));
+		} catch (e) {}
+		try {
+			element.dispatchEvent(new FocusEvent("focus", {
+				view: window,
+				bubbles: false,
+				cancelable: true
+			}));
+		} catch (e) {}
+	}
+	
 	var settings = {};
 	// settings.textonlymode
 	// settings.captureevents
@@ -211,11 +231,30 @@ function toDataURL(url, callback) {
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("getSource" == request){sendResponse("mixcloud");	return;	}
+				if ("getSource" == request){
+					sendResponse("mixcloud");
+					return;
+				}
 				if ("focusChat" == request){
 					var input = document.querySelector("textarea[placeholder='Send a message'], textarea");
 					if (input){
-						input.focus();
+						try {
+							input.scrollIntoView({ block: "center", inline: "nearest" });
+						} catch(e){}
+						try {
+							input.click();
+						} catch(e){}
+						try {
+							input.focus({ preventScroll: true });
+						} catch(e){
+							try {
+								input.focus();
+							} catch (err) {}
+						}
+						simulateFocus(input);
+						try {
+							input.setSelectionRange(input.value.length, input.value.length);
+						} catch(e){}
 						sendResponse(true);
 						return;
 					}
@@ -229,7 +268,9 @@ function toDataURL(url, callback) {
 						return;
 					}
 				}
-			} catch(e){}
+			} catch(e){
+				console.error(e);
+			}
 			sendResponse(false);
 		}
 	);
