@@ -8,7 +8,7 @@
 <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&display=swap');
 
 :root {
 /* Brand anchors (original colors) */
@@ -42,7 +42,7 @@
 --radius: 20px;
 --radiusLarge: 28px;
 --gap: 16px;
---maxWidth: 740px;
+--maxWidth: 100%;
 --msgPad: 18px;
 --avatar: 56px;
 
@@ -65,7 +65,7 @@ body {
 width: 100%;
 height: 100%;
 overflow: hidden;
-font-family: 'Ubuntu', 'SF Pro Display', sans-serif;
+font-family: 'Outfit', 'SF Pro Display', sans-serif;
 background: transparent;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
@@ -104,7 +104,8 @@ align-items: stretch;
 justify-content: center;
 padding: 32px 28px;
 z-index: 2;
-background: transparent;
+background: transparent !important;
+box-shadow: none !important;
 }
 
 /* Viewport with gradient fade */
@@ -154,45 +155,53 @@ display: block;
 overflow: visible;
 isolation: isolate;
 transform: translateZ(0);
+background: transparent !important;
+box-shadow: none !important;
 }
 
 /* Messages list */
 .chatList {
 position: relative;
 z-index: 3;
-display: flex;
-flex-direction: column;
-gap: var(--gap);
-padding: 20px 0;
+display: flex !important;
+flex-direction: column !important;
+gap: var(--gap) !important;
+padding: 20px 0 !important;
+background: transparent !important;
+box-shadow: none !important;
+border: none !important;
+border-radius: 0 !important;
+overflow: visible !important;
 }
 
-/* Message bubble - Apple's liquid glass effect */
+/* Message bubble - RNG Tool Glass Panel */
 .msg {
-position: relative;
-display: grid;
-grid-template-columns: var(--avatar) 1fr;
-align-items: start;
-gap: 16px;
-padding: var(--msgPad);
-border-radius: var(--radius);
+position: relative !important;
+display: grid !important;
+grid-template-columns: var(--avatar) 1fr !important;
+align-items: start !important;
+padding: var(--msgPad) !important;
+margin-bottom: var(--gap) !important;
 
-/* Layered glass background */
-background:
-radial-gradient(900px 220px at 12% 12%, rgba(255, 255, 255, 0.08), transparent 58%),
-radial-gradient(700px 200px at 90% 28%, rgba(108, 137, 253, 0.10), transparent 60%),
-linear-gradient(180deg, rgba(12, 12, 18, 0.52), rgba(12, 12, 18, 0.26));
+background: linear-gradient(135deg,
+  rgba(255, 255, 255, 0.15) 0%,
+  rgba(255, 255, 255, 0.02) 40%,
+  rgba(0, 0, 0, 0.1) 60%,
+  rgba(0, 0, 0, 0.4) 100%) !important;
+backdrop-filter: blur(30px) saturate(150%) !important;
+-webkit-backdrop-filter: blur(30px) saturate(150%) !important;
 
-/* Subtle border */
-border: 1px solid rgba(255, 255, 255, 0.10);
+border-top: 1.5px solid rgba(255, 255, 255, 0.4) !important;
+border-left: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+border-bottom: 1.5px solid rgba(0, 0, 0, 0.8) !important;
+border-right: 1.5px solid rgba(0, 0, 0, 0.4) !important;
+border-radius: 16px !important;
 
-/* Subtle depth - minimal shadows */
+/* Highly polished minimal shadow mapping (Outward soft drops removed for pure glass) */
 box-shadow:
-0 4px 16px rgba(0, 0, 0, 0.15),
-inset 0 1px 0 rgba(255, 255, 255, 0.08);
-
-/* Glass blur effect */
-backdrop-filter: blur(calc(var(--blur) - 4px)) saturate(110%);
--webkit-backdrop-filter: blur(calc(var(--blur) - 4px)) saturate(110%);
+  inset 0 2px 4px rgba(255, 255, 255, 0.15),
+  inset 0 -2px 6px rgba(0, 0, 0, 0.3) !important;
+filter: drop-shadow(0 0 0 rgba(0,0,0,0)) !important;
 
 /* Animation */
 transform: translateY(12px);
@@ -201,74 +210,7 @@ animation: msgAppear 420ms cubic-bezier(0.2, 0.9, 0.25, 1) forwards;
 will-change: transform, opacity;
 }
 
-/* Specular highlight layer */
-.msg::before {
-content: "";
-position: absolute;
-inset: 0;
-border-radius: inherit;
-pointer-events: none;
-background:
-linear-gradient(115deg,
-rgba(255, 255, 255, 0.10),
-transparent 22%,
-rgba(255, 255, 255, 0.05),
-transparent 64%,
-rgba(255, 255, 255, 0.10));
-opacity: 0.55;
-mix-blend-mode: screen;
-filter: blur(0.3px);
-}
-
-/* Rainbow border effect - created with pseudo-element */
-.msg::after {
-content: "";
-position: absolute;
-inset: -2px;
-border-radius: inherit;
-padding: 2px;
-background: linear-gradient(
-90deg,
-rgba(255, 100, 100, 0.6),
-rgba(255, 200, 100, 0.6),
-rgba(255, 255, 100, 0.6),
-rgba(100, 255, 100, 0.6),
-rgba(100, 200, 255, 0.6),
-rgba(200, 100, 255, 0.6),
-rgba(255, 100, 200, 0.6),
-rgba(255, 100, 100, 0.6)
-);
-background-size: 300% 100%;
-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-mask-composite: exclude;
--webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
--webkit-mask-composite: xor;
-opacity: 0;
-filter: blur(5px);
-transition: opacity 0.3s ease;
-pointer-events: none;
-z-index: -1;
-}
-
-.msg:hover {
-transform: translateY(-2px);
-border-color: rgba(255, 255, 255, 0.15);
-border-width: 1px;
-}
-
-.msg:hover::after {
-opacity: 1;
-animation: rainbowFlow 8s linear infinite;
-}
-
-@keyframes rainbowFlow {
-0% {
-background-position: 0% 50%;
-}
-100% {
-background-position: 300% 50%;
-}
-}
+/* Specular elements replaced */
 
 @keyframes msgAppear {
 to {
@@ -282,69 +224,7 @@ opacity: 0;
 transition: opacity 1s ease-out;
 }
 
-/* Inner glow frame on all four sides */
-.msg .bar {
-position: absolute;
-inset: 6px;
-/* Creates the frame spacing from edges */
-border-radius: inherit;
-pointer-events: none;
-
-/* Multi-layered glow from all sides */
-background:
-/* Top glow */
-radial-gradient(120px 20px at 50% 0%,
-rgba(108, 137, 253, 0.45),
-rgba(250, 109, 71, 0.18) 55%,
-rgba(250, 109, 71, 0.00) 75%),
-
-/* Right glow */
-radial-gradient(20px 120px at 100% 50%,
-rgba(108, 137, 253, 0.45),
-rgba(250, 109, 71, 0.18) 55%,
-rgba(250, 109, 71, 0.00) 75%),
-
-/* Bottom glow */
-radial-gradient(120px 20px at 50% 100%,
-rgba(108, 137, 253, 0.45),
-rgba(250, 109, 71, 0.18) 55%,
-rgba(250, 109, 71, 0.00) 75%),
-
-/* Left glow (your original) */
-radial-gradient(20px 120px at 0% 50%,
-rgba(108, 137, 253, 0.45),
-rgba(250, 109, 71, 0.18) 55%,
-rgba(250, 109, 71, 0.00) 75%);
-
-filter: blur(6px);
-opacity: 0.9;
-}
-
-/* Subtle inner edge sparks on all four sides */
-.msg .bar::after {
-content: "";
-position: absolute;
-inset: 10px;
-border-radius: inherit;
-
-background: linear-gradient(180deg,
-rgba(255, 255, 255, 0.22),
-rgba(255, 255, 255, 0.06));
-
-/* Standard property first, then webkit prefix for older Safari */
-mask:
-linear-gradient(#fff 0 0) content-box,
-linear-gradient(#fff 0 0);
-mask-composite: exclude;
--webkit-mask:
-linear-gradient(#fff 0 0) content-box,
-linear-gradient(#fff 0 0);
--webkit-mask-composite: xor;
-
-padding: 2px;
-opacity: 0.55;
-filter: blur(0.2px);
-}
+/* Inner glow removed for RNG style */
 
 /* Avatar with premium treatment */
 .avatar {
@@ -359,12 +239,15 @@ background: linear-gradient(135deg,
 rgba(108, 137, 253, 0.15),
 rgba(250, 109, 71, 0.10));
 
-border: 1.5px solid rgba(255, 255, 255, 0.15);
+border-top: 1px solid rgba(255, 255, 255, 0.5);
+border-left: 1px solid rgba(255, 255, 255, 0.2);
+border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+border-right: 1px solid rgba(0, 0, 0, 0.3);
 
 box-shadow:
-0 0 0 2px rgba(0, 0, 0, 0.15) inset,
-0 8px 24px rgba(0, 0, 0, 0.30),
-0 2px 8px rgba(0, 0, 0, 0.20);
+0 0 0 1px rgba(0, 0, 0, 0.15) inset,
+0 4px 12px rgba(0, 0, 0, 0.25),
+0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .avatar img {
@@ -409,34 +292,76 @@ gap: 8px;
 
 .topline {
 display: flex;
-align-items: center;
+align-items: flex-start;
 gap: 10px;
 min-width: 0;
+flex-wrap: wrap;
 }
 
 .name {
-font-weight: 600;
+font-weight: 900;
 font-size: var(--nameSize);
 color: rgba(108, 137, 253, 0.95);
-text-shadow: 0 0 16px rgba(108, 137, 253, 0.22);
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
-max-width: 60%;
+text-shadow:
+  1px 1px 0 #0d1b2a,
+  2px 2px 0 #0d1b2a,
+  3px 3px 4px rgba(0, 0, 0, 0.6);
+word-wrap: break-word;
+overflow-wrap: anywhere;
+line-height: 1.2;
+padding-right: 6px;
 letter-spacing: -0.01em;
 transition: color 0.35s ease, text-shadow 0.35s ease;
+/* Ensure sparkles can absolutely position over name */
+position: relative; 
+}
+
+/* Magic UI Vanilla Sparkles */
+@keyframes magic-sparkle-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(180deg); }
+}
+@keyframes magic-sparkle-ping {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
+.magic-sparkle {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px currentColor);
+  animation: magic-sparkle-ping 700ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.magic-sparkle svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: magic-sparkle-spin 1000ms linear infinite;
+}
+.sparkle-layer {
+  position: absolute;
+  inset: -10px;
+  pointer-events: none;
+  z-index: 1; /* Place above the drop shadow */
+  overflow: visible;
 }
 
 /* EVEN messages → blue */
 .msg:nth-child(even) .name {
 color: rgba(108, 137, 253, 0.95);
-text-shadow: 0 0 16px rgba(108, 137, 253, 0.22);
+text-shadow:
+  1px 1px 0 #0d1b2a,
+  2px 2px 0 #0d1b2a,
+  3px 3px 4px rgba(0, 0, 0, 0.6);
 }
 
 /* ODD messages → orange */
 .msg:nth-child(odd) .name {
 color: rgba(250, 109, 71, 0.95);
-text-shadow: 0 0 16px rgba(250, 109, 71, 0.22);
+text-shadow:
+  1px 1px 0 #0d1b2a,
+  2px 2px 0 #0d1b2a,
+  3px 3px 4px rgba(0, 0, 0, 0.6);
 }
 
 /* Meta pills */
@@ -445,6 +370,8 @@ display: flex;
 align-items: center;
 gap: 6px;
 min-width: 0;
+flex-shrink: 0;
+margin-top: 2px;
 }
 
 .pill {
@@ -466,9 +393,10 @@ inset 0 1px 0 rgba(255, 255, 255, 0.10);
 
 color: var(--textSoft);
 font-size: 11px;
-font-weight: 600;
+font-weight: 800;
 text-transform: uppercase;
 letter-spacing: 0.05em;
+text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .pill::before {
@@ -497,14 +425,16 @@ inset 0 1px 0 rgba(255, 255, 255, 0.15);
 color: var(--text);
 font-size: var(--msgSize);
 line-height: 1.5;
-font-weight: 500;
-letter-spacing: -0.01em;
-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+font-weight: 700;
+letter-spacing: 0.02em;
+text-shadow:
+  1px 1px 0 #0d1b2a,
+  2px 2px 3px rgba(0, 0, 0, 0.6);
 word-wrap: break-word;
 overflow-wrap: anywhere;
 
 /* Emoji rendering consistency across platforms */
-font-family: 'Ubuntu', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+font-family: 'Outfit', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
 }
 
 /* Emotes / emoji images (Twitch/SSN/BTTV/7TV/FFZ) */
@@ -742,6 +672,11 @@ function sanitizeChatHTML(input) {
         if (h === "cdn.7tv.app" || h.endsWith(".7tv.app")) return true;
         // FFZ
         if (h === "cdn.frankerfacez.com" || h.endsWith(".frankerfacez.com")) return true;
+        // YouTube emojis
+        if (h.endsWith(".ggpht.com") || h.endsWith(".googleusercontent.com")) return true;
+        if (h === "youtube.com" || h.endsWith(".youtube.com")) return true;
+        if (h === "ytimg.com" || h.endsWith(".ytimg.com")) return true;
+        if (h === "gstatic.com" || h.endsWith(".gstatic.com")) return true;
         return false;
       };
 
@@ -872,6 +807,47 @@ function fixEmojiBaseline(el){
   }
 }
 
+/* --- Vanilla Magic UI Sparkles Engine --- */
+const SPARKLE_COLORS = ['#A07CFE', '#FE8FB5', '#FFD700', '#6c89fd', '#fa6d47'];
+const rand = (min, max) => Math.random() * (max - min) + min;
+
+function initMagicSparkles(textElement) {
+  if (!textElement) return;
+  const layer = document.createElement('div');
+  layer.className = 'sparkle-layer';
+  textElement.appendChild(layer);
+
+  const spawnSparkle = () => {
+    if (!document.contains(layer)) return; // Cleanup when chat bubble scrolls off limit
+    
+    const color = SPARKLE_COLORS[Math.floor(Math.random() * SPARKLE_COLORS.length)];
+    const size = rand(10, 24);
+    const dur = rand(600, 1000);
+    
+    const el = document.createElement('div');
+    el.className = 'magic-sparkle';
+    el.innerHTML = `<svg viewBox="0 0 68 68" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:${color}"><path d="M26.5 25.5C19.0043 33.3697 0 34 0 34C0 34 19.1013 35.3684 26.5 43.5C33.234 50.901 34 68 34 68C34 68 36.9884 50.7065 44.5 43.5C51.6431 36.647 68 34 68 34C68 34 51.6947 32.0939 44.5 25.5C36.5605 18.2235 34 0 34 0C34 0 33.6591 17.9837 26.5 25.5Z" fill="currentColor"/></svg>`;
+    
+    // Random placement bounds offset slightly inwards and outwards
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.left = rand(-5, 105) + '%';
+    el.style.top = rand(-10, 110) + '%';
+    el.style.zIndex = Math.random() > 0.5 ? 1 : -1;
+    el.style.animationDuration = dur + 'ms';
+    
+    layer.appendChild(el);
+    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, dur);
+
+    setTimeout(spawnSparkle, rand(150, 600)); // Loop next spawn
+  };
+  
+  // Stagger initial spawns
+  for (let i = 0; i < 3; i++) {
+    setTimeout(spawnSparkle, rand(0, 500));
+  }
+}
+
 function createMessageNode(data) {
 const wrap = document.createElement("div");
 wrap.className = "msg";
@@ -886,8 +862,6 @@ const platform = normalizePlatform(data.type);
 const donationValue = safeText(data.hasDonation);
 
 wrap.innerHTML = `
-       <div class="bar"></div>
-
        <div class="avatar">
          ${avatarUrl ? `<img alt="" src="${escapeHTML(avatarUrl)}" />` : ""}
        </div>
@@ -922,6 +896,9 @@ const node = createMessageNode(data);
 chat.appendChild(node);
 // baseline-fix unicode emoji after sanitize/insert
 fixEmojiBaseline(node.querySelector('.message'));
+
+// Add dynamic Magic UI stars around the username
+initMagicSparkles(node.querySelector('.name'));
 
 // If showtime is set, fade out and remove the message after the specified time
 if (showtime > 0) {
