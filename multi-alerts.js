@@ -1066,7 +1066,7 @@ function renderAlert(model) {
   if (shouldRenderBodyText(model)) {
     const message = document.createElement('div');
     message.className = 'alert-message';
-    message.textContent = model.bodyText;
+    message.innerHTML = model.bodyText;
     copy.appendChild(message);
   }
 
