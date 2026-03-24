@@ -36,8 +36,10 @@ function flashCopied(feedbackEl) {
 }
 
 let currentSessionId = '';
-let currentChatURL   = '';
-let currentAlertURL  = '';
+
+function overlayUrl(file) {
+  return currentSessionId ? chrome.runtime.getURL(file) + '?session=' + currentSessionId : '';
+}
 
 function applyState(state, streamID) {
   currentSessionId = streamID || '';
@@ -49,12 +51,9 @@ function applyState(state, streamID) {
   $('status-dot').classList.toggle('active', isOn);
   $('status-label').textContent = isOn ? 'Active' : 'Inactive';
 
-  currentChatURL  = hasSession ? chrome.runtime.getURL('sampleoverlay.html') + '?session=' + currentSessionId : '';
-  currentAlertURL = hasSession ? chrome.runtime.getURL('multi-alerts.html')  + '?session=' + currentSessionId : '';
-
   $('session-id').textContent = currentSessionId || '—';
-  $('chat-url').textContent   = currentChatURL   || '—';
-  $('alerts-url').textContent = currentAlertURL  || '—';
+  $('chat-url').textContent   = overlayUrl('sampleoverlay.html') || '—';
+  $('alerts-url').textContent = overlayUrl('multi-alerts.html')  || '—';
 
   ['btn-copy-session', 'btn-copy-chat', 'btn-open-chat', 'btn-copy-alerts', 'btn-open-alerts'].forEach((id) => {
     $(id).disabled = !hasSession;
@@ -102,8 +101,8 @@ function init() {
     copyToClipboard(currentSessionId).then(() => flashCopied($('session-copy-feedback')));
   });
 
-  wireOverlay(() => currentChatURL,  'btn-copy-chat',   'chat-copy-feedback',   'btn-open-chat');
-  wireOverlay(() => currentAlertURL, 'btn-copy-alerts', 'alerts-copy-feedback', 'btn-open-alerts');
+  wireOverlay(() => overlayUrl('sampleoverlay.html'), 'btn-copy-chat',   'chat-copy-feedback',   'btn-open-chat');
+  wireOverlay(() => overlayUrl('multi-alerts.html'),  'btn-copy-alerts', 'alerts-copy-feedback', 'btn-open-alerts');
 }
 
 if (document.readyState === 'loading') {
