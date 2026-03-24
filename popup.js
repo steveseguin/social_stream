@@ -38,7 +38,7 @@ function flashCopied(feedbackEl) {
 let currentSessionId = '';
 
 function overlayUrl(file) {
-  return currentSessionId ? chrome.runtime.getURL(file) + '?session=' + currentSessionId : '';
+  return currentSessionId ? 'https://socialstream.ninja/' + file + '?session=' + currentSessionId : '';
 }
 
 function applyState(state, streamID) {
