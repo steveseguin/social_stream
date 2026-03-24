@@ -7080,9 +7080,26 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
       const actionId = settings.streamerbotactionid.textsetting;
       console.log(`Triggering Streamer.bot Action ID: ${actionId}`);
 
-      // Pass the prepared chat data as an argument named 'chatData' to the action
+      // Pass chat data fields as flat args so CPH.TryGetArg<T>() works directly in C#
+      // e.g. CPH.TryGetArg<string>("chatmessage", out string msg) — do NOT wrap in a nested object
       const args = {
-          chatData: payloadData
+          chatmessage: payloadData.chatmessage || '',
+          chatname: payloadData.chatname || '',
+          userid: String(payloadData.userid || ''),
+          chatimg: payloadData.chatimg || '',
+          isBot: !!payloadData.isBot,
+          originalPlatform: payloadData.originalPlatform || 'unknown',
+          source: payloadData.source || 'SocialStream.Ninja',
+          type: payloadData.type || '',
+          nameColor: payloadData.nameColor || '#FFFFFF',
+          chatbadges: String(payloadData.chatbadges || ''),
+          membership: String(payloadData.membership || ''),
+          hasDonation: String(payloadData.hasDonation || ''),
+          contentimg: payloadData.contentimg || '',
+          subtitle: payloadData.subtitle || '',
+          textonly: !!payloadData.textonly,
+          tid: payloadData.tid || '',
+          id: payloadData.id || ''
       };
 
       if (payloadData.videoId) {

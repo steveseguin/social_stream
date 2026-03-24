@@ -178,7 +178,7 @@
       <li>Name your action clearly (e.g., "Process SocialStream Message")</li>
       <li><strong><span class="required">Very Important:</span></strong> After creating the action, right-click on it and select <strong>Copy Action ID</strong>. You will paste this ID into the SocialStream.Ninja settings.</li>
       <li>Add sub-actions to handle the message data. A common first step is to extract the data using C#. Right-click the action → <strong>Add Sub-Action</strong> → <strong>Core</strong> → <strong>C#</strong> → <strong>Execute C# Code</strong></li>
-      <li>Paste the following C# code. This code extracts the chat data sent by SocialStream.Ninja from the `chatData` argument:</li>
+      <li>Paste the following C# code. This code extracts the chat data sent by SocialStream.Ninja from the action arguments:</li>
    </ol>
 <pre><code>using System;
 
@@ -187,18 +187,24 @@ public class CPHInline
     public bool Execute()
     {
         // --- Get the chat data sent from SocialStream.Ninja ---
-        // Using CPH.GetArg to retrieve individual arguments directly
-        // This avoids Newtonsoft.Json dependencies and compilation issues
-        string message = CPH.GetArg("chatmessage", "");
-        string username = CPH.GetArg("chatname", "Unknown User");
-        string userId = CPH.GetArg("userid", "");
-        string avatar = CPH.GetArg("chatimg", "");
-        bool isBot = CPH.GetArg<bool>("isBot", false);
-        string originalPlatform = CPH.GetArg("originalPlatform", "unknown");
-        string source = CPH.GetArg("source", "unknown");
+        // Uses TryGetArg to retrieve individual arguments directly
+        CPH.TryGetArg&lt;string&gt;("chatmessage", out string message);
+        CPH.TryGetArg&lt;string&gt;("chatname", out string username);
+        CPH.TryGetArg&lt;string&gt;("userid", out string userId);
+        CPH.TryGetArg&lt;string&gt;("chatimg", out string avatar);
+        CPH.TryGetArg&lt;bool&gt;("isBot", out bool isBot);
+        CPH.TryGetArg&lt;string&gt;("originalPlatform", out string originalPlatform);
+        CPH.TryGetArg&lt;string&gt;("source", out string source);
+
+        message = message ?? "";
+        username = username ?? "Unknown User";
+        userId = userId ?? "";
+        avatar = avatar ?? "";
+        originalPlatform = originalPlatform ?? "unknown";
+        source = source ?? "unknown";
 
         // Log for debugging (visible in Action Queue logs)
-        CPH.LogInfo($"[SocialStream][{originalPlatform}] {username}: {message}");
+        CPH.LogInfo(string.Format("[SocialStream][{0}] {1}: {2}", originalPlatform, username, message));
 
         // --- Set arguments for subsequent sub-actions ---
         // Access these in other sub-actions as %ss_message%, %ss_username%, etc.
