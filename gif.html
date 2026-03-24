@@ -39,6 +39,16 @@
 			max-height:100vh;
 			max-width:100vw;
 		}
+		body.stretch #mediaContent,
+		body.stretch img,
+		body.stretch svg,
+		body.stretch video {
+			width: 100vw !important;
+			height: 100vh !important;
+			max-width: none !important;
+			max-height: none !important;
+			object-fit: fill;
+		}
     </style>
 </head>
 <body>
@@ -49,6 +59,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const mediaContainer = document.getElementById('mediaContainer');
         const mediaContent = document.getElementById('mediaContent');
+        if (urlParams.has('stretch')) document.body.classList.add('stretch');
         let mediaQueue = [];
         let isPlaying = false;
         
@@ -89,6 +100,25 @@
             }
         }
 
+        function detectMediaType(url) {
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    const contentType = (response.headers.get('Content-Type') || '').split(';')[0].trim();
+                    if (['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/svg+xml'].includes(contentType)) {
+                        displayImage(url);
+                    } else if (['video/mp4', 'video/webm', 'video/ogg'].includes(contentType)) {
+                        displayVideo(url);
+                    } else if (['audio/mpeg', 'audio/wav', 'audio/ogg'].includes(contentType)) {
+                        playAudio(url);
+                    } else {
+                        displayEmbeddedContent(url);
+                    }
+                })
+                .catch(() => {
+                    displayEmbeddedContent(url);
+                });
+        }
+
         function playNextMedia() {
 			if (mediaQueue.length === 0) {
 				isPlaying = false;
@@ -107,7 +137,8 @@
 			if (isEmbeddedContent(mediaUrl)) {
 				displayEmbeddedContent(mediaUrl);
 			} else {
-				const fileExtension = mediaUrl.split('.').pop().toLowerCase();
+				const urlPath = mediaUrl.split('?')[0].split('&')[0];
+				const fileExtension = urlPath.split('.').pop().toLowerCase();
 
 				if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
 					displayImage(mediaUrl);
@@ -117,13 +148,10 @@
 					playAudio(mediaUrl);
 				} else if (fileExtension === 'svg') {
 					displaySVG(mediaUrl);
-				} else if (fileExtension === 'html' || mediaUrl.split('/').pop().split('.').length == 1) {
+				} else if (fileExtension === 'html') {
 					displayEmbeddedContent(mediaUrl);
-				} else if (mediaUrl.split('/').pop().split('.').pop().length > 4) {
-					displayImage(mediaUrl);
 				} else {
-					console.error('Unsupported file type:', fileExtension);
-					playNextMedia();
+					detectMediaType(mediaUrl);
 				}
 			}
 		}
@@ -191,30 +219,6 @@
 			}, minDisplayTime);
 		}
 
-        function displayImage(url) {
-            const img = new Image();
-            img.onload = () => {
-                mediaContent.src = url;
-                fadeIn();
-                if (url.toLowerCase().endsWith('.gif')) {
-                    const gifDuration = getGifDuration(img);
-                    const displayTime = Math.max(gifDuration, minDisplayTime);
-                    setTimeout(() => {
-                        fadeOut(() => playNextMedia());
-                    }, displayTime);
-                } else {
-                    setTimeout(() => {
-                        fadeOut(() => playNextMedia());
-                    }, minDisplayTime);
-                }
-            };
-            img.onerror = () => {
-                console.error('Failed to load image:', url);
-                playNextMedia();
-            };
-            img.src = url;
-        }
-		
         function displayVideo(url) {
             const video = document.createElement('video');
             video.src = url;
@@ -386,6 +390,38 @@
             return duration;
         }
 		
+		function getGifDuration(arr) {
+            if (arr[0] !== 0x47 || arr[1] !== 0x49 || arr[2] !== 0x46) return 0;
+            const lsdFlags = arr[10];
+            const gctSize = (lsdFlags & 0x80) ? 3 * (1 << ((lsdFlags & 0x07) + 1)) : 0;
+            let i = 13 + gctSize;
+            let duration = 0;
+            while (i < arr.length - 1) {
+                if (arr[i] === 0x3B) break;
+                if (arr[i] === 0x21) {
+                    if (arr[i + 1] === 0xF9) {
+                        const delayCs = arr[i + 4] | (arr[i + 5] << 8);
+                        duration += (delayCs > 0 ? delayCs : 10) * 10;
+                        i += 8;
+                    } else {
+                        i += 2;
+                        while (i < arr.length && arr[i] !== 0) i += arr[i] + 1;
+                        i++;
+                    }
+                } else if (arr[i] === 0x2C) {
+                    i += 10;
+                    const lctFlags = arr[i - 1];
+                    if (lctFlags & 0x80) i += 3 * (1 << ((lctFlags & 0x07) + 1));
+                    i++;
+                    while (i < arr.length && arr[i] !== 0) i += arr[i] + 1;
+                    i++;
+                } else {
+                    i++;
+                }
+            }
+            return duration;
+        }
+
 		function analyzeAnimatedImage(blob, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -410,9 +446,34 @@
                 .then(response => response.blob())
                 .then(blob => {
                     const objectURL = URL.createObjectURL(blob);
+                    const cleanUrl = url.toLowerCase().split('?')[0];
+                    const isGif = blob.type === 'image/gif' || cleanUrl.endsWith('.gif');
+                    const isWebp = blob.type === 'image/webp' || cleanUrl.endsWith('.webp');
                     mediaContent.onload = () => {
                         fadeIn();
-                        if (url.toLowerCase().endsWith('.webp')) {
+                        if (isGif) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const arr = new Uint8Array(e.target.result);
+                                const gifDuration = getGifDuration(arr);
+                                const displayTime = Math.max(gifDuration || minDisplayTime, minDisplayTime);
+                                setTimeout(() => {
+                                    fadeOut(() => {
+                                        URL.revokeObjectURL(objectURL);
+                                        playNextMedia();
+                                    });
+                                }, displayTime);
+                            };
+                            reader.onerror = () => {
+                                setTimeout(() => {
+                                    fadeOut(() => {
+                                        URL.revokeObjectURL(objectURL);
+                                        playNextMedia();
+                                    });
+                                }, minDisplayTime);
+                            };
+                            reader.readAsArrayBuffer(blob);
+                        } else if (isWebp) {
                             analyzeAnimatedImage(blob, (duration) => {
                                 const displayTime = Math.max(duration, minDisplayTime);
                                 setTimeout(() => {
@@ -430,6 +491,11 @@
                                 });
                             }, minDisplayTime);
                         }
+                    };
+                    mediaContent.onerror = () => {
+                        console.error('Failed to display image:', url);
+                        URL.revokeObjectURL(objectURL);
+                        playNextMedia();
                     };
                     mediaContent.src = objectURL;
                 })
