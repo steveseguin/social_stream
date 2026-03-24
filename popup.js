@@ -2,6 +2,41 @@
 
 const $ = (id) => document.getElementById(id);
 
+// When running inside the SSNApp Electron window there is no Chrome extension
+// runtime. Shim the two APIs popup.js uses (sendMessage, tabs.create) so the
+// rest of the file works without any Electron-specific branching.
+if (typeof require !== 'undefined') {
+  const { ipcRenderer, shell } = require('electron');
+
+  if (typeof chrome === 'undefined') window.chrome = {};
+  if (!chrome.runtime) chrome.runtime = {};
+  if (!chrome.tabs)    chrome.tabs    = {};
+
+  const pending = new Map();
+  let seq = 0;
+
+  chrome.runtime.sendMessage = function (msg, cb) {
+    if (typeof cb !== 'function') { ipcRenderer.send('fromPopup', msg); return; }
+    const id    = ++seq;
+    const timer = setTimeout(() => { pending.delete(id); cb(null); }, 3000);
+    pending.set(id, { cb, timer });
+    ipcRenderer.send('fromPopup', { ...msg, callbackId: id });
+  };
+
+  function resolveIpc(data) {
+    if (!data || !pending.has(data.callbackId)) return;
+    const { cb, timer } = pending.get(data.callbackId);
+    clearTimeout(timer);
+    pending.delete(data.callbackId);
+    cb(data);
+  }
+
+  ipcRenderer.on('fromMain',       (_e, data) => resolveIpc(data));
+  ipcRenderer.on('fromBackground', (_e, data) => resolveIpc(data));
+
+  chrome.tabs.create = ({ url }) => shell.openExternal(url);
+}
+
 function sendToBackground(msg, cb) {
   try {
     chrome.runtime.sendMessage(msg, (response) => {
