@@ -23,6 +23,7 @@ class EventFlowSystem {
 		this.allowEvalCustomJs = (typeof options.allowEvalCustomJs === 'boolean')
 			? options.allowEvalCustomJs
 			: this.detectCustomJsEvalSupport();
+		this.customJsEvalSupported = this.allowEvalCustomJs; // alias used by EventFlowEditor
 		this.customJsEvalWarningShown = false;
 		
 		// MIDI properties
