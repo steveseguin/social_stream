@@ -7061,11 +7061,14 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
     const payloadData = {
         ...data, // Copy original data
         chatname: username || data.chatname || data.userid || "Host⚡",
-        isBot: isBot,
+        bot: isBot || !!data.bot,  // local isBot = Ollama prefix detection; data.bot = platform/list bot flag
+        mod: !!data.mod,
+        host: !!data.host,
+        admin: !!data.admin,
+        vip: !!data.vip,
         chatmessage: cleaned,
-        // Add any other relevant info Streamer.bot action might need
-        source: "SocialStream.Ninja", // Explicitly add source
-        originalPlatform: data.type || "unknown" // Preserve original platform info
+        source: "SocialStream.Ninja",
+        originalPlatform: data.type || "unknown"
     };
 
     if (videoId) {
@@ -7087,7 +7090,11 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
           chatname: payloadData.chatname || '',
           userid: String(payloadData.userid || ''),
           chatimg: payloadData.chatimg || '',
-          isBot: !!payloadData.isBot,
+          bot: payloadData.bot,
+          mod: payloadData.mod,
+          host: payloadData.host,
+          admin: payloadData.admin,
+          vip: payloadData.vip,
           originalPlatform: payloadData.originalPlatform || 'unknown',
           source: payloadData.source || 'SocialStream.Ninja',
           type: payloadData.type || '',
