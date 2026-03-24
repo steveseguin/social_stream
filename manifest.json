@@ -1,8 +1,8 @@
 {
   "name": "Social Stream Ninja",
-  "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
+  "description": "Unified live chat overlay for Twitch, YouTube, Kick, TikTok, and 100+ more platforms.",
   "manifest_version": 3,
-  "version": "3.47.3",
+  "version": "1.0.0",
   "homepage_url": "http://socialstream.ninja/",
   "browser_specific_settings": {
     "gecko": {
@@ -74,6 +74,7 @@
     "https://patreon.com/*",
     "https://simps.com/app/*",
     "https://velora.tv/*",
+    "https://api.velora.tv/*",
     "https://studio.kwai.com/*",
     "https://studio.favorited.com/popout/chat",
     "https://*/*autoreloadwithsocialstream",
@@ -1176,6 +1177,19 @@
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/kick.html*",
         "http://localhost:8080/*/kick.html*",
         "http://localhost:8181/*/kick.html*"
+      ]
+    },
+    {
+      "js": [
+        "./sources/websocket/velora.js"
+      ],
+      "matches": [
+        "https://socialstream.ninja/sources/websocket/velora*",
+        "https://beta.socialstream.ninja/sources/websocket/velora*",
+        "https://socialstream.ninja/beta/sources/websocket/velora*",
+        "file:///C:/Users/steve/Code/social_stream/sources/websocket/velora.html*",
+        "http://localhost:8080/*/velora.html*",
+        "http://localhost:8181/*/velora.html*"
       ]
     },
     {

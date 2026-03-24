@@ -3845,18 +3845,18 @@ function updateKickStreamEditorFields(channel) {
 }
 
 async function fetchCurrentKickChannelInfo() {
-    let path = '/public/v1/channels';
     if (state.channelId != null) {
-        path += `?broadcaster_user_id=${encodeURIComponent(String(state.channelId))}`;
-    } else if (state.channelSlug) {
-        path += `?slug=${encodeURIComponent(normalizeChannel(state.channelSlug))}`;
+        const path = `/public/v1/channels?broadcaster_user_id=${encodeURIComponent(String(state.channelId))}`;
+        const data = await apiFetch(path);
+        const channels = unwrapKickChannelPayload(data);
+        return channels[0] || null;
     }
-    const data = await apiFetch(path);
-    return pickKickChannelBySlug(
-        unwrapKickChannelPayload(data),
-        normalizeChannel(state.channelSlug),
-        { allowSingletonWithoutSlug: true }
-    );
+    if (state.channelSlug) {
+        return fetchKickChannelBySlug(normalizeChannel(state.channelSlug));
+    }
+    const data = await apiFetch('/public/v1/channels');
+    const channels = unwrapKickChannelPayload(data);
+    return channels[0] || null;
 }
 
 async function refreshKickStreamInfo() {
