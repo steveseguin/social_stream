@@ -3292,6 +3292,8 @@ class EventFlowSystem {
                 let ttsText = config.text || '';
                 if (config.useMessageText && message.chatmessage) {
                     ttsText = message.chatmessage;
+                } else {
+                    ttsText = this.replaceTemplateVars(ttsText, message);
                 }
                 if (ttsText && this.sendTargetP2P) {
                     this.sendTargetP2P({
