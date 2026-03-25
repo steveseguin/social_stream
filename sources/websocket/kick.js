@@ -3845,14 +3845,14 @@ function updateKickStreamEditorFields(channel) {
 }
 
 async function fetchCurrentKickChannelInfo() {
+    if (state.channelSlug) {
+        return fetchKickChannelBySlug(normalizeChannel(state.channelSlug));
+    }
     if (state.channelId != null) {
         const path = `/public/v1/channels?broadcaster_user_id=${encodeURIComponent(String(state.channelId))}`;
         const data = await apiFetch(path);
         const channels = unwrapKickChannelPayload(data);
         return channels[0] || null;
-    }
-    if (state.channelSlug) {
-        return fetchKickChannelBySlug(normalizeChannel(state.channelSlug));
     }
     const data = await apiFetch('/public/v1/channels');
     const channels = unwrapKickChannelPayload(data);
@@ -3906,7 +3906,14 @@ async function updateKickStreamInfoFromInputs() {
         body: JSON.stringify(payload)
     });
     log('Kick stream title/category updated.', 'info');
-    await refreshKickStreamInfo();
+    // Reflect submitted values immediately — the Kick API caches stale data
+    // after a PATCH so an immediate re-fetch would overwrite the inputs with
+    // old values.  After a short delay the cache should have cleared.
+    if (els.streamTitle && title) els.streamTitle.value = title;
+    if (els.streamCategory && category) els.streamCategory.value = category;
+    setTimeout(() => {
+        refreshKickStreamInfo().catch(() => {});
+    }, 3000);
     return true;
 }
 
