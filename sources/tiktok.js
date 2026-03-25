@@ -1715,6 +1715,10 @@
 			return null;
 		}
 
+		if (observer instanceof MutationObserver && observedDomElementForObserver1 && observedDomElementForObserver1.isConnected) {
+			return null;
+		}
+
 		const hasChatSurface = !!document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-message"]');
 		const hasComposer = !!findTikTokChatComposer() || !!document.querySelector(".public-DraftEditorPlaceholder-inner");
 		const hasDisabledComposer = !!document.querySelector("div[contenteditable='plaintext-only'][disabled][placeholder]");
