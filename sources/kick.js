@@ -1133,7 +1133,7 @@
 			}
 			
 			if (!chatNodes.length){
-				let tmp = ele.querySelector("div span[class^='font-normal']");
+				let tmp = ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
 				if (tmp){
 					chatmessage = getAllContentNodes(tmp);
 					chatmessage = chatmessage.trim();
@@ -1142,7 +1142,7 @@
 		  } catch(e){
 		  }
 	  } else {
-		let tmp = ele.querySelector("div span[class^='font-normal']");
+		let tmp = ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
 		if (tmp){
 			chatmessage = getAllContentNodes(tmp);
 			chatmessage = chatmessage.trim();
