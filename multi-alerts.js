@@ -57,10 +57,12 @@ const SUBSCRIPTION_EVENTS = new Set([
   'member_milestone',    // → membermilestone
   'gift_membership',     // → giftpurchase
   'membership_gift',     // → giftpurchase
-  'community_gift'       // → giftpurchase
+  'community_gift',      // → giftpurchase
+  'new-subscriber'       // StreamElements (hyphenated variant)
 ]);
 const DONATION_EVENTS = new Set([
   'donation',
+  'gift',              // TikTok gifts, Kick DOM gifts
   'supersticker',
   'thankyou',
   'jeweldonation',
@@ -68,7 +70,7 @@ const DONATION_EVENTS = new Set([
   'support'
 ]);
 const BITS_EVENTS = new Set(['cheer', 'bits']);
-const RAID_EVENTS = new Set(['raid', 'host', 'hosting']);
+const RAID_EVENTS = new Set(['raid', 'host', 'hosting', 'redirect']);
 
 const KNOWN_SOURCES = new Set([
   'amazon',
