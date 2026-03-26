@@ -654,6 +654,12 @@
 	const KICK_MESSAGE_CONTAINER_SELECTOR = "[data-index], [data-chat-entry]";
 	const KICK_DELETE_TEXTS = new Set(["deleted by a moderator", "(deleted)"]);
 
+	function getKickUsernameButton(ele) {
+		return ele.querySelector("button.inline.font-bold[data-prevent-expand]")
+			|| ele.querySelector("button[title]")
+			|| ele.querySelector("button.font-bold.inline");
+	}
+
 	function normalizeKickText(text) {
 		return (text || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
 	}
@@ -728,9 +734,9 @@
 	}
 
 	function getKickDeleteChatname(ele) {
+		const btn = getKickUsernameButton(ele);
 		const rawName =
-			ele?.querySelector?.("button[title]")?.innerText ||
-			ele?.querySelector?.("button.font-bold.inline.text-white")?.innerText ||
+			btn?.innerText ||
 			ele?.querySelector?.(".chat-entry-username")?.innerText ||
 			"";
 		return escapeHtml(normalizeKickChatname(rawName));
@@ -1055,13 +1061,14 @@
 	  let messageId = "";
 	  var eventName = "";
 	  try {
-		  if (ele.querySelector("button[title]")){
-			chatname = escapeHtml(ele.querySelector("button[title]").innerText);
+		  var usernameBtn = getKickUsernameButton(ele);
+		  if (usernameBtn){
+			chatname = escapeHtml(usernameBtn.innerText);
 		  } else {
-			chatname = escapeHtml(ele.querySelector("button.font-bold.inline.text-white").innerText);
+			chatname = escapeHtml(ele.querySelector("button.font-bold").innerText);
 			eventName = true;
 		  }
-		
+
 	  } catch(e){
 		  return;
 	  }
@@ -1110,7 +1117,8 @@
 	  
 	  
 	  try {
-		nameColor = ele.querySelector("button[title]").style.color;
+		var colorBtn = getKickUsernameButton(ele);
+		if (colorBtn) { nameColor = colorBtn.style.color; }
 	  } catch(e){}
 	  
 	   
@@ -1193,7 +1201,7 @@
 	  
 	  var member = false;
 	  var mod = false;
-	  ele.querySelectorAll("div > div > div > div > div > div[data-state] img[src], div > div > div > div > div > div[data-state] svg").forEach(badge=>{
+	  ele.querySelectorAll("div[data-state] img[src], div[data-state] svg").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
