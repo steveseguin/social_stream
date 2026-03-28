@@ -523,8 +523,8 @@ class EventFlowEditor {
                         <div class="flow-list" id="flow-list"></div>
                         <button id="new-flow-btn" class="btn"><span style="color: #4CAF50; margin-right: 5px;">+</span>Create New Flow</button>
                         <div class="flow-import-export" style="display: flex; gap: 5px; margin-top: 10px;">
-                            <button id="import-flow-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📥 Import</button>
-                            <button id="export-all-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📤 Export All</button>
+                            <button id="import-flow-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px; white-space: nowrap;">📥 Import</button>
+                            <button id="export-all-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px; white-space: nowrap;">📤 Export All</button>
                         </div>
                         <select id="template-select" class="btn" style="width: 100%; margin-top: 10px; padding: 8px 12px; font-size: 14px; cursor: pointer;">
                             <option value="">📋 Load Template...</option>
