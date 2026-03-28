@@ -4573,8 +4573,8 @@ function handleCustomGifCommand(ele, sync) {
     if (!ele.closest('.custom-gif-command-entry')) return false;
     
     const commands = Array.from(document.querySelectorAll('.custom-gif-command-entry')).map(entry => ({
-        command: entry.querySelector('.custom-command').value,
-        url: entry.querySelector('.custom-media-url').value
+        command: entry.querySelector('.custom-command')?.value?.trim() || '',
+        url: entry.querySelector('.custom-media-url')?.value?.trim() || ''
     }));
     
     if (sync) {
@@ -5459,9 +5459,50 @@ try {
 	log(e);
 }
 
+function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia') {
+    if (!inputElement) {
+        return;
+    }
+
+    window.open('https://fileuploads.socialstream.ninja/popup/upload', popupName, 'width=640,height=640');
+
+    const handler = (event) => {
+        if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+        if (!event.data || event.data.type !== 'media-uploaded' || !event.data.url) return;
+
+        inputElement.value = event.data.url;
+        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+        window.removeEventListener('message', handler);
+    };
+
+    window.addEventListener('message', handler);
+}
+
+function triggerCustomGifPreview(entry) {
+    const commandInput = entry?.querySelector('.custom-command');
+    const mediaUrlInput = entry?.querySelector('.custom-media-url');
+    const mediaUrl = mediaUrlInput?.value?.trim();
+
+    if (!mediaUrl) {
+        alert('Add or upload a GIF, image, or video URL first.');
+        mediaUrlInput?.focus();
+        return;
+    }
+
+    chrome.runtime.sendMessage({
+        cmd: 'previewCustomGif',
+        target: 'gif',
+        type: 'popup',
+        chatname: 'GIF Test',
+        chatmessage: commandInput?.value?.trim() || '!preview',
+        contentimg: mediaUrl
+    }, function () {});
+}
+
 function createCommandEntry(command = '', url = '') {
     function encodeHTML(str) {
-        return str.replace(/&/g, '&amp;')
+        return String(str ?? '').replace(/&/g, '&amp;')
                   .replace(/</g, '&lt;')
                   .replace(/>/g, '&gt;')
                   .replace(/"/g, '&quot;')
@@ -5479,11 +5520,27 @@ function createCommandEntry(command = '', url = '') {
             <input type="text" class="textInput custom-media-url" value="${encodeHTML(url)}" autocomplete="off" placeholder="https://media.giphy.com/media/..." data-textsetting="customGifUrl" />
             <label><span data-translate="media-url">&gt; Media URL (GIF, image, or video)</span></label>
         </div>
-        <button class="removeCustomGifCommand" style="width: auto; min-width: 60px; padding: 0 5px;">
-            <span data-translate="remove">Remove</span>
-        </button>
+        <div class="custom-gif-command-actions">
+            <button class="uploadCustomGifMedia" type="button" title="Upload your own GIF, image, or video file">
+                <span>Upload</span>
+            </button>
+            <button class="testCustomGifCommand" type="button" title="Preview this media in the gif.html overlay">
+                <span>Test</span>
+            </button>
+            <button class="removeCustomGifCommand" type="button">
+                <span data-translate="remove">Remove</span>
+            </button>
+        </div>
     `;
     
+    entry.querySelector('.uploadCustomGifMedia').addEventListener('click', function() {
+        openHostedMediaUploadForInput(entry.querySelector('.custom-media-url'), 'uploadCustomGifMedia');
+    });
+
+    entry.querySelector('.testCustomGifCommand').addEventListener('click', function() {
+        triggerCustomGifPreview(entry);
+    });
+
     entry.querySelector('.removeCustomGifCommand').addEventListener('click', function() {
         entry.remove();
         updateSettings(entry, true);
