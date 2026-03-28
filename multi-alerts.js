@@ -38,6 +38,7 @@ const COUNT_EVENTS = new Set([
 const FOLLOW_EVENTS = new Set(['new_follower', 'follow', 'followed']);
 const SUBSCRIPTION_EVENTS = new Set([
   'new_subscriber',
+  'new-subscriber',
   'subscription_gift',
   'resub',
   'sponsorship',
@@ -432,7 +433,10 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount) {
       }
       return { lead: actor, tail: 'just subscribed' };
     case ALERT_CATEGORIES.DONATION:
-      return { lead: actor, tail: 'sent support' };
+      if (eventKey === 'gift') {
+        return { lead: actor, tail: amount ? `sent ${amount}` : 'sent a gift' };
+      }
+      return { lead: actor, tail: amount ? `sent ${amount}` : 'sent support' };
     case ALERT_CATEGORIES.BITS:
       return { lead: actor, tail: amount ? `cheered ${amount}` : 'cheered' };
     case ALERT_CATEGORIES.RAID:
@@ -445,6 +449,13 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount) {
   }
 }
 
+function buildTitle(category, eventKey) {
+  if (category === ALERT_CATEGORIES.DONATION && eventKey === 'gift') {
+    return 'New Gift';
+  }
+  return CATEGORY_LABELS[category] || 'New Alert';
+}
+
 function buildBodyText(category, payload, viewerCount) {
   const eventKey = pickEventKey(payload);
   const rawMessage = normalizeText(payload.chatmessage);
@@ -454,6 +465,9 @@ function buildBodyText(category, payload, viewerCount) {
     return rawMessage || `Welcome the raid from ${pickActorName(payload)}.`;
   }
   if (category === ALERT_CATEGORIES.DONATION) {
+    if (eventKey === 'gift') {
+      return rawMessage || 'A gift just landed.';
+    }
     return rawMessage || 'Thank you for the support!';
   }
   if (category === ALERT_CATEGORIES.BITS) {
@@ -503,7 +517,7 @@ function buildAlertViewModel(payload = {}) {
     eventKey,
     sourceKey,
     sourceLabel,
-    title: CATEGORY_LABELS[category] || 'New Alert',
+    title: buildTitle(category, eventKey),
     accent: CATEGORY_ACCENTS[category] || '#9146ff',
     actor,
     amount,
@@ -644,12 +658,18 @@ function readSettings() {
     normalizeText(urlParams.get('server2')) ||
     normalizeText(urlParams.get('server3'));
 
+  const queueEnabled = urlParams.has('queue')
+    ? true
+    : urlParams.has('noqueue')
+      ? false
+      : false;
+
   return {
     roomID: normalizeText(urlParams.get('session')),
     password: normalizeText(urlParams.get('password')) || 'false',
     showTime: Math.max(1800, parseNumberParam('showtime', 8000)),
     cooldown: Math.max(0, parseNumberParam('cooldown', 900)),
-    queueEnabled: !urlParams.has('noqueue'),
+    queueEnabled,
     maxQueue: Math.max(1, Math.min(100, parseNumberParam('maxqueue', 20))),
     minShowTime: Math.max(1500, parseNumberParam('minshowtime', 3000)),
     beep: urlParams.has('beep'),
@@ -671,6 +691,9 @@ function readSettings() {
           ? 'right'
           : 'left',
     scale: Math.max(0.45, Math.min(3, parseNumberParam('scale', 1))),
+    mediaScale: Math.max(0.6, Math.min(2.2, parseNumberParam('mediascale', 1))),
+    headlineScale: Math.max(0.75, Math.min(1.8, parseNumberParam('headlinescale', 1))),
+    detailScale: Math.max(0.8, Math.min(1.8, parseNumberParam('detailscale', 1))),
     pageBg: normalizeColor(urlParams.get('pagebg')),
     chroma: normalizeColor(urlParams.get('chroma')),
     previewOnly: urlParams.has('preview'),
@@ -685,6 +708,9 @@ function readSettings() {
 
 function applyPagePresentation() {
   document.documentElement.style.setProperty('--overlay-scale', String(settings.scale));
+  document.documentElement.style.setProperty('--media-scale', String(settings.mediaScale));
+  document.documentElement.style.setProperty('--headline-scale', String(settings.headlineScale));
+  document.documentElement.style.setProperty('--detail-scale', String(settings.detailScale));
   document.body.dataset.align = settings.align;
   document.body.classList.toggle('show-status', settings.showStatus);
 

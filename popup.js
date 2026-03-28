@@ -5028,7 +5028,150 @@ function sendMultiAlertsPreview(payload) {
     sendOverlayPreview('multialerts', payload);
 }
 
-function buildTestAlertPayload(category) {
+const MULTI_ALERT_PREVIEW_PLATFORMS = Object.freeze({
+    tiktok: {
+        type: 'tiktok',
+        platform: 'tiktok',
+        accent: '#fe2c55',
+        avatarLabel: 'RW',
+        chatname: 'Riftwalker',
+        subscriptionLabel: 'Creator Subscriber',
+        subscriptionSubtitle: 'Subscriber badge unlocked',
+        donationAmount: '100 Diamonds',
+        donationValue: 0.5,
+        donationMessage: 'Sent Rose x100',
+        donationMediaLabel: 'ROSE',
+        bitsAmount: '350 Diamonds',
+        bitsMessage: 'Diamond shower incoming!',
+        raidMessage: 'Dropped in with 42 viewers!'
+    },
+    twitch: {
+        type: 'twitch',
+        platform: 'twitch',
+        accent: '#9146ff',
+        avatarLabel: 'TW',
+        chatname: 'CaptainSquawk',
+        subscriptionLabel: 'Tier 1',
+        subscriptionSubtitle: 'Tier 1 subscription',
+        donationAmount: '$10.00',
+        donationValue: 10,
+        donationMessage: 'Keep up the great work!',
+        donationMediaLabel: 'HYPE',
+        bitsAmount: '500 bits',
+        bitsMessage: 'Cheer train incoming!',
+        raidMessage: 'Raiding with 42 viewers!'
+    },
+    youtube: {
+        type: 'youtube',
+        platform: 'youtube',
+        accent: '#ff3b30',
+        avatarLabel: 'YT',
+        chatname: 'StudioPixel',
+        subscriptionLabel: 'New Member',
+        subscriptionSubtitle: 'Channel membership joined',
+        donationAmount: '$10.00',
+        donationValue: 10,
+        donationMessage: 'Sent a Super Chat to support the stream!',
+        donationMediaLabel: 'LIVE',
+        bitsAmount: '500 cheers',
+        bitsMessage: 'The live chat is popping off!',
+        raidMessage: 'Sending 42 viewers over from live chat!'
+    },
+    kick: {
+        type: 'kick',
+        platform: 'kick',
+        accent: '#53fc18',
+        avatarLabel: 'KK',
+        chatname: 'GreenRoom',
+        subscriptionLabel: 'Kick Subscriber',
+        subscriptionSubtitle: 'Channel support renewed',
+        donationAmount: '$10.00',
+        donationValue: 10,
+        donationMessage: 'Tipped to keep the stream rolling!',
+        donationMediaLabel: 'TIP',
+        bitsAmount: '500 hype',
+        bitsMessage: 'Hype meter kicked up a notch!',
+        raidMessage: 'Rolling in with 42 viewers!'
+    }
+});
+
+function getMultiAlertPreviewPlatformKey() {
+    return document.getElementById('multi-alert-preview-platform')?.value || 'tiktok';
+}
+
+function buildMultiAlertPreviewDescriptor(category) {
+    const platformKey = getMultiAlertPreviewPlatformKey();
+    const profile = MULTI_ALERT_PREVIEW_PLATFORMS[platformKey] || MULTI_ALERT_PREVIEW_PLATFORMS.tiktok;
+    const commonOverrides = {
+        type: profile.type,
+        platform: profile.platform,
+        chatname: profile.chatname,
+        chatimg: createPreviewAvatarDataUri(profile.avatarLabel, profile.accent)
+    };
+
+    switch (category) {
+        case 'follow':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'new_follower',
+                    chatmessage: `${profile.chatname} has started following`
+                }
+            };
+        case 'subscription':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'new_subscriber',
+                    membership: profile.subscriptionLabel,
+                    subtitle: profile.subscriptionSubtitle,
+                    chatmessage: 'Welcome to the squad!'
+                }
+            };
+        case 'donation':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: platformKey === 'tiktok' ? 'gift' : 'donation',
+                    hasDonation: profile.donationAmount,
+                    donoValue: profile.donationValue,
+                    chatmessage: profile.donationMessage,
+                    contentimg: createPreviewMediaDataUri(profile.donationMediaLabel, profile.accent),
+                    title: platformKey === 'tiktok' ? 'Rose' : ''
+                }
+            };
+        case 'bits':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'cheer',
+                    hasDonation: profile.bitsAmount,
+                    chatmessage: profile.bitsMessage,
+                    contentimg: createPreviewMediaDataUri('500', profile.accent),
+                    meta: { bits: 500 }
+                }
+            };
+        case 'raid':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'raid',
+                    chatmessage: profile.raidMessage,
+                    contentimg: createPreviewMediaDataUri('RAID', profile.accent),
+                    meta: { viewers: 42 }
+                }
+            };
+        default:
+            return null;
+    }
+}
+
+function buildTestAlertPayload(category, overrides = {}) {
     const payloads = {
         follow: {
             type: 'twitch',
@@ -5072,7 +5215,19 @@ function buildTestAlertPayload(category) {
             meta: { viewers: 42 }
         }
     };
-    return payloads[category] || null;
+    const payload = payloads[category];
+    if (!payload) {
+        return null;
+    }
+
+    return {
+        ...payload,
+        ...overrides,
+        meta: {
+            ...(payload.meta || {}),
+            ...(overrides.meta || {})
+        }
+    };
 }
 
 function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
@@ -5094,14 +5249,19 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
             return;
         }
         button.addEventListener('click', () => {
-            sendOverlayPreview(previewKey, descriptor);
+            const resolvedDescriptor =
+                typeof descriptor === 'function'
+                    ? descriptor()
+                    : descriptor;
+
+            sendOverlayPreview(previewKey, resolvedDescriptor);
             if (previewKey === 'multialerts') {
-                if (descriptor && descriptor.category) {
-                    const payload = buildTestAlertPayload(descriptor.category);
+                if (resolvedDescriptor && resolvedDescriptor.category) {
+                    const payload = buildTestAlertPayload(resolvedDescriptor.category, resolvedDescriptor.overrides || {});
                     if (payload) {
                         chrome.runtime.sendMessage({ cmd: 'testAlert', payload });
                     }
-                } else if (descriptor === false) {
+                } else if (resolvedDescriptor === false) {
                     chrome.runtime.sendMessage({ cmd: 'clearAlerts' });
                 }
             }
@@ -6702,13 +6862,23 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	});
 
 	attachOverlayPreviewControls('multialerts', [
-		{ id: 'multi-alert-preview-follow', descriptor: { category: 'follow' } },
-		{ id: 'multi-alert-preview-sub', descriptor: { category: 'subscription' } },
-		{ id: 'multi-alert-preview-dono', descriptor: { category: 'donation' } },
-		{ id: 'multi-alert-preview-bits', descriptor: { category: 'bits' } },
-		{ id: 'multi-alert-preview-raid', descriptor: { category: 'raid' } },
+		{ id: 'multi-alert-preview-follow', descriptor: () => buildMultiAlertPreviewDescriptor('follow') },
+		{ id: 'multi-alert-preview-sub', descriptor: () => buildMultiAlertPreviewDescriptor('subscription') },
+		{ id: 'multi-alert-preview-dono', descriptor: () => buildMultiAlertPreviewDescriptor('donation') },
+		{ id: 'multi-alert-preview-bits', descriptor: () => buildMultiAlertPreviewDescriptor('bits') },
+		{ id: 'multi-alert-preview-raid', descriptor: () => buildMultiAlertPreviewDescriptor('raid') },
 		{ id: 'multi-alert-preview-clear', descriptor: false }
 	]);
+
+	var previewPlatformSelect = document.getElementById('multi-alert-preview-platform');
+	if (previewPlatformSelect) {
+		previewPlatformSelect.addEventListener('change', function() {
+			var state = overlayPreviewState.multialerts;
+			if (state?.pending && state.pending.category) {
+				sendOverlayPreview('multialerts', buildMultiAlertPreviewDescriptor(state.pending.category));
+			}
+		});
+	}
 
 	var muteBtn = document.getElementById('multi-alert-preview-mute');
 	if (muteBtn) {
