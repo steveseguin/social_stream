@@ -11490,25 +11490,415 @@ function markAutoMessageForTab(tabId) {
 	lastAutoMessagePerTab[tabId] = tabMessageActivityCounter[tabId] || 0;
 }
 
-async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 0) {
-	// console.log('[RELAY DEBUG - sendMessageToTabs] Called with:', {
-	//     data: data,
-	//     reverse: reverse,
-	//     metadata: metadata,
-	//     relayMode: relayMode,
-	//     antispam: antispam,
-	//     overrideTimeout: overrideTimeout,
-	//     isExtensionOn: isExtensionOn,
-	//     disablehost: settings.disablehost
-	// });
+function hasExplicitRelayTabTargets(data, reverse = false) {
+	return !reverse && "tid" in data && data.tid !== false && data.tid !== null;
+}
 
+function normalizeRelayTabId(tabId) {
+	if (typeof tabId === "number") {
+		return tabId;
+	}
+	if (typeof tabId === "string") {
+		const parsedId = parseInt(tabId, 10);
+		return Number.isNaN(parsedId) ? null : parsedId;
+	}
+	return null;
+}
+
+function getRelayTargetTabIdSet(tid) {
+	const values = Array.isArray(tid) ? tid : [tid];
+	const targetIds = new Set();
+
+	for (const value of values) {
+		const normalizedId = normalizeRelayTabId(value);
+		if (normalizedId !== null) {
+			targetIds.add(normalizedId);
+		}
+	}
+
+	return targetIds;
+}
+
+function filterRelayCandidateTabs(tabs, data, reverse) {
+	if (!Array.isArray(tabs) || !tabs.length) {
+		return [];
+	}
+
+	if (hasExplicitRelayTabTargets(data, reverse)) {
+		const targetIds = getRelayTargetTabIdSet(data.tid);
+		if (!targetIds.size) {
+			return [];
+		}
+		return tabs.filter(tab => targetIds.has(tab.id));
+	}
+
+	if (!reverse && priorityTabs.size > 0) {
+		return tabs.filter(tab => priorityTabs.has(tab.id));
+	}
+
+	return tabs;
+}
+
+function isRelayAllowedTabUrl(url) {
+	if (!url) {
+		return false;
+	}
+	if (!isSSAPP) {
+		if (url.startsWith("chrome://")) {
+			return false;
+		}
+		if (url.startsWith("chrome-extension")) {
+			return false;
+		}
+	}
+	if (url.startsWith("https://socialstream.ninja/") && !url.includes("/sources/websocket/")) {
+		return false;
+	}
+	return checkIfAllowed(url);
+}
+
+function matchesRelayTabFilter(tab, data, reverse) {
+	if (!("tid" in data) || data.tid === false || data.tid === null) {
+		return true;
+	}
+	if (!tab || typeof tab.id === "undefined") {
+		return false;
+	}
+
+	if (Array.isArray(data.tid)) {
+		const targetIds = getRelayTargetTabIdSet(data.tid);
+		if (!targetIds.size) {
+			return reverse;
+		}
+		return reverse ? !targetIds.has(tab.id) : targetIds.has(tab.id);
+	}
+
+	const targetId = normalizeRelayTabId(data.tid);
+	if (targetId === null) {
+		return reverse;
+	}
+
+	if (reverse) {
+		if (targetId === tab.id) {
+			return false;
+		}
+		if (data.url && tab.url && data.url === tab.url) {
+			return false;
+		}
+		return true;
+	}
+
+	return targetId === tab.id;
+}
+
+function claimPublishedUrl(published, url) {
+	if (!url || url in published) {
+		return false;
+	}
+	published[url] = true;
+	return true;
+}
+
+async function matchesRelayDestination(tab, destination, mode = "sourceType") {
+	if (!destination) {
+		return true;
+	}
+	if (!tab || !tab.url) {
+		return false;
+	}
+	if (mode === "url") {
+		return urlMatchesDestination(tab.url, destination);
+	}
+	if (!tab.id) {
+		return urlMatchesDestination(tab.url, destination);
+	}
+
+	const sourceType = await getSourceType(tab.id);
+	if (!sourceType) {
+		return urlMatchesDestination(tab.url, destination);
+	}
+
+	return sourceType === destination.toLowerCase();
+}
+
+function createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldCheckDynamicPerTab) {
+	const throttleProfile = getThrottleProfileForTab(tab, data);
+	const throttleOptions = {
+		origin: messageOrigin || "relay",
+		dropProtected: messageOrigin === "host",
+		priority: messageOrigin === "host" ? 1 : 0
+	};
+
+	return {
+		throttleProfile,
+		throttleOptions,
+		storeMessage(text) {
+			if (text === undefined || text === null) {
+				return;
+			}
+			const value = String(text);
+			if (!value.length) {
+				return;
+			}
+			const sanitized = checkExactDuplicateAlreadyRelayed(value, false, false, true);
+			if (sanitized) {
+				handleMessageStore(tab.id, sanitized, now, relayMode, messageOrigin);
+			}
+		},
+		markAutoIfNeeded() {
+			if (shouldCheckDynamicPerTab && tab.id) {
+				markAutoMessageForTab(tab.id);
+			}
+		}
+	};
+}
+
+async function relayAttachAndChatToTab(tab, message, relayTabContext, options = {}) {
+	relayTabContext.storeMessage(message);
+	await attachAndChat(
+		tab.id,
+		message,
+		!!options.middle,
+		options.keypress !== false,
+		!!options.backspace,
+		!!options.delayedPress,
+		options.overrideTimeout || 0,
+		options.chatFunction,
+		relayTabContext.throttleProfile,
+		relayTabContext.throttleOptions,
+		options.modifierKey,
+		!!options.primingEnter
+	);
+	relayTabContext.markAutoIfNeeded();
+}
+
+function relayStoreOnlyForTab(relayTabContext, message) {
+	relayTabContext.storeMessage(message);
+	relayTabContext.markAutoIfNeeded();
+}
+
+function isWebsocketSourceTabUrl(url) {
+	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://")));
+}
+
+function relayMessageToWebsocketSourceTab(tabId, message) {
+	try {
+		chrome.tabs.sendMessage(
+			tabId,
+			{
+				type: "SEND_MESSAGE",
+				message: message
+			},
+			function () {
+				chrome.runtime.lastError;
+			}
+		);
+		return true;
+	} catch (e) {
+		console.error("Failed to send to websocket source:", e);
+		return false;
+	}
+}
+
+async function dispatchRelayMessageToTab(tab, data, options = {}) {
+	const now = options.now || Date.now();
+	const overrideTimeout = options.overrideTimeout || 0;
+	const relayMode = !!options.relayMode;
+	const messageOrigin = options.messageOrigin || "relay";
+	const shouldCheckDynamicPerTab = !!options.shouldCheckDynamicPerTab;
+	const rumbleCooldownMs = Number(options.rumbleCooldownMs) || 1000;
+	const relayTabContext = createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldCheckDynamicPerTab);
+	const url = tab.url || "";
+
+	if (shouldCheckDynamicPerTab && tab.id && shouldSkipAutoMessageForTab(tab.id)) {
+		return;
+	}
+
+	if (url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
+		relayStoreOnlyForTab(relayTabContext, data.response);
+		return;
+	}
+
+	if (url.startsWith("https://www.twitch.tv/popout/")) {
+		await relayAttachAndChatToTab(tab, limitMessageForPlatform(data.response, "twitch"), relayTabContext, {
+			middle: false,
+			keypress: true,
+			backspace: false,
+			delayedPress: false,
+			overrideTimeout: overrideTimeout
+		});
+		return;
+	}
+
+	if (url.startsWith("https://boltplus.tv/")) {
+		await relayAttachAndChatToTab(tab, data.response, relayTabContext, {
+			middle: false,
+			keypress: true,
+			backspace: true,
+			delayedPress: true,
+			overrideTimeout: overrideTimeout
+		});
+		return;
+	}
+
+	if (url.startsWith("https://rumble.com/")) {
+		if (tab.id in messageTimeout && now - messageTimeout[tab.id] < rumbleCooldownMs) {
+			relayTabContext.markAutoIfNeeded();
+			return;
+		}
+		await relayAttachAndChatToTab(tab, data.response, relayTabContext, {
+			middle: true,
+			keypress: true,
+			backspace: true,
+			delayedPress: false,
+			overrideTimeout: rumbleCooldownMs
+		});
+		return;
+	}
+
+	if (url.startsWith("https://app.chime.aws/meetings/")) {
+		await relayAttachAndChatToTab(tab, data.response, relayTabContext, {
+			middle: false,
+			keypress: true,
+			backspace: true,
+			delayedPress: false,
+			overrideTimeout: overrideTimeout
+		});
+		return;
+	}
+
+	if (url.startsWith("https://kick.com/")) {
+		const kickMessage = limitMessageForPlatform(data.response, "kick");
+		await relayAttachAndChatToTab(tab, isSSAPP ? ` ${kickMessage}` : kickMessage, relayTabContext, {
+			middle: false,
+			keypress: true,
+			backspace: true,
+			delayedPress: false,
+			overrideTimeout: overrideTimeout,
+			chatFunction: kickFakeChat
+		});
+		return;
+	}
+
+	if (url.startsWith("https://app.slack.com")) {
+		await relayAttachAndChatToTab(tab, data.response, relayTabContext, {
+			middle: true,
+			keypress: true,
+			backspace: true,
+			delayedPress: false,
+			overrideTimeout: overrideTimeout
+		});
+		return;
+	}
+
+	if (url.startsWith("https://app.zoom.us/")) {
+		await relayAttachAndChatToTab(tab, data.response, relayTabContext, {
+			middle: false,
+			keypress: true,
+			backspace: false,
+			delayedPress: false,
+			overrideTimeout: overrideTimeout,
+			chatFunction: zoomFakeChat
+		});
+		return;
+	}
+
+	if (url.startsWith("https://x.com/home")) {
+		await relayAttachAndChatToTab(tab, data.response, relayTabContext, {
+			middle: false,
+			keypress: true,
+			backspace: false,
+			delayedPress: false,
+			overrideTimeout: overrideTimeout,
+			modifierKey: getPlatformSubmitModifier(),
+			primingEnter: true
+		});
+		return;
+	}
+
+	if (url.includes("youtube.com/live_chat")) {
+		getYoutubeAvatarImage(url, true);
+		await relayAttachAndChatToTab(tab, limitMessageForPlatform(data.response, "youtube"), relayTabContext, {
+			middle: true,
+			keypress: true,
+			backspace: false,
+			delayedPress: false,
+			overrideTimeout: overrideTimeout
+		});
+		return;
+	}
+
+	if (isWebsocketSourceTabUrl(url)) {
+		if (relayMessageToWebsocketSourceTab(tab.id, data.response)) {
+			relayTabContext.markAutoIfNeeded();
+		}
+		return;
+	}
+
+	if (url.includes("tiktok.com")) {
+		let tiktokMessage = data.response;
+
+		if (settings.notiktoklinks) {
+			tiktokMessage = replaceURLsWithSubstring(tiktokMessage, "");
+		}
+
+		await relayAttachAndChatToTab(tab, limitMessageForPlatform(tiktokMessage, "tiktok"), relayTabContext, {
+			middle: true,
+			keypress: true,
+			backspace: false,
+			delayedPress: false,
+			overrideTimeout: overrideTimeout
+		});
+		return;
+	}
+
+	if (url.includes("odysee.com/")) {
+		await relayAttachAndChatToTab(tab, data.response, relayTabContext, {
+			middle: false,
+			keypress: true,
+			backspace: true,
+			delayedPress: false,
+			overrideTimeout: overrideTimeout
+		});
+		return;
+	}
+
+	await relayAttachAndChatToTab(tab, data.response, relayTabContext, {
+		middle: true,
+		keypress: true,
+		backspace: false,
+		delayedPress: false,
+		overrideTimeout: overrideTimeout
+	});
+}
+
+async function processRelayTabBatch(tabs, published, validator, processor) {
+	await Promise.allSettled(
+		tabs.map(async tab => {
+			try {
+				if (validator) {
+					const isValid = await validator(tab);
+					if (!isValid) {
+						return;
+					}
+				}
+				if (!claimPublishedUrl(published, tab.url)) {
+					return;
+				}
+				await processor(tab);
+			} catch (e) {
+				chrome.runtime.lastError;
+			}
+		})
+	);
+}
+
+async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 0) {
 	if (!chrome.debugger || !isExtensionOn || settings.disablehost) {
-		// console.log('[RELAY DEBUG - sendMessageToTabs] Early return - Extension off or host disabled');
 		return false;
 	}
 
 	if (!data.response) {
-		// console.log('[RELAY DEBUG - sendMessageToTabs] Early return - No response in data');
 		return false;
 	}
 
@@ -11551,254 +11941,40 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 	try {
 		let tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
-
-		// OPTIMIZATION: When specific tab IDs are provided, filter tabs immediately
-		// This avoids iterating through ALL browser tabs and doing async operations on each
-		// Note: Skip when reverse === true, as we need to send to all tabs EXCEPT those in tid
-		if (!reverse && "tid" in data && data.tid !== false && data.tid !== null) {
-			if (typeof data.tid === "object" && Array.isArray(data.tid)) {
-				const tidSet = new Set(data.tid.map(id => (typeof id === "string" ? parseInt(id, 10) : id)));
-				tabs = tabs.filter(tab => tidSet.has(tab.id));
-			} else if (typeof data.tid === "number" || typeof data.tid === "string") {
-				const targetId = typeof data.tid === "string" ? parseInt(data.tid, 10) : data.tid;
-				tabs = tabs.filter(tab => tab.id === targetId);
-			}
-		} else if (!reverse && priorityTabs.size > 0) {
-			// No specific tid - filter to only tabs we know have active content scripts (registered via getSettings)
-			// Skip this filter if priorityTabs is empty (e.g., after service worker restart) to maintain backward compatibility
-			tabs = tabs.filter(tab => priorityTabs.has(tab.id));
-		}
+		tabs = filterRelayCandidateTabs(tabs, data, reverse);
 
 		var published = {};
-		let processedAnyTab = false; // Track if we processed any tabs with destination filter
+		let processedAnyTab = false;
 
-		// Helper function to process a tab
 		const processTab = async tab => {
-			// console.log(`[RELAY DEBUG - sendMessageToTabs] Processing valid tab ${tab.id}: ${tab.url?.substring(0, 50)}...`);
-			processedAnyTab = true; // Mark that we found at least one valid tab
-			if (shouldCheckDynamicPerTab && tab.id && shouldSkipAutoMessageForTab(tab.id)) {
-				return;
-			}
-			const storeMessageForTab = text => {
-				if (text === undefined || text === null) {
-					return;
-				}
-				const value = String(text);
-				if (!value.length) {
-					return;
-				}
-				const sanitized = checkExactDuplicateAlreadyRelayed(value, false, false, true);
-				if (sanitized) {
-					handleMessageStore(tab.id, sanitized, now, relayMode, messageOrigin);
-				}
-			};
-			const applyPlatformLimit = (message, platform) => limitMessageForPlatform(message, platform);
-			published[tab.url] = true;
-			const throttleProfile = getThrottleProfileForTab(tab, data);
-			const throttleOptions = {
-				origin: messageOrigin || "relay",
-				dropProtected: messageOrigin === "host",
-				priority: messageOrigin === "host" ? 1 : 0
-			};
-			const markAutoForTabIfNeeded = () => {
-				if (shouldCheckDynamicPerTab && tab.id) {
-					markAutoMessageForTab(tab.id);
-				}
-			};
-
-			// Handle different site types
-			if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
-				storeMessageForTab(data.response);
-				// we will handle this on its own.
-				markAutoForTabIfNeeded();
-				return;
-			} else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
-				let restxt = applyPlatformLimit(data.response, "twitch");
-				storeMessageForTab(restxt);
-				await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-				markAutoForTabIfNeeded();
-			} else if (tab.url.startsWith("https://boltplus.tv/")) {
-				storeMessageForTab(data.response);
-				await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout, undefined, throttleProfile, throttleOptions);
-				markAutoForTabIfNeeded();
-			} else if (tab.url.startsWith("https://rumble.com/")) {
-				if (tab.id in messageTimeout && now - messageTimeout[tab.id] < RUMBLE_COOLDOWN_MS) {
-					markAutoForTabIfNeeded();
-					return;
-				}
-				storeMessageForTab(data.response);
-				await attachAndChat(tab.id, data.response, true, true, true, false, RUMBLE_COOLDOWN_MS, undefined, throttleProfile, throttleOptions);
-				markAutoForTabIfNeeded();
-			} else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
-				storeMessageForTab(data.response);
-				await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-				markAutoForTabIfNeeded();
-			} else if (tab.url.startsWith("https://kick.com/")) {
-				let restxt = applyPlatformLimit(data.response, "kick");
-				const messageForKick = isSSAPP ? ` ${restxt}` : restxt;
-				storeMessageForTab(messageForKick);
-				await attachAndChat(tab.id, messageForKick, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-				markAutoForTabIfNeeded();
-			} else if (tab.url.startsWith("https://app.slack.com")) {
-				storeMessageForTab(data.response);
-				await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-				markAutoForTabIfNeeded();
-			} else if (tab.url.startsWith("https://app.zoom.us/")) {
-				storeMessageForTab(data.response);
-				await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat, throttleProfile, throttleOptions);
-				markAutoForTabIfNeeded();
-				return;
-			} else if (tab.url.startsWith("https://x.com/home")) {
-				storeMessageForTab(data.response);
-				// X.com requires Ctrl+Enter (Windows/Linux) or Cmd+Enter (Mac) to post
-				// Also needs a priming Enter to activate the editor on first interaction
-				const xModifier = getPlatformSubmitModifier();
-				await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions, xModifier, true);
-				markAutoForTabIfNeeded();
-				return;
-			} else {
-				// Generic handler
-				if (tab.url.includes("youtube.com/live_chat")) {
-					getYoutubeAvatarImage(tab.url, true);
-					let restxt = applyPlatformLimit(data.response, "youtube");
-					storeMessageForTab(restxt);
-					await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-					markAutoForTabIfNeeded();
-					return;
-				}
-
-				// Handle websocket source pages (socialstream.ninja/sources/websocket/* or local file:// sources/websocket/*)
-				if (tab.url && tab.url.includes("/sources/websocket/") && (tab.url.includes("socialstream.ninja") || tab.url.startsWith("file://"))) {
-					try {
-						chrome.tabs.sendMessage(
-							tab.id,
-							{
-								type: "SEND_MESSAGE",
-								message: data.response
-							},
-							function (response) {
-								chrome.runtime.lastError; // Clear any error
-							}
-						);
-						markAutoForTabIfNeeded();
-						return;
-					} catch (e) {
-						console.error("Failed to send to websocket source:", e);
-					}
-				}
-
-				if (tab.url.includes("tiktok.com")) {
-					let tiktokMessage = data.response;
-
-					if (settings.notiktoklinks) {
-						tiktokMessage = replaceURLsWithSubstring(tiktokMessage, "");
-					}
-					let restxt = applyPlatformLimit(tiktokMessage, "tiktok");
-					storeMessageForTab(restxt);
-					await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-					markAutoForTabIfNeeded();
-					return;
-				}
-
-				if (tab.url.includes("odysee.com/")) {
-					// Odysee: clear input first (backspace=true), use only keypress Enter (middle=false to avoid extra "\r")
-					storeMessageForTab(data.response);
-					await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-					markAutoForTabIfNeeded();
-					return;
-				}
-
-				storeMessageForTab(data.response);
-				await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-				markAutoForTabIfNeeded();
-			}
+			processedAnyTab = true;
+			await dispatchRelayMessageToTab(tab, data, {
+				now: now,
+				overrideTimeout: overrideTimeout,
+				relayMode: relayMode,
+				messageOrigin: messageOrigin,
+				shouldCheckDynamicPerTab: shouldCheckDynamicPerTab,
+				rumbleCooldownMs: RUMBLE_COOLDOWN_MS
+			});
 		};
 
-		// Fast path: if we have specific tab IDs and no destination filter, skip validation
-		const hasSpecificTids = !reverse && "tid" in data && data.tid !== false && data.tid !== null;
+		const hasSpecificTids = hasExplicitRelayTabTargets(data, reverse);
 		const needsValidation = data.destination || relayMode;
 
-		// First pass: try with source type matching - PARALLEL processing
-		await Promise.allSettled(
-			tabs.map(async tab => {
-				try {
-					// Skip validation if we already filtered by tid and don't need destination/relay checks
-					if (!hasSpecificTids || needsValidation) {
-						let isValid = await isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode);
-						if (!isValid) {
-							return;
-						}
-					}
-					if (tab.url) {
-						if (tab.url in published) {
-							return; // Another tab with this URL already claimed it
-						}
-						// NOTE: If Electron starts double-sending again from dock.html,
-						// revisit this block and consider a targeted pre-claim for
-						// file:// sources only instead of global prefiltering.
-						published[tab.url] = true;
-					}
-					await processTab(tab);
-				} catch (e) {
-					chrome.runtime.lastError;
-				}
-			})
+		await processRelayTabBatch(
+			tabs,
+			published,
+			!hasSpecificTids || needsValidation ? tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) : null,
+			processTab
 		);
 
-		// If we have a destination filter and didn't process any tabs, try URL matching as fallback
 		if (data.destination && !processedAnyTab) {
-			// console.log(`[RELAY DEBUG - sendMessageToTabs] No tabs matched destination '${data.destination}' by source type, trying URL matching fallback`);
-
-			// Reset published to allow retrying
 			published = {};
-
-			// Create a modified data object that bypasses source type checking
-			const fallbackData = { ...data };
-
-			// Filter tabs synchronously first, then process in parallel
-			const fallbackTabs = tabs.filter(tab => {
-				if (!tab.url) return false;
-				// Skip Chrome-specific URL checks in Electron (these URLs don't exist in Electron)
-				if (!isSSAPP) {
-					if (tab.url.startsWith("chrome://")) return false;
-					if (tab.url.startsWith("chrome-extension")) return false;
-				}
-				if (tab.url.startsWith("https://socialstream.ninja/")) {
-					// Allow websocket source pages to receive messages (production and beta)
-					if (!tab.url.includes("/sources/websocket/")) {
-						return false;
-					}
-				}
-				if (tab.url in published) return false;
-				if (!checkIfAllowed(tab.url)) return false;
-
-				// Check TID conditions
-				if ("tid" in data && data.tid !== false && data.tid !== null) {
-					if (typeof data.tid == "object") {
-						if (reverse && data.tid.includes(tab.id.toString())) return false;
-						if (!reverse && !data.tid.includes(tab.id.toString())) return false;
-					} else {
-						if (reverse) {
-							if (data.tid === tab.id) return false;
-							if (data.url && tab.url && data.url === tab.url) return false;
-						} else if (data.tid !== tab.id) return false;
-					}
-				}
-
-				// Try URL matching for the destination
-				if (!tab.url.includes(data.destination)) return false;
-
-				return true;
-			});
-
-			await Promise.allSettled(
-				fallbackTabs.map(async tab => {
-					try {
-						await processTab(tab);
-					} catch (e) {
-						chrome.runtime.lastError;
-					}
-				})
+			await processRelayTabBatch(
+				tabs,
+				published,
+				tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url" }),
+				processTab
 			);
 		}
 	} catch (error) {
@@ -11821,65 +11997,16 @@ function urlMatchesDestination(url, destination) {
 }
 
 // Helper function to check if a tab is valid for processing
-async function isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) {
-	// First check URLs that we can't or shouldn't process
-	if (!tab.url) return false;
-	// Skip Chrome-specific URL checks in Electron (these URLs don't exist in Electron)
-	if (!isSSAPP) {
-		if (tab.url.startsWith("chrome://")) return false;
-		if (tab.url.startsWith("chrome-extension")) return false;
-	}
-	if (tab.url.startsWith("https://socialstream.ninja/")) {
-		// Allow websocket source pages to receive messages (production and beta)
-		if (!tab.url.includes("/sources/websocket/")) {
-			return false;
-		}
-	}
+async function isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, options = {}) {
+	if (!tab || !tab.url) return false;
+	if (!isRelayAllowedTabUrl(tab.url)) return false;
 	if (tab.url in published) return false;
-	if (!checkIfAllowed(tab.url)) return false;
-
-	// Check TID conditions
-	if ("tid" in data && data.tid !== false && data.tid !== null) {
-		if (typeof data.tid == "object") {
-			if (reverse && data.tid.includes(tab.id.toString())) return false;
-			if (!reverse && !data.tid.includes(tab.id.toString())) return false;
-		} else {
-			if (reverse) {
-				if (data.tid === tab.id) return false;
-				if (data.url && tab.url && data.url === tab.url) return false;
-			} else if (data.tid !== tab.id) return false;
-		}
-	}
-
-	// Check destination - match against tab's source type instead of URL
+	if (!matchesRelayTabFilter(tab, data, reverse)) return false;
 	if (data.destination) {
-		// Ensure tab.id exists before trying to get source type
-		if (!tab.id) {
-			// console.log('[RELAY DEBUG - isValidTab] No tab.id available, cannot check source type');
-			// Fall back to URL matching if we have a URL (use strict matching to avoid partial matches)
-			if (tab.url && !urlMatchesDestination(tab.url, data.destination)) {
-				return false;
-			}
-			return true; // If no tab.id and no URL, allow it through
-		}
-
-		const sourceType = await getSourceType(tab.id);
-		// console.log('[RELAY DEBUG - isValidTab] Tab source type:', sourceType, 'Expected destination:', data.destination);
-
-		// If we couldn't get the source type, fall back to URL matching for custom destinations
-		if (!sourceType) {
-			// For custom destinations like channel names, still use URL matching (strict to avoid partial matches)
-			if (!urlMatchesDestination(tab.url, data.destination)) {
-				// console.log('[RELAY DEBUG - isValidTab] No source type, URL check failed');
-				return false;
-			}
-		} else {
-			// For platform destinations, match exact source type (already lowercase from getSourceType)
-			if (sourceType !== data.destination.toLowerCase()) {
-				// console.log('[RELAY DEBUG - isValidTab] Source type mismatch');
-				// Don't return false here - we'll check this in sendMessageToTabs for fallback
-				return false;
-			}
+		const destinationMode = options.destinationMode || "sourceType";
+		const destinationMatched = await matchesRelayDestination(tab, data.destination, destinationMode);
+		if (!destinationMatched) {
+			return false;
 		}
 	}
 	if (reverse && !overrideTimeout && tab.id) {
@@ -11888,15 +12015,12 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 		}
 	}
 
-	// In relay mode, if relaytargets is configured, only relay to those targets
-	// If relaytargets is not configured (false), allow all targets
 	if (relayMode && relaytargets) {
 		let sourceType = await getSourceType(tab.id);
 		if (!sourceType || !relaytargets.includes(sourceType)) {
 			return false;
 		}
 	}
-	// If relayMode is true but relaytargets is false, we allow all destinations
 
 	return true;
 }
@@ -12090,6 +12214,64 @@ function zoomFakeChat(tabid, message, middle = false, keypress = true, backspace
 			}
 		});
 	});
+}
+
+async function kickFakeChat(tabId, message) {
+	try {
+		// Find the chat input element and get its viewport coordinates via CDP.
+		// Using Runtime.evaluate (page context) so getBoundingClientRect is accurate.
+		const posResult = await chrome.debugger.sendCommand({ tabId }, "Runtime.evaluate", {
+			expression: `(function() {
+				var selectors = ['[data-lexical-editor="true"]', '[data-input="true"]', '#message-input [contenteditable]', '[role="textbox"]'];
+				for (var i = 0; i < selectors.length; i++) {
+					var el = document.querySelector(selectors[i]);
+					if (el) {
+						el.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+						var r = el.getBoundingClientRect();
+						if (r.width > 0 && r.height > 0) {
+							return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
+						}
+					}
+				}
+				return null;
+			})()`,
+			returnByValue: true
+		});
+
+		const pos = posResult && posResult.result && posResult.result.value;
+		if (!pos || typeof pos.x !== "number") {
+			warnlog(`Tab ${tabId} - kick: chat input not found`);
+			await delayedDetach(tabId);
+			return;
+		}
+
+		// CDP mouse-click to establish real browser-level focus (same technique Playwright uses).
+		await chrome.debugger.sendCommand({ tabId }, "Input.dispatchMouseEvent", {
+			type: "mousePressed", x: pos.x, y: pos.y, button: "left", clickCount: 1
+		});
+		await chrome.debugger.sendCommand({ tabId }, "Input.dispatchMouseEvent", {
+			type: "mouseReleased", x: pos.x, y: pos.y, button: "left", clickCount: 1
+		});
+		await new Promise(r => setTimeout(r, 50));
+
+		// Select all existing text then insert the new message.
+		await sendKeyEvent(tabId, "keyDown", { key: "a", code: "KeyA", nativeVirtualKeyCode: 65, windowsVirtualKeyCode: 65, modifiers: 2 });
+		await sendKeyEvent(tabId, "keyUp",   { key: "a", code: "KeyA", nativeVirtualKeyCode: 65, windowsVirtualKeyCode: 65 });
+		await new Promise(r => setTimeout(r, 20));
+
+		await insertText(tabId, message);
+		await new Promise(r => setTimeout(r, 50));
+
+		// Submit with Enter.
+		await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+		await new Promise(r => setTimeout(r, 10));
+		await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+
+		await delayedDetach(tabId);
+	} catch (e) {
+		warnlog(`Kick fake chat error for tab ${tabId}: ${e?.message || e}`);
+		await delayedDetach(tabId);
+	}
 }
 
 function limitString(string, maxLength) {
@@ -12664,7 +12846,7 @@ async function performGeneralFakeChatSend(tabId, { message, middle = true, keypr
 		await delayedDetach(tabId);
 	} catch (e) {
 		chrome.runtime.lastError;
-		log(e);
+		warnlog(`performGeneralFakeChatSend error for tab ${tabId}: ${e?.message || e}`);
 		await delayedDetach(tabId);
 	}
 }

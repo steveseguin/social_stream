@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>YouTube Live Chat Stream Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 24px;
+      line-height: 1.4;
+    }
+    .pass { color: #0a7a2f; }
+    .fail { color: #c62828; }
+    pre {
+      background: #111;
+      color: #eee;
+      padding: 12px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>YouTube Live Chat Stream Test</h1>
+  <div id="summary">Running...</div>
+  <pre id="log"></pre>
+  <script>
+    (async function() {
+      const log = document.getElementById('log');
+      const summary = document.getElementById('summary');
+
+      function write(line, className) {
+        const div = document.createElement('div');
+        if (className) div.className = className;
+        div.textContent = line;
+        log.appendChild(div);
+      }
+
+      function assert(condition, label) {
+        if (!condition) {
+          throw new Error(label);
+        }
+        write('PASS  ' + label, 'pass');
+      }
+
+      function wait(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function createStreamBody(chunks) {
+        const encoder = new TextEncoder();
+        return {
+          getReader() {
+            let index = 0;
+            return {
+              read() {
+                if (index >= chunks.length) {
+                  return Promise.resolve({ done: true, value: undefined });
+                }
+                const value = encoder.encode(chunks[index++]);
+                return Promise.resolve({ done: false, value: value });
+              },
+              releaseLock() {}
+            };
+          }
+        };
+      }
+
+      function createOkResponse(chunks) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          body: createStreamBody(chunks),
+          json: async function() { return {}; }
+        };
+      }
+
+      function createErrorResponse(status, payload) {
+        return {
+          ok: false,
+          status: status,
+          statusText: status === 401 ? 'Unauthorized' : 'Error',
+          body: null,
+          json: async function() { return payload || {}; }
+        };
+      }
+
+      try {
+        const module = await import('../providers/youtube/liveChat.js');
+        const createYouTubeLiveChat = module.createYouTubeLiveChat;
+
+        const chatMessage = {
+          kind: 'youtube#liveChatMessage',
+          id: 'msg-1',
+          snippet: {
+            type: 'textMessageEvent',
+            publishedAt: '2026-03-29T12:00:00Z',
+            displayMessage: 'hello world',
+            textMessageDetails: {
+              messageText: 'hello world'
+            }
+          },
+          authorDetails: {
+            channelId: 'channel-1',
+            displayName: 'Tester',
+            profileImageUrl: 'https://example.com/avatar.png',
+            isChatOwner: false,
+            isChatModerator: false,
+            isChatSponsor: true
+          }
+        };
+
+        {
+          const chats = [];
+          const client = createYouTubeLiveChat({
+            mode: 'stream',
+            tokenProvider: async function() {
+              return { accessToken: 'token-1' };
+            },
+            fetchImplementation: async function() {
+              return createOkResponse([
+                JSON.stringify({ nextPageToken: 'next-1', items: [chatMessage] }) + '\n'
+              ]);
+            }
+          });
+          client.on(client.EVENTS.CHAT, function(chat) {
+            chats.push(chat);
+          });
+          await client.start({ chatId: 'chat-1' });
+          await wait(0);
+          client.stop();
+          assert(chats.length === 1, 'stream emits one chat event');
+          assert(chats[0].raw.id === 'msg-1', 'stream preserves raw message id');
+          assert(chats[0].message === 'hello world', 'stream preserves display message');
+        }
+
+        {
+          const chats = [];
+          const client = createYouTubeLiveChat({
+            mode: 'stream',
+            tokenProvider: async function() {
+              return { accessToken: 'token-2' };
+            },
+            fetchImplementation: async function() {
+              return createOkResponse([
+                'not-json\n',
+                JSON.stringify({ items: [chatMessage] }) + '\n'
+              ]);
+            }
+          });
+          client.on(client.EVENTS.CHAT, function(chat) {
+            chats.push(chat);
+          });
+          await client.start({ chatId: 'chat-2' });
+          await wait(0);
+          client.stop();
+          assert(chats.length === 1, 'malformed chunk does not block later valid chat');
+        }
+
+        {
+          const client = createYouTubeLiveChat({
+            mode: 'stream',
+            tokenProvider: async function() {
+              return { accessToken: 'expired-token' };
+            },
+            fetchImplementation: async function() {
+              return createErrorResponse(401, {});
+            }
+          });
+          let tokenExpired = false;
+          try {
+            await client.start({ chatId: 'chat-3' });
+          } catch (error) {
+            tokenExpired = error && error.code === 'TOKEN_EXPIRED';
+          }
+          client.stop();
+          assert(tokenExpired, '401 surfaces TOKEN_EXPIRED');
+        }
+
+        summary.textContent = 'All tests passed.';
+        summary.className = 'pass';
+      } catch (error) {
+        write('FAIL  ' + (error && error.message ? error.message : String(error)), 'fail');
+        summary.textContent = 'Test failed.';
+        summary.className = 'fail';
+        console.error(error);
+      }
+    })();
+  </script>
+</body>
+</html>
