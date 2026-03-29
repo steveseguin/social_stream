@@ -345,7 +345,7 @@ try {
     var channel = '';
     var videoId = '';
     var quotaWarningActive = false;
-    let pollInterval;
+    let streamStatsInterval;
     let channelStatsInterval; // Separate interval for channel stats
     let fetchTimeout; // Track fetch timeout to clear on disconnect
     let lastKnownViewers = null;
@@ -358,6 +358,8 @@ try {
 	var messageQueue = [];
 	var queueDrainTimeout = null;
 	const YT_ADVANCED_CONTROLS_STORAGE_KEY = 'youtubeAdvancedControls';
+	const YT_CHANNEL_LOOKUP_CACHE_KEY = 'youtubeChannelLookupCache';
+	const YT_CHANNEL_LOOKUP_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
     var pendingRelayMessages = [];
     const MAX_CACHED_CHAT_MESSAGES = 500;
     const LIVE_CHAT_MAX_RESULTS = 500;
@@ -396,7 +398,6 @@ try {
 	var isPageVisible = true;
 	var lastVisibilityChange = Date.now();
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
-	var foregroundPollingInterval;
 	var tokenRefreshPromise = null;
 	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.";
 	
@@ -752,6 +753,86 @@ function enableBackgroundKeepAlive() {
 			syncBlockUsers: !!document.getElementById('sync-block-users')?.checked
 		};
 		localStorage.setItem(YT_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+	}
+
+	function normalizeChannelLookupCacheKey(channelIdentifier) {
+		const value = typeof channelIdentifier === 'string' ? channelIdentifier.trim() : '';
+		if (!value || value.startsWith('UC')) {
+			return '';
+		}
+		return value.toLowerCase();
+	}
+
+	function loadChannelLookupCache() {
+		try {
+			const parsed = JSON.parse(localStorage.getItem(YT_CHANNEL_LOOKUP_CACHE_KEY) || '{}');
+			return parsed && typeof parsed === 'object' ? parsed : {};
+		} catch (_) {
+			return {};
+		}
+	}
+
+	function saveChannelLookupCache(cache) {
+		try {
+			localStorage.setItem(YT_CHANNEL_LOOKUP_CACHE_KEY, JSON.stringify(cache || {}));
+		} catch (error) {
+			console.warn('Failed to save YouTube channel lookup cache:', error);
+		}
+	}
+
+	function getCachedChannelLookupId(channelIdentifier) {
+		const key = normalizeChannelLookupCacheKey(channelIdentifier);
+		if (!key) {
+			return '';
+		}
+		const cache = loadChannelLookupCache();
+		const entry = cache[key];
+		if (!entry || !entry.channelId || !entry.expiresAt || entry.expiresAt <= Date.now()) {
+			if (entry) {
+				delete cache[key];
+				saveChannelLookupCache(cache);
+			}
+			return '';
+		}
+		return String(entry.channelId);
+	}
+
+	function setCachedChannelLookupId(channelIdentifier, channelId) {
+		const key = normalizeChannelLookupCacheKey(channelIdentifier);
+		const normalizedChannelId = typeof channelId === 'string' ? channelId.trim() : '';
+		if (!key || !normalizedChannelId) {
+			return;
+		}
+		const cache = loadChannelLookupCache();
+		cache[key] = {
+			channelId: normalizedChannelId,
+			expiresAt: Date.now() + YT_CHANNEL_LOOKUP_CACHE_TTL_MS
+		};
+		saveChannelLookupCache(cache);
+	}
+
+	function clearCachedChannelLookupId(channelIdentifier) {
+		const key = normalizeChannelLookupCacheKey(channelIdentifier);
+		if (!key) {
+			return;
+		}
+		const cache = loadChannelLookupCache();
+		if (!(key in cache)) {
+			return;
+		}
+		delete cache[key];
+		saveChannelLookupCache(cache);
+	}
+
+	function rememberChannelInfo(channelIdentifier, channelInfo) {
+		if (!channelInfo || !channelInfo.id) {
+			return null;
+		}
+		if (channelIdentifier) {
+			userDetails[channelIdentifier] = channelInfo;
+		}
+		userDetails[channelInfo.id] = channelInfo;
+		return channelInfo;
 	}
 
 	function normalizeSourceControlPlatform(type) {
@@ -1429,10 +1510,7 @@ function enableBackgroundKeepAlive() {
 			if (liveChatId && !isPolling && !fetchTimeout) {
 				const timeSinceLastPoll = Date.now() - lastPollingTime;
 				const timeSinceLastSuccess = Date.now() - lastSuccessfulPollTime;
-				const requiredInterval = Math.max(
-					youtubeRecommendedInterval,
-					foregroundPollingInterval || 5000
-				);
+				const requiredInterval = youtubeRecommendedInterval || 5000;
 				
 				// Additional safety check for rapid visibility changes
 				if (timeSinceLastSuccess < requiredInterval) {
@@ -1477,10 +1555,6 @@ function enableBackgroundKeepAlive() {
 				queueDrainTimeout = null;
 			}
 			
-		if (!foregroundPollingInterval && pollInterval) {
-			foregroundPollingInterval = pollInterval;
-		}
-		
 		}
 	}
 	function scheduleAuthRetry(delayOverride) {
@@ -2295,7 +2369,7 @@ function enableBackgroundKeepAlive() {
 		const videoInput = document.getElementById('video-input');
 		
 		// If already connected, disconnect
-		if (liveChatId || pollInterval) {
+		if (liveChatId || streamStatsInterval) {
 			clearPolling();
 			updateHeaderInfo(username, 'Disconnected');
 			document.getElementById('textarea').innerHTML = '<div>Disconnected from chat.</div>';
@@ -2344,29 +2418,31 @@ function enableBackgroundKeepAlive() {
     async function getChannelInfo(channelIdentifier) {
 		const token = getStoredToken();
 		if (!token) return null;
-		if (userDetails[channelIdentifier]) return userDetails[channelIdentifier];
+		const normalizedChannelIdentifier = typeof channelIdentifier === 'string' ? channelIdentifier.trim() : '';
+		if (!normalizedChannelIdentifier) return null;
+		if (userDetails[normalizedChannelIdentifier]) return userDetails[normalizedChannelIdentifier];
 		try {
 			// First try: direct channel ID lookup
 			let response = await fetchWithTimeout(
-				`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdentifier}`, 5000,
+				`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${normalizedChannelIdentifier}`, 5000,
 				{ 'Authorization': `Bearer ${token}` }
 			);
 			let data = await response.json();
 			
 			// Second try: username lookup if first try failed and not a channel ID
-			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+			if ((!data.items || data.items.length === 0) && !normalizedChannelIdentifier.startsWith('UC')) {
 				response = await fetchWithTimeout(
-					`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${channelIdentifier}`, 5000,
+					`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${normalizedChannelIdentifier}`, 5000,
 					{ 'Authorization': `Bearer ${token}` }
 				);
 				data = await response.json();
 			}
 			
 			// Third try: handle @username format using forHandle parameter
-			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+			if ((!data.items || data.items.length === 0) && !normalizedChannelIdentifier.startsWith('UC')) {
 				// Try with @handle format
-				const handleToTry = channelIdentifier.startsWith('@') ? 
-					channelIdentifier : '@' + channelIdentifier;
+				const handleToTry = normalizedChannelIdentifier.startsWith('@') ? 
+					normalizedChannelIdentifier : '@' + normalizedChannelIdentifier;
 					
 				response = await fetchWithTimeout(
 					`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${handleToTry}`, 5000,
@@ -2375,11 +2451,26 @@ function enableBackgroundKeepAlive() {
 				data = await response.json();
 			}
 			
-			// Fourth try: search query as last resort (uses 100 quota units)
-			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+			// Fourth try: cached search fallback result (short-lived to avoid repeated search.list calls)
+			if ((!data.items || data.items.length === 0) && !normalizedChannelIdentifier.startsWith('UC')) {
+				const cachedChannelId = getCachedChannelLookupId(normalizedChannelIdentifier);
+				if (cachedChannelId) {
+					response = await fetchWithTimeout(
+						`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${cachedChannelId}`, 5000,
+						{ 'Authorization': `Bearer ${token}` }
+					);
+					data = await response.json();
+					if (!data.items || data.items.length === 0) {
+						clearCachedChannelLookupId(normalizedChannelIdentifier);
+					}
+				}
+			}
+			
+			// Fifth try: search query as last resort (uses 100 quota units)
+			if ((!data.items || data.items.length === 0) && !normalizedChannelIdentifier.startsWith('UC')) {
 				// Handle @username format by removing @ if present
-				const searchQuery = channelIdentifier.startsWith('@') ? 
-					channelIdentifier.substring(1) : channelIdentifier;
+				const searchQuery = normalizedChannelIdentifier.startsWith('@') ? 
+					normalizedChannelIdentifier.substring(1) : normalizedChannelIdentifier;
 					
 				console.warn('Using search API as fallback - this costs 100 quota units');
 				response = await fetchWithTimeout(
@@ -2394,13 +2485,14 @@ function enableBackgroundKeepAlive() {
 						{ 'Authorization': `Bearer ${token}` }
 					);
 					data = await response.json();
+					if (data.items && data.items.length > 0) {
+						setCachedChannelLookupId(normalizedChannelIdentifier, channelIdFromResult);
+					}
 				}
 			}
 			
 			if (data.items && data.items.length > 0) {
-				userDetails[channelIdentifier] = data.items[0];
-				userDetails[data.items[0].id] = data.items[0];
-				return data.items[0];
+				return rememberChannelInfo(normalizedChannelIdentifier, data.items[0]);
 			}
 			return null;
 		} catch (error) {
@@ -2819,9 +2911,9 @@ function enableBackgroundKeepAlive() {
     }
 
     function stopStreamStatsPolling() {
-        if (pollInterval) {
-            clearInterval(pollInterval);
-            pollInterval = null;
+        if (streamStatsInterval) {
+            clearInterval(streamStatsInterval);
+            streamStatsInterval = null;
         }
     }
 
@@ -2831,7 +2923,7 @@ function enableBackgroundKeepAlive() {
             return;
         }
         getStreamStats();
-        pollInterval = setInterval(() => {
+        streamStatsInterval = setInterval(() => {
             getStreamStats();
         }, 30000);
     }
@@ -2874,7 +2966,6 @@ function enableBackgroundKeepAlive() {
 			queueDrainTimeout = null;
 		}
 		
-		foregroundPollingInterval = null;
 		channelStatsInterval = null;
 		fetchTimeout = null;
 		lastKnownViewers = null;
@@ -2970,7 +3061,7 @@ function enableBackgroundKeepAlive() {
 	}
 	async function connect(directVideoIdParam = null) {
 		// Prevent double connections
-		if (liveChatId || pollInterval) {
+		if (liveChatId || streamStatsInterval) {
 			console.warn('Already connected. Call clearPolling() first to disconnect.');
 			return;
 		}
@@ -3852,7 +3943,7 @@ function enableBackgroundKeepAlive() {
 		console.log('Cleaning up resources...');
 		
 		// Clear all intervals
-		if (pollInterval) clearInterval(pollInterval);
+		if (streamStatsInterval) clearInterval(streamStatsInterval);
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
 		if (displayInterval) clearInterval(displayInterval);
 		
