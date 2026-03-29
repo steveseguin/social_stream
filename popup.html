@@ -7753,7 +7753,7 @@ input:checked + .slider:before {
 								
 								<div>
 									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
-										<option selected value="ollama">Ollama (Local)</option>
+										<option selected value="ollama">Ollama (Native Local API)</option>
 										<option value="chatgpt">ChatGPT API</option>
 										<option value="gemini">Gemini API</option>
 										<option value="deepseek">DeepSeek API</option>
@@ -7761,10 +7761,13 @@ input:checked + .slider:before {
 										<option value="bedrock">AWS Bedrock API</option>
 										<option value="openrouter">OpenRouter API</option>
 										<option value="groq">Groq API</option>
-										<option value="custom">Custom API</option>
+										<option value="custom">Custom API (OpenAI-compatible / llama.cpp)</option>
 									</select>
 								<div>
 								</div>	
+									<div style="width: 95%; font-size: 0.9em; opacity: 0.85; margin: 6px 0 10px 0;">
+										Ollama uses its own native API. For llama.cpp, LM Studio, vLLM, or other OpenAI-compatible servers, choose <strong>Custom API</strong>.
+									</div>
 									<div id="ollamaendpoint" class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
 										<label for="ollamaendpoint"><span data-translate="ollama-API-endpoint">&gt; Ollama API endpoint</span></label>
@@ -7796,7 +7799,7 @@ input:checked + .slider:before {
 									</div>
 
 									<div id="customAIEndpoint" class="hidden textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="customAIEndpoint" />
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: http://localhost:8080 or http://localhost:8080/v1/chat/completions" data-textsetting="customAIEndpoint" />
 										<label for="customAIEndpoint"><span data-translate="custom-API-endpoint">&gt; Custom OpenAI-compatible endpoint</span></label>
 									</div>
 
@@ -7869,8 +7872,8 @@ input:checked + .slider:before {
 								</div>
 								<div id="customAIModel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="eg: fine-tuned-v1" data-textsetting="customAIModel" />
-										<label for="customAIModel"><span data-translate="customAIModel">&gt; Model to use</span></label>
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: qwen2.5-7b-instruct or the alias exposed by your server" data-textsetting="customAIModel" />
+										<label for="customAIModel"><span data-translate="customAIModel">&gt; Model to use (server model id, not the .gguf filename)</span></label>
 									</div>
 								</div>
 								
@@ -7885,6 +7888,14 @@ input:checked + .slider:before {
 										<label for="openroutermodel"><span data-translate="openroutermodel">&gt; OpenRouter Model to use</span></label>
 									</div>
 								</div>
+
+								<div style="width: 95%; margin: 12px 0 0 0;">
+									<button id="testSelectedLLMProvider" class="glowingButton" style="width: auto; min-width: 190px;" title="Sends a short test prompt using the currently selected chat bot provider and settings">
+										<span>Test selected chat bot</span>
+									</button>
+									<span id="testSelectedLLMProviderStatus" style="display: inline-block; margin-left: 10px; font-size: 0.9em; opacity: 0.9;"></span>
+								</div>
+								<div id="testSelectedLLMProviderOutput" style="display: none; width: 95%; margin: 8px 0 0 0; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,0.06); white-space: pre-wrap; word-break: break-word; font-size: 0.92em;"></div>
 								
 							</div>
 						</div>

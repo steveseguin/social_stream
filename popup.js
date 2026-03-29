@@ -3099,6 +3099,133 @@ function handleAIProviderVisibility(provider) {
     }
 }
 
+function sendPopupBackgroundCommand(message, timeout = 45000) {
+    return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+            reject(new Error('Response timeout'));
+        }, timeout);
+
+        chrome.runtime.sendMessage({ type: 'toBackground', data: message }, response => {
+            clearTimeout(timeoutId);
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve(response);
+            }
+        });
+    });
+}
+
+function collectLLMProviderTestSettings() {
+    const override = {
+        aiProvider: {
+            optionsetting: document.getElementById('aiProvider')?.value || 'ollama'
+        }
+    };
+
+    [
+        'ollamaendpoint', 'ollamamodel', 'chatgptApiKey', 'chatgptmodel',
+        'geminiApiKey', 'geminimodel', 'xaiApiKey', 'xaimodel',
+        'deepseekApiKey', 'deepseekmodel', 'groqApiKey', 'groqmodel',
+        'openrouterApiKey', 'openroutermodel', 'customAIEndpoint',
+        'customAIModel', 'customAIApiKey', 'bedrockAccessKey',
+        'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel'
+    ].forEach(key => {
+        const input = document.querySelector(`[data-textsetting='${key}']`);
+        if (input) {
+            override[key] = { textsetting: input.value.trim() };
+        }
+    });
+
+    const keepAliveInput = document.querySelector("[data-numbersetting='ollamaKeepAlive']");
+    if (keepAliveInput) {
+        override.ollamaKeepAlive = { numbersetting: keepAliveInput.value };
+    }
+
+    return override;
+}
+
+function formatLLMProviderTestError(error) {
+    if (!error) {
+        return 'Unknown error';
+    }
+    if (typeof error === 'string') {
+        return error;
+    }
+
+    const parts = [];
+    if (error.provider) {
+        parts.push(`Provider: ${error.provider}`);
+    }
+    if (error.status !== undefined && error.status !== null) {
+        parts.push(`Status: ${error.status}`);
+    }
+    if (error.code) {
+        parts.push(`Code: ${error.code}`);
+    }
+    if (error.message) {
+        parts.push(`Message: ${error.message}`);
+    }
+    if (error.hint) {
+        parts.push(`Hint: ${error.hint}`);
+    }
+
+    return parts.join('\n') || 'Unknown error';
+}
+
+async function testSelectedLLMProvider() {
+    const button = document.getElementById('testSelectedLLMProvider');
+    const status = document.getElementById('testSelectedLLMProviderStatus');
+    const output = document.getElementById('testSelectedLLMProviderOutput');
+    if (!button || !status || !output) {
+        return;
+    }
+
+    const originalLabel = button.querySelector('span')?.textContent || button.textContent;
+    const providerLabel = document.getElementById('aiProvider')?.selectedOptions?.[0]?.textContent || 'selected provider';
+
+    button.disabled = true;
+    if (button.querySelector('span')) {
+        button.querySelector('span').textContent = 'Testing...';
+    } else {
+        button.textContent = 'Testing...';
+    }
+    status.textContent = `Testing ${providerLabel}...`;
+    status.style.color = '#bbb';
+    output.style.display = 'none';
+    output.textContent = '';
+
+    try {
+        const response = await sendPopupBackgroundCommand({
+            cmd: 'testLLMProvider',
+            prompt: 'Reply with one short sentence confirming this chatbot connection works.',
+            settingsOverride: collectLLMProviderTestSettings()
+        }, 60000);
+
+        if (response && response.success) {
+            status.textContent = 'Connected';
+            status.style.color = '#7ad37a';
+            output.textContent = response.response || 'The provider replied without any text.';
+        } else {
+            status.textContent = 'Failed';
+            status.style.color = '#ff8a8a';
+            output.textContent = formatLLMProviderTestError(response?.error || response?.message || response);
+        }
+    } catch (error) {
+        status.textContent = 'Failed';
+        status.style.color = '#ff8a8a';
+        output.textContent = error?.message || String(error);
+    } finally {
+        output.style.display = 'block';
+        button.disabled = false;
+        if (button.querySelector('span')) {
+            button.querySelector('span').textContent = originalLabel;
+        } else {
+            button.textContent = originalLabel;
+        }
+    }
+}
+
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
@@ -7346,6 +7473,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 	if (deleteBadwordsButton) {
 		deleteBadwordsButton.addEventListener('click', deleteBadwordsFile);
+	}
+
+	const testSelectedLLMProviderButton = document.getElementById('testSelectedLLMProvider');
+	if (testSelectedLLMProviderButton) {
+		testSelectedLLMProviderButton.addEventListener('click', testSelectedLLMProvider);
 	}
 	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');

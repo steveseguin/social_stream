@@ -210,8 +210,8 @@ async function toDataURL(url) {
 					onElementInserted(document.querySelector('#chat-items'));
 				}
 			} else if (document.querySelector("iframe").contentWindow.document.body.querySelector('#chat-items').children.length){
-				if (!document.querySelector("iframe").contentWindow.document.body.querySelector('#chat-items')){
-					document.querySelector("iframe").contentWindow.document.body.querySelector('#chat-items')=true;
+				if (!document.querySelector("iframe").contentWindow.document.body.querySelector('#chat-items').marked){
+					document.querySelector("iframe").contentWindow.document.body.querySelector('#chat-items').marked = true;
 					onElementInserted(document.querySelector("iframe").contentWindow.document.body.querySelector('#chat-items'));
 				}
 			}

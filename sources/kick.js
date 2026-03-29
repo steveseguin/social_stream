@@ -1305,11 +1305,8 @@
 			try{
 				if ("getSource" == request){sendResponse("kick");	return;	}
 				if ("focusChat" == request){
-					if (isPopoutChat) {
-						document.querySelector('[data-input="true"]').focus();
-					} else {
-						document.querySelector('#message-input').focus();
-					}
+					console.log("FOCUS");
+					document.querySelector('#message-input, [data-input="true"]>p, [data-input="true"]').focus();
 					sendResponse(true);
 					return;
 				}
