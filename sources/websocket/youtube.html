@@ -360,6 +360,12 @@ try {
 	const YT_ADVANCED_CONTROLS_STORAGE_KEY = 'youtubeAdvancedControls';
     var pendingRelayMessages = [];
     const MAX_CACHED_CHAT_MESSAGES = 500;
+    const LIVE_CHAT_MAX_RESULTS = 500;
+    const QUIET_CHAT_MIN_INTERVAL_MS = 2500;
+    const QUIET_CHAT_BACKOFF_INTERVAL_MS = 5000;
+    const QUIET_CHAT_IDLE_INTERVAL_MS = 8000;
+    const QUIET_CHAT_BACKOFF_THRESHOLD = 3;
+    const QUIET_CHAT_IDLE_THRESHOLD = 10;
     var messageContextCache = new Map();
     var messageCacheOrder = [];
     var channelNameCache = new Map();
@@ -377,6 +383,7 @@ try {
 	}
 	
 	var consecutiveMaxMessages = 0; // Track consecutive polls with max messages
+	var consecutiveEmptyPolls = 0; // Track consecutive polls with no new messages
 	
 	var initialBacklogProcessing = true;
 	var initialBacklogTimestamp = null;
@@ -1515,7 +1522,7 @@ function enableBackgroundKeepAlive() {
 		
 		let response;
 		try {
-			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
+			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=${LIVE_CHAT_MAX_RESULTS}`;
 			if (nextPageToken) url += `&pageToken=${nextPageToken}`;
 			
 			response = await fetchWithTimeout(url, 5000, {
@@ -1800,14 +1807,16 @@ function enableBackgroundKeepAlive() {
 			// Update pagination token
 			nextPageToken = data.nextPageToken;
 			
+			const itemCount = Array.isArray(data.items) ? data.items.length : 0;
+			
 			// Handle completion of initial backlog
-			if (initialBacklogProcessing && data.items.length < 200) {
+			if (initialBacklogProcessing && itemCount < LIVE_CHAT_MAX_RESULTS) {
 				initialBacklogProcessing = false;
 				console.log('Initial backlog processing complete');
 			}
 			
 			// Track consecutive max message polls
-			if (data.items && data.items.length >= 200) {
+			if (itemCount >= LIVE_CHAT_MAX_RESULTS) {
 				consecutiveMaxMessages++;
 				if (consecutiveMaxMessages >= 3 && slowerPollingMode) {
 					slowerPollingMode = false;
@@ -1817,11 +1826,24 @@ function enableBackgroundKeepAlive() {
 				consecutiveMaxMessages = 0; // Reset counter if not maxed
 			}
 			
+			if (itemCount === 0) {
+				consecutiveEmptyPolls++;
+			} else {
+				consecutiveEmptyPolls = 0;
+			}
+			
 			// Reset quick poll count on successful request
 			quickPollCount = 0;
 			
 			// Calculate next poll interval
 			let nextPollInterval = recommendedInterval;
+			if (consecutiveEmptyPolls >= QUIET_CHAT_IDLE_THRESHOLD) {
+				nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_IDLE_INTERVAL_MS);
+			} else if (consecutiveEmptyPolls >= QUIET_CHAT_BACKOFF_THRESHOLD) {
+				nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_BACKOFF_INTERVAL_MS);
+			} else if (consecutiveEmptyPolls > 0) {
+				nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_MIN_INTERVAL_MS);
+			}
 			
 			// Apply slower polling mode if enabled (1.5x slower)
 			if (slowerPollingMode) {
@@ -2873,6 +2895,7 @@ function enableBackgroundKeepAlive() {
 		pendingRelayMessages = [];
 		quickPollCount = 0;
 		consecutiveMaxMessages = 0; // Reset consecutive max message counter
+		consecutiveEmptyPolls = 0;
 		lastSuccessfulPollTime = 0;
 		youtubeRecommendedInterval = 5000; // Reset to default
 		
