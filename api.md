@@ -1053,6 +1053,45 @@ ws.send(JSON.stringify({
 }));
 ```
 
+## Timer Control via API
+
+The timer page can be controlled through the API with the following actions:
+
+### Basic Timer Controls
+- **Start Timer**: `{"action": "starttimer"}`
+- **Pause Timer**: `{"action": "pausetimer"}`
+- **Toggle Timer**: `{"action": "toggletimer"}`
+- **Reset Timer**: `{"action": "resettimer"}`
+- **Add Time**: `{"action": "timeradd", "value": 30}` adds 30 seconds
+- **Subtract Time**: `{"action": "timersubtract", "value": 30}` subtracts 30 seconds
+
+### Setting Timer State
+- **Set Timer**: `{"action": "settimer", "value": {...}}`
+  - Common fields: `seconds`, `label`, `mode`, `style`, `warnSeconds`, `dangerSeconds`, `soundUrl`
+- **Get Timer State**: `{"action": "gettimerstate", "get": "timer-123"}` returns the current timer state via callback
+
+### Example Usage
+```javascript
+// Set a 5-minute countdown named "Interview"
+ws.send(JSON.stringify({
+    action: "settimer",
+    value: {
+        seconds: 300,
+        label: "Interview",
+        mode: "countdown",
+        style: "stage",
+        warnSeconds: 60,
+        dangerSeconds: 15
+    }
+}));
+
+// Request current timer state
+ws.send(JSON.stringify({
+    action: "gettimerstate",
+    get: "timer-state-1"
+}));
+```
+
 Just to touch on the Battle Royal game though,
 
 ## Battle Page (battle.html)

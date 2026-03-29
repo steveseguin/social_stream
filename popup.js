@@ -2223,6 +2223,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "spotify", path: "spotify-overlay.html" },
 	{ id: "scoreboard", path: "scoreboard.html"},
 	{ id: "map", path: "map.html" },
+	{ id: "timer", path: "timer.html" },
 	
   ];
   
@@ -3593,6 +3594,7 @@ function getTargetMap() {
 		'map': 23,
         'meta': 24,
         'multialerts': 25,
+        'timer': 26,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -5312,7 +5314,8 @@ function refreshLinks(){
       'custom-gif-commandslink': 'custom-gif-commands',
 	  'scoreboardlink': 'scoreboard',
 	  'spotifylink': 'spotify',
-	  'maplink': 'map'
+	  'maplink': 'map',
+	  'timerlink': 'timer'
     };
     const linkIdsToClean = Object.keys(linkIdToDivIdMap);
 
@@ -8456,6 +8459,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					}
 					
 					// Remove this specific listener
+					window.removeEventListener('message', handleMessage);
+				}
+			});
+		};
+	}
+
+	const uploadTimerSoundBtn = document.getElementById('uploadTimerSoundBtn');
+	if (uploadTimerSoundBtn) {
+		uploadTimerSoundBtn.onclick = function() {
+			window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadTimerSound', 'width=640,height=640');
+			window.addEventListener('message', function handleMessage(event) {
+				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+				if (event.data && event.data.type === 'media-uploaded') {
+					const timerSoundInput = document.getElementById('timerCustomSound');
+					if (timerSoundInput) {
+						timerSoundInput.value = event.data.url;
+						timerSoundInput.dispatchEvent(new Event('input', { bubbles: true }));
+						timerSoundInput.dispatchEvent(new Event('change', { bubbles: true }));
+					}
 					window.removeEventListener('message', handleMessage);
 				}
 			});

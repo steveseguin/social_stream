@@ -12298,6 +12298,122 @@ input:checked + .slider:before {
 			
 	
 			
+			<div class="link" title="Timer overlay">
+				<h2 class="timer_section_title">
+					<span class="title-group">Timer</span>
+					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+						<a class="copy-link rounded_area" title="Copy timer link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+						<a class="options-link rounded_area" href="#timer" title="Jump to the timer options."><span data-translate="options">[options]</span></a>
+						<label for="help-timer" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					</span>
+				</h2>
+				<input type="checkbox" id="help-timer" class="link-help-toggle">
+				<div class="link-help-content">
+					<strong>A focused stage timer with optional operator controls.</strong>
+					<p>Use this as a countdown or count-up overlay, then control it from the page itself, from the popup, or through the API.</p>
+					<ul>
+						<li>Single timer with overtime and warning states</li>
+						<li>Optional operator controls with start, pause, reset, and +/-30s</li>
+						<li>Three built-in looks: stage, compact, ring</li>
+						<li>Works with the <code>&amp;server</code> API path for remote control</li>
+					</ul>
+				</div>
+				<p style="margin-top: -5px;">A focused timer overlay for breaks, interviews, countdowns, and on-stream pacing.</p>
+				<div id="timer" data-raw="" class="streaming_chat"><a href="" id="timerlink"></a></div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-timer-options" />
+					<label class="collapsible-label" for="wrapper-timer-options"><span>Timer Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group timer">
+								<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 12px;">
+									<button class="glowingButton" style="flex:1" data-action="starttimer"><span>Start</span></button>
+									<button class="glowingButton" style="flex:1" data-action="pausetimer"><span>Pause</span></button>
+									<button class="glowingButton" style="flex:1" data-action="resettimer"><span>Reset</span></button>
+									<button class="glowingButton" style="flex:1" data-action="timeradd" data-value="30"><span>+30s</span></button>
+									<button class="glowingButton" style="flex:1" data-action="timersubtract" data-value="30"><span>-30s</span></button>
+								</div>
+								<div>
+									<span>Style preset</span>
+									<select data-optionparam26="style">
+										<option value="stage">Stage</option>
+										<option value="compact">Compact</option>
+										<option value="ring">Ring</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<span>Timer mode</span>
+									<select data-optionparam26="mode">
+										<option value="countdown">Countdown</option>
+										<option value="countup">Count up</option>
+									</select>
+								</div>
+								<br>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="timerLabelInput" class="textInput instant" autocomplete="off" placeholder="eg: Interview" data-textparam26="label" />
+									<label for="timerLabelInput"><span>&gt; Timer label</span></label>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="duration" />
+										<span class="slider round"></span>
+									</label>
+									<span>Default time <input type="number" style="max-width: 8ch;" min="0" max="999999" value="300" data-numbersetting26="duration" />s</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="warn" />
+										<span class="slider round"></span>
+									</label>
+									<span>Warn at <input type="number" style="max-width: 8ch;" min="0" max="999999" value="60" data-numbersetting26="warn" />s</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="danger" />
+										<span class="slider round"></span>
+									</label>
+									<span>Danger at <input type="number" style="max-width: 8ch;" min="0" max="999999" value="15" data-numbersetting26="danger" />s</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="operator" />
+										<span class="slider round"></span>
+									</label>
+									<span>Show operator controls on the page</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="autostart" />
+										<span class="slider round"></span>
+									</label>
+									<span>Start automatically when the page loads</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="sound" />
+										<span class="slider round"></span>
+									</label>
+									<span>Play a sound when the timer completes</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%; margin-top: 10px;">
+									<input type="text" id="timerCustomSound" class="textInput instant" autocomplete="off" placeholder="https://example.com/timer.wav" data-textparam26="customsound" />
+									<label for="timerCustomSound"><span>&gt; Custom timer sound URL</span></label>
+								</div>
+								<div style="margin-top: 10px;">
+									<button id="uploadTimerSoundBtn" class="glowingButton" style="width: 220px;">
+										<span>Upload Timer Sound</span>
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<div class="link" id="spotify-integration" title="Spotify Integration">
 				<h2 class="spotify_section_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span>Spotify Integration</span>

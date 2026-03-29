@@ -415,7 +415,7 @@
             <p class="note">These commands manage the waitlist functionality, useful for giveaways or queue management.</p>
         </div>
 		
-		<div class="section">
+        <div class="section">
             <h2>Poll Commands</h2>
             <div class="mb-3">
                 <select id="pollPresetSelect" class="form-control">
@@ -438,6 +438,24 @@
                 <button class="btn btn-warning" onclick="createCustomPoll()">Create Custom Poll</button>
             </div>
             <p class="note">Extended poll controls allow you to load saved presets, create custom polls, and manage poll settings via the API.</p>
+        </div>
+
+        <div class="section">
+            <h2>Timer Commands</h2>
+            <div class="mb-3">
+                <input type="number" id="timerSeconds" class="form-control" placeholder="Seconds" value="300">
+                <input type="text" id="timerLabel" class="form-control mt-2" placeholder="Timer label" value="Break">
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-warning" onclick="setTimerFromInputs()">Set Timer</button>
+                <button class="btn btn-success" onclick="sendCommand('starttimer')">Start</button>
+                <button class="btn btn-info" onclick="sendCommand('pausetimer')">Pause</button>
+                <button class="btn btn-warning" onclick="sendCommand('resettimer')">Reset</button>
+                <button class="btn btn-warning" onclick="sendCommand('timeradd', 30)">+30s</button>
+                <button class="btn btn-warning" onclick="sendCommand('timersubtract', 30)">-30s</button>
+                <button class="btn btn-secondary" onclick="requestTimerState()">Get State</button>
+            </div>
+            <p class="note">Use these actions with <code>timer.html?session=YOUR_SESSION&amp;server</code> or with the extension when a timer page is connected.</p>
         </div>
 
         <div class="section">
@@ -851,6 +869,41 @@ Developer Notes:
 			log.setAttribute('data-type', requestData.type);
 			log.textContent = JSON.stringify(requestData, null, 2);
 			log.style.display = 'block';
+		}
+
+		function setTimerFromInputs() {
+			const seconds = parseInt(document.getElementById('timerSeconds').value, 10) || 300;
+			const label = document.getElementById('timerLabel').value || 'Timer';
+			sendCommand('settimer', { seconds, label });
+		}
+
+		function requestTimerState() {
+			if (!socket || socket.readyState !== WebSocket.OPEN) {
+				alert('Please connect first');
+				return;
+			}
+
+			const callbackId = 'timer_' + Date.now();
+			socket.send(JSON.stringify({
+				action: 'gettimerstate',
+				apiid: sessionID,
+				get: callbackId
+			}));
+
+			socket.addEventListener('message', function handleTimerState(event) {
+				try {
+					const data = JSON.parse(event.data);
+					if (data.callback && data.callback.get === callbackId) {
+						socket.removeEventListener('message', handleTimerState);
+						const messageDiv = document.createElement('div');
+						messageDiv.className = 'inbound';
+						messageDiv.textContent = JSON.stringify(data.callback.result, null, 2);
+						document.getElementById('incoming_messages').prepend(messageDiv);
+					}
+				} catch (e) {
+					console.error('Error parsing timer response:', e);
+				}
+			});
 		}
 		
 		// Poll-specific functions

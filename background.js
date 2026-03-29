@@ -4712,6 +4712,34 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "downloadwaitlist") {
 			downloadWaitlist();
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "starttimer") {
+			applyTimerAction("starttimer");
+			initializeTimer();
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "pausetimer") {
+			applyTimerAction("pausetimer");
+			initializeTimer();
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "toggletimer") {
+			applyTimerAction("toggletimer");
+			initializeTimer();
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resettimer") {
+			applyTimerAction("resettimer");
+			initializeTimer();
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "timeradd") {
+			applyTimerAction("timeradd", request.value);
+			initializeTimer();
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "timersubtract") {
+			applyTimerAction("timersubtract", request.value);
+			initializeTimer();
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "settimer") {
+			applyTimerAction("settimer", request.value);
+			initializeTimer();
+			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "cleardock") {
 			sendResponse({ state: isExtensionOn });
 			var data = {};
@@ -7771,6 +7799,40 @@ socketserver.addEventListener("message", async function (event) {
 			} else if (data.action && data.action === "resetmap") {
 				sendTargetP2P({cmd:"resetmap"},"map");
 				resp = true;
+			} else if (data.action && data.action === "starttimer" && !settings.disablehost) {
+				applyTimerAction("starttimer");
+				initializeTimer();
+				resp = true;
+			} else if (data.action && data.action === "pausetimer" && !settings.disablehost) {
+				applyTimerAction("pausetimer");
+				initializeTimer();
+				resp = true;
+			} else if (data.action && data.action === "toggletimer" && !settings.disablehost) {
+				applyTimerAction("toggletimer");
+				initializeTimer();
+				resp = true;
+			} else if (data.action && data.action === "resettimer" && !settings.disablehost) {
+				applyTimerAction("resettimer");
+				initializeTimer();
+				resp = true;
+			} else if (data.action && data.action === "timeradd" && !settings.disablehost) {
+				applyTimerAction("timeradd", data.value);
+				initializeTimer();
+				resp = true;
+			} else if (data.action && data.action === "timersubtract" && !settings.disablehost) {
+				applyTimerAction("timersubtract", data.value);
+				initializeTimer();
+				resp = true;
+			} else if (data.action && data.action === "settimer" && !settings.disablehost) {
+				applyTimerAction("settimer", data.value);
+				initializeTimer();
+				resp = true;
+			} else if (data.action && data.action === "gettimerstate" && !settings.disablehost) {
+				if (data.get) {
+					socketserver.send(JSON.stringify({ callback: { get: data.get, result: exportTimerState() } }));
+					data.get = false;
+				}
+				resp = true;
 			} else if (data.action && data.action === "loadpoll") {
 				// Load a saved poll preset by ID
 				if (data.value && data.value.pollId) {
@@ -9408,6 +9470,264 @@ function sendTargetP2P(data, target) {
     }
 }
 
+var timerState = {
+	version: 1,
+	mode: "countdown",
+	style: "stage",
+	label: "Timer",
+	durationMs: 300000,
+	currentMs: 300000,
+	running: false,
+	startedAt: 0,
+	warnAtMs: 60000,
+	dangerAtMs: 15000,
+	soundEnabled: false,
+	soundUrl: "",
+	updatedAt: Date.now()
+};
+var timerStateInitialized = false;
+
+function getCurrentTimerValue(now = Date.now()) {
+	if (!timerState.running) {
+		return timerState.currentMs;
+	}
+	const elapsed = Math.max(0, now - timerState.startedAt);
+	return timerState.mode === "countup" ? (timerState.currentMs + elapsed) : (timerState.currentMs - elapsed);
+}
+
+function exportTimerState(now = Date.now()) {
+	const displayMs = getCurrentTimerValue(now);
+	const remainingToTargetMs = timerState.mode === "countdown" ? displayMs : (timerState.durationMs > 0 ? timerState.durationMs - displayMs : null);
+	const done = timerState.mode === "countdown" ? (displayMs <= 0) : (timerState.durationMs > 0 && displayMs >= timerState.durationMs);
+	const overtime = timerState.mode === "countdown" ? (displayMs < 0) : (timerState.durationMs > 0 && displayMs > timerState.durationMs);
+	return {
+		version: 1,
+		mode: timerState.mode,
+		style: timerState.style,
+		label: timerState.label,
+		durationMs: timerState.durationMs,
+		currentMs: timerState.currentMs,
+		running: timerState.running,
+		startedAt: timerState.startedAt,
+		warnAtMs: timerState.warnAtMs,
+		dangerAtMs: timerState.dangerAtMs,
+		soundEnabled: timerState.soundEnabled,
+		soundUrl: timerState.soundUrl,
+		updatedAt: timerState.updatedAt,
+		displayMs: displayMs,
+		remainingToTargetMs: remainingToTargetMs,
+		done: done,
+		overtime: overtime,
+		progress: timerState.durationMs > 0 ? Math.max(0, Math.min(1, displayMs / timerState.durationMs)) : 0
+	};
+}
+
+function sendTimerP2P(payload, uid = null) {
+	if (ninjaBridge && ninjaBridge.isReady()) {
+		try {
+			if (!uid) {
+				ninjaBridge.sendToLabel({ timer: payload }, "timer");
+			} else {
+				ninjaBridge.send({ timer: payload }, uid);
+			}
+			return;
+		} catch (e) { console.warn("SDK sendTimerP2P failed", e); }
+	}
+
+	if (iframe) {
+		if (!uid) {
+			var keys = Object.keys(connectedPeers);
+			for (var i = 0; i < keys.length; i++) {
+				try {
+					var UUID = keys[i];
+					var label = connectedPeers[UUID];
+					if (label === "timer") {
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: UUID }, "*");
+					}
+				} catch (e) {}
+			}
+		} else {
+			try {
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: uid }, "*");
+			} catch (e) {}
+		}
+	}
+}
+
+function initializeTimer(uid = null) {
+	sendTimerP2P(exportTimerState(), uid);
+}
+
+function normalizeTimerMode(mode) {
+	mode = (mode || "").toString().toLowerCase();
+	return (mode === "up" || mode === "countup") ? "countup" : "countdown";
+}
+
+function normalizeTimerStyle(style) {
+	style = (style || "").toString().toLowerCase();
+	return (style === "compact" || style === "ring") ? style : "stage";
+}
+
+function parseTimerDurationMs(value, fallback) {
+	if (value === null || value === undefined || value === "") {
+		return fallback;
+	}
+	if (typeof value === "number" && isFinite(value)) {
+		return Math.round(value * 1000);
+	}
+	let text = String(value).trim();
+	if (!text) {
+		return fallback;
+	}
+	if (/^-?\d+(\.\d+)?$/.test(text)) {
+		return Math.round(parseFloat(text) * 1000);
+	}
+	let negative = text.charAt(0) === "-";
+	if (negative || text.charAt(0) === "+") {
+		text = text.substring(1);
+	}
+	let parts = text.split(":");
+	if (!parts.length || parts.length > 3) {
+		return fallback;
+	}
+	let total = 0;
+	let multiplier = 1;
+	for (let i = parts.length - 1; i >= 0; i -= 1) {
+		let num = parseFloat(parts[i]);
+		if (!isFinite(num)) {
+			return fallback;
+		}
+		total += num * multiplier;
+		multiplier *= 60;
+	}
+	return Math.round((negative ? -total : total) * 1000);
+}
+
+function applyExportedTimerState(payload) {
+	if (!payload || typeof payload !== "object") {
+		return;
+	}
+	timerState.mode = normalizeTimerMode(payload.mode || timerState.mode);
+	timerState.style = normalizeTimerStyle(payload.style || timerState.style);
+	timerState.label = typeof payload.label === "string" ? payload.label : timerState.label;
+	timerState.durationMs = Math.max(0, parseInt(payload.durationMs, 10) || 0);
+	timerState.currentMs = parseInt(payload.currentMs, 10);
+	if (!isFinite(timerState.currentMs)) {
+		timerState.currentMs = timerState.mode === "countup" ? 0 : timerState.durationMs;
+	}
+	timerState.running = !!payload.running;
+	timerState.startedAt = parseInt(payload.startedAt, 10) || 0;
+	timerState.warnAtMs = Math.max(0, parseInt(payload.warnAtMs, 10) || 0);
+	timerState.dangerAtMs = Math.max(0, parseInt(payload.dangerAtMs, 10) || 0);
+	timerState.soundEnabled = !!payload.soundEnabled;
+	timerState.soundUrl = typeof payload.soundUrl === "string" ? payload.soundUrl : "";
+	timerState.updatedAt = parseInt(payload.updatedAt, 10) || Date.now();
+	timerStateInitialized = true;
+}
+
+function applyTimerAction(action, value) {
+	const now = Date.now();
+	action = (action || "").toString().toLowerCase();
+
+	if (action === "starttimer") {
+		if (!timerState.running) {
+			timerState.currentMs = getCurrentTimerValue(now);
+			timerState.running = true;
+			timerState.startedAt = now;
+		}
+	} else if (action === "pausetimer") {
+		if (timerState.running) {
+			timerState.currentMs = getCurrentTimerValue(now);
+			timerState.running = false;
+			timerState.startedAt = 0;
+		}
+	} else if (action === "toggletimer") {
+		applyTimerAction(timerState.running ? "pausetimer" : "starttimer");
+		return;
+	} else if (action === "resettimer") {
+		timerState.running = false;
+		timerState.startedAt = 0;
+		timerState.currentMs = timerState.mode === "countup" ? 0 : timerState.durationMs;
+	} else if (action === "timeradd" || action === "timersubtract") {
+		let deltaSeconds = (typeof value === "object" && value && value.seconds !== undefined) ? parseFloat(value.seconds) : parseFloat(value);
+		if (!isFinite(deltaSeconds)) {
+			deltaSeconds = 30;
+		}
+		if (action === "timersubtract") {
+			deltaSeconds *= -1;
+		}
+		timerState.currentMs = getCurrentTimerValue(now) + Math.round(deltaSeconds * 1000);
+		timerState.startedAt = timerState.running ? now : 0;
+	} else if (action === "settimer") {
+		const wasRunning = timerState.running;
+		const liveCurrent = getCurrentTimerValue(now);
+		let payload = (value && typeof value === "object") ? value : { seconds: value };
+		let nextMode = payload.mode !== undefined ? normalizeTimerMode(payload.mode) : timerState.mode;
+		let nextDuration = timerState.durationMs;
+		let nextCurrent = null;
+
+		if (payload.seconds !== undefined) {
+			nextDuration = Math.max(0, parseTimerDurationMs(payload.seconds, timerState.durationMs));
+			nextCurrent = nextMode === "countup" ? 0 : nextDuration;
+		} else if (payload.duration !== undefined) {
+			nextDuration = Math.max(0, parseTimerDurationMs(payload.duration, timerState.durationMs));
+			nextCurrent = nextMode === "countup" ? 0 : nextDuration;
+		}
+		if (payload.current !== undefined) {
+			nextCurrent = parseTimerDurationMs(payload.current, nextCurrent === null ? timerState.currentMs : nextCurrent);
+		} else if (payload.currentSeconds !== undefined) {
+			nextCurrent = parseTimerDurationMs(payload.currentSeconds, nextCurrent === null ? timerState.currentMs : nextCurrent);
+		}
+
+		if (payload.label !== undefined) {
+			timerState.label = String(payload.label || "Timer");
+		}
+		if (payload.warn !== undefined) {
+			timerState.warnAtMs = Math.max(0, parseTimerDurationMs(payload.warn, timerState.warnAtMs));
+		} else if (payload.warnSeconds !== undefined) {
+			timerState.warnAtMs = Math.max(0, parseTimerDurationMs(payload.warnSeconds, timerState.warnAtMs));
+		}
+		if (payload.danger !== undefined) {
+			timerState.dangerAtMs = Math.max(0, parseTimerDurationMs(payload.danger, timerState.dangerAtMs));
+		} else if (payload.dangerSeconds !== undefined) {
+			timerState.dangerAtMs = Math.max(0, parseTimerDurationMs(payload.dangerSeconds, timerState.dangerAtMs));
+		}
+		if (payload.sound !== undefined) {
+			timerState.soundEnabled = !!payload.sound;
+		}
+		if (payload.customsound !== undefined) {
+			timerState.soundUrl = String(payload.customsound || "");
+			if (timerState.soundUrl) {
+				timerState.soundEnabled = true;
+			}
+		}
+		if (payload.soundUrl !== undefined) {
+			timerState.soundUrl = String(payload.soundUrl || "");
+			if (timerState.soundUrl) {
+				timerState.soundEnabled = true;
+			}
+		}
+
+		const modeChanged = nextMode !== timerState.mode;
+		const nextRunning = payload.autostart !== undefined ? !!payload.autostart : (payload.running !== undefined ? !!payload.running : wasRunning);
+		timerState.mode = nextMode;
+		timerState.style = payload.style !== undefined ? normalizeTimerStyle(payload.style) : timerState.style;
+		timerState.durationMs = nextDuration;
+		if (nextCurrent !== null) {
+			timerState.currentMs = nextCurrent;
+		} else if (modeChanged) {
+			timerState.currentMs = nextMode === "countup" ? 0 : nextDuration;
+		} else if (wasRunning) {
+			timerState.currentMs = liveCurrent;
+		}
+		timerState.running = nextRunning;
+		timerState.startedAt = nextRunning ? now : 0;
+	}
+
+	timerState.updatedAt = now;
+	timerStateInitialized = true;
+}
+
 // Shared helper for Spotify actions - used by both message listener and EventFlowSystem
 async function handleSpotifyAction(msg) {
 	if (!msg || typeof msg !== 'object' || !msg.spotifyAction) {
@@ -10074,6 +10394,8 @@ async function initTransport(streamID, pass = false) {
                         try { initializeWaitlist(); } catch(e){}
                     } else if (label === 'poll') {
                         try { initializePoll(); } catch(e){}
+                    } else if (label === 'timer') {
+                        try { initializeTimer(uuid); } catch(e){}
                     }
                 } catch (e) { console.warn(e); }
             });
@@ -10094,6 +10416,7 @@ async function initTransport(streamID, pass = false) {
                         else if (label === 'ticker') { try { processTicker(); } catch(e){} }
                         else if (label === 'waitlist') { try { initializeWaitlist(); } catch(e){} }
                         else if (label === 'poll') { try { initializePoll(); } catch(e){} }
+                        else if (label === 'timer') { try { initializeTimer(uuid); } catch(e){} }
                     } catch (e) { console.warn(e); }
                 });
                 await ninjaBridge.init({ room: streamID, password: pass, streamID: streamID });
@@ -10425,6 +10748,40 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 			if (isExtensionOn){
 				fowardOBSCommand(request);
 			}
+		} else if (request.action === "registerTimer") {
+			if (!timerStateInitialized && request.value && request.value.timer) {
+				applyExportedTimerState(request.value.timer);
+			}
+			if (UUID) {
+				initializeTimer(UUID);
+			} else {
+				initializeTimer();
+			}
+		} else if (request.action === "starttimer") {
+			applyTimerAction("starttimer");
+			initializeTimer();
+		} else if (request.action === "pausetimer") {
+			applyTimerAction("pausetimer");
+			initializeTimer();
+		} else if (request.action === "toggletimer") {
+			applyTimerAction("toggletimer");
+			initializeTimer();
+		} else if (request.action === "resettimer") {
+			applyTimerAction("resettimer");
+			initializeTimer();
+		} else if (request.action === "timeradd") {
+			applyTimerAction("timeradd", request.value);
+			initializeTimer();
+		} else if (request.action === "timersubtract") {
+			applyTimerAction("timersubtract", request.value);
+			initializeTimer();
+		} else if (request.action === "settimer") {
+			applyTimerAction("settimer", request.value);
+			initializeTimer();
+		} else if (request.action === "gettimerstate") {
+			if (UUID) {
+				initializeTimer(UUID);
+			}
 		} else if (request.value && ("target" in request) && UUID && request.action === "chatbot"){ // target is the callback ID
 			if (isExtensionOn && settings.allowChatBot){ // private chat bot
 				
@@ -10685,6 +11042,8 @@ eventer(messageEvent, async function (e) {
 						initializeWaitlist();
 					} else if (connectedPeers[e.data.UUID] == "poll") {
 						initializePoll();
+					} else if (connectedPeers[e.data.UUID] == "timer") {
+						initializeTimer(e.data.UUID);
 					} else if (connectedPeers[e.data.UUID] == "spotify") {
 						sendSpotifyOverlay(latestSpotifyOverlay || {
 							status: 'idle',
@@ -10708,6 +11067,8 @@ eventer(messageEvent, async function (e) {
 						initializeWaitlist();
 					} else if (connectedPeers[e.data.UUID] == "poll") {
 						initializePoll();
+					} else if (connectedPeers[e.data.UUID] == "timer") {
+						initializeTimer(e.data.UUID);
 					} else if (connectedPeers[e.data.UUID] == "spotify") {
 						sendSpotifyOverlay(latestSpotifyOverlay || {
 							status: 'idle',
