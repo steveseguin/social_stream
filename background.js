@@ -11667,7 +11667,8 @@ async function relayAttachAndChatToTab(tab, message, relayTabContext, options = 
 		relayTabContext.throttleProfile,
 		relayTabContext.throttleOptions,
 		options.modifierKey,
-		!!options.primingEnter
+		!!options.primingEnter,
+		options.pointerFocusSelectors || null
 	);
 	relayTabContext.markAutoIfNeeded();
 }
@@ -11775,7 +11776,14 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 			backspace: true,
 			delayedPress: false,
 			overrideTimeout: overrideTimeout,
-			chatFunction: kickFakeChat
+			pointerFocusSelectors: [
+				"[data-lexical-editor='true']",
+				"[data-input='true'] [contenteditable='true']",
+				"[data-input='true'] [role='textbox']",
+				"#message-input [contenteditable='true']",
+				"#message-input [role='textbox']",
+				"[role='textbox']"
+			]
 		});
 		return;
 	}
@@ -12145,7 +12153,8 @@ async function attachAndChat(
 	throttleProfile = null,
 	throttleOptions = null,
 	modifierKey = null, // 'ctrl', 'meta', or null - used for platforms requiring Ctrl+Enter or Cmd+Enter
-	primingEnter = false // Send plain Enter before text to activate/prime the editor (e.g., for X.com)
+	primingEnter = false, // Send plain Enter before text to activate/prime the editor (e.g., for X.com)
+	pointerFocusSelectors = null
 ) {
 	await new Promise((resolve, reject) => {
 		safeDebuggerAttach(tabId, "1.3", error => {
@@ -12158,7 +12167,7 @@ async function attachAndChat(
 		});
 	});
 
-	await Promise.resolve(chatFunction(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout, throttleProfile, throttleOptions, modifierKey, primingEnter));
+	await Promise.resolve(chatFunction(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout, throttleProfile, throttleOptions, modifierKey, primingEnter, pointerFocusSelectors));
 }
 
 function zoomFakeChat(tabid, message, middle = false, keypress = true, backspace = false) {
@@ -12214,64 +12223,6 @@ function zoomFakeChat(tabid, message, middle = false, keypress = true, backspace
 			}
 		});
 	});
-}
-
-async function kickFakeChat(tabId, message) {
-	try {
-		// Find the chat input element and get its viewport coordinates via CDP.
-		// Using Runtime.evaluate (page context) so getBoundingClientRect is accurate.
-		const posResult = await chrome.debugger.sendCommand({ tabId }, "Runtime.evaluate", {
-			expression: `(function() {
-				var selectors = ['[data-lexical-editor="true"]', '[data-input="true"]', '#message-input [contenteditable]', '[role="textbox"]'];
-				for (var i = 0; i < selectors.length; i++) {
-					var el = document.querySelector(selectors[i]);
-					if (el) {
-						el.scrollIntoView({ block: 'nearest', behavior: 'instant' });
-						var r = el.getBoundingClientRect();
-						if (r.width > 0 && r.height > 0) {
-							return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
-						}
-					}
-				}
-				return null;
-			})()`,
-			returnByValue: true
-		});
-
-		const pos = posResult && posResult.result && posResult.result.value;
-		if (!pos || typeof pos.x !== "number") {
-			warnlog(`Tab ${tabId} - kick: chat input not found`);
-			await delayedDetach(tabId);
-			return;
-		}
-
-		// CDP mouse-click to establish real browser-level focus (same technique Playwright uses).
-		await chrome.debugger.sendCommand({ tabId }, "Input.dispatchMouseEvent", {
-			type: "mousePressed", x: pos.x, y: pos.y, button: "left", clickCount: 1
-		});
-		await chrome.debugger.sendCommand({ tabId }, "Input.dispatchMouseEvent", {
-			type: "mouseReleased", x: pos.x, y: pos.y, button: "left", clickCount: 1
-		});
-		await new Promise(r => setTimeout(r, 50));
-
-		// Select all existing text then insert the new message.
-		await sendKeyEvent(tabId, "keyDown", { key: "a", code: "KeyA", nativeVirtualKeyCode: 65, windowsVirtualKeyCode: 65, modifiers: 2 });
-		await sendKeyEvent(tabId, "keyUp",   { key: "a", code: "KeyA", nativeVirtualKeyCode: 65, windowsVirtualKeyCode: 65 });
-		await new Promise(r => setTimeout(r, 20));
-
-		await insertText(tabId, message);
-		await new Promise(r => setTimeout(r, 50));
-
-		// Submit with Enter.
-		await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
-		await new Promise(r => setTimeout(r, 10));
-		await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
-
-		await delayedDetach(tabId);
-	} catch (e) {
-		warnlog(`Kick fake chat error for tab ${tabId}: ${e?.message || e}`);
-		await delayedDetach(tabId);
-	}
 }
 
 function limitString(string, maxLength) {
@@ -12667,6 +12618,74 @@ async function focusChat(tabId, timeoutMs = 150) {
 	});
 }
 
+function buildPointerFocusExpression(selectors) {
+	const safeSelectors = Array.isArray(selectors) ? selectors.filter(Boolean).map(selector => String(selector)) : [];
+	return `(function() {
+		var selectors = ${JSON.stringify(safeSelectors)};
+		for (var i = 0; i < selectors.length; i++) {
+			try {
+				var el = document.querySelector(selectors[i]);
+				if (!el) {
+					continue;
+				}
+				if (el.scrollIntoView) {
+					el.scrollIntoView({ block: "nearest", inline: "nearest" });
+				}
+				var rect = el.getBoundingClientRect();
+				if (rect.width > 0 && rect.height > 0) {
+					return { x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2) };
+				}
+			} catch (e) {}
+		}
+		return null;
+	})()`;
+}
+
+async function establishBrowserFocus(tabId, selectors = null) {
+	if (!Array.isArray(selectors) || !selectors.length) {
+		return false;
+	}
+
+	try {
+		const posResult = await chrome.debugger.sendCommand({ tabId }, "Runtime.evaluate", {
+			expression: buildPointerFocusExpression(selectors),
+			returnByValue: true
+		});
+		const pos = posResult?.result?.value;
+		if (!pos || typeof pos.x !== "number" || typeof pos.y !== "number") {
+			return false;
+		}
+
+		await chrome.debugger.sendCommand({ tabId }, "Input.dispatchMouseEvent", {
+			type: "mousePressed",
+			x: pos.x,
+			y: pos.y,
+			button: "left",
+			clickCount: 1
+		});
+		await chrome.debugger.sendCommand({ tabId }, "Input.dispatchMouseEvent", {
+			type: "mouseReleased",
+			x: pos.x,
+			y: pos.y,
+			button: "left",
+			clickCount: 1
+		});
+		await new Promise(resolve => setTimeout(resolve, 50));
+		return true;
+	} catch (e) {
+		warnlog(`Browser focus click failed for tab ${tabId}: ${e?.message || e}`);
+		return false;
+	}
+}
+
+async function focusChatForSend(tabId, pointerFocusSelectors = null) {
+	const jsFocused = await focusChat(tabId);
+	if (await establishBrowserFocus(tabId, pointerFocusSelectors)) {
+		return true;
+	}
+	return jsFocused;
+}
+
 async function getSourceType(tabId, timeoutMs = 150) {
 	// Check cache first
 	if (tabSourceCache.has(tabId)) {
@@ -12708,7 +12727,8 @@ async function generalFakeChat(
 	throttleProfile = null,
 	throttleOptions = null,
 	modifierKey = null, // 'ctrl', 'meta', or null - used for platforms requiring Ctrl+Enter or Cmd+Enter
-	primingEnter = false // Send plain Enter before text to activate/prime the editor (e.g., for X.com)
+	primingEnter = false, // Send plain Enter before text to activate/prime the editor (e.g., for X.com)
+	pointerFocusSelectors = null
 ) {
 	const normalizedTimeout = typeof overrideTimeout === "number" ? overrideTimeout : 0;
 	const resolvedProfile = resolveThrottleProfile(tabId, throttleProfile, normalizedTimeout);
@@ -12732,7 +12752,8 @@ async function generalFakeChat(
 				backspace,
 				delayedPress,
 				modifierKey,
-				primingEnter
+				primingEnter,
+				pointerFocusSelectors
 			},
 			queueOptions
 		);
@@ -12745,11 +12766,12 @@ async function generalFakeChat(
 		backspace,
 		delayedPress,
 		modifierKey,
-		primingEnter
+		primingEnter,
+		pointerFocusSelectors
 	});
 }
 
-async function performGeneralFakeChatSend(tabId, { message, middle = true, keypress = true, backspace = false, delayedPress = false, modifierKey = null, primingEnter = false }) {
+async function performGeneralFakeChatSend(tabId, { message, middle = true, keypress = true, backspace = false, delayedPress = false, modifierKey = null, primingEnter = false, pointerFocusSelectors = null }) {
 	try {
 		await new Promise((resolve, reject) => {
 			safeDebuggerAttach(tabId, "1.3", error => {
@@ -12761,10 +12783,10 @@ async function performGeneralFakeChatSend(tabId, { message, middle = true, keypr
 			});
 		});
 
-		let isFocused = await focusChat(tabId);
+		let isFocused = await focusChatForSend(tabId, pointerFocusSelectors);
 		if (!isFocused) {
 			await new Promise(resolve => setTimeout(resolve, 150));
-			isFocused = await focusChat(tabId);
+			isFocused = await focusChatForSend(tabId, pointerFocusSelectors);
 		}
 		if (!isFocused) {
 			warnlog(`Tab ${tabId} - focus failed, aborting`);
