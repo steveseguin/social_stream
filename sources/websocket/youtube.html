@@ -376,17 +376,6 @@ try {
 	var quickPollCount = 0
     var urlParams = new URLSearchParams(window.location.search);
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
-	const YT_TRANSPORT_POLL = 'poll';
-	const YT_TRANSPORT_STREAM = 'stream';
-	const YT_TRANSPORT_AUTO = 'auto';
-	const YT_STREAMING_ADAPTER_EXTENSION_PATH = 'sources/websocket/youtube_streaming_adapter.js';
-	const YT_STREAMING_ADAPTER_RELATIVE_PATH = './youtube_streaming_adapter.js';
-	var preferredYouTubeTransport = YT_TRANSPORT_POLL;
-	var activeYouTubeTransport = YT_TRANSPORT_POLL;
-	var youtubeStreamingAdapter = null;
-	var youtubeStreamingAdapterPromise = null;
-	var youtubeStreamingMessageCount = 0;
-	var youtubeStreamingStartInFlight = false;
 	var slowerPollingMode = false; // Flag for slower polling mode (1.5x slower)
 	
 	// Check for slower polling mode from URL parameters
@@ -1503,240 +1492,6 @@ function enableBackgroundKeepAlive() {
         if (quotaBanner) quotaBanner.classList.add('hidden');
         syncSignedInCredentialsVisibility();
     }
-	function normalizeYouTubeTransport(value) {
-		const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-		if (normalized === YT_TRANSPORT_STREAM || normalized === YT_TRANSPORT_AUTO) {
-			return normalized;
-		}
-		return YT_TRANSPORT_POLL;
-	}
-	function refreshYouTubeTransportPreference() {
-		preferredYouTubeTransport = normalizeYouTubeTransport(
-			urlParams.get('transport') || hashParams.get('transport') || ''
-		);
-		return preferredYouTubeTransport;
-	}
-	function shouldPreferYouTubeStreaming() {
-		return (
-			preferredYouTubeTransport === YT_TRANSPORT_STREAM ||
-			preferredYouTubeTransport === YT_TRANSPORT_AUTO
-		);
-	}
-	function setActiveYouTubeTransport(value) {
-		activeYouTubeTransport = value === YT_TRANSPORT_STREAM ? YT_TRANSPORT_STREAM : YT_TRANSPORT_POLL;
-	}
-	function isYouTubeStreamingActive() {
-		if (activeYouTubeTransport !== YT_TRANSPORT_STREAM || !youtubeStreamingAdapter) {
-			return false;
-		}
-		try {
-			if (typeof youtubeStreamingAdapter.isActive === 'function') {
-				return !!youtubeStreamingAdapter.isActive();
-			}
-			const state = typeof youtubeStreamingAdapter.getState === 'function'
-				? youtubeStreamingAdapter.getState()
-				: null;
-			return !!state && (state.status === 'starting' || state.status === 'running');
-		} catch (_) {
-			return activeYouTubeTransport === YT_TRANSPORT_STREAM;
-		}
-	}
-	async function importYouTubeStreamingAdapterModule() {
-		if (
-			typeof chrome !== 'undefined' &&
-			chrome?.runtime &&
-			typeof chrome.runtime.getURL === 'function'
-		) {
-			try {
-				return await import(chrome.runtime.getURL(YT_STREAMING_ADAPTER_EXTENSION_PATH));
-			} catch (error) {
-				console.warn('Failed to import YouTube streaming adapter via chrome.runtime.getURL', error);
-			}
-		}
-		return import(YT_STREAMING_ADAPTER_RELATIVE_PATH);
-	}
-	async function loadYouTubeStreamingAdapter() {
-		if (youtubeStreamingAdapter) {
-			return youtubeStreamingAdapter;
-		}
-		if (!youtubeStreamingAdapterPromise) {
-			youtubeStreamingAdapterPromise = importYouTubeStreamingAdapterModule()
-				.then(async function(module) {
-					if (!module || typeof module.createYouTubeStreamingAdapter !== 'function') {
-						throw new Error('YouTube streaming adapter module did not export createYouTubeStreamingAdapter.');
-					}
-					youtubeStreamingAdapter = await module.createYouTubeStreamingAdapter({
-						logger: console,
-						tokenProvider: async function() {
-							const token = getStoredToken();
-							return token ? { accessToken: token } : null;
-						},
-						onChat: handleYouTubeStreamingChat,
-						onStatus: handleYouTubeStreamingStatus,
-						onError: handleYouTubeStreamingError
-					});
-					return youtubeStreamingAdapter;
-				})
-				.catch(function(error) {
-					youtubeStreamingAdapterPromise = null;
-					throw error;
-				});
-		}
-		return youtubeStreamingAdapterPromise;
-	}
-	function stopYouTubeStreamingTransport() {
-		if (!youtubeStreamingAdapter || typeof youtubeStreamingAdapter.stop !== 'function') {
-			return;
-		}
-		try {
-			youtubeStreamingAdapter.stop();
-		} catch (error) {
-			console.warn('Failed to stop YouTube streaming transport cleanly', error);
-		}
-	}
-	function getInitialPollingDelay() {
-		let initialFetchDelay = 2000;
-		if (currentStream && lastConnectedVideoId === currentStream.id) {
-			const timeSinceDisconnect = Date.now() - lastDisconnectTime;
-			if (timeSinceDisconnect < 10000) {
-				initialFetchDelay = Math.max(5000, 10000 - timeSinceDisconnect);
-				console.log(`Reconnecting to same video after ${timeSinceDisconnect}ms, using ${initialFetchDelay}ms delay`);
-			}
-		}
-		return initialFetchDelay;
-	}
-	function schedulePollingFetch(delay) {
-		const nextDelay = typeof delay === 'number' ? delay : 2000;
-		if (fetchTimeout) {
-			try {
-				clearTimeout(fetchTimeout);
-			} catch (_) {}
-			fetchTimeout = null;
-		}
-		setActiveYouTubeTransport(YT_TRANSPORT_POLL);
-		fetchTimeout = setTrackedTimeout(fetchChatMessages, nextDelay, !isPageVisible);
-		return nextDelay;
-	}
-	function getYouTubeStreamingErrorReason(error) {
-		try {
-			return String(
-				error?.code ||
-				error?.ytReason ||
-				error?.detail?.error?.errors?.[0]?.reason ||
-				error?.detail?.error?.status ||
-				''
-			).toLowerCase();
-		} catch (_) {
-			return '';
-		}
-	}
-	function shouldFallbackFromStreaming(error) {
-		const reason = getYouTubeStreamingErrorReason(error);
-		const message = String(error?.message || '').toLowerCase();
-		const status = Number(error?.status || error?.ytStatus || 0);
-		return (
-			reason === 'token_expired' ||
-			reason === 'missing_access_token' ||
-			reason === 'livechatended' ||
-			reason === 'livechatnotfound' ||
-			reason === 'forbidden' ||
-			reason === 'quotaexceeded' ||
-			reason === 'dailylimitexceeded' ||
-			status === 401 ||
-			status === 403 ||
-			status === 404 ||
-			message.indexOf('streaming responses') !== -1 ||
-			message.indexOf('missing readable body') !== -1
-		);
-	}
-	function fallbackToPollingFromStreaming(error, options = {}) {
-		const reason = getYouTubeStreamingErrorReason(error);
-		const hadStreamingMessages = youtubeStreamingMessageCount > 0;
-		stopYouTubeStreamingTransport();
-		if (reason === 'livechatended') {
-			handleLiveChatEnded();
-			return;
-		}
-		if (isQuotaError(error)) {
-			showQuotaBanner();
-		}
-		if (hadStreamingMessages) {
-			initialBacklogProcessing = false;
-			initialBacklogTimestamp = null;
-		}
-		nextPageToken = null;
-		youtubeRecommendedInterval = 5000;
-		if (!options.silent) {
-			addEvent('Streaming unavailable, using polling');
-		}
-		schedulePollingFetch(typeof options.delay === 'number' ? options.delay : getInitialPollingDelay());
-	}
-	async function startYouTubeStreamingTransport() {
-		if (!liveChatId) {
-			return false;
-		}
-		const adapter = await loadYouTubeStreamingAdapter();
-		stopYouTubeStreamingTransport();
-		setActiveYouTubeTransport(YT_TRANSPORT_STREAM);
-		youtubeStreamingStartInFlight = true;
-		try {
-			await adapter.start({
-				liveChatId: liveChatId
-			});
-		} finally {
-			youtubeStreamingStartInFlight = false;
-		}
-		return true;
-	}
-	async function startPreferredYouTubeTransport(options = {}) {
-		if (!liveChatId) {
-			return false;
-		}
-		if (!shouldPreferYouTubeStreaming()) {
-			schedulePollingFetch(options.delay);
-			return false;
-		}
-		try {
-			await startYouTubeStreamingTransport();
-			return true;
-		} catch (error) {
-			console.warn('YouTube streaming start failed; falling back to polling.', error);
-			fallbackToPollingFromStreaming(error, {
-				delay: options.delay,
-				silent: false
-			});
-			return false;
-		}
-	}
-	function handleYouTubeStreamingStatus(status) {
-		const nextStatus = typeof status?.status === 'string' ? status.status : '';
-		if (nextStatus === 'starting' || nextStatus === 'running') {
-			setActiveYouTubeTransport(YT_TRANSPORT_STREAM);
-		}
-	}
-	function handleYouTubeStreamingError(error) {
-		if (!liveChatId || activeYouTubeTransport !== YT_TRANSPORT_STREAM) {
-			return;
-		}
-		if (youtubeStreamingStartInFlight) {
-			return;
-		}
-		if (shouldFallbackFromStreaming(error)) {
-			console.warn('YouTube streaming hit a non-recoverable error; using polling fallback.', error);
-			fallbackToPollingFromStreaming(error, {
-				delay: 1000
-			});
-		}
-	}
-	function handleYouTubeStreamingChat(chat) {
-		if (!liveChatId || !chat || !chat.raw) {
-			return;
-		}
-		youtubeStreamingMessageCount++;
-		processLiveChatItem(chat.raw, {
-			isBacklogMessage: false
-		});
-	}
 	function handleVisibilityChange() {
 		const wasVisible = isPageVisible;
 		isPageVisible = document.visibilityState === 'visible';
@@ -1752,7 +1507,7 @@ function enableBackgroundKeepAlive() {
 			}
 			
 			// Only resume if we have an active connection and aren't already polling
-			if (liveChatId && !isPolling && !fetchTimeout && !isYouTubeStreamingActive()) {
+			if (liveChatId && !isPolling && !fetchTimeout) {
 				const timeSinceLastPoll = Date.now() - lastPollingTime;
 				const timeSinceLastSuccess = Date.now() - lastSuccessfulPollTime;
 				const requiredInterval = youtubeRecommendedInterval || 5000;
@@ -1781,7 +1536,7 @@ function enableBackgroundKeepAlive() {
 			}
 			
 			// Keep next poll scheduled while hidden so we don't stall
-			if (fetchTimeout && !isPolling && !isYouTubeStreamingActive()) {
+			if (fetchTimeout && !isPolling) {
 				const elapsed = Date.now() - lastPollingTime;
 				const baseInterval = youtubeRecommendedInterval || 5000;
 				const remaining = Math.max(0, baseInterval - elapsed);
@@ -1816,204 +1571,8 @@ function enableBackgroundKeepAlive() {
 		fetchTimeout = setTrackedTimeout(fetchChatMessages, resumeDelay, !isPageVisible);
 		return resumeDelay;
 	}
-	function processLiveChatItem(item, options = {}) {
-		const isBacklogMessage = !!options.isBacklogMessage;
-		if (!item || !item.snippet || !item.authorDetails || !item.snippet.publishedAt) {
-			return;
-		}
-
-		const publishedAt = new Date(item.snippet.publishedAt);
-		if (isNaN(publishedAt.getTime())) {
-			return;
-		}
-		if (lastMessageTime && !(publishedAt > lastMessageTime)) {
-			return;
-		}
-
-		const isSpecialEvent = item.snippet.type === 'giftMembershipReceivedEvent' ||
-			item.snippet.type === 'newSponsorEvent' ||
-			item.snippet.type === 'membershipGiftingEvent' ||
-			item.snippet.type === 'memberMilestoneChatEvent' ||
-			item.snippet.type === 'superStickerEvent';
-
-		if (!isBacklogMessage && !isSpecialEvent) {
-			const textMessageDetails = item.snippet.textMessageDetails || {};
-			const messageReplyDetails = textMessageDetails.messageReplyDetails || null;
-			const normalizedReplyDetails = messageReplyDetails
-				? {
-					messageId: messageReplyDetails.messageId || null,
-					channelId: messageReplyDetails.channelId || null,
-					commentId: messageReplyDetails.commentId || null,
-					raw: messageReplyDetails
-				}
-				: null;
-			queueMessage({
-				messageId: item.id,
-				authorName: item.authorDetails.displayName.replace(/^@/, ''),
-				message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
-				plainTextMessage: textMessageDetails.messageText || '',
-				profileImageUrl: item.authorDetails.profileImageUrl,
-				isChatOwner: item.authorDetails.isChatOwner,
-				isChatSponsor: item.authorDetails.isChatSponsor,
-				isChatModerator: item.authorDetails.isChatModerator,
-				authorChannelId: item.authorDetails.channelId,
-				publishedAt,
-				skipEvent: isBacklogMessage,
-				isMembershipMessage: false,
-				replyDetails: normalizedReplyDetails,
-				replyMessageId: normalizedReplyDetails ? normalizedReplyDetails.messageId : null,
-				replyChannelId: normalizedReplyDetails ? normalizedReplyDetails.channelId : null
-			});
-		}
-
-		if (item.snippet.type === 'giftMembershipReceivedEvent' && item.snippet.giftMembershipReceivedDetails) {
-			const giftDetails = item.snippet.giftMembershipReceivedDetails;
-			if (!isBacklogMessage) {
-				processGiftRedemption({
-					authorName: item.authorDetails.displayName.replace(/^@/, ''),
-					gifterChannelId: giftDetails.gifterChannelId,
-					memberLevelName: giftDetails.memberLevelName,
-					profileImageUrl: item.authorDetails.profileImageUrl,
-					authorChannelId: item.authorDetails.channelId,
-					displayMessage: item.snippet.displayMessage
-				});
-			}
-		}
-
-		if (item.snippet.type === 'newSponsorEvent' && item.snippet.newSponsorDetails) {
-			if (!isBacklogMessage) {
-				processNewSponsorship({
-					authorName: item.authorDetails.displayName.replace(/^@/, ''),
-					memberLevelName: item.snippet.newSponsorDetails.memberLevelName,
-					profileImageUrl: item.authorDetails.profileImageUrl,
-					authorChannelId: item.authorDetails.channelId,
-					displayMessage: item.snippet.displayMessage
-				});
-			}
-		}
-
-		if (item.snippet.type === 'membershipGiftingEvent' && item.snippet.membershipGiftingDetails) {
-			const giftingDetails = item.snippet.membershipGiftingDetails;
-			if (!isBacklogMessage) {
-				processGiftPurchase({
-					authorName: item.authorDetails.displayName.replace(/^@/, ''),
-					giftCount: giftingDetails.giftMembershipsCount || 1,
-					memberLevelName: giftingDetails.giftMembershipsLevelName,
-					profileImageUrl: item.authorDetails.profileImageUrl,
-					authorChannelId: item.authorDetails.channelId,
-					displayMessage: item.snippet.displayMessage
-				});
-			}
-		}
-
-		if (item.snippet.type === 'memberMilestoneChatEvent' && item.snippet.memberMilestoneChatDetails) {
-			const milestoneDetails = item.snippet.memberMilestoneChatDetails;
-			if (!isBacklogMessage) {
-				processMemberMilestone({
-					authorName: item.authorDetails.displayName.replace(/^@/, ''),
-					memberMonth: milestoneDetails.memberMonth,
-					memberLevelName: milestoneDetails.memberLevelName,
-					profileImageUrl: item.authorDetails.profileImageUrl,
-					authorChannelId: item.authorDetails.channelId,
-					displayMessage: item.snippet.displayMessage,
-					isChatOwner: item.authorDetails.isChatOwner,
-					isChatModerator: item.authorDetails.isChatModerator,
-					isChatSponsor: item.authorDetails.isChatSponsor
-				});
-			}
-		}
-
-		if (item.snippet.type === 'superStickerEvent' && item.snippet.superStickerDetails) {
-			const stickerDetails = item.snippet.superStickerDetails;
-			if (!isBacklogMessage) {
-				let stickerBadges = [];
-				if (item.authorDetails.isChatOwner) stickerBadges.push({"type": "text", "text": "\uD83D\uDC51"});
-				if (item.authorDetails.isChatModerator) stickerBadges.push({"type": "text", "text": "\uD83D\uDEE1\uFE0F"});
-				if (item.authorDetails.isChatSponsor) stickerBadges.push({"type": "text", "text": "\u2B50"});
-
-				processSuperSticker({
-					authorName: item.authorDetails.displayName.replace(/^@/, ''),
-					amount: stickerDetails.amountDisplayString,
-					stickerId: stickerDetails.superStickerMetadata?.stickerId,
-					altText: stickerDetails.superStickerMetadata?.altText,
-					profileImageUrl: item.authorDetails.profileImageUrl,
-					authorChannelId: item.authorDetails.channelId,
-					badges: stickerBadges.length > 0 ? stickerBadges : "",
-					displayMessage: item.snippet.displayMessage
-				});
-			}
-		}
-
-		if (item.snippet.superChatDetails) {
-			if (!isBacklogMessage) {
-				let superChatBadges = [];
-				if (item.authorDetails.isChatOwner) superChatBadges.push({"type": "text", "text": "\uD83D\uDC51"});
-				if (item.authorDetails.isChatModerator) superChatBadges.push({"type": "text", "text": "\uD83D\uDEE1\uFE0F"});
-				if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "\u2B50"});
-
-				processSuperChat({
-					authorName: item.authorDetails.displayName.replace(/^@/, ''),
-					amount: item.snippet.superChatDetails.amountDisplayString,
-					message: item.snippet.superChatDetails.userComment,
-					tier: item.snippet.superChatDetails.tier,
-					profileImageUrl: item.authorDetails.profileImageUrl,
-					authorChannelId: item.authorDetails.channelId,
-					badges: superChatBadges.length > 0 ? superChatBadges : ""
-				});
-			}
-		}
-
-		if (item.snippet.membershipDetails) {
-			const membershipEventInfo = deriveMembershipEventContext(item.snippet, item.snippet.membershipDetails);
-			if (!isBacklogMessage) {
-				const membershipMessage = item.snippet.displayMessage || '';
-				if (membershipMessage) {
-					const membershipDetailsCopy = item.snippet.membershipDetails ? { ...item.snippet.membershipDetails } : null;
-					const membershipPayload = {
-						messageId: item.id,
-						authorName: item.authorDetails.displayName.replace(/^@/, ''),
-						message: membershipMessage,
-						plainTextMessage: membershipMessage,
-						profileImageUrl: item.authorDetails.profileImageUrl,
-						isChatOwner: item.authorDetails.isChatOwner,
-						isChatSponsor: item.authorDetails.isChatSponsor,
-						isChatModerator: item.authorDetails.isChatModerator,
-						authorChannelId: item.authorDetails.channelId,
-						publishedAt,
-						skipEvent: isBacklogMessage,
-						isMembershipMessage: true
-					};
-					if (membershipDetailsCopy) {
-						membershipPayload.meta = {
-							membershipDetails: membershipDetailsCopy,
-							snippetType: item.snippet.type
-						};
-					}
-					queueMessage(membershipPayload);
-				} else {
-					let membershipBadges = [];
-					if (item.authorDetails.isChatOwner) membershipBadges.push({"type": "text", "text": "\uD83D\uDC51"});
-					if (item.authorDetails.isChatModerator) membershipBadges.push({"type": "text", "text": "\uD83D\uDEE1\uFE0F"});
-					membershipBadges.push({"type": "text", "text": "\u2B50"});
-
-					processMembership({
-						authorName: item.authorDetails.displayName.replace(/^@/, ''),
-						level: item.snippet.membershipDetails.memberLevelName,
-						profileImageUrl: item.authorDetails.profileImageUrl,
-						authorChannelId: item.authorDetails.channelId,
-						badges: membershipBadges,
-						membershipDetails: item.snippet.membershipDetails,
-						rawSnippetType: item.snippet.type,
-						eventType: membershipEventInfo.eventType
-					});
-				}
-			}
-		}
-
-		lastMessageTime = publishedAt;
-	}
 	async function fetchChatMessages() {
-		if (!liveChatId || isPolling || isYouTubeStreamingActive()) return;
+		if (!liveChatId || isPolling) return;
 		
 		// Double-check we're not polling too soon
 		const timeSinceLastPoll = Date.now() - lastPollingTime;
@@ -3397,7 +2956,6 @@ function enableBackgroundKeepAlive() {
 		});
 		activeTimeouts.clear();
 		
-		stopYouTubeStreamingTransport();
 		stopStreamStatsPolling();
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
 		if (fetchTimeout) {
@@ -3429,9 +2987,6 @@ function enableBackgroundKeepAlive() {
 		quickPollCount = 0;
 		consecutiveMaxMessages = 0; // Reset consecutive max message counter
 		consecutiveEmptyPolls = 0;
-		youtubeStreamingMessageCount = 0;
-		youtubeStreamingStartInFlight = false;
-		setActiveYouTubeTransport(YT_TRANSPORT_POLL);
 		lastSuccessfulPollTime = 0;
 		youtubeRecommendedInterval = 5000; // Reset to default
 		
@@ -3650,7 +3205,7 @@ function enableBackgroundKeepAlive() {
                      document.getElementById('likes-count').textContent = 'N/A';
                 }
             }
-           if (channelInfoForHeaderAndStats && channelInfoForHeaderAndStats.statistics && channelInfoForHeaderAndStats.statistics.subscriberCount) {
+            if (channelInfoForHeaderAndStats && channelInfoForHeaderAndStats.statistics && channelInfoForHeaderAndStats.statistics.subscriberCount) {
                 updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
             } else if (effectiveChannelIdToUse) {
                 await getSubscriberCount(effectiveChannelIdToUse);
@@ -3666,9 +3221,19 @@ function enableBackgroundKeepAlive() {
 					connectButton.style.backgroundColor = '#f44336';
 				}
 				initializeSpinner();
-				await startPreferredYouTubeTransport({
-					delay: getInitialPollingDelay()
-				});
+				// Calculate delay based on reconnection timing
+				let initialFetchDelay = 2000; // Default 2 second delay
+				
+				// If reconnecting to the same video within 10 seconds, use longer delay
+				if (currentStream && lastConnectedVideoId === currentStream.id) {
+					const timeSinceDisconnect = Date.now() - lastDisconnectTime;
+					if (timeSinceDisconnect < 10000) {
+						initialFetchDelay = Math.max(5000, 10000 - timeSinceDisconnect);
+						console.log(`Reconnecting to same video after ${timeSinceDisconnect}ms, using ${initialFetchDelay}ms delay`);
+					}
+				}
+				
+				fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
 			} else {
                  const noChatMessage = document.createElement("div");
                  noChatMessage.style.color = "orange";
@@ -4415,7 +3980,6 @@ function enableBackgroundKeepAlive() {
 		
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
-		refreshYouTubeTransportPreference();
 		
 		// Re-check slower polling mode on page init
 		if (urlParams.has('slowerpoll') || hashParams.has('slowerpoll')) {
@@ -4838,15 +4402,12 @@ function enableBackgroundKeepAlive() {
 			if (!error) return false;
 			const reason = String(error.ytReason || error.reason || '').toLowerCase();
 			const payloadReason = String(error?.ytPayload?.error?.errors?.[0]?.reason || '').toLowerCase();
-			const detailReason = String(error?.detail?.error?.errors?.[0]?.reason || error?.detail?.error?.status || '').toLowerCase();
 			const message = String(error.ytMessage || error.message || '').toLowerCase();
 			return (
 				reason.includes('quota') ||
 				reason.includes('dailylimit') ||
 				payloadReason.includes('quota') ||
 				payloadReason.includes('dailylimit') ||
-				detailReason.includes('quota') ||
-				detailReason.includes('dailylimit') ||
 				message.includes('quota') ||
 				message.includes('rate limit')
 			);
