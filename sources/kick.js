@@ -430,17 +430,34 @@
 	// Determine if we're on the new popout chat or the old chatroom
 	var isPopoutChat = window.location.href.includes("/popout/") && window.location.href.includes("/chat");
 	var isOldChatroom = window.location.href.includes("/chatroom");
-
-	// Register focusChat, getSource, and insertKickChat immediately — before any async API
-	// calls that could stall the IIFE and leave these messages without a listener.
-	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+	var isExtensionOn = true;
+	var lastMessage = "";
+	var settings = {};
+	var runtimeMessageHandler = function (request, sender, sendResponse) {
 		try {
-			if ("getSource" == request) { sendResponse("kick"); return; }
-			if ("focusChat" == request) {
-				sendResponse(focusKickChatInput()); return;
+			if ("getSource" == request) {
+				sendResponse("kick");
+				return;
 			}
-		} catch(e) { sendResponse(false); }
-	});
+			if ("focusChat" == request) {
+				var input = isPopoutChat ? document.querySelector('[data-input="true"]') : document.querySelector('#message-input');
+				if (input && input.focus) {
+					input.focus();
+					sendResponse(true);
+					return;
+				}
+				sendResponse(false);
+				return;
+			}
+		} catch (e) {}
+		sendResponse(false);
+	};
+
+	chrome.runtime.onMessage.addListener(
+		function (request, sender, sendResponse) {
+			return runtimeMessageHandler(request, sender, sendResponse);
+		}
+	);
 
 	try {
 		var kickUserID = false;
@@ -450,8 +467,6 @@
 		}
 	} catch(e){}
 
-	var isExtensionOn = true;
-	
 	var channelImg = "";
 	  
 	try {
@@ -1313,170 +1328,64 @@
 	// Route to the appropriate processMessage function based on the URL
 	var processMessage = isPopoutChat ? processMessageNew : processMessageOld;
 
-	function querySelectorAny(root, selectors) {
-		if (!root || !selectors || !selectors.length) {
-			return null;
-		}
-		for (var i = 0; i < selectors.length; i++) {
-			try {
-				var match = root.querySelector(selectors[i]);
-				if (match) {
-					return match;
+	runtimeMessageHandler = function (request, sender, sendResponse) {
+		try {
+			if ("getSource" == request) {
+				sendResponse("kick");
+				return;
+			}
+			if ("focusChat" == request) {
+				var input = isPopoutChat ? document.querySelector('[data-input="true"]') : document.querySelector('#message-input');
+				if (input && input.focus) {
+					input.focus();
+					sendResponse(true);
+					return;
 				}
-			} catch (e) {}
-		}
-		return null;
-	}
-
-	function resolveKickChatInputTarget(target) {
-		if (!target) {
-			return null;
-		}
-		if (target.matches && target.matches("textarea, input, [contenteditable='true'], [role='textbox']")) {
-			return target;
-		}
-		return querySelectorAny(target, [
-			"[contenteditable='true'][role='textbox']",
-			"[contenteditable='true']",
-			"[role='textbox']",
-			"textarea",
-			"input"
-		]) || target;
-	}
-
-	function getKickChatInput() {
-		var selectors = [
-			"[data-input='true'] [contenteditable='true'][role='textbox']",
-			"[data-input='true'] [contenteditable='true']",
-			"[data-input='true'] [role='textbox']",
-			"[data-input='true'] textarea",
-			"[data-input='true'] input",
-			"[data-input='true']",
-			"#message-input [contenteditable='true']",
-			"#message-input [role='textbox']",
-			"#message-input textarea",
-			"#message-input input",
-			"#message-input",
-			"[contenteditable='true'][role='textbox']",
-			"[contenteditable='true'][data-slate-editor='true']",
-			"[contenteditable='true'][data-lexical-editor='true']",
-			"[contenteditable='true'][aria-label]",
-			"textarea[placeholder]",
-			"textarea",
-			"input[placeholder]"
-		];
-		var match = querySelectorAny(document, selectors);
-		return resolveKickChatInputTarget(match);
-	}
-
-	function focusKickChatInput() {
-		var input = getKickChatInput();
-		if (!input) {
-			return false;
-		}
-
-		try {
-			if (input.scrollIntoView) {
-				input.scrollIntoView({ block: "nearest" });
+				sendResponse(false);
+				return;
 			}
-		} catch (e) {}
-
-		try {
-			if (input.click) {
-				input.click();
-			}
-		} catch (e) {}
-
-		try {
-			if (input.focus) {
-				input.focus();
-			}
-		} catch (e) {}
-
-		try {
-			if (input.isContentEditable && window.getSelection && document.createRange) {
-				var selection = window.getSelection();
-				var range = document.createRange();
-				// Lexical/ProseMirror editors require the caret to be inside a
-				// paragraph node, not at the outer contenteditable div level.
-				// Find the last block-level child to place the cursor in.
-				var caretTarget = input;
-				var paragraphs = input.querySelectorAll("p");
-				if (paragraphs.length > 0) {
-					caretTarget = paragraphs[paragraphs.length - 1];
-				}
-				range.selectNodeContents(caretTarget);
-				range.collapse(false);
-				selection.removeAllRanges();
-				selection.addRange(range);
-			} else if (typeof input.setSelectionRange === "function") {
-				var length = typeof input.value === "string" ? input.value.length : 0;
-				input.setSelectionRange(length, length);
-			}
-		} catch (e) {}
-
-		try {
-			if (document.activeElement === input) {
-				return true;
-			}
-			if (input.contains && document.activeElement && input.contains(document.activeElement)) {
-				return true;
-			}
-		} catch (e) {}
-
-		return !!(input.isContentEditable || (input.matches && input.matches("textarea, input, [role='textbox']")));
-	}
-
-	chrome.runtime.onMessage.addListener(
-		function (request, sender, sendResponse) {
-			try{
-				if (typeof request === "object"){
-					if ("state" in request){
-						if (request.state !== null){
-							isExtensionOn = request.state;
-						}
-					}
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						if (settings.bttv) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-						}
-						if (settings.seventv) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-						}
-						if (settings.ffz) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-						}
-						return;
-					}
-					if ("SEVENTV" in request) {
-						SEVENTV = request.SEVENTV;
-						sendResponse(true);
-						mergeEmotes();
-						return;
-					}
-					if ("BTTV" in request) {
-						BTTV = request.BTTV;
-						sendResponse(true);
-						mergeEmotes();
-						return;
-					}
-					if ("FFZ" in request) {
-						FFZ = request.FFZ;
-						sendResponse(true);
-						mergeEmotes();
-						return;
+			if (typeof request === "object") {
+				if ("state" in request) {
+					if (request.state !== null) {
+						isExtensionOn = request.state;
 					}
 				}
-				// twitch doesn't capture avatars already.
-			} catch(e){}
-			sendResponse(false);
-		}
-	);
-	
-	var lastMessage = "";
-	var settings = {};
+				if ("settings" in request) {
+					settings = request.settings;
+					sendResponse(true);
+					if (settings.bttv) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
+					if (settings.seventv) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
+					if (settings.ffz) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
+					return;
+				}
+				if ("SEVENTV" in request) {
+					SEVENTV = request.SEVENTV;
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+				if ("BTTV" in request) {
+					BTTV = request.BTTV;
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+				if ("FFZ" in request) {
+					FFZ = request.FFZ;
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+			}
+		} catch (e) {}
+		sendResponse(false);
+	};
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}

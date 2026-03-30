@@ -10583,16 +10583,17 @@ const debuggerState = {
 };
 
 function safeDebuggerAttach(tabId, version, callback) {
+	// Clear any pending detach timeout first so repeated sends can reuse the
+	// existing debugger session instead of detaching in the middle of follow-up work.
+	if (debuggerState.timeouts[tabId]) {
+		clearTimeout(debuggerState.timeouts[tabId]);
+		delete debuggerState.timeouts[tabId];
+	}
+
 	if (debuggerState.attachments[tabId]) {
 		// Already attached, just call the callback
 		callback();
 		return;
-	}
-
-	// Clear any pending detach timeout
-	if (debuggerState.timeouts[tabId]) {
-		clearTimeout(debuggerState.timeouts[tabId]);
-		delete debuggerState.timeouts[tabId];
 	}
 
 	try {
@@ -11701,6 +11702,15 @@ function relayMessageToWebsocketSourceTab(tabId, message) {
 	}
 }
 
+const KICK_POINTER_FOCUS_SELECTORS = [
+	"[data-lexical-editor='true']",
+	"[data-input='true'] [contenteditable='true']",
+	"[data-input='true'] [role='textbox']",
+	"#message-input [contenteditable='true']",
+	"#message-input [role='textbox']",
+	"[role='textbox']"
+];
+
 async function dispatchRelayMessageToTab(tab, data, options = {}) {
 	const now = options.now || Date.now();
 	const overrideTimeout = options.overrideTimeout || 0;
@@ -11776,14 +11786,7 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 			backspace: true,
 			delayedPress: false,
 			overrideTimeout: overrideTimeout,
-			pointerFocusSelectors: [
-				"[data-lexical-editor='true']",
-				"[data-input='true'] [contenteditable='true']",
-				"[data-input='true'] [role='textbox']",
-				"#message-input [contenteditable='true']",
-				"#message-input [role='textbox']",
-				"[role='textbox']"
-			]
+			pointerFocusSelectors: KICK_POINTER_FOCUS_SELECTORS
 		});
 		return;
 	}
