@@ -3825,6 +3825,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			request = request.data;
 		}
 
+		const senderTab = sender && sender.tab ? sender.tab : null;
+		const hasSenderTabId = !!(senderTab && senderTab.id !== null && typeof senderTab.id !== "undefined");
+		const senderTabId = hasSenderTabId ? senderTab.id : null;
+		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
+
 		if (request.cmd && request.cmd === "setOnOffState") {
 			// toggle the IFRAME (stream to the remote dock) on or off
 			isExtensionOn = request.data.value;
@@ -4487,21 +4492,25 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if ("getSettings" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
-			try {
-				priorityTabs.add(sender.tab.id);
-			} catch (e) {
-				console.error(e);
+			if (hasSenderTabId) {
+				try {
+					priorityTabs.add(senderTabId);
+				} catch (e) {
+					console.error(e);
+				}
 			}
 		} else if ("pokeMe" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			sendResponse({ state: isExtensionOn }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
-			if (!settings.disabletiktokpoke) {
-				pokeSite(sender.tab.url, sender.tab.id);
+			if (!settings.disabletiktokpoke && hasSenderTabId && senderTabUrl) {
+				pokeSite(senderTabUrl, senderTabId);
 			}
 		} else if ("keepAlive" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			const keepAliveMessage = {};
-			keepAliveMessage.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
+			if (hasSenderTabId) {
+				keepAliveMessage.tid = senderTabId; // including the source (tab id) of the social media site the data was pulled from
+			}
 			keepAliveMessage.response = ""; // empty response, as we just want to keep alive
 			//sendMessageToTabs(keepAliveMessage);
 			sendMessageToTabs(keepAliveMessage, false, null, false, false, false);
@@ -11656,21 +11665,7 @@ function createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldC
 
 async function relayAttachAndChatToTab(tab, message, relayTabContext, options = {}) {
 	relayTabContext.storeMessage(message);
-	await attachAndChat(
-		tab.id,
-		message,
-		!!options.middle,
-		options.keypress !== false,
-		!!options.backspace,
-		!!options.delayedPress,
-		options.overrideTimeout || 0,
-		options.chatFunction,
-		relayTabContext.throttleProfile,
-		relayTabContext.throttleOptions,
-		options.modifierKey,
-		!!options.primingEnter,
-		options.pointerFocusSelectors || null
-	);
+	await attachAndChat(tab.id, message, !!options.middle, options.keypress !== false, !!options.backspace, !!options.delayedPress, options.overrideTimeout || 0, options.chatFunction, relayTabContext.throttleProfile, relayTabContext.throttleOptions, options.modifierKey, !!options.primingEnter, options.pointerFocusSelectors || null);
 	relayTabContext.markAutoIfNeeded();
 }
 
@@ -11702,14 +11697,7 @@ function relayMessageToWebsocketSourceTab(tabId, message) {
 	}
 }
 
-const KICK_POINTER_FOCUS_SELECTORS = [
-	"[data-lexical-editor='true']",
-	"[data-input='true'] [contenteditable='true']",
-	"[data-input='true'] [role='textbox']",
-	"#message-input [contenteditable='true']",
-	"#message-input [role='textbox']",
-	"[role='textbox']"
-];
+const KICK_POINTER_FOCUS_SELECTORS = ["[data-lexical-editor='true']", "[data-input='true'] [contenteditable='true']", "[data-input='true'] [role='textbox']", "#message-input [contenteditable='true']", "#message-input [role='textbox']", "[role='textbox']"];
 
 async function dispatchRelayMessageToTab(tab, data, options = {}) {
 	const now = options.now || Date.now();
@@ -11972,21 +11960,11 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		const hasSpecificTids = hasExplicitRelayTabTargets(data, reverse);
 		const needsValidation = data.destination || relayMode;
 
-		await processRelayTabBatch(
-			tabs,
-			published,
-			!hasSpecificTids || needsValidation ? tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) : null,
-			processTab
-		);
+		await processRelayTabBatch(tabs, published, !hasSpecificTids || needsValidation ? tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) : null, processTab);
 
 		if (data.destination && !processedAnyTab) {
 			published = {};
-			await processRelayTabBatch(
-				tabs,
-				published,
-				tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url" }),
-				processTab
-			);
+			await processRelayTabBatch(tabs, published, tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url" }), processTab);
 		}
 	} catch (error) {
 		//console.log('Error in sendMessageToTabs:', error);
