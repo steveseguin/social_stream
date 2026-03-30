@@ -205,7 +205,7 @@
 	var cachedUserProfiles = new Map();
 	var maxCachedProfiles = 10000; // Limit to 10,000 profiles
 	var processedMessages = new Set();
-	var maxTrackedMessages = 3;
+	var maxTrackedMessages = 40;
 	var pastMessages = [];
 	var trackedKickMessageIds = new Map();
 	var maxTrackedKickMessageIds = 500;
@@ -1103,23 +1103,23 @@
 	  
 	  
 	  try {
-		 //console.log(signedInUser);
-		if (signedInUser && signedInUser==chatname){
+		messageId = getKickMessageKey(ele);
+		if (!messageId){
 			const content = ele.textContent || "";
 			const imgSrcs = Array.from(ele.querySelectorAll('img')).map(img => img.src).join(' ');
-			messageId = `${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
-			
-			if (processedMessages.has(messageId)) return;
-			
-			processedMessages.add(messageId);
-			
-			if (processedMessages.size > maxTrackedMessages) {
-			  const entriesToRemove = processedMessages.size - maxTrackedMessages;
-			  const entries = Array.from(processedMessages);
-			  for (let i = 0; i < entriesToRemove; i++) {
-				processedMessages.delete(entries[i]);
-			  }
-			}
+			messageId = `${chatname}|${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
+		}
+
+		if (processedMessages.has(messageId)) return;
+
+		processedMessages.add(messageId);
+
+		if (processedMessages.size > maxTrackedMessages) {
+		  const entriesToRemove = processedMessages.size - maxTrackedMessages;
+		  const entries = Array.from(processedMessages);
+		  for (let i = 0; i < entriesToRemove; i++) {
+			processedMessages.delete(entries[i]);
+		  }
 		}
 	  } catch(e) {
 		  console.error(e);

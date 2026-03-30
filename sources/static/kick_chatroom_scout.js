@@ -22,18 +22,21 @@
 	var AUTH_RETRY_MS = 60 * 60 * 1000;
 	var NO_CANDIDATE_LOG_INTERVAL_MS = 60 * 1000;
 	var BRIDGE_TOKEN_STORAGE_KEY = "kickScoutBridgeToken";
+	var ENABLE_SCOUT_LOGS = false;
 
 	var SLUG_PATTERN = /^[a-z0-9_.-]+$/i;
 	var LOCALE_PATTERN = /^[a-z]{2}(?:-[a-z]{2})?$/i;
 	var RESERVED_SEGMENTS = new Set(["about", "api", "apps", "auth", "browse", "category", "categories", "chat", "chatroom", "communities", "dashboard", "developer", "discover", "docs", "download", "embed", "events", "explore", "following", "friends", "help", "home", "id", "jobs", "legal", "live", "login", "logout", "messages", "moderation", "notifications", "oauth", "partners", "plans", "policy", "popout", "privacy", "register", "search", "settings", "signup", "status", "store", "stream", "streams", "subscriptions", "support", "terms", "u", "videos", "wallet"]);
 
 	function log(msg) {
+		if (!ENABLE_SCOUT_LOGS) return;
 		try {
 			console.log("[SSN KickScout] " + msg);
 		} catch (e) {}
 	}
 
 	function warn(msg) {
+		if (!ENABLE_SCOUT_LOGS) return;
 		try {
 			console.warn("[SSN KickScout] " + msg);
 		} catch (e) {}
