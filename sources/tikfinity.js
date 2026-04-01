@@ -10,6 +10,19 @@
 	var observer = null;
 	var observedTarget = null;
 	var rawTransportActive = false;
+	var lastRawMessageAt = 0;
+	var initialDomScanDone = false;
+	var RAW_TRANSPORT_IDLE_MS = 15000;
+	var supportedRawTypes = {
+		chat: true,
+		gift: true,
+		follow: true,
+		share: true,
+		subscribe: true,
+		member: true,
+		join: true,
+		envelope: true
+	};
 
 	function escapeHtml(unsafe) {
 		try {
@@ -70,8 +83,61 @@
 
 	function pushMessage(data) {
 		try {
-			chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function () {});
+			chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function () {
+				if (chrome.runtime && chrome.runtime.lastError) {
+					return;
+				}
+			});
 		} catch (e) {}
+	}
+
+	function normalizeRawType(rawType) {
+		rawType = normalizeText(rawType).toLowerCase();
+		if (rawType === "join") {
+			return "member";
+		}
+		return rawType;
+	}
+
+	function isSupportedRawEvent(rawType, payload) {
+		if (!supportedRawTypes[rawType]) {
+			return false;
+		}
+		if (!payload || typeof payload !== "object") {
+			return false;
+		}
+		if (rawType === "chat") {
+			return !!(payload.comment || payload.nickname || payload.uniqueId);
+		}
+		if ((rawType === "gift") && !(payload.giftName || payload.giftId || payload.giftPictureUrl)) {
+			return false;
+		}
+		return true;
+	}
+
+	function enableRawTransport() {
+		rawTransportActive = true;
+		lastRawMessageAt = Date.now();
+		if (observer) {
+			observer.disconnect();
+			observer = null;
+			observedTarget = null;
+		}
+	}
+
+	function shouldUseRawTransport() {
+		if (!rawTransportActive) {
+			return false;
+		}
+		if (!lastRawMessageAt) {
+			return false;
+		}
+		if ((Date.now() - lastRawMessageAt) <= RAW_TRANSPORT_IDLE_MS) {
+			return true;
+		}
+		rawTransportActive = false;
+		lastRawMessageAt = 0;
+		return false;
 	}
 
 	function getProfileUrl(uniqueId, href) {
@@ -218,13 +284,11 @@
 		if (!payload || typeof payload !== "object" || !isExtensionOn) {
 			return;
 		}
-
-		rawTransportActive = true;
-		if (observer) {
-			observer.disconnect();
-			observer = null;
-			observedTarget = null;
+		rawType = normalizeRawType(rawType);
+		if (!isSupportedRawEvent(rawType, payload)) {
+			return;
 		}
+		enableRawTransport();
 
 		var chatname = normalizeText(payload.nickname || payload.uniqueId || "");
 		var data = createBaseData(chatname, payload.profilePictureUrl || "", getBadgesFromPayload(payload));
@@ -316,10 +380,10 @@
 		if (!messageElement || !messageElement.isConnected || messageElement.dataset.ssProcessed) {
 			return;
 		}
-		messageElement.dataset.ssProcessed = "1";
-		if (rawTransportActive || !isExtensionOn) {
+		if (shouldUseRawTransport() || !isExtensionOn) {
 			return;
 		}
+		messageElement.dataset.ssProcessed = "1";
 
 		var rawType = (messageElement.getAttribute("data-type") || "").toLowerCase();
 		if (!rawType) {
@@ -423,7 +487,7 @@
 	}
 
 	function observeFeed(target) {
-		if (!target || rawTransportActive) {
+		if (!target || shouldUseRawTransport()) {
 			return;
 		}
 		if (observedTarget === target && observer) {
@@ -434,11 +498,16 @@
 			observer = null;
 			observedTarget = null;
 		}
-		target.querySelectorAll(".message").forEach(function (messageElement) {
-			messageElement.dataset.ssProcessed = "1";
-		});
+		if (!initialDomScanDone) {
+			target.querySelectorAll(".message").forEach(function (messageElement) {
+				messageElement.dataset.ssProcessed = "1";
+			});
+			initialDomScanDone = true;
+		} else {
+			target.querySelectorAll(".message").forEach(processDomMessage);
+		}
 		observer = new MutationObserver(function (mutations) {
-			if (rawTransportActive || !isExtensionOn) {
+			if (shouldUseRawTransport() || !isExtensionOn) {
 				return;
 			}
 			mutations.forEach(function (mutation) {
@@ -463,7 +532,7 @@
 	}
 
 	function startDomFallback() {
-		if (rawTransportActive || !isExtensionOn) {
+		if (shouldUseRawTransport() || !isExtensionOn) {
 			return;
 		}
 		var target = document.querySelector(".activity-feed__content");
@@ -479,7 +548,7 @@
 		if (!event.data.type || !("payload" in event.data)) {
 			return;
 		}
-		processPayloadMessage((event.data.type + "").toLowerCase(), event.data.payload);
+		processPayloadMessage(event.data.type + "", event.data.payload);
 	}
 
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
