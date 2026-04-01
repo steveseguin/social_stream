@@ -125,277 +125,8 @@
 	  return new Promise(resolve => setTimeout(resolve, ms));
 	}
 
-	function getFacebookType() {
-		if (window.location.href.includes("workplace.com")){
-			return "workplace";
-		}
-		return "facebook";
-	}
-
-	function cleanFacebookText(text) {
-		return (text || "").replace(/[\u200e\u200f]/g, "").replace(/\s+/g, " ").trim();
-	}
-
-	function getNodeImageSource(node) {
-		if (!node) {
-			return "";
-		}
-		try {
-			var image = node.querySelector("image");
-			if (image) {
-				image.skip = true;
-				return image.getAttributeNS('http://www.w3.org/1999/xlink', 'href') || "";
-			}
-		} catch (e) {}
-		try {
-			var img = node.querySelector("img[src]");
-			if (img) {
-				img.skip = true;
-				return img.src || "";
-			}
-		} catch (e) {}
-		return "";
-	}
-
-	function getFacebookMContainerMessageNode(ele) {
-		try {
-			var nodes = ele.querySelectorAll("[role='button'][aria-label*='interact with this comment'] [dir='auto']");
-			for (var i = 0; i < nodes.length; i++) {
-				if (cleanFacebookText(nodes[i].textContent)) {
-					return nodes[i];
-				}
-			}
-		} catch (e) {}
-		return null;
-	}
-
-	function getFacebookMContainerName(ele) {
-		try {
-			var profileButton = ele.querySelector("[aria-label^='Profile, ']");
-			if (profileButton && profileButton.ariaLabel) {
-				return escapeHtml(cleanFacebookText(profileButton.ariaLabel.replace(/^Profile,\s*/i, "")));
-			}
-		} catch (e) {}
-		try {
-			var nameNodes = ele.querySelectorAll("[aria-hidden='true'] [dir='auto']");
-			for (var i = 0; i < nameNodes.length; i++) {
-				var value = cleanFacebookText(nameNodes[i].textContent);
-				if (value && (value !== "Top fan") && (value !== "Subscriber")) {
-					return escapeHtml(value);
-				}
-			}
-		} catch (e) {}
-		return "";
-	}
-
-	function getFacebookMContainerMembership(ele) {
-		try {
-			var textNodes = ele.querySelectorAll("[dir='auto']");
-			for (var i = 0; i < textNodes.length; i++) {
-				var value = cleanFacebookText(textNodes[i].textContent);
-				if ((value === "Top fan") || (value === "Subscriber")) {
-					return escapeHtml(value);
-				}
-			}
-		} catch (e) {}
-		return "";
-	}
-
-	function getFacebookMContainerDonation(ele) {
-		try {
-			var textNodes = ele.querySelectorAll("[dir='auto']");
-			for (var i = 0; i < textNodes.length; i++) {
-				var value = cleanFacebookText(textNodes[i].textContent);
-				var match = value.match(/^Sent\s+(\d+)\s+Stars?$/i);
-				if (match) {
-					if (parseInt(match[1], 10) === 1) {
-						return "1 Star";
-					}
-					return match[1] + " Stars";
-				}
-			}
-		} catch (e) {}
-		return "";
-	}
-
-	function isFacebookMContainerComment(ele) {
-		if (!ele || !ele.matches || ele.matches("[role='article']")) {
-			return false;
-		}
-		if (!ele.matches("div[data-tracking-duration-id][data-long-click-action-id][data-type='container'][data-mcomponent='MContainer']")) {
-			return false;
-		}
-		if (!ele.querySelector("[aria-label^='Profile, ']")) {
-			return false;
-		}
-		if (getFacebookMContainerMessageNode(ele)) {
-			return true;
-		}
-		if (getFacebookMContainerDonation(ele)) {
-			return true;
-		}
-		return false;
-	}
-
-	function getFacebookElementKey(ele) {
-		if (!ele) {
-			return "";
-		}
-		if (ele.id && !ele.id.startsWith("client:")) {
-			return ele.id;
-		}
-		if (ele.parentNode && ele.parentNode.id && !ele.parentNode.id.startsWith("client:")) {
-			return ele.parentNode.id;
-		}
-		if (isFacebookMContainerComment(ele)) {
-			var parts = [];
-			if (ele.dataset.trackingDurationId) {
-				parts.push(ele.dataset.trackingDurationId);
-			}
-			if (ele.dataset.compId) {
-				parts.push(ele.dataset.compId);
-			}
-			if (ele.dataset.longClickActionId) {
-				parts.push(ele.dataset.longClickActionId);
-			}
-			if (parts.length) {
-				return "mcontainer:" + parts.join(":");
-			}
-		}
-		try {
-			var idNode = ele.querySelector("[id]");
-			if (idNode && idNode.id) {
-				return idNode.id;
-			}
-		} catch (e) {}
-		return "";
-	}
-
-	function getFacebookArticleName(ele) {
-		try {
-			var nameElement = ele.childNodes[1].childNodes[0].querySelectorAll('span[dir="auto"]')[0];
-			return cleanFacebookText(nameElement ? nameElement.innerText : "");
-		} catch (e) {}
-		try {
-			var nameLink = ele.childNodes[1].childNodes[0].querySelector('a[role="link"]');
-			return cleanFacebookText(nameLink ? nameLink.innerText : "");
-		} catch (e) {}
-		return "";
-	}
-
-	function getFacebookArticleMessageText(ele) {
-		var msg = "";
-		try {
-			var msgNodes = ele.childNodes[1].childNodes[0].querySelectorAll('span[dir="auto"]');
-			if (msgNodes && msgNodes.length) {
-				msg = cleanFacebookText(msgNodes[msgNodes.length - 1].textContent);
-			}
-		} catch (e) {}
-		if (!msg) {
-			try {
-				var listNode = ele.querySelector("ul > li");
-				if (listNode && listNode.parentNode && listNode.parentNode.parentNode) {
-					msg = cleanFacebookText(listNode.parentNode.parentNode.textContent);
-				}
-			} catch (e) {}
-		}
-		return msg;
-	}
-
-	function getFacebookArticleContentImage(ele) {
-		try {
-			var contentImage = ele.querySelector('div>div>div>div>div>div>div>img[draggable="false"][width][height][class][src]');
-			return contentImage ? (contentImage.src || "") : "";
-		} catch (e) {}
-		return "";
-	}
-
-	function getFacebookElementSignature(ele, messageKey) {
-		if (!ele) {
-			return "";
-		}
-		if (isFacebookMContainerComment(ele)) {
-			var mName = cleanFacebookText(getFacebookMContainerName(ele));
-			var msgNode = getFacebookMContainerMessageNode(ele);
-			var mMsg = cleanFacebookText(msgNode ? msgNode.textContent : "");
-			var mDonation = cleanFacebookText(getFacebookMContainerDonation(ele));
-			var mMembership = cleanFacebookText(getFacebookMContainerMembership(ele));
-			if (!mName && !mMsg && !mDonation && !mMembership) {
-				return "";
-			}
-			return [messageKey || "", mName, mMsg, mDonation, mMembership].join("|");
-		}
-		var name = getFacebookArticleName(ele);
-		var msg = getFacebookArticleMessageText(ele);
-		var contentimg = msg ? "" : getFacebookArticleContentImage(ele);
-		if (!name && !msg && !contentimg) {
-			return "";
-		}
-		return [messageKey || "", name, msg, contentimg].join("|");
-	}
-
-	function pushProcessedFacebookMessage(data, dupMessage) {
-		var entry = data.chatname + "+" + data.hasDonation + "+" + (dupMessage || "");
-		var entryString = JSON.stringify(entry);
-
-		if (!dupCheck2.includes(entryString)) {
-			dupCheck2.push(entryString);
-			
-			setTimeout(() => {
-				const index = dupCheck2.indexOf(entryString);
-				if (index > -1) {
-					dupCheck2.splice(index, 1);
-				}
-			}, 15000);
-		} else {
-			return;
-		}
-		
-		pushMessage(data);
-	}
-
-	function processMContainerMessage(ele) {
-		var msgElement = getFacebookMContainerMessageNode(ele);
-		var msg = "";
-		if (msgElement) {
-			msg = getAllContentNodes(msgElement);
-			msg = msg.trim();
-		}
-		
-		var hasDonation = getFacebookMContainerDonation(ele);
-		if (!msg && !hasDonation) {
-			return false;
-		}
-		
-		var data = {};
-		data.chatname = getFacebookMContainerName(ele);
-		if (!data.chatname) {
-			return false;
-		}
-		data.chatbadges = [];
-		data.backgroundColor = "";
-		data.textColor = "";
-		data.chatmessage = msg;
-		data.chatimg = getNodeImageSource(ele.querySelector("[aria-label^='Profile, ']") || ele);
-		data.hasDonation = hasDonation;
-		data.membership = getFacebookMContainerMembership(ele);
-		data.contentimg = "";
-		data.textonly = settings.textonlymode || false;
-		data.type = getFacebookType();
-		
-		pushProcessedFacebookMessage(data, msg || hasDonation);
-		return true;
-	}
-
 	async function processMessage(ele) {
 		if (ele == window) {
-			return;
-		}
-		
-		if (isFacebookMContainerComment(ele)) {
-			if (!processMContainerMessage(ele) && ele.isConnected) {
-				delete ele.dataset.set123;
-			}
 			return;
 		}
 		
@@ -553,9 +284,34 @@
 		if (originalMessage){
 			data.reply = originalMessage;
 		}
-		data.type = getFacebookType();
+		if (window.location.href.includes("workplace.com")){
+			data.type = "workplace";
+		} else {
+			data.type = "facebook";
+		}
 		
-		pushProcessedFacebookMessage(data, dupMessage);
+		
+		var entry = data.chatname + "+" + data.hasDonation + "+" + dupMessage;
+		var entryString = JSON.stringify(entry);
+
+		if (!dupCheck2.includes(entryString)) {
+			dupCheck2.push(entryString);
+			
+			setTimeout(() => {
+				const index = dupCheck2.indexOf(entryString);
+				if (index > -1) {
+					dupCheck2.splice(index, 1);
+				}
+			}, 15000);
+
+			//console.log(data);
+		} else {
+			return;
+		}
+	//	console.log([...dupCheck2]);
+		
+		//console.warn(data);
+		pushMessage(data);
 	}
 	
 	var settings = {};
@@ -649,7 +405,7 @@
 	var counter=0;
 	
 	var ttt = setInterval(function() {
-		dupCheck = dupCheck.slice(-120); // Track recent row signatures so recycled DOM rows can emit new messages.
+		dupCheck = dupCheck.slice(-60); // facebook seems to keep around 40 messages, so this is overkill?
 		
 		if (lastURL !== window.location.href){
 			lastURL = window.location.href;
@@ -659,29 +415,42 @@
 		}
 		try {
 			if (window.location.href.includes("/live/producer/") || window.location.href.endsWith("/videos") || window.location.href.includes("/videos/") || window.location.href.includes("?v=") || window.location.href.includes("/watch/live/")) {
-				var main = document.querySelectorAll("[role='article'], div[data-tracking-duration-id][data-long-click-action-id][data-type='container'][data-mcomponent='MContainer']");
+				var main = document.querySelectorAll("[role='article']");
 				for (var j = 0; j < main.length; j++) {
 					try {
-						if (!main[j].matches("[role='article']") && !isFacebookMContainerComment(main[j])) {
-							main[j].dataset.set123 = "skip";
-							continue;
-						}
-						var messageKey = getFacebookElementKey(main[j]);
-						var messageSignature = getFacebookElementSignature(main[j], messageKey);
-						if (!messageSignature) {
-							delete main[j].dataset.set123;
-							continue;
-						}
-						if (main[j].dataset.set123 === messageSignature) {
-							continue;
-						}
-						main[j].dataset.set123 = messageSignature;
-						if (processed>3){
-							if (dupCheck.includes(messageSignature)) {
-								continue;
+						if (!main[j].dataset.set123) {
+							main[j].dataset.set123 = "true";
+							if (main[j].id){
+								if (main[j].id.startsWith("client:")) {
+									continue;
+								}
+								if (dupCheck.includes(main[j].id)) {
+									continue;
+								}
+								dupCheck.push(main[j].id);
+								if (processed>3){
+									processMessage(main[j]);
+								}
+							} else if (main[j].parentNode && main[j].parentNode.id) {
+								if (dupCheck.includes(main[j].parentNode.id)){
+									continue;
+								}
+								if (main[j].parentNode.id.startsWith("client:")) {
+									continue;
+								}
+								dupCheck.push(main[j].parentNode.id);
+								if (processed>3){
+									processMessage(main[j]);
+								}
+							} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id) {
+								var id = main[j].querySelector("[id]"); // an archived video
+								if (id && !(dupCheck.includes(id))) {
+									dupCheck.push(id);
+									if (processed>3){
+										processMessage(main[j]);
+									}
+								}
 							}
-							dupCheck.push(messageSignature);
-							processMessage(main[j]);
 						}
 					} catch (e) {}
 				}
