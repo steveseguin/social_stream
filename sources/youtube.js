@@ -1214,6 +1214,33 @@
 	if (containsShorts(window.location.href)){
 		youtubeShorts = true;
 	}
+
+	var youtubePokeInterval = null;
+	var youtubePokeTimeoutMinutes = 10;
+
+	function isDesktopYouTubePokeContext() {
+		return !!(window.ninjafy || window.electronApi);
+	}
+
+	function refreshYouTubePokeInterval() {
+		if (youtubePokeInterval) {
+			clearInterval(youtubePokeInterval);
+			youtubePokeInterval = null;
+		}
+		if (!isDesktopYouTubePokeContext()) {
+			return;
+		}
+		if (settings && settings.disabletiktokpoke) {
+			return;
+		}
+		youtubePokeInterval = setInterval(function() {
+			try {
+				chrome.runtime.sendMessage(chrome.runtime.id, {
+					"pokeMe": true
+				}, function(response) {});
+			} catch (e) {}
+		}, 1000 * 60 * youtubePokeTimeoutMinutes);
+	}
 	
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		try {
@@ -1275,6 +1302,7 @@
 					} else {
 						removeLargerFont();
 					}
+					refreshYouTubePokeInterval();
 					return;
 				}
 				if ("SEVENTV" in request) {
@@ -1349,6 +1377,7 @@
 		response = response || {};
 		if ("settings" in response) {
 			settings = response.settings;
+			refreshYouTubePokeInterval();
 
 			if (settings.bttv && !BTTV) {
 				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
