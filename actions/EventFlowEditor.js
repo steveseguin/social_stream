@@ -2888,7 +2888,7 @@ class EventFlowEditor {
 				this.populateMIDIInputDevices('prop-deviceId', node.config.deviceId);
 				break;
 			case 'fromSource':
-				const isCustomSource = node.config.source && !['*', 'afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
+				const isCustomSource = node.config.source !== undefined && node.config.source !== null && !['*', 'afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
   'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
