@@ -1,7 +1,11 @@
 (function () {
+	if (window.__socialStreamTikfinityInjected) {
+		return;
+	}
 	if (window.location.pathname.indexOf("/widget/vite/src/activity-feed/") === -1) {
 		return;
 	}
+	window.__socialStreamTikfinityInjected = true;
 
 	console.log("Social stream injected");
 
@@ -13,6 +17,8 @@
 	var lastRawMessageAt = 0;
 	var initialDomScanDone = false;
 	var RAW_TRANSPORT_IDLE_MS = 15000;
+	var RECENT_EVENT_WINDOW_MS = 12000;
+	var recentEventMap = new Map();
 	var supportedRawTypes = {
 		chat: true,
 		gift: true,
@@ -89,6 +95,55 @@
 				}
 			});
 		} catch (e) {}
+	}
+
+	function cleanupRecentEvents(now) {
+		recentEventMap.forEach(function (timestamp, key) {
+			if ((now - timestamp) > RECENT_EVENT_WINDOW_MS) {
+				recentEventMap.delete(key);
+			}
+		});
+	}
+
+	function buildRecentEventKey(data, meta, transportLabel) {
+		var eventName = data && data.event ? data.event : "chat";
+		var timestamp = meta && meta.timestamp ? normalizeText(meta.timestamp) : "";
+		var uniqueId = meta && meta.uniqueId ? normalizeText(meta.uniqueId) : "";
+		var normalizedName = normalizeText(data && data.chatname ? data.chatname : "");
+		var normalizedMessage = normalizeText(data && data.chatmessage ? data.chatmessage.replace(/<[^>]+>/g, " ") : "");
+		var normalizedDonation = normalizeText(data && data.hasDonation ? data.hasDonation : "");
+		var normalizedContentImg = normalizeText(data && data.contentimg ? data.contentimg : "");
+		var normalizedMembership = normalizeText(data && data.membership ? data.membership : "");
+		var normalizedProfile = normalizeText(meta && meta.profile ? meta.profile : "");
+		var normalizedGiftId = normalizeText(meta && meta.giftId ? String(meta.giftId) : "");
+		var normalizedGroupId = normalizeText(meta && meta.groupId ? String(meta.groupId) : "");
+		var stableTime = timestamp || "no-time";
+		return [
+			eventName,
+			uniqueId || normalizedName,
+			normalizedMessage,
+			normalizedDonation,
+			normalizedMembership,
+			normalizedContentImg,
+			normalizedProfile,
+			normalizedGiftId,
+			normalizedGroupId,
+			stableTime
+		].join("|");
+	}
+
+	function shouldEmitEvent(data, meta, transportLabel) {
+		var now = Date.now();
+		cleanupRecentEvents(now);
+		var key = buildRecentEventKey(data, meta, transportLabel);
+		if (!key) {
+			return true;
+		}
+		if (recentEventMap.has(key)) {
+			return false;
+		}
+		recentEventMap.set(key, now);
+		return true;
 	}
 
 	function normalizeRawType(rawType) {
@@ -277,6 +332,15 @@
 		if (meta && Object.keys(meta).length) {
 			data.meta = meta;
 		}
+		if (!shouldEmitEvent(data, meta, meta && meta.transport ? meta.transport : "")) {
+			return;
+		}
+		if (meta && meta.transport) {
+			delete meta.transport;
+			if (!Object.keys(meta).length) {
+				delete data.meta;
+			}
+		}
 		pushMessage(data);
 	}
 
@@ -308,6 +372,7 @@
 				meta.timestamp = new Date(parseInt(payload.createTime, 10)).toISOString();
 			} catch (e) {}
 		}
+		meta.transport = "raw";
 
 		if (rawType === "chat") {
 			data.chatmessage = formatChatMessageFromPayload(payload.comment || "", payload.emotes || []);
@@ -403,6 +468,7 @@
 		if (profileUrl) {
 			meta.profile = profileUrl;
 		}
+		meta.transport = "dom";
 
 		if (rawType === "chat") {
 			var textWrap = messageElement.querySelector(".message__text");
