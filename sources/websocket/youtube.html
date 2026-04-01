@@ -400,11 +400,13 @@ try {
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
 	var tokenRefreshPromise = null;
 	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.";
+	const INNERTUBE_EMOJI_CACHE_TTL = 24 * 60 * 60 * 1000;
 	
 
 	var emojiData = [];
 	var customEmoteData = [];
 	var shortcutMap = new Map(); // For :word: patterns
+	var channelShortcutMap = new Map(); // Active stream/channel custom emoji only
 	var unicodeMap = new Map();  // For Unicode emoji characters
 	
 	
@@ -439,55 +441,6 @@ try {
 		flushPendingRelayMessages();
 	}
 
-	// Request emotes from extension
-	function requestEmotesFromExtension() {
-		if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
-			// Get video ID from current connection
-			if (videoId) {
-				console.log("Requesting emotes for video:", videoId);
-				
-				// Request BTTV emotes
-				chrome.runtime.sendMessage(chrome.runtime.id, { 
-					getBTTV: true,
-					url: "https://youtube.com/?v=" + videoId,
-					videoId: videoId,
-					type: "youtube"
-				}, function (response) {
-					if (chrome.runtime.lastError) {
-						console.log('BTTV request error:', chrome.runtime.lastError.message);
-					}
-				});
-				
-				// Request 7TV emotes if enabled
-				if (settings.seventv) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { 
-						getSEVENTV: true,
-						url: "https://youtube.com/?v=" + videoId,
-						videoId: videoId,
-						type: "youtube"
-					}, function (response) {
-						if (chrome.runtime.lastError) {
-							console.log('7TV request error:', chrome.runtime.lastError.message);
-						}
-					});
-				}
-				
-				// Request FFZ emotes if enabled
-				if (settings.ffz) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { 
-						getFFZ: true,
-						url: "https://youtube.com/?v=" + videoId,
-						videoId: videoId,
-						type: "youtube"
-					}, function (response) {
-						if (chrome.runtime.lastError) {
-							console.log('FFZ request error:', chrome.runtime.lastError.message);
-						}
-					});
-				}
-			}
-		}
-	}
 	function processEmojiData(data) {
 	  emojiData = data;
 	  // Clear existing data if any
@@ -629,7 +582,193 @@ function enableBackgroundKeepAlive() {
 		});
 	  });
 	}
+
+	function clearChannelEmojiEntries() {
+		channelShortcutMap.clear();
+	}
 	
+	function applyChannelEmojiEntries(entries) {
+		clearChannelEmojiEntries();
+		for (const entry of entries) {
+			for (const s of (entry.shortcuts || [])) {
+				channelShortcutMap.set(s, { url: entry.url, id: entry.id, alt: entry.alt });
+			}
+		}
+	}
+
+	function buildYouTubeEmojiEntries(emojis) {
+		if (!emojis?.length) return null;
+		const entries = [];
+		for (const emoji of emojis) {
+			if (!emoji.isCustomEmoji) continue;
+			const thumbs = emoji.image?.thumbnails;
+			if (!thumbs?.length) continue;
+			const url = thumbs[thumbs.length - 1].url;
+			const alt = emoji.shortcuts?.[0] || (emoji.emojiId || '').split('/').pop() || 'emoji';
+			entries.push({ shortcuts: emoji.shortcuts || [], url, id: emoji.emojiId || '', alt });
+		}
+		return entries.length ? entries : null;
+	}
+
+	function extractYouTubeInitialData(html) {
+		if (!html) return null;
+		const markers = ['ytInitialData"] = ', "ytInitialData'] = ", 'var ytInitialData = '];
+		let jsonStart = -1;
+		for (const marker of markers) {
+			const idx = html.indexOf(marker);
+			if (idx !== -1) {
+				jsonStart = idx + marker.length;
+				break;
+			}
+		}
+		if (jsonStart === -1) return null;
+		let depth = 0;
+		let inStr = false;
+		let esc = false;
+		let end = -1;
+		for (let i = jsonStart; i < html.length; i++) {
+			const c = html[i];
+			if (esc) {
+				esc = false;
+				continue;
+			}
+			if (c === '\\' && inStr) {
+				esc = true;
+				continue;
+			}
+			if (c === '"') {
+				inStr = !inStr;
+				continue;
+			}
+			if (inStr) continue;
+			if (c === '{') depth++;
+			else if (c === '}' && --depth === 0) {
+				end = i + 1;
+				break;
+			}
+		}
+		if (end === -1) return null;
+		return JSON.parse(html.slice(jsonStart, end));
+	}
+
+	function hasYouTubeExtensionBridge() {
+		try {
+			return document.documentElement.getAttribute('data-ss-youtube-bridge') === '1';
+		} catch (e) {
+			return false;
+		}
+	}
+
+	async function tryFetchEmojiFromPage(vidId) {
+		try {
+			const controller = new AbortController();
+			const tid = setTimeout(() => controller.abort(), 10000);
+			const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${vidId}`, {
+				credentials: 'include', signal: controller.signal
+			});
+			clearTimeout(tid);
+			if (!resp.ok) return null;
+			const html = await resp.text();
+			const data = extractYouTubeInitialData(html);
+			return buildYouTubeEmojiEntries(data?.contents?.liveChatRenderer?.emojis);
+		} catch (e) {
+			console.log('YouTube emoji page fetch failed, trying Innertube API:', e.message || e);
+			return null;
+		}
+	}
+
+	async function tryFetchEmojiViaInnertubeAPI(vidId) {
+		const token = getStoredToken();
+		if (!token) return null;
+		const ctx = { context: { client: { clientName: 'WEB', clientVersion: '2.20240101.00.00', hl: 'en' } } };
+		const hdrs = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', method: 'POST' };
+
+		let continuation;
+		try {
+			const r = await fetchWithTimeout('https://www.youtube.com/youtubei/v1/next', 10000,
+				{ ...hdrs, body: JSON.stringify({ ...ctx, videoId: vidId }) });
+			const d = await r.json();
+			const conts = d?.contents?.twoColumnWatchNextResults?.conversationBar?.liveChatRenderer?.continuations;
+			continuation = conts?.[0]?.reloadContinuationData?.continuation
+						|| conts?.[0]?.invalidationContinuationData?.continuation;
+		} catch (e) {
+			console.log('YouTube emoji Innertube /next failed:', e.message || e);
+			return null;
+		}
+		if (!continuation) return null;
+
+		try {
+			const r = await fetchWithTimeout('https://www.youtube.com/youtubei/v1/live_chat/get_live_chat', 10000,
+				{ ...hdrs, body: JSON.stringify({ ...ctx, continuation }) });
+			const d = await r.json();
+			return buildYouTubeEmojiEntries(d?.continuationContents?.liveChatContinuation?.emojis);
+		} catch (e) {
+			console.log('YouTube emoji Innertube get_live_chat failed:', e.message || e);
+			return null;
+		}
+	}
+
+	async function tryFetchEmojiViaExtensionBridge(vidId) {
+		return new Promise(function(resolve) {
+			if (!hasYouTubeExtensionBridge()) {
+				resolve(null);
+				return;
+			}
+			const requestId = 'ytemoji_' + vidId + '_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+			var done = false;
+			var timeout = setTimeout(function() {
+				if (done) return;
+				done = true;
+				window.removeEventListener('youtubeEmojiLoaded', handler);
+				resolve(null);
+			}, 5000);
+			var handler = function(e) {
+				if (!e.detail || e.detail.requestId !== requestId) return;
+				if (done) return;
+				done = true;
+				clearTimeout(timeout);
+				window.removeEventListener('youtubeEmojiLoaded', handler);
+				resolve(Array.isArray(e.detail.youtubeEmoji) && e.detail.youtubeEmoji.length ? e.detail.youtubeEmoji : null);
+			};
+			window.addEventListener('youtubeEmojiLoaded', handler);
+			window.dispatchEvent(new CustomEvent('youtubeEmojiRequest', {
+				detail: {
+					videoId: vidId,
+					requestId: requestId
+				},
+				bubbles: true
+			}));
+		});
+	}
+
+	async function fetchChannelEmoji(vidId) {
+		const cacheKey = 'ytChannelEmoji_' + vidId;
+		const cacheTimeKey = 'ytChannelEmojiTime_' + vidId;
+
+		// Restore from cache if fresh
+		try {
+			const cached = localStorage.getItem(cacheKey);
+			const cachedTime = parseInt(localStorage.getItem(cacheTimeKey) || '0');
+			if (cached && (Date.now() - cachedTime) < INNERTUBE_EMOJI_CACHE_TTL) {
+				const entries = JSON.parse(cached);
+				applyChannelEmojiEntries(entries);
+				if (entries.length) console.log('Restored ' + entries.length + ' custom YouTube emoji from cache');
+				return;
+			}
+		} catch (e) {}
+
+		const entries = (await tryFetchEmojiViaExtensionBridge(vidId)) || (await tryFetchEmojiFromPage(vidId)) || (await tryFetchEmojiViaInnertubeAPI(vidId));
+		if (!entries?.length) return;
+
+		try {
+			localStorage.setItem(cacheKey, JSON.stringify(entries));
+			localStorage.setItem(cacheTimeKey, String(Date.now()));
+		} catch (e) {}
+
+		applyChannelEmojiEntries(entries);
+		console.log('Loaded ' + entries.length + ' custom YouTube emoji');
+	}
+
 	function getTranslation(key, value = false) {
 		try {
 			if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
@@ -1256,12 +1395,12 @@ function enableBackgroundKeepAlive() {
 			result = replaceEmotesWithImages(result);
 		}
 		
-		if (!shortcutMap.size && !unicodeMap.size) return result;
+		if (!shortcutMap.size && !channelShortcutMap.size && !unicodeMap.size) return result;
 		
 		// Process shortcut emotes
 		const shortcutRegex = /:([\w_-]+):/g;
 		result = result.replace(shortcutRegex, (match) => {
-			const emojiInfo = shortcutMap.get(match);
+			const emojiInfo = channelShortcutMap.get(match) || shortcutMap.get(match);
 			if (!emojiInfo) return match;
 			
 			if (settings.textonlymode || false) {
@@ -2856,11 +2995,6 @@ function enableBackgroundKeepAlive() {
 			},
 			bubbles: true
 		}));
-		
-		// Also request emotes for this video
-		if (videoId) {
-			requestEmotesFromExtension();
-		}
 	}
 	
 
@@ -2981,6 +3115,7 @@ function enableBackgroundKeepAlive() {
 		lastMessageTime = null;
 		isPolling = false;
 		currentStream = null;
+		clearChannelEmojiEntries();
 		clearSourceIdentity();
 		messageQueue = [];
 		pendingRelayMessages = [];
@@ -3234,6 +3369,7 @@ function enableBackgroundKeepAlive() {
 				}
 				
 				fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
+				if (currentStream?.id) fetchChannelEmoji(currentStream.id).catch(() => {});
 			} else {
                  const noChatMessage = document.createElement("div");
                  noChatMessage.style.color = "orange";
