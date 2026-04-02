@@ -4416,36 +4416,56 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				const videoId = request.videoId;
 				const requestId = request.requestId ? String(request.requestId) : null;
 				const sendEmojiResult = function (entries) {
-					chrome.tabs.sendMessage(tabId, { youtubeEmoji: entries, requestId, videoId }, function () { chrome.runtime.lastError; });
+					chrome.tabs.sendMessage(tabId, { youtubeEmoji: entries, requestId, videoId }, function () {
+						chrome.runtime.lastError;
+					});
 				};
 				(async () => {
 					let entries = [];
 					try {
-						const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`, { credentials: 'omit' });
+						const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`, { credentials: "omit" });
 						if (!resp.ok) {
 							sendEmojiResult(entries);
 							return;
 						}
 						const html = await resp.text();
-						const markers = ['ytInitialData"] = ', "ytInitialData'] = ", 'var ytInitialData = '];
+						const markers = ['ytInitialData"] = ', "ytInitialData'] = ", "var ytInitialData = "];
 						let jsonStart = -1;
 						for (const m of markers) {
 							const idx = html.indexOf(m);
-							if (idx !== -1) { jsonStart = idx + m.length; break; }
+							if (idx !== -1) {
+								jsonStart = idx + m.length;
+								break;
+							}
 						}
 						if (jsonStart === -1) {
 							sendEmojiResult(entries);
 							return;
 						}
-						let depth = 0, inStr = false, esc = false, end = -1;
+						let depth = 0,
+							inStr = false,
+							esc = false,
+							end = -1;
 						for (let scanIndex = jsonStart; scanIndex < html.length; scanIndex++) {
 							const c = html[scanIndex];
-							if (esc) { esc = false; continue; }
-							if (c === '\\' && inStr) { esc = true; continue; }
-							if (c === '"') { inStr = !inStr; continue; }
+							if (esc) {
+								esc = false;
+								continue;
+							}
+							if (c === "\\" && inStr) {
+								esc = true;
+								continue;
+							}
+							if (c === '"') {
+								inStr = !inStr;
+								continue;
+							}
 							if (inStr) continue;
-							if (c === '{') depth++;
-							else if (c === '}' && --depth === 0) { end = scanIndex + 1; break; }
+							if (c === "{") depth++;
+							else if (c === "}" && --depth === 0) {
+								end = scanIndex + 1;
+								break;
+							}
 						}
 						if (end === -1) {
 							sendEmojiResult(entries);
@@ -4458,11 +4478,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 							const thumbs = emoji.image && emoji.image.thumbnails;
 							if (!thumbs || !thumbs.length) continue;
 							const url = thumbs[thumbs.length - 1].url;
-							const alt = (emoji.shortcuts && emoji.shortcuts[0]) || (emoji.emojiId || '').split('/').pop() || 'emoji';
-							entries.push({ shortcuts: emoji.shortcuts || [], url, id: emoji.emojiId || '', alt });
+							const alt = (emoji.shortcuts && emoji.shortcuts[0]) || (emoji.emojiId || "").split("/").pop() || "emoji";
+							entries.push({ shortcuts: emoji.shortcuts || [], url, id: emoji.emojiId || "", alt });
 						}
 					} catch (e) {
-						console.log('Background YouTube emoji fetch failed:', e);
+						console.log("Background YouTube emoji fetch failed:", e);
 					}
 					sendEmojiResult(entries);
 				})();
@@ -12039,22 +12059,12 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		const hasSpecificTids = hasExplicitRelayTabTargets(data, reverse);
 		const needsValidation = data.destination || relayMode;
 
-		await processRelayTabBatch(
-			tabs,
-			published,
-			!hasSpecificTids || needsValidation ? tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) : null,
-			processTab
-		);
+		await processRelayTabBatch(tabs, published, !hasSpecificTids || needsValidation ? tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) : null, processTab);
 
 		// If no platform match was found, fall back to matching a custom destination against the tab URL.
 		if (data.destination && !processedAnyTab) {
 			published = {};
-			await processRelayTabBatch(
-				tabs,
-				published,
-				tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url" }),
-				processTab
-			);
+			await processRelayTabBatch(tabs, published, tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url" }), processTab);
 		}
 	} catch (error) {
 		//console.log('Error in sendMessageToTabs:', error);
