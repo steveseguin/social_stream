@@ -11,7 +11,9 @@ const INCLUDE_GIFTS_KEY = 'tiktok.includeGifts';
 const INCLUDE_FOLLOWS_KEY = 'tiktok.includeFollows';
 const INCLUDE_LIKES_KEY = 'tiktok.includeLikes';
 
+// TODO: Remove the lite/vendor fallback once all deployments ship shared/vendor/socket.io.min.js.
 const SOCKET_IO_SOURCES = [
+  '../../shared/vendor/socket.io.min.js',
   './vendor/socket.io.min.js'
 ];
 

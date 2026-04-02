@@ -113,7 +113,7 @@
 
   function ensureSocketClient() {
     if (typeof window.io === 'function') return true;
-    const msg = 'Socket.io client not loaded. Check that ../lite/vendor/socket.io.min.js is reachable.';
+    const msg = 'Socket.io client not loaded. Check that ../../shared/vendor/socket.io.min.js is reachable.';
     logEvent(msg, null, 'error');
     setStatus('error', 'Socket.io client missing');
     return false;

@@ -674,13 +674,14 @@
                 </article>
 
 
-<h3>TikTok Live &ndash; Standard DOM Capture</h3>
-                    <p class="source-note">Implementation: <code>sources/tiktok.js</code> (extension content script). SSApp has a native TikTok integration with richer event support (see SSApp docs).</p>
+<h3>TikTok Live &ndash; DOM Capture and TikFinity Feed</h3>
+                    <p class="source-note">Implementation: <code>sources/tiktok.js</code> for native TikTok pages and <code>sources/tikfinity.js</code> for TikFinity's activity-feed widget/iframe. SSApp still has a native TikTok integration with the widest event coverage (see SSApp docs).</p>
                     <ul class="requirements">
                         <li>Works on the broadcaster's live page. Gift/like/follow banners only populate when the session is authenticated.</li>
                         <li>TikTok provides many events via DOM detection <strong>without requiring WebSocket mode</strong> &ndash; gifts, follows, joins, and likes are captured automatically.</li>
+                        <li>TikFinity widget pages at <code>tikfinity.zerody.one/widget/activity-feed*</code> also work. The embedded activity-feed iframe emits the same canonical TikTok payload fields for chat, follows, shares, gifts, subscriptions, joins, and treasure chests.</li>
                         <li>No additional API authentication required.</li>
-                        <li><strong>SSApp native mode</strong> connects directly via tiktok-live-connector and adds events not available through DOM scraping: <code>subscribe</code>, <code>question_new</code>, <code>envelope</code>, <code>emote</code>, <code>shared</code>, and <code>viewer_update</code>.</li>
+                        <li><strong>SSApp native mode</strong> still adds events beyond the page/widget capture paths: <code>question_new</code>, <code>emote</code>, and <code>viewer_update</code>.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -707,6 +708,21 @@
                                 <td>Ensures <code>chatname</code> exists before emitting.</td>
                             </tr>
                             <tr>
+                                <td><code>shared</code></td>
+                                <td>TikFinity share rows.</td>
+                                <td><code>chatmessage</code> is the rendered share text.</td>
+                            </tr>
+                            <tr>
+                                <td><code>subscribe</code></td>
+                                <td>TikFinity subscription rows.</td>
+                                <td><code>membership</code> is set to <code>SUBSCRIBER</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><code>envelope</code></td>
+                                <td>TikFinity treasure chest rows.</td>
+                                <td><code>meta.coins</code> and <code>meta.canOpen</code> carry the chest details.</td>
+                            </tr>
+                            <tr>
                                 <td><code>liked</code></td>
                                 <td>Like storm summaries triggered by TikTok social cards.</td>
                                 <td>Requires identifiable user; otherwise suppressed.</td>
@@ -718,7 +734,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights"><code>membership</code> mirrors badge tooltips (subscriber tiers). Avatar caching keeps <code>chatimg</code> valid between events; if the DOM suppresses color for moderators the script clears <code>nameColor</code>.</p>
+                    <p class="field-highlights"><code>membership</code> mirrors badge tooltips (subscriber tiers). Avatar caching keeps <code>chatimg</code> valid between events; if the DOM suppresses color for moderators the script clears <code>nameColor</code>. TikFinity gift rows also set <code>contentimg</code> to the gift icon when available.</p>
                 </article>
 
                 <article class="platform-card" id="whatnot">

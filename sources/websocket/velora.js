@@ -25,6 +25,8 @@ const state = {
     authUser: null,
     socket: null,
     socketStatus: 'disconnected',
+    isExtensionOn: false,
+    settings: {},
     viewerPollTimer: null,
     refreshTimer: null,
     streamId: null
@@ -688,6 +690,44 @@ async function sendChatMessage() {
     }
 }
 
+async function sendChatBridgeMessage(text) {
+    text = String(text || '').trim();
+    if (!text) {
+        return false;
+    }
+    if (!state.tokens?.access_token) {
+        throw new Error('Not signed in.');
+    }
+
+    const channelId = state.authUser?.id;
+    if (!channelId) {
+        throw new Error('No channel ID - profile not loaded.');
+    }
+
+    const response = await fetch(`${VELORA_API_BASE}/api/integrations/oauth/chat/channels/${channelId}/messages`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${state.tokens.access_token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ message: text })
+    });
+
+    if (!response.ok) {
+        let errMsg = `HTTP ${response.status}`;
+        try {
+            const err = await response.json();
+            errMsg = err.message || err.error || errMsg;
+        } catch (_) {}
+        throw new Error(errMsg);
+    }
+
+    setChatStatus('Sent.', false);
+    setTimeout(() => setChatStatus('', false), 3000);
+    return true;
+}
+
 // ─── Extension bridge ─────────────────────────────────────────────────────────
 
 function pushMessage(data) {
@@ -706,6 +746,83 @@ function notifyBridgeStatus() {
         els.bridgeState.textContent = connected ? 'Extension connected' : 'Extension disconnected';
         els.bridgeState.className = `status-chip ${connected ? 'ok' : 'warning'}`;
     }
+}
+
+function wireExtensionBridge() {
+    if (!(typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id)) {
+        return;
+    }
+
+    try {
+        chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+            try {
+                if (request === 'getSource') {
+                    sendResponse('velora');
+                    return;
+                }
+                if (request === 'focusChat') {
+                    if (els.chatMessage) {
+                        els.chatMessage.focus();
+                        sendResponse(true);
+                    } else {
+                        sendResponse(false);
+                    }
+                    return;
+                }
+                if (request && typeof request === 'object') {
+                    if ('settings' in request) {
+                        state.settings = request.settings || {};
+                        sendResponse(true);
+                        return;
+                    }
+                    if ('state' in request) {
+                        state.isExtensionOn = !!request.state;
+                        sendResponse(true);
+                        return;
+                    }
+                    if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+                        sendChatBridgeMessage(request.message).then(function () {
+                            sendResponse(true);
+                        }).catch(function () {
+                            sendResponse(false);
+                        });
+                        return true;
+                    }
+                }
+            } catch (e) {}
+            sendResponse(false);
+        });
+    } catch (e) {}
+
+    try {
+        chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
+                return;
+            }
+            response = response || {};
+            if ('settings' in response) {
+                state.settings = response.settings || {};
+            }
+            if ('state' in response) {
+                state.isExtensionOn = !!response.state;
+            }
+        });
+    } catch (e) {}
+}
+
+function wirePostMessageBridge() {
+    window.addEventListener('message', function (event) {
+        let request = event && event.data;
+        if (!request || typeof request !== 'object') {
+            return;
+        }
+        if (request.__ssappSendToTab) {
+            request = request.__ssappSendToTab;
+        }
+        if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+            sendChatBridgeMessage(request.message).catch(function () {});
+        }
+    });
 }
 
 // ─── UI updates ───────────────────────────────────────────────────────────────
@@ -957,6 +1074,8 @@ async function init() {
     }
 
     bindEvents();
+    wireExtensionBridge();
+    wirePostMessageBridge();
     notifyBridgeStatus();
     updateAuthUI();
 

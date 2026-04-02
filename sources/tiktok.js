@@ -145,8 +145,55 @@
 		initAt: Date.now(),
 		lastKey: "",
 		lastSentAt: 0,
-		connectedSent: false
+		connectedSent: false,
+		lastConnectedAt: 0,
+		pendingError: "",
+		pendingErrorAt: 0
 	};
+
+	function resetTikTokStandardPendingError() {
+		tikTokStandardStatusState.pendingError = "";
+		tikTokStandardStatusState.pendingErrorAt = 0;
+	}
+
+	function shouldDelayTikTokStandardFatal(normalizedError, now) {
+		if (!normalizedError) {
+			return false;
+		}
+
+		const lower = normalizedError.toLowerCase();
+		const shouldDebounce = lower.includes("did not expose a usable live chat panel")
+			|| lower.includes("live chat is unavailable");
+		if (!shouldDebounce) {
+			resetTikTokStandardPendingError();
+			return false;
+		}
+
+		if (tikTokStandardStatusState.pendingError !== normalizedError) {
+			tikTokStandardStatusState.pendingError = normalizedError;
+			tikTokStandardStatusState.pendingErrorAt = now;
+			return true;
+		}
+
+		if (!tikTokStandardStatusState.pendingErrorAt) {
+			tikTokStandardStatusState.pendingErrorAt = now;
+			return true;
+		}
+
+		if ((now - tikTokStandardStatusState.pendingErrorAt) < 8000) {
+			return true;
+		}
+
+		if ((now - lastMessageTime) < 20000) {
+			return true;
+		}
+
+		if (tikTokStandardStatusState.lastConnectedAt && (now - tikTokStandardStatusState.lastConnectedAt) < 12000) {
+			return true;
+		}
+
+		return false;
+	}
 
 	function canSendTikTokStandardStatus() {
 		return !!(
@@ -187,7 +234,9 @@
 		if (!canSendTikTokStandardStatus() || tikTokStandardStatusState.connectedSent) {
 			return;
 		}
+		resetTikTokStandardPendingError();
 		tikTokStandardStatusState.connectedSent = true;
+		tikTokStandardStatusState.lastConnectedAt = Date.now();
 		tikTokStandardStatusState.lastKey = "connected";
 		tikTokStandardStatusState.lastSentAt = Date.now();
 		sendTikTokStandardStatus({
@@ -206,10 +255,14 @@
 			return;
 		}
 		const now = Date.now();
+		if (shouldDelayTikTokStandardFatal(normalizedError, now)) {
+			return;
+		}
 		const statusKey = `${code}:${normalizedError}`;
 		if (tikTokStandardStatusState.lastKey === statusKey && (now - tikTokStandardStatusState.lastSentAt) < 15000) {
 			return;
 		}
+		resetTikTokStandardPendingError();
 		tikTokStandardStatusState.lastKey = statusKey;
 		tikTokStandardStatusState.lastSentAt = now;
 		tikTokStandardStatusState.connectedSent = false;
@@ -1739,6 +1792,8 @@
 		const blockedReason = getTikTokStandardBlockedReason();
 		if (blockedReason) {
 			reportTikTokStandardFatal(blockedReason);
+		} else {
+			resetTikTokStandardPendingError();
 		}
 	}
 	

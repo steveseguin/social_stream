@@ -18,6 +18,11 @@ If you need more context on how Electron wiring differs from the extension boots
 - Event payload vocabulary and field expectations are documented in `docs/event-reference.html`. Update that page whenever a source adds, renames, or re-shapes an event so downstream surfaces stay in sync.
 
 ## Communication
+- VERY IMPORTANT: Be terse.
+- VERY IMPORTANT: Do not add extra details unless Steve explicitly asks for them.
+- VERY IMPORTANT: State the answer or fix in one sentence first.
+- VERY IMPORTANT: Do not explain reasoning unless Steve asks.
+- Answer the exact question directly first.
 - Be terse.
 - Answer only what was asked unless extra context is needed to prevent a mistake.
 - Call out oversights or red-flag concerns when they matter.
@@ -129,36 +134,11 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 - All `sources/websocket/**/*.html|js` assets load inside both the Chrome extension and the Electron app. Any new page (e.g., a streaming client) must accept configuration via URL parameters (`?channel=...`, `?videoId=...`) just like the legacy polling pages.
 - Lite plugins (`lite/plugins/**`) are standalone web-only integrations. They never ship inside the extension or Electron bundle, but they should still share core logic via `shared/` when practical.
 
-## Shared Work Touchstone
-
-- Task in progress: build a shared YouTube streaming core that both the Lite streaming plugin and a new `sources/websocket` streaming page can consume without duplicating transport logic.
-- Key requirements:
-  - Keep the shared core environment agnostic—inject fetch/token/chat ID resolvers instead of calling platform APIs directly.
-  - Ensure any new shared modules land under `shared/` or `providers/` and update both extension manifest `web_accessible_resources` and Lite deployment scripts so they remain publishable everywhere.
-  - Maintain quota awareness while improving latency (streaming should react faster than the 3–5 s polling cadence but avoid runaway reconnect loops).
-- Outstanding questions should be clarified with the project owner before implementation—capture decisions here once resolved so future contributors stay aligned.
-
-### 2025-11-03 YouTube Streaming Progress
-
-- Added shared HTML sanitizers in `shared/utils/html.js` and centralized chat normalization in `providers/youtube/messageNormalizer.js`; Lite’s polling + streaming paths now reuse the same payload builder.
-- Introduced `providers/youtube/contextResolver.js` for OAuth-backed channel/video → liveChatId resolution and wired it into `sources/websocket/youtube_streaming.js` alongside the shared streaming core.
-- Refreshed `sources/websocket/youtube_streaming.js` to handle OAuth (including refresh + overrides), dynamic imports, message normalization, and relay batching parity with legacy sources.
-- **Next actions**:
-  1. Expose the streaming page inside the extension/Electron chooser and ensure manifests include the new `providers/**` + `shared/**` modules.
-  2. Add latency/quota instrumentation and surface state in the UI (latency indicator, retry diagnostics) while updating `docs/event-reference.html` for the streaming transport meta.
-  3. Audit build/deploy scripts (`lite`, extension packaging) so the new shared files ship with both surfaces; follow up with automated tests covering token refresh, offline/ended streams, and error backoff.
-
-### 2025-11-04 YouTube Streaming Progress
-
-- `providers/youtube/liveChat.js` now unwraps nested streaming chunks to emit canonical `youtube#liveChatMessage` payloads (including badges and author flags) so downstream normalizers can build chat events reliably across Lite + extension surfaces.
-- `sources/websocket/youtube_streaming.js` resolves chat payload fallbacks before normalization, ensuring the new page renders and relays messages even when the stream core only forwards partial metadata.
-- Streaming surface now auto-connects once a live chat context is resolved (either via query params or the Resolve action), so the workflow matches the legacy polling page without requiring an extra Connect click.
-- **Follow-ups**:
-  1. Exercise the streaming flow end-to-end (extension + Electron) to confirm live traffic renders with emotes/badges and to capture any quota/backoff telemetry requirements.
-  2. Backport the new `rawChunk` context to Lite plugin logging so we can diagnose malformed responses without losing the streamed JSON line.
-  3. Once verified, update `docs/event-reference.html` with the streaming transport note and add UI hooks for latency indicators/metrics.
-  4. Temporary instrumentation added to `providers/youtube/liveChat.js` and `sources/websocket/youtube_streaming.js` to trace streaming payloads/token flows while debugging missing chat messages—trim once parity is confirmed.
 ## Communication
 
+- VERY IMPORTANT: Be terse in responses to Steve.
+- Do not add extra detail beyond the direct answer unless needed to prevent a mistake.
+- VERY IMPORTANT: State the answer or fix in one sentence first.
+- VERY IMPORTANT: Do not explain reasoning unless Steve asks.
 - When replying to Steve, prefer plain, everyday language over jargon.
 - Keep explanations direct and practical; explain technical terms briefly when they matter.

@@ -2,7 +2,7 @@
 	"name": "Social Stream Ninja",
 	"description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
 	"manifest_version": 3,
-	"version": "3.47.8",
+	"version": "3.48.0",
 	"homepage_url": "http://socialstream.ninja/",
 	"browser_specific_settings": {
 		"gecko": {
@@ -22,7 +22,7 @@
 	"permissions": ["webNavigation", "notifications", "storage", "debugger", "tabs", "scripting", "activeTab", "tabCapture", "identity"],
 	"web_accessible_resources": [
 		{
-			"resources": ["providers/kick/core.js", "providers/twitch/chatClient.js", "providers/youtube/liveChat.js", "providers/youtube/contextResolver.js", "shared/utils/scriptLoader.js", "shared/utils/html.js", "shared/utils/twitchEmotes.js", "shared/vendor/tmi.js", "shared/vendor/tmi.module.js"],
+			"resources": ["providers/kick/core.js", "providers/twitch/chatClient.js", "providers/youtube/liveChat.js", "providers/youtube/contextResolver.js", "shared/utils/scriptLoader.js", "shared/utils/html.js", "shared/utils/twitchEmotes.js", "shared/vendor/socket.io.min.js", "shared/vendor/tmi.js", "shared/vendor/tmi.module.js"],
 			"matches": ["<all_urls>"]
 		},
 		{
@@ -454,7 +454,7 @@
 			"matches": ["https://socialstream.ninja/sources/websocket/kick*", "https://beta.socialstream.ninja/sources/websocket/kick*", "https://socialstream.ninja/beta/sources/websocket/kick*", "file:///C:/Users/steve/Code/social_stream/sources/websocket/kick.html*", "http://localhost:8080/*/kick.html*", "http://localhost:8181/*/kick.html*"]
 		},
 		{
-			"js": ["./lite/vendor/socket.io.min.js", "./sources/websocket/velora.js"],
+			"js": ["./shared/vendor/socket.io.min.js", "./sources/websocket/velora.js"],
 			"matches": ["https://socialstream.ninja/sources/websocket/velora*", "https://beta.socialstream.ninja/sources/websocket/velora*", "https://socialstream.ninja/beta/sources/websocket/velora*", "file:///C:/Users/steve/Code/social_stream/sources/websocket/velora.html*", "http://localhost:8080/*/velora.html*", "http://localhost:8181/*/velora.html*"]
 		},
 		{

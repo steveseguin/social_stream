@@ -4409,6 +4409,64 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					});
 				}
 			}
+		} else if ("getYouTubeEmoji" in request) {
+			sendResponse({ state: isExtensionOn });
+			if (request.videoId && sender.tab && sender.tab.id) {
+				const tabId = sender.tab.id;
+				const videoId = request.videoId;
+				const requestId = request.requestId ? String(request.requestId) : null;
+				const sendEmojiResult = function (entries) {
+					chrome.tabs.sendMessage(tabId, { youtubeEmoji: entries, requestId, videoId }, function () { chrome.runtime.lastError; });
+				};
+				(async () => {
+					let entries = [];
+					try {
+						const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`, { credentials: 'omit' });
+						if (!resp.ok) {
+							sendEmojiResult(entries);
+							return;
+						}
+						const html = await resp.text();
+						const markers = ['ytInitialData"] = ', "ytInitialData'] = ", 'var ytInitialData = '];
+						let jsonStart = -1;
+						for (const m of markers) {
+							const idx = html.indexOf(m);
+							if (idx !== -1) { jsonStart = idx + m.length; break; }
+						}
+						if (jsonStart === -1) {
+							sendEmojiResult(entries);
+							return;
+						}
+						let depth = 0, inStr = false, esc = false, end = -1;
+						for (let i = jsonStart; i < html.length; i++) {
+							const c = html[i];
+							if (esc) { esc = false; continue; }
+							if (c === '\\' && inStr) { esc = true; continue; }
+							if (c === '"') { inStr = !inStr; continue; }
+							if (inStr) continue;
+							if (c === '{') depth++;
+							else if (c === '}' && --depth === 0) { end = i + 1; break; }
+						}
+						if (end === -1) {
+							sendEmojiResult(entries);
+							return;
+						}
+						const data = JSON.parse(html.slice(jsonStart, end));
+						const emojis = (data && data.contents && data.contents.liveChatRenderer && data.contents.liveChatRenderer.emojis) || [];
+						for (const emoji of emojis) {
+							if (!emoji.isCustomEmoji) continue;
+							const thumbs = emoji.image && emoji.image.thumbnails;
+							if (!thumbs || !thumbs.length) continue;
+							const url = thumbs[thumbs.length - 1].url;
+							const alt = (emoji.shortcuts && emoji.shortcuts[0]) || (emoji.emojiId || '').split('/').pop() || 'emoji';
+							entries.push({ shortcuts: emoji.shortcuts || [], url, id: emoji.emojiId || '', alt });
+						}
+					} catch (e) {
+						console.log('Background YouTube emoji fetch failed:', e);
+					}
+					sendEmojiResult(entries);
+				})();
+			}
 		} else if (request.cmd && request.cmd === "vpzoneFetchJson") {
 			let parsedUrl;
 			try {
@@ -11609,7 +11667,7 @@ function claimPublishedUrl(published, url) {
 	return true;
 }
 
-async function matchesRelayDestination(tab, destination, mode = "sourceType") {
+async function matchesRelayDestination(tab, destination, mode = "sourceType", sourceType = false) {
 	if (!destination) {
 		return true;
 	}
@@ -11619,16 +11677,37 @@ async function matchesRelayDestination(tab, destination, mode = "sourceType") {
 	if (mode === "url") {
 		return urlMatchesDestination(tab.url, destination);
 	}
-	if (!tab.id) {
-		return urlMatchesDestination(tab.url, destination);
-	}
-
-	const sourceType = await getSourceType(tab.id);
+	const normalizedDestination = normalizeSourceControlPlatform(destination.toLowerCase());
 	if (!sourceType) {
-		return urlMatchesDestination(tab.url, destination);
+		if (!tab.id) {
+			return false;
+		}
+		sourceType = await getSourceType(tab.id);
+		if (!sourceType) {
+			return false;
+		}
 	}
 
-	return sourceType === destination.toLowerCase();
+	return normalizeSourceControlPlatform(sourceType) === normalizedDestination;
+}
+
+// Match a destination slug/user against a URL path segment without partial matches.
+function urlMatchesDestination(url, destination) {
+	if (!url || !destination) return false;
+	const escaped = destination.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	const pattern = new RegExp(`[/@]${escaped}(?:[/?#]|$)`, "i");
+	return pattern.test(url);
+}
+
+function getLegacySSAppRelaySourceType(tab) {
+	if (!isSSAPP || !tab || !tab.url) {
+		return false;
+	}
+	const normalizedUrl = String(tab.url).toLowerCase();
+	if (normalizedUrl.startsWith("https://www.tiktok.com/@") && normalizedUrl.includes("/live")) {
+		return "tiktok";
+	}
+	return false;
 }
 
 function createRelayTabContext(tab, data, now, relayMode, messageOrigin, shouldCheckDynamicPerTab) {
@@ -11960,11 +12039,22 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		const hasSpecificTids = hasExplicitRelayTabTargets(data, reverse);
 		const needsValidation = data.destination || relayMode;
 
-		await processRelayTabBatch(tabs, published, !hasSpecificTids || needsValidation ? tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) : null, processTab);
+		await processRelayTabBatch(
+			tabs,
+			published,
+			!hasSpecificTids || needsValidation ? tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) : null,
+			processTab
+		);
 
+		// If no platform match was found, fall back to matching a custom destination against the tab URL.
 		if (data.destination && !processedAnyTab) {
 			published = {};
-			await processRelayTabBatch(tabs, published, tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url" }), processTab);
+			await processRelayTabBatch(
+				tabs,
+				published,
+				tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url" }),
+				processTab
+			);
 		}
 	} catch (error) {
 		//console.log('Error in sendMessageToTabs:', error);
@@ -11974,26 +12064,22 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 	return true;
 }
 
-// Helper function to match destination in URL with proper word boundaries
-// Prevents partial matches like "deerstreams" matching "deerstreamslive"
-function urlMatchesDestination(url, destination) {
-	if (!url || !destination) return false;
-	// Escape regex special characters in destination
-	const escaped = destination.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-	// Match destination after path separator (/ or @) and before end of segment or query/fragment
-	const pattern = new RegExp(`[/@]${escaped}(?:[/?#]|$)`, "i");
-	return pattern.test(url);
-}
-
 // Helper function to check if a tab is valid for processing
 async function isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, options = {}) {
 	if (!tab || !tab.url) return false;
 	if (!isRelayAllowedTabUrl(tab.url)) return false;
 	if (tab.url in published) return false;
 	if (!matchesRelayTabFilter(tab, data, reverse)) return false;
+	let sourceType = false;
+	if (tab.id) {
+		sourceType = await getSourceType(tab.id);
+	}
+	if (!sourceType) {
+		sourceType = getLegacySSAppRelaySourceType(tab);
+	}
 	if (data.destination) {
 		const destinationMode = options.destinationMode || "sourceType";
-		const destinationMatched = await matchesRelayDestination(tab, data.destination, destinationMode);
+		const destinationMatched = await matchesRelayDestination(tab, data.destination, destinationMode, sourceType);
 		if (!destinationMatched) {
 			return false;
 		}
@@ -12005,7 +12091,6 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 	}
 
 	if (relayMode && relaytargets) {
-		let sourceType = await getSourceType(tab.id);
 		if (!sourceType || !relaytargets.includes(sourceType)) {
 			return false;
 		}
@@ -12660,6 +12745,12 @@ async function establishBrowserFocus(tabId, selectors = null) {
 }
 
 async function focusChatForSend(tabId, pointerFocusSelectors = null) {
+	if (Array.isArray(pointerFocusSelectors) && pointerFocusSelectors.length) {
+		if (await establishBrowserFocus(tabId, pointerFocusSelectors)) {
+			return true;
+		}
+		return await focusChat(tabId);
+	}
 	const jsFocused = await focusChat(tabId);
 	if (await establishBrowserFocus(tabId, pointerFocusSelectors)) {
 		return true;
@@ -12667,6 +12758,8 @@ async function focusChatForSend(tabId, pointerFocusSelectors = null) {
 	return jsFocused;
 }
 
+// During the current extension + legacy SSApp support window, getSource is used
+// as an outbound-routeability signal, not as pure source identity.
 async function getSourceType(tabId, timeoutMs = 150) {
 	// Check cache first
 	if (tabSourceCache.has(tabId)) {

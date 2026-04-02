@@ -156,7 +156,10 @@ function toDataURL(url, callback) {
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				
+				if ("getSource" == request){
+					sendResponse("circle");
+					return;
+				}
 				if (!checkUrlAndRunScript() && ("focusChat" == request)){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 				
 					document.querySelector('textarea').focus();

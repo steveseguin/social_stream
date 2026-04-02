@@ -751,8 +751,9 @@
 	if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
 		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			try {
+				// This helper is not a routeable chat source. Do not answer getSource here
+				// or it can override sources/kick.js and break targeted sendChat routing.
 				if (request === "getSource") {
-					sendResponse("kick_chatroom_scout");
 					return;
 				}
 				if (request && typeof request === "object" && Object.prototype.hasOwnProperty.call(request, "settings")) {

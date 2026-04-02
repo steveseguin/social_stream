@@ -44,7 +44,8 @@ function pushMessage(data) {
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     try {
         if ("getSource" == request) {
-            sendResponse("nostr");
+            // Nostr websocket mode is currently read-only, so keep it out of relay targets.
+            sendResponse(false);
             return;
         }
         

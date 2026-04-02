@@ -373,6 +373,10 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
+				if ("getSource" == request){
+					sendResponse("rumble");
+					return;
+				}
 				if ("focusChat" == request && isExtensionOn){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('#chat-message-text-input').focus();
 					sendResponse(true);
