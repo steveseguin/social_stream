@@ -11,24 +11,8 @@
 
 	var settings = {};
 	var isExtensionOn = true;
-	var observer = null;
-	var observedTarget = null;
-	var rawTransportActive = false;
-	var lastRawMessageAt = 0;
-	var initialDomScanDone = false;
-	var RAW_TRANSPORT_IDLE_MS = 15000;
-	var RECENT_EVENT_WINDOW_MS = 12000;
+	var RECENT_EVENT_WINDOW_MS = 2500;
 	var recentEventMap = new Map();
-	var supportedRawTypes = {
-		chat: true,
-		gift: true,
-		follow: true,
-		share: true,
-		subscribe: true,
-		member: true,
-		join: true,
-		envelope: true
-	};
 
 	function escapeHtml(unsafe) {
 		try {
@@ -105,37 +89,37 @@
 		});
 	}
 
-	function buildRecentEventKey(data, meta, transportLabel) {
-		var eventName = data && data.event ? data.event : "chat";
-		var timestamp = meta && meta.timestamp ? normalizeText(meta.timestamp) : "";
-		var uniqueId = meta && meta.uniqueId ? normalizeText(meta.uniqueId) : "";
-		var normalizedName = normalizeText(data && data.chatname ? data.chatname : "");
-		var normalizedMessage = normalizeText(data && data.chatmessage ? data.chatmessage.replace(/<[^>]+>/g, " ") : "");
-		var normalizedDonation = normalizeText(data && data.hasDonation ? data.hasDonation : "");
-		var normalizedContentImg = normalizeText(data && data.contentimg ? data.contentimg : "");
-		var normalizedMembership = normalizeText(data && data.membership ? data.membership : "");
-		var normalizedProfile = normalizeText(meta && meta.profile ? meta.profile : "");
-		var normalizedGiftId = normalizeText(meta && meta.giftId ? String(meta.giftId) : "");
-		var normalizedGroupId = normalizeText(meta && meta.groupId ? String(meta.groupId) : "");
-		var stableTime = timestamp || "no-time";
+	function normalizeMessageForKey(message) {
+		message = message || "";
+		message = message.replace(/<img[^>]+alt=(["'])(.*?)\1[^>]*>/gi, " $2 ");
+		message = message.replace(/<img[^>]+src=(["'])(.*?)\1[^>]*>/gi, function (match, quote, src) {
+			return " [img:" + normalizeText((src || "").split("?")[0].toLowerCase()) + "] ";
+		});
+		message = message.replace(/<[^>]+>/g, " ");
+		return normalizeText(message);
+	}
+
+	function buildRecentEventKey(data, meta) {
 		return [
-			eventName,
-			uniqueId || normalizedName,
-			normalizedMessage,
-			normalizedDonation,
-			normalizedMembership,
-			normalizedContentImg,
-			normalizedProfile,
-			normalizedGiftId,
-			normalizedGroupId,
-			stableTime
+			normalizeText(data && data.event ? data.event : "chat"),
+			normalizeText(meta && meta.groupId ? String(meta.groupId) : ""),
+			normalizeText(meta && meta.giftId ? String(meta.giftId) : ""),
+			normalizeText(meta && meta.userId !== undefined ? String(meta.userId) : ""),
+			normalizeText(meta && meta.uniqueId ? meta.uniqueId : ""),
+			normalizeText(data && data.chatname ? data.chatname : ""),
+			normalizeMessageForKey(data && data.chatmessage ? data.chatmessage : ""),
+			normalizeText(data && data.hasDonation ? data.hasDonation : ""),
+			normalizeText(data && data.membership ? data.membership : ""),
+			normalizeText(data && data.contentimg ? data.contentimg : ""),
+			normalizeText(meta && meta.repeatCount !== undefined ? String(meta.repeatCount) : ""),
+			normalizeText(meta && meta.repeatText ? meta.repeatText : "")
 		].join("|");
 	}
 
-	function shouldEmitEvent(data, meta, transportLabel) {
+	function shouldEmitEvent(data, meta) {
 		var now = Date.now();
+		var key = buildRecentEventKey(data, meta);
 		cleanupRecentEvents(now);
-		var key = buildRecentEventKey(data, meta, transportLabel);
 		if (!key) {
 			return true;
 		}
@@ -144,55 +128,6 @@
 		}
 		recentEventMap.set(key, now);
 		return true;
-	}
-
-	function normalizeRawType(rawType) {
-		rawType = normalizeText(rawType).toLowerCase();
-		if (rawType === "join") {
-			return "member";
-		}
-		return rawType;
-	}
-
-	function isSupportedRawEvent(rawType, payload) {
-		if (!supportedRawTypes[rawType]) {
-			return false;
-		}
-		if (!payload || typeof payload !== "object") {
-			return false;
-		}
-		if (rawType === "chat") {
-			return !!(payload.comment || payload.nickname || payload.uniqueId);
-		}
-		if ((rawType === "gift") && !(payload.giftName || payload.giftId || payload.giftPictureUrl)) {
-			return false;
-		}
-		return true;
-	}
-
-	function enableRawTransport() {
-		rawTransportActive = true;
-		lastRawMessageAt = Date.now();
-		if (observer) {
-			observer.disconnect();
-			observer = null;
-			observedTarget = null;
-		}
-	}
-
-	function shouldUseRawTransport() {
-		if (!rawTransportActive) {
-			return false;
-		}
-		if (!lastRawMessageAt) {
-			return false;
-		}
-		if ((Date.now() - lastRawMessageAt) <= RAW_TRANSPORT_IDLE_MS) {
-			return true;
-		}
-		rawTransportActive = false;
-		lastRawMessageAt = 0;
-		return false;
 	}
 
 	function getProfileUrl(uniqueId, href) {
@@ -332,14 +267,8 @@
 		if (meta && Object.keys(meta).length) {
 			data.meta = meta;
 		}
-		if (!shouldEmitEvent(data, meta, meta && meta.transport ? meta.transport : "")) {
+		if (!shouldEmitEvent(data, meta)) {
 			return;
-		}
-		if (meta && meta.transport) {
-			delete meta.transport;
-			if (!Object.keys(meta).length) {
-				delete data.meta;
-			}
 		}
 		pushMessage(data);
 	}
@@ -348,11 +277,6 @@
 		if (!payload || typeof payload !== "object" || !isExtensionOn) {
 			return;
 		}
-		rawType = normalizeRawType(rawType);
-		if (!isSupportedRawEvent(rawType, payload)) {
-			return;
-		}
-		enableRawTransport();
 
 		var chatname = normalizeText(payload.nickname || payload.uniqueId || "");
 		var data = createBaseData(chatname, payload.profilePictureUrl || "", getBadgesFromPayload(payload));
@@ -372,7 +296,6 @@
 				meta.timestamp = new Date(parseInt(payload.createTime, 10)).toISOString();
 			} catch (e) {}
 		}
-		meta.transport = "raw";
 
 		if (rawType === "chat") {
 			data.chatmessage = formatChatMessageFromPayload(payload.comment || "", payload.emotes || []);
@@ -441,172 +364,6 @@
 		finalizeAndPush(data, meta);
 	}
 
-	function processDomMessage(messageElement) {
-		if (!messageElement || !messageElement.isConnected || messageElement.dataset.ssProcessed) {
-			return;
-		}
-		if (shouldUseRawTransport() || !isExtensionOn) {
-			return;
-		}
-		messageElement.dataset.ssProcessed = "1";
-
-		var rawType = (messageElement.getAttribute("data-type") || "").toLowerCase();
-		if (!rawType) {
-			return;
-		}
-
-		var avatar = messageElement.querySelector(".message__pfp");
-		var sender = messageElement.querySelector(".message__sender");
-		var uniqueId = avatar && avatar.getAttribute("alt") ? avatar.getAttribute("alt") : "";
-		var chatname = getPlainSenderName(sender) || uniqueId;
-		var data = createBaseData(chatname, avatar && avatar.src ? avatar.src : "", getBadgesFromElement(messageElement));
-		var meta = {};
-		var profileUrl = getProfileUrl(uniqueId, sender && sender.getAttribute ? sender.getAttribute("href") : "");
-		if (uniqueId) {
-			meta.uniqueId = uniqueId;
-		}
-		if (profileUrl) {
-			meta.profile = profileUrl;
-		}
-		meta.transport = "dom";
-
-		if (rawType === "chat") {
-			var textWrap = messageElement.querySelector(".message__text");
-			var textBody = textWrap ? textWrap.querySelector("span") : null;
-			data.chatmessage = getAllContentNodes(textBody);
-			if (textWrap && textWrap.getAttribute("title")) {
-				meta.timestamp = textWrap.getAttribute("title");
-			}
-		} else if (rawType === "gift") {
-			data.event = "gift";
-			if (shouldSkipEvent(data.event)) {
-				return;
-			}
-			var giftNameElement = messageElement.querySelector(".gift-name");
-			var giftName = "";
-			if (giftNameElement) {
-				try {
-					var giftClone = giftNameElement.cloneNode(true);
-					giftClone.querySelectorAll(".gift-id").forEach(function (node) {
-						node.remove();
-					});
-					giftName = normalizeText(giftClone.textContent || "");
-				} catch (e) {
-					giftName = normalizeText(giftNameElement.textContent || "");
-				}
-			}
-			var streakText = normalizeText((messageElement.querySelector(".gift-streak") || {}).textContent || "");
-			data.chatmessage = escapeHtml(giftName + (streakText ? " " + streakText : ""));
-			data.hasDonation = normalizeText((messageElement.querySelector(".gift-cost") || {}).textContent || "");
-			data.contentimg = ((messageElement.querySelector(".gift-icon") || {}).src) || "";
-			var giftIdText = normalizeText((messageElement.querySelector(".gift-id") || {}).textContent || "");
-			if (giftIdText) {
-				meta.giftId = giftIdText.replace(/[^\d]/g, "");
-			}
-			if (giftName) {
-				meta.giftName = giftName;
-			}
-			if (streakText) {
-				meta.repeatText = streakText;
-			}
-		} else if (rawType === "follow") {
-			data.event = "followed";
-			if (shouldSkipEvent(data.event)) {
-				return;
-			}
-			data.chatmessage = normalizeText((messageElement.querySelector(".follow-text") || {}).textContent || "Started following!");
-		} else if (rawType === "share") {
-			data.event = "shared";
-			if (shouldSkipEvent(data.event)) {
-				return;
-			}
-			data.chatmessage = normalizeText((messageElement.querySelector(".share-text") || {}).textContent || "Shared the stream!");
-		} else if (rawType === "subscribe") {
-			data.event = "subscribe";
-			if (shouldSkipEvent(data.event)) {
-				return;
-			}
-			data.chatmessage = normalizeText((messageElement.querySelector(".subscribe-text") || {}).textContent || "Subscribed!");
-			data.membership = "SUBSCRIBER";
-		} else if (rawType === "join") {
-			data.event = "joined";
-			if (shouldSkipEvent(data.event)) {
-				return;
-			}
-			data.chatmessage = normalizeText((messageElement.querySelector(".join-text") || {}).textContent || "Joined!");
-		} else if (rawType === "envelope") {
-			data.event = "envelope";
-			if (shouldSkipEvent(data.event)) {
-				return;
-			}
-			data.chatmessage = normalizeText((messageElement.querySelector(".envelope-text") || {}).textContent || "");
-			var envelopeMatch = data.chatmessage.match(/with\s+([\d,]+)\s+coins?\s+for\s+([\d,]+)\s+people/i);
-			if (envelopeMatch) {
-				meta.coins = parseInt((envelopeMatch[1] || "0").replace(/,/g, ""), 10) || 0;
-				meta.canOpen = parseInt((envelopeMatch[2] || "0").replace(/,/g, ""), 10) || 0;
-			}
-		} else {
-			return;
-		}
-
-		finalizeAndPush(data, meta);
-	}
-
-	function observeFeed(target) {
-		if (!target || shouldUseRawTransport()) {
-			return;
-		}
-		if (observedTarget === target && observer) {
-			return;
-		}
-		if (observer) {
-			observer.disconnect();
-			observer = null;
-			observedTarget = null;
-		}
-		if (!initialDomScanDone) {
-			target.querySelectorAll(".message").forEach(function (messageElement) {
-				messageElement.dataset.ssProcessed = "1";
-			});
-			initialDomScanDone = true;
-		} else {
-			target.querySelectorAll(".message").forEach(processDomMessage);
-		}
-		observer = new MutationObserver(function (mutations) {
-			if (shouldUseRawTransport() || !isExtensionOn) {
-				return;
-			}
-			mutations.forEach(function (mutation) {
-				if (!mutation.addedNodes || !mutation.addedNodes.length) {
-					return;
-				}
-				for (var i = 0; i < mutation.addedNodes.length; i++) {
-					var node = mutation.addedNodes[i];
-					if (!node || node.nodeType !== 1) {
-						continue;
-					}
-					if (node.classList && node.classList.contains("message")) {
-						processDomMessage(node);
-					} else if (node.querySelectorAll) {
-						node.querySelectorAll(".message").forEach(processDomMessage);
-					}
-				}
-			});
-		});
-		observer.observe(target, { childList: true, subtree: false });
-		observedTarget = target;
-	}
-
-	function startDomFallback() {
-		if (shouldUseRawTransport() || !isExtensionOn) {
-			return;
-		}
-		var target = document.querySelector(".activity-feed__content");
-		if (target) {
-			observeFeed(target);
-		}
-	}
-
 	function handleWindowMessage(event) {
 		if (!event || !event.data || typeof event.data !== "object") {
 			return;
@@ -614,13 +371,14 @@
 		if (!event.data.type || !("payload" in event.data)) {
 			return;
 		}
-		processPayloadMessage(event.data.type + "", event.data.payload);
+		processPayloadMessage((event.data.type + "").toLowerCase(), event.data.payload);
 	}
 
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		try {
 			if (request === "getSource") {
-				sendResponse("tikfinity");
+				// TikFinity is read-only for outbound chat, so keep it out of relay targets.
+				sendResponse(false);
 				return;
 			}
 			if (request === "focusChat") {
@@ -657,15 +415,8 @@
 	});
 
 	window.addEventListener("message", handleWindowMessage, false);
-	setInterval(startDomFallback, 2000);
-	startDomFallback();
 
 	window.addEventListener("beforeunload", function () {
-		if (observer) {
-			observer.disconnect();
-			observer = null;
-			observedTarget = null;
-		}
 		window.removeEventListener("message", handleWindowMessage, false);
 	});
 })();
