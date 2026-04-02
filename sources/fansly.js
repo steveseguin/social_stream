@@ -63,9 +63,16 @@ function toDataURL(url, callback) {
 	
 	
 	function processMessage(ele){
+		if (!ele || (ele.nodeType !== 1) || !ele.querySelector){
+			return;
+		}
+		if (ele.dataset && (ele.dataset.ssnProcessed === "1")){
+			return;
+		}
 		
 		//console.log(ele);
 		var chatimg = "";
+		var timestamp = "";
 		
 		var name="";
 		var nameColor="";
@@ -101,6 +108,10 @@ function toDataURL(url, callback) {
 		} catch(e){
 			return;
 		}
+
+		try {
+			timestamp = (ele.querySelector(".message-time")?.textContent || "").trim();
+		} catch(e){}
 		
 		var donations = "";
 		if (ele.querySelector(".tip .fa-dollar-sign")){
@@ -113,6 +124,12 @@ function toDataURL(url, callback) {
 		}
 		
 		if (!(msg || donations) && !name){return;}
+		
+		var signature = timestamp+"::"+name+"::"+msg+"::"+donations;
+		if (ele.dataset && (ele.dataset.ssnMessageSignature === signature)){
+			markProcessed(ele, signature);
+			return;
+		}
 		
 		var data = {};
 		data.chatname = name;
@@ -129,6 +146,7 @@ function toDataURL(url, callback) {
 		
 		//console.log(data);
 		
+		markProcessed(ele, signature);
 		pushMessage(data);
 	}
 
@@ -175,6 +193,71 @@ function toDataURL(url, callback) {
 
 	var lastURL =  "";
 	var observer = null;
+	var observedTarget = null;
+	var CHAT_CONTAINER_SELECTOR = ".chat-container";
+	var CHAT_MESSAGE_SELECTOR = "app-chat-room-message.chat-message";
+
+	function markProcessed(ele, signature){
+		if (!ele || !ele.dataset){return;}
+		ele.dataset.ssnProcessed = "1";
+		if (signature){
+			ele.dataset.ssnMessageSignature = signature;
+		}
+	}
+
+	function disconnectObserver(){
+		if (!observer){return;}
+		try {
+			observer.disconnect();
+		} catch(e){}
+		observer = null;
+		observedTarget = null;
+	}
+
+	function getMessageNodeFromNode(node){
+		var ele = null;
+		if (!node){return null;}
+		if (node.nodeType === 1){
+			ele = node;
+		} else if (node.parentElement){
+			ele = node.parentElement;
+		}
+		if (!ele){return null;}
+		if (ele.matches && ele.matches(CHAT_MESSAGE_SELECTOR)){
+			return ele;
+		}
+		if (ele.closest){
+			return ele.closest(CHAT_MESSAGE_SELECTOR);
+		}
+		return null;
+	}
+
+	function scheduleProcess(node){
+		try {
+			var messageNode = getMessageNodeFromNode(node);
+			if (messageNode){
+				if (messageNode.ssnProcessTimer){
+					clearTimeout(messageNode.ssnProcessTimer);
+				}
+				messageNode.ssnProcessTimer = setTimeout(function(){
+					messageNode.ssnProcessTimer = null;
+					processMessage(messageNode);
+				}, 100);
+				return;
+			}
+			if (node && node.nodeType === 1 && node.querySelectorAll){
+				node.querySelectorAll(CHAT_MESSAGE_SELECTOR).forEach(function(item){
+					if (item.ssnProcessTimer){
+						clearTimeout(item.ssnProcessTimer);
+					}
+					item.ssnProcessTimer = setTimeout(function(){
+						item.ssnProcessTimer = null;
+						processMessage(item);
+					}, 100);
+				});
+			}
+		} catch(e){}
+	}
 	
 	
 	function onElementInserted(target) {
@@ -184,9 +267,7 @@ function toDataURL(url, callback) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].skip){continue;}
-							mutation.addedNodes[i].skip = true;
-							processMessage(mutation.addedNodes[i]); // do not remove
+							scheduleProcess(mutation.addedNodes[i]);
 						} catch(e){}
 					}
 				}
@@ -204,15 +285,19 @@ function toDataURL(url, callback) {
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('.chat-container').children.length){
-			if (!document.querySelector('.chat-container').dataset.marked){
-				document.querySelector('.chat-container').dataset.marked = true;;
-				document.querySelector('.chat-container').childNodes.forEach(ele=>{
-					ele.skip = true;
-					//processMessage(ele);
+		if (location.href !== lastURL){
+			lastURL = location.href;
+			disconnectObserver();
+		}
+		var container = document.querySelector(CHAT_CONTAINER_SELECTOR);
+		if (container && container.children.length){
+			if (container !== observedTarget){
+				disconnectObserver();
+				observedTarget = container;
+				container.querySelectorAll(CHAT_MESSAGE_SELECTOR).forEach(function(ele){
+					markProcessed(ele);
 				});
-				
-				onElementInserted(document.querySelector('.chat-container'));
+				onElementInserted(container);
 			}
 		}} catch(e){}
 	},2000);
