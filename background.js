@@ -4438,14 +4438,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 							return;
 						}
 						let depth = 0, inStr = false, esc = false, end = -1;
-						for (let i = jsonStart; i < html.length; i++) {
-							const c = html[i];
+						for (let scanIndex = jsonStart; scanIndex < html.length; scanIndex++) {
+							const c = html[scanIndex];
 							if (esc) { esc = false; continue; }
 							if (c === '\\' && inStr) { esc = true; continue; }
 							if (c === '"') { inStr = !inStr; continue; }
 							if (inStr) continue;
 							if (c === '{') depth++;
-							else if (c === '}' && --depth === 0) { end = i + 1; break; }
+							else if (c === '}' && --depth === 0) { end = scanIndex + 1; break; }
 						}
 						if (end === -1) {
 							sendEmojiResult(entries);
