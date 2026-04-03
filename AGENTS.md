@@ -142,3 +142,10 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 - VERY IMPORTANT: Do not explain reasoning unless Steve asks.
 - When replying to Steve, prefer plain, everyday language over jargon.
 - Keep explanations direct and practical; explain technical terms briefly when they matter.
+
+## Git Push Contract
+
+- VERY IMPORTANT: When Steve says `push`, treat it as an instruction to push to `beta`.
+- VERY IMPORTANT: Do it serially in this exact order only: `git add -A`, `git commit` (use `--allow-empty` if needed), `git pull --rebase origin beta`, `git push origin beta`.
+- VERY IMPORTANT: Do not parallelize any git commands in that flow.
+- VERY IMPORTANT: Do not add extra git inspection commands unless Steve explicitly asks for them.
