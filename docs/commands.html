@@ -532,8 +532,8 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 							<i class="fas fa-robot"></i>
 						</div>
 						<div class="capability-content">
-							<h4>Ollama (Local)</h4>
-							<p>Free, privacy-focused, self-hosted AI models running on your own computer.</p>
+							<h4>Ollama (Native Local API)</h4>
+							<p>Free, privacy-focused, self-hosted AI models running on your own computer through Ollama's own API.</p>
 						</div>
 					</div>
 					
@@ -602,8 +602,8 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 							<i class="fas fa-tools"></i>
 						</div>
 						<div class="capability-content">
-							<h4>Custom API</h4>
-							<p>Connect to any OpenAI-compatible endpoint for maximum flexibility.</p>
+							<h4>Custom API (OpenAI-compatible)</h4>
+							<p>Connect to llama.cpp, LM Studio, vLLM, or any other OpenAI-compatible endpoint.</p>
 						</div>
 					</div>
 				</div>
@@ -1029,6 +1029,36 @@ https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
             </div>
 		</div>
 				
+	</section>
+	
+	
+	<section id="timer-api" class="command-section">
+		<div class="container">
+			<h2>Timer API</h2>
+			<div class="command-card">
+				<h3>Control <code>timer.html</code> Remotely</h3>
+				<p>The timer page is intentionally narrow in scope: one timer, optional operator controls, warning states, overtime, and a few visual styles.</p>
+				<p>Useful actions include <code>starttimer</code>, <code>pausetimer</code>, <code>resettimer</code>, <code>timeradd</code>, <code>timersubtract</code>, and <code>settimer</code>.</p>
+				<div class="code-block">
+					<pre>{
+  "action": "settimer",
+  "value": {
+    "seconds": 300,
+    "label": "Interview",
+    "mode": "countdown",
+    "style": "stage",
+    "warnSeconds": 60,
+    "dangerSeconds": 15
+  }
+}</pre>
+				</div>
+				<p>To query the current timer state, use <code>gettimerstate</code> with a callback token.</p>
+				<div class="code-block">
+					<pre>{ "action": "gettimerstate", "get": "timer-state-1" }</pre>
+				</div>
+				<p>Use the page with <code>timer.html?session=YOUR_SESSION&amp;server</code> if you want it controlled directly through the API server.</p>
+			</div>
+		</div>
 	</section>
 	
 	

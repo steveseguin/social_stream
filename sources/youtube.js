@@ -639,6 +639,7 @@
 							data.sourceImg = channelThumbnail;
 						}
 
+						markYouTubeChatActivity();
 						chrome.runtime.sendMessage(
 							chrome.runtime.id,
 							{ message: data },
@@ -1184,6 +1185,7 @@
 		//}
 
 		try {
+			markYouTubeChatActivity();
 			chrome.runtime.sendMessage(
 				chrome.runtime.id,
 				{
@@ -1214,11 +1216,152 @@
 	if (containsShorts(window.location.href)){
 		youtubeShorts = true;
 	}
+
+	var youtubeRecoveryInterval = null;
+	var youtubeStaleChatActivityMs = 15 * 60 * 1000;
+	var youtubeMinimumRefreshMs = 10 * 60 * 1000;
+	var youtubeRecoveryCheckMs = 30 * 1000;
+	var lastYouTubeChatActivityAt = 0;
+	var lastYouTubeRefreshTimerResetAt = Date.now();
+	var hasSeenYouTubeChatActivity = false;
+
+	function isDesktopYouTubeRecoveryContext() {
+		return !!(window.ninjafy || window.electronApi);
+	}
+
+	function isYouTubePopoutChatWindow() {
+		var href = window.location.href || "";
+		if (!href.includes("youtube.com/live_chat") && !href.includes("studio.youtube.com/live_chat")) {
+			return false;
+		}
+		return href.includes("is_popout=1");
+	}
+
+	function isPassiveYouTubeRecoveryEnabled() {
+		if (!isDesktopYouTubeRecoveryContext()) {
+			return false;
+		}
+		if (!isExtensionOn) {
+			return false;
+		}
+		if (!isYouTubePopoutChatWindow()) {
+			return false;
+		}
+		if (settings && settings.disabletiktokpoke) {
+			return false;
+		}
+		return true;
+	}
+
+	function markYouTubeChatActivity() {
+		hasSeenYouTubeChatActivity = true;
+		lastYouTubeChatActivityAt = Date.now();
+	}
+
+	function markYouTubeUserActivity() {
+		lastYouTubeRefreshTimerResetAt = Date.now();
+	}
+
+	function getYouTubeChatInputElement() {
+		return document.querySelector('yt-live-chat-text-input-field-renderer div#input[contenteditable], div#input[contenteditable]');
+	}
+
+	function isYouTubeChatInputFocused() {
+		var activeElement = document.activeElement;
+		if (!activeElement) {
+			return false;
+		}
+		if (activeElement === getYouTubeChatInputElement()) {
+			return true;
+		}
+		if (activeElement.closest && activeElement.closest("yt-live-chat-text-input-field-renderer")) {
+			return true;
+		}
+		return false;
+	}
+
+	function isTrustedYouTubeInteraction(event) {
+		return !!(event && event.isTrusted);
+	}
+
+	function maybeRecoverYouTubeChat() {
+		if (!isPassiveYouTubeRecoveryEnabled()) {
+			return;
+		}
+		if (!hasSeenYouTubeChatActivity || !lastYouTubeChatActivityAt) {
+			return;
+		}
+		var now = Date.now();
+		if ((now - lastYouTubeChatActivityAt) < youtubeStaleChatActivityMs) {
+			return;
+		}
+		if ((now - lastYouTubeRefreshTimerResetAt) < youtubeMinimumRefreshMs) {
+			return;
+		}
+		if (isYouTubeChatInputFocused()) {
+			markYouTubeUserActivity();
+			return;
+		}
+		lastYouTubeRefreshTimerResetAt = now;
+		try {
+			window.location.reload();
+		} catch (e) {}
+	}
+
+	function refreshYouTubeRecoveryInterval() {
+		if (youtubeRecoveryInterval) {
+			clearInterval(youtubeRecoveryInterval);
+			youtubeRecoveryInterval = null;
+		}
+		if (!isPassiveYouTubeRecoveryEnabled()) {
+			return;
+		}
+		youtubeRecoveryInterval = setInterval(function() {
+			maybeRecoverYouTubeChat();
+		}, youtubeRecoveryCheckMs);
+	}
+
+	document.addEventListener("focusin", function(event) {
+		if (isTrustedYouTubeInteraction(event)) {
+			markYouTubeUserActivity();
+		}
+	}, true);
+
+	document.addEventListener("mousedown", function(event) {
+		if (isTrustedYouTubeInteraction(event)) {
+			markYouTubeUserActivity();
+		}
+	}, true);
+
+	document.addEventListener("touchstart", function(event) {
+		if (isTrustedYouTubeInteraction(event)) {
+			markYouTubeUserActivity();
+		}
+	}, true);
+
+	document.addEventListener("keydown", function(event) {
+		if (isTrustedYouTubeInteraction(event)) {
+			markYouTubeUserActivity();
+		}
+	}, true);
+
+	document.addEventListener("input", function(event) {
+		if (isTrustedYouTubeInteraction(event)) {
+			markYouTubeUserActivity();
+		}
+	}, true);
+
+	document.addEventListener("wheel", function(event) {
+		if (isTrustedYouTubeInteraction(event)) {
+			markYouTubeUserActivity();
+		}
+	}, true);
 	
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		try {
 			if ("getSource" == request){sendResponse("youtube");	return;	}
 			if ("focusChat" == request) {
+				markYouTubeUserActivity();
 				const editableInput = document.querySelector('yt-live-chat-text-input-field-renderer div#input[contenteditable]');
 				if (editableInput) {
 					editableInput.focus();
@@ -1248,6 +1391,7 @@
 				
 				if ("state" in request) {
 					isExtensionOn = request.state;
+					refreshYouTubeRecoveryInterval();
 				}
 				
 				if ("settings" in request) {
@@ -1275,6 +1419,7 @@
 					} else {
 						removeLargerFont();
 					}
+					refreshYouTubeRecoveryInterval();
 					return;
 				}
 				if ("SEVENTV" in request) {
@@ -1349,6 +1494,7 @@
 		response = response || {};
 		if ("settings" in response) {
 			settings = response.settings;
+			refreshYouTubeRecoveryInterval();
 
 			if (settings.bttv && !BTTV) {
 				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
@@ -1586,6 +1732,7 @@
 			data.chatname = getAllContentNodes(ele.querySelector(".text-owner-light, .text-owner-dark"));
 			data.chatmessage = getAllContentNodes(ele.querySelector("span.cursor-auto.align-middle"));
 			data.type = "youtube";
+			markYouTubeChatActivity();
 			chrome.runtime.sendMessage(
 				chrome.runtime.id,
 				{

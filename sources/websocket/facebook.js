@@ -235,10 +235,6 @@ function initExtension() {
   if (!extension.available) return;
   try {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request === 'getSource') {
-        sendResponse('facebook');
-        return;
-      }
       if (request && typeof request === 'object' && request.settings) {
         extension.settings = request.settings;
         applySettings(request.settings);

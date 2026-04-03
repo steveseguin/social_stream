@@ -26,6 +26,7 @@ function toDataURL(url, callback) {
 	}
 
 	function escapeHtml(unsafe){ // success is when goofs be trying to hack me
+		unsafe = (unsafe || "") + "";
 		return unsafe
 			 .replace(/&/g, "&amp;")
 			 .replace(/</g, "&lt;")
@@ -35,16 +36,18 @@ function toDataURL(url, callback) {
 	}
 	function getAllContentNodes(element) {
 		var resp = "";
+		if (!element){return resp;}
 		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.nodeType===3){
 				return escapeHtml(element.textContent) || "";
 			}
+			return escapeHtml(element.textContent) || "";
 		}
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
-				if (!node.classList.contains("comment-see-more")){
+				if (!node.classList || !node.classList.contains("comment-see-more")){
 					resp += getAllContentNodes(node)
 				}
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
@@ -59,6 +62,47 @@ function toDataURL(url, callback) {
 			}
 		});
 		return resp;
+	}
+
+	function getTextContent(element){
+		if (!element || !element.textContent){return "";}
+		return (element.textContent || "").replace(/\s+/g, " ").trim();
+	}
+
+	function getMessageText(ele){
+		var parts = [];
+		try {
+			ele.querySelectorAll(".message-content .message-text").forEach(function(node){
+				var text = getAllContentNodes(node).trim();
+				if (text){
+					parts.push(text);
+				}
+			});
+		} catch(e){}
+		return parts.join("\n").trim();
+	}
+
+	function getDonationText(ele){
+		var wrapper = null;
+		var amountEle = null;
+		var amount = "";
+		try {
+			wrapper = ele.querySelector(".message-wrapper");
+			if (!wrapper || !wrapper.classList || !wrapper.classList.contains("has-tip")){
+				return "";
+			}
+			amountEle = ele.querySelector(".tip app-balance-display, .tip-body app-balance-display");
+			amount = getTextContent(amountEle);
+			if (!amount || (amount === "0")){
+				return "";
+			}
+			amount = amount.replace(/^\$/, "").trim();
+			if (ele.querySelector(".tip .fa-dollar-sign, .tip-body .fa-dollar-sign")){
+				return "$" + amount;
+			}
+			return amount;
+		} catch(e){}
+		return "";
 	}
 	
 	
@@ -76,9 +120,11 @@ function toDataURL(url, callback) {
 		
 		var name="";
 		var nameColor="";
+		var nameEle = null;
 		try {
-			name = escapeHtml(ele.querySelector("[appaccountcard][style]").textContent.trim());
-			nameColor = ele.querySelector("[appaccountcard][style]").style?.color || "";
+			nameEle = ele.querySelector("[appaccountcard][style], [appaccountcard]");
+			name = escapeHtml((nameEle?.textContent || "").trim());
+			nameColor = nameEle?.style?.color || "";
 		} catch(e){
 			return;
 		}
@@ -103,8 +149,7 @@ function toDataURL(url, callback) {
 		
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".message-text"));
-			msg = msg.trim();
+			msg = getMessageText(ele);
 		} catch(e){
 			return;
 		}
@@ -113,17 +158,18 @@ function toDataURL(url, callback) {
 			timestamp = (ele.querySelector(".message-time")?.textContent || "").trim();
 		} catch(e){}
 		
-		var donations = "";
-		if (ele.querySelector(".tip .fa-dollar-sign")){
-			donations = getAllContentNodes(ele.querySelector(".tip"));
-			if (donations){
-				donations = "$"+donations;
-			}
-		} else if (ele.querySelector(".tip")){
-			donations = getAllContentNodes(ele.querySelector(".tip")) || "";
-		}
+		var donations = getDonationText(ele);
 		
-		if (!(msg || donations) && !name){return;}
+		if (!name && (msg || donations)){
+			name = "Fansly User";
+		}
+		if (!name || (!msg && !donations)){return;}
+		
+		var signature = timestamp+"::"+name+"::"+msg+"::"+donations;
+		if (ele.dataset && (ele.dataset.ssnMessageSignature === signature)){
+			markProcessed(ele, signature);
+			return;
+		}
 		
 		var signature = timestamp+"::"+name+"::"+msg+"::"+donations;
 		if (ele.dataset && (ele.dataset.ssnMessageSignature === signature)){

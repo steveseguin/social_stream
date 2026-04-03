@@ -1637,7 +1637,7 @@ class EventFlowSystem {
             case 'compareProperty': {
                 const prop = config.property || 'donationAmount';
                 const operator = config.operator || 'gt';
-                const compareValue = parseFloat(config.value) || 0;
+                const rawCompareValue = config.value;
 
                 // Get the property value from the message
                 let msgValue = message[prop];
@@ -1654,20 +1654,45 @@ class EventFlowSystem {
                     return false;
                 }
 
-                // Parse to number if string
-                const numValue = parseFloat(msgValue);
-                if (isNaN(numValue)) {
-                    return false; // Can't compare non-numeric value
+                const compareValueText = String(rawCompareValue ?? '').trim();
+                const msgValueText = String(msgValue).trim();
+                const isStrictNumericString = value => /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(value);
+                const canCompareNumerically =
+                    compareValueText !== '' &&
+                    msgValueText !== '' &&
+                    isStrictNumericString(msgValueText) &&
+                    isStrictNumericString(compareValueText);
+                const numValue = canCompareNumerically ? Number(msgValueText) : null;
+                const compareValue = canCompareNumerically ? Number(compareValueText) : null;
+
+                if (['gt', 'gte', 'lt', 'lte'].includes(operator)) {
+                    if (!canCompareNumerically) {
+                        return false;
+                    }
+
+                    switch (operator) {
+                        case 'gt': return numValue > compareValue;
+                        case 'lt': return numValue < compareValue;
+                        case 'gte': return numValue >= compareValue;
+                        case 'lte': return numValue <= compareValue;
+                        default: return false;
+                    }
                 }
 
-                // Perform comparison
+                if (canCompareNumerically) {
+                    switch (operator) {
+                        case 'eq': return numValue === compareValue;
+                        case 'ne': return numValue !== compareValue;
+                        default: return false;
+                    }
+                }
+
+                const normalizedMsgValue = msgValueText.toLowerCase();
+                const normalizedCompareValue = compareValueText.toLowerCase();
+
                 switch (operator) {
-                    case 'gt': return numValue > compareValue;
-                    case 'lt': return numValue < compareValue;
-                    case 'eq': return numValue === compareValue;
-                    case 'gte': return numValue >= compareValue;
-                    case 'lte': return numValue <= compareValue;
-                    case 'ne': return numValue !== compareValue;
+                    case 'eq': return normalizedMsgValue === normalizedCompareValue;
+                    case 'ne': return normalizedMsgValue !== normalizedCompareValue;
                     default: return false;
                 }
             }

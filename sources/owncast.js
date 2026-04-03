@@ -42,7 +42,11 @@ function toDataURL(url, callback) {
 	function getAllContentNodes(element) {
 		var resp = "";
 		
-		if (!element.childNodes.length || !element.childNodes){
+		if (!element){
+			return "";
+		}
+		
+		if (!element.childNodes || !element.childNodes.length){
 			return element.textContent || "";
 		}
 		
@@ -62,6 +66,90 @@ function toDataURL(url, callback) {
 		});
 		return resp;
 	}
+
+	function querySelectorAny(root, selectors) {
+		if (!root || !selectors || !selectors.length){
+			return null;
+		}
+		for (var i = 0; i < selectors.length; i++){
+			try {
+				var match = root.querySelector(selectors[i]);
+				if (match){
+					return match;
+				}
+			} catch(e){}
+		}
+		return null;
+	}
+
+	function getChatName(ele) {
+		var chatname = "";
+		try{
+			var chatnameNode = querySelectorAny(ele, [
+				".message-author",
+				"[class^='ChatUserMessage_userName__']",
+				"[class^='ChatUserMessage_repeatUser__'] [class^='ChatUserMessage_userName__']",
+				"[class^='ChatUserMessage_user__'] > :not([class^='ChatUserMessage_userBadges'])"
+			]);
+			if (chatnameNode){
+				chatname = escapeHtml((chatnameNode.textContent || "").trim());
+			}
+		} catch(e){}
+		return chatname;
+	}
+
+	function getChatMessage(ele) {
+		var chatmessage = "";
+		try{
+			var messageNode = querySelectorAny(ele, [
+				"[class^='ChatUserMessage_message__']",
+				".ChatUserMessage_message__JJiP9",
+				".message-text"
+			]);
+			if (messageNode){
+				chatmessage = getAllContentNodes(messageNode);
+			}
+		} catch(e){}
+		return chatmessage;
+	}
+
+	function getChatInput() {
+		return querySelectorAny(document, [
+			"#chat-input-content-editable",
+			"#chat-input [role='textbox'][contenteditable='true']",
+			"[aria-label='Chat text input'][contenteditable='true']",
+			"[contenteditable='true'][placeholder='Send a message to chat']",
+			"[class^='ChatTextField_inputWrap__'] [contenteditable='true']",
+			"div#message-input",
+			"#message-input"
+		]);
+	}
+
+	function focusChatInput() {
+		var input = getChatInput();
+		if (!input){
+			return false;
+		}
+		try {
+			if (input.scrollIntoView){
+				input.scrollIntoView({ block: "nearest" });
+			}
+		} catch(e){}
+		try {
+			if (input.focus){
+				input.focus();
+			}
+			if (input.isContentEditable && window.getSelection && document.createRange){
+				var selection = window.getSelection();
+				var range = document.createRange();
+				range.selectNodeContents(input);
+				range.collapse(false);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			}
+		} catch(e){}
+		return true;
+	}
 	
 
 	function processMessage(ele, wss=true){
@@ -76,16 +164,9 @@ function toDataURL(url, callback) {
 	  
 	  ele.alreadyRead = true;
 	  
-	  var chatname = "";
-	  try{
-		chatname = ele.querySelector(".message-author, [class^='ChatUserMessage_user'] > :not([class^='ChatUserMessage_userBadges'])").textContent;
-		chatname = escapeHtml(chatname);
-	  } catch(e){}
+	  var chatname = getChatName(ele);
 	  
-	  var chatmessage = "";
-	  try{
-		  chatmessage = getAllContentNodes(ele.querySelector("[class^='ChatUserMessage_message__']"));
-	  } catch(e){}
+	  var chatmessage = getChatMessage(ele);
 	  
 	  var chatimg = "";
 	  var chatdonation = "";
@@ -133,8 +214,7 @@ function toDataURL(url, callback) {
 			try{
 				if ("getSource" == request){sendResponse("owncast");	return;	}
 				if ("focusChat" == request){
-					document.querySelector("div#message-input").focus();
-					sendResponse(true);
+					sendResponse(focusChatInput());
 					return;
 				}
 				if (typeof request === "object"){
@@ -170,17 +250,25 @@ function toDataURL(url, callback) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						if (!mutation.addedNodes[i]){continue;}
+						var addedNode = mutation.addedNodes[i];
 						
-						if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
-							if ( parseInt(mutation.addedNodes[i].dataset.index) > dataIndex){
-								dataIndex = parseInt(mutation.addedNodes[i].dataset.index);
+						if (addedNode.dataset && addedNode.dataset.index){
+							if ( parseInt(addedNode.dataset.index) > dataIndex){
+								dataIndex = parseInt(addedNode.dataset.index);
 							} else {
 								continue;
 							}
 						}
 						
-						if (mutation.addedNodes[i] && mutation.addedNodes[i].querySelector && mutation.addedNodes[i].querySelectorAll(".chat-message_user").length==1) {
-							callback(mutation.addedNodes[i].querySelector(".chat-message_user"));
+						if (addedNode && addedNode.matches && addedNode.matches(".chat-message_user")) {
+							callback(addedNode);
+							continue;
+						}
+						
+						if (addedNode && addedNode.querySelectorAll) {
+							addedNode.querySelectorAll(".chat-message_user").forEach(node=>{
+								callback(node);
+							});
 						}
 					}
 				}

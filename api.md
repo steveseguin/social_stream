@@ -74,6 +74,10 @@ There is an easy to use sandbox to play with some of the common API commands and
     - [Basic Poll Controls](#basic-poll-controls)
     - [Advanced Poll Controls](#advanced-poll-controls)
     - [Example Usage](#example-usage)
+  - [Timer Control via API](#timer-control-via-api)
+    - [Basic Timer Controls](#basic-timer-controls)
+    - [Setting Timer State](#setting-timer-state)
+    - [Example Usage](#example-usage-1)
   - [Battle Page (battle.html)](#battle-page-battlehtml)
     - [Communication Method](#communication-method)
     - [Game Features](#game-features)
@@ -1050,6 +1054,45 @@ ws.send(JSON.stringify({
 ws.send(JSON.stringify({
     action: "loadpoll",
     value: { pollId: "poll-1234567890" }
+}));
+```
+
+## Timer Control via API
+
+The timer page can be controlled through the API with the following actions:
+
+### Basic Timer Controls
+- **Start Timer**: `{"action": "starttimer"}`
+- **Pause Timer**: `{"action": "pausetimer"}`
+- **Toggle Timer**: `{"action": "toggletimer"}`
+- **Reset Timer**: `{"action": "resettimer"}`
+- **Add Time**: `{"action": "timeradd", "value": 30}` adds 30 seconds
+- **Subtract Time**: `{"action": "timersubtract", "value": 30}` subtracts 30 seconds
+
+### Setting Timer State
+- **Set Timer**: `{"action": "settimer", "value": {...}}`
+  - Common fields: `seconds`, `label`, `mode`, `style`, `warnSeconds`, `dangerSeconds`, `soundUrl`
+- **Get Timer State**: `{"action": "gettimerstate", "get": "timer-123"}` returns the current timer state via callback
+
+### Example Usage
+```javascript
+// Set a 5-minute countdown named "Interview"
+ws.send(JSON.stringify({
+    action: "settimer",
+    value: {
+        seconds: 300,
+        label: "Interview",
+        mode: "countdown",
+        style: "stage",
+        warnSeconds: 60,
+        dangerSeconds: 15
+    }
+}));
+
+// Request current timer state
+ws.send(JSON.stringify({
+    action: "gettimerstate",
+    get: "timer-state-1"
 }));
 ```
 

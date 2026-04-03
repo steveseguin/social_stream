@@ -3820,31 +3820,89 @@ function updateKickStreamEditorFields(channel) {
     if (!channel || typeof channel !== 'object') {
         return;
     }
-    const title = pickFirstString(
-        [
-            channel.stream_title,
-            channel.stream?.title,
-            channel.stream?.stream_title
-        ],
-        ''
-    );
-    const category = pickFirstString(
-        [
-            channel.category?.name,
-            channel.category_name,
-            channel.category?.slug
-        ],
-        ''
-    );
-    if (els.streamTitle) {
-        els.streamTitle.value = title;
+    const values = extractKickStreamEditorValues(channel);
+    if (els.streamTitle && values.title) {
+        els.streamTitle.value = values.title;
     }
-    if (els.streamCategory) {
-        els.streamCategory.value = category;
+    if (els.streamCategory && values.category) {
+        els.streamCategory.value = values.category;
     }
 }
 
+function extractKickStreamEditorValues() {
+    const titleCandidates = [];
+    const categoryCandidates = [];
+    for (const source of arguments) {
+        if (!source || typeof source !== 'object') {
+            continue;
+        }
+        titleCandidates.push(
+            source.stream_title,
+            source.streamTitle,
+            source.title,
+            source.stream?.title,
+            source.stream?.stream_title
+        );
+        categoryCandidates.push(
+            source.category?.name,
+            source.category_name,
+            source.category?.slug,
+            source.category,
+            source.streamCategory
+        );
+    }
+    return {
+        title: pickFirstString(titleCandidates, ''),
+        category: pickFirstString(categoryCandidates, '')
+    };
+}
+
+function getAuthenticatedKickChannelIdentity() {
+    const slug = normalizeChannel(
+        pickFirstString(
+            [
+                state.authUser?.slug,
+                state.authUser?.channel?.slug,
+                state.authUser?.user?.slug,
+                state.authUser?.username,
+                state.tokens?.profile?.slug,
+                state.tokens?.profile?.channel?.slug,
+                state.tokens?.profile?.user?.slug,
+                state.tokens?.profile?.username,
+                state.tokens?.username,
+                state.tokens?.user_login,
+                state.tokens?.userLogin,
+                state.tokens?.user_name,
+                state.tokens?.userName
+            ],
+            ''
+        )
+    );
+    const userId = normalizeKickNumericId(
+        state.authUser?.id ??
+        state.authUser?.user_id ??
+        state.authUser?.user?.id ??
+        state.authUser?.user?.user_id ??
+        state.tokens?.profile?.id ??
+        state.tokens?.profile?.user_id ??
+        state.tokens?.profile?.user?.id ??
+        state.tokens?.profile?.user?.user_id ??
+        state.tokens?.user_id ??
+        state.tokens?.userId
+    );
+    return { slug, userId };
+}
+
 async function fetchCurrentKickChannelInfo() {
+    const selectedSlug = normalizeChannel(state.channelSlug);
+    const authIdentity = getAuthenticatedKickChannelIdentity();
+    if (selectedSlug && authIdentity.slug && selectedSlug === authIdentity.slug) {
+        const data = await apiFetch('/public/v1/channels');
+        const channels = unwrapKickChannelPayload(data);
+        if (channels[0]) {
+            return channels[0];
+        }
+    }
     if (state.channelSlug) {
         return fetchKickChannelBySlug(normalizeChannel(state.channelSlug));
     }

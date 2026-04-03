@@ -1360,6 +1360,39 @@ input:checked + .slider:before {
     margin-right: 10px;
 }
 
+.custom-gif-command-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.custom-gif-command-actions button {
+    width: auto;
+    min-width: 72px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+}
+
+.uploadCustomGifMedia {
+    background-color: #667eea;
+}
+
+.uploadCustomGifMedia:hover {
+    background-color: #4f67d8;
+}
+
+.testCustomGifCommand {
+    background-color: #0ea5e9;
+}
+
+.testCustomGifCommand:hover {
+    background-color: #0284c7;
+}
+
 .removeCustomGifCommand {
     padding: 5px 10px;
     background-color: #ff0000;
@@ -5483,6 +5516,39 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
+										<input type="checkbox" data-param25="headlinescale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔠 Headline size
+										<input type="range" min="0.8" max="1.6" step="0.05" value="1" style="width: 150px;" data-numbersetting25="headlinescale" data-range-display="multi-alert-headline-display" data-range-suffix="x" />
+										<span class="range-value" id="multi-alert-headline-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="detailscale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔎 Detail text size
+										<input type="range" min="0.8" max="1.7" step="0.05" value="1" style="width: 150px;" data-numbersetting25="detailscale" data-range-display="multi-alert-detail-display" data-range-suffix="x" />
+										<span class="range-value" id="multi-alert-detail-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="mediascale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🖼️ Gift / media size
+										<input type="range" min="0.7" max="1.8" step="0.05" value="1" style="width: 150px;" data-numbersetting25="mediascale" data-range-display="multi-alert-media-display" data-range-suffix="x" />
+										<span class="range-value" id="multi-alert-media-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
 										<input type="checkbox" data-param25="hideavatar" />
 										<span class="slider round"></span>
 									</label>
@@ -5640,6 +5706,15 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
+								<div style="width: 100%; margin-bottom: 10px;">
+									<label for="multi-alert-preview-platform">Preview platform</label>
+									<select id="multi-alert-preview-platform" class="textInput">
+										<option value="tiktok" selected>TikTok</option>
+										<option value="twitch">Twitch</option>
+										<option value="youtube">YouTube</option>
+										<option value="kick">Kick</option>
+									</select>
+								</div>
 								<div style="display: flex; flex-wrap: nowrap; gap: 6px; margin-bottom: 14px;">
 									<button type="button" id="multi-alert-preview-follow" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Follow</button>
 									<button type="button" id="multi-alert-preview-sub" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Sub</button>
@@ -6058,13 +6133,13 @@ input:checked + .slider:before {
                                     <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />🌹
                                     <span data-translate="notiktokdonations"> Do NOT treat roses/etc as donations on TikTok </span>
                                 </div>
-								<div title="Disable the TikTok keep-alive poke that can cause window focus grabbing">
+								<div title="Disable the TikTok and YouTube active keep-alive that can cause window focus grabbing">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="disabletiktokpoke" />
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />🚫👆
-                                    <span data-translate="disabletiktokpoke"> Disable TikTok keep-alive (prevents focus grab) </span>
+                                    <span data-translate="disabletiktokpoke"> Disable TikTok/YouTube active keep-alive (prevents focus grab) </span>
                                 </div>
                                 <div title="Block donations/memberships from Youtube Shorts. Requires &shorts added to the Youtube chat pop out also.">
                                     <label class="switch">
@@ -6718,6 +6793,25 @@ input:checked + .slider:before {
 								
                                 <h3><span data-translate="trigger-midi-note">Trigger MIDI note on command</span></h3>
 								Default Output MIDI Device:<select id="midiDeviceSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputDevice"></select>
+								MIDI Channel:<select id="midiOutputChannelSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputChannel">
+									<option value="1" selected>Channel 1</option>
+									<option value="2">Channel 2</option>
+									<option value="3">Channel 3</option>
+									<option value="4">Channel 4</option>
+									<option value="5">Channel 5</option>
+									<option value="6">Channel 6</option>
+									<option value="7">Channel 7</option>
+									<option value="8">Channel 8</option>
+									<option value="9">Channel 9</option>
+									<option value="10">Channel 10</option>
+									<option value="11">Channel 11</option>
+									<option value="12">Channel 12</option>
+									<option value="13">Channel 13</option>
+									<option value="14">Channel 14</option>
+									<option value="15">Channel 15</option>
+									<option value="16">Channel 16</option>
+									<option value="all">All Channels</option>
+								</select>
 								<a href="https://socialstream.ninja/midimonitor" class="lightblue"  title="Open a page to debug MIDI with" target="_blank">⚙️</a>
 								<div style="font-size: 12px; color: #888; margin-top: 5px;">
 									<span data-translate="enable-midi-to-see-devices">Enable MIDI hotkeys above to see available devices</span>
@@ -7678,7 +7772,7 @@ input:checked + .slider:before {
 								
 								<div>
 									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
-										<option selected value="ollama">Ollama (Local)</option>
+										<option selected value="ollama">Ollama (Native Local API)</option>
 										<option value="chatgpt">ChatGPT API</option>
 										<option value="gemini">Gemini API</option>
 										<option value="deepseek">DeepSeek API</option>
@@ -7686,10 +7780,13 @@ input:checked + .slider:before {
 										<option value="bedrock">AWS Bedrock API</option>
 										<option value="openrouter">OpenRouter API</option>
 										<option value="groq">Groq API</option>
-										<option value="custom">Custom API</option>
+										<option value="custom">Custom API (OpenAI-compatible / llama.cpp)</option>
 									</select>
 								<div>
 								</div>	
+									<div style="width: 95%; font-size: 0.9em; opacity: 0.85; margin: 6px 0 10px 0;">
+										Ollama uses its own native API. For llama.cpp, LM Studio, vLLM, or other OpenAI-compatible servers, choose <strong>Custom API</strong>.
+									</div>
 									<div id="ollamaendpoint" class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
 										<label for="ollamaendpoint"><span data-translate="ollama-API-endpoint">&gt; Ollama API endpoint</span></label>
@@ -7721,7 +7818,7 @@ input:checked + .slider:before {
 									</div>
 
 									<div id="customAIEndpoint" class="hidden textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="customAIEndpoint" />
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: http://localhost:8080 or http://localhost:8080/v1/chat/completions" data-textsetting="customAIEndpoint" />
 										<label for="customAIEndpoint"><span data-translate="custom-API-endpoint">&gt; Custom OpenAI-compatible endpoint</span></label>
 									</div>
 
@@ -7794,8 +7891,8 @@ input:checked + .slider:before {
 								</div>
 								<div id="customAIModel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" class="textInput" autocomplete="off" placeholder="eg: fine-tuned-v1" data-textsetting="customAIModel" />
-										<label for="customAIModel"><span data-translate="customAIModel">&gt; Model to use</span></label>
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: qwen2.5-7b-instruct or the alias exposed by your server" data-textsetting="customAIModel" />
+										<label for="customAIModel"><span data-translate="customAIModel">&gt; Model to use (server model id, not the .gguf filename)</span></label>
 									</div>
 								</div>
 								
@@ -7810,6 +7907,14 @@ input:checked + .slider:before {
 										<label for="openroutermodel"><span data-translate="openroutermodel">&gt; OpenRouter Model to use</span></label>
 									</div>
 								</div>
+
+								<div style="width: 95%; margin: 12px 0 0 0;">
+									<button id="testSelectedLLMProvider" class="glowingButton" style="width: auto; min-width: 190px;" title="Sends a short test prompt using the currently selected chat bot provider and settings">
+										<span>Test selected chat bot</span>
+									</button>
+									<span id="testSelectedLLMProviderStatus" style="display: inline-block; margin-left: 10px; font-size: 0.9em; opacity: 0.9;"></span>
+								</div>
+								<div id="testSelectedLLMProviderOutput" style="display: none; width: 95%; margin: 8px 0 0 0; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,0.06); white-space: pre-wrap; word-break: break-word; font-size: 0.92em;"></div>
 								
 							</div>
 						</div>
@@ -12223,6 +12328,122 @@ input:checked + .slider:before {
 			
 	
 			
+			<div class="link" title="Timer overlay">
+				<h2 class="timer_section_title">
+					<span class="title-group">Timer</span>
+					<span class="options-link-group" style="float: right; display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+						<a class="copy-link rounded_area" title="Copy timer link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+						<a class="options-link rounded_area" href="#timer" title="Jump to the timer options."><span data-translate="options">[options]</span></a>
+						<label for="help-timer" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					</span>
+				</h2>
+				<input type="checkbox" id="help-timer" class="link-help-toggle">
+				<div class="link-help-content">
+					<strong>A focused stage timer with optional operator controls.</strong>
+					<p>Use this as a countdown or count-up overlay, then control it from the page itself, from the popup, or through the API.</p>
+					<ul>
+						<li>Single timer with overtime and warning states</li>
+						<li>Optional operator controls with start, pause, reset, and +/-30s</li>
+						<li>Three built-in looks: stage, compact, ring</li>
+						<li>Works with the <code>&amp;server</code> API path for remote control</li>
+					</ul>
+				</div>
+				<p style="margin-top: -5px;">A focused timer overlay for breaks, interviews, countdowns, and on-stream pacing.</p>
+				<div id="timer" data-raw="" class="streaming_chat"><a href="" id="timerlink"></a></div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-timer-options" />
+					<label class="collapsible-label" for="wrapper-timer-options"><span>Timer Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group timer">
+								<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 12px;">
+									<button class="glowingButton" style="flex:1" data-action="starttimer"><span>Start</span></button>
+									<button class="glowingButton" style="flex:1" data-action="pausetimer"><span>Pause</span></button>
+									<button class="glowingButton" style="flex:1" data-action="resettimer"><span>Reset</span></button>
+									<button class="glowingButton" style="flex:1" data-action="timeradd" data-value="30"><span>+30s</span></button>
+									<button class="glowingButton" style="flex:1" data-action="timersubtract" data-value="30"><span>-30s</span></button>
+								</div>
+								<div>
+									<span>Style preset</span>
+									<select data-optionparam26="style">
+										<option value="stage">Stage</option>
+										<option value="compact">Compact</option>
+										<option value="ring">Ring</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<span>Timer mode</span>
+									<select data-optionparam26="mode">
+										<option value="countdown">Countdown</option>
+										<option value="countup">Count up</option>
+									</select>
+								</div>
+								<br>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="timerLabelInput" class="textInput instant" autocomplete="off" placeholder="eg: Interview" data-textparam26="label" />
+									<label for="timerLabelInput"><span>&gt; Timer label</span></label>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="duration" />
+										<span class="slider round"></span>
+									</label>
+									<span>Default time <input type="number" style="max-width: 8ch;" min="0" max="999999" value="300" data-numbersetting26="duration" />s</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="warn" />
+										<span class="slider round"></span>
+									</label>
+									<span>Warn at <input type="number" style="max-width: 8ch;" min="0" max="999999" value="60" data-numbersetting26="warn" />s</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="danger" />
+										<span class="slider round"></span>
+									</label>
+									<span>Danger at <input type="number" style="max-width: 8ch;" min="0" max="999999" value="15" data-numbersetting26="danger" />s</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="operator" />
+										<span class="slider round"></span>
+									</label>
+									<span>Show operator controls on the page</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="autostart" />
+										<span class="slider round"></span>
+									</label>
+									<span>Start automatically when the page loads</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param26="sound" />
+										<span class="slider round"></span>
+									</label>
+									<span>Play a sound when the timer completes</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%; margin-top: 10px;">
+									<input type="text" id="timerCustomSound" class="textInput instant" autocomplete="off" placeholder="https://example.com/timer.wav" data-textparam26="customsound" />
+									<label for="timerCustomSound"><span>&gt; Custom timer sound URL</span></label>
+								</div>
+								<div style="margin-top: 10px;">
+									<button id="uploadTimerSoundBtn" class="glowingButton" style="width: 220px;">
+										<span>Upload Timer Sound</span>
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<div class="link" id="spotify-integration" title="Spotify Integration">
 				<h2 class="spotify_section_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🎵</span>Spotify Integration</span>

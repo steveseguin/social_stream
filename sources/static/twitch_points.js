@@ -30,7 +30,9 @@
                             return;
                         }
                     }
-                    if ("getSource" == request){sendResponse("twitch_points");	return;	}
+                    // This helper is not a routeable chat source. Do not answer getSource here
+                    // or it can override sources/twitch.js and break targeted sendChat routing.
+                    if ("getSource" == request) { return; }
 					if ("focusChat" == request) {
                         return;
                     }

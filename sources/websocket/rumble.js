@@ -1158,7 +1158,8 @@
                 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                     try {
                         if (request === 'getSource') {
-                            sendResponse('rumble');
+                            // Rumble websocket mode is read-only, so keep it out of relay targets.
+                            sendResponse(false);
                             return;
                         }
                         if (request === 'focusChat') {

@@ -173,6 +173,57 @@
 		return ele.closest?.(SELECTORS.messageContainer) || ele.querySelector?.(SELECTORS.messageContainer) || null;
 	}
 
+	function getComputedAccentColor(ele) {
+		if (!ele || ele.nodeType !== 1) {
+			return "";
+		}
+		try {
+			var computed = getComputedStyle(ele);
+			var color = computed.backgroundColor;
+			if (color == "rgba(0, 0, 0, 0)") {
+				color = "";
+			}
+			if (!color && (computed.borderWidth != "0px")) {
+				color = computed.borderColor;
+				if (color == "rgba(0, 0, 0, 0)") {
+					color = "";
+				}
+			}
+			return color || "";
+		} catch (e) {}
+		return "";
+	}
+
+	function getHighlightColor(ele) {
+		if (!ele || ele.nodeType !== 1) {
+			return "";
+		}
+
+		var noticeAttachment = null;
+		var inlineHighlight = ele.querySelector(".chat-line__message-body--highlighted");
+		var legacyHighlight = ele.querySelector(".has-highlight");
+		try {
+			noticeAttachment = ele.closest(".user-notice-line, [data-test-selector='user-notice-line']");
+		} catch (e) {}
+
+		var candidates = [ele, inlineHighlight, legacyHighlight];
+		if (!inlineHighlight && noticeAttachment) {
+			inlineHighlight = noticeAttachment.querySelector(".chat-line__message-body--highlighted");
+		}
+		if (inlineHighlight) {
+			candidates.push(noticeAttachment);
+			candidates.push(noticeAttachment ? noticeAttachment.previousElementSibling : null);
+		}
+
+		for (var i = 0; i < candidates.length; i++) {
+			var color = getComputedAccentColor(candidates[i]);
+			if (color) {
+				return color;
+			}
+		}
+		return "";
+	}
+
 	function getTrackedMessageKey(ele, fallbackChatname = "", fallbackMessage = "") {
 		const ariaLabel = ele?.getAttribute?.("aria-label") || "";
 		if (ariaLabel) {
@@ -1108,37 +1159,7 @@
 
 		try {
 			if (!highlightColor) {
-				var computed = getComputedStyle(ele);
-				highlightColor = computed.backgroundColor;
-				if (highlightColor == "rgba(0, 0, 0, 0)") {
-					highlightColor = "";
-				}
-				if (!highlightColor) {
-					if (computed.borderWidth != "0px") {
-						highlightColor = computed.borderColor;
-						if (highlightColor == "rgba(0, 0, 0, 0)") {
-							highlightColor = "";
-						}
-					}
-				}
-				if (!highlightColor) {
-					let hlele = ele.querySelector(".has-highlight");
-					if (hlele) {
-						computed = getComputedStyle(hlele);
-						highlightColor = computed.backgroundColor;
-						if (highlightColor == "rgba(0, 0, 0, 0)") {
-							highlightColor = "";
-						}
-						if (!highlightColor) {
-							if (computed.borderWidth != "0px") {
-								highlightColor = computed.borderColor;
-								if (highlightColor == "rgba(0, 0, 0, 0)") {
-									highlightColor = "";
-								}
-							}
-						}
-					}
-				}
+				highlightColor = getHighlightColor(ele);
 			}
 		} catch (e) {}
 			

@@ -133,6 +133,10 @@ var FFZ = false;
 var currentVideoId = null;
 var currentChannelId = null;
 
+try {
+	document.documentElement.setAttribute('data-ss-youtube-bridge', '1');
+} catch (e) {}
+
 function syncThirdPartyEmotesForContext() {
 	if (!settings || typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
 		return;
@@ -235,6 +239,26 @@ function requestEmotesForVideo(videoId, channelId, options = {}) {
 	}
 }
 
+function requestYouTubeEmoji(videoId, requestId = null) {
+	if (!videoId || typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		return;
+	}
+
+	var payload = {
+		getYouTubeEmoji: true,
+		videoId: String(videoId)
+	};
+	if (requestId) {
+		payload.requestId = String(requestId);
+	}
+
+	chrome.runtime.sendMessage(chrome.runtime.id, payload, function () {
+		if (chrome.runtime.lastError) {
+			console.log('YouTube emoji request error:', chrome.runtime.lastError.message);
+		}
+	});
+}
+
 function processExtensionQueue() {
 	if (isProcessingExtensionQueue || extensionRelayQueue.length === 0) {
 		return;
@@ -311,6 +335,13 @@ window.addEventListener('youtubeVideoChanged', function(e) {
 		console.log('Video changed:', e.detail);
 		requestEmotesForVideo(e.detail.videoId, e.detail.channelId);
 	}
+});
+
+window.addEventListener('youtubeEmojiRequest', function(e) {
+	if (!e.detail || !e.detail.videoId) {
+		return;
+	}
+	requestYouTubeEmoji(e.detail.videoId, e.detail.requestId || null);
 });
 
 function deepMerge(target, source) {
@@ -430,6 +461,18 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				FFZ = request.FFZ;
 				sendResponse(true);
 				mergeEmotes();
+				return;
+			}
+			if ("youtubeEmoji" in request) {
+				window.dispatchEvent(new CustomEvent('youtubeEmojiLoaded', {
+					detail: {
+						youtubeEmoji: request.youtubeEmoji,
+						requestId: request.requestId || null,
+						videoId: request.videoId || null
+					},
+					bubbles: true
+				}));
+				sendResponse(true);
 				return;
 			}
 			if (request.type === 'SOURCE_CONTROL') {

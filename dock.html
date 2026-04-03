@@ -4534,7 +4534,6 @@
 				giveVIPBadge = true;
 			}
 			
-			const urlVersion = urlParams.get('v') || false;
 			
 			var openChatAutomatically = false;
 			if (urlParams.has("openchat")) {
@@ -6907,12 +6906,6 @@
 							return false;
 						}
 						
-						const comparison = compareVersions(urlVersion, "3.21.10");
-						if (socketserver && comparison > 0) {
-							console.log(`URL version ${urlVersion} is too old`);
-							return false;
-						}
-						
 						console.log(data.stripe);
 
 						var message = {};
@@ -7021,12 +7014,6 @@
 							return false;
 						}
 						
-						const comparison = compareVersions(urlVersion, "3.21.10");
-						if (socketserver && comparison > 0) {
-							console.log(`URL version ${urlVersion} is too old`);
-							return false;
-						}
-						
 						try {
 							var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
 						} catch (e) {
@@ -7082,12 +7069,6 @@
 							return false;
 						}
 						else {
-							
-							const comparison = compareVersions(urlVersion, "3.21.10");
-							if (socketserver && comparison > 0) {
-								console.log(`URL version ${urlVersion} is too old`);
-								return false;
-							}
 							
 							var bmac = data.bmac; 
 							var message = {};

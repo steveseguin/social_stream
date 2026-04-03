@@ -29,7 +29,13 @@ class LLMServiceError extends Error {
     }
 }
 
-function getLLMHint(status, code) {
+function getLLMHint(status, code, details = {}) {
+    const provider = details.provider || '';
+    const model = details.model || '';
+
+    if (provider === 'ollama' && /\.gguf$/i.test(model)) {
+        return 'This looks like a GGUF filename. If you are using llama.cpp or another OpenAI-compatible server, choose Custom API instead of Ollama.';
+    }
     if (status === 401 || status === 403) {
         return 'Verify that your API key is present and has permission to use this model.';
     }
@@ -81,7 +87,7 @@ function reportLLMError(error) {
 function createLLMError(baseDetails, extra = {}) {
     const merged = { ...baseDetails, ...extra };
     if (!merged.hint && (merged.status || merged.code)) {
-        merged.hint = getLLMHint(merged.status, merged.code) || merged.hint;
+        merged.hint = getLLMHint(merged.status, merged.code, merged) || merged.hint;
     }
     const err = new LLMServiceError(merged);
     reportLLMError(err);
@@ -144,8 +150,9 @@ async function rebuildIndex() {
     globalLunrIndex = initLunrIndex(documents);
 }
 
-async function getFirstAvailableModel(exclude=null) {
-    let ollamaendpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
+async function getFirstAvailableModel(exclude = null, llmSettings = null) {
+    llmSettings = { ...(settings || {}), ...(llmSettings || {}) };
+    let ollamaendpoint = llmSettings.ollamaendpoint?.textsetting || "http://localhost:11434";
     
     const isLLMModel = (model) => {
         const llmFamilies = ['llama', 'qwen2'];
@@ -383,9 +390,10 @@ function hmacToHex(hmacBuffer) {
 
 const activeChatBotSessions = {};
 let tmpModelFallback = "";
-async function callLLMAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null) {
+async function callLLMAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null, options = {}) {
+	const llmSettings = { ...(settings || {}), ...(options.settings || {}) };
 	
-	const provider = settings.aiProvider?.optionsetting || "ollama";
+	const provider = llmSettings.aiProvider?.optionsetting || "ollama";
 	let endpoint, apiKey, streamable;
 
 	const buildContext = () => ({
@@ -409,60 +417,60 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 
 	switch (provider) {
 		case "ollama":
-			endpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
-			model = model || settings.ollamamodel?.textsetting || tmpModelFallback || null;
+			endpoint = llmSettings.ollamaendpoint?.textsetting || "http://localhost:11434";
+			model = model || llmSettings.ollamamodel?.textsetting || tmpModelFallback || null;
 			break;
 		case "chatgpt":
 			endpoint = "https://api.openai.com/v1/chat/completions";
-			model = model || settings.chatgptmodel?.textsetting || "gpt-4o-mini";
-			apiKey = settings.chatgptApiKey?.textsetting;
+			model = model || llmSettings.chatgptmodel?.textsetting || "gpt-4o-mini";
+			apiKey = llmSettings.chatgptApiKey?.textsetting;
 			callback = null;
 			break;
 		case "deepseek":
 			endpoint = "https://api.deepseek.com/v1/chat/completions";
-			model = model || settings.deepseekmodel?.textsetting || "deepseek-chat";
-			apiKey = settings.deepseekApiKey?.textsetting;
+			model = model || llmSettings.deepseekmodel?.textsetting || "deepseek-chat";
+			apiKey = llmSettings.deepseekApiKey?.textsetting;
 			callback = null;
 			break;
 		case "gemini":
 			endpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-			model = model || settings.geminimodel?.textsetting || "gemini-2.5-flash";
-			apiKey = settings.geminiApiKey?.textsetting;
+			model = model || llmSettings.geminimodel?.textsetting || "gemini-2.5-flash";
+			apiKey = llmSettings.geminiApiKey?.textsetting;
 			callback = null;
 			break;
 		case "xai":  // New case for Grok
 			endpoint = "https://api.x.ai/v1/chat/completions";
-			model = model || settings.xaimodel?.textsetting || "grok-beta";  // Default to grok-beta
-			apiKey = settings.xaiApiKey?.textsetting;  // Requires an API key from xAI
+			model = model || llmSettings.xaimodel?.textsetting || "grok-beta";  // Default to grok-beta
+			apiKey = llmSettings.xaiApiKey?.textsetting;  // Requires an API key from xAI
 			// streamable = true;  // Grok supports streaming
 			callback = null;
 			break;
 		case "bedrock":
-			endpoint = `https://bedrock-runtime.${settings.bedrockRegion?.textsetting || "us-east-1"}.amazonaws.com/model`;
-			model = model || settings.bedrockmodel?.textsetting || "anthropic.claude-3-sonnet-20240229-v1:0";
-			apiKey = settings.bedrockAccessKey?.textsetting;
-			const secretKey = settings.bedrockSecretKey?.textsetting;
-			const region = settings.bedrockRegion?.textsetting || "us-east-1";
+			endpoint = `https://bedrock-runtime.${llmSettings.bedrockRegion?.textsetting || "us-east-1"}.amazonaws.com/model`;
+			model = model || llmSettings.bedrockmodel?.textsetting || "anthropic.claude-3-sonnet-20240229-v1:0";
+			apiKey = llmSettings.bedrockAccessKey?.textsetting;
+			const secretKey = llmSettings.bedrockSecretKey?.textsetting;
+			const region = llmSettings.bedrockRegion?.textsetting || "us-east-1";
 			callback = null; // TODO: Implement streaming for Bedrock if desired
 			break;
 		case "openrouter":
 			endpoint = "https://openrouter.ai/api/v1/chat/completions";
-			model = model || settings.openroutermodel?.textsetting || "openai/gpt-4o";
-			apiKey = settings.openrouterApiKey?.textsetting;
+			model = model || llmSettings.openroutermodel?.textsetting || "openai/gpt-4o";
+			apiKey = llmSettings.openrouterApiKey?.textsetting;
 			callback = null;
 			break;
 		case "groq":
 			endpoint = "https://api.groq.com/openai/v1/chat/completions";
-			model = model || settings.groqmodel?.textsetting || "llama-3.1-8b-instant";
-			apiKey = settings.groqApiKey?.textsetting;
+			model = model || llmSettings.groqmodel?.textsetting || "llama-3.1-8b-instant";
+			apiKey = llmSettings.groqApiKey?.textsetting;
 			break;
 		case "custom":
-			endpoint = settings.customAIEndpoint?.textsetting || "http://localhost:11434";
+			endpoint = llmSettings.customAIEndpoint?.textsetting || "http://localhost:11434";
 			if (!endpoint.includes("/v1") || !endpoint.includes("/completions")){ // going to assume you already ended the completions URL
 				endpoint = endpoint.replace(/\/+$/, '') + "/v1/chat/completions"
 			}
-			model = model || settings.customAIModel?.textsetting || "";
-			apiKey = settings.customAIApiKey?.textsetting;
+			model = model || llmSettings.customAIModel?.textsetting || "";
+			apiKey = llmSettings.customAIApiKey?.textsetting;
 			//callback = null;
 			break;
 		case "default":
@@ -525,7 +533,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		
         let ollamamodel = model;
         if (!ollamamodel) {
-            ollamamodel = await getFirstAvailableModel();
+            ollamamodel = await getFirstAvailableModel(null, llmSettings);
             if (ollamamodel) {
                 tmpModelFallback = ollamamodel;
                 setTimeout(() => {
@@ -546,7 +554,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
             return result.response + "💥";
         } else if (result.error && result.error === 404) {
             try {
-                const availableModel = await getFirstAvailableModel(ollamamodel);
+                const availableModel = await getFirstAvailableModel(ollamamodel, llmSettings);
                 if (availableModel) {
                     console.log(`[LLM:ollama] Model "${ollamamodel}" not found. Falling back to "${availableModel}".`);
                     tmpModelFallback = availableModel;
@@ -925,7 +933,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                             model: currentModel,
                             prompt: prompt,
                             stream: true,
-							keep_alive: settings.ollamaKeepAlive ?  parseInt(settings.ollamaKeepAlive.numbersetting)+"m" : "5m"
+							keep_alive: llmSettings.ollamaKeepAlive ?  parseInt(llmSettings.ollamaKeepAlive.numbersetting)+"m" : "5m"
                         };
                         
                         if (images){
@@ -984,7 +992,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                     model: currentModel,
                     prompt: prompt,
                     stream: isStreaming,
-					keep_alive: settings.ollamaKeepAlive ?  parseInt(settings.ollamaKeepAlive.numbersetting)+"m" : "5m"
+					keep_alive: llmSettings.ollamaKeepAlive ?  parseInt(llmSettings.ollamaKeepAlive.numbersetting)+"m" : "5m"
                 };
                 
                 if (images){

@@ -2223,6 +2223,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "spotify", path: "spotify-overlay.html" },
 	{ id: "scoreboard", path: "scoreboard.html"},
 	{ id: "map", path: "map.html" },
+	{ id: "timer", path: "timer.html" },
 	
   ];
   
@@ -3098,6 +3099,133 @@ function handleAIProviderVisibility(provider) {
     }
 }
 
+function sendPopupBackgroundCommand(message, timeout = 45000) {
+    return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+            reject(new Error('Response timeout'));
+        }, timeout);
+
+        chrome.runtime.sendMessage({ type: 'toBackground', data: message }, response => {
+            clearTimeout(timeoutId);
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve(response);
+            }
+        });
+    });
+}
+
+function collectLLMProviderTestSettings() {
+    const override = {
+        aiProvider: {
+            optionsetting: document.getElementById('aiProvider')?.value || 'ollama'
+        }
+    };
+
+    [
+        'ollamaendpoint', 'ollamamodel', 'chatgptApiKey', 'chatgptmodel',
+        'geminiApiKey', 'geminimodel', 'xaiApiKey', 'xaimodel',
+        'deepseekApiKey', 'deepseekmodel', 'groqApiKey', 'groqmodel',
+        'openrouterApiKey', 'openroutermodel', 'customAIEndpoint',
+        'customAIModel', 'customAIApiKey', 'bedrockAccessKey',
+        'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel'
+    ].forEach(key => {
+        const input = document.querySelector(`[data-textsetting='${key}']`);
+        if (input) {
+            override[key] = { textsetting: input.value.trim() };
+        }
+    });
+
+    const keepAliveInput = document.querySelector("[data-numbersetting='ollamaKeepAlive']");
+    if (keepAliveInput) {
+        override.ollamaKeepAlive = { numbersetting: keepAliveInput.value };
+    }
+
+    return override;
+}
+
+function formatLLMProviderTestError(error) {
+    if (!error) {
+        return 'Unknown error';
+    }
+    if (typeof error === 'string') {
+        return error;
+    }
+
+    const parts = [];
+    if (error.provider) {
+        parts.push(`Provider: ${error.provider}`);
+    }
+    if (error.status !== undefined && error.status !== null) {
+        parts.push(`Status: ${error.status}`);
+    }
+    if (error.code) {
+        parts.push(`Code: ${error.code}`);
+    }
+    if (error.message) {
+        parts.push(`Message: ${error.message}`);
+    }
+    if (error.hint) {
+        parts.push(`Hint: ${error.hint}`);
+    }
+
+    return parts.join('\n') || 'Unknown error';
+}
+
+async function testSelectedLLMProvider() {
+    const button = document.getElementById('testSelectedLLMProvider');
+    const status = document.getElementById('testSelectedLLMProviderStatus');
+    const output = document.getElementById('testSelectedLLMProviderOutput');
+    if (!button || !status || !output) {
+        return;
+    }
+
+    const originalLabel = button.querySelector('span')?.textContent || button.textContent;
+    const providerLabel = document.getElementById('aiProvider')?.selectedOptions?.[0]?.textContent || 'selected provider';
+
+    button.disabled = true;
+    if (button.querySelector('span')) {
+        button.querySelector('span').textContent = 'Testing...';
+    } else {
+        button.textContent = 'Testing...';
+    }
+    status.textContent = `Testing ${providerLabel}...`;
+    status.style.color = '#bbb';
+    output.style.display = 'none';
+    output.textContent = '';
+
+    try {
+        const response = await sendPopupBackgroundCommand({
+            cmd: 'testLLMProvider',
+            prompt: 'Reply with one short sentence confirming this chatbot connection works.',
+            settingsOverride: collectLLMProviderTestSettings()
+        }, 60000);
+
+        if (response && response.success) {
+            status.textContent = 'Connected';
+            status.style.color = '#7ad37a';
+            output.textContent = response.response || 'The provider replied without any text.';
+        } else {
+            status.textContent = 'Failed';
+            status.style.color = '#ff8a8a';
+            output.textContent = formatLLMProviderTestError(response?.error || response?.message || response);
+        }
+    } catch (error) {
+        status.textContent = 'Failed';
+        status.style.color = '#ff8a8a';
+        output.textContent = error?.message || String(error);
+    } finally {
+        output.style.display = 'block';
+        button.disabled = false;
+        if (button.querySelector('span')) {
+            button.querySelector('span').textContent = originalLabel;
+        } else {
+            button.textContent = originalLabel;
+        }
+    }
+}
+
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
@@ -3593,6 +3721,7 @@ function getTargetMap() {
 		'map': 23,
         'meta': 24,
         'multialerts': 25,
+        'timer': 26,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -4573,8 +4702,8 @@ function handleCustomGifCommand(ele, sync) {
     if (!ele.closest('.custom-gif-command-entry')) return false;
     
     const commands = Array.from(document.querySelectorAll('.custom-gif-command-entry')).map(entry => ({
-        command: entry.querySelector('.custom-command').value,
-        url: entry.querySelector('.custom-media-url').value
+        command: entry.querySelector('.custom-command')?.value?.trim() || '',
+        url: entry.querySelector('.custom-media-url')?.value?.trim() || ''
     }));
     
     if (sync) {
@@ -5028,7 +5157,150 @@ function sendMultiAlertsPreview(payload) {
     sendOverlayPreview('multialerts', payload);
 }
 
-function buildTestAlertPayload(category) {
+const MULTI_ALERT_PREVIEW_PLATFORMS = Object.freeze({
+    tiktok: {
+        type: 'tiktok',
+        platform: 'tiktok',
+        accent: '#fe2c55',
+        avatarLabel: 'RW',
+        chatname: 'Riftwalker',
+        subscriptionLabel: 'Creator Subscriber',
+        subscriptionSubtitle: 'Subscriber badge unlocked',
+        donationAmount: '100 Diamonds',
+        donationValue: 0.5,
+        donationMessage: 'Sent Rose x100',
+        donationMediaLabel: 'ROSE',
+        bitsAmount: '350 Diamonds',
+        bitsMessage: 'Diamond shower incoming!',
+        raidMessage: 'Dropped in with 42 viewers!'
+    },
+    twitch: {
+        type: 'twitch',
+        platform: 'twitch',
+        accent: '#9146ff',
+        avatarLabel: 'TW',
+        chatname: 'CaptainSquawk',
+        subscriptionLabel: 'Tier 1',
+        subscriptionSubtitle: 'Tier 1 subscription',
+        donationAmount: '$10.00',
+        donationValue: 10,
+        donationMessage: 'Keep up the great work!',
+        donationMediaLabel: 'HYPE',
+        bitsAmount: '500 bits',
+        bitsMessage: 'Cheer train incoming!',
+        raidMessage: 'Raiding with 42 viewers!'
+    },
+    youtube: {
+        type: 'youtube',
+        platform: 'youtube',
+        accent: '#ff3b30',
+        avatarLabel: 'YT',
+        chatname: 'StudioPixel',
+        subscriptionLabel: 'New Member',
+        subscriptionSubtitle: 'Channel membership joined',
+        donationAmount: '$10.00',
+        donationValue: 10,
+        donationMessage: 'Sent a Super Chat to support the stream!',
+        donationMediaLabel: 'LIVE',
+        bitsAmount: '500 cheers',
+        bitsMessage: 'The live chat is popping off!',
+        raidMessage: 'Sending 42 viewers over from live chat!'
+    },
+    kick: {
+        type: 'kick',
+        platform: 'kick',
+        accent: '#53fc18',
+        avatarLabel: 'KK',
+        chatname: 'GreenRoom',
+        subscriptionLabel: 'Kick Subscriber',
+        subscriptionSubtitle: 'Channel support renewed',
+        donationAmount: '$10.00',
+        donationValue: 10,
+        donationMessage: 'Tipped to keep the stream rolling!',
+        donationMediaLabel: 'TIP',
+        bitsAmount: '500 hype',
+        bitsMessage: 'Hype meter kicked up a notch!',
+        raidMessage: 'Rolling in with 42 viewers!'
+    }
+});
+
+function getMultiAlertPreviewPlatformKey() {
+    return document.getElementById('multi-alert-preview-platform')?.value || 'tiktok';
+}
+
+function buildMultiAlertPreviewDescriptor(category) {
+    const platformKey = getMultiAlertPreviewPlatformKey();
+    const profile = MULTI_ALERT_PREVIEW_PLATFORMS[platformKey] || MULTI_ALERT_PREVIEW_PLATFORMS.tiktok;
+    const commonOverrides = {
+        type: profile.type,
+        platform: profile.platform,
+        chatname: profile.chatname,
+        chatimg: createPreviewAvatarDataUri(profile.avatarLabel, profile.accent)
+    };
+
+    switch (category) {
+        case 'follow':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'new_follower',
+                    chatmessage: `${profile.chatname} has started following`
+                }
+            };
+        case 'subscription':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'new_subscriber',
+                    membership: profile.subscriptionLabel,
+                    subtitle: profile.subscriptionSubtitle,
+                    chatmessage: 'Welcome to the squad!'
+                }
+            };
+        case 'donation':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: platformKey === 'tiktok' ? 'gift' : 'donation',
+                    hasDonation: profile.donationAmount,
+                    donoValue: profile.donationValue,
+                    chatmessage: profile.donationMessage,
+                    contentimg: createPreviewMediaDataUri(profile.donationMediaLabel, profile.accent),
+                    title: platformKey === 'tiktok' ? 'Rose' : ''
+                }
+            };
+        case 'bits':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'cheer',
+                    hasDonation: profile.bitsAmount,
+                    chatmessage: profile.bitsMessage,
+                    contentimg: createPreviewMediaDataUri('500', profile.accent),
+                    meta: { bits: 500 }
+                }
+            };
+        case 'raid':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'raid',
+                    chatmessage: profile.raidMessage,
+                    contentimg: createPreviewMediaDataUri('RAID', profile.accent),
+                    meta: { viewers: 42 }
+                }
+            };
+        default:
+            return null;
+    }
+}
+
+function buildTestAlertPayload(category, overrides = {}) {
     const payloads = {
         follow: {
             type: 'twitch',
@@ -5072,7 +5344,19 @@ function buildTestAlertPayload(category) {
             meta: { viewers: 42 }
         }
     };
-    return payloads[category] || null;
+    const payload = payloads[category];
+    if (!payload) {
+        return null;
+    }
+
+    return {
+        ...payload,
+        ...overrides,
+        meta: {
+            ...(payload.meta || {}),
+            ...(overrides.meta || {})
+        }
+    };
 }
 
 function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
@@ -5094,14 +5378,19 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
             return;
         }
         button.addEventListener('click', () => {
-            sendOverlayPreview(previewKey, descriptor);
+            const resolvedDescriptor =
+                typeof descriptor === 'function'
+                    ? descriptor()
+                    : descriptor;
+
+            sendOverlayPreview(previewKey, resolvedDescriptor);
             if (previewKey === 'multialerts') {
-                if (descriptor && descriptor.category) {
-                    const payload = buildTestAlertPayload(descriptor.category);
+                if (resolvedDescriptor && resolvedDescriptor.category) {
+                    const payload = buildTestAlertPayload(resolvedDescriptor.category, resolvedDescriptor.overrides || {});
                     if (payload) {
                         chrome.runtime.sendMessage({ cmd: 'testAlert', payload });
                     }
-                } else if (descriptor === false) {
+                } else if (resolvedDescriptor === false) {
                     chrome.runtime.sendMessage({ cmd: 'clearAlerts' });
                 }
             }
@@ -5152,7 +5441,8 @@ function refreshLinks(){
       'custom-gif-commandslink': 'custom-gif-commands',
 	  'scoreboardlink': 'scoreboard',
 	  'spotifylink': 'spotify',
-	  'maplink': 'map'
+	  'maplink': 'map',
+	  'timerlink': 'timer'
     };
     const linkIdsToClean = Object.keys(linkIdToDivIdMap);
 
@@ -5299,9 +5589,50 @@ try {
 	log(e);
 }
 
+function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia') {
+    if (!inputElement) {
+        return;
+    }
+
+    window.open('https://fileuploads.socialstream.ninja/popup/upload', popupName, 'width=640,height=640');
+
+    const handler = (event) => {
+        if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+        if (!event.data || event.data.type !== 'media-uploaded' || !event.data.url) return;
+
+        inputElement.value = event.data.url;
+        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+        window.removeEventListener('message', handler);
+    };
+
+    window.addEventListener('message', handler);
+}
+
+function triggerCustomGifPreview(entry) {
+    const commandInput = entry?.querySelector('.custom-command');
+    const mediaUrlInput = entry?.querySelector('.custom-media-url');
+    const mediaUrl = mediaUrlInput?.value?.trim();
+
+    if (!mediaUrl) {
+        alert('Add or upload a GIF, image, or video URL first.');
+        mediaUrlInput?.focus();
+        return;
+    }
+
+    chrome.runtime.sendMessage({
+        cmd: 'previewCustomGif',
+        target: 'gif',
+        type: 'popup',
+        chatname: 'GIF Test',
+        chatmessage: commandInput?.value?.trim() || '!preview',
+        contentimg: mediaUrl
+    }, function () {});
+}
+
 function createCommandEntry(command = '', url = '') {
     function encodeHTML(str) {
-        return str.replace(/&/g, '&amp;')
+        return String(str ?? '').replace(/&/g, '&amp;')
                   .replace(/</g, '&lt;')
                   .replace(/>/g, '&gt;')
                   .replace(/"/g, '&quot;')
@@ -5319,11 +5650,27 @@ function createCommandEntry(command = '', url = '') {
             <input type="text" class="textInput custom-media-url" value="${encodeHTML(url)}" autocomplete="off" placeholder="https://media.giphy.com/media/..." data-textsetting="customGifUrl" />
             <label><span data-translate="media-url">&gt; Media URL (GIF, image, or video)</span></label>
         </div>
-        <button class="removeCustomGifCommand" style="width: auto; min-width: 60px; padding: 0 5px;">
-            <span data-translate="remove">Remove</span>
-        </button>
+        <div class="custom-gif-command-actions">
+            <button class="uploadCustomGifMedia" type="button" title="Upload your own GIF, image, or video file">
+                <span>Upload</span>
+            </button>
+            <button class="testCustomGifCommand" type="button" title="Preview this media in the gif.html overlay">
+                <span>Test</span>
+            </button>
+            <button class="removeCustomGifCommand" type="button">
+                <span data-translate="remove">Remove</span>
+            </button>
+        </div>
     `;
     
+    entry.querySelector('.uploadCustomGifMedia').addEventListener('click', function() {
+        openHostedMediaUploadForInput(entry.querySelector('.custom-media-url'), 'uploadCustomGifMedia');
+    });
+
+    entry.querySelector('.testCustomGifCommand').addEventListener('click', function() {
+        triggerCustomGifPreview(entry);
+    });
+
     entry.querySelector('.removeCustomGifCommand').addEventListener('click', function() {
         entry.remove();
         updateSettings(entry, true);
@@ -6702,13 +7049,23 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	});
 
 	attachOverlayPreviewControls('multialerts', [
-		{ id: 'multi-alert-preview-follow', descriptor: { category: 'follow' } },
-		{ id: 'multi-alert-preview-sub', descriptor: { category: 'subscription' } },
-		{ id: 'multi-alert-preview-dono', descriptor: { category: 'donation' } },
-		{ id: 'multi-alert-preview-bits', descriptor: { category: 'bits' } },
-		{ id: 'multi-alert-preview-raid', descriptor: { category: 'raid' } },
+		{ id: 'multi-alert-preview-follow', descriptor: () => buildMultiAlertPreviewDescriptor('follow') },
+		{ id: 'multi-alert-preview-sub', descriptor: () => buildMultiAlertPreviewDescriptor('subscription') },
+		{ id: 'multi-alert-preview-dono', descriptor: () => buildMultiAlertPreviewDescriptor('donation') },
+		{ id: 'multi-alert-preview-bits', descriptor: () => buildMultiAlertPreviewDescriptor('bits') },
+		{ id: 'multi-alert-preview-raid', descriptor: () => buildMultiAlertPreviewDescriptor('raid') },
 		{ id: 'multi-alert-preview-clear', descriptor: false }
 	]);
+
+	var previewPlatformSelect = document.getElementById('multi-alert-preview-platform');
+	if (previewPlatformSelect) {
+		previewPlatformSelect.addEventListener('change', function() {
+			var state = overlayPreviewState.multialerts;
+			if (state?.pending && state.pending.category) {
+				sendOverlayPreview('multialerts', buildMultiAlertPreviewDescriptor(state.pending.category));
+			}
+		});
+	}
 
 	var muteBtn = document.getElementById('multi-alert-preview-mute');
 	if (muteBtn) {
@@ -7116,6 +7473,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 	if (deleteBadwordsButton) {
 		deleteBadwordsButton.addEventListener('click', deleteBadwordsFile);
+	}
+
+	const testSelectedLLMProviderButton = document.getElementById('testSelectedLLMProvider');
+	if (testSelectedLLMProviderButton) {
+		testSelectedLLMProviderButton.addEventListener('click', testSelectedLLMProvider);
 	}
 	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
@@ -8229,6 +8591,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					}
 					
 					// Remove this specific listener
+					window.removeEventListener('message', handleMessage);
+				}
+			});
+		};
+	}
+
+	const uploadTimerSoundBtn = document.getElementById('uploadTimerSoundBtn');
+	if (uploadTimerSoundBtn) {
+		uploadTimerSoundBtn.onclick = function() {
+			window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadTimerSound', 'width=640,height=640');
+			window.addEventListener('message', function handleMessage(event) {
+				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+				if (event.data && event.data.type === 'media-uploaded') {
+					const timerSoundInput = document.getElementById('timerCustomSound');
+					if (timerSoundInput) {
+						timerSoundInput.value = event.data.url;
+						timerSoundInput.dispatchEvent(new Event('input', { bubbles: true }));
+						timerSoundInput.dispatchEvent(new Event('change', { bubbles: true }));
+					}
 					window.removeEventListener('message', handleMessage);
 				}
 			});

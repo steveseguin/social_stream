@@ -126,9 +126,13 @@
         }
     }
 
-    chrome.runtime.onMessage.addListener(
+	chrome.runtime.onMessage.addListener(
         function (request, sender, sendResponse) {
             try {
+                if ("getSource" === request) {
+                    sendResponse("chaturbate");
+                    return;
+                }
                 if ("focusChat" === request) {
                     var chatInput = document.querySelector('#ChatTabContainer div[data-testid="chat-input"][contenteditable="true"]');
                     if (chatInput) {

@@ -35,14 +35,18 @@
             max-height: 100%;
             object-fit: contain;
         }
-		img,svg,video{
+		#mediaContainer img,
+		#mediaContainer svg,
+		#mediaContainer video,
+		#mediaContainer iframe{
 			max-height:100vh;
 			max-width:100vw;
 		}
-		body.stretch #mediaContent,
-		body.stretch img,
-		body.stretch svg,
-		body.stretch video {
+		body.stretch #mediaContainer #mediaContent,
+		body.stretch #mediaContainer img,
+		body.stretch #mediaContainer svg,
+		body.stretch #mediaContainer video,
+		body.stretch #mediaContainer iframe {
 			width: 100vw !important;
 			height: 100vh !important;
 			max-width: none !important;
@@ -65,8 +69,10 @@
         
 		var audioContext = new (window.AudioContext || window.webkitAudioContext)();
 		
-		const fadeoutTime = 300
-		const minDisplayTime = parseInt(urlParams.get('showtime')) || (fadeoutTime+1); 
+		const fadeoutTime = 300;
+		const minDisplayTime = parseInt(urlParams.get('showtime')) || (fadeoutTime + 1);
+		const embeddedDisplayTime = urlParams.has('showtime') ? minDisplayTime : Math.max(minDisplayTime, 5000);
+		const mediaProbeTimeout = 4000;
 
         function processData(data) {
            //console.log(data);
@@ -100,23 +106,177 @@
             }
         }
 
-        function detectMediaType(url) {
-            fetch(url, { method: 'HEAD' })
-                .then(response => {
-                    const contentType = (response.headers.get('Content-Type') || '').split(';')[0].trim();
-                    if (['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/svg+xml'].includes(contentType)) {
-                        displayImage(url);
-                    } else if (['video/mp4', 'video/webm', 'video/ogg'].includes(contentType)) {
-                        displayVideo(url);
-                    } else if (['audio/mpeg', 'audio/wav', 'audio/ogg'].includes(contentType)) {
-                        playAudio(url);
-                    } else {
-                        displayEmbeddedContent(url);
-                    }
-                })
-                .catch(() => {
-                    displayEmbeddedContent(url);
-                });
+        function getMediaTypeFromExtension(source) {
+			const cleanSource = (source || '').toLowerCase().split('#')[0].split('?')[0].split('&')[0];
+			const fileExtension = cleanSource.split('.').pop();
+			if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) return 'image';
+			if (['mp4', 'webm', 'ogg'].includes(fileExtension)) return 'video';
+			if (['mp3', 'wav'].includes(fileExtension)) return 'audio';
+			if (fileExtension === 'svg') return 'svg';
+			if (fileExtension === 'html') return 'embed';
+			return '';
+        }
+
+		function getMediaTypeFromMimeType(contentType) {
+			switch ((contentType || '').split(';')[0].trim().toLowerCase()) {
+				case 'image/gif':
+				case 'image/webp':
+				case 'image/jpeg':
+				case 'image/png':
+				case 'image/svg+xml':
+					return contentType.includes('svg') ? 'svg' : 'image';
+				case 'video/mp4':
+				case 'video/webm':
+				case 'video/ogg':
+					return 'video';
+				case 'audio/mpeg':
+				case 'audio/wav':
+				case 'audio/ogg':
+					return 'audio';
+				case 'text/html':
+					return 'embed';
+				default:
+					return '';
+			}
+		}
+
+		function renderDetectedMedia(url, mediaType) {
+			if (mediaType === 'image') {
+				displayImage(url);
+			} else if (mediaType === 'video') {
+				displayVideo(url);
+			} else if (mediaType === 'audio') {
+				playAudio(url);
+			} else if (mediaType === 'svg') {
+				displaySVG(url);
+			} else {
+				displayEmbeddedContent(url);
+			}
+		}
+
+		function probeSingleMediaType(url, mediaType) {
+			return new Promise((resolve) => {
+				let settled = false;
+				let timeoutId = null;
+				let element = null;
+
+				const cleanup = () => {
+					if (timeoutId) {
+						clearTimeout(timeoutId);
+					}
+					if (!element) return;
+					element.onerror = null;
+					if ('onload' in element) {
+						element.onload = null;
+					}
+					if ('onloadedmetadata' in element) {
+						element.onloadedmetadata = null;
+					}
+					if ('oncanplay' in element) {
+						element.oncanplay = null;
+					}
+					element.removeAttribute('src');
+					if (typeof element.load === 'function') {
+						try {
+							element.load();
+						} catch (e) {}
+					}
+				};
+
+				const finish = (result) => {
+					if (settled) return;
+					settled = true;
+					cleanup();
+					resolve(result);
+				};
+
+				timeoutId = setTimeout(() => finish(''), mediaProbeTimeout);
+
+				if (mediaType === 'image') {
+					element = new Image();
+					element.onload = () => finish('image');
+					element.onerror = () => finish('');
+					element.src = url;
+					return;
+				}
+
+				if (mediaType === 'video') {
+					element = document.createElement('video');
+					element.muted = true;
+					element.preload = 'metadata';
+					element.playsInline = true;
+					element.onloadedmetadata = () => finish('video');
+					element.oncanplay = () => finish('video');
+					element.onerror = () => finish('');
+					element.src = url;
+					element.load();
+					return;
+				}
+
+				if (mediaType === 'audio') {
+					element = new Audio();
+					element.preload = 'metadata';
+					element.onloadedmetadata = () => finish('audio');
+					element.oncanplay = () => finish('audio');
+					element.onerror = () => finish('');
+					element.src = url;
+					element.load();
+					return;
+				}
+
+				finish('');
+			});
+		}
+
+		async function probeMediaElement(url, preferredType) {
+			const probeOrder = [];
+			if (preferredType && !['embed', 'svg'].includes(preferredType)) {
+				probeOrder.push(preferredType);
+			}
+			['video', 'image', 'audio'].forEach((type) => {
+				if (!probeOrder.includes(type)) {
+					probeOrder.push(type);
+				}
+			});
+
+			for (const mediaType of probeOrder) {
+				const result = await probeSingleMediaType(url, mediaType);
+				if (result) {
+					return result;
+				}
+			}
+
+			return '';
+		}
+
+        async function detectMediaType(url) {
+			const extensionType = getMediaTypeFromExtension(url);
+			if (extensionType && extensionType !== 'embed') {
+				renderDetectedMedia(url, extensionType);
+				return;
+			}
+
+			let headerType = '';
+			try {
+				const response = await fetch(url, { method: 'HEAD' });
+				headerType = getMediaTypeFromMimeType(response.headers.get('Content-Type') || '');
+				if (!headerType) {
+					headerType = getMediaTypeFromExtension(response.url || '');
+				}
+			} catch (e) {}
+
+			if (headerType && headerType !== 'embed') {
+				renderDetectedMedia(url, headerType);
+				return;
+			}
+
+			const probedType = await probeMediaElement(url, headerType || extensionType);
+			if (probedType) {
+				renderDetectedMedia(url, probedType);
+				return;
+			}
+
+			renderDetectedMedia(url, headerType || 'embed');
         }
 
         function playNextMedia() {
@@ -216,7 +376,7 @@
 					mediaContainer.appendChild(mediaContent);
 					playNextMedia();
 				});
-			}, minDisplayTime);
+			}, embeddedDisplayTime);
 		}
 
         function displayVideo(url) {

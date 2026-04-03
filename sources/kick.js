@@ -205,7 +205,7 @@
 	var cachedUserProfiles = new Map();
 	var maxCachedProfiles = 10000; // Limit to 10,000 profiles
 	var processedMessages = new Set();
-	var maxTrackedMessages = 3;
+	var maxTrackedMessages = 40;
 	var pastMessages = [];
 	var trackedKickMessageIds = new Map();
 	var maxTrackedKickMessageIds = 500;
@@ -430,6 +430,34 @@
 	// Determine if we're on the new popout chat or the old chatroom
 	var isPopoutChat = window.location.href.includes("/popout/") && window.location.href.includes("/chat");
 	var isOldChatroom = window.location.href.includes("/chatroom");
+	var isExtensionOn = true;
+	var lastMessage = "";
+	var settings = {};
+	var runtimeMessageHandler = function (request, sender, sendResponse) {
+		try {
+			if ("getSource" == request) {
+				sendResponse("kick");
+				return;
+			}
+			if ("focusChat" == request) {
+				var input = isPopoutChat ? document.querySelector('[data-input="true"]') : document.querySelector('#message-input');
+				if (input && input.focus) {
+					input.focus();
+					sendResponse(true);
+					return;
+				}
+				sendResponse(false);
+				return;
+			}
+		} catch (e) {}
+		sendResponse(false);
+	};
+
+	chrome.runtime.onMessage.addListener(
+		function (request, sender, sendResponse) {
+			return runtimeMessageHandler(request, sender, sendResponse);
+		}
+	);
 
 	try {
 		var kickUserID = false;
@@ -439,13 +467,13 @@
 		}
 	} catch(e){}
 
-	var isExtensionOn = true;
-	
 	var channelImg = "";
 	  
-	if (kickUsername){
-		channelImg = await getKickAvatarImage(kickUsername, kickUsername) || "https://kick.com/img/default-profile-pictures/default2.jpeg";
-	}
+	try {
+		if (kickUsername){
+			channelImg = await getKickAvatarImage(kickUsername, kickUsername) || "https://kick.com/img/default-profile-pictures/default2.jpeg";
+		}
+	} catch(e){}
 	
 	//console.log(channelImg, kickUsername);
 	
@@ -573,7 +601,7 @@
 			return response;
 		} catch(e){
 			console.error(e);
-			return await fetch(URL);
+			return null;
 		}
 	}
 	
@@ -1075,23 +1103,23 @@
 	  
 	  
 	  try {
-		 //console.log(signedInUser);
-		if (signedInUser && signedInUser==chatname){
+		messageId = getKickMessageKey(ele);
+		if (!messageId){
 			const content = ele.textContent || "";
 			const imgSrcs = Array.from(ele.querySelectorAll('img')).map(img => img.src).join(' ');
-			messageId = `${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
-			
-			if (processedMessages.has(messageId)) return;
-			
-			processedMessages.add(messageId);
-			
-			if (processedMessages.size > maxTrackedMessages) {
-			  const entriesToRemove = processedMessages.size - maxTrackedMessages;
-			  const entries = Array.from(processedMessages);
-			  for (let i = 0; i < entriesToRemove; i++) {
-				processedMessages.delete(entries[i]);
-			  }
-			}
+			messageId = `${chatname}|${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
+		}
+
+		if (processedMessages.has(messageId)) return;
+
+		processedMessages.add(messageId);
+
+		if (processedMessages.size > maxTrackedMessages) {
+		  const entriesToRemove = processedMessages.size - maxTrackedMessages;
+		  const entries = Array.from(processedMessages);
+		  for (let i = 0; i < entriesToRemove; i++) {
+			processedMessages.delete(entries[i]);
+		  }
 		}
 	  } catch(e) {
 		  console.error(e);
@@ -1300,66 +1328,64 @@
 	// Route to the appropriate processMessage function based on the URL
 	var processMessage = isPopoutChat ? processMessageNew : processMessageOld;
 
-	chrome.runtime.onMessage.addListener(
-		function (request, sender, sendResponse) {
-			try{
-				if ("getSource" == request){sendResponse("kick");	return;	}
-				if ("focusChat" == request){
-					if (isPopoutChat) {
-						document.querySelector('[data-input="true"]').focus();
-					} else {
-						document.querySelector('#message-input').focus();
-					}
+	runtimeMessageHandler = function (request, sender, sendResponse) {
+		try {
+			if ("getSource" == request) {
+				sendResponse("kick");
+				return;
+			}
+			if ("focusChat" == request) {
+				var input = isPopoutChat ? document.querySelector('[data-input="true"]') : document.querySelector('#message-input');
+				if (input && input.focus) {
+					input.focus();
 					sendResponse(true);
 					return;
 				}
-				if (typeof request === "object"){
-					if ("state" in request){
-						if (request.state !== null){
-							isExtensionOn = request.state;
-						}
-					}
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						if (settings.bttv) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-						}
-						if (settings.seventv) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-						}
-						if (settings.ffz) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-						}
-						return;
-					}
-					if ("SEVENTV" in request) {
-						SEVENTV = request.SEVENTV;
-						sendResponse(true);
-						mergeEmotes();
-						return;
-					}
-					if ("BTTV" in request) {
-						BTTV = request.BTTV;
-						sendResponse(true);
-						mergeEmotes();
-						return;
-					}
-					if ("FFZ" in request) {
-						FFZ = request.FFZ;
-						sendResponse(true);
-						mergeEmotes();
-						return;
+				sendResponse(false);
+				return;
+			}
+			if (typeof request === "object") {
+				if ("state" in request) {
+					if (request.state !== null) {
+						isExtensionOn = request.state;
 					}
 				}
-				// twitch doesn't capture avatars already.
-			} catch(e){}
-			sendResponse(false);
-		}
-	);
-	
-	var lastMessage = "";
-	var settings = {};
+				if ("settings" in request) {
+					settings = request.settings;
+					sendResponse(true);
+					if (settings.bttv) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
+					if (settings.seventv) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
+					if (settings.ffz) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
+					return;
+				}
+				if ("SEVENTV" in request) {
+					SEVENTV = request.SEVENTV;
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+				if ("BTTV" in request) {
+					BTTV = request.BTTV;
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+				if ("FFZ" in request) {
+					FFZ = request.FFZ;
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+			}
+		} catch (e) {}
+		sendResponse(false);
+	};
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
