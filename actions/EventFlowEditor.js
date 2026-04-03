@@ -487,7 +487,11 @@ class EventFlowEditor {
             { value: 'facebook', label: 'Facebook' },
             { value: 'tiktok', label: 'TikTok' },
             { value: 'instagram', label: 'Instagram' },
-            { value: 'rumble', label: 'Rumble' }
+            { value: 'rumble', label: 'Rumble' },
+            { value: 'kofi', label: 'Ko-fi' },
+            { value: 'bmac', label: 'Buy Me a Coffee' },
+            { value: 'fourthwall', label: 'Fourthwall' },
+            { value: 'stripe', label: 'Stripe' }
         ];
         const selectedSources = node.config.sources || [];
 
@@ -2892,7 +2896,7 @@ class EventFlowEditor {
   'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
-  'kiwiirc', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
+  'kiwiirc', 'kofi', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
   'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'mobcrush', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
   'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
@@ -2901,7 +2905,7 @@ class EventFlowEditor {
   'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
   'wix', 'wix2', 'workplace', 'x', 'xeenon', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
-  'other'].includes(node.config.source);
+  'bmac', 'fourthwall', 'stripe', 'other'].includes(node.config.source);
 				
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
 						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
@@ -2909,7 +2913,7 @@ class EventFlowEditor {
   'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
-  'kiwiirc', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
+  'kiwiirc', 'kofi', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
   'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'mobcrush', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
   'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
@@ -2918,7 +2922,7 @@ class EventFlowEditor {
   'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
   'wix', 'wix2', 'workplace', 'x', 'xeenon', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
-  'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()
+  'bmac', 'fourthwall', 'stripe', 'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()
    + s.slice(1).replace(/_/g, ' ')}</option>`).join('')}
    						<option value="custom" ${isCustomSource ? 'selected' : ''}>🔧 Custom...</option>
 						 </select></div>`;
@@ -3188,6 +3192,11 @@ class EventFlowEditor {
 			case 'compareProperty':
 				const commonProperties = [
 					{ value: 'donationAmount', label: 'Donation Amount' },
+					{ value: 'type', label: 'Source Type' },
+					{ value: 'event', label: 'Event Name' },
+					{ value: 'sourceName', label: 'Channel Name' },
+					{ value: 'membership', label: 'Membership Status' },
+					{ value: 'hasDonation', label: 'Donation Label' },
 					{ value: 'karma', label: 'Karma Score (0-1)' },
 					{ value: 'memberMonths', label: 'Member Months' },
 					{ value: 'bitsAmount', label: 'Bits Amount (Twitch)' },
@@ -3226,8 +3235,8 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group">
 						<label class="property-label">Compare Value</label>
-						<input type="number" class="property-input" id="prop-value" value="${node.config.value ?? 0}" step="any">
-						<div class="property-help">The value to compare against</div>
+						<input type="text" class="property-input" id="prop-value" value="${node.config.value ?? 0}" placeholder="e.g. 10, youtube, donation">
+						<div class="property-help">Use numbers for &gt;/&lt; comparisons, or text for = / != matches.</div>
 					</div>
 					<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>💡 Examples:</strong><br>

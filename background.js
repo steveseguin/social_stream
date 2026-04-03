@@ -13892,7 +13892,7 @@ async function applyBotActions(data, tab = false) {
 				const event = settings[`midievent${id}`];
 				const command = settings[`midicommand${id}`]?.textsetting;
 				const note = settings[`midinote${id}`]?.numbersetting;
-				const device = settings[`mididevice${id}`]?.numbersetting || "";
+				const device = settings[`mididevice${id}`]?.optionsetting || "";
 
 				if (!event?.setting || !command || !note) continue;
 
@@ -14565,7 +14565,33 @@ try {
 	log(e);
 }
 
-function triggerMidiNote(note = 64, device = false) {
+function getMidiOutputChannels(channel = false) {
+	const selectedChannel = (channel || settings.midiOutputChannel?.optionsetting || "1") + "";
+	if (selectedChannel.toLowerCase() === "all") {
+		return Array.from({ length: 16 }, (_, index) => index + 1);
+	}
+
+	const parsedChannel = parseInt(selectedChannel, 10);
+	if (parsedChannel >= 1 && parsedChannel <= 16) {
+		return [parsedChannel];
+	}
+
+	return [1];
+}
+
+function sendMidiNoteToOutput(output, note, channels) {
+	if (!output) {
+		return;
+	}
+
+	channels.forEach(channel => {
+		const statusOffset = channel - 1;
+		output.send([0x90 + statusOffset, note, 127]); // Note On
+		output.send([0x80 + statusOffset, note, 0]); // Note Off
+	});
+}
+
+function triggerMidiNote(note = 64, device = false, channel = false) {
 	if (!WebMidi.enabled) {
 		try {
 			WebMidi.enable();
@@ -14575,19 +14601,18 @@ function triggerMidiNote(note = 64, device = false) {
 		}
 	}
 	try {
-		if (settings.midiDeviceSelect?.optionsetting || device) {
-			const selectedOutput = WebMidi.outputs.find(output => output.name === (device || settings.midiDeviceSelect.optionsetting));
+		const selectedDevice = device || settings.midiOutputDevice?.optionsetting || "";
+		const channels = getMidiOutputChannels(channel);
+		if (selectedDevice) {
+			const selectedOutput = WebMidi.outputs.find(output => output.name === selectedDevice);
 			if (selectedOutput) {
-				selectedOutput.send([0x90, note, 127]); // Note On
-				selectedOutput.send([0x80, note, 0]); // Note Off
+				sendMidiNoteToOutput(selectedOutput, note, channels);
 			} else {
-				console.warn("MIDI device not found: " + (device || settings.midiDeviceSelect.optionsetting));
+				console.warn("MIDI device not found: " + selectedDevice);
 			}
 		} else {
 			WebMidi.outputs.forEach(output => {
-				//output.playNote(note);
-				output.send([0x90, note, 127]); // Note On
-				output.send([0x80, note, 0]); // Note Off
+				sendMidiNoteToOutput(output, note, channels);
 			});
 		}
 	} catch (e) {
