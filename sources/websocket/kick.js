@@ -206,7 +206,8 @@ const state = {
     advancedControls: {
         syncDeleteMessages: false,
         syncBlockUsers: false
-    }
+    },
+    streamInfoCache: null
 };
 
 const els = {};
@@ -1887,6 +1888,7 @@ function initElements() {
         chatStatus: q('chat-status'),
         syncDeleteMessages: q('sync-delete-messages'),
         syncBlockUsers: q('sync-block-users'),
+        streamAdminTarget: q('stream-admin-target'),
         streamTitle: q('stream-title'),
         streamCategory: q('stream-category'),
         refreshStreamInfo: q('refresh-stream-info'),
@@ -2047,6 +2049,7 @@ function loadConfig() {
         if (cfg.chatroomId) {
             state.socket.chatroomId = String(cfg.chatroomId).trim();
         }
+        state.streamInfoCache = sanitizeKickStreamInfoCache(cfg.streamInfoCache);
     } catch (err) {
         console.error('Failed to load Kick config', err);
     }
@@ -2064,6 +2067,13 @@ function sanitizeStoredConfig(cfg) {
             changed = true;
         }
     });
+    const streamInfoCache = sanitizeKickStreamInfoCache(sanitized.streamInfoCache);
+    if (streamInfoCache) {
+        sanitized.streamInfoCache = streamInfoCache;
+    } else if (Object.prototype.hasOwnProperty.call(sanitized, 'streamInfoCache')) {
+        delete sanitized.streamInfoCache;
+        changed = true;
+    }
     if (changed) {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
@@ -2190,7 +2200,8 @@ function persistConfig() {
         chatroomId: state.socket.chatroomId || '',
         siteApiBase: state.socket.siteApiBase || '',
         siteApiProxyBase: state.socket.siteApiProxyBase || '',
-        allowProxy: state.socket.allowProxy !== false
+        allowProxy: state.socket.allowProxy !== false,
+        streamInfoCache: sanitizeKickStreamInfoCache(state.streamInfoCache)
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
 }
@@ -2353,6 +2364,7 @@ function updateInputsFromState() {
     if (els.chatStatus) {
         els.chatStatus.textContent = '';
     }
+    updateKickAdminControlHint();
 }
 
 function resolveAuthIdentity() {
@@ -2443,6 +2455,7 @@ function updateAuthStatus() {
             }
         });
     }
+    updateKickAdminControlHint();
     notifyLiteStatus('auth');
 }
 
@@ -3817,15 +3830,12 @@ async function apiFetch(path, options = {}, retry = true) {
 }
 
 function updateKickStreamEditorFields(channel) {
-    if (!channel || typeof channel !== 'object') {
-        return;
+    const values = resolveKickStreamEditorValues(channel);
+    if (els.streamTitle) {
+        els.streamTitle.value = values.title || '';
     }
-    const values = extractKickStreamEditorValues(channel);
-    if (els.streamTitle && values.title) {
-        els.streamTitle.value = values.title;
-    }
-    if (els.streamCategory && values.category) {
-        els.streamCategory.value = values.category;
+    if (els.streamCategory) {
+        els.streamCategory.value = values.category || '';
     }
 }
 
@@ -3857,6 +3867,150 @@ function extractKickStreamEditorValues() {
     };
 }
 
+function sanitizeKickStreamInfoCache(cache) {
+    if (!cache || typeof cache !== 'object') {
+        return null;
+    }
+    const slug = normalizeChannel(cache.slug || cache.channelSlug || '');
+    const values = extractKickStreamEditorValues(cache);
+    const updatedAt = Number(cache.updatedAt);
+    const source = pickFirstString([cache.source], '');
+    if (!slug && !values.title && !values.category) {
+        return null;
+    }
+    return {
+        slug,
+        title: values.title || '',
+        category: values.category || '',
+        updatedAt: Number.isFinite(updatedAt) && updatedAt > 0 ? updatedAt : 0,
+        source
+    };
+}
+
+function getKickStreamInfoCacheForSlug(slugInput) {
+    const cached = sanitizeKickStreamInfoCache(state.streamInfoCache);
+    if (!cached) {
+        return null;
+    }
+    const slug = normalizeChannel(slugInput);
+    if (slug && cached.slug && cached.slug !== slug) {
+        return null;
+    }
+    return cached;
+}
+
+function rememberKickStreamInfo(valuesSource, options = {}) {
+    const values = extractKickStreamEditorValues(valuesSource);
+    if (!values.title && !values.category) {
+        return null;
+    }
+    const authIdentity = getAuthenticatedKickChannelIdentity();
+    const slug = normalizeChannel(
+        options.slug ||
+        extractKickChannelSlug(valuesSource) ||
+        authIdentity.slug ||
+        state.channelSlug
+    );
+    state.streamInfoCache = sanitizeKickStreamInfoCache({
+        slug,
+        ...values,
+        updatedAt: Date.now(),
+        source: pickFirstString([options.source], '')
+    });
+    persistConfig();
+    return state.streamInfoCache;
+}
+
+function resolveKickStreamEditorValues(channel) {
+    const authIdentity = getAuthenticatedKickChannelIdentity();
+    const slug = normalizeChannel(
+        extractKickChannelSlug(channel) ||
+        authIdentity.slug ||
+        state.channelSlug
+    );
+    const values = extractKickStreamEditorValues(channel);
+    const cached = getKickStreamInfoCacheForSlug(slug);
+    return {
+        title: values.title || cached?.title || '',
+        category: values.category || cached?.category || ''
+    };
+}
+
+function canFetchKickSiteStreamInfo() {
+    try {
+        // Disabled by default. Kick's offline stream-info endpoint currently
+        // needs dashboard-style web auth that the SSN OAuth/local page does
+        // not have, so normal refreshes should stick to public-v1 + cache.
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+        const explicitOptIn =
+            urlParams.get('kick_site_stream_info') === '1' ||
+            hashParams.get('kick_site_stream_info') === '1' ||
+            localStorage.getItem('kickSiteStreamInfoExperimental') === '1';
+        if (!explicitOptIn) {
+            return false;
+        }
+        if (extension.available) {
+            return true;
+        }
+        const origin = typeof window?.location?.origin === 'string' ? window.location.origin : '';
+        if (!origin || origin === 'null') {
+            return false;
+        }
+        return /^https:\/\/(?:dashboard\.)?kick\.com$/i.test(origin);
+    } catch (_) {
+        return false;
+    }
+}
+
+async function fetchKickSiteStreamInfoBySlug(slugInput) {
+    const slug = normalizeChannel(slugInput);
+    if (!slug || !canFetchKickSiteStreamInfo()) {
+        return null;
+    }
+    try {
+        const response = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}/stream-info`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            return null;
+        }
+        const data = await response.json();
+        if (!data || typeof data !== 'object') {
+            return null;
+        }
+        return {
+            ...data,
+            slug
+        };
+    } catch (_) {
+        return null;
+    }
+}
+
+function mergeKickChannelInfo(channel, streamInfo, slugInput) {
+    const merged = {
+        ...(channel && typeof channel === 'object' ? channel : {}),
+        ...(streamInfo && typeof streamInfo === 'object' ? streamInfo : {})
+    };
+    const slug = normalizeChannel(
+        extractKickChannelSlug(streamInfo) ||
+        extractKickChannelSlug(channel) ||
+        slugInput
+    );
+    if (slug && !merged.slug) {
+        merged.slug = slug;
+    }
+    if (streamInfo?.category || channel?.category) {
+        merged.category = streamInfo?.category || channel?.category;
+    }
+    return merged;
+}
+
 function getAuthenticatedKickChannelIdentity() {
     const slug = normalizeChannel(
         pickFirstString(
@@ -3865,11 +4019,15 @@ function getAuthenticatedKickChannelIdentity() {
                 state.authUser?.channel?.slug,
                 state.authUser?.user?.slug,
                 state.authUser?.username,
+                state.authUser?.name,
+                state.authUser?.user?.name,
                 state.tokens?.profile?.slug,
                 state.tokens?.profile?.channel?.slug,
                 state.tokens?.profile?.user?.slug,
                 state.tokens?.profile?.username,
+                state.tokens?.profile?.name,
                 state.tokens?.username,
+                state.tokens?.name,
                 state.tokens?.user_login,
                 state.tokens?.userLogin,
                 state.tokens?.user_name,
@@ -3893,28 +4051,119 @@ function getAuthenticatedKickChannelIdentity() {
     return { slug, userId };
 }
 
-async function fetchCurrentKickChannelInfo() {
+function formatKickChannelHandle(slug) {
+    const normalized = normalizeChannel(slug);
+    return normalized ? `@${normalized}` : '';
+}
+
+function getKickAdminControlContext() {
     const selectedSlug = normalizeChannel(state.channelSlug);
     const authIdentity = getAuthenticatedKickChannelIdentity();
-    if (selectedSlug && authIdentity.slug && selectedSlug === authIdentity.slug) {
-        const data = await apiFetch('/public/v1/channels');
-        const channels = unwrapKickChannelPayload(data);
-        if (channels[0]) {
-            return channels[0];
+    const authSlug = normalizeChannel(authIdentity.slug);
+    return {
+        selectedSlug,
+        authSlug,
+        selectedLabel: formatKickChannelHandle(selectedSlug),
+        authLabel: formatKickChannelHandle(authSlug),
+        mismatch: Boolean(selectedSlug && authSlug && selectedSlug !== authSlug)
+    };
+}
+
+function updateKickAdminControlHint() {
+    if (!els.streamAdminTarget) {
+        return;
+    }
+    const authed = Boolean(state.tokens?.access_token) && !isTokenExpired();
+    const context = getKickAdminControlContext();
+    if (!authed) {
+        els.streamAdminTarget.textContent = 'Sign in with the Kick channel you want to edit.';
+        return;
+    }
+    if (context.mismatch) {
+        els.streamAdminTarget.textContent = `These controls update ${context.authLabel}, not ${context.selectedLabel}.`;
+        return;
+    }
+    if (context.authLabel) {
+        els.streamAdminTarget.textContent = `These controls update ${context.authLabel}.`;
+        return;
+    }
+    els.streamAdminTarget.textContent = 'These controls update the authenticated Kick channel.';
+}
+
+async function fetchAuthenticatedKickChannelInfo() {
+    const data = await apiFetch('/public/v1/channels');
+    const channels = unwrapKickChannelPayload(data);
+    return channels[0] || null;
+}
+
+async function fetchCurrentKickChannelInfo() {
+    const authIdentity = getAuthenticatedKickChannelIdentity();
+    const preferredSlug = normalizeChannel(authIdentity.slug || state.channelSlug);
+    let authenticatedChannel = null;
+    if (state.tokens?.access_token && !isTokenExpired()) {
+        authenticatedChannel = await fetchAuthenticatedKickChannelInfo();
+        if (authenticatedChannel) {
+            rememberKickStreamInfo(authenticatedChannel, {
+                slug: extractKickChannelSlug(authenticatedChannel) || preferredSlug,
+                source: 'public-v1'
+            });
         }
     }
+    const streamInfoSlug = normalizeChannel(
+        extractKickChannelSlug(authenticatedChannel) ||
+        preferredSlug
+    );
+    const streamInfo = streamInfoSlug
+        ? await fetchKickSiteStreamInfoBySlug(streamInfoSlug)
+        : null;
+    if (streamInfo) {
+        rememberKickStreamInfo(streamInfo, {
+            slug: streamInfoSlug,
+            source: 'stream-info'
+        });
+    }
+    if (authenticatedChannel || streamInfo) {
+        return mergeKickChannelInfo(authenticatedChannel, streamInfo, streamInfoSlug);
+    }
     if (state.channelSlug) {
-        return fetchKickChannelBySlug(normalizeChannel(state.channelSlug));
+        const channel = await fetchKickChannelBySlug(normalizeChannel(state.channelSlug));
+        if (channel) {
+            rememberKickStreamInfo(channel, {
+                slug: extractKickChannelSlug(channel) || normalizeChannel(state.channelSlug),
+                source: 'public-v1-slug'
+            });
+            return mergeKickChannelInfo(channel, null, state.channelSlug);
+        }
+        const cached = getKickStreamInfoCacheForSlug(state.channelSlug);
+        return cached ? mergeKickChannelInfo(null, cached, state.channelSlug) : null;
     }
     if (state.channelId != null) {
         const path = `/public/v1/channels?broadcaster_user_id=${encodeURIComponent(String(state.channelId))}`;
         const data = await apiFetch(path);
         const channels = unwrapKickChannelPayload(data);
-        return channels[0] || null;
+        const channel = channels[0] || null;
+        if (channel) {
+            rememberKickStreamInfo(channel, {
+                slug: extractKickChannelSlug(channel) || preferredSlug,
+                source: 'public-v1-id'
+            });
+            return mergeKickChannelInfo(channel, null, preferredSlug);
+        }
+        const cached = getKickStreamInfoCacheForSlug(preferredSlug);
+        return cached ? mergeKickChannelInfo(null, cached, preferredSlug) : null;
     }
     const data = await apiFetch('/public/v1/channels');
     const channels = unwrapKickChannelPayload(data);
-    return channels[0] || null;
+    const channel = channels[0] || null;
+    if (channel) {
+        rememberKickStreamInfo(channel, {
+            slug: extractKickChannelSlug(channel) || preferredSlug,
+            source: 'public-v1-default'
+        });
+        return mergeKickChannelInfo(channel, null, preferredSlug);
+    }
+    const cached = getKickStreamInfoCacheForSlug(preferredSlug);
+    return cached ? mergeKickChannelInfo(null, cached, preferredSlug) : null;
 }
 
 async function refreshKickStreamInfo() {
@@ -3945,6 +4194,7 @@ async function resolveKickCategoryId(value) {
 async function updateKickStreamInfoFromInputs() {
     const title = els.streamTitle ? els.streamTitle.value.trim() : '';
     const category = els.streamCategory ? els.streamCategory.value.trim() : '';
+    const adminContext = getKickAdminControlContext();
     const payload = {};
     if (title) {
         payload.stream_title = title;
@@ -3959,9 +4209,19 @@ async function updateKickStreamInfoFromInputs() {
     if (!Object.keys(payload).length) {
         throw new Error('Nothing to update.');
     }
+    if (adminContext.mismatch) {
+        log(`Kick admin controls target ${adminContext.authLabel}, not ${adminContext.selectedLabel}.`, 'warning');
+    }
     await apiFetch('/public/v1/channels', {
         method: 'PATCH',
         body: JSON.stringify(payload)
+    });
+    rememberKickStreamInfo({
+        stream_title: title,
+        category: category ? { name: category } : null
+    }, {
+        slug: adminContext.authSlug || state.channelSlug,
+        source: 'patch'
     });
     log('Kick stream title/category updated.', 'info');
     // Reflect submitted values immediately — the Kick API caches stale data
