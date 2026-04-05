@@ -170,7 +170,19 @@ if (document.readyState === "complete" || document.readyState === "interactive")
 
 // Function to open Event Flow Editor
 function openEventFlowEditor() {
-    // For all contexts, just open actions/index.html
+    if (ssapp) {
+        // In ssapp context, the remote actions/index.html is disconnected from the local context
+        // Try to tell ssapp to switch to the editor view via postMessage
+        try {
+            window.parent.postMessage({ action: 'switchToEventFlowEditor' }, '*');
+        } catch (e) {
+            console.warn('Could not send postMessage to parent:', e);
+        }
+        // Also show message for older ssapp versions that don't have the listener yet
+        alert('In the desktop app, use the 🪤 Event Flow Editor option in the navigation menu.');
+        return;
+    }
+    // For extension context, open actions/index.html
     window.open('actions/index.html', '_blank');
 }
 // Make function available globally
@@ -181,6 +193,48 @@ var webMidiScriptLoaded = false;
 
 function log(msg,a,b){
 	console.log(msg,a,b);
+}
+
+function showSpotifyAuthToast(level, title, message) {
+	const normalizedLevel = ['error', 'warning', 'info', 'success'].includes(level) ? level : 'info';
+	try {
+		if (typeof Toast !== 'undefined' && typeof Toast[normalizedLevel] === 'function') {
+			Toast[normalizedLevel](title, message);
+			return true;
+		}
+	} catch (_) {}
+	try {
+		if (window.parent && window.parent !== window && window.parent.Toast && typeof window.parent.Toast[normalizedLevel] === 'function') {
+			window.parent.Toast[normalizedLevel](title, message);
+			return true;
+		}
+	} catch (_) {}
+	return false;
+}
+
+function getSpotifyAuthTroubleshootingText(result = null) {
+	let text = 'Please ensure:\n'
+		+ '1. Spotify integration is enabled\n'
+		+ '2. Client ID and Secret are filled in\n'
+		+ '3. Your redirect URIs are configured in Spotify app settings\n'
+		+ '4. The app owner has active Premium, the playback account is Premium, and that account is listed as an authorized Development Mode user (new app limits began February 11, 2026; existing app limits began March 9, 2026).';
+	if (result?.errorCode) {
+		text += `\n5. OAuth error code: ${result.errorCode}`;
+	}
+	if (result?.redirectUriAttempted) {
+		text += `\n6. Redirect URI attempted: ${result.redirectUriAttempted}`;
+	}
+	if (Array.isArray(result?.expectedRedirectUris) && result.expectedRedirectUris.length) {
+		text += `\n7. Expected redirect URIs:\n- ${result.expectedRedirectUris.join('\n- ')}`;
+	}
+	return text;
+}
+
+function getSpotifyAuthErrorMessage(result) {
+	if (!result || typeof result !== 'object') {
+		return 'Unknown error';
+	}
+	return result.message || result.error || 'Unknown error';
 }
 
 function handleSpotifyAuthResultFromBackground(result) {
@@ -228,7 +282,9 @@ function handleSpotifyAuthResultFromBackground(result) {
 		if (result?.message) {
 			console.log(result.message);
 			if (result.waitingForManualCallback) {
-				alert(result.message);
+				if (!showSpotifyAuthToast('info', 'Spotify OAuth', result.message)) {
+					alert(result.message);
+				}
 			}
 		}
 
@@ -262,12 +318,18 @@ function handleSpotifyAuthResultFromBackground(result) {
 			manualLinkField.value = '';
 		}
 		console.log('Spotify connected successfully.');
-	} else {
-		const errorMsg = result?.error || 'Unknown error';
-		console.error('Spotify auth failed (async result):', errorMsg);
-		alert('Failed to connect to Spotify. Error: ' + errorMsg);
+        if (result?.warning) {
+            alert('Spotify connected, but playback access is limited:\n\n' + result.warning);
+        }
+		} else {
+			const errorCode = result?.errorCode || 'SPOTIFY_OAUTH_ERROR';
+			const errorMsg = getSpotifyAuthErrorMessage(result);
+			console.error(`Spotify auth failed (async result) [${errorCode}]:`, errorMsg, result);
+			const composed = `[${errorCode}] ${errorMsg}`;
+			showSpotifyAuthToast('error', 'Spotify OAuth Error', composed);
+			alert('Failed to connect to Spotify. Error: ' + composed + '\n\n' + getSpotifyAuthTroubleshootingText(result));
+		}
 	}
-}
 
 window.handleSpotifyAuthResultFromBackground = handleSpotifyAuthResultFromBackground;
 
@@ -497,20 +559,28 @@ if (typeof(chrome.runtime)=='undefined'){
 	const pendingCallbacks = new Map();
 	let callbackIdCounter = 0;
 	
-	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
-		if (typeof(callback) == "function") {
-			// Generate unique callback ID
-			const callbackId = ++callbackIdCounter;
-			
-			// Create promise with timeout
-			const promise = new Promise((resolve) => {
-				// Store callback with timeout
-				const timeoutId = setTimeout(() => {
-					pendingCallbacks.delete(callbackId);
-					// If timeout, get sync response as fallback
-					const response = ipcRenderer.sendSync('fromPopup', data);
-					resolve(response);
-				}, 500);
+		chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
+			if (typeof(callback) == "function") {
+				// Generate unique callback ID
+				const callbackId = ++callbackIdCounter;
+				const isGetSettingsRequest = !!(data && data.cmd === "getSettings");
+				const timeoutMs = isGetSettingsRequest ? 3000 : 500;
+				
+				// Create promise with timeout
+				const promise = new Promise((resolve) => {
+					// Store callback with timeout
+					const timeoutId = setTimeout(() => {
+						pendingCallbacks.delete(callbackId);
+						if (isGetSettingsRequest) {
+							// For startup hydration, avoid forcing a synchronous fallback from potentially stale cache.
+							// Let periodic retries continue, and allow late async callback responses to update the UI.
+							resolve(undefined);
+							return;
+						}
+						// For other messages, keep sync fallback behavior.
+						const response = ipcRenderer.sendSync('fromPopup', data);
+						resolve(response);
+					}, timeoutMs);
 				
 				pendingCallbacks.set(callbackId, { 
 					callback: resolve, 
@@ -763,6 +833,19 @@ function miniTranslate(ele, ident = false, direct=false) {
 				ele.placeholder = translation.placeholders[key];
 			}
 		}
+	}
+	var obsTransparentNotes = ele.querySelectorAll('.obs-transparent-note');
+	obsTransparentNotes.forEach(function(ele2) {
+		ele2.innerHTML = getTranslation(
+			"obs-browser-source-is-already-transparent-by-default",
+			" (OBS Browser Source is already transparent by default)"
+		);
+	});
+	if (ele.classList && ele.classList.contains("obs-transparent-note")){
+		ele.innerHTML = getTranslation(
+			"obs-browser-source-is-already-transparent-by-default",
+			" (OBS Browser Source is already transparent by default)"
+		);
 	}
 }
 
@@ -1029,6 +1112,186 @@ function updateSourceTypeList(type) {
             <button class="remove-source" data-source-type="${source}">×</button>
         </div>
     `).join('');
+}
+
+function normalizeCommaValues(value) {
+    return value
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => item);
+}
+
+const commaTagPresetOptions = {
+    events: [
+        // Cross-platform
+        { value: 'new_follower', label: 'new_follower - Follow' },
+        { value: 'new_subscriber', label: 'new_subscriber - New sub' },
+        { value: 'resub', label: 'resub - Renewal/upgrade' },
+        { value: 'subscription_gift', label: 'subscription_gift - Gift subs' },
+        { value: 'donation', label: 'donation - Donation/Super Chat' },
+        { value: 'raid', label: 'raid - Raid' },
+        // Twitch
+        { value: 'cheer', label: 'cheer - Bits/Cheers (Twitch)' },
+        { value: 'channel_points', label: 'channel_points - Channel points (Twitch)' },
+        // YouTube
+        { value: 'sponsorship', label: 'sponsorship - New member (YouTube)' },
+        { value: 'membermilestone', label: 'membermilestone - Member milestone (YouTube)' },
+        { value: 'giftpurchase', label: 'giftpurchase - Gift purchase (YouTube)' },
+        { value: 'giftredemption', label: 'giftredemption - Gift redemption (YouTube)' },
+        { value: 'supersticker', label: 'supersticker - Super Sticker (YouTube)' },
+        // TikTok
+        { value: 'gift', label: 'gift - Gift (TikTok/Kick DOM)' },
+        { value: 'joined', label: 'joined - Join (TikTok)' },
+        { value: 'liked', label: 'liked - Like (TikTok)' },
+        // Status/system
+        { value: 'stream_online', label: 'stream_online - Stream online' },
+        { value: 'stream_offline', label: 'stream_offline - Stream offline' },
+        { value: 'viewer_update', label: 'viewer_update - Viewer count' },
+        { value: 'follower_update', label: 'follower_update - Follower count' },
+        { value: 'subscriber_update', label: 'subscriber_update - Subscriber count' },
+        { value: 'reward', label: 'reward - Redemption (Twitch/Kick DOM)' }
+    ]
+};
+
+function getCommaTagInput(inputId) {
+    let input = document.getElementById(inputId);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${inputId}"]`);
+    }
+    return input;
+}
+
+function refreshCommaTagInput(inputOrKey) {
+    if (!inputOrKey) {
+        return;
+    }
+    const input = typeof inputOrKey === 'string' ? getCommaTagInput(inputOrKey) : inputOrKey;
+    if (!input) {
+        return;
+    }
+    const inputId = input.id || input.dataset.textsetting;
+    if (inputId) {
+        updateCommaTagList(inputId);
+    }
+}
+
+function updateCommaTagList(inputId) {
+    const input = getCommaTagInput(inputId);
+    const list = document.getElementById(`${inputId}List`);
+    if (!input || !list) return;
+
+    const values = normalizeCommaValues(input.value);
+    list.style.display = values.length ? '' : 'none';
+    list.innerHTML = values.map(value => `
+        <div class="username-tag">
+            <span>${escapeHtml(value)}</span>
+            <button class="remove-source" data-value="${escapeHtml(value)}">×</button>
+        </div>
+    `).join('');
+}
+
+function addCommaTagValue(inputId, value) {
+    const input = getCommaTagInput(inputId);
+    if (!input || !value) return;
+
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return;
+
+    const values = normalizeCommaValues(input.value);
+    if (values.some(existing => existing.toLowerCase() === trimmedValue.toLowerCase())) {
+        return;
+    }
+
+    values.push(trimmedValue);
+    input.value = values.join(', ');
+    updateCommaTagList(inputId);
+    updateSettings(input);
+}
+
+function removeCommaTagValue(inputId, value) {
+    const input = getCommaTagInput(inputId);
+    if (!input || !value) return;
+
+    const values = normalizeCommaValues(input.value);
+    const updated = values.filter(existing => existing.toLowerCase() !== value.toLowerCase());
+    input.value = updated.join(', ');
+    updateCommaTagList(inputId);
+    updateSettings(input);
+}
+
+function setupCommaTagInput(inputId) {
+    const input = getCommaTagInput(inputId);
+    if (!input) return;
+
+    const container = input.closest('.textInputContainer');
+    if (!container) return;
+
+    container.classList.add('tag-input-container');
+
+    if (document.getElementById(`${inputId}List`)) {
+        updateCommaTagList(inputId);
+        return;
+    }
+
+    input.classList.add('hidden');
+
+    const listContainer = document.createElement('div');
+    listContainer.className = 'source-list-container';
+    listContainer.id = `${inputId}List`;
+
+    const addContainer = document.createElement('div');
+    addContainer.className = 'add-source-container';
+    const presetOptions = commaTagPresetOptions[input.dataset.tagPresets] || [];
+    const presetMarkup = presetOptions.length ? `
+        <select id="preset${inputId}Tag">
+            <option value="" selected>Common events</option>
+            ${presetOptions.map(option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join('')}
+        </select>
+        <button id="addPreset${inputId}Tag">Add preset</button>
+    ` : '';
+    addContainer.innerHTML = `
+        <input type="text" id="new${inputId}Tag" placeholder="Add value">
+        <button id="add${inputId}Tag">Add</button>
+        ${presetMarkup}
+    `;
+
+    container.parentNode.classList.add('isolate');
+    container.parentNode.insertBefore(listContainer, container.nextSibling);
+    container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+
+    listContainer.addEventListener('click', (event) => {
+        if (event.target.classList.contains('remove-source')) {
+            removeCommaTagValue(inputId, event.target.dataset.value);
+        }
+    });
+
+    const addButton = addContainer.querySelector(`#add${inputId}Tag`);
+    const addInput = addContainer.querySelector(`#new${inputId}Tag`);
+    if (addButton && addInput) {
+        addButton.addEventListener('click', () => {
+            addCommaTagValue(inputId, addInput.value);
+            addInput.value = '';
+        });
+
+        addInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addCommaTagValue(inputId, addInput.value);
+                addInput.value = '';
+            }
+        });
+    }
+
+    const addPresetButton = addContainer.querySelector(`#addPreset${inputId}Tag`);
+    const presetSelect = addContainer.querySelector(`#preset${inputId}Tag`);
+    if (addPresetButton && presetSelect) {
+        addPresetButton.addEventListener('click', () => {
+            addCommaTagValue(inputId, presetSelect.value);
+            presetSelect.value = '';
+        });
+    }
+
+    updateCommaTagList(inputId);
 }
 
 // Blocked words tag system functions
@@ -1638,6 +1901,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 }
 
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
+const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
 
@@ -1936,8 +2200,10 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   const pages = [
     { id: "dock", path: "dock.html" },
     { id: "overlay", path: "featured.html" },
+    { id: "multialerts", path: "multi-alerts.html" },
     { id: "emoteswall", path: "emotes.html" },
     { id: "hypemeter", path: "hype.html" },
+    { id: "meta", path: "meta.html" },
     { id: "waitlist", path: "waitlist.html" },
     { id: "tipjar", path: "tipjar.html" },
 	{ id: "leaderboard", path: "leaderboard.html" },
@@ -1957,6 +2223,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "spotify", path: "spotify-overlay.html" },
 	{ id: "scoreboard", path: "scoreboard.html"},
 	{ id: "map", path: "map.html" },
+	{ id: "timer", path: "timer.html" },
 	
   ];
   
@@ -2001,6 +2268,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   if (remoteControlUrl) {
     remoteControlUrl.href = `${baseURL}sampleapi.html?session=${streamID}${password}${customParams}${versionParam}`;
   }
+
+  syncAllOverlayPreviews();
 }
 
 function applyFeaturedOverlayPreset(presetValue) {
@@ -2223,6 +2492,9 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 if (key === 'blockedwords') {
                     updateBlockedWordsList();
                 }
+                if (commaTagInputs.includes(ele.id) || commaTagInputs.includes(key)) {
+                    refreshCommaTagInput(ele.id || key);
+                }
             }
         }
 
@@ -2389,13 +2661,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 
         const ele = document.querySelector(`input[data-textsetting='${key}'],textarea[data-textsetting='${key}']`);
         if (ele) {
-            // For fields that default to "all/none" when empty, don't load saved values
-            const defaultToEmptyFields = ['eventsSources', 'ttssources', 'relaytargets'];
-            if (defaultToEmptyFields.includes(key)) {
-                ele.value = ''; // Always start with empty for these fields
-            } else {
-                ele.value = valueToSet; // valueToSet is settingObj.textsetting
-            }
+            ele.value = valueToSet; // valueToSet is settingObj.textsetting
 
             if (ele.dataset.palette) {
                 try {
@@ -2409,6 +2675,10 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 updateUsernameList(key);
             } else if (sourceTypes.includes(key)) {
                 updateSourceTypeList(key);
+            } else if (commaTagInputs.includes(key)) {
+                updateCommaTagList(key);
+            } else if (commaTagInputs.includes(ele.id)) {
+                refreshCommaTagInput(ele.id);
             }
         }
     }
@@ -2540,6 +2810,11 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
+        // Load profiles if they weren't loaded during init (e.g., due to startup timing)
+        if (typeof ProfileManager !== 'undefined' && ProfileManager.loadProfilesFromResponse) {
+            ProfileManager.loadProfilesFromResponse(response);
+        }
+
         if (response.handleStatus) {
             mergeHandleStatusFromBackground(response.handleStatus);
         }
@@ -2587,51 +2862,6 @@ function update(response, sync = true) {
             document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
             // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
 
-            if ('settings' in response) {
-                setupTtsProviders(response); // Handle TTS provider setting initialization
-
-                const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
-                const paramNums = Object.values(targetMap);
-
-                for (var key in response.settings) {
-                    try {
-                        if (key === "midiConfig") {
-                            if (response.settings[key]) {
-                                document.getElementById("midiConfig").classList.add("pressed");
-                                document.getElementById("midiConfig").innerText = " Config Loaded";
-                            } else {
-                                document.getElementById("midiConfig").classList.remove("pressed");
-                                document.getElementById("midiConfig").innerText = " Load Config";
-                            }
-                            continue; // Continue to next setting
-                        }
-
-                        if (typeof response.settings[key] == "object") {
-                            // Pass 'response' to handle 'mynameext' correctly within processObjectSetting
-                            processObjectSetting(key, response.settings[key], sync, paramNums, response);
-                        } else {
-                            processLegacySetting(key, response.settings[key], sync);
-                        }
-                    } catch (e) {
-                        console.error(`Error processing setting ${key}:`, e);
-                    }
-                }
-
-                if ("translation" in response.settings) {
-                    translation = response.settings["translation"];
-                    miniTranslate(document.body); // Assuming miniTranslate is defined
-                }
-            }
-
-            createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
-
-            // Check if MIDI is enabled and initialize if needed
-            const midiCheckbox = document.querySelector('input[data-setting="midi"]');
-            if (midiCheckbox && midiCheckbox.checked) {
-                // MIDI was enabled in settings, initialize the dropdown
-                handleMidiToggle(true);
-            }
-
             // Refresh all page links.
             refreshLinks();
 
@@ -2641,7 +2871,7 @@ function update(response, sync = true) {
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
-                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
+                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
 					'spotifylink','maplink'
@@ -2673,6 +2903,51 @@ function update(response, sync = true) {
 
             } catch (e) {
                 console.error("Error cleaning TTS params from links:", e);
+            }
+        }
+
+        if ('settings' in response && (response.streamID || ssapp)) {
+            setupTtsProviders(response); // Handle TTS provider setting initialization
+
+            const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
+            const paramNums = Object.values(targetMap);
+
+            for (var key in response.settings) {
+                try {
+                    if (key === "midiConfig") {
+                        if (response.settings[key]) {
+                            document.getElementById("midiConfig").classList.add("pressed");
+                            document.getElementById("midiConfig").innerText = " Config Loaded";
+                        } else {
+                            document.getElementById("midiConfig").classList.remove("pressed");
+                            document.getElementById("midiConfig").innerText = " Load Config";
+                        }
+                        continue; // Continue to next setting
+                    }
+
+                    if (typeof response.settings[key] == "object") {
+                        // Pass 'response' to handle 'mynameext' correctly within processObjectSetting
+                        processObjectSetting(key, response.settings[key], sync, paramNums, response);
+                    } else {
+                        processLegacySetting(key, response.settings[key], sync);
+                    }
+                } catch (e) {
+                    console.error(`Error processing setting ${key}:`, e);
+                }
+            }
+
+            if ("translation" in response.settings) {
+                translation = response.settings["translation"];
+                miniTranslate(document.body); // Assuming miniTranslate is defined
+            }
+
+            createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
+
+            // Check if MIDI is enabled and initialize if needed
+            const midiCheckbox = document.querySelector('input[data-setting="midi"]');
+            if (midiCheckbox && midiCheckbox.checked) {
+                // MIDI was enabled in settings, initialize the dropdown
+                handleMidiToggle(true);
             }
         }
 
@@ -2753,17 +3028,26 @@ function processParam(key, paramNum, settingObj, sync) {
 // Handle legacy settings format
 function processLegacySetting(key, value, sync) {
     // Process simple settings
-    var ele = document.querySelector(`input[data-setting='${key}'], input[data-param1='${key}'], input[data-param2='${key}']`);
+    var ele = document.querySelector(`input[data-setting='${key}']`);
+    if (!ele) {
+        ele = document.querySelector(`input[data-param1='${key}'], input[data-param2='${key}']`);
+    }
     if (ele) {
         ele.checked = value;
         updateSettings(ele, sync);
     }
     
     // Process text settings
-    var ele = document.querySelector(`input[data-textsetting='${key}'], input[data-textparam1='${key}'], textarea[data-textsetting='${key}'], textarea[data-textparam1='${key}']`);
+    ele = document.querySelector(`input[data-textsetting='${key}'], textarea[data-textsetting='${key}']`);
+    if (!ele) {
+        ele = document.querySelector(`input[data-textparam1='${key}'], textarea[data-textparam1='${key}']`);
+    }
     if (ele) {
         ele.value = value;
         updateSettings(ele, sync);
+        if (commaTagInputs.includes(ele.id) || commaTagInputs.includes(key)) {
+            refreshCommaTagInput(ele.id || key);
+        }
     }
 }
 
@@ -2812,6 +3096,133 @@ function handleAIProviderVisibility(provider) {
     } else if (provider == "groq") {
         document.getElementById("groqApiKey").classList.remove("hidden");
         document.getElementById("groqmodel").classList.remove("hidden");
+    }
+}
+
+function sendPopupBackgroundCommand(message, timeout = 45000) {
+    return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+            reject(new Error('Response timeout'));
+        }, timeout);
+
+        chrome.runtime.sendMessage({ type: 'toBackground', data: message }, response => {
+            clearTimeout(timeoutId);
+            if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+            } else {
+                resolve(response);
+            }
+        });
+    });
+}
+
+function collectLLMProviderTestSettings() {
+    const override = {
+        aiProvider: {
+            optionsetting: document.getElementById('aiProvider')?.value || 'ollama'
+        }
+    };
+
+    [
+        'ollamaendpoint', 'ollamamodel', 'chatgptApiKey', 'chatgptmodel',
+        'geminiApiKey', 'geminimodel', 'xaiApiKey', 'xaimodel',
+        'deepseekApiKey', 'deepseekmodel', 'groqApiKey', 'groqmodel',
+        'openrouterApiKey', 'openroutermodel', 'customAIEndpoint',
+        'customAIModel', 'customAIApiKey', 'bedrockAccessKey',
+        'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel'
+    ].forEach(key => {
+        const input = document.querySelector(`[data-textsetting='${key}']`);
+        if (input) {
+            override[key] = { textsetting: input.value.trim() };
+        }
+    });
+
+    const keepAliveInput = document.querySelector("[data-numbersetting='ollamaKeepAlive']");
+    if (keepAliveInput) {
+        override.ollamaKeepAlive = { numbersetting: keepAliveInput.value };
+    }
+
+    return override;
+}
+
+function formatLLMProviderTestError(error) {
+    if (!error) {
+        return 'Unknown error';
+    }
+    if (typeof error === 'string') {
+        return error;
+    }
+
+    const parts = [];
+    if (error.provider) {
+        parts.push(`Provider: ${error.provider}`);
+    }
+    if (error.status !== undefined && error.status !== null) {
+        parts.push(`Status: ${error.status}`);
+    }
+    if (error.code) {
+        parts.push(`Code: ${error.code}`);
+    }
+    if (error.message) {
+        parts.push(`Message: ${error.message}`);
+    }
+    if (error.hint) {
+        parts.push(`Hint: ${error.hint}`);
+    }
+
+    return parts.join('\n') || 'Unknown error';
+}
+
+async function testSelectedLLMProvider() {
+    const button = document.getElementById('testSelectedLLMProvider');
+    const status = document.getElementById('testSelectedLLMProviderStatus');
+    const output = document.getElementById('testSelectedLLMProviderOutput');
+    if (!button || !status || !output) {
+        return;
+    }
+
+    const originalLabel = button.querySelector('span')?.textContent || button.textContent;
+    const providerLabel = document.getElementById('aiProvider')?.selectedOptions?.[0]?.textContent || 'selected provider';
+
+    button.disabled = true;
+    if (button.querySelector('span')) {
+        button.querySelector('span').textContent = 'Testing...';
+    } else {
+        button.textContent = 'Testing...';
+    }
+    status.textContent = `Testing ${providerLabel}...`;
+    status.style.color = '#bbb';
+    output.style.display = 'none';
+    output.textContent = '';
+
+    try {
+        const response = await sendPopupBackgroundCommand({
+            cmd: 'testLLMProvider',
+            prompt: 'Reply with one short sentence confirming this chatbot connection works.',
+            settingsOverride: collectLLMProviderTestSettings()
+        }, 60000);
+
+        if (response && response.success) {
+            status.textContent = 'Connected';
+            status.style.color = '#7ad37a';
+            output.textContent = response.response || 'The provider replied without any text.';
+        } else {
+            status.textContent = 'Failed';
+            status.style.color = '#ff8a8a';
+            output.textContent = formatLLMProviderTestError(response?.error || response?.message || response);
+        }
+    } catch (error) {
+        status.textContent = 'Failed';
+        status.style.color = '#ff8a8a';
+        output.textContent = error?.message || String(error);
+    } finally {
+        output.style.display = 'block';
+        button.disabled = false;
+        if (button.querySelector('span')) {
+            button.querySelector('span').textContent = originalLabel;
+        } else {
+            button.textContent = originalLabel;
+        }
     }
 }
 
@@ -3088,7 +3499,140 @@ function processManifestData(data, manifestData) {
     }
 }
 
+// Important Changes Notification System
+const importantChanges = [
+    {
+        id: "events-always-on-v3.40",
+        minVersion: "3.40.0",  // Only show to users with this version or newer
+        title: "Heads up! Stream events now show by default",
+        message: "Follows, likes, and subs now appear in your overlay. Want to turn them off?",
+        actionText: "Disable stream events",
+        targetSection: "wrapper-global-mechanics-options",
+        targetSetting: "hideevents"
+    }
+];
 
+function checkImportantChanges() {
+    const container = document.getElementById("importantChanges");
+    if (!container) return;
+
+    // Get current extension version
+    let currentVersion = "0.0.0";
+    try {
+        const manifestData = chrome.runtime.getManifest();
+        if (manifestData && manifestData.version) {
+            currentVersion = manifestData.version;
+        }
+    } catch (e) {
+        console.error("Error getting extension version:", e);
+        return; // Can't determine version, don't show notifications
+    }
+
+    // Get dismissed changes from localStorage
+    let dismissedChanges = [];
+    try {
+        const stored = localStorage.getItem('dismissedImportantChanges');
+        if (stored) {
+            dismissedChanges = JSON.parse(stored);
+        }
+    } catch (e) {
+        console.error("Error loading dismissed changes:", e);
+    }
+
+    // Filter changes: not dismissed AND user's version >= minVersion
+    const activeChanges = importantChanges.filter(change => {
+        if (dismissedChanges.includes(change.id)) return false;
+        if (change.minVersion && compareVersions(currentVersion, change.minVersion) < 0) return false;
+        return true;
+    });
+
+    if (activeChanges.length === 0) {
+        container.classList.remove('show');
+        container.innerHTML = '';
+        return;
+    }
+
+    // Build notification HTML (dismiss button now at bottom right)
+    let html = '';
+    activeChanges.forEach(change => {
+        html += `
+            <div class="important-change" data-change-id="${change.id}">
+                <strong>${change.title}</strong><br>
+                <small>${change.message}</small><br>
+                <a href="#" class="change-action-link" data-target-section="${change.targetSection}" data-target-setting="${change.targetSetting}">${change.actionText}</a>
+                <button class="dismiss-btn" data-change-id="${change.id}" title="Dismiss">&times;</button>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+    container.classList.add('show');
+
+    // Add event listeners for dismiss buttons
+    container.querySelectorAll('.dismiss-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const changeId = this.dataset.changeId;
+            dismissImportantChange(changeId);
+        });
+    });
+
+    // Add event listeners for action links
+    container.querySelectorAll('.change-action-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetSection = this.dataset.targetSection;
+            const targetSetting = this.dataset.targetSetting;
+            scrollToSetting(targetSection, targetSetting);
+        });
+    });
+}
+
+function dismissImportantChange(changeId) {
+    let dismissedChanges = [];
+    try {
+        const stored = localStorage.getItem('dismissedImportantChanges');
+        if (stored) {
+            dismissedChanges = JSON.parse(stored);
+        }
+    } catch (e) {
+        console.error("Error loading dismissed changes:", e);
+    }
+
+    if (!dismissedChanges.includes(changeId)) {
+        dismissedChanges.push(changeId);
+        localStorage.setItem('dismissedImportantChanges', JSON.stringify(dismissedChanges));
+    }
+
+    // Re-check to update the display
+    checkImportantChanges();
+}
+
+function scrollToSetting(targetSection, targetSetting) {
+    // Find the collapsible section
+    const sectionCheckbox = document.getElementById(targetSection);
+    if (sectionCheckbox) {
+        // Expand the collapsible if collapsed
+        sectionCheckbox.checked = true;
+    }
+
+    // Find the setting element
+    const settingElement = document.querySelector(`[data-setting="${targetSetting}"]`);
+    if (settingElement) {
+        // Scroll to the setting
+        settingElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Add a brief highlight effect
+        const parentDiv = settingElement.closest('div');
+        if (parentDiv) {
+            parentDiv.style.transition = 'background-color 0.3s';
+            parentDiv.style.backgroundColor = 'rgba(255, 193, 7, 0.3)';
+            setTimeout(() => {
+                parentDiv.style.backgroundColor = '';
+            }, 2000);
+        }
+    }
+}
 
 // Language parameter handling removed - use the translation dropdown instead
 
@@ -3175,6 +3719,9 @@ function getTargetMap() {
 		'scoreboard': 21,
 		'spotify': 22,
 		'map': 23,
+        'meta': 24,
+        'multialerts': 25,
+        'timer': 26,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -3385,7 +3932,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     return true;
 }
 function handleExclusiveCases(ele, paramType, paramValue, sync) {
-    const exclusiveTypes = ['param1', 'param4', 'param5'];
+    const exclusiveTypes = ['param1', 'param4', 'param5', 'param13'];
     if (!exclusiveTypes.includes(paramType)) return;
 
     // Handle exclusive settings like darkmode/lightmode
@@ -3398,11 +3945,19 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
         },
         param4: {
             'alignright': 'align=center',
-            'align=center': 'alignright'
+            'align=center': 'alignright',
+            'transparent': 'pagebg',
+            'pagebg': 'transparent'
         },
         param5: {
             'alignright': 'aligncenter',
-            'aligncenter': 'alignright'
+            'aligncenter': 'alignright',
+            'transparent': 'pagebg',
+            'pagebg': 'transparent'
+        },
+        param13: {
+            'nobg': 'pagebg',
+            'pagebg': 'nobg'
         }
     };
 
@@ -3445,6 +4000,15 @@ function handleTextParam(ele, targetId, paramType, sync) {
     // Check if there's a corresponding checkbox
     const checkboxSelector = `input[data-param${paramNum}='${paramValue}']`;
     const checkbox = document.querySelector(checkboxSelector);
+
+    // For color text params with paired checkboxes, auto-toggle so users don't need two steps.
+    if (sync && checkbox && (paramValue === 'viewerbarbg' || paramValue === 'pagebg' || paramValue === 'bgcolor')) {
+        const hasTextValue = Boolean((ele.value || '').trim());
+        if (checkbox.checked !== hasTextValue) {
+            checkbox.checked = hasTextValue;
+            updateSettings(checkbox, sync);
+        }
+    }
     
     // Only modify URL if there's no checkbox, or if checkbox exists and is checked
     if (!checkbox || checkbox.checked) {
@@ -4138,8 +4702,8 @@ function handleCustomGifCommand(ele, sync) {
     if (!ele.closest('.custom-gif-command-entry')) return false;
     
     const commands = Array.from(document.querySelectorAll('.custom-gif-command-entry')).map(entry => ({
-        command: entry.querySelector('.custom-command').value,
-        url: entry.querySelector('.custom-media-url').value
+        command: entry.querySelector('.custom-command')?.value?.trim() || '',
+        url: entry.querySelector('.custom-media-url')?.value?.trim() || ''
     }));
     
     if (sync) {
@@ -4243,13 +4807,6 @@ function updateSettings(ele, sync = true, value = null) {
     
     // Handle text settings
     if (ele.dataset.textsetting && sync) {
-        // For fields that default to "all/none" when empty, don't save empty values
-        const defaultToEmptyFields = ['eventsSources', 'ttssources', 'relaytargets'];
-        if (defaultToEmptyFields.includes(ele.dataset.textsetting) && !ele.value.trim()) {
-            // Don't save empty values for these fields
-            return;
-        }
-        
         chrome.runtime.sendMessage({
             cmd: "saveSetting",
             type: "textsetting",
@@ -4321,6 +4878,530 @@ function validateRoomId(roomId) {
 	return sanitizedId;
 }
 
+let overlayPreviewSequence = 0;
+
+const overlayPreviewConfigs = Object.freeze({
+    multialerts: {
+        frameId: 'multi-alerts-preview-frame',
+        divId: 'multialerts',
+        localPath: 'multi-alerts.html',
+        previewUrlSource: 'local',
+        messageKey: 'multiAlertsPreview'
+    }
+});
+
+const overlayPreviewState = {
+    multialerts: { pending: null, timer: null, muted: false }
+};
+
+function getLocalOverlayUrl(path) {
+    try {
+        if (chrome?.runtime?.getURL) {
+            return chrome.runtime.getURL(path);
+        }
+    } catch (error) {
+        console.warn('Unable to build local overlay URL via chrome.runtime.getURL', error);
+    }
+    try {
+        return new URL(path, window.location.href).toString();
+    } catch (error) {
+        console.warn('Unable to build local overlay URL via URL()', error);
+        return path;
+    }
+}
+
+function nextOverlayPreviewId(prefix) {
+    overlayPreviewSequence += 1;
+    return `${prefix}_${Date.now()}_${overlayPreviewSequence}`;
+}
+
+function createPreviewAvatarDataUri(label, bgColor, textColor = '#ffffff') {
+    const source = String(label || 'SS');
+    const initials = source
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join('') || 'SS';
+    const svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">',
+        `<rect width="128" height="128" rx="64" fill="${bgColor}"/>`,
+        `<text x="64" y="76" text-anchor="middle" font-family="Arial, sans-serif" font-size="46" font-weight="700" fill="${textColor}">${initials}</text>`,
+        '</svg>'
+    ].join('');
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function createPreviewMediaDataUri(label, bgColor) {
+    const safeLabel = String(label || 'Preview').slice(0, 18);
+    const svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">',
+        '<defs>',
+        `<linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">`,
+        `<stop offset="0%" stop-color="${bgColor}" stop-opacity="0.95"/>`,
+        '<stop offset="100%" stop-color="#05070d" stop-opacity="1"/>',
+        '</linearGradient>',
+        '</defs>',
+        '<rect width="320" height="180" rx="22" fill="url(#bg)"/>',
+        '<circle cx="58" cy="46" r="18" fill="rgba(255,255,255,0.18)"/>',
+        '<circle cx="112" cy="124" r="26" fill="rgba(255,255,255,0.12)"/>',
+        '<path d="M240 42l34 18v30l-34 18-34-18V60z" fill="rgba(255,255,255,0.18)"/>',
+        '<rect x="28" y="122" width="126" height="14" rx="7" fill="rgba(255,255,255,0.18)"/>',
+        '<rect x="28" y="144" width="176" height="10" rx="5" fill="rgba(255,255,255,0.12)"/>',
+        `<text x="214" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#ffffff">${safeLabel}</text>`,
+        '</svg>'
+    ].join('');
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function buildChatOverlayPreviewPayload(kind, overrides = {}) {
+    const presetMap = {
+        chat: {
+            type: 'youtube',
+            platform: 'youtube',
+            chatname: 'SapheusOwO',
+            chatmessage: 'This is how your overlay styling reads during a live chat moment.',
+            subtitle: 'First time chatter',
+            accent: '#ff4e45'
+        },
+        donation: {
+            type: 'twitch',
+            platform: 'twitch',
+            chatname: 'campa',
+            chatmessage: 'Keep up the great work!',
+            hasDonation: '$10.00',
+            subtitle: 'Sent from Twitch',
+            accent: '#14b8a6'
+        },
+        member: {
+            type: 'youtube',
+            platform: 'youtube',
+            chatname: 'steve',
+            chatmessage: 'Happy to be here for another stream.',
+            membership: 'New Member',
+            subtitle: 'Tier 1 membership',
+            accent: '#8b5cf6'
+        },
+        image: {
+            type: 'kick',
+            platform: 'kick',
+            chatname: 'pixelbot',
+            chatmessage: 'Media attachments and GIF-style content will appear like this.',
+            contentimg: createPreviewMediaDataUri('HYPE', '#38bdf8'),
+            subtitle: 'Shared a media reaction',
+            accent: '#38bdf8'
+        }
+    };
+
+    const preset = presetMap[kind] || presetMap.chat;
+    const accent = overrides.accent || preset.accent;
+    return {
+        id: overrides.id || nextOverlayPreviewId(kind),
+        timestamp: Date.now(),
+        chatimg: overrides.chatimg || createPreviewAvatarDataUri(overrides.chatname || preset.chatname, accent),
+        ...preset,
+        ...overrides
+    };
+}
+
+function buildOverlayPreviewPayload(previewKey, descriptor) {
+    if (descriptor === false) {
+        return false;
+    }
+
+    if (previewKey === 'multialerts') {
+        return descriptor;
+    }
+
+    const normalizedDescriptor =
+        typeof descriptor === 'string'
+            ? { kind: descriptor }
+            : descriptor || { kind: 'chat' };
+
+    return buildChatOverlayPreviewPayload(
+        normalizedDescriptor.kind || normalizedDescriptor.type || 'chat',
+        normalizedDescriptor.overrides || {}
+    );
+}
+
+function buildOverlayPreviewUrl(previewKey) {
+    const config = overlayPreviewConfigs[previewKey];
+    if (!config) {
+        return '';
+    }
+
+    const sourceDiv = document.getElementById(config.divId);
+    const rawUrl = typeof sourceDiv?.raw === 'string' ? sourceDiv.raw : '';
+    let rawPreviewUrl = null;
+    let rawParams = new URLSearchParams();
+
+    if (rawUrl) {
+        try {
+            rawPreviewUrl = new URL(rawUrl, window.location.href);
+            rawParams = new URLSearchParams(rawPreviewUrl.search);
+        } catch (error) {
+            console.warn('Unable to parse overlay preview raw URL', rawUrl, error);
+        }
+    }
+
+    let previewUrl = null;
+    if (config.previewUrlSource === 'raw' && rawPreviewUrl) {
+        previewUrl = new URL(rawPreviewUrl.toString());
+    } else {
+        previewUrl = new URL(getLocalOverlayUrl(config.localPath));
+    }
+
+    rawParams.set('preview', '1');
+    rawParams.set('embedded', '1');
+    if (!rawParams.get('session')) {
+        rawParams.set('session', 'preview');
+    }
+
+    previewUrl.hash = '';
+    previewUrl.search = rawParams.toString();
+    return previewUrl.toString();
+}
+
+function syncOverlayPreview(previewKey) {
+    const config = overlayPreviewConfigs[previewKey];
+    if (!config) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
+    if (!frame) {
+        return;
+    }
+
+    const nextUrl = buildOverlayPreviewUrl(previewKey);
+    if (frame.dataset.currentPreviewUrl === nextUrl) {
+        replayOverlayPreview(previewKey, { silent: true });
+        return;
+    }
+
+    frame.dataset.currentPreviewUrl = nextUrl;
+    frame.src = nextUrl;
+}
+
+function replayOverlayPreview(previewKey, options = {}) {
+    const config = overlayPreviewConfigs[previewKey];
+    const state = overlayPreviewState[previewKey];
+    if (!config || !state) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
+    if (!frame || !frame.contentWindow || state.pending === null) {
+        return;
+    }
+
+    if (state.timer) {
+        clearTimeout(state.timer);
+        state.timer = null;
+    }
+
+    const payload = buildOverlayPreviewPayload(previewKey, state.pending);
+    frame.contentWindow.postMessage({ [config.messageKey]: false }, '*');
+    state.timer = setTimeout(() => {
+        if (frame.contentWindow) {
+            const messagePayload =
+                payload === false
+                    ? false
+                    : {
+                        __multiAlertsPreviewEnvelope: true,
+                        payload,
+                        silent: Boolean(options.silent) || Boolean(state.muted)
+                    };
+            frame.contentWindow.postMessage({ [config.messageKey]: messagePayload }, '*');
+        }
+        state.timer = null;
+    }, 40);
+}
+
+function sendOverlayPreview(previewKey, descriptor) {
+    const config = overlayPreviewConfigs[previewKey];
+    const state = overlayPreviewState[previewKey];
+    if (!config || !state) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
+    if (!frame) {
+        return;
+    }
+
+    state.pending = descriptor;
+    if (descriptor === false) {
+        if (state.timer) {
+            clearTimeout(state.timer);
+            state.timer = null;
+        }
+        if (frame.contentWindow) {
+            frame.contentWindow.postMessage({ [config.messageKey]: false }, '*');
+        }
+        return;
+    }
+
+    replayOverlayPreview(previewKey, { silent: false });
+}
+
+function syncMultiAlertsPreview() {
+    syncOverlayPreview('multialerts');
+}
+
+function replayMultiAlertsPreview() {
+    replayOverlayPreview('multialerts');
+}
+
+function sendMultiAlertsPreview(payload) {
+    sendOverlayPreview('multialerts', payload);
+}
+
+const MULTI_ALERT_PREVIEW_PLATFORMS = Object.freeze({
+    tiktok: {
+        type: 'tiktok',
+        platform: 'tiktok',
+        accent: '#fe2c55',
+        avatarLabel: 'RW',
+        chatname: 'Riftwalker',
+        subscriptionLabel: 'Creator Subscriber',
+        subscriptionSubtitle: 'Subscriber badge unlocked',
+        donationAmount: '100 Diamonds',
+        donationValue: 0.5,
+        donationMessage: 'Sent Rose x100',
+        donationMediaLabel: 'ROSE',
+        bitsAmount: '350 Diamonds',
+        bitsMessage: 'Diamond shower incoming!',
+        raidMessage: 'Dropped in with 42 viewers!'
+    },
+    twitch: {
+        type: 'twitch',
+        platform: 'twitch',
+        accent: '#9146ff',
+        avatarLabel: 'TW',
+        chatname: 'CaptainSquawk',
+        subscriptionLabel: 'Tier 1',
+        subscriptionSubtitle: 'Tier 1 subscription',
+        donationAmount: '$10.00',
+        donationValue: 10,
+        donationMessage: 'Keep up the great work!',
+        donationMediaLabel: 'HYPE',
+        bitsAmount: '500 bits',
+        bitsMessage: 'Cheer train incoming!',
+        raidMessage: 'Raiding with 42 viewers!'
+    },
+    youtube: {
+        type: 'youtube',
+        platform: 'youtube',
+        accent: '#ff3b30',
+        avatarLabel: 'YT',
+        chatname: 'StudioPixel',
+        subscriptionLabel: 'New Member',
+        subscriptionSubtitle: 'Channel membership joined',
+        donationAmount: '$10.00',
+        donationValue: 10,
+        donationMessage: 'Sent a Super Chat to support the stream!',
+        donationMediaLabel: 'LIVE',
+        bitsAmount: '500 cheers',
+        bitsMessage: 'The live chat is popping off!',
+        raidMessage: 'Sending 42 viewers over from live chat!'
+    },
+    kick: {
+        type: 'kick',
+        platform: 'kick',
+        accent: '#53fc18',
+        avatarLabel: 'KK',
+        chatname: 'GreenRoom',
+        subscriptionLabel: 'Kick Subscriber',
+        subscriptionSubtitle: 'Channel support renewed',
+        donationAmount: '$10.00',
+        donationValue: 10,
+        donationMessage: 'Tipped to keep the stream rolling!',
+        donationMediaLabel: 'TIP',
+        bitsAmount: '500 hype',
+        bitsMessage: 'Hype meter kicked up a notch!',
+        raidMessage: 'Rolling in with 42 viewers!'
+    }
+});
+
+function getMultiAlertPreviewPlatformKey() {
+    return document.getElementById('multi-alert-preview-platform')?.value || 'tiktok';
+}
+
+function buildMultiAlertPreviewDescriptor(category) {
+    const platformKey = getMultiAlertPreviewPlatformKey();
+    const profile = MULTI_ALERT_PREVIEW_PLATFORMS[platformKey] || MULTI_ALERT_PREVIEW_PLATFORMS.tiktok;
+    const commonOverrides = {
+        type: profile.type,
+        platform: profile.platform,
+        chatname: profile.chatname,
+        chatimg: createPreviewAvatarDataUri(profile.avatarLabel, profile.accent)
+    };
+
+    switch (category) {
+        case 'follow':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'new_follower',
+                    chatmessage: `${profile.chatname} has started following`
+                }
+            };
+        case 'subscription':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'new_subscriber',
+                    membership: profile.subscriptionLabel,
+                    subtitle: profile.subscriptionSubtitle,
+                    chatmessage: 'Welcome to the squad!'
+                }
+            };
+        case 'donation':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: platformKey === 'tiktok' ? 'gift' : 'donation',
+                    hasDonation: profile.donationAmount,
+                    donoValue: profile.donationValue,
+                    chatmessage: profile.donationMessage,
+                    contentimg: createPreviewMediaDataUri(profile.donationMediaLabel, profile.accent),
+                    title: platformKey === 'tiktok' ? 'Rose' : ''
+                }
+            };
+        case 'bits':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'cheer',
+                    hasDonation: profile.bitsAmount,
+                    chatmessage: profile.bitsMessage,
+                    contentimg: createPreviewMediaDataUri('500', profile.accent),
+                    meta: { bits: 500 }
+                }
+            };
+        case 'raid':
+            return {
+                category,
+                overrides: {
+                    ...commonOverrides,
+                    event: 'raid',
+                    chatmessage: profile.raidMessage,
+                    contentimg: createPreviewMediaDataUri('RAID', profile.accent),
+                    meta: { viewers: 42 }
+                }
+            };
+        default:
+            return null;
+    }
+}
+
+function buildTestAlertPayload(category, overrides = {}) {
+    const payloads = {
+        follow: {
+            type: 'twitch',
+            event: 'new_follower',
+            chatname: 'Jess',
+            chatimg: 'https://socialstream.ninja/media/user1.jpg',
+            chatmessage: 'Jess has started following'
+        },
+        subscription: {
+            type: 'twitch',
+            event: 'new_subscriber',
+            chatname: 'Markus',
+            chatimg: 'https://socialstream.ninja/media/user2.jpg',
+            chatmessage: 'Welcome to the squad!',
+            membership: 'Tier 1',
+            subtitle: 'Tier 1 subscription'
+        },
+        donation: {
+            type: 'twitch',
+            event: 'donation',
+            chatname: 'Priya',
+            chatimg: 'https://socialstream.ninja/media/user3.jpg',
+            chatmessage: 'Keep up the great work!',
+            hasDonation: '$10.00'
+        },
+        bits: {
+            type: 'twitch',
+            event: 'cheer',
+            chatname: 'Ava',
+            chatimg: 'https://socialstream.ninja/media/user4.png',
+            chatmessage: 'Cheer train incoming!',
+            hasDonation: '500 bits',
+            meta: { bits: 500 }
+        },
+        raid: {
+            type: 'twitch',
+            event: 'raid',
+            chatname: 'CaptainSquawk',
+            chatimg: 'https://socialstream.ninja/media/user5.jpg',
+            chatmessage: 'Raiding with 42 viewers!',
+            meta: { viewers: 42 }
+        }
+    };
+    const payload = payloads[category];
+    if (!payload) {
+        return null;
+    }
+
+    return {
+        ...payload,
+        ...overrides,
+        meta: {
+            ...(payload.meta || {}),
+            ...(overrides.meta || {})
+        }
+    };
+}
+
+function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
+    const config = overlayPreviewConfigs[previewKey];
+    if (!config) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
+    if (frame) {
+        frame.addEventListener('load', () => {
+            replayOverlayPreview(previewKey, { silent: true });
+        });
+    }
+
+    buttonConfigs.forEach(({ id, descriptor }) => {
+        const button = document.getElementById(id);
+        if (!button) {
+            return;
+        }
+        button.addEventListener('click', () => {
+            const resolvedDescriptor =
+                typeof descriptor === 'function'
+                    ? descriptor()
+                    : descriptor;
+
+            sendOverlayPreview(previewKey, resolvedDescriptor);
+            if (previewKey === 'multialerts') {
+                if (resolvedDescriptor && resolvedDescriptor.category) {
+                    const payload = buildTestAlertPayload(resolvedDescriptor.category, resolvedDescriptor.overrides || {});
+                    if (payload) {
+                        chrome.runtime.sendMessage({ cmd: 'testAlert', payload });
+                    }
+                } else if (resolvedDescriptor === false) {
+                    chrome.runtime.sendMessage({ cmd: 'clearAlerts' });
+                }
+            }
+        });
+    });
+}
+
+function syncAllOverlayPreviews() {
+    syncOverlayPreview('multialerts');
+}
+
 function refreshLinks(){
   let hideLinks = false;
   document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
@@ -4338,8 +5419,10 @@ function refreshLinks(){
     const linkIdToDivIdMap = {
       'docklink': 'dock',
       'overlaylink': 'overlay',
+      'multialertslink': 'multialerts',
       'emoteswalllink': 'emoteswall',
       'hypemeterlink': 'hypemeter',
+      'metalink': 'meta',
       'waitlistlink': 'waitlist',
       'tipjarlink': 'tipjar',
 	  'leaderboardlink': 'leaderboard',
@@ -4358,7 +5441,8 @@ function refreshLinks(){
       'custom-gif-commandslink': 'custom-gif-commands',
 	  'scoreboardlink': 'scoreboard',
 	  'spotifylink': 'spotify',
-	  'maplink': 'map'
+	  'maplink': 'map',
+	  'timerlink': 'timer'
     };
     const linkIdsToClean = Object.keys(linkIdToDivIdMap);
 
@@ -4388,6 +5472,8 @@ function refreshLinks(){
   } catch (e) {
     console.error("Error cleaning TTS params from links:", e);
   }
+
+  syncAllOverlayPreviews();
 }
 
 function handleRangeInput(event) {
@@ -4435,13 +5521,13 @@ if (!chrome.browserAction){
 	  });
 	}
 
-	sendMessageToBackground({cmd: "getSettings"}, 20000).then(response => {
-		log("Received response:", response);
-		update(response, false);
-	  })
-	  .catch(error => {
-		console.error("Error:", error);
-	  });
+		sendMessageToBackground({cmd: "getSettings"}, 20000).then(response => {
+			log("Received response:", response);
+			update(response, false);
+		  })
+		  .catch(error => {
+			console.error("Error:", error);
+		  });
 	  
 }
 
@@ -4503,9 +5589,50 @@ try {
 	log(e);
 }
 
+function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia') {
+    if (!inputElement) {
+        return;
+    }
+
+    window.open('https://fileuploads.socialstream.ninja/popup/upload', popupName, 'width=640,height=640');
+
+    const handler = (event) => {
+        if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+        if (!event.data || event.data.type !== 'media-uploaded' || !event.data.url) return;
+
+        inputElement.value = event.data.url;
+        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+        window.removeEventListener('message', handler);
+    };
+
+    window.addEventListener('message', handler);
+}
+
+function triggerCustomGifPreview(entry) {
+    const commandInput = entry?.querySelector('.custom-command');
+    const mediaUrlInput = entry?.querySelector('.custom-media-url');
+    const mediaUrl = mediaUrlInput?.value?.trim();
+
+    if (!mediaUrl) {
+        alert('Add or upload a GIF, image, or video URL first.');
+        mediaUrlInput?.focus();
+        return;
+    }
+
+    chrome.runtime.sendMessage({
+        cmd: 'previewCustomGif',
+        target: 'gif',
+        type: 'popup',
+        chatname: 'GIF Test',
+        chatmessage: commandInput?.value?.trim() || '!preview',
+        contentimg: mediaUrl
+    }, function () {});
+}
+
 function createCommandEntry(command = '', url = '') {
     function encodeHTML(str) {
-        return str.replace(/&/g, '&amp;')
+        return String(str ?? '').replace(/&/g, '&amp;')
                   .replace(/</g, '&lt;')
                   .replace(/>/g, '&gt;')
                   .replace(/"/g, '&quot;')
@@ -4523,11 +5650,27 @@ function createCommandEntry(command = '', url = '') {
             <input type="text" class="textInput custom-media-url" value="${encodeHTML(url)}" autocomplete="off" placeholder="https://media.giphy.com/media/..." data-textsetting="customGifUrl" />
             <label><span data-translate="media-url">&gt; Media URL (GIF, image, or video)</span></label>
         </div>
-        <button class="removeCustomGifCommand" style="width: auto; min-width: 60px; padding: 0 5px;">
-            <span data-translate="remove">Remove</span>
-        </button>
+        <div class="custom-gif-command-actions">
+            <button class="uploadCustomGifMedia" type="button" title="Upload your own GIF, image, or video file">
+                <span>Upload</span>
+            </button>
+            <button class="testCustomGifCommand" type="button" title="Preview this media in the gif.html overlay">
+                <span>Test</span>
+            </button>
+            <button class="removeCustomGifCommand" type="button">
+                <span data-translate="remove">Remove</span>
+            </button>
+        </div>
     `;
     
+    entry.querySelector('.uploadCustomGifMedia').addEventListener('click', function() {
+        openHostedMediaUploadForInput(entry.querySelector('.custom-media-url'), 'uploadCustomGifMedia');
+    });
+
+    entry.querySelector('.testCustomGifCommand').addEventListener('click', function() {
+        triggerCustomGifPreview(entry);
+    });
+
     entry.querySelector('.removeCustomGifCommand').addEventListener('click', function() {
         entry.remove();
         updateSettings(entry, true);
@@ -5696,6 +6839,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	// Initialize blocked words tag input
 	setupBlockedWordsInput();
+	commaTagInputs.forEach((inputId) => {
+		setupCommaTagInput(inputId);
+	});
 
 	// Add event listener for save profile button
 	const saveProfileBtn = document.querySelector('button[data-action="saveProfile"]');
@@ -5901,6 +7047,35 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	document.querySelectorAll("[data-copy]").forEach(ele=>{
 		ele.onclick = copyToClipboard;
 	});
+
+	attachOverlayPreviewControls('multialerts', [
+		{ id: 'multi-alert-preview-follow', descriptor: () => buildMultiAlertPreviewDescriptor('follow') },
+		{ id: 'multi-alert-preview-sub', descriptor: () => buildMultiAlertPreviewDescriptor('subscription') },
+		{ id: 'multi-alert-preview-dono', descriptor: () => buildMultiAlertPreviewDescriptor('donation') },
+		{ id: 'multi-alert-preview-bits', descriptor: () => buildMultiAlertPreviewDescriptor('bits') },
+		{ id: 'multi-alert-preview-raid', descriptor: () => buildMultiAlertPreviewDescriptor('raid') },
+		{ id: 'multi-alert-preview-clear', descriptor: false }
+	]);
+
+	var previewPlatformSelect = document.getElementById('multi-alert-preview-platform');
+	if (previewPlatformSelect) {
+		previewPlatformSelect.addEventListener('change', function() {
+			var state = overlayPreviewState.multialerts;
+			if (state?.pending && state.pending.category) {
+				sendOverlayPreview('multialerts', buildMultiAlertPreviewDescriptor(state.pending.category));
+			}
+		});
+	}
+
+	var muteBtn = document.getElementById('multi-alert-preview-mute');
+	if (muteBtn) {
+		muteBtn.addEventListener('click', function() {
+			var state = overlayPreviewState.multialerts;
+			state.muted = !state.muted;
+			muteBtn.textContent = state.muted ? '🔇' : '🔊';
+			muteBtn.style.opacity = state.muted ? '1' : '0.6';
+		});
+	}
 	
 	
 	try {
@@ -6299,6 +7474,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	if (deleteBadwordsButton) {
 		deleteBadwordsButton.addEventListener('click', deleteBadwordsFile);
 	}
+
+	const testSelectedLLMProviderButton = document.getElementById('testSelectedLLMProvider');
+	if (testSelectedLLMProviderButton) {
+		testSelectedLLMProviderButton.addEventListener('click', testSelectedLLMProvider);
+	}
 	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
 	const ragFileManagement = document.getElementById('ragFileManagement');
@@ -6575,24 +7755,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				const roleCheckboxes = row.querySelectorAll('.spotify-cmd-roles input[type="checkbox"]');
 				const triggerInput = row.querySelector('.spotify-cmd-trigger');
 
-				// Apply saved enabled state
-				if (enabledCheckbox && disabledCommands.includes(command)) {
-					enabledCheckbox.checked = false;
+				// Apply enabled state (default enabled unless explicitly disabled)
+				if (enabledCheckbox) {
+					enabledCheckbox.checked = !disabledCommands.includes(command);
 				}
 
-				// Apply saved role permissions
-				if (permissions[command] && permissions[command].length > 0) {
-					const savedRoles = permissions[command];
-					roleCheckboxes.forEach(cb => {
-						cb.checked = savedRoles.includes(cb.value);
-					});
-				}
+				// Apply role permissions (defaults from data attribute when not saved)
+				const savedRoles = permissions[command] && permissions[command].length > 0 ? permissions[command] : null;
+				const defaultRoles = row.dataset.defaultRoles ? row.dataset.defaultRoles.split(',') : [];
+				const rolesToApply = savedRoles || defaultRoles;
+				roleCheckboxes.forEach(cb => {
+					cb.checked = rolesToApply.includes(cb.value);
+				});
 
-				// Apply saved custom triggers
-				if (triggerInput && customTriggers[command]) {
-					triggerInput.value = customTriggers[command];
+				// Apply custom triggers (fallback to default command)
+				if (triggerInput) {
+					triggerInput.value = customTriggers[command] || triggerInput.value || command;
 				}
 			});
+
 		});
 
 		// Save on change
@@ -6752,21 +7933,27 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					cmd: "spotifyManualCallback",
 					url: callbackUrl,
 					redirectUri
-				}).then(response => {
-					console.log("Manual callback result:", response);
-					if (response && response.success) {
-						spotifyAuthStatus.style.display = 'inline';
-						spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
+					}).then(response => {
+						console.log("Manual callback result:", response);
+						if (response && response.success) {
+							spotifyAuthStatus.style.display = 'inline';
+							spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
 						if (spotifySignOutButton) {
 							spotifySignOutButton.style.display = 'inline-block';
+							}
+							callbackDiv.style.display = 'none';
+							document.getElementById('spotifyCallbackInput').value = '';
+							showSpotifyAuthToast('success', 'Spotify Connected', 'Spotify callback completed successfully.');
+							alert('Spotify connected successfully!');
+						} else {
+							const errorCode = response?.errorCode || 'SPOTIFY_OAUTH_ERROR';
+							const errorMsg = getSpotifyAuthErrorMessage(response);
+							console.error(`Manual Spotify callback failed [${errorCode}]:`, errorMsg, response);
+							const composed = `[${errorCode}] ${errorMsg}`;
+							showSpotifyAuthToast('error', 'Spotify Callback Error', composed);
+							alert('Failed to process callback: ' + composed + '\n\n' + getSpotifyAuthTroubleshootingText(response));
 						}
-						callbackDiv.style.display = 'none';
-						document.getElementById('spotifyCallbackInput').value = '';
-						alert('Spotify connected successfully!');
-					} else {
-						alert('Failed to process callback: ' + (response?.error || 'Unknown error'));
-					}
-				});
+					});
 			} else {
 				alert('Please paste the complete callback URL');
 			}
@@ -6811,20 +7998,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			const response = await sendSpotifyCommand({ cmd: "spotifyAuth" });
 			handleSpotifyAuthResponse(response);
 			
-			function handleSpotifyAuthResponse(response) {
-				console.log('Spotify auth response received:', response);
-				spotifyAuthButton.disabled = false;
-				const callbackDiv = document.getElementById('spotifyCallbackDiv');
-				const manualLinkContainer = document.getElementById('spotifyManualLinkContainer');
-				const manualLinkField = document.getElementById('spotifyManualAuthUrl');
-				
-				if (response && response.success) {
-					spotifyAuthStatus.style.display = 'inline';
-					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
-					if (spotifySignOutButton) {
-						spotifySignOutButton.style.display = 'inline-block';
-					}
-					// Hide manual callback input on success
+				function handleSpotifyAuthResponse(response) {
+					console.log('Spotify auth response received:', response);
+					spotifyAuthButton.disabled = false;
+					const callbackDiv = document.getElementById('spotifyCallbackDiv');
+					const manualLinkContainer = document.getElementById('spotifyManualLinkContainer');
+					const manualLinkField = document.getElementById('spotifyManualAuthUrl');
+
+					if (response && response.success) {
+						spotifyAuthStatus.style.display = 'inline';
+						spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
+						if (spotifySignOutButton) {
+							spotifySignOutButton.style.display = 'inline-block';
+						}
+
 						if (callbackDiv) {
 							callbackDiv.style.display = 'none';
 							document.getElementById('spotifyCallbackInput').value = '';
@@ -6835,27 +8022,30 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 								manualLinkField.value = '';
 							}
 						}
-					// Show success message if already connected
+
 						if (response.alreadyConnected) {
 							console.log('Already connected to Spotify');
 						} else if (response.message && response.message.includes('authorization')) {
-							// For SSAPP, the OAuth window opened - wait for callback
-						console.log('OAuth window opened - waiting for authorization');
-						spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
-						// Show manual input as backup after 5 seconds
-						if (window.ssapp && callbackDiv) {
-							setTimeout(() => {
-								if (!spotifyAuthStatus.style.display || spotifyAuthStatus.style.display === 'none') {
-									callbackDiv.style.display = 'block';
-									console.log('If the authorization window is stuck, you can paste the callback URL manually.');
-								}
-							}, 5000);
+							// For SSAPP, the OAuth window opened - wait for callback.
+							console.log('OAuth window opened - waiting for authorization');
+							spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
+							if (window.ssapp && callbackDiv) {
+								setTimeout(() => {
+									if (!spotifyAuthStatus.style.display || spotifyAuthStatus.style.display === 'none') {
+										callbackDiv.style.display = 'block';
+										console.log('If the authorization window is stuck, you can paste the callback URL manually.');
+									}
+								}, 5000);
+							}
 						}
-					}
-				} else if (response?.waitingForManualCallback || response?.waitingForCallback) {
-					spotifyAuthButton.disabled = true;
-					const waitingForManual = !!response.waitingForManualCallback;
-					spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
+
+						if (response?.warning) {
+							alert('Spotify connected, but playback access is limited:\n\n' + response.warning);
+						}
+					} else if (response?.waitingForManualCallback || response?.waitingForCallback) {
+						spotifyAuthButton.disabled = true;
+						const waitingForManual = !!response.waitingForManualCallback;
+						spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
 
 						if (callbackDiv) {
 							callbackDiv.style.display = waitingForManual ? 'block' : 'none';
@@ -6886,41 +8076,44 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 							: 'Please finish the Spotify login in the newly opened tab.');
 
 						console.log(waitMessage);
+						showSpotifyAuthToast('info', 'Spotify OAuth', waitMessage);
 						if (waitingForManual) {
 							alert(waitMessage);
 						}
 					} else {
 						spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
-						const errorMsg = response?.error || 'Unknown error';
-						console.error('Spotify auth failed:', errorMsg);
-					
-					// Show manual callback input if the background specifically asked for manual completion
-					if (callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
-						callbackDiv.style.display = 'block';
-						console.log('Please paste the callback URL manually.');
-					}
+						const errorCode = response?.errorCode || 'SPOTIFY_OAUTH_ERROR';
+						const errorMsg = getSpotifyAuthErrorMessage(response);
+						console.error(`Spotify auth failed [${errorCode}]:`, errorMsg, response);
 
-					if (manualLinkContainer) {
-						if (response?.manualAuthUrl) {
-							manualLinkContainer.style.display = 'block';
-							if (manualLinkField) {
-								manualLinkField.value = response.manualAuthUrl;
-							}
-						} else {
-							manualLinkContainer.style.display = 'none';
-							if (manualLinkField) {
-								manualLinkField.value = '';
+						// Show manual callback input if the background specifically asked for manual completion.
+						if (callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
+							callbackDiv.style.display = 'block';
+							console.log('Please paste the callback URL manually.');
+						}
+
+						if (manualLinkContainer) {
+							if (response?.manualAuthUrl) {
+								manualLinkContainer.style.display = 'block';
+								if (manualLinkField) {
+									manualLinkField.value = response.manualAuthUrl;
+								}
+							} else {
+								manualLinkContainer.style.display = 'none';
+								if (manualLinkField) {
+									manualLinkField.value = '';
+								}
 							}
 						}
-					}
-					
-					// Only show alert if not already connected
-					if (errorMsg !== 'Already connected') {
-						alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\nPlease ensure:\n1. Spotify integration is enabled\n2. Client ID and Secret are filled in\n3. Your redirect URIs are configured in Spotify app settings');
+
+						if (errorMsg !== 'Already connected') {
+							const composed = `[${errorCode}] ${errorMsg}`;
+							showSpotifyAuthToast('error', 'Spotify OAuth Error', composed);
+							alert('Failed to connect to Spotify. Error: ' + composed + '\n\n' + getSpotifyAuthTroubleshootingText(response));
+						}
 					}
 				}
-			}
-		});
+			});
 	}
 	
 	// Spotify Sign Out Button
@@ -6965,13 +8158,24 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	let retryCount = 0;
+	const MAX_RETRIES = 60; // 30 seconds at 500ms intervals
+
 	let initialSetup = setInterval(()=>{
+		if (retryCount++ > MAX_RETRIES) {
+			clearInterval(initialSetup);
+			log("getSettings gave up after max retries");
+			return;
+		}
 		log("pop up asking main for settings yet again..");
 		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
 			chrome.runtime.lastError;
 			log("getSettings response",response);
-			if ((response == undefined) || (!response.streamID)){
-				
+			const hasSession = !!(response && response.streamID);
+			const hasSettingsPayload = !!(response && response.settings);
+			const ready = hasSession || (ssapp && hasSettingsPayload);
+			if (!ready){
+				// keep polling
 			} else {
 				clearInterval(initialSetup);
 				update(response, false); // we dont want to sync things
@@ -6983,7 +8187,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
 		chrome.runtime.lastError;
 		log("getSettings response",response);
-		if ((response == undefined) || (!response.streamID)){
+		const hasSession = !!(response && response.streamID);
+		const hasSettingsPayload = !!(response && response.settings);
+		const ready = hasSession || (ssapp && hasSettingsPayload);
+		if (!ready){
 			
 		} else {
 			clearInterval(initialSetup);
@@ -7085,27 +8292,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			if (this.value) {
 				// A game was selected
 				const gameUrl = baseURL + this.value;
-				
+
 				// Extract existing parameters from current URL
 				let existingParams = '';
 				if (overlayDiv.raw && overlayDiv.raw.includes('?')) {
 					existingParams = overlayDiv.raw.split('?')[1];
 				}
-				
-				// Extract session parameter to preserve it
-				let sessionParam = '';
-				if (existingParams) {
-					const params = new URLSearchParams(existingParams);
-					const session = params.get('session') || params.get('s');
-					if (session) {
-						sessionParam = session;
-					}
-				}
-				
-				// Construct new URL with game
+
+				// Construct new URL preserving all existing parameters
 				let newUrl = gameUrl;
-				if (sessionParam) {
-					newUrl += '?session=' + sessionParam;
+				if (existingParams) {
+					newUrl += '?' + existingParams;
 				}
 				
 				// Update the overlay URL
@@ -7225,6 +8422,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
             if (wrapper) wrapper.style.display = '';
         });
 			}
+
+			refreshLinks();
 		});
 	}
 
@@ -7240,7 +8439,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 			
 			msg.value = this.dataset.value || null;
-			if (msg.cmd == "fakemsg"){
+			if (msg.cmd == "fakemsg" || msg.cmd == "fakemeta"){
 				chrome.runtime.sendMessage(msg, function (response) {
 					// actions have callbacks? maybe
 				});
@@ -7303,8 +8502,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	};
 
-	checkVersion(); 
-	
+	checkVersion();
+	checkImportantChanges();
+
 	let hideLinks = false;
 	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
 		if (x.checked){
@@ -7396,6 +8596,54 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 		};
 	}
+
+	const uploadTimerSoundBtn = document.getElementById('uploadTimerSoundBtn');
+	if (uploadTimerSoundBtn) {
+		uploadTimerSoundBtn.onclick = function() {
+			window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadTimerSound', 'width=640,height=640');
+			window.addEventListener('message', function handleMessage(event) {
+				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+				if (event.data && event.data.type === 'media-uploaded') {
+					const timerSoundInput = document.getElementById('timerCustomSound');
+					if (timerSoundInput) {
+						timerSoundInput.value = event.data.url;
+						timerSoundInput.dispatchEvent(new Event('input', { bubbles: true }));
+						timerSoundInput.dispatchEvent(new Event('change', { bubbles: true }));
+					}
+					window.removeEventListener('message', handleMessage);
+				}
+			});
+		};
+	}
+
+	// Handle per-type alert sound upload buttons
+	const alertSoundUploads = [
+		{ btnId: 'uploadFollowSoundBtn', inputId: 'multi-alert-followsound' },
+		{ btnId: 'uploadSubSoundBtn', inputId: 'multi-alert-subsound' },
+		{ btnId: 'uploadDonoSoundBtn', inputId: 'multi-alert-donosound' },
+		{ btnId: 'uploadBitsSoundBtn', inputId: 'multi-alert-bitssound' },
+		{ btnId: 'uploadRaidSoundBtn', inputId: 'multi-alert-raidsound' }
+	];
+	alertSoundUploads.forEach(({ btnId, inputId }) => {
+		const btn = document.getElementById(btnId);
+		if (btn) {
+			btn.onclick = function() {
+				window.open('https://fileuploads.socialstream.ninja/popup/upload', btnId, 'width=640,height=640');
+				window.addEventListener('message', function handleMessage(event) {
+					if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+					if (event.data && event.data.type === 'media-uploaded') {
+						const input = document.getElementById(inputId);
+						if (input) {
+							input.value = event.data.url;
+							input.dispatchEvent(new Event('input', { bubbles: true }));
+							input.dispatchEvent(new Event('change', { bubbles: true }));
+						}
+						window.removeEventListener('message', handleMessage);
+					}
+				});
+			};
+		}
+	});
 
 	const uploadFeaturedFallbackBtn = document.getElementById('uploadFeaturedFallbackBtn');
 	if (uploadFeaturedFallbackBtn) {

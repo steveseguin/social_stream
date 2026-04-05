@@ -30,7 +30,9 @@
                             return;
                         }
                     }
-                    if ("getSource" == request){sendResponse("twitch_points");	return;	}
+                    // This helper is not a routeable chat source. Do not answer getSource here
+                    // or it can override sources/twitch.js and break targeted sendChat routing.
+                    if ("getSource" == request) { return; }
 					if ("focusChat" == request) {
                         return;
                     }
@@ -183,7 +185,7 @@
 	data.chatname = "Ad Alert";
 	data.nameColor = "#F33";
 	data.chatmessage = ""
-	data.event = "adbreak";
+	data.event = "ad_break";
 	data.chatimg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHJlY3QgeD0iMiIgeT0iNCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjE2IiBmaWxsPSIjOTkwMDAwIiBzdHJva2U9IiM5OTAwMDAiIHN0cm9rZS13aWR0aD0iMiIgcng9IjIiLz48dGV4dCB4PSI1LjUiIHk9IjE1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjgiIGZpbGw9IndoaXRlIj5BRDwvdGV4dD48Y2lyY2xlIGN4PSIxOSIgY3k9IjciIHI9IjIiIGZpbGw9IndoaXRlIi8+PC9zdmc+";
 	data.textonly = true;
 	data.type = "twitch";
@@ -228,4 +230,3 @@
 	});
     
 })();
-	

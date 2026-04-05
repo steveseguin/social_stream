@@ -69,13 +69,13 @@ window.addEventListener('unhandledrejection', (event) => {
 		
 		var chatimg = "";
 		try{
-		   chatimg = ele.querySelector("[data-sentry-component='UserAvatar'] img[src]").src;
+		   chatimg = ele.querySelector("img[src^='https://gcdn.favorited.app/profile-images']").src;
 		} catch(e){
 		}
 		
 		var name="";
 		try {
-			name = ele.querySelector("[data-sentry-component='UserInlineWithBadges'] span:not(:empty), section p.text-neutral-50.font-bold, button>section>p").textContent.trim();
+			name = ele.querySelector("main>button>div>p.font-bold").textContent.trim();
 			name = escapeHtml(name);
 		} catch(e){
 		}
@@ -187,6 +187,10 @@ window.addEventListener('unhandledrejection', (event) => {
 								setTimeout(function(ele){
 									processMessage(ele);
 								},400,mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].classList.contains("w-full")){
+								setTimeout(function(ele){
+									processMessage(ele);
+								},400,mutation.addedNodes[i]);
 							}
 						} catch(e){}
 					}
@@ -209,7 +213,7 @@ window.addEventListener('unhandledrejection', (event) => {
 				document.querySelector('body').marked=true;
 				console.log("CONNECTED chat detected");
 				setTimeout(function(){
-					document.querySelectorAll('[data-sentry-component="ChatMessageUser"]').forEach(ele=>{
+					document.querySelectorAll('main.w-full, [data-sentry-component="ChatMessageUser"]').forEach(ele=>{
 						ele.skip=true;
 					});
 					onElementInserted(document.querySelector('body'));

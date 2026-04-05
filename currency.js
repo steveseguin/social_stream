@@ -54,7 +54,9 @@ function convertToUSD(valueStr, source = '') {
     heart: 0.01,
     hearts: 0.01,
     
-    // Kick
+    // Kick (10,000 KICKs = $15 USD)
+    kick: 0.0015,
+    kicks: 0.0015,
     sub: 4.99,
     subscription: 4.99,
     
@@ -90,6 +92,8 @@ function convertToUSD(valueStr, source = '') {
       sponsorship: 4.99
     },
     kick: {
+      kick: 0.0015, // 10,000 KICKs = $15 USD
+      kicks: 0.0015,
       sub: 3.75, // Kick takes a smaller cut
       subscription: 3.75,
       giftsub: 3.75,

@@ -13,6 +13,8 @@
     --text-color: #e4e6eb;
     --card-bg: linear-gradient(145deg, #1a2a48, #162238);
     --card-shadow: rgba(0, 0, 0, 0.3);
+    --scale-output: 1;
+    --topbar-background: #0009;
 }
 
 body, html {
@@ -24,6 +26,7 @@ body, html {
     color: var(--text-color);
     font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
+    zoom: var(--scale-output);
 }
 
 #chat-container {
@@ -148,6 +151,10 @@ body, html {
     margin-top: 5px;
 }
 
+body.hide-timestamps .timestamp {
+    display: none;
+}
+
 .source-icon {
     width: 20px;
     height: 20px;
@@ -174,22 +181,30 @@ body, html {
     background-repeat: no-repeat;
     background-size: contain;
     padding: 5px;
-    margin: 0 5px 0 0;
+    margin: 0;
     cursor: help;
     padding-left: 34px;
     border-radius: 25%;
 }
 
 #topbar {
-    display: flex;
-    margin: 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: max-content;
+    max-width: none;
+    margin: 0;
     text-align: center;
     position: fixed;
     right: 0;
+    left: auto;
     z-index: 999;
-    background-color: #0009;
+    background-color: var(--topbar-background, #0009);
     border-radius: 0 0 0 13px;
-    padding-left: 3px;
+    padding: 0 8px 0 3px;
+    box-sizing: border-box;
+    overflow: visible;
+    white-space: nowrap;
 }
 
 #topbar:empty {
@@ -205,8 +220,24 @@ body.obsstudio-mode #header {
     display: none;
 }
 
-body.obsstudio-mode #chat-container {
+body.obsstudio-mode #chat-container,
+body.transparent-mode #chat-container,
+body.compact-height #chat-container {
     height: 100vh;
+}
+
+body.transparent-mode {
+    background-color: transparent;
+}
+
+body.transparent-mode #header,
+body.compact-height #header {
+    display: none;
+}
+
+body.transparent-mode #topbar,
+body.compact-height #topbar {
+    display: none;
 }
 
 #header {
@@ -391,6 +422,49 @@ body.light-mode .message.active {
     background-color: rgba(255, 255, 255, 0.06);
     font-size: 0.85em;
     line-height: 1.4;
+    display: none;
+}
+
+.meta-wrapper.expanded .meta-details {
+    display: block;
+}
+
+.meta-summary {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85em;
+    opacity: 0.85;
+}
+
+.meta-summary-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.meta-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: inherit;
+    font-size: 0.75em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+
+.meta-toggle:hover {
+    opacity: 1;
+}
+
+body.light-mode .meta-toggle {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.12);
 }
 
 body.light-mode .meta-details {
@@ -494,6 +568,16 @@ body.light-mode .meta-value.badge {
 		}
 	}
 
+	function normalizeColorParam(value) {
+		if (typeof value !== "string") return null;
+		const trimmed = value.trim();
+		if (!trimmed) return null;
+		if (/^[0-9a-fA-F]{3,8}$/.test(trimmed)) {
+			return "#" + trimmed;
+		}
+		return trimmed;
+	}
+
     var password = "false";
     var featuredMode = false;
     
@@ -513,11 +597,29 @@ body.light-mode .meta-value.badge {
 	var showUSD = urlParams.has("currency") ? true : false;
 	var highlightValue = urlParams.has("highlightvalue") ? true : false;
 	var lightMode = urlParams.has("lightmode");
+	var transparentMode = urlParams.has("transparent") || urlParams.has("transparency");
 	var hideMetaPanels = urlParams.has("hidemeta");
+	var hideTimestamps = urlParams.has("notime");
 	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
 	const showViewerCount = urlParams.has("showviewercount");
+	const compactHeightThreshold = 520;
+	const viewerBarBg = normalizeColorParam(urlParams.get("viewerbarbg") || urlParams.get("viewerbarbackground") || urlParams.get("topbarbg"));
+	if (viewerBarBg) {
+		document.documentElement.style.setProperty("--topbar-background", viewerBarBg);
+	}
+
+	function updateCompactHeightMode() {
+		document.body.classList.toggle("compact-height", window.innerHeight <= compactHeightThreshold);
+	}
+
+	// Apply scale if specified
+	var scale = 1;
+	if (urlParams.has("scale")) {
+		scale = parseFloat(urlParams.get("scale")) || 1.0;
+		document.documentElement.style.setProperty("--scale-output", scale);
+	}
 
 	// Apply theme immediately
 	if (lightMode) {
@@ -526,6 +628,10 @@ body.light-mode .meta-value.badge {
 		document.documentElement.style.setProperty('--text-color', '#333');
 		document.documentElement.style.setProperty('--card-bg', '#fff');
 		document.documentElement.style.setProperty('--card-shadow', 'rgba(0, 0, 0, 0.1)');
+	}
+
+	if (hideTimestamps) {
+		document.body.classList.add("hide-timestamps");
 	}
 
 	// Apply custom font if specified
@@ -545,8 +651,17 @@ body.light-mode .meta-value.badge {
 		document.body.style.backgroundColor = '#13141A';
 		document.documentElement.style.setProperty('--bg-color', '#13141A');
 	}
+
+	if (transparentMode) {
+		document.body.classList.add("transparent-mode");
+		document.body.style.backgroundColor = "transparent";
+		document.documentElement.style.setProperty("--bg-color", "transparent");
+	}
+
+	updateCompactHeightMode();
+	window.addEventListener("resize", updateCompactHeightMode);
     
-    const FRIENDLY_EVENT_LABELS = {
+	const FRIENDLY_EVENT_LABELS = {
 		new_follower: 'New Follower',
 		new_subscriber: 'New Subscriber',
 		resub: 'Resub',
@@ -554,6 +669,7 @@ body.light-mode .meta-value.badge {
 		gift: 'Gift',
 		giftpurchase: 'Gift Purchase',
 		giftredemption: 'Gift Redemption',
+		reward: 'Channel Points',
 		sponsorship: 'Membership',
 		membermilestone: 'Member Milestone',
 		member_milestone: 'Member Milestone',
@@ -561,7 +677,17 @@ body.light-mode .meta-value.badge {
 		cheer: 'Cheer',
 		donation: 'Donation',
 		supersticker: 'Super Sticker',
-		thankyou: 'Thank You'
+		thankyou: 'Thank You',
+		// Deprecated — kept for backward compat with older extension versions
+		subscription: 'New Subscriber',       // → new_subscriber
+		subgift: 'Gifted Subs',               // → subscription_gift
+		membership: 'Membership',             // → sponsorship
+		new_member: 'Membership',             // → sponsorship
+		new_membership: 'Membership',         // → sponsorship
+		newmember: 'Membership',              // → sponsorship
+		upgraded_membership: 'Resub',         // → resub
+		membership_upgrade: 'Resub',          // → resub
+		membership_milestone: 'Member Milestone' // → membermilestone
 	};
 
 	const STATUS_EVENT_TYPES = new Set(['viewer_update', 'follower_update', 'subscriber_update', 'view_update', 'likes_update']);
@@ -573,13 +699,19 @@ body.light-mode .meta-value.badge {
 		'giftredemption',
 		'subscription_gift',
 		'sponsorship',
-		'gift_membership',
-		'giftmemberships',
-		'gifted_membership',
-		'gifted_memberships',
-		'membership_gift'
+		// Deprecated — kept for backward compat with older extension versions
+		'gift_membership',     // → giftpurchase or giftredemption
+		'giftmemberships',     // → giftpurchase
+		'gifted_membership',   // → giftredemption
+		'gifted_memberships',  // → giftpurchase
+		'subgift',             // → subscription_gift
+		'membership_gift',     // → giftpurchase
+		'community_gift'       // → giftpurchase
 	]);
-	const NO_META_EVENT_TYPES = new Set(['follow', 'new_follower', 'shared', 'share', 'share_live']);
+	const NO_META_EVENT_TYPES = new Set([
+		'follow', 'new_follower', 'shared', 'share', 'share_live',
+		'followed' // Deprecated TikTok alias → new_follower
+	]);
 
 	function normalizeEventKey(event) {
 		if (typeof event !== 'string') return '';
@@ -589,6 +721,7 @@ body.light-mode .meta-value.badge {
 			.replace(/__+/g, '_')
 			.replace(/^_+|_+$/g, '');
 		const aliasMap = {
+			channel_points: 'reward',
 			channel_subscription_gifts: 'subscription_gift',
 			channel_subscription_gift: 'subscription_gift',
 			channel_subscription_new: 'new_subscriber',
@@ -910,7 +1043,7 @@ body.light-mode .meta-value.badge {
 			}
 		}
 
-		if (normalizedEvent === 'channel_points' && isPlainObject(data.reward)) {
+		if (normalizedEvent === 'reward' && isPlainObject(data.reward)) {
 			const reward = data.reward;
 			const rewardFields = [];
 			if (reward.title) {
@@ -947,7 +1080,7 @@ body.light-mode .meta-value.badge {
 			addSection('Reward', rewardFields);
 		}
 
-		if (normalizedEvent === 'channel_points' && meta) {
+		if (normalizedEvent === 'reward' && meta) {
 			const metaFields = [];
 			if ('userId' in meta) {
 				metaFields.push({ label: 'User ID', value: meta.userId });
@@ -1198,11 +1331,57 @@ body.light-mode .meta-value.badge {
 		return sections;
 	}
 
+	function buildMetaSummary(sections) {
+		const parts = [];
+		for (let i = 0; i < sections.length; i++) {
+			const fields = sections[i].fields;
+			for (let j = 0; j < fields.length; j++) {
+				const f = fields[j];
+				if (f.badge) continue;
+				const label = f.label;
+				// Pick only the most useful fields for summary
+				if (/^(title|cost|user input|prompt|question|tenure|tier|level|amount|sender|coins|emotes)$/i.test(label)) {
+					parts.push(f.value);
+				}
+			}
+			if (parts.length >= 3) break;
+		}
+		return parts.join(' · ');
+	}
+
 	function createMetaDetailsNode(data) {
 		const sections = buildMetaSections(data);
 		if (!sections.length) {
 			return null;
 		}
+
+		const wrapper = document.createElement('div');
+		wrapper.className = 'meta-wrapper';
+
+		// Build summary line
+		const summaryText = buildMetaSummary(sections);
+		const summaryRow = document.createElement('div');
+		summaryRow.className = 'meta-summary';
+
+		if (summaryText) {
+			const summarySpan = document.createElement('span');
+			summarySpan.className = 'meta-summary-text';
+			summarySpan.textContent = summaryText;
+			summaryRow.appendChild(summarySpan);
+		}
+
+		const toggleBtn = document.createElement('button');
+		toggleBtn.className = 'meta-toggle';
+		toggleBtn.textContent = 'Details ▸';
+		toggleBtn.addEventListener('click', function(e) {
+			e.stopPropagation();
+			const isExpanded = wrapper.classList.toggle('expanded');
+			toggleBtn.textContent = isExpanded ? 'Details ▾' : 'Details ▸';
+		});
+		summaryRow.appendChild(toggleBtn);
+		wrapper.appendChild(summaryRow);
+
+		// Build full details (hidden by default)
 		const container = document.createElement('div');
 		container.className = 'meta-details';
 		for (let i = 0; i < sections.length; i++) {
@@ -1252,7 +1431,8 @@ body.light-mode .meta-value.badge {
 			sectionNode.appendChild(fieldsWrapper);
 			container.appendChild(sectionNode);
 		}
-		return container;
+		wrapper.appendChild(container);
+		return wrapper;
 	}
 
 	function buildEventDisplay(data) {
@@ -1462,7 +1642,7 @@ body.light-mode .meta-value.badge {
 			<div class="text">${display.message || ''}</div>
 			${data.hasDonation ? `<div class="donation">💰 ${data.hasDonation}</div>` : ''}
 			${usdValue > 0 ? `<div class="usd-value">$${usdValue.toFixed(2)} USD</div>` : ''}
-			<div class="timestamp">${timeString}</div>
+			${hideTimestamps ? '' : `<div class="timestamp">${timeString}</div>`}
 		`;
 
 		const metaDetailsNode = hideMetaPanels ? null : createMetaDetailsNode(data);

@@ -33,6 +33,39 @@
         .sign-out-button:hover {
             background-color: #d32f2f;
         }
+        .auth-method-selector {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .auth-method-label {
+            display: block;
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .auth-method-options {
+            display: flex;
+            gap: 16px;
+        }
+        .auth-method-option {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #333;
+        }
+        .auth-method-option input[type="radio"] {
+            margin: 0;
+            cursor: pointer;
+        }
+        .auth-method-option span {
+            user-select: none;
+        }
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -239,6 +272,71 @@
 			position: relative;
 			z-index: 1;
 		}
+
+        /* Dark mode styles */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #18181b;
+                color: #efeff1;
+            }
+            .channel-header,
+            .stats-container,
+            .chat-container,
+            .permissions-container,
+            .recent-events,
+            .moderation-controls {
+                background: #1f1f23 !important;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            }
+            .stat-box {
+                background: #2d2d32;
+            }
+            .stat-label {
+                color: #adadb8;
+            }
+            .channel-input,
+            .chat-input input,
+            #mod-username,
+            #mod-seconds,
+            #mod-reason {
+                background: #2d2d32;
+                border-color: #3d3d42;
+                color: #efeff1;
+            }
+            .channel-input::placeholder,
+            .chat-input input::placeholder,
+            #mod-username::placeholder,
+            #mod-seconds::placeholder,
+            #mod-reason::placeholder {
+                color: #808086;
+            }
+            .event-item {
+                border-bottom-color: #3d3d42;
+            }
+            .auth-method-selector {
+                background: rgba(255, 255, 255, 0.08);
+            }
+            .auth-method-label {
+                color: #adadb8;
+            }
+            .auth-method-option {
+                color: #efeff1;
+            }
+            .header-item span:last-child,
+            #current-user,
+            #current-channel {
+                color: #efeff1;
+            }
+            .stats-container h3,
+            .chat-container h3,
+            .recent-events h4,
+            .moderation-controls h4 {
+                color: #efeff1;
+            }
+            #textarea div {
+                color: #efeff1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -246,6 +344,19 @@
         <div class="main-content">
             <div class="auth text-center">
                 <a id="auth-link" class="auth-button">Sign in to Twitch</a>
+                <div id="auth-method-selector" class="auth-method-selector hidden">
+                    <label class="auth-method-label">Sign-in method:</label>
+                    <div class="auth-method-options">
+                        <label class="auth-method-option">
+                            <input type="radio" name="twitch-auth-method" value="external" checked>
+                            <span>External browser</span>
+                        </label>
+                        <label class="auth-method-option">
+                            <input type="radio" name="twitch-auth-method" value="local">
+                            <span>Local app</span>
+                        </label>
+                    </div>
+                </div>
             </div>
             
             <div class="hidden socket">
@@ -324,11 +435,55 @@
                 <button id="btn-ad-90" class="connect-button">Start 90s Ad</button>
                 <button id="btn-ad-schedule" class="connect-button" style="background:#555;">Fetch Ad Schedule</button>
             </div>
+            <div style="margin-top:12px; padding-top:12px; border-top:1px solid #eee;">
+                <h4 style="margin:0 0 8px 0;">Advanced Sync</h4>
+                <label class="auth-method-option" style="display:flex; margin-bottom:8px;">
+                    <input type="checkbox" id="sync-delete-messages">
+                    <span>Sync dock deletes to Twitch</span>
+                </label>
+                <label class="auth-method-option" style="display:flex; margin-bottom:12px;">
+                    <input type="checkbox" id="sync-block-users">
+                    <span>Sync dock blocks to Twitch bans</span>
+                </label>
+                <div class="moderation-input-grid">
+                    <input type="text" id="stream-title" class="channel-input" placeholder="Stream title">
+                    <input type="text" id="stream-category" class="channel-input" placeholder="Game / category">
+                    <div class="moderation-button-group">
+                        <button id="btn-update-channel" class="connect-button" style="background:#2255dd;">Update Title / Category</button>
+                        <button id="btn-refresh-channel" class="connect-button" style="background:#555;">Refresh Current</button>
+                    </div>
+                </div>
+                <div style="font-size:12px; color:#666; margin-top:8px;">Title/category editing requires the Twitch OAuth scope <code>channel:manage:broadcast</code>.</div>
+            </div>
         </div>
         </div>
     </div>
     <script>
         //console.log(".");
+		const TWITCH_ADVANCED_CONTROLS_STORAGE_KEY = 'twitchWsAdvancedControls';
+
+		function loadAdvancedControlSettings() {
+			try {
+				const parsed = JSON.parse(localStorage.getItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
+				return {
+					syncDeleteMessages: !!parsed.syncDeleteMessages,
+					syncBlockUsers: !!parsed.syncBlockUsers
+				};
+			} catch (_) {
+				return {
+					syncDeleteMessages: false,
+					syncBlockUsers: false
+				};
+			}
+		}
+
+		function saveAdvancedControlSettings() {
+			const payload = {
+				syncDeleteMessages: !!document.getElementById('sync-delete-messages')?.checked,
+				syncBlockUsers: !!document.getElementById('sync-block-users')?.checked
+			};
+			localStorage.setItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+		}
 
 		function signOut() {
 			localStorage.removeItem('twitchOAuthToken');
@@ -373,11 +528,22 @@
                 });
             }
 
-            const savedAlias = localStorage.getItem('twitchUserAlias');
+			const savedAlias = localStorage.getItem('twitchUserAlias');
             const aliasInput = document.getElementById('alias-input');
             if (savedAlias && aliasInput) {
                 aliasInput.value = savedAlias;
             }
+			const controlSettings = loadAdvancedControlSettings();
+			const syncDeleteMessages = document.getElementById('sync-delete-messages');
+			const syncBlockUsers = document.getElementById('sync-block-users');
+			if (syncDeleteMessages) {
+				syncDeleteMessages.checked = controlSettings.syncDeleteMessages;
+				syncDeleteMessages.addEventListener('change', saveAdvancedControlSettings);
+			}
+			if (syncBlockUsers) {
+				syncBlockUsers.checked = controlSettings.syncBlockUsers;
+				syncBlockUsers.addEventListener('change', saveAdvancedControlSettings);
+			}
 
             if (aliasInput) {
                 aliasInput.addEventListener('change', function() {
@@ -396,6 +562,24 @@
             g('btn-ad-60')?.addEventListener('click', () => post('ad', { length: 60 }));
             g('btn-ad-90')?.addEventListener('click', () => post('ad', { length: 90 }));
             g('btn-ad-schedule')?.addEventListener('click', () => post('ad_schedule', {}));
+            g('btn-update-channel')?.addEventListener('click', () => post('update_channel_info', {
+				title: g('stream-title')?.value,
+				category: g('stream-category')?.value
+			}));
+            g('btn-refresh-channel')?.addEventListener('click', () => post('refresh_channel_info', {}));
+			window.addEventListener('message', function(event) {
+				if (!event?.data || event.data.source !== 'twitch-ws-script') {
+					return;
+				}
+				if (event.data.action === 'channel_info' && event.data.payload) {
+					if (g('stream-title')) {
+						g('stream-title').value = event.data.payload.title || '';
+					}
+					if (g('stream-category')) {
+						g('stream-category').value = event.data.payload.category || '';
+					}
+				}
+			});
         });
 
         // The rest of your existing JavaScript code goes here

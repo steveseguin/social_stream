@@ -380,6 +380,171 @@ const speechSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance
 const donationsFilterKey = 'activity.filter.donationsOnly';
 const ttsEnabledKey = 'activity.tts.enabled';
 
+const ALLOWED_ACTIVITY_TAGS = new Set(['a', 'b', 'strong', 'i', 'em', 'u', 's', 'br', 'span', 'small', 'code', 'img']);
+const ALLOWED_ACTIVITY_ATTRS = {
+  a: new Set(['href', 'target', 'rel', 'title']),
+  img: new Set(['src', 'alt', 'title', 'class', 'loading', 'decoding']),
+  span: new Set(['class']),
+  b: new Set(['class']),
+  strong: new Set(['class']),
+  i: new Set(['class']),
+  em: new Set(['class']),
+  u: new Set(['class']),
+  s: new Set(['class']),
+  small: new Set(['class']),
+  code: new Set(['class'])
+};
+
+function sanitizeRenderableUrl(value, { allowDataImage = false, allowRelative = false } = {}) {
+  const raw = String(value || '').trim();
+  if (!raw) {
+    return '';
+  }
+
+  if (allowRelative && /^(?:\/|\.\/|\.\.\/)/.test(raw)) {
+    return raw;
+  }
+
+  if (allowDataImage && /^data:image\/(?:png|jpe?g|gif|webp|avif);base64,[a-z0-9+/=\s]+$/i.test(raw)) {
+    return raw.replace(/\s+/g, '');
+  }
+
+  try {
+    const parsed = new URL(raw, window.location.href);
+    const protocol = (parsed.protocol || '').toLowerCase();
+    if (protocol === 'http:' || protocol === 'https:') {
+      return parsed.href;
+    }
+  } catch (err) {
+    return '';
+  }
+  return '';
+}
+
+function sanitizeClassValue(value) {
+  if (!value) {
+    return '';
+  }
+  return String(value)
+    .split(/\s+/)
+    .filter((token) => /^[a-z0-9_-]+$/i.test(token))
+    .join(' ');
+}
+
+function sanitizeActivityHtml(input) {
+  if (input === null || input === undefined) {
+    return '';
+  }
+  const html = String(input);
+  if (!html.trim()) {
+    return '';
+  }
+
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  const sanitizeNode = (root) => {
+    const children = Array.from(root.childNodes);
+    children.forEach((node) => {
+      if (node.nodeType === Node.COMMENT_NODE) {
+        node.remove();
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        return;
+      }
+
+      const tag = node.tagName.toLowerCase();
+      if (!ALLOWED_ACTIVITY_TAGS.has(tag)) {
+        const replacement = document.createTextNode(node.textContent || '');
+        node.replaceWith(replacement);
+        return;
+      }
+
+      const allowedAttrs = ALLOWED_ACTIVITY_ATTRS[tag] || new Set();
+      Array.from(node.attributes).forEach((attr) => {
+        const name = attr.name.toLowerCase();
+        const value = attr.value || '';
+
+        if (!allowedAttrs.has(name) || name.startsWith('on') || name === 'style' || name === 'srcdoc') {
+          node.removeAttribute(attr.name);
+          return;
+        }
+
+        if (name === 'href') {
+          const safeHref = sanitizeRenderableUrl(value, { allowRelative: true });
+          if (!safeHref) {
+            node.removeAttribute('href');
+          } else {
+            node.setAttribute('href', safeHref);
+          }
+          return;
+        }
+
+        if (name === 'src') {
+          const safeSrc = sanitizeRenderableUrl(value, { allowDataImage: true, allowRelative: true });
+          if (!safeSrc) {
+            node.removeAttribute('src');
+          } else {
+            node.setAttribute('src', safeSrc);
+          }
+          return;
+        }
+
+        if (name === 'target') {
+          const normalizedTarget = value.toLowerCase();
+          node.setAttribute('target', normalizedTarget === '_blank' ? '_blank' : '_self');
+          return;
+        }
+
+        if (name === 'class') {
+          const safeClass = sanitizeClassValue(value);
+          if (safeClass) {
+            node.setAttribute('class', safeClass);
+          } else {
+            node.removeAttribute('class');
+          }
+          return;
+        }
+
+        if (name === 'loading') {
+          const normalizedLoading = value.toLowerCase();
+          if (!['lazy', 'eager', 'auto'].includes(normalizedLoading)) {
+            node.removeAttribute('loading');
+          }
+          return;
+        }
+
+        if (name === 'decoding') {
+          const normalizedDecoding = value.toLowerCase();
+          if (!['sync', 'async', 'auto'].includes(normalizedDecoding)) {
+            node.removeAttribute('decoding');
+          }
+        }
+      });
+
+      if (tag === 'a') {
+        const target = (node.getAttribute('target') || '').toLowerCase();
+        if (target === '_blank') {
+          node.setAttribute('rel', 'noopener noreferrer');
+        } else {
+          node.removeAttribute('rel');
+        }
+      }
+
+      if (tag === 'img' && !node.getAttribute('src')) {
+        node.remove();
+        return;
+      }
+
+      sanitizeNode(node);
+    });
+  };
+
+  sanitizeNode(template.content);
+  return template.innerHTML;
+}
+
 function updateSessionStatus(message, tone = 'info', { html = false } = {}) {
   const target = elements.sessionStatus;
   if (!target) return;
@@ -799,18 +964,21 @@ function buildActivityNode(entry) {
     if (payload.backgroundColor) {
       messageEl.style.background = payload.backgroundColor;
     }
-    messageEl.innerHTML = payload.chatmessage;
+    messageEl.innerHTML = sanitizeActivityHtml(payload.chatmessage);
     body.appendChild(messageEl);
   }
 
   if (payload.contentimg) {
-    const media = document.createElement('img');
-    media.className = 'activity-item__media';
-    media.src = payload.contentimg;
-    media.alt = payload.chatname ? `${payload.chatname} shared content` : 'Shared content';
-    media.loading = 'lazy';
-    media.decoding = 'async';
-    body.appendChild(media);
+    const safeMediaSrc = sanitizeRenderableUrl(payload.contentimg, { allowDataImage: true, allowRelative: true });
+    if (safeMediaSrc) {
+      const media = document.createElement('img');
+      media.className = 'activity-item__media';
+      media.src = safeMediaSrc;
+      media.alt = payload.chatname ? `${payload.chatname} shared content` : 'Shared content';
+      media.loading = 'lazy';
+      media.decoding = 'async';
+      body.appendChild(media);
+    }
   }
 
   card.appendChild(body);
@@ -852,7 +1020,8 @@ function createAvatarNode(payload, fallbackIcon) {
   const wrapper = document.createElement('div');
   wrapper.className = 'activity-item__avatar';
 
-  if (payload.chatimg) {
+  const safeAvatarSrc = sanitizeRenderableUrl(payload.chatimg, { allowDataImage: true, allowRelative: true });
+  if (safeAvatarSrc) {
     const img = document.createElement('img');
     img.alt = payload.chatname ? `${payload.chatname} avatar` : 'Avatar';
     img.loading = 'lazy';
@@ -862,7 +1031,7 @@ function createAvatarNode(payload, fallbackIcon) {
       wrapper.classList.add('activity-item__avatar--fallback');
       img.src = AVATAR_FALLBACK_SRC;
     };
-    img.src = payload.chatimg;
+    img.src = safeAvatarSrc;
     wrapper.appendChild(img);
     return wrapper;
   }
@@ -933,9 +1102,13 @@ function createBadgeNode(badge) {
   }
 
   if (typeof badge === 'string') {
+    const safeBadgeSrc = sanitizeRenderableUrl(badge, { allowDataImage: true, allowRelative: true });
+    if (!safeBadgeSrc) {
+      return null;
+    }
     const img = document.createElement('img');
     img.className = 'activity-item__badge';
-    img.src = badge;
+    img.src = safeBadgeSrc;
     img.alt = 'Badge';
     img.loading = 'lazy';
     img.decoding = 'async';
@@ -944,19 +1117,20 @@ function createBadgeNode(badge) {
 
   if (typeof badge === 'object') {
     if (badge.url || badge.image) {
+      const safeBadgeSrc = sanitizeRenderableUrl(badge.url || badge.image, { allowDataImage: true, allowRelative: true });
+      if (!safeBadgeSrc) {
+        return null;
+      }
       const img = document.createElement('img');
       img.className = 'activity-item__badge';
-      img.src = badge.url || badge.image;
+      img.src = safeBadgeSrc;
       img.alt = badge.alt || 'Badge';
       img.loading = 'lazy';
       img.decoding = 'async';
       return img;
     }
     if (badge.type === 'svg' && badge.html) {
-      const span = document.createElement('span');
-      span.className = 'activity-item__badge activity-item__badge--svg';
-      span.innerHTML = badge.html;
-      return span;
+      return null;
     }
   }
 
@@ -1882,44 +2056,49 @@ function init() {
 
   updateFullscreenControl();
 
-  plugins = [
+  if (!isActivityPopoutView) {
+    plugins = [
 
-    createYoutubePluginInstance(youtubeStreamingEnabled),
+      createYoutubePluginInstance(youtubeStreamingEnabled),
 
-    new TwitchPlugin({
-      messenger,
-      emotes,
-      icon: '../sources/images/twitch.png',
-      debug: debugEnabled,
-      onActivity: addActivity,
-      onStatus: ({ kind = 'debug', plugin, state }) => addActivity({ kind, plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
-      autoConnect: true,
-      controls: { connect: false, disconnect: true }
-    }),
-    new KickPlugin({
-      messenger,
-      emotes,
-      icon: '../sources/images/kick.png',
-      debug: debugEnabled,
-      onActivity: addActivity,
-      onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
-    }),
-    new TikTokPlugin({
-      messenger,
-      icon: '../sources/images/tiktok.png',
-      debug: debugEnabled,
-      onActivity: addActivity,
-      onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
-    })
-  ];
+      new TwitchPlugin({
+        messenger,
+        emotes,
+        icon: '../sources/images/twitch.png',
+        debug: debugEnabled,
+        onActivity: addActivity,
+        onStatus: ({ kind = 'debug', plugin, state }) => addActivity({ kind, plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
+        autoConnect: true,
+        controls: { connect: false, disconnect: true }
+      }),
+      new KickPlugin({
+        messenger,
+        emotes,
+        icon: '../sources/images/kick.png',
+        debug: debugEnabled,
+        onActivity: addActivity,
+        onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
+      }),
+      new TikTokPlugin({
+        messenger,
+        icon: '../sources/images/tiktok.png',
+        debug: debugEnabled,
+        onActivity: addActivity,
+        onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
+      })
+    ];
+    mountAllPlugins();
+  } else {
+    plugins = [];
+  }
 
-
-  mountAllPlugins();
   startSession(storedSession);
-  processOAuthCallback(pluginMap).catch((err) => {
-    console.error('OAuth processing failed', err);
-    updateSessionStatus(err.message || 'OAuth callback handling failed.', 'warn');
-  });
+  if (!isActivityPopoutView) {
+    processOAuthCallback(pluginMap).catch((err) => {
+      console.error('OAuth processing failed', err);
+      updateSessionStatus(err.message || 'OAuth callback handling failed.', 'warn');
+    });
+  }
   initMobileNav();
 
   if (!isActivityPopoutView && focusParam === 'activity' && elements.activitySection) {

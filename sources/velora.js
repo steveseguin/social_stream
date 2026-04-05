@@ -75,6 +75,8 @@
 	
 	var channelName = "";
 	
+	var processedMessages = new Set();
+	
 	function processMessage(ele){
 		console.log(ele);
 		if (!ele || !ele.isConnected){
@@ -93,28 +95,33 @@
 			return;
 		}
 
-		
 		var chatimg = ""
+		
 
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector("[title^='View profile for'], [class*='border-amber'] .text-sm.font-semibold.leading-tight.text-white").textContent);
+			var nameEl = ele.querySelector("[title^='View profile for']");
+		if (nameEl) { name = escapeHtml(nameEl.textContent.trim()); }
 		} catch(e){
 		}
 		
 		var namecolor="";
 		
 		var badges=[];
-		/* try {
-			ele.querySelectorAll("img[class^='ChatBadge_image_'][src]").forEach(badge=>{
+		try {
+			ele.querySelectorAll("img[src^='https://assets.velora.tv/badges'], img[src*='/velora-badges/']").forEach(badge=>{
+				badge.src = badge.src + "";
 				badges.push(badge.src);
 			});
+			
+			
 		} catch(e){
-		} */
+		} 
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector("div > div > div.text-sm.break-words.text-white, [class*='border-amber'] > div > div > p")).trim();
+			var msgEl = ele.querySelector(".chat-message-content > div:last-child");
+		if (msgEl) { msg = getAllContentNodes(msgEl).trim(); }
 		} catch(e){
 		}
 		
@@ -128,11 +135,20 @@
 		} catch(e){
 		}
 		
-		if (!msg || !name){
+		if (!name || (!msg && !donation)){
 	//		console.log("no name");
 			return;
 		}
 		
+		var msgKey = name + "|\u00b6|" + msg;
+		if (processedMessages.has(msgKey)){
+			ele.skip = true;
+			return;
+		}
+		processedMessages.add(msgKey);
+		if (processedMessages.size > 200){
+			processedMessages.delete(processedMessages.values().next().value);
+		}
 		
 		ele.skip = true;
 		
@@ -162,20 +178,27 @@
 		}
 	}
 	var isExtensionOn = true;
+	var cachedViewerEl = null;
 	
 	function checkViewers(){
 		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			try {
 				
 				
-				if (window.location.href === "https://velora.tv/dashboard/stream/popout?panels=chat"){
-					var viewerSpan = document.querySelector(".min-w-0 > .mt-1").childNodes[0];
-				} else {
-					var viewerSpan = document.querySelector(".inline-flex.items-center.gap-2.rounded-full > .tracking-normal.text-white.font-semibold").parentNode.nextElementSibling.childNodes[1];
+				if (!cachedViewerEl || !cachedViewerEl.isConnected){
+					cachedViewerEl = null;
+					var els = document.querySelectorAll("div, span");
+					for (var i = 0; i < els.length; i++){
+						var el = els[i];
+						if (!el.childElementCount && /^[\d,.]+[km]?\s+viewers?$/i.test(el.textContent.trim())){
+							cachedViewerEl = el;
+							break;
+						}
+					}
 				}
 				
-				if (viewerSpan && viewerSpan.textContent){
-					let views = viewerSpan.textContent.toUpperCase();
+				if (cachedViewerEl && cachedViewerEl.textContent){
+					let views = cachedViewerEl.textContent.toUpperCase();
 					let multiplier = 1;
 					if (views.includes("K")){
 						multiplier = 1000;
@@ -278,7 +301,7 @@
 							if (addedNode.skip){continue;}
 
 							setTimeout(()=>{
-									processMessage(addedNode);
+								processMessage(addedNode);
 							},300);
 
 						} catch(e){
@@ -309,10 +332,9 @@
 		}
 		checking = setInterval(function(){
 			try {
-				var container = document.querySelector(".duration-300.rounded-none > .flex-1.overflow-y-auto.p-4.space-y-3.min-h-0");
-				if (!container && window.location.href === "https://velora.tv/dashboard/stream/popout?panels=chat"){
-					container = document.querySelector("body");
-				} 
+				var container = document.querySelector(".chat-scroll-hidden");
+				
+				if (!container){ return; }
 				
 				if (!container.marked){
 					container.marked=true;
@@ -321,11 +343,7 @@
 
 					setTimeout(function(){
 						dataIndex = 0;
-						if (window.location.href === "https://velora.tv/dashboard/stream/popout?panels=chat"){
-							onElementInserted(container, true);
-						} else {
-							onElementInserted(container);
-						}
+						onElementInserted(container);
 					},2000);
 				}
 				checkViewers();

@@ -39,6 +39,38 @@
 			background-color: transparent;
 		}
 
+		#obs-status-badge {
+			position: fixed;
+			right: 16px;
+			bottom: 16px;
+			max-width: min(360px, calc(100vw - 32px));
+			padding: 12px 14px;
+			border-radius: 12px;
+			font-size: 13px;
+			line-height: 1.45;
+			color: #f5f8ff;
+			background: rgba(11, 18, 32, 0.88);
+			border: 1px solid rgba(255, 255, 255, 0.14);
+			box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+			backdrop-filter: blur(10px);
+			z-index: 10020;
+			display: none;
+			pointer-events: none;
+			white-space: pre-wrap;
+		}
+
+		#obs-status-badge[data-state="connected"] {
+			border-color: rgba(76, 175, 80, 0.5);
+		}
+
+		#obs-status-badge[data-state="connecting"] {
+			border-color: rgba(33, 150, 243, 0.5);
+		}
+
+		#obs-status-badge[data-state="error"] {
+			border-color: rgba(255, 152, 0, 0.55);
+		}
+
 		.fullscreen-media-container {
 			position: fixed;
 			top: 0;
@@ -234,6 +266,7 @@
 </head>
 <body>
     <div id="status-message"></div>
+    <div id="obs-status-badge" aria-live="polite"></div>
     <div id="fullscreen-media-container" class="fullscreen-media-container"></div>
 
     <!-- Multi-layer overlay system -->
@@ -291,10 +324,26 @@
         var iframe = null;
         var roomID = "test";
         var password = "false";
+        var globalVolume = urlParams.has("volume") ? Math.max(0, Math.min(1, parseFloat(urlParams.get("volume")))) : 1.0;
+        if (isNaN(globalVolume)) { globalVolume = 1.0; }
+        var defaultDuration = urlParams.has("duration") ? Math.max(1000, parseInt(urlParams.get("duration"))) : 10000;
+        if (isNaN(defaultDuration)) { defaultDuration = 10000; }
         var mediaContainer = document.getElementById('fullscreen-media-container');
         var statusMessage = document.getElementById('status-message');
         var obsStudio = null;
         var obsWebSocket = null;
+        var obsWebSocketConnecting = null;
+        var obsStatusEnabled = urlParams.get('obsstatus') === '1' || urlParams.get('obsdebug') === '1';
+        var obsStatusBadge = document.getElementById('obs-status-badge');
+        var obsWebSocketState = {
+            url: null,
+            passwordProvided: false,
+            obsVersion: null,
+            obsWebSocketVersion: null,
+            rpcVersion: null,
+            lastError: null,
+            state: 'idle'
+        };
         var audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
         // Multi-layer overlay system references
@@ -378,12 +427,18 @@
                 layer.innerHTML = '';
             }
 
-            // Process text with placeholder replacement
+            // Process text with generic placeholder replacement
+            // Supports all variables from messageData: {username}, {message}, {source}, {donation},
+            // {event}, {membership}, {hasDonation}, {subtitle}, {meta}, etc.
             var text = config.text || '';
-            text = text.replace(/\{username\}/gi, messageData.username || messageData.chatname || 'User');
-            text = text.replace(/\{message\}/gi, messageData.message || messageData.chatmessage || '');
-            text = text.replace(/\{source\}/gi, messageData.source || messageData.type || '');
-            text = text.replace(/\{donation\}/gi, messageData.donation || messageData.hasDonation || '');
+            text = text.replace(/\{(\w+)\}/gi, function(match, key) {
+                var val = messageData[key.toLowerCase()];
+                if (val === undefined || val === null) return '';
+                if (typeof val === 'object') {
+                    try { return JSON.stringify(val); } catch (e) { return ''; }
+                }
+                return String(val);
+            });
 
             if (!text) {
                 console.warn('[showOverlayText] No text to display');
@@ -460,45 +515,254 @@
             if (!obsStudio && window.obsstudio) {
                 obsStudio = window.obsstudio;
                 console.log('OBS Studio API found (late binding).');
+                if (obsStatusEnabled) {
+                    updateObsStatusBadge();
+                }
             }
             return obsStudio;
         }
+
+        function getObsWebSocketUrl() {
+            const wsUrl = urlParams.get('obsws') || urlParams.get('obswebsocket') || '';
+            return wsUrl || 'ws://127.0.0.1:4455';
+        }
+
+        function getObsWebSocketPassword() {
+            return urlParams.get('obspw') || urlParams.get('obspassword') || '';
+        }
+
+        function getObsWebSocketCompatibilityHint(wsUrl = getObsWebSocketUrl()) {
+            const hints = [];
+
+            if (String(wsUrl).includes(':4444')) {
+                hints.push('Port 4444 usually means obs-websocket 4.x. Flow Actions uses the OBS WebSocket v5 API built into OBS 28+ on port 4455.');
+            } else {
+                hints.push('Flow Actions uses the OBS WebSocket v5 API built into OBS 28+ (default URL: ws://127.0.0.1:4455).');
+            }
+
+            if (window.location.protocol === 'https:' && /^ws:\/\//i.test(wsUrl || '')) {
+                hints.push('Some external browsers block ws:// from an https:// page. If that happens, run the overlay inside OBS Browser Source or use a secure websocket endpoint.');
+            }
+
+            return hints.join(' ');
+        }
+
+        function logObsWebSocketUnavailable(actionLabel) {
+            const lastError = obsWebSocketState.lastError ? ` Last error: ${obsWebSocketState.lastError}.` : '';
+            console.warn(`[OBS] ${actionLabel} requires OBS WebSocket.${lastError} ${getObsWebSocketCompatibilityHint()}`);
+        }
+
+        function updateObsStatusBadge() {
+            if (!obsStatusEnabled || !obsStatusBadge) {
+                return;
+            }
+
+            const lines = [];
+            const state = obsWebSocketState.state || 'idle';
+            const labelMap = {
+                idle: 'Idle',
+                connecting: 'Connecting',
+                connected: 'Connected',
+                error: 'Error'
+            };
+
+            lines.push(`OBS WebSocket: ${labelMap[state] || state}`);
+            lines.push(`URL: ${obsWebSocketState.url || getObsWebSocketUrl()}`);
+
+            if (obsWebSocketState.obsVersion || obsWebSocketState.obsWebSocketVersion) {
+                lines.push(
+                    `OBS ${obsWebSocketState.obsVersion || '?'} / WS ${obsWebSocketState.obsWebSocketVersion || '?'} / RPC ${obsWebSocketState.rpcVersion || '?'}`
+                );
+            }
+
+            if (obsWebSocketState.passwordProvided) {
+                lines.push('Auth: password supplied');
+            } else {
+                lines.push('Auth: no password supplied');
+            }
+
+            if (obsWebSocketState.lastError) {
+                lines.push(`Last error: ${obsWebSocketState.lastError}`);
+            }
+
+            obsStatusBadge.style.display = 'block';
+            obsStatusBadge.dataset.state = state;
+            obsStatusBadge.textContent = lines.join('\n');
+        }
+
+        async function invokeObsStudioMethod(methodName, args = [], successMessage = '', errorLabel = methodName) {
+            const obs = getObsStudio();
+            if (!obs || typeof obs[methodName] !== 'function') {
+                return false;
+            }
+
+            try {
+                const result = obs[methodName].apply(obs, args);
+                if (result && typeof result.then === 'function') {
+                    await result;
+                }
+
+                if (successMessage) {
+                    console.log(`[OBS] ${successMessage}`);
+                }
+                return true;
+            } catch (error) {
+                console.error(`[OBS] Error ${errorLabel}:`, error);
+                return false;
+            }
+        }
+
+        async function resolveObsInputReference(client, inputName) {
+            if (!client || !inputName) {
+                return null;
+            }
+
+            try {
+                const inputList = await client.call('GetInputList');
+                return (inputList.inputs || []).find((input) => input.inputName === inputName) || null;
+            } catch (error) {
+                console.warn('[OBS WebSocket] Unable to resolve input reference:', error.message || error);
+                return null;
+            }
+        }
         
         // Initialize OBS WebSocket connection
-        async function initOBSWebSocket() {
+        async function initOBSWebSocket(forceReconnect = false) {
             if (typeof OBSWebSocket === 'undefined') {
-                console.warn('OBS WebSocket library not loaded');
-                return;
+                console.warn('[OBS WebSocket] Library not loaded');
+                return null;
             }
-            
-            // Get OBS WebSocket settings from URL parameters
-            const wsUrl = urlParams.get('obsws') || urlParams.get('obswebsocket') || 'ws://localhost:4455';
-            const wsPassword = urlParams.get('obspw') || urlParams.get('obspassword') || '';
-            
-            // Only try to connect if password is provided
-            if (!wsPassword) {
-                console.log('OBS WebSocket password not provided. Use ?obspw=yourpassword in URL to enable.');
-                return;
+
+            if (obsWebSocket && !forceReconnect) {
+                return obsWebSocket;
             }
-            
-            obsWebSocket = new OBSWebSocket();
-            
+
+            if (obsWebSocketConnecting && !forceReconnect) {
+                return obsWebSocketConnecting;
+            }
+
+            const wsUrl = getObsWebSocketUrl();
+            const wsPassword = getObsWebSocketPassword();
+
+            obsWebSocketState.url = wsUrl;
+            obsWebSocketState.passwordProvided = !!wsPassword;
+            obsWebSocketState.lastError = null;
+            obsWebSocketState.state = 'connecting';
+            updateObsStatusBadge();
+
+            obsWebSocketConnecting = (async () => {
+                if (forceReconnect && obsWebSocket) {
+                    try {
+                        await obsWebSocket.disconnect();
+                    } catch (error) {
+                        console.warn('[OBS WebSocket] Error disconnecting previous client:', error.message || error);
+                    }
+                    obsWebSocket = null;
+                }
+
+                const client = new OBSWebSocket();
+
+                client.on('ConnectionClosed', (error) => {
+                    if (obsWebSocket === client) {
+                        obsWebSocket = null;
+                        obsWebSocketState.lastError = (error && error.message) || 'Connection closed';
+                        obsWebSocketState.state = 'error';
+                        console.warn('[OBS WebSocket] Connection closed:', obsWebSocketState.lastError);
+                        updateObsStatusBadge();
+                    }
+                });
+
+                client.on('ConnectionError', (error) => {
+                    obsWebSocketState.lastError = (error && error.message) || String(error);
+                    obsWebSocketState.state = 'error';
+                    console.warn('[OBS WebSocket] Connection error:', obsWebSocketState.lastError);
+                    updateObsStatusBadge();
+                });
+
+                try {
+                    const connectInfo = await client.connect(wsUrl, wsPassword || undefined);
+                    const version = await client.call('GetVersion');
+
+                    obsWebSocket = client;
+                    obsWebSocketState.obsVersion = version.obsVersion || null;
+                    obsWebSocketState.obsWebSocketVersion = version.obsWebSocketVersion || connectInfo.obsWebSocketVersion || null;
+                    obsWebSocketState.rpcVersion = connectInfo.negotiatedRpcVersion || connectInfo.rpcVersion || null;
+                    obsWebSocketState.lastError = null;
+                    obsWebSocketState.state = 'connected';
+                    updateObsStatusBadge();
+
+                    console.log(
+                        `[OBS WebSocket] Connected to ${wsUrl} ` +
+                        `(OBS ${obsWebSocketState.obsVersion || 'unknown'}, ` +
+                        `WebSocket ${obsWebSocketState.obsWebSocketVersion || 'unknown'}, ` +
+                        `RPC ${obsWebSocketState.rpcVersion || 'unknown'})`
+                    );
+                    return client;
+                } catch (error) {
+                    obsWebSocket = null;
+                    obsWebSocketState.lastError = error && error.message ? error.message : String(error);
+                    obsWebSocketState.state = 'error';
+                    console.warn(`[OBS WebSocket] Failed to connect to ${wsUrl}:`, obsWebSocketState.lastError);
+                    console.warn(`[OBS WebSocket] ${getObsWebSocketCompatibilityHint(wsUrl)}`);
+                    updateObsStatusBadge();
+                    return null;
+                } finally {
+                    obsWebSocketConnecting = null;
+                }
+            })();
+
+            return obsWebSocketConnecting;
+        }
+
+        async function ensureObsWebSocket() {
+            if (obsWebSocket) {
+                return obsWebSocket;
+            }
+            return initOBSWebSocket();
+        }
+
+        async function testOBSWebSocketConnection() {
+            const client = await ensureObsWebSocket();
+            if (!client) {
+                return {
+                    ok: false,
+                    url: getObsWebSocketUrl(),
+                    error: obsWebSocketState.lastError || 'Unable to connect',
+                    hint: getObsWebSocketCompatibilityHint()
+                };
+            }
+
             try {
-                const { obsWebSocketVersion, negotiatedRpcVersion } = await obsWebSocket.connect(wsUrl, wsPassword);
-                console.log(`Connected to OBS WebSocket v${obsWebSocketVersion} (RPC ${negotiatedRpcVersion})`);
-                
-                // Test the connection
-                const version = await obsWebSocket.call('GetVersion');
-                console.log('OBS Studio Version:', version.obsVersion);
+                const version = await client.call('GetVersion');
+                let currentScene = null;
+
+                try {
+                    currentScene = await client.call('GetCurrentProgramScene');
+                } catch (sceneError) {
+                    currentScene = { error: sceneError.message || String(sceneError) };
+                }
+
+                return {
+                    ok: true,
+                    url: getObsWebSocketUrl(),
+                    obsVersion: version.obsVersion || null,
+                    obsWebSocketVersion: version.obsWebSocketVersion || null,
+                    rpcVersion: obsWebSocketState.rpcVersion,
+                    currentProgramSceneName: currentScene && currentScene.currentProgramSceneName
+                };
             } catch (error) {
-                console.warn('Failed to connect to OBS WebSocket:', error.message);
-                console.log('Make sure OBS WebSocket is enabled in OBS Tools -> WebSocket Server Settings');
-                obsWebSocket = null;
+                return {
+                    ok: false,
+                    url: getObsWebSocketUrl(),
+                    error: error.message || String(error),
+                    hint: getObsWebSocketCompatibilityHint()
+                };
             }
         }
         
         // Try to connect to OBS WebSocket on page load
         setTimeout(initOBSWebSocket, 1000); 
+        updateObsStatusBadge();
 
         // Function to show session ID modal
         function showSessionModal() {
@@ -724,7 +988,7 @@
 		}
 
         // Function to handle different action types
-        function handleAction(payload) {
+        async function handleAction(payload) {
             if (!payload || !payload.actionType) {
                 console.warn("Received an empty or invalid payload:", payload);
                 return;
@@ -745,7 +1009,7 @@
                             useLayer: payload.useLayer,
                             clearFirst: payload.clearFirst
                         };
-                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration || 10000, opts);
+                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration || defaultDuration, opts);
                     } else {
                         console.warn("Play media action received without a URL.");
                     }
@@ -779,23 +1043,31 @@
                 case 'obsChangeScene':
                     if (payload.sceneName) {
                         // Try OBS WebSocket first, then fall back to Browser Source API
-                        const obs = getObsStudio();
-                        if (obsWebSocket) {
-                            obsWebSocket.call('SetCurrentProgramScene', { sceneName: payload.sceneName })
-                                .then(() => console.log(`[OBS WebSocket] Changed scene to ${payload.sceneName}`))
-                                .catch(err => console.error("[OBS WebSocket] Error changing scene:", err));
-                        } else if (obs) {
+                        let handled = false;
+                        const client = await ensureObsWebSocket();
+
+                        if (client) {
                             try {
-                                const result = obs.setCurrentScene(payload.sceneName);
-                                if (result && typeof result.then === 'function') {
-                                    result.then(() => {})
-                                          .catch(err => console.error("[OBS] Error changing scene:", err));
-                                }
+                                await client.call('SetCurrentProgramScene', { sceneName: payload.sceneName });
+                                console.log(`[OBS WebSocket] Changed scene to ${payload.sceneName}`);
+                                handled = true;
                             } catch (err) {
-                                console.error("[OBS] Error changing scene:", err);
+                                console.error("[OBS WebSocket] Error changing scene:", err);
                             }
-                        } else {
+                        }
+
+                        if (!handled) {
+                            handled = await invokeObsStudioMethod(
+                                'setCurrentScene',
+                                [payload.sceneName],
+                                `Scene changed to ${payload.sceneName}`,
+                                'changing scene'
+                            );
+                        }
+
+                        if (!handled) {
                             console.warn("[OBS] No API available (WebSocket or Browser Source)");
+                            logObsWebSocketUnavailable('Change Scene');
                         }
                     } else {
                         console.warn("[OBS] Scene name not provided");
@@ -803,190 +1075,280 @@
                     break;
                 
                 case 'obsToggleSource':
-                    if (payload.sourceName && obsWebSocket) {
+                    if (payload.sourceName) {
+                        const client = await ensureObsWebSocket();
+                        if (!client) {
+                            logObsWebSocketUnavailable('Toggle Source');
+                            break;
+                        }
+
                         // Get current scene to find the source
-                        obsWebSocket.call('GetCurrentProgramScene')
-                            .then(async (data) => {
-                                const sceneName = data.currentProgramSceneName;
-                                
-                                // Get the current visibility state
-                                try {
-                                    const sceneItemId = await obsWebSocket.call('GetSceneItemId', {
-                                        sceneName: sceneName,
-                                        sourceName: payload.sourceName
-                                    });
-                                    
-                                    // Coerce string values to boolean when provided
-                                    const toBool = (v) => (v === true || v === 'true' || v === 1 || v === '1');
-                                    let enabled = undefined;
-                                    if (payload.visible === 'toggle' || payload.visible === undefined) {
-                                        // Get current state to toggle
-                                        const itemState = await obsWebSocket.call('GetSceneItemEnabled', {
-                                            sceneName: sceneName,
-                                            sceneItemId: sceneItemId.sceneItemId
-                                        });
-                                        enabled = !itemState.sceneItemEnabled;
-                                    } else {
-                                        enabled = toBool(payload.visible);
-                                    }
-                                    
-                                    // Set the visibility
-                                    await obsWebSocket.call('SetSceneItemEnabled', {
-                                        sceneName: sceneName,
-                                        sceneItemId: sceneItemId.sceneItemId,
-                                        sceneItemEnabled: enabled
-                                    });
-                                    
-                                    console.log(`[OBS WebSocket] Source '${payload.sourceName}' set to ${enabled ? 'visible' : 'hidden'}`);
-                                } catch (err) {
-                                    // More user-friendly error message
-                                    if (err.message && err.message.includes('No scene items were found')) {
-                                        console.warn(`[OBS WebSocket] Source '${payload.sourceName}' not found in scene '${sceneName}'`);
-                                    } else {
-                                        console.warn(`[OBS WebSocket] Could not toggle source '${payload.sourceName}':`, err.message || err);
-                                    }
-                                }
-                            })
-                            .catch(err => console.error("[OBS WebSocket] Error getting current scene:", err));
-                    } else if (!obsWebSocket) {
-                        console.warn("[OBS] WebSocket not connected - source toggle requires OBS WebSocket");
+                        try {
+                            const data = await client.call('GetCurrentProgramScene');
+                            const sceneName = data.currentProgramSceneName;
+                            const sceneItemId = await client.call('GetSceneItemId', {
+                                sceneName: sceneName,
+                                sourceName: payload.sourceName
+                            });
+
+                            // Coerce string values to boolean when provided
+                            const toBool = (v) => (v === true || v === 'true' || v === 1 || v === '1');
+                            let enabled = undefined;
+                            if (payload.visible === 'toggle' || payload.visible === undefined) {
+                                const itemState = await client.call('GetSceneItemEnabled', {
+                                    sceneName: sceneName,
+                                    sceneItemId: sceneItemId.sceneItemId
+                                });
+                                enabled = !itemState.sceneItemEnabled;
+                            } else {
+                                enabled = toBool(payload.visible);
+                            }
+
+                            await client.call('SetSceneItemEnabled', {
+                                sceneName: sceneName,
+                                sceneItemId: sceneItemId.sceneItemId,
+                                sceneItemEnabled: enabled
+                            });
+
+                            console.log(`[OBS WebSocket] Source '${payload.sourceName}' set to ${enabled ? 'visible' : 'hidden'}`);
+                        } catch (err) {
+                            if (err.message && err.message.includes('No scene items were found')) {
+                                console.warn(`[OBS WebSocket] Source '${payload.sourceName}' not found in the current scene`);
+                            } else {
+                                console.warn(`[OBS WebSocket] Could not toggle source '${payload.sourceName}':`, err.message || err);
+                            }
+                        }
                     } else {
                         console.warn("[OBS] Source name not provided");
                     }
                     break;
                 
                 case 'obsSetSourceFilter':
-                    if (payload.sourceName && payload.filterName && obsWebSocket) {
+                    if (payload.sourceName && payload.filterName) {
+                        const client = await ensureObsWebSocket();
+                        if (!client) {
+                            logObsWebSocketUnavailable('Toggle Filter');
+                            break;
+                        }
+
                         const enabled = payload.enabled === 'toggle' ? undefined : 
                                       (payload.enabled === true || payload.enabled === 'true');
                         
-                        if (enabled === undefined) {
-                            // Toggle the filter
-                            obsWebSocket.call('GetSourceFilterEnabled', {
-                                sourceName: payload.sourceName,
-                                filterName: payload.filterName
-                            })
-                            .then(async (state) => {
-                                await obsWebSocket.call('SetSourceFilterEnabled', {
-                                    sourceName: payload.sourceName,
+                        try {
+                            const inputRef = await resolveObsInputReference(client, payload.sourceName);
+                            const filterTarget = inputRef && inputRef.inputUuid
+                                ? { sourceUuid: inputRef.inputUuid }
+                                : { sourceName: payload.sourceName };
+
+                            if (enabled === undefined) {
+                                const state = await client.call('GetSourceFilter', Object.assign({}, filterTarget, {
+                                    filterName: payload.filterName
+                                }));
+
+                                await client.call('SetSourceFilterEnabled', Object.assign({}, filterTarget, {
                                     filterName: payload.filterName,
                                     filterEnabled: !state.filterEnabled
-                                });
+                                }));
                                 console.log(`[OBS WebSocket] Filter '${payload.filterName}' toggled`);
-                            })
-                            .catch(err => console.error("[OBS WebSocket] Error toggling filter:", err));
-                        } else {
-                            // Set specific state
-                            obsWebSocket.call('SetSourceFilterEnabled', {
-                                sourceName: payload.sourceName,
-                                filterName: payload.filterName,
-                                filterEnabled: enabled
-                            })
-                            .then(() => console.log(`[OBS WebSocket] Filter '${payload.filterName}' set to ${enabled ? 'enabled' : 'disabled'}`))
-                            .catch(err => console.error("[OBS WebSocket] Error setting filter:", err));
+                            } else {
+                                await client.call('SetSourceFilterEnabled', Object.assign({}, filterTarget, {
+                                    filterName: payload.filterName,
+                                    filterEnabled: enabled
+                                }));
+                                console.log(`[OBS WebSocket] Filter '${payload.filterName}' set to ${enabled ? 'enabled' : 'disabled'}`);
+                            }
+                        } catch (err) {
+                            console.error("[OBS WebSocket] Error setting filter:", err);
                         }
-                    } else if (!obsWebSocket) {
-                        console.warn("[OBS] WebSocket not connected - filter toggle requires OBS WebSocket");
+                    } else {
+                        console.warn("[OBS] Source name and filter name are required");
                     }
                     break;
                 
                 case 'obsMuteSource':
-                    if (payload.sourceName && obsWebSocket) {
+                    if (payload.sourceName) {
+                        const client = await ensureObsWebSocket();
+                        if (!client) {
+                            logObsWebSocketUnavailable('Mute/Unmute Audio');
+                            break;
+                        }
+
                         const muted = payload.muted === 'toggle' ? undefined : 
                                     (payload.muted === true || payload.muted === 'true');
                         
-                        if (muted === undefined) {
-                            // Toggle mute state
-                            obsWebSocket.call('GetInputMute', { inputName: payload.sourceName })
-                                .then(async (state) => {
-                                    await obsWebSocket.call('SetInputMute', {
-                                        inputName: payload.sourceName,
-                                        inputMuted: !state.inputMuted
-                                    });
-                                    console.log(`[OBS WebSocket] Source '${payload.sourceName}' mute toggled`);
-                                })
-                                .catch(err => console.error("[OBS WebSocket] Error toggling mute:", err));
-                        } else {
-                            // Set specific mute state
-                            obsWebSocket.call('SetInputMute', {
-                                inputName: payload.sourceName,
-                                inputMuted: muted
-                            })
-                            .then(() => console.log(`[OBS WebSocket] Source '${payload.sourceName}' ${muted ? 'muted' : 'unmuted'}`))
-                            .catch(err => console.error("[OBS WebSocket] Error setting mute:", err));
+                        try {
+                            const inputRef = await resolveObsInputReference(client, payload.sourceName);
+                            const inputTarget = inputRef && inputRef.inputUuid
+                                ? { inputUuid: inputRef.inputUuid }
+                                : { inputName: payload.sourceName };
+
+                            if (muted === undefined) {
+                                const state = await client.call('GetInputMute', inputTarget);
+                                await client.call('SetInputMute', Object.assign({}, inputTarget, {
+                                    inputMuted: !state.inputMuted
+                                }));
+                                console.log(`[OBS WebSocket] Source '${payload.sourceName}' mute toggled`);
+                            } else {
+                                await client.call('SetInputMute', Object.assign({}, inputTarget, {
+                                    inputMuted: muted
+                                }));
+                                console.log(`[OBS WebSocket] Source '${payload.sourceName}' ${muted ? 'muted' : 'unmuted'}`);
+                            }
+                        } catch (err) {
+                            console.error("[OBS WebSocket] Error setting mute:", err);
                         }
-                    } else if (!obsWebSocket) {
-                        console.warn("[OBS] WebSocket not connected - mute toggle requires OBS WebSocket");
+                    } else {
+                        console.warn("[OBS] Source name not provided");
                     }
                     break;
                 
                 case 'obsStartRecording':
-                    if (obsStudio) {
-                        try {
-                            console.log("[OBS] Starting recording");
-                            obsStudio.startRecording();
-                            console.log("[OBS] Recording start command sent");
-                        } catch (err) {
-                            console.error("[OBS] Error starting recording:", err);
+                    {
+                        let handled = false;
+                        const client = await ensureObsWebSocket();
+                        if (client) {
+                            try {
+                                await client.call('StartRecord');
+                                console.log("[OBS WebSocket] Recording start command sent");
+                                handled = true;
+                            } catch (err) {
+                                console.error("[OBS WebSocket] Error starting recording:", err);
+                            }
                         }
-                    } else {
-                        console.warn("[OBS] API not available");
+
+                        if (!handled) {
+                            handled = await invokeObsStudioMethod(
+                                'startRecording',
+                                [],
+                                'Recording start command sent',
+                                'starting recording'
+                            );
+                        }
+
+                        if (!handled) {
+                            console.warn("[OBS] No API available to start recording");
+                            logObsWebSocketUnavailable('Start Recording');
+                        }
                     }
                     break;
                     
                 case 'obsStopRecording':
-                    if (obsStudio) {
-                        try {
-                            console.log("[OBS] Stopping recording");
-                            obsStudio.stopRecording();
-                            console.log("[OBS] Recording stop command sent");
-                        } catch (err) {
-                            console.error("[OBS] Error stopping recording:", err);
+                    {
+                        let handled = false;
+                        const client = await ensureObsWebSocket();
+                        if (client) {
+                            try {
+                                await client.call('StopRecord');
+                                console.log("[OBS WebSocket] Recording stop command sent");
+                                handled = true;
+                            } catch (err) {
+                                console.error("[OBS WebSocket] Error stopping recording:", err);
+                            }
                         }
-                    } else {
-                        console.warn("[OBS] API not available");
+
+                        if (!handled) {
+                            handled = await invokeObsStudioMethod(
+                                'stopRecording',
+                                [],
+                                'Recording stop command sent',
+                                'stopping recording'
+                            );
+                        }
+
+                        if (!handled) {
+                            console.warn("[OBS] No API available to stop recording");
+                            logObsWebSocketUnavailable('Stop Recording');
+                        }
                     }
                     break;
                     
                 case 'obsStartStreaming':
-                    if (obsStudio) {
-                        try {
-                            console.log("[OBS] Starting streaming");
-                            obsStudio.startStreaming();
-                            console.log("[OBS] Streaming start command sent");
-                        } catch (err) {
-                            console.error("[OBS] Error starting streaming:", err);
+                    {
+                        let handled = false;
+                        const client = await ensureObsWebSocket();
+                        if (client) {
+                            try {
+                                await client.call('StartStream');
+                                console.log("[OBS WebSocket] Streaming start command sent");
+                                handled = true;
+                            } catch (err) {
+                                console.error("[OBS WebSocket] Error starting streaming:", err);
+                            }
                         }
-                    } else {
-                        console.warn("[OBS] API not available");
+
+                        if (!handled) {
+                            handled = await invokeObsStudioMethod(
+                                'startStreaming',
+                                [],
+                                'Streaming start command sent',
+                                'starting streaming'
+                            );
+                        }
+
+                        if (!handled) {
+                            console.warn("[OBS] No API available to start streaming");
+                            logObsWebSocketUnavailable('Start Streaming');
+                        }
                     }
                     break;
                     
                 case 'obsStopStreaming':
-                    if (obsStudio) {
-                        try {
-                            console.log("[OBS] Stopping streaming");
-                            obsStudio.stopStreaming();
-                            console.log("[OBS] Streaming stop command sent");
-                        } catch (err) {
-                            console.error("[OBS] Error stopping streaming:", err);
+                    {
+                        let handled = false;
+                        const client = await ensureObsWebSocket();
+                        if (client) {
+                            try {
+                                await client.call('StopStream');
+                                console.log("[OBS WebSocket] Streaming stop command sent");
+                                handled = true;
+                            } catch (err) {
+                                console.error("[OBS WebSocket] Error stopping streaming:", err);
+                            }
                         }
-                    } else {
-                        console.warn("[OBS] API not available");
+
+                        if (!handled) {
+                            handled = await invokeObsStudioMethod(
+                                'stopStreaming',
+                                [],
+                                'Streaming stop command sent',
+                                'stopping streaming'
+                            );
+                        }
+
+                        if (!handled) {
+                            console.warn("[OBS] No API available to stop streaming");
+                            logObsWebSocketUnavailable('Stop Streaming');
+                        }
                     }
                     break;
                     
                 case 'obsReplayBuffer':
-                    if (obsStudio) {
-                        try {
-                            console.log("[OBS] Saving replay buffer");
-                            obsStudio.saveReplayBuffer();
-                            console.log("[OBS] Replay buffer save command sent");
-                        } catch (err) {
-                            console.error("[OBS] Error saving replay buffer:", err);
+                    {
+                        let handled = false;
+                        const client = await ensureObsWebSocket();
+                        if (client) {
+                            try {
+                                await client.call('SaveReplayBuffer');
+                                console.log("[OBS WebSocket] Replay buffer save command sent");
+                                handled = true;
+                            } catch (err) {
+                                console.error("[OBS WebSocket] Error saving replay buffer:", err);
+                            }
                         }
-                    } else {
-                        console.warn("[OBS] API not available");
+
+                        if (!handled) {
+                            handled = await invokeObsStudioMethod(
+                                'saveReplayBuffer',
+                                [],
+                                'Replay buffer save command sent',
+                                'saving replay buffer'
+                            );
+                        }
+
+                        if (!handled) {
+                            console.warn("[OBS] No API available to save replay buffer");
+                            logObsWebSocketUnavailable('Save Replay Buffer');
+                        }
                     }
                     break;
 
@@ -1070,7 +1432,8 @@
         }
 
         // Function to play media with optional positioned area (percent-based)
-		function playMediaFullscreen(url, mediaType, duration = 10000, opts = {}) {
+		function playMediaFullscreen(url, mediaType, duration, opts = {}) {
+			duration = duration || defaultDuration;
 			// Determine target container - use layer system if opts.useLayer is true
 			const useLayer = !!opts.useLayer;
 			const targetContainer = useLayer ? overlayLayers.media : mediaContainer;
@@ -1123,6 +1486,7 @@
 					mediaElement.style.overflow = 'hidden';
 					mediaElement.style.backgroundColor = 'transparent';
 				}
+				mediaElement.controls = false;
 				targetContainer.appendChild(mediaElement);
 				if (!useLayer) {
 					targetContainer.style.display = 'flex';
@@ -1168,6 +1532,7 @@
 				mediaElement.style.overflow = 'hidden';
 				mediaElement.style.backgroundColor = 'transparent';
 			}
+			mediaElement.controls = false;
 
 			wrapper.appendChild(mediaElement);
 			targetContainer.appendChild(wrapper);
@@ -1189,14 +1554,14 @@
 		}
 
         // Function to play audio
-        async function playAudio(audioUrl, volume = 1.0) {
+        async function playAudio(audioUrl, volume) {
             try {
                 if (audioContext.state === 'suspended') {
                     await audioContext.resume();
                 }
-                
+
                 const audio = new Audio(audioUrl);
-                audio.volume = parseFloat(volume);
+                audio.volume = volume !== undefined ? parseFloat(volume) : globalVolume;
                 await audio.play();
                 console.log("Playing audio:", audioUrl);
             } catch (e) {
@@ -1243,6 +1608,7 @@
 		}
 
 		window.testAction = testAction;
+        window.testOBSWebSocketConnection = testOBSWebSocketConnection;
 
         // Initialize or show modal based on whether session ID is needed
         if (needsSessionId) {

@@ -13,6 +13,7 @@
   --font-color-title: #FFF;
   --font-family: 'Sora', Roboto, Arial, sans-serif;
   --background-color: #0000;
+  --topbar-background: #0009;
   --electron-drag-fix: drag;
   --outline: -0.5px -0.5px 0 #000, 0.5px -0.5px 0 #000, -0.5px 0.5px 0 #000, 0.5px 0.5px 0 #000;
   --scale: 1;
@@ -174,6 +175,10 @@ div > span {
   line-height: 1.2;
   min-width: calc(40px * var(--scale));
   order: -1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "kern" 0;
+  font-kerning: none;
+  white-space: nowrap;
 }
 [data-viewers]:empty{
   display:none!important;
@@ -188,6 +193,10 @@ div > span {
   line-height: 1.2;
   min-width: calc(40px * var(--scale));
   order: -1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "kern" 0;
+  font-kerning: none;
+  white-space: nowrap;
 }
 [data-chatters]:empty{
   display:none!important;
@@ -328,6 +337,10 @@ span.zero-width-parent img.zero-width-emote {
   text-align: left;
   display: flex;
   align-items: center;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "kern" 0;
+  font-kerning: none;
+  white-space: nowrap;
 }
 .style-compact [data-viewers]::before {
   content: "👁️ ";
@@ -385,6 +398,10 @@ span.zero-width-parent img.zero-width-emote {
   align-items: center;
   position:relative;
   top:1px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "kern" 0;
+  font-kerning: none;
+  white-space: nowrap;
 }
 .style-modern img {
   padding: 0;
@@ -416,6 +433,10 @@ span.zero-width-parent img.zero-width-emote {
   display: flex;
   align-items: center;
   order: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "kern" 0;
+  font-kerning: none;
+  white-space: nowrap;
 }
 
 .style-minimal [data-viewers]::before {
@@ -439,6 +460,11 @@ span.zero-width-parent img.zero-width-emote {
   font-size: 50%;
   padding: 3px;
 }
+.style-minimal.has-custom-viewerbarbg #hype {
+  background-color: var(--topbar-background, #0009);
+  border-radius: calc(10px * var(--scale));
+  padding: calc(2px * var(--scale)) calc(4px * var(--scale));
+}
 .style-modern #hype {
   gap: 2px;
   display: inline-flex;
@@ -459,7 +485,7 @@ span.zero-width-parent img.zero-width-emote {
   position: fixed !important;
   right: 0;
   top: 0;
-  background-color: #0009;
+  background-color: var(--topbar-background, #0009);
   border-radius: 0 0 0 calc(13px * var(--scale));
 }
 .style-topbar .sourceStatHolder {
@@ -490,6 +516,10 @@ span.zero-width-parent img.zero-width-emote {
   text-align: left;
   top: 1px;
   position:relative;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "kern" 0;
+  font-kerning: none;
+  white-space: nowrap;
 }
 .style-topbar [data-chatters]::before, .style-topbar [data-viewers]::before  {
   content: "";
@@ -552,6 +582,23 @@ var hidereplies = false;
 var uniqueId = "";
 var sourceTypes = {};
 var computedStyle = getComputedStyle(document.documentElement);
+function normalizeColorParam(value) {
+    if (typeof value !== "string") return null;
+    var trimmed = value.trim();
+    if (!trimmed) return null;
+    if (/^[0-9a-fA-F]{3,8}$/.test(trimmed)) {
+        return "#" + trimmed;
+    }
+    return trimmed;
+}
+var viewerBarBg = normalizeColorParam(urlParams.get("viewerbarbg") || urlParams.get("viewerbarbackground") || urlParams.get("topbarbg"));
+if (viewerBarBg) {
+    document.documentElement.style.setProperty("--topbar-background", viewerBarBg);
+    if (parentHolder) {
+        parentHolder.classList.add("has-custom-viewerbarbg");
+    }
+}
+var pageBgParam = normalizeColorParam(urlParams.get("pagebg") || urlParams.get("pagebackground") || urlParams.get("dockbg"));
 try {
     if ((window.ninjafy || window.electronApi)) {
         document.body.style.width = "95%";
@@ -766,6 +813,9 @@ if (urlParams.has("darkmode")) {
 if (urlParams.has("transparent")) {
     document.documentElement.style.setProperty("--background-color", "#0000", "important");
 }
+if (pageBgParam) {
+    document.documentElement.style.setProperty("--background-color", pageBgParam, "important");
+}
 if (urlParams.has("nooutline")) {
     document.documentElement.style.setProperty("--outline", "0px");
 }
@@ -914,6 +964,83 @@ var hasViewerCount = {};
 var activeChatters = {};
 var aggregatedViewers = {};
 
+function renderAggregatedViewerSnapshot() {
+    if (!showViewers || !aggregatedViewers || typeof aggregatedViewers !== "object") {
+        return;
+    }
+    const hypeEl = document.getElementById("hype");
+    const parentEl = document.getElementById("parentHolder");
+    if (!hypeEl || !parentEl) {
+        return;
+    }
+
+    const normalizedViewers = {};
+    Object.keys(aggregatedViewers).forEach(function(platform) {
+        const type = getSourceImage(platform);
+        const numeric = parseInt(aggregatedViewers[platform], 10);
+        if (!normalizedViewers[type]) {
+            normalizedViewers[type] = 0;
+        }
+        if (!isNaN(numeric)) {
+            normalizedViewers[type] += numeric;
+        }
+    });
+
+    const types = Object.keys(normalizedViewers).sort();
+    if (!types.length) {
+        return;
+    }
+    const visibleTypes = new Set(types);
+
+    types.forEach(function(type) {
+        let holder = hypeEl.querySelector(".sourceStatHolder[data-type='" + type + "']");
+        if (!holder) {
+            holder = document.createElement("div");
+            holder.className = "sourceStatHolder";
+            holder.dataset.type = type;
+
+            const img = document.createElement("img");
+            img.className = "sourceicons";
+            img.src = "./sources/images/" + type + ".png";
+            img.decoding = "async";
+            img.loading = "eager";
+            holder.appendChild(img);
+        }
+
+        if (showViewers && !holder.querySelector("span[data-viewers][data-type='" + type + "']")) {
+            const v = document.createElement("span");
+            v.dataset.viewers = "true";
+            v.dataset.type = type;
+            holder.appendChild(v);
+        }
+
+        if (showChatters && !holder.querySelector("span[data-chatters][data-type='" + type + "']")) {
+            const c = document.createElement("span");
+            c.dataset.chatters = "true";
+            c.dataset.type = type;
+            c.textContent = "0";
+            holder.appendChild(c);
+        }
+
+        const viewerSpan = holder.querySelector("span[data-viewers][data-type='" + type + "']");
+        if (viewerSpan) {
+            viewerSpan.textContent = String(normalizedViewers[type] || 0);
+        }
+
+        hypeEl.appendChild(holder);
+    });
+
+    if (!showChatters) {
+        hypeEl.querySelectorAll(".sourceStatHolder").forEach(function(node) {
+            if (!visibleTypes.has(node.dataset.type)) {
+                node.remove();
+            }
+        });
+    }
+
+    parentEl.classList.remove("hidden");
+}
+
 function handleClearAction(clearAction) {
     if (!clearAction || !clearAction.action) return;
     if (clearAction.action === "refreshSources") {
@@ -952,7 +1079,28 @@ function processInput(data) {
         console.error("hype.html: 'parentHolder' element not found!");
         return;
     }
+    const viewerSources = (data.hype.viewers && typeof data.hype.viewers === "object") ? data.hype.viewers : {};
+    const chatterSources = (data.hype.chatters && typeof data.hype.chatters === "object") ? data.hype.chatters : {};
     let combinedData = data.hype.combined || {};
+
+    // Viewer-only and chatter-only modes should start from their dedicated payloads.
+    if (showViewers && !showChatters) {
+        combinedData = {};
+        Object.keys(viewerSources).forEach(sourceType => {
+            combinedData[sourceType] = {
+                chatters: 0,
+                viewers: parseInt(viewerSources[sourceType]) || 0
+            };
+        });
+    } else if (showChatters && !showViewers) {
+        combinedData = {};
+        Object.keys(chatterSources).forEach(sourceType => {
+            combinedData[sourceType] = {
+                chatters: parseInt(chatterSources[sourceType]) || 0,
+                viewers: 0
+            };
+        });
+    }
     
     // Apply combination logic based on URL parameters
     if (combineAll) {
@@ -1263,6 +1411,7 @@ eventer(messageEvent, function(e) {
                         });
                     }
                 }
+                renderAggregatedViewerSnapshot();
 
                 // Do not short-circuit; allow subsequent hype updates to render.
                 return;

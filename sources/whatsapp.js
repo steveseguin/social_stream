@@ -79,6 +79,65 @@ function toDataURL(url, callback) {
 	}
 	
 	var lastName = "";
+
+	function isLikelyQuotedNode(node, root){
+		var cursor = node;
+		while (cursor && cursor !== root){
+			if (cursor.dataset && cursor.dataset.testid){
+				var testId = (cursor.dataset.testid + "").toLowerCase();
+				if ((testId.indexOf("quoted") !== -1) || (testId.indexOf("reply") !== -1)){
+					return true;
+				}
+			}
+			if (cursor.getAttribute){
+				var ariaLabel = cursor.getAttribute("aria-label");
+				if (ariaLabel){
+					ariaLabel = ariaLabel.toLowerCase();
+					if ((ariaLabel.indexOf("quoted") !== -1) || (ariaLabel.indexOf("reply") !== -1)){
+						return true;
+					}
+				}
+			}
+			if (cursor.nodeName === "BLOCKQUOTE"){
+				return true;
+			}
+			cursor = cursor.parentElement;
+		}
+		return false;
+	}
+
+	function extractChatMessageText(ele){
+		try {
+			var nodes = ele.querySelectorAll(".selectable-text.copyable-text, [data-testid='selectable-text'].copyable-text");
+			if (!nodes || !nodes.length){
+				return "";
+			}
+
+			var parsed = [];
+			nodes.forEach((node)=>{
+				var text = getAllContentNodes(node);
+				if (text && text.trim()){
+					parsed.push({
+						text,
+						quoted: isLikelyQuotedNode(node, ele)
+					});
+				}
+			});
+
+			if (!parsed.length){
+				return "";
+			}
+
+			var nonQuoted = parsed.filter((entry)=>!entry.quoted);
+			if (nonQuoted.length){
+				return nonQuoted[nonQuoted.length - 1].text;
+			}
+
+			return parsed[parsed.length - 1].text;
+		} catch(e){
+			return "";
+		}
+	}
 	
 	function processMessage(ele, skipProcessing=false){
 	  
@@ -178,6 +237,12 @@ function toDataURL(url, callback) {
 				}
 			} else {
 				return;
+				try{
+					chatname = escapeHtml(document.querySelector('#main header [role="button"][data-tab] span').textContent);
+				}catch(e){
+					return;
+				}
+
 			}
 			// console.log("1");
 		}
@@ -202,12 +267,7 @@ function toDataURL(url, callback) {
 			chatname = "";
 		}
 		
-		try {
-			chatmessage = ele.querySelector(".selectable-text.copyable-text");
-			chatmessage = getAllContentNodes(chatmessage);
-		} catch(e){
-			chatmessage = "";
-		}
+		chatmessage = extractChatMessageText(ele);
 		
 		if (!chatmessage){
 			

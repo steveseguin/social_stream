@@ -322,9 +322,9 @@ export class BasePlugin {
           id: payload?.id || null,
           preview: normalized.slice(0, 80)
         };
-        this.log(note || 'Message relayed', summary);
+        this.debugLog(note || 'Message relayed', summary);
       } else if (preview) {
-        this.log(preview, previewDetail);
+        this.debugLog(preview, previewDetail);
       }
     } catch (err) {
       this.reportError(err);

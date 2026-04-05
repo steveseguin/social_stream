@@ -1421,14 +1421,31 @@
 				stripSubtitles = true;
 			}
 
+			var noSourceColors = false;
+			if (urlParams.has("nosourcecolors")) {
+				noSourceColors = true;
+			}
+
+			function parseListParam(value) {
+				if (!value) {
+					return false;
+				}
+				const values = value.split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
+				return values.length ? values : false;
+			}
+
 			var onlyTwitch = false;
 			var hideTwitch = false;
+			var hideEvents = false;
 
 			if (urlParams.has("onlytwitch")) {
 				onlyTwitch = true;
 			}
 			if (urlParams.has("hidetwitch")) {
 				hideTwitch = true;
+			}
+			if (urlParams.has("hideallevents") || urlParams.has("hideevents")) {
+				hideEvents = true;
 			}
 			
 			var onlyFrom = false;
@@ -1440,11 +1457,10 @@
 
 			var hideFrom = false;
 			if (urlParams.get("hidefrom") || urlParams.get("exclude")) {
-				hideFrom = [];
-				(urlParams.get("hidefrom") || urlParams.get("exclude")).split(",").forEach(x => {
-					hideFrom.push(x.trim().toLowerCase());
-				});
+				hideFrom = parseListParam(urlParams.get("hidefrom") || urlParams.get("exclude"));
 			}
+
+			var filterEvents = parseListParam(urlParams.get("filterevents"));
 
 			// beepwords is now handled by TTS.configure()
 			
@@ -1553,7 +1569,8 @@
 
 			var timeoutDelay = 0;
 			if (urlParams.has("showtime")) {
-				timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
+				timeoutDelay = parseInt(urlParams.get("showtime"));
+				if (isNaN(timeoutDelay)) { timeoutDelay = 20000; }
 			}
 
 			var borderRadius = 0;
@@ -2433,6 +2450,16 @@
 					if (hideFrom && hideFrom.includes(data.contents.type)) {
 						return false;
 					}
+
+					const rawEventType = data.contents.event;
+					const contentEventType = typeof rawEventType === "string" ? rawEventType.toLowerCase().trim() : "";
+					if (hideEvents && rawEventType) {
+						return false;
+					}
+					const eventMessageText = (data.contents.textContent || data.contents.chatmessage || "").toLowerCase();
+					if (filterEvents && rawEventType && filterEvents.some(v => (contentEventType && contentEventType === v) || (eventMessageText && eventMessageText.includes(v)))) {
+						return false;
+					}
 					
 					if (filterfeaturedusers){
 						if (!data.contents.chatname){return false;}
@@ -2801,6 +2828,14 @@
 					  data.hasDonation = "";
 					}
 
+					if (noSourceColors) {
+					  data.backgroundColor = "";
+					  data.textColor = "";
+					  data.backgroundNameColor = "";
+					  data.textNameColor = "";
+					  data.nameColor = "";
+					}
+
 					var backgroundColor = "";
 					if (data.backgroundColor) {
 					  if (data.backgroundColor.startsWith("background-color:")) {
@@ -3119,7 +3154,7 @@
 						} else {
 						  speak(donoText);
 						}
-					  } else if (msgPlain && data.event && (data.event == "newmember")){
+					  } else if (msgPlain && data.event && (data.event == "sponsorship" || data.event == "newmember" || data.event == "new_member" || data.event == "membership")){
 						if (chatname) {
 						  if (TTS.English) {
 							speak(chatname + " says! " + msgPlain);

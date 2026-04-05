@@ -46,6 +46,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `transparent` or `transparency` | boolean | Makes background transparent and hides scrollbar |
 | `chroma` | hex color | Sets a specific background color (without #) |
 | `blur` or `blurred` | number | Applies blur effect to messages (value in pixels) |
+| `noblur` | boolean | Disables blur rendering (including hidden-source blur and timed-out blur) |
 | `compact` or `overlaymode` | boolean | Enables compact mode with less spacing |
 | `padding` | number | Sets padding between messages in pixels |
 | `largeavatar` | boolean | Shows larger user avatars on the left side |
@@ -67,6 +68,11 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hideshadow` | boolean | Removes alternating card drop shadows |
 | `largecontent` | boolean | Enlarges embedded content or image cards |
 | `donationright` | number | Sets donation amount margin-right in pixels |
+| `bubbleopacity` | 0.0-1.0 | Sets message bubble background opacity |
+| `namebubblecolor` | hex/color | Background color for the rounded name bubble |
+| `namebubbletext` | hex/color | Text color for the rounded name bubble |
+| `namebubbleradius` | number or CSS length | Border radius for the rounded name bubble |
+| `namebubblepadding` | CSS padding string | Padding for the rounded name bubble |
 | `bolder` | boolean | Applies a thicker drop shadow around text |
 | `thinner` | boolean | Applies a thinner drop shadow around text |
 | `unhighlight` | boolean | Uses an alternate style when un-featuring messages |
@@ -87,6 +93,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `twolines` | boolean | Places messages on a separate line below usernames |
 | `split` | boolean | Enables split mode for message alignment |
 | `bubble` | boolean | Styles messages as chat bubbles |
+| `namebubble` | boolean | Adds a separate rounded bubble behind usernames (bubble mode) |
 | `fadedtop` | boolean | Fades out the top of the overlay |
 | `reverse` | boolean | Displays the feed in reverse order (newest at the top) |
 | `dropdown` | boolean | Enables reverse order with drop-down style animations |
@@ -125,7 +132,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `attachmentsonly` | boolean | Displays only messages that include an attached image or clip |
 | `hidequestions` | boolean | Hides cards flagged as questions |
 | `onlyquestions` | boolean | Shows only messages that contain question metadata |
-| `hidenumbers` | boolean | Hides numerical message counters on cards |
+| `hidenumbers` | boolean | Hides messages that contain only digits |
 | `showsourcename` | boolean | Displays the originating platform label on each card |
 | `showviewercount` | boolean | Shows the current viewer count indicator |
 | `nocolon` | boolean | Removes the colon between username and message body |
@@ -184,6 +191,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `disabletimeout` | boolean | Disables the auto-timeout on featured messages |
 | `altselect` | boolean | Keeps the Feature button visible when menus are hidden |
 | `autoscroll` | boolean | Scrolls to the latest message once and leaves scrolling unlocked |
+| `manualscroll` | boolean | Disables automatic near-bottom scrolling unless Force scroll is enabled |
 | `buffer` | boolean | Enables adaptive buffering for smoother message pacing |
 | `bufferdelay` | number | Base delay (ms) used when buffering messages |
 | `buffermin` | number | Minimum delay (ms) used when buffering messages |
@@ -330,7 +338,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 
 | Parameter | Values | Description |
 |-----------|---------|-------------|
-| `filterevents` | comma-separated strings | List of event types to filter |
+| `filterevents` | comma-separated strings | Exact event names or text keywords to filter when `data.event` is present |
 | `trivialevents` | boolean | Allows background shading for minor events |
 | `showonlyevents` | boolean | Shows only stream events |
 | `hideallevents` | boolean | Hides all stream events |

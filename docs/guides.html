@@ -307,13 +307,24 @@
 						<li>Customize voice settings with parameters like <code>&pitch=1&volume=1&rate=1</code></li>
 					</ol>
 
-					<h4>Premium TTS Options:</h4>
+					<h4>Free Local TTS Options (no API key):</h4>
 					<ul class="guide-list">
-						<li><strong>Kokoro TTS:</strong> Browser-based premium quality TTS (included free)</li>
+						<li><strong>Kokoro TTS:</strong> Built-in browser AI, excellent quality — <code>&ttsprovider=kokoro</code></li>
+						<li><strong>Piper TTS:</strong> Fast, lightweight neural TTS — <code>&ttsprovider=piper</code></li>
+						<li><strong>Kitten TTS:</strong> Smallest footprint, CPU-only — <code>&ttsprovider=kitten</code></li>
+						<li><strong>Self-hosted server:</strong> Run Kokoro-FastAPI or openedai-speech locally via Docker — <code>&ttsprovider=openai&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
+					</ul>
+
+					<h4>Premium Cloud TTS Options:</h4>
+					<ul class="guide-list">
 						<li><strong>Google Cloud TTS:</strong> Professional-quality voices (requires Google API key)</li>
 						<li><strong>ElevenLabs:</strong> Ultra-realistic voices with custom voice training</li>
 						<li><strong>Speechify:</strong> Natural-sounding premium voices</li>
 					</ul>
+
+					<div class="guide-note">
+						<p><strong>Want to keep it local and private?</strong> See the <a href="local-tts.html"><strong>Local AI TTS Guide</strong></a> for full setup instructions including self-hosted server options and OBS audio capture.</p>
+					</div>
 				</div>
 
 				<div class="guide-card">
@@ -380,7 +391,7 @@
 						</ul>
 					</div>
 
-					<p>For a complete list of event payloads and data fields, see the <a href="../docs/event-reference.html">Event Reference</a> documentation.</p>
+					<p>For a complete list of event payloads and data fields, see the <a href="event-reference.html">Event Reference</a> documentation.</p>
 				</div>
 
 				<div class="guide-card" id="extension-event-flow">
@@ -839,6 +850,12 @@
 				</div>
 
 				<div class="guide-card">
+					<h3>YouTube Custom Project Setup</h3>
+					<p>If you want the desktop app to use your own YouTube API quota, use the dedicated setup guide. It covers Google Cloud setup, exact redirect URLs, API key restrictions, and basic security guidance.</p>
+					<p><a href="youtube-project-setup.html" target="_blank" rel="noopener">Open the YouTube Project Setup Guide</a></p>
+				</div>
+
+				<div class="guide-card">
 					<h3>LLM Integration</h3>
 					<p>Advanced AI features available in the standalone app:</p>
 					<ul class="guide-list">
@@ -872,7 +889,7 @@
 						<li><strong>Kick:</strong> Subscriptions, tips, follow alerts</li>
 					</ul>
 
-					<p>See the <a href="../docs/event-reference.html">Event Reference</a> for complete event payload documentation.</p>
+					<p>See the <a href="event-reference.html">Event Reference</a> for complete event payload documentation.</p>
 				</div>
 
 				<div class="guide-card" id="standalone-event-flow">
@@ -1119,7 +1136,7 @@
 						<span class="accordion-icon"></span>
 					</button>
 					<div class="accordion-content">
-						<span>We maintain a canonical list of every event payload (followers, memberships, raids, viewer counts, donations, and more) in the <a href="../docs/event-reference.html">Event Reference</a>. It also explains which sources require the “Capture Stream Events” toggle, login permissions, or additional scopes to receive data.</span>
+						<span>We maintain a canonical list of every event payload (followers, memberships, raids, viewer counts, donations, and more) in the <a href="event-reference.html">Event Reference</a>. It also explains which sources require the “Capture Stream Events” toggle, login permissions, or additional scopes to receive data.</span>
 					</div>
 				</div>
 				

@@ -460,6 +460,10 @@ body::before {
     var password = "false";
     var featuredMode = false;
 
+    // showtime: if set via URL, override default. Otherwise keep current default (45000ms for terminal feel)
+    // Use showtime=0 to disable auto-hiding
+    var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 45000;
+
     const chatContainer = document.getElementById('chat-container');
     const messageListWrapper = document.getElementById('message-list-wrapper');
     const MAX_MESSAGES = 25; // More messages for terminal feel
@@ -585,8 +589,8 @@ body::before {
             if (timestamp) {
                 const age = now - timestamp;
                 
-                // After 45 seconds, start fading (longer for terminal feel)
-                if (age > 45000 && !message.classList.contains('fading')) {
+                // After showtime ms, start fading (showtime=0 disables auto-hiding)
+                if (showtime > 0 && age > showtime && !message.classList.contains('fading')) {
                     message.classList.add('fading');
                 }
             }

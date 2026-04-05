@@ -2,7 +2,7 @@
 import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
 import { randomSessionId, safeHtml, htmlToText } from '../utils/helpers.js';
-import { normalizeYouTubeLiveChatItem } from '../../providers/youtube/messageNormalizer.js';
+
 
 const TOKEN_KEY = 'youtube.token';
 const CLIENT_ID_KEY = 'youtube.clientId';
@@ -26,6 +26,17 @@ const YT_SCOPES = [
   'https://www.googleapis.com/auth/youtube.force-ssl',
   'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
 ];
+
+function buildCanonicalRedirectUri() {
+  try {
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.hash = '';
+    return url.toString();
+  } catch (err) {
+    return `${window.location.origin}${window.location.pathname}`;
+  }
+}
 
 
 export class YoutubePlugin extends BasePlugin {
@@ -511,7 +522,7 @@ export class YoutubePlugin extends BasePlugin {
     const clientId = storedClientId || DEFAULT_CLIENT_ID;
     storage.set(CLIENT_ID_KEY, clientId);
 
-    const redirectUri = new URL(window.location.href.split('#')[0]).toString();
+    const redirectUri = buildCanonicalRedirectUri();
     const state = `${this.id}:${randomSessionId()}`;
     storage.set(STATE_KEY, state);
     storage.set(REDIRECT_KEY, redirectUri);
@@ -643,11 +654,11 @@ export class YoutubePlugin extends BasePlugin {
   buildRedirectUriWithoutOAuthParams() {
     try {
       const url = new URL(window.location.href);
+      url.search = '';
       url.hash = '';
-      ['code', 'scope', 'state'].forEach((key) => url.searchParams.delete(key));
       return url.toString();
     } catch (err) {
-      return window.location.href.split('#')[0].split('?code=')[0];
+      return `${window.location.origin}${window.location.pathname}`;
     }
   }
 
@@ -1025,12 +1036,85 @@ export class YoutubePlugin extends BasePlugin {
       options.transport ||
       (this.useStreaming ? 'youtube_streaming_api' : 'youtube_data_api');
 
-    const { message, note } = normalizeYouTubeLiveChatItem(item, {
-      sanitizeHtml: safeHtml,
-      toPlainText: htmlToText,
-      includeRaw: true,
-      transport
-    });
+    const snippet = item?.snippet || {};
+    const author = item?.authorDetails || {};
+    const publishedAt = snippet.publishedAt || new Date().toISOString();
+    const timestamp = Number.isNaN(Date.parse(publishedAt)) ? Date.now() : Date.parse(publishedAt);
+
+    const rawMessage = snippet.displayMessage || '';
+    const sanitizedMessage = safeHtml(rawMessage);
+
+    const message = {
+      platform: 'youtube',
+      type: 'youtube',
+      chatname: author.displayName || 'YouTube User',
+      chatmessage: sanitizedMessage,
+      chatimg: author.profileImageUrl || '',
+      timestamp,
+      hasDonation: snippet.superChatDetails?.amountDisplayString || (snippet.superStickerDetails ? 'Super Sticker' : ''),
+      donationAmount: snippet.superChatDetails?.amountDisplayString,
+      donationCurrency: snippet.superChatDetails?.currency,
+      isModerator: !!author.isChatModerator,
+      isOwner: !!author.isChatOwner,
+      isMember: !!author.isChatSponsor,
+      event: this.resolveEvent(snippet),
+      previewText: rawMessage,
+      raw: item
+    };
+
+    if (item?.id) {
+      message.sourceId = item.id;
+    }
+    if (author?.channelId) {
+      message.userid = author.channelId;
+    }
+    if (snippet.superChatDetails) {
+      message.color = snippet.superChatDetails.tier || null;
+    }
+    if (snippet.superStickerDetails?.superStickerMetadata?.altText) {
+      message.subtitle = snippet.superStickerDetails.superStickerMetadata.altText;
+    }
+
+    const membershipInfo = this.deriveMembershipMetadata(snippet, sanitizedMessage);
+    let note = null;
+    if (membershipInfo) {
+      if (membershipInfo.membership) {
+        message.membership = membershipInfo.membership;
+      }
+      if (membershipInfo.subtitle) {
+        message.subtitle = membershipInfo.subtitle;
+      }
+      if (membershipInfo.event) {
+        message.event = membershipInfo.event;
+      }
+      if (membershipInfo.previewText) {
+        message.previewText = membershipInfo.previewText;
+      }
+      if (membershipInfo.chatmessage) {
+        message.chatmessage = membershipInfo.chatmessage;
+      }
+      note = membershipInfo.note || null;
+    }
+
+    const badges = this.buildChatBadges(author, { includeMemberBadge: membershipInfo?.includeMemberBadge });
+    if (badges.length) {
+      message.chatbadges = badges;
+    }
+
+    const membershipMeta = membershipInfo
+      ? this.buildMembershipMeta(snippet, membershipInfo)
+      : null;
+
+    const meta = {};
+    if (membershipMeta) {
+      meta.membership = membershipMeta;
+    }
+    if (transport) {
+      meta.transport = transport;
+    }
+    if (Object.keys(meta).length) {
+      message.meta = meta;
+    }
 
     if (this.debug) {
       const debugSnapshot = { ...message };
@@ -1041,6 +1125,32 @@ export class YoutubePlugin extends BasePlugin {
     }
 
     await this.publishWithEmotes(message, { silent: true, note });
+  }
+
+  resolveEvent(snippet) {
+    if (!snippet) {
+      return null;
+    }
+    const type = typeof snippet.type === 'string' ? snippet.type.trim().toLowerCase() : '';
+    if (!type || type === 'textmessageevent') {
+      return null;
+    }
+    if (type === 'superchatevent' || type === 'superstickerevent' || type === 'fanfundingevent') {
+      return null;
+    }
+    if (type === 'newsponsorevent') {
+      return 'sponsorship';
+    }
+    if (type === 'membermilestonechatevent') {
+      return 'membermilestone';
+    }
+    if (type === 'membershipgiftingevent' || snippet?.membershipGiftingDetails) {
+      return 'giftpurchase';
+    }
+    if (type === 'giftmembershipreceivedevent' || snippet?.giftMembershipReceivedDetails) {
+      return 'giftredemption';
+    }
+    return type;
   }
 
   buildChatBadges(author, options = {}) {
@@ -1093,7 +1203,7 @@ export class YoutubePlugin extends BasePlugin {
       result = {
         membership: membershipLabel,
         subtitle,
-        event: isUpgrade ? 'membership_upgrade' : 'membership',
+        event: isUpgrade ? 'resub' : 'sponsorship',
         note: level ? `${membershipLabel}: ${level}` : membershipLabel,
         includeMemberBadge: true
       };
@@ -1118,7 +1228,7 @@ export class YoutubePlugin extends BasePlugin {
       result = {
         membership: 'Membership Milestone',
         subtitle: subtitleParts.join(' · ') || null,
-        event: 'membership_milestone',
+        event: 'membermilestone',
         note: subtitleParts.join(' · ') || 'Membership Milestone',
         includeMemberBadge: true
       };
@@ -1139,7 +1249,7 @@ export class YoutubePlugin extends BasePlugin {
       result = {
         membership: membershipLabel,
         subtitle: level || null,
-        event: 'membership_gift',
+        event: 'giftpurchase',
         note: level ? `${membershipLabel} (${level})` : membershipLabel,
         includeMemberBadge: true,
         membershipGiftCount: count
@@ -1163,7 +1273,7 @@ export class YoutubePlugin extends BasePlugin {
       result = {
         membership: 'Gift Membership',
         subtitle: subtitleParts.join(' · ') || null,
-        event: 'membership_gift_received',
+        event: 'giftredemption',
         note: subtitleParts.join(' · ') || 'Gift Membership',
         includeMemberBadge: true
       };
@@ -1183,7 +1293,7 @@ export class YoutubePlugin extends BasePlugin {
       result = {
         membership: 'Membership',
         subtitle: level || null,
-        event: 'membership',
+        event: 'sponsorship',
         note: level ? `Membership: ${level}` : 'Membership',
         includeMemberBadge: true
       };
@@ -1653,19 +1763,19 @@ export class YoutubePlugin extends BasePlugin {
     }
 
     if (normalized === 'newsponsorevent') {
-      return 'membership';
+      return 'sponsorship';
     }
 
     if (normalized === 'membermilestonechatevent') {
-      return 'membership_milestone';
+      return 'membermilestone';
     }
 
     if (normalized === 'membershipgiftingevent' || snippet.membershipGiftingDetails) {
-      return 'membership_gift';
+      return 'giftpurchase';
     }
 
     if (normalized === 'giftmembershipreceivedevent' || snippet.giftMembershipReceivedDetails) {
-      return 'membership_gift_received';
+      return 'giftredemption';
     }
 
     return normalized;

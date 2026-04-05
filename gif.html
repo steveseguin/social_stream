@@ -35,9 +35,23 @@
             max-height: 100%;
             object-fit: contain;
         }
-		img,svg,video{
+		#mediaContainer img,
+		#mediaContainer svg,
+		#mediaContainer video,
+		#mediaContainer iframe{
 			max-height:100vh;
 			max-width:100vw;
+		}
+		body.stretch #mediaContainer #mediaContent,
+		body.stretch #mediaContainer img,
+		body.stretch #mediaContainer svg,
+		body.stretch #mediaContainer video,
+		body.stretch #mediaContainer iframe {
+			width: 100vw !important;
+			height: 100vh !important;
+			max-width: none !important;
+			max-height: none !important;
+			object-fit: fill;
 		}
     </style>
 </head>
@@ -49,13 +63,16 @@
         const urlParams = new URLSearchParams(window.location.search);
         const mediaContainer = document.getElementById('mediaContainer');
         const mediaContent = document.getElementById('mediaContent');
+        if (urlParams.has('stretch')) document.body.classList.add('stretch');
         let mediaQueue = [];
         let isPlaying = false;
         
 		var audioContext = new (window.AudioContext || window.webkitAudioContext)();
 		
-		const fadeoutTime = 300
-		const minDisplayTime = parseInt(urlParams.get('showtime')) || (fadeoutTime+1); 
+		const fadeoutTime = 300;
+		const minDisplayTime = parseInt(urlParams.get('showtime')) || (fadeoutTime + 1);
+		const embeddedDisplayTime = urlParams.has('showtime') ? minDisplayTime : Math.max(minDisplayTime, 5000);
+		const mediaProbeTimeout = 4000;
 
         function processData(data) {
            //console.log(data);
@@ -89,6 +106,179 @@
             }
         }
 
+        function getMediaTypeFromExtension(source) {
+			const cleanSource = (source || '').toLowerCase().split('#')[0].split('?')[0].split('&')[0];
+			const fileExtension = cleanSource.split('.').pop();
+			if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) return 'image';
+			if (['mp4', 'webm', 'ogg'].includes(fileExtension)) return 'video';
+			if (['mp3', 'wav'].includes(fileExtension)) return 'audio';
+			if (fileExtension === 'svg') return 'svg';
+			if (fileExtension === 'html') return 'embed';
+			return '';
+        }
+
+		function getMediaTypeFromMimeType(contentType) {
+			switch ((contentType || '').split(';')[0].trim().toLowerCase()) {
+				case 'image/gif':
+				case 'image/webp':
+				case 'image/jpeg':
+				case 'image/png':
+				case 'image/svg+xml':
+					return contentType.includes('svg') ? 'svg' : 'image';
+				case 'video/mp4':
+				case 'video/webm':
+				case 'video/ogg':
+					return 'video';
+				case 'audio/mpeg':
+				case 'audio/wav':
+				case 'audio/ogg':
+					return 'audio';
+				case 'text/html':
+					return 'embed';
+				default:
+					return '';
+			}
+		}
+
+		function renderDetectedMedia(url, mediaType) {
+			if (mediaType === 'image') {
+				displayImage(url);
+			} else if (mediaType === 'video') {
+				displayVideo(url);
+			} else if (mediaType === 'audio') {
+				playAudio(url);
+			} else if (mediaType === 'svg') {
+				displaySVG(url);
+			} else {
+				displayEmbeddedContent(url);
+			}
+		}
+
+		function probeSingleMediaType(url, mediaType) {
+			return new Promise((resolve) => {
+				let settled = false;
+				let timeoutId = null;
+				let element = null;
+
+				const cleanup = () => {
+					if (timeoutId) {
+						clearTimeout(timeoutId);
+					}
+					if (!element) return;
+					element.onerror = null;
+					if ('onload' in element) {
+						element.onload = null;
+					}
+					if ('onloadedmetadata' in element) {
+						element.onloadedmetadata = null;
+					}
+					if ('oncanplay' in element) {
+						element.oncanplay = null;
+					}
+					element.removeAttribute('src');
+					if (typeof element.load === 'function') {
+						try {
+							element.load();
+						} catch (e) {}
+					}
+				};
+
+				const finish = (result) => {
+					if (settled) return;
+					settled = true;
+					cleanup();
+					resolve(result);
+				};
+
+				timeoutId = setTimeout(() => finish(''), mediaProbeTimeout);
+
+				if (mediaType === 'image') {
+					element = new Image();
+					element.onload = () => finish('image');
+					element.onerror = () => finish('');
+					element.src = url;
+					return;
+				}
+
+				if (mediaType === 'video') {
+					element = document.createElement('video');
+					element.muted = true;
+					element.preload = 'metadata';
+					element.playsInline = true;
+					element.onloadedmetadata = () => finish('video');
+					element.oncanplay = () => finish('video');
+					element.onerror = () => finish('');
+					element.src = url;
+					element.load();
+					return;
+				}
+
+				if (mediaType === 'audio') {
+					element = new Audio();
+					element.preload = 'metadata';
+					element.onloadedmetadata = () => finish('audio');
+					element.oncanplay = () => finish('audio');
+					element.onerror = () => finish('');
+					element.src = url;
+					element.load();
+					return;
+				}
+
+				finish('');
+			});
+		}
+
+		async function probeMediaElement(url, preferredType) {
+			const probeOrder = [];
+			if (preferredType && !['embed', 'svg'].includes(preferredType)) {
+				probeOrder.push(preferredType);
+			}
+			['video', 'image', 'audio'].forEach((type) => {
+				if (!probeOrder.includes(type)) {
+					probeOrder.push(type);
+				}
+			});
+
+			for (const mediaType of probeOrder) {
+				const result = await probeSingleMediaType(url, mediaType);
+				if (result) {
+					return result;
+				}
+			}
+
+			return '';
+		}
+
+        async function detectMediaType(url) {
+			const extensionType = getMediaTypeFromExtension(url);
+			if (extensionType && extensionType !== 'embed') {
+				renderDetectedMedia(url, extensionType);
+				return;
+			}
+
+			let headerType = '';
+			try {
+				const response = await fetch(url, { method: 'HEAD' });
+				headerType = getMediaTypeFromMimeType(response.headers.get('Content-Type') || '');
+				if (!headerType) {
+					headerType = getMediaTypeFromExtension(response.url || '');
+				}
+			} catch (e) {}
+
+			if (headerType && headerType !== 'embed') {
+				renderDetectedMedia(url, headerType);
+				return;
+			}
+
+			const probedType = await probeMediaElement(url, headerType || extensionType);
+			if (probedType) {
+				renderDetectedMedia(url, probedType);
+				return;
+			}
+
+			renderDetectedMedia(url, headerType || 'embed');
+        }
+
         function playNextMedia() {
 			if (mediaQueue.length === 0) {
 				isPlaying = false;
@@ -107,7 +297,8 @@
 			if (isEmbeddedContent(mediaUrl)) {
 				displayEmbeddedContent(mediaUrl);
 			} else {
-				const fileExtension = mediaUrl.split('.').pop().toLowerCase();
+				const urlPath = mediaUrl.split('?')[0].split('&')[0];
+				const fileExtension = urlPath.split('.').pop().toLowerCase();
 
 				if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
 					displayImage(mediaUrl);
@@ -117,13 +308,10 @@
 					playAudio(mediaUrl);
 				} else if (fileExtension === 'svg') {
 					displaySVG(mediaUrl);
-				} else if (fileExtension === 'html' || mediaUrl.split('/').pop().split('.').length == 1) {
+				} else if (fileExtension === 'html') {
 					displayEmbeddedContent(mediaUrl);
-				} else if (mediaUrl.split('/').pop().split('.').pop().length > 4) {
-					displayImage(mediaUrl);
 				} else {
-					console.error('Unsupported file type:', fileExtension);
-					playNextMedia();
+					detectMediaType(mediaUrl);
 				}
 			}
 		}
@@ -188,33 +376,9 @@
 					mediaContainer.appendChild(mediaContent);
 					playNextMedia();
 				});
-			}, minDisplayTime);
+			}, embeddedDisplayTime);
 		}
 
-        function displayImage(url) {
-            const img = new Image();
-            img.onload = () => {
-                mediaContent.src = url;
-                fadeIn();
-                if (url.toLowerCase().endsWith('.gif')) {
-                    const gifDuration = getGifDuration(img);
-                    const displayTime = Math.max(gifDuration, minDisplayTime);
-                    setTimeout(() => {
-                        fadeOut(() => playNextMedia());
-                    }, displayTime);
-                } else {
-                    setTimeout(() => {
-                        fadeOut(() => playNextMedia());
-                    }, minDisplayTime);
-                }
-            };
-            img.onerror = () => {
-                console.error('Failed to load image:', url);
-                playNextMedia();
-            };
-            img.src = url;
-        }
-		
         function displayVideo(url) {
             const video = document.createElement('video');
             video.src = url;
@@ -386,6 +550,38 @@
             return duration;
         }
 		
+		function getGifDuration(arr) {
+            if (arr[0] !== 0x47 || arr[1] !== 0x49 || arr[2] !== 0x46) return 0;
+            const lsdFlags = arr[10];
+            const gctSize = (lsdFlags & 0x80) ? 3 * (1 << ((lsdFlags & 0x07) + 1)) : 0;
+            let i = 13 + gctSize;
+            let duration = 0;
+            while (i < arr.length - 1) {
+                if (arr[i] === 0x3B) break;
+                if (arr[i] === 0x21) {
+                    if (arr[i + 1] === 0xF9) {
+                        const delayCs = arr[i + 4] | (arr[i + 5] << 8);
+                        duration += (delayCs > 0 ? delayCs : 10) * 10;
+                        i += 8;
+                    } else {
+                        i += 2;
+                        while (i < arr.length && arr[i] !== 0) i += arr[i] + 1;
+                        i++;
+                    }
+                } else if (arr[i] === 0x2C) {
+                    i += 10;
+                    const lctFlags = arr[i - 1];
+                    if (lctFlags & 0x80) i += 3 * (1 << ((lctFlags & 0x07) + 1));
+                    i++;
+                    while (i < arr.length && arr[i] !== 0) i += arr[i] + 1;
+                    i++;
+                } else {
+                    i++;
+                }
+            }
+            return duration;
+        }
+
 		function analyzeAnimatedImage(blob, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -410,9 +606,34 @@
                 .then(response => response.blob())
                 .then(blob => {
                     const objectURL = URL.createObjectURL(blob);
+                    const cleanUrl = url.toLowerCase().split('?')[0];
+                    const isGif = blob.type === 'image/gif' || cleanUrl.endsWith('.gif');
+                    const isWebp = blob.type === 'image/webp' || cleanUrl.endsWith('.webp');
                     mediaContent.onload = () => {
                         fadeIn();
-                        if (url.toLowerCase().endsWith('.webp')) {
+                        if (isGif) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const arr = new Uint8Array(e.target.result);
+                                const gifDuration = getGifDuration(arr);
+                                const displayTime = Math.max(gifDuration || minDisplayTime, minDisplayTime);
+                                setTimeout(() => {
+                                    fadeOut(() => {
+                                        URL.revokeObjectURL(objectURL);
+                                        playNextMedia();
+                                    });
+                                }, displayTime);
+                            };
+                            reader.onerror = () => {
+                                setTimeout(() => {
+                                    fadeOut(() => {
+                                        URL.revokeObjectURL(objectURL);
+                                        playNextMedia();
+                                    });
+                                }, minDisplayTime);
+                            };
+                            reader.readAsArrayBuffer(blob);
+                        } else if (isWebp) {
                             analyzeAnimatedImage(blob, (duration) => {
                                 const displayTime = Math.max(duration, minDisplayTime);
                                 setTimeout(() => {
@@ -430,6 +651,11 @@
                                 });
                             }, minDisplayTime);
                         }
+                    };
+                    mediaContent.onerror = () => {
+                        console.error('Failed to display image:', url);
+                        URL.revokeObjectURL(objectURL);
+                        playNextMedia();
                     };
                     mediaContent.src = objectURL;
                 })

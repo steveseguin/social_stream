@@ -31,9 +31,14 @@ body {
   margin-bottom: 16px;
   position: relative;
   padding: 2px;
-  box-shadow: inset -1px -1px 0 var(--win-border-shadow), 
+  box-shadow: inset -1px -1px 0 var(--win-border-shadow),
               inset 1px 1px 0 var(--win-border-light);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.5s ease;
+}
+
+.message.fading {
+  opacity: 0;
+  transition: opacity 1s ease-out;
 }
 
 .message::before {
@@ -136,7 +141,7 @@ svg, img {
 
 	var urlParams = new URLSearchParams(window.location.search);
 	var roomID = "";
-	
+
 	if (urlParams.has("session")){
 		roomID = urlParams.get("session");
 	} else {
@@ -144,7 +149,10 @@ svg, img {
 	}
 	var password = "false";
 	var featuredMode = false; // featured == selected messages only.  not featured == all messages.
-	
+
+	// showtime: if set, messages will fade out and be removed after this many milliseconds
+	var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 0;
+
 	const chatContainer = document.getElementById('chat-container');
 	
 	function addMessageToOverlay(data) {
@@ -188,16 +196,28 @@ svg, img {
 		});
 		
 		chatContainer.prepend(messageDiv);
-		
+
 		while (chatContainer.children.length > 20) {
 			chatContainer.removeChild(chatContainer.lastChild);
 		}
-		
+
 		setTimeout(() => {
 			Array.from(chatContainer.children).forEach(child => {
 				child.style.transform = '';
 			});
-		}, 500); 
+		}, 500);
+
+		// If showtime is set, fade out and remove the message after the specified time
+		if (showtime > 0) {
+			setTimeout(() => {
+				messageDiv.classList.add('fading');
+				setTimeout(() => {
+					if (messageDiv.parentNode) {
+						messageDiv.parentNode.removeChild(messageDiv);
+					}
+				}, 1000); // Remove after fade animation completes
+			}, showtime);
+		}
 	}
 	
 	const iframe = document.createElement("iframe");

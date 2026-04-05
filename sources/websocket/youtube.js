@@ -109,6 +109,14 @@
 })();
 // --- END APPEND-ONLY BLOCK ---
 
+function isTrustedTabBridgeEvent(event) {
+	if (!event || event.source !== window) return false;
+	if (event.origin && typeof window !== 'undefined' && window.location && event.origin !== window.location.origin) {
+		return false;
+	}
+	return true;
+}
+
 var settings = {};
 
 // Relay queue and throttling (avoid clobbering page globals)
@@ -125,55 +133,130 @@ var FFZ = false;
 var currentVideoId = null;
 var currentChannelId = null;
 
-function requestEmotesForVideo(videoId, channelId) {
-	if (!settings || !chrome.runtime || !chrome.runtime.id) return;
-	
-	// Store current IDs
-	currentVideoId = videoId;
-	currentChannelId = channelId;
-	
-	// Reset emotes when video changes
-	EMOTELIST = false;
-	BTTV = false;
-	SEVENTV = false;
-	FFZ = false;
-	
-	if (settings.bttv) {
-		chrome.runtime.sendMessage(chrome.runtime.id, { 
-			getBTTV: true,
-			url: "https://youtube.com/?v="+videoId,
-			videoId: videoId,
-			channelId: channelId
-		}, function (response) {
+try {
+	document.documentElement.setAttribute('data-ss-youtube-bridge', '1');
+} catch (e) {}
+
+function syncThirdPartyEmotesForContext() {
+	if (!settings || typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		return;
+	}
+
+	if (currentVideoId) {
+		requestEmotesForVideo(currentVideoId, currentChannelId);
+		return;
+	}
+
+	if (settings.bttv && !BTTV) {
+		chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
 			if (chrome.runtime.lastError) {
 				console.log('BTTV request error:', chrome.runtime.lastError.message);
 			}
 		});
 	}
-	if (settings.seventv) {
-		chrome.runtime.sendMessage(chrome.runtime.id, { 
-			getSEVENTV: true,
-			videoId: videoId,
-			url: "https://youtube.com/?v="+videoId,
-			channelId: channelId
-		}, function (response) {
+	if (settings.seventv && !SEVENTV) {
+		chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {
 			if (chrome.runtime.lastError) {
 				console.log('7TV request error:', chrome.runtime.lastError.message);
 			}
 		});
 	}
-	if (settings.ffz) {
-		chrome.runtime.sendMessage(chrome.runtime.id, { 
-			getFFZ: true,
-			videoId: videoId,
-			url: "https://youtube.com/?v="+videoId,
-			channelId: channelId
-		}, function (response) {
+	if (settings.ffz && !FFZ) {
+		chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {
 			if (chrome.runtime.lastError) {
 				console.log('FFZ request error:', chrome.runtime.lastError.message);
 			}
 		});
 	}
+}
+
+function requestEmotesForVideo(videoId, channelId, options = {}) {
+	if (!settings || typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) return;
+
+	const normalizedVideoId = videoId ? String(videoId) : null;
+	const normalizedChannelId = channelId ? String(channelId) : null;
+	const contextChanged =
+		normalizedVideoId !== currentVideoId ||
+		normalizedChannelId !== currentChannelId;
+	const force = !!options.force;
+	const shouldReset = contextChanged || force;
+
+	// Store current IDs
+	currentVideoId = normalizedVideoId;
+	currentChannelId = normalizedChannelId;
+
+	if (shouldReset) {
+		// Reset on context change (or forced refresh) even if all providers are currently disabled.
+		EMOTELIST = false;
+		BTTV = false;
+		SEVENTV = false;
+		FFZ = false;
+	}
+
+	const needsBttv = !!settings.bttv && (shouldReset || !BTTV);
+	const needsSeventv = !!settings.seventv && (shouldReset || !SEVENTV);
+	const needsFfz = !!settings.ffz && (shouldReset || !FFZ);
+
+	if (!needsBttv && !needsSeventv && !needsFfz) {
+		return;
+	}
+
+	if (needsBttv) {
+		chrome.runtime.sendMessage(chrome.runtime.id, {
+			getBTTV: true,
+			url: "https://youtube.com/?v=" + normalizedVideoId,
+			videoId: normalizedVideoId,
+			channelId: normalizedChannelId
+		}, function () {
+			if (chrome.runtime.lastError) {
+				console.log('BTTV request error:', chrome.runtime.lastError.message);
+			}
+		});
+	}
+	if (needsSeventv) {
+		chrome.runtime.sendMessage(chrome.runtime.id, {
+			getSEVENTV: true,
+			videoId: normalizedVideoId,
+			url: "https://youtube.com/?v=" + normalizedVideoId,
+			channelId: normalizedChannelId
+		}, function () {
+			if (chrome.runtime.lastError) {
+				console.log('7TV request error:', chrome.runtime.lastError.message);
+			}
+		});
+	}
+	if (needsFfz) {
+		chrome.runtime.sendMessage(chrome.runtime.id, {
+			getFFZ: true,
+			videoId: normalizedVideoId,
+			url: "https://youtube.com/?v=" + normalizedVideoId,
+			channelId: normalizedChannelId
+		}, function () {
+			if (chrome.runtime.lastError) {
+				console.log('FFZ request error:', chrome.runtime.lastError.message);
+			}
+		});
+	}
+}
+
+function requestYouTubeEmoji(videoId, requestId = null) {
+	if (!videoId || typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		return;
+	}
+
+	var payload = {
+		getYouTubeEmoji: true,
+		videoId: String(videoId)
+	};
+	if (requestId) {
+		payload.requestId = String(requestId);
+	}
+
+	chrome.runtime.sendMessage(chrome.runtime.id, payload, function () {
+		if (chrome.runtime.lastError) {
+			console.log('YouTube emoji request error:', chrome.runtime.lastError.message);
+		}
+	});
 }
 
 function processExtensionQueue() {
@@ -252,6 +335,13 @@ window.addEventListener('youtubeVideoChanged', function(e) {
 		console.log('Video changed:', e.detail);
 		requestEmotesForVideo(e.detail.videoId, e.detail.channelId);
 	}
+});
+
+window.addEventListener('youtubeEmojiRequest', function(e) {
+	if (!e.detail || !e.detail.videoId) {
+		return;
+	}
+	requestYouTubeEmoji(e.detail.videoId, e.detail.requestId || null);
 });
 
 function deepMerge(target, source) {
@@ -335,6 +425,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			sendResponse(true);
 			return;
 		}
+		if (request && request.__ssappSendToTab) {
+			request = request.__ssappSendToTab;
+		}
 		if (typeof request === "object") {
 			if ("state" in request) {
 				isExtensionOn = request.state;
@@ -349,28 +442,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				}));
 				
 				sendResponse(true);
-				
-				if (settings.bttv && !BTTV) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
-						if (chrome.runtime.lastError) {
-							console.log('BTTV request error:', chrome.runtime.lastError.message);
-						}
-					});
-				}
-				if (settings.seventv && !SEVENTV) {
-					chrome.runtime.sendMessage(chrome.runtime.id,  { getSEVENTV: true }, function (response) {
-						if (chrome.runtime.lastError) {
-							console.log('7TV request error:', chrome.runtime.lastError.message);
-						}
-					});
-				}
-				if (settings.ffz && !FFZ) {
-					chrome.runtime.sendMessage(chrome.runtime.id,  { getFFZ: true }, function (response) {
-						if (chrome.runtime.lastError) {
-							console.log('FFZ request error:', chrome.runtime.lastError.message);
-						}
-					});
-				}
+				syncThirdPartyEmotesForContext();
 				return;
 			}
 			if ("SEVENTV" in request) {
@@ -389,6 +461,34 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				FFZ = request.FFZ;
 				sendResponse(true);
 				mergeEmotes();
+				return;
+			}
+			if ("youtubeEmoji" in request) {
+				window.dispatchEvent(new CustomEvent('youtubeEmojiLoaded', {
+					detail: {
+						youtubeEmoji: request.youtubeEmoji,
+						requestId: request.requestId || null,
+						videoId: request.videoId || null
+					},
+					bubbles: true
+				}));
+				sendResponse(true);
+				return;
+			}
+			if (request.type === 'SOURCE_CONTROL') {
+				window.dispatchEvent(new CustomEvent('sourceControlMessage', {
+					detail: request,
+					bubbles: true
+				}));
+				sendResponse(true);
+				return;
+			}
+			if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+				window.dispatchEvent(new CustomEvent('sendExtensionMessage', {
+					detail: { message: request.message },
+					bubbles: true
+				}));
+				sendResponse(true);
 				return;
 			}
 		}
@@ -417,28 +517,7 @@ try {
 				detail: { settings: settings },
 				bubbles: true
 			}));
-
-			if (settings.bttv && !BTTV) {
-				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
-					if (chrome.runtime.lastError) {
-						console.log('BTTV request error:', chrome.runtime.lastError.message);
-					}
-				});
-			}
-			if (settings.seventv && !SEVENTV) {
-				chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true }, function (response) {
-					if (chrome.runtime.lastError) {
-						console.log('7TV request error:', chrome.runtime.lastError.message);
-					}
-				});
-			}
-			if (settings.ffz && !FFZ) {
-				chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true }, function (response) {
-					if (chrome.runtime.lastError) {
-						console.log('FFZ request error:', chrome.runtime.lastError.message);
-					}
-				});
-			}
+			syncThirdPartyEmotesForContext();
 		}
 		if ("state" in response) {
 			isExtensionOn = response.state;
@@ -449,3 +528,26 @@ try {
 }
 
 console.log("INJECTED YOUTUBE INTEGRATION");
+
+// Handle messages from preload-mock.js which uses window.postMessage instead of chrome.runtime
+// This is needed when chrome.runtime is deleted for Kasada bypass
+window.addEventListener('message', function(event) {
+	if (!isTrustedTabBridgeEvent(event)) return;
+	if (!event.data || typeof event.data !== 'object') return;
+	if (!event.data.__ssappSendToTab) return;
+
+	var request = event.data.__ssappSendToTab;
+	if (request.type === 'SOURCE_CONTROL') {
+		window.dispatchEvent(new CustomEvent('sourceControlMessage', {
+			detail: request,
+			bubbles: true
+		}));
+		return;
+	}
+	if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+		window.dispatchEvent(new CustomEvent('sendExtensionMessage', {
+			detail: { message: request.message },
+			bubbles: true
+		}));
+	}
+});

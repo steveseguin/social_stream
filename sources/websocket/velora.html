@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Stream - Velora</title>
+    <link rel="icon" href="https://velora.tv/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="velora.css">
+</head>
+<body>
+    <div class="container">
+        <header class="channel-header">
+            <div class="header-main-row">
+                <div class="header-copy">
+                    <h1>Velora for Social Stream</h1>
+                    <p class="subtitle">Sign in with your Velora account to relay chat and alerts in real-time via the official Events API.</p>
+                </div>
+                <div class="status-row">
+                    <span id="channel-label" class="status-note">Channel: <span>-</span></span>
+                    <span id="viewer-count" class="status-chip warning">Viewers: -</span>
+                    <span id="socket-state" class="status-chip warning">Events disconnected</span>
+                    <span id="bridge-state" class="status-chip warning">Extension disconnected</span>
+                </div>
+            </div>
+
+            <div class="setup-row">
+                <span class="setup-label">Client ID:</span>
+                <input type="text" id="client-id-input" placeholder="Your Velora app Client ID" spellcheck="false" autocomplete="off" />
+                <button id="save-client-id" class="button-secondary">Save</button>
+            </div>
+
+            <div id="setup-notice" class="notice-box">
+                <strong>Setup required:</strong> Register a free app at
+                <a href="https://developer.velora.tv" target="_blank" rel="noopener">developer.velora.tv</a>
+                to get a Client ID. Set your redirect URI to this page's URL
+                (<code id="redirect-uri-hint"></code>), then enter the Client ID above and sign in.
+                Request scopes: <code>user:read chat:read chat:write</code>.
+            </div>
+
+            <div class="auth-row">
+                <button id="start-auth">Sign in with Velora</button>
+                <button id="sign-out" class="button-secondary">Sign out</button>
+                <span id="auth-state" class="status-chip warning">Not signed in</span>
+            </div>
+        </header>
+
+        <div class="layout">
+            <main class="main-content">
+                <details class="panel chat-panel collapsible-panel" open>
+                    <summary class="panel-summary">
+                        <h2>Live Chat</h2>
+                        <span class="panel-summary-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="panel-body">
+                        <p class="hint">Incoming Velora chat messages appear here as they arrive.</p>
+                        <div id="chat-feed" class="chat-feed">
+                            <div id="chat-feed-empty" class="chat-feed-empty">No chat messages yet.</div>
+                        </div>
+                        <div class="chat-input-footer">
+                            <label for="chat-message">Send message (requires <code>chat:write</code>)</label>
+                            <textarea id="chat-message" placeholder="Say something in chat…"></textarea>
+                            <div class="button-row">
+                                <button id="send-chat">Send</button>
+                                <span id="chat-status" class="hint"></span>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="panel collapsible-panel" open>
+                    <summary class="panel-summary">
+                        <h2>Live Event Log</h2>
+                        <span class="panel-summary-icon" aria-hidden="true"></span>
+                    </summary>
+                    <div class="panel-body">
+                        <p class="hint">All events received from the Velora Events API.</p>
+                        <div id="event-log" class="log"></div>
+                    </div>
+                </details>
+            </main>
+
+            <aside class="sidebar">
+                <section class="panel">
+                    <h2>Alerts</h2>
+                    <p class="hint">Follows, subscriptions, gifts, Volts, and raids appear here.</p>
+                    <div id="alerts-feed" class="alerts-feed">
+                        <div id="alerts-feed-empty" class="alerts-feed-empty">No alerts yet.</div>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </div>
+</body>
+</html>

@@ -583,12 +583,22 @@
 
     <script>
 	
-    // Get URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const donationPriority = urlParams.has('donationpriority');
-    // Session security and network options
-    const password = urlParams.get('password') || 'false';
-    const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
+	    // Get URL parameters
+	    const urlParams = new URLSearchParams(window.location.search);
+	    const donationPriority = urlParams.has('donationpriority');
+	    // Session security and network options
+	    const password = urlParams.get('password') || 'false';
+	    const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
+	    function normalizeColorParam(value) {
+	        if (typeof value !== "string") return null;
+	        const trimmed = value.trim();
+	        if (!trimmed) return null;
+	        if (/^[0-9a-fA-F]{3,8}$/.test(trimmed)) {
+	            return "#" + trimmed;
+	        }
+	        return trimmed;
+	    }
+	    const pageBgParam = normalizeColorParam(urlParams.get('pagebg') || urlParams.get('pagebackground') || urlParams.get('dockbg'));
 
 	// Instructions configuration
 	const showInstructions = !urlParams.has('noinstructions');
@@ -869,6 +879,21 @@
 			if (spaceEl) spaceEl.style.display = 'none';
 		}
 	}
+	if (pageBgParam) {
+		document.body.style.background = '#0000';
+		document.body.style.backgroundImage = 'none';
+		const bgLayer = document.querySelector('.background');
+		if (bgLayer) {
+			bgLayer.style.display = 'block';
+			bgLayer.style.background = pageBgParam;
+		}
+		const fadeLayer = document.querySelector('.fade');
+		if (fadeLayer && fadeLayer.style.display === 'none') {
+			fadeLayer.style.display = 'block';
+		}
+		const spaceEl = document.getElementById('space');
+		if (spaceEl) spaceEl.style.display = 'none';
+	}
 
 
 	// Set animation speed
@@ -1061,6 +1086,7 @@
 	}
 
 	const triggerMode = urlParams.get('triggermode') || 'auto';
+	const loopCredits = urlParams.has('loop');
 
 	// Build instructions content based on environment and mode
 	function buildInstructionsContent() {
@@ -1171,6 +1197,15 @@
 
 	// Handle animation end
 	document.querySelector('.text-container').addEventListener('animationend', function() {
+		// If loop is enabled, restart the animation
+		if (loopCredits) {
+			// Update content with any new users that joined during the animation
+			creditsContent.innerHTML = generateCreditsContent();
+			applyAdaptiveOffsets();
+			restartScrollAnimation();
+			return;
+		}
+
 		// Clear collected names when animation completes (unless in preview mode)
 		if (!previewMode) {
 			users.clear();

@@ -45,6 +45,7 @@ WEBSITE_HOSTED_FILES=(
     "waitlist.html"
     "tipjar.html"
     "ticker.html"
+    "timer.html"
     "sampleoverlay.html"
     "samplefeatured.html"
     "sampleemote.html"

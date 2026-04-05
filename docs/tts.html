@@ -328,7 +328,10 @@
                 <li>Browser compatibility varies significantly</li>
             </ul>
             
-            <h3>Premium TTS Options (Direct Browser Audio)</h3>
+            <h3>Local / Free TTS Options (No API Key Required)</h3>
+            <div class="info">
+                <strong>Want fully local AI TTS?</strong> Several high-quality AI voices are built directly into Social Stream Ninja and run in your browser — no API key, no cloud, no extra install. See the <a href="local-tts.html"><strong>Local AI TTS Guide</strong></a> for setup instructions and self-hosted server options.
+            </div>
             <table>
                 <tr>
                     <th>Provider</th>
@@ -340,7 +343,41 @@
                     <td>Kokoro TTS</td>
                     <td>Free</td>
                     <td>Direct</td>
-                    <td>Browser-based, requires powerful computer</td>
+                    <td>Browser-based AI, excellent quality, 26 voices</td>
+                </tr>
+                <tr>
+                    <td>Piper TTS</td>
+                    <td>Free</td>
+                    <td>Direct</td>
+                    <td>Browser-based, fast, CPU-friendly neural TTS</td>
+                </tr>
+                <tr>
+                    <td>Kitten TTS</td>
+                    <td>Free</td>
+                    <td>Direct</td>
+                    <td>Browser-based, lightweight ONNX model</td>
+                </tr>
+                <tr>
+                    <td>eSpeak-NG</td>
+                    <td>Free</td>
+                    <td>Direct</td>
+                    <td>Classic open-source, works on any hardware</td>
+                </tr>
+            </table>
+
+            <h3>Premium / Cloud TTS Options (Direct Browser Audio)</h3>
+            <table>
+                <tr>
+                    <th>Provider</th>
+                    <th>Cost</th>
+                    <th>OBS Capture</th>
+                    <th>Features</th>
+                </tr>
+                <tr>
+                    <td>OpenAI TTS</td>
+                    <td>API costs apply (or free local)</td>
+                    <td>Direct</td>
+                    <td>High quality; also supports local servers via custom endpoint</td>
                 </tr>
                 <tr>
                     <td>Google Cloud</td>
@@ -359,6 +396,12 @@
                     <td>API costs apply</td>
                     <td>Direct</td>
                     <td>High-quality voices, multiple languages</td>
+                </tr>
+                <tr>
+                    <td>Gemini TTS</td>
+                    <td>API costs apply</td>
+                    <td>Direct</td>
+                    <td>Google generative language API</td>
                 </tr>
             </table>
         </div>
@@ -533,7 +576,7 @@
                 </tr>
                 <tr>
                     <td>&ttsprovider</td>
-                    <td>Select provider (system/kokoro/elevenlabs/google/speechify)</td>
+                    <td>Select provider: kokoro, piper, kitten, espeak, openai, elevenlabs, google, speechify, gemini</td>
                     <td>&ttsprovider=kokoro</td>
                 </tr>
             </table>
@@ -567,15 +610,48 @@
             </table>
         </div>
         
-        <h2 id="premium-options">Premium TTS Service Configuration</h2>
+        <h2 id="premium-options">TTS Provider Configuration</h2>
         <div class="card">
-            <h3>Kokoro TTS (Free, Browser-based)</h3>
+            <h3>Kokoro TTS (Free, Built-in)</h3>
             <ul>
                 <li>Enable with <code>?ttsprovider=kokoro</code></li>
-                <li>Requires powerful computer</li>
+                <li>Runs in browser via WebGPU/WASM — no server needed</li>
                 <li>Works directly with OBS browser source</li>
                 <li>Voice selection: <code>&voicekokoro=af_bella</code></li>
                 <li>Speed control: <code>&kokorospeed=1.2</code></li>
+            </ul>
+
+            <h3>Piper TTS (Free, Built-in)</h3>
+            <ul>
+                <li>Enable with <code>?ttsprovider=piper</code></li>
+                <li>Fast, CPU-friendly neural TTS running in browser</li>
+                <li>Voice selection: <code>&pipervoice=en_US-hfc_female-medium</code></li>
+                <li>Speed control: <code>&piperspeed=1.0</code></li>
+            </ul>
+
+            <h3>Kitten TTS (Free, Built-in)</h3>
+            <ul>
+                <li>Enable with <code>?ttsprovider=kitten</code></li>
+                <li>Lightweight ONNX-based TTS running in browser</li>
+                <li>Voice selection: <code>&kittenvoice=expr-voice-4-f</code></li>
+            </ul>
+
+            <h3>eSpeak-NG (Free, Built-in)</h3>
+            <ul>
+                <li>Enable with <code>?ttsprovider=espeak</code></li>
+                <li>Classic open-source TTS, works on any hardware</li>
+                <li>Voice selection: <code>&espeakvoice=en</code></li>
+                <li>Speed control: <code>&espeakspeed=175</code></li>
+            </ul>
+
+            <h3>OpenAI / Local Server TTS</h3>
+            <ul>
+                <li>Enable with <code>?ttsprovider=openai</code></li>
+                <li>Uses OpenAI's API by default, or any compatible local server</li>
+                <li>Custom endpoint: <code>&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
+                <li>No API key needed for local servers</li>
+                <li>Voice: <code>&voiceopenai=af_bella</code>, speed: <code>&openaispeed=1.0</code></li>
+                <li>See the <a href="local-tts.html">Local AI TTS Guide</a> for self-hosted server setup</li>
             </ul>
             
             <h3>Google Cloud TTS</h3>

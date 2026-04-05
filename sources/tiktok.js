@@ -141,6 +141,150 @@
 		}
 	}
 
+	const tikTokStandardStatusState = {
+		initAt: Date.now(),
+		lastKey: "",
+		lastSentAt: 0,
+		connectedSent: false,
+		lastConnectedAt: 0,
+		pendingError: "",
+		pendingErrorAt: 0
+	};
+
+	function resetTikTokStandardPendingError() {
+		tikTokStandardStatusState.pendingError = "";
+		tikTokStandardStatusState.pendingErrorAt = 0;
+	}
+
+	function shouldDelayTikTokStandardFatal(normalizedError, now) {
+		if (!normalizedError) {
+			return false;
+		}
+
+		const lower = normalizedError.toLowerCase();
+		const shouldDebounce = lower.includes("did not expose a usable live chat panel")
+			|| lower.includes("live chat is unavailable");
+		if (!shouldDebounce) {
+			resetTikTokStandardPendingError();
+			return false;
+		}
+
+		if (tikTokStandardStatusState.pendingError !== normalizedError) {
+			tikTokStandardStatusState.pendingError = normalizedError;
+			tikTokStandardStatusState.pendingErrorAt = now;
+			return true;
+		}
+
+		if (!tikTokStandardStatusState.pendingErrorAt) {
+			tikTokStandardStatusState.pendingErrorAt = now;
+			return true;
+		}
+
+		if ((now - tikTokStandardStatusState.pendingErrorAt) < 8000) {
+			return true;
+		}
+
+		if ((now - lastMessageTime) < 20000) {
+			return true;
+		}
+
+		if (tikTokStandardStatusState.lastConnectedAt && (now - tikTokStandardStatusState.lastConnectedAt) < 12000) {
+			return true;
+		}
+
+		return false;
+	}
+
+	function canSendTikTokStandardStatus() {
+		return !!(
+			typeof chrome !== "undefined" &&
+			chrome.runtime &&
+			typeof chrome.runtime.sendMessage === "function" &&
+			(
+				window.ninjafy ||
+				window.electronApi ||
+				typeof window.__SSAPP_TAB_ID__ !== "undefined"
+			)
+		);
+	}
+
+	function sendTikTokStandardStatus(payload) {
+		if (!canSendTikTokStandardStatus() || !payload || typeof payload !== "object") {
+			return false;
+		}
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				tiktokStatus: {
+					platform: "tiktok",
+					...payload
+				}
+			}, function() {
+				if (chrome.runtime.lastError) {
+					console.warn("[TikTok] Failed to send standard status:", chrome.runtime.lastError.message);
+				}
+			});
+			return true;
+		} catch (e) {
+			console.warn("[TikTok] Failed to emit standard status:", e);
+			return false;
+		}
+	}
+
+	function markTikTokStandardConnected(connectionLabel = "Connected via standard capture") {
+		if (!canSendTikTokStandardStatus() || tikTokStandardStatusState.connectedSent) {
+			return;
+		}
+		resetTikTokStandardPendingError();
+		tikTokStandardStatusState.connectedSent = true;
+		tikTokStandardStatusState.lastConnectedAt = Date.now();
+		tikTokStandardStatusState.lastKey = "connected";
+		tikTokStandardStatusState.lastSentAt = Date.now();
+		sendTikTokStandardStatus({
+			status: "connected",
+			connectionMethod: "Standard capture",
+			connectionLabel
+		});
+	}
+
+	function reportTikTokStandardFatal(error, code = "standard_blocked") {
+		if (!canSendTikTokStandardStatus() || !error) {
+			return;
+		}
+		const normalizedError = String(error).trim();
+		if (!normalizedError) {
+			return;
+		}
+		const now = Date.now();
+		if (shouldDelayTikTokStandardFatal(normalizedError, now)) {
+			return;
+		}
+		const statusKey = `${code}:${normalizedError}`;
+		if (tikTokStandardStatusState.lastKey === statusKey && (now - tikTokStandardStatusState.lastSentAt) < 15000) {
+			return;
+		}
+		resetTikTokStandardPendingError();
+		tikTokStandardStatusState.lastKey = statusKey;
+		tikTokStandardStatusState.lastSentAt = now;
+		tikTokStandardStatusState.connectedSent = false;
+		sendTikTokStandardStatus({
+			status: "fatal_error",
+			code,
+			error: normalizedError
+		});
+	}
+
+	function getTikTokStateObject() {
+		try {
+			const sigiStateElement = document.getElementById("SIGI_STATE");
+			if (!sigiStateElement || !sigiStateElement.textContent) {
+				return null;
+			}
+			return JSON.parse(sigiStateElement.textContent);
+		} catch (e) {
+			return null;
+		}
+	}
+
 	function getTranslation(key, value = false) {
 		if (settings.translation && settings.translation.innerHTML && (key in settings.translation.innerHTML)) {
 			return settings.translation.innerHTML[key];
@@ -1210,6 +1354,9 @@
 				return;
 			}
 		} else if (isLikeEvent) {
+			if (!settings.capturelikeevent) {
+				return;
+			}
 			ital = "liked";
 			if (!chatname) {
 				return;
@@ -1470,6 +1617,9 @@
 				return;
 			}
 		} else if (isLikeEvent) {
+			if (!settings.capturelikeevent) {
+				return;
+			}
 			ital = "liked";
 			if (!chatname) {
 				return;
@@ -1528,6 +1678,124 @@
 	var counter = 0;
 	var lastMessageTime = Date.now();
 	var observerHealthCheckInterval = 60000; // Check every minute
+
+	function parseTikTokViewerCountText(value) {
+		if (typeof value !== "string") {
+			return null;
+		}
+		let viewText = value.replace(/\s+/g, " ").trim();
+		if (!viewText) {
+			return null;
+		}
+		viewText = viewText.replace(/^[^\d]+/, "");
+		const suffixMatch = viewText.match(/([KMB])$/i);
+		let multiplier = 1;
+		if (suffixMatch) {
+			const suffix = suffixMatch[1].toUpperCase();
+			if (suffix === "K") {
+				multiplier = 1000;
+			} else if (suffix === "M") {
+				multiplier = 1000000;
+			} else if (suffix === "B") {
+				multiplier = 1000000000;
+			}
+			viewText = viewText.slice(0, -1).trim().replace(/,/g, ".");
+			const numeric = parseFloat(viewText.replace(/[^\d.]/g, ""));
+			return Number.isFinite(numeric) ? Math.round(numeric * multiplier) : null;
+		}
+		const numeric = parseInt(viewText.replace(/[^\d]/g, ""), 10);
+		return Number.isFinite(numeric) ? numeric : null;
+	}
+
+	function getTikTokStateViewerCount() {
+		try {
+			const state = getTikTokStateObject();
+			if (!state) {
+				return null;
+			}
+			const roomStats = state?.LiveRoom?.liveRoomUserInfo?.liveRoom?.liveRoomStats;
+			if (!roomStats) {
+				return null;
+			}
+			const viewerCount = roomStats.userCount ?? roomStats.user_count ?? roomStats.viewerCount ?? null;
+			const numeric = parseInt(viewerCount, 10);
+			return Number.isFinite(numeric) ? numeric : null;
+		} catch (e) {
+			return null;
+		}
+	}
+
+	function getTikTokStandardBlockedReason() {
+		const isLivePage = window.location.href.includes("livecenter") ||
+			(window.location.pathname.includes("@") && window.location.pathname.includes("live"));
+		if (!isLivePage) {
+			return null;
+		}
+
+		const elapsed = Date.now() - tikTokStandardStatusState.initAt;
+		const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").trim().toLowerCase();
+
+		if (bodyText) {
+			if (bodyText.includes("comments turned off") || bodyText.includes("comments are turned off")) {
+				return "TikTok says comments are turned off on this page.";
+			}
+			if (
+				bodyText.includes("verify to continue") ||
+				bodyText.includes("security check") ||
+				bodyText.includes("please verify") ||
+				bodyText.includes("complete the puzzle") ||
+				bodyText.includes("too many attempts")
+			) {
+				return "TikTok is showing a verification challenge in standard mode.";
+			}
+		}
+
+		if (document.querySelector("[id*='captcha'], [class*='captcha'], iframe[src*='captcha'], iframe[src*='verify'], [data-e2e*='captcha']")) {
+			return "TikTok is showing a verification challenge in standard mode.";
+		}
+
+		const state = getTikTokStateObject();
+		const liveRoom = state?.LiveRoom?.liveRoomUserInfo?.liveRoom || null;
+		const currentRoom = state?.CurrentRoom || null;
+		const showLiveChat = liveRoom?.showLiveChat ?? currentRoom?.showLiveChat;
+		const enableChat = liveRoom?.enableChat ?? currentRoom?.enableChat;
+
+		if ((showLiveChat === false || enableChat === false) && elapsed > 6000) {
+			return "TikTok live chat is unavailable in standard mode.";
+		}
+
+		if (elapsed < 20000) {
+			return null;
+		}
+
+		if (observer instanceof MutationObserver && observedDomElementForObserver1 && observedDomElementForObserver1.isConnected) {
+			return null;
+		}
+
+		const hasChatSurface = !!document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-message"]');
+		const hasComposer = !!findTikTokChatComposer() || !!document.querySelector(".public-DraftEditorPlaceholder-inner");
+		const hasDisabledComposer = !!document.querySelector("div[contenteditable='plaintext-only'][disabled][placeholder]");
+		if ((!hasChatSurface && !hasComposer) || hasDisabledComposer) {
+			return "TikTok standard mode did not expose a usable live chat panel.";
+		}
+
+		return null;
+	}
+
+	function monitorTikTokStandardHealth() {
+		if (!canSendTikTokStandardStatus() || !isExtensionOn) {
+			return;
+		}
+		if (!StreamState.isValid() && StreamState.getCurrentChannel()) {
+			return;
+		}
+		const blockedReason = getTikTokStandardBlockedReason();
+		if (blockedReason) {
+			reportTikTokStandardFatal(blockedReason);
+		} else {
+			resetTikTokStandardPendingError();
+		}
+	}
 	
 	function start() {
 		if (!isExtensionOn) {
@@ -1572,22 +1840,15 @@
 					let views = 0; // Default to 0 if not found
 
 					if (viewerCount && viewerCount.textContent) {
-						let viewText = viewerCount.textContent;
-
-						if (viewText.startsWith("· ")){
-							viewText = viewText.replace("· ","");
+						const parsedViews = parseTikTokViewerCountText(viewerCount.textContent);
+						if (Number.isFinite(parsedViews)) {
+							views = parsedViews;
 						}
-
-						let multiplier = 1;
-						if (viewText.includes("K")) {
-							multiplier = 1000;
-							viewText = viewText.replace("K", "");
-						} else if (viewText.includes("M")) {
-							multiplier = 1000000;
-							viewText = viewText.replace("M", "");
-						}
-						if (viewText == parseFloat(viewText)) {
-							views = parseFloat(viewText) * multiplier;
+					}
+					if (!views) {
+						const stateViews = getTikTokStateViewerCount();
+						if (Number.isFinite(stateViews)) {
+							views = stateViews;
 						}
 					}
 
@@ -1608,6 +1869,7 @@
 				////console.error(e);
 			}
 		}
+		monitorTikTokStandardHealth();
 		
 		if (observer && observedDomElementForObserver1) {
 			// Check if the observed element is still connected
@@ -1617,6 +1879,7 @@
 				observer = false;
 				observedDomElementForObserver1 = null;
 			} else {
+				markTikTokStandardConnected();
 				//console.log("<<>");
 				return;
 			}
@@ -1738,6 +2001,7 @@
 					subtree: subtree
 				});
 				observedDomElementForObserver1 = currentTargetForTimeout;
+				markTikTokStandardConnected();
 				////console.log("Main observer is now observing.", currentTargetForTimeout);
 			} else {
 				if (observer instanceof MutationObserver) {

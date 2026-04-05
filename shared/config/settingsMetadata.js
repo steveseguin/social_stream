@@ -188,10 +188,20 @@ const SETTINGS_METADATA = Object.freeze({
     category: "custom_injection",
     description: "Capture likes, subs, and other available event data."
   },
+  "hideevents": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Block stream events (follows, likes, subs) from appearing anywhere."
+  },
   "capturejoinedevent": {
     type: "boolean",
     category: "custom_injection",
     description: "Don't block 'joined' stream events in TikTok"
+  },
+  "capturelikeevent": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Allow 'liked' stream events in TikTok (high volume)"
   },
   "chatbotHistoryTotal": {
     type: "number",
@@ -673,6 +683,16 @@ const SETTINGS_METADATA = Object.freeze({
     category: "management",
     description: "When enabled, forward chat !commands to Twitch."
   },
+  "forwardcommands2kick": {
+    type: "boolean",
+    category: "management",
+    description: "When enabled, forward chat !commands to Kick."
+  },
+  "forwardcommands2youtube": {
+    type: "boolean",
+    category: "management",
+    description: "When enabled, forward chat !commands to YouTube."
+  },
   "geminiApiKey": {
     type: "text",
     category: "configure_llm_api",
@@ -681,7 +701,7 @@ const SETTINGS_METADATA = Object.freeze({
   "geminimodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Gemini model identifier to call (for example gemini-1.5-flash)."
+    description: "Gemini model identifier to call (for example gemini-2.5-flash)."
   },
   "giphy": {
     type: "boolean",
@@ -752,6 +772,11 @@ const SETTINGS_METADATA = Object.freeze({
     type: "boolean",
     category: "assign_roles_classes_to_certain_users",
     description: "When enabled, filter out messages for listed bots."
+  },
+  "stripatext": {
+    type: "boolean",
+    category: "streaming_chat_dock_overlay",
+    description: "Remove @ from the start of display names."
   },
   "hidegiphytrigger": {
     type: "boolean",
@@ -837,6 +862,11 @@ const SETTINGS_METADATA = Object.freeze({
     type: "text",
     category: "opened_in_new_tab",
     description: "Kick channel slug opened by the chat shortcut."
+  },
+  "kickchatroomscout": {
+    type: "boolean",
+    category: "miscellaneous_options_for_sites",
+    description: "Experimental: on kick.com pages, check bridge lookup first and seed chatroom cache when missing."
   },
   "kittenspeed": {
     type: "number",
@@ -1217,6 +1247,11 @@ const SETTINGS_METADATA = Object.freeze({
     type: "boolean",
     category: "management",
     description: "When enabled, relay all messages (!NOT RECOMMENDED!)."
+  },
+  "blockChannelPointRelays": {
+    type: "boolean",
+    category: "management",
+    description: "When enabled, channel point redemptions are not relayed."
   },
   "relaydonos": {
     type: "boolean",

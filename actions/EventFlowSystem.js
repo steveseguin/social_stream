@@ -20,6 +20,11 @@ class EventFlowSystem {
 		});
 		this.messageStore = options.messageStore || window.messageStore || {}; // Share message store from background.js
 		this.handleMessageStore = options.handleMessageStore || window.handleMessageStore || null; // Function to handle message storage
+		this.allowEvalCustomJs = (typeof options.allowEvalCustomJs === 'boolean')
+			? options.allowEvalCustomJs
+			: this.detectCustomJsEvalSupport();
+		this.customJsEvalSupported = this.allowEvalCustomJs; // alias used by EventFlowEditor
+		this.customJsEvalWarningShown = false;
 		
 		// MIDI properties
 		this.midiEnabled = false;
@@ -57,6 +62,40 @@ class EventFlowSystem {
         
         this.initPromise = this.initDatabase();
     }
+
+	detectCustomJsEvalSupport() {
+		try {
+			if (typeof isSSAPP !== 'undefined' && isSSAPP) return true;
+			if (typeof window !== 'undefined' && (
+				window.ssapp === true ||
+				window.ninjafy ||
+				window.electronApi
+			)) return true;
+			if (typeof window !== 'undefined' && window.location && typeof window.location.search === 'string') {
+				const params = new URLSearchParams(window.location.search || '');
+				if (params.has('ssapp')) return true;
+			}
+		} catch (error) {
+			// ignore and continue to extension detection
+		}
+
+		// MV3 extension pages do not allow dynamic eval/new Function under default CSP.
+		try {
+			if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
+				return false;
+			}
+		} catch (error) {
+			// If this check fails, fall through to default allow.
+		}
+
+		return true;
+	}
+
+	warnCustomJsEvalDisabled(scope = 'customJs') {
+		if (this.customJsEvalWarningShown) return;
+		this.customJsEvalWarningShown = true;
+		console.warn(`[EventFlowSystem] ${scope} is disabled in extension context due CSP (unsafe-eval not allowed). Use SSApp/Electron or a runtime addon.`);
+	}
 
     // Start periodic evaluation for time-based triggers (timeInterval/timeOfDay)
     startScheduler() {
@@ -964,7 +1003,7 @@ class EventFlowSystem {
 	
 	isMetaOnlyPayload(message) {
 		if (!message || typeof message !== 'object') return false;
-		if (!message.meta) return false; // Any truthy meta (object/string/number) counts
+		if (!("meta" in message)) return false;
 		const hasChatFields = !!(message.chatname || message.chatmessage || message.hasDonation || message.contentimg);
 		return !hasChatFields;
 	}
@@ -1281,6 +1320,63 @@ class EventFlowSystem {
         const text = tmp.textContent || tmp.innerText || '';
         return text.replace(/\s\s+/g, ' ').trim();
     }
+
+    normalizeEventType(eventType) {
+        const normalized = (eventType || '').toLowerCase().trim();
+        // Backward compatibility alias: legacy Twitch ad event spelling.
+        if (normalized === 'adbreak') {
+            return 'ad_break';
+        }
+        // Backward compatibility alias: legacy Twitch websocket channel point name.
+        if (normalized === 'channel_points') {
+            return 'reward';
+        }
+        return normalized;
+    }
+
+    eventTypeMatches(targetEventType, messageEventType) {
+        const normalizedTarget = this.normalizeEventType(targetEventType);
+        const normalizedMessage = this.normalizeEventType(messageEventType);
+        return !!normalizedTarget && normalizedMessage === normalizedTarget;
+    }
+
+    looksLikeRewardRedemption(message) {
+        if (!message || typeof message !== 'object') {
+            return false;
+        }
+
+        const directRewardName = String(message.rewardTitle || message.rewardName || '').trim();
+        if (directRewardName) {
+            return true;
+        }
+
+        const shouldUseTextHeuristics = message.type === 'kick' || message.event === true;
+        if (!shouldUseTextHeuristics) {
+            return false;
+        }
+
+        const text = String(message.chatmessage || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        if (!text) {
+            return false;
+        }
+
+        const rewardPatterns = [
+            /^(?:has redeemed|redeemed)\b/,
+            /^(?:ha canjeado|canjeo)\b/,
+            /^(?:rescatou|resgatou)\b/,
+            /^(?:ha riscattato)\b/,
+            /^(?:a echange|a rachete)\b/,
+            /^hat .+ eingelost\b/,
+            /^heeft .+ ingewisseld\b/
+        ];
+
+        return rewardPatterns.some(pattern => pattern.test(text));
+    }
     
     async evaluateTrigger(triggerNode, message) {
         const { triggerType, config } = triggerNode;
@@ -1417,7 +1513,7 @@ class EventFlowSystem {
 
             case 'channelPointRedemption':
                 // Check if this is a reward/redemption event
-                if (message.event !== 'reward') {
+                if (!this.eventTypeMatches('reward', message.event) && !this.looksLikeRewardRedemption(message)) {
                     return false;
                 }
                 // If a specific reward name is configured, check it
@@ -1436,9 +1532,9 @@ class EventFlowSystem {
 
             case 'eventType':
                 // Check if the event type matches
-                const targetEvent = (config.eventType || '').toLowerCase().trim();
-                const msgEvent = (message.event || '').toLowerCase().trim();
-                match = targetEvent && msgEvent === targetEvent;
+                const targetEvent = config.eventType || '';
+                const msgEvent = message.event || '';
+                match = this.eventTypeMatches(targetEvent, msgEvent);
                 return match;
 
             // === NEW DEDICATED EVENT TRIGGERS ===
@@ -1512,15 +1608,15 @@ class EventFlowSystem {
             }
 
             case 'eventOther': {
-                const targetEventType = (config.eventType || '').toLowerCase().trim();
-                const msgEventType = (message.event || '').toLowerCase().trim();
-                return targetEventType && msgEventType === targetEventType;
+                const targetEventType = config.eventType || '';
+                const msgEventType = message.event || '';
+                return this.eventTypeMatches(targetEventType, msgEventType);
             }
 
             case 'eventCustom': {
-                const targetEventType = (config.eventType || '').toLowerCase().trim();
-                const msgEventType = (message.event || '').toLowerCase().trim();
-                const eventMatch = targetEventType && msgEventType === targetEventType;
+                const targetEventType = config.eventType || '';
+                const msgEventType = message.event || '';
+                const eventMatch = this.eventTypeMatches(targetEventType, msgEventType);
 
                 // If there's a custom condition, evaluate it
                 if (eventMatch && config.customCondition) {
@@ -1541,7 +1637,7 @@ class EventFlowSystem {
             case 'compareProperty': {
                 const prop = config.property || 'donationAmount';
                 const operator = config.operator || 'gt';
-                const compareValue = parseFloat(config.value) || 0;
+                const rawCompareValue = config.value;
 
                 // Get the property value from the message
                 let msgValue = message[prop];
@@ -1558,20 +1654,45 @@ class EventFlowSystem {
                     return false;
                 }
 
-                // Parse to number if string
-                const numValue = parseFloat(msgValue);
-                if (isNaN(numValue)) {
-                    return false; // Can't compare non-numeric value
+                const compareValueText = String(rawCompareValue ?? '').trim();
+                const msgValueText = String(msgValue).trim();
+                const isStrictNumericString = value => /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(value);
+                const canCompareNumerically =
+                    compareValueText !== '' &&
+                    msgValueText !== '' &&
+                    isStrictNumericString(msgValueText) &&
+                    isStrictNumericString(compareValueText);
+                const numValue = canCompareNumerically ? Number(msgValueText) : null;
+                const compareValue = canCompareNumerically ? Number(compareValueText) : null;
+
+                if (['gt', 'gte', 'lt', 'lte'].includes(operator)) {
+                    if (!canCompareNumerically) {
+                        return false;
+                    }
+
+                    switch (operator) {
+                        case 'gt': return numValue > compareValue;
+                        case 'lt': return numValue < compareValue;
+                        case 'gte': return numValue >= compareValue;
+                        case 'lte': return numValue <= compareValue;
+                        default: return false;
+                    }
                 }
 
-                // Perform comparison
+                if (canCompareNumerically) {
+                    switch (operator) {
+                        case 'eq': return numValue === compareValue;
+                        case 'ne': return numValue !== compareValue;
+                        default: return false;
+                    }
+                }
+
+                const normalizedMsgValue = msgValueText.toLowerCase();
+                const normalizedCompareValue = compareValueText.toLowerCase();
+
                 switch (operator) {
-                    case 'gt': return numValue > compareValue;
-                    case 'lt': return numValue < compareValue;
-                    case 'eq': return numValue === compareValue;
-                    case 'gte': return numValue >= compareValue;
-                    case 'lte': return numValue <= compareValue;
-                    case 'ne': return numValue !== compareValue;
+                    case 'eq': return normalizedMsgValue === normalizedCompareValue;
+                    case 'ne': return normalizedMsgValue !== normalizedCompareValue;
                     default: return false;
                 }
             }
@@ -1626,6 +1747,10 @@ class EventFlowSystem {
                 return false;
                 
             case 'customJs':
+                if (!this.allowEvalCustomJs) {
+                    this.warnCustomJsEvalDisabled('customJs trigger');
+                    return false;
+                }
                 try {
                     const evalFunction = new Function('message', config.code);
                     match = evalFunction(message);
@@ -2113,14 +2238,65 @@ class EventFlowSystem {
             blocked
         };
     }
-	
-	sanitizeSendMessage(text, textonly = false, alt = false) {
+
+	/**
+	 * Replace template variables in text with values from the message object.
+	 * Supports core aliases ({username}, {message}, {source}, {donation}) plus
+	 * extended fields ({event}, {membership}, {hasDonation}, {meta}, etc.).
+	 * @param {string} text - Template text containing {variable} placeholders
+	 * @param {Object} message - Message object with field values
+	 * @returns {string} Text with placeholders replaced
+	 */
+	replaceTemplateVars(text, message) {
+		if (!text) return text || '';
+		if (!message) return text;
+
+		// Build lookup map with all supported variables (lowercase keys for case-insensitive matching)
+		const messageData = {
+			// Core aliases for backward compatibility
+			username: message.chatname || message.displayname || '',
+			message: message.chatmessage || '',
+			source: (message.type || '').charAt(0).toUpperCase() + (message.type || '').slice(1),
+			donation: message.hasDonation || '',
+			// Direct field mappings
+			chatname: message.chatname || '',
+			displayname: message.displayname || '',
+			chatmessage: message.chatmessage || '',
+			type: message.type || '',
+			hasdonation: message.hasDonation || '',
+			donationamount: message.donationAmount || '',
+			event: message.event || '',
+			membership: message.membership || '',
+			subtitle: message.subtitle || '',
+			userid: message.userid || '',
+			chatimg: message.chatimg || '',
+			contentimg: message.contentimg || '',
+			rewardtitle: message.rewardTitle || '',
+			meta: message.meta || ''
+		};
+
+		return text.replace(/\{(\w+)\}/gi, (match, key) => {
+			const val = messageData[key.toLowerCase()];
+			if (val === undefined || val === null) return '';
+			if (typeof val === 'object') {
+				try {
+					return JSON.stringify(val);
+				} catch (e) {
+					return '';
+				}
+			}
+			return String(val);
+		});
+	}
+
+	sanitizeSendMessage(text, textonly = false, alt = false, mode = 'safe') {
 		if (!text || !text.trim()) {
 			return alt || text;
 		}
 
 		// Prefer the shared relay sanitizer (from background.js) so editor + background behave identically
-		if (typeof this.sanitizeRelay === 'function') {
+		// Only use it in 'safe' mode since it applies full sanitization
+		if (typeof this.sanitizeRelay === 'function' && mode === 'safe') {
 			try {
 				const cleaned = this.sanitizeRelay(text, textonly, alt);
 				if (cleaned || !alt) {
@@ -2170,18 +2346,28 @@ class EventFlowSystem {
 			text = textArea.value;
 		}
 
+		// HTML stripping always runs (XSS prevention)
 		text = text.replace(/(<([^>]+)>)/gi, "");
-		text = text.replace(/[!#@]/g, "");
-		text = text.replace(/cheer\d+/gi, " ");
 
-		text = text.replace(/\.(?=\S)/g, (match, offset, str) => {
-			const prev = offset > 0 ? str[offset - 1] : "";
-			const next = str[offset + 1] || "";
-			if (/\S/.test(prev) && /\S/.test(next)) {
-				return ".";
-			}
-			return " ";
-		});
+		if (mode === 'safe') {
+			// Full sanitization (current behavior)
+			text = text.replace(/[!#@]/g, "");
+			text = text.replace(/cheer\d+/gi, " ");
+			text = text.replace(/\.(?=\S)/g, (match, offset, str) => {
+				const prev = offset > 0 ? str[offset - 1] : "";
+				const next = str[offset + 1] || "";
+				if (/\S/.test(prev) && /\S/.test(next)) {
+					return ".";
+				}
+				return " ";
+			});
+		} else if (mode === 'preserveUrls') {
+			// Strip commands but preserve dots for URLs
+			text = text.replace(/[!#@]/g, "");
+			text = text.replace(/cheer\d+/gi, " ");
+			// Dots preserved - no replacement
+		}
+		// 'raw' mode: Only HTML stripped above
 
 		emojiMap.forEach((emoji, placeholder) => {
 			text = text.replace(placeholder, emoji);
@@ -2332,6 +2518,20 @@ class EventFlowSystem {
                 };
                 result.modified = true;
                 break;
+
+            case 'featureMessage': {
+                const currentMeta = (message && typeof message.meta === 'object' && message.meta !== null && !Array.isArray(message.meta))
+                    ? { ...message.meta }
+                    : (message && message.meta !== undefined ? { value: message.meta } : {});
+
+                currentMeta.featured = true;
+                result.message = {
+                    ...(message || {}),
+                    meta: currentMeta
+                };
+                result.modified = true;
+                break;
+            }
                 
             case 'addPrefix':
                 if (config.prefix && message && message.chatmessage) {
@@ -2409,23 +2609,12 @@ class EventFlowSystem {
                     break;
                 }
                 
-                // Process template - this can use any message properties, not just chatmessage
-                let processedTemplate = config.template || 'Hello from {source}!';
-                
-                // Replace all occurrences of template variables
-                const _srcRaw = (message && message.type) || '';
-                const _src = _srcRaw ? _srcRaw.charAt(0).toUpperCase() + _srcRaw.slice(1) : '';
-                const _uname = (message && message.chatname) || '';
-                const _msg = (message && message.chatmessage) || '';
-                processedTemplate = processedTemplate.replace(/\{source\}/g, _src);
-                processedTemplate = processedTemplate.replace(/\{type\}/g, _srcRaw);
-                processedTemplate = processedTemplate.replace(/\{username\}/g, _uname);
-                processedTemplate = processedTemplate.replace(/\{chatname\}/g, _uname);
-                processedTemplate = processedTemplate.replace(/\{message\}/g, _msg);
-                processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, _msg);
-                
-                // Sanitize the message
-                let sanitizedSendMessage = this.sanitizeSendMessage(processedTemplate, false).trim();
+                // Process template using the shared replacement utility
+                let processedTemplate = this.replaceTemplateVars(config.template || 'Hello from {source}!', message);
+
+                // Sanitize the message based on configured mode
+                const sanitizeMode = config.sanitizeMode || 'safe';
+                let sanitizedSendMessage = this.sanitizeSendMessage(processedTemplate, false, false, sanitizeMode).trim();
                 
                 // Check if sanitized message is empty
                 if (!sanitizedSendMessage) {
@@ -2515,18 +2704,8 @@ class EventFlowSystem {
                     break;
                 }
                 
-                // Process relay template - focused on forwarding the chat message
-                let relayTemplate = config.template || '[{source}] {username}: {message}';
-                
-                // Replace all occurrences of template variables
-                const relaySourceRaw = message.type || '';
-                const relaySource = relaySourceRaw ? relaySourceRaw.charAt(0).toUpperCase() + relaySourceRaw.slice(1) : '';
-                relayTemplate = relayTemplate.replace(/\{source\}/g, relaySource);
-                relayTemplate = relayTemplate.replace(/\{type\}/g, relaySourceRaw);
-                relayTemplate = relayTemplate.replace(/\{username\}/g, message.chatname || '');
-                relayTemplate = relayTemplate.replace(/\{chatname\}/g, message.chatname || '');
-                relayTemplate = relayTemplate.replace(/\{message\}/g, message.chatmessage || '');
-                relayTemplate = relayTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                // Process relay template using the shared replacement utility
+                let relayTemplate = this.replaceTemplateVars(config.template || '[{source}] {username}: {message}', message);
                 
                 // Sanitize the message
                 let sanitizedRelayMessage = this.sanitizeRelay ? this.sanitizeRelay(relayTemplate, false).trim() : relayTemplate.trim();
@@ -2713,6 +2892,10 @@ class EventFlowSystem {
 				break;
                 
             case 'customJs':
+                if (!this.allowEvalCustomJs) {
+                    this.warnCustomJsEvalDisabled('customJs action');
+                    break;
+                }
                 try {
                     const evalFunction = new Function('message', 'result', config.code);
                     const customResult = evalFunction(message, { ...result });
@@ -2813,10 +2996,26 @@ class EventFlowSystem {
 						duration: config.duration || 5000,
 						clearFirst: !!config.clearFirst,
 						messageData: {
+							// Core aliases for backward compatibility
 							username: message.chatname || message.displayname || '',
 							message: message.chatmessage || '',
-							source: message.type || '',
-							donation: message.hasDonation ? (message.donationAmount || message.donation || 'yes') : ''
+							source: (message.type || '').charAt(0).toUpperCase() + (message.type || '').slice(1),
+							donation: message.hasDonation || '',
+							// Extended fields
+							chatname: message.chatname || '',
+							displayname: message.displayname || '',
+							chatmessage: message.chatmessage || '',
+							type: message.type || '',
+							hasdonation: message.hasDonation || '',
+							donationamount: message.donationAmount || '',
+							event: message.event || '',
+							membership: message.membership || '',
+							subtitle: message.subtitle || '',
+							userid: message.userid || '',
+							chatimg: message.chatimg || '',
+							contentimg: message.contentimg || '',
+							rewardtitle: message.rewardTitle || '',
+							meta: message.meta || ''
 						}
 					};
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
@@ -3118,6 +3317,8 @@ class EventFlowSystem {
                 let ttsText = config.text || '';
                 if (config.useMessageText && message.chatmessage) {
                     ttsText = message.chatmessage;
+                } else {
+                    ttsText = this.replaceTemplateVars(ttsText, message);
                 }
                 if (ttsText && this.sendTargetP2P) {
                     this.sendTargetP2P({

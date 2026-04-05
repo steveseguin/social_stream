@@ -99,7 +99,7 @@
 				} else if (hasDonation>1){
 					hasDonation = hasDonation +" gifts";
 				} else {
-					hasDonation = false;
+					hasDonation = "";
 				}
 			}
 		}

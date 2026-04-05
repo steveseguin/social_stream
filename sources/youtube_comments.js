@@ -291,7 +291,9 @@ function toDataURL(url, callback) {
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("getSource" == request){sendResponse("youtube");	return;	}
+				// This helper is not a routeable chat source. Do not answer getSource here
+				// or it can override sources/youtube.js and break targeted sendChat routing.
+				if ("getSource" == request){ return; }
 				if ("focusChat" == request){
 					document.querySelector("div#input").focus();
 					sendResponse(true);

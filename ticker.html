@@ -395,6 +395,7 @@
 	if (urlParams.has("speed")){
 		speed = parseFloat(urlParams.get("speed")) || 1;
 	}
+	var useTimeBasedSpeed = ((urlParams.get("speedmode") || "").toLowerCase() === "time");
 
 	function getBooleanParam(name){
 		if (!urlParams.has(name)){return false;}
@@ -522,17 +523,40 @@
 			tickerWidth = document.querySelector('.ticker-container').clientWidth || 0;
 		}
 		let position = 0;
+		let lastTimestamp = null;
+		const pixelsPerSecond = speed * 60;
 
-		function scroll() {
-			position -= speed;
-			if (position <= -tickerWidth) {
+		function scroll(timestamp) {
+			if (useTimeBasedSpeed){
+				if (lastTimestamp === null){
+					lastTimestamp = timestamp;
+				}
+				let deltaSeconds = (timestamp - lastTimestamp) / 1000;
+				lastTimestamp = timestamp;
+				if (!isFinite(deltaSeconds) || deltaSeconds < 0){
+					deltaSeconds = 0;
+				}
+				deltaSeconds = Math.min(deltaSeconds, 0.1);
+				position -= pixelsPerSecond * deltaSeconds;
+			} else {
+				position -= speed;
+			}
+			if (tickerWidth > 0){
+				while (position <= -tickerWidth){
+					position += tickerWidth;
+				}
+			} else {
 				position = 0;
 			}
 			ticker.style.transform = `translateX(${position}px)`;
 			scrollAnimationFrame = requestAnimationFrame(scroll);
 		}
 
-		scroll();
+		if (useTimeBasedSpeed){
+			scrollAnimationFrame = requestAnimationFrame(scroll);
+		} else {
+			scroll();
+		}
 	}
 
 	function setupScrollMode(entries){

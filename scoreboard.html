@@ -307,6 +307,16 @@
 	})(window);
 
 	var urlParams = new URLSearchParams(window.location.search);
+	function normalizeColorParam(value) {
+		if (typeof value !== "string") return null;
+		var trimmed = value.trim();
+		if (!trimmed) return null;
+		if (/^[0-9a-fA-F]{3,8}$/.test(trimmed)) {
+			return "#" + trimmed;
+		}
+		return trimmed;
+	}
+	var pageBgParam = normalizeColorParam(urlParams.get("bgcolor") || urlParams.get("pagebg") || urlParams.get("pagebackground") || urlParams.get("dockbg"));
 	var iframe = null;
 	var roomID = "test";
 	var darkmode = null;
@@ -521,6 +531,9 @@
 
 	if (urlParams.has("transparent")){
 		document.documentElement.style.setProperty("--background-color", "#0000", "important");
+	}
+	if (pageBgParam) {
+		document.documentElement.style.setProperty("--background-color", pageBgParam, "important");
 	}
 	
 	if (urlParams.has("nooutline")){

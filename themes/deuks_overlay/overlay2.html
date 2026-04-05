@@ -139,6 +139,11 @@
             max-height: 1.5em;
             vertical-align: middle; /* Align emotes with text */
          }
+
+        .message-container.fading {
+            opacity: 0;
+            transition: opacity 1.5s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -153,6 +158,11 @@
 	const roomID = urlParams.get("session") || "7RUWtGBfz2";
 	const password = "false";
 	const featuredMode = false;
+
+	// showtime: if set via URL, override default. Otherwise keep current default (0 = no auto-hiding)
+	// Use showtime=30000 to auto-hide messages after 30 seconds
+	var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 0;
+	const messageTimestamps = new Map();
 
 	// Function to apply overlay size based on URL parameter
 	function applyOverlaySize() {
@@ -194,6 +204,27 @@
 		autoScroll();
 	});
 	observer.observe(chatContainer, { childList: true, subtree: true });
+
+	// Check for message aging and apply fading (only if showtime > 0)
+	setInterval(() => {
+		if (showtime <= 0) return;
+		const now = Date.now();
+		const messages = Array.from(chatContainer.children).filter(
+			child => child.classList.contains('message-container')
+		);
+
+		messages.forEach(message => {
+			const timestamp = messageTimestamps.get(message.id);
+			if (timestamp) {
+				const age = now - timestamp;
+
+				// After showtime ms, start fading (showtime=0 disables auto-hiding)
+				if (age > showtime && !message.classList.contains('fading')) {
+					message.classList.add('fading');
+				}
+			}
+		});
+	}, 1000);
 
 	function addEventToOverlay(data) {
 		const eventDiv = document.createElement('div');
@@ -238,7 +269,12 @@
 			// Create a new message container
 			const messageContainer = document.createElement('div');
 			messageContainer.classList.add('message-container');
-			
+
+			// Generate unique ID and track timestamp for aging
+			const messageId = data.mid || 'msg-' + Date.now();
+			messageContainer.id = messageId;
+			messageTimestamps.set(messageId, Date.now());
+
 			const messageDiv = document.createElement('div');
 			messageDiv.classList.add('message');
 

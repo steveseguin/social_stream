@@ -50,7 +50,12 @@
 	params += "&scale=0.4";
 	params += "&fadein&smooth&emoji&color";
 	params += "&twolines";
-	
+
+	// Pass showtime through to dock.html if provided
+	if (urlParams.has("showtime")){
+		params += "&showtime=" + urlParams.get("showtime");
+	}
+
 	if (urlParams.has("session")){
 		getById("iframeOverlay").src = `../../dock.html?session=${urlParams.get("session")}${params}`;
 	}

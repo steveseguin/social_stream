@@ -107,9 +107,6 @@ class MessageStoreDB {
             expiresAt: now + (this.daysToKeep * MS_PER_DAY)
         };
         
-        // Log what we're storing
-        console.log("Storing message with userid:", messageData.userid, "chatname:", messageData.chatname, "type:", messageData.type);
-
         return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readwrite');
             const store = tx.objectStore(this.storeName);
@@ -130,7 +127,6 @@ class MessageStoreDB {
                         exists: true,
                         lastActivity: messageData.timestamp
                     });
-                    console.log("Cached user as existing:", cacheKey);
                 }
                 
                 resolve(request.result); 
@@ -386,12 +382,81 @@ class MessageStoreDB {
         setInterval(cleanup, MS_PER_DAY);
     }
 
+    async getMessagesBefore(beforeTimestamp, limit = 50, beforeId = null) {
+        if (settings?.disableDB) return [];
+
+        let normalizedBeforeTimestamp;
+        if (beforeTimestamp === null || beforeTimestamp === undefined || beforeTimestamp === "") {
+            normalizedBeforeTimestamp = Date.now();
+        } else {
+            normalizedBeforeTimestamp = Math.trunc(Number(beforeTimestamp));
+            if (!Number.isFinite(normalizedBeforeTimestamp)) {
+                normalizedBeforeTimestamp = Date.now();
+            }
+        }
+
+        let normalizedLimit = parseInt(limit, 10);
+        if (!Number.isFinite(normalizedLimit) || normalizedLimit <= 0) {
+            normalizedLimit = 50;
+        }
+
+        let normalizedBeforeId = null;
+        if (beforeId !== null && beforeId !== undefined && beforeId !== "") {
+            const parsedBeforeId = parseInt(beforeId, 10);
+            if (Number.isFinite(parsedBeforeId)) {
+                normalizedBeforeId = parsedBeforeId;
+            }
+        }
+
+        const db = await this.ensureDB();
+        return new Promise((resolve) => {
+            const tx = db.transaction(this.storeName, 'readonly');
+            const index = tx.objectStore(this.storeName).index('timestamp');
+            const messages = [];
+            const now = Date.now();
+
+            const cursorRequest = index.openCursor(IDBKeyRange.upperBound(normalizedBeforeTimestamp), 'prev');
+            cursorRequest.onsuccess = event => {
+                const cursor = event.target.result;
+                if (cursor && messages.length < normalizedLimit) {
+                    const msg = cursor.value;
+                    const msgTimestamp = Math.trunc(Number(msg.timestamp));
+                    const msgId = parseInt(msg.id, 10);
+                    if (
+                        normalizedBeforeId !== null &&
+                        Number.isFinite(msgTimestamp) &&
+                        msgTimestamp === normalizedBeforeTimestamp &&
+                        Number.isFinite(msgId) &&
+                        msgId >= normalizedBeforeId
+                    ) {
+                        cursor.continue();
+                        return;
+                    }
+                    if (!msg.expiresAt || msg.expiresAt > now) {
+                        messages.push(msg);
+                    }
+                    cursor.continue();
+                } else {
+                    resolve(messages);
+                }
+            };
+
+            cursorRequest.onerror = () => resolve([]);
+        });
+    }
+
     async clearCache() {
         this.cache.recent = [];
         this.cache.userMessages.clear();
         this.cache.lastUpdate = 0;
     }
 }
+
+// Compatibility function for getMessagesBeforeDB
+async function getMessagesBeforeDB(beforeTimestamp, limit, beforeId) {
+    return await messageStoreDB.getMessagesBefore(beforeTimestamp, limit, beforeId);
+}
+
 // Compatibility function for getLastMessagesDB
 async function getLastMessagesDB(limit = 10) {
     return await messageStoreDB.getRecentMessages(limit);

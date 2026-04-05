@@ -7,11 +7,16 @@ class SpotifyIntegration {
 		this.tokenExpiry = null;
 		this.currentTrack = null;
 		this.pollingInterval = null;
-       this.settings = null;
-       this.callbacks = {
-           onNewTrack: null,
-           onCommandResponse: null
-       };
+		this.settings = null;
+		this.callbacks = {
+			onNewTrack: null,
+			onCommandResponse: null
+		};
+		this.authWarning = null;
+		this.lastPolicyWarning = {
+			key: null,
+			timestamp: 0
+		};
 
 		this.browserRedirectUri = 'https://socialstream.ninja/spotify.html';
 		this.electronRedirectUri = 'http://127.0.0.1:8888/callback';
@@ -150,6 +155,99 @@ class SpotifyIntegration {
         return `https://accounts.spotify.com/authorize?client_id=${this.settings.spotifyClientId.textsetting}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(' '))}&state=${state}`;
     }
 
+    getDevelopmentModePolicyGuidance() {
+        return 'Spotify Development Mode changes (new apps from February 11, 2026; existing apps from March 9, 2026) require an active Premium subscription for the app owner, allow one Development Mode Client ID per developer, and limit each client to up to five authorized users. This playback-based integration is effectively Premium-only.';
+    }
+
+    setAuthWarning(warning) {
+        this.authWarning = warning || null;
+    }
+
+    consumeAuthWarning() {
+        const warning = this.authWarning;
+        this.authWarning = null;
+        return warning;
+    }
+
+    reportPolicyRestriction(message, errorCode = 'spotify_policy_restriction') {
+        const cleanMessage = (message || '').trim();
+        if (!cleanMessage) {
+            return;
+        }
+
+        const now = Date.now();
+        const warningKey = `${errorCode}:${cleanMessage}`;
+        if (
+            this.lastPolicyWarning.key === warningKey &&
+            (now - this.lastPolicyWarning.timestamp) < 120000
+        ) {
+            return;
+        }
+
+        this.lastPolicyWarning = {
+            key: warningKey,
+            timestamp: now
+        };
+
+        console.warn('[Spotify Policy Restriction]', cleanMessage);
+
+        if (this.callbacks.onTrackUpdate) {
+            this.callbacks.onTrackUpdate({
+                track: this.currentTrack || null,
+                status: 'error',
+                isPlaying: false,
+                progressMs: 0,
+                durationMs: 0,
+                receivedAt: now,
+                errorCode,
+                message: cleanMessage
+            });
+        }
+
+        if (this.callbacks.onPolicyIssue) {
+            try {
+                this.callbacks.onPolicyIssue({
+                    message: cleanMessage,
+                    errorCode,
+                    timestamp: now
+                });
+            } catch (error) {
+                console.warn('Spotify policy callback error:', error);
+            }
+        }
+    }
+
+    async checkDevelopmentModeEligibility() {
+        if (!this.accessToken) {
+            return null;
+        }
+
+        try {
+            const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (response.status === 401) {
+                await this.refreshAccessToken();
+                return null;
+            }
+
+            if (response.status === 403) {
+                return this.parsePlaybackError(
+                    response,
+                    'Spotify denied playback access for this account.'
+                );
+            }
+
+            return null;
+        } catch (error) {
+            console.warn('Spotify eligibility check failed:', error);
+            return null;
+        }
+    }
+
 	notifySpotifyAuthResult(result) {
 		if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) {
 			return;
@@ -198,57 +296,184 @@ class SpotifyIntegration {
 				throw new Error(`Spotify authorization failed: ${errorParam}`);
 			}
 
-			if (!code) {
-				throw new Error('Spotify authorization did not complete.');
-			}
+				if (!code) {
+					throw new Error('Spotify authorization did not complete.');
+				}
 
-			const success = await this.handleAuthCallback(code, returnedState, redirectUri);
-			if (!success) {
-				throw new Error('Failed to process Spotify authorization response.');
-			}
+				const success = await this.handleAuthCallback(code, returnedState, redirectUri);
+				if (!success) {
+					throw new Error('Failed to process Spotify authorization response.');
+				}
 
-			this.notifySpotifyAuthResult({ success: true, message: 'Connected to Spotify!' });
-		} catch (error) {
-			const message = error?.message || error?.toString() || 'Spotify authorization failed.';
-			console.error('Chrome identity Spotify auth error:', message);
-			this.notifySpotifyAuthResult({ success: false, error: message });
-		} finally {
-			this.identityAuthInFlight = false;
+				const warning = this.consumeAuthWarning();
+				this.notifySpotifyAuthResult({
+					success: true,
+					warning,
+					message: warning
+						? `Connected to Spotify, but playback access is limited: ${warning}`
+						: 'Connected to Spotify!'
+				});
+				} catch (error) {
+					const normalized = this.normalizeOAuthError(error, {
+						runtime: 'extension',
+						redirectUriAttempted: redirectUri
+					});
+					console.error('Chrome identity Spotify auth error:', normalized.errorCode, normalized.error);
+					this.notifySpotifyAuthResult({
+						success: false,
+						errorCode: normalized.errorCode,
+						error: normalized.error,
+						message: normalized.message,
+						redirectUriAttempted: normalized.redirectUriAttempted,
+						expectedRedirectUris: normalized.expectedRedirectUris
+					});
+			} finally {
+				this.identityAuthInFlight = false;
+			}
 		}
-	}
 
-    normalizeLoopbackRedirectUri(uri) {
-        if (!uri || typeof uri !== 'string') {
-            return uri;
-        }
+	    normalizeLoopbackRedirectUri(uri) {
+	        if (!uri || typeof uri !== 'string') {
+	            return uri;
+	        }
 
-        try {
-            const parsed = new URL(uri);
-            if ((parsed.hostname === 'localhost' || parsed.hostname === '[::1]' || parsed.hostname === '::1') && parsed.port === '8888') {
-                parsed.hostname = '127.0.0.1';
-                return parsed.toString();
-            }
-        } catch (_) {
-            // Fall back to simple string replacement
-        }
+	        try {
+	            const parsed = new URL(uri);
+	            if (parsed.hostname === 'localhost' || parsed.hostname === '[::1]' || parsed.hostname === '::1') {
+	                parsed.hostname = '127.0.0.1';
+	                return parsed.toString();
+	            }
+	        } catch (_) {
+	            // Fall back to simple string replacement
+	        }
 
-        return uri.replace('http://localhost:8888', 'http://127.0.0.1:8888')
-                  .replace('https://localhost:8888', 'http://127.0.0.1:8888');
-    }
+	        return uri
+	            .replace('http://localhost:', 'http://127.0.0.1:')
+	            .replace('https://localhost:', 'http://127.0.0.1:');
+	    }
 
-    describeElectronOAuthError(error) {
-        const message = (error?.message || '').toLowerCase();
-        if (message.includes('eaddrinuse')) {
-            return 'Spotify login is already running. Close the existing browser window or wait a few seconds, then try again or paste the callback URL below.';
-        }
-        if (message.includes('timeout')) {
-            return 'Spotify did not finish signing in within five minutes. If the browser is still waiting, finish the login and paste the callback URL into Social Stream.';
-        }
-        if (message.includes('auth window closed')) {
-            return 'The Spotify login window closed before we received a response. Re-run the login or paste the callback URL below after finishing in your browser.';
-        }
-        return 'Spotify could not finish connecting automatically. Authorize the app in your regular browser and paste the callback URL into Social Stream Ninja.';
-    }
+	    getExpectedElectronRedirectUris(redirectUriAttempted = null) {
+	        const loopback = [
+	            'http://127.0.0.1:8888/callback',
+	            'http://127.0.0.1:8080/callback',
+	            'http://127.0.0.1:8181/callback'
+	        ];
+	        const attempted = this.normalizeLoopbackRedirectUri(redirectUriAttempted);
+	        const out = [];
+	        if (attempted) {
+	            out.push(attempted);
+	        }
+	        loopback.forEach((uri) => {
+	            if (!out.includes(uri)) {
+	                out.push(uri);
+	            }
+	        });
+	        return out;
+	    }
+
+	    createOAuthError(code, message, details = {}) {
+	        const error = new Error(message || 'Spotify OAuth failed');
+	        if (code) {
+	            error.code = code;
+	        }
+	        if (details && typeof details === 'object') {
+	            Object.assign(error, details);
+	        }
+	        return error;
+	    }
+
+	    normalizeOAuthError(error, context = {}) {
+	        const rawError = String(
+	            error?.error ||
+	            error?.message ||
+	            error?.toString?.() ||
+	            'Spotify authorization failed.'
+	        );
+
+	        let errorCode = String(error?.errorCode || error?.code || context.errorCode || '').toUpperCase();
+	        if (!errorCode) {
+	            const message = rawError.toLowerCase();
+	            if (
+	                message.includes('eaddrinuse') ||
+	                message.includes('address already in use') ||
+	                message.includes('port unavailable') ||
+	                message.includes('port_in_use') ||
+	                (message.includes('unable to bind') && message.includes('callback port'))
+	            ) {
+	                errorCode = 'PORT_IN_USE';
+	            } else if (message.includes('state mismatch')) {
+	                errorCode = 'STATE_MISMATCH';
+	            } else if ((message.includes('redirect') && message.includes('mismatch')) || message.includes('unexpected callback uri')) {
+	                errorCode = 'REDIRECT_MISMATCH';
+	            } else if (message.includes('timeout')) {
+	                errorCode = 'TIMEOUT';
+	            } else if (message.includes('closed by user') || message.includes('auth window closed') || message.includes('interrupted')) {
+	                errorCode = 'USER_CLOSED';
+	            } else {
+	                const explicitMatch = rawError.match(/\b(PORT_IN_USE|STATE_MISMATCH|REDIRECT_MISMATCH|TIMEOUT|USER_CLOSED)\b/i);
+	                errorCode = explicitMatch ? explicitMatch[1].toUpperCase() : 'OAUTH_ERROR';
+	            }
+	        }
+
+	        const runtime = context.runtime || (this.hasElectronBridge() ? 'electron' : 'extension');
+	        const attemptedRedirectUri = this.normalizeLoopbackRedirectUri(
+	            context.redirectUriAttempted ||
+	            error?.redirectUriAttempted ||
+	            error?.attemptedRedirectUri ||
+	            null
+	        );
+	        const expectedRedirectUris = Array.isArray(context.expectedRedirectUris) && context.expectedRedirectUris.length
+	            ? context.expectedRedirectUris
+	            : (Array.isArray(error?.expectedRedirectUris) && error.expectedRedirectUris.length
+	                ? error.expectedRedirectUris
+	                : (runtime === 'electron' ? this.getExpectedElectronRedirectUris(attemptedRedirectUri) : []));
+
+	        let message;
+	        switch (errorCode) {
+	            case 'PORT_IN_USE':
+	                message = 'Spotify could not bind a local callback port. Close other app/browser sessions using Spotify OAuth and try again.';
+	                break;
+	            case 'STATE_MISMATCH':
+	                message = 'Spotify callback state check failed. Re-run Spotify connect from the popup and use only the latest auth window/tab.';
+	                break;
+	            case 'REDIRECT_MISMATCH':
+	                message = 'Spotify redirected to an unexpected callback URI. Verify your Spotify app redirect URI list matches this runtime mode.';
+	                break;
+	            case 'TIMEOUT':
+	                message = 'Spotify login timed out before callback was received. Re-run connect and complete consent promptly.';
+	                break;
+	            case 'USER_CLOSED':
+	                message = 'Spotify login window was closed before authorization completed.';
+	                break;
+	            default:
+	                message = 'Spotify could not finish connecting automatically.';
+	                break;
+	        }
+
+	        if (attemptedRedirectUri) {
+	            message += ` Attempted redirect: ${attemptedRedirectUri}.`;
+	        }
+
+	        if (runtime === 'electron') {
+	            if (expectedRedirectUris.length) {
+	                message += ` Expected desktop redirect URIs include: ${expectedRedirectUris.join(', ')}.`;
+	            }
+	        } else if (runtime === 'extension') {
+	            message += ' Extension mode expects the chromiumapp callback URI generated by chrome.identity.';
+	        }
+
+	        return {
+	            errorCode,
+	            error: rawError,
+	            message,
+	            redirectUriAttempted: attemptedRedirectUri,
+	            expectedRedirectUris
+	        };
+	    }
+
+	    describeElectronOAuthError(error, context = {}) {
+	        return this.normalizeOAuthError(error, { ...context, runtime: 'electron' }).message;
+	    }
 
     async invokeElectronOAuth({ authUrl, redirectUri, state }) {
         const electronIpc = this.getElectronIpc();
@@ -288,12 +513,12 @@ class SpotifyIntegration {
             throw error;
         }
 
-        electronPromise
-            .then((result) => this.processElectronOAuthResult(result, {
-                state,
-                redirectUri: normalizedRedirect
-            }))
-            .catch((error) => this.handleElectronOAuthError(error, { state, scopes }));
+	        electronPromise
+	            .then((result) => this.processElectronOAuthResult(result, {
+	                state,
+	                redirectUri: normalizedRedirect
+	            }))
+	            .catch((error) => this.handleElectronOAuthError(error, { state, scopes, redirectUri: normalizedRedirect }));
 
         this.pendingElectronOAuth = electronPromise;
     }
@@ -305,34 +530,61 @@ class SpotifyIntegration {
 
         if (result.code) {
             try {
-                const success = await this.handleAuthCallback(
-                    result.code,
-                    result.state || state,
-                    this.normalizeLoopbackRedirectUri(result.redirectUri || redirectUri)
-                );
+	                const success = await this.handleAuthCallback(
+	                    result.code,
+	                    result.state || state,
+	                    this.normalizeLoopbackRedirectUri(result.redirectUri || redirectUri)
+	                );
 
-                if (success) {
-                    this.notifySpotifyAuthResult({ success: true, message: 'Connected to Spotify!' });
-                } else {
-                    this.notifySpotifyAuthResult({
-                        success: false,
-                        error: 'Failed to process Spotify authorization response.'
-                    });
+	                if (success) {
+                        const warning = this.consumeAuthWarning();
+	                    this.notifySpotifyAuthResult({
+                            success: true,
+                            warning,
+                            message: warning
+                                ? `Connected to Spotify, but playback access is limited: ${warning}`
+                                : 'Connected to Spotify!'
+                        });
+	                } else {
+	                    this.notifySpotifyAuthResult({
+	                        success: false,
+	                        error: 'Failed to process Spotify authorization response.'
+	                    });
                 }
-            } catch (error) {
-                console.error('Spotify OAuth callback processing failed:', error);
-                this.notifySpotifyAuthResult({
-                    success: false,
-                    error: error?.message || 'Spotify authorization failed while processing the callback.'
-                });
-            }
-            return;
-        }
+	            } catch (error) {
+	                console.error('Spotify OAuth callback processing failed:', error);
+	                const normalized = this.normalizeOAuthError(error, {
+	                    runtime: 'electron',
+	                    redirectUriAttempted: result?.redirectUri || redirectUri
+	                });
+	                this.notifySpotifyAuthResult({
+	                    success: false,
+	                    errorCode: normalized.errorCode,
+	                    error: normalized.error,
+	                    message: normalized.message,
+	                    redirectUriAttempted: normalized.redirectUriAttempted,
+	                    expectedRedirectUris: normalized.expectedRedirectUris
+	                });
+	            }
+	            return;
+	        }
 
-        if (result.error) {
-            this.notifySpotifyAuthResult({ success: false, error: result.error });
-            return;
-        }
+	        if (result.error || result.errorCode) {
+	            const normalized = this.normalizeOAuthError(result, {
+	                runtime: 'electron',
+	                redirectUriAttempted: result?.redirectUriAttempted || result?.attemptedRedirectUri || redirectUri,
+	                expectedRedirectUris: result?.expectedRedirectUris
+	            });
+	            this.notifySpotifyAuthResult({
+	                success: false,
+	                errorCode: normalized.errorCode,
+	                error: normalized.error,
+	                message: normalized.message,
+	                redirectUriAttempted: normalized.redirectUriAttempted,
+	                expectedRedirectUris: normalized.expectedRedirectUris
+	            });
+	            return;
+	        }
 
         if (result.waitingForManualCallback || result.manualAuthUrl || result.waitingForCallback) {
             this.notifySpotifyAuthResult({
@@ -345,22 +597,31 @@ class SpotifyIntegration {
         }
     }
 
-    handleElectronOAuthError(error, { state, scopes }) {
-        console.error('Electron OAuth error:', error);
-        const manualAuthUrl = this.buildAuthUrl({
-            redirectUri: this.browserRedirectUri,
-            scopes,
-            state
-        });
+	    handleElectronOAuthError(error, { state, scopes, redirectUri }) {
+	        console.error('Electron OAuth error:', error);
+	        const normalized = this.normalizeOAuthError(error, {
+	            runtime: 'electron',
+	            redirectUriAttempted: redirectUri,
+	            expectedRedirectUris: error?.expectedRedirectUris
+	        });
+	        const manualAuthUrl = this.buildAuthUrl({
+	            redirectUri: this.browserRedirectUri,
+	            scopes,
+	            state
+	        });
+	        const offerManualCallback = normalized.errorCode !== 'USER_CLOSED';
 
-        this.notifySpotifyAuthResult({
-            success: false,
-            waitingForManualCallback: true,
-            manualAuthUrl,
-            error: error?.message || error?.toString(),
-            message: this.describeElectronOAuthError(error)
-        });
-    }
+	        this.notifySpotifyAuthResult({
+	            success: false,
+	            waitingForManualCallback: offerManualCallback,
+	            manualAuthUrl: offerManualCallback ? manualAuthUrl : undefined,
+	            errorCode: normalized.errorCode,
+	            error: normalized.error,
+	            message: normalized.message,
+	            redirectUriAttempted: normalized.redirectUriAttempted,
+	            expectedRedirectUris: normalized.expectedRedirectUris
+	        });
+	    }
 
     async refreshAccessToken() {
         if (!this.refreshToken || !this.settings.spotifyClientId?.textsetting || !this.settings.spotifyClientSecret?.textsetting) {
@@ -450,7 +711,7 @@ class SpotifyIntegration {
         }
     }
 
-    async getCurrentTrack() {
+    async getCurrentTrack(isRetry = false) {
         this.managedQueueEnabled = !!(this.settings?.spotifyManagedQueue?.setting ?? this.settings?.spotifyManagedQueue);
         if (!this.accessToken) {
             return null;
@@ -481,6 +742,12 @@ class SpotifyIntegration {
                 return null;
             }
 
+            if (response.status === 401 && !isRetry) {
+                await this.refreshAccessToken();
+                // After refresh, retry once to get the track immediately
+                return this.getCurrentTrack(true);
+            }
+
             if (response.status === 204) {
                 this.currentTrack = null;
                 if (this.callbacks.onTrackUpdate) {
@@ -496,8 +763,12 @@ class SpotifyIntegration {
                 return null;
             }
 
-            if (response.status === 401) {
-                await this.refreshAccessToken();
+            if (response.status === 403) {
+                const message = await this.parsePlaybackError(
+                    response,
+                    'Spotify blocked playback status for this account.'
+                );
+                this.reportPolicyRestriction(message, 'spotify_playback_403');
                 return null;
             }
 
@@ -562,6 +833,54 @@ class SpotifyIntegration {
         return null;
     }
 
+    /**
+     * Parse Spotify API error responses into user-friendly messages
+     */
+    async parsePlaybackError(response, fallback) {
+        let payload = null;
+        try { payload = await response.json(); } catch {}
+        const msg = payload?.error?.message || '';
+        const lower = msg.toLowerCase();
+
+        if (response.status === 403) {
+            const policyGuidance = this.getDevelopmentModePolicyGuidance();
+
+            if (lower.includes('premium')) {
+                return `Spotify Premium is required for this Spotify Development Mode integration. ${policyGuidance}`;
+            }
+            if (
+                lower.includes('development mode') ||
+                lower.includes('authorized user') ||
+                lower.includes('not authorized') ||
+                lower.includes('allowlist') ||
+                lower.includes('whitelist') ||
+                lower.includes('quota mode')
+            ) {
+                return `This Spotify account is not allowed for this app's Development Mode. ${policyGuidance}`;
+            }
+            if (lower.includes('scope')) {
+                return "Spotify permissions issue. Try disconnecting and reconnecting Spotify.";
+            }
+            if (lower.includes('restricted')) {
+                return "This device doesn't support remote control.";
+            }
+            return `Spotify denied playback access for this app/account. ${policyGuidance}`;
+        }
+
+        if (response.status === 429) {
+            const retry = response.headers.get('Retry-After');
+            return retry
+                ? `Spotify rate limited. Try again in ${retry}s.`
+                : "Spotify rate limited. Try again shortly.";
+        }
+
+        if (response.status >= 500) {
+            return "Spotify is having issues. Try again later.";
+        }
+
+        return fallback;
+    }
+
     // Playback control methods
     async skip() {
         if (!this.accessToken) {
@@ -584,7 +903,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to skip track" };
+                const message = await this.parsePlaybackError(response, "Failed to skip track");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify skip error:', error);
@@ -613,7 +933,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to go to previous track" };
+                const message = await this.parsePlaybackError(response, "Failed to go to previous track");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify previous error:', error);
@@ -642,7 +963,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to pause playback" };
+                const message = await this.parsePlaybackError(response, "Failed to pause playback");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify pause error:', error);
@@ -671,7 +993,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to resume playback" };
+                const message = await this.parsePlaybackError(response, "Failed to resume playback");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify resume error:', error);
@@ -702,7 +1025,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to set volume" };
+                const message = await this.parsePlaybackError(response, "Failed to set volume");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify volume error:', error);
@@ -789,7 +1113,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to set shuffle" };
+                const message = await this.parsePlaybackError(response, "Failed to set shuffle");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify shuffle error:', error);
@@ -826,7 +1151,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to set repeat mode" };
+                const message = await this.parsePlaybackError(response, "Failed to set repeat mode");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify repeat error:', error);
@@ -908,7 +1234,8 @@ class SpotifyIntegration {
             } else if (queueResponse.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to add track to queue" };
+                const message = await this.parsePlaybackError(queueResponse, "Failed to add track to queue");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify queue error:', error);
@@ -1084,7 +1411,8 @@ class SpotifyIntegration {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 console.warn(`[Spotify] Failed to push to queue: ${queueResponse.status}`);
-                return { success: false, message: "Failed to add to Spotify queue" };
+                const message = await this.parsePlaybackError(queueResponse, "Failed to add to Spotify queue");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('[Spotify] Error pushing to queue:', error);
@@ -1387,11 +1715,13 @@ class SpotifyIntegration {
         return null;
     }
 
-    // OAuth flow methods for initial setup
+	// OAuth flow methods for initial setup
 	async startOAuthFlow() {
 		if (!this.settings.spotifyClientId?.textsetting) {
 			throw new Error("Spotify Client ID not configured");
 		}
+
+        this.setAuthWarning(null);
 
         // Ensure tokens are loaded from settings
         if (!this.accessToken && this.settings.spotifyAccessToken) {
@@ -1409,12 +1739,32 @@ class SpotifyIntegration {
                 console.log("Token expired, refreshing...");
                 await this.refreshAccessToken();
             }
+            const eligibilityWarning = await this.checkDevelopmentModeEligibility();
+            this.setAuthWarning(eligibilityWarning);
             // Return success with indicator that we're already connected
-            return { success: true, alreadyConnected: true };
+            return {
+                success: true,
+                alreadyConnected: true,
+                warning: eligibilityWarning || undefined,
+                message: eligibilityWarning || undefined
+            };
         }
 
+		const generateSecureAuthState = () => {
+			try {
+				if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+					const bytes = new Uint8Array(16);
+					crypto.getRandomValues(bytes);
+					return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+				}
+			} catch (stateError) {
+				console.warn('Failed to generate secure Spotify OAuth state:', stateError);
+			}
+			return `${Date.now().toString(36)}${Math.random().toString(36).substring(2, 12)}`;
+		};
+
 		const scopes = ['user-read-currently-playing', 'user-read-playback-state', 'user-modify-playback-state'];
-		const state = Math.random().toString(36).substring(7); // Generate random state for security
+		const state = generateSecureAuthState();
 
 		const persistAuthState = () => {
 			if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
@@ -1482,50 +1832,67 @@ class SpotifyIntegration {
 		            authUrl = this.buildAuthUrl({ redirectUri: preferredRedirectUri, scopes, state });
                 }
                 
-                try {
-                    this.launchElectronOAuthFlow({
-                        authUrl,
-                        redirectUri: preferredRedirectUri,
-                        state,
-                        scopes
-                    });
-                } catch (electronError) {
-                    console.error('Electron OAuth error:', electronError);
-                    const manualAuthUrl = this.buildAuthUrl({ redirectUri: this.browserRedirectUri, scopes, state });
-                    return {
-                        success: false,
-                        waitingForManualCallback: true,
-                        message: this.describeElectronOAuthError(electronError),
-                        error: electronError?.message,
-                        manualAuthUrl
-                    };
-                }
+	                try {
+	                    this.launchElectronOAuthFlow({
+	                        authUrl,
+	                        redirectUri: preferredRedirectUri,
+	                        state,
+	                        scopes
+	                    });
+	                } catch (electronError) {
+	                    console.error('Electron OAuth error:', electronError);
+	                    const normalized = this.normalizeOAuthError(electronError, {
+	                        runtime: 'electron',
+	                        redirectUriAttempted: preferredRedirectUri
+	                    });
+	                    const manualAuthUrl = this.buildAuthUrl({ redirectUri: this.browserRedirectUri, scopes, state });
+	                    return {
+	                        success: false,
+	                        waitingForManualCallback: true,
+	                        message: normalized.message,
+	                        errorCode: normalized.errorCode,
+	                        error: normalized.error,
+	                        redirectUriAttempted: normalized.redirectUriAttempted,
+	                        expectedRedirectUris: normalized.expectedRedirectUris,
+	                        manualAuthUrl
+	                    };
+	                }
 
-                return {
-                    success: false,
-                    waitingForCallback: true,
-                    message: 'Please finish the Spotify login in the newly opened browser window.'
-                };
-			} else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
-				chrome.tabs.create({ url: authUrl });
-				fallbackStatus = {
-					success: false,
-		            waitingForManualCallback: true,
-		            message: 'After authorizing Spotify in the newly opened tab, copy the full callback URL and paste it back into Social Stream Ninja to finish connecting.'
-		        };
-			} else {
-				window.open(authUrl, 'spotify-auth', 'width=500,height=700');
-				fallbackStatus = { success: false, waitingForCallback: true };
-		    }
+	                return {
+	                    success: false,
+	                    waitingForCallback: true,
+	                    message: 'Please finish the Spotify login in the newly opened browser window.',
+	                    redirectUriAttempted: preferredRedirectUri,
+	                    expectedRedirectUris: this.getExpectedElectronRedirectUris(preferredRedirectUri)
+	                };
+				} else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+					chrome.tabs.create({ url: authUrl });
+					fallbackStatus = {
+						success: false,
+			            waitingForManualCallback: true,
+			            message: 'After authorizing Spotify in the newly opened tab, copy the full callback URL and paste it back into Social Stream Ninja to finish connecting.',
+			            redirectUriAttempted: this.browserRedirectUri
+			        };
+				} else {
+					window.open(authUrl, 'spotify-auth', 'width=500,height=700');
+					fallbackStatus = {
+						success: false,
+						waitingForCallback: true,
+						redirectUriAttempted: preferredRedirectUri
+					};
+			    }
 
 		    return fallbackStatus;
 		}
     }
 
     // Handle OAuth callback
-    async handleAuthCallback(code, state, redirectUriOverride = null) {
-        // Check state from memory or storage
-        let validState = false;
+	    async handleAuthCallback(code, state, redirectUriOverride = null) {
+            this.setAuthWarning(null);
+
+	        // Check state from memory or storage
+	        let validState = false;
+            let usedStoredState = false;
         
         if (state === this.pendingAuthState) {
             validState = true;
@@ -1534,20 +1901,35 @@ class SpotifyIntegration {
             const stored = await chrome.storage.local.get(['spotifyAuthState']);
             if (stored.spotifyAuthState === state) {
                 validState = true;
-                // Clean up stored state
-                await chrome.storage.local.remove(['spotifyAuthState']);
+                usedStoredState = true;
             }
         }
         
-        if (!validState) {
-            console.error('State mismatch in OAuth callback');
-            return false;
-        }
+	        if (!validState) {
+	            console.error('State mismatch in OAuth callback');
+	            throw this.createOAuthError('STATE_MISMATCH', 'State mismatch in OAuth callback', {
+	                expectedState: this.pendingAuthState || null,
+	                receivedState: state || null,
+	                redirectUriAttempted: this.normalizeLoopbackRedirectUri(redirectUriOverride || this.getDefaultRedirectUri())
+	            });
+	        }
 
-        const redirectUri = this.normalizeLoopbackRedirectUri(redirectUriOverride || this.getDefaultRedirectUri());
-        await this.exchangeCodeForToken(code, redirectUri);
-        return true;
-    }
+	        const redirectUri = this.normalizeLoopbackRedirectUri(redirectUriOverride || this.getDefaultRedirectUri());
+	        await this.exchangeCodeForToken(code, redirectUri);
+            this.pendingAuthState = null;
+
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                try {
+                    await chrome.storage.local.remove(['spotifyAuthState']);
+                } catch (storageError) {
+                    if (usedStoredState) {
+                        console.warn('Failed to clear Spotify auth state after callback:', storageError);
+                    }
+                }
+            }
+
+	        return true;
+	}
 
     async exchangeCodeForToken(code, redirectUri) {
         const authString = btoa(`${this.settings.spotifyClientId.textsetting}:${this.settings.spotifyClientSecret.textsetting}`);
@@ -1564,9 +1946,25 @@ class SpotifyIntegration {
 
             const data = await response.json();
             
-            if (data.error) {
-                throw new Error(`Spotify token exchange failed: ${data.error} - ${data.error_description}`);
-            }
+	            if (data.error) {
+	                const details = {
+	                    spotifyError: data.error,
+	                    spotifyErrorDescription: data.error_description,
+	                    redirectUriAttempted: redirectUri
+	                };
+	                if (data.error === 'invalid_grant') {
+	                    throw this.createOAuthError(
+	                        'REDIRECT_MISMATCH',
+	                        `Spotify token exchange failed: ${data.error} - ${data.error_description || 'invalid_grant'}`,
+	                        details
+	                    );
+	                }
+	                throw this.createOAuthError(
+	                    'TOKEN_EXCHANGE_FAILED',
+	                    `Spotify token exchange failed: ${data.error} - ${data.error_description || 'unknown token exchange error'}`,
+	                    details
+	                );
+	            }
             
             if (data.access_token) {
                 this.accessToken = data.access_token;
@@ -1584,13 +1982,19 @@ class SpotifyIntegration {
                     console.log('Spotify tokens saved to settings successfully');
                 });
                 
-                console.log('Spotify tokens saved successfully');
-                if (this.settings?.spotifyEnabled) {
-                    this.startPolling();
-                }
-            } else {
-                throw new Error('No access token received from Spotify');
-            }
+	                console.log('Spotify tokens saved successfully');
+	                if (this.settings?.spotifyEnabled) {
+	                    this.startPolling();
+	                }
+
+                    const eligibilityWarning = await this.checkDevelopmentModeEligibility();
+                    this.setAuthWarning(eligibilityWarning);
+                    if (eligibilityWarning) {
+                        console.warn('Spotify post-auth eligibility warning:', eligibilityWarning);
+                    }
+	            } else {
+	                throw new Error('No access token received from Spotify');
+	            }
         } catch (error) {
             console.error('Token exchange error:', error);
             throw error;

@@ -4,7 +4,7 @@
     'use strict';
 
     // Discord webhook for form submissions (public - submissions go to private channel for review)
-    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1448484964961357935/9YPrpWrA4EHJZ0kjPAQfmT7brPKxYaJGXj0L3-wBG5kTYiSxuNg2Wk20QCh267KxhXDz';
+    const WEBHOOK_URL = 'https://freelance.vdo.workers.dev';
 
     // Fetch approved services from GitHub Gist (updated by Discord bot on approval)
     const GIST_ID = '3642a19e9ed4b16571906cdb2e216a45';

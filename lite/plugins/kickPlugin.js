@@ -25,6 +25,7 @@ const STORAGE_VERSION = 5;
 
 const DEFAULT_API_BASE = 'https://kick.com/api/v2';
 const DEFAULT_WS_BASE = 'wss://ws-us2.pusher.com';
+const BRIDGE_BASE_URL = 'https://kick-bridge.socialstream.ninja';
 const HISTORY_LIMIT = 400;
 const PUSHER_APP_KEY = '32cbd69e4b950bf97679';
 const CHANNEL_WHITESPACE_MESSAGE = 'Kick channel names cannot contain spaces. Enter the channel slug (e.g. "evarate").';
@@ -118,7 +119,7 @@ export class KickPlugin extends BasePlugin {
       ...options,
       id: 'kick',
       name: 'Kick',
-      description: 'Fetch Kick chat messages using the public API and relay them to your overlays.'
+      description: 'Connect to Kick chat directly and relay messages to your overlays.'
     });
 
     this.channelInput = null;
@@ -220,14 +221,9 @@ export class KickPlugin extends BasePlugin {
     });
     apiRow.append(apiLabel, apiInput);
 
-    const bridgeHelper = document.createElement('p');
-    bridgeHelper.className = 'field__hint';
-    const bridgeLink = document.createElement('a');
-    bridgeLink.href = '../../sources/websocket/kick.html';
-    bridgeLink.target = '_blank';
-    bridgeLink.rel = 'noopener noreferrer';
-    bridgeLink.textContent = 'Open Kick webhook manager';
-    bridgeHelper.append('Sign in with Kick and manage webhook subscriptions using the ', bridgeLink, ' page.');
+    const connectionHelper = document.createElement('p');
+    connectionHelper.className = 'field__hint';
+    connectionHelper.textContent = 'Chat uses Kick\'s WebSocket. Channel details resolve via the bridge lookup first, with direct API fallback if chatroom data is still unavailable.';
 
     const chatroomRow = document.createElement('label');
     chatroomRow.className = 'field';
@@ -288,7 +284,7 @@ export class KickPlugin extends BasePlugin {
       storage.set(ADVANCED_VISIBLE_KEY, nextVisible ? '1' : '0');
     });
 
-    container.append(channelRow, bridgeHelper, advancedToggle, advancedGroup);
+    container.append(channelRow, connectionHelper, advancedToggle, advancedGroup);
     // Advanced inputs live inside the group so append after we set up toggle
     this.channelInput = channelInput;
     this.apiBaseInput = apiInput;
@@ -703,8 +699,8 @@ export class KickPlugin extends BasePlugin {
         this.detailsLabel.textContent = `Chatroom ID: ${chatroomDisplay}${sourceLabel}`;
       } else {
         this.detailsLabel.hidden = false;
-        const bridgeStatus = this.bridgeStatus || 'disconnected';
-        this.detailsLabel.textContent = `Bridge status: ${bridgeStatus}`;
+        const wsStatus = this.ws ? (this.ws.readyState === WebSocket.OPEN ? 'connected' : 'connecting') : 'disconnected';
+        this.detailsLabel.textContent = `WebSocket: ${wsStatus}`;
       }
     }
   }
@@ -783,7 +779,7 @@ export class KickPlugin extends BasePlugin {
         this.log(`Using ${metadataSource === 'manual' ? 'manual' : 'legacy'} Kick chatroom override for ${channel}.`);
       } else {
         try {
-          metadata = await this.fetchChannelMetadata(channel);
+          metadata = await this.fetchChannelMetadataAligned(channel);
           metadataSource = 'api';
         } catch (fetchErr) {
           const fallback = this.getCachedMetadataForChannel(channel, { includeLegacy: !channelChanged });
@@ -815,14 +811,14 @@ export class KickPlugin extends BasePlugin {
       this.refreshStatus();
 
       await this.prepareEmotesForChannel(channel);
-      await this.ensureBridge();
       this.setState('connecting');
-      this.bridgeStatus = 'connecting';
       this.refreshStatus();
-      this.postBridgeMessage('kick-lite-set-config', { chatType: 'user' });
-      this.postBridgeMessage('kick-lite-set-channel', { slug: channel, force: true });
-      this.postBridgeMessage('kick-lite-connect', { force: true });
-      this.log(`Connecting to Kick channel ${channel} via webhook bridge.`);
+      this.connectWebsocket({
+        wsBase: DEFAULT_WS_BASE,
+        chatroomId: this.chatroomId,
+        channelId: this.channelNumericId
+      });
+      this.log(`Connecting to Kick channel ${channel} via direct WebSocket.`);
     } catch (err) {
       this.resetConnectionState();
       const error = err instanceof Error ? err : new Error(err?.message || String(err));
@@ -830,19 +826,75 @@ export class KickPlugin extends BasePlugin {
     }
   }
 
-  async fetchChannelMetadata(channel) {
-    const url = `${this.apiBase}/channels/${encodeURIComponent(channel)}`;
-    const data = await this.fetchJson(url);
-    if (!data) {
-      throw new Error('Kick channel lookup returned empty response. Provide the chatroom ID manually if needed.');
+  async fetchChannelMetadataLegacy(channel) {
+    // 1. Try legacy kick.com API (works same-origin, Cloudflare may block elsewhere)
+    try {
+      const url = `${this.apiBase}/channels/${encodeURIComponent(channel)}`;
+      const data = await this.fetchJson(url);
+      if (data && !data.error) {
+        const chatroomId = this.extractChatroomId(data);
+        const channelId = this.extractChannelId(data);
+        const userId = this.extractUserId(data);
+        if (chatroomId) return { chatroomId, channelId, userId };
+      }
+    } catch (_) {
+      // Cloudflare block expected — fall through to bridge
     }
-    if (data.error) {
-      throw new Error(typeof data.error === 'string' ? data.error : 'Kick API returned an error for the channel lookup.');
+
+    // 2. Try bridge cache (no auth needed)
+    try {
+      const resp = await fetch(`${BRIDGE_BASE_URL}/kick/lookup?slug=${encodeURIComponent(channel)}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.chatroom_id) {
+          return {
+            chatroomId: String(data.chatroom_id),
+            channelId: data.channel_id ? String(data.channel_id) : null,
+            userId: data.broadcaster_user_id ? String(data.broadcaster_user_id) : null
+          };
+        }
+      }
+    } catch (_) {
+      // Bridge unreachable — fall through
     }
-    const chatroomId = this.extractChatroomId(data);
-    const channelId = this.extractChannelId(data);
-    const userId = this.extractUserId(data);
-    return { chatroomId, channelId, userId };
+
+    throw new Error('Unable to resolve Kick chatroom. Legacy API blocked and bridge cache empty. Provide chatroom ID manually.');
+  }
+
+  async fetchChannelMetadataAligned(channel) {
+    // Match the websocket page: bridge lookup first, then direct Kick API fallback.
+    try {
+      const resp = await fetch(`${BRIDGE_BASE_URL}/kick/lookup?slug=${encodeURIComponent(channel)}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.chatroom_id) {
+          return {
+            chatroomId: String(data.chatroom_id),
+            channelId: data.channel_id ? String(data.channel_id) : null,
+            userId: data.broadcaster_user_id ? String(data.broadcaster_user_id) : null
+          };
+        }
+      }
+    } catch (_) {
+      // Bridge unreachable - fall through to direct API.
+    }
+
+    try {
+      const url = `${this.apiBase}/channels/${encodeURIComponent(channel)}`;
+      const data = await this.fetchJson(url);
+      if (data && !data.error) {
+        const chatroomId = this.extractChatroomId(data);
+        const channelId = this.extractChannelId(data);
+        const userId = this.extractUserId(data);
+        if (chatroomId) {
+          return { chatroomId, channelId, userId };
+        }
+      }
+    } catch (_) {
+      // Cloudflare or CORS failures are expected in the browser.
+    }
+
+    throw new Error('Unable to resolve Kick chatroom. Bridge cache was empty and direct API lookup failed. Provide chatroom ID manually.');
   }
 
   extractChannelId(payload) {
@@ -955,7 +1007,7 @@ export class KickPlugin extends BasePlugin {
         message.mod = true;
       }
 
-      if (event === 'gift') {
+      if (event === 'subscription_gift') {
         const gift = payload.gift || payload.meta?.gift;
         if (gift) {
           const summary = [gift.name || gift.title || 'Gift'];
@@ -982,7 +1034,7 @@ export class KickPlugin extends BasePlugin {
           message.chatmessage = safeHtml(payload.meta.message);
         }
         message.previewText = htmlToText(message.chatmessage);
-      } else if (event === 'subscription') {
+      } else if (event === 'new_subscriber') {
         const tier = payload.meta?.tier || payload.subscription_tier;
         const textValue = tier ? `Subscribed (${tier})` : 'Subscribed';
         message.chatmessage = safeHtml(textValue);
@@ -1398,6 +1450,7 @@ export class KickPlugin extends BasePlugin {
   }
 
   async lookupProfileData(ids) {
+    if (this._profileLookupBlocked) return null;
     const endpoints = this.buildProfileEndpoints(ids);
     for (let i = 0; i < endpoints.length; i += 1) {
       const endpoint = endpoints[i];
@@ -1408,7 +1461,12 @@ export class KickPlugin extends BasePlugin {
           return profile;
         }
       } catch (err) {
-        this.log(`Kick profile endpoint failed (${endpoint}): ${err?.message || err}`);
+        const msg = err?.message || String(err);
+        // Cloudflare returns HTML — stop spamming all endpoints
+        if (/did not return JSON|text\/html/i.test(msg)) {
+          this._profileLookupBlocked = true;
+          return null;
+        }
       }
     }
     return null;
@@ -1629,14 +1687,14 @@ export class KickPlugin extends BasePlugin {
       return;
     }
 
-    if (eventName === 'App\\Events\\GiftPurchaseEvent') {
-      if (data?.event === 'gift' || data?.gift) {
+    if (eventName === 'App\\Events\\GiftPurchaseEvent' || eventName === 'App\\Events\\GiftedSubscriptionsEvent') {
+      if (data?.event === 'subscription_gift' || data?.gift || eventName.includes('Gifted')) {
         this.emitMessage(data);
       }
       return;
     }
 
-    if (eventName === 'App\\Events\\ChannelSubscriptionEvent') {
+    if (eventName === 'App\\Events\\ChannelSubscriptionEvent' || eventName === 'App\\Events\\SubscriptionEvent') {
       this.emitMessage({
         id: data?.id || `kick-sub-${Date.now()}`,
         type: 'kick',
@@ -1644,21 +1702,26 @@ export class KickPlugin extends BasePlugin {
         chatmessage: data?.message || 'Subscribed',
         hasDonation: 'Subscribed',
         timestamp: Date.now(),
-        event: 'subscription'
+        event: 'new_subscriber'
       });
       return;
     }
 
-    if (eventName === 'App\\Events\\ChatMessageDeletedEvent') {
+    if (eventName === 'App\\Events\\ChatMessageDeletedEvent' || eventName === 'App\\Events\\MessageDeletedEvent') {
       const targetId = data?.message_id || data?.id;
       if (targetId && this.seenIds.has(targetId)) {
-        this.messenger.emitMessage({ type: 'kick', id: `kick-${targetId}`, deleted: true });
+        this.messenger.sendDelete({
+          type: 'kick',
+          id: `kick-${targetId}`
+        });
       }
       return;
     }
 
-    // Unhandled events can still be useful for debugging
-    this.log(`Unhandled Kick event: ${eventName}`);
+    if (eventName === 'App\\Events\\UserBannedEvent') {
+      // Banned user's messages should be treated as deleted
+      return;
+    }
   }
 
   handleWsClose(event) {
@@ -1807,7 +1870,7 @@ export class KickPlugin extends BasePlugin {
   }
 
   resetConnectionState() {
-    this.disconnectBridge();
+    this.disconnectWebsocket();
     this.chatroomId = null;
     this.channelNumericId = null;
     this.channelUserId = null;

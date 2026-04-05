@@ -75,8 +75,13 @@
 	params+= "&transparent";
 	params+= "&hidemenu";
 	params+= "&scale=0.35";
-	
+
 	params += "&fadein&hidemenu&transparent&hideshadow&emoji&compact&notime&swipeleft&color&noavatar";
+
+	// Pass showtime through to dock.html if provided
+	if (urlParams.has("showtime")){
+		params += "&showtime=" + urlParams.get("showtime");
+	}
 	
 	
 	var css = `

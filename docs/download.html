@@ -136,9 +136,11 @@
                         <div class="download-icon">
                             <img src="../icons/firefox.svg" alt="Firefox">
                         </div>
-                        <h3>Firefox (Temporarily Disabled)</h3>
-                        <p>Firefox signing is currently paused due to recent Mozilla policy changes.</p>
-                        <p class="note">We will re-enable downloads once signing resumes. Please use Chromium-based browsers or the standalone apps in the meantime.</p>
+                        <h3>Firefox</h3>
+                        <p>Signed Firefox extension for direct installation.</p>
+                        <p class="note">Some features like TTS models and tab capture are not available in Firefox.</p>
+                        <a href="#firefox-install" class="view-installation-instructions btn btn-text">View Installation Instructions</a>
+                        <a href="https://raw.githubusercontent.com/steveseguin/social_stream/firefox/social-stream-ninja.xpi" class="btn btn-primary">Download XPI</a>
                     </div>
                 </div>
             </div>
@@ -268,44 +270,39 @@
 
     <section id="firefox-install" class="installation-guide alt">
         <div class="container">
-            <h2>Firefox Installation (Limited Support)</h2>
+            <h2>Firefox Installation</h2>
             <div class="installation-steps">
                 <div class="step">
                     <div class="step-number">1</div>
                     <div class="step-content">
-                        <h3>Download and Extract</h3>
-                        <p>Download the ZIP file and extract it to a folder on your computer.</p>
-                        <a href="https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip" class="btn btn-text">Download ZIP</a>
+                        <h3>Download the XPI File</h3>
+                        <p>Download the signed Firefox extension file.</p>
+                        <a href="https://raw.githubusercontent.com/steveseguin/social_stream/firefox/social-stream-ninja.xpi" class="btn btn-primary">Download XPI</a>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
                     <div class="step-content">
-                        <h3>Swap in the Firefox Manifest</h3>
-                        <p>In the root of the extracted folder, back up the existing <code>manifest.json</code>, then rename <code>manifest-firefox.json</code> to <code>manifest.json</code>.</p>
-                        <p class="note">Only rename for Firefox; keep the MV3 manifest for Chrome/Edge installs.</p>
+                        <h3>Install in Firefox</h3>
+                        <p>Open Firefox and install the extension:</p>
+                        <ul>
+                            <li>Go to <code>about:addons</code> in Firefox</li>
+                            <li>Click the gear icon (settings)</li>
+                            <li>Select "Install Add-on From File..."</li>
+                            <li>Choose the downloaded XPI file</li>
+                        </ul>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
                     <div class="step-content">
-                        <h3>Open Firefox Debugging Page</h3>
-                        <p>Navigate to Firefox's debugging page:</p>
-                        <code>about:debugging#/runtime/this-firefox</code>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>Load Temporary Add-on</h3>
-                        <p>Click "Load Temporary Add-on" and select the renamed <code>manifest.json</code> in the extracted Social Stream Ninja folder.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-number">5</div>
-                    <div class="step-content">
-                        <h3>Important Limitations</h3>
-                        <p>Temporary install only: you may need to reload after closing Firefox, and settings persistence can be limited.</p>
+                        <h3>Firefox Limitations</h3>
+                        <p>The Firefox version has some limitations compared to Chrome:</p>
+                        <ul>
+                            <li>TTS voice models are not included (uses system voices only)</li>
+                            <li>Tab capture and debugger features are not available</li>
+                            <li>Auto-responder feature is not supported</li>
+                        </ul>
                     </div>
                 </div>
             </div>

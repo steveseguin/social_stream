@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - Local AI TTS Guide</title>
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --secondary-color: #1976D2;
+            --accent-color: #FF9800;
+            --success-color: #4CAF50;
+            --text-color: #212121;
+            --text-light: #757575;
+            --bg-color: #FFFFFF;
+            --card-bg: #F5F5F5;
+            --border-color: #E0E0E0;
+            --code-bg: #263238;
+            --code-text: #ECEFF1;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #64B5F6;
+            --secondary-color: #42A5F5;
+            --accent-color: #FFB74D;
+            --success-color: #81C784;
+            --text-color: #E0E0E0;
+            --text-light: #BDBDBD;
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --border-color: #424242;
+            --code-bg: #000000;
+            --code-text: #ECEFF1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1565C0, #0288D1);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .theme-toggle:hover { background: rgba(255,255,255,0.1); }
+
+        h1 { margin: 0; font-size: 2.2em; }
+        h1 + p { margin: 8px 0 0; opacity: 0.9; font-size: 1.1em; }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+
+        h3 { color: var(--secondary-color); margin-top: 24px; }
+        h4 { margin-top: 18px; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .warning {
+            background-color: #FFF3E0;
+            border-left: 4px solid var(--accent-color);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        [data-theme="dark"] .warning {
+            background-color: #4E342E;
+            color: #FFCC80;
+        }
+
+        .info {
+            background-color: #E3F2FD;
+            border-left: 4px solid var(--primary-color);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        [data-theme="dark"] .info {
+            background-color: #0D47A1;
+            color: #BBDEFB;
+        }
+
+        .success {
+            background-color: #E8F5E9;
+            border-left: 4px solid var(--success-color);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        [data-theme="dark"] .success {
+            background-color: #1B5E20;
+            color: #C8E6C9;
+        }
+
+        .code {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 14px 16px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.92em;
+            overflow-x: auto;
+            margin: 12px 0;
+            white-space: pre;
+        }
+
+        code {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        [data-theme="dark"] code {
+            background-color: #2A2A2A;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        tr:nth-child(even) { background-color: var(--card-bg); }
+
+        [data-theme="dark"] tr:nth-child(even) { background-color: #1A1A1A; }
+
+        .check { color: var(--success-color); font-weight: bold; }
+        .cross { color: #EF5350; font-weight: bold; }
+        .partial { color: var(--accent-color); font-weight: bold; }
+
+        ul, ol { padding-left: 22px; }
+        li { margin: 8px 0; }
+
+        a { color: var(--primary-color); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        nav {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 24px 0;
+        }
+
+        nav ul { list-style: none; padding: 0; columns: 2; }
+        nav li { margin: 4px 0; }
+
+        .path-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 700px) {
+            .path-grid { grid-template-columns: 1fr; }
+            nav ul { columns: 1; }
+        }
+
+        .path-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+        }
+
+        .path-card.recommended { border-color: var(--primary-color); }
+        .path-card h3 { margin-top: 0; }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .badge.green { background: var(--success-color); }
+        .badge.orange { background: var(--accent-color); }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            background-color: var(--card-bg);
+            color: var(--text-light);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin: 10px 0;
+        }
+
+        .step-content { flex: 1; }
+
+        .url-example {
+            background: var(--code-bg);
+            color: #A5D6A7;
+            padding: 14px 16px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.88em;
+            overflow-x: auto;
+            margin: 12px 0;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span>🌓</span>
+                <span class="theme-text">Toggle Dark Mode</span>
+            </button>
+            <h1>Local AI TTS Guide</h1>
+            <p>Read your live stream chat aloud using free, private, self-hosted AI voices — no API keys required</p>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <nav>
+            <h3 style="margin-top:0">Table of Contents</h3>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#builtin">Path 1 — Built-in TTS (Zero Setup)</a></li>
+                <li><a href="#server">Path 2 — Self-Hosted TTS Server</a></li>
+                <li><a href="#kokoro-fastapi">Kokoro-FastAPI Setup</a></li>
+                <li><a href="#openedai">openedai-speech Setup</a></li>
+                <li><a href="#connect">Connecting to Social Stream</a></li>
+                <li><a href="#obs">Getting Audio into OBS</a></li>
+                <li><a href="#comparison">Comparison Table</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+            </ul>
+        </nav>
+
+        <!-- OVERVIEW -->
+        <h2 id="overview">Overview</h2>
+        <div class="card">
+            <p>Social Stream Ninja supports fully local AI text-to-speech — your chat messages are converted to voice entirely on your own computer, with no data sent to external servers and no API key required.</p>
+
+            <p>There are two approaches:</p>
+            <div class="path-grid">
+                <div class="path-card recommended">
+                    <h3>Path 1 — Built-in TTS <span class="badge green">No Setup</span></h3>
+                    <p>Several high-quality AI voices are <strong>built directly into Social Stream Ninja</strong>. They run in your browser using WebAssembly or ONNX — no server, no Docker, no install.</p>
+                    <ul>
+                        <li>Kokoro 82M (best quality)</li>
+                        <li>Piper Neural TTS</li>
+                        <li>Kitten TTS</li>
+                        <li>eSpeak-NG</li>
+                    </ul>
+                    <p><strong>Just add a URL parameter and go.</strong></p>
+                </div>
+                <div class="path-card">
+                    <h3>Path 2 — Self-Hosted Server <span class="badge orange">Docker Required</span></h3>
+                    <p>Run a local TTS server on your machine and point Social Stream Ninja at it. Gives you more voice options, voice cloning, and server-side control.</p>
+                    <ul>
+                        <li>Kokoro-FastAPI</li>
+                        <li>openedai-speech (Piper)</li>
+                        <li>kokoro-web</li>
+                    </ul>
+                    <p>Uses Social Stream's built-in <strong>OpenAI-compatible endpoint</strong> support.</p>
+                </div>
+            </div>
+
+            <div class="success">
+                <strong>Start with Path 1.</strong> The built-in Kokoro TTS rivals cloud services in quality, runs entirely in your browser, and works with OBS out of the box. Only move to Path 2 if you need more control or different models.
+            </div>
+        </div>
+
+        <!-- PATH 1: BUILT-IN -->
+        <h2 id="builtin">Path 1 — Built-in TTS (Zero Setup)</h2>
+        <div class="card">
+            <p>These engines are bundled inside Social Stream Ninja and require no installation. They run in the browser using WebAssembly (WASM) or ONNX Runtime.</p>
+
+            <table>
+                <tr>
+                    <th>Provider</th>
+                    <th>Quality</th>
+                    <th>CPU Use</th>
+                    <th>GPU/WebGPU</th>
+                    <th>URL Parameter</th>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro TTS</strong></td>
+                    <td>⭐⭐⭐⭐⭐ Excellent</td>
+                    <td class="partial">Medium</td>
+                    <td class="check">Faster with GPU</td>
+                    <td><code>?ttsprovider=kokoro</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Piper TTS</strong></td>
+                    <td>⭐⭐⭐⭐ Very Good</td>
+                    <td class="check">Low</td>
+                    <td class="partial">CPU only</td>
+                    <td><code>?ttsprovider=piper</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Kitten TTS</strong></td>
+                    <td>⭐⭐⭐ Good</td>
+                    <td class="check">Very Low</td>
+                    <td class="partial">CPU only</td>
+                    <td><code>?ttsprovider=kitten</code></td>
+                </tr>
+                <tr>
+                    <td><strong>eSpeak-NG</strong></td>
+                    <td>⭐⭐ Robotic</td>
+                    <td class="check">Minimal</td>
+                    <td class="partial">CPU only</td>
+                    <td><code>?ttsprovider=espeak</code></td>
+                </tr>
+            </table>
+
+            <h3>How to Enable</h3>
+            <p>Add <code>&amp;ttsprovider=</code> and <code>&amp;speech=</code> to your Social Stream <strong>dock.html</strong> URL:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kokoro</div>
+
+            <h3>Kokoro TTS Options</h3>
+            <p>Kokoro has 26 built-in voices. Specify one with <code>&amp;voicekokoro=</code>:</p>
+            <div class="code">English female: af_bella, af_sarah, af_nicole, af_sky
+English male:   am_adam, am_michael
+British female: bf_emma, bf_isabella
+British male:   bm_george, bm_lewis</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kokoro&voicekokoro=af_bella&kokorospeed=1.1</div>
+
+            <h3>Piper TTS Options</h3>
+            <p>Specify a voice model with <code>&amp;pipervoice=</code>:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=piper&pipervoice=en_US-hfc_female-medium</div>
+
+            <h3>Kitten TTS Options</h3>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kitten&kittenvoice=expr-voice-4-f</div>
+
+            <h3>eSpeak-NG Options</h3>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=espeak&espeakvoice=en&espeakspeed=175</div>
+
+            <div class="warning">
+                <strong>First-time load:</strong> Kokoro and Piper need to download their model files on first use (~50–200 MB). This happens automatically in the background. Subsequent loads are instant (cached in browser).
+            </div>
+
+            <div class="info">
+                <strong>OBS capture:</strong> All built-in TTS providers play audio directly through the browser. In OBS, add your dock.html as a Browser Source and enable <strong>"Control audio via OBS"</strong> — no virtual cables needed. See the <a href="#obs">OBS section</a> below.
+            </div>
+        </div>
+
+        <!-- PATH 2: SELF-HOSTED SERVER -->
+        <h2 id="server">Path 2 — Self-Hosted TTS Server</h2>
+        <div class="card">
+            <p>If you want more voice options, voice cloning, or a dedicated server you can reuse across tools, you can run a local TTS server. Social Stream Ninja connects to it using its built-in <strong>OpenAI-compatible TTS endpoint</strong> support — no API key needed for local servers.</p>
+
+            <div class="warning">
+                <strong>Requirements:</strong> <a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a> must be installed and running. Docker is free for personal use.
+            </div>
+
+            <p>Three recommended options:</p>
+            <table>
+                <tr>
+                    <th>Server</th>
+                    <th>Model</th>
+                    <th>GPU</th>
+                    <th>Disk</th>
+                    <th>Default Port</th>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro-FastAPI</strong> <span class="badge green">Recommended</span></td>
+                    <td>Kokoro 82M</td>
+                    <td class="partial">Optional</td>
+                    <td>~2 GB</td>
+                    <td>8880</td>
+                </tr>
+                <tr>
+                    <td><strong>openedai-speech</strong> (Piper) <span class="badge">Lightweight</span></td>
+                    <td>Piper TTS</td>
+                    <td class="cross">CPU only</td>
+                    <td>&lt;1 GB</td>
+                    <td>8000</td>
+                </tr>
+                <tr>
+                    <td><strong>kokoro-web</strong></td>
+                    <td>Kokoro 82M</td>
+                    <td class="partial">Optional</td>
+                    <td>~2 GB</td>
+                    <td>3000</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- KOKORO-FASTAPI -->
+        <h2 id="kokoro-fastapi">Kokoro-FastAPI Setup</h2>
+        <div class="card">
+            <p><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a> runs the Kokoro 82M model as a local server with an OpenAI-compatible API. It works on CPU (no GPU required) and has excellent voice quality.</p>
+
+            <h3>Install with Docker</h3>
+            <p>Open a terminal (Command Prompt, PowerShell, or Terminal) and run one of the following:</p>
+
+            <h4>CPU (works on any computer):</h4>
+            <div class="code">docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</div>
+
+            <h4>GPU (NVIDIA only — faster synthesis):</h4>
+            <div class="code">docker run --gpus all -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu:v0.2.0post4</div>
+
+            <div class="info">
+                <strong>First run:</strong> Docker will download the image (~1.5–2 GB). This only happens once. After that, the server starts in a few seconds.
+            </div>
+
+            <h3>Verify It's Running</h3>
+            <p>Open your browser and go to <strong>http://localhost:8880/web/</strong> — you should see a web UI where you can test voices.</p>
+
+            <h3>Available Voices</h3>
+            <p>67+ voices available. A few highlights:</p>
+            <div class="code">af_bella, af_sarah, af_nicole, af_sky, af_heart  (American female)
+am_adam, am_michael                              (American male)
+bf_emma, bf_isabella                             (British female)
+bm_george, bm_lewis                              (British male)</div>
+            <p>Browse and test all voices at <code>http://localhost:8880/web/</code> once the server is running.</p>
+
+            <h3>SSN URL</h3>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8880/v1/audio/speech&voiceopenai=af_bella</div>
+
+            <h3>Keep the Server Running</h3>
+            <p>To keep Kokoro-FastAPI running automatically in the background, use Docker's restart flag:</p>
+            <div class="code">docker run -d --restart unless-stopped -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2</div>
+            <p>It will now start automatically with Docker Desktop on every reboot.</p>
+        </div>
+
+        <!-- OPENEDAI-SPEECH -->
+        <h2 id="openedai">openedai-speech Setup (Lightweight Piper)</h2>
+        <div class="card">
+            <p><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a> is the lightest option — a CPU-only Piper TTS server under 1 GB. Good for older or less powerful computers.</p>
+
+            <h3>Install with Docker Compose</h3>
+
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    Clone the repository or create a folder with the following <code>docker-compose.min.yml</code>. Alternatively, run the commands below directly.
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">Run the minimal Piper-only image:</div>
+            </div>
+            <div class="code">docker run -d --restart unless-stopped \
+  -p 8000:8000 \
+  ghcr.io/matatonic/openedai-speech-min</div>
+
+            <h3>Available Voices</h3>
+            <p>openedai-speech uses OpenAI-style voice names mapped to Piper voices:</p>
+            <div class="code">alloy, echo, fable, onyx, nova, shimmer</div>
+
+            <h3>SSN URL</h3>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8000/v1/audio/speech&voiceopenai=nova</div>
+        </div>
+
+        <!-- CONNECTING TO SSN -->
+        <h2 id="connect">Connecting to Social Stream Ninja</h2>
+        <div class="card">
+            <p>All self-hosted servers above use the same connection method — Social Stream's built-in <strong>OpenAI TTS endpoint</strong> support with a custom local URL.</p>
+
+            <h3>URL Parameters</h3>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>ttsprovider</code></td>
+                    <td><code>openai</code></td>
+                    <td>Use the OpenAI-compatible TTS path</td>
+                </tr>
+                <tr>
+                    <td><code>openaiendpoint</code></td>
+                    <td><code>http://localhost:8880/v1/audio/speech</code></td>
+                    <td>Your local server URL (change port as needed)</td>
+                </tr>
+                <tr>
+                    <td><code>speech</code></td>
+                    <td><code>en-US</code></td>
+                    <td>Enables TTS for English</td>
+                </tr>
+                <tr>
+                    <td><code>voiceopenai</code></td>
+                    <td><code>af_bella</code></td>
+                    <td>Voice name (depends on server)</td>
+                </tr>
+                <tr>
+                    <td><code>openaiformat</code></td>
+                    <td><code>mp3</code></td>
+                    <td>Audio format: mp3, wav, opus, flac</td>
+                </tr>
+                <tr>
+                    <td><code>openaispeed</code></td>
+                    <td><code>1.0</code></td>
+                    <td>Speaking speed (0.5–2.0)</td>
+                </tr>
+            </table>
+
+            <h3>Full Example URLs</h3>
+            <h4>Kokoro-FastAPI:</h4>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8880/v1/audio/speech&voiceopenai=af_bella&openaispeed=1.1</div>
+
+            <h4>openedai-speech:</h4>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8000/v1/audio/speech&voiceopenai=nova</div>
+
+            <h4>kokoro-web:</h4>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:3000/api/v1/audio/speech&voiceopenai=af_bella</div>
+
+            <h3>Additional TTS Options</h3>
+            <p>These work with any TTS provider, including local servers:</p>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Example</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>simpletts</code></td>
+                    <td><code>&simpletts</code></td>
+                    <td>Skip "says" — reads message only</td>
+                </tr>
+                <tr>
+                    <td><code>simpletts2</code></td>
+                    <td><code>&simpletts2</code></td>
+                    <td>Skip usernames entirely</td>
+                </tr>
+                <tr>
+                    <td><code>volume</code></td>
+                    <td><code>&volume=0.8</code></td>
+                    <td>Volume level (0.0–1.0)</td>
+                </tr>
+                <tr>
+                    <td><code>skipmessages</code></td>
+                    <td><code>&skipmessages=3</code></td>
+                    <td>Read every 3rd message only</td>
+                </tr>
+                <tr>
+                    <td><code>ttscommand</code></td>
+                    <td><code>&ttscommand=!say</code></td>
+                    <td>Only read messages starting with !say</td>
+                </tr>
+                <tr>
+                    <td><code>readevents</code></td>
+                    <td><code>&readevents</code></td>
+                    <td>Also read subscriptions, donations, etc.</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>No API key needed.</strong> When using a local server (non-openai.com URL), Social Stream Ninja sends the request without an Authorization header. You do not need to configure a key.
+            </div>
+        </div>
+
+        <!-- OBS AUDIO CAPTURE -->
+        <h2 id="obs">Getting Audio into OBS</h2>
+        <div class="card">
+            <p>How you capture TTS audio in OBS depends on how you're running Social Stream Ninja.</p>
+
+            <h3>Method 1 — OBS Browser Source <span class="badge green">Recommended</span></h3>
+            <p>This is the simplest method and works for <strong>all TTS providers</strong> (built-in and self-hosted server).</p>
+
+            <div class="step"><span class="step-number">1</span><div class="step-content">In OBS, add a new <strong>Browser Source</strong></div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Set the URL to your <code>dock.html</code> URL with TTS parameters</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">Check <strong>"Control audio via OBS"</strong> in the browser source settings</div></div>
+            <div class="step"><span class="step-number">4</span><div class="step-content">Click <strong>OK</strong> — TTS audio will now appear as an OBS audio source you can adjust or route</div></div>
+            <div class="step"><span class="step-number">5</span><div class="step-content">Click the browser source once in the preview to allow browser audio autoplay</div></div>
+
+            <div class="info">
+                <strong>Why this works:</strong> Built-in TTS and self-hosted server TTS both play audio through the browser's audio context (not OS speech synthesis). OBS can capture browser audio directly when "Control audio via OBS" is checked.
+            </div>
+
+            <h3>Method 2 — SSN Desktop App + Desktop Audio</h3>
+            <p>If you're using the Social Stream Ninja standalone desktop app (not an OBS browser source):</p>
+
+            <div class="step"><span class="step-number">1</span><div class="step-content">TTS audio plays through your system speakers/headphones from the app</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">In OBS, add an <strong>Audio Input Capture</strong> or <strong>Desktop Audio Capture</strong> source</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">If you want TTS isolated from other desktop audio, use a virtual audio cable:<br>
+                <ul>
+                    <li><strong>Windows:</strong> VB-Audio Virtual Cable (free)</li>
+                    <li>Set the virtual cable as output for the SSN app in Windows Sound settings</li>
+                    <li>Capture the virtual cable input in OBS</li>
+                </ul>
+            </div></div>
+
+            <div class="warning">
+                <strong>System TTS (<code>?speech=en-US</code> without a provider) uses OS speech synthesis</strong>, which cannot be captured by OBS browser source. Use one of the providers above (<code>kokoro</code>, <code>piper</code>, etc.) instead.
+            </div>
+        </div>
+
+        <!-- COMPARISON TABLE -->
+        <h2 id="comparison">Comparison Table</h2>
+        <div class="card">
+            <table>
+                <tr>
+                    <th>Option</th>
+                    <th>Setup</th>
+                    <th>Quality</th>
+                    <th>Private</th>
+                    <th>OBS (Browser Source)</th>
+                    <th>GPU Needed</th>
+                    <th>Cost</th>
+                </tr>
+                <tr>
+                    <td><strong>Built-in Kokoro</strong></td>
+                    <td class="check">None</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td class="check">Yes</td>
+                    <td class="check">Yes</td>
+                    <td class="partial">No (faster with)</td>
+                    <td class="check">Free</td>
+                </tr>
+                <tr>
+                    <td><strong>Built-in Piper</strong></td>
+                    <td class="check">None</td>
+                    <td>⭐⭐⭐⭐</td>
+                    <td class="check">Yes</td>
+                    <td class="check">Yes</td>
+                    <td class="check">No</td>
+                    <td class="check">Free</td>
+                </tr>
+                <tr>
+                    <td><strong>Built-in Kitten</strong></td>
+                    <td class="check">None</td>
+                    <td>⭐⭐⭐</td>
+                    <td class="check">Yes</td>
+                    <td class="check">Yes</td>
+                    <td class="check">No</td>
+                    <td class="check">Free</td>
+                </tr>
+                <tr>
+                    <td><strong>Built-in eSpeak</strong></td>
+                    <td class="check">None</td>
+                    <td>⭐⭐</td>
+                    <td class="check">Yes</td>
+                    <td class="check">Yes</td>
+                    <td class="check">No</td>
+                    <td class="check">Free</td>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro-FastAPI</strong></td>
+                    <td class="partial">Docker</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td class="check">Yes</td>
+                    <td class="check">Yes</td>
+                    <td class="partial">No (optional)</td>
+                    <td class="check">Free</td>
+                </tr>
+                <tr>
+                    <td><strong>openedai-speech</strong></td>
+                    <td class="partial">Docker</td>
+                    <td>⭐⭐⭐⭐</td>
+                    <td class="check">Yes</td>
+                    <td class="check">Yes</td>
+                    <td class="check">No</td>
+                    <td class="check">Free</td>
+                </tr>
+                <tr>
+                    <td>ElevenLabs</td>
+                    <td class="check">API Key</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td class="cross">No</td>
+                    <td class="check">Yes</td>
+                    <td class="check">No</td>
+                    <td class="partial">Paid tiers</td>
+                </tr>
+                <tr>
+                    <td>System TTS</td>
+                    <td class="check">None</td>
+                    <td>⭐⭐</td>
+                    <td class="check">Yes</td>
+                    <td class="cross">No*</td>
+                    <td class="check">No</td>
+                    <td class="check">Free</td>
+                </tr>
+            </table>
+            <p style="font-size:0.9em; color: var(--text-light);">* System TTS requires virtual audio cable routing for OBS capture.</p>
+        </div>
+
+        <!-- TROUBLESHOOTING -->
+        <h2 id="troubleshooting">Troubleshooting</h2>
+        <div class="card">
+            <h3>No audio playing</h3>
+            <ul>
+                <li><strong>Click the page first.</strong> Browsers require user interaction before playing audio. Click anywhere on the dock.html page once.</li>
+                <li>Check that <code>&speech=en-US</code> is in your URL.</li>
+                <li>Check the browser console (F12) for error messages.</li>
+            </ul>
+
+            <h3>Kokoro / Piper takes a long time on first load</h3>
+            <p>The model files are being downloaded (~50–200 MB). This only happens once — subsequent loads use the cached version. Wait for the first message before testing.</p>
+
+            <h3>Local server not responding (self-hosted setup)</h3>
+            <ul>
+                <li>Confirm Docker Desktop is running and the container is started.</li>
+                <li>Open <code>http://localhost:8880</code> (or your port) in a browser to confirm the server is up.</li>
+                <li>Check that no firewall is blocking the port.</li>
+            </ul>
+
+            <h3>CORS error in browser console (extension mode)</h3>
+            <p>If you're using the Social Stream browser extension (not the standalone app), your local server must allow cross-origin requests from the extension.</p>
+            <p>Most FastAPI-based servers (Kokoro-FastAPI, openedai-speech) allow all origins by default. If you see a CORS error:</p>
+            <ul>
+                <li>Check the server's documentation for CORS configuration.</li>
+                <li>The <strong>SSN standalone app</strong> does not have this limitation — use it instead.</li>
+            </ul>
+
+            <h3>"http://localhost" blocked in OBS browser source</h3>
+            <p>OBS browser sources can have trouble reaching <code>localhost</code> servers. Try:</p>
+            <ul>
+                <li>Use <code>http://127.0.0.1:8880/v1/audio/speech</code> instead of <code>localhost</code></li>
+                <li>Or use the SSN standalone app instead of OBS browser source</li>
+            </ul>
+
+            <h3>Audio plays but OBS doesn't capture it</h3>
+            <ul>
+                <li>Make sure <strong>"Control audio via OBS"</strong> is checked in the browser source properties.</li>
+                <li>In OBS Audio Mixer, look for the browser source — its meter should move when TTS plays.</li>
+                <li>Ensure you're not using System TTS (<code>?speech=en-US</code> without <code>&ttsprovider=</code>) — that bypasses browser audio.</li>
+            </ul>
+
+            <h3>Wrong voice / voice not found</h3>
+            <p>Voice names are case-sensitive and must match what the server supports. Visit <code>http://localhost:8880/web/</code> (Kokoro-FastAPI) to browse and test available voices.</p>
+
+            <h3>Docker image not found</h3>
+            <p>Image tags change with new releases. If the tag in this guide no longer works, check the project's GitHub page for the latest version tag.</p>
+            <ul>
+                <li>Kokoro-FastAPI: <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">github.com/remsky/Kokoro-FastAPI</a></li>
+                <li>openedai-speech: <a href="https://github.com/matatonic/openedai-speech" target="_blank">github.com/matatonic/openedai-speech</a></li>
+            </ul>
+        </div>
+
+        <div class="info" style="margin-top: 30px;">
+            <strong>More TTS options:</strong> For cloud-based premium TTS (ElevenLabs, Google Cloud, Speechify) and full URL parameter reference, see the <a href="tts.html">TTS Voice Guide</a>.
+        </div>
+
+        <footer>
+            <p>Social Stream Ninja — Local AI TTS Guide &nbsp;|&nbsp; <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub</a> &nbsp;|&nbsp; <a href="tts.html">TTS Voice Guide</a> &nbsp;|&nbsp; <a href="guides.html">All Guides</a></p>
+        </footer>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const themeText = document.querySelector('.theme-text');
+            const currentTheme = body.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                body.removeAttribute('data-theme');
+                themeText.textContent = 'Toggle Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeText.textContent = 'Toggle Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Apply saved theme on load
+        (function() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const themeText = document.querySelector('.theme-text');
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.body.setAttribute('data-theme', 'dark');
+                if (themeText) themeText.textContent = 'Toggle Light Mode';
+            }
+        })();
+    </script>
+</body>
+</html>

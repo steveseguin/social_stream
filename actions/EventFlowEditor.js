@@ -316,10 +316,11 @@ class EventFlowEditor {
             },
             {
                 id: 'legacy',
-                name: '📦 Legacy/Other',
+                name: '📦 Advanced',
                 expanded: false,
                 triggers: [
-                    { id: 'eventType', name: '📣 Event Type (Legacy)' }
+                    { id: 'eventType', name: '📣 Event Type (Advanced)' },
+                    { id: 'customJs', name: 'Custom Code' }
                 ]
             }
         ];
@@ -343,6 +344,7 @@ class EventFlowEditor {
                     { id: 'findReplace', name: '🔄 Find & Replace' },
                     { id: 'removeText', name: '✂️ Remove Text' },
                     { id: 'setProperty', name: '🎨 Set Property' },
+                    { id: 'featureMessage', name: '🌟 Feature Message' },
                     { id: 'sendMessage', name: '💬 Send Message' },
                     { id: 'relay', name: '📢 Relay Chat' },
                     { id: 'reflectionFilter', name: '🪞 Reflection Filter' }
@@ -353,6 +355,7 @@ class EventFlowEditor {
                 name: '🔌 Integrations',
                 expanded: true,
                 actions: [
+                    { id: 'customJs', name: 'Execute Custom Code' },
                     { id: 'webhook', name: '🌐 Call Webhook' },
                     { id: 'addPoints', name: '⬆️ Add Points' },
                     { id: 'spendPoints', name: '⬇️ Spend Points' }
@@ -484,7 +487,11 @@ class EventFlowEditor {
             { value: 'facebook', label: 'Facebook' },
             { value: 'tiktok', label: 'TikTok' },
             { value: 'instagram', label: 'Instagram' },
-            { value: 'rumble', label: 'Rumble' }
+            { value: 'rumble', label: 'Rumble' },
+            { value: 'kofi', label: 'Ko-fi' },
+            { value: 'bmac', label: 'Buy Me a Coffee' },
+            { value: 'fourthwall', label: 'Fourthwall' },
+            { value: 'stripe', label: 'Stripe' }
         ];
         const selectedSources = node.config.sources || [];
 
@@ -520,8 +527,8 @@ class EventFlowEditor {
                         <div class="flow-list" id="flow-list"></div>
                         <button id="new-flow-btn" class="btn"><span style="color: #4CAF50; margin-right: 5px;">+</span>Create New Flow</button>
                         <div class="flow-import-export" style="display: flex; gap: 5px; margin-top: 10px;">
-                            <button id="import-flow-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📥 Import</button>
-                            <button id="export-all-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📤 Export All</button>
+                            <button id="import-flow-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px; white-space: nowrap;">📥 Import</button>
+                            <button id="export-all-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px; white-space: nowrap;">📤 Export All</button>
                         </div>
                         <select id="template-select" class="btn" style="width: 100%; margin-top: 10px; padding: 8px 12px; font-size: 14px; cursor: pointer;">
                             <option value="">📋 Load Template...</option>
@@ -559,9 +566,13 @@ class EventFlowEditor {
                                     </div>
                                     <div class="trigger-group-items" style="${group.expanded ? '' : 'display: none;'}">
                                         ${group.triggers.map(trigger => `
-                                            <div class="node-item trigger" data-nodetype="trigger" data-subtype="${trigger.id}" draggable="true">
-                                                ${trigger.name}
-                                            </div>
+                                            ${(() => {
+                                                const isDisabled = !this.eventFlowSystem.customJsEvalSupported && trigger.id === 'customJs';
+                                                const label = isDisabled ? `${trigger.name} (Desktop only)` : trigger.name;
+                                                return `<div class="node-item trigger ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="trigger" data-subtype="${trigger.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in extension mode due browser CSP (unsafe-eval blocked).' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
+                                                    ${label}
+                                                </div>`;
+                                            })()}
                                         `).join('')}
                                     </div>
                                 </div>
@@ -577,9 +588,13 @@ class EventFlowEditor {
                                     </div>
                                     <div class="action-group-items" style="${group.expanded ? '' : 'display: none;'}">
                                         ${group.actions.map(action => `
-                                            <div class="node-item action" data-nodetype="action" data-subtype="${action.id}" draggable="true">
-                                                ${action.name}
-                                            </div>
+                                            ${(() => {
+                                                const isDisabled = !this.eventFlowSystem.customJsEvalSupported && action.id === 'customJs';
+                                                const label = isDisabled ? `${action.name} (Desktop only)` : action.name;
+                                                return `<div class="node-item action ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="action" data-subtype="${action.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in extension mode due browser CSP (unsafe-eval blocked).' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
+                                                    ${label}
+                                                </div>`;
+                                            })()}
                                         `).join('')}
                                     </div>
                                 </div>
@@ -694,6 +709,13 @@ class EventFlowEditor {
 
         const triggerItems = document.querySelectorAll('#trigger-list .node-item');
         triggerItems.forEach(item => {
+            if (item.dataset.disabled === 'true') {
+                item.setAttribute('draggable', 'false');
+                item.addEventListener('click', () => {
+                    this.showNotification('Custom Code is available in SSApp desktop only.', 'warning');
+                });
+                return;
+            }
             item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'trigger', item.dataset.subtype)); // Changed to subtype
         });
 
@@ -724,6 +746,13 @@ class EventFlowEditor {
 
         const actionItems = document.querySelectorAll('#action-list .node-item');
         actionItems.forEach(item => {
+            if (item.dataset.disabled === 'true') {
+                item.setAttribute('draggable', 'false');
+                item.addEventListener('click', () => {
+                    this.showNotification('Custom Code is available in SSApp desktop only.', 'warning');
+                });
+                return;
+            }
             item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'action', item.dataset.subtype)); // Changed to subtype
         });
 
@@ -796,28 +825,89 @@ class EventFlowEditor {
                 <div class="node-help-buttons">
                     <button class="btn btn-ghost" data-guide-link="event-flow">📘 Event Flow Guide</button>
                     <button class="btn btn-ghost" data-guide-link="state-nodes">🎮 State Nodes Guide</button>
+                    <button class="btn btn-ghost" data-guide-link="event-reference">📖 Event Reference</button>
                 </div>
             </div>
         `;
     }
 
-    openGuide(guideKey) {
-        const guideMap = {
-            'event-flow': 'actions/event-flow-guide.html',
-            'state-nodes': 'actions/state-nodes-guide.html',
-            'event-flow-about': 'actions/event-flow-guide.html#what-is-event-flow'
-        };
-        let target = guideMap[guideKey];
-        if (!target) return;
-        if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getURL === 'function') {
-            target = chrome.runtime.getURL(target);
+    isExtensionRuntimeAvailable() {
+        const runtime = typeof chrome !== 'undefined' ? chrome.runtime : null;
+        if (!runtime || typeof runtime.getURL !== 'function') {
+            return false;
         }
+
+        // Electron/SSApp may provide partial chrome shims; treat those as local-file contexts.
+        if (
+            this.isSSApp ||
+            window.ssapp === true ||
+            window.ninjafy ||
+            window.electronApi ||
+            (typeof process !== 'undefined' && process.versions && process.versions.electron)
+        ) {
+            return false;
+        }
+
+        return typeof runtime.id === 'string' && runtime.id.length > 0;
+    }
+
+    isActionsPageContext() {
+        const path = (window.location && window.location.pathname) || '';
+        return path.includes('/actions/') || path.endsWith('/actions');
+    }
+
+    resolveGuideTarget(guideKey) {
+        const guideMap = {
+            'event-flow': {
+                extensionPath: 'actions/event-flow-guide.html',
+                rootPath: 'actions/event-flow-guide.html',
+                actionsPath: 'event-flow-guide.html'
+            },
+            'state-nodes': {
+                extensionPath: 'actions/state-nodes-guide.html',
+                rootPath: 'actions/state-nodes-guide.html',
+                actionsPath: 'state-nodes-guide.html'
+            },
+            'event-flow-about': {
+                extensionPath: 'actions/event-flow-guide.html',
+                rootPath: 'actions/event-flow-guide.html',
+                actionsPath: 'event-flow-guide.html',
+                hash: '#what-is-event-flow'
+            },
+            'event-reference': {
+                extensionPath: 'docs/event-reference.html',
+                rootPath: 'docs/event-reference.html',
+                actionsPath: '../docs/event-reference.html'
+            },
+            'event-reference-cross-platform': {
+                extensionPath: 'docs/event-reference.html',
+                rootPath: 'docs/event-reference.html',
+                actionsPath: '../docs/event-reference.html',
+                hash: '#cross-platform'
+            }
+        };
+
+        const guide = guideMap[guideKey];
+        if (!guide) return '';
+
+        if (this.isExtensionRuntimeAvailable()) {
+            const extensionUrl = chrome.runtime.getURL(guide.extensionPath);
+            return `${extensionUrl}${guide.hash || ''}`;
+        }
+
+        const localPath = this.isActionsPageContext() ? guide.actionsPath : guide.rootPath;
         try {
-			if (window.location.href.includes("/actions/")){
-				window.open(target.replace("actions/",""), '_blank');
-			} else {
-				window.open(target, '_blank');
-			}
+            return new URL(localPath, window.location.href).href + (guide.hash || '');
+        } catch (error) {
+            return `${localPath}${guide.hash || ''}`;
+        }
+    }
+
+    openGuide(guideKey) {
+        const target = this.resolveGuideTarget(guideKey);
+        if (!target) return;
+        try {
+            window.open(target, '_blank');
         } catch (error) {
             console.error('Failed to open guide', error);
         }
@@ -1868,6 +1958,7 @@ class EventFlowEditor {
                     const shortValue = value.length > 15 ? value.substring(0, 15) + '...' : value;
                     return `${prop} = ${shortValue}`;
                 }
+                case 'featureMessage': return 'Feature in dock/overlay';
                 case 'sendMessage': return `Send to: ${node.config.destination || 'All'}`;
                 case 'relay': return `Relay to: ${node.config.destination || 'All'}`;
                 case 'reflectionFilter': {
@@ -2356,6 +2447,7 @@ class EventFlowEditor {
                 case 'midiNoteOff': node.config = { deviceId: '', note: '', channel: 1 }; break;
                 case 'midiCC': node.config = { deviceId: '', controller: '', channel: 1 }; break;
                 case 'messageProperties': node.config = { requiredProperties: [], forbiddenProperties: [], requireAll: true, lastActivityFilter: { enabled: false, mode: 'within', amount: 10, unit: 'minutes' } }; break;
+                case 'customJs': node.config = { code: 'return (message.chatmessage || "").includes("test");' }; break;
             }
         } else if (type === 'action') {
             node.actionType = subtype;
@@ -2378,9 +2470,11 @@ class EventFlowEditor {
 					node.config = { removeType: 'removeCommand' }; break;
                 case 'setProperty':
 					node.config = { property: 'nameColor', value: '#FF0000' }; break;
-            case 'sendMessage':
-					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0 }; break;
-            case 'relay':
+                case 'featureMessage':
+                    node.config = {}; break;
+                case 'sendMessage':
+					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0, sanitizeMode: 'safe' }; break;
+                case 'relay':
 					node.config = { destination: '', template: '[{source}] {username}: {message}', timeout: 0 }; break;
                 case 'webhook':
 					node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true, syncMode: false, blockOnFailure: false }; break;
@@ -2388,6 +2482,8 @@ class EventFlowEditor {
 					node.config = { amount: 100 }; break;
                 case 'spendPoints':
 					node.config = { amount: 100 }; break;
+                case 'customJs':
+					node.config = { code: 'message.chatmessage += " (edited)";\nreturn { modified: true, message };' }; break;
 				case 'playTenorGiphy':
 					node.config = { mediaUrl: 'https://giphy.com/embed/X9izlczKyCpmCSZu0l', mediaType: 'iframe', duration: 10000, width: 100, height: 100, x: 0, y: 0, randomX: false, randomY: false, useLayer: false, clearFirst: true };
 					break;
@@ -2670,6 +2766,8 @@ class EventFlowEditor {
 
 	showNodeProperties(node) {
 		const propertiesContent = document.getElementById('node-properties-content');
+		const eventReferenceUrl = this.escapeHtml(this.resolveGuideTarget('event-reference') || '#');
+		const eventReferenceCrossPlatformUrl = this.escapeHtml(this.resolveGuideTarget('event-reference-cross-platform') || '#');
 		let html = `<h4>${this.escapeHtml(this.getNodeTitle(node))} Properties</h4>
 					<input type="hidden" id="node-id-prop" value="${this.escapeHtml(node.id)}">`;
 
@@ -2794,11 +2892,11 @@ class EventFlowEditor {
 				this.populateMIDIInputDevices('prop-deviceId', node.config.deviceId);
 				break;
 			case 'fromSource':
-				const isCustomSource = node.config.source && !['*', 'afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
-  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk',
+				const isCustomSource = node.config.source !== undefined && node.config.source !== null && !['*', 'afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
+  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
-  'kiwiirc', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
+  'kiwiirc', 'kofi', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
   'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'mobcrush', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
   'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
@@ -2807,15 +2905,15 @@ class EventFlowEditor {
   'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
   'wix', 'wix2', 'workplace', 'x', 'xeenon', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
-  'other'].includes(node.config.source);
+  'bmac', 'fourthwall', 'stripe', 'other'].includes(node.config.source);
 				
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
 						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
 						    ${['afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
-  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk',
+  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
-  'kiwiirc', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
+  'kiwiirc', 'kofi', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
   'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'mobcrush', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
   'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
@@ -2824,7 +2922,7 @@ class EventFlowEditor {
   'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
   'wix', 'wix2', 'workplace', 'x', 'xeenon', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
-  'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()
+  'bmac', 'fourthwall', 'stripe', 'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()
    + s.slice(1).replace(/_/g, ' ')}</option>`).join('')}
    						<option value="custom" ${isCustomSource ? 'selected' : ''}>🔧 Custom...</option>
 						 </select></div>`;
@@ -2842,7 +2940,7 @@ class EventFlowEditor {
 				break;
 			case 'userRole':
 				html += `<div class="property-group"><label class="property-label">User Role</label><select class="property-input" id="prop-role">
-						   ${['mod', 'vip', 'admin', 'subscriber', 'follower'].map(r => `<option value="${r}" ${node.config.role === r ? 'selected' : ''}>${r.charAt(0).toUpperCase() + r.slice(1)}</option>`).join('')}
+						   ${['mod', 'vip', 'admin', 'subscriber', 'member', 'follower'].map(r => `<option value="${r}" ${node.config.role === r ? 'selected' : ''}>${r.charAt(0).toUpperCase() + r.slice(1)}</option>`).join('')}
 						 </select></div>`;
 				break;
 			case 'hasDonation': // Trigger type
@@ -2912,7 +3010,7 @@ class EventFlowEditor {
 					<div style="background: #bbdefb; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
 						⚠️ <strong>Twitch/YouTube/Kick require WebSocket mode</strong> in extension settings for follower events.
 					</div>
-					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #1976d2;">📖 Event Reference Documentation</a>
+							<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #1976d2;">📖 Event Reference Documentation</a>
 				</div>`;
 				break;
 
@@ -2929,7 +3027,7 @@ class EventFlowEditor {
 					<div style="background: #c8e6c9; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
 						⚠️ <strong>Twitch/YouTube/Kick require WebSocket mode</strong> for subscription events.
 					</div>
-					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #2e7d32;">📖 Event Reference Documentation</a>
+							<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #2e7d32;">📖 Event Reference Documentation</a>
 				</div>`;
 				break;
 
@@ -2944,7 +3042,7 @@ class EventFlowEditor {
 					<div style="background: #ffe0b2; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
 						⚠️ <strong>Requires WebSocket mode</strong> for Twitch/YouTube.
 					</div>
-					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #e65100;">📖 Event Reference Documentation</a>
+							<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #e65100;">📖 Event Reference Documentation</a>
 				</div>`;
 				break;
 
@@ -2960,7 +3058,7 @@ class EventFlowEditor {
 					<div style="background: #f8bbd0; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
 						⚠️ <strong>Requires WebSocket mode</strong> for Twitch/YouTube.
 					</div>
-					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #c2185b;">📖 Event Reference Documentation</a>
+							<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #c2185b;">📖 Event Reference Documentation</a>
 				</div>`;
 				break;
 
@@ -2985,7 +3083,7 @@ class EventFlowEditor {
 						<div style="background: #ffecb3; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
 							⚠️ <strong>YouTube/Twitch/Kick require WebSocket mode</strong> for monetary events.
 						</div>
-						<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #f57f17;">📖 Event Reference Documentation</a>
+								<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #f57f17;">📖 Event Reference Documentation</a>
 					</div>`;
 				break;
 
@@ -3006,7 +3104,7 @@ class EventFlowEditor {
 						<div style="background: #d1c4e9; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
 							⚠️ <strong>Twitch WebSocket mode required.</strong> Raids are Twitch-specific.
 						</div>
-						<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #512da8;">📖 Event Reference Documentation</a>
+								<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #512da8;">📖 Event Reference Documentation</a>
 					</div>`;
 				break;
 
@@ -3027,7 +3125,7 @@ class EventFlowEditor {
 						<div style="background: #b3e5fc; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
 							⚠️ <strong>Twitch WebSocket mode required.</strong> Cheers/Bits are Twitch-specific.
 						</div>
-						<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #0288d1;">📖 Event Reference Documentation</a>
+								<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #0288d1;">📖 Event Reference Documentation</a>
 					</div>`;
 				break;
 
@@ -3058,7 +3156,7 @@ class EventFlowEditor {
 						<div style="background: #cfd8dc; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
 							⚠️ Most Twitch/YouTube/Kick events require <strong>WebSocket mode</strong> enabled in extension settings.
 						</div>
-						<a href="docs/event-reference.html" target="_blank" style="color: #455a64;">📖 Full Event Reference</a>
+								<a href="${eventReferenceUrl}" data-guide-link="event-reference" style="color: #455a64;">📖 Full Event Reference</a>
 					</div>`;
 				break;
 
@@ -3087,13 +3185,18 @@ class EventFlowEditor {
 							⚠️ <strong>Twitch/YouTube/Kick require WebSocket mode</strong> for most stream events.<br>
 							💡 <strong>TikTok</strong> provides many events via DOM detection without extra config.
 						</div>
-						<a href="docs/event-reference.html" target="_blank" style="color: #7b1fa2;">📖 Full Event Reference</a>
+								<a href="${eventReferenceUrl}" data-guide-link="event-reference" style="color: #7b1fa2;">📖 Full Event Reference</a>
 					</div>`;
 				break;
 
 			case 'compareProperty':
 				const commonProperties = [
 					{ value: 'donationAmount', label: 'Donation Amount' },
+					{ value: 'type', label: 'Source Type' },
+					{ value: 'event', label: 'Event Name' },
+					{ value: 'sourceName', label: 'Channel Name' },
+					{ value: 'membership', label: 'Membership Status' },
+					{ value: 'hasDonation', label: 'Donation Label' },
 					{ value: 'karma', label: 'Karma Score (0-1)' },
 					{ value: 'memberMonths', label: 'Member Months' },
 					{ value: 'bitsAmount', label: 'Bits Amount (Twitch)' },
@@ -3132,8 +3235,8 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group">
 						<label class="property-label">Compare Value</label>
-						<input type="number" class="property-input" id="prop-value" value="${node.config.value ?? 0}" step="any">
-						<div class="property-help">The value to compare against</div>
+						<input type="text" class="property-input" id="prop-value" value="${node.config.value ?? 0}" placeholder="e.g. 10, youtube, donation">
+						<div class="property-help">Use numbers for &gt;/&lt; comparisons, or text for = / != matches.</div>
 					</div>
 					<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>💡 Examples:</strong><br>
@@ -3570,6 +3673,9 @@ class EventFlowEditor {
 				break;
 			// --- Custom JS Trigger ---
 			case 'customJs': // Assuming 'customJs' can be a trigger, action, or logic type based on context
+				if (!this.eventFlowSystem.customJsEvalSupported) {
+					html += `<div class="property-group"><div class="property-help" style="color:#f0ad4e;">Custom Code execution is disabled in extension mode due browser CSP restrictions. Use SSApp desktop.</div></div>`;
+				}
 				if (node.type === 'trigger') {
 					 html += `<div class="property-group"><label class="property-label">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false">${node.config.code || 'return message.chatmessage.includes("test");'}</textarea>
 							 <div class="property-help">Return true/false. \`message\` object is available.</div></div>`;
@@ -3638,154 +3744,141 @@ class EventFlowEditor {
 							</div>`;
 				}
 				break;
-			case 'setProperty': {
-				const commonProperties = [
-					{ value: 'custom', label: '-- Custom Property --' },
-					// Styling
-					{ value: 'nameColor', label: 'Name Color', type: 'color' },
-					{ value: 'backgroundColor', label: 'Background Color', type: 'color' },
-					{ value: 'textColor', label: 'Text Color', type: 'color' },
-					// Message basics
-					{ value: 'chatmessage', label: 'Chat Message', type: 'text' },
-					{ value: 'chatname', label: 'Username (chatname)', type: 'text' },
-					{ value: 'type', label: 'Source Type (platform)', type: 'text' },
-					{ value: 'sourceName', label: 'Source / Channel Name', type: 'text' },
-					{ value: 'userid', label: 'User ID', type: 'text' },
-					// Media
-					{ value: 'chatimg', label: 'Avatar URL (chatimg)', type: 'url' },
-					{ value: 'contentimg', label: 'Content Image / Video (contentimg)', type: 'url' },
-					{ value: 'sourceImg', label: 'Source Icon URL', type: 'url' },
-					// Event & metadata
-					{ value: 'title', label: 'Event Title', type: 'text' },
-					{ value: 'subtitle', label: 'Event Subtitle', type: 'text' },
-					{ value: 'membership', label: 'Membership Details', type: 'text' },
-					{ value: 'hasDonation', label: 'Donation Amount (hasDonation)', type: 'text' },
-					{ value: 'event', label: 'Event Flag / Name', type: 'text' },
-					// Status flags
-					{ value: 'mod', label: 'Is Moderator', type: 'boolean' },
-					{ value: 'vip', label: 'Is VIP', type: 'boolean' },
-					{ value: 'verified', label: 'Is Verified', type: 'boolean' },
-					{ value: 'bot', label: 'Is Bot', type: 'boolean' },
-					{ value: 'host', label: 'Is Host', type: 'boolean' },
-					{ value: 'admin', label: 'Is Admin', type: 'boolean' },
-					{ value: 'question', label: 'Is Question', type: 'boolean' },
-					{ value: 'private', label: 'Is Private / DM', type: 'boolean' },
-					{ value: 'textonly', label: 'Text-only Message', type: 'boolean' }
-				];
-				
-				const selectedProp = commonProperties.find(p => p.value === node.config.property);
-				const isCustom = !selectedProp || node.config.property === 'custom';
-				const propType = selectedProp?.type || 'text';
-				
-				html += `
-					<div class="property-group">
-						<label class="property-label">Property to Set</label>
-						<select class="property-input" id="prop-property-select">
-							${commonProperties.map(prop => 
-								`<option value="${prop.value}" ${node.config.property === prop.value ? 'selected' : ''}>
-									${prop.label}
-								</option>`
-							).join('')}
-						</select>
-					</div>
-					
-					<div class="property-group" id="custom-property-name" style="${isCustom ? '' : 'display: none;'}">
-						<label class="property-label">Custom Property Name</label>
-						<input type="text" class="property-input" id="prop-property" 
-							value="${isCustom ? (node.config.property || '') : ''}" 
-							placeholder="e.g., customBadge, priority">
-						<div class="property-help">Enter the exact property name</div>
-					</div>
-					
-					<div class="property-group">
-						<label class="property-label">Value</label>`;
-				
-				// Different input types based on property type
-				if (propType === 'color' && node.config.property !== 'custom') {
-					const colorPresets = [
-						{ color: '#FF0000', name: 'Red' },
-						{ color: '#00FF00', name: 'Green' },
-						{ color: '#0000FF', name: 'Blue' },
-						{ color: '#FFFF00', name: 'Yellow' },
-						{ color: '#FF00FF', name: 'Magenta' },
-						{ color: '#00FFFF', name: 'Cyan' },
-						{ color: '#FFA500', name: 'Orange' },
-						{ color: '#800080', name: 'Purple' },
-						{ color: '#FFC0CB', name: 'Pink' },
-						{ color: '#FFFFFF', name: 'White' },
-						{ color: '#000000', name: 'Black' },
-						{ color: '#808080', name: 'Gray' }
-					];
-					
-					html += `
-						<div style="display: flex; gap: 10px; align-items: center;">
-							<input type="color" class="property-input" id="prop-value-color" 
-								value="${node.config.value?.startsWith('#') ? node.config.value : '#FF0000'}" 
-								style="width: 60px; height: 35px;">
-							<input type="text" class="property-input" id="prop-value" 
-								value="${node.config.value || '#FF0000'}" 
-								placeholder="#FF0000 or red or {source}_color"
-								style="flex: 1;">
-						</div>
-						<div class="property-help">Pick a color, use hex code, color name, or template like "{source}_color"</div>
-						<div style="margin-top: 10px;">
-							<label class="property-label">Quick Colors:</label>
-							<div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
-								${colorPresets.map(preset => 
-									`<button type="button" class="color-preset-btn" 
-										data-color="${preset.color}" 
-										style="background: ${preset.color}; width: 30px; height: 30px; border: 1px solid #555; cursor: pointer; border-radius: 4px;"
-										title="${preset.name}"></button>`
-								).join('')}
-							</div>
-						</div>`;
-				} else if (propType === 'boolean') {
-					html += `
-						<select class="property-input" id="prop-value">
-							<option value="true" ${node.config.value === true || node.config.value === 'true' ? 'selected' : ''}>True</option>
-							<option value="false" ${node.config.value === false || node.config.value === 'false' ? 'selected' : ''}>False</option>
-						</select>
-						<div class="property-help">Set boolean flag</div>`;
-				} else {
-					html += `
-						<input type="text" class="property-input" id="prop-value" 
-							value="${node.config.value || ''}" 
-							placeholder="${propType === 'url' ? 'https://example.com/image.png' : 'Enter value or use {username}, {source}, etc.'}">
-						<div class="property-help">Can use template variables: {username}, {source}, {message}, {type}</div>`;
-				}
-				
-				html += `</div>
-					
-					<details style="margin-top: 10px;">
-						<summary style="cursor: pointer; color: #888;">Examples & Use Cases</summary>
-						<div style="margin-top: 10px; padding: 10px; background: #2a2a2a; border-radius: 4px;">
-							<strong>Platform Colors:</strong><br>
-							• YouTube → nameColor: #FF0000<br>
-							• Twitch → nameColor: #9146FF<br>
-							• Discord → nameColor: #5865F2<br><br>
-							
-							<strong>Role-based Colors:</strong><br>
-							• Moderators → backgroundColor: #FFD700<br>
-							• VIPs → nameColor: #FF69B4<br>
-							• Donors → textColor: #00FF00<br><br>
-							
-						<strong>Dynamic Values:</strong><br>
-						• Property: chatimg<br>
-						• Value: https://api.example.com/avatar/{username}.png<br><br>
-						
-						<strong>Event Metadata:</strong><br>
-						• Property: event → Value: raid_start<br>
-						• Property: membership → Value: gifted-5<br>
-						• Property: contentimg → Value: https://cdn.example.com/alerts/{userid}.png<br><br>
-						
-						<strong>Conditional Styling:</strong><br>
-						• Use with "From Source" trigger<br>
-						• Set different colors per platform
-					</div>
-					</details>`;
-				break;
-			}
-			case 'sendMessage':
+            case 'setProperty': {
+                const commonProperties = [
+                    { value: 'custom', label: '-- Custom Property --' },
+                    // Styling
+                    { value: 'nameColor', label: 'Name Color', type: 'color' },
+                    { value: 'backgroundColor', label: 'Background Color', type: 'color' },
+                    { value: 'textColor', label: 'Text Color', type: 'color' },
+                    // Message basics
+                    { value: 'chatmessage', label: 'Chat Message', type: 'text' },
+                    { value: 'chatname', label: 'Username (chatname)', type: 'text' },
+                    { value: 'type', label: 'Source Type (platform)', type: 'text' },
+                    { value: 'sourceName', label: 'Source / Channel Name', type: 'text' },
+                    { value: 'userid', label: 'User ID', type: 'text' },
+                    // Media
+                    { value: 'chatimg', label: 'Avatar URL (chatimg)', type: 'url' },
+                    { value: 'contentimg', label: 'Content Image / Video (contentimg)', type: 'url' },
+                    { value: 'sourceImg', label: 'Source Icon URL', type: 'url' },
+                    // Event & metadata
+                    { value: 'title', label: 'Event Title', type: 'text' },
+                    { value: 'subtitle', label: 'Event Subtitle', type: 'text' },
+                    { value: 'membership', label: 'Membership Details', type: 'text' },
+                    { value: 'hasDonation', label: 'Donation Amount (hasDonation)', type: 'text' },
+                    { value: 'event', label: 'Event Flag / Name', type: 'text' },
+                    // Status flags
+                    { value: 'mod', label: 'Is Moderator', type: 'boolean' },
+                    { value: 'vip', label: 'Is VIP', type: 'boolean' },
+                    { value: 'verified', label: 'Is Verified', type: 'boolean' },
+                    { value: 'bot', label: 'Is Bot', type: 'boolean' },
+                    { value: 'host', label: 'Is Host', type: 'boolean' },
+                    { value: 'admin', label: 'Is Admin', type: 'boolean' },
+                    { value: 'question', label: 'Is Question', type: 'boolean' },
+                    { value: 'private', label: 'Is Private / DM', type: 'boolean' },
+                    { value: 'textonly', label: 'Text-only Message', type: 'boolean' }
+                ];
+                
+                const selectedProp = commonProperties.find(p => p.value === node.config.property);
+                const isCustom = !selectedProp || node.config.property === 'custom';
+                const propType = selectedProp?.type || 'text';
+                
+                html += `
+                    <div class="property-group">
+                        <label class="property-label">Property to Set</label>
+                        <select class="property-input" id="prop-property-select">
+                            ${commonProperties.map(prop => 
+                                `<option value="${prop.value}" ${node.config.property === prop.value ? 'selected' : ''}>
+                                    ${prop.label}
+                                </option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="property-group" id="custom-property-name" style="${isCustom ? '' : 'display: none;'}">
+                        <label class="property-label">Custom Property Name</label>
+                        <input type="text" class="property-input" id="prop-property" 
+                            value="${isCustom ? (node.config.property || '') : ''}" 
+                            placeholder="e.g., customBadge, priority">
+                        <div class="property-help">Enter the exact property name</div>
+                    </div>
+                    
+                    <div class="property-group">
+                        <label class="property-label">Value</label>`;
+                
+                // Different input types based on property type
+                if (propType === 'color' && node.config.property !== 'custom') {
+                    const colorPresets = [
+                        { color: '#FF0000', name: 'Red' },
+                        { color: '#00FF00', name: 'Green' },
+                        { color: '#0000FF', name: 'Blue' },
+                        { color: '#FFFF00', name: 'Yellow' },
+                        { color: '#FF00FF', name: 'Magenta' },
+                        { color: '#00FFFF', name: 'Cyan' },
+                        { color: '#FFA500', name: 'Orange' },
+                        { color: '#800080', name: 'Purple' },
+                        { color: '#FFC0CB', name: 'Pink' },
+                        { color: '#FFFFFF', name: 'White' },
+                        { color: '#000000', name: 'Black' },
+                        { color: '#808080', name: 'Gray' }
+                    ];
+                    
+                    html += `
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="color" class="property-input" id="prop-value-color" 
+                                value="${node.config.value?.startsWith('#') ? node.config.value : '#FF0000'}" 
+                                style="width: 60px; height: 35px;">
+                            <input type="text" class="property-input" id="prop-value" 
+                                value="${node.config.value || '#FF0000'}" 
+                                placeholder="#FF0000 or red or {source}_color"
+                                style="flex: 1;">
+                        </div>
+                        <div class="property-help">Pick a color, use hex code, color name, or template like "{source}_color"</div>
+                        <div style="margin-top: 10px;">
+                            <label class="property-label">Quick Colors:</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+                                ${colorPresets.map(preset => 
+                                    `<button type="button" class="color-preset-btn" 
+                                        data-color="${preset.color}" 
+                                        style="background: ${preset.color}; width: 30px; height: 30px; border: 1px solid #555; cursor: pointer; border-radius: 4px;"
+                                        title="${preset.name}"></button>`
+                                ).join('')}
+                            </div>
+                        </div>`;
+                } else if (propType === 'boolean') {
+                    html += `
+                        <select class="property-input" id="prop-value">
+                            <option value="true" ${node.config.value === true || node.config.value === 'true' ? 'selected' : ''}>True</option>
+                            <option value="false" ${node.config.value === false || node.config.value === 'false' ? 'selected' : ''}>False</option>
+                        </select>
+                        <div class="property-help">Set boolean flag</div>`;
+                } else {
+                    html += `
+                        <input type="text" class="property-input" id="prop-value" 
+                            value="${node.config.value || ''}" 
+                            placeholder="${propType === 'url' ? 'https://example.com/image.png' : 'Enter value or use {username}, {source}, etc.'}">
+                        <div class="property-help">Can use template variables: {username}, {source}, {message}, {type}</div>`;
+                }
+                
+                html += `</div>
+                    
+                    <details style="margin-top: 10px;">
+                        <summary style="cursor: pointer; color: #888;">Examples & Use Cases</summary>
+                        <div style="margin-top: 10px; padding: 10px; background: #2a2a2a; border-radius: 4px;">
+                            <strong>Conditional Styling:</strong><br>
+                            • Use with "From Source" trigger<br>
+                            • Set different colors per platform
+                    </div>
+                    </details>`;
+                break;
+            }
+            case 'featureMessage':
+                html += `<div class="property-group">
+                    <p class="property-help">Immediately features the triggering message in the dock and featured overlay, matching a manual click in the chat list.</p>
+                    <div class="property-help">Use with a trigger like “Message Starts With” or “Channel Points” to auto-feature specific messages.</div>
+                </div>`;
+                break;
+            case 'sendMessage':
 				// Send Message allows sending generated messages (e.g., thank you messages, announcements)
 				const sendDestinations = [
 					{ value: 'reply', label: '↩️ Reply to Source' },
@@ -3837,6 +3930,18 @@ class EventFlowEditor {
                 </div>
                 <div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || 'Thank you {username}!'}</textarea><div class="property-help">Use {username}, {message}, {source} placeholders</div></div>
                 <div class="property-group"><label class="property-label">Timeout (ms)</label><input type="number" class="property-input" id="prop-timeout" value="${node.config.timeout || 0}"><div class="property-help">Delay before sending (0 for immediate).</div></div>
+                <div class="property-group">
+                    <label class="property-label">Sanitization Mode</label>
+                    <select class="property-input" id="prop-sanitizeMode">
+                        <option value="safe" ${(node.config.sanitizeMode || 'safe') === 'safe' ? 'selected' : ''}>Safe - Full sanitization (default)</option>
+                        <option value="preserveUrls" ${node.config.sanitizeMode === 'preserveUrls' ? 'selected' : ''}>Preserve URLs - Keep dots</option>
+                        <option value="raw" ${node.config.sanitizeMode === 'raw' ? 'selected' : ''}>Raw - HTML stripping only</option>
+                    </select>
+                    <div class="property-help">Safe strips dots/commands to prevent loops. Preserve URLs keeps dots intact. Raw only removes HTML tags.</div>
+                </div>
+                <div id="sanitize-warning" style="display:${(node.config.sanitizeMode || 'safe') !== 'safe' ? 'block' : 'none'}; color: #ff6b6b; padding: 5px 0; font-size: 12px;">
+                    ⚠️ Non-safe modes may cause reflection mismatches if platforms modify your message (URL shortening, etc.)
+                </div>
                 <div class="property-help">Destinations: <strong>Reply to Source</strong> posts back only to the originating tab; <strong>All</strong> includes the source; <strong>All (Excluding Source)</strong> prevents posting back to the origin.</div>
                 <div class="property-help">Reflections: Sent messages are tagged as reflections when they re‑enter via the extension (to avoid loops). Add a <strong>Reflection Filter</strong> node in this flow to control whether those reflected posts appear in the dock/overlays: <em>Block All</em> hides them, <em>Allow First</em> lets only the first show within the window, <em>Allow All</em> shows all. The filter does not change sending; it only controls display on re‑ingest.</div>`;
 				break;
@@ -4412,6 +4517,11 @@ class EventFlowEditor {
 							value="${node.config.sceneName || ''}" placeholder="e.g., Game Scene, Starting Soon">
 						<div class="property-help">The exact name of the OBS scene to switch to</div>
 					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>OBS WebSocket option:</strong><br>
+						This action can also use OBS WebSocket v5 on OBS 28+ (default port 4455, password optional).<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Set your Browser Source permissions to "Advanced Access Level" to enable OBS control.
@@ -4435,12 +4545,17 @@ class EventFlowEditor {
 						</select>
 						<div class="property-help">Set whether to show, hide, or toggle the source</div>
 					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Version note:</strong><br>
+						This action requires OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; only add <code>&obspw=...</code> if OBS requires one.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
 						1. Enable in OBS: Tools → WebSocket Server Settings<br>
-						2. Note your password (required by OBS)<br>
-						3. Add to actions.html URL: <code>&obspw=yourpassword</code><br>
-						Example: <code>actions.html?session=test&obspw=abc123</code>
+						2. Add a password only if your OBS server requires one<br>
+						3. Flow Actions expects OBS WebSocket v5 on OBS 28+ (default port 4455)<br>
+						Example: <code>actions.html?session=test&obsws=ws://127.0.0.1:4455</code>
 					</div>`;
 				break;
 				
@@ -4466,10 +4581,15 @@ class EventFlowEditor {
 							<option value="false" ${node.config.enabled === false || node.config.enabled === 'false' ? 'selected' : ''}>Disable</option>
 						</select>
 					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Version note:</strong><br>
+						This action requires OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; only add <code>&obspw=...</code> if OBS requires one.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
 						1. Enable in OBS: Tools → WebSocket Server Settings<br>
-						2. Add password to actions.html URL: <code>&obspw=yourpassword</code>
+						2. Add <code>&obspw=...</code> only if your OBS server requires a password
 					</div>`;
 				break;
 				
@@ -4489,10 +4609,15 @@ class EventFlowEditor {
 							<option value="false" ${node.config.muted === false || node.config.muted === 'false' ? 'selected' : ''}>Unmute</option>
 						</select>
 					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Version note:</strong><br>
+						This action requires OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; only add <code>&obspw=...</code> if OBS requires one.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
 						1. Enable in OBS: Tools → WebSocket Server Settings<br>
-						2. Add password to actions.html URL: <code>&obspw=yourpassword</code>
+						2. Add <code>&obspw=...</code> only if your OBS server requires a password
 					</div>`;
 				break;
 				
@@ -4500,6 +4625,11 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<div class="property-help">Starts recording in OBS. Make sure recording is configured in OBS settings.</div>
+					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Connection order:</strong><br>
+						Event Flow now tries OBS WebSocket v5 first, then falls back to the OBS Browser Source API if the page is running inside OBS.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
 					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
@@ -4512,6 +4642,11 @@ class EventFlowEditor {
 					<div class="property-group">
 						<div class="property-help">Stops the current recording in OBS.</div>
 					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Connection order:</strong><br>
+						Event Flow now tries OBS WebSocket v5 first, then falls back to the OBS Browser Source API if the page is running inside OBS.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Browser Source needs "Advanced Access Level" permissions.
@@ -4522,6 +4657,11 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<div class="property-help">Starts streaming in OBS. Make sure stream settings are configured.</div>
+					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Connection order:</strong><br>
+						Event Flow now tries OBS WebSocket v5 first, then falls back to the OBS Browser Source API if the page is running inside OBS.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
 					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
@@ -4534,6 +4674,11 @@ class EventFlowEditor {
 					<div class="property-group">
 						<div class="property-help">Stops the current stream in OBS.</div>
 					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Connection order:</strong><br>
+						Event Flow now tries OBS WebSocket v5 first, then falls back to the OBS Browser Source API if the page is running inside OBS.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Browser Source needs "Advanced Access Level" permissions.
@@ -4544,6 +4689,11 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<div class="property-help">Saves the replay buffer. Replay buffer must be enabled and running in OBS.</div>
+					</div>
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Connection order:</strong><br>
+						Event Flow now tries OBS WebSocket v5 first, then falls back to the OBS Browser Source API if the page is running inside OBS.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
 					</div>
 					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
@@ -5085,6 +5235,22 @@ class EventFlowEditor {
                 // ensure config refresh
                 if (nodeData && nodeData.config) {
                     nodeData.config.policy = e.target.value;
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        // Special handling for sanitizeMode dropdown (Send Message node)
+        const sanitizeModeSelect = document.getElementById('prop-sanitizeMode');
+        if (sanitizeModeSelect) {
+            sanitizeModeSelect.addEventListener('change', (e) => {
+                const warning = document.getElementById('sanitize-warning');
+                if (warning) {
+                    warning.style.display = e.target.value === 'safe' ? 'none' : 'block';
+                }
+                if (nodeData && nodeData.config) {
+                    nodeData.config.sanitizeMode = e.target.value;
                 }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);

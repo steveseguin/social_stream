@@ -1424,7 +1424,8 @@
 
 			var timeoutDelay = 0;
 			if (urlParams.has("showtime")) {
-				timeoutDelay = parseInt(urlParams.get("showtime")) || 20000;
+				timeoutDelay = parseInt(urlParams.get("showtime"));
+				if (isNaN(timeoutDelay)) { timeoutDelay = 20000; }
 			}
 
 			var borderRadius = 0;

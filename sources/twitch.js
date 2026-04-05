@@ -35,6 +35,13 @@
 
 	const hideContentInParentheses = str => str.replace(/\(.*?\)/g, "");
 
+	function normalizeDisplayName(name) {
+		if (!name) {
+			return "";
+		}
+		return hideContentInParentheses(escapeHtml(name)).trim();
+	}
+
 	function getTwitchAvatarImage(username) {
 		fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username=" + encodeURIComponent(username))
 			.then(response => {
@@ -153,6 +160,144 @@
 		chatBadges: "img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun, img.chat-badge[src]",
 		messageContainer: ".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper, .room-message"
 	};
+	const trackedTwitchMessageIds = new Map();
+	const MAX_TRACKED_TWITCH_MESSAGE_IDS = 500;
+
+	function getMessageContainer(ele) {
+		if (!ele || ele.nodeType !== 1) {
+			return null;
+		}
+		if (ele.matches?.(SELECTORS.messageContainer)) {
+			return ele;
+		}
+		return ele.closest?.(SELECTORS.messageContainer) || ele.querySelector?.(SELECTORS.messageContainer) || null;
+	}
+
+	function getComputedAccentColor(ele) {
+		if (!ele || ele.nodeType !== 1) {
+			return "";
+		}
+		try {
+			var computed = getComputedStyle(ele);
+			var color = computed.backgroundColor;
+			if (color == "rgba(0, 0, 0, 0)") {
+				color = "";
+			}
+			if (!color && (computed.borderWidth != "0px")) {
+				color = computed.borderColor;
+				if (color == "rgba(0, 0, 0, 0)") {
+					color = "";
+				}
+			}
+			return color || "";
+		} catch (e) {}
+		return "";
+	}
+
+	function getHighlightColor(ele) {
+		if (!ele || ele.nodeType !== 1) {
+			return "";
+		}
+
+		var noticeAttachment = null;
+		var inlineHighlight = ele.querySelector(".chat-line__message-body--highlighted");
+		var legacyHighlight = ele.querySelector(".has-highlight");
+		try {
+			noticeAttachment = ele.closest(".user-notice-line, [data-test-selector='user-notice-line']");
+		} catch (e) {}
+
+		var candidates = [ele, inlineHighlight, legacyHighlight];
+		if (!inlineHighlight && noticeAttachment) {
+			inlineHighlight = noticeAttachment.querySelector(".chat-line__message-body--highlighted");
+		}
+		if (inlineHighlight) {
+			candidates.push(noticeAttachment);
+			candidates.push(noticeAttachment ? noticeAttachment.previousElementSibling : null);
+		}
+
+		for (var i = 0; i < candidates.length; i++) {
+			var color = getComputedAccentColor(candidates[i]);
+			if (color) {
+				return color;
+			}
+		}
+		return "";
+	}
+
+	function getTrackedMessageKey(ele, fallbackChatname = "", fallbackMessage = "") {
+		const ariaLabel = ele?.getAttribute?.("aria-label") || "";
+		if (ariaLabel) {
+			return ariaLabel.trim();
+		}
+		const textMessage = stripHtmlContent(fallbackMessage);
+		if (fallbackChatname && textMessage) {
+			return `${fallbackChatname}: ${textMessage}`.trim();
+		}
+		return "";
+	}
+
+	function rememberTrackedMessageId(ele, id, fallbackChatname = "", fallbackMessage = "") {
+		if (!ele || !id) {
+			return;
+		}
+		ele.dataset.mid = id;
+		const key = getTrackedMessageKey(ele, fallbackChatname, fallbackMessage);
+		if (!key) {
+			return;
+		}
+		if (trackedTwitchMessageIds.has(key)) {
+			trackedTwitchMessageIds.delete(key);
+		}
+		trackedTwitchMessageIds.set(key, id);
+		if (trackedTwitchMessageIds.size > MAX_TRACKED_TWITCH_MESSAGE_IDS) {
+			const oldestKey = trackedTwitchMessageIds.keys().next().value;
+			if (oldestKey) {
+				trackedTwitchMessageIds.delete(oldestKey);
+			}
+		}
+	}
+
+	function getTrackedMessageId(ele) {
+		const midSource = ele?.dataset?.mid
+			? ele
+			: ele?.querySelector?.("[data-mid]") || ele?.closest?.("[data-mid]") || null;
+		if (midSource?.dataset?.mid) {
+			const parsedId = parseInt(midSource.dataset.mid, 10);
+			return isNaN(parsedId) ? null : parsedId;
+		}
+		const key = getTrackedMessageKey(ele);
+		if (!key || !trackedTwitchMessageIds.has(key)) {
+			return null;
+		}
+		const parsedId = parseInt(trackedTwitchMessageIds.get(key), 10);
+		return isNaN(parsedId) ? null : parsedId;
+	}
+
+	function getDeleteChatName(ele) {
+		const displayNameEle = ele?.querySelector?.(SELECTORS.displayName);
+		if (displayNameEle?.innerText) {
+			return normalizeDisplayName(displayNameEle.innerText);
+		}
+		const ariaLabel = ele?.getAttribute?.("aria-label") || "";
+		if (ariaLabel.includes(":")) {
+			return normalizeDisplayName(ariaLabel.split(":")[0]);
+		}
+		return "";
+	}
+
+	function isDeletedMessageNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return false;
+		}
+		const dataTarget = node.dataset?.aTarget || node.getAttribute?.("data-a-target") || "";
+		if (dataTarget === "chat-deleted-message-placeholder" || node.classList?.contains("chat-line__message--deleted-notice")) {
+			return true;
+		}
+		return !!node.querySelector?.("[data-a-target='chat-deleted-message-placeholder'], .chat-line__message--deleted-notice");
+	}
+
+	const KNOCK_PRIMARY_PATTERNS = [/wants to collaborate/i];
+	const KNOCK_FALLBACK_PATTERNS = [/stream together/i, /co-?stream/i];
 	
 	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
 	
@@ -369,6 +514,135 @@
 		return textArray;
 	}
 
+	function findKnockMessageNode(root, patterns) {
+		if (!root || !root.querySelectorAll) {
+			return null;
+		}
+		const nodes = root.querySelectorAll("p, span");
+		for (const node of nodes) {
+			const text = node.textContent ? node.textContent.trim() : "";
+			if (!text) {
+				continue;
+			}
+			for (const pattern of patterns) {
+				if (pattern.test(text)) {
+					return node;
+				}
+			}
+		}
+		return null;
+	}
+
+	function extractKnockMessage(root) {
+		const primaryNode = findKnockMessageNode(root, KNOCK_PRIMARY_PATTERNS);
+		if (primaryNode) {
+			return { node: primaryNode, text: primaryNode.textContent.trim() };
+		}
+		const fallbackNode = findKnockMessageNode(root, KNOCK_FALLBACK_PATTERNS);
+		if (fallbackNode) {
+			return { node: fallbackNode, text: fallbackNode.textContent.trim() };
+		}
+		return null;
+	}
+
+	function findKnockAlertContainer(node) {
+		if (!node || node.nodeType !== 1) {
+			return null;
+		}
+		let anchor = null;
+		let current = node;
+		for (let depth = 0; depth < 3 && current; depth++) {
+			const messageMatch = extractKnockMessage(current);
+			const openCallNode = current.matches?.("[class*='openCallingAlert']") ? current : current.querySelector?.("[class*='openCallingAlert']");
+			anchor = messageMatch?.node || openCallNode;
+			if (anchor) {
+				break;
+			}
+			current = current.parentNode;
+		}
+		if (!anchor) {
+			return null;
+		}
+		const queueRoot = anchor.closest?.("[data-a-target='chat-alert-queue']");
+		if (!queueRoot) {
+			return null;
+		}
+		const container = anchor.closest("[class*='engagement--']") || anchor.closest("[class*='expanded--']") || anchor;
+		if (!container || container.dataset.ignore) {
+			return null;
+		}
+		return container;
+	}
+
+	function processKnockAlert(container) {
+		if (!container || container.dataset.ignore) {
+			return;
+		}
+		container.dataset.ignore = true;
+
+		const messageMatch = extractKnockMessage(container);
+		if (!messageMatch || !messageMatch.text) {
+			return;
+		}
+		const messageText = messageMatch.text.trim();
+		if (!messageText) {
+			return;
+		}
+
+		const now = Date.now();
+		if (messageText === lastKnockMessage && now - lastKnockAt < 5000) {
+			return;
+		}
+		lastKnockMessage = messageText;
+		lastKnockAt = now;
+
+		let chatname = "";
+		const nameMatch = messageText.match(/^(.+?)\s+wants to collaborate/i);
+		if (nameMatch && nameMatch[1]) {
+			chatname = nameMatch[1].trim();
+		}
+
+		let avatarSrc = "";
+		const avatarImg = container.querySelector("img[alt]");
+		if (avatarImg) {
+			if (!chatname) {
+				chatname = avatarImg.getAttribute("alt") || "";
+			}
+			avatarSrc = avatarImg.getAttribute("src") || "";
+		}
+
+		var data = {};
+		data.chatname = escapeHtml(chatname);
+		data.chatbadges = [];
+		data.nameColor = "";
+		data.chatmessage = escapeHtml(messageText);
+		data.chatimg = avatarSrc;
+		data.hasDonation = "";
+		data.membership = "";
+		data.type = "twitch";
+		data.textonly = settings.textonlymode || false;
+		data.event = "knock";
+
+		if (brandedImageURL) {
+			data.sourceImg = brandedImageURL;
+		}
+		if (channelName){
+			data.sourceName = channelName;
+		}
+
+		try {
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				{
+					message: data
+				},
+				function (e) {}
+			);
+		} catch (e) {
+			//
+		}
+	}
+
 	const SUBSCRIBER_PATTERNS = [
 		{ keyword: "subscriber", label: "Subscriber" },
 		{ keyword: "suscriptor", label: "Suscriptor" },
@@ -397,6 +671,16 @@
 			}
 		}
 		return null;
+	}
+
+	function isSubscriptionNoticeText(text) {
+		if (!text) {
+			return false;
+		}
+		if (matchSubscriberKeyword(text)) {
+			return true;
+		}
+		return /\bresub(?:scribed)?\b|\bsubscribed\b|\bsubbed\b|\bprime\s+sub\b|\bsubscription\b|\bgift(?:ed|ing)\s+\d*\s*sub(?:s)?\b/i.test(text);
 	}
 
 	function buildSubscriberSubtitle(text, label) {
@@ -504,6 +788,8 @@
 	var lastMessage = "";
 	var lastUser = "";
 	var lastEle = null;
+	var lastKnockMessage = "";
+	var lastKnockAt = 0;
 	//var midList = [];
 	
 	function sleep(ms) {
@@ -517,11 +803,12 @@
 		
 		if (settings.delaytwitch){
 		  await sleep(3000);
-		  if (!ele){return;}
-		  if (ele.querySelector(".deleted, [data-a-target='chat-deleted-message-placeholder']")) {
-			  // already deleted.
-			  return;  
-		  }
+	    }
+	  
+	    if (!ele){return;}
+	    if (isDeletedMessageNode(ele) || ele.querySelector(".deleted, [data-a-target='chat-deleted-message-placeholder'], .chat-line__message--deleted-notice")) {
+		  // already deleted.
+		  return;
 	    }
 	  
 	    if (!ele.isConnected){
@@ -547,9 +834,7 @@
 			}
 
 			username = escapeHtml(username);
-			displayName = escapeHtml(displayName);
-
-			displayName = hideContentInParentheses(displayName);
+			displayName = normalizeDisplayName(displayName);
 
 			try {
 				nameColor = displayNameEle.style.color || ele.querySelector(".seventv-chat-user, .chat-line__username").style.color;
@@ -631,7 +916,11 @@
 			}
 		} catch (e) {}
 		
-		if (settings.memberchatonly && !subscriber){
+		const hasEventPill = !!ele.querySelector(".message-event-pill");
+		const isNoticeAttachment = hasEventPill || (typeof ele.closest === "function" && !!ele.closest(".user-notice-line, [data-test-selector='user-notice-line']"));
+		const markSubscriberAsMembership = !!subscriber && (!settings.limitedtwitchmemberchat || isNoticeAttachment);
+
+		if (settings.memberchatonly && !markSubscriberAsMembership){
 			return;
 		}
 
@@ -870,37 +1159,7 @@
 
 		try {
 			if (!highlightColor) {
-				var computed = getComputedStyle(ele);
-				highlightColor = computed.backgroundColor;
-				if (highlightColor == "rgba(0, 0, 0, 0)") {
-					highlightColor = "";
-				}
-				if (!highlightColor) {
-					if (computed.borderWidth != "0px") {
-						highlightColor = computed.borderColor;
-						if (highlightColor == "rgba(0, 0, 0, 0)") {
-							highlightColor = "";
-						}
-					}
-				}
-				if (!highlightColor) {
-					let hlele = ele.querySelector(".has-highlight");
-					if (hlele) {
-						computed = getComputedStyle(hlele);
-						highlightColor = computed.backgroundColor;
-						if (highlightColor == "rgba(0, 0, 0, 0)") {
-							highlightColor = "";
-						}
-						if (!highlightColor) {
-							if (computed.borderWidth != "0px") {
-								highlightColor = computed.borderColor;
-								if (highlightColor == "rgba(0, 0, 0, 0)") {
-									highlightColor = "";
-								}
-							}
-						}
-					}
-				}
+				highlightColor = getHighlightColor(ele);
 			}
 		} catch (e) {}
 			
@@ -936,7 +1195,7 @@
 			data.chatimg = "";
 		}
 		data.hasDonation = hasDonation;
-		data.membership = subscriber;
+		data.membership = markSubscriberAsMembership ? subscriber : "";
 		data.subtitle = subtitle;
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
@@ -971,7 +1230,7 @@
 				},
 				function (e) {
 					if (e?.id){
-						ele.dataset.mid = e.id;
+						rememberTrackedMessageId(ele, e.id, data.chatname, data.chatmessage);
 					}
 				}
 			);
@@ -1173,8 +1432,7 @@
 		if (displayNameEle){
 			displayName = displayNameEle.innerText;
 			if (displayName){
-				displayName = escapeHtml(displayName);
-				displayName = hideContentInParentheses(displayName).trim();
+				displayName = normalizeDisplayName(displayName);
 			}
 		}
 		data.chatname = displayName;
@@ -1198,7 +1456,14 @@
 		} else if (data.chatmessage.includes(" gifting ") && data.chatmessage.includes(" Sub")) {
 			data.event = "giftpurchase";
 		} else if (data.chatmessage.includes(" gifted ") && data.chatmessage.includes(" Sub")) {
-			data.event = "sponsorship";
+			data.event = "subscription_gift";
+		}
+
+		if (settings.limitedtwitchmemberchat) {
+			const isMembershipNotice = (data.event === "giftpurchase") || (data.event === "subscription_gift") || isSubscriptionNoticeText(data.chatmessage);
+			if (isMembershipNotice) {
+				data.membership = getTranslation("subscriber", "SUBSCRIBER");
+			}
 		}
 		
 
@@ -1224,54 +1489,46 @@
 
 	function deleteThis(ele) {
 		try {
-			ele.dataset.ignore = true;
-			if (ele.deleted) {
+			const messageEle = getMessageContainer(ele) || ele;
+			if (!messageEle || messageEle.nodeType !== 1) {
 				return;
 			}
-			ele.deleted = true;
-			
-			var chatname = ele.querySelector(SELECTORS.displayName);
-			if (chatname) {
-				var data = {};
-				data.chatname = escapeHtml(chatname.innerText);
-				data.type = "twitch";
-				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
-				
-				try {
-					chrome.runtime.sendMessage(
-						chrome.runtime.id,
-						{
-							delete: data
-						},
-						function (e) {}
-					);
-				} catch (e) {
-					//
-				}
+			messageEle.dataset.ignore = true;
+			if (messageEle.deleted) {
 				return;
 			}
-			chatname = ele.parentNode.querySelector(SELECTORS.displayName);
+			messageEle.deleted = true;
+
+			var data = {};
+			data.type = "twitch";
+
+			const trackedId = getTrackedMessageId(messageEle);
+			if (trackedId !== null) {
+				data.id = trackedId;
+			}
+
+			const chatname = getDeleteChatName(messageEle) || getDeleteChatName(ele);
 			if (chatname) {
-				ele.parentNode.dataset.ignore = true;
-				if (ele.parentNode.deleted) {
-					return;
-				}
-				ele.parentNode.deleted = true;
-				var data = {};
-				data.chatname = escapeHtml(chatname.innerText);
-				data.type = "twitch";
-				try {
-					chrome.runtime.sendMessage(
-						chrome.runtime.id,
-						{
-							delete: data
-						},
-						function (e) {}
-					);
-				} catch (e) {
-					//
-				}
+				data.chatname = chatname;
+			}
+
+			if (!data.id && !data.chatname) {
 				return;
+			}
+			if (!data.id) {
+				data.onlyLast = true;
+			}
+
+			try {
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					{
+						delete: data
+					},
+					function (e) {}
+				);
+			} catch (e) {
+				//
 			}
 		} catch (e) {}
 	}
@@ -1303,10 +1560,9 @@
 				if (mutation.target === target) continue;
 				
 				if (mutation.type === "attributes") {
-					if (mutation.attributeName === "class" && mutation.target.classList.contains("deleted")) {
+					if (mutation.attributeName === "class" && (mutation.target.classList.contains("deleted") || isDeletedMessageNode(mutation.target))) {
 						deleteThis(mutation.target);
-					} else if (mutation.attributeName === "data-a-target" && 
-							  mutation.target.data?.aTarget === "chat-deleted-message-placeholder") {
+					} else if (mutation.attributeName === "data-a-target" && isDeletedMessageNode(mutation.target)) {
 						deleteThis(mutation.target);
 					}
 					continue;
@@ -1322,9 +1578,14 @@
 					if (!node || !node.dataset || node.nodeType === 3) continue;
 					
 					try {
-						if ((node.dataset?.aTarget === "chat-deleted-message-placeholder") || 
-							node.querySelector('[data-a-target="chat-deleted-message-placeholder"]')) {
+						if (isDeletedMessageNode(node)) {
 							deleteThis(node);
+							continue;
+						}
+
+						const knockElement = findKnockAlertContainer(node);
+						if (knockElement){
+							checkList.push([processKnockAlert, knockElement]);
 							continue;
 						}
 
@@ -1365,23 +1626,13 @@
 			};
 		}
 
-		if (document.querySelector("seventv-container")) {
-			var config = {
-				childList: true, // Observe the addition of new child nodes
-				subtree: true, // Observe the target node and its descendants
-				attributes: true, // Observe attributes changes
-				attributeOldValue: true, // Optionally capture the old value of the attribute
-				attributeFilter: ["data-a-target", "class"] // Only observe changes to 'is-deleted' attribute
-			};
-		} else {
-			var config = {
-				childList: true, // Observe the addition of new child nodes
-				subtree: true, // Observe the target node and its descendants
-				attributes: true, // Observe attributes changes
-				attributeOldValue: true, // Optionally capture the old value of the attribute
-				attributeFilter: ["data-a-target"] // Only observe changes to 'is-deleted' attribute
-			};
-		}
+		var config = {
+			childList: true, // Observe the addition of new child nodes
+			subtree: true, // Observe the target node and its descendants
+			attributes: true, // Observe attributes changes
+			attributeOldValue: true, // Optionally capture the old value of the attribute
+			attributeFilter: ["data-a-target", "class"] // Observe Twitch delete markers on current and legacy DOMs
+		};
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);

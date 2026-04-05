@@ -11,8 +11,8 @@
 <body>
     <div class="container">
         <div id="quota-warning" class="quota-warning hidden">
-            <span id="quota-warning-text">We've hit the default YouTube API quota. You can use your own Google API project to continue without interruptions.</span>
-            <button id="quota-open-credentials" class="auth-button" style="background:#fbbc05;color:#202124;">Set Up My Credentials</button>
+            <span id="quota-warning-text">We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.</span>
+            <button id="quota-open-credentials" class="auth-button" style="background:#fbbc05;color:#202124;">Set Up My YouTube Project</button>
         </div>
         <div class="main-content">
             <div class="auth">
@@ -23,7 +23,20 @@
                     
             <div class="auth-section">
                 <a id="auth-link" class="auth-button">Sign in with YouTube</a>
-                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom OAuth Client ID</div>
+                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Custom YouTube project active</div>
+                <div id="auth-method-selector" class="auth-method-selector hidden">
+                    <label class="auth-method-label">Sign-in method:</label>
+                    <div class="auth-method-options">
+                        <label class="auth-method-option">
+                            <input type="radio" name="yt-auth-method" value="external" checked>
+                            <span>External browser</span>
+                        </label>
+                        <label class="auth-method-option">
+                            <input type="radio" name="yt-auth-method" value="local">
+                            <span>Local app</span>
+                        </label>
+                    </div>
+                </div>
             </div>
                     
                     <div class="landing-description">
@@ -33,28 +46,24 @@
                     </div>
 
                     <details id="credentials-details" class="credentials-details">
-                        <summary>Advanced: Use your own Google API credentials</summary>
+                        <summary>Use your own YouTube project in the desktop app (advanced)</summary>
                         <div class="credentials-form">
                             <label for="custom-client-id">OAuth Client ID</label>
-                            <input id="custom-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com" />
-                            <label for="custom-api-key">API Key (optional)</label>
-                            <input id="custom-api-key" type="text" placeholder="AIza... (optional)" />
+                            <input id="custom-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                            <label for="custom-client-secret">OAuth Client Secret</label>
+                            <input id="custom-client-secret" type="password" placeholder="GOCSPX-..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                            <label for="custom-api-key">API Key</label>
+                            <input id="custom-api-key" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                             <div class="credentials-actions">
                                 <button id="save-credentials" class="connect-button" style="background:#1a73e8;">Save</button>
                                 <button id="clear-credentials" class="connect-button" style="background:#5f6368;">Reset to default</button>
                             </div>
+                            <div id="credentials-browser-note" class="credentials-note hidden">Custom YouTube project settings are only available in the SSN Standalone desktop app.</div>
                             <div class="credentials-help">
-                                <p><strong>How to set up in Google Cloud:</strong></p>
-                                <ul>
-                                    <li>Create or select a project at console.cloud.google.com</li>
-                                    <li>Enable the “YouTube Data API v3” in APIs & Services</li>
-                                    <li>Configure OAuth consent screen (External), add yourself as a test user or publish</li>
-                                    <li>Create Credentials → OAuth client ID → Web application</li>
-                                    <li>Add the following to Authorized redirect URIs:</li>
-                                </ul>
+                                <p><strong>Need help?</strong> Open the full setup guide before creating or pasting credentials.</p>
+                                <button id="open-setup-guide" type="button" class="guide-link-button">Open Setup Guide</button>
                                 <code id="redirect-uri-hint"></code>
-                                <p>Save and copy your Client ID (ends with .apps.googleusercontent.com) into the field above. API Key is optional.</p>
-                                <p>After saving, sign out and sign in again to use your credentials.</p>
+                                <p>All 3 fields are required together. Save, then sign out and sign in again.</p>
                             </div>
                         </div>
                     </details>
@@ -123,32 +132,61 @@
         </div>
 
         <div class="sidebar hidden socket">
-            <div class="permissions-container" id="permissions-info"></div>
+            <button id="sidebar-toggle" class="sidebar-toggle" title="Collapse sidebar">&rsaquo;</button>
+            <div class="sidebar-content">
+            <div class="permissions-container hidden" id="permissions-info"></div>
             <div class="credentials-container" id="credentials-container-signedin">
-                <div class="permissions-header">Use Your Own Credentials</div>
-                <div class="credentials-form inline">
+                <details id="signedin-credentials-details" class="credentials-details">
+                    <summary>Edit Your YouTube Project</summary>
+                    <div class="credentials-form inline">
                     <label for="custom-client-id-2">OAuth Client ID</label>
-                    <input id="custom-client-id-2" type="text" placeholder="xxxx.apps.googleusercontent.com" />
-                    <label for="custom-api-key-2">API Key (optional)</label>
-                    <input id="custom-api-key-2" type="text" placeholder="AIza... (optional)" />
+                    <input id="custom-client-id-2" type="text" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                    <label for="custom-client-secret-2">OAuth Client Secret</label>
+                    <input id="custom-client-secret-2" type="password" placeholder="GOCSPX-..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                    <label for="custom-api-key-2">API Key</label>
+                    <input id="custom-api-key-2" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                     <div class="credentials-actions">
                         <button id="save-credentials-2" class="connect-button" style="background:#1a73e8;">Save</button>
                         <button id="clear-credentials-2" class="connect-button" style="background:#5f6368;">Reset</button>
                     </div>
-                    <div class="credentials-note">Changes take effect next sign-in. Use Reset to return to defaults.</div>
+                    <div class="credentials-note">All 3 fields are required together. Changes take effect on the next sign-in.</div>
                     <div class="credentials-help" style="margin-top:8px;">
-                        <p><strong>Setup steps:</strong> Enable “YouTube Data API v3”, configure OAuth consent, create a Web Application OAuth client, and add this Authorized redirect URI:</p>
+                        <p><strong>Need help?</strong> Open the full setup guide before creating or pasting credentials.</p>
+                        <button id="open-setup-guide-2" type="button" class="guide-link-button">Open Setup Guide</button>
                         <code id="redirect-uri-hint-2"></code>
                     </div>
-                </div>
+                    </div>
+                </details>
             </div>
             <div class="recent-events">
                 <h4>Recent Events</h4>
                 <div id="events-list"></div>
             </div>
+            <div class="recent-events" style="margin-top:15px;">
+                <h4>Advanced Controls</h4>
+                <div style="display:grid; gap:8px;">
+                    <label class="auth-method-option" style="display:flex;">
+                        <input type="checkbox" id="sync-delete-messages">
+                        <span>Sync dock deletes to YouTube</span>
+                    </label>
+                    <label class="auth-method-option" style="display:flex;">
+                        <input type="checkbox" id="sync-block-users">
+                        <span>Sync dock blocks to YouTube bans</span>
+                    </label>
+                    <input type="text" id="stream-title" class="channel-input" placeholder="Video title">
+                    <input type="text" id="stream-description" class="channel-input" placeholder="Video description">
+                    <input type="text" id="stream-category" class="channel-input" placeholder="Video category name or ID">
+                    <div class="credentials-actions">
+                        <button id="refresh-stream-info" class="connect-button" style="background:#5f6368;">Refresh Current</button>
+                        <button id="update-stream-info" class="connect-button" style="background:#1a73e8;">Update Metadata</button>
+                    </div>
+                    <div class="credentials-note">YouTube uses a video category, not a Twitch/Kick game category.</div>
+                </div>
+            </div>
+            </div>
         </div>
     </div>
-    
+
     <div class="policy-footer hidden">
         <a href="https://socialstream.ninja/TOS" target="_blank">Terms of Service</a>
         |
@@ -159,6 +197,22 @@
     
 <script>
 
+(function() {
+    var toggle = document.getElementById('sidebar-toggle');
+    var sidebar = toggle.closest('.sidebar');
+    var stored = localStorage.getItem('yt-sidebar-collapsed');
+    if (stored === 'true') {
+        sidebar.classList.add('collapsed');
+        toggle.innerHTML = '&lsaquo;';
+        toggle.title = 'Expand sidebar';
+    }
+    toggle.addEventListener('click', function() {
+        var collapsed = sidebar.classList.toggle('collapsed');
+        toggle.innerHTML = collapsed ? '&lsaquo;' : '&rsaquo;';
+        toggle.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+        localStorage.setItem('yt-sidebar-collapsed', collapsed);
+    });
+})();
 
 try {
     /*
@@ -182,29 +236,119 @@ try {
         'https://www.googleapis.com/auth/youtube.force-ssl',
         'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
     ];
-    var clientId = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
+    var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var YT_AUTH_SOURCE_KEY = 'youtubeOAuthSource';
+    var YT_AUTH_SOURCE_HOSTED = 'default_hosted';
+    var YT_AUTH_SOURCE_CUSTOM = 'custom_ssapp';
+    var clientId = DEFAULT_YT_CLIENT_ID;
+    var clientSecretOverride = '';
     var apiKeyOverride = '';
-    try {
-        // Allow overrides via localStorage or URL for advanced users
-        const storedId = localStorage.getItem('ytClientIdOverride');
-        const storedKey = localStorage.getItem('ytApiKeyOverride');
-        const qp = new URLSearchParams(window.location.search);
-        const hp = new URLSearchParams(window.location.hash.slice(1));
-        const urlClient = qp.get('client_id') || hp.get('client_id');
-        const urlKey = qp.get('api_key') || hp.get('api_key');
-        if (storedId) clientId = storedId;
-        if (storedKey) apiKeyOverride = storedKey;
-        if (urlClient) { clientId = urlClient; }
-        if (urlKey) { apiKeyOverride = urlKey; }
-    } catch {}
+    function getRuntimeParams() {
+        return {
+            query: new URLSearchParams(window.location.search),
+            hash: new URLSearchParams(window.location.hash.slice(1))
+        };
+    }
+    function getYouTubeOAuthBridge() {
+        try {
+            if (window.ninjafy && typeof window.ninjafy.startYouTubeOAuth === 'function') return window.ninjafy;
+        } catch (_) {}
+        try {
+            if (window.__ssapp && typeof window.__ssapp.startYouTubeOAuth === 'function') return window.__ssapp;
+        } catch (_) {}
+        return null;
+    }
+    function isDesktopYouTubeContext() {
+        try {
+            const params = getRuntimeParams();
+            if (params.query.has('ssapp') || params.hash.has('ssapp')) return true;
+        } catch (_) {}
+        return isElectronEnvironment() || !!getYouTubeOAuthBridge();
+    }
+    function supportsCustomDesktopYouTubeAuth() {
+        const bridge = getYouTubeOAuthBridge();
+        return !!(
+            bridge &&
+            typeof bridge.startYouTubeOAuth === 'function' &&
+            typeof bridge.exchangeYouTubeOAuthCode === 'function' &&
+            typeof bridge.refreshYouTubeOAuthToken === 'function'
+        );
+    }
+    function getCustomDesktopCredentials() {
+        try {
+            const params = getRuntimeParams();
+            const storedClientId = localStorage.getItem('ytClientIdOverride') || '';
+            const storedClientSecret = localStorage.getItem('ytClientSecretOverride') || '';
+            const storedApiKey = localStorage.getItem('ytApiKeyOverride') || '';
+            const customClientId = (params.query.get('client_id') || params.hash.get('client_id') || storedClientId || '').trim();
+            const customClientSecret = (params.query.get('client_secret') || params.hash.get('client_secret') || storedClientSecret || '').trim();
+            const customApiKey = (params.query.get('api_key') || params.hash.get('api_key') || storedApiKey || '').trim();
+            const hasAny = !!(customClientId || customClientSecret || customApiKey);
+            const hasAll = !!(customClientId && customClientSecret && customApiKey);
+            return {
+                clientId: customClientId,
+                clientSecret: customClientSecret,
+                apiKey: customApiKey,
+                hasAny: hasAny,
+                hasAll: hasAll,
+                hasPartial: hasAny && !hasAll
+            };
+        } catch (_) {
+            return {
+                clientId: '',
+                clientSecret: '',
+                apiKey: '',
+                hasAny: false,
+                hasAll: false,
+                hasPartial: false
+            };
+        }
+    }
+    function usingCustomDesktopAuth() {
+        const credentials = getCustomDesktopCredentials();
+        return isDesktopYouTubeContext() && credentials.hasAll;
+    }
+    function getStoredAuthSource() {
+        try {
+            return localStorage.getItem(YT_AUTH_SOURCE_KEY) || YT_AUTH_SOURCE_HOSTED;
+        } catch (_) {
+            return YT_AUTH_SOURCE_HOSTED;
+        }
+    }
+    function setStoredAuthSource(source) {
+        try {
+            localStorage.setItem(YT_AUTH_SOURCE_KEY, source || YT_AUTH_SOURCE_HOSTED);
+        } catch (_) {}
+    }
+    function refreshClientOverrides() {
+        try {
+            const credentials = getCustomDesktopCredentials();
+            if (isDesktopYouTubeContext() && credentials.hasAll) {
+                clientId = credentials.clientId;
+                clientSecretOverride = credentials.clientSecret;
+                apiKeyOverride = credentials.apiKey;
+                return;
+            }
+            clientId = DEFAULT_YT_CLIENT_ID;
+            clientSecretOverride = '';
+            apiKeyOverride = '';
+        } catch (_) {
+            clientId = DEFAULT_YT_CLIENT_ID;
+            clientSecretOverride = '';
+            apiKeyOverride = '';
+        }
+    }
+    refreshClientOverrides();
     var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
     var username = "";
     var channel = '';
     var videoId = '';
-    let pollInterval;
+    var quotaWarningActive = false;
+    let streamStatsInterval;
     let channelStatsInterval; // Separate interval for channel stats
-    let subscriberAlertInterval; // Interval for checking new subscribers
     let fetchTimeout; // Track fetch timeout to clear on disconnect
+    let lastKnownViewers = null;
     var lastMessageTime = null;
     var liveChatId = null;
     var nextPageToken = null;
@@ -213,8 +357,17 @@ try {
 	var currentStream = null;
 	var messageQueue = [];
 	var queueDrainTimeout = null;
+	const YT_ADVANCED_CONTROLS_STORAGE_KEY = 'youtubeAdvancedControls';
+	const YT_CHANNEL_LOOKUP_CACHE_KEY = 'youtubeChannelLookupCache';
+	const YT_CHANNEL_LOOKUP_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
     var pendingRelayMessages = [];
     const MAX_CACHED_CHAT_MESSAGES = 500;
+    const LIVE_CHAT_MAX_RESULTS = 500;
+    const QUIET_CHAT_MIN_INTERVAL_MS = 2500;
+    const QUIET_CHAT_BACKOFF_INTERVAL_MS = 5000;
+    const QUIET_CHAT_IDLE_INTERVAL_MS = 8000;
+    const QUIET_CHAT_BACKOFF_THRESHOLD = 3;
+    const QUIET_CHAT_IDLE_THRESHOLD = 10;
     var messageContextCache = new Map();
     var messageCacheOrder = [];
     var channelNameCache = new Map();
@@ -232,6 +385,7 @@ try {
 	}
 	
 	var consecutiveMaxMessages = 0; // Track consecutive polls with max messages
+	var consecutiveEmptyPolls = 0; // Track consecutive polls with no new messages
 	
 	var initialBacklogProcessing = true;
 	var initialBacklogTimestamp = null;
@@ -244,13 +398,15 @@ try {
 	var isPageVisible = true;
 	var lastVisibilityChange = Date.now();
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
-	var foregroundPollingInterval;
 	var tokenRefreshPromise = null;
+	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.";
+	const INNERTUBE_EMOJI_CACHE_TTL = 24 * 60 * 60 * 1000;
 	
 
 	var emojiData = [];
 	var customEmoteData = [];
 	var shortcutMap = new Map(); // For :word: patterns
+	var channelShortcutMap = new Map(); // Active stream/channel custom emoji only
 	var unicodeMap = new Map();  // For Unicode emoji characters
 	
 	
@@ -285,55 +441,6 @@ try {
 		flushPendingRelayMessages();
 	}
 
-	// Request emotes from extension
-	function requestEmotesFromExtension() {
-		if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
-			// Get video ID from current connection
-			if (videoId) {
-				console.log("Requesting emotes for video:", videoId);
-				
-				// Request BTTV emotes
-				chrome.runtime.sendMessage(chrome.runtime.id, { 
-					getBTTV: true,
-					url: "https://youtube.com/?v=" + videoId,
-					videoId: videoId,
-					type: "youtube"
-				}, function (response) {
-					if (chrome.runtime.lastError) {
-						console.log('BTTV request error:', chrome.runtime.lastError.message);
-					}
-				});
-				
-				// Request 7TV emotes if enabled
-				if (settings.seventv) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { 
-						getSEVENTV: true,
-						url: "https://youtube.com/?v=" + videoId,
-						videoId: videoId,
-						type: "youtube"
-					}, function (response) {
-						if (chrome.runtime.lastError) {
-							console.log('7TV request error:', chrome.runtime.lastError.message);
-						}
-					});
-				}
-				
-				// Request FFZ emotes if enabled
-				if (settings.ffz) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { 
-						getFFZ: true,
-						url: "https://youtube.com/?v=" + videoId,
-						videoId: videoId,
-						type: "youtube"
-					}, function (response) {
-						if (chrome.runtime.lastError) {
-							console.log('FFZ request error:', chrome.runtime.lastError.message);
-						}
-					});
-				}
-			}
-		}
-	}
 	function processEmojiData(data) {
 	  emojiData = data;
 	  // Clear existing data if any
@@ -475,7 +582,193 @@ function enableBackgroundKeepAlive() {
 		});
 	  });
 	}
+
+	function clearChannelEmojiEntries() {
+		channelShortcutMap.clear();
+	}
 	
+	function applyChannelEmojiEntries(entries) {
+		clearChannelEmojiEntries();
+		for (const entry of entries) {
+			for (const s of (entry.shortcuts || [])) {
+				channelShortcutMap.set(s, { url: entry.url, id: entry.id, alt: entry.alt });
+			}
+		}
+	}
+
+	function buildYouTubeEmojiEntries(emojis) {
+		if (!emojis?.length) return null;
+		const entries = [];
+		for (const emoji of emojis) {
+			if (!emoji.isCustomEmoji) continue;
+			const thumbs = emoji.image?.thumbnails;
+			if (!thumbs?.length) continue;
+			const url = thumbs[thumbs.length - 1].url;
+			const alt = emoji.shortcuts?.[0] || (emoji.emojiId || '').split('/').pop() || 'emoji';
+			entries.push({ shortcuts: emoji.shortcuts || [], url, id: emoji.emojiId || '', alt });
+		}
+		return entries.length ? entries : null;
+	}
+
+	function extractYouTubeInitialData(html) {
+		if (!html) return null;
+		const markers = ['ytInitialData"] = ', "ytInitialData'] = ", 'var ytInitialData = '];
+		let jsonStart = -1;
+		for (const marker of markers) {
+			const idx = html.indexOf(marker);
+			if (idx !== -1) {
+				jsonStart = idx + marker.length;
+				break;
+			}
+		}
+		if (jsonStart === -1) return null;
+		let depth = 0;
+		let inStr = false;
+		let esc = false;
+		let end = -1;
+		for (let i = jsonStart; i < html.length; i++) {
+			const c = html[i];
+			if (esc) {
+				esc = false;
+				continue;
+			}
+			if (c === '\\' && inStr) {
+				esc = true;
+				continue;
+			}
+			if (c === '"') {
+				inStr = !inStr;
+				continue;
+			}
+			if (inStr) continue;
+			if (c === '{') depth++;
+			else if (c === '}' && --depth === 0) {
+				end = i + 1;
+				break;
+			}
+		}
+		if (end === -1) return null;
+		return JSON.parse(html.slice(jsonStart, end));
+	}
+
+	function hasYouTubeExtensionBridge() {
+		try {
+			return document.documentElement.getAttribute('data-ss-youtube-bridge') === '1';
+		} catch (e) {
+			return false;
+		}
+	}
+
+	async function tryFetchEmojiFromPage(vidId) {
+		try {
+			const controller = new AbortController();
+			const tid = setTimeout(() => controller.abort(), 10000);
+			const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${vidId}`, {
+				credentials: 'include', signal: controller.signal
+			});
+			clearTimeout(tid);
+			if (!resp.ok) return null;
+			const html = await resp.text();
+			const data = extractYouTubeInitialData(html);
+			return buildYouTubeEmojiEntries(data?.contents?.liveChatRenderer?.emojis);
+		} catch (e) {
+			console.log('YouTube emoji page fetch failed, trying Innertube API:', e.message || e);
+			return null;
+		}
+	}
+
+	async function tryFetchEmojiViaInnertubeAPI(vidId) {
+		const token = getStoredToken();
+		if (!token) return null;
+		const ctx = { context: { client: { clientName: 'WEB', clientVersion: '2.20240101.00.00', hl: 'en' } } };
+		const hdrs = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', method: 'POST' };
+
+		let continuation;
+		try {
+			const r = await fetchWithTimeout('https://www.youtube.com/youtubei/v1/next', 10000,
+				{ ...hdrs, body: JSON.stringify({ ...ctx, videoId: vidId }) });
+			const d = await r.json();
+			const conts = d?.contents?.twoColumnWatchNextResults?.conversationBar?.liveChatRenderer?.continuations;
+			continuation = conts?.[0]?.reloadContinuationData?.continuation
+						|| conts?.[0]?.invalidationContinuationData?.continuation;
+		} catch (e) {
+			console.log('YouTube emoji Innertube /next failed:', e.message || e);
+			return null;
+		}
+		if (!continuation) return null;
+
+		try {
+			const r = await fetchWithTimeout('https://www.youtube.com/youtubei/v1/live_chat/get_live_chat', 10000,
+				{ ...hdrs, body: JSON.stringify({ ...ctx, continuation }) });
+			const d = await r.json();
+			return buildYouTubeEmojiEntries(d?.continuationContents?.liveChatContinuation?.emojis);
+		} catch (e) {
+			console.log('YouTube emoji Innertube get_live_chat failed:', e.message || e);
+			return null;
+		}
+	}
+
+	async function tryFetchEmojiViaExtensionBridge(vidId) {
+		return new Promise(function(resolve) {
+			if (!hasYouTubeExtensionBridge()) {
+				resolve(null);
+				return;
+			}
+			const requestId = 'ytemoji_' + vidId + '_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+			var done = false;
+			var timeout = setTimeout(function() {
+				if (done) return;
+				done = true;
+				window.removeEventListener('youtubeEmojiLoaded', handler);
+				resolve(null);
+			}, 5000);
+			var handler = function(e) {
+				if (!e.detail || e.detail.requestId !== requestId) return;
+				if (done) return;
+				done = true;
+				clearTimeout(timeout);
+				window.removeEventListener('youtubeEmojiLoaded', handler);
+				resolve(Array.isArray(e.detail.youtubeEmoji) && e.detail.youtubeEmoji.length ? e.detail.youtubeEmoji : null);
+			};
+			window.addEventListener('youtubeEmojiLoaded', handler);
+			window.dispatchEvent(new CustomEvent('youtubeEmojiRequest', {
+				detail: {
+					videoId: vidId,
+					requestId: requestId
+				},
+				bubbles: true
+			}));
+		});
+	}
+
+	async function fetchChannelEmoji(vidId) {
+		const cacheKey = 'ytChannelEmoji_' + vidId;
+		const cacheTimeKey = 'ytChannelEmojiTime_' + vidId;
+
+		// Restore from cache if fresh
+		try {
+			const cached = localStorage.getItem(cacheKey);
+			const cachedTime = parseInt(localStorage.getItem(cacheTimeKey) || '0');
+			if (cached && (Date.now() - cachedTime) < INNERTUBE_EMOJI_CACHE_TTL) {
+				const entries = JSON.parse(cached);
+				applyChannelEmojiEntries(entries);
+				if (entries.length) console.log('Restored ' + entries.length + ' custom YouTube emoji from cache');
+				return;
+			}
+		} catch (e) {}
+
+		const entries = (await tryFetchEmojiViaExtensionBridge(vidId)) || (await tryFetchEmojiFromPage(vidId)) || (await tryFetchEmojiViaInnertubeAPI(vidId));
+		if (!entries?.length) return;
+
+		try {
+			localStorage.setItem(cacheKey, JSON.stringify(entries));
+			localStorage.setItem(cacheTimeKey, String(Date.now()));
+		} catch (e) {}
+
+		applyChannelEmojiEntries(entries);
+		console.log('Loaded ' + entries.length + ' custom YouTube emoji');
+	}
+
 	function getTranslation(key, value = false) {
 		try {
 			if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
@@ -576,6 +869,133 @@ function enableBackgroundKeepAlive() {
 			return null;
 		}
 		return messageContextCache.get(String(messageId)) || null;
+	}
+
+	function loadAdvancedControlSettings() {
+		try {
+			const parsed = JSON.parse(localStorage.getItem(YT_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
+			return {
+				syncDeleteMessages: !!parsed.syncDeleteMessages,
+				syncBlockUsers: !!parsed.syncBlockUsers
+			};
+		} catch (_) {
+			return {
+				syncDeleteMessages: false,
+				syncBlockUsers: false
+			};
+		}
+	}
+
+	function saveAdvancedControlSettings() {
+		const payload = {
+			syncDeleteMessages: !!document.getElementById('sync-delete-messages')?.checked,
+			syncBlockUsers: !!document.getElementById('sync-block-users')?.checked
+		};
+		localStorage.setItem(YT_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+	}
+
+	function normalizeChannelLookupCacheKey(channelIdentifier) {
+		const value = typeof channelIdentifier === 'string' ? channelIdentifier.trim() : '';
+		if (!value || value.startsWith('UC')) {
+			return '';
+		}
+		return value.toLowerCase();
+	}
+
+	function loadChannelLookupCache() {
+		try {
+			const parsed = JSON.parse(localStorage.getItem(YT_CHANNEL_LOOKUP_CACHE_KEY) || '{}');
+			return parsed && typeof parsed === 'object' ? parsed : {};
+		} catch (_) {
+			return {};
+		}
+	}
+
+	function saveChannelLookupCache(cache) {
+		try {
+			localStorage.setItem(YT_CHANNEL_LOOKUP_CACHE_KEY, JSON.stringify(cache || {}));
+		} catch (error) {
+			console.warn('Failed to save YouTube channel lookup cache:', error);
+		}
+	}
+
+	function getCachedChannelLookupId(channelIdentifier) {
+		const key = normalizeChannelLookupCacheKey(channelIdentifier);
+		if (!key) {
+			return '';
+		}
+		const cache = loadChannelLookupCache();
+		const entry = cache[key];
+		if (!entry || !entry.channelId || !entry.expiresAt || entry.expiresAt <= Date.now()) {
+			if (entry) {
+				delete cache[key];
+				saveChannelLookupCache(cache);
+			}
+			return '';
+		}
+		return String(entry.channelId);
+	}
+
+	function setCachedChannelLookupId(channelIdentifier, channelId) {
+		const key = normalizeChannelLookupCacheKey(channelIdentifier);
+		const normalizedChannelId = typeof channelId === 'string' ? channelId.trim() : '';
+		if (!key || !normalizedChannelId) {
+			return;
+		}
+		const cache = loadChannelLookupCache();
+		cache[key] = {
+			channelId: normalizedChannelId,
+			expiresAt: Date.now() + YT_CHANNEL_LOOKUP_CACHE_TTL_MS
+		};
+		saveChannelLookupCache(cache);
+	}
+
+	function clearCachedChannelLookupId(channelIdentifier) {
+		const key = normalizeChannelLookupCacheKey(channelIdentifier);
+		if (!key) {
+			return;
+		}
+		const cache = loadChannelLookupCache();
+		if (!(key in cache)) {
+			return;
+		}
+		delete cache[key];
+		saveChannelLookupCache(cache);
+	}
+
+	function rememberChannelInfo(channelIdentifier, channelInfo) {
+		if (!channelInfo || !channelInfo.id) {
+			return null;
+		}
+		if (channelIdentifier) {
+			userDetails[channelIdentifier] = channelInfo;
+		}
+		userDetails[channelInfo.id] = channelInfo;
+		return channelInfo;
+	}
+
+	function normalizeSourceControlPlatform(type) {
+		type = (type || '').toLowerCase();
+		if (type === 'youtubeshorts') {
+			return 'youtube';
+		}
+		return type;
+	}
+
+	function resolveYouTubeDeleteMessageId(payload = {}) {
+		const explicitMessageId =
+			payload.messageId ||
+			payload.message_id ||
+			payload.nativeMessageId ||
+			payload.native_message_id ||
+			'';
+		if (explicitMessageId) {
+			return String(explicitMessageId);
+		}
+		if (payload.tid !== undefined && payload.tid !== null && payload.tid !== '') {
+			return '';
+		}
+		return payload.id ? String(payload.id) : '';
 	}
 
 	// Treat the presence of the excludeReplyingTo key as an opt-out toggle, regardless of its stored value.
@@ -975,12 +1395,12 @@ function enableBackgroundKeepAlive() {
 			result = replaceEmotesWithImages(result);
 		}
 		
-		if (!shortcutMap.size && !unicodeMap.size) return result;
+		if (!shortcutMap.size && !channelShortcutMap.size && !unicodeMap.size) return result;
 		
 		// Process shortcut emotes
 		const shortcutRegex = /:([\w_-]+):/g;
 		result = result.replace(shortcutRegex, (match) => {
-			const emojiInfo = shortcutMap.get(match);
+			const emojiInfo = channelShortcutMap.get(match) || shortcutMap.get(match);
 			if (!emojiInfo) return match;
 			
 			if (settings.textonlymode || false) {
@@ -1057,20 +1477,137 @@ function enableBackgroundKeepAlive() {
 		}
 		return null;
 	}
-	function setStoredToken(token, expiresIn = 3600, refresh = null) {
+	function setStoredToken(token, expiresIn = 3600, refresh = null, authSource = null) {
 		const expiryTime = new Date().getTime() + (expiresIn * 1000);
 		localStorage.setItem('youtubeOAuthToken', token);
 		localStorage.setItem('youtubeOAuthExpiry', expiryTime.toString());
 		if (refresh) {
 			localStorage.setItem('youtubeRefreshToken', refresh);
 		}
+		setStoredAuthSource(authSource || YT_AUTH_SOURCE_HOSTED);
 	}function clearStoredToken() {
 		localStorage.removeItem('youtubeOAuthToken');
 		localStorage.removeItem('youtubeOAuthExpiry');
 		localStorage.removeItem('youtubeRefreshToken');
+		localStorage.removeItem(YT_AUTH_SOURCE_KEY);
 		localStorage.removeItem('youtubeChannel');
         localStorage.removeItem('youtubeVideoId');
 	}
+    function isSocketInterfaceVisible() {
+        return Array.from(document.querySelectorAll('.socket')).some(ele => !ele.classList.contains('hidden'));
+    }
+    function renderSignedInStatusPanel() {
+        try {
+            const panel = document.getElementById('permissions-info');
+            if (!panel) return;
+            if (!isSocketInterfaceVisible()) {
+                panel.classList.add('hidden');
+                panel.innerHTML = '';
+                return;
+            }
+            const authSource = getStoredAuthSource();
+            const isCustomProject = authSource === YT_AUTH_SOURCE_CUSTOM;
+            const shouldShow = quotaWarningActive || isCustomProject;
+            if (!shouldShow) {
+                panel.classList.add('hidden');
+                panel.innerHTML = '';
+                return;
+            }
+            let title = '';
+            let body = '';
+            let buttonLabel = '';
+            if (quotaWarningActive && isCustomProject) {
+                title = 'Your YouTube project is out of quota';
+                body = 'Google sign-in worked, but this saved API key/project has no YouTube quota left right now.';
+                buttonLabel = 'Edit Project';
+            } else if (quotaWarningActive) {
+                title = 'Default YouTube quota is exhausted';
+                body = 'Google sign-in worked, but Social Stream\'s default YouTube project is out of quota right now.';
+                buttonLabel = isDesktopYouTubeContext() ? 'Use My Project' : '';
+            } else if (isCustomProject) {
+                title = 'Using your own YouTube project';
+                body = 'This window is signed in with your saved Client ID, Client Secret, and API key.';
+                buttonLabel = 'Edit Project';
+            }
+            panel.innerHTML = '';
+            const heading = document.createElement('div');
+            heading.className = 'permissions-header';
+            heading.textContent = title;
+            panel.appendChild(heading);
+            const copy = document.createElement('div');
+            copy.className = 'status-copy';
+            copy.textContent = body;
+            panel.appendChild(copy);
+            if (buttonLabel) {
+                const button = document.createElement('button');
+                button.className = 'connect-button';
+                button.style.background = '#1a73e8';
+                button.textContent = buttonLabel;
+                button.onclick = function() {
+                    openQuotaCredentials();
+                    const details = document.getElementById('signedin-credentials-details');
+                    if (details) details.open = true;
+                };
+                panel.appendChild(button);
+            }
+            panel.classList.remove('hidden');
+        } catch (_) {}
+    }
+    function syncAuthMethodSelectorVisibility() {
+        try {
+            const selector = document.getElementById('auth-method-selector');
+            if (!selector) return;
+            const credentials = getCustomDesktopCredentials();
+            const shouldShow = isDesktopYouTubeContext() && !credentials.hasAny && !isSocketInterfaceVisible();
+            selector.classList.toggle('hidden', !shouldShow);
+        } catch (_) {}
+    }
+    function syncSignedInCredentialsVisibility(forceVisible = false) {
+        try {
+            const signedInCreds = document.getElementById('credentials-container-signedin');
+            if (!signedInCreds) return;
+            if (!isDesktopYouTubeContext()) {
+                signedInCreds.classList.add('hidden');
+                renderSignedInStatusPanel();
+                syncAuthMethodSelectorVisibility();
+                return;
+            }
+            const credentials = getCustomDesktopCredentials();
+            const shouldShow = isSocketInterfaceVisible() && (forceVisible || credentials.hasAny || quotaWarningActive);
+            signedInCreds.classList.toggle('hidden', !shouldShow);
+            const details = document.getElementById('signedin-credentials-details');
+            if (details) details.open = !!quotaWarningActive;
+            renderSignedInStatusPanel();
+            syncAuthMethodSelectorVisibility();
+        } catch (_) {}
+    }
+    function openQuotaCredentials() {
+        try {
+            if (!isDesktopYouTubeContext()) {
+                alert('Custom YouTube project settings are only available in the desktop app.');
+                return;
+            }
+            const warn = document.getElementById('quota-warning');
+            if (warn) warn.classList.add('hidden');
+            if (isSocketInterfaceVisible()) {
+                syncSignedInCredentialsVisibility(true);
+                const signedInCreds = document.getElementById('credentials-container-signedin');
+                if (signedInCreds && typeof signedInCreds.scrollIntoView === 'function') {
+                    signedInCreds.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                const signedInInput = document.getElementById('custom-client-id-2');
+                if (signedInInput) {
+                    setTimeout(() => signedInInput.focus(), 150);
+                }
+                return;
+            }
+            const details = document.getElementById('credentials-details');
+            if (details) details.open = true;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const clientInput = document.getElementById('custom-client-id');
+            if (clientInput) clientInput.focus();
+        } catch (_) {}
+    }
     function showAuthButton() {
         const authElement = document.querySelector('.auth');
         if (authElement) authElement.classList.remove("hidden");
@@ -1078,7 +1615,11 @@ function enableBackgroundKeepAlive() {
         const policyFooter = document.querySelector('.policy-footer');
         if (policyFooter) policyFooter.classList.remove('hidden');
         const signedInCreds = document.getElementById('credentials-container-signedin');
-        if (signedInCreds) signedInCreds.classList.remove('hidden');
+        if (signedInCreds) signedInCreds.classList.add('hidden');
+        const quotaBanner = document.getElementById('quota-warning');
+        if (quotaBanner) quotaBanner.classList.toggle('hidden', !quotaWarningActive);
+        renderSignedInStatusPanel();
+        syncAuthMethodSelectorVisibility();
     }
     function showSocketInterface() {
         const authElement = document.querySelector('.auth');
@@ -1086,8 +1627,9 @@ function enableBackgroundKeepAlive() {
         if (authElement) authElement.classList.add("hidden");
         const policyFooter = document.querySelector('.policy-footer');
         if (policyFooter) policyFooter.classList.add('hidden');
-        const signedInCreds = document.getElementById('credentials-container-signedin');
-        if (signedInCreds) signedInCreds.classList.add('hidden');
+        const quotaBanner = document.getElementById('quota-warning');
+        if (quotaBanner) quotaBanner.classList.add('hidden');
+        syncSignedInCredentialsVisibility();
     }
 	function handleVisibilityChange() {
 		const wasVisible = isPageVisible;
@@ -1107,10 +1649,7 @@ function enableBackgroundKeepAlive() {
 			if (liveChatId && !isPolling && !fetchTimeout) {
 				const timeSinceLastPoll = Date.now() - lastPollingTime;
 				const timeSinceLastSuccess = Date.now() - lastSuccessfulPollTime;
-				const requiredInterval = Math.max(
-					youtubeRecommendedInterval,
-					foregroundPollingInterval || 5000
-				);
+				const requiredInterval = youtubeRecommendedInterval || 5000;
 				
 				// Additional safety check for rapid visibility changes
 				if (timeSinceLastSuccess < requiredInterval) {
@@ -1155,10 +1694,6 @@ function enableBackgroundKeepAlive() {
 				queueDrainTimeout = null;
 			}
 			
-		if (!foregroundPollingInterval && pollInterval) {
-			foregroundPollingInterval = pollInterval;
-		}
-		
 		}
 	}
 	function scheduleAuthRetry(delayOverride) {
@@ -1200,7 +1735,7 @@ function enableBackgroundKeepAlive() {
 		
 		let response;
 		try {
-			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
+			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=${LIVE_CHAT_MAX_RESULTS}`;
 			if (nextPageToken) url += `&pageToken=${nextPageToken}`;
 			
 			response = await fetchWithTimeout(url, 5000, {
@@ -1407,21 +1942,23 @@ function enableBackgroundKeepAlive() {
 						}
 						
 						if (item.snippet.superChatDetails) {
-							// Build badges for super chat author
-							let superChatBadges = [];
-							if (item.authorDetails.isChatOwner) superChatBadges.push({"type": "text", "text": "👑"});
-							if (item.authorDetails.isChatModerator) superChatBadges.push({"type": "text", "text": "🛡️"});
-							if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
-							
-							processSuperChat({
-								authorName: item.authorDetails.displayName.replace(/^@/, ''),
-								amount: item.snippet.superChatDetails.amountDisplayString,
-								message: item.snippet.superChatDetails.userComment,
-								tier: item.snippet.superChatDetails.tier,
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								authorChannelId: item.authorDetails.channelId,
-								badges: superChatBadges.length > 0 ? superChatBadges : ""
-							});
+							if (!isBacklogMessage) {
+								// Build badges for super chat author
+								let superChatBadges = [];
+								if (item.authorDetails.isChatOwner) superChatBadges.push({"type": "text", "text": "👑"});
+								if (item.authorDetails.isChatModerator) superChatBadges.push({"type": "text", "text": "🛡️"});
+								if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
+
+								processSuperChat({
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
+									amount: item.snippet.superChatDetails.amountDisplayString,
+									message: item.snippet.superChatDetails.userComment,
+									tier: item.snippet.superChatDetails.tier,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									badges: superChatBadges.length > 0 ? superChatBadges : ""
+								});
+							}
 						}
 						if (item.snippet.membershipDetails) {
 							const membershipEventInfo = deriveMembershipEventContext(item.snippet, item.snippet.membershipDetails);
@@ -1483,14 +2020,16 @@ function enableBackgroundKeepAlive() {
 			// Update pagination token
 			nextPageToken = data.nextPageToken;
 			
+			const itemCount = Array.isArray(data.items) ? data.items.length : 0;
+			
 			// Handle completion of initial backlog
-			if (initialBacklogProcessing && data.items.length < 200) {
+			if (initialBacklogProcessing && itemCount < LIVE_CHAT_MAX_RESULTS) {
 				initialBacklogProcessing = false;
 				console.log('Initial backlog processing complete');
 			}
 			
 			// Track consecutive max message polls
-			if (data.items && data.items.length >= 200) {
+			if (itemCount >= LIVE_CHAT_MAX_RESULTS) {
 				consecutiveMaxMessages++;
 				if (consecutiveMaxMessages >= 3 && slowerPollingMode) {
 					slowerPollingMode = false;
@@ -1500,11 +2039,24 @@ function enableBackgroundKeepAlive() {
 				consecutiveMaxMessages = 0; // Reset counter if not maxed
 			}
 			
+			if (itemCount === 0) {
+				consecutiveEmptyPolls++;
+			} else {
+				consecutiveEmptyPolls = 0;
+			}
+			
 			// Reset quick poll count on successful request
 			quickPollCount = 0;
 			
 			// Calculate next poll interval
 			let nextPollInterval = recommendedInterval;
+			if (consecutiveEmptyPolls >= QUIET_CHAT_IDLE_THRESHOLD) {
+				nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_IDLE_INTERVAL_MS);
+			} else if (consecutiveEmptyPolls >= QUIET_CHAT_BACKOFF_THRESHOLD) {
+				nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_BACKOFF_INTERVAL_MS);
+			} else if (consecutiveEmptyPolls > 0) {
+				nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_MIN_INTERVAL_MS);
+			}
 			
 			// Apply slower polling mode if enabled (1.5x slower)
 			if (slowerPollingMode) {
@@ -1602,15 +2154,27 @@ function enableBackgroundKeepAlive() {
 					}
 					showSocketInterface();
 				} else {
-					refreshToken();
+					console.warn('Authenticated but unable to load YouTube profile from channels?mine=true');
+					showSocketInterface();
+					updateHeaderInfo(username || 'Signed in', 'Quota exceeded');
+					showQuotaAuthFailure(getPostSignInQuotaMessage());
 				}
 			}).catch(error => {
+				if (isQuotaError(error)) {
+					console.error('Quota exceeded while validating YouTube account after sign-in:', error);
+					showSocketInterface();
+					updateHeaderInfo(username || 'Signed in', 'Quota exceeded');
+					showQuotaAuthFailure(getPostSignInQuotaMessage());
+					return;
+				}
 				if (error.message && error.message.includes('401')) {
 					refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
 				} else {
 					console.error('Error validating token:', error);
 					clearStoredToken();
 					showAuthButton();
+					const reason = String(error?.ytMessage || error?.ytReason || error?.message || 'Unknown validation error');
+					showOAuthFailure(`Sign-in succeeded, but account validation failed: ${reason}`);
 				}
 			});
 		} catch (error) {
@@ -1656,14 +2220,68 @@ function enableBackgroundKeepAlive() {
 		});
 		return tokenRefreshPromise;
 	}
+	function setExpectedOAuthState(state) {
+		try {
+			sessionStorage.youtubeOAuthState = state;
+		} catch (_) {}
+		try {
+			localStorage.setItem('youtubeOAuthState', state);
+		} catch (_) {}
+	}
+	function getExpectedOAuthState() {
+		let state = null;
+		try {
+			state = sessionStorage.youtubeOAuthState || null;
+		} catch (_) {}
+		if (state) return state;
+		try {
+			return localStorage.getItem('youtubeOAuthState') || null;
+		} catch (_) {
+			return null;
+		}
+	}
+	function clearExpectedOAuthState() {
+		try {
+			delete sessionStorage.youtubeOAuthState;
+		} catch (_) {}
+		try {
+			localStorage.removeItem('youtubeOAuthState');
+		} catch (_) {}
+	}
+	function getPostSignInQuotaMessage() {
+		if (getStoredAuthSource() === YT_AUTH_SOURCE_CUSTOM) {
+			return 'Google sign-in worked, but your saved YouTube project is out of quota right now.';
+		}
+		return 'Google sign-in worked, but the default YouTube project is out of quota right now.';
+	}
+	function showOAuthFailure(message) {
+		try {
+			showAuthButton();
+			showQuotaAuthFailure(message || 'YouTube sign-in failed after permission grant. Please check your redirect URIs and credentials, then try again.');
+		} catch (_) {}
+	}
+	function buildAuthRequest(redirectOverride, stateOverride) {
+		const state = stateOverride || nonce(15);
+		setExpectedOAuthState(state);
+		const redirectTarget = redirectOverride || redirectURI;
+		return {
+			state,
+			redirectUri: redirectTarget,
+			url: AUTH_BASE_URL + '/auth' +
+				'?client_id=' + clientId +
+				'&redirect_uri=' + encodeURIComponent(redirectTarget) +
+				'&scope=' + encodeURIComponent(YT_SCOPES.join(' ')) +
+				'&state=' + state
+		};
+	}
 	function authUrl() {
-		const state = nonce(15);
-		sessionStorage.youtubeOAuthState = state;
-		return 'https://ytauth.socialstream.ninja/auth' +
-			'?client_id=' + clientId +
-			'&redirect_uri=' + encodeURIComponent(redirectURI) +
-			'&scope=' + encodeURIComponent(YT_SCOPES.join(' ')) +
-			'&state=' + state;
+		return buildAuthRequest().url;
+	}
+	function getTokenExchangeBridge() {
+		const bridge = getYouTubeOAuthBridge();
+		return bridge && typeof bridge.exchangeYouTubeOAuthCode === 'function' && typeof bridge.refreshYouTubeOAuthToken === 'function'
+			? bridge
+			: null;
 	}
 	async function refreshAccessToken(refreshTokenValue) {
 		if (!refreshTokenValue) {
@@ -1672,15 +2290,40 @@ function enableBackgroundKeepAlive() {
             showAuthButton();
             return false;
         }
+		refreshClientOverrides();
+		const authSource = getStoredAuthSource();
 		try {
-			const response = await fetch('https://ytauth.socialstream.ninja/refresh', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ refresh_token: refreshTokenValue })
-			});
-			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-			const data = await response.json();
-			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue);
+			let data = null;
+			if (authSource === YT_AUTH_SOURCE_CUSTOM) {
+				const credentials = getCustomDesktopCredentials();
+				if (!isDesktopYouTubeContext() || !credentials.hasAll) {
+					throw new Error('Custom YouTube sign-in is missing one or more saved credentials.');
+				}
+				const bridge = getTokenExchangeBridge();
+				if (!bridge) {
+					throw new Error('This desktop app build does not support local YouTube token refresh yet.');
+				}
+				data = await bridge.refreshYouTubeOAuthToken({
+					refreshToken: refreshTokenValue,
+					clientId: credentials.clientId,
+					clientSecret: credentials.clientSecret
+				});
+			} else {
+				const response = await fetch(AUTH_BASE_URL + '/refresh', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ refresh_token: refreshTokenValue, client_id: DEFAULT_YT_CLIENT_ID })
+				});
+				data = await response.json().catch(() => ({}));
+				if (!response.ok) {
+					const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
+					throw new Error(msg);
+				}
+			}
+			if (!data || !data.access_token) {
+				throw new Error('Token refresh response did not include access_token.');
+			}
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue, authSource);
 			setTimeout(() => { verifyAndUseToken(data.access_token); }, 500);
 			return true;
 		} catch (error) {
@@ -1690,32 +2333,112 @@ function enableBackgroundKeepAlive() {
 			return false;
 		}
 	}
+	async function exchangeCodeForTokens(code, state, redirectOverride) {
+		refreshClientOverrides();
+		const expectedState = getExpectedOAuthState();
+		if (!expectedState || state !== expectedState) {
+			console.error('State mismatch - possible CSRF attack', { expectedState, receivedState: state });
+			showOAuthFailure('State mismatch during YouTube sign-in. Please try again and avoid switching to a different browser tab/window during authentication.');
+			return;
+		}
+		if (!code) {
+			console.error('No authorization code supplied.');
+			showOAuthFailure('No authorization code was returned by Google. Please try signing in again.');
+			return;
+		}
+		const redirectTarget = redirectOverride || redirectURI;
+		try {
+			const authSource = usingCustomDesktopAuth() ? YT_AUTH_SOURCE_CUSTOM : YT_AUTH_SOURCE_HOSTED;
+			let data = null;
+			if (authSource === YT_AUTH_SOURCE_CUSTOM) {
+				const credentials = getCustomDesktopCredentials();
+				const bridge = getTokenExchangeBridge();
+				if (!isDesktopYouTubeContext() || !credentials.hasAll) {
+					throw new Error('Custom YouTube sign-in needs OAuth Client ID, OAuth Client Secret, and API Key.');
+				}
+				if (!bridge) {
+					throw new Error('This desktop app build does not support local YouTube token exchange yet.');
+				}
+				data = await bridge.exchangeYouTubeOAuthCode({
+					code: code,
+					redirectUri: redirectTarget,
+					clientId: credentials.clientId,
+					clientSecret: credentials.clientSecret
+				});
+			} else {
+				const response = await fetch(AUTH_BASE_URL + '/token', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ code: code, redirect_uri: redirectTarget, client_id: DEFAULT_YT_CLIENT_ID })
+				});
+				data = await response.json().catch(() => ({}));
+				if (!response.ok) {
+					const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
+					throw new Error(msg);
+				}
+			}
+			if (!data.access_token) {
+				throw new Error('Token exchange response did not include access_token.');
+			}
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource);
+			clearExpectedOAuthState();
+			window.history.replaceState({}, document.title, redirectURI);
+			verifyAndUseToken(data.access_token);
+		} catch (error) {
+			console.error('Error exchanging code for tokens:', error);
+			const errorMessage = error && error.message ? error.message : 'unknown error';
+			showOAuthFailure(`YouTube sign-in failed after permission grant: ${errorMessage}`);
+		}
+	}
 	async function handleAuthCallback() {
 		const urlParams = new URLSearchParams(window.location.search);
 		const code = urlParams.get('code');
 		const state = urlParams.get('state');
-		if (state !== sessionStorage.youtubeOAuthState) {
-			console.error('State mismatch - possible CSRF attack');
-			showAuthButton(); return;
-		}
-		if (code) {
-			try {
-				const response = await fetch('https://ytauth.socialstream.ninja/token', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ code: code, redirect_uri: redirectURI })
-				});
-				if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-				const data = await response.json();
-				setStoredToken(data.access_token, data.expires_in, data.refresh_token);
-				window.history.replaceState({}, document.title, redirectURI);
-				verifyAndUseToken(data.access_token);
-			} catch (error) {
-				console.error('Error exchanging code for tokens:', error);
-				showAuthButton();
+		await exchangeCodeForTokens(code, state, redirectURI);
+	}
+	async function startExternalAuthFlow() {
+		const bridge = getYouTubeOAuthBridge();
+		const startOAuthFn = bridge && typeof bridge.startYouTubeOAuth === 'function'
+			? bridge.startYouTubeOAuth
+			: null;
+		const useCustomDesktopAuth = usingCustomDesktopAuth();
+		
+		if (!startOAuthFn) {
+			if (useCustomDesktopAuth) {
+				alert('This desktop app build is missing the local YouTube sign-in bridge. Please update the desktop app.');
+				return;
 			}
+			window.location.href = authUrl();
+			return;
+		}
+		if (useCustomDesktopAuth && !supportsCustomDesktopYouTubeAuth()) {
+			alert('This desktop app build is missing local YouTube token exchange support. Please update the desktop app.');
+			return;
+		}
+		const state = nonce(15);
+		setExpectedOAuthState(state);
+		try {
+			const result = await startOAuthFn({
+				clientId: useCustomDesktopAuth ? clientId : DEFAULT_YT_CLIENT_ID,
+				scopes: YT_SCOPES,
+				state,
+				authBase: useCustomDesktopAuth ? null : AUTH_BASE_URL,
+				authMode: useCustomDesktopAuth ? 'custom_google' : 'hosted'
+			});
+			if (!result || !result.code) {
+				console.error('YouTube OAuth did not return a code.');
+				showAuthButton();
+				return;
+			}
+			await exchangeCodeForTokens(result.code, result.state || state, result.redirectUri);
+		} catch (error) {
+			console.error('External YouTube OAuth failed:', error);
+			showAuthButton();
 		}
 	}
+	try {
+		window.__SSAPP_START_YT_AUTH__ = startExternalAuthFlow;
+	} catch (_) {}
     function nonce(length) {
         var text = "";
         var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -1785,7 +2508,7 @@ function enableBackgroundKeepAlive() {
 		const videoInput = document.getElementById('video-input');
 		
 		// If already connected, disconnect
-		if (liveChatId || pollInterval) {
+		if (liveChatId || streamStatsInterval) {
 			clearPolling();
 			updateHeaderInfo(username, 'Disconnected');
 			document.getElementById('textarea').innerHTML = '<div>Disconnected from chat.</div>';
@@ -1828,36 +2551,37 @@ function enableBackgroundKeepAlive() {
             return await response.json();
         } catch (error) {
             console.error('Error fetching user info:', error);
-            if (error.message && error.message.includes('401')) throw error;
-            return null;
+            throw error;
         }
     }
     async function getChannelInfo(channelIdentifier) {
 		const token = getStoredToken();
 		if (!token) return null;
-		if (userDetails[channelIdentifier]) return userDetails[channelIdentifier];
+		const normalizedChannelIdentifier = typeof channelIdentifier === 'string' ? channelIdentifier.trim() : '';
+		if (!normalizedChannelIdentifier) return null;
+		if (userDetails[normalizedChannelIdentifier]) return userDetails[normalizedChannelIdentifier];
 		try {
 			// First try: direct channel ID lookup
 			let response = await fetchWithTimeout(
-				`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdentifier}`, 5000,
+				`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${normalizedChannelIdentifier}`, 5000,
 				{ 'Authorization': `Bearer ${token}` }
 			);
 			let data = await response.json();
 			
 			// Second try: username lookup if first try failed and not a channel ID
-			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+			if ((!data.items || data.items.length === 0) && !normalizedChannelIdentifier.startsWith('UC')) {
 				response = await fetchWithTimeout(
-					`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${channelIdentifier}`, 5000,
+					`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${normalizedChannelIdentifier}`, 5000,
 					{ 'Authorization': `Bearer ${token}` }
 				);
 				data = await response.json();
 			}
 			
 			// Third try: handle @username format using forHandle parameter
-			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+			if ((!data.items || data.items.length === 0) && !normalizedChannelIdentifier.startsWith('UC')) {
 				// Try with @handle format
-				const handleToTry = channelIdentifier.startsWith('@') ? 
-					channelIdentifier : '@' + channelIdentifier;
+				const handleToTry = normalizedChannelIdentifier.startsWith('@') ? 
+					normalizedChannelIdentifier : '@' + normalizedChannelIdentifier;
 					
 				response = await fetchWithTimeout(
 					`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${handleToTry}`, 5000,
@@ -1866,11 +2590,26 @@ function enableBackgroundKeepAlive() {
 				data = await response.json();
 			}
 			
-			// Fourth try: search query as last resort (uses 100 quota units)
-			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+			// Fourth try: cached search fallback result (short-lived to avoid repeated search.list calls)
+			if ((!data.items || data.items.length === 0) && !normalizedChannelIdentifier.startsWith('UC')) {
+				const cachedChannelId = getCachedChannelLookupId(normalizedChannelIdentifier);
+				if (cachedChannelId) {
+					response = await fetchWithTimeout(
+						`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${cachedChannelId}`, 5000,
+						{ 'Authorization': `Bearer ${token}` }
+					);
+					data = await response.json();
+					if (!data.items || data.items.length === 0) {
+						clearCachedChannelLookupId(normalizedChannelIdentifier);
+					}
+				}
+			}
+			
+			// Fifth try: search query as last resort (uses 100 quota units)
+			if ((!data.items || data.items.length === 0) && !normalizedChannelIdentifier.startsWith('UC')) {
 				// Handle @username format by removing @ if present
-				const searchQuery = channelIdentifier.startsWith('@') ? 
-					channelIdentifier.substring(1) : channelIdentifier;
+				const searchQuery = normalizedChannelIdentifier.startsWith('@') ? 
+					normalizedChannelIdentifier.substring(1) : normalizedChannelIdentifier;
 					
 				console.warn('Using search API as fallback - this costs 100 quota units');
 				response = await fetchWithTimeout(
@@ -1885,13 +2624,14 @@ function enableBackgroundKeepAlive() {
 						{ 'Authorization': `Bearer ${token}` }
 					);
 					data = await response.json();
+					if (data.items && data.items.length > 0) {
+						setCachedChannelLookupId(normalizedChannelIdentifier, channelIdFromResult);
+					}
 				}
 			}
 			
 			if (data.items && data.items.length > 0) {
-				userDetails[channelIdentifier] = data.items[0];
-				userDetails[data.items[0].id] = data.items[0];
-				return data.items[0];
+				return rememberChannelInfo(normalizedChannelIdentifier, data.items[0]);
 			}
 			return null;
 		} catch (error) {
@@ -2058,6 +2798,195 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 
+	async function fetchCurrentVideoSnippet(videoIdToUse = null) {
+		const token = getStoredToken();
+		const targetVideoId = videoIdToUse || (currentStream && currentStream.id) || videoId;
+		if (!token || !targetVideoId) {
+			return null;
+		}
+		try {
+			const response = await fetchWithTimeout(
+				`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${encodeURIComponent(targetVideoId)}`,
+				5000,
+				{ 'Authorization': `Bearer ${token}` }
+			);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const data = await response.json();
+			return data.items && data.items.length ? data.items[0] : null;
+		} catch (error) {
+			console.error('Error fetching YouTube video snippet:', error);
+			return null;
+		}
+	}
+
+	async function refreshCurrentVideoMetadata() {
+		const videoDetails = await fetchCurrentVideoSnippet();
+		if (!videoDetails || !videoDetails.snippet) {
+			return null;
+		}
+		const titleInput = document.getElementById('stream-title');
+		const descriptionInput = document.getElementById('stream-description');
+		const categoryInput = document.getElementById('stream-category');
+		if (titleInput) {
+			titleInput.value = videoDetails.snippet.title || '';
+		}
+		if (descriptionInput) {
+			descriptionInput.value = videoDetails.snippet.description || '';
+		}
+		if (categoryInput) {
+			categoryInput.value = videoDetails.snippet.categoryId || '';
+		}
+		return videoDetails;
+	}
+
+	async function resolveVideoCategoryId(value) {
+		const query = (value || '').trim();
+		if (!query) {
+			return null;
+		}
+		if (/^\d+$/.test(query)) {
+			return query;
+		}
+		const token = getStoredToken();
+		if (!token) {
+			return null;
+		}
+		try {
+			const response = await fetchWithTimeout(
+				'https://www.googleapis.com/youtube/v3/videoCategories?part=snippet&regionCode=US',
+				5000,
+				{ 'Authorization': `Bearer ${token}` }
+			);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const data = await response.json();
+			const categories = Array.isArray(data.items) ? data.items : [];
+			const exactMatch = categories.find((item) => (item?.snippet?.title || '').toLowerCase() === query.toLowerCase());
+			const partialMatch = categories.find((item) => (item?.snippet?.title || '').toLowerCase().includes(query.toLowerCase()));
+			return (exactMatch || partialMatch || {}).id || null;
+		} catch (error) {
+			console.error('Error resolving YouTube category:', error);
+			return null;
+		}
+	}
+
+	async function updateCurrentVideoMetadata(payload = {}) {
+		const token = getStoredToken();
+		const targetVideoId = (currentStream && currentStream.id) || videoId;
+		if (!token || !targetVideoId) {
+			return false;
+		}
+		const existingVideo = await fetchCurrentVideoSnippet(targetVideoId);
+		if (!existingVideo || !existingVideo.snippet) {
+			return false;
+		}
+		const updatedSnippet = { ...existingVideo.snippet };
+		const title = (payload.title || '').trim();
+		const description = typeof payload.description === 'string' ? payload.description : '';
+		const category = (payload.category || '').trim();
+		if (title) {
+			updatedSnippet.title = title;
+		}
+		if (typeof payload.description === 'string' && payload.description.trim()) {
+			updatedSnippet.description = description;
+		}
+		if (category) {
+			const resolvedCategoryId = await resolveVideoCategoryId(category);
+			if (!resolvedCategoryId) {
+				console.warn('Unable to resolve YouTube category:', category);
+				return false;
+			}
+			updatedSnippet.categoryId = String(resolvedCategoryId);
+		}
+		try {
+			const response = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					id: targetVideoId,
+					snippet: updatedSnippet
+				})
+			});
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				console.error('Error updating YouTube metadata:', errorData);
+				return false;
+			}
+			await refreshCurrentVideoMetadata();
+			return true;
+		} catch (error) {
+			console.error('Error updating YouTube metadata:', error);
+			return false;
+		}
+	}
+
+	async function deleteLiveChatMessage(messageId) {
+		const token = getStoredToken();
+		if (!token || !messageId) {
+			return false;
+		}
+		try {
+			const response = await fetch(`https://www.googleapis.com/youtube/v3/liveChat/messages?id=${encodeURIComponent(messageId)}`, {
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			});
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				console.error('Error deleting live chat message:', errorData);
+				return false;
+			}
+			return true;
+		} catch (error) {
+			console.error('Error deleting live chat message:', error);
+			return false;
+		}
+	}
+
+	async function banLiveChatAuthor(payload = {}) {
+		const token = getStoredToken();
+		const messageId = resolveYouTubeDeleteMessageId(payload);
+		const messageContext = lookupChatMessage(messageId);
+		const channelId = payload.userid || payload.userId || messageContext?.authorChannelId || '';
+		if (!token || !liveChatId || !channelId) {
+			return false;
+		}
+		try {
+			const response = await fetch('https://www.googleapis.com/youtube/v3/liveChat/bans?part=snippet', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					snippet: {
+						liveChatId: liveChatId,
+						type: 'permanent',
+						bannedUserDetails: {
+							channelId: String(channelId)
+						}
+					}
+				})
+			});
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				console.error('Error banning live chat user:', errorData);
+				return false;
+			}
+			return true;
+		} catch (error) {
+			console.error('Error banning live chat user:', error);
+			return false;
+		}
+	}
+
 	function notifyVideoChange(videoId, channelId) {
 		window.dispatchEvent(new CustomEvent('youtubeVideoChanged', {
 			detail: {
@@ -2066,11 +2995,6 @@ function enableBackgroundKeepAlive() {
 			},
 			bubbles: true
 		}));
-		
-		// Also request emotes for this video
-		if (videoId) {
-			requestEmotesFromExtension();
-		}
 	}
 	
 
@@ -2087,17 +3011,57 @@ function enableBackgroundKeepAlive() {
             const data = await response.json();
             if (data.items && data.items.length > 0) {
                 const stats = data.items[0];
-                if (stats.liveStreamingDetails && stats.liveStreamingDetails.concurrentViewers) {
-                    updateStats('viewer_update', { meta: stats.liveStreamingDetails.concurrentViewers });
+                const concurrentViewers = stats?.liveStreamingDetails?.concurrentViewers;
+                if (concurrentViewers !== undefined && concurrentViewers !== null && concurrentViewers !== '') {
+                    lastKnownViewers = concurrentViewers;
+                } else if (lastKnownViewers === null) {
+                    lastKnownViewers = 0;
                 }
                 if (stats.statistics && stats.statistics.likeCount) {
                     updateStats('likes_update', { meta: stats.statistics.likeCount });
                 }
+            } else if (lastKnownViewers === null) {
+                lastKnownViewers = 0;
             }
         } catch (error) {
             console.error('Error fetching stream stats:', error);
+            if (lastKnownViewers === null) {
+                lastKnownViewers = 0;
+            }
+        }
+        updateStats('viewer_update', { meta: lastKnownViewers });
+    }
+
+    function isViewerTrackingEnabled() {
+        const currentSettings = settings && typeof settings === 'object' ? settings : {};
+        return Boolean(
+            currentSettings.showviewercount ||
+            currentSettings.hypemode
+        );
+    }
+
+    function shouldPollStreamStats() {
+        return isViewerTrackingEnabled();
+    }
+
+    function stopStreamStatsPolling() {
+        if (streamStatsInterval) {
+            clearInterval(streamStatsInterval);
+            streamStatsInterval = null;
         }
     }
+
+    function syncStreamStatsPolling() {
+        stopStreamStatsPolling();
+        if (!currentStream || !currentStream.id || !liveChatId || !shouldPollStreamStats()) {
+            return;
+        }
+        getStreamStats();
+        streamStatsInterval = setInterval(() => {
+            getStreamStats();
+        }, 30000);
+    }
+
     async function getSubscriberCount(channelIdForSubs) {
         const token = getStoredToken();
         if (!token) return;
@@ -2115,111 +3079,6 @@ function enableBackgroundKeepAlive() {
             console.error('Error fetching subscriber count:', error);
         }
     }
-
-    // Subscriber alerts - fetch recent subscribers and emit new_follower events
-    const SEEN_SUBSCRIBERS_KEY = 'yt_seen_subscribers';
-    const MAX_SEEN_SUBSCRIBERS = 2000; // Limit stored IDs to prevent localStorage bloat
-
-    function getSeenSubscribers() {
-        try {
-            const stored = localStorage.getItem(SEEN_SUBSCRIBERS_KEY);
-            return stored ? JSON.parse(stored) : [];
-        } catch (e) {
-            console.error('Error reading seen subscribers:', e);
-            return [];
-        }
-    }
-
-    function saveSeenSubscribers(subscriberIds) {
-        try {
-            // Keep only the most recent entries to prevent unbounded growth
-            const trimmed = subscriberIds.slice(-MAX_SEEN_SUBSCRIBERS);
-            localStorage.setItem(SEEN_SUBSCRIBERS_KEY, JSON.stringify(trimmed));
-        } catch (e) {
-            console.error('Error saving seen subscribers:', e);
-        }
-    }
-
-    async function fetchRecentSubscribers() {
-        const token = getStoredToken();
-        if (!token) return;
-
-        try {
-            const response = await fetchWithTimeout(
-                'https://www.googleapis.com/youtube/v3/subscriptions?part=snippet,subscriberSnippet&myRecentSubscribers=true&maxResults=50',
-                10000,
-                { 'Authorization': `Bearer ${token}` }
-            );
-
-            if (!response.ok) {
-                if (response.status === 403) {
-                    console.log('Subscriber alerts: Insufficient permissions or quota exceeded');
-                } else {
-                    console.error('Error fetching recent subscribers:', response.status);
-                }
-                return;
-            }
-
-            const data = await response.json();
-            if (!data.items || data.items.length === 0) return;
-
-            const seenSubscribers = getSeenSubscribers();
-            const seenSet = new Set(seenSubscribers);
-            const newSubscribers = [];
-
-            // Process subscribers - API returns newest first
-            for (const item of data.items) {
-                const subscriberId = item.subscriberSnippet?.channelId || item.snippet?.channelId;
-                if (!subscriberId) continue;
-
-                if (!seenSet.has(subscriberId)) {
-                    seenSet.add(subscriberId);
-                    newSubscribers.push({
-                        channelId: subscriberId,
-                        title: item.subscriberSnippet?.title || item.snippet?.title || 'New Subscriber',
-                        description: item.subscriberSnippet?.description || '',
-                        thumbnails: item.subscriberSnippet?.thumbnails || item.snippet?.thumbnails || {},
-                        publishedAt: item.snippet?.publishedAt
-                    });
-                }
-            }
-
-            // Save updated seen list
-            if (newSubscribers.length > 0) {
-                saveSeenSubscribers(Array.from(seenSet));
-
-                // Emit events for new subscribers (oldest first for chronological order)
-                for (const subscriber of newSubscribers.reverse()) {
-                    const subscriberLabel = getTranslation('new-subscriber-event', 'New Subscriber');
-                    const chatimg = subscriber.thumbnails?.default?.url ||
-                                   subscriber.thumbnails?.medium?.url || '';
-
-                    addEvent(`${subscriberLabel}: ${subscriber.title}`);
-
-                    pushMessage(applySourceIdentity({
-                        type: youtubeShorts ? "youtubeshorts" : "youtube",
-                        event: 'new_follower',
-                        chatname: subscriber.title,
-                        chatmessage: getTranslation('subscribed-message', 'subscribed to the channel'),
-                        chatimg: chatimg,
-                        userid: subscriber.channelId,
-                        timestamp: subscriber.publishedAt,
-                        meta: {
-                            channelId: subscriber.channelId,
-                            title: subscriber.title,
-                            subscribedAt: subscriber.publishedAt
-                        },
-                        textonly: settings.textonlymode || false
-                    }));
-
-                    console.log('New subscriber detected:', subscriber.title);
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching recent subscribers:', error);
-        }
-    }
-
 	function clearPolling() {
 		// Clear all tracked timeouts
 		activeTimeouts.forEach(timeout => {
@@ -2231,9 +3090,8 @@ function enableBackgroundKeepAlive() {
 		});
 		activeTimeouts.clear();
 		
-		if (pollInterval) clearInterval(pollInterval);
+		stopStreamStatsPolling();
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
-		if (subscriberAlertInterval) clearInterval(subscriberAlertInterval);
 		if (fetchTimeout) {
 			clearTimeout(fetchTimeout);
 		}
@@ -2242,11 +3100,9 @@ function enableBackgroundKeepAlive() {
 			queueDrainTimeout = null;
 		}
 		
-		foregroundPollingInterval = null;
-		pollInterval = null;
 		channelStatsInterval = null;
-		subscriberAlertInterval = null;
 		fetchTimeout = null;
+		lastKnownViewers = null;
 		
 		// Track disconnection time and video ID
 		if (liveChatId && currentStream) {
@@ -2259,11 +3115,13 @@ function enableBackgroundKeepAlive() {
 		lastMessageTime = null;
 		isPolling = false;
 		currentStream = null;
+		clearChannelEmojiEntries();
 		clearSourceIdentity();
 		messageQueue = [];
 		pendingRelayMessages = [];
 		quickPollCount = 0;
 		consecutiveMaxMessages = 0; // Reset consecutive max message counter
+		consecutiveEmptyPolls = 0;
 		lastSuccessfulPollTime = 0;
 		youtubeRecommendedInterval = 5000; // Reset to default
 		
@@ -2327,7 +3185,7 @@ function enableBackgroundKeepAlive() {
 					}
 				}
 				if (stats.viewCount) {
-					if (settings.showviewcount || settings.hypemode) {
+					if (isViewerTrackingEnabled()) {
 						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount }));
 					}
 				}
@@ -2338,7 +3196,7 @@ function enableBackgroundKeepAlive() {
 	}
 	async function connect(directVideoIdParam = null) {
 		// Prevent double connections
-		if (liveChatId || pollInterval) {
+		if (liveChatId || streamStatsInterval) {
 			console.warn('Already connected. Call clearPolling() first to disconnect.');
 			return;
 		}
@@ -2469,11 +3327,13 @@ function enableBackgroundKeepAlive() {
             connectMessageDiv.innerText = `Target: ${channelDisplayNameToUse} - Stream: ${streamTitleToUse || 'N/A'}`;
             document.getElementById('textarea').appendChild(connectMessageDiv);
             if (streamInfoToUse) {
-                if (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.concurrentViewers) {
-                    updateStats('viewer_update', { meta: streamInfoToUse.liveStreamingDetails.concurrentViewers });
+                const initialConcurrentViewers = streamInfoToUse?.liveStreamingDetails?.concurrentViewers;
+                if (initialConcurrentViewers !== undefined && initialConcurrentViewers !== null && initialConcurrentViewers !== '') {
+                    lastKnownViewers = initialConcurrentViewers;
                 } else {
-                     document.getElementById('viewer-count').textContent = 'N/A';
+                    lastKnownViewers = 0;
                 }
+                updateStats('viewer_update', { meta: lastKnownViewers });
                 if (streamInfoToUse.statistics && streamInfoToUse.statistics.likeCount) {
                     updateStats('likes_update', { meta: streamInfoToUse.statistics.likeCount });
                 } else {
@@ -2509,6 +3369,7 @@ function enableBackgroundKeepAlive() {
 				}
 				
 				fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
+				if (currentStream?.id) fetchChannelEmoji(currentStream.id).catch(() => {});
 			} else {
                  const noChatMessage = document.createElement("div");
                  noChatMessage.style.color = "orange";
@@ -2516,19 +3377,11 @@ function enableBackgroundKeepAlive() {
                  document.getElementById('textarea').appendChild(noChatMessage);
             }
             // Clear existing intervals
-            if (pollInterval) clearInterval(pollInterval);
+            stopStreamStatsPolling();
             if (channelStatsInterval) clearInterval(channelStatsInterval);
             
-            // Stream stats (viewers & likes) - interval based on settings
-            if (currentStream && currentStream.id && liveChatId) {
-                // Get stream stats immediately
-                getStreamStats();
-                // Update interval: 30 seconds if showing viewer count, 2 minutes otherwise
-                const statsInterval = (settings.showviewercount || settings.hypemode) ? 30000 : 120000;
-                pollInterval = setInterval(() => {
-                    getStreamStats();
-                }, statsInterval);
-            }
+            // Stream stats (viewers & likes) - poll only when viewer tracking is enabled
+            syncStreamStatsPolling();
             
             // Channel stats (subscribers) - every 30 minutes
             if (effectiveChannelIdToUse) {
@@ -2539,15 +3392,9 @@ function enableBackgroundKeepAlive() {
                     getChannelStats(effectiveChannelIdToUse);
                 }, 30 * 60 * 1000); // 30 minutes
             }
-
-            // Subscriber alerts - check for new subscribers every 5 minutes
-            // Note: YouTube API has up to 4-hour delay for subscriber data, same as Streamlabs
-            if (subscriberAlertInterval) clearInterval(subscriberAlertInterval);
-            fetchRecentSubscribers(); // Initial fetch
-            subscriberAlertInterval = setInterval(() => {
-                fetchRecentSubscribers();
-            }, 5 * 60 * 1000); // 5 minutes (quota cost: 1 unit per call = 288 units/day if running 24h)
-
+            refreshCurrentVideoMetadata().catch(error => {
+                console.warn('Failed to refresh current YouTube metadata fields:', error);
+            });
             console.log('Connection process complete for target:', channelDisplayNameToUse);
 			const channelInput = document.getElementById('channel-input');
             if (channelInput.value && channelToUse) channelInput.value = '';
@@ -2719,10 +3566,16 @@ function enableBackgroundKeepAlive() {
 						outgoingMessage.reply = textOnlyMode ? basePlainText : messageWithEmojis;
 					}
 					if (messageData.meta && typeof messageData.meta === 'object') {
-						const { raw: _raw, reply: _reply, ...safeMeta } = messageData.meta;
+						const { raw: _raw, reply: _reply, ...safeMetaBase } = messageData.meta;
+						const safeMeta = { ...safeMetaBase };
+						if (messageData.messageId && !safeMeta.messageId) {
+							safeMeta.messageId = String(messageData.messageId);
+						}
 						if (Object.keys(safeMeta).length > 0) {
 							outgoingMessage.meta = safeMeta;
 						}
+					} else if (messageData.messageId) {
+						outgoingMessage.meta = { messageId: String(messageData.messageId) };
 					}
 					pushMessage(applySourceIdentity(outgoingMessage));
 				}
@@ -3189,7 +4042,7 @@ function enableBackgroundKeepAlive() {
 		switch(type) {
 			case 'viewer_update':
 				document.getElementById('viewer-count').textContent = data.meta;
-				if (settings.showviewercount || settings.hypemode){
+				if (isViewerTrackingEnabled()){
 					pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'viewer_update', meta: data.meta }));
 				}
 				break;
@@ -3226,11 +4079,10 @@ function enableBackgroundKeepAlive() {
 		console.log('Cleaning up resources...');
 		
 		// Clear all intervals
-		if (pollInterval) clearInterval(pollInterval);
+		if (streamStatsInterval) clearInterval(streamStatsInterval);
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
-		if (subscriberAlertInterval) clearInterval(subscriberAlertInterval);
 		if (displayInterval) clearInterval(displayInterval);
-
+		
 		// Clear all timeouts
 		if (fetchTimeout) clearTimeout(fetchTimeout);
 		activeTimeouts.forEach(timeout => clearTimeout(timeout));
@@ -3301,11 +4153,94 @@ function enableBackgroundKeepAlive() {
 			signOutButton.addEventListener('click', signOut);
 			registerCleanup(() => signOutButton.removeEventListener('click', signOut));
 		}
+		const advancedControlSettings = loadAdvancedControlSettings();
+		const syncDeleteMessages = document.getElementById('sync-delete-messages');
+		const syncBlockUsers = document.getElementById('sync-block-users');
+		if (syncDeleteMessages) {
+			syncDeleteMessages.checked = advancedControlSettings.syncDeleteMessages;
+			syncDeleteMessages.addEventListener('change', saveAdvancedControlSettings);
+			registerCleanup(() => syncDeleteMessages.removeEventListener('change', saveAdvancedControlSettings));
+		}
+		if (syncBlockUsers) {
+			syncBlockUsers.checked = advancedControlSettings.syncBlockUsers;
+			syncBlockUsers.addEventListener('change', saveAdvancedControlSettings);
+			registerCleanup(() => syncBlockUsers.removeEventListener('change', saveAdvancedControlSettings));
+		}
+		const refreshStreamInfoButton = document.getElementById('refresh-stream-info');
+		if (refreshStreamInfoButton) {
+			const refreshStreamInfoHandler = function() {
+				refreshCurrentVideoMetadata().then((videoDetails) => {
+					if (videoDetails) {
+						addEvent('Loaded current YouTube metadata');
+					}
+				}).catch((error) => {
+					console.error('Failed to refresh YouTube metadata:', error);
+					addEvent('Failed to load current YouTube metadata');
+				});
+			};
+			refreshStreamInfoButton.addEventListener('click', refreshStreamInfoHandler);
+			registerCleanup(() => refreshStreamInfoButton.removeEventListener('click', refreshStreamInfoHandler));
+		}
+		const updateStreamInfoButton = document.getElementById('update-stream-info');
+		if (updateStreamInfoButton) {
+			const updateStreamInfoHandler = function() {
+				updateCurrentVideoMetadata({
+					title: document.getElementById('stream-title')?.value || '',
+					description: (document.getElementById('stream-description')?.value || '').trim(),
+					category: document.getElementById('stream-category')?.value || ''
+				}).then((ok) => {
+					if (ok) {
+						addEvent('YouTube title/description/category updated');
+					} else {
+						addEvent('YouTube metadata update failed');
+					}
+				}).catch((error) => {
+					console.error('Failed to update YouTube metadata:', error);
+					addEvent('YouTube metadata update failed');
+				});
+			};
+			updateStreamInfoButton.addEventListener('click', updateStreamInfoHandler);
+			registerCleanup(() => updateStreamInfoButton.removeEventListener('click', updateStreamInfoHandler));
+		}
+		// Auth method selector setup
+		const authMethodSelector = document.getElementById('auth-method-selector');
+		const isElectron = isDesktopYouTubeContext();
+		if (authMethodSelector && isElectron) {
+			// Load saved preference
+			const savedMethod = localStorage.getItem('ytAuthMethod') || 'external';
+			const radios = authMethodSelector.querySelectorAll('input[name="yt-auth-method"]');
+			radios.forEach(radio => {
+				radio.checked = radio.value === savedMethod;
+				radio.addEventListener('change', function() {
+					localStorage.setItem('ytAuthMethod', this.value);
+				});
+			});
+		}
+		syncAuthMethodSelectorVisibility();
+
 		const authLink = document.getElementById('auth-link');
 		if (authLink) {
 			const authHandler = function(e) {
 				e.preventDefault();
-				window.location.href = authUrl();
+				const credentials = getCustomDesktopCredentials();
+				if (isDesktopYouTubeContext() && credentials.hasPartial) {
+					alert('Use all 3 YouTube fields together: OAuth Client ID, OAuth Client Secret, and API Key. Or clear them.');
+					return;
+				}
+				if (usingCustomDesktopAuth()) {
+					startExternalAuthFlow();
+					return;
+				}
+				if (isElectron) {
+					const authMethod = localStorage.getItem('ytAuthMethod') || 'external';
+					if (authMethod === 'external') {
+						startExternalAuthFlow();
+					} else {
+						window.location.href = authUrl();
+					}
+				} else {
+					window.location.href = authUrl();
+				}
 			};
 			authLink.addEventListener('click', authHandler);
 			registerCleanup(() => authLink.removeEventListener('click', authHandler));
@@ -3313,11 +4248,7 @@ function enableBackgroundKeepAlive() {
 		const quotaBtn = document.getElementById('quota-open-credentials');
 		if (quotaBtn) {
 			const openCreds = function() {
-				const details = document.getElementById('credentials-details');
-				if (details) details.open = true;
-				const warn = document.getElementById('quota-warning');
-				if (warn) warn.classList.add('hidden');
-				window.scrollTo({ top: 0, behavior: 'smooth' });
+				openQuotaCredentials();
 			};
 			quotaBtn.addEventListener('click', openCreds);
 			registerCleanup(() => quotaBtn.removeEventListener('click', openCreds));
@@ -3332,8 +4263,8 @@ function enableBackgroundKeepAlive() {
 		if (sendButton) sendButton.onclick = handleSendMessage;
 		const inputText = document.querySelector('#input-text');
 		if (inputText) {
-			inputText.addEventListener('keypress', handleEnterKey);
-			registerCleanup(() => inputText.removeEventListener('keypress', handleEnterKey));
+			inputText.addEventListener('keydown', handleEnterKey);
+			registerCleanup(() => inputText.removeEventListener('keydown', handleEnterKey));
 		}
 		const connectButton = document.getElementById('connect-button');
 		if (connectButton) {
@@ -3413,17 +4344,94 @@ function enableBackgroundKeepAlive() {
 				if ("settings" in e.detail) {
 					settings = e.detail.settings;
 					console.log('settings updated:', settings);
+					syncStreamStatsPolling();
 				}
 			}
 		};
 		window.addEventListener('settingsChanged', settingsHandler);
 		registerCleanup(() => window.removeEventListener('settingsChanged', settingsHandler));
 	}
-	
-	
+
+	// Handle messages from extension/dock via content script
+	{
+		const extensionMessageHandler = function(e) {
+			if (e.detail && e.detail.message && liveChatId) {
+				sendChatMessage(e.detail.message).catch(error => {
+					console.error('Failed to send extension message:', error);
+				});
+			}
+		};
+		window.addEventListener('sendExtensionMessage', extensionMessageHandler);
+		registerCleanup(() => window.removeEventListener('sendExtensionMessage', extensionMessageHandler));
+	}
+
+	{
+		const sourceControlHandler = function(e) {
+			const detail = e.detail || {};
+			const payload = detail.payload || {};
+			const controls = loadAdvancedControlSettings();
+			if (normalizeSourceControlPlatform(detail.platform || payload.type) !== 'youtube') {
+				return;
+			}
+			if (detail.control === 'deleteMessage') {
+				if (!controls.syncDeleteMessages) {
+					return;
+				}
+				const messageId = resolveYouTubeDeleteMessageId(payload);
+				if (!messageId) {
+					addEvent('Skipped dock delete: missing native YouTube message ID');
+					return;
+				}
+				deleteLiveChatMessage(messageId).then((ok) => {
+					if (ok) {
+						addEvent('Synced dock delete to YouTube');
+					}
+				}).catch((error) => {
+					console.error('Failed to sync YouTube delete:', error);
+					addEvent('Failed to sync dock delete to YouTube');
+				});
+				return;
+			}
+			if (detail.control === 'blockUser') {
+				if (!controls.syncBlockUsers) {
+					return;
+				}
+				banLiveChatAuthor(payload).then((ok) => {
+					if (ok) {
+						addEvent(`Synced dock block to YouTube: ${payload.chatname || payload.userid || 'viewer'}`);
+					}
+				}).catch((error) => {
+					console.error('Failed to sync YouTube block:', error);
+					addEvent('Failed to sync dock block to YouTube');
+				});
+			}
+		};
+		window.addEventListener('sourceControlMessage', sourceControlHandler);
+		registerCleanup(() => window.removeEventListener('sourceControlMessage', sourceControlHandler));
+	}
+
+	function applyApiKeyOverride(rawUrl) {
+		if (!rawUrl || typeof rawUrl !== 'string' || !apiKeyOverride) return rawUrl;
+		if (getStoredAuthSource() !== YT_AUTH_SOURCE_CUSTOM || !usingCustomDesktopAuth()) return rawUrl;
+		try {
+			const parsed = new URL(rawUrl, window.location.href);
+			const host = (parsed.hostname || '').toLowerCase();
+			const path = (parsed.pathname || '').toLowerCase();
+			const isYouTubeDataApiHost = host === 'www.googleapis.com' || host === 'youtube.googleapis.com';
+			if (!isYouTubeDataApiHost || !path.startsWith('/youtube/')) return rawUrl;
+			if (!parsed.searchParams.has('key')) {
+				parsed.searchParams.set('key', apiKeyOverride);
+			}
+			return parsed.toString();
+		} catch (_) {
+			return rawUrl;
+		}
+	}
+
 	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
+		const requestUrl = applyApiKeyOverride(URL);
 		const controller = new AbortController();
-		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${URL}`;
+		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${requestUrl}`;
 		const abortReason = (typeof DOMException === 'function')
 			? new DOMException(friendlyTimeoutMessage, 'AbortError')
 			: new Error(friendlyTimeoutMessage);
@@ -3452,8 +4460,8 @@ function enableBackgroundKeepAlive() {
 					});
 				}
 			}
-			//console.log('Fetching:', URL, options);
-			const response = await fetch(URL, options);
+			//console.log('Fetching:', requestUrl, options);
+			const response = await fetch(requestUrl, options);
 			clearTimeout(timeout_id);
 			//console.log('Response status:', response.status, response.statusText);
 			if (!response.ok) {
@@ -3495,7 +4503,7 @@ function enableBackgroundKeepAlive() {
 				console.error(err.message);
 				throw err;
 			}
-			console.error('Fetch error:', e && e.name ? e.name : 'Error', e && e.message ? e.message : '', URL);
+			console.error('Fetch error:', e && e.name ? e.name : 'Error', e && e.message ? e.message : '', requestUrl);
 			throw e;
 		} finally {
 			clearTimeout(timeout_id);
@@ -3504,53 +4512,172 @@ function enableBackgroundKeepAlive() {
 
 	function showQuotaBanner() {
 		try {
+			quotaWarningActive = true;
 			const el = document.getElementById('quota-warning');
 			if (!el) return;
-			el.classList.remove('hidden');
+			if (!isSocketInterfaceVisible()) {
+				el.classList.remove('hidden');
+			} else {
+				el.classList.add('hidden');
+			}
+			syncSignedInCredentialsVisibility(true);
 		} catch(_){}
 	}
 
 	function hideQuotaBanner() {
 		try {
+			quotaWarningActive = false;
 			const el = document.getElementById('quota-warning');
 			if (el) el.classList.add('hidden');
+			syncSignedInCredentialsVisibility();
 		} catch(_){}
+	}
+
+	function isQuotaError(error) {
+		try {
+			if (!error) return false;
+			const reason = String(error.ytReason || error.reason || '').toLowerCase();
+			const payloadReason = String(error?.ytPayload?.error?.errors?.[0]?.reason || '').toLowerCase();
+			const message = String(error.ytMessage || error.message || '').toLowerCase();
+			return (
+				reason.includes('quota') ||
+				reason.includes('dailylimit') ||
+				payloadReason.includes('quota') ||
+				payloadReason.includes('dailylimit') ||
+				message.includes('quota') ||
+				message.includes('rate limit')
+			);
+		} catch (_) {
+			return false;
+		}
+	}
+
+	function showQuotaAuthFailure(message) {
+		try {
+			const text = typeof message === 'string' && message.trim()
+				? message.trim()
+				: DEFAULT_QUOTA_WARNING_TEXT;
+			const textEl = document.getElementById('quota-warning-text');
+			if (textEl) textEl.textContent = text;
+			const details = document.getElementById('credentials-details');
+			if (details && !isSocketInterfaceVisible()) details.open = true;
+			showQuotaBanner();
+		} catch(_){}
+	}
+	function getCustomCredentialValidationMessage(clientIdValue, clientSecretValue, apiKeyValue) {
+		const hasAny = !!(clientIdValue || clientSecretValue || apiKeyValue);
+		if (!hasAny) return '';
+		if (!clientIdValue || !clientSecretValue || !apiKeyValue) {
+			return 'Use all 3 YouTube fields together: OAuth Client ID, OAuth Client Secret, and API Key.';
+		}
+		if (!/\.apps\.googleusercontent\.com$/i.test(clientIdValue)) {
+			return 'That OAuth Client ID does not look valid. It should end with .apps.googleusercontent.com';
+		}
+		if (clientSecretValue.length < 10) {
+			return 'That OAuth Client Secret looks too short.';
+		}
+		if (apiKeyValue.length < 20) {
+			return 'That API key looks too short. It should look like AIza... and come from Google Cloud credentials.';
+		}
+		return '';
+	}
+	function setCredentialInputsValue(ids, value) {
+		ids.forEach(id => {
+			const input = document.getElementById(id);
+			if (input) input.value = value;
+		});
+	}
+	function updateRedirectHints() {
+		const redirectValue = [
+			'http://localhost:8181/sources/websocket/youtube.html',
+			'http://localhost:8080/sources/websocket/youtube.html'
+		].join('\n');
+		['redirect-uri-hint', 'redirect-uri-hint-2'].forEach(id => {
+			const element = document.getElementById(id);
+			if (!element) return;
+			element.textContent = redirectValue;
+			element.style.whiteSpace = 'pre-line';
+		});
+	}
+	function getSetupGuideUrl() {
+		try {
+			return new URL('../../docs/youtube-project-setup.html', window.location.href).toString();
+		} catch (_) {
+			return '../../docs/youtube-project-setup.html';
+		}
+	}
+	function wireSetupGuideLinks() {
+		const openGuide = function() {
+			const targetUrl = getSetupGuideUrl();
+			try {
+				const opened = window.open(targetUrl, '_blank', 'noopener');
+				if (opened) return;
+			} catch (_) {}
+			window.location.href = targetUrl;
+		};
+		['open-setup-guide', 'open-setup-guide-2'].forEach(id => {
+			const button = document.getElementById(id);
+			if (button) button.onclick = openGuide;
+		});
 	}
 
 	function initCredentialsUI() {
 		try {
-			const redirectValue = window.location.href.split('/youtube')[0] + '/youtube.html';
-			const redirectEl = document.getElementById('redirect-uri-hint');
-			if (redirectEl) redirectEl.textContent = redirectValue;
-			const redirectEl2 = document.getElementById('redirect-uri-hint-2');
-			if (redirectEl2) redirectEl2.textContent = redirectValue;
-			const storedId = localStorage.getItem('ytClientIdOverride') || '';
-			const storedKey = localStorage.getItem('ytApiKeyOverride') || '';
-			const useCustom = !!storedId;
-			// Populate both forms
-			['custom-client-id','custom-client-id-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedId; });
-			['custom-api-key','custom-api-key-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedKey; });
+			refreshClientOverrides();
+			updateRedirectHints();
+			wireSetupGuideLinks();
+			const isDesktopContext = isDesktopYouTubeContext();
+			const credentials = getCustomDesktopCredentials();
+			const useCustom = isDesktopContext && credentials.hasAll;
+			const browserNote = document.getElementById('credentials-browser-note');
+			const details = document.getElementById('credentials-details');
+			if (browserNote) browserNote.classList.toggle('hidden', isDesktopContext);
+			if (details) details.classList.toggle('hidden', !isDesktopContext);
+			setCredentialInputsValue(['custom-client-id','custom-client-id-2'], credentials.clientId);
+			setCredentialInputsValue(['custom-client-secret','custom-client-secret-2'], credentials.clientSecret);
+			setCredentialInputsValue(['custom-api-key','custom-api-key-2'], credentials.apiKey);
 			const indicator = document.getElementById('custom-cred-indicator');
 			if (indicator) indicator.classList.toggle('hidden', !useCustom);
-			if (useCustom) hideQuotaBanner();
+			syncAuthMethodSelectorVisibility();
+			syncSignedInCredentialsVisibility();
 			// Wire buttons
 			const save = async function(primary=true){
-				const cid = (document.getElementById(primary ? 'custom-client-id' : 'custom-client-id-2')||{}).value || '';
-				const akey = (document.getElementById(primary ? 'custom-api-key' : 'custom-api-key-2')||{}).value || '';
-				if (cid && !/\.apps\.googleusercontent\.com$/.test(cid)) {
-					alert('That OAuth Client ID does not look valid. It should end with .apps.googleusercontent.com');
+				if (!isDesktopYouTubeContext()) {
+					alert('Custom YouTube project settings are only available in the desktop app.');
 					return;
 				}
-				if (cid) localStorage.setItem('ytClientIdOverride', cid); else localStorage.removeItem('ytClientIdOverride');
-				if (akey) localStorage.setItem('ytApiKeyOverride', akey); else localStorage.removeItem('ytApiKeyOverride');
-				alert('Saved. Please sign out and sign in again to apply your credentials.');
+				const suffix = primary ? '' : '-2';
+				const cid = ((document.getElementById('custom-client-id' + suffix)||{}).value || '').trim();
+				const secret = ((document.getElementById('custom-client-secret' + suffix)||{}).value || '').trim();
+				const akey = ((document.getElementById('custom-api-key' + suffix)||{}).value || '').trim();
+				const validationMessage = getCustomCredentialValidationMessage(cid, secret, akey);
+				if (validationMessage) {
+					alert(validationMessage);
+					return;
+				}
+				if (!cid && !secret && !akey) {
+					alert('Enter all 3 YouTube fields or use Reset.');
+					return;
+				}
+				localStorage.setItem('ytClientIdOverride', cid);
+				localStorage.setItem('ytClientSecretOverride', secret);
+				localStorage.setItem('ytApiKeyOverride', akey);
+				localStorage.setItem('ytAuthMethod', 'external');
+				refreshClientOverrides();
+				alert('Saved. Sign out and sign in again to use your custom YouTube project.');
 				hideQuotaBanner();
 				initCredentialsUI();
 			};
 			const clear = function(){
+				const hadCustomSession = getStoredAuthSource() === YT_AUTH_SOURCE_CUSTOM;
 				localStorage.removeItem('ytClientIdOverride');
+				localStorage.removeItem('ytClientSecretOverride');
 				localStorage.removeItem('ytApiKeyOverride');
-				alert('Custom credentials cleared. Default project will be used.');
+				refreshClientOverrides();
+				if (hadCustomSession) {
+					signOut();
+				}
+				alert('Custom YouTube project settings cleared. Default sign-in will be used.');
 				initCredentialsUI();
 			};
 			const s1 = document.getElementById('save-credentials'); if (s1) s1.onclick = () => save(true);

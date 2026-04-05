@@ -2,12 +2,13 @@
 const ProfileManager = {
   profiles: [],
   currentProfileId: null,
+  profilesLoaded: false,
 
   init() {
     document.getElementById('profilesList').addEventListener('click', (e) => {
       const deleteButton = e.target.closest('.delete-profile');
       const activateButton = e.target.closest('.activate-profile');
-      
+
       if (deleteButton) {
         const profileItem = deleteButton.closest('.profile-item');
         const profileId = profileItem.dataset.profileId;
@@ -28,88 +29,50 @@ const ProfileManager = {
 
     // Load profiles from storage
     chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
-      if (response && response.settings && response.settings.savedProfiles && response.settings.savedProfiles.json) {
-        try {
-          this.profiles = JSON.parse(response.settings.savedProfiles.json);
-          this.updateProfilesList();
-        } catch(e) {
-          console.error("Error parsing saved profiles:", e);
-        }
-      }
+      this.loadProfilesFromResponse(response);
     });
+  },
+
+  loadProfilesFromResponse(response) {
+    if (this.profilesLoaded) return;
+    if (response && response.settings && response.settings.savedProfiles && response.settings.savedProfiles.json) {
+      try {
+        this.profiles = JSON.parse(response.settings.savedProfiles.json);
+        this.profilesLoaded = true;
+        this.updateProfilesList();
+      } catch(e) {
+        console.error("Error parsing saved profiles:", e);
+      }
+    }
   },
 
   async saveCurrentProfile() {
     const profileName = await prompt("Enter a name for this profile:", "My Profile");
     if (!profileName) return;
 
-    // Get current settings
-    const currentSettings = {};
-    
-    // Gather all settings from checkbox inputs
-    document.querySelectorAll('input[type="checkbox"][data-setting]').forEach(input => {
-      const settingName = input.dataset.setting;
-      currentSettings[settingName] = { setting: input.checked };
-    });
-    
-    // Gather all settings from text inputs
-    document.querySelectorAll('input[type="text"][data-textsetting], textarea[data-textsetting]').forEach(input => {
-      const settingName = input.dataset.textsetting;
-      currentSettings[settingName] = { textsetting: input.value };
-    });
-    
-    // Gather all settings from select inputs
-    document.querySelectorAll('select[data-optionsetting]').forEach(select => {
-      const settingName = select.dataset.optionsetting;
-      currentSettings[settingName] = { optionsetting: select.value };
-    });
-    
-    // Gather all settings from number inputs
-    document.querySelectorAll('input[type="number"][data-numbersetting]').forEach(input => {
-      const settingName = input.dataset.numbersetting;
-      currentSettings[settingName] = { numbersetting: input.value };
-    });
-    
-    // Gather param settings
-    for (let i = 1; i <= 18; i++) {
-      document.querySelectorAll(`input[data-param${i}]`).forEach(input => {
-        const settingName = input.dataset[`param${i}`];
-        if (!currentSettings[settingName]) currentSettings[settingName] = {};
-        currentSettings[settingName][`param${i}`] = input.checked;
-      });
-      
-      document.querySelectorAll(`input[data-textparam${i}], textarea[data-textparam${i}]`).forEach(input => {
-        const settingName = input.dataset[`textparam${i}`];
-        if (!currentSettings[settingName]) currentSettings[settingName] = {};
-        currentSettings[settingName][`textparam${i}`] = input.value;
-      });
-      
-      document.querySelectorAll(`select[data-optionparam${i}]`).forEach(select => {
-        const settingName = select.dataset[`optionparam${i}`];
-        if (!currentSettings[settingName]) currentSettings[settingName] = {};
-        currentSettings[settingName][`optionparam${i}`] = select.value;
-      });
-      
-      document.querySelectorAll(`input[data-numbersetting${i}]`).forEach(input => {
-        const settingName = input.dataset[`numbersetting${i}`];
-        if (!currentSettings[settingName]) currentSettings[settingName] = {};
-        currentSettings[settingName][`numbersetting${i}`] = input.value;
-      });
-    }
+    chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
+      const currentSettings = (response && response.settings) ? response.settings : {};
 
-    const newProfile = {
-      id: Date.now().toString(),
-      name: profileName,
-      dateCreated: new Date().toISOString(),
-      settings: currentSettings
-    };
+      // Strip savedProfiles from the snapshot to prevent recursive data growth
+      // and to avoid overwriting the profiles list when loading a profile
+      const settingsSnapshot = Object.assign({}, currentSettings);
+      delete settingsSnapshot.savedProfiles;
 
-    this.profiles.push(newProfile);
-    this.currentProfileId = newProfile.id;
-    this.updateProfilesList();
-    this.saveProfilesToStorage();
-    
-    alert(`Profile "${profileName}" saved successfully!`);
+      const newProfile = {
+        id: Date.now().toString(),
+        name: profileName,
+        dateCreated: new Date().toISOString(),
+        settings: settingsSnapshot
+      };
+
+      this.profiles.push(newProfile);
+      this.currentProfileId = newProfile.id;
+      this.updateProfilesList();
+      this.saveProfilesToStorage();
+
+      alert(`Profile "${profileName}" saved successfully!`);
+    });
+
   },
 
   loadProfile(profileId) {
@@ -120,8 +83,9 @@ const ProfileManager = {
       return;
     }
 
-    // Apply the settings from the profile
+    // Apply the settings from the profile (skip savedProfiles to preserve current profiles list)
     for (const [key, settingObj] of Object.entries(profile.settings)) {
+      if (key === 'savedProfiles') continue;
       try {
         processObjectSetting(key, settingObj, true, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], {settings: profile.settings});
       } catch (e) {
@@ -141,6 +105,8 @@ const ProfileManager = {
     });
     
     alert(`Profile "${profile.name}" loaded successfully!`);
+    window.location.reload();
+
   },
 
   updateProfilesList() {

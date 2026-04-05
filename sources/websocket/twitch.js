@@ -320,6 +320,7 @@ try{
 		// New scopes for moderation, ads, and redemptions
 		'moderator:manage:banned_users',
 		'moderator:manage:chat_messages',
+		'channel:manage:broadcast',
 		'channel:read:ads',
 		'channel:manage:ads',
 		'channel:read:redemptions'
@@ -331,6 +332,26 @@ try{
 	var FFZ = false;
 	var EMOTELIST = false;
 	var settings = {};
+
+	function syncThirdPartyEmotesForChannel(force = false) {
+		const activeChannel = (channel || "").replace(/^#/, "").trim();
+		if (!activeChannel) {
+			return;
+		}
+		if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+			return;
+		}
+		if (settings.bttv && (force || !BTTV)) {
+			chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, type:"twitch", channel: activeChannel }, function () {});
+		}
+		if (settings.seventv && (force || !SEVENTV)) {
+			chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, type:"twitch", channel: activeChannel }, function () {});
+		}
+		if (settings.ffz && (force || !FFZ)) {
+			chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, type:"twitch", channel: activeChannel }, function () {});
+		}
+	}
+
 	function getTranslation(key, value = '') {
 		try {
 			if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
@@ -346,6 +367,73 @@ try{
 			return value;
 		}
 		return key.replaceAll('-', ' ');
+	}
+
+	const TWITCH_ADVANCED_CONTROLS_STORAGE_KEY = 'twitchWsAdvancedControls';
+
+	function getAdvancedControlSettings() {
+		try {
+			const parsed = JSON.parse(localStorage.getItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
+			return {
+				syncDeleteMessages: !!parsed.syncDeleteMessages,
+				syncBlockUsers: !!parsed.syncBlockUsers
+			};
+		} catch (_) {
+			return {
+				syncDeleteMessages: false,
+				syncBlockUsers: false
+			};
+		}
+	}
+
+	function isAdvancedControlEnabled(key) {
+		const controlSettings = getAdvancedControlSettings();
+		return !!controlSettings[key];
+	}
+
+	function notifyPage(action, payload) {
+		try {
+			window.postMessage({ source: 'twitch-ws-script', action, payload }, '*');
+		} catch (_) {}
+	}
+
+	function normalizeSourceControlPlatform(type) {
+		type = (type || '').toLowerCase();
+		if (type === 'youtubeshorts') {
+			return 'youtube';
+		}
+		return type;
+	}
+
+	function pickSourceControlMessageId(...candidates) {
+		for (const candidate of candidates) {
+			if (candidate === undefined || candidate === null) {
+				continue;
+			}
+			const normalized = String(candidate).trim();
+			if (normalized) {
+				return normalized;
+			}
+		}
+		return '';
+	}
+
+	function isValidTwitchMessageId(value) {
+		return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+	}
+
+	function resolveTwitchDeleteMessageId(payload = {}) {
+		const explicitMessageId = pickSourceControlMessageId(
+			payload.messageId,
+			payload.message_id,
+			payload.nativeMessageId,
+			payload.native_message_id
+		);
+		if (explicitMessageId && isValidTwitchMessageId(explicitMessageId)) {
+			return explicitMessageId;
+		}
+		const fallbackMessageId = pickSourceControlMessageId(payload.id);
+		return isValidTwitchMessageId(fallbackMessageId) ? fallbackMessageId : '';
 	}
 
 
@@ -423,6 +511,7 @@ try{
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
 		channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || channel;
+		syncThirdPartyEmotesForChannel(true);
 		
 		// Set up event listeners
 		const signOutButton = document.getElementById('sign-out-button');
@@ -430,12 +519,36 @@ try{
 			signOutButton.addEventListener('click', signOut);
 		}
 
+		// Auth method selector setup
+		const authMethodSelector = document.getElementById('auth-method-selector');
+		const isElectron = isElectronEnvironment();
+		if (authMethodSelector && isElectron) {
+			authMethodSelector.classList.remove('hidden');
+			// Load saved preference
+			const savedMethod = localStorage.getItem('twitchAuthMethod') || 'external';
+			const radios = authMethodSelector.querySelectorAll('input[name="twitch-auth-method"]');
+			radios.forEach(radio => {
+				radio.checked = radio.value === savedMethod;
+				radio.addEventListener('change', function() {
+					localStorage.setItem('twitchAuthMethod', this.value);
+				});
+			});
+		}
+
 		const authLink = document.getElementById('auth-link');
 		if (authLink) {
 			authLink.addEventListener('click', function(e) {
 				e.preventDefault();
-				const authURL = authUrl();
-				window.location.href = authURL;
+				if (isElectron) {
+					const authMethod = localStorage.getItem('twitchAuthMethod') || 'external';
+					if (authMethod === 'external') {
+						startExternalTwitchAuthFlow();
+					} else {
+						window.location.href = authUrl();
+					}
+				} else {
+					window.location.href = authUrl();
+				}
 			});
 		}
 
@@ -555,6 +668,7 @@ try{
 		} else if (hashMatch(/%40(\w+)/)){
 			channel = hashMatch(/%40(\w+)/) || channel;
 		}
+		syncThirdPartyEmotesForChannel(true);
 		token = hashMatch(/access_token=(\w+)/);
 		if (sessionStorage.twitchOAuthState == state) {
 			verifyAndUseToken(token);
@@ -626,6 +740,7 @@ let getViewerCountInterval = null;
 let getFollowersInterval = null;
 let getSubscribersInterval = null;
 let tokenValidationInterval = null;
+const TWITCH_VIEWER_POLL_INTERVAL_MS = 30000;
 let badges = null;
 
 	async function ensureTmiClient() {
@@ -840,6 +955,9 @@ async function ensureChatClientInstance() {
 
 			setWebsocketReadyState(WEBSOCKET_READY_STATE.OPEN);
 			showSocketInterface();
+			refreshChannelInformation().catch((error) => {
+				console.warn('Unable to refresh Twitch channel information', error);
+			});
 
 			if (permissions && (permissions.canViewFollowers || permissions.isBroadcaster || permissions.isModerator)) {
 				await connectEventSub();
@@ -857,7 +975,7 @@ async function ensureChatClientInstance() {
 
 			getViewerCount(channel);
 			clearInterval(getViewerCountInterval);
-			getViewerCountInterval = setInterval(() => getViewerCount(channel), 60000);
+			getViewerCountInterval = setInterval(() => getViewerCount(channel), TWITCH_VIEWER_POLL_INTERVAL_MS);
 
 			clearInterval(tokenValidationInterval);
 			tokenValidationInterval = setInterval(async () => {
@@ -999,6 +1117,22 @@ async function ensureChatClientInstance() {
 		if (!payload) {
 			return;
 		}
+
+		// Skip events that EventSub is already handling to prevent duplicates
+		if (payload.event === 'cheer' && activeSubscriptions.has('channel.cheer')) {
+			return;
+		}
+		if (payload.event === 'new_subscriber' && activeSubscriptions.has('channel.subscribe')) {
+			return;
+		}
+		if (payload.event === 'subscription_gift'
+			&& activeSubscriptions.has('channel.subscription.gift')) {
+			return;
+		}
+		if (payload.event === 'resub' && activeSubscriptions.has('channel.subscription.message')) {
+			return;
+		}
+
 		if (payload.event === 'cheer') {
 			await handleNormalizedChatMessage({
 				...payload,
@@ -1007,12 +1141,15 @@ async function ensureChatClientInstance() {
 			});
 			return;
 		}
+		if (settings.hideevents) {
+			return;
+		}
 		const notice = convertMembershipPayloadToUserNotice(payload);
 		await processUserNotice(notice);
 	}
 
 	async function handleNormalizedRaid(payload) {
-		if (!payload) {
+		if (!payload || settings.hideevents) {
 			return;
 		}
 		const tags = {
@@ -1074,6 +1211,11 @@ async function ensureChatClientInstance() {
 				if (!ok) console.warn('Ad request failed');
 			} else if (action === 'ad_schedule') {
 				await fetchAdSchedule();
+			} else if (action === 'update_channel_info') {
+				const ok = await updateChannelInformation(payload || {});
+				if (!ok) console.warn('Channel update failed');
+			} else if (action === 'refresh_channel_info') {
+				await refreshChannelInformation();
 			}
 		} catch (e) {
 			console.error('UI action error', e);
@@ -1174,19 +1316,7 @@ async function ensureChatClientInstance() {
 				const sent = await sendMessage(msg);
 				if (sent) {
 					inputElement.value = "";
-					let builtmsg = {};
-					builtmsg.command = "PRIVMSG";
-					builtmsg.params = [username];
-					builtmsg.prefix = username+"!"+username+"@"+username+".tmi.twitch.tv";
-					builtmsg.trailing = msg;
-					
-					// Get user's specific badges from localStorage
-					const userBadges = localStorage.getItem('userBadges');
-					builtmsg.tags = {
-						badges: userBadges || '',
-						color: localStorage.getItem('userColor') || ''
-					};
-					await processMessage(builtmsg);
+					// Server echo will display the message via handleNormalizedChatMessage
 				}
 			}
 		}
@@ -1279,26 +1409,36 @@ async function ensureChatClientInstance() {
 				document.querySelector('#sendmessage').focus();
 				sendResponse(true);
 				return;
-			} 
+			}
+			if (request && request.__ssappSendToTab) {
+				request = request.__ssappSendToTab;
+			}
 			if (typeof request === "object") {
 				if ("state" in request) {
 					isExtensionOn = request.state;
 				}
+				if (request.type === 'SOURCE_CONTROL') {
+					handleSourceControlRequest(request)
+						.then((result) => sendResponse(result))
+						.catch((err) => {
+							console.error('Twitch SOURCE_CONTROL failed', err);
+							sendResponse(false);
+						});
+					return true;
+				}
+				if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+					sendMessage(request.message)
+						.then(() => sendResponse(true))
+						.catch((err) => {
+							console.error('Twitch extension SEND_MESSAGE failed', err);
+							sendResponse(false);
+						});
+					return true;
+				}
 				if ("settings" in request) {
 					settings = request.settings;
 					sendResponse(true);
-					
-					if (channel){
-						if (settings.bttv) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, type:"twitch", channel:channel }, function (response) {});
-						}
-						if (settings.seventv) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, type:"twitch", channel:channel }, function (response) {});
-						}
-						if (settings.ffz) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, type:"twitch", channel:channel }, function (response) {});
-						}
-					}
+					syncThirdPartyEmotesForChannel(false);
 					return;
 				}
 				if ("SEVENTV" in request) {
@@ -1323,11 +1463,52 @@ async function ensureChatClientInstance() {
 					return;
 				}
 			}
+
 		} catch(e) {
 			console.error('Error handling Chrome message:', e);
 		}
 		sendResponse(false);
 	});
+
+	async function handleSourceControlRequest(request) {
+		const payload = request?.payload || {};
+		if (normalizeSourceControlPlatform(request?.platform || payload?.type) !== 'twitch') {
+			return false;
+		}
+		if (request.control === 'deleteMessage') {
+			if (!isAdvancedControlEnabled('syncDeleteMessages')) {
+				return false;
+			}
+			const messageId = resolveTwitchDeleteMessageId(payload);
+			if (!messageId) {
+				addEvent('Skipped dock delete: missing native Twitch message ID');
+				return false;
+			}
+			const ok = await deleteChatMessage(messageId);
+			if (ok) {
+				addEvent('Synced dock delete to Twitch');
+			}
+			return ok;
+		}
+		if (request.control === 'blockUser') {
+			if (!isAdvancedControlEnabled('syncBlockUsers')) {
+				return false;
+			}
+			const userId = payload.userid || '';
+			const login = (payload.chatname || payload.username || '').replace(/^@/, '').trim();
+			const ok = userId
+				? await banUserById(userId, 0, 'Blocked from Social Stream Ninja')
+				: login
+					? await banUser(login, 0, 'Blocked from Social Stream Ninja')
+					: false;
+			if (ok) {
+				addEvent(`Synced dock block to Twitch: ${login || userId}`);
+			}
+			return ok;
+		}
+		return false;
+	}
+
 
 	function authUrl() {
 		sessionStorage.twitchOAuthState = nonce(15);
@@ -1351,6 +1532,58 @@ async function ensureChatClientInstance() {
 		}
 		return text;
 	}
+
+	function isElectronEnvironment() {
+		// Check for ssapp URL parameter (set by ssapp when creating WSS windows)
+		// This is backwards compatible - older ssapp versions won't set the param,
+		// but will still work via the ninjafy check for full preload scenarios
+		const urlParams = new URLSearchParams(window.location.search);
+		const hashParams = new URLSearchParams(window.location.hash.slice(1));
+		const isSsappViaParam = urlParams.has('ssapp') || hashParams.has('ssapp');
+		const hasNinjafyOAuth = window.ninjafy && typeof window.ninjafy.startTwitchOAuth === 'function';
+		const hasSsappOAuth = window.__ssapp && typeof window.__ssapp.startTwitchOAuth === 'function';
+		return isSsappViaParam || hasNinjafyOAuth || hasSsappOAuth;
+	}
+
+	async function startExternalTwitchAuthFlow() {
+		// Try ninjafy first (full preload), then __ssapp (mock preload), then fallback to redirect
+		const startOAuthFn = (window.ninjafy && typeof window.ninjafy.startTwitchOAuth === 'function')
+			? window.ninjafy.startTwitchOAuth
+			: (window.__ssapp && typeof window.__ssapp.startTwitchOAuth === 'function')
+				? window.__ssapp.startTwitchOAuth
+				: null;
+		
+		if (!startOAuthFn) {
+			window.location.href = authUrl();
+			return;
+		}
+		const state = nonce(15) + "@" + (username || "");
+		sessionStorage.twitchOAuthState = state.split("@")[0];
+		try {
+			const result = await startOAuthFn({
+				clientId,
+				scopes: scope.split('+'),
+				state
+			});
+			if (!result || !result.access_token) {
+				console.error('Twitch OAuth did not return an access_token.');
+				showAuthButton();
+				return;
+			}
+			// Process the token as if it came from the hash fragment
+			localStorage.setItem('twitchOAuthToken', result.access_token);
+			sessionStorage.setItem('twitchOAuthToken', result.access_token);
+			verifyAndUseToken(result.access_token);
+		} catch (error) {
+			console.error('External Twitch OAuth failed:', error);
+			showAuthButton();
+		}
+	}
+
+	// Expose for remote control trigger
+	try {
+		window.__SSAPP_START_TWITCH_AUTH__ = startExternalTwitchAuthFlow;
+	} catch (_) {}
 
 	async function sendMessage(message) {
 		await modulesReady;
@@ -1689,6 +1922,9 @@ async function ensureChatClientInstance() {
 		try {
 		//console.log("Processing message:", parsedMessage);
 		const normalizedPayload = parsedMessage.__normalizedPayload || null;
+		const normalizedEventType = normalizedPayload?.event;
+		const normalizedEventTypeLower =
+			typeof normalizedEventType === 'string' ? normalizedEventType.toLowerCase() : '';
 		const user = parsedMessage.prefix.split('!')[0];
 		const message = normalizedPayload?.rawMessage ?? parsedMessage.trailing;
 		// Clean channel name from params (remove # prefix)
@@ -1718,8 +1954,20 @@ async function ensureChatClientInstance() {
 			});
 		}
 		
+		const isSubscriptionNoticeContext =
+			normalizedEventTypeLower === 'resub' ||
+			normalizedEventTypeLower === 'new_subscriber' ||
+			normalizedEventTypeLower === 'subscription_gift' ||
+			normalizedEventTypeLower === 'sub' ||
+			normalizedEventTypeLower === 'subscribe' ||
+			normalizedEventTypeLower === 'subgift' ||
+			normalizedEventTypeLower === 'submysterygift' ||
+			normalizedEventTypeLower === 'anonsubmysterygift' ||
+			normalizedEventTypeLower === 'anonsubgift';
+		const markSubscriberAsMembership = !!subscriber && (!settings.limitedtwitchmemberchat || isSubscriptionNoticeContext);
+
 		// Apply member chat only filter if enabled
-		if (settings.memberchatonly && !subscriber) {
+		if (settings.memberchatonly && !markSubscriberAsMembership) {
 			return;
 		}
 		
@@ -1777,9 +2025,6 @@ async function ensureChatClientInstance() {
 		}
 
 		var data = {};
-		const normalizedEventType = normalizedPayload?.event;
-		const normalizedEventTypeLower =
-			typeof normalizedEventType === 'string' ? normalizedEventType.toLowerCase() : '';
 		// Chat messages must never set data.event; reserve it for true system events (raids, cheers, /me actions, etc.).
 		if (normalizedEventType && normalizedEventTypeLower !== 'message' && normalizedEventTypeLower !== 'chat') {
 			data.event = normalizedEventType;
@@ -1824,7 +2069,7 @@ async function ensureChatClientInstance() {
 			data.chatmessage = replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
 		}
 		
-		data.membership = subscriber;
+		data.membership = markSubscriberAsMembership ? subscriber : "";
 		data.subtitle = subtitle;
 		data.mod = mod;
 
@@ -1907,6 +2152,9 @@ async function ensureChatClientInstance() {
 			case 'resub':
 				eventData.chatmessage = systemMsg;
 				eventData.event = msgId === 'sub' ? 'new_subscriber' : 'resub';
+				if (settings.limitedtwitchmemberchat) {
+					eventData.membership = "Subscriber";
+				}
 				if (parsedMessage.trailing) {
 					eventData.chatmessage += " - " + parsedMessage.trailing;
 				}
@@ -1914,9 +2162,15 @@ async function ensureChatClientInstance() {
 				break;
 				
 			case 'subgift':
+			case 'anonsubgift':
+			case 'submysterygift':
+			case 'anonsubmysterygift':
 				eventData.chatmessage = systemMsg;
 				eventData.event = 'subscription_gift';
-				addEvent(`Gift Sub: ${displayName}`);
+				if (settings.limitedtwitchmemberchat) {
+					eventData.membership = "Subscriber";
+				}
+				addEvent(`Gift Sub: ${displayName || 'Anonymous'}`);
 				break;
 				
 			default:
@@ -1989,6 +2243,7 @@ async function ensureChatClientInstance() {
 		if (channelName) {
 			localStorage.setItem('twitchChannel', channelName);
 			channel = channelName;
+			syncThirdPartyEmotesForChannel(true);
 			channelInput.value = '';
 			await connect();
 		}
@@ -2003,6 +2258,7 @@ async function ensureChatClientInstance() {
 				if (channelName) {
 					localStorage.setItem('twitchChannel', channelName);
 					channel = channelName;
+					syncThirdPartyEmotesForChannel(true);
 					channelInput.value = '';
 					await connect();
 				}
@@ -2066,18 +2322,23 @@ async function ensureChatClientInstance() {
 
 	function pushMessage(data) {
 		try {
-			// Show viewer count updates if enabled
-			if (data.event === 'viewer_update' && !(settings.showviewercount || settings.hypemode)) {
-				return; // Skip viewer updates if not enabled
-			}
-			
 			if (data.type && data.event) {
 				updateStats(data.event, data);
 			}
-					
+
+			// Keep local UI stats updated, but only relay viewer updates when enabled.
+			const viewerGateOpen = Boolean(
+				settings &&
+				typeof settings === 'object' &&
+				(settings.showviewercount || settings.hypemode)
+			);
+			if (data.event === 'viewer_update' && !viewerGateOpen) {
+				return;
+			}
+
 			// Send message to Chrome extension
-			chrome.runtime.sendMessage(chrome.runtime.id, { 
-				"message": data 
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				"message": data
 			}, function(response) {
 				// Handle response if needed
 			});
@@ -2093,24 +2354,7 @@ async function ensureChatClientInstance() {
 		response = response || {};
 		if ("settings" in response) {
 			settings = response.settings;
-			
-			if (channel){
-				if (settings.bttv && !BTTV) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, type:"twitch", channel:channel  }, function (response) {
-						//	console.log(response);
-					});
-				}
-				if (settings.seventv && !SEVENTV) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, type:"twitch", channel:channel  }, function (response) {
-						//	console.log(response);
-					});
-				}
-				if (settings.ffz && !FFZ) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, type:"twitch", channel:channel  }, function (response) {
-						//	console.log(response);
-					});
-				}
-			}
+			syncThirdPartyEmotesForChannel(false);
 		}
 		if ("state" in response) {
 			isExtensionOn = response.state;
@@ -2120,6 +2364,19 @@ async function ensureChatClientInstance() {
 
 	console.log("INJECTED WEBSOCKETS");
 
+	// Handle messages from preload-mock.js which uses window.postMessage instead of chrome.runtime
+	// This is needed when chrome.runtime is deleted for Kasada bypass
+	window.addEventListener('message', function(event) {
+		if (!event.data || typeof event.data !== 'object') return;
+		if (!event.data.__ssappSendToTab) return;
+
+		var request = event.data.__ssappSendToTab;
+		if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+			sendMessage(request.message).catch(function(err) {
+				console.error('Twitch SEND_MESSAGE via postMessage failed', err);
+			});
+		}
+	});
 
 	//////////////
 
@@ -2134,10 +2391,10 @@ async function ensureChatClientInstance() {
 	async function getViewerCount(channelName) {
 		const token = getStoredToken();
 		if (!token) return;
-		
+
 		// Clean channel name (remove # if present)
 		channelName = channelName.replace(/^#/, '');
-		
+
 		try {
 			const response = await fetchWithTimeout(
 				`https://api.twitch.tv/helix/streams?user_login=${channelName}`,
@@ -2147,26 +2404,24 @@ async function ensureChatClientInstance() {
 					'Authorization': `Bearer ${token}`
 				}
 			);
-			
+
 			const data = await response.json();
-			console.log(data);
 			if (data.data && data.data[0]) {
-				const currentViewers = data.data[0].viewer_count;
-				lastKnownViewers = currentViewers;
-				console.log({
-					type: 'twitch',
-					event: 'viewer_update',
-					meta: lastKnownViewers
-				});
-				pushMessage({
-					type: 'twitch',
-					event: 'viewer_update',
-					meta: lastKnownViewers
-				});
+				lastKnownViewers = data.data[0].viewer_count;
+			} else if (lastKnownViewers === null) {
+				lastKnownViewers = 0;
 			}
 		} catch (error) {
 			console.error('Error fetching viewer count:', error);
+			if (lastKnownViewers === null) {
+				lastKnownViewers = 0;
+			}
 		}
+		pushMessage({
+			type: 'twitch',
+			event: 'viewer_update',
+			meta: lastKnownViewers
+		});
 	}
 
 	// Function to fetch followers
@@ -2443,7 +2698,7 @@ async function cleanupCurrentConnection() {
 					version: '2',
 					condition: {
 						broadcaster_user_id: broadcasterId,
-						moderator_user_id: broadcasterId
+						moderator_user_id: authUser.user_id
 					}
 				});
 			}
@@ -2586,6 +2841,11 @@ async function cleanupCurrentConnection() {
 	function handleEventSubNotification(payload) {
 		const event = payload.event;
 		const subscription = payload.subscription;
+		
+		// Skip if hideevents is enabled
+		if (settings.hideevents) {
+			return;
+		}
 
 		switch (subscription.type) {
 		case 'channel.follow':
@@ -2616,6 +2876,7 @@ async function cleanupCurrentConnection() {
 			pushMessage({
 				type: "twitch",
 				event: 'new_subscriber',
+				membership: settings.limitedtwitchmemberchat ? "Subscriber" : "",
 				chatmessage: subscribeMessage,
 				chatname: event.user_name,
 				userid: event.user_id,
@@ -2636,6 +2897,7 @@ async function cleanupCurrentConnection() {
 				pushMessage({
 					type: 'twitch',
 					event: 'resub',
+					membership: settings.limitedtwitchmemberchat ? "Subscriber" : "",
 					chatname: event.user_name,
 					userid: event.user_id,
 					chatmessage: event.message?.text || `${event.user_name} resubscribed`,
@@ -2654,6 +2916,7 @@ async function cleanupCurrentConnection() {
 				pushMessage({
 					type: "twitch",
 					event: 'subscription_gift',
+					membership: settings.limitedtwitchmemberchat ? "Subscriber" : "",
 					chatname: event.user_name,
 					chatmessage: `${event.user_name} has gifted ${event.total} tier ${event.tier} subs!`,
 					userid: event.user_id,
@@ -2694,7 +2957,7 @@ async function cleanupCurrentConnection() {
 
 				pushMessage({
 					type: "twitch",
-					event: 'channel_points',
+					event: 'reward',
 					chatname: event.user_name,
 					userid: event.user_id,
 					chatmessage: rewardMessage,
@@ -2713,7 +2976,7 @@ async function cleanupCurrentConnection() {
 						userId: event.user_id,
 						rewardId: event.reward.id,
 						cost: rewardCost,
-						alias: 'reward'
+						alias: 'channel_points'
 					},
 					textonly: settings.textonlymode || false
 				});
@@ -2770,21 +3033,186 @@ async function cleanupCurrentConnection() {
 		return info?.id || null;
 	}
 
-	async function banUser(login, duration = 0, reason = '') {
+	async function getCurrentModerator() {
+		const token = getStoredToken();
+		if (!token || !currentChannelId) {
+			return null;
+		}
+		return validateToken(token);
+	}
+
+	async function getCurrentChannelInformation() {
+		const token = getStoredToken();
+		if (!token || !currentChannelId) {
+			return null;
+		}
+		try {
+			const response = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${currentChannelId}`, {
+				headers: {
+					'Client-ID': clientId,
+					'Authorization': `Bearer ${token}`
+				}
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				console.error('getCurrentChannelInformation failed', data);
+				return null;
+			}
+			return data?.data?.[0] || null;
+		} catch (error) {
+			console.error('getCurrentChannelInformation error', error);
+			return null;
+		}
+	}
+
+	async function resolveGameId(category) {
+		const query = (category || '').trim();
+		if (!query) {
+			return null;
+		}
+		if (/^\d+$/.test(query)) {
+			return query;
+		}
+		const token = getStoredToken();
+		if (!token) {
+			return null;
+		}
+		try {
+			const response = await fetch(`https://api.twitch.tv/helix/search/categories?query=${encodeURIComponent(query)}`, {
+				headers: {
+					'Client-ID': clientId,
+					'Authorization': `Bearer ${token}`
+				}
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				console.error('resolveGameId failed', data);
+				return null;
+			}
+			const items = Array.isArray(data?.data) ? data.data : [];
+			const exactMatch = items.find((item) => (item?.name || '').toLowerCase() === query.toLowerCase());
+			return (exactMatch || items[0] || {}).id || null;
+		} catch (error) {
+			console.error('resolveGameId error', error);
+			return null;
+		}
+	}
+
+	async function refreshChannelInformation() {
+		const channelInfo = await getCurrentChannelInformation();
+		if (!channelInfo) {
+			return null;
+		}
+		const payload = {
+			title: channelInfo.title || '',
+			category: channelInfo.game_name || '',
+			categoryId: channelInfo.game_id || ''
+		};
+		notifyPage('channel_info', payload);
+		return payload;
+	}
+
+	async function updateChannelInformation(payload = {}) {
 		try {
 			const token = getStoredToken();
 			if (!token || !currentChannelId) return false;
-			const moderator = await validateToken(token);
-			const userId = await getUserIdByLogin(login);
-			if (!userId) return false;
+			const requestBody = {};
+			const title = (payload?.title || '').trim();
+			const category = (payload?.category || '').trim();
+			if (title) {
+				requestBody.title = title;
+			}
+			if (category) {
+				const gameId = await resolveGameId(category);
+				if (!gameId) {
+					addEvent(`Category lookup failed: ${category}`);
+					return false;
+				}
+				requestBody.game_id = gameId;
+			}
+			if (!Object.keys(requestBody).length) {
+				return false;
+			}
+			const response = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${currentChannelId}`, {
+				method: 'PATCH',
+				headers: {
+					'Client-ID': clientId,
+					'Authorization': `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(requestBody)
+			});
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				console.error('updateChannelInformation failed', errorData);
+				addEvent('Stream title/category update failed');
+				return false;
+			}
+			await refreshChannelInformation();
+			addEvent('Stream title/category updated');
+			return true;
+		} catch (error) {
+			console.error('updateChannelInformation error', error);
+			addEvent('Stream title/category update failed');
+			return false;
+		}
+	}
+
+	async function deleteChatMessage(messageId) {
+		try {
+			const token = getStoredToken();
+			if (!token || !currentChannelId || !messageId) return false;
+			const moderator = await getCurrentModerator();
+			if (!moderator?.user_id) {
+				return false;
+			}
+			const response = await fetch(`https://api.twitch.tv/helix/moderation/chat?broadcaster_id=${currentChannelId}&moderator_id=${moderator.user_id}&message_id=${encodeURIComponent(messageId)}`, {
+				method: 'DELETE',
+				headers: {
+					'Client-ID': clientId,
+					'Authorization': `Bearer ${token}`
+				}
+			});
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				console.error('deleteChatMessage failed', errorData);
+				return false;
+			}
+			return true;
+		} catch (error) {
+			console.error('deleteChatMessage error', error);
+			return false;
+		}
+	}
+
+	async function banUserById(userId, duration = 0, reason = '') {
+		try {
+			const token = getStoredToken();
+			if (!token || !currentChannelId || !userId) return false;
+			const moderator = await getCurrentModerator();
+			if (!moderator?.user_id) {
+				return false;
+			}
 			const res = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${currentChannelId}&moderator_id=${moderator.user_id}`,
 				{
 					method: 'POST',
 					headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-					body: JSON.stringify({ data: { user_id: userId, duration: duration || undefined, reason: reason || undefined } })
+					body: JSON.stringify({ data: { user_id: String(userId), duration: duration || undefined, reason: reason || undefined } })
 				}
 			);
+			if (!res.ok) {
+				const errorData = await res.json().catch(() => ({}));
+				console.error('banUserById failed', errorData);
+			}
 			return res.ok;
+		} catch(e) { console.error('banUserById error', e); return false; }
+	}
+
+	async function banUser(login, duration = 0, reason = '') {
+		try {
+			const userId = await getUserIdByLogin(login);
+			if (!userId) return false;
+			return banUserById(userId, duration, reason);
 		} catch(e) { console.error('banUser error', e); return false; }
 	}
 
@@ -2899,13 +3327,15 @@ async function cleanupCurrentConnection() {
 		return {
 			isBroadcaster,
 			isModerator,
-			canViewFollowers: true, // Followers are public info
+			canViewFollowers: isBroadcaster || isModerator,
+			hasFollowerReadScope: !!scopes['moderator:read:followers'],
 			canManageChat: (isBroadcaster || isModerator) && (scopes['moderator:manage:chat_messages'] || isBroadcaster),
 			canBanUsers: (isBroadcaster || isModerator) && (scopes['moderator:manage:banned_users'] || isBroadcaster),
 			canDeleteMessages: (isBroadcaster || isModerator) && (scopes['moderator:manage:chat_messages'] || isBroadcaster),
 			canViewSubscribers: isBroadcaster || isModerator,
 			hasSubscriptionProgram: broadcasterInfo?.partner || broadcasterInfo?.broadcaster_type === 'affiliate',
 			canModerate: isBroadcaster || isModerator,
+			canManageBroadcast: isBroadcaster && !!scopes['channel:manage:broadcast'],
 			canManageAds: !!scopes['channel:manage:ads'],
 			canReadAds: !!scopes['channel:read:ads'],
 			canReadRedemptions: !!scopes['channel:read:redemptions'],

@@ -850,7 +850,7 @@ main.layout {
 }
 
 .activity-status--debug {
-  opacity: 0.85;
+  display: none;
 }
 
 
@@ -1139,12 +1139,103 @@ body.activity-popout #activity .activity__log {
   }
 
   .activity-item {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto 1fr;
+    gap: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 10px;
+  }
+
+  .activity-item::before {
+    border-left-width: 3px;
+    border-radius: 10px;
   }
 
   .activity-item__avatar {
-    width: 46px;
-    height: 46px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    align-self: start;
+    margin-top: 0.15rem;
+  }
+
+  .activity-item__avatar-initial {
+    font-size: 0.7rem;
+  }
+
+  .activity-item__avatar--fallback img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .activity-item__body {
+    display: block;
+    min-width: 0;
+  }
+
+  .activity-item__meta {
+    font-size: 0.6rem;
+    opacity: 0.5;
+    margin-bottom: 0.1rem;
+    gap: 0.25rem;
+  }
+
+  .activity-item__platform-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .activity-item__headline {
+    display: inline;
+  }
+
+  .activity-item__name {
+    font-size: 0.95rem;
+    margin-right: 0.3rem;
+  }
+
+  .activity-item__badges {
+    display: inline-flex;
+    vertical-align: middle;
+    margin-right: 0.2rem;
+  }
+
+  .activity-item__badge,
+  .activity-item__badge-flag {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.25rem;
+  }
+
+  .activity-item__badge {
+    width: 16px;
+    height: 16px;
+  }
+
+  .activity-item__message {
+    display: inline;
+    font-size: 0.95rem;
+    padding: 0;
+    line-height: 1.35;
+  }
+
+  .activity-item__subtitle {
+    font-size: 0.78rem;
+    margin-top: 0.15rem;
+  }
+
+  .activity-item__chips {
+    margin-top: 0.15rem;
+  }
+
+  .activity-status {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+    gap: 0.2rem;
+  }
+
+  .activity-status__detail {
+    font-size: 0.65rem;
+    max-height: 3.5em;
+    overflow: hidden;
   }
 
   .sources__grid {

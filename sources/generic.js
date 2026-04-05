@@ -307,7 +307,7 @@
   // Settings and message passing
   var settings = {
     textonlymode: false,
-    captureevents: true
+    hideevents: false
   };
   
   chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response) {

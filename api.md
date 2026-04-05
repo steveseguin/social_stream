@@ -74,6 +74,10 @@ There is an easy to use sandbox to play with some of the common API commands and
     - [Basic Poll Controls](#basic-poll-controls)
     - [Advanced Poll Controls](#advanced-poll-controls)
     - [Example Usage](#example-usage)
+  - [Timer Control via API](#timer-control-via-api)
+    - [Basic Timer Controls](#basic-timer-controls)
+    - [Setting Timer State](#setting-timer-state)
+    - [Example Usage](#example-usage-1)
   - [Battle Page (battle.html)](#battle-page-battlehtml)
     - [Communication Method](#communication-method)
     - [Game Features](#game-features)
@@ -129,6 +133,7 @@ For controlling SSN from StreamDeck, Bitfocus Companion, or similar tools, you o
 https://io.socialstream.ninja/SESSION_ID/nextInQueue
 https://io.socialstream.ninja/SESSION_ID/clearOverlay
 https://io.socialstream.ninja/SESSION_ID/sendEncodedChat/null/Hello%20World
+https://io.socialstream.ninja/SESSION_ID/drawmode/null/toggle
 ```
 
 **WebSocket commands:**
@@ -319,6 +324,7 @@ When a message is sent, it goes to the specified output channel. Those who have 
 
 14. **Draw Mode**
     - `{"action": "drawmode", "value": true}`
+    - `{"action": "drawmode", "value": "toggle"}`
 
 15. **Emote-only Filter**
     - Toggle or set the global emote-only mode that keeps only emotes/emoji from chat messages. Messages that become empty (and have no donation/content image) after filtering are dropped.
@@ -354,6 +360,12 @@ The server also supports HTTP GET, POST, and PUT requests for the same actions. 
 - GET: `https://io.socialstream.ninja/SESSION_ID/ACTION/TARGET/VALUE`
 - POST/PUT: `https://io.socialstream.ninja/SESSION_ID` (with JSON body)
 - POST/PUT: `https://io.socialstream.ninja/SESSION_ID/ACTION` (with JSON body)
+
+If your action needs a value but no target, use `null` as the target placeholder:
+```
+https://io.socialstream.ninja/SESSION_ID/drawmode/null/true
+https://io.socialstream.ninja/SESSION_ID/drawmode/null/toggle
+```
 
 ### Channel Parameter
 
@@ -571,11 +583,13 @@ The featured page offers several filtering options that can be controlled via th
 
 1. `onlyshowdonos`: Only show messages with donations
 2. `hideDonations`: Hide donation information
-3. `hideTwitch`: Hide messages from Twitch
-4. `onlyTwitch`: Only show messages from Twitch
-5. `onlyFrom`: Only show messages from a specific source
-6. `hideFrom`: Hide messages from specific sources
-7. `filterfeaturedusers`: Only show messages from approved listed users
+3. `hideevents`: Hide all event payloads that include an `event` type
+4. `filterevents`: Hide specific events by exact event name or matching event text
+5. `hideTwitch`: Hide messages from Twitch
+6. `onlyTwitch`: Only show messages from Twitch
+7. `onlyFrom`: Only show messages from a specific source
+8. `hideFrom`: Hide messages from specific sources
+9. `filterfeaturedusers`: Only show messages from approved listed users
 
 ### API Actions
 
@@ -815,6 +829,7 @@ The extension processes various API actions, including:
 8. `stopentries`: Stops accepting new entries.
 9. `downloadwaitlist`: Initiates a download of the waitlist.
 10. `selectwinner`: Selects a random winner from the waitlist.
+11. `drawmode`: Toggles draw mode for giveaways/waitlists.
 
 .. and most actions that targets the dock can be sent via the extension API or other overlays.
 
@@ -1039,6 +1054,45 @@ ws.send(JSON.stringify({
 ws.send(JSON.stringify({
     action: "loadpoll",
     value: { pollId: "poll-1234567890" }
+}));
+```
+
+## Timer Control via API
+
+The timer page can be controlled through the API with the following actions:
+
+### Basic Timer Controls
+- **Start Timer**: `{"action": "starttimer"}`
+- **Pause Timer**: `{"action": "pausetimer"}`
+- **Toggle Timer**: `{"action": "toggletimer"}`
+- **Reset Timer**: `{"action": "resettimer"}`
+- **Add Time**: `{"action": "timeradd", "value": 30}` adds 30 seconds
+- **Subtract Time**: `{"action": "timersubtract", "value": 30}` subtracts 30 seconds
+
+### Setting Timer State
+- **Set Timer**: `{"action": "settimer", "value": {...}}`
+  - Common fields: `seconds`, `label`, `mode`, `style`, `warnSeconds`, `dangerSeconds`, `soundUrl`
+- **Get Timer State**: `{"action": "gettimerstate", "get": "timer-123"}` returns the current timer state via callback
+
+### Example Usage
+```javascript
+// Set a 5-minute countdown named "Interview"
+ws.send(JSON.stringify({
+    action: "settimer",
+    value: {
+        seconds: 300,
+        label: "Interview",
+        mode: "countdown",
+        style: "stage",
+        warnSeconds: 60,
+        dangerSeconds: 15
+    }
+}));
+
+// Request current timer state
+ws.send(JSON.stringify({
+    action: "gettimerstate",
+    get: "timer-state-1"
 }));
 ```
 

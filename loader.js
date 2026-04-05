@@ -23,7 +23,7 @@ async function loadScriptsInOrder() {
         './libs/objects.js?v=1',
         './libs/colours.js?v=1',
         './spotify.js?v=1',
-        './background.js?v=2',
+        './background.js?v=4',
         './db.js?v=1',
         './ai.js?v=2',
         './points.js?v=1',

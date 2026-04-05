@@ -519,6 +519,10 @@
 			data.id = parseInt(Math.random*100000000);
 		}
 		
+		// Hide bots if doNotShowBot is enabled - check both data.bot (set by extension) and custombot list (URL param)
+		if (doNotShowBot && data.bot) {
+			return;
+		}
 		if (data.chatname){
 			if (custombot && doNotShowBot && custombot.includes(data.chatname.toLowerCase().replace(/[^a-z0-9_]+/gi, ""))){ // because why not. :)
 				return;

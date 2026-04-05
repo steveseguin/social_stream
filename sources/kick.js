@@ -205,8 +205,10 @@
 	var cachedUserProfiles = new Map();
 	var maxCachedProfiles = 10000; // Limit to 10,000 profiles
 	var processedMessages = new Set();
-	var maxTrackedMessages = 3;
+	var maxTrackedMessages = 40;
 	var pastMessages = [];
+	var trackedKickMessageIds = new Map();
+	var maxTrackedKickMessageIds = 500;
 
 	// Persistent cache configuration
 	const CACHE_KEY = 'kick_user_profiles_cache';
@@ -428,6 +430,34 @@
 	// Determine if we're on the new popout chat or the old chatroom
 	var isPopoutChat = window.location.href.includes("/popout/") && window.location.href.includes("/chat");
 	var isOldChatroom = window.location.href.includes("/chatroom");
+	var isExtensionOn = true;
+	var lastMessage = "";
+	var settings = {};
+	var runtimeMessageHandler = function (request, sender, sendResponse) {
+		try {
+			if ("getSource" == request) {
+				sendResponse("kick");
+				return;
+			}
+			if ("focusChat" == request) {
+				var input = isPopoutChat ? document.querySelector('[data-input="true"]') : document.querySelector('#message-input');
+				if (input && input.focus) {
+					input.focus();
+					sendResponse(true);
+					return;
+				}
+				sendResponse(false);
+				return;
+			}
+		} catch (e) {}
+		sendResponse(false);
+	};
+
+	chrome.runtime.onMessage.addListener(
+		function (request, sender, sendResponse) {
+			return runtimeMessageHandler(request, sender, sendResponse);
+		}
+	);
 
 	try {
 		var kickUserID = false;
@@ -437,13 +467,13 @@
 		}
 	} catch(e){}
 
-	var isExtensionOn = true;
-	
 	var channelImg = "";
 	  
-	if (kickUsername){
-		channelImg = await getKickAvatarImage(kickUsername, kickUsername) || "https://kick.com/img/default-profile-pictures/default2.jpeg";
-	}
+	try {
+		if (kickUsername){
+			channelImg = await getKickAvatarImage(kickUsername, kickUsername) || "https://kick.com/img/default-profile-pictures/default2.jpeg";
+		}
+	} catch(e){}
 	
 	//console.log(channelImg, kickUsername);
 	
@@ -455,7 +485,7 @@
 			}
 
 			const data = await response.json();
-			
+
 			if (data.livestream) {
 				return data.livestream.viewer_count || 0;
 			}
@@ -571,7 +601,7 @@
 			return response;
 		} catch(e){
 			console.error(e);
-			return await fetch(URL);
+			return null;
 		}
 	}
 	
@@ -649,35 +679,184 @@
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	
+	const KICK_MESSAGE_CONTAINER_SELECTOR = "[data-index], [data-chat-entry]";
+	const KICK_DELETE_TEXTS = new Set(["deleted by a moderator", "(deleted)"]);
+
+	function getKickUsernameButton(ele) {
+		return ele.querySelector("button.inline.font-bold[data-prevent-expand]")
+			|| ele.querySelector("button[title]")
+			|| ele.querySelector("button.font-bold.inline");
+	}
+
+	function normalizeKickText(text) {
+		return (text || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+	}
+
+	function normalizeKickChatname(name) {
+		name = name || "";
+		name = name.replace("Channel Host", "");
+		name = name.replace(":", "");
+		return name.trim();
+	}
+
+	function getKickMessageContainer(ele) {
+		const base = ele?.nodeType === 1 ? ele : ele?.parentElement;
+		if (!base) {
+			return null;
+		}
+		if (base.matches?.(KICK_MESSAGE_CONTAINER_SELECTOR)) {
+			return base;
+		}
+		return base.closest?.(KICK_MESSAGE_CONTAINER_SELECTOR) || null;
+	}
+
+	function getKickMessageKey(ele) {
+		const messageEle = getKickMessageContainer(ele) || (ele?.nodeType === 1 ? ele : null);
+		if (!messageEle?.dataset) {
+			return "";
+		}
+		if (messageEle.dataset.chatEntry) {
+			return `entry:${messageEle.dataset.chatEntry}`;
+		}
+		if (messageEle.dataset.index) {
+			return `index:${messageEle.dataset.index}`;
+		}
+		return "";
+	}
+
+	function rememberKickTrackedMessageId(ele, id) {
+		if (!ele || !id) {
+			return;
+		}
+		ele.dataset.mid = id;
+		const key = getKickMessageKey(ele);
+		if (!key) {
+			return;
+		}
+		if (trackedKickMessageIds.has(key)) {
+			trackedKickMessageIds.delete(key);
+		}
+		trackedKickMessageIds.set(key, id);
+		if (trackedKickMessageIds.size > maxTrackedKickMessageIds) {
+			const oldestKey = trackedKickMessageIds.keys().next().value;
+			if (oldestKey) {
+				trackedKickMessageIds.delete(oldestKey);
+			}
+		}
+	}
+
+	function getKickTrackedMessageId(ele) {
+		const source = ele?.dataset?.mid
+			? ele
+			: ele?.querySelector?.("[data-mid]") || ele?.closest?.("[data-mid]") || null;
+		if (source?.dataset?.mid) {
+			const parsedId = parseInt(source.dataset.mid, 10);
+			return isNaN(parsedId) ? null : parsedId;
+		}
+		const key = getKickMessageKey(ele);
+		if (!key || !trackedKickMessageIds.has(key)) {
+			return null;
+		}
+		const parsedId = parseInt(trackedKickMessageIds.get(key), 10);
+		return isNaN(parsedId) ? null : parsedId;
+	}
+
+	function getKickDeleteChatname(ele) {
+		const btn = getKickUsernameButton(ele);
+		const rawName =
+			btn?.innerText ||
+			ele?.querySelector?.(".chat-entry-username")?.innerText ||
+			"";
+		return escapeHtml(normalizeKickChatname(rawName));
+	}
+
+	function hasKickDeletedLabel(ele) {
+		return Array.from(ele?.querySelectorAll?.("span.font-semibold") || []).some((node) => {
+			const label = normalizeKickText(node.textContent).toLowerCase();
+			return KICK_DELETE_TEXTS.has(label);
+		});
+	}
+
+	function isDeletedKickMessage(ele) {
+		const messageEle = getKickMessageContainer(ele);
+		if (!messageEle) {
+			return false;
+		}
+		if (messageEle.querySelector("[class^='deleted-message']")) {
+			return true;
+		}
+		if (messageEle.querySelector(".line-through")) {
+			return true;
+		}
+		return hasKickDeletedLabel(messageEle);
+	}
 	
 	function deleteThis(ele){
-		if (ele.querySelector("[class^='deleted-message']")){
-		  console.log("DELETEED");
-		  try {
-				var data = {};
-				data.chatname = escapeHtml(ele.querySelector(".chat-entry-username").innerText);
-				data.chatname = data.chatname.replace("Channel Host", "");
-				data.chatname = data.chatname.replace(":", "");
-				data.chatname = data.chatname.trim();
-
-				if (ele.dataset.mid) {
-					const parsedId = parseInt(ele.dataset.mid);
-					if (!isNaN(parsedId)) {
-						data.id = parsedId;
-					}
-				}
-				data.type = "kick";
-				
-				chrome.runtime.sendMessage(
-					chrome.runtime.id,
-					{
-						delete: data
-					},
-					function (e) {}
-				);
-			} catch (e) {
+		// MutationObserver targets can be the chat list wrapper; only act on actual message rows.
+		const messageEle = getKickMessageContainer(ele);
+		if (!messageEle || !isDeletedKickMessage(messageEle)) {
+			return false;
+		}
+		if (messageEle.deleted) {
+			return true;
+		}
+		messageEle.deleted = true;
+		try {
+			var data = {};
+			const chatname = getKickDeleteChatname(messageEle) || getKickDeleteChatname(ele);
+			if (chatname) {
+				data.chatname = chatname;
 			}
-		 }
+			const parsedId = getKickTrackedMessageId(messageEle);
+			if (parsedId !== null) {
+				data.id = parsedId;
+			}
+			data.type = "kick";
+			if (!data.id && !data.chatname) {
+				return true;
+			}
+			if (!data.id) {
+				data.onlyLast = true;
+			}
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				{
+					delete: data
+				},
+				function (e) {}
+			);
+		} catch (e) {
+		}
+		return true;
+	}
+
+	function looksLikeKickRewardMessage(messageText) {
+		if (!messageText || typeof messageText !== "string") {
+			return false;
+		}
+
+		const normalized = messageText
+			.toLowerCase()
+			.normalize("NFD")
+			.replace(/[\u0300-\u036f]/g, "")
+			.replace(/\s+/g, " ")
+			.trim();
+
+		if (!normalized) {
+			return false;
+		}
+
+		const rewardPatterns = [
+			/^(?:has redeemed|redeemed)\b/,
+			/^(?:ha canjeado|canjeo)\b/,
+			/^(?:rescatou|resgatou)\b/,
+			/^(?:ha riscattato)\b/,
+			/^(?:a echange|a rachete)\b/,
+			/^hat .+ eingelost\b/,
+			/^heeft .+ ingewisseld\b/
+		];
+
+		return rewardPatterns.some(pattern => pattern.test(normalized));
 	}
 	
 	async function processMessageOld(ele){	// old chatroom format
@@ -687,16 +866,12 @@
 	  }
 	
 	  if (!ele){return;}
+	  if (deleteThis(ele)){return;}
 	  
 	  if (!ele.isConnected){return;}
 	  
 	  if (settings.customkickstate) {
 		return;
-	  }
-	  
-	   if (ele.querySelector("[class^='deleted-message']")){
-		  console.log("DELETEED");
-		  return;
 	  }
 		
 	  var chatsticker = false;
@@ -794,9 +969,7 @@
 	  var hasDonation = '';
 	
 	  
-	  chatname = chatname.replace("Channel Host", "");
-	  chatname = chatname.replace(":", "");
-	  chatname = chatname.trim();
+	  chatname = normalizeKickChatname(chatname);
 	  
 	  var chatimg = "";
 	  
@@ -813,6 +986,9 @@
 			data.reply = originalMessage;
 		}
 		
+	  if (looksLikeKickRewardMessage(chatmessage)) {
+		data.event = "reward";
+	  }
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;
@@ -849,7 +1025,7 @@
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
 			if (ele && e && e.id){
-				ele.dataset.mid = e.id;
+				rememberKickTrackedMessageId(ele, e.id);
 			}
 		});
 	  } catch(e){
@@ -896,28 +1072,7 @@
 	
 	  if (!ele || !ele.isConnected) return;
 	  
-	  if (ele.querySelector(".line-through, .text-neutral>.font-semibold")){
-		 // console.log("DELETEED");
-		  try {
-				var data = {};
-				data.chatname = escapeHtml(ele.querySelector("button[title]").innerText);
-				data.chatname = data.chatname.replace("Channel Host", "");
-				data.chatname = data.chatname.replace(":", "");
-				data.chatname = data.chatname.trim();
-				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
-				data.type = "kick";
-				
-				chrome.runtime.sendMessage(
-					chrome.runtime.id,
-					{
-						delete: data
-					},
-					function (e) {}
-				);
-			} catch (e) {
-			}
-		return;
-	  }
+	  if (deleteThis(ele)) return;
 	  
 	  if (ele.dataset.matched){return;}
 	  ele.dataset.matched = true;
@@ -934,36 +1089,37 @@
 	  let messageId = "";
 	  var eventName = "";
 	  try {
-		  if (ele.querySelector("button[title]")){
-			chatname = escapeHtml(ele.querySelector("button[title]").innerText);
+		  var usernameBtn = getKickUsernameButton(ele);
+		  if (usernameBtn){
+			chatname = escapeHtml(usernameBtn.innerText);
 		  } else {
-			chatname = escapeHtml(ele.querySelector("button.font-bold.inline.text-white").innerText);
+			chatname = escapeHtml(ele.querySelector("button.font-bold").innerText);
 			eventName = true;
 		  }
-		
+
 	  } catch(e){
 		  return;
 	  }
 	  
 	  
 	  try {
-		 console.log(signedInUser);
-		if (signedInUser && signedInUser==chatname){
+		messageId = getKickMessageKey(ele);
+		if (!messageId){
 			const content = ele.textContent || "";
 			const imgSrcs = Array.from(ele.querySelectorAll('img')).map(img => img.src).join(' ');
-			messageId = `${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
-			
-			if (processedMessages.has(messageId)) return;
-			
-			processedMessages.add(messageId);
-			
-			if (processedMessages.size > maxTrackedMessages) {
-			  const entriesToRemove = processedMessages.size - maxTrackedMessages;
-			  const entries = Array.from(processedMessages);
-			  for (let i = 0; i < entriesToRemove; i++) {
-				processedMessages.delete(entries[i]);
-			  }
-			}
+			messageId = `${chatname}|${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
+		}
+
+		if (processedMessages.has(messageId)) return;
+
+		processedMessages.add(messageId);
+
+		if (processedMessages.size > maxTrackedMessages) {
+		  const entriesToRemove = processedMessages.size - maxTrackedMessages;
+		  const entries = Array.from(processedMessages);
+		  for (let i = 0; i < entriesToRemove; i++) {
+			processedMessages.delete(entries[i]);
+		  }
 		}
 	  } catch(e) {
 		  console.error(e);
@@ -973,6 +1129,8 @@
 	  if (settings.delaykick){
 		  await sleep(3000);
 	  }
+	  if (!ele || !ele.isConnected) return;
+	  if (deleteThis(ele)) return;
 	  
 	  if (settings.customkickstate) {
 		return;
@@ -987,7 +1145,8 @@
 	  
 	  
 	  try {
-		nameColor = ele.querySelector("button[title]").style.color;
+		var colorBtn = getKickUsernameButton(ele);
+		if (colorBtn) { nameColor = colorBtn.style.color; }
 	  } catch(e){}
 	  
 	   
@@ -1002,7 +1161,7 @@
 			}
 			
 			if (!chatNodes.length){
-				let tmp = ele.querySelector("div span[class^='font-normal']");
+				let tmp = ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
 				if (tmp){
 					chatmessage = getAllContentNodes(tmp);
 					chatmessage = chatmessage.trim();
@@ -1011,7 +1170,7 @@
 		  } catch(e){
 		  }
 	  } else {
-		let tmp = ele.querySelector("div span[class^='font-normal']");
+		let tmp = ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
 		if (tmp){
 			chatmessage = getAllContentNodes(tmp);
 			chatmessage = chatmessage.trim();
@@ -1024,10 +1183,33 @@
 		chatmessage = chatmessage.trim();
 	  }
 	  
+	  var contentImg = "";
+	  var hasDonation = '';
+	  
+	  if (!chatmessage && chatname && ele.querySelector("img[alt='sticker'][src]")){
+		  try {
+			  chatmessage = getAllContentNodes(ele.querySelector("div.flex-shrink-0.break-normal"));
+			  chatmessage = chatmessage.replace(chatname,"").trim();
+			  contentImg = ele.querySelector("img[alt='sticker'][src]").src;
+			  
+			  hasDonation = parseInt(ele.querySelector("svg path[d^='M7.67318 0.0611465L3.07733 1.75287C2.86614']").parentNode.nextElementSibling.textContent);
+			  if (hasDonation===1){
+				  hasDonation = hasDonation + " KICK";
+			  } else if (hasDonation){
+				  hasDonation = hasDonation + " KICKs";
+			  } else {
+				  hasDonation = "";
+			  }
+			  eventName = "gift";
+		  } catch(e){
+		  }
+	  }
+	  
 	  if (!chatmessage){return;}
 	  
 	  var originalMessage = "";
 	  var replyMessage = "";
+	  
 	  
 	  if (!settings.excludeReplyingTo){
 		  let reply = ele.querySelector(".text-xs button");
@@ -1047,7 +1229,7 @@
 	  
 	  var member = false;
 	  var mod = false;
-	  ele.querySelectorAll("div > div > div > div > div > div[data-state] img[src], div > div > div > div > div > div[data-state] svg").forEach(badge=>{
+	  ele.querySelectorAll("div[data-state] img[src], div[data-state] svg").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
@@ -1073,11 +1255,9 @@
 	  });
 
 
-	  var hasDonation = '';
+	 
 	  
-	  chatname = chatname.replace("Channel Host", "");
-	  chatname = chatname.replace(":", "");
-	  chatname = chatname.trim();
+	  chatname = normalizeKickChatname(chatname);
 	  
 	  var chatimg = "";
 	  
@@ -1094,10 +1274,8 @@
 			data.reply = originalMessage;
 		}
 		
-		if (eventName){
-			if (chatmessage.startsWith("has redeemed ")){
-				eventName = "reward";
-			}
+		if (eventName && looksLikeKickRewardMessage(chatmessage)){
+			eventName = "reward";
 		}
 	  data.event = eventName;
 	  data.chatname = chatname;
@@ -1106,6 +1284,9 @@
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
+	  if (contentImg){
+		data.contentimg = contentImg;
+	  }
 	  if (member){
 		data.membership = member;
 	  }
@@ -1136,7 +1317,7 @@
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
 			if (e && ele){
-				ele.dataset.mid = e?.id;
+				rememberKickTrackedMessageId(ele, e?.id);
 			}
 		});
 	  } catch(e){
@@ -1147,66 +1328,64 @@
 	// Route to the appropriate processMessage function based on the URL
 	var processMessage = isPopoutChat ? processMessageNew : processMessageOld;
 
-	chrome.runtime.onMessage.addListener(
-		function (request, sender, sendResponse) {
-			try{
-				if ("getSource" == request){sendResponse("kick");	return;	}
-				if ("focusChat" == request){
-					if (isPopoutChat) {
-						document.querySelector('[data-input="true"]').focus();
-					} else {
-						document.querySelector('#message-input').focus();
-					}
+	runtimeMessageHandler = function (request, sender, sendResponse) {
+		try {
+			if ("getSource" == request) {
+				sendResponse("kick");
+				return;
+			}
+			if ("focusChat" == request) {
+				var input = isPopoutChat ? document.querySelector('[data-input="true"]') : document.querySelector('#message-input');
+				if (input && input.focus) {
+					input.focus();
 					sendResponse(true);
 					return;
 				}
-				if (typeof request === "object"){
-					if ("state" in request){
-						if (request.state !== null){
-							isExtensionOn = request.state;
-						}
-					}
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						if (settings.bttv) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-						}
-						if (settings.seventv) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-						}
-						if (settings.ffz) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-						}
-						return;
-					}
-					if ("SEVENTV" in request) {
-						SEVENTV = request.SEVENTV;
-						sendResponse(true);
-						mergeEmotes();
-						return;
-					}
-					if ("BTTV" in request) {
-						BTTV = request.BTTV;
-						sendResponse(true);
-						mergeEmotes();
-						return;
-					}
-					if ("FFZ" in request) {
-						FFZ = request.FFZ;
-						sendResponse(true);
-						mergeEmotes();
-						return;
+				sendResponse(false);
+				return;
+			}
+			if (typeof request === "object") {
+				if ("state" in request) {
+					if (request.state !== null) {
+						isExtensionOn = request.state;
 					}
 				}
-				// twitch doesn't capture avatars already.
-			} catch(e){}
-			sendResponse(false);
-		}
-	);
-	
-	var lastMessage = "";
-	var settings = {};
+				if ("settings" in request) {
+					settings = request.settings;
+					sendResponse(true);
+					if (settings.bttv) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
+					if (settings.seventv) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
+					if (settings.ffz) {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
+					return;
+				}
+				if ("SEVENTV" in request) {
+					SEVENTV = request.SEVENTV;
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+				if ("BTTV" in request) {
+					BTTV = request.BTTV;
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+				if ("FFZ" in request) {
+					FFZ = request.FFZ;
+					sendResponse(true);
+					mergeEmotes();
+					return;
+				}
+			}
+		} catch (e) {}
+		sendResponse(false);
+	};
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
@@ -1237,9 +1416,19 @@
 	function onElementInsertedOld(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				if (mutation.type === "attributes" || mutation.type === "characterData") {
+					deleteThis(mutation.target);
+					return;
+				}
+				if (deleteThis(mutation.target)) {
+					return;
+				}
 				if (mutation.addedNodes.length) {
 					for (var i = 0; i < mutation.addedNodes.length; i++) {
 						try {
+							if (deleteThis(mutation.addedNodes[i])) {
+								continue;
+							}
 							if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.chatEntry){
 								if (pastMessages.includes(mutation.addedNodes[i].dataset.chatEntry)){continue;}
 							
@@ -1264,7 +1453,7 @@
 				}
 			});
 		};
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -1273,14 +1462,25 @@
 	function onElementInsertedNew(target, subtree=false) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				if (mutation.type === "attributes" || mutation.type === "characterData") {
+					deleteThis(mutation.target);
+					return;
+				}
+				if (deleteThis(mutation.target)) {
+					return;
+				}
 				if (mutation.removedNodes.length) {
-					if (mutation.target.parentNode && mutation.target.parentNode.dataset.index){
-						processMessage(mutation.target.parentNode);
+					const row = getKickMessageContainer(mutation.target);
+					if (row && row.dataset.index){
+						processMessage(row);
 					}
 				} else if (mutation.target == target || subtree){
 					if (mutation.addedNodes.length) {
 						for (var i = 0; i < mutation.addedNodes.length; i++) {
 							try {
+								if (deleteThis(mutation.addedNodes[i])) {
+									continue;
+								}
 								if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
 									if (SevenTV){
 										setTimeout(function(ele){
@@ -1301,7 +1501,7 @@
 				} 
 			});
 		};
-		var config = { childList: true, subtree: true };
+		var config = { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);

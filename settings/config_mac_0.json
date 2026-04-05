@@ -1,15 +1,15 @@
 {
   "global": {
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
     "size": {
-      "width": 600,
-      "height": 450
+      "width": 1366,
+      "height": 768
     },
     "signin": {
       "userAgent": "Chrome",
       "size": {
-        "width": 950,
-        "height": 600
+        "width": 1280,
+        "height": 720
       },
       "allowPopups": true,
       "enforceSigninCSP": true
@@ -17,39 +17,39 @@
     "mockUserAgentData": {
       "brands": [
         {
+          "brand": "Not:A-Brand",
+          "version": "99"
+        },
+        {
           "brand": "Chromium",
-          "version": "142"
+          "version": "145"
         },
         {
           "brand": "Google Chrome",
-          "version": "142"
-        },
-        {
-          "brand": "Not_A Brand",
-          "version": "99"
+          "version": "145"
         }
       ],
       "mobile": false,
       "platform": "macOS",
       "fullVersionList": [
         {
+          "brand": "Not:A-Brand",
+          "version": "99.0.0.0"
+        },
+        {
           "brand": "Chromium",
-          "version": "142.0.7444.162"
+          "version": "145.0.7632.117"
         },
         {
           "brand": "Google Chrome",
-          "version": "142.0.7444.162"
-        },
-        {
-          "brand": "Not_A Brand",
-          "version": "99.0.0.0"
+          "version": "145.0.7632.117"
         }
       ],
       "architecture": "arm",
       "bitness": "64",
       "model": "",
-      "platformVersion": "15.5.0",
-      "uaFullVersion": "142.0.7444.162",
+      "platformVersion": "15.7.4",
+      "uaFullVersion": "145.0.7632.117",
       "wow64": false,
       "enhancedHeaders": true
     }
@@ -60,7 +60,7 @@
   "patreon": {
     "signin": {
       "url": "https://patreon.com/",
-      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
       "size": {
         "width": 1280,
         "height": 720
@@ -77,18 +77,44 @@
   },
   "joystick": {
     "signin": {
-      "userAgent": "Chrome",
-      "size": {
-        "width": 950,
-        "height": 600
-      },
-      "url": "https://joystick.com/login"
+      "url": "https://joystick.tv/login",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.235 Safari/537.36",
+      "preload": "none",
+      "enforceSigninCSP": false,
+      "origin": "https://joystick.tv",
+      "referrer": "https://joystick.tv/"
+	},
+	"preload": "none",
+	"enforceSigninCSP": false,
+	"origin": "https://joystick.tv",
+	"referrer": "https://joystick.tv/",
+    "size": {
+      "width": 900,
+      "height": 600
     }
+  },
+    "loco": {
+    "signin": {
+      "url": "https://loco.com/support/FAQs",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.235 Safari/537.36",
+      "preload": "none",
+      "enforceSigninCSP": false,
+      "origin": "https://loco.com",
+      "referrer": "https://loco.com/"
+    },
+    "size": {
+      "width": 1100,
+      "height": 600
+    },
+	"preload": "none",
+	"enforceSigninCSP": false,
+	"origin": "https://loco.com",
+	"referrer": "https://loco.com/"
   },
   "restream": {
     "signin": {
       "url": "https://restream.io/login",
-      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
       "size": {
         "width": 1280,
         "height": 720
@@ -98,9 +124,13 @@
     }
   },
   "tiktok": {
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+	"preload": "none",
+	"enforceSigninCSP": false,
+	"origin": "https://www.tiktok.com",
+	"referrer": "https://www.tiktok.com/",
     "signin": {
-      "url": "https://tiktok.com/login",
+      "url": "https://www.tiktok.com/login",
       "closeOnNavigate": true,
       "allowPopups": false
     },
@@ -117,8 +147,15 @@
       "height": 720
     }
   },
+  
+  "vpzone": {
+    "size": {
+      "width": 1035,
+      "height": 600
+    }
+  },
   "chatgpt": {
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
     "signin": {
       "url": "https://auth.openai.com/log-in",
       "userAgent": "Chrome",
@@ -141,11 +178,11 @@
   "favorited": {
     "signin": {
       "url": "https://studio.favorited.com/login",
-      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
     }
   },
   "instagram": {
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
     "signin": {
       "url": "https://instagram.com/",
       "size": {
@@ -155,7 +192,7 @@
     }
   },
   "instagramlive": {
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
     "signin": {
       "url": "https://instagram.com/",
       "size": {
@@ -165,21 +202,26 @@
     }
   },
   "facebook": {
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
     "signin": {
-      "url": "https://facebook.com/",
+      "url": "https://www.facebook.com",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
       "size": {
-        "width": 1280,
-        "height": 720
-      }
+        "width": 1920,
+        "height": 1080
+      },
+      "preload": "kasada",
+      "monitorAntiBot": false,
+      "useSystemBrowser": false,
+      "useTLSProxy": false,
+      "origin": "https://www.facebook.com",
+      "referrer": "https://www.facebook.com/"
     },
-	"size": {
-        "width": 1300,
-        "height": 1300
-      }
+    "origin": "https://www.facebook.com",
+    "referrer": "https://www.facebook.com/"
   },
   "youtube": {
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
     "signin": {
       "url": "https://youtube.com/",
       "userAgent": "Chrome"
@@ -194,7 +236,7 @@
     }
   },
   "youtubeshorts": {
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
     "signin": {
       "url": "https://youtube.com/",
       "userAgent": "Chrome"
@@ -209,9 +251,51 @@
     }
   },
   "rumble": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "mockUserAgentData": {
+      "brands": [
+        {
+          "brand": "Not:A-Brand",
+          "version": "99"
+        },
+        {
+          "brand": "Chromium",
+          "version": "145"
+        },
+        {
+          "brand": "Google Chrome",
+          "version": "145"
+        }
+      ],
+      "mobile": false,
+      "platform": "macOS",
+      "fullVersionList": [
+        {
+          "brand": "Not:A-Brand",
+          "version": "99.0.0.0"
+        },
+        {
+          "brand": "Chromium",
+          "version": "145.0.7632.117"
+        },
+        {
+          "brand": "Google Chrome",
+          "version": "145.0.7632.117"
+        }
+      ],
+      "architecture": "arm",
+      "bitness": "64",
+      "model": "",
+      "platformVersion": "15.7.4",
+      "uaFullVersion": "145.0.7632.117",
+      "wow64": false,
+      "enhancedHeaders": true
+    },
     "signin": {
-      "url": "https://rumble.com/",
-      "userAgent": "Chrome"
+      "url": "https://rumble.com/login",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "preload": "mock",
+      "enforceSigninCSP": false
     }
   },
   "trovo": {
@@ -266,7 +350,7 @@
     "userAgent": "Chrome",
     "signin": {
       "url": "https://kick.com",
-      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
       "size": {
         "width": 1920,
         "height": 1080
@@ -280,7 +364,7 @@
   "parti": {
     "signin": {
       "url": "https://parti.com/",
-      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
     },
     "size": {
       "width": 900,
@@ -293,74 +377,74 @@
       "userAgent": "Chrome"
     }
   },
-	"twitch": {
-		"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
-		"mockUserAgentData": {
-		  "brands": [
-			{
-			  "brand": "Not?A_Brand",
-			  "version": "99"
-			},
-			{
-			  "brand": "Google Chrome",
-			  "version": "141"
-			},
-			{
-			  "brand": "Chromium",
-			  "version": "141"
-			}
-		  ],
-		  "mobile": false,
-		  "platform": "macOS",
-		  "fullVersionList": [
-			{
-			  "brand": "Not?A_Brand",
-			  "version": "24.0.0.0"
-			},
-			{
-			  "brand": "Google Chrome",
-			  "version": "141.0.7390.123"
-			},
-			{
-			  "brand": "Chromium",
-			  "version": "141.0.7390.123"
-			}
-		  ],
-		  "architecture": "arm",
-		  "bitness": "64",
-		  "model": "",
-		  "platformVersion": "15.5.0",
-		  "uaFullVersion": "141.0.7390.123",
-		  "wow64": false,
-		  "enhancedHeaders": true
-		},
-		"signin": {
-		  "url": "https://twitch.tv/",
-		  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
-		  "size": {
-			"width": 1920,
-			"height": 1080
-		  },
-		  "preload": "kasada",
-		  "preserveAntiBot": false,
-		  "monitorAntiBot": false,
-		  "useSystemBrowser": false,
-		  "useTLSProxy": true
-		},
-		"wss": {
-		  "size": {
-			"width": 1100,
-			"height": 865
-		  }
-		}
-	  },
+  "twitch": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "mockUserAgentData": {
+      "brands": [
+        {
+          "brand": "Not:A-Brand",
+          "version": "99"
+        },
+        {
+          "brand": "Chromium",
+          "version": "145"
+        },
+        {
+          "brand": "Google Chrome",
+          "version": "145"
+        }
+      ],
+      "mobile": false,
+      "platform": "macOS",
+      "fullVersionList": [
+        {
+          "brand": "Not:A-Brand",
+          "version": "99.0.0.0"
+        },
+        {
+          "brand": "Chromium",
+          "version": "145.0.7632.117"
+        },
+        {
+          "brand": "Google Chrome",
+          "version": "145.0.7632.117"
+        }
+      ],
+      "architecture": "arm",
+      "bitness": "64",
+      "model": "",
+      "platformVersion": "15.7.4",
+      "uaFullVersion": "145.0.7632.117",
+      "wow64": false,
+      "enhancedHeaders": true
+    },
+    "signin": {
+      "url": "https://twitch.tv/",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "size": {
+        "width": 1920,
+        "height": 1080
+      },
+      "preload": "kasada",
+      "preserveAntiBot": false,
+      "monitorAntiBot": false,
+      "useSystemBrowser": false,
+      "useTLSProxy": true
+    },
+    "wss": {
+      "size": {
+        "width": 1100,
+        "height": 865
+      }
+    }
+  },
   "telegramk": {
     "signin": {
       "url": "https://web.telegram.org/k/",
       "telegramk": {
         "signin": {
           "url": "https://web.telegram.org/k/",
-          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
         }
       }
     }
@@ -371,7 +455,7 @@
       "telegram": {
         "signin": {
           "url": "https://web.telegram.org/k/",
-          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
         }
       }
     }
@@ -394,7 +478,7 @@
     "wss": {
       "Origin": "https://live.bilibili.com",
       "Referer": "https://live.bilibili.com/",
-      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
       "webSecurity": false,
       "size": {
         "width": 860,
@@ -405,7 +489,7 @@
   "x": {
     "signin": {
       "url": "https://x.com/i/flow/login",
-      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
     }
   },
   "arenasocial": {
@@ -416,11 +500,40 @@
     "signin": {
       "url": "https://arena.social/",
       "enforceSigninCSP": false,
-      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
       "preload": "kasada",
       "monitorAntiBot": false,
       "useSystemBrowser": false,
       "useTLSProxy": false
+    }
+  },
+  "mixcloud": {
+    "origin": "https://www.mixcloud.com",
+    "referrer": "https://www.mixcloud.com/",
+    "signin": {
+      "url": "https://www.mixcloud.com/login/",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.235 Safari/537.36",
+      "preload": "none",
+      "enforceSigninCSP": false,
+      "origin": "https://www.mixcloud.com",
+      "referrer": "https://www.mixcloud.com/"
+    },
+    "size": {
+      "width": 900,
+      "height": 600
+    }
+  },
+  "locals": {
+    "signin": {
+      "url": "https://locals.com/login",
+      "preload": "none",
+      "enforceSigninCSP": false,
+      "referrerMode": "off",
+      "userAgent": null
+    },
+    "size": {
+      "width": 950,
+      "height": 600
     }
   }
 }

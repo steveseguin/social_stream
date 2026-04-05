@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Social Stream - Facebook Live Page API</title>
+  <link rel="icon" href="https://www.facebook.com/favicon.ico" type="image/x-icon">
+  <style>
+    :root {
+      --fb-blue: #1877f2;
+      --fb-dark: #10151d;
+      --fb-panel: #171d27;
+      --fb-panel-alt: #121821;
+      --fb-border: #2a3444;
+      --fb-text: #eef3ff;
+      --fb-muted: #9aa8bc;
+      --fb-success: #53d99a;
+      --fb-warning: #f2b84c;
+      --fb-danger: #ff717f;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--fb-dark);
+      color: var(--fb-text);
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      line-height: 1.4;
+      font-size: 14px;
+    }
+    .page {
+      min-height: 100%;
+      padding: 10px;
+    }
+    .content {
+      width: min(1320px, 100%);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .panel {
+      background: var(--fb-panel);
+      border: 1px solid var(--fb-border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .hero {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr);
+      background: var(--fb-panel-alt);
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.2;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--fb-muted);
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      border: 1px solid var(--fb-border);
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .status-chip.connected { color: var(--fb-success); border-color: rgba(79, 227, 161, 0.4); }
+    .status-chip.connecting { color: var(--fb-warning); border-color: rgba(255, 182, 72, 0.4); }
+    .status-chip.error { color: var(--fb-danger); border-color: rgba(255, 107, 124, 0.4); }
+    h2 { margin: 0 0 8px; font-size: 1rem; }
+    label { display: block; font-weight: 600; margin-bottom: 4px; }
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--fb-border);
+      background: #0e131b;
+      color: var(--fb-text);
+      font-size: 0.95rem;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+    input:focus {
+      outline: none;
+      border-color: rgba(63, 209, 255, 0.55);
+      box-shadow: 0 0 0 2px rgba(63, 209, 255, 0.16);
+    }
+    select:focus {
+      outline: none;
+      border-color: rgba(63, 209, 255, 0.55);
+      box-shadow: 0 0 0 2px rgba(63, 209, 255, 0.16);
+    }
+    .hint {
+      color: var(--fb-muted);
+      font-size: 0.84rem;
+      margin: 4px 0 0;
+    }
+    .grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+      align-items: center;
+    }
+    .row label {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-weight: 500;
+      margin: 0;
+    }
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--fb-blue);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease, opacity 0.2s ease;
+    }
+    button:hover:not(:disabled) {
+      background: #2c86fb;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+    .button-secondary {
+      background: transparent;
+      color: var(--fb-text);
+      border: 1px solid var(--fb-border);
+    }
+    .button-outline {
+      background: rgba(24, 119, 242, 0.12);
+      color: var(--fb-text);
+      border: 1px solid rgba(24, 119, 242, 0.35);
+    }
+    .stats {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+    .stat {
+      background: #0f141c;
+      border: 1px solid var(--fb-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    .stat-label { color: var(--fb-muted); font-size: 0.75rem; }
+    .stat-value { font-size: 1rem; font-weight: 700; margin-top: 2px; }
+    .chat-feed {
+      background: #0d1218;
+      border: 1px solid var(--fb-border);
+      border-radius: 8px;
+      min-height: 420px;
+      max-height: 60vh;
+      overflow: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .chat-line {
+      display: grid;
+      gap: 4px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(38, 52, 75, 0.6);
+    }
+    .chat-line:last-child { border-bottom: none; padding-bottom: 0; }
+    .chat-header {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      font-weight: 600;
+    }
+    .chat-time {
+      color: var(--fb-muted);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .chat-text {
+      color: rgba(233, 240, 255, 0.9);
+      word-break: break-word;
+    }
+    details {
+      border: 1px solid var(--fb-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #0f141c;
+    }
+    summary { cursor: pointer; font-weight: 600; }
+    code {
+      background: #0c1117;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--fb-border);
+    }
+    .token-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+    }
+    .token-row label {
+      margin: 0;
+      font-weight: 500;
+    }
+    .footer-note {
+      color: var(--fb-muted);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+    .layout-main {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+      align-items: start;
+    }
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+    @media (max-width: 980px) {
+      .layout-main {
+        grid-template-columns: 1fr;
+      }
+      .chat-feed {
+        min-height: 300px;
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="content">
+      <section class="panel hero">
+        <h1>Facebook Live Page API bridge</h1>
+        <p>Page-admin bridge for Facebook Live comments. Use this only for Pages you manage.</p>
+        <div class="hero-actions">
+          <button id="connect-btn">Connect</button>
+          <button id="disconnect-btn" class="button-secondary" disabled>Disconnect</button>
+          <button id="resolve-btn" class="button-outline">Resolve live video</button>
+          <span class="status-chip" id="status-chip">Disconnected</span>
+        </div>
+        <div class="hint" id="status-detail">Waiting for a Page access token and live video ID.</div>
+      </section>
+      <div class="layout-main">
+        <div class="stack">
+          <section class="panel">
+            <h2>Connection settings</h2>
+            <div class="grid">
+              <div>
+                <label for="page-select">Managed Page</label>
+                <select id="page-select">
+                  <option value="">Sign in to load your Pages</option>
+                </select>
+                <div class="hint" id="page-select-hint">After sign-in, choose the Page to use.</div>
+              </div>
+            </div>
+            <div class="row">
+              <button id="signin-btn" type="button">Sign in with Facebook</button>
+              <button id="clear-auth-btn" type="button" class="button-secondary">Clear sign-in</button>
+            </div>
+            <div class="row">
+              <label><input type="checkbox" id="auto-connect"> Auto-connect</label>
+              <label><input type="checkbox" id="live-filter" checked> Use live stream filter</label>
+              <label><input type="checkbox" id="viewer-count"> Poll viewer count</label>
+            </div>
+            <details style="margin-top: 10px;">
+              <summary>Advanced / manual setup</summary>
+              <div class="grid" style="margin-top: 10px;">
+                <div>
+                  <label for="video-id">Live video ID</label>
+                  <input id="video-id" type="text" placeholder="123456789012345">
+                  <div class="hint">Paste a video ID or Facebook video URL.</div>
+                </div>
+                <div>
+                  <label for="page-id">Page ID or page name</label>
+                  <input id="page-id" type="text" placeholder="yourpage">
+                  <div class="hint">Used by Resolve to find the current live video.</div>
+                </div>
+                <div>
+                  <label for="access-token">Page access token</label>
+                  <input id="access-token" type="password" placeholder="EAAB...">
+                  <div class="hint">Manual override. Sign-in fills this automatically.</div>
+                  <div class="token-row">
+                    <label><input type="checkbox" id="show-token"> Show token</label>
+                  </div>
+                </div>
+                <div>
+                  <label for="poll-interval">Poll interval (ms)</label>
+                  <input id="poll-interval" type="number" min="1500" max="30000" step="250">
+                  <div class="hint">Lower is faster. Higher uses fewer API calls.</div>
+                </div>
+                <div>
+                  <label for="oauth-base">Sign-in service URL</label>
+                  <input id="oauth-base" type="text" placeholder="https://auth.socialstream.ninja/auth/facebook/pages">
+                  <div class="hint">Leave this alone unless support tells you to change it.</div>
+                </div>
+              </div>
+            </details>
+          </section>
+
+          <section class="panel">
+            <h2>Status</h2>
+            <div class="stats">
+              <div class="stat">
+                <div class="stat-label">Connection</div>
+                <div class="stat-value" id="status-text">Disconnected</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Messages</div>
+                <div class="stat-value" id="message-count">0</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Errors</div>
+                <div class="stat-value" id="error-count">0</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Last poll</div>
+                <div class="stat-value" id="last-poll">-</div>
+              </div>
+            </div>
+            <details style="margin-top: 10px;">
+              <summary>Setup notes</summary>
+              <div class="hint" style="margin-top: 8px;">
+                <p>1) This only works for Pages you manage.</p>
+                <p>2) Sign in, pick a Page, resolve the live video, then connect.</p>
+                <p>3) Manual fallback: paste a Page token and video ID yourself.</p>
+                <p>4) Auto-connect URL: <code>?videoId=VIDEO_ID&amp;access_token=TOKEN&amp;autoconnect=1</code></p>
+              </div>
+            </details>
+          </section>
+        </div>
+
+        <section class="panel">
+          <h2>Live chat feed</h2>
+          <div id="chat-feed" class="chat-feed">
+            <div id="chat-empty" class="hint">No messages yet.</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="footer-note">Keep this page open while you want Facebook Live messages from your managed Page to relay into Social Stream.</div>
+    </div>
+  </div>
+
+  <script src="facebook.js"></script>
+</body>
+</html>

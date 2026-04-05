@@ -1,0 +1,17 @@
+{
+  "scripts": {
+    "lint:js": "eslint .",
+    "lint:js:background:strict": "eslint background.js --rule \"no-redeclare:error\" --rule \"no-shadow:error\" --rule \"no-unreachable:error\" --rule \"no-duplicate-case:error\" --rule \"no-mixed-spaces-and-tabs:error\"",
+    "format:js:background": "prettier --write background.js",
+    "lint:js:background:indent-audit": "prettier --check background.js",
+    "lint:js:background:format-audit": "prettier --check background.js"
+  },
+  "dependencies": {
+    "playwright": "^1.58.2",
+    "python3": "^0.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^10.1.0",
+    "prettier": "^3.8.1"
+  }
+}
