@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Social Stream - VPZone API Source</title>
+    <title>Social Stream - VPZone WebSocket Source</title>
     <link rel="icon" href="https://vpzone.tv/favicon.ico" type="image/x-icon">
     <style>
         :root {
@@ -86,7 +86,7 @@
         }
 
         input[type="text"],
-        input[type="number"] {
+        input[type="password"] {
             width: 100%;
             border: 1px solid var(--line);
             border-radius: 9px;
@@ -118,33 +118,9 @@
             border-color: var(--line);
         }
 
-        button.warn {
-            background: var(--warn);
-            color: #1e1603;
-        }
-
         button:disabled {
             opacity: 0.55;
             cursor: not-allowed;
-        }
-
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .checkbox {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .checkbox input {
-            accent-color: var(--accent);
         }
 
         .chips {
@@ -313,9 +289,9 @@
 <body>
     <div class="wrap">
         <section class="card">
-            <h1>VPZone API Source</h1>
-            <p>Read-only polling source for VPZone. It uses the public stream and persisted event endpoints, so it can replay recent chat history as well as new chat and event rows.</p>
-            <p class="hint">URL params supported: <code>?channel=AngelicAngel</code> and <code>?poll=3000</code>.</p>
+            <h1>VPZone WebSocket Source</h1>
+            <p>Read-only VPZone websocket bridge. It subscribes to a stream username and forwards <code>chat_message</code>, follow/subscription events, and optional presence viewer counts.</p>
+            <p class="hint">URL params supported: <code>?channel=lordwaffl3</code>, <code>?ws=wss://vpzone.tv/ws</code>, and <code>?token=YOUR_BEARER_TOKEN</code>.</p>
         </section>
 
         <section class="card">
@@ -323,29 +299,30 @@
             <div class="grid">
                 <div>
                     <label for="channel-input">Channel</label>
-                    <input id="channel-input" type="text" autocomplete="off" placeholder="AngelicAngel or full VPZone stream URL" />
+                    <input id="channel-input" type="text" autocomplete="off" placeholder="lordwaffl3, stream URL, or chat-dock URL" />
                 </div>
                 <div>
-                    <label for="poll-interval">Events Poll (ms)</label>
-                    <input id="poll-interval" type="number" min="1000" step="500" value="3000" />
+                    <label for="ws-url">WebSocket URL</label>
+                    <input id="ws-url" type="text" autocomplete="off" value="wss://vpzone.tv/ws" />
+                </div>
+                <div>
+                    <label for="auth-token">Bearer Token</label>
+                    <input id="auth-token" type="password" autocomplete="off" placeholder="Optional" />
                 </div>
             </div>
-            <div class="row" style="margin-top:12px;">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;">
                 <button id="save-config" class="alt">Save Config</button>
                 <button id="connect-btn">Connect</button>
                 <button id="disconnect-btn" class="ghost">Disconnect</button>
-                <button id="refresh-btn" class="warn">Refresh Now</button>
-                <label class="checkbox"><input id="replay-history" type="checkbox" checked> Replay recent history on first connect</label>
             </div>
             <div class="chips" style="margin-top:12px;">
-                <span id="socket-chip" class="chip bad">Poller: disconnected</span>
-                <span id="stream-chip" class="chip">Stream: unknown</span>
+                <span id="socket-chip" class="chip bad">Socket: disconnected</span>
                 <span id="viewer-chip" class="chip">Viewers: -</span>
-                <span id="title-chip" class="chip">Title: -</span>
-                <span id="category-chip" class="chip">Category: -</span>
+                <span id="last-event-chip" class="chip">Last event: Waiting</span>
+                <span id="auth-chip" class="chip">Auth: public</span>
             </div>
             <p id="status-text" class="hint">Enter a VPZone channel and connect.</p>
-            <p class="hint">Open the real page in a second tab if you want to compare output: <a id="channel-link" class="link" href="https://vpzone.tv" target="_blank" rel="noopener">vpzone.tv</a></p>
+            <p class="hint">Chat dock shortcut: <a id="channel-link" class="link" href="https://vpzone.tv" target="_blank" rel="noopener">vpzone.tv</a></p>
         </section>
 
         <section class="split">

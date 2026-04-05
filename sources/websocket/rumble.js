@@ -66,6 +66,20 @@
         return typeof chrome !== 'undefined' && chrome && chrome.runtime && typeof chrome.runtime.sendMessage === 'function';
     }
 
+    function preferDirectFetch() {
+        try {
+            if (typeof location !== 'undefined' && location && location.protocol === 'file:') {
+                return true;
+            }
+        } catch (error) {}
+        try {
+            if (window.ninjafy || window.electronApi) {
+                return true;
+            }
+        } catch (error) {}
+        return false;
+    }
+
     function relay(payload) {
         if (!payload || typeof payload !== 'object') {
             return;
@@ -666,7 +680,7 @@
     }
 
     async function fetchJson(url) {
-        if (extAvailable() && chrome.runtime && chrome.runtime.id) {
+        if (extAvailable() && chrome.runtime && chrome.runtime.id && !preferDirectFetch()) {
             return new Promise(function (resolve, reject) {
                 try {
                     chrome.runtime.sendMessage(chrome.runtime.id, { cmd: 'rumbleFetchJson', url: url }, function (response) {
