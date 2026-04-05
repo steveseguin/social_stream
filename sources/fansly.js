@@ -171,6 +171,12 @@ function toDataURL(url, callback) {
 			return;
 		}
 		
+		var signature = timestamp+"::"+name+"::"+msg+"::"+donations;
+		if (ele.dataset && (ele.dataset.ssnMessageSignature === signature)){
+			markProcessed(ele, signature);
+			return;
+		}
+		
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = badges;
