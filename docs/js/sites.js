@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>No need to pop out the chat</li>
                 </ul>
             `,
-            notes: 'Facebook Live chat integration works on the main page. Also works with Workplace.com (using the same setup as Facebook).'
+            notes: 'Facebook Live chat integration works on the main page. Also works with Workplace.com (using the same setup as Facebook). A creator-owned API bridge is also available at <code>sources/websocket/facebook.html</code>.'
         },
         {
             name: 'Instagram Live',
