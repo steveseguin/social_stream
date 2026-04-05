@@ -1,10 +1,34 @@
+(function () {
+const guardRoot = typeof document !== 'undefined' ? document.documentElement : null;
+const guardAttr = 'data-ssn-facebook-ws-loaded';
+
+try {
+  if (guardRoot && guardRoot.getAttribute(guardAttr) === '1') {
+    return;
+  }
+  if (guardRoot) {
+    guardRoot.setAttribute(guardAttr, '1');
+  }
+} catch (err) {}
+
 const STORAGE_KEY = 'facebookApiConfig';
+const AUTH_STORAGE_KEY = 'facebookApiAuth';
 const API_VERSION = 'v20.0';
 const DEFAULT_POLL_INTERVAL = 3000;
 const MIN_POLL_INTERVAL = 1500;
 const MAX_POLL_INTERVAL = 30000;
 const MAX_DEDUPE = 500;
 const VIEWER_POLL_INTERVAL = 15000;
+const DEFAULT_OAUTH_BASE = 'https://auth.socialstream.ninja/auth/facebook/pages';
+const AUTH_MESSAGE_SUCCESS = 'ssn-facebook-auth-success';
+const AUTH_MESSAGE_ERROR = 'ssn-facebook-auth-error';
+const AUTH_RESULT_KEY = 'facebook_auth_result';
+const AUTH_ERROR_KEY = 'facebook_auth_error';
+const FACEBOOK_AUTH_SCOPES = [
+  'pages_show_list',
+  'pages_read_engagement',
+  'pages_read_user_content'
+];
 
 const TAB_ID = typeof window !== 'undefined' && typeof window.__SSAPP_TAB_ID__ !== 'undefined'
   ? window.__SSAPP_TAB_ID__
@@ -17,6 +41,7 @@ const extension = {
 };
 
 const state = {
+  oauthBase: DEFAULT_OAUTH_BASE,
   accessToken: '',
   pageId: '',
   videoId: '',
@@ -37,12 +62,19 @@ const state = {
   seenQueue: [],
   textOnly: false,
   viewerValue: null,
-  videoTitle: ''
+  videoTitle: '',
+  authUser: null,
+  authPages: [],
+  selectedPageId: '',
+  authPopup: null
 };
 
 const els = {};
 
 function cacheElements() {
+  els.oauthBase = document.getElementById('oauth-base');
+  els.pageSelect = document.getElementById('page-select');
+  els.pageSelectHint = document.getElementById('page-select-hint');
   els.accessToken = document.getElementById('access-token');
   els.videoId = document.getElementById('video-id');
   els.pageId = document.getElementById('page-id');
@@ -51,6 +83,8 @@ function cacheElements() {
   els.liveFilter = document.getElementById('live-filter');
   els.viewerCount = document.getElementById('viewer-count');
   els.showToken = document.getElementById('show-token');
+  els.signinBtn = document.getElementById('signin-btn');
+  els.clearAuthBtn = document.getElementById('clear-auth-btn');
   els.connectBtn = document.getElementById('connect-btn');
   els.disconnectBtn = document.getElementById('disconnect-btn');
   els.resolveBtn = document.getElementById('resolve-btn');
@@ -86,6 +120,25 @@ function parseCount(value) {
   return Number.isFinite(num) ? num : null;
 }
 
+function hasAccessToken() {
+  return !!String(state.accessToken || '').trim();
+}
+
+function canResolveLiveVideo() {
+  return hasAccessToken() && !!String(state.pageId || '').trim();
+}
+
+function canConnectNow() {
+  return hasAccessToken() && (!!String(state.videoId || '').trim() || !!String(state.pageId || '').trim());
+}
+
+function updateActionButtons() {
+  if (!els.connectBtn || !els.disconnectBtn || !els.resolveBtn) return;
+  els.connectBtn.disabled = state.connected || !canConnectNow();
+  els.disconnectBtn.disabled = !state.connected;
+  els.resolveBtn.disabled = !canResolveLiveVideo();
+}
+
 function formatTime(timestamp) {
   if (!timestamp) return '-';
   try {
@@ -117,6 +170,66 @@ function normalizePageId(value) {
   return trimmed;
 }
 
+function normalizeOauthBase(value) {
+  const raw = (value || '').trim();
+  if (!raw) return DEFAULT_OAUTH_BASE;
+  return raw.replace(/\/+$/, '');
+}
+
+function getRuntimeOrigin() {
+  try {
+    if (window.location && window.location.origin && window.location.origin !== 'null') {
+      return window.location.origin;
+    }
+  } catch (err) {}
+  return '*';
+}
+
+function getOauthOrigin() {
+  try {
+    return new URL(state.oauthBase).origin;
+  } catch (err) {
+    return '';
+  }
+}
+
+function getAuthReturnTo() {
+  try {
+    return String(window.location.href || '').split('#')[0];
+  } catch (err) {
+    return '';
+  }
+}
+
+function getAuthStartUrl() {
+  const url = new URL(`${state.oauthBase}/start`);
+  url.searchParams.set('return_to', getAuthReturnTo());
+  url.searchParams.set('origin', getRuntimeOrigin());
+  return url.toString();
+}
+
+function base64UrlToJson(value) {
+  if (!value) return null;
+  try {
+    const normalized = String(value).replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized + '==='.slice((normalized.length + 3) % 4);
+    const decoded = atob(padded);
+    return JSON.parse(decoded);
+  } catch (err) {
+    return null;
+  }
+}
+
+function getPageById(pageId) {
+  if (!pageId) return null;
+  for (let i = 0; i < state.authPages.length; i += 1) {
+    if (String(state.authPages[i].id || '') === String(pageId)) {
+      return state.authPages[i];
+    }
+  }
+  return null;
+}
+
 function getUrlParam(key) {
   const search = new URLSearchParams(window.location.search);
   const hash = new URLSearchParams(window.location.hash.slice(1));
@@ -137,7 +250,9 @@ function loadConfig() {
   const urlInterval = getUrlParam('poll');
   const urlAuto = getUrlParam('autoconnect');
   const urlLiveFilter = getUrlParam('live_filter');
+  const urlOauthBase = getUrlParam('oauthBase') || getUrlParam('oauth_base');
 
+  state.oauthBase = normalizeOauthBase(urlOauthBase || saved.oauthBase || DEFAULT_OAUTH_BASE);
   state.accessToken = urlToken || saved.accessToken || '';
   state.videoId = normalizeVideoId(urlVideo || saved.videoId || '');
   state.pageId = normalizePageId(urlPage || saved.pageId || '');
@@ -157,6 +272,7 @@ function loadConfig() {
 
 function saveConfig() {
   const payload = {
+    oauthBase: state.oauthBase,
     accessToken: state.accessToken,
     videoId: state.videoId,
     pageId: state.pageId,
@@ -172,33 +288,180 @@ function saveConfig() {
   }
 }
 
+function saveAuthState() {
+  const payload = {
+    oauthBase: state.oauthBase,
+    authUser: state.authUser,
+    authPages: state.authPages,
+    selectedPageId: state.selectedPageId
+  };
+  try {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(payload));
+  } catch (err) {
+    console.warn('Failed to save Facebook auth state', err);
+  }
+}
+
+function loadAuthState() {
+  let saved = {};
+  try {
+    saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || '{}');
+  } catch (err) {
+    saved = {};
+  }
+  state.oauthBase = normalizeOauthBase(saved.oauthBase || state.oauthBase || DEFAULT_OAUTH_BASE);
+  state.authUser = saved.authUser || null;
+  state.authPages = Array.isArray(saved.authPages) ? saved.authPages.filter((page) => page && page.id && page.accessToken) : [];
+  state.selectedPageId = saved.selectedPageId || (state.pageId && getPageById(state.pageId) ? state.pageId : '');
+  if (state.selectedPageId) {
+    const selectedPage = getPageById(state.selectedPageId);
+    if (selectedPage) {
+      state.pageId = String(selectedPage.id || state.pageId || '');
+      if (!getUrlParam('access_token') && !getUrlParam('token')) {
+        state.accessToken = String(selectedPage.accessToken || state.accessToken || '');
+      }
+    }
+  }
+}
+
+function clearAuthState() {
+  state.authUser = null;
+  state.authPages = [];
+  state.selectedPageId = '';
+  state.accessToken = '';
+  if (!getUrlParam('pageId') && !getUrlParam('page_id') && !getUrlParam('channel')) {
+    state.pageId = '';
+  }
+  try {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  } catch (err) {
+    console.warn('Failed to clear Facebook auth state', err);
+  }
+}
+
 function updateInputs() {
-  els.accessToken.value = state.accessToken;
-  els.videoId.value = state.videoId;
-  els.pageId.value = state.pageId;
-  els.pollInterval.value = state.pollInterval;
-  els.autoConnect.checked = state.autoConnect;
-  els.liveFilter.checked = state.liveFilter;
-  els.viewerCount.checked = state.viewerCount;
+  if (els.oauthBase) els.oauthBase.value = state.oauthBase;
+  updatePageOptions();
+  if (els.accessToken) els.accessToken.value = state.accessToken;
+  if (els.videoId) els.videoId.value = state.videoId;
+  if (els.pageId) els.pageId.value = state.pageId;
+  if (els.pollInterval) els.pollInterval.value = state.pollInterval;
+  if (els.autoConnect) els.autoConnect.checked = state.autoConnect;
+  if (els.liveFilter) els.liveFilter.checked = state.liveFilter;
+  if (els.viewerCount) els.viewerCount.checked = state.viewerCount;
+  updateActionButtons();
 }
 
 function syncStateFromInputs() {
-  state.accessToken = (els.accessToken.value || '').trim();
-  state.videoId = normalizeVideoId(els.videoId.value || '');
-  state.pageId = normalizePageId(els.pageId.value || '');
-  state.pollInterval = clamp(els.pollInterval.value || DEFAULT_POLL_INTERVAL, MIN_POLL_INTERVAL, MAX_POLL_INTERVAL);
-  state.autoConnect = els.autoConnect.checked;
-  state.liveFilter = els.liveFilter.checked;
-  state.viewerCount = els.viewerCount.checked;
-  els.videoId.value = state.videoId;
-  els.pageId.value = state.pageId;
-  els.pollInterval.value = state.pollInterval;
+  state.oauthBase = normalizeOauthBase((els.oauthBase && els.oauthBase.value) || DEFAULT_OAUTH_BASE);
+  state.accessToken = ((els.accessToken && els.accessToken.value) || '').trim();
+  state.videoId = normalizeVideoId((els.videoId && els.videoId.value) || '');
+  state.pageId = normalizePageId((els.pageId && els.pageId.value) || '');
+  state.pollInterval = clamp((els.pollInterval && els.pollInterval.value) || DEFAULT_POLL_INTERVAL, MIN_POLL_INTERVAL, MAX_POLL_INTERVAL);
+  state.autoConnect = !!(els.autoConnect && els.autoConnect.checked);
+  state.liveFilter = !!(els.liveFilter && els.liveFilter.checked);
+  state.viewerCount = !!(els.viewerCount && els.viewerCount.checked);
+  if (els.pageSelect && els.pageSelect.value) {
+    state.selectedPageId = els.pageSelect.value;
+  }
+  if (els.oauthBase) els.oauthBase.value = state.oauthBase;
+  if (els.videoId) els.videoId.value = state.videoId;
+  if (els.pageId) els.pageId.value = state.pageId;
+  if (els.pollInterval) els.pollInterval.value = state.pollInterval;
+  updateActionButtons();
+}
+
+function updatePageOptions() {
+  if (!els.pageSelect) return;
+  const currentValue = state.selectedPageId || '';
+  els.pageSelect.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = state.authPages.length ? 'Choose a managed Page' : 'Sign in to load your Pages';
+  els.pageSelect.appendChild(placeholder);
+  for (let i = 0; i < state.authPages.length; i += 1) {
+    const page = state.authPages[i];
+    const option = document.createElement('option');
+    option.value = String(page.id);
+    option.textContent = page.name ? `${page.name} (${page.id})` : String(page.id);
+    if (String(page.id) === String(currentValue)) {
+      option.selected = true;
+    }
+    els.pageSelect.appendChild(option);
+  }
+  if (!currentValue) {
+    els.pageSelect.value = '';
+  }
+  if (els.pageSelectHint) {
+    if (state.authPages.length) {
+      const userName = state.authUser && state.authUser.name ? `Signed in as ${state.authUser.name}. ` : '';
+      els.pageSelectHint.textContent = `${userName}Choose the Facebook Page to use for chat capture.`;
+    } else {
+      els.pageSelectHint.textContent = 'After sign-in, choose the Facebook Page to use for chat capture.';
+    }
+  }
+}
+
+function applySelectedPage(pageId) {
+  const page = getPageById(pageId);
+  if (!page) return false;
+  state.selectedPageId = String(page.id || '');
+  state.pageId = String(page.id || '');
+  state.accessToken = String(page.accessToken || '');
+  if (els.pageSelect) {
+    els.pageSelect.value = state.selectedPageId;
+  }
+  updateInputs();
+  saveConfig();
+  saveAuthState();
+  return true;
+}
+
+function isViewerTrackingEnabled(settingsOverride) {
+  const activeSettings = settingsOverride && typeof settingsOverride === 'object'
+    ? settingsOverride
+    : extension.settings && typeof extension.settings === 'object'
+      ? extension.settings
+      : {};
+  return Boolean(activeSettings.showviewercount || activeSettings.hypemode);
+}
+
+function handleAuthSuccess(payload) {
+  const pages = Array.isArray(payload && payload.pages) ? payload.pages : [];
+  state.authUser = payload && payload.user ? payload.user : null;
+  state.authPages = pages
+    .filter((page) => page && page.id && page.accessToken)
+    .map((page) => ({
+      id: String(page.id),
+      name: page.name || '',
+      accessToken: String(page.accessToken || ''),
+      category: page.category || '',
+      tasks: Array.isArray(page.tasks) ? page.tasks : []
+    }));
+  if (!state.authPages.length) {
+    updatePageOptions();
+    saveAuthState();
+    setStatus('error', 'Facebook sign-in succeeded, but no managed Pages were returned for this account.');
+    return;
+  }
+
+  const preferredPage = getPageById(state.selectedPageId) || state.authPages[0];
+  applySelectedPage(preferredPage.id);
+  updatePageOptions();
+  const authName = state.authUser && state.authUser.name ? ` as ${state.authUser.name}` : '';
+  setStatus('connected', `Signed in${authName}. Selected Page ${preferredPage.name || preferredPage.id}.`);
+}
+
+function handleAuthError(payload) {
+  const message = payload && payload.message ? payload.message : 'Facebook sign-in failed.';
+  setStatus('error', message);
 }
 
 function updateStats() {
   els.messageCount.textContent = String(state.messageCount);
   els.errorCount.textContent = String(state.errorCount);
   els.lastPoll.textContent = formatTime(state.lastPollAt);
+  updateActionButtons();
 }
 
 function setStatus(status, message) {
@@ -220,12 +483,182 @@ function setStatus(status, message) {
   }
 }
 
+function handleAuthPayload(payload) {
+  if (!payload || typeof payload !== 'object') return false;
+  if (payload.type === AUTH_MESSAGE_SUCCESS) {
+    handleAuthSuccess(payload);
+    return true;
+  }
+  if (payload.type === AUTH_MESSAGE_ERROR) {
+    handleAuthError(payload);
+    return true;
+  }
+  return false;
+}
+
+function consumeAuthResultFromHash() {
+  let changed = false;
+  try {
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const encodedResult = hash.get(AUTH_RESULT_KEY);
+    const encodedError = hash.get(AUTH_ERROR_KEY);
+    if (encodedResult) {
+      const payload = base64UrlToJson(encodedResult);
+      if (payload) {
+        handleAuthPayload(payload);
+      }
+      hash.delete(AUTH_RESULT_KEY);
+      changed = true;
+    }
+    if (encodedError) {
+      const payload = base64UrlToJson(encodedError);
+      if (payload) {
+        handleAuthPayload(payload);
+      }
+      hash.delete(AUTH_ERROR_KEY);
+      changed = true;
+    }
+    if (changed) {
+      const cleanUrl = `${window.location.pathname}${window.location.search}${hash.toString() ? `#${hash.toString()}` : ''}`;
+      history.replaceState({}, document.title, cleanUrl);
+    }
+  } catch (err) {
+    console.warn('Failed to consume Facebook auth callback payload', err);
+  }
+}
+
+function getExpectedAuthMessageOrigin() {
+  const origin = getOauthOrigin();
+  return origin || '';
+}
+
+function getFacebookOAuthBridge() {
+  if (
+    window.ninjafy &&
+    typeof window.ninjafy.startFacebookOAuth === 'function' &&
+    typeof window.ninjafy.exchangeFacebookOAuthCode === 'function'
+  ) {
+    return window.ninjafy;
+  }
+  if (
+    window.__ssapp &&
+    typeof window.__ssapp.startFacebookOAuth === 'function' &&
+    typeof window.__ssapp.exchangeFacebookOAuthCode === 'function'
+  ) {
+    return window.__ssapp;
+  }
+  return null;
+}
+
+function isElectronFacebookContext() {
+  return !!getFacebookOAuthBridge();
+}
+
+function generateAuthNonce(length) {
+  const size = Number(length) > 0 ? Number(length) : 24;
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let text = '';
+  for (let i = 0; i < size; i += 1) {
+    text += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return text;
+}
+
+async function startExternalFacebookAuthFlow() {
+  const bridge = getFacebookOAuthBridge();
+  if (!bridge || typeof bridge.startFacebookOAuth !== 'function' || typeof bridge.exchangeFacebookOAuthCode !== 'function') {
+    throw new Error('Restart the desktop app to load Facebook sign-in support.');
+  }
+
+  syncStateFromInputs();
+  saveConfig();
+  saveAuthState();
+
+  const stateValue = generateAuthNonce(24);
+  setStatus('connecting', 'Opening Facebook sign-in in your default browser...');
+
+  const result = await bridge.startFacebookOAuth({
+    authBase: state.oauthBase,
+    state: stateValue,
+    scopes: FACEBOOK_AUTH_SCOPES,
+    apiVersion: API_VERSION
+  });
+
+  if (!result || !result.code) {
+    throw new Error('Facebook OAuth did not return an authorization code.');
+  }
+
+  const payload = await bridge.exchangeFacebookOAuthCode({
+    authBase: state.oauthBase,
+    code: result.code,
+    redirectUri: result.redirectUri,
+    apiVersion: API_VERSION
+  });
+
+  if (!handleAuthPayload(payload)) {
+    throw new Error('Facebook OAuth exchange returned an unexpected response.');
+  }
+}
+
+function openAuthPopup() {
+  if (isElectronFacebookContext()) {
+    startExternalFacebookAuthFlow().catch((err) => {
+      setStatus('error', `Facebook sign-in failed: ${err.message || err}`);
+    });
+    return;
+  }
+  try {
+    syncStateFromInputs();
+    saveConfig();
+    saveAuthState();
+    const authUrl = getAuthStartUrl();
+    const popup = window.open(authUrl, 'facebookAuth', 'width=560,height=760');
+    if (!popup) {
+      setStatus('error', 'Popup blocked. Allow popups for this site and try again.');
+      return;
+    }
+    state.authPopup = popup;
+    setStatus('connecting', 'Opening Facebook sign-in...');
+  } catch (err) {
+    setStatus('error', `Facebook sign-in failed to start: ${err.message || err}`);
+  }
+}
+
+function clearAuthSelection() {
+  disconnect();
+  clearAuthState();
+  updateInputs();
+  updatePageOptions();
+  saveConfig();
+  setStatus('disconnected', 'Facebook sign-in cleared. Paste a Page token manually or sign in again.');
+  updateActionButtons();
+}
+
+function bindAuthMessages() {
+  window.addEventListener('message', (event) => {
+    const expectedOrigin = getExpectedAuthMessageOrigin();
+    if (expectedOrigin && event.origin !== expectedOrigin) {
+      return;
+    }
+    if (handleAuthPayload(event.data)) {
+      if (state.authPopup && !state.authPopup.closed) {
+        try {
+          state.authPopup.close();
+        } catch (err) {}
+      }
+      state.authPopup = null;
+    }
+  });
+}
+
 function applySettings(settings) {
+  extension.settings = settings && typeof settings === 'object' ? settings : {};
   state.textOnly = Boolean(settings && settings.textonlymode);
+  state.viewerCount = isViewerTrackingEnabled(settings);
   if (!state.pageId && settings && settings.facebook_username && settings.facebook_username.textsetting) {
     state.pageId = normalizePageId(settings.facebook_username.textsetting);
-    updateInputs();
   }
+  updateInputs();
   if (state.autoConnect && state.accessToken && state.pageId && !state.connected) {
     connect();
   }
@@ -300,14 +733,14 @@ async function graphRequest(path, params) {
 async function resolveLiveVideo({ connectAfter = false } = {}) {
   syncStateFromInputs();
   if (!state.accessToken) {
-    setStatus('error', 'Access token is required to resolve live video.');
+    setStatus('error', 'A Page access token is required to resolve live video.');
     return;
   }
   if (!state.pageId) {
     setStatus('error', 'Page ID or name is required to resolve live video.');
     return;
   }
-  setStatus('connecting', 'Resolving live video...');
+  setStatus('connecting', 'Resolving Page live video...');
   try {
     const data = await graphRequest(`${encodeURIComponent(state.pageId)}/live_videos`, {
       fields: 'id,title,permalink_url,status,creation_time',
@@ -316,7 +749,7 @@ async function resolveLiveVideo({ connectAfter = false } = {}) {
     });
     const entry = Array.isArray(data.data) && data.data.length ? data.data[0] : null;
     if (!entry || !entry.id) {
-      setStatus('error', 'No live video found for this page.');
+      setStatus('error', 'No live video found for this Page.');
       return;
     }
     state.videoId = String(entry.id);
@@ -355,7 +788,7 @@ function getViewerCountValue(data) {
 }
 
 async function pollViewerCount() {
-  if (!state.viewerCount) return;
+  if (!isViewerTrackingEnabled()) return;
   const now = Date.now();
   if (now - state.lastViewerAt < VIEWER_POLL_INTERVAL) return;
   state.lastViewerAt = now;
@@ -540,7 +973,7 @@ async function pollOnce() {
       clearTimeout(state.pollTimer);
       els.connectBtn.disabled = false;
       els.disconnectBtn.disabled = true;
-      setStatus('error', 'Access token is invalid or missing permissions.');
+      setStatus('error', 'Page access token is invalid or missing permissions.');
       return;
     }
     if (state.liveFilter && msg && msg.toLowerCase().includes('live_filter')) {
@@ -566,7 +999,8 @@ function connect() {
     disconnect();
   }
   if (!state.accessToken) {
-    setStatus('error', 'Access token is required.');
+    setStatus('error', 'Sign in with Facebook first.');
+    updateActionButtons();
     return;
   }
   if (!state.videoId) {
@@ -575,14 +1009,14 @@ function connect() {
       return;
     }
     setStatus('error', 'Live video ID is required.');
+    updateActionButtons();
     return;
   }
   state.connected = true;
   state.failureCount = 0;
   state.polling = false;
-  setStatus('connecting', 'Connecting to Facebook Live...');
-  els.connectBtn.disabled = true;
-  els.disconnectBtn.disabled = false;
+  setStatus('connecting', 'Connecting to Facebook Page live chat...');
+  updateActionButtons();
   pollOnce();
 }
 
@@ -591,21 +1025,30 @@ function disconnect() {
   state.polling = false;
   clearTimeout(state.pollTimer);
   setStatus('disconnected', 'Disconnected.');
-  els.connectBtn.disabled = false;
-  els.disconnectBtn.disabled = true;
+  updateActionButtons();
 }
 
 function bindEvents() {
+  els.signinBtn.addEventListener('click', openAuthPopup);
+  els.clearAuthBtn.addEventListener('click', clearAuthSelection);
   els.connectBtn.addEventListener('click', connect);
   els.disconnectBtn.addEventListener('click', disconnect);
   els.resolveBtn.addEventListener('click', () => resolveLiveVideo({ connectAfter: false }));
+  els.pageSelect.addEventListener('change', () => {
+    const selectedPageId = els.pageSelect.value || '';
+    if (!selectedPageId) return;
+    if (applySelectedPage(selectedPageId)) {
+      setStatus('connected', `Selected Page ${getPageById(selectedPageId)?.name || selectedPageId}.`);
+    }
+  });
   els.showToken.addEventListener('change', () => {
     els.accessToken.type = els.showToken.checked ? 'text' : 'password';
   });
-  [els.accessToken, els.videoId, els.pageId, els.pollInterval].forEach((input) => {
+  [els.oauthBase, els.accessToken, els.videoId, els.pageId, els.pollInterval].forEach((input) => {
     input.addEventListener('change', () => {
       syncStateFromInputs();
       saveConfig();
+      saveAuthState();
       if (state.connected) {
         schedulePoll();
       }
@@ -632,12 +1075,24 @@ function autoConnectIfReady() {
 function init() {
   cacheElements();
   loadConfig();
+  loadAuthState();
   updateInputs();
+  consumeAuthResultFromHash();
   bindEvents();
+  bindAuthMessages();
   initExtension();
   updateStats();
-  setStatus('disconnected', 'Waiting for access token and live video ID.');
+  if (!state.authPages.length && !state.accessToken) {
+    setStatus('disconnected', 'Sign in with Facebook to load your Page.');
+  } else if (state.authPages.length && !state.connected) {
+    const selectedPage = getPageById(state.selectedPageId);
+    setStatus('connected', `Facebook Pages loaded. ${selectedPage ? `Selected Page ${selectedPage.name || selectedPage.id}. ` : ''}Resolve or connect when ready.`);
+  } else if (!state.connected) {
+    setStatus('disconnected', 'Facebook Page token loaded. Resolve or connect when ready.');
+  }
+  updateActionButtons();
   autoConnectIfReady();
 }
 
 init();
+})();
