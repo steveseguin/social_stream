@@ -20,6 +20,7 @@ const MAX_POLL_INTERVAL = 30000;
 const MAX_DEDUPE = 500;
 const VIEWER_POLL_INTERVAL = 15000;
 const DEFAULT_OAUTH_BASE = 'https://auth.socialstream.ninja/auth/facebook/pages';
+const DEFAULT_LOCAL_RETURN_BASE = 'http://localhost:8181/';
 const AUTH_MESSAGE_SUCCESS = 'ssn-facebook-auth-success';
 const AUTH_MESSAGE_ERROR = 'ssn-facebook-auth-error';
 const AUTH_RESULT_KEY = 'facebook_auth_result';
@@ -176,6 +177,77 @@ function normalizeOauthBase(value) {
   return raw.replace(/\/+$/, '');
 }
 
+function getRuntimeParams() {
+  return {
+    query: new URLSearchParams(window.location.search),
+    hash: new URLSearchParams(window.location.hash.slice(1))
+  };
+}
+
+function getRuntimeParam(key) {
+  const params = getRuntimeParams();
+  return params.query.get(key) || params.hash.get(key) || '';
+}
+
+function hasRuntimeFlag(key) {
+  const params = getRuntimeParams();
+  return params.query.has(key) || params.hash.has(key);
+}
+
+function isFacebookSocketPage(pathname) {
+  return /\/facebook\.html$/i.test(String(pathname || ''));
+}
+
+function buildFacebookReturnUrlFromBase(base) {
+  if (!base) return '';
+  try {
+    const parsed = new URL(String(base).trim(), window.location.href);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return '';
+    }
+    parsed.hash = '';
+    if (isFacebookSocketPage(parsed.pathname)) {
+      return parsed.toString();
+    }
+    const lowerPath = String(parsed.pathname || '').toLowerCase();
+    const relativePath = /\/(?:beta\/)?sources\/websocket\/?$/i.test(lowerPath)
+      ? 'facebook.html'
+      : 'sources/websocket/facebook.html';
+    const normalizedBase = new URL(parsed.toString());
+    normalizedBase.search = '';
+    if (!/\/$/.test(normalizedBase.pathname)) {
+      normalizedBase.pathname = `${normalizedBase.pathname}/`;
+    }
+    return new URL(relativePath, normalizedBase.toString()).toString();
+  } catch (err) {
+    return '';
+  }
+}
+
+function mergeCurrentSearchParams(url) {
+  if (!url) return '';
+  try {
+    const target = new URL(url);
+    const current = new URL(window.location.href);
+    const params = new URLSearchParams(current.search);
+    const ignored = {
+      return_to: true,
+      returnTo: true,
+      redirect_uri: true,
+      redirectUri: true
+    };
+    params.forEach((value, key) => {
+      if (!ignored[key] && !target.searchParams.has(key)) {
+        target.searchParams.set(key, value);
+      }
+    });
+    target.hash = '';
+    return target.toString();
+  } catch (err) {
+    return url;
+  }
+}
+
 function getRuntimeOrigin() {
   try {
     if (window.location && window.location.origin && window.location.origin !== 'null') {
@@ -194,6 +266,37 @@ function getOauthOrigin() {
 }
 
 function getAuthReturnTo() {
+  const explicitReturnTo = getRuntimeParam('return_to') || getRuntimeParam('returnTo');
+  const explicitUrl = mergeCurrentSearchParams(buildFacebookReturnUrlFromBase(explicitReturnTo));
+  if (explicitUrl) {
+    return explicitUrl;
+  }
+
+  try {
+    const currentUrl = new URL(String(window.location.href || ''));
+    if ((currentUrl.protocol === 'http:' || currentUrl.protocol === 'https:') && isFacebookSocketPage(currentUrl.pathname)) {
+      currentUrl.hash = '';
+      return currentUrl.toString();
+    }
+  } catch (err) {
+  }
+
+  const sourceModeUrl = mergeCurrentSearchParams(buildFacebookReturnUrlFromBase(getRuntimeParam('sourcemode')));
+  if (sourceModeUrl) {
+    return sourceModeUrl;
+  }
+
+  const isBetaRuntime = hasRuntimeFlag('beta') || getRuntimeParam('branch') === 'beta';
+  const fallbackBase = hasRuntimeFlag('devmode')
+    ? DEFAULT_LOCAL_RETURN_BASE
+    : isBetaRuntime
+      ? 'https://beta.socialstream.ninja/'
+      : 'https://socialstream.ninja/';
+  const fallbackUrl = mergeCurrentSearchParams(buildFacebookReturnUrlFromBase(fallbackBase));
+  if (fallbackUrl) {
+    return fallbackUrl;
+  }
+
   try {
     return String(window.location.href || '').split('#')[0];
   } catch (err) {
