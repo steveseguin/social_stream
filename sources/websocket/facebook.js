@@ -38,6 +38,7 @@ const TAB_ID = typeof window !== 'undefined' && typeof window.__SSAPP_TAB_ID__ !
 const extension = {
   available: typeof chrome !== 'undefined' && !!(chrome && chrome.runtime && chrome.runtime.id),
   settings: {},
+  settingsLoaded: false,
   tabId: TAB_ID
 };
 
@@ -47,7 +48,7 @@ const state = {
   pageId: '',
   videoId: '',
   pollInterval: DEFAULT_POLL_INTERVAL,
-  autoConnect: false,
+  autoConnect: true,
   liveFilter: true,
   viewerCount: false,
   connected: false,
@@ -67,7 +68,8 @@ const state = {
   authUser: null,
   authPages: [],
   selectedPageId: '',
-  authPopup: null
+  authPopup: null,
+  authInFlight: false
 };
 
 const els = {};
@@ -75,6 +77,7 @@ const els = {};
 function cacheElements() {
   els.oauthBase = document.getElementById('oauth-base');
   els.pageSelect = document.getElementById('page-select');
+  els.pageSelectSingle = document.getElementById('page-select-single');
   els.pageSelectHint = document.getElementById('page-select-hint');
   els.accessToken = document.getElementById('access-token');
   els.videoId = document.getElementById('video-id');
@@ -95,6 +98,7 @@ function cacheElements() {
   els.messageCount = document.getElementById('message-count');
   els.errorCount = document.getElementById('error-count');
   els.lastPoll = document.getElementById('last-poll');
+  els.viewerDisplay = document.getElementById('viewer-count-display');
   els.chatFeed = document.getElementById('chat-feed');
   els.chatEmpty = document.getElementById('chat-empty');
 }
@@ -135,6 +139,12 @@ function canConnectNow() {
 
 function updateActionButtons() {
   if (!els.connectBtn || !els.disconnectBtn || !els.resolveBtn) return;
+  if (els.signinBtn) {
+    els.signinBtn.disabled = !!state.authInFlight;
+  }
+  if (els.clearAuthBtn) {
+    els.clearAuthBtn.disabled = !!state.authInFlight || (!state.accessToken && !state.authPages.length);
+  }
   els.connectBtn.disabled = state.connected || !canConnectNow();
   els.disconnectBtn.disabled = !state.connected;
   els.resolveBtn.disabled = !canResolveLiveVideo();
@@ -362,15 +372,17 @@ function loadConfig() {
   state.pollInterval = clamp(urlInterval || saved.pollInterval || DEFAULT_POLL_INTERVAL, MIN_POLL_INTERVAL, MAX_POLL_INTERVAL);
   if (urlAuto !== null) {
     state.autoConnect = urlAuto === '1' || urlAuto === 'true';
+  } else if (saved.autoConnect !== undefined) {
+    state.autoConnect = Boolean(saved.autoConnect);
   } else {
-    state.autoConnect = saved.autoConnect || false;
+    state.autoConnect = true;
   }
   state.liveFilter = urlLiveFilter
     ? urlLiveFilter !== '0' && urlLiveFilter !== 'false'
     : saved.liveFilter !== undefined
       ? Boolean(saved.liveFilter)
       : true;
-  state.viewerCount = saved.viewerCount || false;
+  state.viewerCount = saved.viewerCount !== undefined ? Boolean(saved.viewerCount) : false;
 }
 
 function saveConfig() {
@@ -416,6 +428,9 @@ function loadAuthState() {
   state.authUser = saved.authUser || null;
   state.authPages = Array.isArray(saved.authPages) ? saved.authPages.filter((page) => page && page.id && page.accessToken) : [];
   state.selectedPageId = saved.selectedPageId || (state.pageId && getPageById(state.pageId) ? state.pageId : '');
+  if (!state.selectedPageId && state.authPages.length === 1) {
+    state.selectedPageId = String(state.authPages[0].id || '');
+  }
   if (state.selectedPageId) {
     const selectedPage = getPageById(state.selectedPageId);
     if (selectedPage) {
@@ -451,7 +466,7 @@ function updateInputs() {
   if (els.pollInterval) els.pollInterval.value = state.pollInterval;
   if (els.autoConnect) els.autoConnect.checked = state.autoConnect;
   if (els.liveFilter) els.liveFilter.checked = state.liveFilter;
-  if (els.viewerCount) els.viewerCount.checked = state.viewerCount;
+  updateViewerCountControl();
   updateActionButtons();
 }
 
@@ -463,7 +478,9 @@ function syncStateFromInputs() {
   state.pollInterval = clamp((els.pollInterval && els.pollInterval.value) || DEFAULT_POLL_INTERVAL, MIN_POLL_INTERVAL, MAX_POLL_INTERVAL);
   state.autoConnect = !!(els.autoConnect && els.autoConnect.checked);
   state.liveFilter = !!(els.liveFilter && els.liveFilter.checked);
-  state.viewerCount = !!(els.viewerCount && els.viewerCount.checked);
+  if (!extension.settingsLoaded) {
+    state.viewerCount = !!(els.viewerCount && els.viewerCount.checked);
+  }
   if (els.pageSelect && els.pageSelect.value) {
     state.selectedPageId = els.pageSelect.value;
   }
@@ -474,9 +491,24 @@ function syncStateFromInputs() {
   updateActionButtons();
 }
 
+function updateViewerCountControl() {
+  if (!els.viewerCount) return;
+  const enabled = isViewerTrackingEnabled();
+  els.viewerCount.checked = enabled;
+  els.viewerCount.disabled = extension.settingsLoaded;
+  const viewerLabel = els.viewerCount.closest('label');
+  if (viewerLabel) {
+    viewerLabel.title = extension.settingsLoaded ? 'Controlled by the app settings.' : '';
+  }
+}
+
 function updatePageOptions() {
   if (!els.pageSelect) return;
-  const currentValue = state.selectedPageId || '';
+  let currentValue = state.selectedPageId || '';
+  if (!currentValue && state.authPages.length === 1) {
+    currentValue = String(state.authPages[0].id || '');
+    state.selectedPageId = currentValue;
+  }
   els.pageSelect.innerHTML = '';
   const placeholder = document.createElement('option');
   placeholder.value = '';
@@ -495,12 +527,29 @@ function updatePageOptions() {
   if (!currentValue) {
     els.pageSelect.value = '';
   }
+  const hasPages = state.authPages.length > 0;
+  const hasMultiplePages = state.authPages.length > 1;
+  const selectedPage = currentValue ? getPageById(currentValue) : (state.authPages.length === 1 ? state.authPages[0] : null);
+  els.pageSelect.disabled = !hasMultiplePages;
+  els.pageSelect.style.display = hasPages && !hasMultiplePages ? 'none' : '';
+  if (els.pageSelectSingle) {
+    if (hasPages && !hasMultiplePages && selectedPage) {
+      els.pageSelectSingle.textContent = selectedPage.name ? `${selectedPage.name} (${selectedPage.id})` : String(selectedPage.id);
+      els.pageSelectSingle.classList.add('visible');
+    } else {
+      els.pageSelectSingle.textContent = '';
+      els.pageSelectSingle.classList.remove('visible');
+    }
+  }
   if (els.pageSelectHint) {
-    if (state.authPages.length) {
+    if (hasMultiplePages) {
       const userName = state.authUser && state.authUser.name ? `Signed in as ${state.authUser.name}. ` : '';
       els.pageSelectHint.textContent = `${userName}Choose the Facebook Page to use for chat capture.`;
+    } else if (selectedPage) {
+      const userName = state.authUser && state.authUser.name ? `Signed in as ${state.authUser.name}. ` : '';
+      els.pageSelectHint.textContent = `${userName}Using ${selectedPage.name || selectedPage.id} for chat capture.`;
     } else {
-      els.pageSelectHint.textContent = 'After sign-in, choose the Facebook Page to use for chat capture.';
+      els.pageSelectHint.textContent = 'Sign in to load your Facebook Pages.';
     }
   }
 }
@@ -521,12 +570,13 @@ function applySelectedPage(pageId) {
 }
 
 function isViewerTrackingEnabled(settingsOverride) {
-  const activeSettings = settingsOverride && typeof settingsOverride === 'object'
-    ? settingsOverride
-    : extension.settings && typeof extension.settings === 'object'
-      ? extension.settings
-      : {};
-  return Boolean(activeSettings.showviewercount || activeSettings.hypemode);
+  const hasOverride = settingsOverride && typeof settingsOverride === 'object';
+  const hasManagedSettings = extension.settingsLoaded && extension.settings && typeof extension.settings === 'object';
+  if (hasOverride || hasManagedSettings) {
+    const activeSettings = hasOverride ? settingsOverride : extension.settings;
+    return Boolean(activeSettings.showviewercount || activeSettings.hypemode);
+  }
+  return Boolean(state.viewerCount);
 }
 
 function handleAuthSuccess(payload) {
@@ -553,6 +603,7 @@ function handleAuthSuccess(payload) {
   updatePageOptions();
   const authName = state.authUser && state.authUser.name ? ` as ${state.authUser.name}` : '';
   setStatus('connected', `Signed in${authName}. Selected Page ${preferredPage.name || preferredPage.id}.`);
+  autoConnectIfReady();
 }
 
 function handleAuthError(payload) {
@@ -564,6 +615,7 @@ function updateStats() {
   els.messageCount.textContent = String(state.messageCount);
   els.errorCount.textContent = String(state.errorCount);
   els.lastPoll.textContent = formatTime(state.lastPollAt);
+  if (els.viewerDisplay) els.viewerDisplay.textContent = state.viewerValue !== null ? String(state.viewerValue) : '-';
   updateActionButtons();
 }
 
@@ -638,15 +690,13 @@ function getExpectedAuthMessageOrigin() {
 function getFacebookOAuthBridge() {
   if (
     window.ninjafy &&
-    typeof window.ninjafy.startFacebookOAuth === 'function' &&
-    typeof window.ninjafy.exchangeFacebookOAuthCode === 'function'
+    typeof window.ninjafy.startFacebookOAuth === 'function'
   ) {
     return window.ninjafy;
   }
   if (
     window.__ssapp &&
-    typeof window.__ssapp.startFacebookOAuth === 'function' &&
-    typeof window.__ssapp.exchangeFacebookOAuthCode === 'function'
+    typeof window.__ssapp.startFacebookOAuth === 'function'
   ) {
     return window.__ssapp;
   }
@@ -669,37 +719,63 @@ function generateAuthNonce(length) {
 
 async function startExternalFacebookAuthFlow() {
   const bridge = getFacebookOAuthBridge();
-  if (!bridge || typeof bridge.startFacebookOAuth !== 'function' || typeof bridge.exchangeFacebookOAuthCode !== 'function') {
+  if (!bridge || typeof bridge.startFacebookOAuth !== 'function') {
     throw new Error('Restart the desktop app to load Facebook sign-in support.');
   }
-
-  syncStateFromInputs();
-  saveConfig();
-  saveAuthState();
-
-  const stateValue = generateAuthNonce(24);
-  setStatus('connecting', 'Opening Facebook sign-in in your default browser...');
-
-  const result = await bridge.startFacebookOAuth({
-    authBase: state.oauthBase,
-    state: stateValue,
-    scopes: FACEBOOK_AUTH_SCOPES,
-    apiVersion: API_VERSION
-  });
-
-  if (!result || !result.code) {
-    throw new Error('Facebook OAuth did not return an authorization code.');
+  if (state.authInFlight) {
+    return;
   }
 
-  const payload = await bridge.exchangeFacebookOAuthCode({
-    authBase: state.oauthBase,
-    code: result.code,
-    redirectUri: result.redirectUri,
-    apiVersion: API_VERSION
-  });
+  state.authInFlight = true;
+  updateActionButtons();
 
-  if (!handleAuthPayload(payload)) {
-    throw new Error('Facebook OAuth exchange returned an unexpected response.');
+  try {
+    syncStateFromInputs();
+    saveConfig();
+    saveAuthState();
+
+    const stateValue = generateAuthNonce(24);
+    setStatus('connecting', 'Opening Facebook sign-in in your default browser...');
+
+    const result = await bridge.startFacebookOAuth({
+      authBase: state.oauthBase,
+      state: stateValue,
+      scopes: FACEBOOK_AUTH_SCOPES,
+      apiVersion: API_VERSION
+    });
+
+    if (handleAuthPayload(result)) {
+      return;
+    }
+
+    const nestedPayload = result && typeof result === 'object'
+      ? (result.payload || result.authPayload || null)
+      : null;
+    if (handleAuthPayload(nestedPayload)) {
+      return;
+    }
+
+    if (!result || !result.code) {
+      throw new Error('Facebook OAuth did not return an authorization result.');
+    }
+
+    if (typeof bridge.exchangeFacebookOAuthCode !== 'function') {
+      throw new Error('Restart the desktop app to load Facebook sign-in exchange support.');
+    }
+
+    const payload = await bridge.exchangeFacebookOAuthCode({
+      authBase: state.oauthBase,
+      code: result.code,
+      redirectUri: result.redirectUri,
+      apiVersion: API_VERSION
+    });
+
+    if (!handleAuthPayload(payload)) {
+      throw new Error('Facebook OAuth exchange returned an unexpected response.');
+    }
+  } finally {
+    state.authInFlight = false;
+    updateActionButtons();
   }
 }
 
@@ -754,41 +830,89 @@ function bindAuthMessages() {
   });
 }
 
+function focusPrimaryControl() {
+  const candidates = [
+    els.connectBtn,
+    els.resolveBtn,
+    els.signinBtn,
+    els.pageId,
+    els.videoId
+  ];
+  for (let i = 0; i < candidates.length; i += 1) {
+    const element = candidates[i];
+    if (!element || element.disabled || typeof element.focus !== 'function') continue;
+    element.focus();
+    return true;
+  }
+  return false;
+}
+
+function handleBridgeRequest(request) {
+  let payload = request;
+  if (payload && payload.__ssappSendToTab) {
+    payload = payload.__ssappSendToTab;
+  }
+  if (payload === 'focusChat') {
+    return focusPrimaryControl();
+  }
+  if (!payload || typeof payload !== 'object') {
+    return false;
+  }
+  if (payload.settings) {
+    applySettings(payload.settings);
+    return true;
+  }
+  return false;
+}
+
 function applySettings(settings) {
+  const viewerTrackingBefore = isViewerTrackingEnabled();
+  extension.settingsLoaded = true;
   extension.settings = settings && typeof settings === 'object' ? settings : {};
   state.textOnly = Boolean(settings && settings.textonlymode);
-  state.viewerCount = isViewerTrackingEnabled(settings);
+  state.viewerCount = isViewerTrackingEnabled(extension.settings);
   if (!state.pageId && settings && settings.facebook_username && settings.facebook_username.textsetting) {
     state.pageId = normalizePageId(settings.facebook_username.textsetting);
   }
   updateInputs();
+  if (viewerTrackingBefore !== isViewerTrackingEnabled()) {
+    state.lastViewerAt = 0;
+  }
   if (state.autoConnect && state.accessToken && state.pageId && !state.connected) {
     connect();
   }
 }
 
 function initExtension() {
-  if (!extension.available) return;
+  if (extension.available) {
+    try {
+      chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        if (handleBridgeRequest(request)) {
+          sendResponse(true);
+          return;
+        }
+        sendResponse(false);
+      });
+
+      chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, (response) => {
+        if (chrome.runtime.lastError) return;
+        if (response && response.settings) {
+          applySettings(response.settings);
+        }
+      });
+    } catch (err) {
+      console.warn('Failed to init extension bridge', err);
+    }
+  }
   try {
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request && typeof request === 'object' && request.settings) {
-        extension.settings = request.settings;
-        applySettings(request.settings);
-        sendResponse(true);
+    window.addEventListener('message', (event) => {
+      if (!event.data || typeof event.data !== 'object' || !event.data.__ssappSendToTab) {
         return;
       }
-      sendResponse(false);
-    });
-
-    chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, (response) => {
-      if (chrome.runtime.lastError) return;
-      if (response && response.settings) {
-        extension.settings = response.settings;
-        applySettings(response.settings);
-      }
+      handleBridgeRequest(event.data);
     });
   } catch (err) {
-    console.warn('Failed to init extension bridge', err);
+    console.warn('Failed to init window bridge', err);
   }
 }
 
@@ -891,7 +1015,6 @@ function getViewerCountValue(data) {
 }
 
 async function pollViewerCount() {
-  if (!isViewerTrackingEnabled()) return;
   const now = Date.now();
   if (now - state.lastViewerAt < VIEWER_POLL_INTERVAL) return;
   state.lastViewerAt = now;
@@ -903,23 +1026,26 @@ async function pollViewerCount() {
     const viewerValue = getViewerCountValue(data);
     if (viewerValue !== null && viewerValue !== state.viewerValue) {
       state.viewerValue = viewerValue;
-      relayPayload({
-        message: {
-          platform: 'facebook',
-          type: 'facebook',
-          event: 'viewer_update',
-          meta: viewerValue,
-          chatname: '',
-          chatmessage: '',
-          chatimg: '',
-          chatbadges: '',
-          backgroundColor: '',
-          textColor: '',
-          hasDonation: '',
-          membership: '',
-          textonly: true
-        }
-      });
+      updateStats();
+      if (isViewerTrackingEnabled()) {
+        relayPayload({
+          message: {
+            platform: 'facebook',
+            type: 'facebook',
+            event: 'viewer_update',
+            meta: viewerValue,
+            chatname: '',
+            chatmessage: '',
+            chatimg: '',
+            chatbadges: '',
+            backgroundColor: '',
+            textColor: '',
+            hasDonation: '',
+            membership: '',
+            textonly: true
+          }
+        });
+      }
     }
   } catch (err) {
     state.errorCount += 1;
@@ -1126,7 +1252,9 @@ function connect() {
 function disconnect() {
   state.connected = false;
   state.polling = false;
+  state.viewerValue = null;
   clearTimeout(state.pollTimer);
+  if (els.viewerDisplay) els.viewerDisplay.textContent = '-';
   setStatus('disconnected', 'Disconnected.');
   updateActionButtons();
 }
