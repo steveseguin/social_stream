@@ -211,7 +211,7 @@ let usingElectron = false;
           return await createAndPushMessage({
             event: "donation",
             hasDonation: formatMoney(payload.tip.tipValue, payload.tip.magnitude),
-            donoValue: payload.tip.tipValue * (payload.tip.magnitude || 0.01),
+            donoValue: payload.tip.tipValue.amount * (payload.tip.magnitude || 0.01),
 
           }, payload.tip.senderUser);
         }
