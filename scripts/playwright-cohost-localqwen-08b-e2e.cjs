@@ -188,6 +188,33 @@ async function addInitScript(page) {
         removeEventListener() {}
       }
     });
+
+    window.__lastRecognition = null;
+
+    class FakeSpeechRecognition {
+      constructor() {
+        window.__lastRecognition = this;
+        this.continuous = true;
+        this.interimResults = true;
+        this.maxAlternatives = 1;
+        this.lang = 'en-US';
+        this.onstart = null;
+        this.onend = null;
+        this.onerror = null;
+        this.onresult = null;
+      }
+
+      start() {
+        setTimeout(() => this.onstart && this.onstart(), 0);
+      }
+
+      stop() {
+        setTimeout(() => this.onend && this.onend(), 0);
+      }
+    }
+
+    window.SpeechRecognition = FakeSpeechRecognition;
+    window.webkitSpeechRecognition = FakeSpeechRecognition;
   });
 }
 
@@ -222,14 +249,24 @@ function findWorkerMessages(log, type, predicate) {
     await page.evaluate(() => {
       localStorage.setItem('responseType_localqwen', 'text');
     });
+    await page.waitForFunction(() => Array.from(document.querySelectorAll('#providerSelect option')).some((option) => option.value === 'localgemma'));
     await page.selectOption('#providerSelect', 'localqwen');
-    await page.waitForFunction(() => document.getElementById('videoSource').disabled === true);
-    await page.waitForFunction(() => document.getElementById('audioSource').disabled === true);
+    await page.waitForFunction(() => document.getElementById('videoSource').disabled === false);
+    await page.waitForFunction(() => document.getElementById('audioSource').disabled === false);
     await page.waitForFunction(() => document.getElementById('apiKey').disabled === true);
+    await page.selectOption('#videoSource', 'fake-camera');
+    await page.selectOption('#audioSource', 'fake-mic');
 
     await page.click('#startButton');
     await page.waitForFunction(() => document.getElementById('startButton').dataset.started === 'true');
+    await page.evaluate(() => {
+      if (window.__lastRecognition && typeof window.__lastRecognition.onstart === 'function') {
+        window.__lastRecognition.onstart();
+      }
+    });
+    await page.waitForFunction(() => document.getElementById('voiceStatusLine').textContent.includes('Listening'));
     await page.waitForFunction(() => document.getElementById('responses').textContent.includes('AI:Hi, introduce yourself in a sentence for me. Be friendly to me. [images:0]'));
+    await page.waitForFunction(() => !document.getElementById('sendButton').disabled && document.getElementById('sendButton').textContent.trim() === 'Send');
 
     await page.fill('.message-input', 'Confirm the local qwen 0.8B model is active.');
     await page.press('.message-input', 'Enter');
@@ -241,21 +278,29 @@ function findWorkerMessages(log, type, predicate) {
       diagEvent: document.getElementById('diagEvent').textContent.trim(),
       responses: document.getElementById('responses').textContent,
       videoDisabled: document.getElementById('videoSource').disabled,
-      audioDisabled: document.getElementById('audioSource').disabled
+      audioDisabled: document.getElementById('audioSource').disabled,
+      videoValue: document.getElementById('videoSource').value,
+      voiceStatus: document.getElementById('voiceStatusLine').textContent.trim(),
+      voiceHeard: document.getElementById('voiceHeardSummary').textContent.trim()
     }));
 
-    const initMessage = findWorkerMessages(state.workerLog, 'init', (entry) => entry.data.modelId === 'qwen3.5-0.8b-onnx')[0];
+    const initMessage = findWorkerMessages(state.workerLog, 'init', (entry) => String(entry.data.modelId || '').includes('qwen3.5-0.8b-onnx'))[0];
     assert(!!initMessage, 'Local Qwen 0.8B init was not sent.');
     assert(initMessage.data.runtime && initMessage.data.runtime.modelClass === 'Qwen3_5ForConditionalGeneration', 'Local Qwen 0.8B init did not use the Qwen runtime.');
     assert(initMessage.data.runtime && initMessage.data.runtime.dtype && initMessage.data.runtime.dtype.embed_tokens === 'q4', 'Local Qwen 0.8B init did not use the q4 runtime.');
 
     const generateMessages = findWorkerMessages(state.workerLog, 'generate');
     assert(generateMessages.length >= 2, 'Local Qwen 0.8B did not generate for greeting and manual prompt.');
+    assert(generateMessages.every((entry) => entry.data.providerKey === 'localqwen'), 'Local Qwen 0.8B generate calls did not preserve the provider key.');
+    assert(generateMessages.every((entry) => String(entry.data.modelId || '').includes('qwen3.5-0.8b-onnx')), 'Local Qwen 0.8B generate calls did not preserve the model id.');
     assert(generateMessages.every((entry) => Array.isArray(entry.data.images) && entry.data.images.length === 0), 'Local Qwen 0.8B should not attach vision frames.');
-    assert(state.videoDisabled && state.audioDisabled, 'Local Qwen 0.8B should keep capture selectors disabled.');
+    assert(!state.videoDisabled && !state.audioDisabled, 'Local Qwen 0.8B should leave capture selectors available.');
+    assert(state.videoValue === 'fake-camera', 'Local Qwen 0.8B should preserve the selected camera for the stream.');
     assert(state.diagProvider.toLowerCase().includes('qwen'), 'Diagnostics did not report Local Qwen.');
     assert(state.diagEvent.includes('generate.done'), 'Local Qwen 0.8B diagnostics did not report completion.');
     assert(state.responses.includes('[images:0]'), 'Local Qwen 0.8B response did not complete through the UI.');
+    assert(state.voiceStatus.includes('|') && /text response|browser tts/i.test(state.voiceStatus), 'Visible speech status summary did not stay populated.');
+    assert(state.voiceHeard && state.voiceHeard !== '-', 'Visible heard summary did not update.');
 
     await page.click('#startButton');
     await page.waitForFunction(() => document.getElementById('startButton').dataset.started === 'false');

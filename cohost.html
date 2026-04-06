@@ -319,6 +319,7 @@ select, button, .api-key, .message-input, textarea, .model-override {
     user-select: none;
     touch-action: none;
     transform: translateZ(0);
+    pointer-events: none;
 }
 .puppet {
   width: 300px;
@@ -1020,6 +1021,14 @@ select, button, .api-key, .message-input, textarea, .model-override {
 			</div>
 
 			<button id="startButton">Start and Connect</button>
+			<div id="actionStatusSummary" class="api-key-info" style="margin-top:-8px;">
+				<div><strong>Status:</strong> <span id="actionStatusLine">Idle</span></div>
+				<div><strong>Detail:</strong> <span id="actionStatusDetail">Press Start and Connect to begin.</span></div>
+			</div>
+			<div id="voiceStatusSummary" class="api-key-info" style="margin-top:-8px;">
+				<div><strong>Speech:</strong> <span id="voiceStatusLine">Idle</span></div>
+				<div><strong>Heard:</strong> <span id="voiceHeardSummary">-</span></div>
+			</div>
 
 			<details class="control-group">
 				<summary class="control-group-header">Diagnostics</summary>
@@ -1227,7 +1236,12 @@ class PuppetAvatar {
         const normalizedText = String(text || '').trim();
         if (!normalizedText) return;
         const lowerText = normalizedText.toLowerCase();
+        const hintedEmotion = inferAvatarEmotionFromText(normalizedText);
         if (source === 'user') {
+            if (hintedEmotion) {
+                this.pulseEmotion(hintedEmotion, 1200, false);
+                return;
+            }
             if (normalizedText.includes('?')) {
                 this.pulseEmotion('listening', 1200, false);
             } else if (normalizedText.includes('!')) {
@@ -1235,6 +1249,10 @@ class PuppetAvatar {
             } else {
                 this.pulseEmotion('thinking', 900, false);
             }
+            return;
+        }
+        if (hintedEmotion) {
+            this.pulseEmotion(hintedEmotion, 1500, false);
             return;
         }
         if (/(sorry|apolog|can't|cannot|unable|failed|error|issue|trouble|hmm)/i.test(lowerText)) {
@@ -1345,6 +1363,108 @@ function formatLocalBrowserWorkerError(error) {
 function cloneLocalBrowserConfig(value) {
     return JSON.parse(JSON.stringify(value || {}));
 }
+function isLikelyLocalModelPath(modelId) {
+    return /^(?:\.{1,2}\/|\/|[a-zA-Z]:[\\/]|thirdparty\/)/.test(String(modelId || '').trim());
+}
+function normalizeBundledModelPath(localPath) {
+    const value = String(localPath || '').trim().replace(/\\/g, '/').replace(/\/+$/, '');
+    return value;
+}
+async function canUseBundledLocalModel(localPath) {
+    const normalizedPath = normalizeBundledModelPath(localPath);
+    if (!normalizedPath) {
+        return false;
+    }
+    if (LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.has(normalizedPath)) {
+        return LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.get(normalizedPath);
+    }
+    const checkPromise = (async () => {
+        try {
+            const configUrl = new URL(`${normalizedPath}/config.json`, window.location.href).href;
+            const response = await fetch(configUrl, { cache: 'no-store' });
+            if (response.body && typeof response.body.cancel === 'function') {
+                try {
+                    await response.body.cancel();
+                } catch (_error) {}
+            }
+            return response.ok;
+        } catch (_error) {
+            return false;
+        }
+    })();
+    LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.set(normalizedPath, checkPromise);
+    return checkPromise;
+}
+function isLikelyRemoteAccessError(errorMessage = '') {
+    return /Failed to fetch|Load failed|NetworkError/i.test(String(errorMessage || ''));
+}
+function buildBundledModelAccessError(providerConfig, remoteHost, errorMessage = '') {
+    const providerLabel = providerConfig?.label || providerConfig?.providerLabel || 'Local browser model';
+    const localPath = normalizeBundledModelPath(providerConfig?.localPath || '');
+    const remote = String(remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST || '').trim() || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
+    if (localPath) {
+        return `${providerLabel} could not load its model files from ${remote}. Add the model under ${localPath} for local use, or enable public browser/CORS access on that host.`;
+    }
+    return `${providerLabel} could not load its model files from ${remote}. Enable public browser/CORS access on that host.`;
+}
+const EMOJI_SEQUENCE_RE = /(?:[#*0-9]\uFE0F?\u20E3|[\u{1F1E6}-\u{1F1FF}]|[\p{Extended_Pictographic}\u00A9\u00AE\u203C\u2049\u2122\u2139\u2600-\u27BF]|\uFE0F|\uFE0E|\u200D)/gu;
+const ASCII_EMOTION_HINTS = [
+    { emotion: 'wink', pattern: /(?:^|[\s(])(?:;\)|;-\)|;\]|;-\])(?=$|[\s)!.,!?])/i, replace: /(?:^|[\s(])(?:;\)|;-\)|;\]|;-\])(?=$|[\s)!.,!?])/gi },
+    { emotion: 'excited', pattern: /(?:^|[\s(])(?::D|:-D|=D|xD|XD|\^\^)(?=$|[\s)!.,!?])/i, replace: /(?:^|[\s(])(?::D|:-D|=D|xD|XD|\^\^)(?=$|[\s)!.,!?])/gi },
+    { emotion: 'happy', pattern: /(?:^|[\s(])(?::\)|:-\)|=\)|=\])(?=$|[\s)!.,!?])/i, replace: /(?:^|[\s(])(?::\)|:-\)|=\)|=\])(?=$|[\s)!.,!?])/gi },
+    { emotion: 'sad', pattern: /(?:^|[\s(])(?::\(|:-\(|=\(|:'\()(?=$|[\s)!.,!?])/i, replace: /(?:^|[\s(])(?::\(|:-\(|=\(|:'\()(?=$|[\s)!.,!?])/gi },
+    { emotion: 'thinking', pattern: /(?:^|[\s(])(?::\/|:-\/|:\\|:-\\|:\||:-\|)(?=$|[\s)!.,!?])/i, replace: /(?:^|[\s(])(?::\/|:-\/|:\\|:-\\|:\||:-\|)(?=$|[\s)!.,!?])/gi }
+];
+const UNICODE_EMOTION_HINTS = [
+    { emotion: 'celebrating', pattern: /(?:🎉|🥳|🎊|✨|🌟|⭐|🙌|👏|🔥|🚀)/u },
+    { emotion: 'proud', pattern: /(?:👍|💪|🤝|🏆|✅|❤|❤️|💖|💕|💙|💚|💜|🧡|🤍|♥|♡)/u },
+    { emotion: 'excited', pattern: /(?:😄|😁|😃|😀|😊|😍|🤩|😆|😺|😸|😻)/u },
+    { emotion: 'wink', pattern: /(?:😉|😜|😏)/u },
+    { emotion: 'thinking', pattern: /(?:🤔|🧐|💭)/u },
+    { emotion: 'confused', pattern: /(?:😕|🤷|❓|❔|😵|🤯)/u },
+    { emotion: 'worried', pattern: /(?:😟|😬|😰|😨|😥|⚠️|⚠|🚫|😣|😓)/u },
+    { emotion: 'sad', pattern: /(?:😢|😭|☹️|☹|🙁|😞|😔|💔)/u },
+    { emotion: 'angry', pattern: /(?:😠|😡|🤬)/u },
+    { emotion: 'sleepy', pattern: /(?:😴|🥱|💤)/u },
+    { emotion: 'surprised', pattern: /(?:😮|😲|😯|😳|😱)/u },
+    { emotion: 'happy', pattern: /(?:🙂|☺️|☺)/u }
+];
+function inferAvatarEmotionFromText(text = '') {
+    const value = String(text || '').trim();
+    if (!value) {
+        return '';
+    }
+    for (const hint of UNICODE_EMOTION_HINTS) {
+        if (hint.pattern.test(value)) {
+            return hint.emotion;
+        }
+    }
+    for (const hint of ASCII_EMOTION_HINTS) {
+        if (hint.pattern.test(value)) {
+            return hint.emotion;
+        }
+    }
+    return '';
+}
+function sanitizeTextForSpeech(text = '') {
+    let value = String(text || '');
+    if (!value.trim()) {
+        return '';
+    }
+    value = value.replace(EMOJI_SEQUENCE_RE, ' ');
+    value = value.replace(/[♡♥❤]+/gu, ' ');
+    for (const hint of ASCII_EMOTION_HINTS) {
+        value = value.replace(hint.replace, ' ');
+    }
+    value = value
+        .replace(/[\u200D\uFE0E\uFE0F]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/\s+([,.;!?])/g, '$1')
+        .replace(/([(\[])\s+/g, '$1')
+        .replace(/\s+([)\]])/g, '$1')
+        .trim();
+    return value;
+}
 function buildLocalBrowserFallbackConfig(providerKey) {
     if (providerKey === 'localgemma') {
         return {
@@ -1352,6 +1472,7 @@ function buildLocalBrowserFallbackConfig(providerKey) {
             label: 'Local Gemma 4 E2B (Browser)',
             providerLabel: 'Local Gemma 4 (Browser)',
             modelId: 'gemma4-e2b-it-onnx',
+            localPath: 'thirdparty/models/gemma4-e2b-it-onnx',
             remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
             runtime: {
                 modelClass: 'Gemma4ForConditionalGeneration',
@@ -1371,6 +1492,7 @@ function buildLocalBrowserFallbackConfig(providerKey) {
         label: 'Local Qwen 3.5 (Browser)',
         providerLabel: 'Local Qwen 3.5 (Browser)',
         modelId: 'qwen3.5-0.8b-onnx',
+        localPath: 'thirdparty/models/qwen3.5-0.8b-onnx',
         remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
         runtime: {
             modelClass: 'Qwen3_5ForConditionalGeneration',
@@ -1397,6 +1519,7 @@ const LOCAL_QWEN_DEFAULT_MODEL = LOCAL_QWEN_CONFIG.modelId;
 const LOCAL_QWEN_DEFAULT_REMOTE_HOST = LOCAL_QWEN_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
 const LOCAL_GEMMA_DEFAULT_MODEL = LOCAL_GEMMA_CONFIG.modelId;
 const LOCAL_GEMMA_DEFAULT_REMOTE_HOST = LOCAL_GEMMA_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
+const LOCAL_BROWSER_BUNDLED_MODEL_CHECKS = new Map();
 const BROWSER_TTS_AVAILABLE = typeof window !== 'undefined' &&
     'speechSynthesis' in window &&
     typeof window.SpeechSynthesisUtterance !== 'undefined';
@@ -1413,6 +1536,10 @@ const diagnosticsState = {
 const diagnosticsHistory = [];
 let lastDiagnosticsSignature = '';
 let diagnosticsCopyStatusTimer = null;
+let messageInput = null;
+let sendButton = null;
+let SEND_BUTTON_IDLE_TEXT = 'Send';
+let manualSendBusy = false;
 const voiceTelemetryState = {
     inputMode: '-',
     inputState: 'idle',
@@ -1442,12 +1569,24 @@ function normalizeVoicePreview(text) {
 function renderVoiceTelemetry() {
     const inputModeEl = document.getElementById('voiceInputMode');
     if (!inputModeEl) return;
+    const inputState = voiceTelemetryState.inputState || 'idle';
+    const outputState = voiceTelemetryState.outputState || 'idle';
+    const inputPreview = normalizeVoicePreview(voiceTelemetryState.inputPreview);
+    const outputPreview = normalizeVoicePreview(voiceTelemetryState.outputPreview);
     inputModeEl.textContent = voiceTelemetryState.inputMode || '-';
-    document.getElementById('voiceInputState').textContent = voiceTelemetryState.inputState || 'idle';
-    document.getElementById('voiceOutputState').textContent = voiceTelemetryState.outputState || 'idle';
-    document.getElementById('voiceInputPreview').textContent = normalizeVoicePreview(voiceTelemetryState.inputPreview);
-    document.getElementById('voiceOutputPreview').textContent = normalizeVoicePreview(voiceTelemetryState.outputPreview);
+    document.getElementById('voiceInputState').textContent = inputState;
+    document.getElementById('voiceOutputState').textContent = outputState;
+    document.getElementById('voiceInputPreview').textContent = inputPreview;
+    document.getElementById('voiceOutputPreview').textContent = outputPreview;
     document.getElementById('voiceUpdated').textContent = formatDiagnosticsTime(voiceTelemetryState.updated);
+    const voiceStatusLine = document.getElementById('voiceStatusLine');
+    const voiceHeardSummary = document.getElementById('voiceHeardSummary');
+    if (voiceStatusLine) {
+        voiceStatusLine.textContent = `${inputState} | ${outputState}`;
+    }
+    if (voiceHeardSummary) {
+        voiceHeardSummary.textContent = inputPreview;
+    }
 }
 function updateVoiceTelemetry(patch = {}) {
     Object.assign(voiceTelemetryState, patch);
@@ -1463,6 +1602,88 @@ function resetVoiceTelemetry(overrides = {}) {
         ...overrides
     });
 }
+function humanizeDiagnosticEvent(value) {
+    const raw = String(value || '').trim();
+    if (!raw || raw === '-') {
+        return 'Waiting for activity.';
+    }
+    if (/%$/.test(raw)) {
+        return raw.replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    return raw.replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+}
+function getActionStatusSummary() {
+    const state = String(diagnosticsState.state || 'idle').trim().toLowerCase();
+    const provider = diagnosticsState.provider || 'provider';
+    const detailFallback = humanizeDiagnosticEvent(diagnosticsState.lastEvent);
+    const errorMessage = diagnosticsState.lastError && diagnosticsState.lastError !== '-'
+        ? diagnosticsState.lastError
+        : '';
+    switch (state) {
+        case 'starting':
+            return {
+                line: 'Starting stream...',
+                detail: 'Requesting camera, microphone, and stream setup.'
+            };
+        case 'connecting':
+            return {
+                line: 'Connecting...',
+                detail: `Opening ${provider}.`
+            };
+        case 'loading':
+            return {
+                line: 'Loading model...',
+                detail: detailFallback
+            };
+        case 'ready':
+        case 'connected':
+        case 'running':
+            return {
+                line: 'Ready',
+                detail: provider !== '-' ? `${provider} is connected.` : 'Connected.'
+            };
+        case 'responding':
+            return {
+                line: 'Generating reply...',
+                detail: 'Waiting for the co-host response.'
+            };
+        case 'restarting':
+            return {
+                line: 'Restarting stream...',
+                detail: 'Rebuilding the active stream and provider connection.'
+            };
+        case 'stopped':
+            return {
+                line: 'Stopped',
+                detail: 'Press Start and Connect to begin again.'
+            };
+        case 'error':
+            return {
+                line: 'Issue',
+                detail: errorMessage || detailFallback
+            };
+        case 'initialized':
+            return {
+                line: 'Ready to start',
+                detail: provider !== '-' ? `${provider} is selected.` : 'Choose a provider and start the stream.'
+            };
+        default:
+            return {
+                line: 'Idle',
+                detail: 'Press Start and Connect to begin.'
+            };
+    }
+}
+function renderActionStatusSummary() {
+    const actionStatusLine = document.getElementById('actionStatusLine');
+    const actionStatusDetail = document.getElementById('actionStatusDetail');
+    if (!actionStatusLine || !actionStatusDetail) {
+        return;
+    }
+    const summary = getActionStatusSummary();
+    actionStatusLine.textContent = summary.line;
+    actionStatusDetail.textContent = summary.detail;
+}
 function renderDiagnostics() {
     const providerEl = document.getElementById('diagProvider');
     if (!providerEl) return;
@@ -1473,6 +1694,8 @@ function renderDiagnostics() {
     document.getElementById('diagEvent').textContent = diagnosticsState.lastEvent || '-';
     document.getElementById('diagError').textContent = diagnosticsState.lastError || '-';
     document.getElementById('diagUpdated').textContent = formatDiagnosticsTime(diagnosticsState.updated);
+    renderActionStatusSummary();
+    syncSendButtonAvailability();
 }
 function pushDiagnosticsHistory() {
     diagnosticsHistory.push({
@@ -1636,8 +1859,11 @@ class LocalBrowserPublisher {
         this.providerKey = providerKey || 'localqwen';
         this.providerConfig = getLocalBrowserProviderConfig(this.providerKey);
         this.providerLabel = this.providerConfig.providerLabel || this.providerConfig.label || 'Local Browser Model';
-        this.model = (modelOverride || this.providerConfig.modelId || LOCAL_QWEN_DEFAULT_MODEL).trim();
+        this.modelOverride = (modelOverride || '').trim();
+        this.model = (this.modelOverride || this.providerConfig.modelId || LOCAL_QWEN_DEFAULT_MODEL).trim();
         this.remoteHost = this.providerConfig.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
+        this.workerModelId = this.model;
+        this.modelSourceLabel = 'remote';
         this.worker = null;
         this.stopped = false;
         this.connected = false;
@@ -1674,6 +1900,22 @@ class LocalBrowserPublisher {
             lastEvent: 'publisher.created',
             lastError: '-'
         });
+    }
+    async resolveWorkerModelTarget() {
+        const defaultModelId = String(this.providerConfig.modelId || '').trim();
+        const bundledLocalPath = normalizeBundledModelPath(this.providerConfig.localPath || '');
+        const modelIsLocalPath = isLikelyLocalModelPath(this.model);
+        const shouldPreferBundledLocalPath = !modelIsLocalPath && bundledLocalPath && this.model === defaultModelId;
+        if (shouldPreferBundledLocalPath && await canUseBundledLocalModel(bundledLocalPath)) {
+            return {
+                modelId: bundledLocalPath,
+                sourceLabel: 'bundled'
+            };
+        }
+        return {
+            modelId: this.model,
+            sourceLabel: modelIsLocalPath ? 'bundled' : 'remote'
+        };
     }
     getVoiceInputMode() {
         return this.providerConfig.supportsVision
@@ -1946,7 +2188,7 @@ class LocalBrowserPublisher {
         pushChunk(current);
         return chunks;
     }
-    speakTextChunk(text) {
+    speakTextChunk(text, emotionHint = '') {
         return new Promise((resolve, reject) => {
             if (!BROWSER_TTS_AVAILABLE || !text) {
                 resolve();
@@ -1979,7 +2221,7 @@ class LocalBrowserPublisher {
             utterance.volume = 1;
             utterance.onstart = () => {
                 this.ttsActive = true;
-                avatar.setEmotion('proud', true);
+                avatar.setEmotion(emotionHint || inferAvatarEmotionFromText(text) || 'proud', true);
         updateDiagnostics({
             state: 'responding',
             connected: 'yes',
@@ -2005,8 +2247,17 @@ class LocalBrowserPublisher {
         if (!this.shouldUseBrowserTts()) {
             return;
         }
-        const chunks = this.buildSpeechChunks(text);
+        const speechEmotion = inferAvatarEmotionFromText(text);
+        const speechText = sanitizeTextForSpeech(text);
+        const chunks = this.buildSpeechChunks(speechText);
         if (!chunks.length) {
+            if (speechEmotion) {
+                avatar.pulseEmotion(speechEmotion, 1400, false);
+            }
+            updateVoiceTelemetry({
+                outputState: speechEmotion ? 'Avatar emote only' : 'Browser TTS skipped',
+                outputPreview: speechEmotion ? `[avatar:${speechEmotion}]` : '-'
+            });
             return;
         }
         this.pauseRecognitionForSpeech();
@@ -2018,7 +2269,7 @@ class LocalBrowserPublisher {
         });
         updateVoiceTelemetry({
             outputState: 'Browser TTS queued',
-            outputPreview: text
+            outputPreview: speechText
         });
         try {
             window.speechSynthesis.cancel();
@@ -2030,7 +2281,7 @@ class LocalBrowserPublisher {
                     outputState: 'Browser TTS speaking',
                     outputPreview: chunk
                 });
-                await this.speakTextChunk(chunk);
+                await this.speakTextChunk(chunk, speechEmotion);
             }
             updateDiagnostics({
                 state: 'connected',
@@ -2040,7 +2291,7 @@ class LocalBrowserPublisher {
             });
             updateVoiceTelemetry({
                 outputState: 'Browser TTS done',
-                outputPreview: text
+                outputPreview: speechText
             });
         } finally {
             this.clearActiveTtsRequest();
@@ -2227,11 +2478,34 @@ class LocalBrowserPublisher {
             });
             this.resetPendingRequests(errorMessage);
         };
-        await this.requestWorker('init', {
-            modelId: this.model,
-            runtime: cloneLocalBrowserConfig(this.providerConfig.runtime || {}),
-            remoteHost: this.remoteHost
-        }, 420000);
+        const workerTarget = await this.resolveWorkerModelTarget();
+        this.workerModelId = workerTarget.modelId;
+        this.modelSourceLabel = workerTarget.sourceLabel;
+        try {
+            await this.requestWorker('init', {
+                providerKey: this.providerKey,
+                modelId: this.workerModelId,
+                runtime: cloneLocalBrowserConfig(this.providerConfig.runtime || {}),
+                remoteHost: this.remoteHost
+            }, 420000);
+        } catch (error) {
+            const baseMessage = error?.message || String(error || '');
+            const errorMessage = (workerTarget.sourceLabel === 'remote' && isLikelyRemoteAccessError(baseMessage))
+                ? buildBundledModelAccessError(this.providerConfig, this.remoteHost, baseMessage)
+                : baseMessage;
+            if (this.worker) {
+                this.worker.terminate();
+                this.worker = null;
+            }
+            this.connected = false;
+            updateDiagnostics({
+                state: 'error',
+                connected: 'no',
+                lastEvent: `localbrowser.${this.providerKey}.connect.error`,
+                lastError: errorMessage
+            });
+            throw new Error(errorMessage);
+        }
         this.connected = true;
         this.reconnectAttempts = 0;
         updateDiagnostics({
@@ -2294,6 +2568,9 @@ class LocalBrowserPublisher {
                 this.stream.getVideoTracks().some((track) => track.readyState === 'live' && track.enabled);
             const imageDataUrl = hasLiveVideo ? this.captureFrameDataUrl() : '';
             const result = await this.requestWorker('generate', {
+                providerKey: this.providerKey,
+                modelId: this.workerModelId,
+                runtime: cloneLocalBrowserConfig(this.providerConfig.runtime || {}),
                 prompt,
                 systemPrompt: systemPromptValue,
                 maxNewTokens: 220,
@@ -3103,6 +3380,8 @@ class RealtimePublisher {
         startButton.dataset.started = "false";
         startButton.disabled = false;
         sendButton.disabled = true;
+        sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        resetSendButton();
         systemPrompt.disabled = false;
     }
     async setupSpeechRecognition() {
@@ -3532,6 +3811,8 @@ class GoogleLivePublisher {
         startButton.dataset.started = "false";
         startButton.disabled = false;
         sendButton.disabled = true;
+        sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        resetSendButton();
         systemPrompt.disabled = false;
     }
 	async handleMessage(event) {
@@ -4715,7 +4996,9 @@ function validateApiKey() {
     const providerConfig = providerUIConfig[selectedProvider] || providerUIConfig.gemini;
     const requiresApiKey = providerConfig.requiresApiKey !== false;
     const acceptsOptionalApiKey = providerConfig.acceptsOptionalApiKey === true;
-    startButton.disabled = requiresApiKey ? !apiKey : false;
+    if (startButton.textContent !== 'Starting...') {
+        startButton.disabled = false;
+    }
     if (requiresApiKey || acceptsOptionalApiKey) {
         if (apiKey) {
             localStorage.setItem(`apiKey_${selectedProvider}`, apiKey);
@@ -4738,13 +5021,16 @@ startButton.addEventListener('click', async () => {
     const acceptsOptionalApiKey = providerConfig.acceptsOptionalApiKey === true;
     const apiKey = (requiresApiKey || acceptsOptionalApiKey) ? apiKeyInput.value.trim() : '';
     if (requiresApiKey && !apiKey) {
+        const missingKeyMessage = `Enter a ${providerConfig.label} API key before starting.`;
         apiKeyInput.classList.add('highlight');
         setTimeout(() => apiKeyInput.classList.remove('highlight'), 2000);
+        apiKeyInput.focus();
+        showError(missingKeyMessage);
         updateDiagnostics({
             state: 'error',
             connected: 'no',
             lastEvent: 'start.blocked',
-            lastError: 'Missing API key or client secret'
+            lastError: missingKeyMessage
         });
         return;
     }
@@ -4777,6 +5063,7 @@ startButton.addEventListener('click', async () => {
             startButton.disabled = false;
             sendButton.disabled = true;
             sendButton.title = 'You must Start the Stream before you can interact with the AI';
+            resetSendButton();
             document.getElementById('systemPrompt').disabled = false;
             updateDiagnostics({
                 state: 'stopped',
@@ -4807,6 +5094,7 @@ startButton.addEventListener('click', async () => {
         startButton.disabled = false;
         sendButton.disabled = false;
         sendButton.title = 'Send a message to the AI';
+        resetSendButton();
         document.getElementById('systemPrompt').disabled = true;
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
@@ -4820,11 +5108,39 @@ startButton.addEventListener('click', async () => {
         window.avatar?.pulseEmotion('celebrating', 1400, false);
     } catch (err) {
         console.error(err);
+        if (publisher) {
+            publisher.stop();
+            publisher = null;
+        }
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        if (preview.srcObject) {
+            preview.srcObject.getTracks().forEach(track => track.stop());
+            preview.srcObject = null;
+        }
+        if (currentAudioIndicator) {
+            currentAudioIndicator.remove();
+            currentAudioIndicator = null;
+        }
+        if (currentAudioContext) {
+            try {
+                Promise.resolve(currentAudioContext.close()).catch(() => {});
+            } catch (closeError) {}
+            currentAudioContext = null;
+        }
+        if (currentAnimationFrame) {
+            cancelAnimationFrame(currentAnimationFrame);
+            currentAnimationFrame = null;
+        }
         showError('Failed to start publishing: ' + err.message);
         startButton.textContent = 'Start Stream';
         startButton.dataset.started = "false";
         startButton.disabled = false;
         sendButton.disabled = true;
+        sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        resetSendButton();
         document.getElementById('systemPrompt').disabled = false;
         updateDiagnostics({
             state: 'error',
@@ -5374,6 +5690,8 @@ async function updateMediaStream() {
         startButton.dataset.started = "false";
         startButton.disabled = false;
         sendButton.disabled = true;
+        sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        resetSendButton();
         document.getElementById('systemPrompt').disabled = false;
     }
 }
@@ -5428,8 +5746,47 @@ if (!navigator.mediaDevices?.getUserMedia) {
     initializeDevices();
     navigator.mediaDevices.addEventListener('devicechange', getDevices);
 }
-const messageInput = document.querySelector('.message-input');
-const sendButton = document.querySelector('#sendButton');
+messageInput = document.querySelector('.message-input');
+sendButton = document.querySelector('#sendButton');
+SEND_BUTTON_IDLE_TEXT = sendButton.textContent.trim() || 'Send';
+function resetSendButton() {
+    sendButton.textContent = SEND_BUTTON_IDLE_TEXT;
+}
+function syncSendButtonAvailability() {
+    if (!sendButton) {
+        return;
+    }
+    const streamStarted = document.getElementById('startButton')?.dataset?.started === 'true';
+    const currentState = String(diagnosticsState.state || 'idle').trim().toLowerCase();
+    const providerBusy = !!(publisher && publisher.responseActive);
+    if (manualSendBusy) {
+        sendButton.disabled = true;
+        sendButton.textContent = 'Sending...';
+        sendButton.title = 'Waiting for the AI response';
+        return;
+    }
+    if (!publisher || !streamStarted) {
+        sendButton.disabled = true;
+        resetSendButton();
+        sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        return;
+    }
+    if (providerBusy || currentState === 'responding') {
+        sendButton.disabled = true;
+        sendButton.textContent = 'Waiting...';
+        sendButton.title = 'Wait for the current reply to finish';
+        return;
+    }
+    if (currentState === 'starting' || currentState === 'connecting' || currentState === 'loading' || currentState === 'restarting') {
+        sendButton.disabled = true;
+        sendButton.textContent = 'Please wait...';
+        sendButton.title = 'The stream is still getting ready';
+        return;
+    }
+    sendButton.disabled = false;
+    resetSendButton();
+    sendButton.title = 'Send a message to the AI';
+}
 sendButton.disabled = true;
 sendButton.addEventListener('click', async () => {
     if (!publisher || sendButton.disabled) {
@@ -5438,6 +5795,8 @@ sendButton.addEventListener('click', async () => {
     }
     if (messageInput.value.trim()) {
         try {
+            manualSendBusy = true;
+            syncSendButtonAvailability();
             messageFormatter.appendMessage(messageInput.value, true);
             updateVoiceTelemetry({
                 inputState: 'Manual text prompt',
@@ -5448,6 +5807,9 @@ sendButton.addEventListener('click', async () => {
         } catch (err) {
             console.error('Failed to send message:', err);
             showError('Failed to send message: ' + err.message);
+        } finally {
+            manualSendBusy = false;
+            syncSendButtonAvailability();
         }
     }
 });
@@ -5480,6 +5842,7 @@ async function restartActivePublisher() {
 		startButton.dataset.started = "true";
 		sendButton.disabled = false;
 		sendButton.title = 'Send a message to the AI';
+        resetSendButton();
         document.getElementById('systemPrompt').disabled = true;
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
@@ -5503,6 +5866,7 @@ async function restartActivePublisher() {
 		startButton.dataset.started = "false";
 		sendButton.disabled = true;
 		sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        resetSendButton();
 		document.getElementById('systemPrompt').disabled = false;
         updateDiagnostics({
             state: 'error',
@@ -5535,8 +5899,8 @@ const providerSelect = document.createElement('select');
 providerSelect.id = 'providerSelect';
 providerSelect.innerHTML = `
     <option value="gemini">Google Gemini Live</option>
-    <option value="localqwen">Local Qwen 3.5 (Browser)</option>
-    <option value="localgemma">Local Gemma 4 (Browser)</option>
+    <option value="localqwen">Local Qwen 3.5 0.8B (Browser)</option>
+    <option value="localgemma">Local Gemma 4 E2B (Browser)</option>
     <option value="customopenai">OpenAI-Compatible (Custom)</option>
     <option value="chatgpt">OpenAI Realtime</option>
     <option value="xai">xAI Realtime</option>
@@ -5556,20 +5920,20 @@ const providerUIConfig = {
         supportsAudioResponse: true
     },
     localqwen: {
-        label: 'Local Qwen 3.5 (Browser)',
+        label: 'Local Qwen 3.5 0.8B (Browser)',
         apiKeyPlaceholder: 'No API key required',
         apiKeyInfoHtml: 'Uses your self-hosted model files (default: largefiles.socialstream.ninja) and local browser runtime. No third-party AI API key is used.',
         defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
         modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_DEFAULT_MODEL} on ${LOCAL_QWEN_DEFAULT_REMOTE_HOST})`,
-        disableCaptureSelection: true,
+        disableCaptureSelection: false,
         deviceNotice: BROWSER_TTS_AVAILABLE
-            ? 'Speech-to-text uses your browser/system default microphone. If Audio Response is selected, Local Qwen replies are spoken with your browser built-in text-to-speech. The selected audio source only affects the stream; inference still runs in-browser and model files are fetched from your configured self-hosted storage if not already cached.'
-            : 'Speech-to-text uses your browser/system default microphone, while the selected audio source only affects the stream. Inference runs in-browser, and model files are fetched from your configured self-hosted storage if not already cached.',
+            ? 'Speech-to-text uses your browser/system default microphone. If Audio Response is selected, Local Qwen replies are spoken with your browser built-in text-to-speech. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames.'
+            : 'Speech-to-text uses your browser/system default microphone. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames.',
         requiresApiKey: false,
         supportsAudioResponse: BROWSER_TTS_AVAILABLE
     },
     localgemma: {
-        label: 'Local Gemma 4 (Browser)',
+        label: 'Local Gemma 4 E2B (Browser)',
         apiKeyPlaceholder: 'No API key required',
         apiKeyInfoHtml: 'Uses your self-hosted Gemma 4 model files and local browser runtime. No third-party AI API key is used.',
         defaultModel: LOCAL_GEMMA_DEFAULT_MODEL,

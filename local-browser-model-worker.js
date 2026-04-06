@@ -256,7 +256,7 @@ function resolveModelClass(className) {
 }
 
 function inferModelClassName(message, runtime = {}) {
-    const explicit = String(runtime.modelClass || '').trim();
+    const explicit = String(runtime.modelClass || initializedModelClass || '').trim();
     if (explicit) {
         return explicit;
     }
@@ -269,7 +269,7 @@ function inferModelClassName(message, runtime = {}) {
         return 'Qwen3_5ForConditionalGeneration';
     }
 
-    const modelId = String(message.modelId || '').trim().toLowerCase();
+    const modelId = String(message.modelId || initializedModelId || '').trim().toLowerCase();
     if (modelId.includes('gemma')) {
         return 'Gemma4ForConditionalGeneration';
     }

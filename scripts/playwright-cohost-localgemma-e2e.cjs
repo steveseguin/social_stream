@@ -227,6 +227,30 @@ async function addCohostInitScript(page) {
       this.onend = null;
       this.onerror = null;
     };
+
+    class FakeSpeechRecognition {
+      constructor() {
+        this.continuous = true;
+        this.interimResults = true;
+        this.maxAlternatives = 1;
+        this.lang = 'en-US';
+        this.onstart = null;
+        this.onend = null;
+        this.onerror = null;
+        this.onresult = null;
+      }
+
+      start() {
+        setTimeout(() => this.onstart && this.onstart(), 0);
+      }
+
+      stop() {
+        setTimeout(() => this.onend && this.onend(), 0);
+      }
+    }
+
+    window.SpeechRecognition = FakeSpeechRecognition;
+    window.webkitSpeechRecognition = FakeSpeechRecognition;
   });
 }
 
@@ -262,6 +286,7 @@ function findWorkerMessages(log, type, predicate) {
       localStorage.setItem('responseType_localgemma', 'text');
       localStorage.setItem('responseType_localqwen', 'text');
     });
+    await page.waitForFunction(() => Array.from(document.querySelectorAll('#providerSelect option')).some((option) => option.value === 'localgemma'));
     await page.waitForFunction(() => Array.from(document.querySelectorAll('#videoSource option')).some((option) => option.value === 'fake-camera'));
 
     await page.selectOption('#providerSelect', 'localgemma');
@@ -274,6 +299,7 @@ function findWorkerMessages(log, type, predicate) {
     await page.waitForFunction(() => document.getElementById('startButton').dataset.started === 'true');
     await page.waitForFunction(() => document.getElementById('diagProvider').textContent.toLowerCase().includes('gemma'));
     await page.waitForFunction(() => document.getElementById('responses').textContent.includes('AI:Hi, introduce yourself in a sentence for me. Be friendly to me.'));
+    await page.waitForFunction(() => !document.getElementById('sendButton').disabled && document.getElementById('sendButton').textContent.trim() === 'Send');
 
     await page.fill('.message-input', 'Describe the visible scene briefly.');
     await page.press('.message-input', 'Enter');
@@ -299,7 +325,7 @@ function findWorkerMessages(log, type, predicate) {
     assert(gemmaState.responses.includes('[vision:1]'), 'Local Gemma response did not complete through the UI.');
 
     await page.selectOption('#providerSelect', 'localqwen');
-    await page.waitForFunction(() => document.getElementById('videoSource').disabled === true);
+    await page.waitForFunction(() => document.getElementById('videoSource').disabled === false);
     await page.waitForFunction(() => document.getElementById('diagProvider').textContent.toLowerCase().includes('qwen'));
 
     await page.fill('.message-input', 'Confirm local qwen is active.');
@@ -316,13 +342,16 @@ function findWorkerMessages(log, type, predicate) {
     const terminateEvents = qwenState.workerLog.filter((entry) => entry.event === 'terminate');
     assert(terminateEvents.length >= 1, 'Switching away from Local Gemma did not terminate the old worker.');
 
-    const qwenInit = findWorkerMessages(qwenState.workerLog, 'init', (entry) => entry.data.modelId === 'qwen3.5-0.8b-onnx').slice(-1)[0];
+    const qwenInit = findWorkerMessages(qwenState.workerLog, 'init', (entry) => String(entry.data.modelId || '').includes('qwen3.5-0.8b-onnx')).slice(-1)[0];
     assert(!!qwenInit, 'Local Qwen init was not sent after switching providers.');
     assert(qwenInit.data.runtime && qwenInit.data.runtime.modelClass === 'Qwen3_5ForConditionalGeneration', 'Local Qwen init did not use the Qwen runtime.');
 
     const qwenManualGenerate = findWorkerMessages(qwenState.workerLog, 'generate', (entry) => entry.data.prompt === 'Confirm local qwen is active.')[0];
     assert(!!qwenManualGenerate, 'Local Qwen manual generate was not sent.');
+    assert(qwenManualGenerate.data.providerKey === 'localqwen', 'Local Qwen generate did not preserve the provider key.');
+    assert(String(qwenManualGenerate.data.modelId || '').includes('qwen3.5-0.8b-onnx'), 'Local Qwen generate did not preserve the model id.');
     assert(Array.isArray(qwenManualGenerate.data.images) && qwenManualGenerate.data.images.length === 0, 'Local Qwen should not attach vision frames.');
+    assert(await page.$eval('#videoSource', (element) => !element.disabled && element.value === 'fake-camera'), 'Switching to Local Qwen should keep the selected camera available for the stream.');
     assert(qwenState.diagProvider.toLowerCase().includes('qwen'), 'Diagnostics did not report Local Qwen.');
     assert(qwenState.diagEvent.includes('generate.done'), 'Local Qwen diagnostics did not report completion.');
 
