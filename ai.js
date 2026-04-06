@@ -456,25 +456,33 @@ function normalizeLocalBrowserImage(image) {
     return '';
 }
 
-function getLocalGemmaSettings(llmSettings, modelOverride = '') {
+function isLocalBrowserProvider(providerKey) {
+    const catalog = getLocalBrowserCatalog();
+    return !!(providerKey && catalog?.getLocalBrowserModelConfig?.(providerKey));
+}
+
+function getLocalBrowserProviderSettings(providerKey, llmSettings, modelOverride = '') {
     const catalog = getLocalBrowserCatalog();
     const defaultConfig = catalog?.getLocalBrowserModelConfig
-        ? (catalog.getLocalBrowserModelConfig('localgemma') || {})
+        ? (catalog.getLocalBrowserModelConfig(providerKey) || {})
         : {};
     const fallbackHost = defaultConfig.remoteHost || catalog?.DEFAULT_REMOTE_HOST || 'https://largefiles.socialstream.ninja/';
+    const modelSettingKey = providerKey === 'localqwen' ? 'localqwenmodel' : 'localgemmamodel';
     const remoteHost = catalog?.normalizeRemoteHost
         ? catalog.normalizeRemoteHost(llmSettings.localgemmahost?.textsetting || fallbackHost)
         : String(llmSettings.localgemmahost?.textsetting || fallbackHost || '').trim().replace(/\/?$/, '/');
     const resolvedModel = String(
         modelOverride ||
-        llmSettings.localgemmamodel?.textsetting ||
+        llmSettings[modelSettingKey]?.textsetting ||
         defaultConfig.modelId ||
-        'gemma4-e2b-it-onnx'
-    ).trim() || 'gemma4-e2b-it-onnx';
+        ''
+    ).trim() || String(defaultConfig.modelId || '').trim();
 
     return {
+        providerKey,
         modelId: resolvedModel,
-        remoteHost
+        remoteHost,
+        supportsVision: defaultConfig.supportsVision !== false
     };
 }
 
@@ -508,10 +516,11 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			endpoint = llmSettings.ollamaendpoint?.textsetting || "http://localhost:11434";
 			model = model || llmSettings.ollamamodel?.textsetting || tmpModelFallback || null;
 			break;
-		case "localgemma": {
-			const localGemmaSettings = getLocalGemmaSettings(llmSettings, model);
-			model = localGemmaSettings.modelId;
-			endpoint = localGemmaSettings.remoteHost;
+		case "localgemma":
+		case "localqwen": {
+			const localBrowserSettings = getLocalBrowserProviderSettings(provider, llmSettings, model);
+			model = localBrowserSettings.modelId;
+			endpoint = localBrowserSettings.remoteHost;
 			callback = callback || null;
 			break;
 		}
@@ -624,7 +633,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		return false;
 	}
 
-    if (provider !== "localgemma" && localBrowserLLMClient) {
+    if (!isLocalBrowserProvider(provider) && localBrowserLLMClient) {
         try {
             await disposeLocalBrowserLLMClient();
         } catch (disposeError) {
@@ -632,8 +641,9 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
         }
     }
 
-    if (provider === "localgemma") {
+    if (isLocalBrowserProvider(provider)) {
         let abortHandler = null;
+        const localBrowserSettings = getLocalBrowserProviderSettings(provider, llmSettings, model);
         if (UUID) {
             if (activeChatBotSessions[UUID]) {
                 activeChatBotSessions[UUID].abort();
@@ -652,6 +662,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
             const normalizedImages = (Array.isArray(images) ? images : (images ? [images] : []))
                 .map(normalizeLocalBrowserImage)
                 .filter(Boolean);
+            const requestImages = localBrowserSettings.supportsVision ? normalizedImages : [];
             localBrowserActiveRequestState = {
                 callback,
                 buffer: ''
@@ -664,13 +675,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 abortController.signal.addEventListener('abort', abortHandler, { once: true });
             }
 
-            const result = await client.generate('localgemma', {
+            const result = await client.generate(provider, {
                 prompt,
                 systemPrompt: '',
                 maxNewTokens: 220,
                 temperature: 0.65,
                 topP: 0.92,
-                images: normalizedImages
+                images: requestImages
             }, {
                 modelOverride: model,
                 remoteHost: endpoint
@@ -686,7 +697,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 return (localBrowserActiveRequestState?.buffer || '') + "💥";
             }
             throw wrapLLMError(error, {
-                message: error?.message || 'Local Gemma browser inference failed.'
+                message: error?.message || 'Local browser model inference failed.'
             });
         } finally {
             if (abortController?.signal && abortHandler) {

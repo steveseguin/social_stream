@@ -7774,6 +7774,7 @@ input:checked + .slider:before {
 									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
 										<option selected value="ollama">Ollama (Native Local API)</option>
 										<option value="localgemma">Local Gemma 4 (Browser, self-hosted)</option>
+										<option value="localqwen">Local Qwen 3.5 (Browser, self-hosted)</option>
 										<option value="chatgpt">ChatGPT API</option>
 										<option value="gemini">Gemini API</option>
 										<option value="deepseek">DeepSeek API</option>
@@ -7841,12 +7842,21 @@ input:checked + .slider:before {
 								
 								<div id="localgemmahost" class="hidden textInputContainer" style="width: 95%;">
 									<input type="text" class="textInput" autocomplete="off" placeholder="https://largefiles.socialstream.ninja/" data-textsetting="localgemmahost" />
-									<label for="localgemmahost">&gt; Self-hosted model asset origin</label>
+									<label for="localgemmahost">&gt; Self-hosted browser model asset origin</label>
+								</div>
+								<div id="localbrowserhelp" class="hidden" style="width: 95%; font-size: 0.9em; opacity: 0.85; margin: 4px 0 10px 0;">
+									Browser models load weights from your own host instead of an API. Leave the model field blank to use the selected provider's default folder.
 								</div>
 								<div id="localgemmamodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemma4-e2b-it-onnx" data-textsetting="localgemmamodel" />
-										<label for="localgemmamodel">&gt; Local Gemma model id / folder</label>
+										<label for="localgemmamodel">&gt; Local Gemma model id / folder override</label>
+									</div>
+								</div>
+								<div id="localqwenmodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: qwen3.5-0.8b-onnx" data-textsetting="localqwenmodel" />
+										<label for="localqwenmodel">&gt; Local Qwen model id / folder override</label>
 									</div>
 								</div>
 								<div id="geminimodel" class="hidden">

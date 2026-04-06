@@ -386,12 +386,17 @@ const SETTINGS_METADATA = Object.freeze({
   "localgemmahost": {
     type: "text",
     category: "configure_llm_api",
-    description: "Self-hosted origin used to fetch Local Gemma browser model assets."
+    description: "Self-hosted origin used to fetch Local browser model assets."
   },
   "localgemmamodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Model identifier or folder name for the Local Gemma browser model."
+    description: "Model identifier or folder name override for the Local Gemma browser model."
+  },
+  "localqwenmodel": {
+    type: "text",
+    category: "configure_llm_api",
+    description: "Model identifier or folder name override for the Local Qwen browser model."
   },
   "customJsEnabled": {
     type: "boolean",

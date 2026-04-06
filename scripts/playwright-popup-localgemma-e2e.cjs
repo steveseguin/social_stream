@@ -210,53 +210,83 @@ async function addPopupInitScript(page) {
 
     const initialState = await page.evaluate(() => ({
       hasLocalGemmaOption: Array.from(document.querySelectorAll('#aiProvider option')).some((option) => option.value === 'localgemma'),
+      hasLocalQwenOption: Array.from(document.querySelectorAll('#aiProvider option')).some((option) => option.value === 'localqwen'),
       hostHidden: document.getElementById('localgemmahost').classList.contains('hidden'),
-      modelHidden: document.getElementById('localgemmamodel').classList.contains('hidden')
+      helpHidden: document.getElementById('localbrowserhelp').classList.contains('hidden'),
+      gemmaModelHidden: document.getElementById('localgemmamodel').classList.contains('hidden'),
+      qwenModelHidden: document.getElementById('localqwenmodel').classList.contains('hidden')
     }));
 
     assert(initialState.hasLocalGemmaOption, 'Popup AI provider list is missing Local Gemma.');
-    assert(initialState.hostHidden && initialState.modelHidden, 'Local Gemma settings should be hidden before selection.');
+    assert(initialState.hasLocalQwenOption, 'Popup AI provider list is missing Local Qwen.');
+    assert(
+      initialState.hostHidden && initialState.helpHidden && initialState.gemmaModelHidden && initialState.qwenModelHidden,
+      'Local browser model settings should be hidden before selection.'
+    );
 
     await page.selectOption('#aiProvider', 'localgemma');
     await page.waitForFunction(() => !document.getElementById('localgemmahost').classList.contains('hidden'));
+    await page.waitForFunction(() => !document.getElementById('localbrowserhelp').classList.contains('hidden'));
     await page.waitForFunction(() => !document.getElementById('localgemmamodel').classList.contains('hidden'));
+    await page.waitForFunction(() => document.getElementById('localqwenmodel').classList.contains('hidden'));
 
     await page.fill("[data-textsetting='localgemmahost']", 'https://assets.example.com/models/');
     await page.dispatchEvent("[data-textsetting='localgemmahost']", 'change');
     await page.fill("[data-textsetting='localgemmamodel']", 'gemma4-e2b-it-onnx');
     await page.dispatchEvent("[data-textsetting='localgemmamodel']", 'change');
 
+    await page.selectOption('#aiProvider', 'localqwen');
+    await page.waitForFunction(() => !document.getElementById('localgemmahost').classList.contains('hidden'));
+    await page.waitForFunction(() => !document.getElementById('localbrowserhelp').classList.contains('hidden'));
+    await page.waitForFunction(() => document.getElementById('localgemmamodel').classList.contains('hidden'));
+    await page.waitForFunction(() => !document.getElementById('localqwenmodel').classList.contains('hidden'));
+
+    await page.fill("[data-textsetting='localqwenmodel']", 'qwen3.5-0.8b-onnx');
+    await page.dispatchEvent("[data-textsetting='localqwenmodel']", 'change');
+
     await page.selectOption('#aiProvider', 'custom');
     await page.waitForFunction(() => document.getElementById('localgemmahost').classList.contains('hidden'));
+    await page.waitForFunction(() => document.getElementById('localbrowserhelp').classList.contains('hidden'));
+    await page.waitForFunction(() => document.getElementById('localqwenmodel').classList.contains('hidden'));
     await page.waitForFunction(() => !document.getElementById('customAIEndpoint').classList.contains('hidden'));
 
-    await page.selectOption('#aiProvider', 'localgemma');
+    await page.selectOption('#aiProvider', 'localqwen');
     await page.waitForFunction(() => !document.getElementById('localgemmahost').classList.contains('hidden'));
+    await page.waitForFunction(() => !document.getElementById('localbrowserhelp').classList.contains('hidden'));
+    await page.waitForFunction(() => !document.getElementById('localqwenmodel').classList.contains('hidden'));
 
     const finalState = await page.evaluate(() => ({
       hostVisible: !document.getElementById('localgemmahost').classList.contains('hidden'),
-      modelVisible: !document.getElementById('localgemmamodel').classList.contains('hidden'),
+      helpVisible: !document.getElementById('localbrowserhelp').classList.contains('hidden'),
+      gemmaModelHidden: document.getElementById('localgemmamodel').classList.contains('hidden'),
+      qwenModelVisible: !document.getElementById('localqwenmodel').classList.contains('hidden'),
       customHidden: document.getElementById('customAIEndpoint').classList.contains('hidden'),
       hostValue: document.querySelector("[data-textsetting='localgemmahost']").value,
-      modelValue: document.querySelector("[data-textsetting='localgemmamodel']").value,
+      gemmaModelValue: document.querySelector("[data-textsetting='localgemmamodel']").value,
+      qwenModelValue: document.querySelector("[data-textsetting='localqwenmodel']").value,
       messages: window.__chromeMessages.slice()
     }));
 
-    assert(finalState.hostVisible && finalState.modelVisible, 'Popup did not show Local Gemma settings after selection.');
-    assert(finalState.customHidden, 'Popup did not hide Custom API settings when switching back to Local Gemma.');
-    assert(finalState.hostValue === 'https://assets.example.com/models/', 'Popup did not preserve the Local Gemma host value.');
-    assert(finalState.modelValue === 'gemma4-e2b-it-onnx', 'Popup did not preserve the Local Gemma model value.');
+    assert(finalState.hostVisible && finalState.helpVisible && finalState.qwenModelVisible, 'Popup did not show Local Qwen settings after selection.');
+    assert(finalState.gemmaModelHidden, 'Popup did not hide the Local Gemma model field when Local Qwen was selected.');
+    assert(finalState.customHidden, 'Popup did not hide Custom API settings when switching back to a local browser provider.');
+    assert(finalState.hostValue === 'https://assets.example.com/models/', 'Popup did not preserve the shared local browser host value.');
+    assert(finalState.gemmaModelValue === 'gemma4-e2b-it-onnx', 'Popup did not preserve the Local Gemma model value.');
+    assert(finalState.qwenModelValue === 'qwen3.5-0.8b-onnx', 'Popup did not preserve the Local Qwen model value.');
 
     const aiProviderSaves = finalState.messages.filter((message) => message && message.cmd === 'saveSetting' && message.setting === 'aiProvider');
     const hostSaves = finalState.messages.filter((message) => message && message.cmd === 'saveSetting' && message.setting === 'localgemmahost');
-    const modelSaves = finalState.messages.filter((message) => message && message.setting === 'localgemmamodel');
+    const gemmaModelSaves = finalState.messages.filter((message) => message && message.setting === 'localgemmamodel');
+    const qwenModelSaves = finalState.messages.filter((message) => message && message.setting === 'localqwenmodel');
 
     assert(aiProviderSaves.some((message) => message.value === 'localgemma'), 'Popup did not save the Local Gemma provider selection.');
+    assert(aiProviderSaves.some((message) => message.value === 'localqwen'), 'Popup did not save the Local Qwen provider selection.');
     assert(hostSaves.some((message) => message.value === 'https://assets.example.com/models/'), 'Popup did not save the Local Gemma host value.');
-    assert(modelSaves.some((message) => message.value === 'gemma4-e2b-it-onnx'), 'Popup did not save the Local Gemma model value.');
+    assert(gemmaModelSaves.some((message) => message.value === 'gemma4-e2b-it-onnx'), 'Popup did not save the Local Gemma model value.');
+    assert(qwenModelSaves.some((message) => message.value === 'qwen3.5-0.8b-onnx'), 'Popup did not save the Local Qwen model value.');
     assert(blockedExternalRequests.length === 0, `External requests were attempted: ${blockedExternalRequests.join(', ')}`);
 
-    console.log('PASS popup local gemma settings e2e');
+    console.log('PASS popup local browser model settings e2e');
     await browser.close();
   } finally {
     server.close();

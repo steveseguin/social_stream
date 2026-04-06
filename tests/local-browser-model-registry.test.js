@@ -41,6 +41,7 @@ try {
     assert(qwenInit.runtime?.dtype?.embed_tokens === 'q4', 'worker init preserves Qwen q4 defaults');
 
     assert(popupHtml.includes('value="localgemma"'), 'popup exposes localgemma provider');
+    assert(popupHtml.includes('value="localqwen"'), 'popup exposes localqwen provider');
     assert(cohostHtml.includes('value="localgemma"'), 'cohost exposes localgemma provider');
     assert(cohostHtml.includes('value="localqwen"'), 'cohost exposes localqwen provider');
     assert(fs.existsSync(path.join(__dirname, '..', 'local-browser-model-worker.js')), 'generic local browser worker exists');

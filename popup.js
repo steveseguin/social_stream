@@ -3060,7 +3060,7 @@ function handleAIProviderVisibility(provider) {
         "deepseekApiKey", "deepseekmodel", "customAIEndpoint", "customAIModel",
         "openrouterApiKey", "openroutermodel", "bedrockAccessKey", "bedrockSecretKey",
         "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey",
-        "localgemmahost", "localgemmamodel"
+        "localgemmahost", "localbrowserhelp", "localgemmamodel", "localqwenmodel"
     ].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
@@ -3099,7 +3099,12 @@ function handleAIProviderVisibility(provider) {
         document.getElementById("groqmodel").classList.remove("hidden");
     } else if (provider == "localgemma") {
         document.getElementById("localgemmahost").classList.remove("hidden");
+        document.getElementById("localbrowserhelp").classList.remove("hidden");
         document.getElementById("localgemmamodel").classList.remove("hidden");
+    } else if (provider == "localqwen") {
+        document.getElementById("localgemmahost").classList.remove("hidden");
+        document.getElementById("localbrowserhelp").classList.remove("hidden");
+        document.getElementById("localqwenmodel").classList.remove("hidden");
     }
 }
 
@@ -3134,7 +3139,7 @@ function collectLLMProviderTestSettings() {
         'openrouterApiKey', 'openroutermodel', 'customAIEndpoint',
         'customAIModel', 'customAIApiKey', 'bedrockAccessKey',
         'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel',
-        'localgemmahost', 'localgemmamodel'
+        'localgemmahost', 'localgemmamodel', 'localqwenmodel'
     ].forEach(key => {
         const input = document.querySelector(`[data-textsetting='${key}']`);
         if (input) {
@@ -4334,7 +4339,7 @@ function handleOptionSetting(ele, sync) {
 			'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
 			'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive',
 			'openrouterApiKey', 'openroutermodel', 'groqApiKey', 'groqmodel',
-			'customAIApiKey', 'localgemmahost', 'localgemmamodel'
+			'customAIApiKey', 'localgemmahost', 'localbrowserhelp', 'localgemmamodel', 'localqwenmodel'
 		];
         
         aiProviderElements.forEach(id => {
@@ -4380,7 +4385,13 @@ function handleOptionSetting(ele, sync) {
                 break;
             case 'localgemma':
                 document.getElementById("localgemmahost").classList.remove("hidden");
+                document.getElementById("localbrowserhelp").classList.remove("hidden");
                 document.getElementById("localgemmamodel").classList.remove("hidden");
+                break;
+            case 'localqwen':
+                document.getElementById("localgemmahost").classList.remove("hidden");
+                document.getElementById("localbrowserhelp").classList.remove("hidden");
+                document.getElementById("localqwenmodel").classList.remove("hidden");
                 break;
             case 'custom':
                 document.getElementById("customAIEndpoint").classList.remove("hidden");
