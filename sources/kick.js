@@ -681,11 +681,97 @@
 	
 	const KICK_MESSAGE_CONTAINER_SELECTOR = "[data-index], [data-chat-entry]";
 	const KICK_DELETE_TEXTS = new Set(["deleted by a moderator", "(deleted)"]);
+	const KICK_BADGE_SELECTOR = ".badge-tooltip img[src], .badge-tooltip svg, .base-badge img[src], .base-badge svg, .badge img[src], .badge svg, div[data-state] img[src], div[data-state] svg";
+	const KICK_MESSAGE_CONTENT_SELECTOR = ".chat-entry-content, .chat-emote-container, .break-all, seventv-container, .seventv-painted-content";
 
 	function getKickUsernameButton(ele) {
 		return ele.querySelector("button.inline.font-bold[data-prevent-expand]")
 			|| ele.querySelector("button[title]")
 			|| ele.querySelector("button.font-bold.inline");
+	}
+
+	function getKickBadgeScope(ele) {
+		var identity = ele && ele.querySelector ? ele.querySelector(".chat-message-identity") : null;
+		if (identity) {
+			return identity;
+		}
+		var usernameBtn = getKickUsernameButton(ele);
+		var current = usernameBtn ? usernameBtn.parentElement : null;
+		while (current && current !== ele) {
+			if (current.querySelector(KICK_BADGE_SELECTOR) && !current.querySelector(KICK_MESSAGE_CONTENT_SELECTOR)) {
+				return current;
+			}
+			current = current.parentElement;
+		}
+		return ele;
+	}
+
+	function collectKickBadges(ele) {
+		var chatbadges = [];
+		var member = false;
+		var mod = false;
+		var seen = new Set();
+		var badgeRoot = getKickBadgeScope(ele);
+		if (!badgeRoot || !badgeRoot.querySelectorAll) {
+			return {
+				chatbadges: chatbadges,
+				member: member,
+				mod: mod
+			};
+		}
+		badgeRoot.querySelectorAll(KICK_BADGE_SELECTOR).forEach(badge=>{
+			try {
+				if (!badge) {
+					return;
+				}
+				if (badge.closest && badge.closest(KICK_MESSAGE_CONTENT_SELECTOR)) {
+					return;
+				}
+				if (badge.matches && badge.matches("img[alt='sticker'][src], img.regular-emote, img.zero-width-emote, img.zero-width-emote-centered")) {
+					return;
+				}
+				if ((badge.nodeName == "IMG") && badge.src && badge.src.includes("/emotes/")) {
+					return;
+				}
+				var signature = "";
+				if (badge.nodeName == "IMG") {
+					signature = "img:" + badge.src;
+				} else if (badge.nodeName && (badge.nodeName.toLowerCase() == "svg")) {
+					signature = "svg:" + badge.outerHTML;
+				}
+				if (signature) {
+					if (seen.has(signature)) {
+						return;
+					}
+					seen.add(signature);
+				}
+				if (badge.nodeName == "IMG"){
+					var tmp = {};
+					tmp.src = badge.src;
+					tmp.type = "img";
+					if (badge.src.includes("subscriber")){
+						member = badge.getAttribute("alt") || "Subscriber";
+					}
+					chatbadges.push(tmp);
+				} else if (badge.nodeName && (badge.nodeName.toLowerCase() == "svg")){
+					var tmp = {};
+					tmp.html = badge.outerHTML;
+					tmp.type = "svg";
+					if (badge.querySelector('[d="M23.5 2.5v3h-3v3h-3v3h-3v3h-3v-3h-6v6h3v3h-3v3h-3v6h6v-3h3v-3h3v3h6v-6h-3v-3h3v-3h3v-3h3v-3h3v-6h-6Z"]')){
+						mod = true;
+					}
+					if (settings.hidecertainbadges && badge.querySelector('[d="M15.6773 22.1533C17.3698 22.1533 18.8182 21.5507 20.0233 20.3461C21.2282 19.1415 21.8307 17.6924 21.8307 16V6.15401C21.8307 4.46162 21.2286 3.01305 20.0233 1.80784C18.8182 0.602907 17.3698 0 15.6773 0C13.9849 0 12.5363 0.602907 11.3311 1.80784C10.1259 3.01285 9.52344 4.46162 9.52344 6.15401V16C9.52344 17.6923 10.1262 19.1415 11.3311 20.3461C12.5361 21.5507 13.9849 22.1533 15.6773 22.1533Z"]')){
+						return;
+					}
+					chatbadges.push(tmp);
+				}
+			} catch(e){  }
+		});
+		return {
+			chatbadges: chatbadges,
+			member: member,
+			mod: mod
+		};
 	}
 
 	function normalizeKickText(text) {
@@ -1227,32 +1313,10 @@
 		  }
 	  }
 	  
-	  var member = false;
-	  var mod = false;
-	  ele.querySelectorAll("div[data-state] img[src], div[data-state] svg").forEach(badge=>{
-		try {
-			if (badge && badge.nodeName == "IMG"){
-				var tmp = {};
-				tmp.src = badge.src;
-				tmp.type = "img";
-				if (badge.src.includes("subscriber")){
-					member = badge.getAttribute("alt") || "Subscriber";
-				}
-				chatbadges.push(tmp);
-			} else if (badge && badge.nodeName.toLowerCase() == "svg"){
-				var tmp = {};
-				tmp.html = badge.outerHTML;
-				tmp.type = "svg";
-				if (badge.querySelector('[d="M23.5 2.5v3h-3v3h-3v3h-3v3h-3v-3h-6v6h3v3h-3v3h-3v6h6v-3h3v-3h3v3h6v-6h-3v-3h3v-3h3v-3h3v-3h3v-6h-6Z"]')){
-					mod = true;
-				}
-				if (settings.hidecertainbadges && badge.querySelector('[d="M15.6773 22.1533C17.3698 22.1533 18.8182 21.5507 20.0233 20.3461C21.2282 19.1415 21.8307 17.6924 21.8307 16V6.15401C21.8307 4.46162 21.2286 3.01305 20.0233 1.80784C18.8182 0.602907 17.3698 0 15.6773 0C13.9849 0 12.5363 0.602907 11.3311 1.80784C10.1259 3.01285 9.52344 4.46162 9.52344 6.15401V16C9.52344 17.6923 10.1262 19.1415 11.3311 20.3461C12.5361 21.5507 13.9849 22.1533 15.6773 22.1533Z"]')){
-					return;
-				}
-				chatbadges.push(tmp);
-			}
-		} catch(e){  }
-	  });
+	  var badgeDetails = collectKickBadges(ele);
+	  var member = badgeDetails.member;
+	  var mod = badgeDetails.mod;
+	  chatbadges = badgeDetails.chatbadges;
 
 
 	 

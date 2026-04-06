@@ -8358,12 +8358,13 @@
 			
 						
 			function markUserAs(element, role) {
-				const userId = element.getAttribute("data-chatname");
+				const chatName = element.getAttribute("data-chatname");
+				const userId = element.getAttribute("data-userid") || "";
 				const userType = element.getAttribute("data-source-type");
 				
-				if (userId && userType) {
+				if (chatName && userType) {
 					
-					send2Extension({ action: "markUser", value: { chatname: userId, type: userType, role: role} });
+					send2Extension({ action: "markUser", value: { chatname: chatName, userid: userId, type: userType, role: role} });
 				
 				}
 			}

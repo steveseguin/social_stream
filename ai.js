@@ -1635,6 +1635,12 @@ async function processMessageWithOllama(data, idx=null) {
   //console.log("starting processing");
   isProcessing = true;
   try {
+    if (data?.bot) {
+      isProcessing = false;
+      noteChatBotDecision('ignored-bot-message', data);
+      return;
+    }
+
     // Rate limiting logic
     let ollamaRateLimitPerTab = 5000;
     if (settings.ollamaRateLimitPerTab) {
@@ -1658,6 +1664,24 @@ async function processMessageWithOllama(data, idx=null) {
     if ((data.type === "stageten" && botname === data.chatname) || !data.chatmessage || (!settings.noollamabotname && data.chatmessage.startsWith(botname + ":"))) {
       isProcessing = false;
       noteChatBotDecision('ignored-self-message', data);
+      return;
+    }
+
+    const allowHostReflectionResponse = Boolean(
+      data?.reflection &&
+      data?.hostReflection &&
+      settings?.chatbotRespondToReflections
+    );
+
+    if (data?.chatbotReflection) {
+      isProcessing = false;
+      noteChatBotDecision('ignored-chatbot-reflection', data);
+      return;
+    }
+
+    if (data?.reflection && !allowHostReflectionResponse) {
+      isProcessing = false;
+      noteChatBotDecision('ignored-reflection', data, { origin: data?.reflectionOrigin || '' });
       return;
     }
 
@@ -1687,14 +1711,6 @@ async function processMessageWithOllama(data, idx=null) {
       noteChatBotDecision('empty-after-cleaning', data);
       return;
     }
-
-    // Prevent self-replies
-    const allowHostReflectionResponse = Boolean(
-      data?.reflection &&
-      data?.hostReflection &&
-      settings?.chatbotRespondToReflections &&
-      !data?.chatbotReflection
-    );
 
     let hostReflectionKey = null;
     if (allowHostReflectionResponse) {
