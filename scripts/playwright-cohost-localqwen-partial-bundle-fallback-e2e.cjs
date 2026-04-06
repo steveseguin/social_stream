@@ -85,6 +85,8 @@ async function setupContext(context) {
 
 async function addInitScript(page) {
   await page.addInitScript(() => {
+    localStorage.setItem('modelOverride_localqwen', 'thirdparty/models/qwen3.5-0.8b-onnx');
+
     function sanitize(value, depth = 0) {
       if (depth > 5) return '[max-depth]';
       if (typeof value === 'string') {
@@ -207,6 +209,8 @@ function findWorkerMessages(log, type) {
     const initMessage = findWorkerMessages(workerLog, 'init')[0];
     assert(!!initMessage, 'Local Qwen init was not sent.');
     assert(initMessage.data.modelId === 'qwen3.5-0.8b-onnx', `Local Qwen should fall back to the self-hosted model id when the bundled files are incomplete, received: ${initMessage.data.modelId}`);
+    const overrideValue = await page.$eval('#modelOverride', (el) => el.value);
+    assert(overrideValue === '', `Expected stale local bundled override to be cleared after fallback, received: ${overrideValue}`);
 
     console.log('PASS cohost local qwen partial bundle fallback e2e');
     await browser.close();

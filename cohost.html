@@ -1943,16 +1943,50 @@ class LocalBrowserPublisher {
     async resolveWorkerModelTarget() {
         const defaultModelId = String(this.providerConfig.modelId || '').trim();
         const bundledLocalPath = normalizeBundledModelPath(this.providerConfig.localPath || '');
-        const modelIsLocalPath = isLikelyLocalModelPath(this.model);
-        const shouldPreferBundledLocalPath = !modelIsLocalPath && bundledLocalPath && this.model === defaultModelId;
+        const requestedModelId = String(this.model || '').trim() || defaultModelId;
+        const modelIsLocalPath = isLikelyLocalModelPath(requestedModelId);
+        const requestedLocalPath = modelIsLocalPath ? normalizeBundledModelPath(requestedModelId) : '';
+        const shouldPreferBundledLocalPath = !modelIsLocalPath && bundledLocalPath && requestedModelId === defaultModelId;
         if (shouldPreferBundledLocalPath && await canUseBundledLocalModel(bundledLocalPath, this.providerConfig)) {
             return {
                 modelId: bundledLocalPath,
                 sourceLabel: 'bundled'
             };
         }
+        if (modelIsLocalPath) {
+            if (requestedLocalPath && await canUseBundledLocalModel(requestedLocalPath, this.providerConfig)) {
+                return {
+                    modelId: requestedLocalPath,
+                    sourceLabel: 'bundled'
+                };
+            }
+            if (defaultModelId && !isLikelyLocalModelPath(defaultModelId)) {
+                const fallbackEvent = `${this.providerLabel} using self-hosted ${defaultModelId} after skipping missing bundled files`;
+                this.modelOverride = '';
+                this.model = defaultModelId;
+                if (requestedLocalPath && requestedLocalPath === bundledLocalPath) {
+                    saveModelOverride(this.providerKey, '');
+                    if (providerSelect?.value === this.providerKey && modelOverrideInput) {
+                        modelOverrideInput.value = '';
+                    }
+                }
+                updateDiagnostics({
+                    model: defaultModelId,
+                    lastEvent: fallbackEvent,
+                    lastError: '-'
+                });
+                updateVoiceTelemetry({
+                    outputState: `Loading ${this.providerLabel}...`,
+                    outputPreview: fallbackEvent
+                });
+                return {
+                    modelId: defaultModelId,
+                    sourceLabel: 'remote'
+                };
+            }
+        }
         return {
-            modelId: this.model,
+            modelId: requestedModelId,
             sourceLabel: modelIsLocalPath ? 'bundled' : 'remote'
         };
     }
