@@ -23,6 +23,7 @@ module.exports = [
     {
         files: [
             "cohost-local-qwen-worker.js",
+            "local-browser-model-worker.js",
             "docs/js/**/*.js",
             "lite/**/*.js",
             "providers/**/*.js",
