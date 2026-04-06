@@ -7773,6 +7773,7 @@ input:checked + .slider:before {
 								<div>
 									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
 										<option selected value="ollama">Ollama (Native Local API)</option>
+										<option value="localgemma">Local Gemma 4 (Browser, self-hosted)</option>
 										<option value="chatgpt">ChatGPT API</option>
 										<option value="gemini">Gemini API</option>
 										<option value="deepseek">DeepSeek API</option>
@@ -7838,6 +7839,16 @@ input:checked + .slider:before {
 									<span data-translate="ollama-keepalive-minutes">⏱️ Keep-alive model time (minutes)</span> <input type="number" min="-1" max="99999999" value="5" data-numbersetting="ollamaKeepAlive" />
 								</div>
 								
+								<div id="localgemmahost" class="hidden textInputContainer" style="width: 95%;">
+									<input type="text" class="textInput" autocomplete="off" placeholder="https://largefiles.socialstream.ninja/" data-textsetting="localgemmahost" />
+									<label for="localgemmahost">&gt; Self-hosted model asset origin</label>
+								</div>
+								<div id="localgemmamodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemma4-e2b-it-onnx" data-textsetting="localgemmamodel" />
+										<label for="localgemmamodel">&gt; Local Gemma model id / folder</label>
+									</div>
+								</div>
 								<div id="geminimodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="geminimodel" />
@@ -12858,6 +12869,8 @@ input:checked + .slider:before {
 			</span>
         </div>
 		<script type="text/javascript" src="./libs/profiles.js"></script>
+		<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
+		<script type="text/javascript" src="./shared/ai/kokoroAssetCatalog.js"></script>
 		<!-- Kitten TTS will be loaded dynamically as ES module when needed -->
         <script type="text/javascript" src="popup.js?v=3"></script>
         <script type="text/javascript" src="spotify-auth-helper.js"></script>

@@ -383,6 +383,16 @@ const SETTINGS_METADATA = Object.freeze({
     category: "configure_llm_api",
     description: "Model identifier exposed by the custom OpenAI-compatible service."
   },
+  "localgemmahost": {
+    type: "text",
+    category: "configure_llm_api",
+    description: "Self-hosted origin used to fetch Local Gemma browser model assets."
+  },
+  "localgemmamodel": {
+    type: "text",
+    category: "configure_llm_api",
+    description: "Model identifier or folder name for the Local Gemma browser model."
+  },
   "customJsEnabled": {
     type: "boolean",
     category: "custom_javascript",

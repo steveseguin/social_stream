@@ -3059,7 +3059,8 @@ function handleAIProviderVisibility(provider) {
         "geminiApiKey", "geminimodel", "xaiApiKey", "xaimodel", "chatgptmodel",
         "deepseekApiKey", "deepseekmodel", "customAIEndpoint", "customAIModel",
         "openrouterApiKey", "openroutermodel", "bedrockAccessKey", "bedrockSecretKey",
-        "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey"
+        "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey",
+        "localgemmahost", "localgemmamodel"
     ].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
@@ -3096,6 +3097,9 @@ function handleAIProviderVisibility(provider) {
     } else if (provider == "groq") {
         document.getElementById("groqApiKey").classList.remove("hidden");
         document.getElementById("groqmodel").classList.remove("hidden");
+    } else if (provider == "localgemma") {
+        document.getElementById("localgemmahost").classList.remove("hidden");
+        document.getElementById("localgemmamodel").classList.remove("hidden");
     }
 }
 
@@ -3129,7 +3133,8 @@ function collectLLMProviderTestSettings() {
         'deepseekApiKey', 'deepseekmodel', 'groqApiKey', 'groqmodel',
         'openrouterApiKey', 'openroutermodel', 'customAIEndpoint',
         'customAIModel', 'customAIApiKey', 'bedrockAccessKey',
-        'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel'
+        'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel',
+        'localgemmahost', 'localgemmamodel'
     ].forEach(key => {
         const input = document.querySelector(`[data-textsetting='${key}']`);
         if (input) {
@@ -4329,7 +4334,7 @@ function handleOptionSetting(ele, sync) {
 			'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
 			'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive',
 			'openrouterApiKey', 'openroutermodel', 'groqApiKey', 'groqmodel',
-			'customAIApiKey'
+			'customAIApiKey', 'localgemmahost', 'localgemmamodel'
 		];
         
         aiProviderElements.forEach(id => {
@@ -4372,6 +4377,10 @@ function handleOptionSetting(ele, sync) {
             case 'groq':
                 document.getElementById("groqApiKey").classList.remove("hidden");
                 document.getElementById("groqmodel").classList.remove("hidden");
+                break;
+            case 'localgemma':
+                document.getElementById("localgemmahost").classList.remove("hidden");
+                document.getElementById("localgemmamodel").classList.remove("hidden");
                 break;
             case 'custom':
                 document.getElementById("customAIEndpoint").classList.remove("hidden");
@@ -6461,139 +6470,76 @@ var KokoroTTS = false;
 var kokoroDownloadInProgress  = null;
 var kokoroTtsInstance = null;
 
+function getKokoroAssets() {
+	return window.SSNKokoroAssets || {
+		modelId: "onnx-community/Kokoro-82M-v1.0-ONNX",
+		getRemoteHost: function() {
+			return "https://largefiles.socialstream.ninja/";
+		},
+		getPreferredDtype: function(device) {
+			return device === "wasm" ? "q8" : "fp32";
+		}
+	};
+}
+
+function logKokoroProgress(progress) {
+	if (!progress) {
+		return;
+	}
+	if ((progress.status === "progress_total" || progress.status === "progress") && progress.total) {
+		const percentage = (progress.loaded / progress.total) * 100;
+		console.log("Kokoro download:", percentage.toFixed(1) + "%");
+	}
+}
+
+async function createKokoroTtsInstance(device) {
+	const kokoroAssets = getKokoroAssets();
+	return KokoroTTS.from_pretrained(kokoroAssets.modelId, {
+		dtype: kokoroAssets.getPreferredDtype(device),
+		device,
+		progress_callback: logKokoroProgress
+	});
+}
+
+async function initKokoroWithFallback(preferredDevice) {
+	const attempts = [preferredDevice];
+	let lastError = null;
+
+	if (preferredDevice === "webgpu") {
+		attempts.push("wasm", "auto");
+	}
+
+	for (const device of attempts) {
+		try {
+			console.log("Initializing Kokoro TTS with device:", device);
+			return await createKokoroTtsInstance(device);
+		} catch (error) {
+			lastError = error;
+			console.error(error);
+		}
+	}
+
+	throw lastError || new Error("Unable to initialize Kokoro TTS");
+}
+
 async function initKokoro() {
 	if (ssapp) return false;
 	if (kokoroDownloadInProgress) return false;
 	
 	if (!KokoroTTS) {
-	
-		async function openDB() {
-			return new Promise((resolve, reject) => {
-				const request = indexedDB.open('kokoroTTS', 1);
-				request.onerror = () => reject(request.error);
-				request.onsuccess = () => resolve(request.result);
-				request.onupgradeneeded = (event) => {
-					const db = event.target.result;
-					if (!db.objectStoreNames.contains('models')) {
-						db.createObjectStore('models');
-					}
-				};
-			});
-		}
-
-		async function getCachedModel() {
-			const db = await openDB();
-			return new Promise((resolve, reject) => {
-				const transaction = db.transaction('models', 'readonly');
-				const store = transaction.objectStore('models');
-				const request = store.get('kokoro-82M-v1.0');
-				request.onerror = () => reject(request.error);
-				request.onsuccess = () => resolve(request.result);
-			});
-		}
-
-		async function cacheModel(modelData) {
-			const db = await openDB();
-			return new Promise((resolve, reject) => {
-				const transaction = db.transaction('models', 'readwrite');
-				const store = transaction.objectStore('models');
-				const request = store.put(modelData, 'kokoro-82M-v1.0');
-				request.onerror = () => reject(request.error);
-				request.onsuccess = () => resolve();
-			});
-		}
-	
 		try {
+			const kokoroAssets = getKokoroAssets();
 			kokoroDownloadInProgress = true;
+			window.SSN_KOKORO_REMOTE_HOST = kokoroAssets.getRemoteHost();
 			console.log("Loading Kokoro dependencies...");
+			console.log("Using Kokoro asset host:", window.SSN_KOKORO_REMOTE_HOST);
 			const module = window.location.href.startsWith("chrome-extension://") ? await import('./thirdparty/kokoro-bundle.es.ext.js') : await import('./thirdparty/kokoro-bundle.es.js');
 			KokoroTTS = module.KokoroTTS;
 			TextSplitterStream = module.TextSplitterStream;
 			const detectWebGPU = module.detectWebGPU;
-			
-			// Initialize IndexedDB handling
-			const DB_NAME = 'kokoroTTS';
-			const STORE_NAME = 'models';
-			const MODEL_KEY = 'kokoro-82M-v1.0';
-			
 			let device = (await detectWebGPU()) ? "webgpu" : "wasm";
 			console.log("Using device:", device);
-			
-			// Check cache first
-			console.log("Checking cache for model...");
-			let modelData = await getCachedModel();
-			
-			if (!modelData) {
-				console.log("Downloading model...");
-				const modelUrl = 'https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx';
-				const response = await fetch(modelUrl);
-				const total = +response.headers.get('Content-Length');
-				let loaded = 0;
-				
-				const reader = response.body.getReader();
-				const chunks = [];
-				
-				while (true) {
-					const {done, value} = await reader.read();
-					if (done) break;
-					
-					chunks.push(value);
-					loaded += value.length;
-					
-					const percentage = (loaded / total) * 100;
-					console.log(`Downloading model: ${percentage.toFixed(1)}%`);
-				}
-				
-				const modelBlob = new Blob(chunks);
-				modelData = new Uint8Array(await modelBlob.arrayBuffer());
-				
-				console.log("Caching model...");
-				await cacheModel(modelData);
-			} else {
-				console.log("Loading model from cache");
-			}
-			
-			console.log("Initializing Kokoro TTS...");
-			try {
-				const customLoadFn = async () => modelData;
-				kokoroTtsInstance = await KokoroTTS.from_pretrained(
-					"onnx-community/Kokoro-82M-v1.0-ONNX",
-					{
-						dtype: device === "wasm" ? "q8" : "fp32",
-						device,
-						load_fn: customLoadFn
-					}
-				);
-
-			} catch(e){
-				console.error(e);
-				if (device === "webgpu"){
-					device = "wasm";
-					try {
-						const customLoadFn = async () => modelData;
-						kokoroTtsInstance = await KokoroTTS.from_pretrained(
-							"onnx-community/Kokoro-82M-v1.0-ONNX",
-							{
-								dtype: device === "wasm" ? "q8" : "fp32",
-								device,
-								load_fn: customLoadFn
-							}
-						);
-					} catch(e){
-						console.error(e);
-						device = "auto";
-						const customLoadFn = async () => modelData;
-						kokoroTtsInstance = await KokoroTTS.from_pretrained(
-							"onnx-community/Kokoro-82M-v1.0-ONNX",
-							{
-								dtype: "q8", //device === "wasm" ? "q8" : "fp16",
-								device,
-								load_fn: customLoadFn
-							}
-						);
-					}
-				}
-			}
+			kokoroTtsInstance = await initKokoroWithFallback(device);
 			
 			console.log("Kokoro TTS ready!");
 			kokoroDownloadInProgress = false;

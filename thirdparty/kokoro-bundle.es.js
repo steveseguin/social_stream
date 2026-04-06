@@ -10649,7 +10649,7 @@ ${v}`, F = h.createShaderModule({ code: y, label: i.name });
   function we() {
     return ie?.wasm?.proxy;
   }
-  ie?.wasm && (ie.wasm.wasmPaths = `https://cdn.jsdelivr.net/npm/@huggingface/transformers@${P.env.version}/dist/`, ie.wasm.proxy = !1, typeof crossOriginIsolated < "u" && crossOriginIsolated || (ie.wasm.numThreads = 1)), ie?.webgpu && (ie.webgpu.powerPreference = "high-performance"), P.env.backends.onnx = ie;
+  ie?.wasm && (ie.wasm.wasmPaths = { wasm: new URL("./kokoro-ort-wasm-simd-threaded.jsep.wasm", import.meta.url).href }, ie.wasm.proxy = !1, typeof crossOriginIsolated < "u" && crossOriginIsolated || (ie.wasm.numThreads = 1)), ie?.webgpu && (ie.webgpu.powerPreference = "high-performance"), P.env.backends.onnx = ie;
 }, "./src/base/feature_extraction_utils.js": (x, C, d) => {
   d.r(C), d.d(C, { FeatureExtractor: () => O, validate_audio_inputs: () => R });
   var k = d("./src/utils/constants.js"), P = d("./src/utils/generic.js"), j = d("./src/utils/hub.js");
@@ -11135,7 +11135,7 @@ ${v}`, F = h.createShaderModule({ code: y, label: i.name });
     const e = Object(import.meta).url;
     e ? ne = P.dirname(P.dirname(j.fileURLToPath(e))) : typeof __dirname < "u" && (ne = P.dirname(__dirname));
   }
-  const ie = Be ? P.join(ne, "/.cache/") : null, we = "/models/", g = { version: "3.3.3", backends: { onnx: {} }, allowRemoteModels: !0, remoteHost: "https://huggingface.co/", remotePathTemplate: "{model}/resolve/{revision}/", allowLocalModels: !(O || R), localModelPath: Be ? P.join(ne, we) : we, useFS: Ae, useBrowserCache: X, useFSCache: Ae, cacheDir: ie, useCustomCache: !1, customCache: null };
+  const ie = Be ? P.join(ne, "/.cache/") : null, we = "/models/", g = { version: "3.3.3", backends: { onnx: {} }, allowRemoteModels: !0, remoteHost: typeof globalThis < "u" && globalThis.SSNKokoroAssets && typeof globalThis.SSNKokoroAssets.getRemoteHost == "function" ? globalThis.SSNKokoroAssets.getRemoteHost() : typeof globalThis < "u" && globalThis.SSN_KOKORO_REMOTE_HOST ? globalThis.SSN_KOKORO_REMOTE_HOST : "https://largefiles.socialstream.ninja/", remotePathTemplate: "{model}/resolve/{revision}/", allowLocalModels: !(O || R), localModelPath: Be ? P.join(ne, we) : we, useFS: Ae, useBrowserCache: X, useFSCache: Ae, cacheDir: ie, useCustomCache: !1, customCache: null };
   function b(e) {
     return Object.keys(e).length === 0;
   }
@@ -17209,7 +17209,7 @@ ${ie}${g}` + we.repeat(xe) + `${ie}`, b;
     if (j.env.useFS && !W(Be, ["http:", "https:", "blob:"])) return new X(Be);
     if (typeof process < "u" && process?.release?.name === "node") {
       const ne = !!process.env?.TESTING_REMOTELY, ie = j.env.version, we = new Headers();
-      if (we.set("User-Agent", `transformers.js/${ie}; is_ci/${ne};`), W(Be, ["http:", "https:"], ["huggingface.co", "hf.co"])) {
+      if (we.set("User-Agent", `transformers.js/${ie}; is_ci/${ne};`), W(Be, ["http:", "https:"], ["largefiles.socialstream.ninja"])) {
         const g = process.env?.HF_TOKEN ?? process.env?.HF_ACCESS_TOKEN;
         g && we.set("Authorization", `Bearer ${g}`);
       }
@@ -36318,7 +36318,7 @@ async function np(x) {
       const R = typeof __dirname < "u" ? __dirname : import.meta.dirname, X = $c.resolve(R, `../voices/${d}.bin`), { buffer: W } = await $c.readFile(X);
       return W;
     }
-    const k = `https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/voices/${d}.bin`;
+    const k = typeof globalThis < "u" && globalThis.SSNKokoroAssets && typeof globalThis.SSNKokoroAssets.getVoiceUrl == "function" ? globalThis.SSNKokoroAssets.getVoiceUrl(d) : `${typeof globalThis < "u" && globalThis.SSN_KOKORO_REMOTE_HOST ? globalThis.SSN_KOKORO_REMOTE_HOST : "https://largefiles.socialstream.ninja/"}onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/voices/${d}.bin`;
     let P;
     try {
       P = await caches.open("kokoro-voices");

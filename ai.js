@@ -390,6 +390,94 @@ function hmacToHex(hmacBuffer) {
 
 const activeChatBotSessions = {};
 let tmpModelFallback = "";
+let localBrowserLLMClient = null;
+let localBrowserActiveRequestState = null;
+
+function getLocalBrowserWorkerPath() {
+    if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
+        return chrome.runtime.getURL('local-browser-model-worker.js');
+    }
+    return 'local-browser-model-worker.js';
+}
+
+function getLocalBrowserCatalog() {
+    return globalThis?.SSNBrowserModelCatalog || null;
+}
+
+function ensureLocalBrowserLLMClient() {
+    if (localBrowserLLMClient) {
+        return localBrowserLLMClient;
+    }
+    if (!globalThis?.SSNLocalBrowserLLM?.createWorkerClient) {
+        throw new Error('Local browser model runtime is not available.');
+    }
+    localBrowserLLMClient = globalThis.SSNLocalBrowserLLM.createWorkerClient({
+        workerPath: getLocalBrowserWorkerPath(),
+        onToken: (message) => {
+            const chunk = message?.text || '';
+            if (!chunk || !localBrowserActiveRequestState) {
+                return;
+            }
+            localBrowserActiveRequestState.buffer += chunk;
+            if (typeof localBrowserActiveRequestState.callback === 'function') {
+                localBrowserActiveRequestState.callback(chunk);
+            }
+        }
+    });
+    return localBrowserLLMClient;
+}
+
+async function disposeLocalBrowserLLMClient() {
+    localBrowserActiveRequestState = null;
+    if (!localBrowserLLMClient) {
+        return;
+    }
+    const client = localBrowserLLMClient;
+    localBrowserLLMClient = null;
+    await client.dispose();
+}
+
+function normalizeLocalBrowserImage(image) {
+    if (!image) {
+        return '';
+    }
+    if (typeof image === 'string') {
+        return image.trim();
+    }
+    if (typeof image.url === 'string') {
+        return image.url.trim();
+    }
+    if (typeof image.image_url === 'string') {
+        return image.image_url.trim();
+    }
+    if (image.image_url && typeof image.image_url.url === 'string') {
+        return image.image_url.url.trim();
+    }
+    return '';
+}
+
+function getLocalGemmaSettings(llmSettings, modelOverride = '') {
+    const catalog = getLocalBrowserCatalog();
+    const defaultConfig = catalog?.getLocalBrowserModelConfig
+        ? (catalog.getLocalBrowserModelConfig('localgemma') || {})
+        : {};
+    const fallbackHost = defaultConfig.remoteHost || catalog?.DEFAULT_REMOTE_HOST || 'https://largefiles.socialstream.ninja/';
+    const remoteHost = catalog?.normalizeRemoteHost
+        ? catalog.normalizeRemoteHost(llmSettings.localgemmahost?.textsetting || fallbackHost)
+        : String(llmSettings.localgemmahost?.textsetting || fallbackHost || '').trim().replace(/\/?$/, '/');
+    const resolvedModel = String(
+        modelOverride ||
+        llmSettings.localgemmamodel?.textsetting ||
+        defaultConfig.modelId ||
+        'gemma4-e2b-it-onnx'
+    ).trim() || 'gemma4-e2b-it-onnx';
+
+    return {
+        modelId: resolvedModel,
+        remoteHost
+    };
+}
+
 async function callLLMAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null, options = {}) {
 	const llmSettings = { ...(settings || {}), ...(options.settings || {}) };
 	
@@ -420,6 +508,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			endpoint = llmSettings.ollamaendpoint?.textsetting || "http://localhost:11434";
 			model = model || llmSettings.ollamamodel?.textsetting || tmpModelFallback || null;
 			break;
+		case "localgemma": {
+			const localGemmaSettings = getLocalGemmaSettings(llmSettings, model);
+			model = localGemmaSettings.modelId;
+			endpoint = localGemmaSettings.remoteHost;
+			callback = callback || null;
+			break;
+		}
 		case "chatgpt":
 			endpoint = "https://api.openai.com/v1/chat/completions";
 			model = model || llmSettings.chatgptmodel?.textsetting || "gpt-4o-mini";
@@ -528,6 +623,81 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		}
 		return false;
 	}
+
+    if (provider !== "localgemma" && localBrowserLLMClient) {
+        try {
+            await disposeLocalBrowserLLMClient();
+        } catch (disposeError) {
+            console.warn('Failed to dispose local browser model worker:', disposeError);
+        }
+    }
+
+    if (provider === "localgemma") {
+        let abortHandler = null;
+        if (UUID) {
+            if (activeChatBotSessions[UUID]) {
+                activeChatBotSessions[UUID].abort();
+            }
+            if (!abortController) {
+                abortController = new AbortController();
+            }
+            activeChatBotSessions[UUID] = abortController;
+        }
+        try {
+            if (abortController?.signal?.aborted) {
+                throw new DOMException('Aborted', 'AbortError');
+            }
+
+            const client = ensureLocalBrowserLLMClient();
+            const normalizedImages = (Array.isArray(images) ? images : (images ? [images] : []))
+                .map(normalizeLocalBrowserImage)
+                .filter(Boolean);
+            localBrowserActiveRequestState = {
+                callback,
+                buffer: ''
+            };
+
+            if (abortController?.signal) {
+                abortHandler = () => {
+                    void disposeLocalBrowserLLMClient().catch(() => {});
+                };
+                abortController.signal.addEventListener('abort', abortHandler, { once: true });
+            }
+
+            const result = await client.generate('localgemma', {
+                prompt,
+                systemPrompt: '',
+                maxNewTokens: 220,
+                temperature: 0.65,
+                topP: 0.92,
+                images: normalizedImages
+            }, {
+                modelOverride: model,
+                remoteHost: endpoint
+            });
+
+            if (typeof callback === 'function' && !localBrowserActiveRequestState.buffer && result.text) {
+                callback(result.text);
+            }
+
+            return result.text || '';
+        } catch (error) {
+            if (error?.name === 'AbortError' || abortController?.signal?.aborted) {
+                return (localBrowserActiveRequestState?.buffer || '') + "💥";
+            }
+            throw wrapLLMError(error, {
+                message: error?.message || 'Local Gemma browser inference failed.'
+            });
+        } finally {
+            if (abortController?.signal && abortHandler) {
+                abortController.signal.removeEventListener('abort', abortHandler);
+            }
+            localBrowserActiveRequestState = null;
+            if (UUID && activeChatBotSessions[UUID] === abortController) {
+                delete activeChatBotSessions[UUID];
+            }
+        }
+    }
 	
     if (provider === "ollama") {
 		

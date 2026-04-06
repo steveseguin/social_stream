@@ -4,7 +4,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$modelBase = "https://huggingface.co/onnx-community/Qwen3.5-0.8B-ONNX/resolve/main"
+$modelBase = "https://largefiles.socialstream.ninja/qwen3.5-0.8b-onnx"
 $requiredFiles = @(
     "config.json",
     "generation_config.json",
@@ -70,4 +70,4 @@ foreach ($relativePath in $optionalFiles) {
     }
 }
 
-Write-Host "Local Qwen 3.5 model files downloaded to $TargetDir"
+Write-Host "Local Qwen 3.5 model files downloaded to $TargetDir from your self-hosted asset origin"

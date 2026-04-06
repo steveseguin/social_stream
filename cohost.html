@@ -1067,6 +1067,7 @@ select, button, .api-key, .message-input, textarea, .model-override {
 		</svg>
 	</a>
 	<div id="puppet-container"></div>
+<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
 <script>
 class PuppetAvatar {
     constructor(containerSelector) {
@@ -1304,17 +1305,98 @@ class PuppetAvatar {
     }
 }
 const GEMINI_DEFAULT_LIVE_MODEL = "models/gemini-2.5-flash-native-audio-preview-12-2025";
-const LOCAL_QWEN_DEFAULT_MODEL = "qwen3.5-0.8b-onnx";
-const LOCAL_QWEN_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
-const LOCAL_QWEN_WORKER_PATH = "cohost-local-qwen-worker.js";
+const LOCAL_BROWSER_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
+const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js";
 const CUSTOM_OPENAI_DEFAULT_ENDPOINT = "http://127.0.0.1:1234/v1";
-const CUSTOM_OPENAI_DEFAULT_MODEL = "qwen3.5-35b";
-const LOCAL_QWEN_DEFAULT_DTYPE = {
-    embed_tokens: "q4",
-    decoder_model_merged: "q4",
-    model: "q4",
-    vision_encoder: "q4"
-};
+const CUSTOM_OPENAI_DEFAULT_MODEL = "";
+function resolveLocalBrowserWorkerUrl() {
+    try {
+        return new URL(LOCAL_BROWSER_WORKER_PATH, window.location.href).href;
+    } catch (_error) {
+        return LOCAL_BROWSER_WORKER_PATH;
+    }
+}
+function createLocalBrowserWorker() {
+    const workerUrl = resolveLocalBrowserWorkerUrl();
+    if (window.location.protocol === 'file:') {
+        const bootstrapSource = `import ${JSON.stringify(workerUrl)};`;
+        const bootstrapUrl = URL.createObjectURL(new Blob([bootstrapSource], {
+            type: 'text/javascript'
+        }));
+        const worker = new Worker(bootstrapUrl, { type: 'module' });
+        const nativeTerminate = worker.terminate.bind(worker);
+        worker.terminate = function terminateLocalBrowserWorker() {
+            try {
+                URL.revokeObjectURL(bootstrapUrl);
+            } catch (_error) {}
+            return nativeTerminate();
+        };
+        return worker;
+    }
+    return new Worker(workerUrl, { type: 'module' });
+}
+function formatLocalBrowserWorkerError(error) {
+    const baseMessage = error?.message || 'Failed to start local model worker';
+    if (window.location.protocol === 'file:') {
+        return `${baseMessage}. If your browser still blocks local workers from file://, open cohost.html over http://localhost or use the extension build.`;
+    }
+    return baseMessage;
+}
+function cloneLocalBrowserConfig(value) {
+    return JSON.parse(JSON.stringify(value || {}));
+}
+function buildLocalBrowserFallbackConfig(providerKey) {
+    if (providerKey === 'localgemma') {
+        return {
+            key: 'localgemma',
+            label: 'Local Gemma 4 E2B (Browser)',
+            providerLabel: 'Local Gemma 4 (Browser)',
+            modelId: 'gemma4-e2b-it-onnx',
+            remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
+            runtime: {
+                modelClass: 'Gemma4ForConditionalGeneration',
+                dtype: {
+                    model: 'q4',
+                    decoder_model_merged: 'q4',
+                    vision_encoder: 'q4',
+                    audio_encoder: 'q4'
+                }
+            },
+            supportsVision: true,
+            defaultPrompt: 'You are a concise, friendly social chat co-host. You can reference visible context when it helps, but do not narrate the scene unless asked.'
+        };
+    }
+    return {
+        key: 'localqwen',
+        label: 'Local Qwen 3.5 (Browser)',
+        providerLabel: 'Local Qwen 3.5 (Browser)',
+        modelId: 'qwen3.5-0.8b-onnx',
+        remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
+        runtime: {
+            modelClass: 'Qwen3_5ForConditionalGeneration',
+            dtype: {
+                embed_tokens: 'q4',
+                decoder_model_merged: 'q4',
+                model: 'q4',
+                vision_encoder: 'q4'
+            }
+        },
+        supportsVision: false,
+        defaultPrompt: 'You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.'
+    };
+}
+function getLocalBrowserProviderConfig(providerKey) {
+    const config = window.SSNBrowserModelCatalog?.getLocalBrowserModelConfig
+        ? window.SSNBrowserModelCatalog.getLocalBrowserModelConfig(providerKey)
+        : null;
+    return cloneLocalBrowserConfig(config || buildLocalBrowserFallbackConfig(providerKey));
+}
+const LOCAL_QWEN_CONFIG = getLocalBrowserProviderConfig('localqwen');
+const LOCAL_GEMMA_CONFIG = getLocalBrowserProviderConfig('localgemma');
+const LOCAL_QWEN_DEFAULT_MODEL = LOCAL_QWEN_CONFIG.modelId;
+const LOCAL_QWEN_DEFAULT_REMOTE_HOST = LOCAL_QWEN_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
+const LOCAL_GEMMA_DEFAULT_MODEL = LOCAL_GEMMA_CONFIG.modelId;
+const LOCAL_GEMMA_DEFAULT_REMOTE_HOST = LOCAL_GEMMA_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
 const BROWSER_TTS_AVAILABLE = typeof window !== 'undefined' &&
     'speechSynthesis' in window &&
     typeof window.SpeechSynthesisUtterance !== 'undefined';
@@ -1549,9 +1631,13 @@ const REALTIME_PROVIDER_CONFIG = {
     }
 };
 class LocalBrowserPublisher {
-    constructor(stream, _apiKey, modelOverride = '') {
+    constructor(stream, providerKey = 'localqwen', modelOverride = '') {
         this.stream = stream;
-        this.model = (modelOverride || LOCAL_QWEN_DEFAULT_MODEL).trim();
+        this.providerKey = providerKey || 'localqwen';
+        this.providerConfig = getLocalBrowserProviderConfig(this.providerKey);
+        this.providerLabel = this.providerConfig.providerLabel || this.providerConfig.label || 'Local Browser Model';
+        this.model = (modelOverride || this.providerConfig.modelId || LOCAL_QWEN_DEFAULT_MODEL).trim();
+        this.remoteHost = this.providerConfig.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
         this.worker = null;
         this.stopped = false;
         this.connected = false;
@@ -1581,13 +1667,18 @@ class LocalBrowserPublisher {
         this.maxReconnectAttempts = 2;
         this.handleWorkerMessage = this.handleWorkerMessage.bind(this);
         updateDiagnostics({
-            provider: 'Local Qwen 3.5 (Browser)',
+            provider: this.providerLabel,
             model: this.model,
             state: 'initialized',
             connected: 'no',
             lastEvent: 'publisher.created',
             lastError: '-'
         });
+    }
+    getVoiceInputMode() {
+        return this.providerConfig.supportsVision
+            ? 'Browser STT + optional image frame'
+            : 'Browser STT -> text prompt';
     }
     setupVideoProcessing() {
         return Promise.resolve();
@@ -1707,6 +1798,9 @@ class LocalBrowserPublisher {
         }
         clearTimeout(pending.timeoutId);
         this.pendingRequests.delete(message.requestId);
+        if (message.requestId === this.activeRequestId) {
+            this.activeRequestId = null;
+        }
         if (message.ok) {
             pending.resolve(message);
             return;
@@ -1732,11 +1826,11 @@ class LocalBrowserPublisher {
         if (message.type === 'status') {
             const stateValue = message.state || 'connected';
             updateDiagnostics({
-                provider: 'Local Qwen 3.5 (Browser)',
+                provider: this.providerLabel,
                 model: this.model,
                 state: stateValue,
                 connected: stateValue === 'error' ? 'no' : (this.connected ? 'yes' : 'no'),
-                lastEvent: `local.${stateValue}`,
+                lastEvent: `localbrowser.${this.providerKey}.${stateValue}`,
                 lastError: stateValue === 'error'
                     ? (message.message || 'Local model worker error')
                     : '-'
@@ -1747,11 +1841,11 @@ class LocalBrowserPublisher {
             const percent = Number.isFinite(message.progress) ? Math.round(message.progress) : 0;
             const phase = message.phase || 'model';
             updateDiagnostics({
-                provider: 'Local Qwen 3.5 (Browser)',
+                provider: this.providerLabel,
                 model: this.model,
                 state: 'loading',
                 connected: 'no',
-                lastEvent: `local.${phase}.${percent}%`
+                lastEvent: `localbrowser.${this.providerKey}.${phase}.${percent}%`
             });
             return;
         }
@@ -1886,12 +1980,12 @@ class LocalBrowserPublisher {
             utterance.onstart = () => {
                 this.ttsActive = true;
                 avatar.setEmotion('proud', true);
-                updateDiagnostics({
-                    state: 'responding',
-                    connected: 'yes',
-                    lastEvent: 'local.tts.start',
-                    lastError: '-'
-                });
+        updateDiagnostics({
+            state: 'responding',
+            connected: 'yes',
+            lastEvent: `localbrowser.${this.providerKey}.tts.start`,
+            lastError: '-'
+        });
             };
             utterance.onend = () => finishResolve();
             utterance.onerror = (event) => {
@@ -1919,7 +2013,7 @@ class LocalBrowserPublisher {
         updateDiagnostics({
             state: 'responding',
             connected: 'yes',
-            lastEvent: 'local.tts.prepare',
+            lastEvent: `localbrowser.${this.providerKey}.tts.prepare`,
             lastError: '-'
         });
         updateVoiceTelemetry({
@@ -1941,7 +2035,7 @@ class LocalBrowserPublisher {
             updateDiagnostics({
                 state: 'connected',
                 connected: 'yes',
-                lastEvent: 'local.tts.done',
+                lastEvent: `localbrowser.${this.providerKey}.tts.done`,
                 lastError: '-'
             });
             updateVoiceTelemetry({
@@ -2102,43 +2196,54 @@ class LocalBrowserPublisher {
             this.worker = null;
         }
         updateDiagnostics({
-            provider: 'Local Qwen 3.5 (Browser)',
+            provider: this.providerLabel,
             model: this.model,
             state: 'connecting',
             connected: 'no',
-            lastEvent: 'local.connect.start',
+            lastEvent: `localbrowser.${this.providerKey}.connect.start`,
             lastError: '-'
         });
-        this.worker = new Worker(LOCAL_QWEN_WORKER_PATH, { type: 'module' });
+        try {
+            this.worker = createLocalBrowserWorker();
+        } catch (error) {
+            const errorMessage = formatLocalBrowserWorkerError(error);
+            updateDiagnostics({
+                state: 'error',
+                connected: 'no',
+                lastEvent: `localbrowser.${this.providerKey}.worker.error`,
+                lastError: errorMessage
+            });
+            throw new Error(errorMessage);
+        }
         this.worker.onmessage = this.handleWorkerMessage;
         this.worker.onerror = (event) => {
-            const errorMessage = event?.message || 'Local model worker error';
+            const errorMessage = formatLocalBrowserWorkerError(event || {});
             this.connected = false;
             updateDiagnostics({
                 state: 'error',
                 connected: 'no',
-                lastEvent: 'local.worker.error',
+                lastEvent: `localbrowser.${this.providerKey}.worker.error`,
                 lastError: errorMessage
             });
             this.resetPendingRequests(errorMessage);
         };
         await this.requestWorker('init', {
             modelId: this.model,
-            dtype: LOCAL_QWEN_DEFAULT_DTYPE,
-            remoteHost: LOCAL_QWEN_DEFAULT_REMOTE_HOST
+            runtime: cloneLocalBrowserConfig(this.providerConfig.runtime || {}),
+            remoteHost: this.remoteHost
         }, 420000);
         this.connected = true;
         this.reconnectAttempts = 0;
         updateDiagnostics({
-            provider: 'Local Qwen 3.5 (Browser)',
+            provider: this.providerLabel,
             model: this.model,
             state: 'connected',
             connected: 'yes',
-            lastEvent: 'local.connect.ready',
+            lastEvent: `localbrowser.${this.providerKey}.connect.ready`,
             lastError: '-'
         });
         resetVoiceTelemetry({
-            inputMode: 'Browser STT -> text prompt',
+            inputMode: this.getVoiceInputMode(),
             outputState: this.shouldUseBrowserTts() ? 'Browser TTS ready' : 'Text response only'
         });
     }
@@ -2180,16 +2285,21 @@ class LocalBrowserPublisher {
         updateDiagnostics({
             state: 'responding',
             connected: 'yes',
-            lastEvent: 'local.generate.start',
+            lastEvent: `localbrowser.${this.providerKey}.generate.start`,
             lastError: '-'
         });
         try {
+            const hasLiveVideo = this.providerConfig.supportsVision &&
+                document.getElementById('videoSource')?.value !== 'none' &&
+                this.stream.getVideoTracks().some((track) => track.readyState === 'live' && track.enabled);
+            const imageDataUrl = hasLiveVideo ? this.captureFrameDataUrl() : '';
             const result = await this.requestWorker('generate', {
                 prompt,
                 systemPrompt: systemPromptValue,
                 maxNewTokens: 220,
                 temperature: 0.65,
-                topP: 0.92
+                topP: 0.92,
+                images: imageDataUrl ? [imageDataUrl] : []
             }, 300000);
             if (!this.currentResponseText && result.text) {
                 this.appendModelText(result.text);
@@ -2198,8 +2308,8 @@ class LocalBrowserPublisher {
             }
             const finalText = (this.currentResponseText || result.text || '').trim();
             const completionEvent = result.finishReason === 'repetition_guard'
-                ? 'local.generate.guarded'
-                : 'local.generate.done';
+                ? `localbrowser.${this.providerKey}.generate.guarded`
+                : `localbrowser.${this.providerKey}.generate.done`;
             if (finalText) {
                 await this.speakTextResponse(finalText);
             }
@@ -2218,11 +2328,27 @@ class LocalBrowserPublisher {
             updateDiagnostics({
                 state: 'error',
                 connected: this.connected ? 'yes' : 'no',
-                lastEvent: 'local.generate.error',
+                lastEvent: `localbrowser.${this.providerKey}.generate.error`,
                 lastError: error.message || 'Local generation failed'
             });
             throw error;
         }
+    }
+    captureFrameDataUrl() {
+        if (!preview || preview.readyState < 2 || !preview.videoWidth || !preview.videoHeight) {
+            return '';
+        }
+        const maxWidth = 960;
+        const scale = Math.min(1, maxWidth / preview.videoWidth);
+        const width = Math.max(1, Math.floor(preview.videoWidth * scale));
+        const height = Math.max(1, Math.floor(preview.videoHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return '';
+        ctx.drawImage(preview, 0, 0, width, height);
+        return canvas.toDataURL('image/jpeg', 0.8);
     }
     isConnected() {
         return this.connected && !!this.worker;
@@ -2246,7 +2372,7 @@ class LocalBrowserPublisher {
         this.resumeRecognitionAfterSpeech = false;
         this.cancelBrowserTts();
         resetVoiceTelemetry({
-            inputMode: 'Browser STT -> text prompt',
+            inputMode: this.getVoiceInputMode(),
             outputState: this.shouldUseBrowserTts() ? 'Browser TTS ready' : 'Text response only'
         });
         if (this.recognition) {
@@ -2279,7 +2405,7 @@ class OpenAICompatiblePublisher {
     constructor(stream, apiKey, modelOverride = '', endpointOverride = '') {
         this.stream = stream;
         this.apiKey = (apiKey || '').trim();
-        this.model = (modelOverride || CUSTOM_OPENAI_DEFAULT_MODEL).trim();
+        this.model = (modelOverride || '').trim();
         this.endpoint = (endpointOverride || CUSTOM_OPENAI_DEFAULT_ENDPOINT).trim();
         this.connected = false;
         this.stopped = false;
@@ -2296,7 +2422,7 @@ class OpenAICompatiblePublisher {
         this.conversation = [];
         updateDiagnostics({
             provider: 'OpenAI-Compatible (Custom)',
-            model: this.model,
+            model: this.model || 'server default',
             state: 'initialized',
             connected: 'no',
             lastEvent: 'publisher.created',
@@ -2536,7 +2662,7 @@ class OpenAICompatiblePublisher {
         this.connected = true;
         updateDiagnostics({
             provider: 'OpenAI-Compatible (Custom)',
-            model: this.model,
+            model: this.model || 'server default',
             state: 'connected',
             connected: 'yes',
             lastEvent: 'custom.connect.ready',
@@ -2579,13 +2705,12 @@ class OpenAICompatiblePublisher {
             const response = await fetch(this.buildCompletionsUrl(), {
                 method: 'POST',
                 headers: this.buildHeaders(),
-                body: JSON.stringify({
-                    model: this.model,
+                body: JSON.stringify(Object.assign({
                     messages,
                     temperature: 0.65,
                     top_p: 0.92,
                     stream: false
-                }),
+                }, this.model ? { model: this.model } : {})),
                 signal: controller.signal
             });
             const raw = await response.text();
@@ -4359,6 +4484,7 @@ const customEndpointInfo = document.getElementById('customEndpointInfo');
 const customModelsRefreshButton = document.getElementById('customModelsRefresh');
 let customModelList = [];
 let customModelsLoading = false;
+let customModelsQueuedRefresh = false;
 
 function normalizeModelOverride(providerName, value) {
     let normalized = (value || '').trim();
@@ -4464,9 +4590,22 @@ function updateCustomModelSelect(currentModel = '') {
 }
 
 async function refreshCustomModelList(showErrors = false) {
-    if (!customModelSelect || !customEndpointInput || customModelsLoading) return;
+    if (!customModelSelect || !customEndpointInput) return;
+    if (customModelsLoading) {
+        customModelsQueuedRefresh = true;
+        return;
+    }
     if (providerSelect.value !== 'customopenai') return;
     const endpoint = getEffectiveCustomEndpoint('customopenai');
+    const hasStoredEndpoint = !!getStoredCustomEndpoint('customopenai');
+    const usingUntouchedDefaultEndpoint = !hasStoredEndpoint &&
+        normalizeCustomEndpoint(customEndpointInput.value || '') === CUSTOM_OPENAI_DEFAULT_ENDPOINT;
+    if (usingUntouchedDefaultEndpoint) {
+        customModelList = [];
+        updateCustomModelSelect(getEffectiveModelForProvider('customopenai'));
+        setCustomEndpointInfo('Set your OpenAI-compatible endpoint, then refresh models or press Enter.', false);
+        return;
+    }
     if (isHttpMixedContentBlocked(endpoint)) {
         setCustomEndpointInfo('HTTPS page cannot call HTTP LAN endpoint. Use HTTPS endpoint or host this page over HTTP on LAN.', true);
         customModelList = [];
@@ -4499,7 +4638,28 @@ async function refreshCustomModelList(showErrors = false) {
             : [];
         const models = [...dataModels, ...legacyModels];
         customModelList = [...new Set(models)].sort();
-        updateCustomModelSelect(getEffectiveModelForProvider('customopenai'));
+        const effectiveModel = getEffectiveModelForProvider('customopenai');
+        let selectedModel = effectiveModel;
+        if (customModelList.length === 1 && !effectiveModel) {
+            selectedModel = customModelList[0];
+            modelOverrideInput.value = selectedModel;
+            saveModelOverride('customopenai', selectedModel);
+        } else if (effectiveModel && !customModelList.includes(effectiveModel) && customModelList.length) {
+            selectedModel = customModelList[0];
+            modelOverrideInput.value = selectedModel;
+            saveModelOverride('customopenai', selectedModel);
+        }
+        updateCustomModelSelect(selectedModel);
+        updateDiagnostics({
+            provider: providerUIConfig.customopenai.label,
+            model: selectedModel || 'server default',
+            state: publisher && publisher.isConnected && publisher.isConnected()
+                ? 'connected'
+                : (publisher ? 'starting' : 'idle'),
+            connected: publisher && publisher.isConnected && publisher.isConnected() ? 'yes' : 'no',
+            lastEvent: 'custom.models.loaded',
+            lastError: '-'
+        });
         setCustomEndpointInfo(customModelList.length
             ? `Loaded ${customModelList.length} model(s) from endpoint`
             : 'No models returned by endpoint');
@@ -4518,11 +4678,17 @@ async function refreshCustomModelList(showErrors = false) {
     } finally {
         customModelsLoading = false;
         customModelsRefreshButton.disabled = false;
+        if (customModelsQueuedRefresh && providerSelect.value === 'customopenai') {
+            customModelsQueuedRefresh = false;
+            setTimeout(() => {
+                refreshCustomModelList(showErrors).catch(() => {});
+            }, 0);
+        }
     }
 }
 
 function isRealtimeProvider(providerName) {
-    return providerName === 'chatgpt' || providerName === 'xai' || providerName === 'localqwen' || providerName === 'customopenai';
+    return providerName === 'chatgpt' || providerName === 'xai' || providerName === 'localqwen' || providerName === 'localgemma' || providerName === 'customopenai';
 }
 
 function createPublisherForProvider(providerName, activeStream, apiKey) {
@@ -4530,8 +4696,8 @@ function createPublisherForProvider(providerName, activeStream, apiKey) {
     if (providerName === 'gemini') {
         return new GoogleLivePublisher(activeStream, apiKey, effectiveModel);
     }
-    if (providerName === 'localqwen') {
-        return new LocalBrowserPublisher(activeStream, apiKey, effectiveModel);
+    if (providerName === 'localqwen' || providerName === 'localgemma') {
+        return new LocalBrowserPublisher(activeStream, providerName, effectiveModel);
     }
     if (providerName === 'customopenai') {
         const endpoint = getEffectiveCustomEndpoint(providerName);
@@ -4917,6 +5083,46 @@ muteAudioButton.addEventListener('click', () => {
     muteAudioButton.querySelector('.speaker-icon').classList.toggle('muted');
 });
 let audioContext;
+function shouldUseExactDeviceId(deviceId) {
+    const normalized = String(deviceId || '').trim().toLowerCase();
+    return !!normalized && normalized !== 'default' && normalized !== 'communications';
+}
+function isRetryableDeviceError(error) {
+    const name = String(error?.name || '').trim();
+    return name === 'OverconstrainedError' || name === 'NotFoundError' || name === 'DevicesNotFoundError';
+}
+function updateSelectedDeviceFromTrack(selectEl, storageKey, track, allowScreen = false) {
+    if (!selectEl || !track) {
+        return;
+    }
+    const settingsDeviceId = String(track.getSettings?.().deviceId || '').trim();
+    const trackLabel = String(track.label || '').trim().toLowerCase();
+    let matchedValue = '';
+
+    if (settingsDeviceId) {
+        const matchedById = Array.from(selectEl.options).find((option) => option.value === settingsDeviceId);
+        if (matchedById) {
+            matchedValue = matchedById.value;
+        }
+    }
+    if (!matchedValue && trackLabel) {
+        const matchedByLabel = Array.from(selectEl.options).find((option) => String(option.text || '').trim().toLowerCase() === trackLabel);
+        if (matchedByLabel) {
+            matchedValue = matchedByLabel.value;
+        }
+    }
+    if (!matchedValue) {
+        const fallbackOption = Array.from(selectEl.options).find((option) => option.value !== 'none' && (allowScreen || option.value !== 'screen'));
+        matchedValue = fallbackOption ? fallbackOption.value : 'none';
+    }
+
+    selectEl.value = matchedValue;
+    if (matchedValue && matchedValue !== 'none') {
+        localStorage.setItem(storageKey, matchedValue);
+    } else {
+        localStorage.removeItem(storageKey);
+    }
+}
 async function getStream() {
     try {
         if (preview.srcObject) {
@@ -4949,13 +5155,15 @@ async function getStream() {
             }
         } else if (videoSelect.value !== 'none') {
             try {
+                const videoConstraint = shouldUseExactDeviceId(videoSelect.value)
+                    ? { deviceId: { exact: videoSelect.value } }
+                    : true;
                 videoStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        deviceId: { exact: videoSelect.value }
-                    }
+                    video: videoConstraint
                 });
                 const videoTrack = videoStream.getVideoTracks()[0];
                 if (videoTrack) {
+                    updateSelectedDeviceFromTrack(videoSelect, 'selectedVideoId', videoTrack);
                     outputStream.getVideoTracks().forEach(track => {
                         outputStream.removeTrack(track);
                         track.stop();
@@ -4964,18 +5172,44 @@ async function getStream() {
                 }
             } catch (err) {
                 console.warn('Selected video device failed:', err);
-                showError('Camera failed to start: ' + err.message);
-                videoSelect.value = 'none';
+                if (isRetryableDeviceError(err)) {
+                    try {
+                        videoStream = await navigator.mediaDevices.getUserMedia({
+                            video: true
+                        });
+                        const fallbackTrack = videoStream.getVideoTracks()[0];
+                        if (fallbackTrack) {
+                            updateSelectedDeviceFromTrack(videoSelect, 'selectedVideoId', fallbackTrack);
+                            outputStream.getVideoTracks().forEach(track => {
+                                outputStream.removeTrack(track);
+                                track.stop();
+                            });
+                            outputStream.addTrack(fallbackTrack);
+                        }
+                    } catch (fallbackError) {
+                        console.warn('Default camera fallback failed:', fallbackError);
+                        showError('Camera failed to start: ' + fallbackError.message);
+                        videoSelect.value = 'none';
+                        localStorage.removeItem('selectedVideoId');
+                    }
+                } else {
+                    showError('Camera failed to start: ' + err.message);
+                    videoSelect.value = 'none';
+                    localStorage.removeItem('selectedVideoId');
+                }
             }
         }
         if (audioSelect.value !== 'none') {
             try {
+                const audioConstraint = {
+                    echoCancellation: true,
+                    noiseSuppression: true
+                };
+                if (shouldUseExactDeviceId(audioSelect.value)) {
+                    audioConstraint.deviceId = { exact: audioSelect.value };
+                }
                 micStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        deviceId: { exact: audioSelect.value },
-                        echoCancellation: true,
-                        noiseSuppression: true
-                    }
+                    audio: audioConstraint
                 });
                 outputStream.getAudioTracks().forEach(track => {
                     outputStream.removeTrack(track);
@@ -4998,12 +5232,38 @@ async function getStream() {
                 } else {
                     const audioTrack = micStream.getAudioTracks()[0];
                     if (audioTrack) {
+                        updateSelectedDeviceFromTrack(audioSelect, 'selectedAudioId', audioTrack, true);
                         outputStream.addTrack(audioTrack);
                     }
                 }
             } catch (err) {
                 console.warn('Selected audio device failed:', err);
-                audioSelect.value = 'none';
+                if (isRetryableDeviceError(err)) {
+                    try {
+                        micStream = await navigator.mediaDevices.getUserMedia({
+                            audio: {
+                                echoCancellation: true,
+                                noiseSuppression: true
+                            }
+                        });
+                        const fallbackTrack = micStream.getAudioTracks()[0];
+                        if (fallbackTrack) {
+                            updateSelectedDeviceFromTrack(audioSelect, 'selectedAudioId', fallbackTrack, true);
+                            outputStream.getAudioTracks().forEach(track => {
+                                outputStream.removeTrack(track);
+                                track.stop();
+                            });
+                            outputStream.addTrack(fallbackTrack);
+                        }
+                    } catch (fallbackError) {
+                        console.warn('Default audio fallback failed:', fallbackError);
+                        audioSelect.value = 'none';
+                        localStorage.removeItem('selectedAudioId');
+                    }
+                } else {
+                    audioSelect.value = 'none';
+                    localStorage.removeItem('selectedAudioId');
+                }
             }
         } else if (videoStream?.getAudioTracks().length > 0) {
             const systemTrack = videoStream.getAudioTracks()[0];
@@ -5276,6 +5536,7 @@ providerSelect.id = 'providerSelect';
 providerSelect.innerHTML = `
     <option value="gemini">Google Gemini Live</option>
     <option value="localqwen">Local Qwen 3.5 (Browser)</option>
+    <option value="localgemma">Local Gemma 4 (Browser)</option>
     <option value="customopenai">OpenAI-Compatible (Custom)</option>
     <option value="chatgpt">OpenAI Realtime</option>
     <option value="xai">xAI Realtime</option>
@@ -5307,12 +5568,25 @@ const providerUIConfig = {
         requiresApiKey: false,
         supportsAudioResponse: BROWSER_TTS_AVAILABLE
     },
+    localgemma: {
+        label: 'Local Gemma 4 (Browser)',
+        apiKeyPlaceholder: 'No API key required',
+        apiKeyInfoHtml: 'Uses your self-hosted Gemma 4 model files and local browser runtime. No third-party AI API key is used.',
+        defaultModel: LOCAL_GEMMA_DEFAULT_MODEL,
+        modelPlaceholder: `Optional model id/path (default ${LOCAL_GEMMA_DEFAULT_MODEL} on ${LOCAL_GEMMA_DEFAULT_REMOTE_HOST})`,
+        disableCaptureSelection: false,
+        deviceNotice: BROWSER_TTS_AVAILABLE
+            ? 'Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees. Audio responses use your browser built-in text-to-speech.'
+            : 'Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees.',
+        requiresApiKey: false,
+        supportsAudioResponse: BROWSER_TTS_AVAILABLE
+    },
     customopenai: {
         label: 'OpenAI-Compatible (Custom)',
         apiKeyPlaceholder: 'Optional bearer token (leave blank for local LM Studio/Ollama)',
         apiKeyInfoHtml: 'Connect to an OpenAI-compatible `/v1/chat/completions` endpoint (LM Studio, Ollama, vLLM, custom gateway).',
         defaultModel: CUSTOM_OPENAI_DEFAULT_MODEL,
-        modelPlaceholder: `Model id (default ${CUSTOM_OPENAI_DEFAULT_MODEL})`,
+        modelPlaceholder: 'Optional model override or select a model from the endpoint',
         disableCaptureSelection: false,
         deviceNotice: 'Speech-to-text runs in-browser. If camera/screen is enabled, a frame is attached for multimodal models.',
         requiresApiKey: false,
@@ -5337,6 +5611,7 @@ const providerUIConfig = {
 const defaultPrompts = {
     gemini: "You are a friendly social chat assistant that can see and hear the user. Avoid describing what you see unless asked.",
     localqwen: "You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.",
+    localgemma: "You are a concise, friendly social chat co-host. You can use visible context when it helps, but do not narrate the scene unless asked.",
     customopenai: "You are a concise, friendly social chat co-host. Keep answers practical and conversational.",
     chatgpt: "You are a friendly and helpful social chat assistant.",
     xai: "You are a friendly and helpful social chat assistant."
@@ -5382,6 +5657,11 @@ function getVoiceModeSummary(providerName) {
         case 'localqwen':
             return {
                 inputMode: 'Browser STT -> text prompt',
+                outputState: responseTypeValue === 'audio' && BROWSER_TTS_AVAILABLE ? 'Browser TTS ready' : 'Text response only'
+            };
+        case 'localgemma':
+            return {
+                inputMode: 'Browser STT + optional image frame',
                 outputState: responseTypeValue === 'audio' && BROWSER_TTS_AVAILABLE ? 'Browser TTS ready' : 'Text response only'
             };
         case 'customopenai':
@@ -5462,7 +5742,7 @@ function applyProviderUI(providerName, restoreKey = true) {
             localStorage.setItem('selectedAudioId', audioSelect.value);
         }
     }
-    if (config.disableCaptureSelection) {
+    if (config.deviceNotice) {
         updateRealtimeDeviceNotice(config.deviceNotice);
     } else {
         removeRealtimeDeviceNotice();
@@ -5555,6 +5835,7 @@ if (customEndpointInput) {
     customEndpointInput.addEventListener('change', async function() {
         const providerName = providerSelect.value;
         if (providerName !== 'customopenai') return;
+        const shouldRestartAfterUpdate = !!publisher && startButton.textContent === 'Stop Stream';
         const normalized = normalizeCustomEndpoint(this.value || CUSTOM_OPENAI_DEFAULT_ENDPOINT);
         this.value = normalized;
         saveCustomEndpoint(providerName, normalized);
@@ -5566,7 +5847,9 @@ if (customEndpointInput) {
         }
         setCustomEndpointInfo(`Endpoint: ${resolveOpenAICompatibleBase(normalized)}`, false);
         await refreshCustomModelList(true);
-        await restartActivePublisher();
+        if (shouldRestartAfterUpdate) {
+            await restartActivePublisher();
+        }
     });
     customEndpointInput.addEventListener('input', function() {
         const providerName = providerSelect.value;
@@ -5752,7 +6035,9 @@ try {
 	};
 	ElectronDesktopCapture = true;
 } catch (e) {
-	console.warn("Couldn't load electron's screen capture. Elevate the app's permission to allow it (right-click?)");
+    if (window.process?.versions?.electron) {
+	    console.warn("Couldn't load electron's screen capture. Elevate the app's permission to allow it (right-click?)");
+    }
 }
 function setupConnectionMonitoring() {
     let monitoringActive = false;
