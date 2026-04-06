@@ -15425,24 +15425,24 @@ async function triggerFakeRandomMessage() {
 	let attempts = 0;
 	const maxAttempts = 5;
 
+	// Keep the popup's legacy fake chat identities stable; alert-specific test personas live elsewhere.
 	// Keep generating new messages until we get one that's different from the last one
 	// or until we've tried a reasonable number of times
 	do {
 		data = {};
-		data.chatname = "Jess";
+		data.chatname = "John Doe";
 		data.nameColor = "";
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
-		data.chatimg = "https://socialstream.ninja/media/user1.jpg";
+		data.chatimg = "";
 		data.type = "youtube";
 
 		if (Math.random() > 0.9) {
 			data.hasDonation = "2500 gold";
 			data.membership = "";
-			data.chatname = "Markus";
-			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
+			data.chatname = "Bob";
 			data.chatbadges = [];
 			var html = {};
 			html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
@@ -15452,14 +15452,14 @@ async function triggerFakeRandomMessage() {
 			data.hasDonation = "3 hearts";
 			data.membership = "";
 			data.chatmessage = "";
-			data.chatimg = "https://socialstream.ninja/media/user3.jpg";
-			data.chatname = "Priya";
+			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
+			data.chatname = "Lucy";
 			data.type = "youtubeshorts";
 		} else if (Math.random() > 0.7) {
 			data.hasDonation = "";
 			data.membership = "";
-			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
-			data.chatname = "DanTheMan";
+			data.chatimg = "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
+			data.chatname = "vdoninja";
 			data.type = "twitch";
 			data.event = "test";
 			var score = parseInt(Math.random() * 378);
@@ -15467,8 +15467,8 @@ async function triggerFakeRandomMessage() {
 		} else if (Math.random() > 0.6) {
 			data.hasDonation = "";
 			data.membership = "";
-			data.chatimg = "https://socialstream.ninja/media/user5.jpg";
-			data.chatname = "CaptainSquawk";
+			data.chatimg = "https://socialstream.ninja/media/sampleavatar.png";
+			data.chatname = "Steve";
 
 			data.vip = true;
 			data.chatmessage = '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦 https://vdo.ninja/';
@@ -15476,16 +15476,15 @@ async function triggerFakeRandomMessage() {
 			data.hasDonation = "";
 			data.nameColor = "#107516";
 			data.membership = "SPONSORSHIP";
-			data.chatimg = parseInt(Math.random() * 2) ? "https://socialstream.ninja/media/user1.jpg" : "https://socialstream.ninja/media/user3.jpg";
-			data.chatname = "Lily_" + randomDigits();
+			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/media/sampleavatar.png";
+			data.chatname = "Steve_" + randomDigits();
 			data.type = parseInt(Math.random() * 2) ? "slack" : "facebook";
 			data.chatmessage = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
 		} else if (Math.random() > 0.4) {
 			data.hasDonation = "";
 			data.highlightColor = "pink";
 			data.nameColor = "lightblue";
-			data.chatname = "Kai";
-			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
+			data.chatname = "NewGuest";
 			data.type = "twitch";
 			data.chatmessage = "hi";
 			data.chatbadges = ["https://vdo.ninja/media/icon.png", "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj", "https://socialstream.ninja/icons/announcement.png"];
@@ -15497,7 +15496,6 @@ async function triggerFakeRandomMessage() {
 			data.nameColor = "";
 			data.private = true;
 			data.chatname = "Sir Drinks-a-lot";
-			data.chatimg = "https://socialstream.ninja/media/user5.jpg";
 			data.type = "discord";
 			data.chatmessage = "☕☕☕ COFFEE!";
 			data.chatbadges = ["https://socialstream.ninja/icons/bot.png", "https://socialstream.ninja/icons/announcement.png"];
@@ -15506,7 +15504,7 @@ async function triggerFakeRandomMessage() {
 			data.membership = "";
 			data.chatmessage = "";
 			data.contentimg = "https://socialstream.ninja/media/logo.png";
-			data.chatname = "Ava";
+			data.chatname = "User123";
 			data.chatimg = "https://socialstream.ninja/media/user1.jpg";
 			data.type = "youtube";
 		} else if (Math.random() > 0.1) {
@@ -15515,12 +15513,11 @@ async function triggerFakeRandomMessage() {
 			data.question = true;
 			data.chatmessage = "Is this a test question?  🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓";
 			data.chatname = "Nich Lass";
-			data.chatimg = "https://socialstream.ninja/media/user3.jpg";
+			data.chatimg = "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj";
 			data.type = "zoom";
 		} else {
 			data.hasDonation = "";
 			data.membership = "SPONSORSHIP";
-			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
 		}
 
 		attempts++;

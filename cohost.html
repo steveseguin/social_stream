@@ -1370,29 +1370,68 @@ function normalizeBundledModelPath(localPath) {
     const value = String(localPath || '').trim().replace(/\\/g, '/').replace(/\/+$/, '');
     return value;
 }
-async function canUseBundledLocalModel(localPath) {
+function getBundledModelRequiredFiles(providerConfig) {
+    const providerKey = String(providerConfig?.key || '').trim().toLowerCase();
+    if (providerKey === 'localqwen') {
+        return [
+            'config.json',
+            'generation_config.json',
+            'tokenizer.json',
+            'tokenizer_config.json',
+            'preprocessor_config.json',
+            'onnx/embed_tokens_q4.onnx',
+            'onnx/embed_tokens_q4.onnx_data',
+            'onnx/decoder_model_merged_q4.onnx',
+            'onnx/decoder_model_merged_q4.onnx_data',
+            'onnx/vision_encoder_q4.onnx',
+            'onnx/vision_encoder_q4.onnx_data'
+        ];
+    }
+    return ['config.json'];
+}
+async function doesBundledModelFileExist(basePath, relativePath) {
+    const fileUrl = new URL(`${basePath}/${relativePath}`, window.location.href).href;
+    try {
+        const response = await fetch(fileUrl, {
+            method: 'HEAD',
+            cache: 'no-store'
+        });
+        if (response.ok) {
+            return true;
+        }
+    } catch (_error) {}
+    try {
+        const response = await fetch(fileUrl, { cache: 'no-store' });
+        if (response.body && typeof response.body.cancel === 'function') {
+            try {
+                await response.body.cancel();
+            } catch (_error) {}
+        }
+        return response.ok;
+    } catch (_error) {
+        return false;
+    }
+}
+async function canUseBundledLocalModel(localPath, providerConfig = null) {
     const normalizedPath = normalizeBundledModelPath(localPath);
     if (!normalizedPath) {
         return false;
     }
-    if (LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.has(normalizedPath)) {
-        return LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.get(normalizedPath);
+    const providerKey = String(providerConfig?.key || '').trim().toLowerCase() || 'default';
+    const cacheKey = `${providerKey}|${normalizedPath}`;
+    if (LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.has(cacheKey)) {
+        return LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.get(cacheKey);
     }
     const checkPromise = (async () => {
-        try {
-            const configUrl = new URL(`${normalizedPath}/config.json`, window.location.href).href;
-            const response = await fetch(configUrl, { cache: 'no-store' });
-            if (response.body && typeof response.body.cancel === 'function') {
-                try {
-                    await response.body.cancel();
-                } catch (_error) {}
+        const requiredFiles = getBundledModelRequiredFiles(providerConfig);
+        for (const relativePath of requiredFiles) {
+            if (!(await doesBundledModelFileExist(normalizedPath, relativePath))) {
+                return false;
             }
-            return response.ok;
-        } catch (_error) {
-            return false;
         }
+        return true;
     })();
-    LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.set(normalizedPath, checkPromise);
+    LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.set(cacheKey, checkPromise);
     return checkPromise;
 }
 function isLikelyRemoteAccessError(errorMessage = '') {
@@ -1906,7 +1945,7 @@ class LocalBrowserPublisher {
         const bundledLocalPath = normalizeBundledModelPath(this.providerConfig.localPath || '');
         const modelIsLocalPath = isLikelyLocalModelPath(this.model);
         const shouldPreferBundledLocalPath = !modelIsLocalPath && bundledLocalPath && this.model === defaultModelId;
-        if (shouldPreferBundledLocalPath && await canUseBundledLocalModel(bundledLocalPath)) {
+        if (shouldPreferBundledLocalPath && await canUseBundledLocalModel(bundledLocalPath, this.providerConfig)) {
             return {
                 modelId: bundledLocalPath,
                 sourceLabel: 'bundled'
