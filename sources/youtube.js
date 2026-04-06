@@ -35,7 +35,7 @@
 		setTimeout(function(videoId){getChannelInfo(videoId)},1000,videoId);
 	}
 
- 	function getTranslation(key, value = false) {
+	function getTranslation(key, value = false) {
 		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
 			// these are the proper translations
 			return settings.translation.innerHTML[key];
@@ -46,6 +46,16 @@
 		} else {
 			return key.replaceAll("-", " "); //
 		}
+	}
+
+	function getCustomDonationThankYouText() {
+		var customText = "";
+		try {
+			if (settings.customDonationThankYou && settings.customDonationThankYou.textsetting) {
+				customText = settings.customDonationThankYou.textsetting.trim();
+			}
+		} catch(e){}
+		return escapeHtml(customText || getTranslation("thank-you", "Thank you for your donation!"));
 	}
 
 	function escapeHtml(unsafe) {
@@ -1171,7 +1181,7 @@
 		if (data.hasDonation){
 			data.title = getTranslation("donation", "DONATION");
 			if (!data.chatmessage){
-				data.chatmessage = getTranslation("thank-you", "Thank you for your donation!");
+				data.chatmessage = getCustomDonationThankYouText();
 				if (!eventType){
 					eventType = "thankyou";
 				}
