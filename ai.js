@@ -12,7 +12,10 @@ let isUploading = false;
 let lunrIndexPromise;
 const maxContextSize = 31000;
 const maxContextSizeFull = 32000;
-const RAG_MAX_SEARCH_RESULTS = 5;
+const RAG_MAX_SEARCH_RESULTS = 8;
+const RAG_MIN_SEARCH_RESULTS = 3;
+const RAG_MAX_RERANK_CANDIDATES = 16;
+const RAG_MAX_EVIDENCE_DOCS = 5;
 const RAG_CONTEXT_CHAR_LIMIT = Math.min(maxContextSize, 12000);
 const RAG_SCORE_RATIO_THRESHOLD = 0.35;
 
@@ -2414,7 +2417,7 @@ function tokenizeRAGSearchQuery(query) {
     return Array.from(new Set(
         String(query || '')
             .split(/\s+/)
-            .map(term => term.trim().replace(/^["'`]+|["'`]+$/g, ''))
+            .map(term => term.trim().replace(/^["'`]+|["'`]+$/g, '').toLowerCase())
             .filter(Boolean)
     ));
 }
@@ -2429,10 +2432,10 @@ function runBoostedLunrSearch(terms, options = {}) {
     const presence = requireAll ? lunr.Query.presence.REQUIRED : lunr.Query.presence.OPTIONAL;
     const fieldBoosts = [
         { name: 'title', boost: 10 },
-        { name: 'tags', boost: 8 },
-        { name: 'synonyms', boost: 6 },
-        { name: 'summary', boost: 4 },
-        { name: 'content', boost: 1 }
+        { name: 'summary', boost: 7 },
+        { name: 'content', boost: 5 },
+        { name: 'tags', boost: 3 },
+        { name: 'synonyms', boost: 2 }
     ];
 
     return globalLunrIndex.query(function(q) {
@@ -2469,9 +2472,309 @@ function filterSearchResultsByConfidence(searchResults) {
     }
 
     const minScore = topScore * RAG_SCORE_RATIO_THRESHOLD;
-    return normalizedResults
+    const confidentResults = normalizedResults
         .filter((result, index) => index === 0 || result.score >= minScore)
         .slice(0, RAG_MAX_SEARCH_RESULTS);
+
+    if (confidentResults.length >= Math.min(RAG_MIN_SEARCH_RESULTS, normalizedResults.length)) {
+        return confidentResults;
+    }
+
+    return normalizedResults.slice(0, Math.min(RAG_MAX_SEARCH_RESULTS, Math.max(RAG_MIN_SEARCH_RESULTS, confidentResults.length || 1)));
+}
+
+function mergeLunrSearchStrategies(strategyResults = []) {
+    const merged = new Map();
+
+    strategyResults.forEach(strategyResult => {
+        if (!strategyResult?.results?.length) {
+            return;
+        }
+
+        const topScore = strategyResult.results[0]?.score || 0;
+        strategyResult.results.forEach((result, index) => {
+            const relativeScore = topScore > 0
+                ? ((result.score || 0) / topScore)
+                : (index === 0 ? 1 : 0);
+            const existing = merged.get(result.ref) || {
+                ref: result.ref,
+                score: 0,
+                rawScore: 0,
+                strategies: [],
+                strategyCount: 0,
+                strategy: strategyResult.strategy
+            };
+
+            existing.score += relativeScore * strategyResult.weight;
+            existing.rawScore = Math.max(existing.rawScore, result.score || 0);
+            if (!existing.strategies.includes(strategyResult.strategy)) {
+                existing.strategies.push(strategyResult.strategy);
+            }
+            existing.strategyCount = existing.strategies.length;
+            if (!existing.strategy || (relativeScore * strategyResult.weight) > (existing.primaryContribution || 0)) {
+                existing.strategy = strategyResult.strategy;
+                existing.primaryContribution = relativeScore * strategyResult.weight;
+            }
+
+            merged.set(result.ref, existing);
+        });
+    });
+
+    return Array.from(merged.values())
+        .map(result => ({
+            ...result,
+            score: result.score + (result.strategyCount * 0.35)
+        }))
+        .sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            if ((b.strategyCount || 0) !== (a.strategyCount || 0)) {
+                return (b.strategyCount || 0) - (a.strategyCount || 0);
+            }
+            return (b.rawScore || 0) - (a.rawScore || 0);
+        });
+}
+
+function tokenizeRAGDocumentText(value) {
+    return Array.from(new Set(
+        String(value || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]+/g, ' ')
+            .split(/\s+/)
+            .filter(Boolean)
+    ));
+}
+
+function isRAGNearTokenMatch(queryTerm, documentToken) {
+    if (!queryTerm || !documentToken) {
+        return false;
+    }
+    if (queryTerm === documentToken) {
+        return true;
+    }
+    if (Math.abs(queryTerm.length - documentToken.length) > 1) {
+        return false;
+    }
+    if (queryTerm.length <= 3 || documentToken.length <= 3) {
+        return false;
+    }
+
+    let queryIndex = 0;
+    let docIndex = 0;
+    let edits = 0;
+
+    while (queryIndex < queryTerm.length && docIndex < documentToken.length) {
+        if (queryTerm[queryIndex] === documentToken[docIndex]) {
+            queryIndex += 1;
+            docIndex += 1;
+            continue;
+        }
+
+        edits += 1;
+        if (edits > 1) {
+            return false;
+        }
+
+        if (queryTerm.length > documentToken.length) {
+            queryIndex += 1;
+        } else if (queryTerm.length < documentToken.length) {
+            docIndex += 1;
+        } else {
+            queryIndex += 1;
+            docIndex += 1;
+        }
+    }
+
+    if (queryIndex < queryTerm.length || docIndex < documentToken.length) {
+        edits += 1;
+    }
+
+    return edits <= 1;
+}
+
+function scoreRAGDocumentMatch(doc, queryTerms, queryText) {
+    if (!doc) {
+        return { score: 0, matchedPrimaryTerms: 0, exactPrimaryTerms: 0 };
+    }
+
+    const fieldConfigs = [
+        {
+            value: [doc.documentTitle, doc.title].filter(Boolean).join(' '),
+            exactBoost: 4.2,
+            fuzzyBoost: 2.2,
+            phraseBoost: 5.5,
+            primary: true
+        },
+        {
+            value: doc.summary || '',
+            exactBoost: 3.5,
+            fuzzyBoost: 1.8,
+            phraseBoost: 4.2,
+            primary: true
+        },
+        {
+            value: (doc.content || '').slice(0, 4000),
+            exactBoost: 2.8,
+            fuzzyBoost: 1.4,
+            phraseBoost: 3.4,
+            primary: true
+        },
+        {
+            value: Array.isArray(doc.tags) ? doc.tags.join(' ') : (doc.tags || ''),
+            exactBoost: 1.4,
+            fuzzyBoost: 0.5,
+            phraseBoost: 1.1,
+            primary: false
+        },
+        {
+            value: Array.isArray(doc.synonyms) ? doc.synonyms.join(' ') : (doc.synonyms || ''),
+            exactBoost: 1.2,
+            fuzzyBoost: 0.4,
+            phraseBoost: 0.8,
+            primary: false
+        }
+    ];
+
+    const normalizedQueryText = String(queryText || '').toLowerCase();
+    const primaryTermMatches = new Map();
+    let primaryExactTerms = 0;
+    let primaryFuzzyTerms = 0;
+    let metadataOnlyTerms = 0;
+    let score = 0;
+
+    fieldConfigs.forEach(field => {
+        const normalizedValue = String(field.value || '').toLowerCase();
+        const fieldTokens = tokenizeRAGDocumentText(field.value);
+        const fieldTokenSet = new Set(fieldTokens);
+        const hasPhraseMatch = normalizedQueryText && normalizedQueryText.length > 3 && normalizedValue.includes(normalizedQueryText);
+
+        if (hasPhraseMatch) {
+            score += field.phraseBoost;
+        }
+
+        queryTerms.forEach(term => {
+            let matched = false;
+            let fuzzyMatched = false;
+
+            if (fieldTokenSet.has(term) || normalizedValue.includes(term)) {
+                matched = true;
+                score += field.exactBoost;
+            } else if (term.length > 3 && fieldTokens.some(token => isRAGNearTokenMatch(term, token))) {
+                fuzzyMatched = true;
+                score += field.fuzzyBoost;
+            }
+
+            if (!matched && !fuzzyMatched) {
+                return;
+            }
+
+            if (field.primary) {
+                const existing = primaryTermMatches.get(term);
+                if (matched && existing !== 'exact') {
+                    primaryTermMatches.set(term, 'exact');
+                } else if (!existing && fuzzyMatched) {
+                    primaryTermMatches.set(term, 'fuzzy');
+                }
+            } else if (!primaryTermMatches.has(term)) {
+                metadataOnlyTerms += 1;
+            }
+        });
+    });
+
+    queryTerms.forEach(term => {
+        if (primaryTermMatches.get(term) === 'exact') {
+            primaryExactTerms += 1;
+        } else if (primaryTermMatches.get(term) === 'fuzzy') {
+            primaryFuzzyTerms += 1;
+        }
+    });
+
+    score += (primaryExactTerms * 2.6) + (primaryFuzzyTerms * 1.1);
+
+    if (queryTerms.length && primaryExactTerms === queryTerms.length) {
+        score += 6;
+    } else if (queryTerms.length && (primaryExactTerms + primaryFuzzyTerms) === queryTerms.length) {
+        score += 3;
+    }
+
+    if ((primaryExactTerms + primaryFuzzyTerms) === 0 && metadataOnlyTerms > 0) {
+        score -= 3.5;
+    }
+
+    return {
+        score,
+        matchedPrimaryTerms: primaryExactTerms + primaryFuzzyTerms,
+        exactPrimaryTerms: primaryExactTerms
+    };
+}
+
+async function rerankLunrSearchResults(query, mergedResults) {
+    const candidates = Array.isArray(mergedResults)
+        ? mergedResults.slice(0, RAG_MAX_RERANK_CANDIDATES)
+        : [];
+
+    if (!candidates.length) {
+        return [];
+    }
+
+    const queryTerms = tokenizeRAGSearchQuery(query);
+    const docs = await getDocumentsFromSearchResults(candidates);
+
+    return candidates
+        .map((result, index) => {
+            const docScore = scoreRAGDocumentMatch(docs[index], queryTerms, query);
+            return {
+                ...result,
+                score: (result.score * 3) + docScore.score,
+                docScore: docScore.score,
+                matchedPrimaryTerms: docScore.matchedPrimaryTerms,
+                exactPrimaryTerms: docScore.exactPrimaryTerms
+            };
+        })
+        .sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            if ((b.exactPrimaryTerms || 0) !== (a.exactPrimaryTerms || 0)) {
+                return (b.exactPrimaryTerms || 0) - (a.exactPrimaryTerms || 0);
+            }
+            if ((b.matchedPrimaryTerms || 0) !== (a.matchedPrimaryTerms || 0)) {
+                return (b.matchedPrimaryTerms || 0) - (a.matchedPrimaryTerms || 0);
+            }
+            return (b.rawScore || 0) - (a.rawScore || 0);
+        });
+}
+
+function scoreRAGEvidenceForUserInput(doc, userInput, baseScore = 0) {
+    const stopWords = new Set([
+        'a', 'an', 'and', 'are', 'can', 'did', 'do', 'does', 'for', 'from', 'how',
+        'i', 'in', 'is', 'it', 'my', 'of', 'on', 'or', 'the', 'to', 'what', 'when',
+        'where', 'who', 'why', 'you', 'your'
+    ]);
+    const userTerms = tokenizeRAGSearchQuery(userInput).filter(term => !stopWords.has(term));
+    const fallbackTerms = userTerms.length ? userTerms : tokenizeRAGSearchQuery(userInput);
+    const docMatch = scoreRAGDocumentMatch(doc, fallbackTerms, userInput);
+    const combinedText = [
+        doc?.documentTitle,
+        doc?.title,
+        doc?.summary,
+        doc?.content
+    ].filter(Boolean).join(' ').toLowerCase();
+    const normalizedInput = String(userInput || '').toLowerCase();
+    let score = (baseScore || 0) + docMatch.score;
+
+    if (/how long/.test(normalizedInput) && /\b\d+\b|\b(day|days|week|weeks|month|months|hour|hours|minute|minutes|business)\b/.test(combinedText)) {
+        score += 6;
+    }
+    if (/(when|what time|what day)/.test(normalizedInput) && /\b(mon|tues|wednes|thurs|fri|satur|sun)day\b|\b(am|pm|eastern|est|pst|cst)\b|\b\d{1,2}:\d{2}\b/.test(combinedText)) {
+        score += 6;
+    }
+    if (/(how old|age)/.test(normalizedInput) && /\b\d+\b|\b(year|years|old)\b/.test(combinedText)) {
+        score += 6;
+    }
+
+    return score;
 }
 
 async function performLunrSearch(query) {
@@ -2485,25 +2788,69 @@ async function performLunrSearch(query) {
 
     const searchQuery = keywords.map(keyword => `+${keyword}`).join(' ');
     const searchStrategies = [
-        () => normalizeLunrResults(globalLunrIndex.search(searchQuery), 'required-terms'),
-        () => normalizeLunrResults(runBoostedLunrSearch(keywords, { requireAll: false }), 'boosted-fields'),
-        () => normalizeLunrResults(globalLunrIndex.search(query), 'legacy-query'),
-        () => normalizeLunrResults(runBoostedLunrSearch(keywords, { requireAll: false, fuzzy: true }), 'boosted-fuzzy'),
-        () => normalizeLunrResults(globalLunrIndex.search(keywords.map(word => `${word}~1`).join(' ')), 'legacy-fuzzy')
+        {
+            strategy: 'required-terms',
+            weight: 1.35,
+            run: () => normalizeLunrResults(globalLunrIndex.search(searchQuery), 'required-terms')
+        },
+        {
+            strategy: 'boosted-required',
+            weight: 1.25,
+            run: () => normalizeLunrResults(runBoostedLunrSearch(keywords, { requireAll: true }), 'boosted-required')
+        },
+        {
+            strategy: 'boosted-fields',
+            weight: 1.1,
+            run: () => normalizeLunrResults(runBoostedLunrSearch(keywords, { requireAll: false }), 'boosted-fields')
+        },
+        {
+            strategy: 'legacy-query',
+            weight: 0.95,
+            run: () => normalizeLunrResults(globalLunrIndex.search(query), 'legacy-query')
+        },
+        {
+            strategy: 'boosted-fuzzy',
+            weight: 0.7,
+            run: () => normalizeLunrResults(runBoostedLunrSearch(keywords, { requireAll: false, fuzzy: true }), 'boosted-fuzzy')
+        },
+        {
+            strategy: 'legacy-fuzzy',
+            weight: 0.55,
+            run: () => normalizeLunrResults(globalLunrIndex.search(keywords.map(word => `${word}~1`).join(' ')), 'legacy-fuzzy')
+        }
     ];
 
-    for (const runSearch of searchStrategies) {
+    const collectedResults = [];
+    for (const strategy of searchStrategies) {
         try {
-            const strategyResults = runSearch();
+            const strategyResults = strategy.run();
             if (strategyResults.length) {
-                return filterSearchResultsByConfidence(strategyResults);
+                collectedResults.push({
+                    strategy: strategy.strategy,
+                    weight: strategy.weight,
+                    results: strategyResults
+                });
             }
         } catch (error) {
             console.warn("Error running Lunr search strategy:", error);
         }
     }
 
-    return [];
+    if (!collectedResults.length) {
+        return [];
+    }
+
+    try {
+        const mergedResults = mergeLunrSearchStrategies(collectedResults);
+        const rerankedResults = await rerankLunrSearchResults(query, mergedResults);
+        if (rerankedResults.length) {
+            return filterSearchResultsByConfidence(rerankedResults);
+        }
+        return filterSearchResultsByConfidence(mergedResults);
+    } catch (error) {
+        console.warn("Error reranking Lunr search results:", error);
+        return filterSearchResultsByConfidence(mergeLunrSearchStrategies(collectedResults));
+    }
 }
 
 async function generateResponseWithSearchResults(userInput, searchResults, chatname, additionalInstructions) {
@@ -2512,7 +2859,18 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
         
         //log("Relevant docs:", relevantDocs);
 
-        const validDocs = relevantDocs.filter(doc => doc !== null && doc.content);
+        const validDocs = relevantDocs
+            .map((doc, index) => {
+                if (!doc || !doc.content) {
+                    return null;
+                }
+                return {
+                    ...doc,
+                    evidenceScore: scoreRAGEvidenceForUserInput(doc, userInput, searchResults[index]?.score || 0)
+                };
+            })
+            .filter(Boolean)
+            .sort((a, b) => (b.evidenceScore || 0) - (a.evidenceScore || 0));
         
         if (validDocs.length === 0) {
             log("No valid documents found");
@@ -2521,7 +2879,7 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
         
         // Concatenate a small set of strong chunks to avoid flooding the response prompt.
         let combinedContent = '';
-        for (const doc of validDocs) {
+        for (const doc of validDocs.slice(0, RAG_MAX_EVIDENCE_DOCS)) {
             const evidenceBlock = [
                 doc.documentTitle ? `Document: ${doc.documentTitle}` : '',
                 doc.title ? `Section: ${doc.title}` : '',
@@ -2566,33 +2924,45 @@ Your response should be suitable for a chat environment, ideally not exceeding 1
 
 async function getDocumentsFromSearchResults(searchResults) {
     const db = await openLunrDatabase();
-    const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME], "readonly");
-    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     
     return Promise.all(searchResults.map(async result => {
-		log(result.ref);
-        const splitIndex = result.ref.split('_');
-		const hasChunkIndex = splitIndex.length > 2;
-		const chunkIndex = hasChunkIndex ? splitIndex[splitIndex.length - 1] : null;
-		const docId = hasChunkIndex ? "doc_"+splitIndex[splitIndex.length - 2] : result.ref;
-        
         try {
-            const request = store.get(docId);
-            const doc = await new Promise((resolve, reject) => {
+            const getStoredDoc = (key) => new Promise((resolve, reject) => {
+                const request = db
+                    .transaction([LUNR_DOCUMENT_STORE_NAME], "readonly")
+                    .objectStore(LUNR_DOCUMENT_STORE_NAME)
+                    .get(key);
                 request.onerror = () => reject(request.error);
                 request.onsuccess = () => resolve(request.result);
             });
-            
-            //log(`Retrieved document for id ${docId}:`, doc); // Add this line for debugging
+
+            let doc = await getStoredDoc(result.ref);
+            if (doc) {
+                return { 
+                    ref: result.ref,
+                    score: result.score || 0,
+                    documentTitle: doc.title || '',
+                    title: doc.title || '',
+                    content: doc.content, 
+                    tags: doc.tags, 
+                    synonyms: doc.synonyms,
+                    summary: doc.overallSummary
+                };
+            }
+
+            const lastUnderscoreIndex = result.ref.lastIndexOf('_');
+            const chunkIndex = lastUnderscoreIndex !== -1 ? result.ref.slice(lastUnderscoreIndex + 1) : '';
+            const hasChunkIndex = /^\d+$/.test(chunkIndex);
+            const docId = hasChunkIndex ? result.ref.slice(0, lastUnderscoreIndex) : result.ref;
+
+            doc = await getStoredDoc(docId);
 
             if (!doc) {
-                //console.warn(`Document not found for id: ${docId}`);
                 return null;
             }
             
-            if (doc.chunks && chunkIndex) {
-                const chunk = doc.chunks[parseInt(chunkIndex)];
-                //log(`Retrieved chunk for index ${chunkIndex}:`, chunk); // Add this line for debugging
+            if (doc.chunks && hasChunkIndex) {
+                const chunk = doc.chunks[parseInt(chunkIndex, 10)];
                 return chunk ? { 
                     ref: result.ref,
                     score: result.score || 0,
