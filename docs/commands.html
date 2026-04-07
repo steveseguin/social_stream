@@ -524,7 +524,7 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 			
 			<div class="command-card">
 				<h3>Supported AI Providers</h3>
-				<p>Social Stream Ninja supports multiple AI service providers, giving you flexibility in choosing the right solution for your stream:</p>
+				<p>Social Stream Ninja supports multiple AI providers, from fully local browser/runtime models to hosted APIs:</p>
 				
 				<div class="api-capabilities">
 					<div class="api-capability">
@@ -539,23 +539,43 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 					
 					<div class="api-capability">
 						<div class="capability-icon">
+							<i class="fas fa-laptop-code"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Local Gemma 4</h4>
+							<p>Run Gemma 4 in the browser using self-hosted model assets instead of a remote API.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-microchip"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Local Qwen 3.5</h4>
+							<p>Run Qwen 3.5 in the browser from your own hosted model files for local, private responses.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
 							<i class="fab fa-openai"></i>
 						</div>
-							<div class="capability-content">
-								<h4>ChatGPT</h4>
-								<p>OpenAI APIs including modern chat and realtime voice models.</p>
-							</div>
+						<div class="capability-content">
+							<h4>ChatGPT / OpenAI</h4>
+							<p>OpenAI APIs including modern chat and realtime voice models.</p>
 						</div>
+					</div>
 					
 					<div class="api-capability">
 						<div class="capability-icon">
 							<i class="fab fa-google"></i>
 						</div>
-							<div class="capability-content">
-								<h4>Google Gemini</h4>
-								<p>Google Gemini models including current Gemini 2.5 text and live multimodal options.</p>
-							</div>
+						<div class="capability-content">
+							<h4>Google Gemini</h4>
+							<p>Google Gemini models including current Gemini 2.5 text and live multimodal options.</p>
 						</div>
+					</div>
 					
 					<div class="api-capability">
 						<div class="capability-icon">
@@ -571,11 +591,11 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 						<div class="capability-icon">
 							<i class="fas fa-rocket"></i>
 						</div>
-							<div class="capability-content">
-								<h4>xAI (Grok)</h4>
-								<p>xAI Grok APIs, including realtime voice sessions when using ephemeral client secrets.</p>
-							</div>
+						<div class="capability-content">
+							<h4>xAI (Grok)</h4>
+							<p>xAI Grok APIs, including realtime voice sessions when using ephemeral client secrets.</p>
 						</div>
+					</div>
 					
 					<div class="api-capability">
 						<div class="capability-icon">
@@ -599,6 +619,16 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 					
 					<div class="api-capability">
 						<div class="capability-icon">
+							<i class="fas fa-bolt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Groq</h4>
+							<p>Low-latency OpenAI-compatible chat inference for fast conversational responses.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
 							<i class="fas fa-tools"></i>
 						</div>
 						<div class="capability-content">
@@ -606,6 +636,10 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 							<p>Connect to llama.cpp, LM Studio, vLLM, or any other OpenAI-compatible endpoint.</p>
 						</div>
 					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Note:</strong> Ollama uses its own native API. For llama.cpp, LM Studio, vLLM, or other OpenAI-compatible servers, choose <strong>Custom API</strong>.</p>
 				</div>
 			</div>
 			
@@ -621,6 +655,26 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 						<div class="capability-content">
 							<h4>System TTS</h4>
 							<p>Free, built-in TTS using your operating system's voice synthesizer.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-heart"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Kokoro</h4>
+							<p>Free, locally-running TTS using WebGPU/CPU for privacy-conscious users.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-cat"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Kitten TTS</h4>
+							<p>Lightweight browser-based TTS that downloads a small model for local voice generation.</p>
 						</div>
 					</div>
 					
@@ -646,6 +700,16 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 					
 					<div class="api-capability">
 						<div class="capability-icon">
+							<i class="fas fa-wave-square"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Gemini (Preview TTS)</h4>
+							<p>Google's preview neural voice models with selectable voice and language options.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
 							<i class="fas fa-volume-up"></i>
 						</div>
 						<div class="capability-content">
@@ -656,17 +720,17 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 					
 					<div class="api-capability">
 						<div class="capability-icon">
-							<i class="fas fa-heart"></i>
+							<i class="fab fa-openai"></i>
 						</div>
 						<div class="capability-content">
-							<h4>Kokoro</h4>
-							<p>Free, locally-running TTS using WebGPU/CPU for privacy-conscious users.</p>
+							<h4>OpenAI TTS</h4>
+							<p>OpenAI speech synthesis with selectable voices, models, and optional compatible endpoints.</p>
 						</div>
 					</div>
 				</div>
 				
 				<div class="command-note">
-					<p><strong>Note:</strong> TTS functionality requires the appropriate overlay page to be open in OBS. Each TTS provider offers different voice options, quality levels, and pricing models.</p>
+					<p><strong>Note:</strong> TTS functionality requires the appropriate overlay page to be open in OBS. Each TTS provider offers different voice options, latency, and pricing or hardware requirements.</p>
 				</div>
 			</div>
 			
@@ -687,17 +751,17 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 							<tr>
 								<td>Primary Chat Bot</td>
 								<td><code>/bot.html</code></td>
-								<td>Main bot overlay with TTS support, responds to chat and displays messages</td>
+								<td>Main bot overlay with optional TTS and public chat responses</td>
 							</tr>
 							<tr>
 								<td>Private Chat Interface</td>
 								<td><code>/chatbot.html</code></td>
-								<td>Standalone 1-on-1 interface for private conversations with the AI</td>
+								<td>Dedicated 1-on-1 bot page that does not share the main bot's RAG dataset or chat history</td>
 							</tr>
 							<tr>
 								<td>Censor Bot</td>
 								<td>(runs in background)</td>
-								<td>Filters and moderates incoming messages automatically</td>
+								<td>Filters, sanitizes, or blocks incoming messages automatically</td>
 							</tr>
 							<tr>
 								<td>AI Co-Host</td>
@@ -711,18 +775,19 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 			
 			<div class="command-card">
 				<h3>Setting Up AI Integration</h3>
-				<p>Follow these steps to set up AI integration with your preferred provider:</p>
+				<p>Follow these steps to set up AI integration with the current menu:</p>
 				
 				<div class="ai-setup-steps">
 					<div class="ai-step">
 						<div class="ai-step-number">1</div>
 						<div class="ai-step-content">
-							<h4>Choose Your AI Provider</h4>
-							<p>Select from the supported providers in the extension settings. Each provider requires different setup:</p>
+							<h4>Choose and Connect Your LLM Provider</h4>
+							<p>Select your provider in <strong>Configure LLM Service Provider</strong> and fill in the matching fields:</p>
 							<ul>
-								<li><strong>Ollama:</strong> Install locally and set up CORS</li>
-								<li><strong>ChatGPT/Gemini/etc:</strong> Add your API key</li>
-								<li><strong>Custom:</strong> Configure your endpoint URL</li>
+								<li><strong>Ollama:</strong> Install locally and set the endpoint if needed</li>
+								<li><strong>Local Gemma / Local Qwen:</strong> Self-host the browser model assets and optional model folder override</li>
+								<li><strong>ChatGPT, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock:</strong> Add your API key and preferred model</li>
+								<li><strong>Custom API:</strong> Enter an OpenAI-compatible endpoint, model id, and optional API key</li>
 							</ul>
 						</div>
 					</div>
@@ -730,28 +795,21 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 					<div class="ai-step">
 						<div class="ai-step-number">2</div>
 						<div class="ai-step-content">
-							<h4>Configure Bot Settings</h4>
-							<p>Customize your bot behavior:</p>
-							<ul>
-								<li>Set trigger words or allow all responses</li>
-								<li>Enable/disable context memory</li>
-								<li>Configure rate limiting</li>
-								<li>Choose moderation level</li>
-								<li>Set custom instructions</li>
-							</ul>
+							<h4>Test the Selected Chat Bot</h4>
+							<p>Use the built-in <strong>Test selected chat bot</strong> button to verify your provider, model, and credentials before going live.</p>
 						</div>
 					</div>
 					
 					<div class="ai-step">
 						<div class="ai-step-number">3</div>
 						<div class="ai-step-content">
-							<h4>Set Up TTS (Optional)</h4>
-							<p>Choose your TTS provider and configure voice settings:</p>
+							<h4>Configure Bot Behavior</h4>
+							<p>Customize how the bot behaves in chat:</p>
 							<ul>
-								<li>Select voice language and style</li>
-								<li>Adjust speed, pitch, and volume</li>
-								<li>Configure URL and name reading preferences</li>
-								<li>Set up audio routing options</li>
+								<li>Enable the LLM AI chat bot</li>
+								<li>Set the bot name, trigger words, and response rate limit</li>
+								<li>Choose whether replies go back to chat or only to the bot overlay page</li>
+								<li>Add custom instructions for tone, role, and moderation rules</li>
 							</ul>
 						</div>
 					</div>
@@ -759,12 +817,13 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 					<div class="ai-step">
 						<div class="ai-step-number">4</div>
 						<div class="ai-step-content">
-							<h4>Add Knowledge Base (Optional)</h4>
-							<p>Upload files for RAG (Retrieval-Augmented Generation):</p>
+							<h4>Enable Optional Extras</h4>
+							<p>Turn on the features you want around the bot:</p>
 							<ul>
-								<li>Add text files or markdown</li>
-								<li>Enable enhanced processing for better results</li>
-								<li>Manage and update your knowledge database</li>
+								<li>Enable TTS for bot replies and choose a provider</li>
+								<li>Enable RAG and upload documents for knowledge-aware answers</li>
+								<li>Enable the censor bot for moderation or strict block mode</li>
+								<li>Open <code>/bot.html</code>, <code>/chatbot.html</code>, or <code>/cohost.html</code> in OBS or a browser as needed</li>
 							</ul>
 						</div>
 					</div>
@@ -772,11 +831,15 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 				
 				<div class="documentation-links">
 					<h4>Detailed Documentation</h4>
-					<p>For complete setup instructions and advanced configuration options, see our detailed guides:</p>
+					<p>For complete setup instructions and deeper TTS coverage, use these guides:</p>
 					<div class="doc-links">
 						<a href="https://socialstream.ninja/ai" class="btn btn-primary" target="_blank">
 							<i class="fas fa-file-alt"></i>
 							<span>Complete AI Integration Guide</span>
+						</a>
+						<a href="local-tts.html" class="btn btn-secondary">
+							<i class="fas fa-volume-up"></i>
+							<span>Local AI TTS Guide</span>
 						</a>
 						<a href="https://github.com/steveseguin/social_stream/blob/master/ai.md" class="btn btn-secondary" target="_blank">
 							<i class="fab fa-github"></i>

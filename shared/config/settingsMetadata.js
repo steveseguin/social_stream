@@ -1086,7 +1086,7 @@ const SETTINGS_METADATA = Object.freeze({
   "ollamaprompt": {
     type: "text",
     category: "chat_bot",
-    description: "System prompt prepended to every Ollama bot response."
+    description: "System prompt prepended to every Ollama bot response. Supports {CURRENT_DATE_TIME} and timezone-aware forms like {CURRENT_DATE_TIME:Europe/Berlin}."
   },
   "ollamatts": {
     type: "boolean",

@@ -12,6 +12,9 @@ let isUploading = false;
 let lunrIndexPromise;
 const maxContextSize = 31000;
 const maxContextSizeFull = 32000;
+const RAG_MAX_SEARCH_RESULTS = 5;
+const RAG_CONTEXT_CHAR_LIMIT = Math.min(maxContextSize, 12000);
+const RAG_SCORE_RATIO_THRESHOLD = 0.35;
 
 class LLMServiceError extends Error {
     constructor(details = {}) {
@@ -109,6 +112,97 @@ function noteChatBotDecision(reason, data, context = {}) {
     } catch (e) {
         console.warn('Failed to log chat bot decision:', e);
     }
+}
+
+function getChatbotPromptTimeZoneDetails(requestedTimeZone = '') {
+    const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const candidate = String(requestedTimeZone || '').trim();
+
+    if (!candidate) {
+        return {
+            formatTimeZone: localTimeZone,
+            label: localTimeZone || 'Local Browser Time'
+        };
+    }
+
+    try {
+        new Intl.DateTimeFormat('en-US', { timeZone: candidate }).format(new Date());
+        return {
+            formatTimeZone: candidate,
+            label: candidate
+        };
+    } catch (e) {
+        return {
+            formatTimeZone: localTimeZone,
+            label: localTimeZone || 'Local Browser Time'
+        };
+    }
+}
+
+function formatChatbotPromptVariable(token, requestedTimeZone = '') {
+    const now = new Date();
+    const timeZone = getChatbotPromptTimeZoneDetails(requestedTimeZone);
+    const formatWith = options => {
+        const formatterOptions = { ...options };
+        if (timeZone.formatTimeZone) {
+            formatterOptions.timeZone = timeZone.formatTimeZone;
+        }
+        return new Intl.DateTimeFormat('en-US', formatterOptions).format(now);
+    };
+
+    if (token === 'CURRENT_DATE_TIME') {
+        return `${formatWith({
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            timeZoneName: 'short'
+        })} [${timeZone.label}]`;
+    }
+
+    if (token === 'CURRENT_DATE') {
+        return `${formatWith({
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })} [${timeZone.label}]`;
+    }
+
+    if (token === 'CURRENT_TIME') {
+        return `${formatWith({
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            timeZoneName: 'short'
+        })} [${timeZone.label}]`;
+    }
+
+    if (token === 'CURRENT_TIMEZONE') {
+        return timeZone.label;
+    }
+
+    return '';
+}
+
+function resolveChatbotPromptVariables(text) {
+    if (typeof text !== 'string' || !text.includes('{')) {
+        return text || '';
+    }
+
+    return text.replace(/\{\{?\s*(CURRENT_DATE_TIME|CURRENT_DATE|CURRENT_TIME|CURRENT_TIMEZONE)(?:\s*[:|]\s*([^}]+?))?\s*\}\}?/g, (match, token, requestedTimeZone) => {
+        try {
+            const replacement = formatChatbotPromptVariable(token, requestedTimeZone);
+            return replacement || match;
+        } catch (e) {
+            return match;
+        }
+    });
 }
 
 async function rebuildIndex() {
@@ -1823,6 +1917,8 @@ async function processMessageWithOllama(data, idx=null) {
 
 async function processUserInput(userInput, data, additionalInstructions, botname) {
   try {
+    additionalInstructions = resolveChatbotPromptVariables(additionalInstructions || '');
+
     // Build base prompt with context
     let promptBase = `${additionalInstructions || ''}\n\nYou are an AI chat assistant and a participant in a live group chat room.`;
 	
@@ -1865,87 +1961,84 @@ async function processUserInput(userInput, data, additionalInstructions, botname
     // Add current message
     
 
-    // Check if RAG is needed
+    // Try RAG first, but fall back cleanly if retrieval looks weak.
     if (await isRAGConfigured()) {
 	  const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
-	  
-	  const ragPrompt = `${promptBase}` + 
-		'If this message requires searching the knowledge database, respond with keywords to search. Otherwise respond with NO_RESPONSE. Keywords should be space-separated terms that will find relevant information in the database.' +
-		'\n\nDatabase info: ${databaseDescriptor}\n\n';
+	  const ragPrompt = `${promptBase}
+
+Decide if the current message needs a search of the custom knowledge database before responding.
+
+Database info:
+${databaseDescriptor}
+
+If a search is needed, produce a short search query with the most relevant keywords only.
+If no search is needed, say NO_RESPONSE.
+
+Prefer this exact format:
+[NEEDS_SEARCH]YES or NO[/NEEDS_SEARCH]
+[SEARCH_QUERY]keyword1 keyword2[/SEARCH_QUERY]`;
 
 	  const ragDecision = await callLLMAPI(ragPrompt);
-	  
-	  if (ragDecision && !ragDecision.toLowerCase().includes('no_response')) {
-		const searchResults = await performLunrSearch(ragDecision.trim());
-		return await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
-	  } else {
-		// Fall through to regular response handling
-		if (settings.alwaysRespondLLM) {
-		  promptBase += '\n\nRespond conversationally to the current group chat message, doing so directly and succinctly.';
+	  const parsedDecision = ragDecision ? parseDecision(ragDecision) : null;
+	  let ragSearchQuery = '';
+
+	  if (parsedDecision?.needsSearch && parsedDecision.searchQuery) {
+		ragSearchQuery = parsedDecision.searchQuery.trim();
+	  } else if (ragDecision && !ragDecision.toLowerCase().includes('no_response')) {
+		ragSearchQuery = ragDecision.trim();
+	  }
+
+	  if (ragSearchQuery) {
+		const searchResults = await performLunrSearch(ragSearchQuery);
+		if (searchResults.length) {
+			const ragResponse = await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
+			if (ragResponse) {
+				return ragResponse;
+			}
+		}
+	  }
+	}
+
+    // Regular response with context
+	let debugmode = false;
+	if (settings.ollamabotname?.textsetting) {
+		debugmode = settings.ollamabotname?.textsetting == "Tommas" ? true : false;
+	}
+	if (debugmode){
+		if (!settings.nollmcontext){
+			promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE, followed by stating why no response is needed.';
 		} else {
-		  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
+			promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is neede, followed by why no response was needed.';
+		}
+	} else if (settings.alwaysRespondLLM){
+		if (!settings.nollmcontext){
+			promptBase += '\n\nRespond conversationally to the current message, doing so directly and succinctly.';
+		} else {
+			promptBase += '\n\nRespond conversationally to the current group chat message, doing so directly and succinctly.';
 		}
 		
-		let response = await callLLMAPI(promptBase);
-		
-		if (botname && response.startsWith(botname+":")){
-			response = response.replace(botname+":","").trim();
-		}
-		
-		if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
-		  if (settings.alwaysRespondLLM && (response && !response.toLowerCase().startsWith('@@@@'))) {
-			return response;
-		  }
-		  return false;
-		}
-		
-		return response;
-	  }
 	} else {
-      // Regular response with context
-	  
-	  
-		let debugmode = false;
-		if (settings.ollamabotname?.textsetting) {
-			debugmode = settings.ollamabotname?.textsetting == "Tommas" ? true : false;
+		if (!settings.nollmcontext){
+			promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE to state you are choosing not to respond. Respond only with NO_RESPONSE if you have no reply.';
+		} else {
+			promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
 		}
-	  if (debugmode){
-		  if (!settings.nollmcontext){
-			  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE, followed by stating why no response is needed.';
-		  } else {
-			  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is neede, followed by why no response was needed.';
-		  }
-	  } else if (settings.alwaysRespondLLM){
-		  if (!settings.nollmcontext){
-			  promptBase += '\n\nRespond conversationally to the current message, doing so directly and succinctly.';
-		  } else {
-			  promptBase += '\n\nRespond conversationally to the current group chat message, doing so directly and succinctly.';
-		  }
-		  
-	  } else {
-		  if (!settings.nollmcontext){
-			  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE to state you are choosing not to respond. Respond only with NO_RESPONSE if you have no reply.';
-		  } else {
-			  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
-		  }
-	  }
-	  //console.log(promptBase);
-      
-      let response = await callLLMAPI(promptBase);
-	  
-	  if (botname && response.startsWith(botname+":")){
+	}
+
+    let response = await callLLMAPI(promptBase);
+	
+	if (botname && response.startsWith(botname+":")){
 		response = response.replace(botname+":","").trim();
-	  }
-	  
-      if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
+	}
+	
+    if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
 		if (settings.alwaysRespondLLM && (response && !response.toLowerCase().startsWith('@@@@'))){
 			return response;
 		}
         return false;
-      }
-      
-      return response;
     }
+    
+    return response;
   } catch (error) {
     console.warn("Error in processUserInput:", error);
     return false;
@@ -2301,25 +2394,116 @@ async function clearLunrDatabase() {
     }
 }
 
+function normalizeLunrResults(results, strategy = 'default') {
+    const dedupedResults = new Map();
+    (results || []).forEach(result => {
+        if (!result || !result.ref) return;
+        const existing = dedupedResults.get(result.ref);
+        if (!existing || (result.score || 0) > existing.score) {
+            dedupedResults.set(result.ref, {
+                ref: result.ref,
+                score: result.score || 0,
+                strategy
+            });
+        }
+    });
+    return Array.from(dedupedResults.values()).sort((a, b) => b.score - a.score);
+}
+
+function tokenizeRAGSearchQuery(query) {
+    return Array.from(new Set(
+        String(query || '')
+            .split(/\s+/)
+            .map(term => term.trim().replace(/^["'`]+|["'`]+$/g, ''))
+            .filter(Boolean)
+    ));
+}
+
+function runBoostedLunrSearch(terms, options = {}) {
+    if (!globalLunrIndex || typeof globalLunrIndex.query !== 'function' || !Array.isArray(terms) || !terms.length) {
+        return [];
+    }
+
+    const requireAll = !!options.requireAll;
+    const fuzzy = !!options.fuzzy;
+    const presence = requireAll ? lunr.Query.presence.REQUIRED : lunr.Query.presence.OPTIONAL;
+    const fieldBoosts = [
+        { name: 'title', boost: 10 },
+        { name: 'tags', boost: 8 },
+        { name: 'synonyms', boost: 6 },
+        { name: 'summary', boost: 4 },
+        { name: 'content', boost: 1 }
+    ];
+
+    return globalLunrIndex.query(function(q) {
+        terms.forEach(term => {
+            fieldBoosts.forEach(field => {
+                q.term(term, {
+                    fields: [field.name],
+                    boost: field.boost,
+                    presence
+                });
+
+                if (fuzzy && term.length > 3) {
+                    q.term(term, {
+                        fields: [field.name],
+                        boost: Math.max(1, field.boost - 2),
+                        presence,
+                        editDistance: 1
+                    });
+                }
+            });
+        });
+    });
+}
+
+function filterSearchResultsByConfidence(searchResults) {
+    const normalizedResults = normalizeLunrResults(searchResults);
+    if (!normalizedResults.length) {
+        return [];
+    }
+
+    const topScore = normalizedResults[0].score || 0;
+    if (topScore <= 0) {
+        return normalizedResults.slice(0, 1);
+    }
+
+    const minScore = topScore * RAG_SCORE_RATIO_THRESHOLD;
+    return normalizedResults
+        .filter((result, index) => index === 0 || result.score >= minScore)
+        .slice(0, RAG_MAX_SEARCH_RESULTS);
+}
+
 async function performLunrSearch(query) {
     if (!globalLunrIndex) {
         await loadLunrIndex();
     }
-    const keywords = query.split(/\s+/);
-    const searchQuery = keywords.map(keyword => `+${keyword}`).join(' ');
-    const results = globalLunrIndex.search(query);
-    if (results.length === 0) {
-        //log("No results found for query:", query);
-        // Perform a more lenient search
-        return globalLunrIndex.search(keywords.map(word => `${word}~1`).join(' ')).map(result => ({
-            ref: result.ref,
-            score: result.score
-        }));
+    const keywords = tokenizeRAGSearchQuery(query);
+    if (!keywords.length) {
+        return [];
     }
-    return results.map(result => ({
-        ref: result.ref,
-        score: result.score
-    }));
+
+    const searchQuery = keywords.map(keyword => `+${keyword}`).join(' ');
+    const searchStrategies = [
+        () => normalizeLunrResults(globalLunrIndex.search(searchQuery), 'required-terms'),
+        () => normalizeLunrResults(runBoostedLunrSearch(keywords, { requireAll: false }), 'boosted-fields'),
+        () => normalizeLunrResults(globalLunrIndex.search(query), 'legacy-query'),
+        () => normalizeLunrResults(runBoostedLunrSearch(keywords, { requireAll: false, fuzzy: true }), 'boosted-fuzzy'),
+        () => normalizeLunrResults(globalLunrIndex.search(keywords.map(word => `${word}~1`).join(' ')), 'legacy-fuzzy')
+    ];
+
+    for (const runSearch of searchStrategies) {
+        try {
+            const strategyResults = runSearch();
+            if (strategyResults.length) {
+                return filterSearchResultsByConfidence(strategyResults);
+            }
+        } catch (error) {
+            console.warn("Error running Lunr search strategy:", error);
+        }
+    }
+
+    return [];
 }
 
 async function generateResponseWithSearchResults(userInput, searchResults, chatname, additionalInstructions) {
@@ -2332,21 +2516,28 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
         
         if (validDocs.length === 0) {
             log("No valid documents found");
-            return `I'm sorry, but I couldn't find any specific information about "${userInput}" in my database.`;
+            return false;
         }
         
-        // Concatenate chunks until we approach 8K characters
+        // Concatenate a small set of strong chunks to avoid flooding the response prompt.
         let combinedContent = '';
-        let usedChunks = 0;
         for (const doc of validDocs) {
-            if (combinedContent.length + doc.content.length > maxContextSize) {  // Leave some room for the prompt
+            const evidenceBlock = [
+                doc.documentTitle ? `Document: ${doc.documentTitle}` : '',
+                doc.title ? `Section: ${doc.title}` : '',
+                doc.summary ? `Summary: ${doc.summary}` : '',
+                `Content: ${doc.content}`
+            ].filter(Boolean).join('\n');
+
+            if (combinedContent.length + evidenceBlock.length > RAG_CONTEXT_CHAR_LIMIT) {
                 break;
             }
-            combinedContent += doc.content + '\n\n';
-            usedChunks++;
+            combinedContent += evidenceBlock + '\n\n';
         }
 
-        log("Combined content:", combinedContent);
+        if (!combinedContent.trim()) {
+            return false;
+        }
 
         const prompt = `You are an AI assistant. ${additionalInstructions || ''}
 
@@ -2358,12 +2549,18 @@ User Input: "${userInput}"
 Relevant Information:
 ${combinedContent}
 
-Provide a concise and informative response based on the above information. Your response should be suitable for a chat environment, ideally not exceeding 150 characters.`;
+Provide a concise and informative response based on the above information only when it clearly answers the user input.
+If the retrieved information is not enough to answer confidently, reply with NO_RESPONSE.
+Your response should be suitable for a chat environment, ideally not exceeding 150 characters.`;
 
-        return await callLLMAPI(prompt);
+        const response = await callLLMAPI(prompt);
+        if (!response || response.toLowerCase().includes('no_response')) {
+            return false;
+        }
+        return response;
     } catch (error) {
         console.warn("Error in generateResponseWithSearchResults:", error);
-        return "I'm sorry, I encountered an error while processing your request. Please try again later.";
+        return false;
     }
 }
 
@@ -2375,12 +2572,9 @@ async function getDocumentsFromSearchResults(searchResults) {
     return Promise.all(searchResults.map(async result => {
 		log(result.ref);
         const splitIndex = result.ref.split('_');
-		if (splitIndex.length<=2){
-			//console.warn(`Invalid document ID: ${result.ref}`);
-            return null;
-        }
-		const chunkIndex = splitIndex[splitIndex.length - 1];
-		const docId = "doc_"+splitIndex[splitIndex.length - 2];
+		const hasChunkIndex = splitIndex.length > 2;
+		const chunkIndex = hasChunkIndex ? splitIndex[splitIndex.length - 1] : null;
+		const docId = hasChunkIndex ? "doc_"+splitIndex[splitIndex.length - 2] : result.ref;
         
         try {
             const request = store.get(docId);
@@ -2400,6 +2594,10 @@ async function getDocumentsFromSearchResults(searchResults) {
                 const chunk = doc.chunks[parseInt(chunkIndex)];
                 //log(`Retrieved chunk for index ${chunkIndex}:`, chunk); // Add this line for debugging
                 return chunk ? { 
+                    ref: result.ref,
+                    score: result.score || 0,
+                    documentTitle: doc.title || '',
+                    title: chunk.title || '',
                     content: chunk.content, 
                     tags: chunk.tags, 
                     synonyms: chunk.synonyms,
@@ -2408,6 +2606,10 @@ async function getDocumentsFromSearchResults(searchResults) {
             }
             
             return { 
+                ref: result.ref,
+                score: result.score || 0,
+                documentTitle: doc.title || '',
+                title: doc.title || '',
                 content: doc.content, 
                 tags: doc.tags, 
                 synonyms: doc.synonyms,
@@ -2892,30 +3094,7 @@ async function addDocumentToRAG(docId, content, title, tags = [], synonyms = [],
         });
     }
 
-    // Add to Lunr index
-    if (preprocessed) {
-        documentToStore.chunks.forEach((chunk, index) => {
-            globalLunrIndex.add({
-                id: `${docId}_${index}`,
-                title: chunk.title,
-                content: chunk.content,
-                summary: chunk.summary,
-                tags: chunk?.tags.join(' '),
-                synonyms: chunk?.synonyms.join(' ')
-            });
-        });
-    } else {
-        globalLunrIndex.add({
-            id: docId,
-            title: title,
-            content: content,
-            summary: content.substring(0, 200), // Use a substring of content as summary if not preprocessed
-            tags: tags.join(' '),
-            synonyms: synonyms.join(' ')
-        });
-    }
-
-    // Rebuild the Lunr index to include the new document
+    // Rebuild the Lunr index to include the new document.
     await rebuildIndex();
 
     await updateDatabaseDescriptor();
