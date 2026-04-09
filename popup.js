@@ -3942,7 +3942,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     return true;
 }
 function handleExclusiveCases(ele, paramType, paramValue, sync) {
-    const exclusiveTypes = ['param1', 'param4', 'param5', 'param13'];
+    const exclusiveTypes = ['param1', 'param4', 'param5', 'param13', 'param25'];
     if (!exclusiveTypes.includes(paramType)) return;
 
     // Handle exclusive settings like darkmode/lightmode
@@ -3968,6 +3968,12 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
         param13: {
             'nobg': 'pagebg',
             'pagebg': 'nobg'
+        },
+        param25: {
+            'alignright': 'align=center',
+            'align=center': 'alignright',
+            'pagebg': 'chroma=00ff00',
+            'chroma=00ff00': 'pagebg'
         }
     };
 

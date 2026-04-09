@@ -5493,6 +5493,28 @@ input:checked + .slider:before {
 
 			<div class="wrapper">
 				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-source-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span>ðŸ”— Source Filtering</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of sources to allow. Example: youtube,twitch">
+									<input type="text" id="multialertsources" class="textInput instant" autocomplete="off" placeholder="youtube,twitch,tiktok,etc" data-textparam25="sources" />
+									<label for="multialertsources"><span>&gt; Only allow source(s)</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of sources to exclude. Example: tiktok,kick">
+									<input type="text" id="multialerthidesources" class="textInput instant" autocomplete="off" placeholder="tiktok,kick,etc" data-textparam25="hidesources" />
+									<label for="multialerthidesources"><span>&gt; Exclude source(s)</span></label>
+								</div>
+								<small style="opacity: 0.8;">Use <code>&sources=youtube,twitch</code> to opt in only those platforms, or <code>&hidesources=tiktok</code> to opt out specific ones.</small>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-layout-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-layout-options"><span>🖼️ Layout & Visibility</span></label>
 					<div class="collapsible-text">

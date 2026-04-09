@@ -105,6 +105,13 @@ const SOURCE_LABELS = Object.freeze({
   youtubeshorts: 'YouTube Shorts'
 });
 
+const SOURCE_ALIASES = Object.freeze({
+  'ko-fi': 'kofi',
+  twitter: 'x',
+  'youtube-shorts': 'youtubeshorts',
+  'youtube_shorts': 'youtubeshorts'
+});
+
 const urlParams = new URLSearchParams(window.location.search);
 
 const CATEGORY_STYLE_PARAMS = {
@@ -205,6 +212,27 @@ function normalizeKey(value) {
   return normalizeText(value).toLowerCase();
 }
 
+function normalizeSourceKey(value) {
+  const normalized = normalizeKey(value);
+  if (!normalized) {
+    return '';
+  }
+  return SOURCE_ALIASES[normalized] || normalized;
+}
+
+function parseSourceListParam(name) {
+  const rawValue = normalizeText(urlParams.get(name));
+  if (!rawValue) {
+    return new Set();
+  }
+  return new Set(
+    rawValue
+      .split(',')
+      .map((entry) => normalizeSourceKey(entry))
+      .filter(Boolean)
+  );
+}
+
 function humanizeKey(value) {
   const normalized = normalizeKey(value).replace(/[_-]+/g, ' ');
   if (!normalized) {
@@ -253,10 +281,10 @@ function createMediaPreviewDataUri(label, bgColor) {
 }
 
 function pickSourceKey(payload = {}) {
-  const directPlatform = normalizeKey(payload.platform);
+  const directPlatform = normalizeSourceKey(payload.platform);
   if (directPlatform) return directPlatform;
 
-  const payloadType = normalizeKey(payload.type);
+  const payloadType = normalizeSourceKey(payload.type);
   if (KNOWN_SOURCES.has(payloadType)) {
     return payloadType;
   }
@@ -269,7 +297,7 @@ function pickSourceKey(payload = {}) {
   ];
 
   for (const candidate of metaCandidates) {
-    const normalized = normalizeKey(candidate);
+    const normalized = normalizeSourceKey(candidate);
     if (normalized) {
       return normalized;
     }
@@ -378,6 +406,19 @@ function detectMediaType(url) {
     return 'video';
   }
   return 'image';
+}
+
+function isSourceAllowed(sourceKey) {
+  const normalized = normalizeSourceKey(sourceKey);
+  if (settings.includeSources.size) {
+    if (!(normalized && settings.includeSources.has(normalized))) {
+      return false;
+    }
+  }
+  if (normalized && settings.excludeSources.size && settings.excludeSources.has(normalized)) {
+    return false;
+  }
+  return true;
 }
 
 function inferCategory(payload = {}) {
@@ -503,6 +544,9 @@ function buildAlertViewModel(payload = {}) {
 
   const eventKey = pickEventKey(payload);
   const sourceKey = pickSourceKey(payload);
+  if (!isSourceAllowed(sourceKey)) {
+    return null;
+  }
   const sourceLabel = SOURCE_LABELS[sourceKey] || humanizeKey(sourceKey);
   const actor = pickActorName(payload);
   const amount = normalizeText(payload.hasDonation);
@@ -684,6 +728,8 @@ function readSettings() {
     hideSource: urlParams.has('hidesource'),
     hideAmount: urlParams.has('hideamount'),
     hideSubtitle: urlParams.has('hidesubtitle'),
+    includeSources: parseSourceListParam('sources'),
+    excludeSources: parseSourceListParam('hidesources'),
     align:
       normalizeText(urlParams.get('align')).toLowerCase() === 'center'
         ? 'center'
@@ -849,8 +895,13 @@ function handlePreviewMessage(previewMessage) {
     return;
   }
 
+  const previewSourceKey = pickSourceKey(payload);
   const model = buildAlertViewModel(payload);
   if (!model) {
+    if (!isSourceAllowed(previewSourceKey)) {
+      clearAlert({ clearQueue: true, preserveCooldown: true });
+      updateStatus(`${SOURCE_LABELS[previewSourceKey] || humanizeKey(previewSourceKey || 'source')} is filtered out`);
+    }
     return;
   }
 
