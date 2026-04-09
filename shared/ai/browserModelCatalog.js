@@ -35,12 +35,11 @@
             remoteHost: DEFAULT_REMOTE_HOST,
             remotePathTemplate: '{model}/',
             runtime: {
-                modelClass: 'Qwen3_5ForConditionalGeneration',
+                modelClass: 'Qwen3_5ForCausalLM',
                 dtype: {
                     embed_tokens: 'q4',
                     decoder_model_merged: 'q4',
-                    model: 'q4',
-                    vision_encoder: 'q4'
+                    model: 'q4'
                 }
             },
             supportsVision: false,
@@ -108,6 +107,7 @@
             providerLabel: config.providerLabel || config.label,
             modelId: modelId,
             localPath: config.localPath || '',
+            device: overrides.device || '',
             remoteHost: remoteHost,
             remotePathTemplate: remotePathTemplate,
             runtime: runtime

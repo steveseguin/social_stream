@@ -1153,6 +1153,7 @@ input:checked + .slider:before {
     border: none;
     cursor: pointer;
     background: transparent;
+    border-radius: 2px;
 }
 
 .glowingButton:before,
@@ -1160,20 +1161,19 @@ input:checked + .slider:before {
     content: "";
     position: absolute;
     inset: 0;
+    border-radius: 2px;
     background: linear-gradient(45deg, #00ccff, transparent 40%, transparent 60%, #ff075b);
-    transition: all 0.3s ease;
     opacity: 0;
+    pointer-events: none;
 }
 
 .glowingButton:hover:before {
-    opacity: 1;
-    inset: -2px;
+    opacity: 0.35;
+    transition: opacity 0.08s ease-out;
 }
 
 .glowingButton:hover:after {
-    opacity: 1;
-    inset: -2px;
-    filter: blur(8px);
+    opacity: 0;
 }
 
 .glowingButton:active {
@@ -1183,12 +1183,13 @@ input:checked + .slider:before {
 .glowingButton:active:before,
 .glowingButton:active:after {
     background: linear-gradient(45deg, #0099ff, transparent 40%, transparent 60%, #cc0033);
-    opacity: 1;
-    inset: -1px;
+    opacity: 0.45;
+    inset: 0;
 }
 
 .glowingButton:active span {
     background: color-mix(in srgb, var(--button-background) 85%, #000);
+    box-shadow: inset 0 0 10px rgba(0, 153, 255, 0.18), inset 0 0 12px rgba(204, 0, 51, 0.18);
 }
 
 .glowingButton span {
@@ -1207,8 +1208,17 @@ input:checked + .slider:before {
     text-overflow: ellipsis;
     height: 100%;
     border-radius: 2px;
+    border: 1px solid transparent;
     padding: 4px 8px;
     box-sizing: border-box;
+}
+
+.glowingButton:hover span {
+    background:
+        linear-gradient(var(--button-background), var(--button-background)) padding-box,
+        linear-gradient(45deg, rgba(0, 204, 255, 0.95), rgba(255, 7, 91, 0.95)) border-box;
+    box-shadow: inset 0 0 10px rgba(0, 204, 255, 0.12), inset 0 0 12px rgba(255, 7, 91, 0.12);
+    transition: background 0.08s ease-out, box-shadow 0.08s ease-out, border-color 0.08s ease-out;
 }
 
 .sticky-action-row {
@@ -6139,13 +6149,13 @@ input:checked + .slider:before {
                                     <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />🌹
                                     <span data-translate="notiktokdonations"> Do NOT treat roses/etc as donations on TikTok </span>
                                 </div>
-								<div title="Disable the TikTok and YouTube active keep-alive that can cause window focus grabbing">
+								<div title="Disable the TikTok keep-alive poke that can cause window focus grabbing">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="disabletiktokpoke" />
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />🚫👆
-                                    <span data-translate="disabletiktokpoke"> Disable TikTok/YouTube active keep-alive (prevents focus grab) </span>
+                                    <span data-translate="disabletiktokpoke"> Disable TikTok keep-alive (prevents focus grab) </span>
                                 </div>
                                 <div title="Block donations/memberships from Youtube Shorts. Requires &shorts added to the Youtube chat pop out also.">
                                     <label class="switch">

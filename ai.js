@@ -489,12 +489,14 @@ const activeChatBotSessions = {};
 let tmpModelFallback = "";
 let localBrowserLLMClient = null;
 let localBrowserActiveRequestState = null;
+let localBrowserLLMQueue = Promise.resolve();
+const LOCAL_BROWSER_WORKER_VERSION = '2';
 
 function getLocalBrowserWorkerPath() {
     if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
-        return chrome.runtime.getURL('local-browser-model-worker.js');
+        return `${chrome.runtime.getURL('local-browser-model-worker.js')}?v=${LOCAL_BROWSER_WORKER_VERSION}`;
     }
-    return 'local-browser-model-worker.js';
+    return `local-browser-model-worker.js?v=${LOCAL_BROWSER_WORKER_VERSION}`;
 }
 
 function getLocalBrowserCatalog() {
@@ -532,6 +534,12 @@ async function disposeLocalBrowserLLMClient() {
     const client = localBrowserLLMClient;
     localBrowserLLMClient = null;
     await client.dispose();
+}
+
+function enqueueLocalBrowserLLMTask(task) {
+    const run = localBrowserLLMQueue.then(task, task);
+    localBrowserLLMQueue = run.then(() => undefined, () => undefined);
+    return run;
 }
 
 function normalizeLocalBrowserImage(image) {
@@ -741,6 +749,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
     if (isLocalBrowserProvider(provider)) {
         let abortHandler = null;
         const localBrowserSettings = getLocalBrowserProviderSettings(provider, llmSettings, model);
+        const localBrowserGeneration = options.localBrowserGeneration || {};
         if (UUID) {
             if (activeChatBotSessions[UUID]) {
                 activeChatBotSessions[UUID].abort();
@@ -750,12 +759,14 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
             }
             activeChatBotSessions[UUID] = abortController;
         }
+        return enqueueLocalBrowserLLMTask(async () => {
         try {
             if (abortController?.signal?.aborted) {
                 throw new DOMException('Aborted', 'AbortError');
             }
 
             const client = ensureLocalBrowserLLMClient();
+            const localBrowserStateless = !!options.localBrowserStateless || !!options.resetConversationBeforeGenerate;
             const normalizedImages = (Array.isArray(images) ? images : (images ? [images] : []))
                 .map(normalizeLocalBrowserImage)
                 .filter(Boolean);
@@ -774,11 +785,12 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 
             const result = await client.generate(provider, {
                 prompt,
-                systemPrompt: '',
-                maxNewTokens: 220,
-                temperature: 0.65,
-                topP: 0.92,
-                images: requestImages
+                systemPrompt: typeof options.systemPrompt === 'string' ? options.systemPrompt : '',
+                maxNewTokens: Number.isFinite(localBrowserGeneration.maxNewTokens) ? localBrowserGeneration.maxNewTokens : 220,
+                temperature: Number.isFinite(localBrowserGeneration.temperature) ? localBrowserGeneration.temperature : 0.65,
+                topP: Number.isFinite(localBrowserGeneration.topP) ? localBrowserGeneration.topP : 0.92,
+                images: requestImages,
+                stateless: localBrowserStateless
             }, {
                 modelOverride: model,
                 remoteHost: endpoint
@@ -805,6 +817,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 delete activeChatBotSessions[UUID];
             }
         }
+        });
     }
 	
     if (provider === "ollama") {
@@ -1411,125 +1424,326 @@ function addSafePhrase(cleanedText, score=-1) {
 	//log("Added ("+score+"): "+cleanedText);
 }
 
+const CENSOR_CONTEXT_MAX_MESSAGES = 6;
+const CENSOR_CONTEXT_MAX_AGE_MS = 120000;
+const CENSOR_COMPACT_FRAGMENT_MAX_LENGTH = 2;
+const CENSOR_COMPACT_CANDIDATE_MIN_LENGTH = 4;
+const CENSOR_COMPACT_CANDIDATE_MAX_LENGTH = 16;
+const CENSOR_CONTEXT_CACHE_LIMIT = 24;
+let recentCensorMessages = [];
 
-let censorProcessingSlots = [false, false, false]; // ollama can handle 4 requests at a time by default I think, but 3 is a good number.
+function getActiveCensorProviderKey() {
+    return settings?.aiProvider?.optionsetting || "ollama";
+}
+
+function shouldUseBinaryCensorPrompt(providerKey) {
+    return providerKey === "localqwen";
+}
+
+function buildCensorContextEntry(data, cleanedText) {
+    const message = String(cleanedText || "").trim();
+    return {
+        chatname: data?.chatname || "",
+        type: data?.type || "",
+        userid: data?.userid || data?.chatname || "",
+        message,
+        chatmessage: message,
+        timestamp: Date.now(),
+        textonly: true
+    };
+}
+
+function rememberCensorContextMessage(data, cleanedText, blocked = false) {
+    const entry = buildCensorContextEntry(data, cleanedText);
+    if (!entry.message) {
+        return null;
+    }
+    entry.blocked = !!blocked;
+    if (!blocked) {
+        recentCensorMessages.unshift(entry);
+        if (recentCensorMessages.length > CENSOR_CONTEXT_CACHE_LIMIT) {
+            recentCensorMessages.length = CENSOR_CONTEXT_CACHE_LIMIT;
+        }
+        ChatContextManager.addMessage(entry);
+    }
+    return entry;
+}
+
+function resetCensorContextMessages() {
+    recentCensorMessages = [];
+}
+
+function getRecentCensorContextMessages(now = Date.now()) {
+    return recentCensorMessages
+        .filter((entry) => entry && (entry.message || entry.chatmessage))
+        .filter((entry) => !entry.blocked)
+        .filter((entry) => {
+            const timestamp = Number(entry.timestamp || 0);
+            return !timestamp || (now - timestamp) <= CENSOR_CONTEXT_MAX_AGE_MS;
+        })
+        .slice(0, CENSOR_CONTEXT_MAX_MESSAGES)
+        .map((entry) => ({
+            chatname: entry.chatname || "",
+            type: entry.type || "",
+            userid: entry.userid || entry.chatname || "",
+            message: String(entry.message || entry.chatmessage || "").trim(),
+            timestamp: entry.timestamp || now
+        }))
+        .filter((entry) => entry.message)
+        .reverse();
+}
+
+function normalizeCompactCensorText(value) {
+    return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function isCompactFragmentEligible(message) {
+    const normalized = normalizeCompactCensorText(message);
+    return !!normalized && normalized.length <= CENSOR_COMPACT_FRAGMENT_MAX_LENGTH;
+}
+
+function buildCompactSequenceCandidates(recentMessages, currentEntry) {
+    const sequence = recentMessages.concat(currentEntry ? [currentEntry] : []);
+    const candidates = [];
+    const latestUser = currentEntry?.chatname || "";
+    const roomFragments = sequence
+        .filter((entry) => isCompactFragmentEligible(entry.message))
+        .map((entry) => normalizeCompactCensorText(entry.message));
+    const sameUserFragments = latestUser
+        ? sequence
+            .filter((entry) => (entry.chatname || "") === latestUser && isCompactFragmentEligible(entry.message))
+            .map((entry) => normalizeCompactCensorText(entry.message))
+        : [];
+
+    function pushCandidate(scope, label, fragments) {
+        const compact = fragments.join("");
+        if (
+            compact.length < CENSOR_COMPACT_CANDIDATE_MIN_LENGTH ||
+            compact.length > CENSOR_COMPACT_CANDIDATE_MAX_LENGTH
+        ) {
+            return;
+        }
+        candidates.push({
+            scope,
+            label,
+            compact
+        });
+    }
+
+    pushCandidate("same-user", latestUser || "same user", sameUserFragments);
+    pushCandidate("room", "whole room", roomFragments);
+
+    return candidates;
+}
+
+function findCompactProfanityCandidate(candidates) {
+    for (const candidate of candidates) {
+        if (!candidate?.compact) {
+            continue;
+        }
+        if (Array.isArray(badWords)) {
+            const matchedFallback = badWords.some((entry) => normalizeCompactCensorText(entry) === candidate.compact);
+            if (matchedFallback) {
+                return candidate;
+            }
+        }
+        if (typeof isProfanity === "function" && isProfanity(candidate.compact)) {
+            return candidate;
+        }
+        if (typeof containsProfanity === "function" && containsProfanity(candidate.compact)) {
+            return candidate;
+        }
+    }
+    return null;
+}
+
+function shouldReviewSafePhraseWithContext(recentMessages, currentEntry) {
+    const latestUser = currentEntry?.chatname || "";
+    const sameUserRecentCount = latestUser
+        ? recentMessages.filter((entry) => (entry.chatname || "") === latestUser).length
+        : 0;
+    const sameUserShortCount = latestUser
+        ? recentMessages.filter((entry) => (entry.chatname || "") === latestUser && isCompactFragmentEligible(entry.message)).length
+        : 0;
+    const roomShortCount = recentMessages.filter((entry) => isCompactFragmentEligible(entry.message)).length;
+    const currentShort = isCompactFragmentEligible(currentEntry?.message);
+
+    return sameUserRecentCount >= 2 || (currentShort && sameUserShortCount >= 2) || (currentShort && roomShortCount >= 3);
+}
+
+function formatCensorRecentMessages(recentMessages) {
+    if (!recentMessages.length) {
+        return "None";
+    }
+    return recentMessages
+        .map((entry, index) => `${index + 1}. ${entry.chatname || "User"}: ${entry.message}`)
+        .join("\n");
+}
+
+function formatCompactCandidatesForPrompt(compactCandidates) {
+    if (!compactCandidates.length) {
+        return "None";
+    }
+    return compactCandidates
+        .map((candidate) => `- ${candidate.scope === "same-user" ? "Same-user" : "Whole-room"} short-fragment join for ${candidate.label}: ${candidate.compact}`)
+        .join("\n");
+}
+
+function buildCensorPrompt(data, cleanedText, recentMessages, compactCandidates, providerKey) {
+    const latestLine = `${data?.chatname || "User"}: ${cleanedText}`;
+    const recentHistory = formatCensorRecentMessages(recentMessages);
+    const compactHints = formatCompactCandidatesForPrompt(compactCandidates);
+
+    if (shouldUseBinaryCensorPrompt(providerKey)) {
+        return [
+            "Reply with only OK or BLOCK.",
+            "Judge whether the latest chat message should be allowed, considering the recent chat context.",
+            "BLOCK if the latest message is abusive by itself, or if the recent messages together clearly form abusive, profane, hateful, threatening, or insulting text, even when split across several short messages or users.",
+            "OK if the latest message and recent pattern are harmless, supportive, or ambiguous.",
+            "Do not explain your answer.",
+            "",
+            "Recent chat:",
+            recentHistory,
+            "",
+            "Compact candidates:",
+            compactHints,
+            "",
+            "Latest message:",
+            latestLine
+        ].join("\n");
+    }
+
+    return [
+        "Analyze the recent chat context and the latest message for any signs of hate, extreme negativity, foul language, swear words, bad words, profanity, racism, sexism, political messaging, civil war, violence, threats, or any content that may be offensive to a general public audience.",
+        "Messages may be long or very short, and offensive words may be spelled across multiple short messages or users.",
+        "Respond ONLY with a number between 0 and 5, where 0 means safe and 5 means clearly offensive.",
+        "Any profanity or curse word automatically qualifies as a 5.",
+        "",
+        "Recent chat:",
+        recentHistory,
+        "",
+        "Compact candidates:",
+        compactHints,
+        "",
+        "Latest message:",
+        latestLine
+    ].join("\n");
+}
+
+function parseBinaryCensorDecision(llmOutput) {
+    const normalized = String(llmOutput || "").trim().toUpperCase();
+    if (!normalized) {
+        return { blocked: true, parseOk: false, normalized: "" };
+    }
+    const match = normalized.match(/\b(BLOCK|OK|SAFE|ALLOW|PASS|APPROVE|APPROVED|CLEAN|YES|REJECT|DENY|UNSAFE|REMOVE|FILTER|NO)\b/);
+    const label = match ? match[1] : "";
+    if (!label) {
+        return { blocked: true, parseOk: false, normalized };
+    }
+    if (label === "BLOCK" || label === "REJECT" || label === "DENY" || label === "UNSAFE" || label === "REMOVE" || label === "FILTER" || label === "NO") {
+        return { blocked: true, parseOk: true, normalized: label };
+    }
+    return { blocked: false, parseOk: true, normalized: label };
+}
+
+function parseNumericCensorDecision(llmOutput) {
+    const normalized = String(llmOutput || "").trim();
+    const match = normalized.match(/[0-5]/);
+    if (!match) {
+        return { blocked: true, parseOk: false, normalized, score: null };
+    }
+    const score = parseInt(match[0], 10);
+    return {
+        blocked: score > 3,
+        parseOk: true,
+        normalized,
+        score
+    };
+}
+
+let censorProcessingSlots = [false, false, false]; // Non-local providers can use a few concurrent moderation requests.
 async function censorMessageWithLLM(data) {
     if (!data.chatmessage) {
         return true;
     }
 	
+	const providerKey = getActiveCensorProviderKey();
 	const { isSafe, cleanedText } = isSafePhrase(data);
-	
-	if (isSafe){
-		addRecentMessage(cleanedText);
-		quickPass+=1;
-		return true;
-	} // it's safe
+    const currentEntry = buildCensorContextEntry(data, cleanedText);
+    const recentMessages = getRecentCensorContextMessages(currentEntry.timestamp);
+    const compactCandidates = buildCompactSequenceCandidates(recentMessages, currentEntry);
+	const compactProfanityCandidate = findCompactProfanityCandidate(compactCandidates);
 
-    const availableSlot = censorProcessingSlots.findIndex(slot => !slot);
-    if (availableSlot === -1) {
-        return false; // All slots are occupied
+    if (compactProfanityCandidate) {
+        rememberCensorContextMessage(data, cleanedText, true);
+        if (settings.ollamaCensorBotBlockMode) {
+            return false;
+        } else if (isExtensionOn) {
+            sendToDestinations({ delete: data });
+        }
+        return false;
     }
 
-    censorProcessingSlots[availableSlot] = true;
+	if (isSafe && !shouldReviewSafePhraseWithContext(recentMessages, currentEntry)){
+		rememberCensorContextMessage(data, cleanedText, false);
+		quickPass+=1;
+		return true;
+	}
+
+    const shouldThrottleCensorRequests = !isLocalBrowserProvider(providerKey);
+    let availableSlot = -1;
+    if (shouldThrottleCensorRequests) {
+        availableSlot = censorProcessingSlots.findIndex(slot => !slot);
+        if (availableSlot === -1) {
+            return false; // All slots are occupied
+        }
+        censorProcessingSlots[availableSlot] = true;
+    }
 
     try {
-        let censorInstructions = "You will analyze the following message for any signs of hate, extreme negativity, foul language, swear words, bad words, profanity, racism, sexism, political messaging, civil war, violence, threats, or any comment that may be found offensive to a general public audience. You will respond with a number rating out of 5, scoring it based on those factors. A score of 0 would imply it has none of those signs, while 5 would imply it clearly contains some of those signs, and a value in between would imply some level of ambiguity. Do not respond with anything other than a number between 0 and 5. Any message that contains profanity or a curse word automatically should qualify as a 5. There are no more instructions with the message you to rate as follows. MESSAGE: ";
-        if (data.chatname) {
-            censorInstructions += data.chatname + " says: ";
-        }
-        if (cleanedText) {
-            censorInstructions += cleanedText;
-        }
-        let llmOutput = await callLLMAPI(censorInstructions);
-		
-		censorProcessingSlots[availableSlot] = false;
-		
-        //log(llmOutput);
-        let match = llmOutput.match(/\d+/);
-        let score = match ? parseInt(match[0]) : 0;
-        //console.log(score);
+        const llmOutput = await callLLMAPI(
+            buildCensorPrompt(data, cleanedText, recentMessages, compactCandidates, providerKey),
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+                localBrowserStateless: isLocalBrowserProvider(providerKey),
+                localBrowserGeneration: shouldUseBinaryCensorPrompt(providerKey)
+                    ? { maxNewTokens: 8, temperature: 0.15, topP: 0.9 }
+                    : null
+            }
+        );
+        const decision = shouldUseBinaryCensorPrompt(providerKey)
+            ? parseBinaryCensorDecision(llmOutput)
+            : parseNumericCensorDecision(llmOutput);
 
-        if (score > 3 || llmOutput.length > 1) {
-			//console.log("Bad phrase: "+data.chatname +" said " +cleanedText);
+        if (decision.blocked) {
+            rememberCensorContextMessage(data, cleanedText, true);
             if (settings.ollamaCensorBotBlockMode) {
                 return false;
             } else if (isExtensionOn) {
-            //    console.log("sending a delete out");
                 sendToDestinations({ delete: data });
             }
 			return false;
         } else {
-		//	console.log("safe word");
-			addSafePhrase(cleanedText, score);
-			ChatContextManager.addMessage(cleanedText);
+			addSafePhrase(cleanedText, decision.score || 0);
+			rememberCensorContextMessage(data, cleanedText, false);
             return true;
         }
     } catch (error) {
         console.warn("Error processing message:", error);
     } finally {
-        censorProcessingSlots[availableSlot] = false;
+        if (shouldThrottleCensorRequests && availableSlot !== -1) {
+            censorProcessingSlots[availableSlot] = false;
+        }
     }
     return false;
 }
 
 async function censorMessageWithHistory(data) {
-    if (!data.chatmessage) {
-        return true;
-    }
-    
-    let cleanedText = data.chatmessage;
-    if (!data.textonly) {
-        cleanedText = decodeAndCleanHtml(cleanedText);
-    }
-    
-    const availableSlot = censorProcessingSlots.findIndex(slot => !slot);
-    if (availableSlot === -1) {
-        return false; // All slots are occupied
-    }
-    censorProcessingSlots[availableSlot] = true;
-
-    try {
-        // Get recent messages from ChatContextManager's cache
-        const recentMessages = ChatContextManager.cache.recentMessages;
-        
-        let censorInstructions = `Analyze the following live text chat history and the latest message for any signs of hate, extreme negativity, foul language, swear words, bad words, profanity, racism, sexism, political messaging, civil war, violence, threats, or any content that may be offensive to a general public audience. Messages may be long or very short, such as a single letter or a collection of emoji-based characters. Pay special attention to words that might be spelled out across multiple messages. Respond ONLY with a number rating out of 5, where 0 implies no offensive content and 5 implies clearly offensive content. Any message containing profanity or curse words automatically qualifies as a 5. ONLY respond with a number between 0 and 5 and nothing else.
-
-Recent chat history:
-${recentMessages.map(m => m.message).join('\n')}
-
-Latest message:
-${data.chatname} says: ${cleanedText}`;
-
-        let llmOutput = await callLLMAPI(censorInstructions);
-        
-        censorProcessingSlots[availableSlot] = false;
-        
-        let match = llmOutput.match(/\d+/);
-        let score = match ? parseInt(match[0]) : 0;
-        
-        if (score > 3 || llmOutput.length > 1) {
-            if (settings.ollamaCensorBotBlockMode) {
-                return false;
-            } else if (isExtensionOn) {
-                sendToDestinations({ delete: data });
-            }
-            return false;
-        } else {
-            addSafePhrase(cleanedText, score);
-            ChatContextManager.addMessage({
-                chatname: data.chatname,
-                message: cleanedText,
-                timestamp: Date.now()
-            });
-            return true;
-        }
-    } catch (error) {
-        console.warn("Error processing message history:", error);
-    } finally {
-        censorProcessingSlots[availableSlot] = false;
-    }
-    return false;
+    return censorMessageWithLLM(data);
 }
 
 
@@ -3681,8 +3895,48 @@ const MAX_TOKENS = 8000;
 const MAX_SUMMARY_MESSAGES = CACHE_SIZE;
 
 const ChatContextManager = { // summary and chat context
+    summary: null,
+    summaryTime: 0,
+    messageCount: 0,
+    cache: {
+        recentMessages: []
+    },
+
     needsSummary() {
         return !this.summary || this.messageCount >= 40 || (Date.now() - this.summaryTime) > SUMMARY_AGE;
+    },
+
+    addMessage(message) {
+        let normalized;
+
+        if (typeof message === 'string') {
+            normalized = {
+                message: message,
+                chatmessage: message,
+                timestamp: Date.now(),
+                textonly: true
+            };
+        } else if (message && typeof message === 'object') {
+            normalized = {
+                ...message,
+                message: message.message || message.chatmessage || '',
+                chatmessage: message.chatmessage || message.message || '',
+                timestamp: message.timestamp || Date.now()
+            };
+        } else {
+            return null;
+        }
+
+        if (!normalized.message && !normalized.chatmessage) {
+            return null;
+        }
+
+        this.cache.recentMessages.unshift(normalized);
+        if (this.cache.recentMessages.length > MAX_SUMMARY_MESSAGES) {
+            this.cache.recentMessages.length = MAX_SUMMARY_MESSAGES;
+        }
+        this.messageCount += 1;
+        return normalized;
     },
 
     async getContext(data) {
@@ -3889,6 +4143,10 @@ const ChatContextManager = { // summary and chat context
         }
     }
 };
+
+function addRecentMessage(message) {
+    return ChatContextManager.addMessage(message);
+}
 
 async function startAIScript() {
     try {

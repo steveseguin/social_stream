@@ -73,6 +73,11 @@ const BACKGROUND_PAGE_COOLDOWN = 5000; // 5 second cooldown between attempts
 const BACKGROUND_PAGE_LOAD_TIMEOUT = 10000; // 10 second timeout waiting for background tab load
 let queuedMessageRetryTimer = null;
 
+function isTransientTabEditError(error) {
+  const message = String(error?.message || error || '').toLowerCase();
+  return message.includes('tabs cannot be edited right now') || message.includes('dragging a tab');
+}
+
 function scheduleQueuedMessageRetry(delayMs) {
   if (queuedMessageRetryTimer !== null) {
     return;
@@ -159,20 +164,20 @@ async function ensureBackgroundPageIsOpen(load = true) {
     try {
       lastBackgroundPageCreated = now;
       
-      // Close any existing background tabs first to prevent duplicates
       const existingTabs = await chrome.tabs.query({ url: chrome.runtime.getURL('background.html') });
-      for (const tab of existingTabs) {
-        await chrome.tabs.remove(tab.id);
+      if (existingTabs.length > 0) {
+        backgroundPageTabId = existingTabs[0].id;
+        log("Reusing existing background page with ID:", backgroundPageTabId);
+      } else {
+        const tab = await chrome.tabs.create({
+          url: chrome.runtime.getURL('background.html'),
+          active: false,
+          pinned: true
+        });
+        
+        backgroundPageTabId = tab.id;
+        log("Background page created with ID:", backgroundPageTabId);
       }
-
-      const tab = await chrome.tabs.create({
-        url: chrome.runtime.getURL('background.html'),
-        active: false,
-        pinned: true
-      });
-      
-      backgroundPageTabId = tab.id;
-      log("Background page created with ID:", backgroundPageTabId);
       
       // Wait for the background page to initialize
       await waitForTabComplete(backgroundPageTabId);
@@ -180,6 +185,12 @@ async function ensureBackgroundPageIsOpen(load = true) {
       backgroundPageTabIdLoaded = true;
       log("Background page loaded");
     } catch (error) {
+      if (isTransientTabEditError(error)) {
+        console.warn("Background page tab edit was blocked by Chrome; retrying shortly:", error);
+        backgroundPageTabIdLoaded = false;
+        scheduleQueuedMessageRetry(BACKGROUND_PAGE_COOLDOWN);
+        return;
+      }
       console.error("Error ensuring background page is open:", error);
       throw error;
     }

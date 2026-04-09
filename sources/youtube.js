@@ -91,6 +91,7 @@
 		attributeFilter: ['is-deleted'],
 		subtree: true
 	  });
+	  return deletionObserver;
 	}
 	
 	function deleteThis(ele) {
@@ -154,9 +155,64 @@
 		return emojiRegex.test(char);
 	}
 	
-	const policy = trustedTypes.createPolicy("myTrustedPolicy", {
-	  createHTML: (string) => string
-	});
+	const policy = (() => {
+		if (!window.trustedTypes || typeof window.trustedTypes.createPolicy !== "function") {
+			return null;
+		}
+		try {
+			return window.trustedTypes.createPolicy("socialstream-youtube", {
+				createHTML: (string) => string
+			});
+		} catch (error) {
+			try {
+				return typeof window.trustedTypes.getPolicy === "function"
+					? window.trustedTypes.getPolicy("socialstream-youtube")
+					: null;
+			} catch (_) {}
+		}
+		return null;
+	})();
+
+	function toTrustedHTML(html) {
+		const normalized = (typeof html === "string") ? html : ((html === undefined || html === null) ? "" : String(html));
+		if (policy && typeof policy.createHTML === "function") {
+			try {
+				return policy.createHTML(normalized);
+			} catch (e) {}
+		}
+		return normalized;
+	}
+
+	function setSafeHTML(element, html) {
+		if (!element) {
+			return false;
+		}
+		try {
+			element.innerHTML = toTrustedHTML(html);
+			return true;
+		} catch (error) {}
+		if (!html) {
+			try {
+				element.replaceChildren();
+				return true;
+			} catch (err) {}
+		}
+		return false;
+	}
+
+	function parseSafeHTMLDocument(html) {
+		try {
+			const parser = new DOMParser();
+			return parser.parseFromString(toTrustedHTML(html), "text/html");
+		} catch (error) {}
+		try {
+			const doc = document.implementation.createHTMLDocument("");
+			if (doc && doc.body && setSafeHTML(doc.body, html)) {
+				return doc;
+			}
+		} catch (err) {}
+		return null;
+	}
 
 	function getAllContentNodes(element) {
 		let result = '';
@@ -185,7 +241,9 @@
 				}
 				const processedText = replaceEmotesWithImages(escapeHtml(node.textContent)); 
 				const tempDiv = document.createElement('div');
-				tempDiv.innerHTML = policy.createHTML(processedText);
+				if (!setSafeHTML(tempDiv, processedText)) {
+					tempDiv.textContent = processedText;
+				}
 				
 				Array.from(tempDiv.childNodes).forEach(child => {
 					if (child.nodeType === 3) {
@@ -317,8 +375,7 @@
 			return "";
 		}
 		try {
-			const parser = new DOMParser();
-			const doc = parser.parseFromString(html, "text/html");
+			const doc = parseSafeHTMLDocument(html);
 			if (doc && doc.body) {
 				doc.body.querySelectorAll("img").forEach((img) => {
 					const altText = img.getAttribute("alt") || img.getAttribute("title") || "";
@@ -331,11 +388,15 @@
 		} catch (e) {}
 		try {
 			const tempDiv = document.createElement("div");
-			tempDiv.innerHTML = policy.createHTML(html);
+			if (!setSafeHTML(tempDiv, html)) {
+				return typeof html === "string"
+					? html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+					: "";
+			}
 			const text = tempDiv.textContent || tempDiv.innerText || "";
 			return text.replace(/\s+/g, " ").trim();
 		} catch (err) {}
-		return typeof html === "string" ? html.replace(/\s+/g, " ").trim() : "";
+		return typeof html === "string" ? html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : "";
 	}
 
 	function extractReplyDetails(ele, currentPlainMessage = "") {
@@ -649,7 +710,6 @@
 							data.sourceImg = channelThumbnail;
 						}
 
-						markYouTubeChatActivity();
 						chrome.runtime.sendMessage(
 							chrome.runtime.id,
 							{ message: data },
@@ -1195,7 +1255,6 @@
 		//}
 
 		try {
-			markYouTubeChatActivity();
 			chrome.runtime.sendMessage(
 				chrome.runtime.id,
 				{
@@ -1226,161 +1285,20 @@
 	if (containsShorts(window.location.href)){
 		youtubeShorts = true;
 	}
-
-	var youtubeRecoveryInterval = null;
-	var youtubeStaleChatActivityMs = 15 * 60 * 1000;
-	var youtubeMinimumRefreshMs = 10 * 60 * 1000;
-	var youtubeRecoveryCheckMs = 30 * 1000;
-	var lastYouTubeChatActivityAt = 0;
-	var lastYouTubeRefreshTimerResetAt = Date.now();
-	var hasSeenYouTubeChatActivity = false;
-
-	function isDesktopYouTubeRecoveryContext() {
-		return !!(window.ninjafy || window.electronApi);
-	}
-
-	function isYouTubePopoutChatWindow() {
-		var href = window.location.href || "";
-		if (!href.includes("youtube.com/live_chat") && !href.includes("studio.youtube.com/live_chat")) {
-			return false;
-		}
-		return href.includes("is_popout=1");
-	}
-
-	function isPassiveYouTubeRecoveryEnabled() {
-		if (!isDesktopYouTubeRecoveryContext()) {
-			return false;
-		}
-		if (!isExtensionOn) {
-			return false;
-		}
-		if (!isYouTubePopoutChatWindow()) {
-			return false;
-		}
-		if (settings && settings.disabletiktokpoke) {
-			return false;
-		}
-		return true;
-	}
-
-	function markYouTubeChatActivity() {
-		hasSeenYouTubeChatActivity = true;
-		lastYouTubeChatActivityAt = Date.now();
-	}
-
-	function markYouTubeUserActivity() {
-		lastYouTubeRefreshTimerResetAt = Date.now();
-	}
-
-	function getYouTubeChatInputElement() {
-		return document.querySelector('yt-live-chat-text-input-field-renderer div#input[contenteditable], div#input[contenteditable]');
-	}
-
-	function isYouTubeChatInputFocused() {
-		var activeElement = document.activeElement;
-		if (!activeElement) {
-			return false;
-		}
-		if (activeElement === getYouTubeChatInputElement()) {
-			return true;
-		}
-		if (activeElement.closest && activeElement.closest("yt-live-chat-text-input-field-renderer")) {
-			return true;
-		}
-		return false;
-	}
-
-	function isTrustedYouTubeInteraction(event) {
-		return !!(event && event.isTrusted);
-	}
-
-	function maybeRecoverYouTubeChat() {
-		if (!isPassiveYouTubeRecoveryEnabled()) {
-			return;
-		}
-		if (!hasSeenYouTubeChatActivity || !lastYouTubeChatActivityAt) {
-			return;
-		}
-		var now = Date.now();
-		if ((now - lastYouTubeChatActivityAt) < youtubeStaleChatActivityMs) {
-			return;
-		}
-		if ((now - lastYouTubeRefreshTimerResetAt) < youtubeMinimumRefreshMs) {
-			return;
-		}
-		if (isYouTubeChatInputFocused()) {
-			markYouTubeUserActivity();
-			return;
-		}
-		lastYouTubeRefreshTimerResetAt = now;
-		try {
-			window.location.reload();
-		} catch (e) {}
-	}
-
-	function refreshYouTubeRecoveryInterval() {
-		if (youtubeRecoveryInterval) {
-			clearInterval(youtubeRecoveryInterval);
-			youtubeRecoveryInterval = null;
-		}
-		if (!isPassiveYouTubeRecoveryEnabled()) {
-			return;
-		}
-		youtubeRecoveryInterval = setInterval(function() {
-			maybeRecoverYouTubeChat();
-		}, youtubeRecoveryCheckMs);
-	}
-
-	document.addEventListener("focusin", function(event) {
-		if (isTrustedYouTubeInteraction(event)) {
-			markYouTubeUserActivity();
-		}
-	}, true);
-
-	document.addEventListener("mousedown", function(event) {
-		if (isTrustedYouTubeInteraction(event)) {
-			markYouTubeUserActivity();
-		}
-	}, true);
-
-	document.addEventListener("touchstart", function(event) {
-		if (isTrustedYouTubeInteraction(event)) {
-			markYouTubeUserActivity();
-		}
-	}, true);
-
-	document.addEventListener("keydown", function(event) {
-		if (isTrustedYouTubeInteraction(event)) {
-			markYouTubeUserActivity();
-		}
-	}, true);
-
-	document.addEventListener("input", function(event) {
-		if (isTrustedYouTubeInteraction(event)) {
-			markYouTubeUserActivity();
-		}
-	}, true);
-
-	document.addEventListener("wheel", function(event) {
-		if (isTrustedYouTubeInteraction(event)) {
-			markYouTubeUserActivity();
-		}
-	}, true);
 	
 	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 		try {
 			if ("getSource" == request){sendResponse("youtube");	return;	}
 			if ("focusChat" == request) {
-				markYouTubeUserActivity();
 				const editableInput = document.querySelector('yt-live-chat-text-input-field-renderer div#input[contenteditable]');
 				if (editableInput) {
 					editableInput.focus();
 					simulateFocus(editableInput);
-					if (editableInput.textContent && editableInput.textContent.length) {
+					if ((editableInput.textContent && editableInput.textContent.length) || editableInput.childNodes.length) {
 						editableInput.textContent = "";
-						if (editableInput.innerHTML && editableInput.innerHTML.length) {
-							editableInput.innerHTML = "";
-						}
+						try {
+							editableInput.replaceChildren();
+						} catch (e) {}
 						try {
 							const inputEvent = new InputEvent("input", { bubbles: true, cancelable: true });
 							editableInput.dispatchEvent(inputEvent);
@@ -1401,7 +1319,6 @@
 				
 				if ("state" in request) {
 					isExtensionOn = request.state;
-					refreshYouTubeRecoveryInterval();
 				}
 				
 				if ("settings" in request) {
@@ -1429,7 +1346,6 @@
 					} else {
 						removeLargerFont();
 					}
-					refreshYouTubeRecoveryInterval();
 					return;
 				}
 				if ("SEVENTV" in request) {
@@ -1504,7 +1420,6 @@
 		response = response || {};
 		if ("settings" in response) {
 			settings = response.settings;
-			refreshYouTubeRecoveryInterval();
 
 			if (settings.bttv && !BTTV) {
 				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
@@ -1594,17 +1509,27 @@
 	  var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 	  var observer = new MutationObserver(onMutationsObserved);
 	  observer.observe(target, config);
+	  return observer;
 	}
 
 	console.log("Social stream inserted");
 	var marked = false;
 	var largerFontApplied = false;
+	var youtubeChatObserver = null;
+	var youtubeDeletionObserver = null;
+	var youtubeChatStructureObserver = null;
+	var youtubeObservedItems = null;
+	var youtubeObservedItemsHost = null;
+	var youtubeChatHadMessages = false;
+	var youtubeEmptySince = 0;
+	var youtubeLastObserverRefreshAt = 0;
+	var youtubeObserverRefreshCooldownMs = 4000;
 
 	function applyLargerFont() {
 		if (!largerFontApplied) {
 			var style = document.createElement("style");
 			style.id = "youtube-larger-font-style";
-			style.innerHTML = `
+			style.textContent = `
 				yt-live-chat-text-message-renderer {
 					font-size: 24px !important;
 				}
@@ -1624,19 +1549,57 @@
 		}
 	}
 
-	const checkTimer = setInterval(function () {
-	  let ele = document.querySelector("yt-live-chat-app #items.yt-live-chat-item-list-renderer");
-	  
-	  if (!ele && document.querySelector("iframe") && !(document.querySelector("iframe[src]") && document.querySelector("iframe[src]").src.includes("truffle.vip"))) {
-		ele = document.querySelector("iframe")?.contentWindow?.document?.body?.querySelector("#chat-messages #chat #contents > #item-scroller > #item-offset > #items.yt-live-chat-item-list-renderer");	
-	  }
-	  if (ele && !ele.skip) {
-		ele.skip = true;
-		setupDeletionObserver(ele);
+	function getYouTubeChatItemsElement() {
+		let ele = document.querySelector("yt-live-chat-app #items.yt-live-chat-item-list-renderer");
+		if (!ele && document.querySelector("iframe") && !(document.querySelector("iframe[src]") && document.querySelector("iframe[src]").src.includes("truffle.vip"))) {
+			ele = document.querySelector("iframe")?.contentWindow?.document?.body?.querySelector("#chat-messages #chat #contents > #item-scroller > #item-offset > #items.yt-live-chat-item-list-renderer");
+		}
+		return ele || null;
+	}
+
+	function getYouTubeChatItemsHost(ele) {
+		if (!ele) {
+			return null;
+		}
 		try {
-			[...document.querySelector("#items.yt-live-chat-item-list-renderer").children].forEach(ele4 => {
-				if (debugmode){
-					checkType(ele4,processMessage);
+			if (ele.parentElement && ele.parentElement.id === "item-offset") {
+				return ele.parentElement;
+			}
+		} catch (e) {}
+		return ele.parentElement || null;
+	}
+
+	function disconnectYouTubeChatObservers() {
+		try {
+			if (youtubeChatObserver) {
+				youtubeChatObserver.disconnect();
+			}
+		} catch (e) {}
+		try {
+			if (youtubeDeletionObserver) {
+				youtubeDeletionObserver.disconnect();
+			}
+		} catch (e) {}
+		try {
+			if (youtubeChatStructureObserver) {
+				youtubeChatStructureObserver.disconnect();
+			}
+		} catch (e) {}
+		youtubeChatObserver = null;
+		youtubeDeletionObserver = null;
+		youtubeChatStructureObserver = null;
+		youtubeObservedItems = null;
+		youtubeObservedItemsHost = null;
+	}
+
+	function seedYouTubeChatItems(ele) {
+		if (!ele || !ele.children) {
+			return;
+		}
+		try {
+			[...ele.children].forEach(ele4 => {
+				if (debugmode) {
+					checkType(ele4, processMessage);
 				}
 				ele4.skip = true;
 				cleared = true;
@@ -1645,11 +1608,89 @@
 				}
 			});
 		} catch (e) {}
-		
-		onElementInserted(ele, function (ele2, eventtype=false) {
+	}
+
+	function observeYouTubeChatStructure(host) {
+		if (!host) {
+			return null;
+		}
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		var observer = new MutationObserver(function () {
+			try {
+				var latestItems = getYouTubeChatItemsElement();
+				if (latestItems && latestItems !== youtubeObservedItems) {
+					bindYouTubeChatObserver(latestItems, true);
+				}
+			} catch (e) {}
+		});
+		observer.observe(host, {
+			childList: true,
+			subtree: false
+		});
+		return observer;
+	}
+
+	function bindYouTubeChatObserver(ele, forceRefresh) {
+		if (!ele) {
+			return;
+		}
+		if (!forceRefresh && youtubeObservedItems === ele && youtubeChatObserver && youtubeDeletionObserver) {
+			return;
+		}
+		disconnectYouTubeChatObservers();
+		ele.skip = true;
+		youtubeObservedItems = ele;
+		youtubeObservedItemsHost = getYouTubeChatItemsHost(ele);
+		youtubeDeletionObserver = setupDeletionObserver(ele);
+		seedYouTubeChatItems(ele);
+		youtubeChatObserver = onElementInserted(ele, function (ele2, eventtype=false) {
 			setTimeout(() => processMessage(ele2, eventtype), captureDelay);
 		});
-		
+		youtubeChatStructureObserver = observeYouTubeChatStructure(youtubeObservedItemsHost);
+		youtubeEmptySince = 0;
+		youtubeLastObserverRefreshAt = Date.now();
+		youtubeChatHadMessages = (ele.childElementCount || 0) > 1;
+	}
+
+	function maybeRefreshYouTubeChatObserver(ele) {
+		if (!ele) {
+			return;
+		}
+		if (!youtubeObservedItems || youtubeObservedItems !== ele || !youtubeChatObserver || !youtubeDeletionObserver) {
+			bindYouTubeChatObserver(ele, false);
+			return;
+		}
+		if (!youtubeObservedItems.isConnected) {
+			bindYouTubeChatObserver(ele, true);
+			return;
+		}
+		var itemCount = ele.childElementCount || 0;
+		if (itemCount > 1) {
+			youtubeChatHadMessages = true;
+			youtubeEmptySince = 0;
+			return;
+		}
+		if (itemCount > 0 || !youtubeChatHadMessages) {
+			youtubeEmptySince = 0;
+			return;
+		}
+		if (!youtubeEmptySince) {
+			youtubeEmptySince = Date.now();
+			return;
+		}
+		if ((Date.now() - youtubeEmptySince) < 1000) {
+			return;
+		}
+		if ((Date.now() - youtubeLastObserverRefreshAt) < youtubeObserverRefreshCooldownMs) {
+			return;
+		}
+		bindYouTubeChatObserver(ele, true);
+	}
+
+	const checkTimer = setInterval(function () {
+	  let ele = getYouTubeChatItemsElement();
+	  if (ele) {
+		maybeRefreshYouTubeChatObserver(ele);
 	  } else if (!ele && document.querySelector("iframe#hyperchat") && !document.querySelector("iframe#hyperchat").marked) {
 			try {
 				var ele22 = document.querySelector("iframe#hyperchat").contentWindow.document.body.querySelector(".content");
@@ -1742,7 +1783,6 @@
 			data.chatname = getAllContentNodes(ele.querySelector(".text-owner-light, .text-owner-dark"));
 			data.chatmessage = getAllContentNodes(ele.querySelector("span.cursor-auto.align-middle"));
 			data.type = "youtube";
-			markYouTubeChatActivity();
 			chrome.runtime.sendMessage(
 				chrome.runtime.id,
 				{

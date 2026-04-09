@@ -22,6 +22,25 @@
         var activeInitKey = '';
         var activeConfig = null;
 
+        function isRecoverableWebGPUError(error) {
+            var message = String((error && error.message) || error || '').toLowerCase();
+            return message.includes('webgpu') || message.includes('no available backend found');
+        }
+
+        function createWorker() {
+            worker = new Worker(workerPath, { type: 'module' });
+            worker.onmessage = handleMessage;
+            worker.onerror = function (event) {
+                var errorMessage = (event && event.message) || 'Local browser model worker error';
+                onError(new Error(errorMessage));
+                terminateWorker();
+            };
+            worker.onmessageerror = function () {
+                onError(new Error('Local browser model worker message error'));
+                terminateWorker();
+            };
+        }
+
         function clearState() {
             connected = false;
             activeInitKey = '';
@@ -117,12 +136,14 @@
             var catalog = global.SSNBrowserModelCatalog;
             var initPayload;
             var initKey;
+            var requestedOverrides;
 
             if (!catalog || typeof catalog.buildWorkerInit !== 'function') {
                 throw new Error('Local browser model catalog is not available.');
             }
 
-            initPayload = catalog.buildWorkerInit(providerKey, overrides || {});
+            requestedOverrides = overrides || {};
+            initPayload = catalog.buildWorkerInit(providerKey, requestedOverrides);
             initKey = JSON.stringify(initPayload);
 
             if (worker && connected && activeInitKey === initKey) {
@@ -133,19 +154,21 @@
                 terminateWorker();
             }
 
-            worker = new Worker(workerPath, { type: 'module' });
-            worker.onmessage = handleMessage;
-            worker.onerror = function (event) {
-                var errorMessage = (event && event.message) || 'Local browser model worker error';
-                onError(new Error(errorMessage));
-                terminateWorker();
-            };
-            worker.onmessageerror = function () {
-                onError(new Error('Local browser model worker message error'));
-                terminateWorker();
-            };
+            createWorker();
+            try {
+                await request('init', initPayload, initTimeoutMs);
+            } catch (error) {
+                if (String(initPayload.device || '').toLowerCase() === 'wasm' || !isRecoverableWebGPUError(error)) {
+                    terminateWorker();
+                    throw error;
+                }
 
-            await request('init', initPayload, initTimeoutMs);
+                terminateWorker();
+                initPayload = catalog.buildWorkerInit(providerKey, Object.assign({}, requestedOverrides, { device: 'wasm' }));
+                initKey = JSON.stringify(initPayload);
+                createWorker();
+                await request('init', initPayload, initTimeoutMs);
+            }
             connected = true;
             activeInitKey = initKey;
             activeConfig = initPayload;
@@ -154,8 +177,22 @@
         }
 
         async function generate(providerKey, payload, overrides) {
-            await connect(providerKey, overrides);
-            return request('generate', payload || {}, generateTimeoutMs);
+            var requestPayload = payload || {};
+            var requestOverrides = overrides || {};
+            var currentDevice;
+
+            await connect(providerKey, requestOverrides);
+            try {
+                return await request('generate', requestPayload, generateTimeoutMs);
+            } catch (error) {
+                currentDevice = String((activeConfig && activeConfig.device) || requestPayload.device || requestOverrides.device || '').toLowerCase();
+                if (currentDevice === 'wasm' || !isRecoverableWebGPUError(error)) {
+                    throw error;
+                }
+
+                await connect(providerKey, Object.assign({}, requestOverrides, { device: 'wasm' }));
+                return request('generate', Object.assign({}, requestPayload, { device: 'wasm' }), generateTimeoutMs);
+            }
         }
 
         async function reset() {

@@ -502,10 +502,16 @@ if (typeof chrome.runtime == "undefined") {
 	};
 
 	chrome.tabs.sendMessage = async function (tab = null, message = null, callback = null) {
-		var response = await ipcRenderer.sendSync("sendToTab", { message: message, tab: tab });
+		let response = false;
+		if (typeof callback === "function") {
+			response = await ipcRenderer.invoke("sendToTab-async", { message: message, tab: tab });
+		} else {
+			response = await ipcRenderer.sendSync("sendToTab", { message: message, tab: tab });
+		}
 		if (callback) {
 			callback(response);
 		}
+		return response;
 	};
 
 	chrome.debugger.sendCommand = async function (a = null, b = null, c = null, callback = null) {
@@ -15525,7 +15531,7 @@ async function triggerFakeRandomMessage() {
 
 	data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 	if (!data) {
-		return response;
+		return null;
 	}
 
 	try {
@@ -15534,7 +15540,7 @@ async function triggerFakeRandomMessage() {
 		console.warn(e);
 	}
 	if (!data) {
-		return response;
+		return null;
 	}
 
 	lastRandomTestMessageData = JSON.parse(JSON.stringify(data)); // Store a deep copy of the current message

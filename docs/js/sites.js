@@ -345,18 +345,6 @@ document.addEventListener('DOMContentLoaded', function() {
             notes: 'Read-only mode. The API URL is secret and includes your live stream key; Rumble currently documents no separate OAuth requirement for reading it. The page can also resolve the normal <code>https://rumble.com/chat/popup/&lt;stream-id&gt;</code> URL so you can open the injected popup directly without first scraping the <code>/live</code> page.'
         },
         {
-            name: 'Dlive.tv',
-            icon: 'dlive.png',
-            description: 'Blockchain-based streaming platform.',
-            type: 'standard',
-            instructions: `
-                <ul>
-                    <li>Just use the regular viewer page; no pop out needed</li>
-                    <li>URL: https://dlive.tv/c/*</li>
-                </ul>
-            `
-        },
-        {
             name: 'Odysee',
             icon: 'odysee.png',
             description: 'Blockchain-based media platform.',
@@ -387,18 +375,6 @@ document.addEventListener('DOMContentLoaded', function() {
             instructions: `
                 <ul>
                     <li>Works with vimeo.com/events/xxx pages or https://vimeo.com/live-chat/xxxxxxxxx/interaction/</li>
-                </ul>
-            `
-        },
-        {
-            name: 'Trovo.live',
-            icon: 'trovo.png',
-            description: 'Emerging game streaming platform.',
-            type: 'popout',
-            instructions: `
-                <ul>
-                    <li>Open the chat pop-up page</li>
-                    <li>URL: https://trovo.live/chat/CHANNEL_NAME_HERE</li>
                 </ul>
             `
         },

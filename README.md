@@ -133,8 +133,6 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - wix.com (https://manage.wix.com/dashboard/*/live-video/* or https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*)
 - clouthub (no pop out; just the video page)
 - rumble.com (pop out chat)
-- trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/CHANNEL_NAME_HERE)
-- Dlive.tv  (just the regular viewer page; no pop out needed)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
 - Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
 - odysee.com (via the pop out chat I think)
@@ -257,6 +255,8 @@ Past supported sites that have ceased to exist.
 - 🪦 caffeine.tv (RIP June 2024)
 - 🪦 moonbeam (RIP Nov 2025)
 - 🪦 soulbound.tv (RIP Nov 2025)
+- 🪦 trovo.live (RIP April 2026)
+- 🪦 dlive.tv (RIP April 2026)
 
   (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 

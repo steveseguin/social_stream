@@ -2,6 +2,7 @@ import {
     env,
     AutoProcessor,
     Gemma4ForConditionalGeneration,
+    Qwen3_5ForCausalLM,
     Qwen3_5ForConditionalGeneration,
     RawImage,
     TextStreamer,
@@ -22,6 +23,7 @@ const DEGENERATE_TAIL_PATTERN_REPEATS = 6;
 const DEGENERATE_TAIL_PATTERN_MAX_UNIT = 4;
 const MODEL_CLASS_MAP = {
     Gemma4ForConditionalGeneration,
+    Qwen3_5ForCausalLM,
     Qwen3_5ForConditionalGeneration
 };
 const LEGACY_RUNTIME_DEFAULTS = {
@@ -33,12 +35,11 @@ const LEGACY_RUNTIME_DEFAULTS = {
             audio_encoder: 'q4'
         }
     },
-    Qwen3_5ForConditionalGeneration: {
+    Qwen3_5ForCausalLM: {
         dtype: {
             embed_tokens: 'q4',
             decoder_model_merged: 'q4',
-            model: 'q4',
-            vision_encoder: 'q4'
+            model: 'q4'
         }
     }
 };
@@ -68,12 +69,18 @@ function postStatus(state, message = '') {
     });
 }
 
-function buildWasmPaths() {
+function buildWasmPaths(modelClassName = '') {
     const base = new URL('./thirdparty/transformersjs/ort/', self.location.href).href;
+    const useJsep = modelClassName === 'Qwen3_5ForCausalLM';
     return {
-        wasm: `${base}ort-wasm-simd-threaded.asyncify.wasm`,
-        mjs: `${base}ort-wasm-simd-threaded.asyncify.mjs`
+        wasm: `${base}ort-wasm-simd-threaded.${useJsep ? 'jsep' : 'asyncify'}.wasm`,
+        mjs: `${base}ort-wasm-simd-threaded.${useJsep ? 'jsep' : 'asyncify'}.mjs`
     };
+}
+
+function isExtensionRuntime() {
+    const protocol = String(self?.location?.protocol || '').toLowerCase();
+    return protocol === 'chrome-extension:' || protocol === 'moz-extension:';
 }
 
 function normalizeRemoteHost(remoteHost) {
@@ -97,14 +104,18 @@ function resolveModelSource(modelId, requestedRemoteHost = '', remotePathTemplat
     };
 }
 
-function configureEnvironment(source) {
+function configureEnvironment(source, runtime = {}) {
+    const extensionRuntime = isExtensionRuntime();
+    const modelClassName = String(runtime.modelClass || '').trim();
+
     env.allowRemoteModels = !source.isLocalModel;
-    env.allowLocalModels = true;
+    env.allowLocalModels = source.isLocalModel;
     env.localModelPath = './';
     env.remoteHost = source.remoteHost;
     env.remotePathTemplate = source.remotePathTemplate || DEFAULT_REMOTE_PATH_TEMPLATE;
-    env.useBrowserCache = true;
+    env.useBrowserCache = !extensionRuntime;
     env.useFSCache = false;
+    env.useWasmCache = !extensionRuntime;
 
     if (!env.backends.onnx) {
         env.backends.onnx = {};
@@ -113,7 +124,7 @@ function configureEnvironment(source) {
         env.backends.onnx.wasm = {};
     }
 
-    env.backends.onnx.wasm.wasmPaths = buildWasmPaths();
+    env.backends.onnx.wasm.wasmPaths = buildWasmPaths(modelClassName);
     env.backends.onnx.wasm.proxy = false;
     env.backends.onnx.wasm.numThreads = 1;
 }
@@ -135,7 +146,7 @@ function trimConversation() {
     }
 }
 
-function buildMessages(systemPrompt, prompt, imageCount = 0) {
+function buildMessages(systemPrompt, prompt, imageCount = 0, includeConversation = true) {
     const messages = [];
     const systemText = (systemPrompt || '').trim();
 
@@ -146,11 +157,13 @@ function buildMessages(systemPrompt, prompt, imageCount = 0) {
         });
     }
 
-    for (const entry of conversation) {
-        messages.push({
-            role: entry.role,
-            content: normalizeMessageContent(entry.content)
-        });
+    if (includeConversation) {
+        for (const entry of conversation) {
+            messages.push({
+                role: entry.role,
+                content: normalizeMessageContent(entry.content)
+            });
+        }
     }
 
     const userContent = [{ type: 'text', text: prompt }];
@@ -224,27 +237,42 @@ async function resolveRequestedDevice(requestedDevice) {
             try {
                 const adapter = await navigator.gpu.requestAdapter();
                 if (!adapter) {
-                    return 'wasm';
+                    return {
+                        device: 'wasm',
+                        reason: 'WebGPU adapter unavailable, falling back to wasm'
+                    };
                 }
             } catch (_error) {
-                return 'wasm';
+                return {
+                    device: 'wasm',
+                    reason: 'WebGPU probe failed, falling back to wasm'
+                };
             }
         }
-        return requestedDevice;
+        return {
+            device: requestedDevice,
+            reason: ''
+        };
     }
 
     if (navigator.gpu?.requestAdapter) {
         try {
             const adapter = await navigator.gpu.requestAdapter();
             if (adapter) {
-                return 'webgpu';
+                return {
+                    device: 'webgpu',
+                    reason: ''
+                };
             }
         } catch (_error) {
             // Ignore and fall back to wasm.
         }
     }
 
-    return 'wasm';
+    return {
+        device: 'wasm',
+        reason: 'WebGPU not supported, falling back to wasm'
+    };
 }
 
 function resolveModelClass(className) {
@@ -266,7 +294,7 @@ function inferModelClassName(message, runtime = {}) {
         return 'Gemma4ForConditionalGeneration';
     }
     if (providerKey === 'localqwen') {
-        return 'Qwen3_5ForConditionalGeneration';
+        return 'Qwen3_5ForCausalLM';
     }
 
     const modelId = String(message.modelId || initializedModelId || '').trim().toLowerCase();
@@ -274,7 +302,7 @@ function inferModelClassName(message, runtime = {}) {
         return 'Gemma4ForConditionalGeneration';
     }
     if (modelId.includes('qwen')) {
-        return 'Qwen3_5ForConditionalGeneration';
+        return 'Qwen3_5ForCausalLM';
     }
 
     return '';
@@ -349,10 +377,15 @@ async function initModel(message) {
         await disposeModel();
     }
 
-    configureEnvironment(source);
+    configureEnvironment(source, runtime);
 
     initializingPromise = (async () => {
-        let device = await resolveRequestedDevice(requestedDevice);
+        const resolvedDevice = await resolveRequestedDevice(requestedDevice);
+        let device = resolvedDevice.device;
+
+        if (resolvedDevice.reason) {
+            postStatus('loading', resolvedDevice.reason);
+        }
 
         postStatus('loading', `Loading local model: ${modelId}`);
 
@@ -457,37 +490,32 @@ async function prepareImages(images) {
     return prepared;
 }
 
-async function generateReply(message) {
-    const prompt = (message.prompt || '').trim();
-    let rawImages = [];
-    let inputs;
+function shouldRetryGenerationOnWasm(error, message) {
+    const requestedDevice = String(message?.device || 'auto').trim().toLowerCase();
+    const partialText = String(error?.partialText || '').trim();
+    const errorMessage = toErrorMessage(error).toLowerCase();
 
-    if (!prompt) {
-        throw new Error('Prompt is empty.');
-    }
-    if (activeRequestId) {
-        throw new Error('A local generation is already in progress.');
+    if (initializedDevice !== 'webgpu' || requestedDevice === 'wasm' || partialText) {
+        return false;
     }
 
-    await initModel(message);
+    return errorMessage.includes('webgpu') || errorMessage.includes('no available backend found');
+}
 
-    rawImages = await prepareImages(message.images);
-    activeRequestId = message.requestId;
-
-    const messages = buildMessages(message.systemPrompt, prompt, rawImages.length);
+async function runGenerationPass(message, prompt, stateless) {
+    const rawImages = await prepareImages(message.images);
+    const messages = buildMessages(message.systemPrompt, prompt, rawImages.length, !stateless);
     const promptText = processor.apply_chat_template(messages, {
         tokenize: false,
         add_generation_prompt: true
     });
-
-    inputs = rawImages.length
+    const inputs = rawImages.length
         ? await processor(promptText, rawImages)
         : await processor(promptText);
 
     let streamedText = '';
     let guardedStop = null;
     const interruptableStop = new InterruptableStoppingCriteria();
-
     const streamer = new TextStreamer(processor.tokenizer, {
         skip_prompt: true,
         skip_special_tokens: true,
@@ -512,26 +540,32 @@ async function generateReply(message) {
         }
     });
 
-    const output = await model.generate({
-        ...inputs,
-        max_new_tokens: Number.isFinite(message.maxNewTokens)
-            ? message.maxNewTokens
-            : DEFAULT_GENERATION.maxNewTokens,
-        max_time: Number.isFinite(message.maxTime)
-            ? message.maxTime
-            : DEFAULT_GENERATION.maxTime,
-        do_sample: true,
-        temperature: Number.isFinite(message.temperature)
-            ? message.temperature
-            : DEFAULT_GENERATION.temperature,
-        top_p: Number.isFinite(message.topP)
-            ? message.topP
-            : DEFAULT_GENERATION.topP,
-        repetition_penalty: 1.12,
-        no_repeat_ngram_size: 4,
-        stopping_criteria: [interruptableStop],
-        streamer
-    });
+    let output;
+    try {
+        output = await model.generate({
+            ...inputs,
+            max_new_tokens: Number.isFinite(message.maxNewTokens)
+                ? message.maxNewTokens
+                : DEFAULT_GENERATION.maxNewTokens,
+            max_time: Number.isFinite(message.maxTime)
+                ? message.maxTime
+                : DEFAULT_GENERATION.maxTime,
+            do_sample: true,
+            temperature: Number.isFinite(message.temperature)
+                ? message.temperature
+                : DEFAULT_GENERATION.temperature,
+            top_p: Number.isFinite(message.topP)
+                ? message.topP
+                : DEFAULT_GENERATION.topP,
+            repetition_penalty: 1.12,
+            no_repeat_ngram_size: 4,
+            stopping_criteria: [interruptableStop],
+            streamer
+        });
+    } catch (error) {
+        error.partialText = streamedText;
+        throw error;
+    }
 
     let responseText = sanitizeGuardedText(streamedText, guardedStop);
     if (!responseText) {
@@ -544,9 +578,11 @@ async function generateReply(message) {
         );
     }
 
-    conversation.push({ role: 'user', content: prompt });
-    conversation.push({ role: 'assistant', content: responseText });
-    trimConversation();
+    if (!stateless) {
+        conversation.push({ role: 'user', content: prompt });
+        conversation.push({ role: 'assistant', content: responseText });
+        trimConversation();
+    }
 
     return {
         text: responseText,
@@ -555,9 +591,59 @@ async function generateReply(message) {
     };
 }
 
-async function disposeModel() {
-    activeRequestId = null;
-    conversation = [];
+async function generateReply(message) {
+    const prompt = (message.prompt || '').trim();
+    const stateless = !!message.stateless;
+
+    if (!prompt) {
+        throw new Error('Prompt is empty.');
+    }
+    if (activeRequestId) {
+        throw new Error('A local generation is already in progress.');
+    }
+
+    activeRequestId = message.requestId;
+    try {
+        await initModel(message);
+        try {
+            return await runGenerationPass(message, prompt, stateless);
+        } catch (error) {
+            if (!shouldRetryGenerationOnWasm(error, message)) {
+                throw error;
+            }
+
+            postStatus('loading', 'WebGPU generation failed, retrying on wasm');
+            await disposeModel({
+                preserveConversation: !stateless,
+                preserveActiveRequestId: true,
+                suppressStatus: true
+            });
+
+            const retryMessage = {
+                ...message,
+                device: 'wasm'
+            };
+            await initModel(retryMessage);
+            return await runGenerationPass(retryMessage, prompt, stateless);
+        }
+    } finally {
+        if (activeRequestId === message.requestId) {
+            activeRequestId = null;
+        }
+    }
+}
+
+async function disposeModel(options = {}) {
+    const preserveActiveRequestId = !!options.preserveActiveRequestId;
+    const preserveConversation = !!options.preserveConversation;
+    const suppressStatus = !!options.suppressStatus;
+
+    if (!preserveActiveRequestId) {
+        activeRequestId = null;
+    }
+    if (!preserveConversation) {
+        conversation = [];
+    }
 
     if (model && typeof model.dispose === 'function') {
         try {
@@ -575,7 +661,9 @@ async function disposeModel() {
     initializedDevice = '';
     initializedSourceSignature = '';
     initializingPromise = null;
-    postStatus('stopped', 'Local model worker stopped');
+    if (!suppressStatus) {
+        postStatus('stopped', 'Local model worker stopped');
+    }
 }
 
 self.addEventListener('message', async (event) => {
@@ -596,7 +684,6 @@ self.addEventListener('message', async (event) => {
             }
             case 'generate': {
                 const result = await generateReply(message);
-                activeRequestId = null;
                 self.postMessage({
                     type: 'response',
                     requestId,
