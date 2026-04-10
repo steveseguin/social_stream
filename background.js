@@ -10828,9 +10828,7 @@ async function processIncomingRequest(request, UUID = false) {
 					altSourceType = "youtube";
 				}
 
-				const storageUsername = request.value.role == "host"
-					? (request.value.chatname || request.value.userid || "")
-					: (request.value.userid || request.value.chatname || "");
+				const storageUsername = request.value.role == "host" ? request.value.chatname || request.value.userid || "" : request.value.userid || request.value.chatname || "";
 				const userToMark = { username: storageUsername, type: altSourceType };
 				const dockUserToMark = {
 					username: request.value.chatname || request.value.userid || storageUsername,
