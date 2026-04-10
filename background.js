@@ -10805,36 +10805,20 @@ async function processIncomingRequest(request, UUID = false) {
 				sendToDestinations({ vipUser: userToVIP });
 			}
 		} else if (request.action === "markUser" && request.value && request.value.chatname && request.value.type && request.value.role) {
+			let settingsKey = "";
 			if (request.value.role == "bot") {
-				if (!settings.botnamesext) {
-					settings.botnamesext = { textsetting: "" };
-				}
-				const markedlist = settings.botnamesext.textsetting.split(",").map(user => {
-					const parts = user.split(":").map(part => part.trim());
-					return { username: parts[0], type: parts[1] || "" };
-				});
-
-				let altSourceType = request.value.type || "";
-				if (altSourceType == "youtubeshorts") {
-					altSourceType = "youtube";
-				}
-
-				const userToMark = { username: request.value.userid || request.value.chatname, type: altSourceType };
-				const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
-
-				if (!isAlreadyMarked) {
-					settings.botnamesext.textsetting += (settings.botnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
-					chrome.storage.local.set({ settings: settings });
-					// Check for errors in chrome storage operations
-					if (chrome.runtime.lastError) {
-						console.error("Error updating settings:", chrome.runtime.lastError.message);
-					}
-				}
+				settingsKey = "botnamesext";
 			} else if (request.value.role == "mod") {
-				if (!settings.modnamesext) {
-					settings.modnamesext = { textsetting: "" };
+				settingsKey = "modnamesext";
+			} else if (request.value.role == "host") {
+				settingsKey = "hostnamesext";
+			}
+
+			if (settingsKey) {
+				if (!settings[settingsKey]) {
+					settings[settingsKey] = { textsetting: "" };
 				}
-				const markedlist = settings.modnamesext.textsetting.split(",").map(user => {
+				const markedlist = settings[settingsKey].textsetting.split(",").map(user => {
 					const parts = user.split(":").map(part => part.trim());
 					return { username: parts[0], type: parts[1] || "" };
 				});
@@ -10844,16 +10828,28 @@ async function processIncomingRequest(request, UUID = false) {
 					altSourceType = "youtube";
 				}
 
-				const userToMark = { username: request.value.userid || request.value.chatname, type: altSourceType };
+				const storageUsername = request.value.role == "host"
+					? (request.value.chatname || request.value.userid || "")
+					: (request.value.userid || request.value.chatname || "");
+				const userToMark = { username: storageUsername, type: altSourceType };
+				const dockUserToMark = {
+					username: request.value.chatname || request.value.userid || storageUsername,
+					type: altSourceType,
+					role: request.value.role
+				};
 				const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
 
-				if (!isAlreadyMarked) {
-					settings.modnamesext.textsetting += (settings.modnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
+				if (!isAlreadyMarked && userToMark.username) {
+					settings[settingsKey].textsetting += (settings[settingsKey].textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
 					chrome.storage.local.set({ settings: settings });
 					// Check for errors in chrome storage operations
 					if (chrome.runtime.lastError) {
 						console.error("Error updating settings:", chrome.runtime.lastError.message);
 					}
+				}
+
+				if (isExtensionOn && dockUserToMark.username) {
+					sendToDestinations({ markUser: dockUserToMark });
 				}
 			}
 		} else if (request.action === "getChatSources") {
