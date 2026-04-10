@@ -421,6 +421,7 @@ try {
 	var shortcutMap = new Map(); // For :word: patterns
 	var channelShortcutMap = new Map(); // Active stream/channel custom emoji only
 	var unicodeMap = new Map();  // For Unicode emoji characters
+	var channelEmojiFetchToken = 0;
 	
 	
 	// BTTV/7TV/FFZ emote support
@@ -431,8 +432,14 @@ try {
 	var EMOTELIST = false;
 
 	function flushPendingRelayMessages() {
-		if (!pendingRelayMessages.length || !liveChatId) {
+		if (!pendingRelayMessages.length) {
+			return;
+		}
+		if (!liveChatId) {
 			pendingRelayMessages.length = 0;
+			return;
+		}
+		if (!emojiAssetsReady) {
 			return;
 		}
 		var pending = pendingRelayMessages.slice();
@@ -755,31 +762,44 @@ function enableBackgroundKeepAlive() {
 	}
 
 	async function fetchChannelEmoji(vidId) {
+		const fetchToken = ++channelEmojiFetchToken;
+		clearChannelEmojiEntries();
+		if (!vidId) {
+			return;
+		}
 		const cacheKey = 'ytChannelEmoji_' + vidId;
 		const cacheTimeKey = 'ytChannelEmojiTime_' + vidId;
-
-		// Restore from cache if fresh
 		try {
+			// Restore from cache if fresh
 			const cached = localStorage.getItem(cacheKey);
 			const cachedTime = parseInt(localStorage.getItem(cacheTimeKey) || '0');
 			if (cached && (Date.now() - cachedTime) < INNERTUBE_EMOJI_CACHE_TTL) {
 				const entries = JSON.parse(cached);
+				if (fetchToken !== channelEmojiFetchToken) {
+					return;
+				}
 				applyChannelEmojiEntries(entries);
 				if (entries.length) console.log('Restored ' + entries.length + ' custom YouTube emoji from cache');
 				return;
 			}
 		} catch (e) {}
 
-		const entries = (await tryFetchEmojiViaExtensionBridge(vidId)) || (await tryFetchEmojiFromPage(vidId)) || (await tryFetchEmojiViaInnertubeAPI(vidId));
-		if (!entries?.length) return;
-
 		try {
+			const entries = (await tryFetchEmojiViaExtensionBridge(vidId)) || (await tryFetchEmojiFromPage(vidId)) || (await tryFetchEmojiViaInnertubeAPI(vidId));
+			if (fetchToken !== channelEmojiFetchToken) {
+				return;
+			}
+			if (!entries?.length) {
+				return;
+			}
+
 			localStorage.setItem(cacheKey, JSON.stringify(entries));
 			localStorage.setItem(cacheTimeKey, String(Date.now()));
-		} catch (e) {}
-
-		applyChannelEmojiEntries(entries);
-		console.log('Loaded ' + entries.length + ' custom YouTube emoji');
+			applyChannelEmojiEntries(entries);
+			console.log('Loaded ' + entries.length + ' custom YouTube emoji');
+		} catch (error) {
+			console.warn('Failed to load YouTube custom emoji', error);
+		}
 	}
 
 	function getTranslation(key, value = false) {
@@ -3128,6 +3148,7 @@ function enableBackgroundKeepAlive() {
 		lastMessageTime = null;
 		isPolling = false;
 		currentStream = null;
+		channelEmojiFetchToken++;
 		clearChannelEmojiEntries();
 		clearSourceIdentity();
 		messageQueue = [];

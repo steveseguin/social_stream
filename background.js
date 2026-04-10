@@ -4429,7 +4429,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				(async () => {
 					let entries = [];
 					try {
-						const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`, { credentials: "omit" });
+						const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`, { credentials: "include" });
 						if (!resp.ok) {
 							sendEmojiResult(entries);
 							return;

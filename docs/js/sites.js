@@ -319,6 +319,18 @@ document.addEventListener('DOMContentLoaded', function() {
             `
         },
         {
+            name: 'GoodGame.ru',
+            icon: 'goodgame.png',
+            description: 'Live streaming platform with a standalone popout chat page.',
+            type: 'popout',
+            instructions: `
+                <ul>
+                    <li>Use the pop out chat page</li>
+                    <li>URL format: https://goodgame.ru/*/chat</li>
+                </ul>
+            `
+        },
+        {
             name: 'Rumble',
             icon: 'rumble.png',
             description: 'Video sharing and streaming platform.',
