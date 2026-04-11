@@ -5502,6 +5502,56 @@ function refreshLinks(){
   syncAllOverlayPreviews();
 }
 
+function flushDeferredCustomCssSettings() {
+	const cssTextareas = document.querySelectorAll("textarea[data-textparam1='cssb64'], textarea[data-textparam2='cssb64']");
+	for (var i = 0; i < cssTextareas.length; i++) {
+		const ele = cssTextareas[i];
+		if (ele.dataset.pendingSave !== "1") {
+			continue;
+		}
+		const paramType = ele.dataset.textparam1 ? "textparam1" : (ele.dataset.textparam2 ? "textparam2" : null);
+		const setting = paramType ? ele.dataset[paramType] : null;
+		if (!paramType || !setting) {
+			continue;
+		}
+		try {
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",
+				type: paramType,
+				target: ele.dataset.target || null,
+				setting: setting,
+				value: ele.value || ""
+			});
+			ele.dataset.lastCommittedValue = ele.value || "";
+			delete ele.dataset.pendingSave;
+		} catch (e) {
+			console.warn("Failed to flush deferred custom CSS setting", e);
+		}
+	}
+}
+
+function setupDeferredCustomCssFlush() {
+	const cssTextareas = document.querySelectorAll("textarea[data-textparam1='cssb64'], textarea[data-textparam2='cssb64']");
+	for (var i = 0; i < cssTextareas.length; i++) {
+		const ele = cssTextareas[i];
+		ele.addEventListener("input", function () {
+			this.dataset.pendingSave = "1";
+		});
+		ele.addEventListener("change", function () {
+			this.dataset.lastCommittedValue = this.value || "";
+			delete this.dataset.pendingSave;
+		});
+	}
+
+	window.addEventListener("pagehide", flushDeferredCustomCssSettings);
+	window.addEventListener("beforeunload", flushDeferredCustomCssSettings);
+	document.addEventListener("visibilitychange", function () {
+		if (document.hidden) {
+			flushDeferredCustomCssSettings();
+		}
+	});
+}
+
 function handleRangeInput(event) {
     const rangeEle = event?.target || this;
     if (!rangeEle) {
@@ -8201,6 +8251,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
+
+	setupDeferredCustomCssFlush();
 	
 	// Override the language selector handler to reload the page
 	const languageSelectOverride = document.querySelector('select[data-optionsetting="translationlanguage"]');
