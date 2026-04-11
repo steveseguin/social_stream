@@ -3881,9 +3881,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			const existingSetting = settings[request.setting];
 			const isObjectSetting = existingSetting && typeof existingSetting === "object" && !Array.isArray(existingSetting);
 			const valueIsEmpty = request.value === "" || request.value === null || request.value === undefined;
-			const preserveSiblingFields =
-				typedSetting &&
-				(/^(?:textparam\d+|numbersetting\d*|optionparam\d+|textsetting|optionsetting|json)$/.test(request.type));
+			const preserveSiblingFields = typedSetting && /^(?:textparam\d+|numbersetting\d*|optionparam\d+|textsetting|optionsetting|json)$/.test(request.type);
 			if (isObjectSetting) {
 				if (valueIsEmpty) {
 					if (preserveSiblingFields) {
