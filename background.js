@@ -3877,10 +3877,28 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				sendResponse({ success: false, error: payload });
 			}
 		} else if (request.cmd && request.cmd === "saveSetting") {
-			if (typeof settings[request.setting] == "object") {
-				if (!request.value) {
-					// pretty risky if something shares the same name.
-					delete settings[request.setting];
+			const typedSetting = typeof request.type === "string" && request.type !== "";
+			const existingSetting = settings[request.setting];
+			const isObjectSetting = existingSetting && typeof existingSetting === "object" && !Array.isArray(existingSetting);
+			const valueIsEmpty = request.value === "" || request.value === null || request.value === undefined;
+			const preserveSiblingFields =
+				typedSetting &&
+				(/^(?:textparam\d+|numbersetting\d*|optionparam\d+|textsetting|optionsetting|json)$/.test(request.type));
+			if (isObjectSetting) {
+				if (valueIsEmpty) {
+					if (preserveSiblingFields) {
+						delete settings[request.setting][request.type];
+						if (request.type == "json") {
+							delete settings[request.setting]["object"];
+						}
+						const remainingKeys = Object.keys(settings[request.setting]).filter(key => key !== "object");
+						if (!remainingKeys.length) {
+							delete settings[request.setting];
+						}
+					} else {
+						// pretty risky if something shares the same name.
+						delete settings[request.setting];
+					}
 				} else {
 					settings[request.setting][request.type] = request.value;
 					if (request.type == "json") {
