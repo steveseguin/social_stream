@@ -7,8 +7,23 @@
 		} catch (e) {}
 	}
 
-	// Add this at the top of your script, outside any function
+	// Cache avatar classification results, but keep it bounded on long sessions.
 	const imageCache = new Map();
+	const MAX_IMAGE_CACHE_ENTRIES = 250;
+
+	function setImageCacheEntry(url, value) {
+		if (!url) return;
+		if (imageCache.has(url)) {
+			imageCache.delete(url);
+		}
+		imageCache.set(url, value);
+		if (imageCache.size > MAX_IMAGE_CACHE_ENTRIES) {
+			const oldestKey = imageCache.keys().next().value;
+			if (oldestKey) {
+				imageCache.delete(oldestKey);
+			}
+		}
+	}
 
 	function getImageInfo(imgOrUrl) {
 		return new Promise((resolve, reject) => {
@@ -23,12 +38,15 @@
 
 			// Check if the image URL is already in the cache
 			if (imageCache.has(url)) {
-				return resolve(imageCache.get(url));
+				const cachedValue = imageCache.get(url);
+				imageCache.delete(url);
+				imageCache.set(url, cachedValue);
+				return resolve(cachedValue);
 			}
 
 			const checkImage = (blob, img) => {
 				const isGeneric = img.naturalWidth === 32 && img.naturalHeight === 32 && blob.size >= 800 && blob.size <= 900;
-				imageCache.set(url, isGeneric); // Cache the result
+				setImageCacheEntry(url, isGeneric);
 				resolve(isGeneric);
 			};
 
@@ -37,15 +55,30 @@
 					.then(response => response.blob())
 					.then(blob => {
 						const img = new Image();
-						img.onload = () => checkImage(blob, img);
+						const objectUrl = URL.createObjectURL(blob);
+						const cleanupObjectUrl = () => {
+							try {
+								URL.revokeObjectURL(objectUrl);
+							} catch (e) {}
+							img.onload = null;
+							img.onerror = null;
+						};
+						img.onload = () => {
+							try {
+								checkImage(blob, img);
+							} finally {
+								cleanupObjectUrl();
+							}
+						};
 						img.onerror = () => {
-							imageCache.set(url, false); // Cache as non-generic on error
+							cleanupObjectUrl();
+							setImageCacheEntry(url, false);
 							reject(new Error('Failed to load image'));
 						};
-						img.src = URL.createObjectURL(blob);
+						img.src = objectUrl;
 					})
 					.catch(() => {
-						imageCache.set(url, false); // Cache as non-generic on fetch error
+						setImageCacheEntry(url, false);
 						reject(new Error('Failed to fetch image'));
 					});
 			};
@@ -491,21 +524,24 @@
 	}, 800);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
+	var keepAliveInterval = null;
+	var localConnection = null;
+	var remoteConnection = null;
 	try {
 		var receiveChannelCallback = function(event) {
 			remoteConnection.datachannel = event.channel;
 			remoteConnection.datachannel.onmessage = function(e) {};;
 			remoteConnection.datachannel.onopen = function(e) {};;
 			remoteConnection.datachannel.onclose = function(e) {};;
-			setInterval(function() {
+			keepAliveInterval = setInterval(function() {
 				if (document.hidden) { // only poke ourselves if tab is hidden, to reduce cpu a tiny bit.
 					remoteConnection.datachannel.send("KEEPALIVE")
 				}
 			}, 800);
 		}
 		var errorHandle = function(e) {}
-		var localConnection = new RTCPeerConnection();
-		var remoteConnection = new RTCPeerConnection();
+		localConnection = new RTCPeerConnection();
+		remoteConnection = new RTCPeerConnection();
 		localConnection.onicecandidate = (e) => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
 		remoteConnection.onicecandidate = (e) => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
 		remoteConnection.ondatachannel = receiveChannelCallback;
@@ -528,6 +564,49 @@
 	} catch (e) {
 		console.log(e);
 	}
+
+	function cleanupFacebookResources() {
+		if (ttt) {
+			clearInterval(ttt);
+			ttt = null;
+		}
+		if (keepAliveInterval) {
+			clearInterval(keepAliveInterval);
+			keepAliveInterval = null;
+		}
+		try {
+			if (localConnection && localConnection.sendChannel) {
+				localConnection.sendChannel.onopen = null;
+				localConnection.sendChannel.onclose = null;
+				localConnection.sendChannel.onmessage = null;
+				localConnection.sendChannel.close();
+			}
+		} catch (e) {}
+		try {
+			if (remoteConnection && remoteConnection.datachannel) {
+				remoteConnection.datachannel.onopen = null;
+				remoteConnection.datachannel.onclose = null;
+				remoteConnection.datachannel.onmessage = null;
+				remoteConnection.datachannel.close();
+			}
+		} catch (e) {}
+		try {
+			if (localConnection) {
+				localConnection.close();
+			}
+		} catch (e) {}
+		try {
+			if (remoteConnection) {
+				remoteConnection.close();
+			}
+		} catch (e) {}
+		localConnection = null;
+		remoteConnection = null;
+		imageCache.clear();
+	}
+
+	window.addEventListener('beforeunload', cleanupFacebookResources, { once: true });
+	window.addEventListener('pagehide', cleanupFacebookResources, { once: true });
 
 
 })();

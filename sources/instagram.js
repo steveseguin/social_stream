@@ -4,6 +4,171 @@
 	
 	
 	var isExtensionOn = true;
+	var PROCESSED_ATTR = "data-ss-processed";
+	var LIVE_COMMENT_SELECTOR = "section [data-set='live']";
+	function addUniqueNode(list, node) {
+		if (node && (list.indexOf(node) === -1)){
+			list.push(node);
+		}
+	}
+	function hasProcessedMarker(element) {
+		try {
+			return !!(element && element.hasAttribute && element.hasAttribute(PROCESSED_ATTR));
+		} catch(e){
+			return false;
+		}
+	}
+	function markProcessed(element, value) {
+		try {
+			if (element && element.setAttribute){
+				element.setAttribute(PROCESSED_ATTR, value || "true");
+			}
+		} catch(e){}
+	}
+	function getDirectChildAncestor(node, ancestor) {
+		try {
+			while (node && node.parentNode && (node.parentNode !== ancestor)){
+				node = node.parentNode;
+			}
+			if (node && node.parentNode === ancestor){
+				return node;
+			}
+		} catch(e){}
+		return null;
+	}
+	function getLiveSectionBeforeFooter(footer) {
+		try {
+			var current = footer ? footer.previousElementSibling : null;
+			while (current){
+				if ((current.tagName || "").toUpperCase() === "SECTION"){
+					return current;
+				}
+				current = current.previousElementSibling;
+			}
+		} catch(e){}
+		return null;
+	}
+	function getInstagramLiveSections() {
+		var sections = [];
+		try {
+			document.querySelectorAll("footer textarea").forEach(function(textarea){
+				var footer = textarea.closest("footer");
+				var section = getLiveSectionBeforeFooter(footer);
+				if (section){
+					addUniqueNode(sections, section);
+				}
+			});
+		} catch(e){}
+		return sections;
+	}
+	function isInstagramLiveCommentNode(node) {
+		try {
+			if (!node || !node.querySelector){
+				return false;
+			}
+			var button = node.querySelector("div[role='button'][aria-disabled='true']");
+			if (!button){
+				return false;
+			}
+			return !!(button.querySelector("span[dir='auto']") && button.querySelector("img[src]"));
+		} catch(e){}
+		return false;
+	}
+	function getInstagramLiveNodes() {
+		var nodes = [];
+		try {
+			getInstagramLiveSections().forEach(function(section){
+				section.querySelectorAll("div[role='button'][aria-disabled='true']").forEach(function(button){
+					addUniqueNode(nodes, getDirectChildAncestor(button, section) || button);
+				});
+			});
+		} catch(e){}
+		nodes = nodes.filter(isInstagramLiveCommentNode);
+		try {
+			document.querySelectorAll(LIVE_COMMENT_SELECTOR).forEach(function(node){
+				if (isInstagramLiveCommentNode(node)){
+					addUniqueNode(nodes, node);
+				}
+			});
+		} catch(e){}
+		if (!nodes.length){
+			try {
+				document.querySelectorAll("div>div>section>div").forEach(function(node){
+					if (isInstagramLiveCommentNode(node)){
+						addUniqueNode(nodes, node);
+					}
+				});
+			} catch(e){}
+		}
+		return nodes;
+	}
+	function getInstagramNameFromProfileImage(img) {
+		try {
+			var alt = (img && img.alt) ? (img.alt + "") : "";
+			if (!alt){
+				return "";
+			}
+			return alt.replace(/['’]s profile picture.*$/i, "").trim();
+		} catch(e){}
+		return "";
+	}
+	function parseInstagramLiveRow(ele) {
+		try {
+			var button = ele.querySelector("div[role='button'][aria-disabled='true']") || ele;
+			var spans = Array.from(button.querySelectorAll("span[dir='auto']")).filter(function(span){
+				return span && span.textContent && span.textContent.trim();
+			});
+			if (!spans.length){
+				return false;
+			}
+			var images = Array.from(button.querySelectorAll("img[src]"));
+			var chatimg = images.length ? (images[0].src + "") : "";
+			var chatname = spans[0].textContent.trim();
+			var chatmessage = "";
+			var streamEvent = false;
+
+			if (images.length){
+				var imgName = getInstagramNameFromProfileImage(images[0]);
+				if (imgName){
+					chatname = imgName;
+				}
+			}
+
+			if (spans.length > 1){
+				chatmessage = getAllContentNodes(spans[spans.length - 1]);
+			} else {
+				var soloText = spans[0].textContent.trim();
+				var splitPoint = soloText.indexOf(" ");
+				if (splitPoint > 0){
+					chatname = soloText.slice(0, splitPoint).trim();
+					chatmessage = escapeHtml(soloText.slice(splitPoint + 1).trim());
+					streamEvent = true;
+				}
+			}
+
+			chatname = (chatname || "").replace(/[,:\s]+$/, "").trim();
+			chatmessage = (chatmessage || "").trim();
+
+			if (!chatname || !chatmessage){
+				return false;
+			}
+			if (chatmessage.toLowerCase() === "joined"){
+				streamEvent = "joined";
+				if (!settings.capturejoinedevent){
+					return false;
+				}
+			}
+
+			return {
+				chatname: escapeHtml(chatname),
+				chatmessage: chatmessage,
+				chatimg: chatimg,
+				badges: [],
+				streamEvent: streamEvent
+			};
+		} catch(e){}
+		return false;
+	}
 function checkConditions(element) {
 	  // Get all siblings of the element
 	  const siblings = Array.from(element.parentNode.children);
@@ -12,8 +177,8 @@ function checkConditions(element) {
 	  // Condition 1: Closer to the bottom than the top
 	  const isCloserToBottom = index > siblings.length / 2;
 
-	  // Condition 2: Any sibling after it doesn't have "data-set" attribute
-	  const hasUnattributedSiblingAfter = siblings.slice(index + 1).some(sibling => !sibling.hasAttribute('data-set'));
+	  // Condition 2: Any sibling after it hasn't been processed by Social Stream yet
+	  const hasUnattributedSiblingAfter = siblings.slice(index + 1).some(sibling => !hasProcessedMarker(sibling));
 
 	  // Condition 3: Less than 99 siblings
 	  const hasLessThan99Siblings = siblings.length < 99; // this probably could be increased
@@ -150,7 +315,7 @@ function checkConditions(element) {
 		}catch(e){
 		}
 		try {
-			ele.querySelector("article ul ul").dataset.set = "subpost";
+			markProcessed(ele.querySelector("article ul ul"), "subpost");
 		}catch(e){}
 		
 		var name = "";
@@ -437,92 +602,97 @@ function checkConditions(element) {
 	}	
 	
 	function processMessageIGLive(ele){
-	//	console.log(ele);
-		try {
-			var content = ele.childNodes[0].childNodes[0].childNodes[0];
-		} catch(e){
-			return;
-		}
 		var chatname="";
 		var streamEvent = false;
-		try {
-			chatname = content.childNodes[1].children[0].textContent;
-			
-			if (content.childNodes[1].children.length==1){
-				streamEvent = true;
-			}
-			
-			let tt = chatname.split(" ");
-			if (tt.length == 2){
-				if (tt[1] == "joined"){
-					streamEvent = "joined";
-					if (!settings.capturejoinedevent){
-						return;
-					}
-				}
-			}
-			
-			chatname = chatname.replace(/ .*/,'');
-			chatname = escapeHtml(chatname);
-			
-			if (chatname && (chatname.slice(-1) == ",")){
-				chatname = chatname.slice(0, -1);
-				streamEvent = true;
-			}
-			
-		} catch(e){
-		}
 		var chatmessage="";
 		var badges = [];
-		try{
+		var chatimg="";
+		var parsed = parseInstagramLiveRow(ele);
+		if (parsed){
+			chatname = parsed.chatname;
+			streamEvent = parsed.streamEvent;
+			chatmessage = parsed.chatmessage;
+			badges = parsed.badges;
+			chatimg = parsed.chatimg;
+		} else {
 			try {
-				chatmessage = getAllContentNodes(Array.from(content.childNodes[2].querySelectorAll(":scope > span")).slice(-1)[0]);
+				var content = ele.childNodes[0].childNodes[0].childNodes[0];
 			} catch(e){
-				chatmessage = getAllContentNodes(Array.from(content.querySelectorAll("div > span")).slice(-1)[0]);
+				return;
 			}
-			
-			try{
-				if (content.childNodes[1].querySelector("img")){
-					var badge = content.childNodes[1].querySelector("img");
-					badge.src = badge.src+"";
-					badges.push(badge.src);
-				}
-			} catch(e){
-			}
-		} catch(e){
-			chatmessage="";
-			try{
-				var msgs = Array.from(content.childNodes[1].querySelectorAll(":scope > span"));
+			try {
+				chatname = content.childNodes[1].children[0].textContent;
 				
-				if (msgs.length==1){
-					chatmessage = getAllContentNodes(msgs[0]);
+				if (content.childNodes[1].children.length==1){
 					streamEvent = true;
-				} else {
-					chatmessage = getAllContentNodes(msgs.slice(-1)[0]);
+				}
+				
+				let tt = chatname.split(" ");
+				if (tt.length == 2){
+					if (tt[1] == "joined"){
+						streamEvent = "joined";
+						if (!settings.capturejoinedevent){
+							return;
+						}
+					}
+				}
+				
+				chatname = chatname.replace(/ .*/,'');
+				chatname = escapeHtml(chatname);
+				
+				if (chatname && (chatname.slice(-1) == ",")){
+					chatname = chatname.slice(0, -1);
+					streamEvent = true;
+				}
+				
+			} catch(e){
+			}
+			try{
+				try {
+					chatmessage = getAllContentNodes(Array.from(content.childNodes[2].querySelectorAll(":scope > span")).slice(-1)[0]);
+				} catch(e){
+					chatmessage = getAllContentNodes(Array.from(content.querySelectorAll("div > span")).slice(-1)[0]);
 				}
 				
 				try{
-					if (content.childNodes[1].childNodes[1].querySelector("img")){
-						var badge = content.childNodes[1].childNodes[1].querySelector("img");
+					if (content.childNodes[1].querySelector("img")){
+						var badge = content.childNodes[1].querySelector("img");
 						badge.src = badge.src+"";
 						badges.push(badge.src);
 					}
 				} catch(e){
 				}
-				
 			} catch(e){
-				//console.log(e);
-				return;
+				chatmessage="";
+				try{
+					var msgs = Array.from(content.childNodes[1].querySelectorAll(":scope > span"));
+					
+					if (msgs.length==1){
+						chatmessage = getAllContentNodes(msgs[0]);
+						streamEvent = true;
+					} else {
+						chatmessage = getAllContentNodes(msgs.slice(-1)[0]);
+					}
+					
+					try{
+						if (content.childNodes[1].childNodes[1].querySelector("img")){
+							var badge = content.childNodes[1].childNodes[1].querySelector("img");
+							badge.src = badge.src+"";
+							badges.push(badge.src);
+						}
+					} catch(e){
+					}
+					
+				} catch(e){
+					return;
+				}
+			}
+			
+			try{
+				chatimg = content.childNodes[0].querySelectorAll("img")[0].src;
+			} catch(e){
 			}
 		}
-		
-		var chatimg="";
-		try{
-			chatimg = content.childNodes[0].querySelectorAll("img")[0].src;
-		} catch(e){
-		}
-		
-	//	console.log(chatmessage);
 	  
 	  if (!chatmessage){return;}
 	  
@@ -594,12 +764,12 @@ function checkConditions(element) {
 		
 		try {
 			if (window.location.pathname.includes("/live/") || window.location.pathname.includes("%2Flive%2F") || (window.location.pathname==="/")){
-				var main =  document.querySelectorAll("div>div>section>div");
+				var main = getInstagramLiveNodes();
 				
 				for (var j =0;j<main.length;j++){
 					try{
-						if (!main[j].dataset.set){
-							main[j].dataset.set = "true";
+						if (!hasProcessedMarker(main[j])){
+							markProcessed(main[j], "true");
 							// processMessageIGLive(main[j]);
 						} 
 					} catch(e){}
@@ -616,11 +786,11 @@ function checkConditions(element) {
 			try {
 				if (window.location.pathname.includes("/live") || window.location.pathname.includes("%2Flive") || (window.location.pathname.endsWith("/") || document.querySelector("video") || document.querySelector("textarea")) || (window.location.pathname==="/")){
 					try {
-						var main = document.querySelectorAll("div>div>section>div");
+						var main = getInstagramLiveNodes();
 						for (var j =0;j<main.length;j++){
 							try{
-								if (!main[j].dataset.set){
-									main[j].dataset.set = "live";
+								if (!hasProcessedMarker(main[j])){
+									markProcessed(main[j], "live");
 									processMessageIGLive(main[j]);
 								} 
 							} catch(e){}
@@ -635,8 +805,8 @@ function checkConditions(element) {
 					if (main){
 						for (var j =0;j<main.length;j++){
 							try{
-								if (!main[j].dataset.set){
-									main[j].dataset.set = "post";
+								if (!hasProcessedMarker(main[j])){
+									markProcessed(main[j], "post");
 									main[j].querySelectorAll("div[role='button']").forEach(xx=>{
 										if (xx.textContent === "more"){
 											//xx.click();
@@ -655,8 +825,8 @@ function checkConditions(element) {
 				try {
 					document.querySelectorAll("article ul ul").forEach(main=>{
 						if (main && main.childNodes){
-							if (!main.dataset.set){
-								main.dataset.set = "comment";	
+							if (!hasProcessedMarker(main)){
+								markProcessed(main, "comment");	
 								processMessageComment(main);
 							}
 						}
@@ -665,8 +835,8 @@ function checkConditions(element) {
 				try {
 					document.querySelectorAll("div > section > main[role='main']").forEach(main=>{
 						if (main && main.childNodes){
-							if (!main.dataset.set){
-								main.dataset.set = "single";	
+							if (!hasProcessedMarker(main)){
+								markProcessed(main, "single");	
 								processMessageSingle(main);
 							}
 						}
