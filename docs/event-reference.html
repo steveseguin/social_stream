@@ -1033,6 +1033,36 @@
                     </table>
                 </article>
 
+                <article class="platform-card" id="onlinechurch">
+                    <h3>Online Church</h3>
+                    <p class="source-note">Implementation: <code>sources/onlinechurch.js</code></p>
+                    <ul class="requirements">
+                        <li>Relies on DOM scraping of the public chat and media header.</li>
+                        <li>Viewer counts only refresh when <strong>Show viewer count</strong> or hype mode is enabled.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New entries appear under <code>#publicchat</code>.</td>
+                                <td>Standard chat payload with sender name, avatar, badges, and optional membership label when present in the DOM.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Polls the live occupancy badge in the media header every 10s.</td>
+                                <td><code>meta</code> integer viewer count; sends <code>0</code> when the badge is missing or unreadable to clear stale counters.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
                 <article class="platform-card" id="rumble-dom">
                     <h3>Rumble - Standard DOM Capture</h3>
                     <p class="source-note">Implementation: <code>sources/rumble.js</code></p>
@@ -1397,4 +1427,3 @@
     </script>
 </body>
 </html>
-

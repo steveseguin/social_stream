@@ -311,6 +311,7 @@ try {
 	var settings = {};
 	// settings.textonlymode
 	// settings.captureevents
+	var lastViewerCount = null;
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
@@ -319,6 +320,91 @@ try {
 		}
 	});
 
+	function parseViewerCount(value){
+		if (!value && value !== 0){
+			return null;
+		}
+
+		var raw = String(value).replace(/,/g, "").trim().toUpperCase();
+		if (!raw){
+			return null;
+		}
+
+		var multiplier = 1;
+		if (raw.endsWith("K")){
+			multiplier = 1000;
+			raw = raw.slice(0, -1);
+		} else if (raw.endsWith("M")){
+			multiplier = 1000000;
+			raw = raw.slice(0, -1);
+		} else if (raw.endsWith("B")){
+			multiplier = 1000000000;
+			raw = raw.slice(0, -1);
+		}
+
+		raw = raw.replace(/[^\d.]/g, "");
+		if (!raw){
+			return null;
+		}
+
+		var parsed = parseFloat(raw);
+		if (!Number.isFinite(parsed)){
+			return null;
+		}
+
+		return Math.round(parsed * multiplier);
+	}
+
+	function getViewerCountFromDom(){
+		var selectors = [
+			"[data-testid='mediaHeader-occupancy']",
+			"[data-testid='mediaHeader'] [class*='ViewerCount']"
+		];
+
+		for (var i = 0; i < selectors.length; i++){
+			try {
+				var node = document.querySelector(selectors[i]);
+				var parsed = parseViewerCount(node && node.textContent);
+				if (Number.isFinite(parsed)){
+					return parsed;
+				}
+			} catch(e){}
+		}
+
+		return null;
+	}
+
+	function sendViewerCount(count){
+		try {
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				({message:{
+						type: "onlinechurch",
+						event: "viewer_update",
+						meta: count
+					}
+				}),
+				function () {}
+			);
+		} catch(e){}
+	}
+
+	function checkViewers(forceUpdate){
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)){
+			return;
+		}
+
+		var count = getViewerCountFromDom();
+		if (count === null){
+			count = 0;
+		}
+
+		if (forceUpdate || lastViewerCount !== count){
+			lastViewerCount = count;
+			sendViewerCount(count);
+		}
+	}
+	
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			
@@ -372,6 +458,9 @@ try {
 			onElementInserted(mainChat);
 		} 
 	},500);
+
+	setTimeout(function(){checkViewers(true);}, 2500);
+	setInterval(function(){checkViewers(false);}, 10000);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
 	try {
