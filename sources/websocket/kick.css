@@ -100,6 +100,21 @@ a {
     border-top: 1px solid #24303d;
 }
 
+.channel-picker-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.channel-picker-row button {
+    white-space: nowrap;
+}
+
+.channel-picker-hint {
+    margin-top: -2px;
+}
+
 button {
     background: var(--kick-green);
     color: var(--kick-green-ink);
@@ -647,6 +662,14 @@ img.zero-width-emote-centered {
     }
 
     .button-row button {
+        width: 100%;
+    }
+
+    .channel-picker-row {
+        grid-template-columns: 1fr;
+    }
+
+    .channel-picker-row button {
         width: 100%;
     }
 }
