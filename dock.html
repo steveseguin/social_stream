@@ -6253,7 +6253,7 @@
 						shouldAdaptiveReload = atHistoryStart || distanceFromBottom > hardReloadDistance;
 					}
 				var reloadRecentHistory = options.reloadRecentHistory === true || shouldAdaptiveReload;
-				var clearBeforeReload = options.clearBeforeReload === true || (reloadRecentHistory && options.clearBeforeReload !== false);
+				var clearBeforeReload = options.clearBeforeReload === true;
 				historyBrowsing = false;
 				reachedOldest = false;
 				isLoadingHistory = false;
@@ -6653,6 +6653,7 @@
 								}
 							}
 						});
+						cleanUpOldNodes();
 						console.log("Loaded from remote DB storage");
 						historyReturnSyncPending = false;
 						flushMissedLiveBuffer();
