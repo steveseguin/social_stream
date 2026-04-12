@@ -5570,7 +5570,10 @@ async function sendToDestinations(message) {
 	var isAlertMessage = message && message.event;
 	var reactionEventName = "";
 	if (message && typeof message.event === "string") {
-		reactionEventName = message.event.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+		reactionEventName = message.event
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "_")
+			.replace(/^_+|_+$/g, "");
 	}
 	var isReactionMessage = reactionEventName === "reaction" || reactionEventName === "liked" || reactionEventName === "like";
 
