@@ -2213,11 +2213,12 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "poll", path: "poll.html" },
     { id: "battle", path: "battle.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
-    { id: "cohost", path: "cohost.html" },
+	{ id: "cohost", path: "cohost.html" },
     { id: "giveaway", path: "giveaway.html" },
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "eventsdashboard", path: "events.html" },
+	{ id: "reactions", path: "reactions.html" },
 	{ id: "flowactions", path: "actions.html" },
 	{ id: "custom-gif-commands", path: "gif.html" },
 	{ id: "spotify", path: "spotify-overlay.html" },
@@ -3732,6 +3733,7 @@ function getTargetMap() {
         'meta': 24,
         'multialerts': 25,
         'timer': 26,
+		'reactions': 27,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -5464,6 +5466,7 @@ function refreshLinks(){
       'creditslink': 'credits',
       'privatechatbotlink': 'privatechatbot',
       'eventsdashboardlink': 'eventsdashboard',
+      'reactionslink': 'reactions',
       'custom-gif-commandslink': 'custom-gif-commands',
 	  'scoreboardlink': 'scoreboard',
 	  'spotifylink': 'spotify',

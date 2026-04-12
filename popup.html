@@ -8819,10 +8819,10 @@ input:checked + .slider:before {
 						A real-time dashboard displaying donations and stream events. Create a customized view for monitoring.
 					</span>
 				</h3>
-				<div id="eventsdashboard" data-raw="" class="eventsdashboard"><a href="" id="eventsdashboardlink"></a></div>
+			<div id="eventsdashboard" data-raw="" class="eventsdashboard"><a href="" id="eventsdashboardlink"></a></div>
 			</div>
 			<a href="" id="eventsdashboard-options"></a>
-			
+
 			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-eventsdashboard-options" />
@@ -8981,7 +8981,137 @@ input:checked + .slider:before {
 					</div>
 				</div>
 			</div>
-			
+
+			<div class="link" title="Reaction-only overlay for floating hearts, thumbs, and similar live reactions.">
+				<h2 class="single_message_title">
+					<span class="title-group"><span class="emoji" aria-hidden="true">💖</span><span>Reactions Overlay</span></span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#reactions-options" title="Jump to the reactions overlay options."><span data-translate="options">[options]</span></a>
+					<label for="help-reactions" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+				</h2>
+				<input type="checkbox" id="help-reactions" class="link-help-toggle">
+				<div class="link-help-content">
+					<strong>Reaction-only overlay for floating hearts and other quick reactions.</strong>
+					<p>Use this when you want likes, hearts, thumbs-up, and similar reaction bursts on their own page instead of mixed into chat or the events dashboard.</p>
+					<ul>
+						<li>Zoom reaction icons float up directly from the captured reaction graphic</li>
+						<li>TikTok like events become floating heart bursts</li>
+						<li>Transparent background so you can place it anywhere in OBS</li>
+						<li>Optional URL params: <code>&amp;align=right</code>, <code>&amp;layout=fountain</code>, <code>&amp;scale=1.2</code>, <code>&amp;burst=8</code>, <code>&amp;speed=1.1</code>, <code>&amp;triple</code>, <code>&amp;pagebg=%23000000</code></li>
+					</ul>
+				</div>
+				<div id="reactions" data-raw="" class="single_message"><a href="" id="reactionslink"></a></div>
+			</div>
+			<a href="" id="reactions-options"></a>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-reactions-options" />
+					<label class="collapsible-label" for="wrapper-reactions-options"><span>💖 Enable and customize</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group reactions_overlay">
+								<h3>Release Area</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="align" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										📍 Align reactions to
+										<select id="reactions-align-select" data-optionparam27="align">
+											<option value="center">Center</option>
+											<option value="left">Left</option>
+											<option value="right">Right</option>
+										</select>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="layout" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🪄 Layout style
+										<select id="reactions-layout-select" data-optionparam27="layout">
+											<option value="spread">Spread out</option>
+											<option value="column">Tight column</option>
+											<option value="fountain">Fountain burst</option>
+										</select>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" id="reactions-triple-toggle" data-param27="triple" />
+										<span class="slider round"></span>
+									</label>
+									<span>3x reactions released for each reaction event</span>
+								</div>
+
+								<h3>Motion &amp; Density</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="scale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔍 Emoji scale
+										<input type="range" id="reactions-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting27="scale" data-range-display="reactions-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="reactions-scale-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="speed" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										⏩ Float speed
+										<input type="range" id="reactions-speed-range" min="0.5" max="2.5" step="0.05" value="1" style="width: 150px;" data-numbersetting27="speed" data-range-display="reactions-speed-display" data-range-suffix="x" />
+										<span class="range-value" id="reactions-speed-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="burst" />
+										<span class="slider round"></span>
+									</label>
+									<span>Burst count per like event:</span>
+									<input type="number" id="reactionBurst" class="numberInput" min="1" max="30" value="6" data-numbersetting27="burst">
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="limit" />
+										<span class="slider round"></span>
+									</label>
+									<span>Maximum visible reactions:</span>
+									<input type="number" id="reactionLimit" class="numberInput" min="10" max="300" value="60" data-numbersetting27="limit">
+								</div>
+
+								<h3>Background</h3>
+								<div title="Set the page background color instead of using transparency. Supports hex, rgba, and named colors.">
+									<label class="switch">
+										<input type="checkbox" data-param27="pagebg" />
+										<span class="slider round"></span>
+									</label>
+									<span>🎨 Custom page background color</span>
+								</div>
+								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
+										<input type="text" id="reactions_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam27="pagebg" data-palette="reactions_pagebg_palette" />
+										<label for="reactions_pagebg">&gt; Page background color</label>
+									</div>
+									<input type="color" data-color="reactions_pagebg" id="reactions_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+								</div>
+								<div>
+									<small>Every enabled control here is added to the <code>reactions.html</code> URL as a matching parameter.</small>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 
             <div class="link" title="This link will only show the inbound emotes, bouncing them around the full page.">
                 <h2 class="emotes_wall_title">

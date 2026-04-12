@@ -697,10 +697,21 @@ function readSettings() {
     disabledCategories[category] = urlParams.has(paramName);
   });
 
+  const hasServer = urlParams.has('server');
+  const hasServer2 = urlParams.has('server2');
+  const hasServer3 = urlParams.has('server3');
+  const hasLocalServer = urlParams.has('localserver');
   const remoteServerUrl =
     normalizeText(urlParams.get('server')) ||
     normalizeText(urlParams.get('server2')) ||
     normalizeText(urlParams.get('server3'));
+  let serverURL = hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja';
+
+  if (hasServer) {
+    serverURL = remoteServerUrl || (hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/api');
+  } else if (hasServer2 || hasServer3) {
+    serverURL = remoteServerUrl || (hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/extension');
+  }
 
   const queueEnabled = urlParams.has('queue')
     ? true
@@ -745,8 +756,8 @@ function readSettings() {
     previewOnly: urlParams.has('preview'),
     showStatus: urlParams.has('showstatus') || urlParams.has('debug') || urlParams.has('preview'),
     debug: urlParams.has('debug'),
-    useSocket: urlParams.has('server') || urlParams.has('server2') || urlParams.has('server3') || urlParams.has('localserver'),
-    serverURL: remoteServerUrl || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja'),
+    useSocket: hasServer || hasServer2 || hasServer3 || hasLocalServer,
+    serverURL,
     styles,
     disabledCategories
   };
@@ -1459,3 +1470,70 @@ async function playAlertSound(model) {
     clearActiveGeneratedSound();
   }
 }
+
+window.__multiAlertsOverlay = {
+  getSettings() {
+    return {
+      roomID: settings.roomID,
+      password: settings.password,
+      showTime: settings.showTime,
+      cooldown: settings.cooldown,
+      queueEnabled: settings.queueEnabled,
+      maxQueue: settings.maxQueue,
+      minShowTime: settings.minShowTime,
+      beep: settings.beep,
+      beepVolume: settings.beepVolume,
+      customBeep: settings.customBeep,
+      categorySounds: Object.assign({}, settings.categorySounds),
+      compact: settings.compact,
+      hideAvatar: settings.hideAvatar,
+      hideMedia: settings.hideMedia,
+      hideSource: settings.hideSource,
+      hideAmount: settings.hideAmount,
+      hideSubtitle: settings.hideSubtitle,
+      includeSources: Array.from(settings.includeSources),
+      excludeSources: Array.from(settings.excludeSources),
+      align: settings.align,
+      scale: settings.scale,
+      mediaScale: settings.mediaScale,
+      headlineScale: settings.headlineScale,
+      detailScale: settings.detailScale,
+      pageBg: settings.pageBg,
+      chroma: settings.chroma,
+      previewOnly: settings.previewOnly,
+      showStatus: settings.showStatus,
+      debug: settings.debug,
+      useSocket: settings.useSocket,
+      serverURL: settings.serverURL,
+      styles: Object.assign({}, settings.styles),
+      disabledCategories: Object.assign({}, settings.disabledCategories)
+    };
+  },
+  getState() {
+    return {
+      queueLength: state.queue.length,
+      hasAlert: Boolean(state.currentAlert),
+      blockedUntil: state.blockedUntil,
+      currentCategory: state.currentAlert ? state.currentAlert.category : '',
+      currentTitle: state.currentAlert ? state.currentAlert.title : '',
+      statusText: elements.status ? elements.status.textContent : ''
+    };
+  },
+  preview(descriptor, options) {
+    if (options && typeof options === 'object') {
+      handlePreviewMessage({
+        __multiAlertsPreviewEnvelope: true,
+        payload: descriptor,
+        silent: Boolean(options.silent)
+      });
+      return;
+    }
+    handlePreviewMessage(descriptor);
+  },
+  sendPayload(payload) {
+    handleIncomingPayload(payload);
+  },
+  clear(options) {
+    clearAlert(options || {});
+  }
+};
