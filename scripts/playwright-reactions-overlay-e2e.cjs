@@ -11,8 +11,8 @@ function assert(condition, message) {
   }
 }
 
-async function addPopupInitScript(page) {
-  await page.addInitScript(() => {
+async function addPopupInitScript(page, baseOrigin) {
+  await page.addInitScript((origin) => {
     const messages = [];
     const storageData = {};
 
@@ -67,7 +67,7 @@ async function addPopupInitScript(page) {
       id: 'playwright-test',
       lastError: null,
       getURL(path) {
-        return path;
+        return `${origin}/${String(path || '').replace(/^\/+/, '')}`;
       },
       getManifest() {
         return { version: '0.0.0-test' };
@@ -100,7 +100,7 @@ async function addPopupInitScript(page) {
       runtime,
       extension: {
         getURL(path) {
-          return path;
+          return `${origin}/${String(path || '').replace(/^\/+/, '')}`;
         }
       },
       storage: {
@@ -169,6 +169,45 @@ async function addPopupInitScript(page) {
     window.confirm = () => true;
     window.alert = () => {};
     window.prompt = (_message, fallbackValue = '') => fallbackValue;
+  }, baseOrigin);
+}
+
+async function addSocketSpyInitScript(page) {
+  await page.addInitScript(() => {
+    window.__socketEvents = [];
+
+    function FakeWebSocket(url) {
+      this.url = url;
+      this.readyState = 1;
+      this.sent = [];
+      window.__socketEvents.push({
+        url,
+        sent: this.sent
+      });
+      setTimeout(() => {
+        if (typeof this.onopen === 'function') {
+          this.onopen();
+        }
+      }, 0);
+    }
+
+    FakeWebSocket.prototype.send = function (message) {
+      this.sent.push(message);
+    };
+
+    FakeWebSocket.prototype.close = function () {
+      this.readyState = 3;
+    };
+
+    FakeWebSocket.prototype.addEventListener = function (eventName, listener) {
+      if (eventName === 'message') {
+        this._messageListener = listener;
+      }
+    };
+
+    FakeWebSocket.prototype.removeEventListener = function () {};
+
+    window.WebSocket = FakeWebSocket;
   });
 }
 
@@ -240,7 +279,7 @@ async function loadOverlay(page, url) {
     });
 
     const popupPage = await context.newPage();
-    await addPopupInitScript(popupPage);
+    await addPopupInitScript(popupPage, `http://${HOST}:${PORT}`);
     await popupPage.goto(`http://${HOST}:${PORT}/popup.html`, { waitUntil: 'domcontentloaded' });
     await popupPage.waitForFunction(() => {
       var link = document.getElementById('reactionslink');
@@ -278,6 +317,7 @@ async function loadOverlay(page, url) {
     assert(popupUrl.searchParams.has('triple'), 'Reactions popup link is missing the triple flag.');
 
     const overlayPage = await context.newPage();
+    await addSocketSpyInitScript(overlayPage);
     await loadOverlay(overlayPage, popupUrl.toString());
 
     const overlayConfig = await overlayPage.evaluate(() => window.__reactionsOverlay.getConfig());
@@ -384,6 +424,58 @@ async function loadOverlay(page, url) {
     assert(spreadSnapshot.history[0].layout === 'spread', 'Spread layout was not applied.');
     assert(spreadSnapshot.history[0].left >= 32 && spreadSnapshot.history[0].left <= 68, 'Spread layout escaped the centered lane.');
     assert(Math.abs(spreadSnapshot.history[0].drift) <= 16.1, 'Spread layout drift exceeded the expected range.');
+
+    const serverModeChecks = [
+      {
+        url: `http://${HOST}:${PORT}/reactions.html?session=testsession&server`,
+        expectedUrl: 'wss://io.socialstream.ninja/api',
+        expectedOut: 3,
+        expectedIn: 4
+      },
+      {
+        url: `http://${HOST}:${PORT}/reactions.html?session=testsession&server2`,
+        expectedUrl: 'wss://io.socialstream.ninja/extension',
+        expectedOut: 3,
+        expectedIn: 4
+      },
+      {
+        url: `http://${HOST}:${PORT}/reactions.html?session=testsession&server3&out=9&in=10`,
+        expectedUrl: 'wss://io.socialstream.ninja/extension',
+        expectedOut: 9,
+        expectedIn: 10
+      },
+      {
+        url: `http://${HOST}:${PORT}/reactions.html?session=testsession&server&server2&server3`,
+        expectedUrl: 'wss://io.socialstream.ninja/api',
+        expectedOut: 3,
+        expectedIn: 4
+      },
+      {
+        url: `http://${HOST}:${PORT}/reactions.html?session=testsession&localserver&server2&server3`,
+        expectedUrl: 'ws://127.0.0.1:3000',
+        expectedOut: 3,
+        expectedIn: 4
+      },
+      {
+        url: `http://${HOST}:${PORT}/reactions.html?session=testsession&localserver`,
+        expectedUrl: 'ws://127.0.0.1:3000',
+        expectedOut: 3,
+        expectedIn: 4
+      }
+    ];
+
+    for (const check of serverModeChecks) {
+      await loadOverlay(overlayPage, check.url);
+      await overlayPage.waitForTimeout(40);
+      const socketInfo = await overlayPage.evaluate(() => window.__socketEvents.slice());
+      assert(socketInfo.length === 1, `Expected one socket connection for ${check.url}.`);
+      assert(socketInfo[0].url === check.expectedUrl, `Wrong socket endpoint for ${check.url}.`);
+      assert(socketInfo[0].sent.length >= 1, `Socket join payload missing for ${check.url}.`);
+      const joinPayload = JSON.parse(socketInfo[0].sent[0]);
+      assert(joinPayload.join === 'testsession', `Socket join room missing for ${check.url}.`);
+      assert(joinPayload.out === check.expectedOut, `Socket out channel mismatch for ${check.url}.`);
+      assert(joinPayload.in === check.expectedIn, `Socket in channel mismatch for ${check.url}.`);
+    }
 
     await browser.close();
 

@@ -3973,9 +3973,7 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
         },
         param25: {
             'alignright': 'align=center',
-            'align=center': 'alignright',
-            'pagebg': 'chroma=00ff00',
-            'chroma=00ff00': 'pagebg'
+            'align=center': 'alignright'
         }
     };
 

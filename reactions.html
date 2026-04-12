@@ -590,6 +590,24 @@ body {
 		connect();
 	}
 
+	function resolveSocketURL() {
+		var hasServer = urlParams.has("server");
+		var hasServer2 = urlParams.has("server2");
+		var hasServer3 = urlParams.has("server3");
+		var hasLocalServer = urlParams.has("localserver");
+
+		if (hasServer) {
+			return urlParams.get("server") || (hasLocalServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+		}
+		if (hasServer2 || hasServer3) {
+			return urlParams.get("server2") || urlParams.get("server3") || (hasLocalServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension");
+		}
+		if (hasLocalServer) {
+			return "ws://127.0.0.1:3000";
+		}
+		return "";
+	}
+
 	window.__reactionsOverlay = {
 		processPayload: processPayload,
 		clearStage: clearStage,
@@ -619,11 +637,9 @@ body {
 
 	setupBridge();
 
-	if (sessionId && (urlParams.has("server") || urlParams.has("localserver"))) {
-		setupSocket(urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api"));
-	}
-	if (sessionId && (urlParams.has("server2") || urlParams.has("server3"))) {
-		setupSocket(urlParams.get("server2") || urlParams.get("server3") || "wss://io.socialstream.ninja/extension");
+	var socketURL = resolveSocketURL();
+	if (sessionId && socketURL) {
+		setupSocket(socketURL);
 	}
 })();
 	</script>

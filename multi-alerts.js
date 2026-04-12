@@ -154,6 +154,7 @@ const SOURCE_ICON_MAP = {
 };
 
 const settings = readSettings();
+const recentPayloads = [];
 
 const state = {
   iframe: null,
@@ -365,6 +366,44 @@ function pickEventKey(payload = {}) {
   }
 
   return '';
+}
+
+function buildRecentPayloadSignature(payload = {}) {
+  return [
+    pickEventKey(payload),
+    pickSourceKey(payload),
+    normalizeText(payload.chatname),
+    normalizeText(payload.chatmessage),
+    normalizeText(payload.hasDonation),
+    normalizeText(payload.membership),
+    normalizeText(payload.contentimg),
+    normalizeText(payload.id || payload.meta?.eventId || payload.meta?.id)
+  ].join('|');
+}
+
+function isDuplicateAlertPayload(payload = {}) {
+  const now = Date.now();
+  const signature = buildRecentPayloadSignature(payload);
+  let index;
+
+  for (index = recentPayloads.length - 1; index >= 0; index -= 1) {
+    if (recentPayloads[index].expiresAt <= now) {
+      recentPayloads.splice(index, 1);
+    }
+  }
+
+  for (index = 0; index < recentPayloads.length; index += 1) {
+    if (recentPayloads[index].signature === signature) {
+      return true;
+    }
+  }
+
+  recentPayloads.push({
+    signature,
+    expiresAt: now + 2500
+  });
+
+  return false;
 }
 
 function pickActorName(payload = {}) {
@@ -1030,6 +1069,10 @@ function handleIncomingPayload(payload) {
     return;
   }
   flattenPayloads(payload).forEach((entry) => {
+    if (isDuplicateAlertPayload(entry)) {
+      log('duplicate alert payload skipped', entry);
+      return;
+    }
     const model = buildAlertViewModel(entry);
     if (!model) {
       return;

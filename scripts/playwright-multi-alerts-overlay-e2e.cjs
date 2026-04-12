@@ -11,8 +11,8 @@ function assert(condition, message) {
   }
 }
 
-async function addPopupInitScript(page) {
-  await page.addInitScript(() => {
+async function addPopupInitScript(page, baseOrigin) {
+  await page.addInitScript((origin) => {
     const messages = [];
     const storageData = {};
 
@@ -67,7 +67,7 @@ async function addPopupInitScript(page) {
       id: 'playwright-test',
       lastError: null,
       getURL(path) {
-        return path;
+        return `${origin}/${String(path || '').replace(/^\/+/, '')}`;
       },
       getManifest() {
         return { version: '0.0.0-test' };
@@ -100,7 +100,7 @@ async function addPopupInitScript(page) {
       runtime,
       extension: {
         getURL(path) {
-          return path;
+          return `${origin}/${String(path || '').replace(/^\/+/, '')}`;
         }
       },
       storage: {
@@ -169,7 +169,7 @@ async function addPopupInitScript(page) {
     window.confirm = () => true;
     window.alert = () => {};
     window.prompt = (_message, fallbackValue = '') => fallbackValue;
-  });
+  }, baseOrigin);
 }
 
 async function addMultiAlertsInitScript(page) {
@@ -190,6 +190,29 @@ async function addMultiAlertsInitScript(page) {
   });
 }
 
+async function waitForPreviewFrame(page) {
+  await page.waitForFunction(() => {
+    const frame = document.getElementById('multi-alerts-preview-frame');
+    return !!(frame && frame.src && frame.src.indexOf('multi-alerts.html') !== -1);
+  });
+
+  const handle = await page.$('#multi-alerts-preview-frame');
+  let frame = null;
+  let attempts = 0;
+
+  while (!frame && attempts < 20) {
+    frame = handle ? await handle.contentFrame() : null;
+    if (!frame) {
+      await page.waitForTimeout(50);
+    }
+    attempts += 1;
+  }
+
+  assert(frame, 'Preview iframe did not attach.');
+  await frame.waitForFunction(() => !!(window.__multiAlertsOverlay && window.__multiAlertsOverlay.getSettings));
+  return frame;
+}
+
 async function setControlValue(page, selector, value, events) {
   await page.locator(selector).evaluate((element, details) => {
     element.value = details.value;
@@ -204,6 +227,12 @@ async function setCheckboxValue(page, selector, checked) {
     element.checked = nextChecked;
     element.dispatchEvent(new Event('change', { bubbles: true }));
   }, checked);
+}
+
+async function clickElement(page, selector) {
+  await page.locator(selector).evaluate((element) => {
+    element.click();
+  });
 }
 
 async function loadOverlay(page, url) {
@@ -275,7 +304,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     });
 
     const popupPage = await context.newPage();
-    await addPopupInitScript(popupPage);
+    await addPopupInitScript(popupPage, `http://${HOST}:${PORT}`);
     await popupPage.goto(`http://${HOST}:${PORT}/popup.html`, { waitUntil: 'domcontentloaded' });
     await popupPage.waitForFunction(() => {
       const link = document.getElementById('multialertslink');
@@ -355,6 +384,11 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     await setCheckboxValue(popupPage, "[data-param25='debug']", true);
     await setControlValue(popupPage, "[data-textparam25='pagebg']", '#112233', ['input', 'change']);
     await setCheckboxValue(popupPage, "[data-param25='pagebg']", true);
+    await setCheckboxValue(popupPage, "[data-param25='chroma=00ff00']", true);
+    let popupUrlWithChroma = new URL(await popupPage.getAttribute('#multialertslink', 'href'));
+    assert(popupUrlWithChroma.searchParams.get('pagebg') === '#112233', 'Popup should keep pagebg when chroma is enabled.');
+    assert(popupUrlWithChroma.searchParams.get('chroma') === '00ff00', 'Popup did not re-add chroma=00ff00.');
+    await setCheckboxValue(popupPage, "[data-param25='chroma=00ff00']", false);
 
     popupUrl = new URL(await popupPage.getAttribute('#multialertslink', 'href'));
     assert(popupUrl.searchParams.get('followstyle') === 'classic', 'Popup did not add followstyle=classic.');
@@ -386,6 +420,86 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(popupUrl.searchParams.get('cooldown') === '300', 'Popup did not add cooldown=300.');
     assert(popupUrl.searchParams.has('queue'), 'Popup did not add queue.');
     assert(popupUrl.searchParams.has('debug'), 'Popup did not add debug.');
+
+    await popupPage.waitForFunction(() => {
+      const frame = document.getElementById('multi-alerts-preview-frame');
+      return !!(
+        frame &&
+        frame.src &&
+        frame.src.indexOf('preview=1') !== -1 &&
+        frame.src.indexOf('embedded=1') !== -1 &&
+        frame.src.indexOf('followstyle=classic') !== -1 &&
+        frame.src.indexOf('pagebg=%23112233') !== -1
+      );
+    });
+
+    let previewFrame = await waitForPreviewFrame(popupPage);
+    const previewFrameSrc = await popupPage.getAttribute('#multi-alerts-preview-frame', 'src');
+    const previewUrl = new URL(previewFrameSrc);
+    assert(previewUrl.searchParams.get('preview') === '1', 'Preview iframe URL is missing preview=1.');
+    assert(previewUrl.searchParams.get('embedded') === '1', 'Preview iframe URL is missing embedded=1.');
+    assert(previewUrl.searchParams.get('align') === 'center', 'Preview iframe URL lost align=center.');
+    assert(previewUrl.searchParams.get('pagebg') === '#112233', 'Preview iframe URL lost pagebg=#112233.');
+    assert(previewUrl.searchParams.get('followstyle') === 'classic', 'Preview iframe URL lost followstyle=classic.');
+    assert(previewUrl.searchParams.get('sources') === 'twitch,youtube', 'Preview iframe URL lost the sources filter.');
+
+    await setControlValue(popupPage, '#multi-alert-preview-platform', 'twitch', ['change']);
+    previewFrame = await waitForPreviewFrame(popupPage);
+    await clickElement(popupPage, '#multi-alert-preview-follow');
+    await previewFrame.waitForFunction(() => !!document.querySelector('.alert-card'));
+    let previewSnapshot = await previewFrame.evaluate(() => ({
+      articleClass: document.querySelector('.alert-card') ? document.querySelector('.alert-card').className : '',
+      bodyAlign: document.body.dataset.align || '',
+      bodyBg: getComputedStyle(document.body).backgroundColor,
+      titleText: document.querySelector('.alert-title') ? document.querySelector('.alert-title').textContent : '',
+      hasSource: !!document.querySelector('.source-badge'),
+      hasAvatar: !!document.querySelector('.alert-avatar'),
+      hasSubtitle: !!document.querySelector('.alert-subtitle'),
+      hasAmount: !!document.querySelector('.alert-amount'),
+      hasMedia: !!document.querySelector('.alert-media'),
+      state: window.__multiAlertsOverlay.getState()
+    }));
+    assert(previewSnapshot.articleClass.includes('theme-classic'), 'Preview iframe did not apply the follow theme.');
+    assert(previewSnapshot.bodyAlign === 'center', 'Preview iframe did not apply center alignment.');
+    assert(previewSnapshot.bodyBg === 'rgb(17, 34, 51)', 'Preview iframe did not apply pagebg=#112233.');
+    assert(previewSnapshot.titleText === 'NEW FOLLOWER', 'Preview follow button did not render a follow alert.');
+    assert(previewSnapshot.hasSource === false, 'Preview iframe did not hide the source badge.');
+    assert(previewSnapshot.hasAvatar === false, 'Preview iframe did not hide the avatar.');
+    assert(previewSnapshot.hasSubtitle === false, 'Preview iframe did not hide the subtitle.');
+    assert(previewSnapshot.hasAmount === false, 'Preview iframe did not hide the amount.');
+    assert(previewSnapshot.hasMedia === false, 'Preview iframe did not hide media.');
+
+    await setControlValue(popupPage, '#multi-alert-preview-platform', 'kick', ['change']);
+    previewFrame = await waitForPreviewFrame(popupPage);
+    await clickElement(popupPage, '#multi-alert-preview-follow');
+    await previewFrame.waitForTimeout(180);
+    previewSnapshot = await previewFrame.evaluate(() => ({
+      hasAlert: !!document.querySelector('.alert-card'),
+      state: window.__multiAlertsOverlay.getState()
+    }));
+    assert(previewSnapshot.hasAlert === false, 'Kick preview should be filtered out by the sources allow-list.');
+    assert(previewSnapshot.state.statusText.toLowerCase().includes('filtered out'), 'Filtered preview did not report a filtered status.');
+
+    await setControlValue(popupPage, '#multi-alert-preview-platform', 'youtube', ['change']);
+    previewFrame = await waitForPreviewFrame(popupPage);
+    await clickElement(popupPage, '#multi-alert-preview-dono');
+    await previewFrame.waitForFunction(() => {
+      const card = document.querySelector('.alert-card');
+      return !!(card && card.className.indexOf('theme-twitch') !== -1);
+    });
+    previewSnapshot = await previewFrame.evaluate(() => ({
+      articleClass: document.querySelector('.alert-card') ? document.querySelector('.alert-card').className : '',
+      titleText: document.querySelector('.alert-title') ? document.querySelector('.alert-title').textContent : '',
+      state: window.__multiAlertsOverlay.getState()
+    }));
+    assert(previewSnapshot.articleClass.includes('theme-twitch'), 'Preview donation button did not apply the donation theme.');
+    assert(previewSnapshot.titleText === 'NEW DONATION', 'Preview donation button did not render a donation alert.');
+
+    await clickElement(popupPage, '#multi-alert-preview-clear');
+    await previewFrame.waitForFunction(() => !document.querySelector('.alert-card'));
+    previewSnapshot = await previewFrame.evaluate(() => window.__multiAlertsOverlay.getState());
+    assert(previewSnapshot.hasAlert === false, 'Preview clear button did not clear the iframe alert.');
+    assert(previewSnapshot.statusText === 'Preview cleared', 'Preview clear button did not update the status text.');
 
     const overlayPage = await context.newPage();
     await addMultiAlertsInitScript(overlayPage);
@@ -580,6 +694,26 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     await overlayPage.waitForTimeout(2050);
     noQueueState = await overlayPage.evaluate(() => window.__multiAlertsOverlay.getState());
     assert(noQueueState.currentCategory !== 'follow', 'No-queue mode should not display the dropped second alert.');
+
+    await loadOverlay(overlayPage, queueUrl.toString());
+    await overlayPage.evaluate(() => {
+      const payload = {
+        event: 'donation',
+        type: 'twitch',
+        platform: 'twitch',
+        chatname: 'DupTester',
+        chatimg: './media/user1.jpg',
+        chatmessage: 'Duplicate payload',
+        hasDonation: '$8'
+      };
+      window.__multiAlertsOverlay.clear({ clearQueue: true, preserveCooldown: false });
+      window.__multiAlertsOverlay.sendPayload(payload);
+      window.__multiAlertsOverlay.sendPayload(payload);
+    });
+    await overlayPage.waitForTimeout(120);
+    const duplicateState = await overlayPage.evaluate(() => window.__multiAlertsOverlay.getState());
+    assert(duplicateState.currentCategory === 'donation', 'Duplicate test should still show the original alert.');
+    assert(duplicateState.queueLength === 0, 'Duplicate alert payload should not be queued a second time.');
 
     const customBeepUrl = new URL(popupUrl.toString());
     customBeepUrl.searchParams.delete('followsound');
