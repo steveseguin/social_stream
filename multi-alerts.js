@@ -233,6 +233,42 @@ function parseSourceListParam(name) {
   );
 }
 
+function normalizeSourceMatchValue(value) {
+  return normalizeText(value).replace(/\s+/g, ' ');
+}
+
+function normalizeSourceMatchKey(value) {
+  const normalized = normalizeSourceMatchValue(value);
+  return normalized ? normalized.toLowerCase() : '';
+}
+
+function parseSourceMatchListParam(name, aliases = []) {
+  const values = [name].concat(aliases);
+  const matches = new Set();
+
+  values.forEach((paramName) => {
+    const rawValue = normalizeText(urlParams.get(paramName));
+    if (!rawValue) {
+      return;
+    }
+    rawValue
+      .split(',')
+      .forEach((entry) => {
+        const exact = normalizeSourceMatchValue(entry);
+        const loose = normalizeSourceMatchKey(entry);
+        if (!exact) {
+          return;
+        }
+        matches.add(exact);
+        if (loose && loose !== exact) {
+          matches.add(loose);
+        }
+      });
+  });
+
+  return matches;
+}
+
 function humanizeKey(value) {
   const normalized = normalizeKey(value).replace(/[_-]+/g, ' ');
   if (!normalized) {
@@ -421,6 +457,58 @@ function isSourceAllowed(sourceKey) {
   return true;
 }
 
+function collectSourceMatchKeys(payload = {}) {
+  const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : null;
+  return {
+    exact: [
+      payload.sourceId,
+      payload.source_id,
+      payload.channelId,
+      payload.channel_id,
+      payload.videoId,
+      payload.videoid,
+      meta?.sourceId,
+      meta?.source_id,
+      meta?.channelId,
+      meta?.channel_id,
+      meta?.videoId,
+      meta?.videoid
+    ]
+      .map((value) => normalizeSourceMatchValue(value))
+      .filter(Boolean),
+    loose: [
+      payload.sourceName,
+      payload.channel,
+      meta?.sourceName,
+      meta?.channel
+    ]
+      .map((value) => normalizeSourceMatchKey(value))
+      .filter(Boolean)
+  };
+}
+
+function isSourceMatchAllowed(payload = {}) {
+  const sourceMatchKeys = collectSourceMatchKeys(payload);
+  if (settings.includeSourceMatches.size) {
+    if (
+      !sourceMatchKeys.exact.some((key) => settings.includeSourceMatches.has(key)) &&
+      !sourceMatchKeys.loose.some((key) => settings.includeSourceMatches.has(key))
+    ) {
+      return false;
+    }
+  }
+  if (
+    settings.excludeSourceMatches.size &&
+    (
+      sourceMatchKeys.exact.some((key) => settings.excludeSourceMatches.has(key)) ||
+      sourceMatchKeys.loose.some((key) => settings.excludeSourceMatches.has(key))
+    )
+  ) {
+    return false;
+  }
+  return true;
+}
+
 function inferCategory(payload = {}) {
   const eventKey = pickEventKey(payload);
   if (COUNT_EVENTS.has(eventKey)) {
@@ -545,6 +633,9 @@ function buildAlertViewModel(payload = {}) {
   const eventKey = pickEventKey(payload);
   const sourceKey = pickSourceKey(payload);
   if (!isSourceAllowed(sourceKey)) {
+    return null;
+  }
+  if (!isSourceMatchAllowed(payload)) {
     return null;
   }
   const sourceLabel = SOURCE_LABELS[sourceKey] || humanizeKey(sourceKey);
@@ -741,6 +832,8 @@ function readSettings() {
     hideSubtitle: urlParams.has('hidesubtitle'),
     includeSources: parseSourceListParam('sources'),
     excludeSources: parseSourceListParam('hidesources'),
+    includeSourceMatches: parseSourceMatchListParam('sourceids', ['channels']),
+    excludeSourceMatches: parseSourceMatchListParam('hidesourceids', ['hidechannels']),
     align:
       normalizeText(urlParams.get('align')).toLowerCase() === 'center'
         ? 'center'
@@ -912,6 +1005,9 @@ function handlePreviewMessage(previewMessage) {
     if (!isSourceAllowed(previewSourceKey)) {
       clearAlert({ clearQueue: true, preserveCooldown: true });
       updateStatus(`${SOURCE_LABELS[previewSourceKey] || humanizeKey(previewSourceKey || 'source')} is filtered out`);
+    } else if (!isSourceMatchAllowed(payload)) {
+      clearAlert({ clearQueue: true, preserveCooldown: true });
+      updateStatus('This source/channel is filtered out');
     }
     return;
   }
@@ -1493,6 +1589,8 @@ window.__multiAlertsOverlay = {
       hideSubtitle: settings.hideSubtitle,
       includeSources: Array.from(settings.includeSources),
       excludeSources: Array.from(settings.excludeSources),
+      includeSourceMatches: Array.from(settings.includeSourceMatches),
+      excludeSourceMatches: Array.from(settings.excludeSourceMatches),
       align: settings.align,
       scale: settings.scale,
       mediaScale: settings.mediaScale,

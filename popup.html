@@ -5494,19 +5494,27 @@ input:checked + .slider:before {
 			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-source-options" />
-					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span>ðŸ”— Source Filtering</span></label>
+					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span>Filter by Platform / Channel</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
-								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of sources to allow. Example: youtube,twitch">
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of platforms to allow. Example: youtube,twitch">
 									<input type="text" id="multialertsources" class="textInput instant" autocomplete="off" placeholder="youtube,twitch,tiktok,etc" data-textparam25="sources" />
-									<label for="multialertsources"><span>&gt; Only allow source(s)</span></label>
+									<label for="multialertsources"><span>&gt; Only allow platform(s)</span></label>
 								</div>
-								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of sources to exclude. Example: tiktok,kick">
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of platforms to exclude. Example: tiktok,kick">
 									<input type="text" id="multialerthidesources" class="textInput instant" autocomplete="off" placeholder="tiktok,kick,etc" data-textparam25="hidesources" />
-									<label for="multialerthidesources"><span>&gt; Exclude source(s)</span></label>
+									<label for="multialerthidesources"><span>&gt; Exclude platform(s)</span></label>
 								</div>
-								<small style="opacity: 0.8;">Use <code>&sources=youtube,twitch</code> to opt in only those platforms, or <code>&hidesources=tiktok</code> to opt out specific ones.</small>
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of exact source/channel matches to allow. Matches existing payload fields like sourceName, sourceId, channelId, and videoId.">
+									<input type="text" id="multialertsourceids" class="textInput instant" autocomplete="off" placeholder="My Channel,UC123,video123" data-textparam25="sourceids" />
+									<label for="multialertsourceids"><span>&gt; Only allow channel/source match(es)</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of exact source/channel matches to exclude. Matches existing payload fields like sourceName, sourceId, channelId, and videoId.">
+									<input type="text" id="multialerthidesourceids" class="textInput instant" autocomplete="off" placeholder="Other Channel,UC999,video999" data-textparam25="hidesourceids" />
+									<label for="multialerthidesourceids"><span>&gt; Exclude channel/source match(es)</span></label>
+								</div>
+								<small style="opacity: 0.8;">Use <code>&sources=youtubeshorts</code> to limit by platform, or <code>&sourceids=My Channel,UC123,video123</code> to limit by existing source/channel fields like <code>sourceName</code>, <code>sourceId</code>, <code>channelId</code>, or <code>videoId</code>.</small>
 							</div>
 						</div>
 					</div>
