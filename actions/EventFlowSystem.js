@@ -706,11 +706,14 @@ class EventFlowSystem {
             }
         }
         
+        const counterRemaining = Math.max(0, (Number(state.targetCount) || 0) - (Number(state.count) || 0));
+
         // Add count to message for downstream nodes
         const modifiedMessage = {
             ...message,
             counterValue: state.count,
             counterTarget: state.targetCount,
+            counterRemaining: counterRemaining,
             counterTriggered: targetReached
         };
         
@@ -2275,6 +2278,25 @@ class EventFlowSystem {
 			meta: message.meta || ''
 		};
 
+		// Expose any top-level message field so state/control actions can feed
+		// values into downstream templates without new hardcoded placeholders.
+		Object.keys(message).forEach((key) => {
+			const normalizedKey = String(key || '').toLowerCase();
+			if (!normalizedKey) return;
+			if (!Object.prototype.hasOwnProperty.call(messageData, normalizedKey)) {
+				messageData[normalizedKey] = message[key];
+			}
+		});
+
+		// Convenience value for cooldown/countdown flows.
+		if (!Object.prototype.hasOwnProperty.call(messageData, 'counterremaining')) {
+			const counterValue = Number(messageData.countervalue);
+			const counterTarget = Number(messageData.countertarget);
+			if (Number.isFinite(counterValue) && Number.isFinite(counterTarget)) {
+				messageData.counterremaining = Math.max(0, counterTarget - counterValue);
+			}
+		}
+
 		return text.replace(/\{(\w+)\}/gi, (match, key) => {
 			const val = messageData[key.toLowerCase()];
 			if (val === undefined || val === null) return '';
@@ -3473,11 +3495,13 @@ class EventFlowSystem {
                 if (config.targetNodeId) {
                     const counterState = this.nodeStates.get(config.targetNodeId);
                     if (counterState && counterState.hasOwnProperty('count')) {
+                        const counterRemaining = Math.max(0, (Number(counterState.targetCount) || 0) - (Number(counterState.count) || 0));
                         // Add counter info to message
                         result.message = {
                             ...message,
                             counterValue: counterState.count,
-                            counterTarget: counterState.targetCount
+                            counterTarget: counterState.targetCount,
+                            counterRemaining: counterRemaining
                         };
                         result.modified = true;
                         console.log(`[CheckCounter] Counter ${config.targetNodeId} value: ${counterState.count}`);

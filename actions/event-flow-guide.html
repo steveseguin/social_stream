@@ -514,11 +514,17 @@ Event Payload ─▶ State Check (isAlertMuted)
                         <tr><td><code>{contentimg}</code></td><td>Attached image URL</td><td>https://...</td></tr>
                         <tr><td><code>{rewardTitle}</code></td><td>Reward name when the source exposes a top-level reward title field</td><td>Highlight My Message</td></tr>
                         <tr><td><code>{meta}</code></td><td>Structured event data (JSON)</td><td>{"viewers":100}</td></tr>
+                        <tr><td><code>{counterValue}</code></td><td>Current counter value after a Counter or Check Counter step</td><td>12</td></tr>
+                        <tr><td><code>{counterTarget}</code></td><td>Counter target value</td><td>30</td></tr>
+                        <tr><td><code>{counterRemaining}</code></td><td>Counter target minus current value, clamped at 0</td><td>18</td></tr>
                     </tbody>
                 </table>
 
                 <div class="panel">
                     <strong>Variable matching is case-insensitive.</strong> <code>{USERNAME}</code>, <code>{Username}</code>, and <code>{username}</code> all work the same way.
+                </div>
+                <div class="panel">
+                    <strong>Flow-added fields also work.</strong> If an earlier action adds a top-level value to the message, later templates can read it directly. This is how <code>Check Counter</code> exposes <code>{counterValue}</code>, <code>{counterTarget}</code>, and <code>{counterRemaining}</code>.
                 </div>
 
                 <h3>Example Templates</h3>

@@ -441,6 +441,11 @@ class EventFlowEditor {
             }
         ];
 
+        const stateActionGroup = this.actionGroups.find(group => group.id === 'state');
+        if (stateActionGroup && !stateActionGroup.actions.some(action => action.id === 'checkCounter')) {
+            stateActionGroup.actions.push({ id: 'checkCounter', name: 'Check Counter' });
+        }
+
         // Flatten for backward compatibility
         this.actionTypes = this.actionGroups.flatMap(group => group.actions);
 
