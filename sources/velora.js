@@ -28,12 +28,17 @@
 	}
 
 	function escapeHtml(unsafe){ // when goofs be trying to hack me
-		return unsafe
-			 .replace(/&/g, "&amp;")
-			 .replace(/</g, "&lt;")
-			 .replace(/>/g, "&gt;")
-			 .replace(/"/g, "&quot;")
-			 .replace(/'/g, "&#039;") || "";
+		try {
+			unsafe = unsafe == null ? "" : String(unsafe);
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
 	}
 
 	function getAllContentNodes(element) { // takes an element.
@@ -76,59 +81,115 @@
 	var channelName = "";
 	
 	var processedMessages = new Set();
+
+	function getChatMessageRoot(ele){
+		if (!ele || !ele.isConnected || !ele.querySelector){ return null; }
+		if (ele.classList && ele.classList.contains("chat-message-content")){
+			return ele;
+		}
+		return ele.querySelector(".chat-message-content");
+	}
+
+	function getChatMessageRow(ele){
+		var root = getChatMessageRoot(ele);
+		if (!root){ return null; }
+		if (root.closest){
+			var row = root.closest(".group");
+			if (row){ return row; }
+		}
+		return root.parentNode || root;
+	}
 	
 	function processMessage(ele){
-		console.log(ele);
-		if (!ele || !ele.isConnected){
-		//	console.log("no connected");
+		var row = getChatMessageRow(ele);
+		var root = getChatMessageRoot(ele);
+		if (!row || !root){
 			return;
 		}
 		
-		if (ele.dataset.knownSize){
-			if (!parseInt(ele.dataset.knownSize)){
-		//		console.log("no knownSize");
-				return;
-			}
-		}
-		
-		if (ele.skip){
+		if (row.skip || root.skip){
 			return;
 		}
 
-		var chatimg = ""
-		
-
-		var name="";
+		var inlineEl = null;
 		try {
-			var nameEl = ele.querySelector("[title^='View profile for']");
-		if (nameEl) { name = escapeHtml(nameEl.textContent.trim()); }
+			inlineEl = root.querySelector("span.inline");
+		} catch(e){
+		}
+		if (!inlineEl){
+			return;
+		}
+		
+		var chatimg = "";
+		
+		var name="";
+		var nameEl = null;
+		try {
+			nameEl = inlineEl.querySelector("button");
+			if (nameEl) {
+				name = escapeHtml(nameEl.textContent.replace(/:\s*$/, "").trim());
+			}
 		} catch(e){
 		}
 		
 		var namecolor="";
+		try {
+			if (nameEl){
+				namecolor = nameEl.style.color || "";
+				if (!namecolor && window.getComputedStyle){
+					namecolor = window.getComputedStyle(nameEl).color || "";
+				}
+			}
+		} catch(e){
+		}
 		
 		var badges=[];
 		try {
-			ele.querySelectorAll("img[src^='https://assets.velora.tv/badges'], img[src*='/velora-badges/']").forEach(badge=>{
-				badge.src = badge.src + "";
-				badges.push(badge.src);
-			});
-			
-			
+			for (var i = 0; i < inlineEl.childNodes.length; i++){
+				var badge = inlineEl.childNodes[i];
+				if (badge === nameEl){
+					break;
+				}
+				if ((badge.nodeType === 1) && (badge.nodeName === "IMG") && badge.src){
+					badges.push(badge.src + "");
+				}
+			}
 		} catch(e){
 		} 
 
+		var timeText = "";
+		try {
+			for (var j = 0; j < inlineEl.childNodes.length; j++){
+				var timeNode = inlineEl.childNodes[j];
+				if (timeNode === nameEl){
+					break;
+				}
+				if ((timeNode.nodeType === 1) && (timeNode.nodeName === "SPAN") && timeNode.textContent){
+					timeText = timeNode.textContent.trim();
+					if (timeText){
+						break;
+					}
+				}
+			}
+		} catch(e){
+		}
+
 		var msg="";
 		try {
-			var msgEl = ele.querySelector(".chat-message-content > div:last-child");
-		if (msgEl) { msg = getAllContentNodes(msgEl).trim(); }
+			var msgEl = nameEl ? nameEl.nextElementSibling : null;
+			if (!msgEl && nameEl && nameEl.parentNode && nameEl.parentNode.querySelector){
+				msgEl = nameEl.parentNode.querySelector("button + span");
+			}
+			if (msgEl) {
+				msg = getAllContentNodes(msgEl).trim();
+			}
 		} catch(e){
 		}
 		
 		
 		var donation = "";
 		try {
-			donation = escapeHtml(ele.querySelector(".flex-1.space-y-2 svg>path[d='m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z']").parentNode.nextSibling.textContent);
+			donation = escapeHtml(row.querySelector(".flex-1.space-y-2 svg>path[d='m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z']").parentNode.nextSibling.textContent);
 			if (msg){
 				msg = msg.replaceAll('“',"").replaceAll('”',"").trim(); 
 			}
@@ -140,9 +201,10 @@
 			return;
 		}
 		
-		var msgKey = name + "|\u00b6|" + msg;
+		var msgKey = "chat|\u00b6|" + timeText + "|\u00b6|" + name + "|\u00b6|" + msg;
 		if (processedMessages.has(msgKey)){
-			ele.skip = true;
+			row.skip = true;
+			root.skip = true;
 			return;
 		}
 		processedMessages.add(msgKey);
@@ -150,7 +212,8 @@
 			processedMessages.delete(processedMessages.values().next().value);
 		}
 		
-		ele.skip = true;
+		row.skip = true;
+		root.skip = true;
 		
 		
 		var data = {};
@@ -286,6 +349,7 @@
 
 	var lastURL =  "";
 	var observer = null;
+	var observerTarget = null;
 	
 	
 	function onElementInserted(target, subtree=false) {
@@ -301,7 +365,13 @@
 							if (addedNode.skip){continue;}
 
 							setTimeout(()=>{
-								processMessage(addedNode);
+								if (getChatMessageRoot(addedNode)){
+									processMessage(addedNode);
+								} else if (addedNode.querySelectorAll){
+									addedNode.querySelectorAll(".chat-message-content").forEach(function(chatNode){
+										processMessage(chatNode);
+									});
+								}
 							},300);
 
 						} catch(e){
@@ -314,6 +384,11 @@
 		
 		var config = { childList: true, subtree: subtree };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		if (observer){
+			try {
+				observer.disconnect();
+			} catch(e){}
+		}
 		
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -321,30 +396,69 @@
 	
 	console.log("social stream injected");
 
+	function findChatContainer(){
+		try {
+			var root = document.querySelector(".chat-message-content");
+			if (root && root.closest){
+				var container = root.closest(".overflow-y-auto");
+				if (container){
+					return container;
+				}
+			}
+		} catch(e){
+		}
+		try {
+			var input = document.querySelector('[aria-label="Chat message input"][contenteditable="true"][data-placeholder][spellcheck="false"][role="textbox"]');
+			if (!input || !input.closest){
+				return null;
+			}
+			var aside = input.closest("aside");
+			if (!aside || !aside.querySelectorAll){
+				return null;
+			}
+			var containers = aside.querySelectorAll(".overflow-y-auto");
+			for (var i = 0; i < containers.length; i++){
+				if (containers[i].querySelector(".chat-message-content")){
+					return containers[i];
+				}
+			}
+		} catch(e){
+		}
+		return null;
+	}
+
 
 	function startCheck(){
 		if (isExtensionOn && checking){return;}
 
 		clearInterval(checking);
 		checking = false;
+		if (observer){
+			try {
+				observer.disconnect();
+			} catch(e){}
+			observer = null;
+			observerTarget = null;
+		}
 		if (!isExtensionOn){
 			return;
 		}
 		checking = setInterval(function(){
 			try {
-				var container = document.querySelector(".chat-scroll-hidden");
+				var container = findChatContainer();
 				
 				if (!container){ return; }
 				
-				if (!container.marked){
+				if (observerTarget !== container){
+					observerTarget = container;
 					container.marked=true;
 
 					console.log("CONNECTED chat detected");
 
 					setTimeout(function(){
 						dataIndex = 0;
-						onElementInserted(container);
-					},2000);
+						onElementInserted(container, true);
+					},1000);
 				}
 				checkViewers();
 			} catch(e){}
