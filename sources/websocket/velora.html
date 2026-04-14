@@ -25,16 +25,15 @@
 
             <div class="setup-row">
                 <span class="setup-label">Client ID:</span>
-                <input type="text" id="client-id-input" placeholder="Your Velora app Client ID" spellcheck="false" autocomplete="off" />
+                <input type="text" id="client-id-input" placeholder="Override the default Velora Client ID" spellcheck="false" autocomplete="off" />
                 <button id="save-client-id" class="button-secondary">Save</button>
             </div>
 
             <div id="setup-notice" class="notice-box">
-                <strong>Setup required:</strong> Register a free app at
-                <a href="https://developer.velora.tv" target="_blank" rel="noopener">developer.velora.tv</a>
-                to get a Client ID. Set your redirect URI to this page's URL
-                (<code id="redirect-uri-hint"></code>), then enter the Client ID above and sign in.
-                Request scopes: <code>user:read chat:read chat:write</code>.
+                <strong>Social Stream app:</strong> This source uses the shared Social Stream Ninja Velora app by default.
+                Override the Client ID above only if needed. Redirect URI:
+                <code id="redirect-uri-hint"></code>.
+                OAuth uses PKCE here, so no client secret is needed in this page.
             </div>
 
             <div class="auth-row">

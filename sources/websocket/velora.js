@@ -2,16 +2,20 @@
 // Uses the official Velora Events API (Socket.IO) with OAuth 2.0 PKCE user sign-in.
 // API docs: https://developer.velora.tv/developer/docs/events-api
 
-const VELORA_AUTH_URL = 'https://velora.tv/oauth/authorize';
-const VELORA_TOKEN_URL = 'https://api.velora.tv/api/developer/oauth/token';
 const VELORA_API_BASE = 'https://api.velora.tv';
 const VELORA_WS_URL = 'wss://api.velora.tv/ws/events';
+const DEFAULT_VELORA_AUTH_BASE = 'https://auth.socialstream.ninja/auth/velora';
+const DEFAULT_VELORA_CLIENT_ID = 'velora_9c9ae006ec8bc256';
+const DEFAULT_VELORA_REDIRECT_URI = 'https://auth.socialstream.ninja/auth/velora/callback';
+const DEFAULT_LOCAL_RETURN_BASE = 'http://localhost:8181/';
 const VELORA_SCOPES = 'user:read chat:read chat:write';
+const VELORA_AUTH_MESSAGE_SUCCESS = 'ssn-velora-auth-success';
+const VELORA_AUTH_MESSAGE_ERROR = 'ssn-velora-auth-error';
+const VELORA_AUTH_RESULT_KEY = 'velora_auth_result';
+const VELORA_AUTH_ERROR_KEY = 'velora_auth_error';
 
 const STORAGE_KEY = 'veloraApiConfig';
 const TOKEN_KEY = 'veloraApiTokens';
-const CODE_VERIFIER_KEY = 'veloraPkceVerifier';
-const OAUTH_STATE_KEY = 'veloraOAuthState';
 
 const CHAT_FEED_LIMIT = 100;
 const ALERTS_FEED_LIMIT = 80;
@@ -19,8 +23,8 @@ const EVENT_LOG_LIMIT = 100;
 const VIEWER_POLL_INTERVAL_MS = 30000;
 
 const state = {
-    clientId: '',
-    redirectUri: '',
+    clientId: DEFAULT_VELORA_CLIENT_ID,
+    redirectUri: DEFAULT_VELORA_REDIRECT_URI,
     tokens: null,
     authUser: null,
     socket: null,
@@ -29,7 +33,8 @@ const state = {
     settings: {},
     viewerPollTimer: null,
     refreshTimer: null,
-    streamId: null
+    streamId: null,
+    authPopup: null
 };
 
 const els = {};
@@ -38,6 +43,159 @@ const els = {};
 
 function q(id) {
     return document.getElementById(id);
+}
+
+function getRuntimeParam(key) {
+    try {
+        const search = new URLSearchParams(window.location.search || '');
+        const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+        return search.get(key) || hash.get(key) || '';
+    } catch (e) {
+        return '';
+    }
+}
+
+function normalizeRedirectUri(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    return raw;
+}
+
+function normalizeAuthBase(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return DEFAULT_VELORA_AUTH_BASE;
+    return raw.replace(/\/+$/, '');
+}
+
+function getVeloraAuthBase() {
+    return normalizeAuthBase(getRuntimeParam('authBase') || getRuntimeParam('auth_base') || DEFAULT_VELORA_AUTH_BASE);
+}
+
+function getExpectedAuthMessageOrigin() {
+    try {
+        return new URL(getVeloraAuthBase()).origin;
+    } catch (e) {
+        return '';
+    }
+}
+
+function hasRuntimeFlag(key) {
+    try {
+        const search = new URLSearchParams(window.location.search || '');
+        const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+        return search.has(key) || hash.has(key);
+    } catch (e) {
+        return false;
+    }
+}
+
+function isVeloraSocketPage(pathname) {
+    return /\/velora\.html$/i.test(String(pathname || ''));
+}
+
+function buildVeloraReturnUrlFromBase(base) {
+    if (!base) return '';
+    try {
+        const parsed = new URL(String(base).trim(), window.location.href);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return '';
+        }
+        parsed.hash = '';
+        if (isVeloraSocketPage(parsed.pathname)) {
+            return parsed.toString();
+        }
+        const lowerPath = String(parsed.pathname || '').toLowerCase();
+        const relativePath = /\/(?:beta\/)?sources\/websocket\/?$/i.test(lowerPath)
+            ? 'velora.html'
+            : 'sources/websocket/velora.html';
+        const normalizedBase = new URL(parsed.toString());
+        normalizedBase.search = '';
+        if (!/\/$/.test(normalizedBase.pathname)) {
+            normalizedBase.pathname = `${normalizedBase.pathname}/`;
+        }
+        return new URL(relativePath, normalizedBase.toString()).toString();
+    } catch (e) {
+        return '';
+    }
+}
+
+function mergeCurrentSearchParams(url) {
+    if (!url) return '';
+    try {
+        const target = new URL(url);
+        const current = new URL(window.location.href);
+        const params = new URLSearchParams(current.search);
+        const ignored = {
+            return_to: true,
+            returnTo: true,
+            redirect_uri: true,
+            redirectUri: true
+        };
+        params.forEach(function (value, key) {
+            if (!ignored[key] && !target.searchParams.has(key)) {
+                target.searchParams.set(key, value);
+            }
+        });
+        target.hash = '';
+        return target.toString();
+    } catch (e) {
+        return url;
+    }
+}
+
+function getRuntimeOrigin() {
+    try {
+        if (window.location && window.location.origin && window.location.origin !== 'null') {
+            return window.location.origin;
+        }
+    } catch (e) {}
+    return '*';
+}
+
+function getAuthReturnTo() {
+    const explicitReturnTo = getRuntimeParam('return_to') || getRuntimeParam('returnTo');
+    const explicitUrl = mergeCurrentSearchParams(buildVeloraReturnUrlFromBase(explicitReturnTo));
+    if (explicitUrl) {
+        return explicitUrl;
+    }
+
+    try {
+        const currentUrl = new URL(String(window.location.href || ''));
+        if ((currentUrl.protocol === 'http:' || currentUrl.protocol === 'https:') && isVeloraSocketPage(currentUrl.pathname)) {
+            currentUrl.hash = '';
+            return currentUrl.toString();
+        }
+    } catch (e) {
+    }
+
+    const sourceModeUrl = mergeCurrentSearchParams(buildVeloraReturnUrlFromBase(getRuntimeParam('sourcemode')));
+    if (sourceModeUrl) {
+        return sourceModeUrl;
+    }
+
+    const isBetaRuntime = hasRuntimeFlag('beta') || getRuntimeParam('branch') === 'beta';
+    const fallbackBase = hasRuntimeFlag('devmode')
+        ? DEFAULT_LOCAL_RETURN_BASE
+        : isBetaRuntime
+            ? 'https://beta.socialstream.ninja/'
+            : 'https://socialstream.ninja/';
+    const fallbackUrl = mergeCurrentSearchParams(buildVeloraReturnUrlFromBase(fallbackBase));
+    if (fallbackUrl) {
+        return fallbackUrl;
+    }
+
+    try {
+        return String(window.location.href || '').split('#')[0];
+    } catch (e) {
+        return '';
+    }
+}
+
+function getAuthStartUrl() {
+    const url = new URL(`${getVeloraAuthBase()}/start`);
+    url.searchParams.set('return_to', getAuthReturnTo());
+    url.searchParams.set('origin', getRuntimeOrigin());
+    return url.toString();
 }
 
 function escapeHtml(str) {
@@ -60,6 +218,25 @@ function loadConfig() {
         if (conf.clientId) state.clientId = conf.clientId;
         if (conf.redirectUri) state.redirectUri = conf.redirectUri;
     } catch (e) {}
+}
+
+function applyRuntimeOverrides() {
+    const clientId = (getRuntimeParam('client_id') || getRuntimeParam('clientId') || '').trim();
+    const redirectUri = normalizeRedirectUri(getRuntimeParam('redirect_uri') || getRuntimeParam('redirectUri'));
+
+    if (clientId) {
+        state.clientId = clientId;
+    }
+    if (redirectUri) {
+        state.redirectUri = redirectUri;
+    }
+
+    if (!state.clientId) {
+        state.clientId = DEFAULT_VELORA_CLIENT_ID;
+    }
+    if (!state.redirectUri) {
+        state.redirectUri = DEFAULT_VELORA_REDIRECT_URI;
+    }
 }
 
 function persistConfig() {
@@ -129,117 +306,210 @@ async function createCodeChallenge(verifier) {
 
 // ─── OAuth flow ───────────────────────────────────────────────────────────────
 
-async function startAuthFlow() {
-    if (!state.clientId) {
-        setAuthStatus('Enter your Client ID first.', 'warning');
-        if (els.clientIdInput) els.clientIdInput.focus();
-        return;
+function getVeloraOAuthBridge() {
+    if (window.ninjafy && typeof window.ninjafy.startVeloraOAuth === 'function') {
+        return window.ninjafy;
     }
-
-    const verifier = generateRandomString(64);
-    const challenge = await createCodeChallenge(verifier);
-    const stateParam = generateRandomString(32);
-
-    sessionStorage.setItem(CODE_VERIFIER_KEY, verifier);
-    sessionStorage.setItem(OAUTH_STATE_KEY, stateParam);
-
-    const redirectUri = window.location.origin + window.location.pathname;
-    state.redirectUri = redirectUri;
-    persistConfig();
-
-    const params = new URLSearchParams({
-        response_type: 'code',
-        client_id: state.clientId,
-        redirect_uri: redirectUri,
-        scope: VELORA_SCOPES,
-        code_challenge: challenge,
-        code_challenge_method: 'S256',
-        state: stateParam
-    });
-
-    window.location.href = `${VELORA_AUTH_URL}?${params.toString()}`;
+    if (window.__ssapp && typeof window.__ssapp.startVeloraOAuth === 'function') {
+        return window.__ssapp;
+    }
+    return null;
 }
 
-async function handleAuthCallback() {
-    const url = new URL(window.location.href);
-    const code = url.searchParams.get('code');
-    const returnedState = url.searchParams.get('state');
-    if (!code) return false;
+function getRedirectUri() {
+    return normalizeRedirectUri(state.redirectUri) || DEFAULT_VELORA_REDIRECT_URI;
+}
 
-    // Strip OAuth params from URL immediately to avoid reuse on reload
-    url.searchParams.delete('code');
-    url.searchParams.delete('state');
-    window.history.replaceState({}, document.title, url.toString());
-
-    const expectedState = sessionStorage.getItem(OAUTH_STATE_KEY);
-    if (!returnedState || returnedState !== expectedState) {
-        setAuthStatus('OAuth state mismatch. Please try again.', 'danger');
-        return false;
-    }
-
-    const verifier = sessionStorage.getItem(CODE_VERIFIER_KEY);
-    if (!verifier) {
-        setAuthStatus('Missing PKCE verifier. Please try again.', 'danger');
-        return false;
-    }
-
-    sessionStorage.removeItem(OAUTH_STATE_KEY);
-    sessionStorage.removeItem(CODE_VERIFIER_KEY);
-
+function base64UrlToJson(value) {
+    if (!value) return null;
     try {
-        await exchangeCodeForToken(code, verifier);
-        await loadUserProfile();
-        updateAuthUI();
-        connectSocket();
-    } catch (err) {
-        console.error('[Velora] Token exchange failed:', err);
-        setAuthStatus(`Sign-in failed: ${err.message}`, 'danger');
+        const normalized = String(value).replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized + '==='.slice((normalized.length + 3) % 4);
+        const decoded = atob(padded);
+        return JSON.parse(decoded);
+    } catch (e) {
+        return null;
     }
-    return true;
 }
 
-async function exchangeCodeForToken(code, verifier) {
-    const redirectUri = state.redirectUri || (window.location.origin + window.location.pathname);
-
-    const body = new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: state.clientId,
-        code,
-        code_verifier: verifier,
-        redirect_uri: redirectUri
-    });
-
-    const response = await fetch(VELORA_TOKEN_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json'
-        },
-        body: body.toString()
-    });
-
-    let data = {};
-    try { data = await response.json(); } catch (e) {}
-
-    if (!response.ok) {
-        throw new Error(data.error_description || data.error || `HTTP ${response.status}`);
+function normalizeTokenPayload(payload) {
+    if (!payload || !payload.access_token) {
+        return null;
     }
-    if (!data.access_token) {
-        throw new Error('No access token returned by Velora.');
-    }
-
-    state.tokens = {
-        access_token: data.access_token,
-        refresh_token: data.refresh_token || null,
-        token_type: data.token_type || 'Bearer',
-        expires_at: data.expires_in ? (Date.now() + data.expires_in * 1000) : null
+    const expiresIn = Number(payload.expires_in);
+    return {
+        access_token: String(payload.access_token),
+        refresh_token: payload.refresh_token ? String(payload.refresh_token) : null,
+        token_type: payload.token_type ? String(payload.token_type) : 'Bearer',
+        expires_at: Number.isFinite(expiresIn) && expiresIn > 0 ? (Date.now() + expiresIn * 1000) : null
     };
+}
+
+function applyTokenPayload(payload) {
+    const tokens = normalizeTokenPayload(payload);
+    if (!tokens) {
+        throw new Error('Velora auth payload did not include an access token.');
+    }
+    state.tokens = tokens;
     persistTokens();
     scheduleTokenRefresh();
 }
 
+async function handleAuthSuccess(payload) {
+    applyTokenPayload(payload && payload.tokens ? payload.tokens : payload);
+    await loadUserProfile();
+    updateAuthUI();
+    connectSocket();
+}
+
+function handleAuthError(payload) {
+    const message = payload && payload.message ? payload.message : 'Velora sign-in failed.';
+    setAuthStatus(message, 'danger');
+}
+
+async function handleAuthPayload(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return false;
+    }
+    if (payload.type === VELORA_AUTH_MESSAGE_SUCCESS || payload.tokens || payload.access_token) {
+        await handleAuthSuccess(payload);
+        return true;
+    }
+    if (payload.type === VELORA_AUTH_MESSAGE_ERROR) {
+        handleAuthError(payload);
+        return true;
+    }
+    return false;
+}
+
+async function consumeAuthResultFromHash() {
+    let changed = false;
+    let handled = false;
+    try {
+        const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+        const encodedResult = hash.get(VELORA_AUTH_RESULT_KEY);
+        const encodedError = hash.get(VELORA_AUTH_ERROR_KEY);
+        if (encodedResult) {
+            const payload = base64UrlToJson(encodedResult);
+            if (await handleAuthPayload(payload)) {
+                handled = true;
+            }
+            hash.delete(VELORA_AUTH_RESULT_KEY);
+            changed = true;
+        }
+        if (encodedError) {
+            const payload = base64UrlToJson(encodedError);
+            if (await handleAuthPayload(payload)) {
+                handled = true;
+            }
+            hash.delete(VELORA_AUTH_ERROR_KEY);
+            changed = true;
+        }
+        if (changed) {
+            const cleanUrl = `${window.location.pathname}${window.location.search}${hash.toString() ? `#${hash.toString()}` : ''}`;
+            history.replaceState({}, document.title, cleanUrl);
+        }
+    } catch (e) {
+        console.warn('[Velora] Failed to consume auth callback payload:', e);
+    }
+    return handled;
+}
+
+async function exchangeCodeForToken(code, verifier, redirectUri) {
+    const response = await fetch(`${getVeloraAuthBase()}/exchange`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            code: code,
+            code_verifier: verifier,
+            redirect_uri: normalizeRedirectUri(redirectUri) || getRedirectUri()
+        })
+    });
+
+    const text = await response.text();
+    let data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch (e) {}
+
+    if (!response.ok) {
+        throw new Error(data.message || data.error_description || data.error || text || `HTTP ${response.status}`);
+    }
+
+    applyTokenPayload(data);
+}
+
+async function startExternalAuthFlow() {
+    const bridge = getVeloraOAuthBridge();
+    if (!bridge || typeof bridge.startVeloraOAuth !== 'function') {
+        return false;
+    }
+
+    const scopes = VELORA_SCOPES.split(/\s+/).filter(Boolean);
+    const result = await bridge.startVeloraOAuth({
+        authBase: getVeloraAuthBase(),
+        clientId: state.clientId,
+        redirectUri: getRedirectUri(),
+        scopes: scopes
+    });
+
+    if (await handleAuthPayload(result)) {
+        return true;
+    }
+
+    const nestedPayload = result && typeof result === 'object'
+        ? (result.payload || result.authPayload || null)
+        : null;
+    if (await handleAuthPayload(nestedPayload)) {
+        return true;
+    }
+
+    if (!result || !result.code || !result.codeVerifier) {
+        throw new Error('Velora OAuth did not return a code and PKCE verifier.');
+    }
+
+    if (result.redirectUri) {
+        state.redirectUri = normalizeRedirectUri(result.redirectUri) || getRedirectUri();
+        persistConfig();
+    }
+
+    await exchangeCodeForToken(result.code, result.codeVerifier, result.redirectUri || getRedirectUri());
+    await loadUserProfile();
+    updateAuthUI();
+    connectSocket();
+    return true;
+}
+
+function startBrowserAuthFlow() {
+    const authUrl = getAuthStartUrl();
+    const popup = window.open(authUrl, 'veloraAuth', 'width=560,height=760');
+    if (!popup) {
+        window.location.href = authUrl;
+        return;
+    }
+    state.authPopup = popup;
+    setAuthStatus('Complete Velora sign-in in the popup.', 'warning');
+}
+
+async function startAuthFlow() {
+    try {
+        const handled = await startExternalAuthFlow();
+        if (!handled) {
+            startBrowserAuthFlow();
+        }
+    } catch (err) {
+        console.error('[Velora] Sign-in failed:', err);
+        setAuthStatus(`Sign-in failed: ${err.message}`, 'danger');
+    }
+}
+
+async function handleAuthCallback() {
+    return consumeAuthResultFromHash();
+}
+
 async function refreshAccessToken() {
-    if (!state.tokens?.refresh_token || !state.clientId) {
+    if (!state.tokens?.refresh_token) {
         clearAuthState();
         updateAuthUI();
         disconnectSocket();
@@ -247,32 +517,31 @@ async function refreshAccessToken() {
     }
 
     try {
-        const body = new URLSearchParams({
-            grant_type: 'refresh_token',
-            client_id: state.clientId,
-            refresh_token: state.tokens.refresh_token
-        });
-
-        const response = await fetch(VELORA_TOKEN_URL, {
+        const response = await fetch(`${getVeloraAuthBase()}/refresh`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             },
-            body: body.toString()
+            body: JSON.stringify({
+                refresh_token: state.tokens.refresh_token
+            })
         });
 
+        const text = await response.text();
         let data = {};
-        try { data = await response.json(); } catch (e) {}
+        try { data = text ? JSON.parse(text) : {}; } catch (e) {}
 
-        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+        if (!response.ok) throw new Error(data.message || data.error_description || data.error || text || `HTTP ${response.status}`);
 
-        state.tokens = {
-            ...state.tokens,
-            access_token: data.access_token,
-            refresh_token: data.refresh_token || state.tokens.refresh_token,
-            expires_at: data.expires_in ? (Date.now() + data.expires_in * 1000) : null
-        };
+        const tokens = normalizeTokenPayload(data);
+        if (!tokens) {
+            throw new Error('Velora refresh response did not include an access token.');
+        }
+        if (!tokens.refresh_token && state.tokens && state.tokens.refresh_token) {
+            tokens.refresh_token = state.tokens.refresh_token;
+        }
+        state.tokens = tokens;
         persistTokens();
         scheduleTokenRefresh();
 
@@ -812,6 +1081,18 @@ function wireExtensionBridge() {
 
 function wirePostMessageBridge() {
     window.addEventListener('message', function (event) {
+        const expectedOrigin = getExpectedAuthMessageOrigin();
+        if (expectedOrigin && event.origin === expectedOrigin) {
+            Promise.resolve(handleAuthPayload(event.data)).then(function (handled) {
+                if (!handled) return;
+                if (state.authPopup && !state.authPopup.closed) {
+                    try {
+                        state.authPopup.close();
+                    } catch (e) {}
+                }
+                state.authPopup = null;
+            }).catch(function () {});
+        }
         let request = event && event.data;
         if (!request || typeof request !== 'object') {
             return;
@@ -844,7 +1125,7 @@ function updateAuthUI() {
         els.signOut.style.display = authed ? '' : 'none';
     }
     if (els.setupNotice) {
-        els.setupNotice.style.display = (authed || state.clientId) ? 'none' : '';
+        els.setupNotice.style.display = authed ? 'none' : '';
     }
 }
 
@@ -1057,16 +1338,20 @@ function bindEvents() {
     }
 }
 
+try {
+    window.__SSAPP_START_VELORA_AUTH__ = startExternalAuthFlow;
+} catch (e) {}
+
 async function init() {
     initElements();
 
-    // Show the redirect URI hint so the user can copy it into their Velora app settings
-    if (els.redirectUriHint) {
-        els.redirectUriHint.textContent = window.location.origin + window.location.pathname;
-    }
-
     loadConfig();
+    applyRuntimeOverrides();
     loadTokens();
+
+    if (els.redirectUriHint) {
+        els.redirectUriHint.textContent = getRedirectUri();
+    }
 
     // Pre-fill client ID input if we have one saved
     if (els.clientIdInput && state.clientId) {

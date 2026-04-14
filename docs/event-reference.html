@@ -1063,6 +1063,46 @@
                     </table>
                 </article>
 
+                <article class="platform-card" id="shareplay">
+                    <h3>SharePlay.tv</h3>
+                    <p class="source-note">Implementation: <code>sources/shareplay.js</code></p>
+                    <ul class="requirements">
+                        <li>Relies on DOM scraping of the live chat drawer on SharePlay channel pages.</li>
+                        <li>Only newly inserted chat rows and cards are emitted after the scraper attaches; the existing backlog is intentionally ignored.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New chat rows appear inside the main chat feed.</td>
+                                <td>Standard chat payload with author, avatar, badge images, and HTML-preserved emotes. Thread replies also populate <code>initial</code>, <code>reply</code>, and <code>meta.reply</code> when the parent row is still present.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>raid</code></td>
+                                <td>SharePlay inserts a Blitz card into the live chat feed.</td>
+                                <td>Mapped to the canonical raid event. <code>meta.cardType</code> is <code>"blitz"</code>, with optional <code>meta.fromLogin</code> and <code>meta.viewers</code> when the card text exposes them.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>shoutout</code></td>
+                                <td>SharePlay inserts a shoutout/follow card into the chat feed.</td>
+                                <td>Emitted as <code>data.event = "shoutout"</code>. The card banner image is forwarded via <code>contentimg</code>, while <code>meta.cardType</code> and <code>meta.action</code> preserve the card label/button text.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Polls the visible header viewer badge every 10s.</td>
+                                <td><code>meta</code> integer viewer count; only emitted when <strong>Show viewer count</strong> or hype mode is enabled, and sends <code>0</code> if the badge becomes unreadable to clear stale counters.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
                 <article class="platform-card" id="rumble-dom">
                     <h3>Rumble - Standard DOM Capture</h3>
                     <p class="source-note">Implementation: <code>sources/rumble.js</code></p>
