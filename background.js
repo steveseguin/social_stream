@@ -13893,7 +13893,7 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
-		if (data.chatmessage) {
+		if (data.chatmessage && !data.chatbotReflection) {
 			const botReplyEvents = settings["botReply"] || [];
 			for (const id of botReplyEvents) {
 				const event = settings[`botReplyMessageEvent${id}`];
@@ -13921,6 +13921,7 @@ async function applyBotActions(data, tab = false) {
 				const timeout = settings[`botReplyMessageTimeout${id}`]?.numbersetting || 0;
 				const msg = {
 					response,
+					outgoingOrigin: "chatbot",
 					...(data.tid && !settings[`botReplyAll${id}`] && { tid: data.tid })
 				};
 
