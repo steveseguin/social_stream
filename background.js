@@ -9944,6 +9944,18 @@ function extractWaitlistMessage(chatMessage = "", trigger = "") {
 	}
 }
 
+function forgetWaitlistUser(entry) {
+	try {
+		if (!entry || !entry.type || !entry.chatname || !waitListUsers[entry.type]) {
+			return;
+		}
+		delete waitListUsers[entry.type][entry.chatname];
+		if (!Object.keys(waitListUsers[entry.type]).length) {
+			delete waitListUsers[entry.type];
+		}
+	} catch (e) {}
+}
+
 function processWaitlist(data) {
 	try {
 		if (!allowNewEntries) {
@@ -10133,10 +10145,16 @@ function removeWaitlist(n = 0) {
 			if (waitlist[i].waitStatus !== 1) {
 				if (n == 0) {
 					waitlist[i].waitStatus = 1;
+					if (settings.waitlistallowrejoin) {
+						forgetWaitlistUser(waitlist[i]);
+					}
 					sendWaitlistConfig(waitlist, true);
 					break;
 				} else if (cc == n) {
 					waitlist[i].waitStatus = 1;
+					if (settings.waitlistallowrejoin) {
+						forgetWaitlistUser(waitlist[i]);
+					}
 					sendWaitlistConfig(waitlist, true);
 					break;
 				} else {

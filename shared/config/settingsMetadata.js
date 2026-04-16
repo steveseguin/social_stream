@@ -1548,6 +1548,11 @@ const SETTINGS_METADATA = Object.freeze({
     category: "other_customization_options",
     description: "When enabled, only members can enter."
   },
+  "waitlistallowrejoin": {
+    type: "boolean",
+    category: "other_customization_options",
+    description: "Allow removed users to join the waitlist again."
+  },
   "waitlistmode": {
     type: "boolean",
     category: "must_enable_the_trigger_to_use",
