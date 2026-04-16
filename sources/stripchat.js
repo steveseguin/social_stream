@@ -3,12 +3,33 @@
 	var settings = {};
 
 	function escapeHtml(unsafe) {
+		unsafe = unsafe || "";
 		return unsafe
 			.replace(/&/g, "&amp;")
 			.replace(/</g, "&lt;")
 			.replace(/>/g, "&gt;")
 			.replace(/"/g, "&quot;")
 			.replace(/'/g, "&#039;") || "";
+	}
+
+	function hasClass(ele, className) {
+		if (!ele || !ele.classList) return false;
+		if (ele.classList.contains(className)) return true;
+		return (ele.className || "").toString().indexOf(className) !== -1;
+	}
+
+	function isStripchatMessage(ele) {
+		if (!ele || ele.nodeType !== 1) return false;
+		if (hasClass(ele, "message-base")) return true;
+		return !!(ele.dataset && ele.dataset.messageId && hasClass(ele, "message"));
+	}
+
+	function removeElements(root, selector) {
+		if (!root || !root.querySelectorAll) return;
+		var nodes = root.querySelectorAll(selector);
+		for (var i = 0; i < nodes.length; i++) {
+			nodes[i].remove();
+		}
 	}
 
 	function getAllContentNodes(element) {
@@ -41,11 +62,12 @@
 		if (!ele || !ele.isConnected) return;
 		if (ele.skip) return;
 		if (ele.nodeType !== 1) return;
-		if (!ele.classList.contains("message-base")) return;
+		if (!isStripchatMessage(ele)) return;
 
 		// skip lovense buzz notifications, goal updates, and action messages
-		if (ele.classList.contains("m-bg-default-v2")) { ele.skip = true; return; }
-		if (ele.classList.contains("m-bg-action")) { ele.skip = true; return; }
+		var className = (ele.className || "").toString();
+		if (hasClass(ele, "m-bg-default-v2") || className.indexOf("LovenseTipMessage") !== -1) { ele.skip = true; return; }
+		if (hasClass(ele, "m-bg-action") || className.indexOf("ActionMessage") !== -1) { ele.skip = true; return; }
 
 		var name = "";
 		var nameColor = "";
@@ -53,8 +75,8 @@
 		var hasDonation = "";
 		var chatimg = "";
 		var badges = [];
-		var isTip = ele.classList.contains("m-bg-tip-v2");
-		var isGoal = ele.classList.contains("m-bg-goal-v2") || ele.classList.contains("m-bg-goal-v2-reached");
+		var isTip = hasClass(ele, "m-bg-tip-v2") || className.indexOf("TipMessage") !== -1;
+		var isGoal = hasClass(ele, "m-bg-goal-v2") || hasClass(ele, "m-bg-goal-v2-reached") || className.indexOf("GoalUpdatedMessage") !== -1;
 
 		if (isGoal) { ele.skip = true; return; }
 
@@ -74,9 +96,15 @@
 
 		if (isTip) {
 			try {
-				var amountEle = ele.querySelector("strong");
+				var amountEle = ele.querySelector("[class*='amountHighlight'], strong");
 				if (amountEle) {
 					hasDonation = escapeHtml(amountEle.textContent.trim());
+				}
+				if (!hasDonation) {
+					var tipMatch = (ele.textContent || "").match(/tipped\s+([0-9.,]+\s*(?:tk|tokens?))/i);
+					if (tipMatch) {
+						hasDonation = escapeHtml(tipMatch[1].trim());
+					}
 				}
 				var commentEle = ele.querySelector("[class*='commentBody']");
 				if (commentEle) {
@@ -85,17 +113,12 @@
 			} catch (e) {
 			}
 		} else {
-			// regular message: content is inside the inner div after the .message-username div
 			try {
-				var contentWrapper = ele.querySelector("[class*='contentWithControls']");
+				var contentWrapper = ele.querySelector("[class*='contentWithControls'], .message-body");
 				if (contentWrapper) {
-					var innerDiv = contentWrapper.querySelector("div");
-					if (innerDiv) {
-						var clone = innerDiv.cloneNode(true);
-						var usernameDiv = clone.querySelector(".message-username");
-						if (usernameDiv) usernameDiv.remove();
-						msg = getAllContentNodes(clone).trim();
-					}
+					var clone = contentWrapper.cloneNode(true);
+					removeElements(clone, ".message-username, [class*='MessageControls'], [class*='Controls'], button, svg");
+					msg = getAllContentNodes(clone).trim();
 				}
 			} catch (e) {
 			}
@@ -159,41 +182,64 @@
 	);
 
 	function onElementInserted(target) {
+		function queueMessageNode(node) {
+			if (!node || node.nodeType !== 1 || node.skip) return;
+
+			if (isStripchatMessage(node)) {
+				setTimeout(function (n) {
+					processMessage(n);
+				}, 100, node);
+				return;
+			}
+
+			if (!node.querySelectorAll) return;
+			var nestedMessages = node.querySelectorAll(".message-base, [data-message-id]");
+			for (var j = 0; j < nestedMessages.length; j++) {
+				if (nestedMessages[j].skip) continue;
+				setTimeout(function (n) {
+					processMessage(n);
+				}, 100, nestedMessages[j]);
+			}
+		}
+
 		var onMutationsObserved = function (mutations) {
 			mutations.forEach(function (mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							var node = mutation.addedNodes[i];
-							if (node.nodeType !== 1) continue;
-							if (node.skip) continue;
-							if (!node.classList.contains("message-base")) continue;
-
-							setTimeout(function (n) {
-								processMessage(n);
-							}, 100, node);
+							queueMessageNode(mutation.addedNodes[i]);
 						} catch (e) { }
 					}
 				}
 			});
 		};
 
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
 
+	function getChatContainer() {
+		var containers = document.querySelectorAll(".messages");
+		for (var i = 0; i < containers.length; i++) {
+			if (containers[i].closest(".model-chat-content") || containers[i].querySelector(".message-base, [data-message-id]")) {
+				return containers[i];
+			}
+		}
+		return containers[0] || null;
+	}
+
 	console.log("Social Stream injected");
 
 	var checkReady = setInterval(function () {
-		var chatContainer = document.querySelector(".messages");
+		var chatContainer = getChatContainer();
 		if (chatContainer) {
 			if (!chatContainer.dataset.ssnMarked) {
 				chatContainer.dataset.ssnMarked = "true";
 				console.log("Social Stream - Stripchat chat connected");
 				setTimeout(function(chatContainer){
-					var existing = chatContainer.querySelectorAll(".message-base");
+					var existing = chatContainer.querySelectorAll(".message-base, [data-message-id]");
 					for (var i = 0; i < existing.length; i++) {
 						existing[i].skip = true;
 					}

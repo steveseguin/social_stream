@@ -66,7 +66,8 @@ try {
 	}
 	
 	const messageHistory = [];
-	const TWO_MINUTES = 2 * 60 * 1000;
+	const MESSAGE_HISTORY_TTL = 2 * 60 * 1000;
+	const STALE_MESSAGE_AGE = 90 * 1000;
 	const MESSAGE_SELECTOR = "[data-testid='messageContainer'], [data-testid='chat-message-container']";
 	var activeObserver = null;
 	var observedChatRoot = null;
@@ -74,13 +75,13 @@ try {
 	function checkMessage(message) {
 		const now = Date.now();
 		for (let i = messageHistory.length - 1; i >= 0; i--) {
-			if (now - messageHistory[i].timestamp > TWO_MINUTES) {
+			if (now - messageHistory[i].timestamp > MESSAGE_HISTORY_TTL) {
 				messageHistory.splice(i, 1);
 			}
 		}
 		
 		const isDuplicate = messageHistory.some(entry => 
-			entry.content === message && now - entry.timestamp <= TWO_MINUTES
+			entry.content === message && now - entry.timestamp <= MESSAGE_HISTORY_TTL
 		);
 		
 		if (!isDuplicate) {
@@ -137,6 +138,7 @@ try {
 			var normalized = normalizeMessageElement(element);
 			if (normalized){
 				normalized.ignore = true;
+				rememberMessageElement(normalized);
 			}
 		});
 	}
@@ -163,7 +165,73 @@ try {
 		if (!text){
 			return false;
 		}
-		return /^(just now|now|\d+\s*[smhdw])$/i.test(text.trim());
+		return /^(just now|now|\d+\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks))$/i.test(text.trim());
+	}
+
+	function parseMessageAge(text){
+		if (!text){
+			return null;
+		}
+		text = text.replace(/\s+/g, " ").trim().toLowerCase();
+		if (text === "now" || text === "just now"){
+			return 0;
+		}
+		var match = text.match(/^(\d+)\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks)$/i);
+		if (!match){
+			return null;
+		}
+		var value = parseInt(match[1], 10);
+		if (!Number.isFinite(value)){
+			return null;
+		}
+		var unit = match[2].toLowerCase();
+		if (unit === "s" || unit.indexOf("sec") === 0 || unit.indexOf("second") === 0){
+			return value * 1000;
+		}
+		if (unit === "m" || unit.indexOf("min") === 0 || unit.indexOf("minute") === 0){
+			return value * 60 * 1000;
+		}
+		if (unit === "h" || unit.indexOf("hr") === 0 || unit.indexOf("hour") === 0){
+			return value * 60 * 60 * 1000;
+		}
+		if (unit === "d" || unit.indexOf("day") === 0){
+			return value * 24 * 60 * 60 * 1000;
+		}
+		if (unit === "w" || unit.indexOf("week") === 0){
+			return value * 7 * 24 * 60 * 60 * 1000;
+		}
+		return null;
+	}
+
+	function getMessageAge(ele){
+		if (!ele || !ele.querySelectorAll){
+			return null;
+		}
+		var nodes = [];
+		try {
+			nodes = ele.querySelectorAll("time, span, p, div");
+		} catch(e){
+			return null;
+		}
+		for (var i = 0; i < nodes.length; i++){
+			var text = "";
+			try {
+				text = (nodes[i].textContent || "").replace(/\s+/g, " ").trim();
+			} catch(e){}
+			if (!text || text.length > 24){
+				continue;
+			}
+			var age = parseMessageAge(text);
+			if (age !== null){
+				return age;
+			}
+		}
+		return null;
+	}
+
+	function isStaleMessage(ele){
+		var age = getMessageAge(ele);
+		return age !== null && age > STALE_MESSAGE_AGE;
 	}
 
 	function getChatMessage(ele, chatname){
@@ -193,6 +261,20 @@ try {
 		}
 		return "";
 	}
+
+	function rememberMessageElement(ele){
+		try {
+			var chatname = getChatName(ele).trim();
+			if (!chatname){
+				return;
+			}
+			var chatmessage = getChatMessage(ele, chatname).trim();
+			if (!chatmessage){
+				return;
+			}
+			checkMessage(chatname+"::"+chatmessage);
+		} catch(e){}
+	}
 	
 	async function processMessage(ele){	// twitch
 	
@@ -202,6 +284,9 @@ try {
 		try {
 			ele = normalizeMessageElement(ele);
 			if (!ele || !ele.isConnected){
+				return;
+			}
+			if (isStaleMessage(ele)){
 				return;
 			}
 			
