@@ -1,4 +1,4 @@
-import SETTINGS_METADATA, { SETTINGS_CATEGORY_INFO } from '../../shared/config/settingsMetadata.js';
+import SETTINGS_DEFINITIONS, { SETTINGS_CATEGORY_INFO } from '../../shared/config/settingsDefinitions.js';
 import URL_PARAMETER_GROUPS from '../../shared/config/urlParameters.js';
 
 const POPUP_SOURCE = '../popup.html';
@@ -254,24 +254,24 @@ function addRecord(map, key, info) {
 function finalizeRecords(map) {
   const records = [];
   for (const [key, entry] of map.entries()) {
-    const metadata = SETTINGS_METADATA[key] || null;
+    const definition = SETTINGS_DEFINITIONS[key] || null;
     const labels = [...entry.labels].map(cleanText).filter(Boolean);
     const titles = [...entry.titles].map(cleanText).filter(Boolean);
     const sections = buildSectionList(entry.sections);
 
     const label =
-      (metadata && metadata.label) ||
+      (definition && definition.label) ||
       pickBestLabel(labels) ||
       toTitleCase(key);
 
     const type =
-      (metadata && metadata.type) ||
+      (definition && definition.type) ||
       entry.inferredType ||
       inferTypeFromTags(entry.elementTags);
 
-    const description = (metadata && metadata.description) || titles[0] || '';
-    const descriptionSource = metadata
-      ? 'metadata'
+    const description = (definition && definition.description) || titles[0] || '';
+    const descriptionSource = definition
+      ? 'definition'
       : description
       ? 'popup'
       : 'placeholder';
@@ -280,7 +280,7 @@ function finalizeRecords(map) {
       key,
       label,
       type,
-      metadata,
+      definition,
       description,
       descriptionSource,
       titles,
@@ -722,8 +722,8 @@ function groupRecords(records, options) {
 
   records.forEach(record => {
     if (mode === 'category') {
-      const categoryKey = record.metadata?.category || '__uncategorized';
-      const title = categoryToLabel(record.metadata?.category);
+      const categoryKey = record.definition?.category || '__uncategorized';
+      const title = categoryToLabel(record.definition?.category);
       const order = CATEGORY_ORDER.get(categoryKey) ?? 9000;
       const id = `category::${categoryKey}`;
       if (!groups.has(id)) {
@@ -781,14 +781,14 @@ function createSettingCard(record) {
   const badges = document.createElement('div');
   badges.className = 'setting-badges';
 
-  if (record.metadata) {
-    renderBadge(badges, 'Metadata enriched', 'status-metadata');
+  if (record.definition) {
+    renderBadge(badges, 'Definition available', 'status-defined');
   } else {
     renderBadge(badges, 'Auto-imported', 'status-placeholder');
   }
 
-  if (record.metadata?.category) {
-    renderBadge(badges, categoryToLabel(record.metadata.category), '');
+  if (record.definition?.category) {
+    renderBadge(badges, categoryToLabel(record.definition.category), '');
   }
 
   if (badges.childElementCount) {
@@ -799,12 +799,12 @@ function createSettingCard(record) {
   description.className = 'setting-description';
   if (record.description) {
     description.textContent = record.description;
-    if (record.descriptionSource === 'popup' && record.metadata) {
+    if (record.descriptionSource === 'popup' && record.definition) {
       description.title = 'Popup tooltip description';
     }
   } else {
     description.classList.add('placeholder');
-    description.textContent = 'No description yet. Update shared/config/settingsMetadata.js to document this setting.';
+    description.textContent = 'No description yet. Update shared/config/settingsDefinitions.js to document this setting.';
   }
   card.appendChild(description);
 
@@ -814,20 +814,20 @@ function createSettingCard(record) {
   const metaItems = [];
   metaItems.push(createMetaItem('Input', typeToLabel(record.type)));
 
-  if (record.metadata?.scope) {
-    metaItems.push(createMetaItem('Scope', toTitleCase(record.metadata.scope)));
+  if (record.definition?.scope) {
+    metaItems.push(createMetaItem('Scope', toTitleCase(record.definition.scope)));
   }
 
-  if (record.metadata?.surfaces?.length) {
-    metaItems.push(createMetaItem('Surfaces', record.metadata.surfaces.join(', ')));
+  if (record.definition?.surfaces?.length) {
+    metaItems.push(createMetaItem('Surfaces', record.definition.surfaces.join(', ')));
   }
 
-  if (record.metadata?.targets?.length) {
-    metaItems.push(createMetaItem('Targets', record.metadata.targets.join(', ')));
+  if (record.definition?.targets?.length) {
+    metaItems.push(createMetaItem('Targets', record.definition.targets.join(', ')));
   }
 
-  if (record.metadata?.expects) {
-    metaItems.push(createMetaItem('Accepts', expectsToLabel(record.metadata.expects)));
+  if (record.definition?.expects) {
+    metaItems.push(createMetaItem('Accepts', expectsToLabel(record.definition.expects)));
   }
 
   if (record.section?.title) {
@@ -839,7 +839,7 @@ function createSettingCard(record) {
     metaItems.push(createMetaItem('Also appears in', others));
   }
 
-  if (!record.metadata && record.titles?.length > 1) {
+  if (!record.definition && record.titles?.length > 1) {
     const extras = record.titles.slice(1).join(' • ');
     if (extras) {
       metaItems.push(createMetaItem('Additional hints', extras));
@@ -913,10 +913,10 @@ function filterRecords(records) {
       record.key,
       record.label,
       record.description,
-      record.metadata?.category,
-      record.metadata?.scope,
-      ...(record.metadata?.targets || []),
-      ...(record.metadata?.surfaces || []),
+      record.definition?.category,
+      record.definition?.scope,
+      ...(record.definition?.targets || []),
+      ...(record.definition?.surfaces || []),
       ...(record.titles || [])
     ]
       .filter(Boolean)

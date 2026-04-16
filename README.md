@@ -536,7 +536,7 @@ Social Stream Ninja ships with a shared profanity list baked directly into `libs
 - Usernames can be scrubbed separately via `👤🚫 Replace common bad words in user names` (`blacklistname`).
 - Run `node tests/profanity-filter.test.js` after touching the list or generator to confirm the data loads and sentinel words survive the variation cap.
 
-The profanity toggles live under **Other filters** inside the extension popup and are also exposed through `shared/config/settingsMetadata.js` for remote configuration tooling.
+The profanity toggles live under **Other filters** inside the extension popup and are also exposed through `shared/config/settingsDefinitions.js` for remote configuration tooling.
 
 It's fairly easy to modify the `auto1` trigger to do whatever you want. You can also customize or remove the URL-parameter trigger needed to activate it.
 

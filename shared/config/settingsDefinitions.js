@@ -1,5 +1,5 @@
-// Auto-generated settings metadata based on popup.html analysis
-// Do not edit by hand; update via metadata generation script.
+// Auto-generated settings definitions based on popup.html analysis
+// Do not edit by hand; update via the settings definition generation script.
 const SETTINGS_CATEGORIES = Object.freeze({
   'streaming_chat_dock_overlay': { label: "Streaming chat (dock & overlay)", order: 0 },
   'more_tts_options': { label: "More TTS options", order: 5 },
@@ -57,7 +57,7 @@ const SETTINGS_CATEGORIES = Object.freeze({
   'miscellaneous': { label: "Miscellaneous", order: 9999 },
 });
 
-const SETTINGS_METADATA = Object.freeze({
+const SETTINGS_DEFINITIONS = Object.freeze({
   "addkarma": {
     type: "boolean",
     category: "custom_injection",
@@ -1615,13 +1615,13 @@ const SETTINGS_METADATA = Object.freeze({
   },
 });
 
-export function getSettingMetadata(settingKey) {
-  return SETTINGS_METADATA[settingKey] || null;
+export function getSettingDefinition(settingKey) {
+  return SETTINGS_DEFINITIONS[settingKey] || null;
 }
 
-export function listSettingsMetadata() {
-  return Object.entries(SETTINGS_METADATA).map(([key, value]) => ({ key, ...value }));
+export function listSettingDefinitions() {
+  return Object.entries(SETTINGS_DEFINITIONS).map(([key, value]) => ({ key, ...value }));
 }
 
 export const SETTINGS_CATEGORY_INFO = SETTINGS_CATEGORIES;
-export default SETTINGS_METADATA;
+export default SETTINGS_DEFINITIONS;
