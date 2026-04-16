@@ -156,6 +156,9 @@ var isExtensionOn = true;
 					return false;
 				}
 			}
+			if (streamEvent && settings.captureevents === false){
+				return false;
+			}
 
 			return {
 				chatname: escapeHtml(chatname),
@@ -657,6 +660,8 @@ function checkConditions(element) {
 	  if (!chatmessage){return;}
 	  
 	  if (!chatname){return;}
+	  
+	  if (streamEvent && settings.captureevents === false){return;}
 	  
 	  if (chatmessage.length > 50){
 		  chatmessage = cleanString(chatmessage);
