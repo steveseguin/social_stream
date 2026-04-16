@@ -2078,6 +2078,31 @@ var worksheet = false;
 var table = [];
 
 var newFileHandleExcel = false;
+
+function getExcelWorkbookBytes() {
+	const xlsbin = XLSX.write(workbook, {
+		bookType: "xlsx",
+		type: "binary"
+	});
+
+	const bytes = new Uint8Array(xlsbin.length);
+	for (let i = 0; i < xlsbin.length; i++) {
+		bytes[i] = xlsbin.charCodeAt(i) & 0xff;
+	}
+	return bytes;
+}
+
+async function writeExcelWorkbook() {
+	const xlsData = getExcelWorkbookBytes();
+	if (typeof newFileHandleExcel == "string") {
+		ipcRenderer.send("write-to-file", { filePath: newFileHandleExcel, data: xlsData });
+		return;
+	}
+	const writableStream = await newFileHandleExcel.createWritable();
+	await writableStream.write(xlsData);
+	await writableStream.close();
+}
+
 async function overwriteFileExcel(data = false) {
 	if (data == "setup") {
 		const opts = {
@@ -2098,7 +2123,14 @@ async function overwriteFileExcel(data = false) {
 		} finally {
 			await restorePreviousTabAfterPicker(restoreTarget);
 		}
+		if (!newFileHandleExcel) {
+			workbook = false;
+			worksheet = false;
+			table = [];
+			return;
+		}
 		workbook = XLSX.utils.book_new();
+		table = [];
 
 		data = [];
 
@@ -2106,28 +2138,7 @@ async function overwriteFileExcel(data = false) {
 		workbook.SheetNames.push("SocialStream-" + streamID);
 		workbook.Sheets["SocialStream-" + streamID] = worksheet;
 
-		var xlsbin = XLSX.write(workbook, {
-			bookType: "xlsx",
-			type: "binary"
-		});
-
-		var buffer = new ArrayBuffer(xlsbin.length),
-			array = new Uint8Array(buffer);
-		for (var i = 0; i < xlsbin.length; i++) {
-			array[i] = xlsbin.charCodeAt(i) & 0xff;
-		}
-		var xlsblob = new Blob([buffer], { type: "application/octet-stream" });
-		delete array;
-		delete buffer;
-		delete xlsbin;
-
-		if (typeof newFileHandleExcel == "string") {
-			ipcRenderer.send("write-to-file", { filePath: newFileHandleExcel, data: xlsblob });
-		} else {
-			const writableStream = await newFileHandleExcel.createWritable();
-			await writableStream.write(xlsblob);
-			await writableStream.close();
-		}
+		await writeExcelWorkbook();
 	} else if (newFileHandleExcel && data) {
 		for (var key in data) {
 			if (!table.includes(key)) {
@@ -2152,21 +2163,7 @@ async function overwriteFileExcel(data = false) {
 		XLSX.utils.sheet_add_aoa(worksheet, [table], { origin: 0 }); // replace header
 		XLSX.utils.sheet_add_aoa(worksheet, [column], { origin: -1 }); // append new line
 
-		const appendedXlsBin = XLSX.write(workbook, {
-			bookType: "xlsx",
-			type: "binary"
-		});
-
-		const appendedBuffer = new ArrayBuffer(appendedXlsBin.length);
-		const appendedArray = new Uint8Array(appendedBuffer);
-		for (let arrayIndex = 0; arrayIndex < appendedXlsBin.length; arrayIndex++) {
-			appendedArray[arrayIndex] = appendedXlsBin.charCodeAt(arrayIndex) & 0xff;
-		}
-		const appendedXlsBlob = new Blob([appendedBuffer], { type: "application/octet-stream" });
-
-		const writableStream = await newFileHandleExcel.createWritable();
-		await writableStream.write(appendedXlsBlob);
-		await writableStream.close();
+		await writeExcelWorkbook();
 	}
 }
 
