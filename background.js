@@ -4884,7 +4884,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "testAlert") {
 			sendResponse({ state: isExtensionOn });
 			if (request.payload && typeof request.payload === "object") {
-				sendToDestinations(request.payload);
+				sendTargetP2P(request.payload, "alerts");
 			}
 		} else if (request.cmd && request.cmd === "fakemeta") {
 			sendResponse({ state: isExtensionOn });
@@ -9944,6 +9944,16 @@ function extractWaitlistMessage(chatMessage = "", trigger = "") {
 	}
 }
 
+function forgetWaitlistUser(entry) {
+	if (!entry || !entry.type || !entry.chatname || !waitListUsers[entry.type]) {
+		return;
+	}
+	delete waitListUsers[entry.type][entry.chatname];
+	if (!Object.keys(waitListUsers[entry.type]).length) {
+		delete waitListUsers[entry.type];
+	}
+}
+
 function processWaitlist(data) {
 	try {
 		if (!allowNewEntries) {
@@ -10133,10 +10143,12 @@ function removeWaitlist(n = 0) {
 			if (waitlist[i].waitStatus !== 1) {
 				if (n == 0) {
 					waitlist[i].waitStatus = 1;
+					forgetWaitlistUser(waitlist[i]);
 					sendWaitlistConfig(waitlist, true);
 					break;
 				} else if (cc == n) {
 					waitlist[i].waitStatus = 1;
+					forgetWaitlistUser(waitlist[i]);
 					sendWaitlistConfig(waitlist, true);
 					break;
 				} else {
