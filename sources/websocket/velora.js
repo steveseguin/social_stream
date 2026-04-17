@@ -4,6 +4,7 @@
 
 const VELORA_API_BASE = 'https://api.velora.tv';
 const VELORA_WS_URL = 'wss://api.velora.tv/ws/events';
+const VELORA_EVENTS_SSE_URL = `${VELORA_API_BASE}/api/events/stream`;
 const DEFAULT_VELORA_AUTH_BASE = 'https://auth.socialstream.ninja/auth/velora';
 const DEFAULT_VELORA_CLIENT_ID = 'velora_9c9ae006ec8bc256';
 const DEFAULT_VELORA_REDIRECT_URI = 'https://auth.socialstream.ninja/auth/velora/callback';
@@ -21,6 +22,8 @@ const CHAT_FEED_LIMIT = 100;
 const ALERTS_FEED_LIMIT = 80;
 const EVENT_LOG_LIMIT = 100;
 const VIEWER_POLL_INTERVAL_MS = 30000;
+const SOCKET_CONNECTED_EVENT_TIMEOUT_MS = 4000;
+const SSE_RECONNECT_DELAY_MS = 3000;
 
 const state = {
     clientId: DEFAULT_VELORA_CLIENT_ID,
@@ -33,9 +36,17 @@ const state = {
     settings: {},
     viewerPollTimer: null,
     refreshTimer: null,
+    sseReconnectTimer: null,
+    socketFallbackTimer: null,
     streamId: null,
     authPopup: null,
-    requestedChannel: ''
+    requestedChannel: '',
+    sseRequest: null,
+    sseReadOffset: 0,
+    sseBuffer: '',
+    eventsConnected: false,
+    eventTransport: '',
+    connectedChannel: ''
 };
 
 const els = {};
@@ -561,9 +572,12 @@ async function refreshAccessToken() {
         persistTokens();
         scheduleTokenRefresh();
 
-        // Re-auth the socket with the new token if connected
+        // Re-auth the active events transport with the new token
         if (state.socket && state.socket.connected) {
             state.socket.auth = { token: state.tokens.access_token };
+        }
+        if (state.sseRequest) {
+            connectSse('Refreshing Velora SSE connection with updated token.');
         }
     } catch (err) {
         console.error('[Velora] Token refresh failed:', err);
@@ -641,16 +655,225 @@ function stopViewerPoll() {
     state.viewerPollTimer = null;
 }
 
+function clearSocketFallbackTimer() {
+    clearTimeout(state.socketFallbackTimer);
+    state.socketFallbackTimer = null;
+}
+
+function clearSseReconnectTimer() {
+    clearTimeout(state.sseReconnectTimer);
+    state.sseReconnectTimer = null;
+}
+
+function resetEventConnectionState() {
+    state.eventsConnected = false;
+    state.eventTransport = '';
+    state.connectedChannel = '';
+}
+
+function disconnectSocketTransport() {
+    clearSocketFallbackTimer();
+    if (state.socket) {
+        try {
+            state.socket.disconnect();
+        } catch (e) {}
+        state.socket = null;
+    }
+}
+
+function disconnectSseTransport() {
+    clearSseReconnectTimer();
+    const xhr = state.sseRequest;
+    state.sseRequest = null;
+    state.sseReadOffset = 0;
+    state.sseBuffer = '';
+    if (xhr) {
+        try {
+            xhr.abort();
+        } catch (e) {}
+    }
+}
+
+function applyConnectedChannelInfo(data, transportLabel) {
+    const channelName = normalizeChannelName(
+        (data && (data.channelUsername || data.username)) ||
+        getAuthedChannelName() ||
+        state.requestedChannel
+    );
+    const labelName = channelName || '-';
+    const transportKey = String(transportLabel || '').toLowerCase();
+    const isFirstConnection = !state.eventsConnected;
+    const channelChanged = channelName && channelName !== state.connectedChannel;
+    const transportChanged = transportKey !== state.eventTransport;
+
+    state.eventsConnected = true;
+    state.eventTransport = transportKey;
+    if (channelName) {
+        state.connectedChannel = channelName;
+    }
+
+    clearSocketFallbackTimer();
+    clearSseReconnectTimer();
+    setSocketStatus('connected');
+
+    if (transportKey === 'sse') {
+        disconnectSocketTransport();
+    } else if (transportKey === 'websocket') {
+        disconnectSseTransport();
+    }
+
+    if (isFirstConnection || transportChanged) {
+        addEventLogEntry(`Connected to Velora Events API via ${transportLabel}.`, 'info');
+    }
+    if (isFirstConnection || transportChanged || channelChanged) {
+        addEventLogEntry(`Authenticated as channel: ${labelName}`, 'info');
+    }
+
+    if (els.channelLabel) {
+        els.channelLabel.querySelector('span').textContent = labelName;
+    }
+
+    if (state.requestedChannel && channelName && channelName !== state.requestedChannel) {
+        addEventLogEntry(`URL requested @${state.requestedChannel}, but Velora connected as @${channelName}.`, 'warn');
+    }
+
+    startViewerPoll();
+}
+
+function scheduleSseReconnect(reason) {
+    if (!state.tokens?.access_token || state.sseRequest) {
+        return;
+    }
+    clearSseReconnectTimer();
+    state.sseReconnectTimer = setTimeout(function () {
+        connectSse(reason);
+    }, SSE_RECONNECT_DELAY_MS);
+}
+
+function handleSsePayload(eventName, payload) {
+    if (!payload || typeof payload !== 'object') {
+        return;
+    }
+    if (eventName === 'connected' || payload.event === 'connected') {
+        applyConnectedChannelInfo(payload.data || payload, 'SSE');
+        return;
+    }
+    handleEvent(payload);
+}
+
+function processSseChunk(chunk) {
+    if (!chunk) return;
+    state.sseBuffer += chunk;
+    const blocks = state.sseBuffer.split(/\r?\n\r?\n/);
+    state.sseBuffer = blocks.pop() || '';
+
+    blocks.forEach(function (block) {
+        if (!block) return;
+        let eventName = '';
+        const dataLines = [];
+        block.split(/\r?\n/).forEach(function (line) {
+            if (!line || line.charAt(0) === ':') return;
+            if (line.indexOf('event:') === 0) {
+                eventName = line.slice(6).trim();
+                return;
+            }
+            if (line.indexOf('data:') === 0) {
+                dataLines.push(line.slice(5).replace(/^\s*/, ''));
+            }
+        });
+        if (!dataLines.length) return;
+        try {
+            handleSsePayload(eventName, JSON.parse(dataLines.join('\n')));
+        } catch (e) {
+            addEventLogEntry('Failed to parse Velora SSE payload.', 'warn');
+        }
+    });
+}
+
+function connectSse(reason) {
+    if (!state.tokens?.access_token) return;
+
+    disconnectSseTransport();
+    disconnectSocketTransport();
+    resetEventConnectionState();
+    setSocketStatus('connecting');
+
+    if (reason) {
+        addEventLogEntry(reason, 'warn');
+    }
+
+    const xhr = new XMLHttpRequest();
+    state.sseRequest = xhr;
+    state.sseReadOffset = 0;
+    state.sseBuffer = '';
+
+    xhr.open('GET', VELORA_EVENTS_SSE_URL, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${state.tokens.access_token}`);
+    xhr.setRequestHeader('Accept', 'text/event-stream');
+
+    xhr.onreadystatechange = function () {
+        if (xhr !== state.sseRequest) return;
+        if (xhr.readyState === 2 && xhr.status && xhr.status !== 200) {
+            setSocketStatus('error');
+            addEventLogEntry(`SSE connection failed: HTTP ${xhr.status}`, 'error');
+        }
+    };
+
+    xhr.onprogress = function () {
+        if (xhr !== state.sseRequest) return;
+        const text = xhr.responseText || '';
+        const chunk = text.slice(state.sseReadOffset);
+        state.sseReadOffset = text.length;
+        processSseChunk(chunk);
+    };
+
+    xhr.onerror = function () {
+        if (xhr !== state.sseRequest) return;
+        state.sseRequest = null;
+        state.sseReadOffset = 0;
+        state.sseBuffer = '';
+        if (!state.eventsConnected) {
+            setSocketStatus('error');
+        }
+        addEventLogEntry('Velora SSE connection error.', 'error');
+        scheduleSseReconnect('Retrying Velora SSE connection.');
+    };
+
+    xhr.onload = function () {
+        if (xhr !== state.sseRequest) return;
+        state.sseRequest = null;
+        state.sseReadOffset = 0;
+        state.sseBuffer = '';
+        if (state.tokens?.access_token) {
+            addEventLogEntry('Velora SSE stream closed. Reconnecting…', 'warn');
+            scheduleSseReconnect();
+        }
+    };
+
+    xhr.send();
+}
+
+function startSocketFallbackTimer() {
+    clearSocketFallbackTimer();
+    state.socketFallbackTimer = setTimeout(function () {
+        if (state.eventsConnected) {
+            return;
+        }
+        connectSse('WebSocket connected without Velora channel confirmation. Falling back to SSE.');
+    }, SOCKET_CONNECTED_EVENT_TIMEOUT_MS);
+}
+
 // ─── Socket.IO connection ─────────────────────────────────────────────────────
 
 function connectSocket() {
     if (!state.tokens?.access_token) return;
     if (typeof io !== 'function') {
-        addEventLogEntry('socket.io client not loaded.', 'error');
+        connectSse('socket.io client not loaded. Using SSE instead.');
         return;
     }
 
     disconnectSocket();
+    resetEventConnectionState();
 
     const socket = io(VELORA_WS_URL, {
         auth: { token: state.tokens.access_token },
@@ -665,38 +888,36 @@ function connectSocket() {
     setSocketStatus('connecting');
 
     socket.on('connect', () => {
-        setSocketStatus('connected');
-        addEventLogEntry('Connected to Velora Events API.', 'info');
-        startViewerPoll();
+        setSocketStatus('connecting');
+        addEventLogEntry('Velora WebSocket transport connected. Waiting for channel confirmation…', 'info');
+        startSocketFallbackTimer();
     });
 
     socket.on('connected', (data) => {
-        const channelName = data.channelUsername || data.username || '';
-        addEventLogEntry(`Authenticated as channel: ${channelName}`, 'info');
-        if (els.channelLabel) {
-            els.channelLabel.querySelector('span').textContent = channelName || '-';
-        }
-        if (state.requestedChannel) {
-            const actualChannel = normalizeChannelName(channelName);
-            if (actualChannel && actualChannel !== state.requestedChannel) {
-                addEventLogEntry(`URL requested @${state.requestedChannel}, but Velora connected as @${actualChannel}.`, 'warn');
-            }
-        }
+        applyConnectedChannelInfo(data, 'WebSocket');
     });
 
     socket.on('event', (payload) => {
+        if (!state.eventsConnected) {
+            applyConnectedChannelInfo(payload && payload.data ? payload.data : null, 'WebSocket');
+        }
         handleEvent(payload);
     });
 
     socket.on('disconnect', (reason) => {
-        setSocketStatus('disconnected');
-        addEventLogEntry(`Disconnected: ${reason}`, 'warn');
-        stopViewerPoll();
+        clearSocketFallbackTimer();
+        if (!state.sseRequest) {
+            setSocketStatus('disconnected');
+            addEventLogEntry(`Disconnected: ${reason}`, 'warn');
+            stopViewerPoll();
+            resetEventConnectionState();
+        }
     });
 
     socket.on('connect_error', (err) => {
         setSocketStatus('error');
         addEventLogEntry(`Connection error: ${err.message}`, 'error');
+        connectSse('WebSocket connection failed. Falling back to SSE.');
     });
 
     socket.on('error', (err) => {
@@ -706,11 +927,10 @@ function connectSocket() {
 }
 
 function disconnectSocket() {
-    if (state.socket) {
-        state.socket.disconnect();
-        state.socket = null;
-    }
+    disconnectSocketTransport();
+    disconnectSseTransport();
     stopViewerPoll();
+    resetEventConnectionState();
     setSocketStatus('disconnected');
 }
 
