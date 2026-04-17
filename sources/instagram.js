@@ -6,6 +6,81 @@
 	var isExtensionOn = true;
 	var PROCESSED_ATTR = "data-ss-processed";
 	var LIVE_COMMENT_SELECTOR = "section [data-set='live']";
+	var LIVE_COMMENT_INPUT_SELECTOR = "footer textarea, footer input, footer [contenteditable='true']";
+	function getInstagramLiveTextSpans(scope) {
+		try {
+			return Array.from(scope.querySelectorAll("span[dir='auto']")).filter(function(span){
+				return span && span.textContent && span.textContent.trim();
+			});
+		} catch(e){}
+		return [];
+	}
+	function getInstagramLiveProfileImage(scope) {
+		try {
+			var images = Array.from(scope.querySelectorAll("img[src]"));
+			if (!images.length){
+				return null;
+			}
+			for (var i = 0; i < images.length; i++){
+				var alt = ((images[i].alt || "") + "").toLowerCase();
+				if ((alt.indexOf("profile picture") !== -1) || (alt.indexOf("profile photo") !== -1)){
+					return images[i];
+				}
+			}
+			return images[0];
+		} catch(e){}
+		return null;
+	}
+	function isInstagramLiveButton(button) {
+		try {
+			if (!button || !button.matches || !button.matches("div[role='button']")){
+				return false;
+			}
+			if (button.closest("[role='tablist']")){
+				return false;
+			}
+			var spans = getInstagramLiveTextSpans(button);
+			if (!spans.length){
+				return false;
+			}
+			if (!getInstagramLiveProfileImage(button)){
+				return false;
+			}
+			var text = ((button.textContent || "") + "").replace(/\s+/g, " ").trim();
+			if (!text){
+				return false;
+			}
+			var ariaLabel = ((button.getAttribute("aria-label") || "") + "").toLowerCase();
+			if (ariaLabel && /^(comment|follow|following|like|liked|reply|send|share|more|menu|close|mute|unmute|play|pause|next|previous)/.test(ariaLabel)){
+				return false;
+			}
+			if ((spans.length === 1) && (text.split(/\s+/).length < 2)){
+				return false;
+			}
+			return true;
+		} catch(e){}
+		return false;
+	}
+	function getInstagramLiveButton(node) {
+		try {
+			if (!node){
+				return null;
+			}
+			if (isInstagramLiveButton(node)){
+				return node;
+			}
+			if (!node.querySelectorAll){
+				return null;
+			}
+			var buttons = node.querySelectorAll("div[role='button']");
+			for (var i = 0; i < buttons.length; i++){
+				if (isInstagramLiveButton(buttons[i])){
+					return buttons[i];
+				}
+			}
+		} catch(e){}
+		return null;
+	}
 	function addUniqueNode(list, node) {
 		if (node && (list.indexOf(node) === -1)){
 			list.push(node);
@@ -51,10 +126,23 @@
 	function getInstagramLiveSections() {
 		var sections = [];
 		try {
-			document.querySelectorAll("footer textarea").forEach(function(textarea){
-				var footer = textarea.closest("footer");
+			document.querySelectorAll(LIVE_COMMENT_INPUT_SELECTOR).forEach(function(input){
+				var footer = input.closest("footer");
 				var section = getLiveSectionBeforeFooter(footer);
 				if (section){
+					addUniqueNode(sections, section);
+				}
+			});
+		} catch(e){}
+		try {
+			document.querySelectorAll("section").forEach(function(section){
+				var matchCount = 0;
+				section.querySelectorAll("div[role='button']").forEach(function(button){
+					if (isInstagramLiveButton(button)){
+						matchCount += 1;
+					}
+				});
+				if (matchCount >= 2){
 					addUniqueNode(sections, section);
 				}
 			});
@@ -63,14 +151,11 @@
 	}
 	function isInstagramLiveCommentNode(node) {
 		try {
-			if (!node || !node.querySelector){
-				return false;
-			}
-			var button = node.querySelector("div[role='button'][aria-disabled='true']");
+			var button = getInstagramLiveButton(node);
 			if (!button){
 				return false;
 			}
-			return !!(button.querySelector("span[dir='auto']") && button.querySelector("img[src]"));
+			return !!getInstagramLiveTextSpans(button).length;
 		} catch(e){}
 		return false;
 	}
@@ -78,8 +163,10 @@
 		var nodes = [];
 		try {
 			getInstagramLiveSections().forEach(function(section){
-				section.querySelectorAll("div[role='button'][aria-disabled='true']").forEach(function(button){
-					addUniqueNode(nodes, getDirectChildAncestor(button, section) || button);
+				section.querySelectorAll("div[role='button']").forEach(function(button){
+					if (isInstagramLiveButton(button)){
+						addUniqueNode(nodes, getDirectChildAncestor(button, section) || button);
+					}
 				});
 			});
 		} catch(e){}
@@ -93,9 +180,13 @@
 		} catch(e){}
 		if (!nodes.length){
 			try {
-				document.querySelectorAll("div>div>section>div").forEach(function(node){
-					if (isInstagramLiveCommentNode(node)){
-						addUniqueNode(nodes, node);
+				document.querySelectorAll("div[role='button']").forEach(function(button){
+					if (isInstagramLiveButton(button)){
+						var section = button.closest("section");
+						var node = section ? (getDirectChildAncestor(button, section) || button) : button;
+						if (isInstagramLiveCommentNode(node)){
+							addUniqueNode(nodes, node);
+						}
 					}
 				});
 			} catch(e){}
@@ -114,21 +205,20 @@
 	}
 	function parseInstagramLiveRow(ele) {
 		try {
-			var button = ele.querySelector("div[role='button'][aria-disabled='true']") || ele;
-			var spans = Array.from(button.querySelectorAll("span[dir='auto']")).filter(function(span){
-				return span && span.textContent && span.textContent.trim();
-			});
+			var button = getInstagramLiveButton(ele) || ele;
+			var spans = getInstagramLiveTextSpans(button);
 			if (!spans.length){
 				return false;
 			}
+			var profileImage = getInstagramLiveProfileImage(button);
 			var images = Array.from(button.querySelectorAll("img[src]"));
-			var chatimg = images.length ? (images[0].src + "") : "";
+			var chatimg = profileImage ? (profileImage.src + "") : (images.length ? (images[0].src + "") : "");
 			var chatname = spans[0].textContent.trim();
 			var chatmessage = "";
 			var streamEvent = false;
 
-			if (images.length){
-				var imgName = getInstagramNameFromProfileImage(images[0]);
+			if (profileImage){
+				var imgName = getInstagramNameFromProfileImage(profileImage);
 				if (imgName){
 					chatname = imgName;
 				}
@@ -757,13 +847,30 @@ function checkConditions(element) {
 		.replace(/[#@]\w+\s*/g, '')  // Remove hashtags, at-mentions, and their associated words
 		.trim();                     // Remove leading and trailing spaces
 	}
+	function isLikelyInstagramLivePage() {
+		try {
+			if (window.location.pathname.includes("/live") || window.location.pathname.includes("%2Flive")){
+				return true;
+			}
+			if (document.querySelector(LIVE_COMMENT_SELECTOR)){
+				return true;
+			}
+			if (document.querySelector(LIVE_COMMENT_INPUT_SELECTOR) && getInstagramLiveSections().length){
+				return true;
+			}
+			if (document.querySelector("video") && getInstagramLiveNodes().length){
+				return true;
+			}
+		} catch(e){}
+		return false;
+	}
 	
 	setTimeout(function(){ // clear existing messages; just too much for a stream.
 		
 		console.log("LOADED SocialStream EXTENSION");
 		
 		try {
-			if (window.location.pathname.includes("/live/") || window.location.pathname.includes("%2Flive%2F") || (window.location.pathname==="/")){
+			if (isLikelyInstagramLivePage()){
 				var main = getInstagramLiveNodes();
 				
 				for (var j =0;j<main.length;j++){
@@ -784,7 +891,7 @@ function checkConditions(element) {
 			}
 		
 			try {
-				if (window.location.pathname.includes("/live") || window.location.pathname.includes("%2Flive") || (window.location.pathname.endsWith("/") || document.querySelector("video") || document.querySelector("textarea")) || (window.location.pathname==="/")){
+				if (isLikelyInstagramLivePage()){
 					try {
 						var main = getInstagramLiveNodes();
 						for (var j =0;j<main.length;j++){
@@ -799,7 +906,7 @@ function checkConditions(element) {
 				}
 			} catch(e){}
 			
-			if (!(window.location.pathname.includes("/live") || window.location.pathname.includes("%2Flive"))){ // not live video
+			if (!isLikelyInstagramLivePage()){ // not live video
 				try {
 					var main = document.querySelectorAll("article");
 					if (main){
@@ -908,12 +1015,13 @@ function checkConditions(element) {
 			try{
 				if ("getSource" == request){sendResponse("instagram");	return;	}
 				if ("focusChat" == request){
-					if (!document.querySelector("textarea[class]")){
+					var chatInput = document.querySelector(LIVE_COMMENT_INPUT_SELECTOR) || document.querySelector("textarea[class]");
+					if (!chatInput){
 						sendResponse(false);
 						return;
 					}
-					document.querySelector("textarea[class]").focus();
-					simulateFocus(document.querySelector('textarea[class]'));
+					chatInput.focus();
+					simulateFocus(chatInput);
 					sendResponse(true);
 					return;
 				}
