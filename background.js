@@ -2498,51 +2498,145 @@ function clearAllWithPrefix(prefix) {
 	}
 }
 
+function escapePronounBadgeText(value = "") {
+	return (value || "")
+		.toString()
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#039;");
+}
+
+function normalizePronounList(result) {
+	var normalized = {};
+
+	if (!result) {
+		return normalized;
+	}
+
+	if (Array.isArray(result)) {
+		for (var i = 0; i < result.length; i++) {
+			var entry = result[i];
+			if (!entry || !entry.name) {
+				continue;
+			}
+
+			var display = entry.display || "";
+			if (!display && entry.subject && entry.object) {
+				display = entry.subject + "/" + entry.object;
+			}
+
+			display = escapePronounBadgeText(display);
+			if (display) {
+				normalized[entry.name] = display;
+			}
+		}
+
+		return normalized;
+	}
+
+	for (var key in result) {
+		if (!result.hasOwnProperty(key)) {
+			continue;
+		}
+
+		var value = result[key];
+		if (!value) {
+			continue;
+		}
+
+		if (typeof value === "string") {
+			normalized[key] = escapePronounBadgeText(value);
+			continue;
+		}
+
+		var display = value.display || "";
+		if (!display && value.subject && value.object) {
+			display = value.subject + "/" + value.object;
+		}
+
+		display = escapePronounBadgeText(display);
+		if (display) {
+			normalized[key] = display;
+		}
+	}
+
+	return normalized;
+}
+
+function normalizePronounLookup(result) {
+	if (!result) {
+		return false;
+	}
+
+	if (Array.isArray(result)) {
+		return result[0] || false;
+	}
+
+	return result;
+}
+
+async function fetchPronounResponse(url) {
+	return fetch(url)
+		.then(response => {
+			const cacheControl = response.headers.get("Cache-Control");
+			let maxAge = 3600; // Default to 60 minutes
+
+			if (cacheControl) {
+				const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
+				if (maxAgeMatch && maxAgeMatch[1]) {
+					maxAge = parseInt(maxAgeMatch[1]);
+				}
+			}
+
+			return response.json().then(result => {
+				return {
+					maxAge: maxAge,
+					result: result
+				};
+			});
+		})
+		.catch(err => {
+			// console.error(err);
+			return false;
+		});
+}
+
 var Pronouns = false;
 async function getPronouns() {
 	if (!Pronouns) {
 		try {
-			Pronouns = getItemWithExpiry("Pronouns");
+			Pronouns = normalizePronounList(getItemWithExpiry("Pronouns"));
 
-			if (!Pronouns) {
-				Pronouns = await fetch("https://api.pronouns.alejo.io/v1/pronouns")
-					.then(response => {
-						const cacheControl = response.headers.get("Cache-Control");
-						let maxAge = 3600; // Default to 60 minutes
+			if (!Object.keys(Pronouns).length) {
+				var mergedPronouns = {};
+				var maxAge = 3600;
+				var pronounEndpoints = ["https://api.pronouns.alejo.io/v1/pronouns", "https://pronouns.alejo.io/api/pronouns"];
 
-						if (cacheControl) {
-							const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
-							if (maxAgeMatch && maxAgeMatch[1]) {
-								maxAge = parseInt(maxAgeMatch[1]);
-							}
+				for (var i = 0; i < pronounEndpoints.length; i++) {
+					var pronounResponse = await fetchPronounResponse(pronounEndpoints[i]);
+					if (!pronounResponse || !pronounResponse.result) {
+						continue;
+					}
+
+					var normalizedPronouns = normalizePronounList(pronounResponse.result);
+					if (!Object.keys(normalizedPronouns).length) {
+						continue;
+					}
+
+					maxAge = Math.min(maxAge, pronounResponse.maxAge || maxAge);
+					for (var key in normalizedPronouns) {
+						if (normalizedPronouns.hasOwnProperty(key)) {
+							mergedPronouns[key] = normalizedPronouns[key];
 						}
+					}
+				}
 
-						return response.json().then(result => {
-							for (const key in result) {
-								if (result.hasOwnProperty(key)) {
-									const { subject, object } = result[key];
-									result[key] = `${subject}/${object}`;
-
-									result[key] =
-										result[key]
-											.replace(/&/g, "&amp;") // i guess this counts as html
-											.replace(/</g, "&lt;")
-											.replace(/>/g, "&gt;")
-											.replace(/"/g, "&quot;")
-											.replace(/'/g, "&#039;") || "";
-								}
-							}
-
-							setItemWithExpiry("Pronouns", result, maxAge / 60);
-							return result;
-						});
-					})
-					.catch(err => {
-						// console.error(err);
-						return {};
-					});
-
-				if (!Pronouns) {
+				if (Object.keys(mergedPronouns).length) {
+					setItemWithExpiry("Pronouns", mergedPronouns, maxAge / 60);
+					Pronouns = mergedPronouns;
+				} else {
 					Pronouns = {};
 				}
 			} else {
@@ -2561,31 +2655,26 @@ async function getPronounsNames(username = "") {
 	}
 	try {
 		if (!(username in PronounsNames)) {
-			PronounsNames[username] = getItemWithExpiry("Pronouns:" + username);
+			PronounsNames[username] = normalizePronounLookup(getItemWithExpiry("Pronouns:" + username));
 
 			if (!PronounsNames[username]) {
-				PronounsNames[username] = await fetch("https://api.pronouns.alejo.io/v1/users/" + username)
-					.then(response => {
-						const cacheControl = response.headers.get("Cache-Control");
-						let maxAge = 3600; // Default to 60 minutes
+				var pronounUserEndpoints = ["https://pronouns.alejo.io/api/users/" + username, "https://api.pronouns.alejo.io/v1/users/" + username];
 
-						if (cacheControl) {
-							const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
-							if (maxAgeMatch && maxAgeMatch[1]) {
-								maxAge = parseInt(maxAgeMatch[1]);
-							}
-						}
-						//console.log(response);
-						return response.json().then(result => {
-							//console.log(result);
-							setItemWithExpiry("Pronouns:" + username, result, maxAge / 60);
-							return result;
-						});
-					})
-					.catch(err => {
-						//console.error(err);
-						return false;
-					});
+				for (var i = 0; i < pronounUserEndpoints.length; i++) {
+					var pronounResponse = await fetchPronounResponse(pronounUserEndpoints[i]);
+					if (!pronounResponse || !pronounResponse.result) {
+						continue;
+					}
+
+					var normalizedPronoun = normalizePronounLookup(pronounResponse.result);
+					if (!normalizedPronoun) {
+						continue;
+					}
+
+					setItemWithExpiry("Pronouns:" + username, normalizedPronoun, pronounResponse.maxAge / 60);
+					PronounsNames[username] = normalizedPronoun;
+					break;
+				}
 
 				if (!PronounsNames[username]) {
 					PronounsNames[username] = false;
