@@ -2522,14 +2522,14 @@ function normalizePronounList(result) {
 				continue;
 			}
 
-			var display = entry.display || "";
-			if (!display && entry.subject && entry.object) {
-				display = entry.subject + "/" + entry.object;
+			var entryDisplay = entry.display || "";
+			if (!entryDisplay && entry.subject && entry.object) {
+				entryDisplay = entry.subject + "/" + entry.object;
 			}
 
-			display = escapePronounBadgeText(display);
-			if (display) {
-				normalized[entry.name] = display;
+			entryDisplay = escapePronounBadgeText(entryDisplay);
+			if (entryDisplay) {
+				normalized[entry.name] = entryDisplay;
 			}
 		}
 
@@ -2551,14 +2551,14 @@ function normalizePronounList(result) {
 			continue;
 		}
 
-		var display = value.display || "";
-		if (!display && value.subject && value.object) {
-			display = value.subject + "/" + value.object;
+		var valueDisplay = value.display || "";
+		if (!valueDisplay && value.subject && value.object) {
+			valueDisplay = value.subject + "/" + value.object;
 		}
 
-		display = escapePronounBadgeText(display);
-		if (display) {
-			normalized[key] = display;
+		valueDisplay = escapePronounBadgeText(valueDisplay);
+		if (valueDisplay) {
+			normalized[key] = valueDisplay;
 		}
 	}
 
@@ -2612,7 +2612,9 @@ async function getPronouns() {
 			if (!Object.keys(Pronouns).length) {
 				var mergedPronouns = {};
 				var maxAge = 3600;
-				var pronounEndpoints = ["https://api.pronouns.alejo.io/v1/pronouns", "https://pronouns.alejo.io/api/pronouns"];
+				var pronounEndpoints = settings.pronounscombined
+					? ["https://api.pronouns.alejo.io/v1/pronouns", "https://pronouns.alejo.io/api/pronouns"]
+					: ["https://api.pronouns.alejo.io/v1/pronouns"];
 
 				for (var i = 0; i < pronounEndpoints.length; i++) {
 					var pronounResponse = await fetchPronounResponse(pronounEndpoints[i]);
@@ -2658,7 +2660,9 @@ async function getPronounsNames(username = "") {
 			PronounsNames[username] = normalizePronounLookup(getItemWithExpiry("Pronouns:" + username));
 
 			if (!PronounsNames[username]) {
-				var pronounUserEndpoints = ["https://pronouns.alejo.io/api/users/" + username, "https://api.pronouns.alejo.io/v1/users/" + username];
+				var pronounUserEndpoints = settings.pronounscombined
+					? ["https://pronouns.alejo.io/api/users/" + username, "https://api.pronouns.alejo.io/v1/users/" + username]
+					: ["https://api.pronouns.alejo.io/v1/users/" + username];
 
 				for (var i = 0; i < pronounUserEndpoints.length; i++) {
 					var pronounResponse = await fetchPronounResponse(pronounUserEndpoints[i]);
@@ -4320,6 +4324,15 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (settings.pronouns) {
 					clearAllWithPrefix("Pronouns");
 					Pronouns = false;
+					PronounsNames = {};
+					await getPronouns();
+				}
+			}
+			if (request.setting == "pronounscombined") {
+				clearAllWithPrefix("Pronouns");
+				Pronouns = false;
+				PronounsNames = {};
+				if (settings.pronouns) {
 					await getPronouns();
 				}
 			}

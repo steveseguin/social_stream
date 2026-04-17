@@ -1218,6 +1218,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Enable Pronoun support - https://pr.alejo.io/"
   },
+  "pronounscombined": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "When enabled, show combined Twitch pronouns when available (example: She/They)."
+  },
   "pumpTheNumbers": {
     type: "boolean",
     category: "custom_injection",
