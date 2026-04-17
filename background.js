@@ -2499,13 +2499,7 @@ function clearAllWithPrefix(prefix) {
 }
 
 function escapePronounBadgeText(value = "") {
-	return (value || "")
-		.toString()
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;")
-		.replace(/'/g, "&#039;");
+	return (value || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
 function normalizePronounList(result) {
@@ -2612,9 +2606,7 @@ async function getPronouns() {
 			if (!Object.keys(Pronouns).length) {
 				var mergedPronouns = {};
 				var maxAge = 3600;
-				var pronounEndpoints = settings.pronounscombined
-					? ["https://api.pronouns.alejo.io/v1/pronouns", "https://pronouns.alejo.io/api/pronouns"]
-					: ["https://api.pronouns.alejo.io/v1/pronouns"];
+				var pronounEndpoints = settings.pronounscombined ? ["https://api.pronouns.alejo.io/v1/pronouns", "https://pronouns.alejo.io/api/pronouns"] : ["https://api.pronouns.alejo.io/v1/pronouns"];
 
 				for (var i = 0; i < pronounEndpoints.length; i++) {
 					var pronounResponse = await fetchPronounResponse(pronounEndpoints[i]);
@@ -2660,9 +2652,7 @@ async function getPronounsNames(username = "") {
 			PronounsNames[username] = normalizePronounLookup(getItemWithExpiry("Pronouns:" + username));
 
 			if (!PronounsNames[username]) {
-				var pronounUserEndpoints = settings.pronounscombined
-					? ["https://pronouns.alejo.io/api/users/" + username, "https://api.pronouns.alejo.io/v1/users/" + username]
-					: ["https://api.pronouns.alejo.io/v1/users/" + username];
+				var pronounUserEndpoints = settings.pronounscombined ? ["https://pronouns.alejo.io/api/users/" + username, "https://api.pronouns.alejo.io/v1/users/" + username] : ["https://api.pronouns.alejo.io/v1/users/" + username];
 
 				for (var i = 0; i < pronounUserEndpoints.length; i++) {
 					var pronounResponse = await fetchPronounResponse(pronounUserEndpoints[i]);
