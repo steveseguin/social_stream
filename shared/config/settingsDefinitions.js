@@ -1221,7 +1221,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "pronounscombined": {
     type: "boolean",
     category: "custom_injection",
-    description: "When enabled, show combined Twitch pronouns when available (example: She/They)."
+    description: "When enabled, show combined Twitch pronouns when available (example: She/They). Uses Alejo's legacy deprecated API because the current v1 API does not include combined pronoun sets."
   },
   "pumpTheNumbers": {
     type: "boolean",

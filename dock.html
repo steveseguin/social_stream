@@ -3838,18 +3838,78 @@
 			let audioContext = null;
 			let waitingForUserGesture = false;
 			var timeoutTone = null;
-			
+			var btKeepAliveTimer = null;
+
 			function initAudioContext() {
 				if (!audioContext && (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined')) {
 					try {
 						const AudioCtx = window.AudioContext || window.webkitAudioContext;
 						audioContext = new AudioCtx();
+						ensureBluetoothAudioKeepAlive();
 					} catch (e) {
 						// Don't warn about user gesture errors
 						if (!e.message || !e.message.includes('user gesture')) {
 							console.warn('Failed to create AudioContext:', e);
 						}
 					}
+				}
+			}
+
+			function stopBluetoothAudioKeepAlive() {
+				if (btKeepAliveTimer) {
+					clearInterval(btKeepAliveTimer);
+					btKeepAliveTimer = null;
+				}
+			}
+
+			function playBluetoothKeepAliveTone() {
+				if (!btKeepAlive) {
+					stopBluetoothAudioKeepAlive();
+					return;
+				}
+				if (!audioContext) {
+					initAudioContext();
+				}
+				if (!audioContext || (audioContext.state === "suspended") || (audioContext.state === "closed")) {
+					return;
+				}
+				try {
+					var oscillator = audioContext.createOscillator();
+					var gainNode = audioContext.createGain();
+					var startTime = audioContext.currentTime;
+
+					oscillator.type = "sine";
+					oscillator.frequency.setValueAtTime(18500, startTime);
+					gainNode.gain.setValueAtTime(0.00008, startTime);
+					gainNode.gain.exponentialRampToValueAtTime(0.0002, startTime + 0.02);
+					gainNode.gain.exponentialRampToValueAtTime(0.00001, startTime + 0.12);
+
+					oscillator.connect(gainNode);
+					gainNode.connect(audioContext.destination);
+
+					oscillator.start(startTime);
+					oscillator.stop(startTime + 0.12);
+					oscillator.onended = function() {
+						try {
+							oscillator.disconnect();
+							gainNode.disconnect();
+						} catch (e) {}
+					};
+				} catch (e) {
+					console.warn("Bluetooth keepalive tone failed:", e);
+				}
+			}
+
+			function ensureBluetoothAudioKeepAlive() {
+				if (!btKeepAlive) {
+					stopBluetoothAudioKeepAlive();
+					return;
+				}
+				if (!audioContext || (audioContext.state === "suspended") || (audioContext.state === "closed")) {
+					return;
+				}
+				if (!btKeepAliveTimer) {
+					btKeepAliveTimer = setInterval(playBluetoothKeepAliveTone, btKeepAliveIntervalMs);
 				}
 			}
 
@@ -3875,6 +3935,7 @@
 					try {
 						await audioContext.resume();
 						waitingForUserGesture = false;
+						ensureBluetoothAudioKeepAlive();
 					} catch (e) {
 						// Can't resume without user gesture, set flag to wait
 						if (!waitingForUserGesture) {
@@ -4250,6 +4311,19 @@
 			var nobeepmod = false;
 			if (urlParams.has("nobeepmod")) {
 				nobeepmod = true;
+			}
+
+			var btKeepAlive = false;
+			var btKeepAliveIntervalMs = 25000;
+			if (urlParams.has("btkeepalive") || urlParams.has("keepaliveaudio")) {
+				btKeepAlive = true;
+				var btKeepAliveParam = parseInt(urlParams.get("btkeepalive") || urlParams.get("keepaliveaudio"), 10);
+				if (!isNaN(btKeepAliveParam) && (btKeepAliveParam > 0)) {
+					if (btKeepAliveParam < 1000) {
+						btKeepAliveParam *= 1000;
+					}
+					btKeepAliveIntervalMs = Math.max(10000, btKeepAliveParam);
+				}
 			}
 
 			var overlapBeep = false;
@@ -11719,6 +11793,7 @@
 			
 			// Clean up audio context when page unloads
 			window.addEventListener('beforeunload', function() {
+				stopBluetoothAudioKeepAlive();
 				if (audioContext && audioContext.state !== 'closed') {
 					audioContext.close();
 				}
@@ -11744,6 +11819,7 @@
 					}
 					if (audioContext.state !== 'suspended') {
 						waitingForUserGesture = false;
+						ensureBluetoothAudioKeepAlive();
 						console.log('Audio context ready after user interaction');
 						document.removeEventListener('click', handler);
 						document.removeEventListener('touchstart', handler);
