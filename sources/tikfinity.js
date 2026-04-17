@@ -237,9 +237,6 @@
 		if (eventName === "gift" && settings.notiktokdonations && !settings.tiktokdonations) {
 			return true;
 		}
-		if (eventName && eventName !== "gift" && eventName !== "joined" && settings.captureevents === false) {
-			return true;
-		}
 		return false;
 	}
 

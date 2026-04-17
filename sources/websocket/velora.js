@@ -34,7 +34,8 @@ const state = {
     viewerPollTimer: null,
     refreshTimer: null,
     streamId: null,
-    authPopup: null
+    authPopup: null,
+    requestedChannel: ''
 };
 
 const els = {};
@@ -53,6 +54,27 @@ function getRuntimeParam(key) {
     } catch (e) {
         return '';
     }
+}
+
+function normalizeChannelName(value) {
+    return String(value || '').trim().replace(/^@+/, '').toLowerCase();
+}
+
+function getRequestedChannel() {
+    return normalizeChannelName(
+        getRuntimeParam('channel') ||
+        getRuntimeParam('username') ||
+        getRuntimeParam('user')
+    );
+}
+
+function getAuthedChannelName() {
+    return normalizeChannelName(
+        state.authUser?.username ||
+        state.authUser?.login ||
+        state.authUser?.channelUsername ||
+        ''
+    );
 }
 
 function normalizeRedirectUri(value) {
@@ -215,18 +237,13 @@ function loadConfig() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return;
         const conf = JSON.parse(raw);
-        if (conf.clientId) state.clientId = conf.clientId;
         if (conf.redirectUri) state.redirectUri = conf.redirectUri;
     } catch (e) {}
 }
 
 function applyRuntimeOverrides() {
-    const clientId = (getRuntimeParam('client_id') || getRuntimeParam('clientId') || '').trim();
     const redirectUri = normalizeRedirectUri(getRuntimeParam('redirect_uri') || getRuntimeParam('redirectUri'));
 
-    if (clientId) {
-        state.clientId = clientId;
-    }
     if (redirectUri) {
         state.redirectUri = redirectUri;
     }
@@ -242,7 +259,6 @@ function applyRuntimeOverrides() {
 function persistConfig() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            clientId: state.clientId,
             redirectUri: state.redirectUri
         }));
     } catch (e) {}
@@ -585,15 +601,31 @@ async function pollViewerCount() {
     try {
         const username = state.authUser.username || state.authUser.login;
         if (!username) return;
-        const response = await fetch(`${VELORA_API_BASE}/api/streams?username=${encodeURIComponent(username)}`, {
+        const response = await fetch(`${VELORA_API_BASE}/api/streams/user/${encodeURIComponent(username)}`, {
             headers: { 'Authorization': `Bearer ${state.tokens.access_token}` }
         });
+        if (response.status === 404) {
+            state.streamId = null;
+            updateViewerCount(null);
+            return;
+        }
         if (!response.ok) return;
         const data = await response.json();
-        const stream = Array.isArray(data.streams) ? data.streams[0] : (data.stream || null);
+        const stream = Array.isArray(data.streams)
+            ? data.streams[0]
+            : (data.stream || data.data || data || null);
         if (stream) {
-            state.streamId = stream.id;
-            updateViewerCount(stream.viewerCount ?? stream.viewer_count ?? null);
+            state.streamId = stream.id || stream.streamId || null;
+            updateViewerCount(
+                stream.viewerCount ??
+                stream.viewer_count ??
+                stream.viewers ??
+                stream.viewer_count_live ??
+                null
+            );
+        } else {
+            state.streamId = null;
+            updateViewerCount(null);
         }
     } catch (e) {}
 }
@@ -644,6 +676,12 @@ function connectSocket() {
         if (els.channelLabel) {
             els.channelLabel.querySelector('span').textContent = channelName || '-';
         }
+        if (state.requestedChannel) {
+            const actualChannel = normalizeChannelName(channelName);
+            if (actualChannel && actualChannel !== state.requestedChannel) {
+                addEventLogEntry(`URL requested @${state.requestedChannel}, but Velora connected as @${actualChannel}.`, 'warn');
+            }
+        }
     });
 
     socket.on('event', (payload) => {
@@ -659,6 +697,11 @@ function connectSocket() {
     socket.on('connect_error', (err) => {
         setSocketStatus('error');
         addEventLogEntry(`Connection error: ${err.message}`, 'error');
+    });
+
+    socket.on('error', (err) => {
+        const message = err && err.message ? err.message : String(err || 'Unknown socket error');
+        addEventLogEntry(`Socket error: ${message}`, 'error');
     });
 }
 
@@ -1111,12 +1154,20 @@ function wirePostMessageBridge() {
 function updateAuthUI() {
     const authed = Boolean(state.tokens?.access_token) && !isTokenExpired();
     const username = state.authUser?.displayName || state.authUser?.username || '';
+    const actualChannel = getAuthedChannelName();
+    const channelMismatch = Boolean(state.requestedChannel && actualChannel && state.requestedChannel !== actualChannel);
 
     if (els.authState) {
-        els.authState.textContent = authed
-            ? (username ? `Signed in as ${username}` : 'Signed in')
-            : 'Not signed in';
-        els.authState.className = `status-chip ${authed ? 'ok' : 'warning'}`;
+        if (authed) {
+            els.authState.textContent = channelMismatch
+                ? `Signed in as ${username || actualChannel} - URL expects @${state.requestedChannel}`
+                : (username ? `Signed in as ${username}` : 'Signed in');
+        } else {
+            els.authState.textContent = state.requestedChannel
+                ? `Sign in as @${state.requestedChannel}`
+                : 'Not signed in';
+        }
+        els.authState.className = `status-chip ${channelMismatch ? 'warning' : (authed ? 'ok' : 'warning')}`;
     }
     if (els.startAuth) {
         els.startAuth.style.display = authed ? 'none' : '';
@@ -1126,6 +1177,10 @@ function updateAuthUI() {
     }
     if (els.setupNotice) {
         els.setupNotice.style.display = authed ? 'none' : '';
+    }
+    if (els.channelLabel) {
+        const channel = actualChannel || state.requestedChannel || '';
+        els.channelLabel.querySelector('span').textContent = channel || '-';
     }
 }
 
@@ -1272,8 +1327,6 @@ function addEventLogEntry(label, level, data) {
 
 function initElements() {
     Object.assign(els, {
-        clientIdInput: q('client-id-input'),
-        saveClientId: q('save-client-id'),
         setupNotice: q('setup-notice'),
         redirectUriHint: q('redirect-uri-hint'),
         startAuth: q('start-auth'),
@@ -1293,22 +1346,6 @@ function initElements() {
 }
 
 function bindEvents() {
-    if (els.saveClientId) {
-        els.saveClientId.addEventListener('click', () => {
-            const val = (els.clientIdInput?.value || '').trim();
-            if (!val) return;
-            state.clientId = val;
-            persistConfig();
-            if (els.setupNotice) els.setupNotice.style.display = 'none';
-        });
-    }
-
-    if (els.clientIdInput) {
-        els.clientIdInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') els.saveClientId?.click();
-        });
-    }
-
     if (els.startAuth) {
         els.startAuth.addEventListener('click', startAuthFlow);
     }
@@ -1345,17 +1382,13 @@ try {
 async function init() {
     initElements();
 
+    state.requestedChannel = getRequestedChannel();
     loadConfig();
     applyRuntimeOverrides();
     loadTokens();
 
     if (els.redirectUriHint) {
         els.redirectUriHint.textContent = getRedirectUri();
-    }
-
-    // Pre-fill client ID input if we have one saved
-    if (els.clientIdInput && state.clientId) {
-        els.clientIdInput.value = state.clientId;
     }
 
     bindEvents();

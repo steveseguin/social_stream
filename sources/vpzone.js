@@ -290,9 +290,6 @@
 		}
 
 		var eventType = match[2].toLowerCase();
-		if (settings.captureevents === false) {
-			return null;
-		}
 		if (eventType === "joined" && settings.capturejoinedevent === false) {
 			return null;
 		}

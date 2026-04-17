@@ -183,11 +183,6 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Enable BTTV emotes - YT/TW channels + globals"
   },
-  "captureevents": {
-    type: "boolean",
-    category: "custom_injection",
-    description: "Capture likes, subs, and other available event data."
-  },
   "hideevents": {
     type: "boolean",
     category: "custom_injection",

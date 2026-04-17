@@ -4196,9 +4196,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "nosubcolor") {
 				pushSettingChange();
 			}
-			if (request.setting == "captureevents") {
-				pushSettingChange();
-			}
 			if (request.setting == "capturejoinedevent") {
 				pushSettingChange();
 			}

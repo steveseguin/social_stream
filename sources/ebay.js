@@ -827,7 +827,7 @@
 	}
 
 	function checkAuctionUpdates() {
-		if (!isExtensionOn || settings.captureevents === false) {
+		if (!isExtensionOn) {
 			return;
 		}
 		var snapshot = createAuctionSnapshot();
@@ -843,7 +843,7 @@
 	}
 
 	function checkCommerceUpdates() {
-		if (!isExtensionOn || settings.captureevents === false) {
+		if (!isExtensionOn) {
 			return;
 		}
 		var snapshot = createCommerceSnapshot();

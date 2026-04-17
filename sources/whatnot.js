@@ -1011,9 +1011,6 @@
 			meta.currency = money.currency;
 		}
 		data.meta = meta;
-		if (settings.captureevents === false) {
-			return;
-		}
 		pushMessage(data);
 	}
 
@@ -1092,9 +1089,6 @@
 			meta.properties = payload.properties;
 		}
 		data.meta = meta;
-		if (data.event && settings.captureevents === false) {
-			return;
-		}
 		pushMessage(data);
 	}
 
@@ -1112,9 +1106,6 @@
 			data.donoValue = money.amount;
 		}
 		data.meta = buildWebSocketMeta(wsChannel, "tip_sent", payload, user);
-		if (settings.captureevents === false) {
-			return;
-		}
 		pushMessage(data);
 	}
 
@@ -1128,9 +1119,6 @@
 		data.event = "member";
 		data.membership = tier;
 		data.meta = buildWebSocketMeta(wsChannel, "user_loyalty_tier_level_up", payload, user);
-		if (settings.captureevents === false) {
-			return;
-		}
 		pushMessage(data);
 	}
 
@@ -1153,9 +1141,6 @@
 			meta.numRaiders = numRaiders;
 		}
 		data.meta = meta;
-		if (settings.captureevents === false) {
-			return;
-		}
 		pushMessage(data);
 	}
 
@@ -1252,7 +1237,7 @@
 	}
 
 	function checkAuctionUpdates() {
-		if (!isExtensionOn || settings.captureevents === false) {
+		if (!isExtensionOn) {
 			return;
 		}
 		var snapshot = parseAuctionSnapshot();
@@ -1268,7 +1253,7 @@
 	}
 
 	function checkCommerceUpdates() {
-		if (!isExtensionOn || settings.captureevents === false) {
+		if (!isExtensionOn) {
 			return;
 		}
 		var snapshot = createCommerceSnapshot();
@@ -1329,10 +1314,6 @@
 
 		var normalizedMessage = (messageBody || "").replace(/\s+/g, " ").trim();
 		data.event = /^joined\b/i.test(normalizedMessage) ? "joined" : false;
-
-		if (data.event && settings.captureevents === false) {
-			return;
-		}
 
 		var meta = {};
 		if (messageIndex !== null) {

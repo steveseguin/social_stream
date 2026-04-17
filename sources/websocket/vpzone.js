@@ -277,7 +277,7 @@
 		var mapped = mapEventName(ev.eventType || ev.type || "");
 		var data;
 		if (!mapped || mapped === "presence" || mapped === "chat_message") return null;
-		if (state.settings.captureevents === false || state.settings.hideevents) return null;
+		if (state.settings.hideevents) return null;
 		if (mapped === "joined" && state.settings.capturejoinedevent === false) return null;
 		data = basePayload();
 		data.event = mapped;
