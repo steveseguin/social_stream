@@ -316,33 +316,49 @@ function checkConditions(element) {
 		.then(response => response.blob())
 		.then(blob => {
 		  const img = new Image();
-		  img.onload = function() {
-			const canvas = document.createElement('canvas');
-			let width = img.width;
-			let height = img.height;
-			
-			// Calculate aspect ratio
-			let aspectRatio = width / height;
-			
-			// Resize logic
-			let scaleFactor = 1;
-			do {
-			  width = img.width * scaleFactor;
-			  height = width / aspectRatio;
-			  
-			  canvas.width = width;
-			  canvas.height = height;
-			  
-			  const ctx = canvas.getContext('2d');
-			  ctx.drawImage(img, 0, 0, width, height);
-			  
-			  scaleFactor *= 0.9;
-			} while (canvas.toDataURL('image/jpeg', 0.7).length > maxSizeKB * 1024);
-
-			const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-			callback(resizedDataUrl);
+		  const objectUrl = URL.createObjectURL(blob);
+		  const cleanupObjectUrl = function() {
+			try {
+				URL.revokeObjectURL(objectUrl);
+			} catch (e) {}
+			img.onload = null;
+			img.onerror = null;
 		  };
-		  img.src = URL.createObjectURL(blob);
+		  img.onload = function() {
+			try {
+				const canvas = document.createElement('canvas');
+				let width = img.width;
+				let height = img.height;
+				
+				// Calculate aspect ratio
+				let aspectRatio = width / height;
+				
+				// Resize logic
+				let scaleFactor = 1;
+				do {
+				  width = img.width * scaleFactor;
+				  height = width / aspectRatio;
+				  
+				  canvas.width = width;
+				  canvas.height = height;
+				  
+				  const ctx = canvas.getContext('2d');
+				  ctx.drawImage(img, 0, 0, width, height);
+				  
+				  scaleFactor *= 0.9;
+				} while (canvas.toDataURL('image/jpeg', 0.7).length > maxSizeKB * 1024);
+
+				const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+				callback(resizedDataUrl);
+			} finally {
+				cleanupObjectUrl();
+			}
+		  };
+		  img.onerror = function() {
+			cleanupObjectUrl();
+			callback(null);
+		  };
+		  img.src = objectUrl;
 		})
 		.catch(error => {
 		  //console.error('Error:', error);

@@ -10,26 +10,44 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 
 			if (recoveredBlob.size / 1024 > maxSizeKB) { // Check if image size is greater than maxSizeKB
 				var img = new Image();
-
-				img.onload = function() {
-					var canvas = document.createElement('canvas');
-					var ctx = canvas.getContext('2d');
-					
-					// Resize logic (example: 250x250)
-					var maxSideSize = 250;
-					var ratio = Math.min(maxSideSize / img.width, maxSideSize / img.height);
-					canvas.width = img.width * ratio;
-					canvas.height = img.height * ratio;
-
-					ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-					// Convert to base64, can choose format and quality
-					var newDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-					callback(newDataUrl);
+				var urlCreator = window.URL || window.webkitURL;
+				var objectUrl = urlCreator.createObjectURL(recoveredBlob);
+				var cleanupObjectUrl = function() {
+					try {
+						if (urlCreator && urlCreator.revokeObjectURL) {
+							urlCreator.revokeObjectURL(objectUrl);
+						}
+					} catch (e) {}
+					img.onload = null;
+					img.onerror = null;
 				};
 
-				var urlCreator = window.URL || window.webkitURL;
-				img.src = urlCreator.createObjectURL(recoveredBlob);
+				img.onload = function() {
+					try {
+						var canvas = document.createElement('canvas');
+						var ctx = canvas.getContext('2d');
+						
+						// Resize logic (example: 250x250)
+						var maxSideSize = 250;
+						var ratio = Math.min(maxSideSize / img.width, maxSideSize / img.height);
+						canvas.width = img.width * ratio;
+						canvas.height = img.height * ratio;
+
+						ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+						// Convert to base64, can choose format and quality
+						var newDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+						callback(newDataUrl);
+					} finally {
+						cleanupObjectUrl();
+					}
+				};
+				img.onerror = function() {
+					cleanupObjectUrl();
+					callback(blobUrl);
+				};
+
+				img.src = objectUrl;
 			} else {
 				// If image is not too large, use original
 				var reader = new FileReader();
