@@ -24,6 +24,77 @@ const EVENT_LOG_LIMIT = 100;
 const VIEWER_POLL_INTERVAL_MS = 30000;
 const SOCKET_CONNECTED_EVENT_TIMEOUT_MS = 4000;
 const SSE_RECONNECT_DELAY_MS = 3000;
+const VELORA_EMOTE_MAP = {
+    "AirRaid": "https://assets.velora.tv/emotes/raid/raid-airraid/56.webp",
+    "BlueGlitzRaid": "https://assets.velora.tv/emotes/raid/raid-blueglitzraid/56.webp",
+    "CannonRaid": "https://assets.velora.tv/emotes/raid/raid-cannonraid/56.webp",
+    "FireRaid": "https://assets.velora.tv/emotes/raid/raid-fireraid/56.webp",
+    "GlitzRaid": "https://assets.velora.tv/emotes/raid/raid-glitzraid/56.webp",
+    "PinkRaid": "https://assets.velora.tv/emotes/raid/raid-pinkraid/56.webp",
+    "PixtextRaid": "https://assets.velora.tv/emotes/raid/raid-pixtextraid/56.webp",
+    "RainbowRaid": "https://assets.velora.tv/emotes/raid/raid-rainbowraid/56.webp",
+    "SimpleRaid": "https://assets.velora.tv/emotes/raid/raid-simpleraid/56.webp",
+    "SplitRedRaid": "https://assets.velora.tv/emotes/raid/raid-splitredraid/56.webp",
+    "VeloraFlameAllSmiles": "https://assets.velora.tv/emotes/flame/flame-allsmiles/56.webp",
+    "VeloraFlameAngel": "https://assets.velora.tv/emotes/flame/flame-angel/56.webp",
+    "VeloraFlameAngry": "https://assets.velora.tv/emotes/flame/flame-angry/56.webp",
+    "VeloraFlameBigF": "https://assets.velora.tv/emotes/flame/flame-bigf/56.webp",
+    "VeloraFlameBigGrin": "https://assets.velora.tv/emotes/flame/flame-biggrin/56.webp",
+    "VeloraFlameBlowKisses": "https://assets.velora.tv/emotes/flame/flame-blowkisses/56.webp",
+    "VeloraFlameCoolLook": "https://assets.velora.tv/emotes/flame/flame-coollook/56.webp",
+    "VeloraFlameCrying": "https://assets.velora.tv/emotes/flame/flame-crying/56.webp",
+    "VeloraFlameDazed": "https://assets.velora.tv/emotes/flame/flame-dazed/56.webp",
+    "VeloraFlameDead": "https://assets.velora.tv/emotes/flame/flame-dead/56.webp",
+    "VeloraFlameDropLaugh": "https://assets.velora.tv/emotes/flame/flame-droplaugh/56.webp",
+    "VeloraFlameEvil": "https://assets.velora.tv/emotes/flame/flame-evil/56.webp",
+    "VeloraFlameInjured": "https://assets.velora.tv/emotes/flame/flame-injured/56.webp",
+    "VeloraFlameLaugh": "https://assets.velora.tv/emotes/flame/flame-laugh/56.webp",
+    "VeloraFlameLove": "https://assets.velora.tv/emotes/flame/flame-love/56.webp",
+    "VeloraFlameLoveEyes": "https://assets.velora.tv/emotes/flame/flame-loveeyes/56.webp",
+    "VeloraFlameMelting": "https://assets.velora.tv/emotes/flame/flame-melting/56.webp",
+    "VeloraFlameMindBlown": "https://assets.velora.tv/emotes/flame/flame-mindblown/56.webp",
+    "VeloraFlameMoney": "https://assets.velora.tv/emotes/flame/flame-money/56.webp",
+    "VeloraFlameNerdy": "https://assets.velora.tv/emotes/flame/flame-nerdy/56.webp",
+    "VeloraFlameRedEye": "https://assets.velora.tv/emotes/flame/flame-redeye/56.webp",
+    "VeloraFlameShock": "https://assets.velora.tv/emotes/flame/flame-shock/56.webp",
+    "VeloraFlameSick": "https://assets.velora.tv/emotes/flame/flame-sick/56.webp",
+    "VeloraFlameSleeping": "https://assets.velora.tv/emotes/flame/flame-sleeping/56.webp",
+    "VeloraFlameThinking": "https://assets.velora.tv/emotes/flame/flame-thinking/56.webp",
+    "VeloraFlameThumbsDown": "https://assets.velora.tv/emotes/flame/flame-thumbsdown/56.webp",
+    "VeloraFlameThumbsUp": "https://assets.velora.tv/emotes/flame/flame-thumbsup/56.webp",
+    "VeloraFlameTongueWink": "https://assets.velora.tv/emotes/flame/flame-tonguewink/56.webp",
+    "VeloraFlameWellMeh": "https://assets.velora.tv/emotes/flame/flame-wellmeh/56.webp",
+    "VeloraFlameYawning": "https://assets.velora.tv/emotes/flame/flame-yawning/56.webp",
+    "VeloraPXLAFK": "https://assets.velora.tv/emotes/pixel/pixel-afk/56.webp",
+    "VeloraPXLBait": "https://assets.velora.tv/emotes/pixel/pixel-bait/56.webp",
+    "VeloraPXLBan": "https://assets.velora.tv/emotes/pixel/pixel-ban/56.webp",
+    "VeloraPXLBg": "https://assets.velora.tv/emotes/pixel/pixel-bg/56.webp",
+    "VeloraPXLBro": "https://assets.velora.tv/emotes/pixel/pixel-bro/56.webp",
+    "VeloraPXLBuff": "https://assets.velora.tv/emotes/pixel/pixel-buff/56.webp",
+    "VeloraPXLBug": "https://assets.velora.tv/emotes/pixel/pixel-bug/56.webp",
+    "VeloraPXLDc": "https://assets.velora.tv/emotes/pixel/pixel-dc/56.webp",
+    "VeloraPXLFB": "https://assets.velora.tv/emotes/pixel/pixel-fb/56.webp",
+    "VeloraPXLFix": "https://assets.velora.tv/emotes/pixel/pixel-fix/56.webp",
+    "VeloraPXLFu": "https://assets.velora.tv/emotes/pixel/pixel-fu/56.webp",
+    "VeloraPXLGg": "https://assets.velora.tv/emotes/pixel/pixel-gg/56.webp",
+    "VeloraPXLGold": "https://assets.velora.tv/emotes/pixel/pixel-gold/56.webp",
+    "VeloraPXLHack": "https://assets.velora.tv/emotes/pixel/pixel-hack/56.webp",
+    "VeloraPXLHit": "https://assets.velora.tv/emotes/pixel/pixel-hit/56.webp",
+    "VeloraPXLLol": "https://assets.velora.tv/emotes/pixel/pixel-lol/56.webp",
+    "VeloraPXLLoot": "https://assets.velora.tv/emotes/pixel/pixel-loot/56.webp",
+    "VeloraPXLLoveYouText": "https://assets.velora.tv/emotes/pixel/pixel-loveyoutext/56.webp",
+    "VeloraPXLMp": "https://assets.velora.tv/emotes/pixel/pixel-mp/56.webp",
+    "VeloraPXLNoText": "https://assets.velora.tv/emotes/pixel/pixel-notext/56.webp",
+    "VeloraPXLOp": "https://assets.velora.tv/emotes/pixel/pixel-op/56.webp",
+    "VeloraPXLQq": "https://assets.velora.tv/emotes/pixel/pixel-qq/56.webp",
+    "VeloraPXLRage": "https://assets.velora.tv/emotes/pixel/pixel-rage/56.webp",
+    "VeloraPXLSad": "https://assets.velora.tv/emotes/pixel/pixel-sad/56.webp",
+    "VeloraPXLSave": "https://assets.velora.tv/emotes/pixel/pixel-save/56.webp",
+    "VeloraPXLStfu": "https://assets.velora.tv/emotes/pixel/pixel-stfu/56.webp",
+    "VeloraPXLUp": "https://assets.velora.tv/emotes/pixel/pixel-up/56.webp",
+    "VeloraPXLWtf": "https://assets.velora.tv/emotes/pixel/pixel-wtf/56.webp",
+    "VeloraPXLYes": "https://assets.velora.tv/emotes/pixel/pixel-yes/56.webp"
+};
 
 const state = {
     clientId: DEFAULT_VELORA_CLIENT_ID,
@@ -239,6 +310,31 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function renderVeloraMessageHtml(message) {
+    const raw = String(message || '');
+    const emotes = [];
+    const html = raw.split(/(\s+)/).map(function (part) {
+        if (!part) return '';
+        if (/^\s+$/.test(part)) {
+            return part.replace(/\r?\n/g, '<br>');
+        }
+        const emoteUrl = VELORA_EMOTE_MAP[part];
+        if (!emoteUrl) {
+            return escapeHtml(part);
+        }
+        emotes.push({
+            code: part,
+            url: emoteUrl
+        });
+        return `<img class="velora-inline-emote" src="${escapeHtml(emoteUrl)}" alt="${escapeHtml(part)}" title="${escapeHtml(part)}" loading="lazy" draggable="false">`;
+    }).join('');
+
+    return {
+        html: html || escapeHtml(raw),
+        emotes: emotes
+    };
 }
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
@@ -1009,14 +1105,15 @@ function handleChatMessage(data) {
 
     const name = displayName || username || '';
     const text = message || '';
+    const renderedMessage = renderVeloraMessageHtml(text);
 
     // Skip pure system messages with no text
     if (isSystem && !text && !card) return;
 
-    addChatFeedMessage(name, text, badges, isMod, isVip, isSubscriber, color);
+    addChatFeedMessage(name, renderedMessage.html, badges, isMod, isVip, isSubscriber, color);
 
     let contentImg = '';
-    let msgText = escapeHtml(text);
+    let msgText = renderedMessage.html;
 
     if (card) {
         if (card.imageUrl || card.thumbnailUrl) {
@@ -1041,7 +1138,15 @@ function handleChatMessage(data) {
         membership: isSubscriber ? (subscriberMonths ? `${subscriberMonths} month subscriber` : 'Subscriber') : '',
         contentimg: contentImg,
         textonly: false,
-        type: 'velora'
+        type: 'velora',
+        meta: {
+            velora: {
+                rawMessage: text,
+                emotes: renderedMessage.emotes,
+                messageId: messageId || '',
+                userId: userId || ''
+            }
+        }
     });
 }
 
@@ -1457,7 +1562,7 @@ function setChatStatus(msg, isError) {
 
 // ─── Feed UI ──────────────────────────────────────────────────────────────────
 
-function addChatFeedMessage(name, text, badges, isMod, isVip, isSubscriber, color) {
+function addChatFeedMessage(name, messageHtml, badges, isMod, isVip, isSubscriber, color) {
     if (!els.chatFeed) return;
 
     const empty = q('chat-feed-empty');
@@ -1478,7 +1583,8 @@ function addChatFeedMessage(name, text, badges, isMod, isVip, isSubscriber, colo
     entry.appendChild(space);
 
     const textSpan = document.createElement('span');
-    textSpan.textContent = text;
+    textSpan.className = 'chat-msg-text';
+    textSpan.innerHTML = messageHtml || '';
     entry.appendChild(textSpan);
 
     els.chatFeed.appendChild(entry);
