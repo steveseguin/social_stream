@@ -1253,10 +1253,48 @@ function validateRoomId(roomId) {
 }
 var relaytargets = false;
 var loadedFirst = false;
+const SETTINGS_OBJECT_FIELD_PATTERN = /^(?:setting|both|param\d+|textparam\d+|numbersetting\d*|optionparam\d+|textsetting|optionsetting(?:2|10)?|json)$/;
+const SETTINGS_OBJECT_TOGGLE_PATTERN = /^(?:setting|both|param\d+)$/;
+
+function pruneSettingsObjects(settingsObject) {
+	if (!settingsObject || typeof settingsObject !== "object") {
+		return false;
+	}
+
+	let changed = false;
+
+	Object.keys(settingsObject).forEach(settingKey => {
+		const entry = settingsObject[settingKey];
+		if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+			return;
+		}
+
+		Object.keys(entry).forEach(fieldKey => {
+			if (SETTINGS_OBJECT_TOGGLE_PATTERN.test(fieldKey) && entry[fieldKey] === false) {
+				delete entry[fieldKey];
+				changed = true;
+			}
+		});
+
+		if (!("json" in entry) && "object" in entry) {
+			delete entry.object;
+			changed = true;
+		}
+
+		const remainingKeys = Object.keys(entry).filter(key => key !== "object");
+		if (!remainingKeys.length) {
+			delete settingsObject[settingKey];
+			changed = true;
+		}
+	});
+
+	return changed;
+}
 
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 	let reloadNeeded = false;
+	let normalizedSettings = false;
 	const { storedId, storedState } = getPersistedSession();
 	const isFirstRun = !storedId && !(item && item.streamID) && storedState === null && !(item && "state" in item);
 	const incomingStreamId = item && item.streamID ? item.streamID : storedId;
@@ -1327,6 +1365,7 @@ function loadSettings(item, resave = false) {
 
 	if (item && item.settings) {
 		settings = item.settings;
+		normalizedSettings = pruneSettingsObjects(settings);
 
 		Object.keys(patterns).forEach(pattern => {
 			settings[pattern] = findExistingEvents(pattern, { settings });
@@ -1370,13 +1409,14 @@ function loadSettings(item, resave = false) {
 		if (isSSAPP && ipcRenderer) {
 			ipcRenderer.sendSync("fromBackground", { streamID, password, settings, state: isExtensionOn });
 			//ipcRenderer.send('backgroundLoaded');
-			if (resave && settings) {
-				chrome.storage.local.set({ settings });
-				chrome.runtime.lastError;
-			}
 		}
 	} catch (e) {
 		console.error(e);
+	}
+
+	if ((resave || normalizedSettings) && settings) {
+		chrome.storage.local.set({ settings });
+		chrome.runtime.lastError;
 	}
 
 	toggleMidi();
@@ -3961,12 +4001,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			const existingSetting = settings[request.setting];
 			const isObjectSetting = existingSetting && typeof existingSetting === "object" && !Array.isArray(existingSetting);
 			const valueIsEmpty = request.value === "" || request.value === null || request.value === undefined;
-			const preserveSiblingFields = typedSetting && /^(?:textparam\d+|numbersetting\d*|optionparam\d+|textsetting|optionsetting|json)$/.test(request.type);
+			const isToggleField = typedSetting && SETTINGS_OBJECT_TOGGLE_PATTERN.test(request.type);
+			const preserveSiblingFields = typedSetting && SETTINGS_OBJECT_FIELD_PATTERN.test(request.type);
+			const shouldDeleteValue = valueIsEmpty || (isToggleField && request.value === false);
 			if (isObjectSetting) {
-				if (valueIsEmpty) {
+				if (shouldDeleteValue) {
 					if (preserveSiblingFields) {
 						delete settings[request.setting][request.type];
-						if (request.type == "json") {
+						if (request.type == "json" || !("json" in settings[request.setting])) {
 							delete settings[request.setting]["object"];
 						}
 						const remainingKeys = Object.keys(settings[request.setting]).filter(key => key !== "object");
@@ -3984,7 +4026,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					}
 				}
 			} else if ("type" in request) {
-				if (!request.value) {
+				if (shouldDeleteValue) {
 					delete settings[request.setting];
 				} else {
 					settings[request.setting] = {};
@@ -3997,6 +4039,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} else {
 				settings[request.setting] = request.value;
 			}
+
+			pruneSettingsObjects(settings);
 
 			Object.keys(patterns).forEach(pattern => {
 				settings[pattern] = findExistingEvents(pattern, { settings });
