@@ -5,6 +5,10 @@
 	var dupCheck = [];
 	var counter = 0;
 	var videosMuted = false;
+	var PROFILE_IMAGE_CACHE_LIMIT = 20;
+	var profileImageCache = {};
+	var profileImageCacheOrder = [];
+	var profileImageInflight = {};
 
 	function pushMessage(data) {
 		try {
@@ -12,47 +16,140 @@
 		} catch(e){}
 	}
 
-	function toDataURL(url, callback, maxSizeKB) {
+	function touchProfileImageCache(url){
+		var index = profileImageCacheOrder.indexOf(url);
+		if (index !== -1){
+			profileImageCacheOrder.splice(index, 1);
+		}
+		profileImageCacheOrder.push(url);
+	}
+
+	function getCachedProfileImage(url){
+		if (!url || !Object.prototype.hasOwnProperty.call(profileImageCache, url)){ return ""; }
+		touchProfileImageCache(url);
+		return profileImageCache[url] || "";
+	}
+
+	function rememberProfileImage(url, dataUrl){
+		if (!url || !dataUrl){ return; }
+		profileImageCache[url] = dataUrl;
+		touchProfileImageCache(url);
+		while (profileImageCacheOrder.length > PROFILE_IMAGE_CACHE_LIMIT){
+			var oldestKey = profileImageCacheOrder.shift();
+			if (!oldestKey){ continue; }
+			delete profileImageCache[oldestKey];
+		}
+	}
+
+	function flushProfileImageInflight(url, value){
+		var callbacks = profileImageInflight[url];
+		delete profileImageInflight[url];
+		if (!callbacks || !callbacks.length){ return; }
+		for (var i = 0; i < callbacks.length; i++){
+			try {
+				callbacks[i](value);
+			} catch(e){}
+		}
+	}
+
+	function releaseCanvas(canvas, context){
+		try {
+			if (canvas && context && canvas.width && canvas.height){
+				context.clearRect(0, 0, canvas.width, canvas.height);
+			}
+		} catch(e){}
+		try {
+			if (canvas){
+				canvas.width = 0;
+				canvas.height = 0;
+			}
+		} catch(e){}
+	}
+
+	function toDataURL(url, callback, maxSizeKB, useCache) {
 		maxSizeKB = maxSizeKB || 6;
+		if (!url){
+			callback("");
+			return;
+		}
+		if (useCache){
+			var cached = getCachedProfileImage(url);
+			if (cached){
+				callback(cached);
+				return;
+			}
+			if (profileImageInflight[url]){
+				profileImageInflight[url].push(callback);
+				return;
+			}
+			profileImageInflight[url] = [callback];
+		}
+		var finished = false;
+		var finish = function(result){
+			if (finished){ return; }
+			finished = true;
+			result = result || url;
+			if (useCache){
+				if (result && (result !== url)){
+					rememberProfileImage(url, result);
+				}
+				flushProfileImageInflight(url, result);
+			} else {
+				callback(result);
+			}
+		};
 		fetch(url)
-			.then(response => response.blob())
-			.then(blob => {
-				const img = new Image();
-				const objectUrl = URL.createObjectURL(blob);
-				const cleanupObjectUrl = function(){
+			.then(function(response){ return response.blob(); })
+			.then(function(blob){
+				var img = new Image();
+				var objectUrl = URL.createObjectURL(blob);
+				var cleanupObjectUrl = function(){
 					try { URL.revokeObjectURL(objectUrl); } catch(e){}
 					img.onload = null;
 					img.onerror = null;
+					try { img.src = ""; } catch(e){}
 				};
 				img.onload = function(){
+					var canvas = null;
+					var context = null;
 					try {
-						const canvas = document.createElement('canvas');
-						let width = img.width;
-						let height = img.height;
-						let aspectRatio = width / height;
-						let scaleFactor = 1;
+						canvas = document.createElement('canvas');
+						var sourceWidth = img.naturalWidth || img.width || 1;
+						var sourceHeight = img.naturalHeight || img.height || 1;
+						var width = sourceWidth;
+						var height = sourceHeight;
+						var aspectRatio = sourceWidth / sourceHeight;
+						var scaleFactor = 1;
+						var dataUrl = url;
+						context = canvas.getContext('2d');
+						if (!context){ throw new Error("canvas context unavailable"); }
 						do {
-							width = img.width * scaleFactor;
-							height = width / aspectRatio;
+							width = Math.max(1, Math.round(sourceWidth * scaleFactor));
+							height = Math.max(1, Math.round(width / aspectRatio));
 							canvas.width = width;
 							canvas.height = height;
-							canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+							context.clearRect(0, 0, width, height);
+							context.drawImage(img, 0, 0, width, height);
+							dataUrl = canvas.toDataURL('image/jpeg', 0.7);
 							scaleFactor *= 0.9;
-						} while (canvas.toDataURL('image/jpeg', 0.7).length > maxSizeKB * 1024);
-						callback(canvas.toDataURL('image/jpeg', 0.7));
+						} while ((dataUrl.length > maxSizeKB * 1024) && (width > 1) && (height > 1));
+						finish(dataUrl);
 					} catch(e){
-						callback(url);
+						finish(url);
 					} finally {
+						releaseCanvas(canvas, context);
 						cleanupObjectUrl();
 					}
 				};
 				img.onerror = function(){
 					cleanupObjectUrl();
-					callback(url);
+					finish(url);
 				};
 				img.src = objectUrl;
 			})
-			.catch(() => callback(url));
+			.catch(function(){
+				finish(url);
+			});
 	}
 
 	function escapeHtml(unsafe){
@@ -146,7 +243,7 @@
 					toDataURL(data.chatimg, function(dataUrl2){
 						data.chatimg = dataUrl2 || data.chatimg;
 						pushMessage(data);
-					});
+					}, 6, true);
 				} else {
 					pushMessage(data);
 				}
@@ -155,7 +252,7 @@
 			toDataURL(data.chatimg, function(dataUrl){
 				data.chatimg = dataUrl || data.chatimg;
 				pushMessage(data);
-			});
+			}, 6, true);
 		} else {
 			pushMessage(data);
 		}
