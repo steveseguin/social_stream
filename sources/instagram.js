@@ -112,9 +112,30 @@
 		return msg;
 	}
 
-	function sendOut(data){
+	function hasProcessedRow(node){
+		try {
+			return !!(node && node.dataset && node.dataset.ssProcessed);
+		} catch(e){}
+		return false;
+	}
+
+	function allowLiveRowDuplicate(row){
+		if (!row || !row.parentNode || !row.parentNode.children){ return false; }
+		var siblings = Array.from(row.parentNode.children);
+		var index = siblings.indexOf(row);
+		if (index === -1){ return false; }
+		var nearBottomThreshold = Math.max(3, Math.ceil(siblings.length * 0.2));
+		var isNearBottom = index >= Math.max(0, siblings.length - nearBottomThreshold);
+		var hasUnprocessedSiblingAfter = siblings.slice(index + 1).some(function(sibling){
+			return !hasProcessedRow(sibling);
+		});
+		return isNearBottom || hasUnprocessedSiblingAfter;
+	}
+
+	function sendOut(data, sourceElement){
 		var key = (data.chatname || "") + "::" + (data.chatmessage || "") + "::" + (data.contentimg || "");
-		if (dupCheck.includes(key)){ return; }
+		var allowDuplicate = (data.type === "instagramlive") && sourceElement && allowLiveRowDuplicate(sourceElement);
+		if (dupCheck.includes(key) && !allowDuplicate){ return false; }
 		dupCheck.push(key);
 		if (dupCheck.length > 100){ dupCheck = dupCheck.slice(-100); }
 
@@ -138,6 +159,7 @@
 		} else {
 			pushMessage(data);
 		}
+		return true;
 	}
 
 	// ---------- Instagram Live ----------
@@ -227,6 +249,31 @@
 		return leaves;
 	}
 
+	function extractLiveBadges(row, profileImg, messageLeaf){
+		var badges = [];
+		var seen = {};
+		try {
+			row.querySelectorAll("img[src]").forEach(function(img){
+				if (!img || !img.src){ return; }
+				if (profileImg && (img === profileImg)){ return; }
+				var alt = ((img.alt || "") + "").toLowerCase();
+				if ((alt.indexOf("profile picture") !== -1) || (alt.indexOf("profile photo") !== -1)){ return; }
+				if (messageLeaf){
+					if ((img === messageLeaf) || (messageLeaf.contains && messageLeaf.contains(img))){ return; }
+					if (img.compareDocumentPosition && window.Node){
+						var position = img.compareDocumentPosition(messageLeaf);
+						if (!(position & window.Node.DOCUMENT_POSITION_FOLLOWING)){ return; }
+					}
+				}
+				var src = img.src + "";
+				if (!src || seen[src]){ return; }
+				seen[src] = true;
+				badges.push(src);
+			});
+		} catch(e){}
+		return badges;
+	}
+
 	function parseLiveRow(row){
 		if (!row || !row.querySelector){ return null; }
 
@@ -235,8 +282,9 @@
 		var chatname = nameFromAlt(profileImg);
 		var chatmessage = "";
 		var streamEvent = false;
+		var messageLeaf = null;
 
-		// Primary: row text begins with "<username>" — everything after is the
+		// Primary: row text begins with "<username>" - everything after is the
 		// message. Works regardless of how Instagram wraps the spans.
 		var fullText = (row.textContent || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
 		if (chatname && fullText.toLowerCase().indexOf(chatname.toLowerCase()) === 0){
@@ -252,6 +300,7 @@
 						break;
 					}
 				}
+				messageLeaf = msgLeaf;
 				chatmessage = msgLeaf ? getAllContentNodes(msgLeaf) : escapeHtml(rest);
 			}
 		}
@@ -261,13 +310,17 @@
 			var leavesFb = collectTextLeaves(row);
 			if (leavesFb.length >= 2){
 				if (!chatname){ chatname = leavesFb[0].textContent.trim(); }
-				if (!chatmessage){ chatmessage = getAllContentNodes(leavesFb[leavesFb.length - 1]); }
+				if (!chatmessage){
+					messageLeaf = leavesFb[leavesFb.length - 1];
+					chatmessage = getAllContentNodes(messageLeaf);
+				}
 			} else if (leavesFb.length === 1){
 				var text = leavesFb[0].textContent.trim();
 				var split = text.indexOf(" ");
 				if (split > 0){
 					if (!chatname){ chatname = text.slice(0, split).trim(); }
 					if (!chatmessage){
+						messageLeaf = leavesFb[0];
 						chatmessage = escapeHtml(text.slice(split + 1).trim());
 						streamEvent = true;
 					}
@@ -290,17 +343,19 @@
 			chatname: escapeHtml(chatname),
 			chatmessage: trimMessage(chatmessage),
 			chatimg: chatimg,
+			badges: extractLiveBadges(row, profileImg, messageLeaf),
 			streamEvent: streamEvent
 		};
 	}
 
 	function processLiveRow(row){
+		if (!isExtensionOn){ return false; }
 		var parsed = parseLiveRow(row);
 		if (!parsed){ return false; }
 
 		var data = {};
 		data.chatname = parsed.chatname;
-		data.chatbadges = "";
+		data.chatbadges = parsed.badges || "";
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = parsed.chatmessage;
@@ -312,11 +367,12 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "instagramlive";
 
-		sendOut(data);
+		sendOut(data, row);
 		return true;
 	}
 
 	function processLiveComments(){
+		if (!isExtensionOn){ return; }
 		findLiveRows().forEach(function(row){
 			if (row.dataset && row.dataset.ssProcessed){ return; }
 			if (processLiveRow(row)){
@@ -384,6 +440,7 @@
 
 	function processPost(ele){
 		if (!ele || ele === window || !ele.querySelector){ return; }
+		if (!isExtensionOn){ return; }
 		if (ele.dataset && ele.dataset.ssProcessed){ return; }
 
 		var name = "";
@@ -431,6 +488,7 @@
 
 	function processComment(ele){
 		if (!ele || ele === window || !ele.querySelector){ return; }
+		if (!isExtensionOn){ return; }
 		if (ele.dataset && ele.dataset.ssProcessed){ return; }
 
 		var nameNode = ele.querySelector("h3, a[href][role='link']");
@@ -463,6 +521,7 @@
 	}
 
 	function processFeed(){
+		if (!isExtensionOn){ return; }
 		try {
 			document.querySelectorAll("article").forEach(function(node){
 				if (!node.dataset || !node.dataset.ssProcessed){
@@ -534,16 +593,18 @@
 	setTimeout(function(){
 		setInterval(function(){
 			try {
-				if (isLivePage()){
-					processLiveComments();
-				} else {
-					processFeed();
+				if (isExtensionOn){
+					if (isLivePage()){
+						processLiveComments();
+					} else {
+						processFeed();
+					}
 				}
 			} catch(e){}
 
 			syncVideos();
 
-			if (counter % 20 === 0){
+			if (isExtensionOn && (counter % 20 === 0)){
 				checkViewers();
 			}
 			counter++;

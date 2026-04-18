@@ -1365,6 +1365,7 @@ function loadSettings(item, resave = false) {
 
 	if (item && item.settings) {
 		settings = item.settings;
+		// Temporary migration cleanup for stale imported false toggle objects. Stop pruning on every import after May 31st 2026.
 		normalizedSettings = pruneSettingsObjects(settings);
 
 		Object.keys(patterns).forEach(pattern => {
