@@ -3401,8 +3401,11 @@
 			}
 
 			var blockMessageSelecting = false;
-			
-			
+			var featuredMode = false;
+			if (urlParams.has("featuredmode")) {
+				featuredMode = true;
+			}
+
 			var autoPinDonations = false;
 			if (urlParams.has("autopindonations") || urlParams.has("autopindonations")) {
 				autoPinDonations = true;
@@ -4654,8 +4657,13 @@
 				};
 				socketserver.onopen = function () {
 					conCon = 1;
-					socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 1 }));
-					console.log("output channel: 2, input channel: 1");
+					if (featuredMode) {
+						socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 2 }));
+						console.log("output channel: 2, input channel: 2");
+					} else {
+						socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 1 }));
+						console.log("output channel: 2, input channel: 1");
+					}
 				};
 
 				socketserver.onerror = function (error) {
@@ -6401,6 +6409,9 @@
 			
 
 			function processInput(data, force=false) {
+				if (!data) {
+					return featuredMode ? true : false;
+				}
 				if ("mid" in data) {
 					if (data.mid && (syncDocks || force)) {
 						if (autoTimeoutEnabled) {
@@ -7496,7 +7507,11 @@
 			function RecvDataWindow(room) {
 				var iframe = document.createElement("iframe");
 				iframe.connectedPeers = {};
-				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + obsremote + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + room;
+				if (featuredMode) {
+					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + room + "&scene&novideo&noaudio&cleanoutput&room=" + room;
+				} else {
+					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + obsremote + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + room;
+				}
 				// push and view, as we will connect with other docks also. I suppose I can have it only do this if &sync is enabled?
 				iframe.style.width = "0px";
 				iframe.style.height = "0px";
