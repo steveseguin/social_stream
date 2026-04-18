@@ -270,12 +270,13 @@
 	var LIVE_COMMENT_INPUT_SELECTOR = "footer textarea, footer input, footer [contenteditable='true'], [aria-label='Add a comment…']";
 	var PROFILE_IMG_SELECTOR = "img[alt*='profile picture'], img[alt*='profile photo']";
 
+	var COMMENT_PERMALINK_SELECTOR = "a[href*='/c/']";
+
 	function isLivePage(){
 		try {
 			var path = window.location.pathname || "";
 			if (path.includes("/live") || path.includes("%2Flive")){ return true; }
 			if (document.querySelector("svg[aria-label='Viewer count icon']")){ return true; }
-			if (document.querySelector(LIVE_COMMENT_INPUT_SELECTOR)){ return true; }
 		} catch(e){}
 		return false;
 	}
@@ -535,6 +536,142 @@
 		return img ? img.src : "";
 	}
 
+	function getPathFromHref(href){
+		if (!href){ return ""; }
+		try {
+			return (new URL(href, window.location.origin)).pathname || "";
+		} catch(e){}
+		return "";
+	}
+
+	function isProfilePath(path){
+		if (!path){ return false; }
+		var parts = path.split("/").filter(Boolean);
+		if (parts.length !== 1){ return false; }
+		var reserved = {
+			p: true,
+			reel: true,
+			reels: true,
+			explore: true,
+			accounts: true,
+			direct: true,
+			stories: true,
+			tv: true,
+			channels: true,
+			about: true,
+			legal: true,
+			privacy: true,
+			terms: true,
+			static: true,
+			web: true,
+			api: true,
+			challenge: true
+		};
+		return !reserved[parts[0].toLowerCase()];
+	}
+
+	function isCommentPermalink(path){
+		return /^\/p\/[^\/]+\/c\/[^\/]+\/?$/i.test(path || "");
+	}
+
+	function extractCommentAuthorLink(scope){
+		if (!scope || !scope.querySelectorAll){ return null; }
+		var links = scope.querySelectorAll("a[href]");
+		for (var i = 0; i < links.length; i++){
+			var link = links[i];
+			var path = getPathFromHref(link.getAttribute("href") || link.href);
+			if (!isProfilePath(path)){ continue; }
+			if ((link.textContent || "").trim()){ return link; }
+		}
+		return null;
+	}
+
+	function isMetaCommentText(text, authorName){
+		if (!text){ return true; }
+		var normalized = (text + "").replace(/\s+/g, " ").trim();
+		if (!normalized){ return true; }
+		if (authorName && (normalized.toLowerCase() === (authorName + "").toLowerCase())){ return true; }
+		if (/^\d+\s*[smhdwy]$/i.test(normalized)){ return true; }
+		if (/^\d+\s+likes?$/i.test(normalized)){ return true; }
+		if (/^reply$/i.test(normalized)){ return true; }
+		if (/^following$/i.test(normalized)){ return true; }
+		if (/^view all \d+ repl(?:y|ies)$/i.test(normalized)){ return true; }
+		if (normalized === "\u2022"){ return true; }
+		return false;
+	}
+
+	function extractCommentMessageNode(scope, authorName){
+		if (!scope || !scope.querySelectorAll){ return null; }
+		var spans = scope.querySelectorAll("span[dir='auto']");
+		for (var i = 0; i < spans.length; i++){
+			var span = spans[i];
+			if (!span){ continue; }
+			if (span.querySelector && span.querySelector("time")){ continue; }
+			if (span.closest && span.closest(COMMENT_PERMALINK_SELECTOR)){ continue; }
+			var text = (span.textContent || "").trim();
+			if (isMetaCommentText(text, authorName)){ continue; }
+			return span;
+		}
+		return null;
+	}
+
+	function extractCommentContentImg(scope){
+		if (!scope || !scope.querySelectorAll){ return ""; }
+		var imgs = scope.querySelectorAll("img[src]");
+		for (var i = 0; i < imgs.length; i++){
+			var img = imgs[i];
+			if (!img || !img.src){ continue; }
+			var alt = ((img.alt || "") + "").toLowerCase();
+			if ((alt.indexOf("profile picture") !== -1) || (alt.indexOf("profile photo") !== -1)){ continue; }
+			var anchor = img.closest ? img.closest("a[href]") : null;
+			if (anchor){
+				var anchorPath = getPathFromHref(anchor.getAttribute("href") || anchor.href);
+				if (isProfilePath(anchorPath)){ continue; }
+			}
+			return img.src + "";
+		}
+		return "";
+	}
+
+	function findCommentRootFromPermalink(link){
+		if (!link){ return null; }
+		var best = null;
+		var node = link;
+		for (var depth = 0; node && (depth < 16); depth++){
+			node = node.parentElement;
+			if (!node || !node.querySelectorAll){ break; }
+			var permalinks = node.querySelectorAll(COMMENT_PERMALINK_SELECTOR);
+			if (permalinks.length > 1){ break; }
+			var authorLink = extractCommentAuthorLink(node);
+			var authorName = authorLink ? ((authorLink.textContent || "").trim()) : "";
+			if (!authorName){
+				var authorImg = node.querySelector(PROFILE_IMG_SELECTOR);
+				authorName = nameFromAlt(authorImg);
+			}
+			if (!authorName){ continue; }
+			if (extractCommentMessageNode(node, authorName) || extractCommentContentImg(node)){
+				best = node;
+			}
+		}
+		return best;
+	}
+
+	function findFeedCommentNodes(){
+		var nodes = [];
+		var seen = new Set();
+		var links = document.querySelectorAll(COMMENT_PERMALINK_SELECTOR);
+		for (var i = 0; i < links.length; i++){
+			var link = links[i];
+			var path = getPathFromHref(link.getAttribute("href") || link.href);
+			if (!isCommentPermalink(path)){ continue; }
+			var root = findCommentRootFromPermalink(link);
+			if (!root || seen.has(root)){ continue; }
+			seen.add(root);
+			nodes.push(root);
+		}
+		return nodes;
+	}
+
 	function processPost(ele){
 		if (!ele || ele === window || !ele.querySelector){ return; }
 		if (!isExtensionOn){ return; }
@@ -588,16 +725,23 @@
 		if (!isExtensionOn){ return; }
 		if (ele.dataset && ele.dataset.ssProcessed){ return; }
 
-		var nameNode = ele.querySelector("h3, a[href][role='link']");
-		var name = nameNode ? escapeHtml((nameNode.textContent || "").trim()) : "";
+		var nameNode = extractCommentAuthorLink(ele) || ele.querySelector("h3, a[href][role='link']");
+		var rawName = nameNode ? ((nameNode.textContent || "").trim()) : "";
+		if (!rawName){
+			var nameImg = ele.querySelector(PROFILE_IMG_SELECTOR);
+			rawName = nameFromAlt(nameImg);
+		}
+		var name = rawName;
 		if (!name){ return; }
+		name = escapeHtml(name);
 
-		var msgNode = (nameNode && nameNode.nextElementSibling) || ele.querySelector("span[dir='auto']");
+		var msgNode = extractCommentMessageNode(ele, rawName) || (nameNode && nameNode.nextElementSibling) || ele.querySelector("span[dir='auto']");
 		var msg = msgNode ? escapeHtml((msgNode.textContent || "").trim()) : "";
 		msg = trimMessage(msg);
-		if (!msg){ return; }
 
 		var img = extractProfileImg(ele);
+		var contentimg = extractCommentContentImg(ele);
+		if (!msg && !contentimg){ return; }
 
 		if (ele.dataset){ ele.dataset.ssProcessed = "comment"; }
 
@@ -610,7 +754,7 @@
 		data.chatimg = img;
 		data.hasDonation = "";
 		data.membership = "";
-		data.contentimg = "";
+		data.contentimg = contentimg || "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "instagram";
 
@@ -624,6 +768,11 @@
 				if (!node.dataset || !node.dataset.ssProcessed){
 					setTimeout(processPost, 100, node);
 				}
+			});
+		} catch(e){}
+		try {
+			findFeedCommentNodes().forEach(function(node){
+				if (!node.dataset || !node.dataset.ssProcessed){ processComment(node); }
 			});
 		} catch(e){}
 		try {
