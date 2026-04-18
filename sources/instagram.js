@@ -7,6 +7,16 @@
 	var PROCESSED_ATTR = "data-ss-processed";
 	var LIVE_COMMENT_SELECTOR = "section [data-set='live']";
 	var LIVE_COMMENT_INPUT_SELECTOR = "footer textarea, footer input, footer [contenteditable='true']";
+	var INSTAGRAM_LIVE_FALLBACK_SCAN_TICKS = 10;
+	var INSTAGRAM_VIDEO_SYNC_TICKS = 6;
+	var instagramLiveState = {
+		section: null,
+		observer: null,
+		observerSection: null,
+		pendingNodes: [],
+		lastVideoSyncTick: -1,
+		lastVideoMutedState: null
+	};
 	function getInstagramLiveTextSpans(scope) {
 		try {
 			return Array.from(scope.querySelectorAll("span[dir='auto']")).filter(function(span){
@@ -123,30 +133,86 @@
 		} catch(e){}
 		return null;
 	}
-	function getInstagramLiveSections() {
-		var sections = [];
+	function isNodeAttached(node) {
+		try {
+			return !!(node && ((node.isConnected === true) || document.contains(node)));
+		} catch(e){}
+		return false;
+	}
+	function collectInstagramLiveNodesFromSection(section) {
+		var nodes = [];
+		if (!section){
+			return nodes;
+		}
+		try {
+			Array.from(section.children || []).forEach(function(child){
+				if (isInstagramLiveCommentNode(child)){
+					addUniqueNode(nodes, child);
+					return;
+				}
+				var button = getInstagramLiveButton(child);
+				if (button){
+					addUniqueNode(nodes, getDirectChildAncestor(button, section) || child);
+				}
+			});
+		} catch(e){}
+		if (nodes.length){
+			return nodes.filter(isInstagramLiveCommentNode);
+		}
+		try {
+			section.querySelectorAll("div[role='button']").forEach(function(button){
+				if (isInstagramLiveButton(button)){
+					addUniqueNode(nodes, getDirectChildAncestor(button, section) || button);
+				}
+			});
+		} catch(e){}
+		return nodes.filter(isInstagramLiveCommentNode);
+	}
+	function isInstagramLiveSection(section) {
+		try {
+			return !!(section && (((section.tagName || "") + "").toUpperCase() === "SECTION") && collectInstagramLiveNodesFromSection(section).length);
+		} catch(e){}
+		return false;
+	}
+	function findInstagramLiveSection() {
+		var candidates = [];
 		try {
 			document.querySelectorAll(LIVE_COMMENT_INPUT_SELECTOR).forEach(function(input){
 				var footer = input.closest("footer");
 				var section = getLiveSectionBeforeFooter(footer);
 				if (section){
-					addUniqueNode(sections, section);
+					addUniqueNode(candidates, section);
 				}
 			});
 		} catch(e){}
+		for (var i = 0; i < candidates.length; i++){
+			if (isInstagramLiveSection(candidates[i])){
+				return candidates[i];
+			}
+		}
 		try {
-			document.querySelectorAll("section").forEach(function(section){
-				var matchCount = 0;
-				section.querySelectorAll("div[role='button']").forEach(function(button){
-					if (isInstagramLiveButton(button)){
-						matchCount += 1;
-					}
-				});
-				if (matchCount >= 2){
-					addUniqueNode(sections, section);
+			var sections = document.querySelectorAll("section");
+			for (var j = 0; j < sections.length; j++){
+				if (isInstagramLiveSection(sections[j])){
+					return sections[j];
 				}
-			});
+			}
 		} catch(e){}
+		return null;
+	}
+	function resolveInstagramLiveSection(forceRefresh) {
+		if (!forceRefresh && isNodeAttached(instagramLiveState.section) && isInstagramLiveSection(instagramLiveState.section)){
+			return instagramLiveState.section;
+		}
+		instagramLiveState.section = findInstagramLiveSection();
+		return instagramLiveState.section;
+	}
+	function getInstagramLiveSections() {
+		var sections = [];
+		var section = resolveInstagramLiveSection();
+		if (section){
+			addUniqueNode(sections, section);
+		}
 		return sections;
 	}
 	function isInstagramLiveCommentNode(node) {
@@ -161,16 +227,10 @@
 	}
 	function getInstagramLiveNodes() {
 		var nodes = [];
-		try {
-			getInstagramLiveSections().forEach(function(section){
-				section.querySelectorAll("div[role='button']").forEach(function(button){
-					if (isInstagramLiveButton(button)){
-						addUniqueNode(nodes, getDirectChildAncestor(button, section) || button);
-					}
-				});
-			});
-		} catch(e){}
-		nodes = nodes.filter(isInstagramLiveCommentNode);
+		var section = resolveInstagramLiveSection();
+		if (section){
+			nodes = collectInstagramLiveNodesFromSection(section);
+		}
 		try {
 			document.querySelectorAll(LIVE_COMMENT_SELECTOR).forEach(function(node){
 				if (isInstagramLiveCommentNode(node)){
@@ -178,19 +238,6 @@
 				}
 			});
 		} catch(e){}
-		if (!nodes.length){
-			try {
-				document.querySelectorAll("div[role='button']").forEach(function(button){
-					if (isInstagramLiveButton(button)){
-						var section = button.closest("section");
-						var node = section ? (getDirectChildAncestor(button, section) || button) : button;
-						if (isInstagramLiveCommentNode(node)){
-							addUniqueNode(nodes, node);
-						}
-					}
-				});
-			} catch(e){}
-		}
 		return nodes;
 	}
 	function getInstagramNameFromProfileImage(img) {
@@ -260,21 +307,15 @@
 		return false;
 	}
 function checkConditions(element) {
-	  // Get all siblings of the element
+	  if (!element || !element.parentNode || !element.parentNode.children){
+		return false;
+	  }
 	  const siblings = Array.from(element.parentNode.children);
 	  const index = siblings.indexOf(element);
-
-	  // Condition 1: Closer to the bottom than the top
-	  const isCloserToBottom = index > siblings.length / 2;
-
-	  // Condition 2: Any sibling after it hasn't been processed by Social Stream yet
+	  const nearBottomThreshold = Math.max(3, Math.ceil(siblings.length * 0.2));
+	  const isNearBottom = index >= Math.max(0, siblings.length - nearBottomThreshold);
 	  const hasUnattributedSiblingAfter = siblings.slice(index + 1).some(sibling => !hasProcessedMarker(sibling));
-
-	  // Condition 3: Less than 99 siblings
-	  const hasLessThan99Siblings = siblings.length < 99; // this probably could be increased
-
-	  // Return true if any condition is met
-	  return isCloserToBottom || hasUnattributedSiblingAfter || hasLessThan99Siblings;
+	  return isNearBottom || hasUnattributedSiblingAfter;
 	}
 	
 	function pushMessage(data, ele =false) {
@@ -675,7 +716,7 @@ function checkConditions(element) {
 		if (settings.showviewercount || settings.hypemode){
 			//console.log(counter);
 			try {
-				let viewerSpan = document.querySelector("svg path[d='M3.267 24.652C8.32 14.772 15.156 9.94 23.905 9.94c8.761 0 15.768 4.847 21.136 14.745a1.47 1.47 0 1 0 2.583-1.401C41.774 12.496 33.83 7 23.905 7 13.97 7 6.175 12.51.651 23.314a1.47 1.47 0 0 0 2.616 1.338Z']").parentNode.parentNode.parentNode.parentNode.nextElementSibling;
+				let viewerSpan = getInstagramViewerSpan();
 				//console.log( viewerSpan.textContent);
 				if (viewerSpan && viewerSpan.textContent){
 					let views = viewerSpan.textContent.toUpperCase();
@@ -690,16 +731,7 @@ function checkConditions(element) {
 					views = views.split(" ")[0];
 					if (views == parseFloat(views)){
 						views = parseFloat(views) * multiplier;
-						chrome.runtime.sendMessage(
-							chrome.runtime.id,
-							({message:{
-									type: 'instagramlive',
-									event: 'viewer_update',
-									meta: views
-								}
-							}),
-							function (e) {}
-						);
+						sendInstagramViewerCount(views);
 					}
 				}
 			} catch (e) {
@@ -863,6 +895,163 @@ function checkConditions(element) {
 		.replace(/[#@]\w+\s*/g, '')  // Remove hashtags, at-mentions, and their associated words
 		.trim();                     // Remove leading and trailing spaces
 	}
+	function sendInstagramViewerCount(views) {
+		try {
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				({message:{
+						type: 'instagramlive',
+						event: 'viewer_update',
+						meta: views
+					}
+				}),
+				function (e) {}
+			);
+		} catch(e){}
+	}
+	function getInstagramViewerSpan() {
+		try {
+			var icon = document.querySelector("svg[aria-label='Viewer count icon']");
+			if (!icon){
+				return null;
+			}
+			var current = icon.parentElement;
+			for (var depth = 0; current && (depth < 6); depth++){
+				var sibling = current.nextElementSibling;
+				while (sibling){
+					var spans = sibling.querySelectorAll("span");
+					for (var i = 0; i < spans.length; i++){
+						if (spans[i] && spans[i].textContent && spans[i].textContent.trim()){
+							return spans[i];
+						}
+					}
+					sibling = sibling.nextElementSibling;
+				}
+				current = current.parentElement;
+			}
+		} catch(e){}
+		return null;
+	}
+	function queueInstagramLiveNode(node) {
+		if (!node || hasProcessedMarker(node) || !isInstagramLiveCommentNode(node)){
+			return;
+		}
+		addUniqueNode(instagramLiveState.pendingNodes, node);
+	}
+	function queueInstagramLiveMutationNode(node, section) {
+		try {
+			if (!node || (node.nodeType !== 1)){
+				return;
+			}
+			var directNode = section ? (getDirectChildAncestor(node, section) || ((node.parentNode === section) ? node : null)) : null;
+			if (directNode){
+				queueInstagramLiveNode(directNode);
+				return;
+			}
+			if (isInstagramLiveCommentNode(node)){
+				queueInstagramLiveNode(node);
+				return;
+			}
+			if (!node.querySelectorAll){
+				return;
+			}
+			node.querySelectorAll("div[role='button']").forEach(function(button){
+				if (isInstagramLiveButton(button)){
+					queueInstagramLiveNode(section ? (getDirectChildAncestor(button, section) || button) : button);
+				}
+			});
+		} catch(e){}
+	}
+	function disconnectInstagramLiveObserver() {
+		try {
+			if (instagramLiveState.observer){
+				instagramLiveState.observer.disconnect();
+			}
+		} catch(e){}
+		instagramLiveState.observer = null;
+		instagramLiveState.observerSection = null;
+	}
+	function stopInstagramLiveTracking() {
+		disconnectInstagramLiveObserver();
+		instagramLiveState.pendingNodes.length = 0;
+		instagramLiveState.section = null;
+	}
+	function ensureInstagramLiveObserver(forceRefresh) {
+		var section = resolveInstagramLiveSection(forceRefresh);
+		if (!section){
+			disconnectInstagramLiveObserver();
+			return null;
+		}
+		if (instagramLiveState.observer && (instagramLiveState.observerSection === section)){
+			return section;
+		}
+		disconnectInstagramLiveObserver();
+		instagramLiveState.section = section;
+		try {
+			instagramLiveState.observer = new MutationObserver(function(mutations){
+				mutations.forEach(function(mutation){
+					if (!mutation || (mutation.type !== "childList") || !mutation.addedNodes){
+						return;
+					}
+					mutation.addedNodes.forEach(function(node){
+						queueInstagramLiveMutationNode(node, section);
+					});
+				});
+			});
+			instagramLiveState.observer.observe(section, { childList: true, subtree: true });
+			instagramLiveState.observerSection = section;
+		} catch(e){
+			instagramLiveState.observer = null;
+			instagramLiveState.observerSection = null;
+		}
+		return section;
+	}
+	function processInstagramLiveNodes(processExisting) {
+		try {
+			var main = getInstagramLiveNodes();
+			for (var j = 0; j < main.length; j++){
+				try {
+					if (!hasProcessedMarker(main[j])){
+						markProcessed(main[j], processExisting ? "live" : "true");
+						if (processExisting){
+							processMessageIGLive(main[j]);
+						}
+					}
+				} catch(e){}
+			}
+		} catch(e){}
+	}
+	function flushInstagramLiveNodeQueue() {
+		if (!instagramLiveState.pendingNodes.length){
+			return;
+		}
+		var nodes = instagramLiveState.pendingNodes.slice();
+		instagramLiveState.pendingNodes.length = 0;
+		nodes.forEach(function(node){
+			try {
+				if (!hasProcessedMarker(node) && isInstagramLiveCommentNode(node)){
+					markProcessed(node, "live");
+					processMessageIGLive(node);
+				}
+			} catch(e){}
+		});
+	}
+	function syncInstagramVideos(force) {
+		if (!force && (instagramLiveState.lastVideoMutedState === videosMuted) && ((counter - instagramLiveState.lastVideoSyncTick) < INSTAGRAM_VIDEO_SYNC_TICKS)){
+			return;
+		}
+		instagramLiveState.lastVideoMutedState = videosMuted;
+		instagramLiveState.lastVideoSyncTick = counter;
+		document.querySelectorAll("video").forEach(function(v){
+			if (videosMuted){
+				v.muted = true;
+				v.pause();
+				v.controls = false;
+			} else {
+				v.controls = true;
+			}
+		});
+	}
 	function isLikelyInstagramLivePage() {
 		try {
 			if (window.location.pathname.includes("/live") || window.location.pathname.includes("%2Flive")){
@@ -871,10 +1060,10 @@ function checkConditions(element) {
 			if (document.querySelector(LIVE_COMMENT_SELECTOR)){
 				return true;
 			}
-			if (document.querySelector(LIVE_COMMENT_INPUT_SELECTOR) && getInstagramLiveSections().length){
+			if (document.querySelector(LIVE_COMMENT_INPUT_SELECTOR) && resolveInstagramLiveSection()){
 				return true;
 			}
-			if (document.querySelector("video") && getInstagramLiveNodes().length){
+			if (document.querySelector("svg[aria-label='Viewer count icon']")){
 				return true;
 			}
 		} catch(e){}
@@ -887,16 +1076,8 @@ function checkConditions(element) {
 		
 		try {
 			if (isLikelyInstagramLivePage()){
-				var main = getInstagramLiveNodes();
-				
-				for (var j =0;j<main.length;j++){
-					try{
-						if (!hasProcessedMarker(main[j])){
-							markProcessed(main[j], "true");
-							// processMessageIGLive(main[j]);
-						} 
-					} catch(e){}
-				}
+				ensureInstagramLiveObserver(true);
+				processInstagramLiveNodes(false);
 			}
 		} catch(e){  }
 	
@@ -905,24 +1086,22 @@ function checkConditions(element) {
 			if (!isOn){
 				return;
 			}
+			var isLivePage = false;
 		
 			try {
-				if (isLikelyInstagramLivePage()){
-					try {
-						var main = getInstagramLiveNodes();
-						for (var j =0;j<main.length;j++){
-							try{
-								if (!hasProcessedMarker(main[j])){
-									markProcessed(main[j], "live");
-									processMessageIGLive(main[j]);
-								} 
-							} catch(e){}
-						}
-					} catch(e){ }
+				isLivePage = isLikelyInstagramLivePage();
+				if (isLivePage){
+					ensureInstagramLiveObserver((counter % INSTAGRAM_LIVE_FALLBACK_SCAN_TICKS) === 0);
+					flushInstagramLiveNodeQueue();
+					if ((counter % INSTAGRAM_LIVE_FALLBACK_SCAN_TICKS) === 0){
+						processInstagramLiveNodes(true);
+					}
+				} else {
+					stopInstagramLiveTracking();
 				}
 			} catch(e){}
 			
-			if (!isLikelyInstagramLivePage()){ // not live video
+			if (!isLivePage){ // not live video
 				try {
 					var main = document.querySelectorAll("article");
 					if (main){
@@ -968,16 +1147,7 @@ function checkConditions(element) {
 				
 			}
 			
-			document.querySelectorAll("video").forEach(v=>{
-				if (videosMuted){
-					v.muted = true;
-					v.pause();
-					v.controls = false;
-				} else {
-					v.controls = true;
-				}
-				
-			});
+			syncInstagramVideos(false);
 			
 			if (counter%20==0){
 				checkViewers();
