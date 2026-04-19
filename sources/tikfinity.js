@@ -11,8 +11,9 @@
 
 	var settings = {};
 	var isExtensionOn = true;
-	var RECENT_EVENT_WINDOW_MS = 2500;
-	var recentEventMap = new Map();
+	var RECENT_MESSAGE_WINDOW_MS = 2500;
+	var MAX_RECENT_MESSAGE_KEYS = 400;
+	var recentMessageMap = new Map();
 
 	function escapeHtml(unsafe) {
 		try {
@@ -81,12 +82,27 @@
 		} catch (e) {}
 	}
 
-	function cleanupRecentEvents(now) {
-		recentEventMap.forEach(function (timestamp, key) {
-			if ((now - timestamp) > RECENT_EVENT_WINDOW_MS) {
-				recentEventMap.delete(key);
+	function cleanupRecentMap(map, maxAge, now) {
+		map.forEach(function (timestamp, key) {
+			if ((now - timestamp) > maxAge) {
+				map.delete(key);
 			}
 		});
+		while (map.size > MAX_RECENT_MESSAGE_KEYS) {
+			map.delete(map.keys().next().value);
+		}
+	}
+
+	function cleanupRecentMessages(now) {
+		cleanupRecentMap(recentMessageMap, RECENT_MESSAGE_WINDOW_MS, now);
+	}
+
+	function normalizeUrlForKey(value) {
+		value = normalizeText(value);
+		if (!value) {
+			return "";
+		}
+		return value.split("#")[0].split("?")[0].toLowerCase();
 	}
 
 	function normalizeMessageForKey(message) {
@@ -99,34 +115,42 @@
 		return normalizeText(message);
 	}
 
-	function buildRecentEventKey(data, meta) {
+	function getRecentActorKey(data, meta) {
+		if (meta && meta.uniqueId) {
+			return normalizeText(meta.uniqueId);
+		}
+		if (meta && meta.userId !== undefined && meta.userId !== null) {
+			return normalizeText(String(meta.userId));
+		}
+		return normalizeText(data && data.chatname ? data.chatname : "");
+	}
+
+	function buildRecentMessageKey(data, meta) {
 		return [
 			normalizeText(data && data.event ? data.event : "chat"),
+			getRecentActorKey(data, meta),
 			normalizeText(meta && meta.groupId ? String(meta.groupId) : ""),
 			normalizeText(meta && meta.giftId ? String(meta.giftId) : ""),
-			normalizeText(meta && meta.userId !== undefined ? String(meta.userId) : ""),
-			normalizeText(meta && meta.uniqueId ? meta.uniqueId : ""),
-			normalizeText(data && data.chatname ? data.chatname : ""),
 			normalizeMessageForKey(data && data.chatmessage ? data.chatmessage : ""),
 			normalizeText(data && data.hasDonation ? data.hasDonation : ""),
 			normalizeText(data && data.membership ? data.membership : ""),
-			normalizeText(data && data.contentimg ? data.contentimg : ""),
+			normalizeUrlForKey(data && data.contentimg ? data.contentimg : ""),
 			normalizeText(meta && meta.repeatCount !== undefined ? String(meta.repeatCount) : ""),
 			normalizeText(meta && meta.repeatText ? meta.repeatText : "")
 		].join("|");
 	}
 
-	function shouldEmitEvent(data, meta) {
+	function shouldEmitMessage(data, meta) {
 		var now = Date.now();
-		var key = buildRecentEventKey(data, meta);
-		cleanupRecentEvents(now);
+		var key = buildRecentMessageKey(data, meta);
+		cleanupRecentMessages(now);
 		if (!key) {
 			return true;
 		}
-		if (recentEventMap.has(key)) {
+		if (recentMessageMap.has(key)) {
 			return false;
 		}
-		recentEventMap.set(key, now);
+		recentMessageMap.set(key, now);
 		return true;
 	}
 
@@ -237,9 +261,6 @@
 		if (eventName === "gift" && settings.notiktokdonations && !settings.tiktokdonations) {
 			return true;
 		}
-		if (eventName && eventName !== "gift" && eventName !== "joined" && settings.captureevents === false) {
-			return true;
-		}
 		return false;
 	}
 
@@ -267,7 +288,7 @@
 		if (meta && Object.keys(meta).length) {
 			data.meta = meta;
 		}
-		if (!shouldEmitEvent(data, meta)) {
+		if (!shouldEmitMessage(data, meta)) {
 			return;
 		}
 		pushMessage(data);
