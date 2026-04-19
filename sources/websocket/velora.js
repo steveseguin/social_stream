@@ -2,25 +2,103 @@
 // Uses the official Velora Events API (Socket.IO) with OAuth 2.0 PKCE user sign-in.
 // API docs: https://developer.velora.tv/developer/docs/events-api
 
-const VELORA_AUTH_URL = 'https://velora.tv/oauth/authorize';
-const VELORA_TOKEN_URL = 'https://api.velora.tv/api/developer/oauth/token';
 const VELORA_API_BASE = 'https://api.velora.tv';
 const VELORA_WS_URL = 'wss://api.velora.tv/ws/events';
+const VELORA_EVENTS_SSE_URL = `${VELORA_API_BASE}/api/events/stream`;
+const DEFAULT_VELORA_AUTH_BASE = 'https://auth.socialstream.ninja/auth/velora';
+const DEFAULT_VELORA_CLIENT_ID = 'velora_9c9ae006ec8bc256';
+const DEFAULT_VELORA_REDIRECT_URI = 'https://auth.socialstream.ninja/auth/velora/callback';
+const DEFAULT_LOCAL_RETURN_BASE = 'http://127.0.0.1:8181/';
 const VELORA_SCOPES = 'user:read chat:read chat:write';
+const VELORA_AUTH_MESSAGE_SUCCESS = 'ssn-velora-auth-success';
+const VELORA_AUTH_MESSAGE_ERROR = 'ssn-velora-auth-error';
+const VELORA_AUTH_RESULT_KEY = 'velora_auth_result';
+const VELORA_AUTH_ERROR_KEY = 'velora_auth_error';
 
 const STORAGE_KEY = 'veloraApiConfig';
 const TOKEN_KEY = 'veloraApiTokens';
-const CODE_VERIFIER_KEY = 'veloraPkceVerifier';
-const OAUTH_STATE_KEY = 'veloraOAuthState';
 
 const CHAT_FEED_LIMIT = 100;
 const ALERTS_FEED_LIMIT = 80;
 const EVENT_LOG_LIMIT = 100;
 const VIEWER_POLL_INTERVAL_MS = 30000;
+const SOCKET_CONNECTED_EVENT_TIMEOUT_MS = 4000;
+const SSE_RECONNECT_DELAY_MS = 3000;
+const VELORA_EMOTE_MAP = {
+    "AirRaid": "https://assets.velora.tv/emotes/raid/raid-airraid/56.webp",
+    "BlueGlitzRaid": "https://assets.velora.tv/emotes/raid/raid-blueglitzraid/56.webp",
+    "CannonRaid": "https://assets.velora.tv/emotes/raid/raid-cannonraid/56.webp",
+    "FireRaid": "https://assets.velora.tv/emotes/raid/raid-fireraid/56.webp",
+    "GlitzRaid": "https://assets.velora.tv/emotes/raid/raid-glitzraid/56.webp",
+    "PinkRaid": "https://assets.velora.tv/emotes/raid/raid-pinkraid/56.webp",
+    "PixtextRaid": "https://assets.velora.tv/emotes/raid/raid-pixtextraid/56.webp",
+    "RainbowRaid": "https://assets.velora.tv/emotes/raid/raid-rainbowraid/56.webp",
+    "SimpleRaid": "https://assets.velora.tv/emotes/raid/raid-simpleraid/56.webp",
+    "SplitRedRaid": "https://assets.velora.tv/emotes/raid/raid-splitredraid/56.webp",
+    "VeloraFlameAllSmiles": "https://assets.velora.tv/emotes/flame/flame-allsmiles/56.webp",
+    "VeloraFlameAngel": "https://assets.velora.tv/emotes/flame/flame-angel/56.webp",
+    "VeloraFlameAngry": "https://assets.velora.tv/emotes/flame/flame-angry/56.webp",
+    "VeloraFlameBigF": "https://assets.velora.tv/emotes/flame/flame-bigf/56.webp",
+    "VeloraFlameBigGrin": "https://assets.velora.tv/emotes/flame/flame-biggrin/56.webp",
+    "VeloraFlameBlowKisses": "https://assets.velora.tv/emotes/flame/flame-blowkisses/56.webp",
+    "VeloraFlameCoolLook": "https://assets.velora.tv/emotes/flame/flame-coollook/56.webp",
+    "VeloraFlameCrying": "https://assets.velora.tv/emotes/flame/flame-crying/56.webp",
+    "VeloraFlameDazed": "https://assets.velora.tv/emotes/flame/flame-dazed/56.webp",
+    "VeloraFlameDead": "https://assets.velora.tv/emotes/flame/flame-dead/56.webp",
+    "VeloraFlameDropLaugh": "https://assets.velora.tv/emotes/flame/flame-droplaugh/56.webp",
+    "VeloraFlameEvil": "https://assets.velora.tv/emotes/flame/flame-evil/56.webp",
+    "VeloraFlameInjured": "https://assets.velora.tv/emotes/flame/flame-injured/56.webp",
+    "VeloraFlameLaugh": "https://assets.velora.tv/emotes/flame/flame-laugh/56.webp",
+    "VeloraFlameLove": "https://assets.velora.tv/emotes/flame/flame-love/56.webp",
+    "VeloraFlameLoveEyes": "https://assets.velora.tv/emotes/flame/flame-loveeyes/56.webp",
+    "VeloraFlameMelting": "https://assets.velora.tv/emotes/flame/flame-melting/56.webp",
+    "VeloraFlameMindBlown": "https://assets.velora.tv/emotes/flame/flame-mindblown/56.webp",
+    "VeloraFlameMoney": "https://assets.velora.tv/emotes/flame/flame-money/56.webp",
+    "VeloraFlameNerdy": "https://assets.velora.tv/emotes/flame/flame-nerdy/56.webp",
+    "VeloraFlameRedEye": "https://assets.velora.tv/emotes/flame/flame-redeye/56.webp",
+    "VeloraFlameShock": "https://assets.velora.tv/emotes/flame/flame-shock/56.webp",
+    "VeloraFlameSick": "https://assets.velora.tv/emotes/flame/flame-sick/56.webp",
+    "VeloraFlameSleeping": "https://assets.velora.tv/emotes/flame/flame-sleeping/56.webp",
+    "VeloraFlameThinking": "https://assets.velora.tv/emotes/flame/flame-thinking/56.webp",
+    "VeloraFlameThumbsDown": "https://assets.velora.tv/emotes/flame/flame-thumbsdown/56.webp",
+    "VeloraFlameThumbsUp": "https://assets.velora.tv/emotes/flame/flame-thumbsup/56.webp",
+    "VeloraFlameTongueWink": "https://assets.velora.tv/emotes/flame/flame-tonguewink/56.webp",
+    "VeloraFlameWellMeh": "https://assets.velora.tv/emotes/flame/flame-wellmeh/56.webp",
+    "VeloraFlameYawning": "https://assets.velora.tv/emotes/flame/flame-yawning/56.webp",
+    "VeloraPXLAFK": "https://assets.velora.tv/emotes/pixel/pixel-afk/56.webp",
+    "VeloraPXLBait": "https://assets.velora.tv/emotes/pixel/pixel-bait/56.webp",
+    "VeloraPXLBan": "https://assets.velora.tv/emotes/pixel/pixel-ban/56.webp",
+    "VeloraPXLBg": "https://assets.velora.tv/emotes/pixel/pixel-bg/56.webp",
+    "VeloraPXLBro": "https://assets.velora.tv/emotes/pixel/pixel-bro/56.webp",
+    "VeloraPXLBuff": "https://assets.velora.tv/emotes/pixel/pixel-buff/56.webp",
+    "VeloraPXLBug": "https://assets.velora.tv/emotes/pixel/pixel-bug/56.webp",
+    "VeloraPXLDc": "https://assets.velora.tv/emotes/pixel/pixel-dc/56.webp",
+    "VeloraPXLFB": "https://assets.velora.tv/emotes/pixel/pixel-fb/56.webp",
+    "VeloraPXLFix": "https://assets.velora.tv/emotes/pixel/pixel-fix/56.webp",
+    "VeloraPXLFu": "https://assets.velora.tv/emotes/pixel/pixel-fu/56.webp",
+    "VeloraPXLGg": "https://assets.velora.tv/emotes/pixel/pixel-gg/56.webp",
+    "VeloraPXLGold": "https://assets.velora.tv/emotes/pixel/pixel-gold/56.webp",
+    "VeloraPXLHack": "https://assets.velora.tv/emotes/pixel/pixel-hack/56.webp",
+    "VeloraPXLHit": "https://assets.velora.tv/emotes/pixel/pixel-hit/56.webp",
+    "VeloraPXLLol": "https://assets.velora.tv/emotes/pixel/pixel-lol/56.webp",
+    "VeloraPXLLoot": "https://assets.velora.tv/emotes/pixel/pixel-loot/56.webp",
+    "VeloraPXLLoveYouText": "https://assets.velora.tv/emotes/pixel/pixel-loveyoutext/56.webp",
+    "VeloraPXLMp": "https://assets.velora.tv/emotes/pixel/pixel-mp/56.webp",
+    "VeloraPXLNoText": "https://assets.velora.tv/emotes/pixel/pixel-notext/56.webp",
+    "VeloraPXLOp": "https://assets.velora.tv/emotes/pixel/pixel-op/56.webp",
+    "VeloraPXLQq": "https://assets.velora.tv/emotes/pixel/pixel-qq/56.webp",
+    "VeloraPXLRage": "https://assets.velora.tv/emotes/pixel/pixel-rage/56.webp",
+    "VeloraPXLSad": "https://assets.velora.tv/emotes/pixel/pixel-sad/56.webp",
+    "VeloraPXLSave": "https://assets.velora.tv/emotes/pixel/pixel-save/56.webp",
+    "VeloraPXLStfu": "https://assets.velora.tv/emotes/pixel/pixel-stfu/56.webp",
+    "VeloraPXLUp": "https://assets.velora.tv/emotes/pixel/pixel-up/56.webp",
+    "VeloraPXLWtf": "https://assets.velora.tv/emotes/pixel/pixel-wtf/56.webp",
+    "VeloraPXLYes": "https://assets.velora.tv/emotes/pixel/pixel-yes/56.webp"
+};
 
 const state = {
-    clientId: '',
-    redirectUri: '',
+    clientId: DEFAULT_VELORA_CLIENT_ID,
+    redirectUri: DEFAULT_VELORA_REDIRECT_URI,
     tokens: null,
     authUser: null,
     socket: null,
@@ -29,7 +107,17 @@ const state = {
     settings: {},
     viewerPollTimer: null,
     refreshTimer: null,
-    streamId: null
+    sseReconnectTimer: null,
+    socketFallbackTimer: null,
+    streamId: null,
+    authPopup: null,
+    requestedChannel: '',
+    sseRequest: null,
+    sseReadOffset: 0,
+    sseBuffer: '',
+    eventsConnected: false,
+    eventTransport: '',
+    connectedChannel: ''
 };
 
 const els = {};
@@ -38,6 +126,180 @@ const els = {};
 
 function q(id) {
     return document.getElementById(id);
+}
+
+function getRuntimeParam(key) {
+    try {
+        const search = new URLSearchParams(window.location.search || '');
+        const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+        return search.get(key) || hash.get(key) || '';
+    } catch (e) {
+        return '';
+    }
+}
+
+function normalizeChannelName(value) {
+    return String(value || '').trim().replace(/^@+/, '').toLowerCase();
+}
+
+function getRequestedChannel() {
+    return normalizeChannelName(
+        getRuntimeParam('channel') ||
+        getRuntimeParam('username') ||
+        getRuntimeParam('user')
+    );
+}
+
+function getAuthedChannelName() {
+    return normalizeChannelName(
+        state.authUser?.username ||
+        state.authUser?.login ||
+        state.authUser?.channelUsername ||
+        ''
+    );
+}
+
+function normalizeRedirectUri(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    return raw;
+}
+
+function normalizeAuthBase(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return DEFAULT_VELORA_AUTH_BASE;
+    return raw.replace(/\/+$/, '');
+}
+
+function getVeloraAuthBase() {
+    return normalizeAuthBase(getRuntimeParam('authBase') || getRuntimeParam('auth_base') || DEFAULT_VELORA_AUTH_BASE);
+}
+
+function getExpectedAuthMessageOrigin() {
+    try {
+        return new URL(getVeloraAuthBase()).origin;
+    } catch (e) {
+        return '';
+    }
+}
+
+function hasRuntimeFlag(key) {
+    try {
+        const search = new URLSearchParams(window.location.search || '');
+        const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+        return search.has(key) || hash.has(key);
+    } catch (e) {
+        return false;
+    }
+}
+
+function isVeloraSocketPage(pathname) {
+    return /\/velora\.html$/i.test(String(pathname || ''));
+}
+
+function buildVeloraReturnUrlFromBase(base) {
+    if (!base) return '';
+    try {
+        const parsed = new URL(String(base).trim(), window.location.href);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return '';
+        }
+        parsed.hash = '';
+        if (isVeloraSocketPage(parsed.pathname)) {
+            return parsed.toString();
+        }
+        const lowerPath = String(parsed.pathname || '').toLowerCase();
+        const relativePath = /\/(?:beta\/)?sources\/websocket\/?$/i.test(lowerPath)
+            ? 'velora.html'
+            : 'sources/websocket/velora.html';
+        const normalizedBase = new URL(parsed.toString());
+        normalizedBase.search = '';
+        if (!/\/$/.test(normalizedBase.pathname)) {
+            normalizedBase.pathname = `${normalizedBase.pathname}/`;
+        }
+        return new URL(relativePath, normalizedBase.toString()).toString();
+    } catch (e) {
+        return '';
+    }
+}
+
+function mergeCurrentSearchParams(url) {
+    if (!url) return '';
+    try {
+        const target = new URL(url);
+        const current = new URL(window.location.href);
+        const params = new URLSearchParams(current.search);
+        const ignored = {
+            return_to: true,
+            returnTo: true,
+            redirect_uri: true,
+            redirectUri: true
+        };
+        params.forEach(function (value, key) {
+            if (!ignored[key] && !target.searchParams.has(key)) {
+                target.searchParams.set(key, value);
+            }
+        });
+        target.hash = '';
+        return target.toString();
+    } catch (e) {
+        return url;
+    }
+}
+
+function getRuntimeOrigin() {
+    try {
+        if (window.location && window.location.origin && window.location.origin !== 'null') {
+            return window.location.origin;
+        }
+    } catch (e) {}
+    return '*';
+}
+
+function getAuthReturnTo() {
+    const explicitReturnTo = getRuntimeParam('return_to') || getRuntimeParam('returnTo');
+    const explicitUrl = mergeCurrentSearchParams(buildVeloraReturnUrlFromBase(explicitReturnTo));
+    if (explicitUrl) {
+        return explicitUrl;
+    }
+
+    try {
+        const currentUrl = new URL(String(window.location.href || ''));
+        if ((currentUrl.protocol === 'http:' || currentUrl.protocol === 'https:') && isVeloraSocketPage(currentUrl.pathname)) {
+            currentUrl.hash = '';
+            return currentUrl.toString();
+        }
+    } catch (e) {
+    }
+
+    const sourceModeUrl = mergeCurrentSearchParams(buildVeloraReturnUrlFromBase(getRuntimeParam('sourcemode')));
+    if (sourceModeUrl) {
+        return sourceModeUrl;
+    }
+
+    const isBetaRuntime = hasRuntimeFlag('beta') || getRuntimeParam('branch') === 'beta';
+    const fallbackBase = hasRuntimeFlag('devmode')
+        ? DEFAULT_LOCAL_RETURN_BASE
+        : isBetaRuntime
+            ? 'https://beta.socialstream.ninja/'
+            : 'https://socialstream.ninja/';
+    const fallbackUrl = mergeCurrentSearchParams(buildVeloraReturnUrlFromBase(fallbackBase));
+    if (fallbackUrl) {
+        return fallbackUrl;
+    }
+
+    try {
+        return String(window.location.href || '').split('#')[0];
+    } catch (e) {
+        return '';
+    }
+}
+
+function getAuthStartUrl() {
+    const url = new URL(`${getVeloraAuthBase()}/start`);
+    url.searchParams.set('return_to', getAuthReturnTo());
+    url.searchParams.set('origin', getRuntimeOrigin());
+    return url.toString();
 }
 
 function escapeHtml(str) {
@@ -50,6 +312,31 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
+function renderVeloraMessageHtml(message) {
+    const raw = String(message || '');
+    const emotes = [];
+    const html = raw.split(/(\s+)/).map(function (part) {
+        if (!part) return '';
+        if (/^\s+$/.test(part)) {
+            return part.replace(/\r?\n/g, '<br>');
+        }
+        const emoteUrl = VELORA_EMOTE_MAP[part];
+        if (!emoteUrl) {
+            return escapeHtml(part);
+        }
+        emotes.push({
+            code: part,
+            url: emoteUrl
+        });
+        return `<img class="velora-inline-emote" src="${escapeHtml(emoteUrl)}" alt="${escapeHtml(part)}" title="${escapeHtml(part)}" loading="lazy" draggable="false">`;
+    }).join('');
+
+    return {
+        html: html || escapeHtml(raw),
+        emotes: emotes
+    };
+}
+
 // ─── Storage ──────────────────────────────────────────────────────────────────
 
 function loadConfig() {
@@ -57,15 +344,28 @@ function loadConfig() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return;
         const conf = JSON.parse(raw);
-        if (conf.clientId) state.clientId = conf.clientId;
         if (conf.redirectUri) state.redirectUri = conf.redirectUri;
     } catch (e) {}
+}
+
+function applyRuntimeOverrides() {
+    const redirectUri = normalizeRedirectUri(getRuntimeParam('redirect_uri') || getRuntimeParam('redirectUri'));
+
+    if (redirectUri) {
+        state.redirectUri = redirectUri;
+    }
+
+    if (!state.clientId) {
+        state.clientId = DEFAULT_VELORA_CLIENT_ID;
+    }
+    if (!state.redirectUri) {
+        state.redirectUri = DEFAULT_VELORA_REDIRECT_URI;
+    }
 }
 
 function persistConfig() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            clientId: state.clientId,
             redirectUri: state.redirectUri
         }));
     } catch (e) {}
@@ -129,117 +429,210 @@ async function createCodeChallenge(verifier) {
 
 // ─── OAuth flow ───────────────────────────────────────────────────────────────
 
-async function startAuthFlow() {
-    if (!state.clientId) {
-        setAuthStatus('Enter your Client ID first.', 'warning');
-        if (els.clientIdInput) els.clientIdInput.focus();
-        return;
+function getVeloraOAuthBridge() {
+    if (window.ninjafy && typeof window.ninjafy.startVeloraOAuth === 'function') {
+        return window.ninjafy;
     }
-
-    const verifier = generateRandomString(64);
-    const challenge = await createCodeChallenge(verifier);
-    const stateParam = generateRandomString(32);
-
-    sessionStorage.setItem(CODE_VERIFIER_KEY, verifier);
-    sessionStorage.setItem(OAUTH_STATE_KEY, stateParam);
-
-    const redirectUri = window.location.origin + window.location.pathname;
-    state.redirectUri = redirectUri;
-    persistConfig();
-
-    const params = new URLSearchParams({
-        response_type: 'code',
-        client_id: state.clientId,
-        redirect_uri: redirectUri,
-        scope: VELORA_SCOPES,
-        code_challenge: challenge,
-        code_challenge_method: 'S256',
-        state: stateParam
-    });
-
-    window.location.href = `${VELORA_AUTH_URL}?${params.toString()}`;
+    if (window.__ssapp && typeof window.__ssapp.startVeloraOAuth === 'function') {
+        return window.__ssapp;
+    }
+    return null;
 }
 
-async function handleAuthCallback() {
-    const url = new URL(window.location.href);
-    const code = url.searchParams.get('code');
-    const returnedState = url.searchParams.get('state');
-    if (!code) return false;
+function getRedirectUri() {
+    return normalizeRedirectUri(state.redirectUri) || DEFAULT_VELORA_REDIRECT_URI;
+}
 
-    // Strip OAuth params from URL immediately to avoid reuse on reload
-    url.searchParams.delete('code');
-    url.searchParams.delete('state');
-    window.history.replaceState({}, document.title, url.toString());
-
-    const expectedState = sessionStorage.getItem(OAUTH_STATE_KEY);
-    if (!returnedState || returnedState !== expectedState) {
-        setAuthStatus('OAuth state mismatch. Please try again.', 'danger');
-        return false;
-    }
-
-    const verifier = sessionStorage.getItem(CODE_VERIFIER_KEY);
-    if (!verifier) {
-        setAuthStatus('Missing PKCE verifier. Please try again.', 'danger');
-        return false;
-    }
-
-    sessionStorage.removeItem(OAUTH_STATE_KEY);
-    sessionStorage.removeItem(CODE_VERIFIER_KEY);
-
+function base64UrlToJson(value) {
+    if (!value) return null;
     try {
-        await exchangeCodeForToken(code, verifier);
-        await loadUserProfile();
-        updateAuthUI();
-        connectSocket();
-    } catch (err) {
-        console.error('[Velora] Token exchange failed:', err);
-        setAuthStatus(`Sign-in failed: ${err.message}`, 'danger');
+        const normalized = String(value).replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized + '==='.slice((normalized.length + 3) % 4);
+        const decoded = atob(padded);
+        return JSON.parse(decoded);
+    } catch (e) {
+        return null;
     }
-    return true;
 }
 
-async function exchangeCodeForToken(code, verifier) {
-    const redirectUri = state.redirectUri || (window.location.origin + window.location.pathname);
-
-    const body = new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: state.clientId,
-        code,
-        code_verifier: verifier,
-        redirect_uri: redirectUri
-    });
-
-    const response = await fetch(VELORA_TOKEN_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json'
-        },
-        body: body.toString()
-    });
-
-    let data = {};
-    try { data = await response.json(); } catch (e) {}
-
-    if (!response.ok) {
-        throw new Error(data.error_description || data.error || `HTTP ${response.status}`);
+function normalizeTokenPayload(payload) {
+    if (!payload || !payload.access_token) {
+        return null;
     }
-    if (!data.access_token) {
-        throw new Error('No access token returned by Velora.');
-    }
-
-    state.tokens = {
-        access_token: data.access_token,
-        refresh_token: data.refresh_token || null,
-        token_type: data.token_type || 'Bearer',
-        expires_at: data.expires_in ? (Date.now() + data.expires_in * 1000) : null
+    const expiresIn = Number(payload.expires_in);
+    return {
+        access_token: String(payload.access_token),
+        refresh_token: payload.refresh_token ? String(payload.refresh_token) : null,
+        token_type: payload.token_type ? String(payload.token_type) : 'Bearer',
+        expires_at: Number.isFinite(expiresIn) && expiresIn > 0 ? (Date.now() + expiresIn * 1000) : null
     };
+}
+
+function applyTokenPayload(payload) {
+    const tokens = normalizeTokenPayload(payload);
+    if (!tokens) {
+        throw new Error('Velora auth payload did not include an access token.');
+    }
+    state.tokens = tokens;
     persistTokens();
     scheduleTokenRefresh();
 }
 
+async function handleAuthSuccess(payload) {
+    applyTokenPayload(payload && payload.tokens ? payload.tokens : payload);
+    await loadUserProfile();
+    updateAuthUI();
+    connectSocket();
+}
+
+function handleAuthError(payload) {
+    const message = payload && payload.message ? payload.message : 'Velora sign-in failed.';
+    setAuthStatus(message, 'danger');
+}
+
+async function handleAuthPayload(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return false;
+    }
+    if (payload.type === VELORA_AUTH_MESSAGE_SUCCESS || payload.tokens || payload.access_token) {
+        await handleAuthSuccess(payload);
+        return true;
+    }
+    if (payload.type === VELORA_AUTH_MESSAGE_ERROR) {
+        handleAuthError(payload);
+        return true;
+    }
+    return false;
+}
+
+async function consumeAuthResultFromHash() {
+    let changed = false;
+    let handled = false;
+    try {
+        const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+        const encodedResult = hash.get(VELORA_AUTH_RESULT_KEY);
+        const encodedError = hash.get(VELORA_AUTH_ERROR_KEY);
+        if (encodedResult) {
+            const payload = base64UrlToJson(encodedResult);
+            if (await handleAuthPayload(payload)) {
+                handled = true;
+            }
+            hash.delete(VELORA_AUTH_RESULT_KEY);
+            changed = true;
+        }
+        if (encodedError) {
+            const payload = base64UrlToJson(encodedError);
+            if (await handleAuthPayload(payload)) {
+                handled = true;
+            }
+            hash.delete(VELORA_AUTH_ERROR_KEY);
+            changed = true;
+        }
+        if (changed) {
+            const cleanUrl = `${window.location.pathname}${window.location.search}${hash.toString() ? `#${hash.toString()}` : ''}`;
+            history.replaceState({}, document.title, cleanUrl);
+        }
+    } catch (e) {
+        console.warn('[Velora] Failed to consume auth callback payload:', e);
+    }
+    return handled;
+}
+
+async function exchangeCodeForToken(code, verifier, redirectUri) {
+    const response = await fetch(`${getVeloraAuthBase()}/exchange`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            code: code,
+            code_verifier: verifier,
+            redirect_uri: normalizeRedirectUri(redirectUri) || getRedirectUri()
+        })
+    });
+
+    const text = await response.text();
+    let data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch (e) {}
+
+    if (!response.ok) {
+        throw new Error(data.message || data.error_description || data.error || text || `HTTP ${response.status}`);
+    }
+
+    applyTokenPayload(data);
+}
+
+async function startExternalAuthFlow() {
+    const bridge = getVeloraOAuthBridge();
+    if (!bridge || typeof bridge.startVeloraOAuth !== 'function') {
+        return false;
+    }
+
+    const scopes = VELORA_SCOPES.split(/\s+/).filter(Boolean);
+    const result = await bridge.startVeloraOAuth({
+        authBase: getVeloraAuthBase(),
+        clientId: state.clientId,
+        redirectUri: getRedirectUri(),
+        scopes: scopes
+    });
+
+    if (await handleAuthPayload(result)) {
+        return true;
+    }
+
+    const nestedPayload = result && typeof result === 'object'
+        ? (result.payload || result.authPayload || null)
+        : null;
+    if (await handleAuthPayload(nestedPayload)) {
+        return true;
+    }
+
+    if (!result || !result.code || !result.codeVerifier) {
+        throw new Error('Velora OAuth did not return a code and PKCE verifier.');
+    }
+
+    if (result.redirectUri) {
+        state.redirectUri = normalizeRedirectUri(result.redirectUri) || getRedirectUri();
+        persistConfig();
+    }
+
+    await exchangeCodeForToken(result.code, result.codeVerifier, result.redirectUri || getRedirectUri());
+    await loadUserProfile();
+    updateAuthUI();
+    connectSocket();
+    return true;
+}
+
+function startBrowserAuthFlow() {
+    const authUrl = getAuthStartUrl();
+    const popup = window.open(authUrl, 'veloraAuth', 'width=560,height=760');
+    if (!popup) {
+        window.location.href = authUrl;
+        return;
+    }
+    state.authPopup = popup;
+    setAuthStatus('Complete Velora sign-in in the popup.', 'warning');
+}
+
+async function startAuthFlow() {
+    try {
+        const handled = await startExternalAuthFlow();
+        if (!handled) {
+            startBrowserAuthFlow();
+        }
+    } catch (err) {
+        console.error('[Velora] Sign-in failed:', err);
+        setAuthStatus(`Sign-in failed: ${err.message}`, 'danger');
+    }
+}
+
+async function handleAuthCallback() {
+    return consumeAuthResultFromHash();
+}
+
 async function refreshAccessToken() {
-    if (!state.tokens?.refresh_token || !state.clientId) {
+    if (!state.tokens?.refresh_token) {
         clearAuthState();
         updateAuthUI();
         disconnectSocket();
@@ -247,38 +640,40 @@ async function refreshAccessToken() {
     }
 
     try {
-        const body = new URLSearchParams({
-            grant_type: 'refresh_token',
-            client_id: state.clientId,
-            refresh_token: state.tokens.refresh_token
-        });
-
-        const response = await fetch(VELORA_TOKEN_URL, {
+        const response = await fetch(`${getVeloraAuthBase()}/refresh`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             },
-            body: body.toString()
+            body: JSON.stringify({
+                refresh_token: state.tokens.refresh_token
+            })
         });
 
+        const text = await response.text();
         let data = {};
-        try { data = await response.json(); } catch (e) {}
+        try { data = text ? JSON.parse(text) : {}; } catch (e) {}
 
-        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+        if (!response.ok) throw new Error(data.message || data.error_description || data.error || text || `HTTP ${response.status}`);
 
-        state.tokens = {
-            ...state.tokens,
-            access_token: data.access_token,
-            refresh_token: data.refresh_token || state.tokens.refresh_token,
-            expires_at: data.expires_in ? (Date.now() + data.expires_in * 1000) : null
-        };
+        const tokens = normalizeTokenPayload(data);
+        if (!tokens) {
+            throw new Error('Velora refresh response did not include an access token.');
+        }
+        if (!tokens.refresh_token && state.tokens && state.tokens.refresh_token) {
+            tokens.refresh_token = state.tokens.refresh_token;
+        }
+        state.tokens = tokens;
         persistTokens();
         scheduleTokenRefresh();
 
-        // Re-auth the socket with the new token if connected
+        // Re-auth the active events transport with the new token
         if (state.socket && state.socket.connected) {
             state.socket.auth = { token: state.tokens.access_token };
+        }
+        if (state.sseRequest) {
+            connectSse('Refreshing Velora SSE connection with updated token.');
         }
     } catch (err) {
         console.error('[Velora] Token refresh failed:', err);
@@ -316,15 +711,31 @@ async function pollViewerCount() {
     try {
         const username = state.authUser.username || state.authUser.login;
         if (!username) return;
-        const response = await fetch(`${VELORA_API_BASE}/api/streams?username=${encodeURIComponent(username)}`, {
+        const response = await fetch(`${VELORA_API_BASE}/api/streams/user/${encodeURIComponent(username)}`, {
             headers: { 'Authorization': `Bearer ${state.tokens.access_token}` }
         });
+        if (response.status === 404) {
+            state.streamId = null;
+            updateViewerCount(null);
+            return;
+        }
         if (!response.ok) return;
         const data = await response.json();
-        const stream = Array.isArray(data.streams) ? data.streams[0] : (data.stream || null);
+        const stream = Array.isArray(data.streams)
+            ? data.streams[0]
+            : (data.stream || data.data || data || null);
         if (stream) {
-            state.streamId = stream.id;
-            updateViewerCount(stream.viewerCount ?? stream.viewer_count ?? null);
+            state.streamId = stream.id || stream.streamId || null;
+            updateViewerCount(
+                stream.viewerCount ??
+                stream.viewer_count ??
+                stream.viewers ??
+                stream.viewer_count_live ??
+                null
+            );
+        } else {
+            state.streamId = null;
+            updateViewerCount(null);
         }
     } catch (e) {}
 }
@@ -340,16 +751,225 @@ function stopViewerPoll() {
     state.viewerPollTimer = null;
 }
 
+function clearSocketFallbackTimer() {
+    clearTimeout(state.socketFallbackTimer);
+    state.socketFallbackTimer = null;
+}
+
+function clearSseReconnectTimer() {
+    clearTimeout(state.sseReconnectTimer);
+    state.sseReconnectTimer = null;
+}
+
+function resetEventConnectionState() {
+    state.eventsConnected = false;
+    state.eventTransport = '';
+    state.connectedChannel = '';
+}
+
+function disconnectSocketTransport() {
+    clearSocketFallbackTimer();
+    if (state.socket) {
+        try {
+            state.socket.disconnect();
+        } catch (e) {}
+        state.socket = null;
+    }
+}
+
+function disconnectSseTransport() {
+    clearSseReconnectTimer();
+    const xhr = state.sseRequest;
+    state.sseRequest = null;
+    state.sseReadOffset = 0;
+    state.sseBuffer = '';
+    if (xhr) {
+        try {
+            xhr.abort();
+        } catch (e) {}
+    }
+}
+
+function applyConnectedChannelInfo(data, transportLabel) {
+    const channelName = normalizeChannelName(
+        (data && (data.channelUsername || data.username)) ||
+        getAuthedChannelName() ||
+        state.requestedChannel
+    );
+    const labelName = channelName || '-';
+    const transportKey = String(transportLabel || '').toLowerCase();
+    const isFirstConnection = !state.eventsConnected;
+    const channelChanged = channelName && channelName !== state.connectedChannel;
+    const transportChanged = transportKey !== state.eventTransport;
+
+    state.eventsConnected = true;
+    state.eventTransport = transportKey;
+    if (channelName) {
+        state.connectedChannel = channelName;
+    }
+
+    clearSocketFallbackTimer();
+    clearSseReconnectTimer();
+    setSocketStatus('connected');
+
+    if (transportKey === 'sse') {
+        disconnectSocketTransport();
+    } else if (transportKey === 'websocket') {
+        disconnectSseTransport();
+    }
+
+    if (isFirstConnection || transportChanged) {
+        addEventLogEntry(`Connected to Velora Events API via ${transportLabel}.`, 'info');
+    }
+    if (isFirstConnection || transportChanged || channelChanged) {
+        addEventLogEntry(`Authenticated as channel: ${labelName}`, 'info');
+    }
+
+    if (els.channelLabel) {
+        els.channelLabel.querySelector('span').textContent = labelName;
+    }
+
+    if (state.requestedChannel && channelName && channelName !== state.requestedChannel) {
+        addEventLogEntry(`URL requested @${state.requestedChannel}, but Velora connected as @${channelName}.`, 'warn');
+    }
+
+    startViewerPoll();
+}
+
+function scheduleSseReconnect(reason) {
+    if (!state.tokens?.access_token || state.sseRequest) {
+        return;
+    }
+    clearSseReconnectTimer();
+    state.sseReconnectTimer = setTimeout(function () {
+        connectSse(reason);
+    }, SSE_RECONNECT_DELAY_MS);
+}
+
+function handleSsePayload(eventName, payload) {
+    if (!payload || typeof payload !== 'object') {
+        return;
+    }
+    if (eventName === 'connected' || payload.event === 'connected') {
+        applyConnectedChannelInfo(payload.data || payload, 'SSE');
+        return;
+    }
+    handleEvent(payload);
+}
+
+function processSseChunk(chunk) {
+    if (!chunk) return;
+    state.sseBuffer += chunk;
+    const blocks = state.sseBuffer.split(/\r?\n\r?\n/);
+    state.sseBuffer = blocks.pop() || '';
+
+    blocks.forEach(function (block) {
+        if (!block) return;
+        let eventName = '';
+        const dataLines = [];
+        block.split(/\r?\n/).forEach(function (line) {
+            if (!line || line.charAt(0) === ':') return;
+            if (line.indexOf('event:') === 0) {
+                eventName = line.slice(6).trim();
+                return;
+            }
+            if (line.indexOf('data:') === 0) {
+                dataLines.push(line.slice(5).replace(/^\s*/, ''));
+            }
+        });
+        if (!dataLines.length) return;
+        try {
+            handleSsePayload(eventName, JSON.parse(dataLines.join('\n')));
+        } catch (e) {
+            addEventLogEntry('Failed to parse Velora SSE payload.', 'warn');
+        }
+    });
+}
+
+function connectSse(reason) {
+    if (!state.tokens?.access_token) return;
+
+    disconnectSseTransport();
+    disconnectSocketTransport();
+    resetEventConnectionState();
+    setSocketStatus('connecting');
+
+    if (reason) {
+        addEventLogEntry(reason, 'warn');
+    }
+
+    const xhr = new XMLHttpRequest();
+    state.sseRequest = xhr;
+    state.sseReadOffset = 0;
+    state.sseBuffer = '';
+
+    xhr.open('GET', VELORA_EVENTS_SSE_URL, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${state.tokens.access_token}`);
+    xhr.setRequestHeader('Accept', 'text/event-stream');
+
+    xhr.onreadystatechange = function () {
+        if (xhr !== state.sseRequest) return;
+        if (xhr.readyState === 2 && xhr.status && xhr.status !== 200) {
+            setSocketStatus('error');
+            addEventLogEntry(`SSE connection failed: HTTP ${xhr.status}`, 'error');
+        }
+    };
+
+    xhr.onprogress = function () {
+        if (xhr !== state.sseRequest) return;
+        const text = xhr.responseText || '';
+        const chunk = text.slice(state.sseReadOffset);
+        state.sseReadOffset = text.length;
+        processSseChunk(chunk);
+    };
+
+    xhr.onerror = function () {
+        if (xhr !== state.sseRequest) return;
+        state.sseRequest = null;
+        state.sseReadOffset = 0;
+        state.sseBuffer = '';
+        if (!state.eventsConnected) {
+            setSocketStatus('error');
+        }
+        addEventLogEntry('Velora SSE connection error.', 'error');
+        scheduleSseReconnect('Retrying Velora SSE connection.');
+    };
+
+    xhr.onload = function () {
+        if (xhr !== state.sseRequest) return;
+        state.sseRequest = null;
+        state.sseReadOffset = 0;
+        state.sseBuffer = '';
+        if (state.tokens?.access_token) {
+            addEventLogEntry('Velora SSE stream closed. Reconnecting…', 'warn');
+            scheduleSseReconnect();
+        }
+    };
+
+    xhr.send();
+}
+
+function startSocketFallbackTimer() {
+    clearSocketFallbackTimer();
+    state.socketFallbackTimer = setTimeout(function () {
+        if (state.eventsConnected) {
+            return;
+        }
+        connectSse('WebSocket connected without Velora channel confirmation. Falling back to SSE.');
+    }, SOCKET_CONNECTED_EVENT_TIMEOUT_MS);
+}
+
 // ─── Socket.IO connection ─────────────────────────────────────────────────────
 
 function connectSocket() {
     if (!state.tokens?.access_token) return;
     if (typeof io !== 'function') {
-        addEventLogEntry('socket.io client not loaded.', 'error');
+        connectSse('socket.io client not loaded. Using SSE instead.');
         return;
     }
 
     disconnectSocket();
+    resetEventConnectionState();
 
     const socket = io(VELORA_WS_URL, {
         auth: { token: state.tokens.access_token },
@@ -364,41 +984,49 @@ function connectSocket() {
     setSocketStatus('connecting');
 
     socket.on('connect', () => {
-        setSocketStatus('connected');
-        addEventLogEntry('Connected to Velora Events API.', 'info');
-        startViewerPoll();
+        setSocketStatus('connecting');
+        addEventLogEntry('Velora WebSocket transport connected. Waiting for channel confirmation…', 'info');
+        startSocketFallbackTimer();
     });
 
     socket.on('connected', (data) => {
-        const channelName = data.channelUsername || data.username || '';
-        addEventLogEntry(`Authenticated as channel: ${channelName}`, 'info');
-        if (els.channelLabel) {
-            els.channelLabel.querySelector('span').textContent = channelName || '-';
-        }
+        applyConnectedChannelInfo(data, 'WebSocket');
     });
 
     socket.on('event', (payload) => {
+        if (!state.eventsConnected) {
+            applyConnectedChannelInfo(payload && payload.data ? payload.data : null, 'WebSocket');
+        }
         handleEvent(payload);
     });
 
     socket.on('disconnect', (reason) => {
-        setSocketStatus('disconnected');
-        addEventLogEntry(`Disconnected: ${reason}`, 'warn');
-        stopViewerPoll();
+        clearSocketFallbackTimer();
+        if (!state.sseRequest) {
+            setSocketStatus('disconnected');
+            addEventLogEntry(`Disconnected: ${reason}`, 'warn');
+            stopViewerPoll();
+            resetEventConnectionState();
+        }
     });
 
     socket.on('connect_error', (err) => {
         setSocketStatus('error');
         addEventLogEntry(`Connection error: ${err.message}`, 'error');
+        connectSse('WebSocket connection failed. Falling back to SSE.');
+    });
+
+    socket.on('error', (err) => {
+        const message = err && err.message ? err.message : String(err || 'Unknown socket error');
+        addEventLogEntry(`Socket error: ${message}`, 'error');
     });
 }
 
 function disconnectSocket() {
-    if (state.socket) {
-        state.socket.disconnect();
-        state.socket = null;
-    }
+    disconnectSocketTransport();
+    disconnectSseTransport();
     stopViewerPoll();
+    resetEventConnectionState();
     setSocketStatus('disconnected');
 }
 
@@ -477,14 +1105,15 @@ function handleChatMessage(data) {
 
     const name = displayName || username || '';
     const text = message || '';
+    const renderedMessage = renderVeloraMessageHtml(text);
 
     // Skip pure system messages with no text
     if (isSystem && !text && !card) return;
 
-    addChatFeedMessage(name, text, badges, isMod, isVip, isSubscriber, color);
+    addChatFeedMessage(name, renderedMessage.html, badges, isMod, isVip, isSubscriber, color);
 
     let contentImg = '';
-    let msgText = escapeHtml(text);
+    let msgText = renderedMessage.html;
 
     if (card) {
         if (card.imageUrl || card.thumbnailUrl) {
@@ -509,7 +1138,15 @@ function handleChatMessage(data) {
         membership: isSubscriber ? (subscriberMonths ? `${subscriberMonths} month subscriber` : 'Subscriber') : '',
         contentimg: contentImg,
         textonly: false,
-        type: 'velora'
+        type: 'velora',
+        meta: {
+            velora: {
+                rawMessage: text,
+                emotes: renderedMessage.emotes,
+                messageId: messageId || '',
+                userId: userId || ''
+            }
+        }
     });
 }
 
@@ -812,6 +1449,18 @@ function wireExtensionBridge() {
 
 function wirePostMessageBridge() {
     window.addEventListener('message', function (event) {
+        const expectedOrigin = getExpectedAuthMessageOrigin();
+        if (expectedOrigin && event.origin === expectedOrigin) {
+            Promise.resolve(handleAuthPayload(event.data)).then(function (handled) {
+                if (!handled) return;
+                if (state.authPopup && !state.authPopup.closed) {
+                    try {
+                        state.authPopup.close();
+                    } catch (e) {}
+                }
+                state.authPopup = null;
+            }).catch(function () {});
+        }
         let request = event && event.data;
         if (!request || typeof request !== 'object') {
             return;
@@ -830,12 +1479,20 @@ function wirePostMessageBridge() {
 function updateAuthUI() {
     const authed = Boolean(state.tokens?.access_token) && !isTokenExpired();
     const username = state.authUser?.displayName || state.authUser?.username || '';
+    const actualChannel = getAuthedChannelName();
+    const channelMismatch = Boolean(state.requestedChannel && actualChannel && state.requestedChannel !== actualChannel);
 
     if (els.authState) {
-        els.authState.textContent = authed
-            ? (username ? `Signed in as ${username}` : 'Signed in')
-            : 'Not signed in';
-        els.authState.className = `status-chip ${authed ? 'ok' : 'warning'}`;
+        if (authed) {
+            els.authState.textContent = channelMismatch
+                ? `Signed in as ${username || actualChannel} - URL expects @${state.requestedChannel}`
+                : (username ? `Signed in as ${username}` : 'Signed in');
+        } else {
+            els.authState.textContent = state.requestedChannel
+                ? `Sign in as @${state.requestedChannel}`
+                : 'Not signed in';
+        }
+        els.authState.className = `status-chip ${channelMismatch ? 'warning' : (authed ? 'ok' : 'warning')}`;
     }
     if (els.startAuth) {
         els.startAuth.style.display = authed ? 'none' : '';
@@ -844,7 +1501,11 @@ function updateAuthUI() {
         els.signOut.style.display = authed ? '' : 'none';
     }
     if (els.setupNotice) {
-        els.setupNotice.style.display = (authed || state.clientId) ? 'none' : '';
+        els.setupNotice.style.display = authed ? 'none' : '';
+    }
+    if (els.channelLabel) {
+        const channel = actualChannel || state.requestedChannel || '';
+        els.channelLabel.querySelector('span').textContent = channel || '-';
     }
 }
 
@@ -901,7 +1562,7 @@ function setChatStatus(msg, isError) {
 
 // ─── Feed UI ──────────────────────────────────────────────────────────────────
 
-function addChatFeedMessage(name, text, badges, isMod, isVip, isSubscriber, color) {
+function addChatFeedMessage(name, messageHtml, badges, isMod, isVip, isSubscriber, color) {
     if (!els.chatFeed) return;
 
     const empty = q('chat-feed-empty');
@@ -922,7 +1583,8 @@ function addChatFeedMessage(name, text, badges, isMod, isVip, isSubscriber, colo
     entry.appendChild(space);
 
     const textSpan = document.createElement('span');
-    textSpan.textContent = text;
+    textSpan.className = 'chat-msg-text';
+    textSpan.innerHTML = messageHtml || '';
     entry.appendChild(textSpan);
 
     els.chatFeed.appendChild(entry);
@@ -991,8 +1653,6 @@ function addEventLogEntry(label, level, data) {
 
 function initElements() {
     Object.assign(els, {
-        clientIdInput: q('client-id-input'),
-        saveClientId: q('save-client-id'),
         setupNotice: q('setup-notice'),
         redirectUriHint: q('redirect-uri-hint'),
         startAuth: q('start-auth'),
@@ -1012,22 +1672,6 @@ function initElements() {
 }
 
 function bindEvents() {
-    if (els.saveClientId) {
-        els.saveClientId.addEventListener('click', () => {
-            const val = (els.clientIdInput?.value || '').trim();
-            if (!val) return;
-            state.clientId = val;
-            persistConfig();
-            if (els.setupNotice) els.setupNotice.style.display = 'none';
-        });
-    }
-
-    if (els.clientIdInput) {
-        els.clientIdInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') els.saveClientId?.click();
-        });
-    }
-
     if (els.startAuth) {
         els.startAuth.addEventListener('click', startAuthFlow);
     }
@@ -1057,20 +1701,20 @@ function bindEvents() {
     }
 }
 
+try {
+    window.__SSAPP_START_VELORA_AUTH__ = startExternalAuthFlow;
+} catch (e) {}
+
 async function init() {
     initElements();
 
-    // Show the redirect URI hint so the user can copy it into their Velora app settings
-    if (els.redirectUriHint) {
-        els.redirectUriHint.textContent = window.location.origin + window.location.pathname;
-    }
-
+    state.requestedChannel = getRequestedChannel();
     loadConfig();
+    applyRuntimeOverrides();
     loadTokens();
 
-    // Pre-fill client ID input if we have one saved
-    if (els.clientIdInput && state.clientId) {
-        els.clientIdInput.value = state.clientId;
+    if (els.redirectUriHint) {
+        els.redirectUriHint.textContent = getRedirectUri();
     }
 
     bindEvents();

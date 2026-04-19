@@ -23,18 +23,10 @@
                 </div>
             </div>
 
-            <div class="setup-row">
-                <span class="setup-label">Client ID:</span>
-                <input type="text" id="client-id-input" placeholder="Your Velora app Client ID" spellcheck="false" autocomplete="off" />
-                <button id="save-client-id" class="button-secondary">Save</button>
-            </div>
-
             <div id="setup-notice" class="notice-box">
-                <strong>Setup required:</strong> Register a free app at
-                <a href="https://developer.velora.tv" target="_blank" rel="noopener">developer.velora.tv</a>
-                to get a Client ID. Set your redirect URI to this page's URL
-                (<code id="redirect-uri-hint"></code>), then enter the Client ID above and sign in.
-                Request scopes: <code>user:read chat:read chat:write</code>.
+                <strong>Sign in as the channel you want to capture.</strong>
+                This page uses the shared Social Stream Ninja Velora app automatically. Redirect URI:
+                <code id="redirect-uri-hint"></code>.
             </div>
 
             <div class="auth-row">
@@ -90,5 +82,7 @@
             </aside>
         </div>
     </div>
+    <script src="../../shared/vendor/socket.io.min.js"></script>
+    <script src="velora.js"></script>
 </body>
 </html>

@@ -131,6 +131,8 @@ const PUSHER_KEY = '32cbd69e4b950bf97679';
 const PUSHER_WS_BASE = 'wss://ws-us2.pusher.com';
 const PUSHER_RECONNECT_DELAY_MS = 5000;
 const PUSHER_PING_INTERVAL_MS = 45000;
+const PUSHER_WATCHDOG_CHECK_MS = 30000;
+const PUSHER_STALE_MIN_MS = 180000;
 
 const SUBSCRIPTION_RETRY_DELAY_MS = 10000;
 const CHAT_FEED_LIMIT = 100;
@@ -197,7 +199,10 @@ const state = {
         pusherWs: null,
         pusherStatus: 'disconnected',
         pusherPingTimer: null,
-        pusherReconnectTimer: null
+        pusherReconnectTimer: null,
+        pusherWatchdogTimer: null,
+        pusherLastActivityAt: 0,
+        pusherActivityTimeoutMs: 0
     },
     chat: {
         sending: false,
@@ -498,7 +503,10 @@ function processLiteMessage(event) {
             break;
         }
         case 'kick-lite-connect': {
-            maybeAutoStart(true);
+            connectSelectedKickChannel({ forceAutoStart: true }).catch((err) => {
+                console.error('Kick lite connect failed', err);
+                log(`Unable to connect Kick channel: ${err?.message || err}`, 'error');
+            });
             notifyLiteStatus('connect');
             break;
         }
@@ -1872,6 +1880,8 @@ function initElements() {
         authState: q('auth-state'),
         startAuth: q('start-auth'),
         signOut: q('sign-out'),
+        channelInput: q('channel-input'),
+        connectChannel: q('connect-channel'),
         channelLabel: q('channel-label'),
         viewerCount: q('viewer-count'),
         eventLog: q('event-log'),
@@ -1988,12 +1998,14 @@ function setChannelSlug(value, options = {}) {
         state.channelId = null;
         state.socket.chatroomId = null;
         state.socket.channelId = null;
+        state.socket.userId = null;
         state.lastResolvedSlug = '';
         state.autoStart.lastSlug = '';
         resetKickViewerHeartbeatState();
         resetThirdPartyEmoteCache();
         resetChatFeed();
         resetAlertsFeed();
+        disconnectPusherSocket();
     } else {
         state.channelSlug = slug; // Preserve original casing.
     }
@@ -2333,6 +2345,14 @@ function loadEventTypesCache() {
 }
 
 function updateInputsFromState() {
+    if (els.channelInput) {
+        const nextValue = state.channelSlug || '';
+        const currentValue = els.channelInput.value || '';
+        const isFocused = document.activeElement === els.channelInput;
+        if (!isFocused || !currentValue || normalizeChannel(currentValue) === normalizeChannel(state.channelSlug)) {
+            els.channelInput.value = nextValue;
+        }
+    }
     if (els.channelLabel) {
         if (state.channelSlug) {
             const name = state.channelName || state.channelSlug;
@@ -2365,6 +2385,26 @@ function updateInputsFromState() {
         els.chatStatus.textContent = '';
     }
     updateKickAdminControlHint();
+}
+
+async function connectSelectedKickChannel(options = {}) {
+    const { forceAutoStart = false } = options;
+    const authIdentity = getAuthenticatedKickChannelIdentity();
+    if (!state.channelSlug && authIdentity.slug) {
+        setChannelSlug(authIdentity.slug, { source: 'profile' });
+    }
+    if (!state.channelSlug) {
+        log('Enter a Kick channel or sign in first.', 'warning');
+        return false;
+    }
+    if (!state.socket.chatroomId) {
+        await resolveChannelForPusher();
+    }
+    connectPusherSocket();
+    if (state.tokens?.access_token && !isTokenExpired()) {
+        await maybeAutoStart(forceAutoStart);
+    }
+    return Boolean(state.socket.chatroomId || state.channelId || state.bridge.status === 'connected');
 }
 
 function resolveAuthIdentity() {
@@ -2486,6 +2526,36 @@ function bindEvents() {
     }
     if (els.signOut) {
         els.signOut.addEventListener('click', signOut);
+    }
+    const handleChannelConnect = () => {
+        const inputSlug = els.channelInput ? els.channelInput.value.trim() : '';
+        const authIdentity = getAuthenticatedKickChannelIdentity();
+        const targetSlug = inputSlug || state.channelSlug || authIdentity.slug || '';
+        if (!targetSlug) {
+            log('Enter a Kick channel or sign in first.', 'warning');
+            return;
+        }
+        const forceSet =
+            state.channelSlugSource === 'query' &&
+            normalizeChannel(targetSlug) !== normalizeChannel(state.channelSlug);
+        setChannelSlug(targetSlug, {
+            source: inputSlug ? 'manual' : 'profile',
+            force: forceSet
+        });
+        connectSelectedKickChannel({ forceAutoStart: true }).catch((err) => {
+            console.error('Failed to connect Kick channel', err);
+            log(`Unable to connect Kick channel: ${err?.message || err}`, 'error');
+        });
+    };
+    if (els.connectChannel) {
+        els.connectChannel.addEventListener('click', handleChannelConnect);
+    }
+    if (els.channelInput) {
+        els.channelInput.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            handleChannelConnect();
+        });
     }
     if (els.syncDeleteMessages) {
         els.syncDeleteMessages.addEventListener('change', () => {
@@ -3200,6 +3270,10 @@ function disconnectPusherSocket() {
         clearInterval(state.socket.pusherPingTimer);
         state.socket.pusherPingTimer = null;
     }
+    if (state.socket.pusherWatchdogTimer) {
+        clearInterval(state.socket.pusherWatchdogTimer);
+        state.socket.pusherWatchdogTimer = null;
+    }
     if (state.socket.pusherReconnectTimer) {
         clearTimeout(state.socket.pusherReconnectTimer);
         state.socket.pusherReconnectTimer = null;
@@ -3209,6 +3283,8 @@ function disconnectPusherSocket() {
         state.socket.pusherWs = null;
     }
     state.socket.pusherStatus = 'disconnected';
+    state.socket.pusherLastActivityAt = 0;
+    state.socket.pusherActivityTimeoutMs = 0;
 }
 
 function schedulePusherReconnect() {
@@ -3217,6 +3293,32 @@ function schedulePusherReconnect() {
         state.socket.pusherReconnectTimer = null;
         connectPusherSocket();
     }, PUSHER_RECONNECT_DELAY_MS);
+}
+
+function notePusherActivity() {
+    state.socket.pusherLastActivityAt = Date.now();
+}
+
+function startPusherWatchdog(activityTimeoutSeconds) {
+    const timeoutMs = Math.max(30000, Number(activityTimeoutSeconds || 60) * 1000);
+    const checkIntervalMs = Math.min(PUSHER_WATCHDOG_CHECK_MS, timeoutMs);
+    state.socket.pusherActivityTimeoutMs = timeoutMs;
+    notePusherActivity();
+    if (state.socket.pusherWatchdogTimer) {
+        clearInterval(state.socket.pusherWatchdogTimer);
+    }
+    state.socket.pusherWatchdogTimer = setInterval(() => {
+        if (state.socket.pusherStatus !== 'connected' || !state.socket.pusherWs) return;
+        const lastActivityAt = Number(state.socket.pusherLastActivityAt || 0);
+        const staleAfterMs = Math.max(PUSHER_STALE_MIN_MS, state.socket.pusherActivityTimeoutMs * 3);
+        if (!lastActivityAt || (Date.now() - lastActivityAt) <= staleAfterMs) return;
+        log('Pusher chat socket went stale. Reconnecting chat.', 'warning');
+        disconnectPusherSocket();
+        state.socket.status = 'disconnected';
+        updateSocketState({ status: 'disconnected' });
+        schedulePusherReconnect();
+        syncBridgeChatMode();
+    }, checkIntervalMs);
 }
 
 function mapPusherEventToPacket(eventName, data) {
@@ -3251,6 +3353,7 @@ function handlePusherMessage(event) {
     }
     const eventName = payload?.event;
     if (!eventName) return;
+    notePusherActivity();
 
     if (eventName === 'pusher:connection_established') {
         let connectionData = {};
@@ -3274,6 +3377,7 @@ function handlePusherMessage(event) {
         state.socket.pusherPingTimer = setInterval(() => {
             sendPusherFrame('pusher:ping', {});
         }, Math.min(timeout * 1000 * 0.75, PUSHER_PING_INTERVAL_MS));
+        startPusherWatchdog(timeout);
         // Pusher is now handling chat — reconnect bridge with noChat if needed
         syncBridgeChatMode();
         return;
@@ -4015,6 +4119,9 @@ function getAuthenticatedKickChannelIdentity() {
     const slug = normalizeChannel(
         pickFirstString(
             [
+                extractKickChannelSlug(state.authUser),
+                extractKickChannelSlug(state.tokens),
+                extractKickChannelSlug(state.tokens?.profile),
                 state.authUser?.slug,
                 state.authUser?.channel?.slug,
                 state.authUser?.user?.slug,
@@ -4027,6 +4134,8 @@ function getAuthenticatedKickChannelIdentity() {
                 state.tokens?.profile?.username,
                 state.tokens?.profile?.name,
                 state.tokens?.username,
+                state.tokens?.channel_slug,
+                state.tokens?.slug_name,
                 state.tokens?.name,
                 state.tokens?.user_login,
                 state.tokens?.userLogin,
@@ -4094,6 +4203,68 @@ async function fetchAuthenticatedKickChannelInfo() {
     const data = await apiFetch('/public/v1/channels');
     const channels = unwrapKickChannelPayload(data);
     return channels[0] || null;
+}
+
+function applyAuthenticatedChannelInfo(channel) {
+    if (!channel || typeof channel !== 'object') {
+        return null;
+    }
+    const hadSlug = Boolean(state.channelSlug);
+    const slug = extractKickChannelSlug(channel);
+    const channelId = normalizeKickNumericId(
+        channel?.broadcaster_user_id ??
+        channel?.user_id ??
+        channel?.channel?.broadcaster_user_id ??
+        channel?.channel?.user_id ??
+        channel?.broadcaster?.user_id ??
+        channel?.broadcaster?.id ??
+        channel?.user?.id ??
+        channel?.user?.user_id
+    );
+    if (!hadSlug && slug) {
+        setChannelSlug(slug, { source: 'profile' });
+    }
+    if (!hadSlug && state.channelId == null && channelId != null) {
+        state.channelId = channelId;
+    }
+    if (!hadSlug && !state.channelName) {
+        state.channelName = pickFirstString(
+            [
+                channel?.username,
+                channel?.slug,
+                channel?.channel_description,
+                channel?.name,
+                channel?.user?.username
+            ],
+            ''
+        );
+    }
+    rememberKickStreamInfo(channel, {
+        slug: slug || state.channelSlug,
+        source: 'public-v1-auth-channel'
+    });
+    updateInputsFromState();
+    updateAuthStatus();
+    return channel;
+}
+
+async function ensureAuthenticatedChannelInfo() {
+    if (getAuthenticatedKickChannelIdentity().slug) {
+        return state.authUser || null;
+    }
+    try {
+        const channel = await fetchAuthenticatedKickChannelInfo();
+        if (channel) {
+            return applyAuthenticatedChannelInfo(channel);
+        }
+    } catch (err) {
+        const message = err?.message || '';
+        if (message && !/404/.test(message)) {
+            console.error('Failed to load authenticated Kick channel info', err);
+            log(`Unable to load Kick channel info (/public/v1/channels): ${message}`, 'warning');
+        }
+    }
+    return null;
 }
 
 async function fetchCurrentKickChannelInfo() {
@@ -4370,11 +4541,19 @@ function extractKickChannelSlug(payload) {
     }
     const candidates = [
         payload?.slug,
+        payload?.channel_slug,
+        payload?.slug_name,
+        payload?.slugname,
+        payload?.broadcaster_slug,
         payload?.username,
         payload?.user?.slug,
         payload?.user?.username,
+        payload?.broadcaster?.slug,
+        payload?.broadcaster?.username,
         payload?.channel?.slug,
-        payload?.channel?.username
+        payload?.channel?.username,
+        payload?.channel?.slug_name,
+        payload?.channel?.channel_slug
     ];
     for (const candidate of candidates) {
         const normalized = normalizeChannel(candidate);
@@ -4640,10 +4819,7 @@ function applyAuthenticatedProfile(profile, idsHint = null) {
     }
     const slug = pickFirstString(
         [
-            profile.slug,
-            profile.channel?.slug,
-            profile.user?.slug,
-            profile.username,
+            extractKickChannelSlug(profile),
             idsHint?.username
         ],
         ''
@@ -4651,6 +4827,8 @@ function applyAuthenticatedProfile(profile, idsHint = null) {
     if (slug && !state.channelSlug) {
 		setChannelSlug(slug, { source: 'profile' });
 	}
+    updateInputsFromState();
+    updateAuthStatus();
     return profile;
 }
 
@@ -4665,7 +4843,9 @@ async function loadAuthenticatedProfile() {
     const cached = cacheIds ? getCachedProfile(cacheIds) : undefined;
     if (cached !== undefined) {
         if (cached.hasProfile && cached.profile) {
-            return applyAuthenticatedProfile(cached.profile, cacheIds);
+            const profile = applyAuthenticatedProfile(cached.profile, cacheIds);
+            await ensureAuthenticatedChannelInfo();
+            return profile;
         }
         return null;
     }
@@ -4673,6 +4853,7 @@ async function loadAuthenticatedProfile() {
         return state.profilePromise;
     }
     state.profilePromise = (async () => {
+        let resolvedProfile = null;
         const endpoints = [
             {
                 path: '/public/v1/users',
@@ -4685,7 +4866,8 @@ async function loadAuthenticatedProfile() {
                 const data = await apiFetch(endpoint.path);
                 const profile = unwrapKickProfile(data);
                 if (profile && typeof profile === 'object') {
-                    return applyAuthenticatedProfile(profile, cacheIds);
+                    resolvedProfile = applyAuthenticatedProfile(profile, cacheIds);
+                    break;
                 }
             } catch (err) {
                 const message = err?.message || '';
@@ -4702,9 +4884,18 @@ async function loadAuthenticatedProfile() {
                 }
             }
         }
-        const fallback = extractProfileFromTokens();
-        if (fallback) {
-            return applyAuthenticatedProfile(fallback, cacheIds);
+        if (!resolvedProfile) {
+            const fallback = extractProfileFromTokens();
+            if (fallback) {
+                resolvedProfile = applyAuthenticatedProfile(fallback, cacheIds);
+            }
+        }
+        await ensureAuthenticatedChannelInfo();
+        if (resolvedProfile) {
+            return resolvedProfile;
+        }
+        if (state.channelSlug || state.channelId != null) {
+            return state.authUser || null;
         }
         if (cacheIds) {
             rememberProfileMiss(cacheIds);
