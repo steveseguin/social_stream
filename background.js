@@ -1593,19 +1593,7 @@ const VIDEO_STATS_DEFAULTS = {
 	intervalSeconds: 5
 };
 
-const VIDEO_STATS_SETTING_KEYS = new Set([
-	"videostatspoller",
-	"videostatssource",
-	"videostatsurl",
-	"videostatspublisher",
-	"videostatsapplication",
-	"videostatskey",
-	"videostatsapikey",
-	"videostatsusername",
-	"videostatspassword",
-	"videostatsinterval",
-	"videostatslabel"
-]);
+const VIDEO_STATS_SETTING_KEYS = new Set(["videostatspoller", "videostatssource", "videostatsurl", "videostatspublisher", "videostatsapplication", "videostatskey", "videostatsapikey", "videostatsusername", "videostatspassword", "videostatsinterval", "videostatslabel"]);
 
 function isVideoStatsSettingKey(settingKey) {
 	return VIDEO_STATS_SETTING_KEYS.has(settingKey);
@@ -1914,7 +1902,7 @@ async function fetchNginxVideoStats(config) {
 				{ key: "codec", path: ["video", "codec"] },
 				{ key: "profile", path: ["video", "profile"] },
 				{ key: "level", path: ["video", "level"], number: true }
-		])
+			])
 		: null;
 	const audio = metaNode
 		? getOptionalVideoStatsObject(metaNode, [
@@ -1922,7 +1910,7 @@ async function fetchNginxVideoStats(config) {
 				{ key: "profile", path: ["audio", "profile"] },
 				{ key: "channels", path: ["audio", "channels"], number: true },
 				{ key: "sampleRate", path: ["audio", "sample_rate"], number: true }
-		])
+			])
 		: null;
 
 	return createVideoStatsPayload(config, "nginx-rtmp", {
