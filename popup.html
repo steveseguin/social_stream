@@ -2056,6 +2056,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="show-viewer-count">🔢 Show viewer count per source; top-right</span>
                                 </div>
+								<div data-keywords="bitrate video stats metadata srt stream bandwidth">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="showbitrate" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Show bitrate metadata if available; top-right</span>
+                                </div>
 								<div title="Set the top-right viewer count bar background color. Supports hex, rgba, and named colors." data-keywords="viewer bar topbar background color theme dock style">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="viewerbarbg" />
@@ -6389,6 +6396,81 @@ input:checked + .slider:before {
 								</div>
 								<hr>
 
+								<!-- Video Stats Polling -->
+								<div title="Poll a video server stats endpoint and send bitrate/health data as meta events.">
+									<label class="switch">
+										<input type="checkbox" data-setting="videostatspoller" />
+										<span class="slider round"></span>
+									</label>
+									📡 Enable video stats polling
+								</div>
+								<div>
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<select id="videostatssource" class="textInput" autocomplete="off" data-optionsetting="videostatssource">
+											<option value="srt-live-server">SRT Live Server / SLS</option>
+											<option value="belabox-cloud">Belabox Cloud</option>
+											<option value="nginx-rtmp">NGINX RTMP</option>
+											<option value="node-media-server">Node Media Server</option>
+										</select>
+										<label for="videostatssource">&gt; Stats source type</label>
+									</div>
+								</div>
+								<div>
+									<div class="textInputContainer" style="display: inline-block; width: 360px;">
+										<input type="text" id="videostatsurl" class="textInput" autocomplete="off" value="http://127.0.0.1:8181/stats" placeholder="http://192.168.0.50:8181/stats" data-textsetting="videostatsurl" />
+										<label for="videostatsurl">&gt; Stats URL</label>
+									</div>
+								</div>
+								<div class="video-stats-publisher-field">
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="text" id="videostatspublisher" class="textInput" autocomplete="off" value="publish/live/feed1" placeholder="publish/live/feed1" data-textsetting="videostatspublisher" />
+										<label for="videostatspublisher">&gt; Publisher / stream id</label>
+									</div>
+								</div>
+								<div class="video-stats-app-field hidden">
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="text" id="videostatsapplication" class="textInput" autocomplete="off" value="live" placeholder="live" data-textsetting="videostatsapplication" />
+										<label for="videostatsapplication">&gt; Application</label>
+									</div>
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="text" id="videostatskey" class="textInput" autocomplete="off" value="feed1" placeholder="feed1" data-textsetting="videostatskey" />
+										<label for="videostatskey">&gt; Stream key/name</label>
+									</div>
+								</div>
+								<div class="video-stats-api-key-field">
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="password" id="videostatsapikey" class="textInput" autocomplete="off" placeholder="Optional API key" data-textsetting="videostatsapikey" />
+										<label for="videostatsapikey">&gt; API key / Authorization header</label>
+									</div>
+								</div>
+								<div class="video-stats-basic-auth-field hidden">
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="text" id="videostatsusername" class="textInput" autocomplete="off" placeholder="Optional username" data-textsetting="videostatsusername" />
+										<label for="videostatsusername">&gt; Username</label>
+									</div>
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="password" id="videostatspassword" class="textInput" autocomplete="off" placeholder="Optional password" data-textsetting="videostatspassword" />
+										<label for="videostatspassword">&gt; Password</label>
+									</div>
+								</div>
+								<div>
+									<div class="textInputContainer" style="display: inline-block; width: 160px;">
+										<input type="number" id="videostatsinterval" class="textInput" min="1" max="60" value="5" autocomplete="off" data-numbersetting="videostatsinterval" />
+										<label for="videostatsinterval">&gt; Poll interval (sec)</label>
+									</div>
+									<div class="textInputContainer" style="display: inline-block; width: 160px;">
+										<input type="text" id="videostatslabel" class="textInput" autocomplete="off" value="SRT" placeholder="SRT" data-textsetting="videostatslabel" />
+										<label for="videostatslabel">&gt; Meta label</label>
+									</div>
+								</div>
+								<p>
+									<span>
+										Sends <code>event: "video_stats"</code> as generic meta data. The stats URL/key is not sent to overlays.
+										<br />
+									</span>
+								</p>
+								<hr>
+
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-setting="streamerbot" />
@@ -8791,6 +8873,27 @@ input:checked + .slider:before {
 							</div>
 							</div>
 							
+						</div>
+					</div>
+                </div>
+            </div>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-ai-prompt-options" />
+					<label class="collapsible-label" for="wrapper-chatbot-ai-prompt-options">
+						<span>AI Prompt Page Builder</span>
+					</label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<h2 style="margin:0;">AI prompt page builder</h2>
+								<div class="link" style="margin:0;" title="Create, iterate, preview, and export AI-built HTML pages.">
+									<div id="aiprompt" data-raw="" class="single_message">
+										<a target="_blank" id="aipromptlink" href="https://beta.socialstream.ninja/aiprompt.html">https://beta.socialstream.ninja/aiprompt.html</a>
+									</div>
+								</div>
+								<i>Requires the configured LLM provider above and the private chat bot option enabled.</i>
+							</div>
 						</div>
 					</div>
                 </div>

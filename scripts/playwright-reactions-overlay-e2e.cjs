@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const path = require('path');
 const { startStaticServer } = require('./playwright-static-server.cjs');
 
 const ROOT = process.cwd();
@@ -211,6 +212,68 @@ async function addSocketSpyInitScript(page) {
   });
 }
 
+async function addTikTokSourceInitScript(page) {
+  await page.addInitScript(() => {
+    const messages = [];
+    const runtimeListeners = [];
+
+    function clone(value) {
+      return value ? JSON.parse(JSON.stringify(value)) : value;
+    }
+
+    function asyncCallback(callback, value) {
+      if (typeof callback === 'function') {
+        setTimeout(() => callback(value), 0);
+      }
+    }
+
+    const runtime = {
+      id: 'playwright-test',
+      lastError: null,
+      getURL(srcPath) {
+        return String(srcPath || '');
+      },
+      sendMessage() {
+        const args = Array.prototype.slice.call(arguments);
+        const callback = args.find((arg) => typeof arg === 'function');
+        const message = args.find((arg) => arg && typeof arg === 'object' && typeof arg !== 'function');
+
+        if (message && message.getSettings) {
+          asyncCallback(callback, {
+            state: true,
+            settings: {
+              capturelikeevent: true,
+              capturejoinedevent: true
+            }
+          });
+          return;
+        }
+
+        if (message && message.message) {
+          messages.push(clone(message));
+        }
+
+        asyncCallback(callback, {});
+      },
+      onMessage: {
+        addListener(listener) {
+          runtimeListeners.push(listener);
+        },
+        removeListener(listener) {
+          const index = runtimeListeners.indexOf(listener);
+          if (index !== -1) {
+            runtimeListeners.splice(index, 1);
+          }
+        }
+      }
+    };
+
+    window.chrome = { runtime };
+    window.__chromeMessages = messages;
+    window.__runtimeListeners = runtimeListeners;
+  });
+}
+
 async function setControlValue(page, selector, value, events) {
   await page.locator(selector).evaluate((element, details) => {
     element.value = details.value;
@@ -245,6 +308,51 @@ async function getOverlaySnapshot(page, payload, waitMs) {
 async function loadOverlay(page, url) {
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !!(window.__reactionsOverlay && window.__reactionsOverlay.getConfig));
+}
+
+async function runTikTokSourceLikeCaptureCheck(context) {
+  const page = await context.newPage();
+
+  await addTikTokSourceInitScript(page);
+  await page.route('https://www.tiktok.com/@playwright/live', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/html; charset=utf-8',
+      body: '<!DOCTYPE html><html><head><title>TikTok fixture</title></head><body><div data-e2e="chat-room"></div></body></html>'
+    });
+  });
+
+  await page.goto('https://www.tiktok.com/@playwright/live', { waitUntil: 'domcontentloaded' });
+  await page.addScriptTag({ path: path.join(ROOT, 'sources', 'tiktok.js') });
+  await page.waitForTimeout(4500);
+  await page.evaluate(() => {
+    const chatRoom = document.querySelector('[data-e2e="chat-room"]');
+    const card = document.createElement('div');
+    const message = document.createElement('span');
+
+    card.dataset.e2e = 'social-message';
+    card.dataset.index = '808';
+    message.textContent = 'liked the LIVE';
+    card.appendChild(message);
+    chatRoom.appendChild(card);
+  });
+
+  await page.waitForFunction(() => {
+    return window.__chromeMessages.some((entry) => entry.message && entry.message.event === 'liked');
+  }, null, { timeout: 5000 });
+
+  const likedMessages = await page.evaluate(() => {
+    return window.__chromeMessages
+      .filter((entry) => entry.message && entry.message.event === 'liked')
+      .map((entry) => entry.message);
+  });
+
+  assert(likedMessages.length === 1, 'TikTok source did not emit the anonymous liked event.');
+  assert(likedMessages[0].type === 'tiktok', 'TikTok liked event has the wrong source type.');
+  assert(likedMessages[0].chatname === '', 'Anonymous TikTok liked events should keep chatname empty.');
+  assert(likedMessages[0].chatmessage === 'liked the LIVE', 'TikTok liked event message text changed unexpectedly.');
+
+  await page.close();
 }
 
 (async () => {
@@ -329,6 +437,44 @@ async function loadOverlay(page, url) {
     assert(overlayConfig.limit === 90, 'Reactions page did not parse limit=90.');
     assert(overlayConfig.pageBackground === '#123456', 'Reactions page did not parse pagebg=#123456.');
     assert(overlayConfig.triple === true, 'Reactions page did not parse the triple flag.');
+
+    const bridgeSnapshot = await overlayPage.evaluate(async () => {
+      const overlay = window.__reactionsOverlay;
+      const iframe = document.querySelector('iframe[src*="vdo.socialstream.ninja"]');
+
+      overlay.clearStage();
+      if (!iframe || !iframe.contentWindow) {
+        return {
+          hasIframe: false,
+          count: 0,
+          history: []
+        };
+      }
+
+      window.dispatchEvent(new MessageEvent('message', {
+        source: iframe.contentWindow,
+        data: {
+          dataReceived: {
+            overlayNinja: {
+              event: 'liked',
+              type: 'tiktok',
+              chatmessage: 'liked the LIVE'
+            }
+          }
+        }
+      }));
+
+      await new Promise((resolve) => setTimeout(resolve, 2400));
+      return {
+        hasIframe: true,
+        count: overlay.getStageCount(),
+        history: overlay.getHistory()
+      };
+    });
+
+    assert(bridgeSnapshot.hasIframe, 'Reactions page did not create the VDO bridge iframe.');
+    assert(bridgeSnapshot.count > 0, 'Reactions page did not render an anonymous TikTok like from the VDO bridge.');
+    assert(bridgeSnapshot.history.every((item) => item.event === 'liked'), 'VDO bridge like burst created non-like reactions.');
 
     const fountainSnapshot = await getOverlaySnapshot(overlayPage, {
       event: 'reaction',
@@ -476,6 +622,8 @@ async function loadOverlay(page, url) {
       assert(joinPayload.out === check.expectedOut, `Socket out channel mismatch for ${check.url}.`);
       assert(joinPayload.in === check.expectedIn, `Socket in channel mismatch for ${check.url}.`);
     }
+
+    await runTikTokSourceLikeCaptureCheck(context);
 
     await browser.close();
 

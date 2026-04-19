@@ -38,7 +38,11 @@ class LLMServiceError extends Error {
 function getLLMHint(status, code, details = {}) {
     const provider = details.provider || '';
     const model = details.model || '';
+    const message = String(details.message || '').toLowerCase();
 
+    if ((provider === 'custom' || provider === 'ollama') && (message.includes('failed to fetch') || message.includes('networkerror') || message.includes('network error'))) {
+        return 'Check the endpoint URL, confirm the AI server is running, and verify Chrome or your firewall is not blocking the request.';
+    }
     if (provider === 'ollama' && /\.gguf$/i.test(model)) {
         return 'This looks like a GGUF filename. If you are using llama.cpp or another OpenAI-compatible server, choose Custom API instead of Ollama.';
     }
@@ -92,7 +96,7 @@ function reportLLMError(error) {
 
 function createLLMError(baseDetails, extra = {}) {
     const merged = { ...baseDetails, ...extra };
-    if (!merged.hint && (merged.status || merged.code)) {
+    if (!merged.hint) {
         merged.hint = getLLMHint(merged.status, merged.code, merged) || merged.hint;
     }
     const err = new LLMServiceError(merged);
@@ -1027,11 +1031,30 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		}
     // Replace the else block in callLLMAPI with:
 	} else { // non-Ollama Request, but rather ChatGPT compatible APIs
+		const normalizedImages = (Array.isArray(images) ? images : (images ? [images] : []))
+			.map(img => {
+				if (!img) return null;
+				if (typeof img === 'string') return img.trim();
+				if (typeof img === 'object') {
+					if (typeof img.image_url === 'string') return img.image_url.trim();
+					if (img.image_url && typeof img.image_url.url === 'string') return img.image_url.url.trim();
+					if (typeof img.url === 'string') return img.url.trim();
+				}
+				return null;
+			})
+			.filter(Boolean);
+
+		const userContent = normalizedImages.length
+			? [{ type: "text", text: prompt }].concat(
+				normalizedImages.map(url => ({ type: "image_url", image_url: { url } }))
+			)
+			: prompt;
+
 		const message = {
 			model: model,
 			messages: [{
 				role: "user",
-				content: prompt
+				content: userContent
 			}],
 			stream: callback !== null
 		};

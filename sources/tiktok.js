@@ -1358,9 +1358,6 @@
 				return;
 			}
 			ital = "liked";
-			if (!chatname) {
-				return;
-			}
 		}
 		if (settings.customtiktokstate) {
 			var channel = window.location.pathname.split("/@");
@@ -1621,9 +1618,6 @@
 				return;
 			}
 			ital = "liked";
-			if (!chatname) {
-				return;
-			}
 		}
 		let chatimg = "";
 		let cachedBadges = "";

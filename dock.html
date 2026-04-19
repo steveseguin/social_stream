@@ -350,6 +350,11 @@
 				white-space: nowrap;
 			}
 
+			.bitrateMeta {
+				padding-left: 8px;
+				border-radius: 5px;
+			}
+
 			@media (max-width: 600px) {
 			  .modal .modal-content {
 				padding: 20px;
@@ -3585,6 +3590,10 @@
 			if (urlParams.has("showviewercount")) {
 				showviewercount = true;
 			}
+			var showbitrate = false;
+			if (urlParams.has("showbitrate") || urlParams.has("showbitratemeta") || urlParams.has("showvideobitrate")) {
+				showbitrate = true;
+			}
 
 			if (urlParams.has("session")) {
 				roomID = urlParams.get("session");
@@ -6064,9 +6073,65 @@
 			var followers = {};
 			
 			var topBarElement = getById("topbar");
-			
+
+			function formatVideoBitrate(bitrateKbps){
+				var bitrate = parseFloat(bitrateKbps);
+				if (isNaN(bitrate) || bitrate <= 0) {
+					return "";
+				}
+				if (bitrate >= 1000) {
+					return (Math.round((bitrate / 1000) * 10) / 10) + " Mbps";
+				}
+				return Math.round(bitrate) + " Kbps";
+			}
+
+			function updateVideoBitrateMeta(meta){
+				if (!showbitrate) {
+					return false;
+				}
+				var ele = document.getElementById("bitrateMeta");
+				var bitrateValue = "";
+				if (meta) {
+					if (typeof meta.bitrateKbps !== "undefined") {
+						bitrateValue = meta.bitrateKbps;
+					} else if (typeof meta.bitrate !== "undefined") {
+						bitrateValue = meta.bitrate;
+					} else if (typeof meta.kbps !== "undefined") {
+						bitrateValue = meta.kbps;
+					}
+				}
+				var bitrateText = formatVideoBitrate(bitrateValue);
+				if (!bitrateText || (meta && meta.online === false)) {
+					if (ele) {
+						clearTimeout(ele.timeout);
+						ele.remove();
+					}
+					return true;
+				}
+				if (!ele) {
+					ele = document.createElement("div");
+					ele.id = "bitrateMeta";
+					ele.classList.add("viewerIcons");
+					ele.classList.add("bitrateMeta");
+					ele.title = "Video bitrate";
+					topBarElement.append(ele);
+				}
+				ele.innerText = bitrateText;
+				clearTimeout(ele.timeout);
+				ele.timeout = setTimeout(function(ele){
+					if (ele){
+						ele.remove();
+					}
+				}, 130000, ele);
+				return true;
+			}
+
 			function updateMeta(data){
 				if (data && data.event && ("meta" in data)){
+					if (data.event == "video_stats"){
+						updateVideoBitrateMeta(data.meta);
+						return true;
+					}
 					if (data.type && data.event == "follower_update"){
 						followers[data.type] = parseInt(data.meta) || 0;
 						return true;
@@ -6098,7 +6163,7 @@
 						if (showviewercount){
 							if (data.meta && typeof data.meta == "object"){
 								// First, remove any viewer elements not in the current update
-								topBarElement.querySelectorAll(".viewerIcons").forEach(ele => {
+								topBarElement.querySelectorAll(".viewerIcons[data-type]").forEach(ele => {
 									if (!data.meta.hasOwnProperty(ele.dataset.type)) {
 										clearTimeout(ele.timeout);
 										ele.remove();

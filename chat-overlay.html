@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Chat Overlay</title>
+</head>
+<body>
+	<script>
+	(function () {
+		var query = location.search ? location.search.substring(1) : "";
+		var hash = location.hash || "";
+		var params = new URLSearchParams(query);
+		if (!params.get("page")) params.set("page", "chat-overlay");
+		location.replace("aiprompt-overlay.html?" + params.toString() + hash);
+	}());
+	</script>
+</body>
+</html>

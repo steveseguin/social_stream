@@ -1481,6 +1481,7 @@ function loadSettings(item, resave = false) {
 
 	setupSocket();
 	setupSocketDock();
+	handleVideoStatsSettingsChange();
 	handleStreamerBotSettingsChange();
 	loadedFirst = true;
 }
@@ -1577,6 +1578,449 @@ async function fetchWithTimeout(url, optionsOrTimeout = {}, timeoutOrHeaders = 8
 }
 // Make it globally available if needed by other parts of background.js, or export if using modules
 window.fetchWithTimeout = fetchWithTimeout;
+
+let videoStatsPollTimer = null;
+let videoStatsPollInFlight = false;
+let videoStatsLastOfflineKey = "";
+
+const VIDEO_STATS_DEFAULTS = {
+	source: "srt-live-server",
+	url: "http://127.0.0.1:8181/stats",
+	publisher: "publish/live/feed1",
+	application: "live",
+	key: "feed1",
+	label: "SRT",
+	intervalSeconds: 5
+};
+
+const VIDEO_STATS_SETTING_KEYS = new Set([
+	"videostatspoller",
+	"videostatssource",
+	"videostatsurl",
+	"videostatspublisher",
+	"videostatsapplication",
+	"videostatskey",
+	"videostatsapikey",
+	"videostatsusername",
+	"videostatspassword",
+	"videostatsinterval",
+	"videostatslabel"
+]);
+
+function isVideoStatsSettingKey(settingKey) {
+	return VIDEO_STATS_SETTING_KEYS.has(settingKey);
+}
+
+function getSettingFlag(settingKey) {
+	const entry = settings && settings[settingKey];
+	return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+}
+
+function getSettingField(settingKey, fieldKey, fallback) {
+	const entry = settings && settings[settingKey];
+	if (entry && typeof entry === "object" && !Array.isArray(entry) && entry[fieldKey] !== undefined && entry[fieldKey] !== null && entry[fieldKey] !== "") {
+		return entry[fieldKey];
+	}
+	return fallback;
+}
+
+function getVideoStatsConfig() {
+	const source = String(getSettingField("videostatssource", "optionsetting", VIDEO_STATS_DEFAULTS.source) || VIDEO_STATS_DEFAULTS.source).trim() || VIDEO_STATS_DEFAULTS.source;
+	let intervalSeconds = parseInt(getSettingField("videostatsinterval", "numbersetting", VIDEO_STATS_DEFAULTS.intervalSeconds), 10);
+	if (!Number.isFinite(intervalSeconds)) {
+		intervalSeconds = VIDEO_STATS_DEFAULTS.intervalSeconds;
+	}
+	intervalSeconds = Math.max(1, Math.min(60, intervalSeconds));
+
+	return {
+		enabled: getSettingFlag("videostatspoller"),
+		source,
+		url: normalizeVideoStatsUrl(getSettingField("videostatsurl", "textsetting", VIDEO_STATS_DEFAULTS.url)),
+		publisher: String(getSettingField("videostatspublisher", "textsetting", VIDEO_STATS_DEFAULTS.publisher) || VIDEO_STATS_DEFAULTS.publisher).trim(),
+		application: String(getSettingField("videostatsapplication", "textsetting", VIDEO_STATS_DEFAULTS.application) || VIDEO_STATS_DEFAULTS.application).trim(),
+		key: String(getSettingField("videostatskey", "textsetting", VIDEO_STATS_DEFAULTS.key) || VIDEO_STATS_DEFAULTS.key).trim(),
+		apiKey: String(getSettingField("videostatsapikey", "textsetting", "") || "").trim(),
+		username: String(getSettingField("videostatsusername", "textsetting", "") || "").trim(),
+		password: String(getSettingField("videostatspassword", "textsetting", "") || ""),
+		label: String(getSettingField("videostatslabel", "textsetting", VIDEO_STATS_DEFAULTS.label) || VIDEO_STATS_DEFAULTS.label).trim(),
+		intervalMs: intervalSeconds * 1000
+	};
+}
+
+function normalizeVideoStatsUrl(url) {
+	url = String(url || "").trim();
+	if (!url) {
+		return VIDEO_STATS_DEFAULTS.url;
+	}
+	if (!/^https?:\/\//i.test(url)) {
+		url = "http://" + url;
+	}
+	return url;
+}
+
+function joinVideoStatsUrl(baseUrl, application, key) {
+	baseUrl = String(baseUrl || "").replace(/\/+$/, "");
+	application = String(application || "").replace(/^\/+|\/+$/g, "");
+	key = String(key || "").replace(/^\/+|\/+$/g, "");
+	if (!application && !key) {
+		return baseUrl;
+	}
+	if (!key) {
+		return baseUrl + "/" + application;
+	}
+	return baseUrl + "/" + application + "/" + key;
+}
+
+function parseVideoStatsNumber(value) {
+	if (value === null || value === undefined || value === "") {
+		return null;
+	}
+	const numeric = Number(value);
+	return Number.isFinite(numeric) ? numeric : null;
+}
+
+function roundVideoStatsNumber(value, digits = 3) {
+	const numeric = parseVideoStatsNumber(value);
+	if (numeric === null) {
+		return null;
+	}
+	const factor = Math.pow(10, digits);
+	return Math.round(numeric * factor) / factor;
+}
+
+function addVideoStatsNumber(meta, key, value, digits = 3) {
+	const numeric = roundVideoStatsNumber(value, digits);
+	if (numeric !== null) {
+		meta[key] = numeric;
+	}
+}
+
+function formatVideoStatsMs(value) {
+	const numeric = roundVideoStatsNumber(value, 0);
+	return numeric === null ? "" : numeric + " ms";
+}
+
+function formatVideoStatsKbps(value) {
+	const numeric = roundVideoStatsNumber(value, 0);
+	return numeric === null ? "" : numeric + " Kbps";
+}
+
+function createVideoStatsPayload(config, provider, stats) {
+	const meta = {
+		provider: provider || config.source,
+		source: config.source,
+		label: config.label || "Video",
+		online: stats.online !== false,
+		updatedAt: new Date().toISOString()
+	};
+
+	addVideoStatsNumber(meta, "bitrateKbps", stats.bitrateKbps, 0);
+	addVideoStatsNumber(meta, "rttMs", stats.rttMs, 1);
+	addVideoStatsNumber(meta, "bufferMs", stats.bufferMs, 0);
+	addVideoStatsNumber(meta, "recvRateMbps", stats.recvRateMbps, 3);
+	addVideoStatsNumber(meta, "bandwidthMbps", stats.bandwidthMbps, 3);
+	addVideoStatsNumber(meta, "droppedPackets", stats.droppedPackets, 0);
+	addVideoStatsNumber(meta, "lostPackets", stats.lostPackets, 0);
+	addVideoStatsNumber(meta, "droppedBytes", stats.droppedBytes, 0);
+	addVideoStatsNumber(meta, "lostBytes", stats.lostBytes, 0);
+	addVideoStatsNumber(meta, "uptimeSeconds", stats.uptimeSeconds, 0);
+	addVideoStatsNumber(meta, "viewers", stats.viewers, 0);
+	addVideoStatsNumber(meta, "durationSeconds", stats.durationSeconds, 0);
+
+	if (stats.video) {
+		meta.video = stats.video;
+	}
+	if (stats.audio) {
+		meta.audio = stats.audio;
+	}
+	if (stats.error) {
+		meta.error = stats.error;
+	}
+
+	const bitrateText = formatVideoStatsKbps(meta.bitrateKbps);
+	const rttText = formatVideoStatsMs(meta.rttMs);
+	const bufferText = formatVideoStatsMs(meta.bufferMs);
+	meta.summary = [bitrateText, rttText, bufferText].filter(Boolean).join(", ");
+
+	return {
+		type: "generic",
+		event: "video_stats",
+		meta
+	};
+}
+
+function getVideoStatsFetchOptions(config) {
+	const headers = {};
+
+	if (config.apiKey) {
+		headers.Authorization = config.apiKey;
+	}
+
+	if (config.source === "node-media-server" && config.username) {
+		headers.Authorization = "Basic " + btoa(config.username + ":" + config.password);
+	}
+
+	return {
+		cache: "no-store",
+		headers
+	};
+}
+
+async function fetchVideoStatsJson(url, config) {
+	const response = await fetchWithTimeout(url, getVideoStatsFetchOptions(config), 5000);
+	if (!response.ok) {
+		throw new Error("Stats request failed: HTTP " + response.status);
+	}
+	return await response.json();
+}
+
+async function fetchVideoStatsText(url, config) {
+	const response = await fetchWithTimeout(url, getVideoStatsFetchOptions(config), 5000);
+	if (!response.ok) {
+		throw new Error("Stats request failed: HTTP " + response.status);
+	}
+	return await response.text();
+}
+
+function selectPublisherStats(data, publisherName) {
+	if (!data || !data.publishers || typeof data.publishers !== "object") {
+		return null;
+	}
+
+	if (publisherName && data.publishers[publisherName]) {
+		return {
+			name: publisherName,
+			stats: data.publishers[publisherName]
+		};
+	}
+
+	const publisherKeys = Object.keys(data.publishers);
+	if (publisherKeys.length === 1) {
+		const fallbackName = publisherKeys[0];
+		return {
+			name: fallbackName,
+			stats: data.publishers[fallbackName]
+		};
+	}
+
+	return null;
+}
+
+async function fetchSrtLikeVideoStats(config, provider) {
+	const data = await fetchVideoStatsJson(config.url, config);
+	const selected = selectPublisherStats(data, config.publisher);
+	if (!selected || !selected.stats) {
+		throw new Error("Publisher not found in stats response");
+	}
+
+	const stats = selected.stats;
+	return createVideoStatsPayload(config, provider, {
+		online: true,
+		bitrateKbps: stats.bitrate,
+		rttMs: stats.rtt,
+		bufferMs: stats.msRcvBuf,
+		recvRateMbps: stats.mbpsRecvRate,
+		bandwidthMbps: stats.mbpsBandwidth,
+		droppedPackets: stats.pktRcvDrop,
+		lostPackets: stats.pktRcvLoss,
+		droppedBytes: stats.bytesRcvDrop,
+		lostBytes: stats.bytesRcvLoss,
+		uptimeSeconds: stats.uptime
+	});
+}
+
+function getDirectChildElement(parent, tagName) {
+	if (!parent) {
+		return null;
+	}
+	for (let i = 0; i < parent.children.length; i++) {
+		if (parent.children[i].tagName === tagName) {
+			return parent.children[i];
+		}
+	}
+	return null;
+}
+
+function getDirectChildText(parent, tagName) {
+	const child = getDirectChildElement(parent, tagName);
+	return child ? child.textContent : "";
+}
+
+function getNestedText(parent, path) {
+	let node = parent;
+	for (let i = 0; i < path.length; i++) {
+		node = getDirectChildElement(node, path[i]);
+		if (!node) {
+			return "";
+		}
+	}
+	return node.textContent || "";
+}
+
+function getOptionalVideoStatsObject(parent, fields) {
+	const output = {};
+	fields.forEach(field => {
+		const value = getNestedText(parent, field.path);
+		if (value !== "") {
+			const numeric = field.number ? parseVideoStatsNumber(value) : null;
+			output[field.key] = field.number && numeric !== null ? numeric : value;
+		}
+	});
+	return Object.keys(output).length ? output : null;
+}
+
+async function fetchNginxVideoStats(config) {
+	const xmlText = await fetchVideoStatsText(config.url, config);
+	const xmlDoc = new DOMParser().parseFromString(xmlText, "application/xml");
+	if (xmlDoc.getElementsByTagName("parsererror").length) {
+		throw new Error("Unable to parse NGINX stats XML");
+	}
+
+	let matchedStream = null;
+	const applications = Array.from(xmlDoc.getElementsByTagName("application"));
+	for (let i = 0; i < applications.length; i++) {
+		const application = applications[i];
+		if (getDirectChildText(application, "name") !== config.application) {
+			continue;
+		}
+		const live = getDirectChildElement(application, "live");
+		if (!live) {
+			continue;
+		}
+		const streams = Array.from(live.getElementsByTagName("stream"));
+		for (let j = 0; j < streams.length; j++) {
+			if (getDirectChildText(streams[j], "name") === config.key) {
+				matchedStream = streams[j];
+				break;
+			}
+		}
+		if (matchedStream) {
+			break;
+		}
+	}
+
+	if (!matchedStream) {
+		throw new Error("Stream not found in NGINX stats");
+	}
+
+	const bwVideo = parseVideoStatsNumber(getDirectChildText(matchedStream, "bw_video"));
+	const metaNode = getDirectChildElement(matchedStream, "meta");
+	const active = !!getDirectChildElement(matchedStream, "active");
+	const video = metaNode
+		? getOptionalVideoStatsObject(metaNode, [
+				{ key: "width", path: ["video", "width"], number: true },
+				{ key: "height", path: ["video", "height"], number: true },
+				{ key: "frameRate", path: ["video", "frame_rate"], number: true },
+				{ key: "codec", path: ["video", "codec"] },
+				{ key: "profile", path: ["video", "profile"] },
+				{ key: "level", path: ["video", "level"], number: true }
+		  ])
+		: null;
+	const audio = metaNode
+		? getOptionalVideoStatsObject(metaNode, [
+				{ key: "codec", path: ["audio", "codec"] },
+				{ key: "profile", path: ["audio", "profile"] },
+				{ key: "channels", path: ["audio", "channels"], number: true },
+				{ key: "sampleRate", path: ["audio", "sample_rate"], number: true }
+		  ])
+		: null;
+
+	return createVideoStatsPayload(config, "nginx-rtmp", {
+		online: active,
+		bitrateKbps: bwVideo === null ? null : bwVideo / 1024,
+		uptimeSeconds: parseVideoStatsNumber(getDirectChildText(matchedStream, "time")),
+		video,
+		audio
+	});
+}
+
+async function fetchNodeMediaVideoStats(config) {
+	const url = joinVideoStatsUrl(config.url, config.application, config.key);
+	const data = await fetchVideoStatsJson(url, config);
+	const stats = data && data.data && typeof data.data === "object" ? data.data : data;
+	if (!stats || typeof stats !== "object") {
+		throw new Error("Invalid Node Media Server stats response");
+	}
+
+	return createVideoStatsPayload(config, "node-media-server", {
+		online: stats.isLive !== false,
+		bitrateKbps: stats.bitrate,
+		viewers: stats.viewers,
+		durationSeconds: stats.duration
+	});
+}
+
+async function fetchVideoStatsPayload(config) {
+	if (config.source === "nginx-rtmp") {
+		return await fetchNginxVideoStats(config);
+	}
+	if (config.source === "node-media-server") {
+		return await fetchNodeMediaVideoStats(config);
+	}
+	if (config.source === "belabox-cloud") {
+		return await fetchSrtLikeVideoStats(config, "belabox-cloud");
+	}
+	return await fetchSrtLikeVideoStats(config, "srt-live-server");
+}
+
+function sendVideoStatsOffline(config, error) {
+	const message = error && error.message ? error.message : "Stats unavailable";
+	const offlineKey = config.source + "|" + config.url + "|" + message;
+	if (offlineKey === videoStatsLastOfflineKey) {
+		return;
+	}
+	videoStatsLastOfflineKey = offlineKey;
+	sendToDestinations(
+		createVideoStatsPayload(config, config.source, {
+			online: false,
+			error: message
+		})
+	);
+}
+
+async function pollVideoStats() {
+	if (videoStatsPollInFlight || !isExtensionOn) {
+		return;
+	}
+
+	const config = getVideoStatsConfig();
+	if (!config.enabled) {
+		stopVideoStatsPoller();
+		return;
+	}
+
+	videoStatsPollInFlight = true;
+	try {
+		const payload = await fetchVideoStatsPayload(config);
+		videoStatsLastOfflineKey = "";
+		sendToDestinations(payload);
+	} catch (e) {
+		console.warn("[VideoStats] Poll failed:", e);
+		sendVideoStatsOffline(config, e);
+	} finally {
+		videoStatsPollInFlight = false;
+	}
+}
+
+function stopVideoStatsPoller() {
+	if (videoStatsPollTimer) {
+		clearInterval(videoStatsPollTimer);
+		videoStatsPollTimer = null;
+	}
+	videoStatsPollInFlight = false;
+	videoStatsLastOfflineKey = "";
+}
+
+function handleVideoStatsSettingsChange() {
+	stopVideoStatsPoller();
+	const config = getVideoStatsConfig();
+	if (!config.enabled) {
+		return;
+	}
+
+	pollVideoStats();
+	videoStatsPollTimer = setInterval(pollVideoStats, config.intervalMs);
+}
 
 async function changeLg(lang) {
 	log("changeLg: " + lang);
@@ -4272,6 +4716,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			if (request.setting == "streamerbotpassword") {
 				handleStreamerBotSettingsChange();
+			}
+			if (isVideoStatsSettingKey(request.setting)) {
+				handleVideoStatsSettingsChange();
 			}
 			if (request.setting == "excludeReplyingTo") {
 				pushSettingChange();

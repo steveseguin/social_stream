@@ -233,6 +233,7 @@
                 <p>To keep dashboards and automations aligned, follow these conventions when extending <code>data.meta</code>:</p>
                 <ul>
                     <li><code>viewer_update</code>, <code>follower_update</code>, and <code>subscriber_update</code> use a plain integer <code>meta</code> value. The background script aggregates them into <code>viewer_updates</code> with an object keyed by <code>data.type</code>.</li>
+                    <li><code>video_stats</code> uses a structured <code>meta</code> object for external encoder/server health, including <code>provider</code>, <code>label</code>, <code>online</code>, <code>bitrateKbps</code>, <code>rttMs</code>, <code>bufferMs</code>, packet loss/drop counters, and optional codec details.</li>
                     <li>Donation-style events include a descriptive object: for example <code>{ amount, currency, supporter }</code> for Kick, <code>{ bits }</code> for Twitch cheers, <code>{ supporter, eventType }</code> for YouTube memberships.</li>
                     <li>Raids and hosts pass <code>{ fromId, fromLogin, viewers }</code> so overlays can display both streamer name and audience size.</li>
                     <li>Reward redemptions expose <code>{ rewardId, cost, alias }</code> alongside the prepared chat message.</li>
@@ -730,7 +731,7 @@
                             <tr>
                                 <td><code>liked</code></td>
                                 <td>Like storm summaries triggered by TikTok social cards.</td>
-                                <td>Requires identifiable user; otherwise suppressed.</td>
+                                <td><code>chatname</code> is included when TikTok exposes it; anonymous/system like cards may still emit.</td>
                             </tr>
                             <tr>
                                 <td><code>true</code> (boolean)</td>

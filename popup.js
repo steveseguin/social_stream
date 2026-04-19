@@ -2217,6 +2217,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "giveaway", path: "giveaway.html" },
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
+    { id: "aiprompt", path: "aiprompt.html" },
     { id: "eventsdashboard", path: "events.html" },
 	{ id: "reactions", path: "reactions.html" },
 	{ id: "flowactions", path: "actions.html" },
@@ -2871,7 +2872,7 @@ function update(response, sync = true) {
                 // A more robust way is if refreshLinks stores the raw URLs on the elements or returns them.
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
-                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
+                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
@@ -3221,11 +3222,13 @@ async function testSelectedLLMProvider() {
             status.textContent = 'Failed';
             status.style.color = '#ff8a8a';
             output.textContent = formatLLMProviderTestError(response?.error || response?.message || response);
+            console.error('[LLM Test] Provider test failed:', response?.error || response?.message || response);
         }
     } catch (error) {
         status.textContent = 'Failed';
         status.style.color = '#ff8a8a';
         output.textContent = error?.message || String(error);
+        console.error('[LLM Test] Provider test threw:', error);
     } finally {
         output.style.display = 'block';
         button.disabled = false;
@@ -4226,6 +4229,28 @@ function handleBothParam(ele, sync) {
     return true;
 }
 
+function updateVideoStatsSettingsVisibility(sourceValue) {
+    const sourceSelect = document.querySelector('select[data-optionsetting="videostatssource"]');
+    const source = sourceValue || (sourceSelect ? sourceSelect.value : "srt-live-server");
+    const usesPublisher = source === "srt-live-server" || source === "belabox-cloud";
+    const usesAppKey = source === "nginx-rtmp" || source === "node-media-server";
+    const usesApiKey = source === "srt-live-server";
+    const usesBasicAuth = source === "node-media-server";
+
+    document.querySelectorAll(".video-stats-publisher-field").forEach(ele => {
+        ele.classList.toggle("hidden", !usesPublisher);
+    });
+    document.querySelectorAll(".video-stats-app-field").forEach(ele => {
+        ele.classList.toggle("hidden", !usesAppKey);
+    });
+    document.querySelectorAll(".video-stats-api-key-field").forEach(ele => {
+        ele.classList.toggle("hidden", !usesApiKey);
+    });
+    document.querySelectorAll(".video-stats-basic-auth-field").forEach(ele => {
+        ele.classList.toggle("hidden", !usesBasicAuth);
+    });
+}
+
 function handleSetting(ele, sync) {
     if (!ele.dataset.setting) return false;
     
@@ -4263,6 +4288,10 @@ function handleSetting(ele, sync) {
     // Handle MIDI toggle
     if (ele.dataset.setting === "midi") {
         handleMidiToggle(ele.checked);
+    }
+
+    if (ele.dataset.setting === "videostatspoller") {
+        updateVideoStatsSettingsVisibility();
     }
     
     if (sync) {
@@ -4334,6 +4363,10 @@ function handleOptionSetting(ele, sync) {
         } else {
             document.getElementById("multipleChoiceOptions").classList.add("hidden");
         }
+    }
+
+    if (settingValue === "videostatssource") {
+        updateVideoStatsSettingsVisibility(ele.value);
     }
     
     // Handle AI Provider settings
@@ -5463,6 +5496,7 @@ function refreshLinks(){
       'giveawaylink': 'giveaway',
       'creditslink': 'credits',
       'privatechatbotlink': 'privatechatbot',
+      'aipromptlink': 'aiprompt',
       'eventsdashboardlink': 'eventsdashboard',
       'reactionslink': 'reactions',
       'custom-gif-commandslink': 'custom-gif-commands',
@@ -8252,6 +8286,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
+
+	updateVideoStatsSettingsVisibility();
 
 	setupDeferredCustomCssFlush();
 	
