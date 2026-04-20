@@ -9321,7 +9321,7 @@ async function resolveRumblePopupFromOembed(videoTarget) {
 	const oembedUrl = new URL("https://rumble.com/api/Media/oembed.json");
 	oembedUrl.searchParams.set("url", parsedUrl.toString());
 	rumbleResponse = await fetchRumbleJsonResponse(oembedUrl.toString());
-	embedMatch = String(rumbleResponse.data && rumbleResponse.data.html || "").match(/\/embed\/(v[a-z0-9]+)\//i);
+	embedMatch = String((rumbleResponse.data && rumbleResponse.data.html) || "").match(/\/embed\/(v[a-z0-9]+)\//i);
 	chatId = decodeRumbleBase36Id(embedMatch && embedMatch[1]);
 	if (!chatId) {
 		return null;
