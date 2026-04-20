@@ -3112,21 +3112,44 @@ function handleAIProviderVisibility(provider) {
     }
 }
 
-function sendPopupBackgroundCommand(message, timeout = 45000) {
+function sendRuntimeCommandMessage(message, timeout, proxyToBackground) {
     return new Promise((resolve, reject) => {
         const timeoutId = setTimeout(() => {
             reject(new Error('Response timeout'));
         }, timeout);
 
-        chrome.runtime.sendMessage({ type: 'toBackground', data: message }, response => {
+        chrome.runtime.sendMessage(proxyToBackground ? { type: 'toBackground', data: message } : message, response => {
             clearTimeout(timeoutId);
             if (chrome.runtime.lastError) {
-                reject(chrome.runtime.lastError);
+                reject(new Error(chrome.runtime.lastError.message || String(chrome.runtime.lastError)));
             } else {
                 resolve(response);
             }
         });
     });
+}
+
+function isBackgroundProxyError(response) {
+    const message = response && response.error ? String(response.error) : "";
+    return /background page|background service|communicate with background|open background/i.test(message);
+}
+
+async function sendPopupBackgroundCommand(message, timeout = 45000) {
+    let directError = null;
+    try {
+        const directResponse = await sendRuntimeCommandMessage(message, timeout, false);
+        if (directResponse && !isBackgroundProxyError(directResponse)) {
+            return directResponse;
+        }
+    } catch (error) {
+        directError = error;
+    }
+
+    const proxyResponse = await sendRuntimeCommandMessage(message, timeout, true);
+    if (!proxyResponse && directError) {
+        throw directError;
+    }
+    return proxyResponse;
 }
 
 function collectLLMProviderTestSettings() {
@@ -5618,20 +5641,7 @@ if (!chrome.browserAction){
 	}
 	
 	function sendMessageToBackground(message, timeout = 15000) {
-	  return new Promise((resolve, reject) => {
-		const timeoutId = setTimeout(() => {
-		  reject(new Error('Response timeout'));
-		}, timeout);
-
-		chrome.runtime.sendMessage({type: 'toBackground', data: message}, response => { 
-		  clearTimeout(timeoutId);
-		  if (chrome.runtime.lastError) {
-			reject(chrome.runtime.lastError);
-		  } else {
-			resolve(response);
-		  }
-		});
-	  });
+	  return sendPopupBackgroundCommand(message, timeout);
 	}
 
 		sendMessageToBackground({cmd: "getSettings"}, 20000).then(response => {

@@ -227,6 +227,8 @@ function sendMessageToBackgroundPage(message, sendResponse) {
     if (chrome.runtime.lastError) {
       console.error("Error sending message to background:", chrome.runtime.lastError);
       sendResponse({ error: 'Failed to communicate with background page' });
+    } else if (typeof response === 'undefined') {
+      sendResponse({ error: 'Background page did not respond' });
     } else {
       sendResponse(response);
     }
@@ -238,7 +240,7 @@ function sendMessageToBackgroundPage(message, sendResponse) {
 
   if (backgroundPageTabId !== null) {
     chrome.tabs.sendMessage(backgroundPageTabId, payload, (response) => {
-      if (chrome.runtime.lastError) {
+      if (chrome.runtime.lastError || typeof response === 'undefined') {
         console.warn("Tab messaging failed, falling back to runtime:", chrome.runtime.lastError);
         sendViaRuntime();
       } else {

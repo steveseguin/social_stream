@@ -1347,6 +1347,7 @@ If the user asks a question that does not require a file change, answer normally
 		var HTML2CANVAS_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
 		var overlayPackageRequestTarget = null;
 		var overlayPackageLoaded = false;
+		var BRIDGE_CHUNK_SIZE = 12000;
 
 		var el = function (id) { return document.getElementById(id); };
 		var pageName = el("pageName");
@@ -1554,10 +1555,7 @@ If the user asks a question that does not require a file change, answer normally
 
 		function publishOverlays() {
 			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
-			bridgeFrame.contentWindow.postMessage({
-				sendData: { overlayNinja: { action: "saveAiPromptOverlays", value: buildOverlayPackage() } },
-				type: "pcs"
-			}, "*");
+			postBridgeOverlayPayload({ action: "saveAiPromptOverlays", value: buildOverlayPackage() }, "pcs");
 		}
 
 		function applyOverlayPackage(pack) {
@@ -1590,10 +1588,7 @@ If the user asks a question that does not require a file change, answer normally
 			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
 			overlayPackageRequestTarget = makeMessageId();
 			overlayPackageLoaded = false;
-			bridgeFrame.contentWindow.postMessage({
-				sendData: { overlayNinja: { action: "getAiPromptOverlays", target: overlayPackageRequestTarget } },
-				type: "pcs"
-			}, "*");
+			postBridgeOverlayPayload({ action: "getAiPromptOverlays", target: overlayPackageRequestTarget }, "pcs");
 			setTimeout(function () {
 				if (!overlayPackageLoaded) publishOverlays();
 			}, 2500);
@@ -2006,6 +2001,36 @@ If the user asks a question that does not require a file change, answer normally
 			setStatus("Connecting to session " + bridgeRoomID + "...", "warn");
 		}
 
+		function postBridgeOverlayPayload(payload, messageType) {
+			messageType = messageType || "rpcs";
+			var text = JSON.stringify(payload);
+			if (text.length <= BRIDGE_CHUNK_SIZE) {
+				bridgeFrame.contentWindow.postMessage({
+					sendData: { overlayNinja: payload },
+					type: messageType
+				}, "*");
+				return 1;
+			}
+
+			var chunkId = "aiprompt_" + Date.now() + "_" + makeMessageId();
+			var total = Math.ceil(text.length / BRIDGE_CHUNK_SIZE);
+			for (var i = 0; i < total; i++) {
+				bridgeFrame.contentWindow.postMessage({
+					sendData: {
+						overlayNinja: {
+							action: "ssnBridgeChunk",
+							chunkId: chunkId,
+							index: i,
+							total: total,
+							value: text.slice(i * BRIDGE_CHUNK_SIZE, (i + 1) * BRIDGE_CHUNK_SIZE)
+						}
+					},
+					type: messageType
+				}, "*");
+			}
+			return total;
+		}
+
 		function sendPrompt(requestOverride, opts) {
 			opts = opts || {};
 			syncFormToPage();
@@ -2069,11 +2094,10 @@ If the user asks a question that does not require a file change, answer normally
 				var payload = { action: "chatbot", value: prompt, target: messageID, turbo: false };
 				if (images && images.length) payload.images = images;
 
-				bridgeFrame.contentWindow.postMessage({
-					sendData: { overlayNinja: payload },
-					type: "rpcs"
-				}, "*");
-				setStatus(sentAfterBridgeWait ? "AI request sent after bridge warmup." : (opts.isAutoFix ? "Auto-fix request sent." : (opts.isCompaction ? "Compaction request sent." : "AI request sent.")), "ok");
+				var sentParts = postBridgeOverlayPayload(payload);
+				var sentLabel = sentAfterBridgeWait ? "AI request sent after bridge warmup." : (opts.isAutoFix ? "Auto-fix request sent." : (opts.isCompaction ? "Compaction request sent." : "AI request sent."));
+				if (sentParts > 1) sentLabel += " (" + sentParts + " chunks)";
+				setStatus(sentLabel, "ok");
 			};
 
 			if (provided && provided.length) {

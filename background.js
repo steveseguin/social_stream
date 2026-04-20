@@ -11420,8 +11420,13 @@ async function initTransport(roomStreamID, pass = false) {
 						const data = pkt && (pkt.detail?.data || pkt.data || pkt);
 						const uuid = ev.detail && (ev.detail.uuid || ev.detail.peer || ev.detail.id);
 						if (!data) return;
-						if (data.overlayNinja) {
-							processIncomingRequest(data.overlayNinja, uuid);
+						if (typeof data !== "object") return;
+						let payload = data.overlayNinja || null;
+						if (!payload && (data.action || "response" in data)) {
+							payload = data;
+						}
+						if (payload) {
+							processIncomingRequest(payload, uuid);
 						}
 					} catch (e) {
 						console.warn(e);
@@ -11572,6 +11577,7 @@ try {
 }
 
 let aiPromptOverlays = { version: 1, activeOverlay: "", order: [], overlays: {} };
+let bridgeChunkRequests = {};
 
 function normalizeAiPromptOverlayKey(value) {
 	value = String(value || "")
@@ -11637,9 +11643,56 @@ function saveAiPromptOverlays(store) {
 	chrome.storage.local.set({ aiPromptOverlays });
 }
 
+async function handleBridgeChunkRequest(request, UUID) {
+	if (!request || request.action !== "ssnBridgeChunk") {
+		return false;
+	}
+	const chunkId = String(request.chunkId || "");
+	const index = parseInt(request.index, 10);
+	const total = parseInt(request.total, 10);
+	if (!chunkId || !Number.isFinite(index) || !Number.isFinite(total) || index < 0 || total < 1 || index >= total) {
+		return true;
+	}
+	const key = String(UUID || "broadcast") + ":" + chunkId;
+	let entry = bridgeChunkRequests[key];
+	if (!entry || entry.total !== total) {
+		if (entry && entry.timer) {
+			clearTimeout(entry.timer);
+		}
+		entry = {
+			total,
+			chunks: new Array(total),
+			received: 0,
+			timer: setTimeout(() => {
+				delete bridgeChunkRequests[key];
+			}, 30000)
+		};
+		bridgeChunkRequests[key] = entry;
+	}
+	if (typeof entry.chunks[index] === "undefined") {
+		entry.received++;
+	}
+	entry.chunks[index] = String(request.value || "");
+	if (entry.received < entry.total) {
+		return true;
+	}
+	clearTimeout(entry.timer);
+	delete bridgeChunkRequests[key];
+	try {
+		const parsed = JSON.parse(entry.chunks.join(""));
+		await processIncomingRequest(parsed, UUID);
+	} catch (e) {
+		console.error("Failed to process chunked bridge request:", e);
+	}
+	return true;
+}
+
 async function processIncomingRequest(request, UUID = false) {
 	// from the dock or chat bot, etc.
 	if (settings.disablehost) {
+		return;
+	}
+	if (await handleBridgeChunkRequest(request, UUID)) {
 		return;
 	}
 
@@ -11864,6 +11917,26 @@ async function processIncomingRequest(request, UUID = false) {
 				// private chat bot
 
 				try {
+					let streamedChunks = 0;
+					const sendChatbotChunk = chunk => {
+						streamedChunks++;
+						sendDataP2P({ chatbotChunk: { value: chunk, target: request.target } }, UUID);
+					};
+					const sendChatbotFinal = fullResponse => {
+						const responseText = fullResponse == null ? "" : String(fullResponse);
+						if (streamedChunks > 0) {
+							sendDataP2P({ chatbotResponse: { value: "", target: request.target } }, UUID);
+							return;
+						}
+						if (responseText.length > 12000) {
+							for (let i = 0; i < responseText.length; i += 12000) {
+								sendDataP2P({ chatbotChunk: { value: responseText.slice(i, i + 12000), target: request.target } }, UUID);
+							}
+							sendDataP2P({ chatbotResponse: { value: "", target: request.target } }, UUID);
+							return;
+						}
+						sendDataP2P({ chatbotResponse: { value: responseText, target: request.target } }, UUID);
+					};
 					// ollama run technobyte/Llama-3.3-70B-Abliterated:IQ2_XS
 					// let model = "technobyte/Llama-3.3-70B-Abliterated:IQ2_XS"
 					let prompt = request.value || "";
@@ -11873,18 +11946,9 @@ async function processIncomingRequest(request, UUID = false) {
 					let model = request.model || null;
 					const controller = new AbortController();
 
-					callLLMAPI(
-						prompt,
-						model,
-						chunk => {
-							sendDataP2P({ chatbotChunk: { value: chunk, target: request.target } }, UUID);
-						},
-						controller,
-						UUID,
-						request.images || null
-					)
+					callLLMAPI(prompt, model, sendChatbotChunk, controller, UUID, request.images || null)
 						.then(fullResponse => {
-							sendDataP2P({ chatbotResponse: { value: fullResponse, target: request.target } }, UUID);
+							sendChatbotFinal(fullResponse);
 						})
 						.catch(error => {
 							let payload;
@@ -11906,6 +11970,16 @@ async function processIncomingRequest(request, UUID = false) {
 					console.error("Unexpected error:", e);
 					sendDataP2P({ chatbotResponse: { value: JSON.stringify({ error: { message: e?.message || "Unexpected error" } }), target: request.target } }, UUID);
 				}
+			} else {
+				sendDataP2P(
+					{
+						chatbotResponse: {
+							value: JSON.stringify({ error: { message: "Private Chat Bot is not enabled or Social Stream is off." } }),
+							target: request.target
+						}
+					},
+					UUID
+				);
 			}
 		}
 	}
