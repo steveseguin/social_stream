@@ -1773,7 +1773,7 @@ If the user asks a question that does not require a file change, answer normally
 		}
 
 		function injectErrorReporter(source) {
-			var reporter = "<script>(function(){function send(err){try{parent.postMessage({__aiPromptError:true,message:String(err&&err.message||err),stack:err&&err.stack?String(err.stack):\"\"},\"*\");}catch(e){}}window.addEventListener(\"error\",function(e){send(e.error||e.message);});window.addEventListener(\"unhandledrejection\",function(e){send(e.reason||\"Unhandled promise rejection\");});var origErr=console.error;console.error=function(){var parts=[];for(var i=0;i<arguments.length;i++)parts.push(String(arguments[i]));send(parts.join(\" \"));origErr.apply(console,arguments);};}());<\/script>";
+			var reporter = "<script>(function(){function send(message,stack){try{parent.postMessage({__aiPromptError:true,message:String(message&&message.message||message),stack:stack?String(stack):\"\"},\"*\");}catch(e){}}window.addEventListener(\"error\",function(e){var detail=\"\";if(e.filename)detail+=\"Source: \"+e.filename+\"\\n\";if(e.lineno)detail+=\"Line: \"+e.lineno+\" Column: \"+(e.colno||0)+\"\\n\";var stack=e.error&&e.error.stack?e.error.stack:detail;send(e.error||e.message,stack);});window.addEventListener(\"unhandledrejection\",function(e){send(e.reason||\"Unhandled promise rejection\",e.reason&&e.reason.stack?e.reason.stack:\"\");});var origErr=console.error;console.error=function(){var parts=[];for(var i=0;i<arguments.length;i++)parts.push(String(arguments[i]));send(parts.join(\" \"),\"\");origErr.apply(console,arguments);};}());<\/script>";
 			var lower = String(source || "").toLowerCase();
 			var headIdx = lower.indexOf("<head>");
 			if (headIdx >= 0) {
@@ -1796,7 +1796,7 @@ If the user asks a question that does not require a file change, answer normally
 		}
 
 		function showConsoleBar(message, stack) {
-			lastIframeError = message;
+			lastIframeError = stack ? (message + "\n\n" + stack) : message;
 			consoleBarText.textContent = message;
 			consoleBar.classList.add("visible");
 			fixErrorBtn.disabled = false;
@@ -1819,7 +1819,7 @@ If the user asks a question that does not require a file change, answer normally
 			}
 			if (!bridgeFrame || !bridgeFrame.contentWindow) return;
 			autoFixAttempts += 1;
-			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " — the preview threw: " + lastIframeError + "\n\nPlease return a corrected, complete HTML document.";
+			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " - the preview threw this error:\n\n" + lastIframeError + "\n\nReturn a corrected, complete HTML document. Focus only on fixing the runtime or syntax error first; keep the existing design unless the error requires changing it.";
 			setStatus("Auto-fixing error (attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + ")…", "warn");
 			setTimeout(function () {
 				hideConsoleBar();
@@ -1925,7 +1925,8 @@ If the user asks a question that does not require a file change, answer normally
 				"=== NEW REQUEST ===",
 				request,
 				"",
-				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally."
+				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
+				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks."
 			].join("\n");
 		}
 
@@ -2476,7 +2477,7 @@ If the user asks a question that does not require a file change, answer normally
 
 		function askAiToFix() {
 			if (!lastIframeError) { setStatus("No error to fix yet.", "warn"); return; }
-			var msg = "The preview threw this error — please fix it and return the updated HTML:\n\n" + lastIframeError;
+			var msg = "The preview threw this error. Return a corrected, complete HTML document and focus on the failing syntax/runtime issue first:\n\n" + lastIframeError;
 			sendPrompt(msg);
 			hideConsoleBar();
 		}
