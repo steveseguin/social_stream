@@ -1153,6 +1153,7 @@ input:checked + .slider:before {
     border: none;
     cursor: pointer;
     background: transparent;
+    border-radius: 2px;
 }
 
 .glowingButton:before,
@@ -1160,20 +1161,19 @@ input:checked + .slider:before {
     content: "";
     position: absolute;
     inset: 0;
+    border-radius: 2px;
     background: linear-gradient(45deg, #00ccff, transparent 40%, transparent 60%, #ff075b);
-    transition: all 0.3s ease;
     opacity: 0;
+    pointer-events: none;
 }
 
 .glowingButton:hover:before {
-    opacity: 1;
-    inset: -2px;
+    opacity: 0.35;
+    transition: opacity 0.08s ease-out;
 }
 
 .glowingButton:hover:after {
-    opacity: 1;
-    inset: -2px;
-    filter: blur(8px);
+    opacity: 0;
 }
 
 .glowingButton:active {
@@ -1183,12 +1183,13 @@ input:checked + .slider:before {
 .glowingButton:active:before,
 .glowingButton:active:after {
     background: linear-gradient(45deg, #0099ff, transparent 40%, transparent 60%, #cc0033);
-    opacity: 1;
-    inset: -1px;
+    opacity: 0.45;
+    inset: 0;
 }
 
 .glowingButton:active span {
     background: color-mix(in srgb, var(--button-background) 85%, #000);
+    box-shadow: inset 0 0 10px rgba(0, 153, 255, 0.18), inset 0 0 12px rgba(204, 0, 51, 0.18);
 }
 
 .glowingButton span {
@@ -1207,8 +1208,17 @@ input:checked + .slider:before {
     text-overflow: ellipsis;
     height: 100%;
     border-radius: 2px;
+    border: 1px solid transparent;
     padding: 4px 8px;
     box-sizing: border-box;
+}
+
+.glowingButton:hover span {
+    background:
+        linear-gradient(var(--button-background), var(--button-background)) padding-box,
+        linear-gradient(45deg, rgba(0, 204, 255, 0.95), rgba(255, 7, 91, 0.95)) border-box;
+    box-shadow: inset 0 0 10px rgba(0, 204, 255, 0.12), inset 0 0 12px rgba(255, 7, 91, 0.12);
+    transition: background 0.08s ease-out, box-shadow 0.08s ease-out, border-color 0.08s ease-out;
 }
 
 .sticky-action-row {
@@ -2046,6 +2056,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="show-viewer-count">🔢 Show viewer count per source; top-right</span>
                                 </div>
+								<div data-keywords="bitrate video stats metadata srt stream bandwidth">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="showbitrate" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Show bitrate metadata if available; top-right</span>
+                                </div>
 								<div title="Set the top-right viewer count bar background color. Supports hex, rgba, and named colors." data-keywords="viewer bar topbar background color theme dock style">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="viewerbarbg" />
@@ -2210,6 +2227,13 @@ input:checked + .slider:before {
                                     <label for="custombeep"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
                                     <button type="button" id="uploadBeepBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
+								<div title="Plays a near-silent ping every 25 seconds to help keep Bluetooth speakers from sleeping during quiet periods; useful on Android when using dock TTS." data-keywords="bluetooth speaker keep alive audio tts android quiet idle sleep">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="btkeepalive" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🔈 Keep Bluetooth speaker awake with a near-silent ping</span>
+                                </div>
 								<div title="Allow beep sounds to overlap when messages arrive quickly (experimental)" data-keywords="beep sound overlap concurrent multiple simultaneous experimental">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="overlapbeep" />
@@ -2299,6 +2323,12 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="skip-donation-data-from-messages">🏷️🦘 Skip messages containing donations </span>
                                 </div>
+								<div data-keywords="custom donation thank you fallback superchat tip message text">
+									<div class="textInputContainer" style="display: inline-block; width: 320px; margin-left: 50px; margin-top: 6px;">
+										<input type="text" id="customDonationThankYou" class="textInput" autocomplete="off" placeholder="Thank you for your donation!" data-textsetting="customDonationThankYou" />
+										<label for="customDonationThankYou"><span>&gt; Custom donation thank-you text</span></label>
+									</div>
+								</div>
                                 <div data-keywords="money tip superchat super chat bits donation donate payment paid sponsor highlight">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoshowdonos" />
@@ -2361,6 +2391,13 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="multiple-docks-will-stay-in-sync-as-to-selected-messages">🔁 Multiple docks will stay in sync as to selected messages </span>
+                                </div>
+								<div title="Connect this dock like a featured overlay so it only receives messages featured from another dock." data-keywords="featured featured-only mirror relay selected messages overlay feed">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="featuredmode" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🌟 Only receive featured messages from another dock </span>
                                 </div>
                                 <div data-keywords="pinned only filtered favorites highlight sticky list">
                                     <label class="switch">
@@ -5477,6 +5514,36 @@ input:checked + .slider:before {
 
 			<div class="wrapper">
 				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-source-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span>Filter by Platform / Channel</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of platforms to allow. Example: youtube,twitch">
+									<input type="text" id="multialertsources" class="textInput instant" autocomplete="off" placeholder="youtube,twitch,tiktok,etc" data-textparam25="sources" />
+									<label for="multialertsources"><span>&gt; Only allow platform(s)</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of platforms to exclude. Example: tiktok,kick">
+									<input type="text" id="multialerthidesources" class="textInput instant" autocomplete="off" placeholder="tiktok,kick,etc" data-textparam25="hidesources" />
+									<label for="multialerthidesources"><span>&gt; Exclude platform(s)</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of exact source/channel matches to allow. Matches existing payload fields like sourceName, sourceId, channelId, and videoId.">
+									<input type="text" id="multialertsourceids" class="textInput instant" autocomplete="off" placeholder="My Channel,UC123,video123" data-textparam25="sourceids" />
+									<label for="multialertsourceids"><span>&gt; Only allow channel/source match(es)</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated list of exact source/channel matches to exclude. Matches existing payload fields like sourceName, sourceId, channelId, and videoId.">
+									<input type="text" id="multialerthidesourceids" class="textInput instant" autocomplete="off" placeholder="Other Channel,UC999,video999" data-textparam25="hidesourceids" />
+									<label for="multialerthidesourceids"><span>&gt; Exclude channel/source match(es)</span></label>
+								</div>
+								<small style="opacity: 0.8;">Use <code>&sources=youtubeshorts</code> to limit by platform, or <code>&sourceids=My Channel,UC123,video123</code> to limit by existing source/channel fields like <code>sourceName</code>, <code>sourceId</code>, <code>channelId</code>, or <code>videoId</code>.</small>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-layout-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-layout-options"><span>🖼️ Layout & Visibility</span></label>
 					<div class="collapsible-text">
@@ -6133,13 +6200,13 @@ input:checked + .slider:before {
                                     <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />🌹
                                     <span data-translate="notiktokdonations"> Do NOT treat roses/etc as donations on TikTok </span>
                                 </div>
-								<div title="Disable the TikTok and YouTube active keep-alive that can cause window focus grabbing">
+								<div title="Disable the TikTok keep-alive poke that can cause window focus grabbing">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="disabletiktokpoke" />
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />🚫👆
-                                    <span data-translate="disabletiktokpoke"> Disable TikTok/YouTube active keep-alive (prevents focus grab) </span>
+                                    <span data-translate="disabletiktokpoke"> Disable TikTok keep-alive (prevents focus grab) </span>
                                 </div>
                                 <div title="Block donations/memberships from Youtube Shorts. Requires &shorts added to the Youtube chat pop out also.">
                                     <label class="switch">
@@ -6200,6 +6267,13 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="enable-pronoun support"> 👨‍👩‍👧‍👦 Add user pronouns (Twitch) <a class="options-link rounded_area" href="https://pr.alejo.io/" target="_blank">via third-party</a>  </span>
+                                </div>
+								<div title="When enabled, show combined Twitch pronouns when available, like She/They. Uses Alejo's legacy deprecated API because the current v1 API does not include combined pronoun sets.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="pronounscombined" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="show-combined-twitch-pronouns"> Show combined Twitch pronouns when available (example: She/They) </span>
                                 </div>
 								<div title="Treat Discord roles as Memberships">
                                     <label class="switch">
@@ -6320,6 +6394,81 @@ input:checked + .slider:before {
 									  <label for="sscapikey"><span>&gt; Ingress API Key</span></label>
 								  </div>
 								</div>
+								<hr>
+
+								<!-- Video Stats Polling -->
+								<div title="Poll a video server stats endpoint and send bitrate/health data as meta events.">
+									<label class="switch">
+										<input type="checkbox" data-setting="videostatspoller" />
+										<span class="slider round"></span>
+									</label>
+									📡 Enable video stats polling
+								</div>
+								<div>
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<select id="videostatssource" class="textInput" autocomplete="off" data-optionsetting="videostatssource">
+											<option value="srt-live-server">SRT Live Server / SLS</option>
+											<option value="belabox-cloud">Belabox Cloud</option>
+											<option value="nginx-rtmp">NGINX RTMP</option>
+											<option value="node-media-server">Node Media Server</option>
+										</select>
+										<label for="videostatssource">&gt; Stats source type</label>
+									</div>
+								</div>
+								<div>
+									<div class="textInputContainer" style="display: inline-block; width: 360px;">
+										<input type="text" id="videostatsurl" class="textInput" autocomplete="off" value="http://127.0.0.1:8181/stats" placeholder="http://192.168.0.50:8181/stats" data-textsetting="videostatsurl" />
+										<label for="videostatsurl">&gt; Stats URL</label>
+									</div>
+								</div>
+								<div class="video-stats-publisher-field">
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="text" id="videostatspublisher" class="textInput" autocomplete="off" value="publish/live/feed1" placeholder="publish/live/feed1" data-textsetting="videostatspublisher" />
+										<label for="videostatspublisher">&gt; Publisher / stream id</label>
+									</div>
+								</div>
+								<div class="video-stats-app-field hidden">
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="text" id="videostatsapplication" class="textInput" autocomplete="off" value="live" placeholder="live" data-textsetting="videostatsapplication" />
+										<label for="videostatsapplication">&gt; Application</label>
+									</div>
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="text" id="videostatskey" class="textInput" autocomplete="off" value="feed1" placeholder="feed1" data-textsetting="videostatskey" />
+										<label for="videostatskey">&gt; Stream key/name</label>
+									</div>
+								</div>
+								<div class="video-stats-api-key-field">
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="password" id="videostatsapikey" class="textInput" autocomplete="off" placeholder="Optional API key" data-textsetting="videostatsapikey" />
+										<label for="videostatsapikey">&gt; API key / Authorization header</label>
+									</div>
+								</div>
+								<div class="video-stats-basic-auth-field hidden">
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="text" id="videostatsusername" class="textInput" autocomplete="off" placeholder="Optional username" data-textsetting="videostatsusername" />
+										<label for="videostatsusername">&gt; Username</label>
+									</div>
+									<div class="textInputContainer" style="display: inline-block; width: 250px;">
+										<input type="password" id="videostatspassword" class="textInput" autocomplete="off" placeholder="Optional password" data-textsetting="videostatspassword" />
+										<label for="videostatspassword">&gt; Password</label>
+									</div>
+								</div>
+								<div>
+									<div class="textInputContainer" style="display: inline-block; width: 160px;">
+										<input type="number" id="videostatsinterval" class="textInput" min="1" max="60" value="5" autocomplete="off" data-numbersetting="videostatsinterval" />
+										<label for="videostatsinterval">&gt; Poll interval (sec)</label>
+									</div>
+									<div class="textInputContainer" style="display: inline-block; width: 160px;">
+										<input type="text" id="videostatslabel" class="textInput" autocomplete="off" value="SRT" placeholder="SRT" data-textsetting="videostatslabel" />
+										<label for="videostatslabel">&gt; Meta label</label>
+									</div>
+								</div>
+								<p>
+									<span>
+										Sends <code>event: "video_stats"</code> as generic meta data. The stats URL/key is not sent to overlays.
+										<br />
+									</span>
+								</p>
 								<hr>
 
 								<div>
@@ -7773,6 +7922,8 @@ input:checked + .slider:before {
 								<div>
 									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
 										<option selected value="ollama">Ollama (Native Local API)</option>
+										<option value="localgemma">Local Gemma 4 (Browser, self-hosted)</option>
+										<option value="localqwen">Local Qwen 3.5 (Browser, self-hosted)</option>
 										<option value="chatgpt">ChatGPT API</option>
 										<option value="gemini">Gemini API</option>
 										<option value="deepseek">DeepSeek API</option>
@@ -7838,6 +7989,25 @@ input:checked + .slider:before {
 									<span data-translate="ollama-keepalive-minutes">⏱️ Keep-alive model time (minutes)</span> <input type="number" min="-1" max="99999999" value="5" data-numbersetting="ollamaKeepAlive" />
 								</div>
 								
+								<div id="localgemmahost" class="hidden textInputContainer" style="width: 95%;">
+									<input type="text" class="textInput" autocomplete="off" placeholder="https://largefiles.socialstream.ninja/" data-textsetting="localgemmahost" />
+									<label for="localgemmahost">&gt; Self-hosted browser model asset origin</label>
+								</div>
+								<div id="localbrowserhelp" class="hidden" style="width: 95%; font-size: 0.9em; opacity: 0.85; margin: 4px 0 10px 0;">
+									Browser models load weights from your own host instead of an API. Leave the model field blank to use the selected provider's default folder.
+								</div>
+								<div id="localgemmamodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemma4-e2b-it-onnx" data-textsetting="localgemmamodel" />
+										<label for="localgemmamodel">&gt; Local Gemma model id / folder override</label>
+									</div>
+								</div>
+								<div id="localqwenmodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: qwen3.5-0.8b-onnx" data-textsetting="localqwenmodel" />
+										<label for="localqwenmodel">&gt; Local Qwen model id / folder override</label>
+									</div>
+								</div>
 								<div id="geminimodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemini-1.5-flash" data-textsetting="geminimodel" />
@@ -8054,7 +8224,7 @@ input:checked + .slider:before {
 								<br />
 								
 								<div class="textInputContainer" style="width: 95%;">
-									<textarea id="ollamaprompt" class="textInput" style="height:80px" autocomplete="off" placeholder="Enter additional instructions or context for the bot (e.g., 'You are a shopping assistant for a YouTube stream; only respond if you think it's important')" data-textsetting="ollamaprompt"></textarea>
+									<textarea id="ollamaprompt" class="textInput" style="height:80px" autocomplete="off" placeholder="Enter additional instructions or context for the bot. Supports {CURRENT_DATE_TIME} and {CURRENT_DATE_TIME:Europe/Berlin}." data-textsetting="ollamaprompt"></textarea>
 									<label for="ollamaprompt">
 										<span data-translate="ollamaprompt">&gt; Additional Bot Instructions (Optional)</span>
 									</label>
@@ -8709,6 +8879,27 @@ input:checked + .slider:before {
             </div>
 			<div class="wrapper">
 				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-ai-prompt-options" />
+					<label class="collapsible-label" for="wrapper-chatbot-ai-prompt-options">
+						<span>AI Prompt Page Builder</span>
+					</label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<h2 style="margin:0;">AI prompt page builder</h2>
+								<div class="link" style="margin:0;" title="Create, iterate, preview, and export AI-built HTML pages.">
+									<div id="aiprompt" data-raw="" class="single_message">
+										<a target="_blank" id="aipromptlink" href="https://beta.socialstream.ninja/aiprompt.html">https://beta.socialstream.ninja/aiprompt.html</a>
+									</div>
+								</div>
+								<i>Requires the configured LLM provider above and the private chat bot option enabled.</i>
+							</div>
+						</div>
+					</div>
+                </div>
+            </div>
+			<div class="wrapper">
+				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-cohost-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-cohost-options">
 						<span data-translate="cohost-chatbot">🙂 Multimodal AI Co-Host</span>
@@ -8760,10 +8951,10 @@ input:checked + .slider:before {
 						A real-time dashboard displaying donations and stream events. Create a customized view for monitoring.
 					</span>
 				</h3>
-				<div id="eventsdashboard" data-raw="" class="eventsdashboard"><a href="" id="eventsdashboardlink"></a></div>
+			<div id="eventsdashboard" data-raw="" class="eventsdashboard"><a href="" id="eventsdashboardlink"></a></div>
 			</div>
 			<a href="" id="eventsdashboard-options"></a>
-			
+
 			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-eventsdashboard-options" />
@@ -8922,7 +9113,137 @@ input:checked + .slider:before {
 					</div>
 				</div>
 			</div>
-			
+
+			<div class="link" title="Reaction-only overlay for floating hearts, thumbs, and similar live reactions.">
+				<h2 class="single_message_title">
+					<span class="title-group"><span class="emoji" aria-hidden="true">💖</span><span>Reactions Overlay</span></span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#reactions-options" title="Jump to the reactions overlay options."><span data-translate="options">[options]</span></a>
+					<label for="help-reactions" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+				</h2>
+				<input type="checkbox" id="help-reactions" class="link-help-toggle">
+				<div class="link-help-content">
+					<strong>Reaction-only overlay for floating hearts and other quick reactions.</strong>
+					<p>Use this when you want likes, hearts, thumbs-up, and similar reaction bursts on their own page instead of mixed into chat or the events dashboard.</p>
+					<ul>
+						<li>Zoom reaction icons float up directly from the captured reaction graphic</li>
+						<li>TikTok like events become floating heart bursts</li>
+						<li>Transparent background so you can place it anywhere in OBS</li>
+						<li>Optional URL params: <code>&amp;align=right</code>, <code>&amp;layout=fountain</code>, <code>&amp;scale=1.2</code>, <code>&amp;burst=8</code>, <code>&amp;speed=1.1</code>, <code>&amp;triple</code>, <code>&amp;pagebg=%23000000</code></li>
+					</ul>
+				</div>
+				<div id="reactions" data-raw="" class="single_message"><a href="" id="reactionslink"></a></div>
+			</div>
+			<a href="" id="reactions-options"></a>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-reactions-options" />
+					<label class="collapsible-label" for="wrapper-reactions-options"><span>💖 Enable and customize</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group reactions_overlay">
+								<h3>Release Area</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="align" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										📍 Align reactions to
+										<select id="reactions-align-select" data-optionparam27="align">
+											<option value="center">Center</option>
+											<option value="left">Left</option>
+											<option value="right">Right</option>
+										</select>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="layout" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🪄 Layout style
+										<select id="reactions-layout-select" data-optionparam27="layout">
+											<option value="spread">Spread out</option>
+											<option value="column">Tight column</option>
+											<option value="fountain">Fountain burst</option>
+										</select>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" id="reactions-triple-toggle" data-param27="triple" />
+										<span class="slider round"></span>
+									</label>
+									<span>3x reactions released for each reaction event</span>
+								</div>
+
+								<h3>Motion &amp; Density</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="scale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔍 Emoji scale
+										<input type="range" id="reactions-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting27="scale" data-range-display="reactions-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="reactions-scale-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="speed" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										⏩ Float speed
+										<input type="range" id="reactions-speed-range" min="0.5" max="2.5" step="0.05" value="1" style="width: 150px;" data-numbersetting27="speed" data-range-display="reactions-speed-display" data-range-suffix="x" />
+										<span class="range-value" id="reactions-speed-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="burst" />
+										<span class="slider round"></span>
+									</label>
+									<span>Burst count per like event:</span>
+									<input type="number" id="reactionBurst" class="numberInput" min="1" max="30" value="6" data-numbersetting27="burst">
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param27="limit" />
+										<span class="slider round"></span>
+									</label>
+									<span>Maximum visible reactions:</span>
+									<input type="number" id="reactionLimit" class="numberInput" min="10" max="300" value="60" data-numbersetting27="limit">
+								</div>
+
+								<h3>Background</h3>
+								<div title="Set the page background color instead of using transparency. Supports hex, rgba, and named colors.">
+									<label class="switch">
+										<input type="checkbox" data-param27="pagebg" />
+										<span class="slider round"></span>
+									</label>
+									<span>🎨 Custom page background color</span>
+								</div>
+								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
+										<input type="text" id="reactions_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam27="pagebg" data-palette="reactions_pagebg_palette" />
+										<label for="reactions_pagebg">&gt; Page background color</label>
+									</div>
+									<input type="color" data-color="reactions_pagebg" id="reactions_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+								</div>
+								<div>
+									<small>Every enabled control here is added to the <code>reactions.html</code> URL as a matching parameter.</small>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 
             <div class="link" title="This link will only show the inbound emotes, bouncing them around the full page.">
                 <h2 class="emotes_wall_title">
@@ -9801,6 +10122,13 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     👑 <span data-translate="members-only-waitlist"> Only members can enter</span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="waitlistallowrejoin" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    🔄️ <span>Allow removed users to rejoin</span>
                                 </div>
                                 <label class="switch">
                                     <input type="checkbox" data-setting="customwaitlistmessagetoggle" />
@@ -12858,6 +13186,8 @@ input:checked + .slider:before {
 			</span>
         </div>
 		<script type="text/javascript" src="./libs/profiles.js"></script>
+		<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
+		<script type="text/javascript" src="./shared/ai/kokoroAssetCatalog.js"></script>
 		<!-- Kitten TTS will be loaded dynamically as ES module when needed -->
         <script type="text/javascript" src="popup.js?v=3"></script>
         <script type="text/javascript" src="spotify-auth-helper.js"></script>

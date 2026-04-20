@@ -441,6 +441,11 @@ class EventFlowEditor {
             }
         ];
 
+        const stateActionGroup = this.actionGroups.find(group => group.id === 'state');
+        if (stateActionGroup && !stateActionGroup.actions.some(action => action.id === 'checkCounter')) {
+            stateActionGroup.actions.push({ id: 'checkCounter', name: 'Check Counter' });
+        }
+
         // Flatten for backward compatibility
         this.actionTypes = this.actionGroups.flatMap(group => group.actions);
 
@@ -5126,7 +5131,7 @@ class EventFlowEditor {
 								?.map(n => `<option value="${n.id}" ${node.config.targetNodeId === n.id ? 'selected' : ''}>${n.config?.name || 'Unnamed Counter'}</option>`)
 								?.join('') || ''}
 						</select>
-						<div class="property-help">Adds counter value to message for downstream nodes</div>
+						<div class="property-help">Adds {counterValue}, {counterTarget}, and {counterRemaining} to the message for downstream nodes</div>
 					</div>`;
 				break;
 				

@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/guides.css">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet"  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
     <meta name="description" content="Comprehensive guides for getting started with Social Stream Ninja, including setup, customization, and troubleshooting.">
 </head>
 <body>
@@ -102,6 +102,9 @@
 			<div class="nav-links" id="standalone-nav" data-section="standalone" style="display: none;">
 				<a href="#standalone-getting-started" class="nav-link active">
 					<i class="fas fa-rocket"></i> Getting Started
+				</a>
+				<a href="#standalone-tiktok" class="nav-link">
+					<i class="fas fa-comment-dots"></i> TikTok
 				</a>
 				<a href="#standalone-customization" class="nav-link">
 					<i class="fas fa-paint-brush"></i> Customization
@@ -503,37 +506,41 @@
 							</ul>
 						</li>
 					</ol>
-					<div class="warning-box" style="background:#fff3cd; border:1px solid #ffc107; padding:1em; border-radius:4px; margin:1em 0;">
+					<div class="warning-note">
 						<strong>Warning:</strong> Do not enable both options. If you add <code>&server</code> to the dock AND enable remote API control in the extension, webhooks will be received by both, causing duplicate donation alerts.
 					</div>
 
 					<h4>Supported Platforms:</h4>
-					<table class="guide-table" style="width:100%; border-collapse:collapse; margin:1em 0;">
-						<tr style="background:#f5f5f5;">
-							<th style="padding:8px; text-align:left; border:1px solid #ddd;">Platform</th>
-							<th style="padding:8px; text-align:left; border:1px solid #ddd;">Webhook URL</th>
-							<th style="padding:8px; text-align:left; border:1px solid #ddd;">Event Type</th>
-						</tr>
-						<tr>
-							<td style="padding:8px; border:1px solid #ddd;"><strong>Stripe</strong></td>
-							<td style="padding:8px; border:1px solid #ddd;"><code>https://io.socialstream.ninja/{sessionID}/stripe</code></td>
-							<td style="padding:8px; border:1px solid #ddd;"><code>checkout.session.completed</code></td>
-						</tr>
-						<tr>
-							<td style="padding:8px; border:1px solid #ddd;"><strong>Ko-Fi</strong></td>
-							<td style="padding:8px; border:1px solid #ddd;"><code>https://io.socialstream.ninja/{sessionID}/kofi</code></td>
-							<td style="padding:8px; border:1px solid #ddd;">Donations (public only)</td>
-						</tr>
-						<tr>
-							<td style="padding:8px; border:1px solid #ddd;"><strong>Buy Me A Coffee</strong></td>
-							<td style="padding:8px; border:1px solid #ddd;"><code>https://io.socialstream.ninja/{sessionID}/bmac</code></td>
-							<td style="padding:8px; border:1px solid #ddd;"><code>donation.created</code>, <code>membership.started</code></td>
-						</tr>
-						<tr>
-							<td style="padding:8px; border:1px solid #ddd;"><strong>Fourthwall</strong></td>
-							<td style="padding:8px; border:1px solid #ddd;"><code>https://io.socialstream.ninja/{sessionID}/fourthwall</code></td>
-							<td style="padding:8px; border:1px solid #ddd;"><code>ORDER_PLACED</code></td>
-						</tr>
+					<table class="guide-table">
+						<thead>
+							<tr>
+								<th>Platform</th>
+								<th>Webhook URL</th>
+								<th>Event Type</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><strong>Stripe</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/stripe</code></td>
+								<td><code>checkout.session.completed</code></td>
+							</tr>
+							<tr>
+								<td><strong>Ko-Fi</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/kofi</code></td>
+								<td>Donations (public only)</td>
+							</tr>
+							<tr>
+								<td><strong>Buy Me A Coffee</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/bmac</code></td>
+								<td><code>donation.created</code>, <code>membership.started</code></td>
+							</tr>
+							<tr>
+								<td><strong>Fourthwall</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/fourthwall</code></td>
+								<td><code>ORDER_PLACED</code></td>
+							</tr>
+						</tbody>
 					</table>
 
 					<h4>Stripe Setup:</h4>
@@ -573,7 +580,7 @@
 						<li>Subscribe to <code>ORDER_PLACED</code> events</li>
 					</ol>
 
-					<div class="warning-box" style="background:#fff3cd; border:1px solid #ffc107; padding:1em; border-radius:4px; margin:1em 0;">
+					<div class="warning-note">
 						<strong>Security Note:</strong> Keep your session ID private. Anyone with your session ID can send fake donation events to your overlay.
 					</div>
 
@@ -741,6 +748,7 @@
 							<li>Click the respective platform button</li>
 							<li>Use the "Sign in" button to authenticate if needed</li>
 							<li>Navigate to your live stream within the app window</li>
+							<li>For TikTok connection modes, replies, and TikFinity fallback, jump to the <a href="#standalone-tiktok">TikTok Guide</a></li>
 						</ul>
 					</div>
 				</div>
@@ -757,6 +765,37 @@
 							allowfullscreen>
 						</iframe>
 					</div>
+				</div>
+
+				<div class="guide-card">
+					<h3>TikTok Guide</h3>
+					<p>Need help with TikTok setup, replies, connection modes, or TikFinity fallback? Use the dedicated TikTok guide.</p>
+					<ul class="guide-list">
+						<li>Which mode to use: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy, or Euler Signing</li>
+						<li>How to reply to TikTok chat from SSN</li>
+						<li>How to use TikFinity OBS Dock as a fallback through Other chat sites</li>
+						<li>What to try when TikTok says you are offline, misses messages, duplicates chat, or closes auth windows</li>
+					</ul>
+					<p><a href="tiktok-guide.html" class="btn btn-primary">Open the TikTok Guide</a></p>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-tiktok" class="guide-section alt">
+			<div class="container">
+				<h2>TikTok (Standalone App)</h2>
+				<p class="section-subtitle">Dedicated setup help for TikTok, including replies, mode selection, and TikFinity fallback.</p>
+
+				<div class="guide-card">
+					<h3>Open the full TikTok guide</h3>
+					<p>The standalone app has the most TikTok options in SSN, so the guide lives on its own page now.</p>
+					<ul class="guide-list">
+						<li>Mode picker help: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy, and Euler Signing</li>
+						<li>How to send replies to TikTok chat from SSN</li>
+						<li>How to use TikFinity OBS Dock through <strong>Other chat sites</strong></li>
+						<li>Common fixes for auth windows closing, missed chat, duplicate chat, and throttling</li>
+					</ul>
+					<p><a href="tiktok-guide.html" class="btn btn-primary">Open the TikTok Guide</a></p>
 				</div>
 			</div>
 		</section>
@@ -1184,7 +1223,7 @@
 						<a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../icons/github.svg" alt="GitHub"></a>
 						<a href="https://discord.socialstream.ninja" target="_blank"><img src="../icons/discord.svg" alt="Discord"></a>
 						<a href="https://x.com/ninjafytools" target="_blank"><img src="../icons/x.svg" alt="X.com"></a>
-					<a href="https://bsky.app/profile/ninjafytools.com" target="_blank"><img src="../icons/bsky.svg" alt="Bluesky"></a>
+						<a href="https://bsky.app/profile/ninjafytools.com" target="_blank"><img src="../icons/bsky.svg" alt="Bluesky"></a>
 					</div>
 				</div>
 				<div class="footer-column">
@@ -1239,6 +1278,7 @@
 		const anchorAliases = {
 			'getting-started': 'extension-getting-started',
 			'installation': 'extension-getting-started',
+			'tiktok': 'standalone-tiktok',
 			'customization': 'extension-customization',
 			'advanced': 'extension-advanced',
 			'troubleshooting': 'extension-troubleshooting',

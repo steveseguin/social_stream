@@ -1,0 +1,303 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Alert Banner</title>
+<style>
+  :root {
+    --bg-gradient: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 20%, rgba(0,0,0,0.8) 80%, rgba(0,0,0,0) 100%);
+    --box-bg: rgba(20, 20, 30, 0.95);
+    --text-color: #ffffff;
+    --accent-follow: #00ff9d;
+    --accent-sub: #9d00ff;
+    --accent-gift: #009dff;
+    --accent-donate: #ffcc00;
+    --accent-raid: #ff0055;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --anim-speed: 0.5s;
+  }
+
+  body {
+    background: transparent;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: var(--font-family);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    pointer-events: none;
+  }
+
+  #alert-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+    gap: 10px;
+  }
+
+  .alert-card {
+    width: 80%;
+    max-width: 600px;
+    background: var(--box-bg);
+    border-radius: 8px;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    border-left: 6px solid #fff;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+    animation: slideIn var(--anim-speed) forwards;
+    pointer-events: auto;
+  }
+
+  /* Progress bar for auto-dismiss */
+  .alert-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.3);
+    width: 100%;
+    transform-origin: left;
+    animation: shrink 4s linear forwards;
+  }
+
+  .alert-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 2;
+  }
+
+  .user-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #333;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+  }
+
+  .text-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .user-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    text-transform: capitalize;
+  }
+
+  .alert-message {
+    font-size: 0.95rem;
+    color: #ddd;
+    margin-top: 2px;
+  }
+
+  .alert-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    letter-spacing: 0.5px;
+    margin-left: 10px;
+    white-space: nowrap;
+  }
+
+  /* Type Specific Styles */
+  .type-follow { border-left-color: var(--accent-follow); }
+  .type-follow .alert-badge { color: var(--accent-follow); border: 1px solid var(--accent-follow); }
+
+  .type-sub { border-left-color: var(--accent-sub); }
+  .type-sub .alert-badge { color: var(--accent-sub); border: 1px solid var(--accent-sub); }
+
+  .type-gift { border-left-color: var(--accent-gift); }
+  .type-gift .alert-badge { color: var(--accent-gift); border: 1px solid var(--accent-gift); }
+
+  .type-donate { border-left-color: var(--accent-donate); }
+  .type-donate .alert-badge { color: var(--accent-donate); border: 1px solid var(--accent-donate); }
+
+  .type-raid { border-left-color: var(--accent-raid); }
+  .type-raid .alert-badge { color: var(--accent-raid); border: 1px solid var(--accent-raid); }
+
+  /* Animations */
+  @keyframes slideIn {
+    0% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes shrink {
+    0% { transform: scaleX(1); }
+    100% { transform: scaleX(0); }
+  }
+
+  @keyframes fadeOut {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+  }
+
+  .removing {
+    animation: fadeOut 0.4s forwards;
+  }
+</style>
+</head>
+<body>
+
+<div id="alert-container"></div>
+
+<script>
+(function() {
+  // VDO.Ninja Bridge Setup
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_alerts_" + Date.now();
+  
+  var bridge = document.createElement("iframe");
+  bridge.id = "ssn_bridge";
+  bridge.style.display = "none";
+  document.body.appendChild(bridge);
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+
+  var container = document.getElementById("alert-container");
+  var alertTimeout = 4000; // 4 seconds
+
+  function handlePayload(data) {
+    if (!data) return;
+
+    var type = data.type || "";
+    var event = data.event || "";
+    var name = data.chatname || "Anonymous";
+    var msg = data.chatmessage || "";
+    var img = data.chatimg || "";
+    var donation = data.hasDonation || "";
+    var membership = data.membership || "";
+    var subtitle = data.subtitle || "";
+
+    var alertType = null;
+
+    // 1. New Follower
+    if (event === "new_follower") {
+      alertType = "follow";
+      msg = msg || "Just followed!";
+    }
+    // 2. Subscriber (Resub)
+    else if (event === "subscriber" || (membership && event !== "subscription_gift" && event !== "gifted")) {
+      alertType = "sub";
+      msg = msg || ("Subscribed! " + (subtitle || ""));
+    }
+    // 3. Gifted Sub
+    else if (event === "subscription_gift" || event === "gifted") {
+      alertType = "gift";
+      msg = msg || ("Gifted subs! " + (subtitle || ""));
+    }
+    // 4. Donation
+    else if (donation) {
+      alertType = "donate";
+      msg = msg || "Thanks for the support!";
+    }
+    // 5. Raid
+    else if (event === "raid") {
+      alertType = "raid";
+      msg = msg || ("Raiding with " + (data.subtitle || "viewers"));
+    }
+
+    if (alertType) {
+      showAlert(alertType, name, msg, img, donation, membership);
+    }
+  }
+
+  function showAlert(type, name, msg, img, donation, membership) {
+    var card = document.createElement("div");
+    card.className = "alert-card type-" + type;
+
+    // Icon
+    var icon = document.createElement("div");
+    icon.className = "user-icon";
+    if (img) icon.style.backgroundImage = "url('" + img + "')";
+    
+    // Text
+    var textGroup = document.createElement("div");
+    textGroup.className = "text-group";
+
+    var userName = document.createElement("div");
+    userName.className = "user-name";
+    userName.textContent = name;
+
+    var messageText = document.createElement("div");
+    messageText.className = "alert-message";
+    
+    // Construct message based on type
+    if (type === "donate") {
+      messageText.textContent = donation + " — " + msg;
+    } else if (type === "sub" && membership) {
+      messageText.textContent = membership + " — " + msg;
+    } else {
+      messageText.textContent = msg;
+    }
+
+    textGroup.appendChild(userName);
+    textGroup.appendChild(messageText);
+
+    // Badge
+    var badge = document.createElement("div");
+    badge.className = "alert-badge";
+    if (type === "follow") badge.textContent = "New Follower";
+    else if (type === "sub") badge.textContent = "Subscriber";
+    else if (type === "gift") badge.textContent = "Gifted Sub";
+    else if (type === "donate") badge.textContent = "Donation";
+    else if (type === "raid") badge.textContent = "RAID";
+
+    card.appendChild(icon);
+    card.appendChild(textGroup);
+    card.appendChild(badge);
+
+    container.appendChild(card);
+
+    // Auto dismiss
+    setTimeout(function() {
+      card.classList.add("removing");
+      card.addEventListener("animationend", function() {
+        if (card.parentNode) {
+          card.parentNode.removeChild(card);
+        }
+      });
+    }, alertTimeout);
+  }
+})();
+</script>
+</body>
+</html>
+```

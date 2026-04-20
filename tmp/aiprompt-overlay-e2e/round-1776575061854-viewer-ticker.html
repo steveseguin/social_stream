@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSN Viewer Counts</title>
+<style>
+  :root {
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-size: 14px;
+    --font-weight: 700;
+    --bar-height: 36px;
+    --gap: 6px;
+    --radius: 6px;
+    --color-bg: rgba(0, 0, 0, 0.75);
+    --color-text: #ffffff;
+    --color-text-muted: #aaaaaa;
+    --color-accent: #00d4ff;
+    --color-total-bg: rgba(255, 255, 255, 0.12);
+    --color-total-border: rgba(255, 255, 255, 0.25);
+    --color-youtube: #ff4444;
+    --color-twitch: #9146ff;
+    --color-kick: #53fc18;
+    --color-tiktok: #fe2c55;
+    --color-facebook: #1877f2;
+    --color-rumble: #ffd000;
+    --color-discord: #5865f2;
+    --color-default: #888888;
+    --transition-speed: 0.3s;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+    color: var(--color-text);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #viewer-bar {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+    padding: 8px 14px;
+    background: var(--color-bg);
+    border-radius: var(--radius);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+    max-width: 95vw;
+    overflow: hidden;
+  }
+
+  #viewer-bar.visible {
+    opacity: 1;
+  }
+
+  .platform-count {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    transition: transform var(--transition-speed) ease, opacity var(--transition-speed) ease;
+  }
+
+  .platform-count .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .platform-count .label {
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    margin-right: 2px;
+  }
+
+  .platform-count .count {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--color-text);
+    min-width: 2ch;
+    text-align: right;
+  }
+
+  .platform-count .count.changed {
+    animation: pop var(--transition-speed) ease;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+
+  .divider {
+    width: 1px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 0 2px;
+  }
+
+  .total-block {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    background: var(--color-total-bg);
+    border: 1px solid var(--color-total-border);
+  }
+
+  .total-block .total-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-text-muted);
+  }
+
+  .total-block .total-count {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--color-accent);
+    min-width: 3ch;
+    text-align: right;
+  }
+
+  .total-block .total-count.changed {
+    animation: pop var(--transition-speed) ease;
+  }
+
+  /* Platform color classes */
+  .dot-youtube { background: var(--color-youtube); }
+  .dot-twitch { background: var(--color-twitch); }
+  .dot-kick { background: var(--color-kick); }
+  .dot-tiktok { background: var(--color-tiktok); }
+  .dot-facebook { background: var(--color-facebook); }
+  .dot-rumble { background: var(--color-rumble); }
+  .dot-discord { background: var(--color-discord); }
+  .dot-default { background: var(--color-default); }
+
+  .label-youtube { color: var(--color-youtube); }
+  .label-twitch { color: var(--color-twitch); }
+  .label-kick { color: var(--color-kick); }
+  .label-tiktok { color: var(--color-tiktok); }
+  .label-facebook { color: var(--color-facebook); }
+  .label-rumble { color: var(--color-rumble); }
+  .label-discord { color: var(--color-discord); }
+  .label-default { color: var(--color-default); }
+</style>
+</head>
+<body>
+
+<div id="viewer-bar">
+  <div id="platforms-container"></div>
+  <div class="divider"></div>
+  <div class="total-block">
+    <span class="total-label">Total</span>
+    <span class="total-count" id="total-count">0</span>
+  </div>
+</div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+<script>
+(function () {
+  "use strict";
+
+  var platformOrder = ["youtube", "twitch", "kick", "tiktok", "facebook", "rumble", "discord"];
+  var currentCounts = {};
+  var prevCounts = {};
+  var barVisible = false;
+
+  var bar = document.getElementById("viewer-bar");
+  var platformsContainer = document.getElementById("platforms-container");
+  var totalCountEl = document.getElementById("total-count");
+
+  function getPlatformColor(type) {
+    var t = (type || "").toLowerCase();
+    if (t === "youtube") return "youtube";
+    if (t === "twitch") return "twitch";
+    if (t === "kick") return "kick";
+    if (t === "tiktok") return "tiktok";
+    if (t === "facebook") return "facebook";
+    if (t === "rumble") return "rumble";
+    if (t === "discord") return "discord";
+    return "default";
+  }
+
+  function formatNumber(n) {
+    if (typeof n !== "number" || isNaN(n)) return "0";
+    return Math.max(0, Math.round(n)).toLocaleString();
+  }
+
+  function renderPlatforms() {
+    platformsContainer.innerHTML = "";
+
+    var allPlatforms = Object.keys(currentCounts);
+    if (allPlatforms.length === 0) return;
+
+    // Sort: known platforms first in order, then unknown ones
+    var sorted = allPlatforms.slice().sort(function (a, b) {
+      var ia = platformOrder.indexOf(a.toLowerCase());
+      var ib = platformOrder.indexOf(b.toLowerCase());
+      var aKnown = ia !== -1;
+      var bKnown = ib !== -1;
+      if (aKnown && bKnown) return ia - ib;
+      if (aKnown) return -1;
+      if (bKnown) return 1;
+      return a.localeCompare(b);
+    });
+
+    sorted.forEach(function (plat) {
+      var count = currentCounts[plat];
+      if (count <= 0) return;
+
+      var el = document.createElement("div");
+      el.className = "platform-count";
+      el.setAttribute("data-platform", plat);
+
+      var colorClass = getPlatformColor(plat);
+
+      var dot = document.createElement("span");
+      dot.className = "dot dot-" + colorClass;
+      el.appendChild(dot);
+
+      var label = document.createElement("span");
+      label.className = "label label-" + colorClass;
+      label.textContent = plat;
+      el.appendChild(label);
+
+      var countSpan = document.createElement("span");
+      countSpan.className = "count";
+      countSpan.textContent = formatNumber(count);
+      countSpan.setAttribute("data-count-for", plat);
+      el.appendChild(countSpan);
+
+      platformsContainer.appendChild(el);
+    });
+  }
+
+  function updateTotal() {
+    var total = 0;
+    var keys = Object.keys(currentCounts);
+    for (var i = 0; i < keys.length; i++) {
+      total += Math.max(0, Math.round(currentCounts[keys[i]]));
+    }
+
+    var newTotalStr = formatNumber(total);
+    var oldTotalStr = totalCountEl.textContent;
+
+    totalCountEl.textContent = newTotalStr;
+
+    if (newTotalStr !== oldTotalStr) {
+      totalCountEl.classList.remove("changed");
+      void totalCountEl.offsetWidth; // reflow
+      totalCountEl.classList.add("changed");
+    }
+  }
+
+  function animateCountChange(platform) {
+    var countSpan = platformsContainer.querySelector('[data-count-for="' + platform + '"]');
+    if (countSpan) {
+      countSpan.classList.remove("changed");
+      void countSpan.offsetWidth;
+      countSpan.classList.add("changed");
+    }
+  }
+
+  function handlePayload(data) {
+    if (!data || !data.event || data.event !== "viewer_updates") return;
+
+    var meta = data.meta;
+    if (!meta || typeof meta !== "object") return;
+
+    // Snapshot: replace state entirely
+    var newCounts = {};
+    var keys = Object.keys(meta);
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      var v = meta[k];
+      if (typeof v === "number" && v > 0) {
+        newCounts[k] = v;
+      }
+    }
+
+    // Detect changes
+    var allKeys = Object.keys(newCounts);
+    for (var j = 0; j < allKeys.length; j++) {
+      var pk = allKeys[j];
+      var oldVal = prevCounts[pk] || 0;
+      var newVal = newCounts[pk];
+      if (oldVal !== newVal) {
+        animateCountChange(pk);
+      }
+    }
+
+    prevCounts = {};
+    var prevKeys = Object.keys(currentCounts);
+    for (var p = 0; p < prevKeys.length; p++) {
+      prevCounts[prevKeys[p]] = currentCounts[prevKeys[p]];
+    }
+
+    currentCounts = newCounts;
+
+    // Show bar if we have data
+    if (allKeys.length > 0 && !barVisible) {
+      barVisible = true;
+      bar.classList.add("visible");
+    }
+
+    renderPlatforms();
+    updateTotal();
+  }
+
+  // --- VDO.Ninja Bridge ---
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  window.handleOverlayPayload = handlePayload;
+
+  // --- Test mode: if no session param, show demo bar after 1s ---
+  if (!roomID) {
+    setTimeout(function () {
+      currentCounts = { youtube: 1243, twitch: 567, kick: 89, tiktok: 2100 };
+      prevCounts = {};
+      barVisible = true;
+      bar.classList.add("visible");
+      renderPlatforms();
+      updateTotal();
+    }, 1000);
+  }
+
+})();
+</script>
+</body>
+</html>

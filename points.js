@@ -513,7 +513,7 @@ class PointsSystem {
             const userEngagements = {};
             
             for (const message of recentMessages) {
-                if (!message.chatname) continue;
+                if (!message.chatname || message.bot) continue;
                 
                 const username = message.chatname;
                 const type = message.type || 'default';
@@ -616,7 +616,7 @@ class PointsSystem {
     }
 
     async processNewMessage(message) {
-        if (!message || !message.chatname) return null;
+        if (!message || !message.chatname || message.bot) return null;
         
         const type = message.type || 'default';
         const username = message.chatname;

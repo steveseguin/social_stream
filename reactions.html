@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>Social Stream - Reactions Overlay</title>
+	<link rel="icon" href="./favicon.ico">
+	<style>
+html, body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background: transparent;
+}
+
+body {
+	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#stage {
+	position: fixed;
+	inset: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.reaction {
+	position: absolute;
+	bottom: -14vh;
+	opacity: 0;
+	will-change: transform, opacity;
+	animation-name: float-up;
+	animation-timing-function: linear;
+	animation-fill-mode: forwards;
+	filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+}
+
+.reaction-content {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transform-origin: center;
+	animation: sway 1.1s ease-in-out infinite alternate;
+}
+
+.reaction-content img,
+.reaction-content svg {
+	width: 100%;
+	height: 100%;
+	display: block;
+	object-fit: contain;
+}
+
+.reaction-heart {
+	line-height: 1;
+	font-size: 1em;
+	text-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.setup-note {
+	position: fixed;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	padding: 12px 16px;
+	border-radius: 12px;
+	background: rgba(0, 0, 0, 0.6);
+	color: #fff;
+	font-size: 15px;
+	letter-spacing: 0.01em;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.hidden {
+	display: none;
+}
+
+@keyframes float-up {
+	0% {
+		opacity: 0;
+		transform: translate3d(0, 0, 0) scale(0.72) rotate(0deg);
+	}
+	10% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+		transform: translate3d(var(--drift, 0vw), -116vh, 0) scale(1.18) rotate(var(--spin, 0deg));
+	}
+}
+
+@keyframes sway {
+	from {
+		transform: translateX(-2px) rotate(-6deg);
+	}
+	to {
+		transform: translateX(2px) rotate(6deg);
+	}
+}
+	</style>
+</head>
+<body>
+	<div id="stage"></div>
+	<div id="setup-note" class="setup-note hidden">Add <code>?session=YOUR_SESSION_ID</code> to use this page.</div>
+
+	<script>
+(function () {
+	"use strict";
+
+	var urlParams = new URLSearchParams(window.location.search);
+	var sessionId = urlParams.get("session") || urlParams.get("room") || "";
+	var password = urlParams.get("password") || "false";
+	var label = urlParams.get("label") || "reactions";
+	var outChannel = parseInt(urlParams.get("out") || urlParams.get("outchan") || "3", 10);
+	var inChannel = parseInt(urlParams.get("in") || urlParams.get("inchan") || "4", 10);
+	var scaleSetting = parseFloat(urlParams.get("scale") || "1");
+	var speedSetting = parseFloat(urlParams.get("speed") || "1");
+	var burstSetting = parseInt(urlParams.get("burst") || "6", 10);
+	var limitSetting = parseInt(urlParams.get("limit") || "60", 10);
+	var pageBackground = urlParams.get("pagebg");
+	var alignSetting = normalizeAlign(urlParams.get("align"));
+	var layoutSetting = normalizeLayout(urlParams.get("layout"));
+	var tripleSetting = readBooleanParam("triple");
+	var stage = document.getElementById("stage");
+	var setupNote = document.getElementById("setup-note");
+	var recentMessages = [];
+	var spawnHistory = [];
+
+	if (!isFinite(outChannel)) {
+		outChannel = 3;
+	}
+	if (!isFinite(inChannel)) {
+		inChannel = 4;
+	}
+	if (!isFinite(scaleSetting) || scaleSetting <= 0) {
+		scaleSetting = 1;
+	}
+	if (!isFinite(speedSetting) || speedSetting <= 0) {
+		speedSetting = 1;
+	}
+	if (!isFinite(burstSetting) || burstSetting < 1) {
+		burstSetting = 6;
+	}
+	if (!isFinite(limitSetting) || limitSetting < 10) {
+		limitSetting = 60;
+	}
+	if (pageBackground) {
+		document.body.style.background = pageBackground;
+	}
+	if (!sessionId) {
+		setupNote.classList.remove("hidden");
+	}
+
+	stage.setAttribute("data-align", alignSetting || "full");
+	stage.setAttribute("data-layout", layoutSetting);
+
+	function clamp(value, min, max) {
+		return Math.max(min, Math.min(max, value));
+	}
+
+	function randomBetween(min, max) {
+		return min + Math.random() * (max - min);
+	}
+
+	function readBooleanParam(name) {
+		var value;
+		if (!urlParams.has(name)) {
+			return false;
+		}
+		value = String(urlParams.get(name) || "").toLowerCase();
+		if (!value || value === "1" || value === "true" || value === "yes" || value === "on") {
+			return true;
+		}
+		if (value === "0" || value === "false" || value === "no" || value === "off") {
+			return false;
+		}
+		return true;
+	}
+
+	function normalizeAlign(value) {
+		value = typeof value === "string" ? value.toLowerCase() : "";
+		if (value === "left" || value === "center" || value === "right") {
+			return value;
+		}
+		return "";
+	}
+
+	function normalizeLayout(value) {
+		value = typeof value === "string" ? value.toLowerCase() : "";
+		if (value === "column" || value === "fountain") {
+			return value;
+		}
+		return "spread";
+	}
+
+	function normalizeEventName(value) {
+		if (typeof value !== "string") {
+			return "";
+		}
+		return value.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+	}
+
+	function decodeHtmlText(value) {
+		var temp;
+		if (typeof value !== "string" || !value) {
+			return "";
+		}
+		temp = document.createElement("div");
+		temp.innerHTML = value;
+		return (temp.textContent || temp.innerText || "").replace(/\s+/g, " ").trim();
+	}
+
+	function extractLikeCount(payload) {
+		var text = decodeHtmlText(payload && payload.chatmessage);
+		var match;
+		var numeric;
+		var value;
+		if (!text) {
+			return null;
+		}
+		match = text.match(/(\d[\d,\.]*)/);
+		if (!match) {
+			return null;
+		}
+		numeric = match[1].replace(/[^\d]/g, "");
+		if (!numeric) {
+			return null;
+		}
+		value = parseInt(numeric, 10);
+		return isFinite(value) && value > 0 ? value : null;
+	}
+
+	function buildSignature(payload) {
+		return [
+			normalizeEventName(payload && payload.event),
+			payload && payload.type ? payload.type : "",
+			payload && payload.chatname ? payload.chatname : "",
+			payload && payload.chatmessage ? payload.chatmessage : "",
+			payload && payload.id ? payload.id : ""
+		].join("|");
+	}
+
+	function wasSeenRecently(payload) {
+		var now = Date.now();
+		var signature = buildSignature(payload);
+		var i;
+
+		for (i = recentMessages.length - 1; i >= 0; i--) {
+			if (recentMessages[i].expiresAt <= now) {
+				recentMessages.splice(i, 1);
+			}
+		}
+
+		for (i = 0; i < recentMessages.length; i++) {
+			if (recentMessages[i].signature === signature) {
+				return true;
+			}
+		}
+
+		recentMessages.push({
+			signature: signature,
+			expiresAt: now + 2500
+		});
+
+		return false;
+	}
+
+	function getHorizontalBounds() {
+		if (alignSetting === "left") {
+			return { min: 6, max: 36 };
+		}
+		if (alignSetting === "center") {
+			return { min: 32, max: 68 };
+		}
+		if (alignSetting === "right") {
+			return { min: 64, max: 94 };
+		}
+		return { min: 10, max: 90 };
+	}
+
+	function getAnchor(bounds) {
+		return clamp((bounds.min + bounds.max) / 2, 6, 94);
+	}
+
+	function getMotion(kind) {
+		var bounds = getHorizontalBounds();
+		var anchor = getAnchor(bounds);
+		var left;
+		var driftMin;
+		var driftMax;
+		var durationMin = kind === "like" ? 3.8 : 3.2;
+		var durationMax = kind === "like" ? 5.8 : 4.9;
+		var spinRange = 18;
+
+		if (layoutSetting === "column") {
+			left = randomBetween(Math.max(bounds.min, anchor - 6), Math.min(bounds.max, anchor + 6));
+			driftMin = -4;
+			driftMax = 4;
+			durationMin += 0.3;
+			durationMax += 0.5;
+			spinRange = 8;
+		} else if (layoutSetting === "fountain") {
+			left = randomBetween(Math.max(bounds.min, anchor - 8), Math.min(bounds.max, anchor + 8));
+			if (alignSetting === "left") {
+				driftMin = -4;
+				driftMax = 24;
+			} else if (alignSetting === "right") {
+				driftMin = -24;
+				driftMax = 4;
+			} else {
+				driftMin = -20;
+				driftMax = 20;
+			}
+			durationMin -= 0.2;
+			durationMax -= 0.1;
+			spinRange = 22;
+		} else {
+			left = randomBetween(bounds.min, bounds.max);
+			if (alignSetting === "left") {
+				driftMin = -8;
+				driftMax = 16;
+			} else if (alignSetting === "right") {
+				driftMin = -16;
+				driftMax = 8;
+			} else {
+				driftMin = -16;
+				driftMax = 16;
+			}
+		}
+
+		return {
+			left: clamp(left, 4, 96),
+			drift: randomBetween(driftMin, driftMax),
+			spin: randomBetween(-spinRange, spinRange),
+			duration: Math.max(1.4, randomBetween(durationMin, durationMax) / speedSetting)
+		};
+	}
+
+	function trimStage() {
+		while (stage.children.length >= limitSetting) {
+			stage.removeChild(stage.firstChild);
+		}
+	}
+
+	function recordSpawn(options) {
+		spawnHistory.push({
+			size: options.size,
+			left: options.left,
+			duration: options.duration,
+			drift: options.drift,
+			spin: options.spin,
+			align: alignSetting || "full",
+			layout: layoutSetting,
+			event: options.event || ""
+		});
+		if (spawnHistory.length > 400) {
+			spawnHistory.splice(0, spawnHistory.length - 400);
+		}
+	}
+
+	function createReaction(markup, className, options) {
+		var item = document.createElement("div");
+		var content = document.createElement("div");
+		var size = clamp(options.size || 48, 18, 240);
+		var left = clamp(options.left || 50, -5, 105);
+		var duration = Math.max(1.4, options.duration || 4.5);
+		var drift = options.drift || 0;
+		var spin = options.spin || 0;
+
+		item.className = "reaction";
+		item.style.width = size + "px";
+		item.style.height = size + "px";
+		item.style.left = left + "vw";
+		item.style.animationDuration = duration + "s";
+		item.style.setProperty("--drift", drift + "vw");
+		item.style.setProperty("--spin", spin + "deg");
+		item.dataset.left = String(left);
+		item.dataset.drift = String(drift);
+		item.dataset.layout = layoutSetting;
+		item.dataset.align = alignSetting || "full";
+
+		content.className = "reaction-content" + (className ? " " + className : "");
+		content.innerHTML = markup;
+		item.appendChild(content);
+
+		recordSpawn({
+			size: size,
+			left: left,
+			duration: duration,
+			drift: drift,
+			spin: spin,
+			event: options.event || ""
+		});
+
+		trimStage();
+		stage.appendChild(item);
+		item.addEventListener("animationend", function () {
+			if (item.parentNode) {
+				item.parentNode.removeChild(item);
+			}
+		});
+	}
+
+	function createHeartMarkup(index) {
+		var hearts = [
+			"&#10084;&#65039;",
+			"&#x1F9E1;",
+			"&#x1F49B;",
+			"&#x1F49A;",
+			"&#x1F499;",
+			"&#x1F496;"
+		];
+		return "<span class='reaction-heart'>" + hearts[index % hearts.length] + "</span>";
+	}
+
+	function getReleaseMultiplier() {
+		return tripleSetting ? 3 : 1;
+	}
+
+	function spawnLikeBurst(payload) {
+		var likeCount = extractLikeCount(payload);
+		var total = burstSetting;
+		var i;
+
+		if (likeCount) {
+			total = clamp(Math.round(Math.log(likeCount + 1) * 4), Math.max(4, burstSetting), 20);
+		}
+
+		total = clamp(total * getReleaseMultiplier(), 1, Math.max(limitSetting, 60));
+
+		for (i = 0; i < total; i++) {
+			(function (index) {
+				setTimeout(function () {
+					var motion = getMotion("like");
+					createReaction(createHeartMarkup(index), "", {
+						size: randomBetween(28, 56) * scaleSetting,
+						left: motion.left,
+						duration: motion.duration,
+						drift: motion.drift,
+						spin: motion.spin,
+						event: "liked"
+					});
+				}, index * randomBetween(45, 110));
+			})(i);
+		}
+	}
+
+	function fallbackReactionMarkup(payload) {
+		var text = decodeHtmlText(payload && payload.chatmessage).toLowerCase();
+		if (text.indexOf("thumb") !== -1) {
+			return "<span class='reaction-heart'>&#128077;</span>";
+		}
+		if (text.indexOf("heart") !== -1 || text.indexOf("like") !== -1) {
+			return "<span class='reaction-heart'>&#10084;&#65039;</span>";
+		}
+		return "<span class='reaction-heart'>&#10024;</span>";
+	}
+
+	function spawnSingleReaction(payload) {
+		var markup = typeof payload.chatmessage === "string" ? payload.chatmessage : "";
+		var total = getReleaseMultiplier();
+		var i;
+
+		if (!markup || markup.indexOf("<") === -1) {
+			markup = fallbackReactionMarkup(payload);
+		}
+
+		for (i = 0; i < total; i++) {
+			(function (index) {
+				setTimeout(function () {
+					var motion = getMotion("reaction");
+					createReaction(markup, "", {
+						size: randomBetween(38, 72) * scaleSetting,
+						left: motion.left,
+						duration: motion.duration,
+						drift: motion.drift,
+						spin: motion.spin,
+						event: "reaction"
+					});
+				}, index * randomBetween(30, 80));
+			})(i);
+		}
+	}
+
+	function processPayload(raw) {
+		var payload = raw;
+		var eventName;
+
+		if (!payload || typeof payload !== "object") {
+			return false;
+		}
+		if (payload.dataReceived && payload.dataReceived.overlayNinja) {
+			payload = payload.dataReceived.overlayNinja;
+		}
+		if (payload.overlayNinja) {
+			payload = payload.overlayNinja;
+		}
+		if (!payload || typeof payload !== "object") {
+			return false;
+		}
+
+		eventName = normalizeEventName(payload.event);
+		if (eventName !== "reaction" && eventName !== "liked" && eventName !== "like") {
+			return false;
+		}
+		if (wasSeenRecently(payload)) {
+			return false;
+		}
+
+		if (eventName === "liked" || eventName === "like") {
+			spawnLikeBurst(payload);
+			return true;
+		}
+
+		spawnSingleReaction(payload);
+		return true;
+	}
+
+	function clearStage() {
+		while (stage.firstChild) {
+			stage.removeChild(stage.firstChild);
+		}
+		recentMessages.length = 0;
+		spawnHistory.length = 0;
+	}
+
+	function setupBridge() {
+		var iframe;
+
+		if (!sessionId) {
+			return;
+		}
+
+		iframe = document.createElement("iframe");
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&solo&view=" + encodeURIComponent(sessionId) + "&novideo&noaudio&label=" + encodeURIComponent(label) + "&cleanoutput&room=" + encodeURIComponent(sessionId);
+		iframe.style.cssText = "width:0;height:0;border:0;position:absolute;left:-200px;top:-200px;";
+		document.body.appendChild(iframe);
+
+		window.addEventListener("message", function (event) {
+			if (event.source !== iframe.contentWindow) {
+				return;
+			}
+			if (event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+				processPayload(event.data.dataReceived.overlayNinja);
+			}
+		});
+	}
+
+	function setupSocket(serverURL) {
+		var socket = null;
+		var attempts = 1;
+
+		function connect() {
+			if (socket) {
+				socket.onclose = null;
+				socket.close();
+			}
+
+			socket = new WebSocket(serverURL);
+			socket.onopen = function () {
+				attempts = 1;
+				socket.send(JSON.stringify({ join: sessionId, out: outChannel, in: inChannel }));
+			};
+			socket.onerror = function () {
+				socket.close();
+			};
+			socket.onclose = function () {
+				setTimeout(connect, Math.min(5000, 100 * attempts));
+				attempts += 1;
+			};
+			socket.addEventListener("message", function (event) {
+				var data;
+				if (!event.data) {
+					return;
+				}
+				try {
+					data = JSON.parse(event.data);
+					processPayload(data);
+					if (data.get) {
+						socket.send(JSON.stringify({ callback: { get: data.get, result: true } }));
+					}
+				} catch (e) {}
+			});
+		}
+
+		connect();
+	}
+
+	function resolveSocketURL() {
+		var hasServer = urlParams.has("server");
+		var hasServer2 = urlParams.has("server2");
+		var hasServer3 = urlParams.has("server3");
+		var hasLocalServer = urlParams.has("localserver");
+
+		if (hasServer) {
+			return urlParams.get("server") || (hasLocalServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+		}
+		if (hasServer2 || hasServer3) {
+			return urlParams.get("server2") || urlParams.get("server3") || (hasLocalServer ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension");
+		}
+		if (hasLocalServer) {
+			return "ws://127.0.0.1:3000";
+		}
+		return "";
+	}
+
+	window.__reactionsOverlay = {
+		processPayload: processPayload,
+		clearStage: clearStage,
+		getConfig: function () {
+			return {
+				sessionId: sessionId,
+				label: label,
+				outChannel: outChannel,
+				inChannel: inChannel,
+				scale: scaleSetting,
+				speed: speedSetting,
+				burst: burstSetting,
+				limit: limitSetting,
+				pageBackground: pageBackground || "",
+				align: alignSetting || "full",
+				layout: layoutSetting,
+				triple: tripleSetting
+			};
+		},
+		getHistory: function () {
+			return spawnHistory.slice();
+		},
+		getStageCount: function () {
+			return stage.children.length;
+		}
+	};
+
+	setupBridge();
+
+	var socketURL = resolveSocketURL();
+	if (sessionId && socketURL) {
+		setupSocket(socketURL);
+	}
+})();
+	</script>
+</body>
+</html>

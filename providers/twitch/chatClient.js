@@ -582,11 +582,11 @@ export function createTwitchChatClient(options = {}) {
       );
     });
 
-    bind('subgift', (chan, recipient, method, userstate) => {
+    bind('subgift', (chan, username, streakMonths, recipient, methods, userstate) => {
       emitter.emit(EVENTS.MEMBERSHIP, normalizeGift(channelName, recipient, userstate, false));
     });
 
-    bind('anonsubgift', (chan, recipient, method, userstate) => {
+    bind('anonsubgift', (chan, streakMonths, recipient, methods, userstate) => {
       emitter.emit(EVENTS.MEMBERSHIP, normalizeGift(channelName, recipient, userstate, true));
     });
 

@@ -9,9 +9,12 @@ var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read fr
 var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var _createPiperPhonemize, _modelConfig, _ort, _ortSession, _progressCallback, _wasmPaths, _logger;
-const HF_BASE = "https://huggingface.co/diffusionstudio/piper-voices/resolve/main";
-const ONNX_BASE = "https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.18.0/";
-const WASM_BASE = "https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize";
+const trimTrailingSlash = (value) => typeof value === "string" ? value.replace(/\/+$/, "") : "";
+const DEFAULT_REMOTE_PIPER_BASE = "https://largefiles.socialstream.ninja/piper";
+const HF_BASE = trimTrailingSlash(typeof globalThis !== "undefined" && globalThis.SSN_PIPER_REMOTE_BASE ? globalThis.SSN_PIPER_REMOTE_BASE : DEFAULT_REMOTE_PIPER_BASE);
+const ONNX_BASE = new URL("../transformersjs/ort/", import.meta.url).href;
+const WASM_BASE = new URL("./piper_phonemize", import.meta.url).href;
+const LOCAL_PIPER_BASE = trimTrailingSlash(new URL("./piper-voices/", import.meta.url).href);
 const PATH_MAP = {
   "ar_JO-kareem-low": "ar/ar_JO/kareem/low/ar_JO-kareem-low.onnx",
   "ar_JO-kareem-medium": "ar/ar_JO/kareem/medium/ar_JO-kareem-medium.onnx",
@@ -139,14 +142,41 @@ const PATH_MAP = {
   "en_US-norman-medium": "en/en_US/norman/medium/en_US-norman-medium.onnx",
   "it_IT-paola-medium": "it/it_IT/paola/medium/it_IT-paola-medium.onnx"
 };
+function uniqueUrls(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+function getStorageKey(url) {
+  try {
+    return decodeURIComponent(new URL(url, import.meta.url).pathname.split("/").at(-1));
+  } catch {
+    return String(url || "").split("/").at(-1);
+  }
+}
+function getVoicePath(voiceId) {
+  const path = PATH_MAP[voiceId];
+  if (!path) {
+    throw new Error(`Unknown Piper voice: ${voiceId}`);
+  }
+  return path;
+}
+function getVoiceAssetCandidates(voiceId, suffix = "") {
+  const path = getVoicePath(voiceId);
+  const filename = path.split("/").at(-1) + suffix;
+  return uniqueUrls([
+    `${LOCAL_PIPER_BASE}/${filename}`,
+    `${LOCAL_PIPER_BASE}/${voiceId}/${filename}`,
+    `${HF_BASE}/${path}${suffix}`,
+    `${HF_BASE}/${voiceId}/${filename}`,
+    `${HF_BASE}/${filename}`
+  ]);
+}
 async function writeBlob(url, blob) {
-  if (!url.match("https://huggingface.co")) return;
   try {
     const root = await navigator.storage.getDirectory();
     const dir = await root.getDirectoryHandle("piper", {
       create: true
     });
-    const path = url.split("/").at(-1);
+    const path = getStorageKey(url);
     const file = await dir.getFileHandle(path, { create: true });
     const writable = await file.createWritable();
     await writable.write(blob);
@@ -159,7 +189,7 @@ async function removeBlob(url) {
   try {
     const root = await navigator.storage.getDirectory();
     const dir = await root.getDirectoryHandle("piper");
-    const path = url.split("/").at(-1);
+    const path = getStorageKey(url);
     const file = await dir.getFileHandle(path);
     await file.remove();
   } catch (e) {
@@ -167,40 +197,54 @@ async function removeBlob(url) {
   }
 }
 async function readBlob(url) {
-  if (!url.match("https://huggingface.co")) return;
   try {
     const root = await navigator.storage.getDirectory();
     const dir = await root.getDirectoryHandle("piper", {
       create: true
     });
-    const path = url.split("/").at(-1);
+    const path = getStorageKey(url);
     const file = await dir.getFileHandle(path);
     return await file.getFile();
   } catch (e) {
     return void 0;
   }
 }
-async function fetchBlob(url, callback) {
-  var _a;
-  const res = await fetch(url);
-  const reader = (_a = res.body) == null ? void 0 : _a.getReader();
-  const contentLength = +(res.headers.get("Content-Length") ?? 0);
-  let receivedLength = 0;
-  let chunks = [];
-  while (reader) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
+async function fetchBlob(urls, callback) {
+  const candidates = Array.isArray(urls) ? urls : [urls];
+  let lastError = null;
+  for (const url of candidates) {
+    try {
+      var _a;
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch ${url}: ${res.status}`);
+      }
+      const reader = (_a = res.body) == null ? void 0 : _a.getReader();
+      const contentLength = +(res.headers.get("Content-Length") ?? 0);
+      let receivedLength = 0;
+      let chunks = [];
+      while (reader) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        chunks.push(value);
+        receivedLength += value.length;
+        callback == null ? void 0 : callback({
+          url,
+          total: contentLength,
+          loaded: receivedLength
+        });
+      }
+      return {
+        url,
+        blob: new Blob(chunks, { type: res.headers.get("Content-Type") ?? void 0 })
+      };
+    } catch (error) {
+      lastError = error;
     }
-    chunks.push(value);
-    receivedLength += value.length;
-    callback == null ? void 0 : callback({
-      url,
-      total: contentLength,
-      loaded: receivedLength
-    });
   }
-  return new Blob(chunks, { type: res.headers.get("Content-Type") ?? void 0 });
+  throw lastError || new Error("Unable to fetch Piper asset");
 }
 function pcm2wav(buffer, numChannels, sampleRate) {
   const bufferLength = buffer.length;
@@ -284,13 +328,9 @@ const _TtsSession = class _TtsSession {
     __privateGet(this, _ort).env.allowLocalModels = false;
     __privateGet(this, _ort).env.wasm.numThreads = navigator.hardwareConcurrency;
     __privateGet(this, _ort).env.wasm.wasmPaths = __privateGet(this, _wasmPaths).onnxWasm;
-    const path = PATH_MAP[this.voiceId];
-    const modelConfigBlob = await getBlob(`${HF_BASE}/${path}.json`);
+    const modelConfigBlob = await getBlob(getVoiceAssetCandidates(this.voiceId, ".json"));
     __privateSet(this, _modelConfig, JSON.parse(await modelConfigBlob.text()));
-    const modelBlob = await getBlob(
-      `${HF_BASE}/${path}`,
-      __privateGet(this, _progressCallback)
-    );
+    const modelBlob = await getBlob(getVoiceAssetCandidates(this.voiceId), __privateGet(this, _progressCallback));
     __privateSet(this, _ortSession, await __privateGet(this, _ort).InferenceSession.create(
       await modelBlob.arrayBuffer()
     ));
@@ -367,24 +407,27 @@ async function predict(config, callback) {
   return session.predict(config.text);
 }
 async function getBlob(url, callback) {
-  let blob = await readBlob(url);
-  if (!blob) {
-    blob = await fetchBlob(url, callback);
-    await writeBlob(url, blob);
+  const candidates = Array.isArray(url) ? url : [url];
+  for (const candidate of candidates) {
+    const cached = await readBlob(candidate);
+    if (cached) {
+      return cached;
+    }
   }
-  return blob;
+  const result = await fetchBlob(candidates, callback);
+  await writeBlob(result.url, result.blob);
+  return result.blob;
 }
 async function download(voiceId, callback) {
-  const path = PATH_MAP[voiceId];
-  const urls = [`${HF_BASE}/${path}`, `${HF_BASE}/${path}.json`];
-  await Promise.all(urls.map(async (url) => {
-    writeBlob(url, await fetchBlob(url, url.endsWith(".onnx") ? callback : void 0));
+  const urls = [getVoiceAssetCandidates(voiceId), getVoiceAssetCandidates(voiceId, ".json")];
+  await Promise.all(urls.map(async (candidates) => {
+    const result = await fetchBlob(candidates, candidates[0].endsWith(".onnx") ? callback : void 0);
+    await writeBlob(result.url, result.blob);
   }));
 }
 async function remove(voiceId) {
-  const path = PATH_MAP[voiceId];
-  const urls = [`${HF_BASE}/${path}`, `${HF_BASE}/${path}.json`];
-  await Promise.all(urls.map((url) => removeBlob(url)));
+  const urls = [...getVoiceAssetCandidates(voiceId), ...getVoiceAssetCandidates(voiceId, ".json")];
+  await Promise.all(uniqueUrls(urls).map((url) => removeBlob(url)));
 }
 async function stored() {
   const root = await navigator.storage.getDirectory();
@@ -410,18 +453,12 @@ async function flush() {
   }
 }
 async function voices() {
-  try {
-    const res = await fetch(`${HF_BASE}/voices.json`);
-    if (!res.ok) throw new Error("Could not retrieve voices file from huggingface");
-    return Object.values(await res.json());
-  } catch {
-    const LOCAL_VOICES_JSON = await import("./voices_static-D_OtJDHM.js");
-    console.log(`Could not fetch voices.json remote ${HF_BASE}. Fetching local`);
-    return Object.values(LOCAL_VOICES_JSON.default);
-  }
+  const LOCAL_VOICES_JSON = await import("./voices_static-D_OtJDHM.js");
+  return Object.values(LOCAL_VOICES_JSON.default);
 }
 export {
   HF_BASE,
+  LOCAL_PIPER_BASE,
   ONNX_BASE,
   PATH_MAP,
   TtsSession,

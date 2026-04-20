@@ -105,12 +105,42 @@ select, button, .api-key, .message-input, textarea, .model-override {
     font-size: 14px;
     width: 100%;
     box-sizing: border-box;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+select:focus,
+button:focus-visible,
+.api-key:focus,
+.message-input:focus,
+textarea:focus,
+.model-override:focus {
+    outline: none;
+    border-color: #5865f2;
+    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.35);
+}
+
+select:hover:not(:disabled),
+.api-key:hover:not(:disabled),
+.message-input:hover:not(:disabled),
+textarea:hover:not(:disabled),
+.model-override:hover:not(:disabled) {
+    border-color: #4a4a4a;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 #providerSelect {
     background: #404eed;
     border-color: #5865f2;
     font-weight: 600;
+}
+
+#providerSelect:hover {
+    background: #4a57f0;
 }
 
 #startButton {
@@ -154,11 +184,21 @@ select, button, .api-key, .message-input, textarea, .model-override {
     align-items: center;
     justify-content: center;
     height: 40px;
+    cursor: pointer;
+}
+
+.mute-button:hover {
+    background: #333;
+    border-color: #4a4a4a;
 }
 
 .mute-button.muted {
     background: #ef4444;
     border-color: #dc2626;
+}
+
+.mute-button.muted:hover {
+    background: #dc2626;
 }
 
 .mute-icon {
@@ -199,6 +239,53 @@ select, button, .api-key, .message-input, textarea, .model-override {
     border: 1px solid #333;
 }
 
+.api-key-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.api-key-info {
+    font-size: 11px;
+    color: #888;
+    line-height: 1.5;
+}
+
+.api-key-info a {
+    color: #7a88ff;
+    text-decoration: none;
+}
+
+.api-key-info a:hover {
+    text-decoration: underline;
+}
+
+.api-key-info strong {
+    color: #bbb;
+}
+
+#actionStatusSummary,
+#voiceStatusSummary {
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+#error {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+#error:empty {
+    display: none;
+}
+
 .diagnostics-panel {
     background: #181818;
     border: 1px solid #2a2a2a;
@@ -222,6 +309,50 @@ select, button, .api-key, .message-input, textarea, .model-override {
     gap: 6px;
 }
 
+.diagnostics-line {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    min-width: 0;
+}
+
+.diagnostics-line .diag-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.voice-preview-line {
+    margin-top: 4px;
+}
+
+.voice-preview {
+    font-style: italic;
+    color: #9aa0a6;
+}
+
+.diagnostics-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    gap: 8px;
+}
+
+.diagnostics-actions button {
+    width: auto;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-family: inherit;
+}
+
+.diagnostics-copy-status {
+    font-size: 10px;
+    color: #888;
+}
+
 .diag-label { color: #555; }
 .diag-value { color: #aaa; }
 
@@ -242,6 +373,25 @@ select, button, .api-key, .message-input, textarea, .model-override {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
+}
+
+.responses::-webkit-scrollbar {
+    width: 8px;
+}
+
+.responses::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.responses::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+.responses::-webkit-scrollbar-thumb:hover {
+    background: #444;
 }
 
 .message {
@@ -319,6 +469,7 @@ select, button, .api-key, .message-input, textarea, .model-override {
     user-select: none;
     touch-action: none;
     transform: translateZ(0);
+    pointer-events: auto;
 }
 .puppet {
   width: 300px;
@@ -957,6 +1108,68 @@ select, button, .api-key, .message-input, textarea, .model-override {
 	-webkit-text-security: disc;
 }
 
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 900px) {
+    body {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        padding: 12px;
+    }
+    .left-panel {
+        width: 100%;
+        min-width: 0;
+        padding-right: 0;
+        overflow-y: visible;
+    }
+    .right-panel {
+        height: 60vh;
+        min-height: 360px;
+        margin-top: 16px;
+    }
+    #puppet-container .puppet {
+        width: 200px;
+        height: 200px;
+    }
+}
+
+@media (max-width: 500px) {
+    body {
+        padding: 8px;
+    }
+    .control-row {
+        grid-template-columns: 1fr;
+    }
+    .message {
+        max-width: 92%;
+    }
+    #sendButton {
+        padding: 0 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .puppet,
+    .puppet *,
+    .face,
+    .shadow,
+    .mouth {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -965,17 +1178,17 @@ select, button, .api-key, .message-input, textarea, .model-override {
 			<div class="control-group">
 				<div class="control-group-header">Media Devices</div>
 				<div class="control-row">
-					<select id="videoSource"></select>
-					<select id="audioSource"></select>
+					<select id="videoSource" aria-label="Video source" title="Video source"></select>
+					<select id="audioSource" aria-label="Audio source" title="Audio source"></select>
 				</div>
 				<div class="mute-controls">
-					<button id="muteMic" class="mute-button">
+					<button id="muteMic" class="mute-button" type="button" aria-label="Mute microphone" title="Mute microphone">
 						<div class="mute-icon mic-icon"></div>
 					</button>
-					<button id="muteAudio" class="mute-button">
+					<button id="muteAudio" class="mute-button" type="button" aria-label="Mute speaker" title="Mute speaker">
 						<div class="mute-icon speaker-icon"></div>
 					</button>
-					<button id="muteVideo" class="mute-button">
+					<button id="muteVideo" class="mute-button" type="button" aria-label="Disable camera" title="Disable camera">
 						<div class="mute-icon video-icon"></div>
 					</button>
 				</div>
@@ -1020,6 +1233,14 @@ select, button, .api-key, .message-input, textarea, .model-override {
 			</div>
 
 			<button id="startButton">Start and Connect</button>
+			<div id="actionStatusSummary" class="api-key-info">
+				<div><strong>Status:</strong> <span id="actionStatusLine">Idle</span></div>
+				<div><strong>Detail:</strong> <span id="actionStatusDetail">Press Start and Connect to begin.</span></div>
+			</div>
+			<div id="voiceStatusSummary" class="api-key-info">
+				<div><strong>Speech:</strong> <span id="voiceStatusLine">Idle</span></div>
+				<div><strong>Heard:</strong> <span id="voiceHeardSummary">-</span></div>
+			</div>
 
 			<details class="control-group">
 				<summary class="control-group-header">Diagnostics</summary>
@@ -1032,10 +1253,10 @@ select, button, .api-key, .message-input, textarea, .model-override {
 						<div class="diagnostics-line"><span class="diag-label">Event:</span><span id="diagEvent" class="diag-value">-</span></div>
 						<div class="diagnostics-line"><span class="diag-label">Time:</span><span id="diagUpdated" class="diag-value">-</span></div>
 					</div>
-					<div class="diagnostics-line" style="margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><span class="diag-label">Err:</span><span id="diagError" class="diag-value">-</span></div>
-					<div class="diagnostics-actions" style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
-						<button type="button" id="diagCopyButton" style="padding:4px 8px; font-size:10px; width:auto;">Copy JSON</button>
-						<span id="diagCopyStatus" class="diagnostics-copy-status" style="font-size:10px;"></span>
+					<div class="diagnostics-line" style="margin-top:4px;"><span class="diag-label">Err:</span><span id="diagError" class="diag-value">-</span></div>
+					<div class="diagnostics-actions">
+						<button type="button" id="diagCopyButton">Copy JSON</button>
+						<span id="diagCopyStatus" class="diagnostics-copy-status"></span>
 					</div>
 				</div>
 				<div id="voiceDiagnostics" class="diagnostics-panel" style="margin-top:8px;">
@@ -1044,7 +1265,7 @@ select, button, .api-key, .message-input, textarea, .model-override {
 						<div class="diagnostics-line"><span class="diag-label">Out:</span><span id="voiceOutputState" class="diag-value">idle</span></div>
 						<div class="diagnostics-line" style="display:none;"><span id="voiceInputMode"></span><span id="voiceUpdated"></span></div>
 					</div>
-					<div class="diagnostics-line voice-preview-line" style="margin-top:4px;"><span class="diag-label">Heard:</span><span id="voiceInputPreview" class="diag-value voice-preview">-</span></div>
+					<div class="diagnostics-line voice-preview-line"><span class="diag-label">Heard:</span><span id="voiceInputPreview" class="diag-value voice-preview">-</span></div>
 					<div class="diagnostics-line voice-preview-line"><span class="diag-label">AI:</span><span id="voiceOutputPreview" class="diag-value voice-preview">-</span></div>
 				</div>
 			</details>
@@ -1056,8 +1277,9 @@ select, button, .api-key, .message-input, textarea, .model-override {
         <div class="chat-container">
             <div id="responses" class="responses"></div>
             <div class="input-container">
-                <input type="text" class="message-input" placeholder="Type a message...">
-                <button id="sendButton" title="You must Start the Stream before you can interact with the AI">Send</button>
+                <label for="messageInput" class="visually-hidden">Message</label>
+                <input type="text" id="messageInput" class="message-input" placeholder="Type a message..." autocomplete="off">
+                <button id="sendButton" type="button" title="You must Start the Stream before you can interact with the AI">Send</button>
             </div>
         </div>
     </div>
@@ -1067,6 +1289,7 @@ select, button, .api-key, .message-input, textarea, .model-override {
 		</svg>
 	</a>
 	<div id="puppet-container"></div>
+<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
 <script>
 class PuppetAvatar {
     constructor(containerSelector) {
@@ -1226,7 +1449,12 @@ class PuppetAvatar {
         const normalizedText = String(text || '').trim();
         if (!normalizedText) return;
         const lowerText = normalizedText.toLowerCase();
+        const hintedEmotion = inferAvatarEmotionFromText(normalizedText);
         if (source === 'user') {
+            if (hintedEmotion) {
+                this.pulseEmotion(hintedEmotion, 1200, false);
+                return;
+            }
             if (normalizedText.includes('?')) {
                 this.pulseEmotion('listening', 1200, false);
             } else if (normalizedText.includes('!')) {
@@ -1234,6 +1462,10 @@ class PuppetAvatar {
             } else {
                 this.pulseEmotion('thinking', 900, false);
             }
+            return;
+        }
+        if (hintedEmotion) {
+            this.pulseEmotion(hintedEmotion, 1500, false);
             return;
         }
         if (/(sorry|apolog|can't|cannot|unable|failed|error|issue|trouble|hmm)/i.test(lowerText)) {
@@ -1304,17 +1536,242 @@ class PuppetAvatar {
     }
 }
 const GEMINI_DEFAULT_LIVE_MODEL = "models/gemini-2.5-flash-native-audio-preview-12-2025";
-const LOCAL_QWEN_DEFAULT_MODEL = "qwen3.5-0.8b-onnx";
-const LOCAL_QWEN_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
-const LOCAL_QWEN_WORKER_PATH = "cohost-local-qwen-worker.js";
+const LOCAL_BROWSER_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
+const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js";
 const CUSTOM_OPENAI_DEFAULT_ENDPOINT = "http://127.0.0.1:1234/v1";
-const CUSTOM_OPENAI_DEFAULT_MODEL = "qwen3.5-35b";
-const LOCAL_QWEN_DEFAULT_DTYPE = {
-    embed_tokens: "q4",
-    decoder_model_merged: "q4",
-    model: "q4",
-    vision_encoder: "q4"
-};
+const CUSTOM_OPENAI_DEFAULT_MODEL = "";
+function resolveLocalBrowserWorkerUrl() {
+    try {
+        return new URL(LOCAL_BROWSER_WORKER_PATH, window.location.href).href;
+    } catch (_error) {
+        return LOCAL_BROWSER_WORKER_PATH;
+    }
+}
+function createLocalBrowserWorker() {
+    const workerUrl = resolveLocalBrowserWorkerUrl();
+    if (window.location.protocol === 'file:') {
+        const bootstrapSource = `import ${JSON.stringify(workerUrl)};`;
+        const bootstrapUrl = URL.createObjectURL(new Blob([bootstrapSource], {
+            type: 'text/javascript'
+        }));
+        const worker = new Worker(bootstrapUrl, { type: 'module' });
+        const nativeTerminate = worker.terminate.bind(worker);
+        worker.terminate = function terminateLocalBrowserWorker() {
+            try {
+                URL.revokeObjectURL(bootstrapUrl);
+            } catch (_error) {}
+            return nativeTerminate();
+        };
+        return worker;
+    }
+    return new Worker(workerUrl, { type: 'module' });
+}
+function formatLocalBrowserWorkerError(error) {
+    const baseMessage = error?.message || 'Failed to start local model worker';
+    if (window.location.protocol === 'file:') {
+        return `${baseMessage}. If your browser still blocks local workers from file://, open cohost.html over http://localhost or use the extension build.`;
+    }
+    return baseMessage;
+}
+function cloneLocalBrowserConfig(value) {
+    return JSON.parse(JSON.stringify(value || {}));
+}
+function isLikelyLocalModelPath(modelId) {
+    return /^(?:\.{1,2}\/|\/|[a-zA-Z]:[\\/]|thirdparty\/)/.test(String(modelId || '').trim());
+}
+function normalizeBundledModelPath(localPath) {
+    const value = String(localPath || '').trim().replace(/\\/g, '/').replace(/\/+$/, '');
+    return value;
+}
+function getBundledModelRequiredFiles(providerConfig) {
+    const providerKey = String(providerConfig?.key || '').trim().toLowerCase();
+    if (providerKey === 'localqwen') {
+        return [
+            'config.json',
+            'generation_config.json',
+            'tokenizer.json',
+            'tokenizer_config.json',
+            'preprocessor_config.json',
+            'onnx/embed_tokens_q4.onnx',
+            'onnx/embed_tokens_q4.onnx_data',
+            'onnx/decoder_model_merged_q4.onnx',
+            'onnx/decoder_model_merged_q4.onnx_data',
+            'onnx/vision_encoder_q4.onnx',
+            'onnx/vision_encoder_q4.onnx_data'
+        ];
+    }
+    return ['config.json'];
+}
+async function doesBundledModelFileExist(basePath, relativePath) {
+    const fileUrl = new URL(`${basePath}/${relativePath}`, window.location.href).href;
+    try {
+        const response = await fetch(fileUrl, {
+            method: 'HEAD',
+            cache: 'no-store'
+        });
+        if (response.ok) {
+            return true;
+        }
+    } catch (_error) {}
+    try {
+        const response = await fetch(fileUrl, { cache: 'no-store' });
+        if (response.body && typeof response.body.cancel === 'function') {
+            try {
+                await response.body.cancel();
+            } catch (_error) {}
+        }
+        return response.ok;
+    } catch (_error) {
+        return false;
+    }
+}
+async function canUseBundledLocalModel(localPath, providerConfig = null) {
+    const normalizedPath = normalizeBundledModelPath(localPath);
+    if (!normalizedPath) {
+        return false;
+    }
+    const providerKey = String(providerConfig?.key || '').trim().toLowerCase() || 'default';
+    const cacheKey = `${providerKey}|${normalizedPath}`;
+    if (LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.has(cacheKey)) {
+        return LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.get(cacheKey);
+    }
+    const checkPromise = (async () => {
+        const requiredFiles = getBundledModelRequiredFiles(providerConfig);
+        for (const relativePath of requiredFiles) {
+            if (!(await doesBundledModelFileExist(normalizedPath, relativePath))) {
+                return false;
+            }
+        }
+        return true;
+    })();
+    LOCAL_BROWSER_BUNDLED_MODEL_CHECKS.set(cacheKey, checkPromise);
+    return checkPromise;
+}
+function isLikelyRemoteAccessError(errorMessage = '') {
+    return /Failed to fetch|Load failed|NetworkError/i.test(String(errorMessage || ''));
+}
+function buildBundledModelAccessError(providerConfig, remoteHost, errorMessage = '') {
+    const providerLabel = providerConfig?.label || providerConfig?.providerLabel || 'Local browser model';
+    const localPath = normalizeBundledModelPath(providerConfig?.localPath || '');
+    const remote = String(remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST || '').trim() || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
+    if (localPath) {
+        return `${providerLabel} could not load its model files from ${remote}. Add the model under ${localPath} for local use, or enable public browser/CORS access on that host.`;
+    }
+    return `${providerLabel} could not load its model files from ${remote}. Enable public browser/CORS access on that host.`;
+}
+const EMOJI_SEQUENCE_RE = /(?:[#*0-9]\uFE0F?\u20E3|[\u{1F1E6}-\u{1F1FF}]|[\p{Extended_Pictographic}\u00A9\u00AE\u203C\u2049\u2122\u2139\u2600-\u27BF]|\uFE0F|\uFE0E|\u200D)/gu;
+const ASCII_EMOTION_HINTS = [
+    { emotion: 'wink', pattern: /(?:^|[\s(])(?:;\)|;-\)|;\]|;-\])(?=$|[\s)!.,!?])/i, replace: /(?:^|[\s(])(?:;\)|;-\)|;\]|;-\])(?=$|[\s)!.,!?])/gi },
+    { emotion: 'excited', pattern: /(?:^|[\s(])(?::D|:-D|=D|xD|XD|\^\^)(?=$|[\s)!.,!?])/i, replace: /(?:^|[\s(])(?::D|:-D|=D|xD|XD|\^\^)(?=$|[\s)!.,!?])/gi },
+    { emotion: 'happy', pattern: /(?:^|[\s(])(?::\)|:-\)|=\)|=\])(?=$|[\s)!.,!?])/i, replace: /(?:^|[\s(])(?::\)|:-\)|=\)|=\])(?=$|[\s)!.,!?])/gi },
+    { emotion: 'sad', pattern: /(?:^|[\s(])(?::\(|:-\(|=\(|:'\()(?=$|[\s)!.,!?])/i, replace: /(?:^|[\s(])(?::\(|:-\(|=\(|:'\()(?=$|[\s)!.,!?])/gi },
+    { emotion: 'thinking', pattern: /(?:^|[\s(])(?::\/|:-\/|:\\|:-\\|:\||:-\|)(?=$|[\s)!.,!?])/i, replace: /(?:^|[\s(])(?::\/|:-\/|:\\|:-\\|:\||:-\|)(?=$|[\s)!.,!?])/gi }
+];
+const UNICODE_EMOTION_HINTS = [
+    { emotion: 'celebrating', pattern: /(?:🎉|🥳|🎊|✨|🌟|⭐|🙌|👏|🔥|🚀)/u },
+    { emotion: 'proud', pattern: /(?:👍|💪|🤝|🏆|✅|❤|❤️|💖|💕|💙|💚|💜|🧡|🤍|♥|♡)/u },
+    { emotion: 'excited', pattern: /(?:😄|😁|😃|😀|😊|😍|🤩|😆|😺|😸|😻)/u },
+    { emotion: 'wink', pattern: /(?:😉|😜|😏)/u },
+    { emotion: 'thinking', pattern: /(?:🤔|🧐|💭)/u },
+    { emotion: 'confused', pattern: /(?:😕|🤷|❓|❔|😵|🤯)/u },
+    { emotion: 'worried', pattern: /(?:😟|😬|😰|😨|😥|⚠️|⚠|🚫|😣|😓)/u },
+    { emotion: 'sad', pattern: /(?:😢|😭|☹️|☹|🙁|😞|😔|💔)/u },
+    { emotion: 'angry', pattern: /(?:😠|😡|🤬)/u },
+    { emotion: 'sleepy', pattern: /(?:😴|🥱|💤)/u },
+    { emotion: 'surprised', pattern: /(?:😮|😲|😯|😳|😱)/u },
+    { emotion: 'happy', pattern: /(?:🙂|☺️|☺)/u }
+];
+function inferAvatarEmotionFromText(text = '') {
+    const value = String(text || '').trim();
+    if (!value) {
+        return '';
+    }
+    for (const hint of UNICODE_EMOTION_HINTS) {
+        if (hint.pattern.test(value)) {
+            return hint.emotion;
+        }
+    }
+    for (const hint of ASCII_EMOTION_HINTS) {
+        if (hint.pattern.test(value)) {
+            return hint.emotion;
+        }
+    }
+    return '';
+}
+function sanitizeTextForSpeech(text = '') {
+    let value = String(text || '');
+    if (!value.trim()) {
+        return '';
+    }
+    value = value.replace(EMOJI_SEQUENCE_RE, ' ');
+    value = value.replace(/[♡♥❤]+/gu, ' ');
+    for (const hint of ASCII_EMOTION_HINTS) {
+        value = value.replace(hint.replace, ' ');
+    }
+    value = value
+        .replace(/[\u200D\uFE0E\uFE0F]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/\s+([,.;!?])/g, '$1')
+        .replace(/([(\[])\s+/g, '$1')
+        .replace(/\s+([)\]])/g, '$1')
+        .trim();
+    return value;
+}
+function buildLocalBrowserFallbackConfig(providerKey) {
+    if (providerKey === 'localgemma') {
+        return {
+            key: 'localgemma',
+            label: 'Local Gemma 4 E2B (Browser)',
+            providerLabel: 'Local Gemma 4 (Browser)',
+            modelId: 'gemma4-e2b-it-onnx',
+            localPath: 'thirdparty/models/gemma4-e2b-it-onnx',
+            remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
+            runtime: {
+                modelClass: 'Gemma4ForConditionalGeneration',
+                dtype: {
+                    model: 'q4',
+                    decoder_model_merged: 'q4',
+                    vision_encoder: 'q4',
+                    audio_encoder: 'q4'
+                }
+            },
+            supportsVision: true,
+            defaultPrompt: 'You are a concise, friendly social chat co-host. You can reference visible context when it helps, but do not narrate the scene unless asked.'
+        };
+    }
+    return {
+        key: 'localqwen',
+        label: 'Local Qwen 3.5 (Browser)',
+        providerLabel: 'Local Qwen 3.5 (Browser)',
+        modelId: 'qwen3.5-0.8b-onnx',
+        localPath: 'thirdparty/models/qwen3.5-0.8b-onnx',
+        remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
+        runtime: {
+            modelClass: 'Qwen3_5ForConditionalGeneration',
+            dtype: {
+                embed_tokens: 'q4',
+                decoder_model_merged: 'q4',
+                model: 'q4',
+                vision_encoder: 'q4'
+            }
+        },
+        supportsVision: false,
+        defaultPrompt: 'You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.'
+    };
+}
+function getLocalBrowserProviderConfig(providerKey) {
+    const config = window.SSNBrowserModelCatalog?.getLocalBrowserModelConfig
+        ? window.SSNBrowserModelCatalog.getLocalBrowserModelConfig(providerKey)
+        : null;
+    return cloneLocalBrowserConfig(config || buildLocalBrowserFallbackConfig(providerKey));
+}
+const LOCAL_QWEN_CONFIG = getLocalBrowserProviderConfig('localqwen');
+const LOCAL_GEMMA_CONFIG = getLocalBrowserProviderConfig('localgemma');
+const LOCAL_QWEN_DEFAULT_MODEL = LOCAL_QWEN_CONFIG.modelId;
+const LOCAL_QWEN_DEFAULT_REMOTE_HOST = LOCAL_QWEN_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
+const LOCAL_GEMMA_DEFAULT_MODEL = LOCAL_GEMMA_CONFIG.modelId;
+const LOCAL_GEMMA_DEFAULT_REMOTE_HOST = LOCAL_GEMMA_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
+const LOCAL_BROWSER_BUNDLED_MODEL_CHECKS = new Map();
 const BROWSER_TTS_AVAILABLE = typeof window !== 'undefined' &&
     'speechSynthesis' in window &&
     typeof window.SpeechSynthesisUtterance !== 'undefined';
@@ -1331,6 +1788,10 @@ const diagnosticsState = {
 const diagnosticsHistory = [];
 let lastDiagnosticsSignature = '';
 let diagnosticsCopyStatusTimer = null;
+let messageInput = null;
+let sendButton = null;
+let SEND_BUTTON_IDLE_TEXT = 'Send';
+let manualSendBusy = false;
 const voiceTelemetryState = {
     inputMode: '-',
     inputState: 'idle',
@@ -1360,12 +1821,24 @@ function normalizeVoicePreview(text) {
 function renderVoiceTelemetry() {
     const inputModeEl = document.getElementById('voiceInputMode');
     if (!inputModeEl) return;
+    const inputState = voiceTelemetryState.inputState || 'idle';
+    const outputState = voiceTelemetryState.outputState || 'idle';
+    const inputPreview = normalizeVoicePreview(voiceTelemetryState.inputPreview);
+    const outputPreview = normalizeVoicePreview(voiceTelemetryState.outputPreview);
     inputModeEl.textContent = voiceTelemetryState.inputMode || '-';
-    document.getElementById('voiceInputState').textContent = voiceTelemetryState.inputState || 'idle';
-    document.getElementById('voiceOutputState').textContent = voiceTelemetryState.outputState || 'idle';
-    document.getElementById('voiceInputPreview').textContent = normalizeVoicePreview(voiceTelemetryState.inputPreview);
-    document.getElementById('voiceOutputPreview').textContent = normalizeVoicePreview(voiceTelemetryState.outputPreview);
+    document.getElementById('voiceInputState').textContent = inputState;
+    document.getElementById('voiceOutputState').textContent = outputState;
+    document.getElementById('voiceInputPreview').textContent = inputPreview;
+    document.getElementById('voiceOutputPreview').textContent = outputPreview;
     document.getElementById('voiceUpdated').textContent = formatDiagnosticsTime(voiceTelemetryState.updated);
+    const voiceStatusLine = document.getElementById('voiceStatusLine');
+    const voiceHeardSummary = document.getElementById('voiceHeardSummary');
+    if (voiceStatusLine) {
+        voiceStatusLine.textContent = `${inputState} | ${outputState}`;
+    }
+    if (voiceHeardSummary) {
+        voiceHeardSummary.textContent = inputPreview;
+    }
 }
 function updateVoiceTelemetry(patch = {}) {
     Object.assign(voiceTelemetryState, patch);
@@ -1381,6 +1854,88 @@ function resetVoiceTelemetry(overrides = {}) {
         ...overrides
     });
 }
+function humanizeDiagnosticEvent(value) {
+    const raw = String(value || '').trim();
+    if (!raw || raw === '-') {
+        return 'Waiting for activity.';
+    }
+    if (/%$/.test(raw)) {
+        return raw.replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    return raw.replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+}
+function getActionStatusSummary() {
+    const state = String(diagnosticsState.state || 'idle').trim().toLowerCase();
+    const provider = diagnosticsState.provider || 'provider';
+    const detailFallback = humanizeDiagnosticEvent(diagnosticsState.lastEvent);
+    const errorMessage = diagnosticsState.lastError && diagnosticsState.lastError !== '-'
+        ? diagnosticsState.lastError
+        : '';
+    switch (state) {
+        case 'starting':
+            return {
+                line: 'Starting stream...',
+                detail: 'Requesting camera, microphone, and stream setup.'
+            };
+        case 'connecting':
+            return {
+                line: 'Connecting...',
+                detail: `Opening ${provider}.`
+            };
+        case 'loading':
+            return {
+                line: 'Loading model...',
+                detail: detailFallback
+            };
+        case 'ready':
+        case 'connected':
+        case 'running':
+            return {
+                line: 'Ready',
+                detail: provider !== '-' ? `${provider} is connected.` : 'Connected.'
+            };
+        case 'responding':
+            return {
+                line: 'Generating reply...',
+                detail: 'Waiting for the co-host response.'
+            };
+        case 'restarting':
+            return {
+                line: 'Restarting stream...',
+                detail: 'Rebuilding the active stream and provider connection.'
+            };
+        case 'stopped':
+            return {
+                line: 'Stopped',
+                detail: 'Press Start and Connect to begin again.'
+            };
+        case 'error':
+            return {
+                line: 'Issue',
+                detail: errorMessage || detailFallback
+            };
+        case 'initialized':
+            return {
+                line: 'Ready to start',
+                detail: provider !== '-' ? `${provider} is selected.` : 'Choose a provider and start the stream.'
+            };
+        default:
+            return {
+                line: 'Idle',
+                detail: 'Press Start and Connect to begin.'
+            };
+    }
+}
+function renderActionStatusSummary() {
+    const actionStatusLine = document.getElementById('actionStatusLine');
+    const actionStatusDetail = document.getElementById('actionStatusDetail');
+    if (!actionStatusLine || !actionStatusDetail) {
+        return;
+    }
+    const summary = getActionStatusSummary();
+    actionStatusLine.textContent = summary.line;
+    actionStatusDetail.textContent = summary.detail;
+}
 function renderDiagnostics() {
     const providerEl = document.getElementById('diagProvider');
     if (!providerEl) return;
@@ -1391,6 +1946,8 @@ function renderDiagnostics() {
     document.getElementById('diagEvent').textContent = diagnosticsState.lastEvent || '-';
     document.getElementById('diagError').textContent = diagnosticsState.lastError || '-';
     document.getElementById('diagUpdated').textContent = formatDiagnosticsTime(diagnosticsState.updated);
+    renderActionStatusSummary();
+    syncSendButtonAvailability();
 }
 function pushDiagnosticsHistory() {
     diagnosticsHistory.push({
@@ -1549,9 +2106,16 @@ const REALTIME_PROVIDER_CONFIG = {
     }
 };
 class LocalBrowserPublisher {
-    constructor(stream, _apiKey, modelOverride = '') {
+    constructor(stream, providerKey = 'localqwen', modelOverride = '') {
         this.stream = stream;
-        this.model = (modelOverride || LOCAL_QWEN_DEFAULT_MODEL).trim();
+        this.providerKey = providerKey || 'localqwen';
+        this.providerConfig = getLocalBrowserProviderConfig(this.providerKey);
+        this.providerLabel = this.providerConfig.providerLabel || this.providerConfig.label || 'Local Browser Model';
+        this.modelOverride = (modelOverride || '').trim();
+        this.model = (this.modelOverride || this.providerConfig.modelId || LOCAL_QWEN_DEFAULT_MODEL).trim();
+        this.remoteHost = this.providerConfig.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
+        this.workerModelId = this.model;
+        this.modelSourceLabel = 'remote';
         this.worker = null;
         this.stopped = false;
         this.connected = false;
@@ -1581,13 +2145,68 @@ class LocalBrowserPublisher {
         this.maxReconnectAttempts = 2;
         this.handleWorkerMessage = this.handleWorkerMessage.bind(this);
         updateDiagnostics({
-            provider: 'Local Qwen 3.5 (Browser)',
+            provider: this.providerLabel,
             model: this.model,
             state: 'initialized',
             connected: 'no',
             lastEvent: 'publisher.created',
             lastError: '-'
         });
+    }
+    async resolveWorkerModelTarget() {
+        const defaultModelId = String(this.providerConfig.modelId || '').trim();
+        const bundledLocalPath = normalizeBundledModelPath(this.providerConfig.localPath || '');
+        const requestedModelId = String(this.model || '').trim() || defaultModelId;
+        const modelIsLocalPath = isLikelyLocalModelPath(requestedModelId);
+        const requestedLocalPath = modelIsLocalPath ? normalizeBundledModelPath(requestedModelId) : '';
+        const shouldPreferBundledLocalPath = !modelIsLocalPath && bundledLocalPath && requestedModelId === defaultModelId;
+        if (shouldPreferBundledLocalPath && await canUseBundledLocalModel(bundledLocalPath, this.providerConfig)) {
+            return {
+                modelId: bundledLocalPath,
+                sourceLabel: 'bundled'
+            };
+        }
+        if (modelIsLocalPath) {
+            if (requestedLocalPath && await canUseBundledLocalModel(requestedLocalPath, this.providerConfig)) {
+                return {
+                    modelId: requestedLocalPath,
+                    sourceLabel: 'bundled'
+                };
+            }
+            if (defaultModelId && !isLikelyLocalModelPath(defaultModelId)) {
+                const fallbackEvent = `${this.providerLabel} using self-hosted ${defaultModelId} after skipping missing bundled files`;
+                this.modelOverride = '';
+                this.model = defaultModelId;
+                if (requestedLocalPath && requestedLocalPath === bundledLocalPath) {
+                    saveModelOverride(this.providerKey, '');
+                    if (providerSelect?.value === this.providerKey && modelOverrideInput) {
+                        modelOverrideInput.value = '';
+                    }
+                }
+                updateDiagnostics({
+                    model: defaultModelId,
+                    lastEvent: fallbackEvent,
+                    lastError: '-'
+                });
+                updateVoiceTelemetry({
+                    outputState: `Loading ${this.providerLabel}...`,
+                    outputPreview: fallbackEvent
+                });
+                return {
+                    modelId: defaultModelId,
+                    sourceLabel: 'remote'
+                };
+            }
+        }
+        return {
+            modelId: requestedModelId,
+            sourceLabel: modelIsLocalPath ? 'bundled' : 'remote'
+        };
+    }
+    getVoiceInputMode() {
+        return this.providerConfig.supportsVision
+            ? 'Browser STT + optional image frame'
+            : 'Browser STT -> text prompt';
     }
     setupVideoProcessing() {
         return Promise.resolve();
@@ -1707,6 +2326,9 @@ class LocalBrowserPublisher {
         }
         clearTimeout(pending.timeoutId);
         this.pendingRequests.delete(message.requestId);
+        if (message.requestId === this.activeRequestId) {
+            this.activeRequestId = null;
+        }
         if (message.ok) {
             pending.resolve(message);
             return;
@@ -1732,11 +2354,11 @@ class LocalBrowserPublisher {
         if (message.type === 'status') {
             const stateValue = message.state || 'connected';
             updateDiagnostics({
-                provider: 'Local Qwen 3.5 (Browser)',
+                provider: this.providerLabel,
                 model: this.model,
                 state: stateValue,
                 connected: stateValue === 'error' ? 'no' : (this.connected ? 'yes' : 'no'),
-                lastEvent: `local.${stateValue}`,
+                lastEvent: `localbrowser.${this.providerKey}.${stateValue}`,
                 lastError: stateValue === 'error'
                     ? (message.message || 'Local model worker error')
                     : '-'
@@ -1747,11 +2369,11 @@ class LocalBrowserPublisher {
             const percent = Number.isFinite(message.progress) ? Math.round(message.progress) : 0;
             const phase = message.phase || 'model';
             updateDiagnostics({
-                provider: 'Local Qwen 3.5 (Browser)',
+                provider: this.providerLabel,
                 model: this.model,
                 state: 'loading',
                 connected: 'no',
-                lastEvent: `local.${phase}.${percent}%`
+                lastEvent: `localbrowser.${this.providerKey}.${phase}.${percent}%`
             });
             return;
         }
@@ -1852,7 +2474,7 @@ class LocalBrowserPublisher {
         pushChunk(current);
         return chunks;
     }
-    speakTextChunk(text) {
+    speakTextChunk(text, emotionHint = '') {
         return new Promise((resolve, reject) => {
             if (!BROWSER_TTS_AVAILABLE || !text) {
                 resolve();
@@ -1885,13 +2507,13 @@ class LocalBrowserPublisher {
             utterance.volume = 1;
             utterance.onstart = () => {
                 this.ttsActive = true;
-                avatar.setEmotion('proud', true);
-                updateDiagnostics({
-                    state: 'responding',
-                    connected: 'yes',
-                    lastEvent: 'local.tts.start',
-                    lastError: '-'
-                });
+                avatar.setEmotion(emotionHint || inferAvatarEmotionFromText(text) || 'proud', true);
+        updateDiagnostics({
+            state: 'responding',
+            connected: 'yes',
+            lastEvent: `localbrowser.${this.providerKey}.tts.start`,
+            lastError: '-'
+        });
             };
             utterance.onend = () => finishResolve();
             utterance.onerror = (event) => {
@@ -1911,20 +2533,29 @@ class LocalBrowserPublisher {
         if (!this.shouldUseBrowserTts()) {
             return;
         }
-        const chunks = this.buildSpeechChunks(text);
+        const speechEmotion = inferAvatarEmotionFromText(text);
+        const speechText = sanitizeTextForSpeech(text);
+        const chunks = this.buildSpeechChunks(speechText);
         if (!chunks.length) {
+            if (speechEmotion) {
+                avatar.pulseEmotion(speechEmotion, 1400, false);
+            }
+            updateVoiceTelemetry({
+                outputState: speechEmotion ? 'Avatar emote only' : 'Browser TTS skipped',
+                outputPreview: speechEmotion ? `[avatar:${speechEmotion}]` : '-'
+            });
             return;
         }
         this.pauseRecognitionForSpeech();
         updateDiagnostics({
             state: 'responding',
             connected: 'yes',
-            lastEvent: 'local.tts.prepare',
+            lastEvent: `localbrowser.${this.providerKey}.tts.prepare`,
             lastError: '-'
         });
         updateVoiceTelemetry({
             outputState: 'Browser TTS queued',
-            outputPreview: text
+            outputPreview: speechText
         });
         try {
             window.speechSynthesis.cancel();
@@ -1936,17 +2567,17 @@ class LocalBrowserPublisher {
                     outputState: 'Browser TTS speaking',
                     outputPreview: chunk
                 });
-                await this.speakTextChunk(chunk);
+                await this.speakTextChunk(chunk, speechEmotion);
             }
             updateDiagnostics({
                 state: 'connected',
                 connected: 'yes',
-                lastEvent: 'local.tts.done',
+                lastEvent: `localbrowser.${this.providerKey}.tts.done`,
                 lastError: '-'
             });
             updateVoiceTelemetry({
                 outputState: 'Browser TTS done',
-                outputPreview: text
+                outputPreview: speechText
             });
         } finally {
             this.clearActiveTtsRequest();
@@ -2102,43 +2733,77 @@ class LocalBrowserPublisher {
             this.worker = null;
         }
         updateDiagnostics({
-            provider: 'Local Qwen 3.5 (Browser)',
+            provider: this.providerLabel,
             model: this.model,
             state: 'connecting',
             connected: 'no',
-            lastEvent: 'local.connect.start',
+            lastEvent: `localbrowser.${this.providerKey}.connect.start`,
             lastError: '-'
         });
-        this.worker = new Worker(LOCAL_QWEN_WORKER_PATH, { type: 'module' });
+        try {
+            this.worker = createLocalBrowserWorker();
+        } catch (error) {
+            const errorMessage = formatLocalBrowserWorkerError(error);
+            updateDiagnostics({
+                state: 'error',
+                connected: 'no',
+                lastEvent: `localbrowser.${this.providerKey}.worker.error`,
+                lastError: errorMessage
+            });
+            throw new Error(errorMessage);
+        }
         this.worker.onmessage = this.handleWorkerMessage;
         this.worker.onerror = (event) => {
-            const errorMessage = event?.message || 'Local model worker error';
+            const errorMessage = formatLocalBrowserWorkerError(event || {});
             this.connected = false;
             updateDiagnostics({
                 state: 'error',
                 connected: 'no',
-                lastEvent: 'local.worker.error',
+                lastEvent: `localbrowser.${this.providerKey}.worker.error`,
                 lastError: errorMessage
             });
             this.resetPendingRequests(errorMessage);
         };
-        await this.requestWorker('init', {
-            modelId: this.model,
-            dtype: LOCAL_QWEN_DEFAULT_DTYPE,
-            remoteHost: LOCAL_QWEN_DEFAULT_REMOTE_HOST
-        }, 420000);
+        const workerTarget = await this.resolveWorkerModelTarget();
+        this.workerModelId = workerTarget.modelId;
+        this.modelSourceLabel = workerTarget.sourceLabel;
+        try {
+            await this.requestWorker('init', {
+                providerKey: this.providerKey,
+                modelId: this.workerModelId,
+                runtime: cloneLocalBrowserConfig(this.providerConfig.runtime || {}),
+                remoteHost: this.remoteHost
+            }, 420000);
+        } catch (error) {
+            const baseMessage = error?.message || String(error || '');
+            const errorMessage = (workerTarget.sourceLabel === 'remote' && isLikelyRemoteAccessError(baseMessage))
+                ? buildBundledModelAccessError(this.providerConfig, this.remoteHost, baseMessage)
+                : baseMessage;
+            if (this.worker) {
+                this.worker.terminate();
+                this.worker = null;
+            }
+            this.connected = false;
+            updateDiagnostics({
+                state: 'error',
+                connected: 'no',
+                lastEvent: `localbrowser.${this.providerKey}.connect.error`,
+                lastError: errorMessage
+            });
+            throw new Error(errorMessage);
+        }
         this.connected = true;
         this.reconnectAttempts = 0;
         updateDiagnostics({
-            provider: 'Local Qwen 3.5 (Browser)',
+            provider: this.providerLabel,
             model: this.model,
             state: 'connected',
             connected: 'yes',
-            lastEvent: 'local.connect.ready',
+            lastEvent: `localbrowser.${this.providerKey}.connect.ready`,
             lastError: '-'
         });
         resetVoiceTelemetry({
-            inputMode: 'Browser STT -> text prompt',
+            inputMode: this.getVoiceInputMode(),
             outputState: this.shouldUseBrowserTts() ? 'Browser TTS ready' : 'Text response only'
         });
     }
@@ -2180,16 +2845,24 @@ class LocalBrowserPublisher {
         updateDiagnostics({
             state: 'responding',
             connected: 'yes',
-            lastEvent: 'local.generate.start',
+            lastEvent: `localbrowser.${this.providerKey}.generate.start`,
             lastError: '-'
         });
         try {
+            const hasLiveVideo = this.providerConfig.supportsVision &&
+                document.getElementById('videoSource')?.value !== 'none' &&
+                this.stream.getVideoTracks().some((track) => track.readyState === 'live' && track.enabled);
+            const imageDataUrl = hasLiveVideo ? this.captureFrameDataUrl() : '';
             const result = await this.requestWorker('generate', {
+                providerKey: this.providerKey,
+                modelId: this.workerModelId,
+                runtime: cloneLocalBrowserConfig(this.providerConfig.runtime || {}),
                 prompt,
                 systemPrompt: systemPromptValue,
                 maxNewTokens: 220,
                 temperature: 0.65,
-                topP: 0.92
+                topP: 0.92,
+                images: imageDataUrl ? [imageDataUrl] : []
             }, 300000);
             if (!this.currentResponseText && result.text) {
                 this.appendModelText(result.text);
@@ -2198,8 +2871,8 @@ class LocalBrowserPublisher {
             }
             const finalText = (this.currentResponseText || result.text || '').trim();
             const completionEvent = result.finishReason === 'repetition_guard'
-                ? 'local.generate.guarded'
-                : 'local.generate.done';
+                ? `localbrowser.${this.providerKey}.generate.guarded`
+                : `localbrowser.${this.providerKey}.generate.done`;
             if (finalText) {
                 await this.speakTextResponse(finalText);
             }
@@ -2218,11 +2891,27 @@ class LocalBrowserPublisher {
             updateDiagnostics({
                 state: 'error',
                 connected: this.connected ? 'yes' : 'no',
-                lastEvent: 'local.generate.error',
+                lastEvent: `localbrowser.${this.providerKey}.generate.error`,
                 lastError: error.message || 'Local generation failed'
             });
             throw error;
         }
+    }
+    captureFrameDataUrl() {
+        if (!preview || preview.readyState < 2 || !preview.videoWidth || !preview.videoHeight) {
+            return '';
+        }
+        const maxWidth = 960;
+        const scale = Math.min(1, maxWidth / preview.videoWidth);
+        const width = Math.max(1, Math.floor(preview.videoWidth * scale));
+        const height = Math.max(1, Math.floor(preview.videoHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return '';
+        ctx.drawImage(preview, 0, 0, width, height);
+        return canvas.toDataURL('image/jpeg', 0.8);
     }
     isConnected() {
         return this.connected && !!this.worker;
@@ -2246,7 +2935,7 @@ class LocalBrowserPublisher {
         this.resumeRecognitionAfterSpeech = false;
         this.cancelBrowserTts();
         resetVoiceTelemetry({
-            inputMode: 'Browser STT -> text prompt',
+            inputMode: this.getVoiceInputMode(),
             outputState: this.shouldUseBrowserTts() ? 'Browser TTS ready' : 'Text response only'
         });
         if (this.recognition) {
@@ -2279,7 +2968,7 @@ class OpenAICompatiblePublisher {
     constructor(stream, apiKey, modelOverride = '', endpointOverride = '') {
         this.stream = stream;
         this.apiKey = (apiKey || '').trim();
-        this.model = (modelOverride || CUSTOM_OPENAI_DEFAULT_MODEL).trim();
+        this.model = (modelOverride || '').trim();
         this.endpoint = (endpointOverride || CUSTOM_OPENAI_DEFAULT_ENDPOINT).trim();
         this.connected = false;
         this.stopped = false;
@@ -2296,7 +2985,7 @@ class OpenAICompatiblePublisher {
         this.conversation = [];
         updateDiagnostics({
             provider: 'OpenAI-Compatible (Custom)',
-            model: this.model,
+            model: this.model || 'server default',
             state: 'initialized',
             connected: 'no',
             lastEvent: 'publisher.created',
@@ -2536,7 +3225,7 @@ class OpenAICompatiblePublisher {
         this.connected = true;
         updateDiagnostics({
             provider: 'OpenAI-Compatible (Custom)',
-            model: this.model,
+            model: this.model || 'server default',
             state: 'connected',
             connected: 'yes',
             lastEvent: 'custom.connect.ready',
@@ -2579,13 +3268,12 @@ class OpenAICompatiblePublisher {
             const response = await fetch(this.buildCompletionsUrl(), {
                 method: 'POST',
                 headers: this.buildHeaders(),
-                body: JSON.stringify({
-                    model: this.model,
+                body: JSON.stringify(Object.assign({
                     messages,
                     temperature: 0.65,
                     top_p: 0.92,
                     stream: false
-                }),
+                }, this.model ? { model: this.model } : {})),
                 signal: controller.signal
             });
             const raw = await response.text();
@@ -2978,6 +3666,8 @@ class RealtimePublisher {
         startButton.dataset.started = "false";
         startButton.disabled = false;
         sendButton.disabled = true;
+        sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        resetSendButton();
         systemPrompt.disabled = false;
     }
     async setupSpeechRecognition() {
@@ -3407,6 +4097,8 @@ class GoogleLivePublisher {
         startButton.dataset.started = "false";
         startButton.disabled = false;
         sendButton.disabled = true;
+        sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        resetSendButton();
         systemPrompt.disabled = false;
     }
 	async handleMessage(event) {
@@ -4359,6 +5051,7 @@ const customEndpointInfo = document.getElementById('customEndpointInfo');
 const customModelsRefreshButton = document.getElementById('customModelsRefresh');
 let customModelList = [];
 let customModelsLoading = false;
+let customModelsQueuedRefresh = false;
 
 function normalizeModelOverride(providerName, value) {
     let normalized = (value || '').trim();
@@ -4464,9 +5157,22 @@ function updateCustomModelSelect(currentModel = '') {
 }
 
 async function refreshCustomModelList(showErrors = false) {
-    if (!customModelSelect || !customEndpointInput || customModelsLoading) return;
+    if (!customModelSelect || !customEndpointInput) return;
+    if (customModelsLoading) {
+        customModelsQueuedRefresh = true;
+        return;
+    }
     if (providerSelect.value !== 'customopenai') return;
     const endpoint = getEffectiveCustomEndpoint('customopenai');
+    const hasStoredEndpoint = !!getStoredCustomEndpoint('customopenai');
+    const usingUntouchedDefaultEndpoint = !hasStoredEndpoint &&
+        normalizeCustomEndpoint(customEndpointInput.value || '') === CUSTOM_OPENAI_DEFAULT_ENDPOINT;
+    if (usingUntouchedDefaultEndpoint) {
+        customModelList = [];
+        updateCustomModelSelect(getEffectiveModelForProvider('customopenai'));
+        setCustomEndpointInfo('Set your OpenAI-compatible endpoint, then refresh models or press Enter.', false);
+        return;
+    }
     if (isHttpMixedContentBlocked(endpoint)) {
         setCustomEndpointInfo('HTTPS page cannot call HTTP LAN endpoint. Use HTTPS endpoint or host this page over HTTP on LAN.', true);
         customModelList = [];
@@ -4499,7 +5205,28 @@ async function refreshCustomModelList(showErrors = false) {
             : [];
         const models = [...dataModels, ...legacyModels];
         customModelList = [...new Set(models)].sort();
-        updateCustomModelSelect(getEffectiveModelForProvider('customopenai'));
+        const effectiveModel = getEffectiveModelForProvider('customopenai');
+        let selectedModel = effectiveModel;
+        if (customModelList.length === 1 && !effectiveModel) {
+            selectedModel = customModelList[0];
+            modelOverrideInput.value = selectedModel;
+            saveModelOverride('customopenai', selectedModel);
+        } else if (effectiveModel && !customModelList.includes(effectiveModel) && customModelList.length) {
+            selectedModel = customModelList[0];
+            modelOverrideInput.value = selectedModel;
+            saveModelOverride('customopenai', selectedModel);
+        }
+        updateCustomModelSelect(selectedModel);
+        updateDiagnostics({
+            provider: providerUIConfig.customopenai.label,
+            model: selectedModel || 'server default',
+            state: publisher && publisher.isConnected && publisher.isConnected()
+                ? 'connected'
+                : (publisher ? 'starting' : 'idle'),
+            connected: publisher && publisher.isConnected && publisher.isConnected() ? 'yes' : 'no',
+            lastEvent: 'custom.models.loaded',
+            lastError: '-'
+        });
         setCustomEndpointInfo(customModelList.length
             ? `Loaded ${customModelList.length} model(s) from endpoint`
             : 'No models returned by endpoint');
@@ -4518,11 +5245,17 @@ async function refreshCustomModelList(showErrors = false) {
     } finally {
         customModelsLoading = false;
         customModelsRefreshButton.disabled = false;
+        if (customModelsQueuedRefresh && providerSelect.value === 'customopenai') {
+            customModelsQueuedRefresh = false;
+            setTimeout(() => {
+                refreshCustomModelList(showErrors).catch(() => {});
+            }, 0);
+        }
     }
 }
 
 function isRealtimeProvider(providerName) {
-    return providerName === 'chatgpt' || providerName === 'xai' || providerName === 'localqwen' || providerName === 'customopenai';
+    return providerName === 'chatgpt' || providerName === 'xai' || providerName === 'localqwen' || providerName === 'localgemma' || providerName === 'customopenai';
 }
 
 function createPublisherForProvider(providerName, activeStream, apiKey) {
@@ -4530,8 +5263,8 @@ function createPublisherForProvider(providerName, activeStream, apiKey) {
     if (providerName === 'gemini') {
         return new GoogleLivePublisher(activeStream, apiKey, effectiveModel);
     }
-    if (providerName === 'localqwen') {
-        return new LocalBrowserPublisher(activeStream, apiKey, effectiveModel);
+    if (providerName === 'localqwen' || providerName === 'localgemma') {
+        return new LocalBrowserPublisher(activeStream, providerName, effectiveModel);
     }
     if (providerName === 'customopenai') {
         const endpoint = getEffectiveCustomEndpoint(providerName);
@@ -4549,7 +5282,9 @@ function validateApiKey() {
     const providerConfig = providerUIConfig[selectedProvider] || providerUIConfig.gemini;
     const requiresApiKey = providerConfig.requiresApiKey !== false;
     const acceptsOptionalApiKey = providerConfig.acceptsOptionalApiKey === true;
-    startButton.disabled = requiresApiKey ? !apiKey : false;
+    if (startButton.textContent !== 'Starting...') {
+        startButton.disabled = false;
+    }
     if (requiresApiKey || acceptsOptionalApiKey) {
         if (apiKey) {
             localStorage.setItem(`apiKey_${selectedProvider}`, apiKey);
@@ -4572,13 +5307,16 @@ startButton.addEventListener('click', async () => {
     const acceptsOptionalApiKey = providerConfig.acceptsOptionalApiKey === true;
     const apiKey = (requiresApiKey || acceptsOptionalApiKey) ? apiKeyInput.value.trim() : '';
     if (requiresApiKey && !apiKey) {
+        const missingKeyMessage = `Enter a ${providerConfig.label} API key before starting.`;
         apiKeyInput.classList.add('highlight');
         setTimeout(() => apiKeyInput.classList.remove('highlight'), 2000);
+        apiKeyInput.focus();
+        showError(missingKeyMessage);
         updateDiagnostics({
             state: 'error',
             connected: 'no',
             lastEvent: 'start.blocked',
-            lastError: 'Missing API key or client secret'
+            lastError: missingKeyMessage
         });
         return;
     }
@@ -4611,6 +5349,7 @@ startButton.addEventListener('click', async () => {
             startButton.disabled = false;
             sendButton.disabled = true;
             sendButton.title = 'You must Start the Stream before you can interact with the AI';
+            resetSendButton();
             document.getElementById('systemPrompt').disabled = false;
             updateDiagnostics({
                 state: 'stopped',
@@ -4641,6 +5380,7 @@ startButton.addEventListener('click', async () => {
         startButton.disabled = false;
         sendButton.disabled = false;
         sendButton.title = 'Send a message to the AI';
+        resetSendButton();
         document.getElementById('systemPrompt').disabled = true;
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
@@ -4654,11 +5394,39 @@ startButton.addEventListener('click', async () => {
         window.avatar?.pulseEmotion('celebrating', 1400, false);
     } catch (err) {
         console.error(err);
+        if (publisher) {
+            publisher.stop();
+            publisher = null;
+        }
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        if (preview.srcObject) {
+            preview.srcObject.getTracks().forEach(track => track.stop());
+            preview.srcObject = null;
+        }
+        if (currentAudioIndicator) {
+            currentAudioIndicator.remove();
+            currentAudioIndicator = null;
+        }
+        if (currentAudioContext) {
+            try {
+                Promise.resolve(currentAudioContext.close()).catch(() => {});
+            } catch (closeError) {}
+            currentAudioContext = null;
+        }
+        if (currentAnimationFrame) {
+            cancelAnimationFrame(currentAnimationFrame);
+            currentAnimationFrame = null;
+        }
         showError('Failed to start publishing: ' + err.message);
         startButton.textContent = 'Start Stream';
         startButton.dataset.started = "false";
         startButton.disabled = false;
         sendButton.disabled = true;
+        sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        resetSendButton();
         document.getElementById('systemPrompt').disabled = false;
         updateDiagnostics({
             state: 'error',
@@ -4917,6 +5685,46 @@ muteAudioButton.addEventListener('click', () => {
     muteAudioButton.querySelector('.speaker-icon').classList.toggle('muted');
 });
 let audioContext;
+function shouldUseExactDeviceId(deviceId) {
+    const normalized = String(deviceId || '').trim().toLowerCase();
+    return !!normalized && normalized !== 'default' && normalized !== 'communications';
+}
+function isRetryableDeviceError(error) {
+    const name = String(error?.name || '').trim();
+    return name === 'OverconstrainedError' || name === 'NotFoundError' || name === 'DevicesNotFoundError';
+}
+function updateSelectedDeviceFromTrack(selectEl, storageKey, track, allowScreen = false) {
+    if (!selectEl || !track) {
+        return;
+    }
+    const settingsDeviceId = String(track.getSettings?.().deviceId || '').trim();
+    const trackLabel = String(track.label || '').trim().toLowerCase();
+    let matchedValue = '';
+
+    if (settingsDeviceId) {
+        const matchedById = Array.from(selectEl.options).find((option) => option.value === settingsDeviceId);
+        if (matchedById) {
+            matchedValue = matchedById.value;
+        }
+    }
+    if (!matchedValue && trackLabel) {
+        const matchedByLabel = Array.from(selectEl.options).find((option) => String(option.text || '').trim().toLowerCase() === trackLabel);
+        if (matchedByLabel) {
+            matchedValue = matchedByLabel.value;
+        }
+    }
+    if (!matchedValue) {
+        const fallbackOption = Array.from(selectEl.options).find((option) => option.value !== 'none' && (allowScreen || option.value !== 'screen'));
+        matchedValue = fallbackOption ? fallbackOption.value : 'none';
+    }
+
+    selectEl.value = matchedValue;
+    if (matchedValue && matchedValue !== 'none') {
+        localStorage.setItem(storageKey, matchedValue);
+    } else {
+        localStorage.removeItem(storageKey);
+    }
+}
 async function getStream() {
     try {
         if (preview.srcObject) {
@@ -4949,13 +5757,15 @@ async function getStream() {
             }
         } else if (videoSelect.value !== 'none') {
             try {
+                const videoConstraint = shouldUseExactDeviceId(videoSelect.value)
+                    ? { deviceId: { exact: videoSelect.value } }
+                    : true;
                 videoStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        deviceId: { exact: videoSelect.value }
-                    }
+                    video: videoConstraint
                 });
                 const videoTrack = videoStream.getVideoTracks()[0];
                 if (videoTrack) {
+                    updateSelectedDeviceFromTrack(videoSelect, 'selectedVideoId', videoTrack);
                     outputStream.getVideoTracks().forEach(track => {
                         outputStream.removeTrack(track);
                         track.stop();
@@ -4964,18 +5774,44 @@ async function getStream() {
                 }
             } catch (err) {
                 console.warn('Selected video device failed:', err);
-                showError('Camera failed to start: ' + err.message);
-                videoSelect.value = 'none';
+                if (isRetryableDeviceError(err)) {
+                    try {
+                        videoStream = await navigator.mediaDevices.getUserMedia({
+                            video: true
+                        });
+                        const fallbackTrack = videoStream.getVideoTracks()[0];
+                        if (fallbackTrack) {
+                            updateSelectedDeviceFromTrack(videoSelect, 'selectedVideoId', fallbackTrack);
+                            outputStream.getVideoTracks().forEach(track => {
+                                outputStream.removeTrack(track);
+                                track.stop();
+                            });
+                            outputStream.addTrack(fallbackTrack);
+                        }
+                    } catch (fallbackError) {
+                        console.warn('Default camera fallback failed:', fallbackError);
+                        showError('Camera failed to start: ' + fallbackError.message);
+                        videoSelect.value = 'none';
+                        localStorage.removeItem('selectedVideoId');
+                    }
+                } else {
+                    showError('Camera failed to start: ' + err.message);
+                    videoSelect.value = 'none';
+                    localStorage.removeItem('selectedVideoId');
+                }
             }
         }
         if (audioSelect.value !== 'none') {
             try {
+                const audioConstraint = {
+                    echoCancellation: true,
+                    noiseSuppression: true
+                };
+                if (shouldUseExactDeviceId(audioSelect.value)) {
+                    audioConstraint.deviceId = { exact: audioSelect.value };
+                }
                 micStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        deviceId: { exact: audioSelect.value },
-                        echoCancellation: true,
-                        noiseSuppression: true
-                    }
+                    audio: audioConstraint
                 });
                 outputStream.getAudioTracks().forEach(track => {
                     outputStream.removeTrack(track);
@@ -4998,12 +5834,38 @@ async function getStream() {
                 } else {
                     const audioTrack = micStream.getAudioTracks()[0];
                     if (audioTrack) {
+                        updateSelectedDeviceFromTrack(audioSelect, 'selectedAudioId', audioTrack, true);
                         outputStream.addTrack(audioTrack);
                     }
                 }
             } catch (err) {
                 console.warn('Selected audio device failed:', err);
-                audioSelect.value = 'none';
+                if (isRetryableDeviceError(err)) {
+                    try {
+                        micStream = await navigator.mediaDevices.getUserMedia({
+                            audio: {
+                                echoCancellation: true,
+                                noiseSuppression: true
+                            }
+                        });
+                        const fallbackTrack = micStream.getAudioTracks()[0];
+                        if (fallbackTrack) {
+                            updateSelectedDeviceFromTrack(audioSelect, 'selectedAudioId', fallbackTrack, true);
+                            outputStream.getAudioTracks().forEach(track => {
+                                outputStream.removeTrack(track);
+                                track.stop();
+                            });
+                            outputStream.addTrack(fallbackTrack);
+                        }
+                    } catch (fallbackError) {
+                        console.warn('Default audio fallback failed:', fallbackError);
+                        audioSelect.value = 'none';
+                        localStorage.removeItem('selectedAudioId');
+                    }
+                } else {
+                    audioSelect.value = 'none';
+                    localStorage.removeItem('selectedAudioId');
+                }
             }
         } else if (videoStream?.getAudioTracks().length > 0) {
             const systemTrack = videoStream.getAudioTracks()[0];
@@ -5114,6 +5976,8 @@ async function updateMediaStream() {
         startButton.dataset.started = "false";
         startButton.disabled = false;
         sendButton.disabled = true;
+        sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        resetSendButton();
         document.getElementById('systemPrompt').disabled = false;
     }
 }
@@ -5168,8 +6032,47 @@ if (!navigator.mediaDevices?.getUserMedia) {
     initializeDevices();
     navigator.mediaDevices.addEventListener('devicechange', getDevices);
 }
-const messageInput = document.querySelector('.message-input');
-const sendButton = document.querySelector('#sendButton');
+messageInput = document.querySelector('.message-input');
+sendButton = document.querySelector('#sendButton');
+SEND_BUTTON_IDLE_TEXT = sendButton.textContent.trim() || 'Send';
+function resetSendButton() {
+    sendButton.textContent = SEND_BUTTON_IDLE_TEXT;
+}
+function syncSendButtonAvailability() {
+    if (!sendButton) {
+        return;
+    }
+    const streamStarted = document.getElementById('startButton')?.dataset?.started === 'true';
+    const currentState = String(diagnosticsState.state || 'idle').trim().toLowerCase();
+    const providerBusy = !!(publisher && publisher.responseActive);
+    if (manualSendBusy) {
+        sendButton.disabled = true;
+        sendButton.textContent = 'Sending...';
+        sendButton.title = 'Waiting for the AI response';
+        return;
+    }
+    if (!publisher || !streamStarted) {
+        sendButton.disabled = true;
+        resetSendButton();
+        sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        return;
+    }
+    if (providerBusy || currentState === 'responding') {
+        sendButton.disabled = true;
+        sendButton.textContent = 'Waiting...';
+        sendButton.title = 'Wait for the current reply to finish';
+        return;
+    }
+    if (currentState === 'starting' || currentState === 'connecting' || currentState === 'loading' || currentState === 'restarting') {
+        sendButton.disabled = true;
+        sendButton.textContent = 'Please wait...';
+        sendButton.title = 'The stream is still getting ready';
+        return;
+    }
+    sendButton.disabled = false;
+    resetSendButton();
+    sendButton.title = 'Send a message to the AI';
+}
 sendButton.disabled = true;
 sendButton.addEventListener('click', async () => {
     if (!publisher || sendButton.disabled) {
@@ -5178,6 +6081,8 @@ sendButton.addEventListener('click', async () => {
     }
     if (messageInput.value.trim()) {
         try {
+            manualSendBusy = true;
+            syncSendButtonAvailability();
             messageFormatter.appendMessage(messageInput.value, true);
             updateVoiceTelemetry({
                 inputState: 'Manual text prompt',
@@ -5188,6 +6093,9 @@ sendButton.addEventListener('click', async () => {
         } catch (err) {
             console.error('Failed to send message:', err);
             showError('Failed to send message: ' + err.message);
+        } finally {
+            manualSendBusy = false;
+            syncSendButtonAvailability();
         }
     }
 });
@@ -5220,6 +6128,7 @@ async function restartActivePublisher() {
 		startButton.dataset.started = "true";
 		sendButton.disabled = false;
 		sendButton.title = 'Send a message to the AI';
+        resetSendButton();
         document.getElementById('systemPrompt').disabled = true;
         if (stream.getAudioTracks().length > 0) {
             setupAudioIndicator(stream);
@@ -5243,6 +6152,7 @@ async function restartActivePublisher() {
 		startButton.dataset.started = "false";
 		sendButton.disabled = true;
 		sendButton.title = 'You must Start the Stream before you can interact with the AI';
+        resetSendButton();
 		document.getElementById('systemPrompt').disabled = false;
         updateDiagnostics({
             state: 'error',
@@ -5275,7 +6185,8 @@ const providerSelect = document.createElement('select');
 providerSelect.id = 'providerSelect';
 providerSelect.innerHTML = `
     <option value="gemini">Google Gemini Live</option>
-    <option value="localqwen">Local Qwen 3.5 (Browser)</option>
+    <option value="localqwen">Local Qwen 3.5 0.8B (Browser)</option>
+    <option value="localgemma">Local Gemma 4 E2B (Browser)</option>
     <option value="customopenai">OpenAI-Compatible (Custom)</option>
     <option value="chatgpt">OpenAI Realtime</option>
     <option value="xai">xAI Realtime</option>
@@ -5295,15 +6206,28 @@ const providerUIConfig = {
         supportsAudioResponse: true
     },
     localqwen: {
-        label: 'Local Qwen 3.5 (Browser)',
+        label: 'Local Qwen 3.5 0.8B (Browser)',
         apiKeyPlaceholder: 'No API key required',
         apiKeyInfoHtml: 'Uses your self-hosted model files (default: largefiles.socialstream.ninja) and local browser runtime. No third-party AI API key is used.',
         defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
         modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_DEFAULT_MODEL} on ${LOCAL_QWEN_DEFAULT_REMOTE_HOST})`,
-        disableCaptureSelection: true,
+        disableCaptureSelection: false,
         deviceNotice: BROWSER_TTS_AVAILABLE
-            ? 'Speech-to-text uses your browser/system default microphone. If Audio Response is selected, Local Qwen replies are spoken with your browser built-in text-to-speech. The selected audio source only affects the stream; inference still runs in-browser and model files are fetched from your configured self-hosted storage if not already cached.'
-            : 'Speech-to-text uses your browser/system default microphone, while the selected audio source only affects the stream. Inference runs in-browser, and model files are fetched from your configured self-hosted storage if not already cached.',
+            ? 'Speech-to-text uses your browser/system default microphone. If Audio Response is selected, Local Qwen replies are spoken with your browser built-in text-to-speech. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames.'
+            : 'Speech-to-text uses your browser/system default microphone. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames.',
+        requiresApiKey: false,
+        supportsAudioResponse: BROWSER_TTS_AVAILABLE
+    },
+    localgemma: {
+        label: 'Local Gemma 4 E2B (Browser)',
+        apiKeyPlaceholder: 'No API key required',
+        apiKeyInfoHtml: 'Uses your self-hosted Gemma 4 model files and local browser runtime. No third-party AI API key is used.',
+        defaultModel: LOCAL_GEMMA_DEFAULT_MODEL,
+        modelPlaceholder: `Optional model id/path (default ${LOCAL_GEMMA_DEFAULT_MODEL} on ${LOCAL_GEMMA_DEFAULT_REMOTE_HOST})`,
+        disableCaptureSelection: false,
+        deviceNotice: BROWSER_TTS_AVAILABLE
+            ? 'Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees. Audio responses use your browser built-in text-to-speech.'
+            : 'Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees.',
         requiresApiKey: false,
         supportsAudioResponse: BROWSER_TTS_AVAILABLE
     },
@@ -5312,7 +6236,7 @@ const providerUIConfig = {
         apiKeyPlaceholder: 'Optional bearer token (leave blank for local LM Studio/Ollama)',
         apiKeyInfoHtml: 'Connect to an OpenAI-compatible `/v1/chat/completions` endpoint (LM Studio, Ollama, vLLM, custom gateway).',
         defaultModel: CUSTOM_OPENAI_DEFAULT_MODEL,
-        modelPlaceholder: `Model id (default ${CUSTOM_OPENAI_DEFAULT_MODEL})`,
+        modelPlaceholder: 'Optional model override or select a model from the endpoint',
         disableCaptureSelection: false,
         deviceNotice: 'Speech-to-text runs in-browser. If camera/screen is enabled, a frame is attached for multimodal models.',
         requiresApiKey: false,
@@ -5337,6 +6261,7 @@ const providerUIConfig = {
 const defaultPrompts = {
     gemini: "You are a friendly social chat assistant that can see and hear the user. Avoid describing what you see unless asked.",
     localqwen: "You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.",
+    localgemma: "You are a concise, friendly social chat co-host. You can use visible context when it helps, but do not narrate the scene unless asked.",
     customopenai: "You are a concise, friendly social chat co-host. Keep answers practical and conversational.",
     chatgpt: "You are a friendly and helpful social chat assistant.",
     xai: "You are a friendly and helpful social chat assistant."
@@ -5382,6 +6307,11 @@ function getVoiceModeSummary(providerName) {
         case 'localqwen':
             return {
                 inputMode: 'Browser STT -> text prompt',
+                outputState: responseTypeValue === 'audio' && BROWSER_TTS_AVAILABLE ? 'Browser TTS ready' : 'Text response only'
+            };
+        case 'localgemma':
+            return {
+                inputMode: 'Browser STT + optional image frame',
                 outputState: responseTypeValue === 'audio' && BROWSER_TTS_AVAILABLE ? 'Browser TTS ready' : 'Text response only'
             };
         case 'customopenai':
@@ -5462,7 +6392,7 @@ function applyProviderUI(providerName, restoreKey = true) {
             localStorage.setItem('selectedAudioId', audioSelect.value);
         }
     }
-    if (config.disableCaptureSelection) {
+    if (config.deviceNotice) {
         updateRealtimeDeviceNotice(config.deviceNotice);
     } else {
         removeRealtimeDeviceNotice();
@@ -5555,6 +6485,7 @@ if (customEndpointInput) {
     customEndpointInput.addEventListener('change', async function() {
         const providerName = providerSelect.value;
         if (providerName !== 'customopenai') return;
+        const shouldRestartAfterUpdate = !!publisher && startButton.textContent === 'Stop Stream';
         const normalized = normalizeCustomEndpoint(this.value || CUSTOM_OPENAI_DEFAULT_ENDPOINT);
         this.value = normalized;
         saveCustomEndpoint(providerName, normalized);
@@ -5566,7 +6497,9 @@ if (customEndpointInput) {
         }
         setCustomEndpointInfo(`Endpoint: ${resolveOpenAICompatibleBase(normalized)}`, false);
         await refreshCustomModelList(true);
-        await restartActivePublisher();
+        if (shouldRestartAfterUpdate) {
+            await restartActivePublisher();
+        }
     });
     customEndpointInput.addEventListener('input', function() {
         const providerName = providerSelect.value;
@@ -5752,7 +6685,9 @@ try {
 	};
 	ElectronDesktopCapture = true;
 } catch (e) {
-	console.warn("Couldn't load electron's screen capture. Elevate the app's permission to allow it (right-click?)");
+    if (window.process?.versions?.electron) {
+	    console.warn("Couldn't load electron's screen capture. Elevate the app's permission to allow it (right-click?)");
+    }
 }
 function setupConnectionMonitoring() {
     let monitoringActive = false;

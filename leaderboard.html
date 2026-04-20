@@ -1283,6 +1283,7 @@
                 this.isMod = false;
                 this.isVip = false;
                 this.isVerified = false;
+                this.isBot = false;
                 
                 // New gift tracking properties
                 this.giftsGiven = 0;  // Number of gifts given to others
@@ -1424,6 +1425,20 @@
             }
             return users.get(key);
         }
+
+        function removeUser(name, type) {
+            if (!name) {
+                return;
+            }
+            Array.from(users.entries()).forEach(([key, user]) => {
+                if (!user || user.name !== name) {
+                    return;
+                }
+                if (!type || user.type === type) {
+                    users.delete(key);
+                }
+            });
+        }
         
         // Persistence functions
         function getStorageKey() {
@@ -1452,6 +1467,7 @@
                         isMod: user.isMod,
                         isVip: user.isVip,
                         isVerified: user.isVerified,
+                        isBot: user.isBot,
                         // New gift tracking properties
                         giftsGiven: user.giftsGiven,
                         giftValue: user.giftValue,
@@ -1502,6 +1518,9 @@
                 // Restore users
                 users.clear();
                 data.users.forEach(userData => {
+                    if (userData.isBot) {
+                        return;
+                    }
                     const user = new User(userData.name, userData.type);
                     Object.assign(user, userData);
                     users.set(userData.key, user);
@@ -1627,7 +1646,12 @@
                 }
 
                 const platform = entry.type || entry.platform || 'default';
+                if (entry.bot === true) {
+                    removeUser(username, platform);
+                    return;
+                }
                 const user = getOrCreateUser(username, platform);
+                user.isBot = false;
                 user.loyaltyPoints = Number(entry.points) || 0;
                 user.loyaltySpent = Number(entry.pointsSpent) || 0;
                 if (typeof entry.available === 'number' && !isNaN(entry.available)) {
@@ -1664,7 +1688,16 @@
                 return;
             }
 
+            if (data.bot === true) {
+                removeUser(data.chatname, data.type);
+                updateLeaderboard();
+                handleAutoHide();
+                saveToLocalStorage();
+                return;
+            }
+
             const user = getOrCreateUser(data.chatname, data.type);
+            user.isBot = false;
             user.messageCount++;
             user.lastActivity = Date.now();
             lastActivityTime = Date.now();
@@ -1740,7 +1773,7 @@
         }
 
         function updateLeaderboard() {
-            let sortedUsers = Array.from(users.values());
+            let sortedUsers = Array.from(users.values()).filter(user => !user.isBot);
             
             // Filter and sort based on category
             if (layout === 'topbar' && category === 'recent_gifts') {

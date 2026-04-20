@@ -175,6 +175,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `queueonly` | boolean | Shows only queued messages |
 | `pinnedonly` | boolean | Shows only pinned messages |
 | `viewonly` | boolean | Disables chat, pin, and feature capabilities |
+| `featuredmode` | boolean | Connects `dock.html` to the featured-message feed so it only receives selected messages |
 | `chatmode` | boolean | Enables chat-only mode (no pin/feature) |
 | `helpermode` | boolean | Enables view/pin/queue mode (no chat/feature) |
 | `chatonly` | boolean | Moves the chat input into the toolbar for a chat-centric layout |

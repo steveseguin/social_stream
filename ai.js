@@ -12,6 +12,12 @@ let isUploading = false;
 let lunrIndexPromise;
 const maxContextSize = 31000;
 const maxContextSizeFull = 32000;
+const RAG_MAX_SEARCH_RESULTS = 8;
+const RAG_MIN_SEARCH_RESULTS = 3;
+const RAG_MAX_RERANK_CANDIDATES = 16;
+const RAG_MAX_EVIDENCE_DOCS = 5;
+const RAG_CONTEXT_CHAR_LIMIT = Math.min(maxContextSize, 12000);
+const RAG_SCORE_RATIO_THRESHOLD = 0.35;
 
 class LLMServiceError extends Error {
     constructor(details = {}) {
@@ -32,7 +38,11 @@ class LLMServiceError extends Error {
 function getLLMHint(status, code, details = {}) {
     const provider = details.provider || '';
     const model = details.model || '';
+    const message = String(details.message || '').toLowerCase();
 
+    if ((provider === 'custom' || provider === 'ollama') && (message.includes('failed to fetch') || message.includes('networkerror') || message.includes('network error'))) {
+        return 'Check the endpoint URL, confirm the AI server is running, and verify Chrome or your firewall is not blocking the request.';
+    }
     if (provider === 'ollama' && /\.gguf$/i.test(model)) {
         return 'This looks like a GGUF filename. If you are using llama.cpp or another OpenAI-compatible server, choose Custom API instead of Ollama.';
     }
@@ -86,7 +96,7 @@ function reportLLMError(error) {
 
 function createLLMError(baseDetails, extra = {}) {
     const merged = { ...baseDetails, ...extra };
-    if (!merged.hint && (merged.status || merged.code)) {
+    if (!merged.hint) {
         merged.hint = getLLMHint(merged.status, merged.code, merged) || merged.hint;
     }
     const err = new LLMServiceError(merged);
@@ -109,6 +119,97 @@ function noteChatBotDecision(reason, data, context = {}) {
     } catch (e) {
         console.warn('Failed to log chat bot decision:', e);
     }
+}
+
+function getChatbotPromptTimeZoneDetails(requestedTimeZone = '') {
+    const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const candidate = String(requestedTimeZone || '').trim();
+
+    if (!candidate) {
+        return {
+            formatTimeZone: localTimeZone,
+            label: localTimeZone || 'Local Browser Time'
+        };
+    }
+
+    try {
+        new Intl.DateTimeFormat('en-US', { timeZone: candidate }).format(new Date());
+        return {
+            formatTimeZone: candidate,
+            label: candidate
+        };
+    } catch (e) {
+        return {
+            formatTimeZone: localTimeZone,
+            label: localTimeZone || 'Local Browser Time'
+        };
+    }
+}
+
+function formatChatbotPromptVariable(token, requestedTimeZone = '') {
+    const now = new Date();
+    const timeZone = getChatbotPromptTimeZoneDetails(requestedTimeZone);
+    const formatWith = options => {
+        const formatterOptions = { ...options };
+        if (timeZone.formatTimeZone) {
+            formatterOptions.timeZone = timeZone.formatTimeZone;
+        }
+        return new Intl.DateTimeFormat('en-US', formatterOptions).format(now);
+    };
+
+    if (token === 'CURRENT_DATE_TIME') {
+        return `${formatWith({
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            timeZoneName: 'short'
+        })} [${timeZone.label}]`;
+    }
+
+    if (token === 'CURRENT_DATE') {
+        return `${formatWith({
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })} [${timeZone.label}]`;
+    }
+
+    if (token === 'CURRENT_TIME') {
+        return `${formatWith({
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            timeZoneName: 'short'
+        })} [${timeZone.label}]`;
+    }
+
+    if (token === 'CURRENT_TIMEZONE') {
+        return timeZone.label;
+    }
+
+    return '';
+}
+
+function resolveChatbotPromptVariables(text) {
+    if (typeof text !== 'string' || !text.includes('{')) {
+        return text || '';
+    }
+
+    return text.replace(/\{\{?\s*(CURRENT_DATE_TIME|CURRENT_DATE|CURRENT_TIME|CURRENT_TIMEZONE)(?:\s*[:|]\s*([^}]+?))?\s*\}\}?/g, (match, token, requestedTimeZone) => {
+        try {
+            const replacement = formatChatbotPromptVariable(token, requestedTimeZone);
+            return replacement || match;
+        } catch (e) {
+            return match;
+        }
+    });
 }
 
 async function rebuildIndex() {
@@ -390,6 +491,110 @@ function hmacToHex(hmacBuffer) {
 
 const activeChatBotSessions = {};
 let tmpModelFallback = "";
+let localBrowserLLMClient = null;
+let localBrowserActiveRequestState = null;
+let localBrowserLLMQueue = Promise.resolve();
+const LOCAL_BROWSER_WORKER_VERSION = '2';
+
+function getLocalBrowserWorkerPath() {
+    if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
+        return `${chrome.runtime.getURL('local-browser-model-worker.js')}?v=${LOCAL_BROWSER_WORKER_VERSION}`;
+    }
+    return `local-browser-model-worker.js?v=${LOCAL_BROWSER_WORKER_VERSION}`;
+}
+
+function getLocalBrowserCatalog() {
+    return globalThis?.SSNBrowserModelCatalog || null;
+}
+
+function ensureLocalBrowserLLMClient() {
+    if (localBrowserLLMClient) {
+        return localBrowserLLMClient;
+    }
+    if (!globalThis?.SSNLocalBrowserLLM?.createWorkerClient) {
+        throw new Error('Local browser model runtime is not available.');
+    }
+    localBrowserLLMClient = globalThis.SSNLocalBrowserLLM.createWorkerClient({
+        workerPath: getLocalBrowserWorkerPath(),
+        onToken: (message) => {
+            const chunk = message?.text || '';
+            if (!chunk || !localBrowserActiveRequestState) {
+                return;
+            }
+            localBrowserActiveRequestState.buffer += chunk;
+            if (typeof localBrowserActiveRequestState.callback === 'function') {
+                localBrowserActiveRequestState.callback(chunk);
+            }
+        }
+    });
+    return localBrowserLLMClient;
+}
+
+async function disposeLocalBrowserLLMClient() {
+    localBrowserActiveRequestState = null;
+    if (!localBrowserLLMClient) {
+        return;
+    }
+    const client = localBrowserLLMClient;
+    localBrowserLLMClient = null;
+    await client.dispose();
+}
+
+function enqueueLocalBrowserLLMTask(task) {
+    const run = localBrowserLLMQueue.then(task, task);
+    localBrowserLLMQueue = run.then(() => undefined, () => undefined);
+    return run;
+}
+
+function normalizeLocalBrowserImage(image) {
+    if (!image) {
+        return '';
+    }
+    if (typeof image === 'string') {
+        return image.trim();
+    }
+    if (typeof image.url === 'string') {
+        return image.url.trim();
+    }
+    if (typeof image.image_url === 'string') {
+        return image.image_url.trim();
+    }
+    if (image.image_url && typeof image.image_url.url === 'string') {
+        return image.image_url.url.trim();
+    }
+    return '';
+}
+
+function isLocalBrowserProvider(providerKey) {
+    const catalog = getLocalBrowserCatalog();
+    return !!(providerKey && catalog?.getLocalBrowserModelConfig?.(providerKey));
+}
+
+function getLocalBrowserProviderSettings(providerKey, llmSettings, modelOverride = '') {
+    const catalog = getLocalBrowserCatalog();
+    const defaultConfig = catalog?.getLocalBrowserModelConfig
+        ? (catalog.getLocalBrowserModelConfig(providerKey) || {})
+        : {};
+    const fallbackHost = defaultConfig.remoteHost || catalog?.DEFAULT_REMOTE_HOST || 'https://largefiles.socialstream.ninja/';
+    const modelSettingKey = providerKey === 'localqwen' ? 'localqwenmodel' : 'localgemmamodel';
+    const remoteHost = catalog?.normalizeRemoteHost
+        ? catalog.normalizeRemoteHost(llmSettings.localgemmahost?.textsetting || fallbackHost)
+        : String(llmSettings.localgemmahost?.textsetting || fallbackHost || '').trim().replace(/\/?$/, '/');
+    const resolvedModel = String(
+        modelOverride ||
+        llmSettings[modelSettingKey]?.textsetting ||
+        defaultConfig.modelId ||
+        ''
+    ).trim() || String(defaultConfig.modelId || '').trim();
+
+    return {
+        providerKey,
+        modelId: resolvedModel,
+        remoteHost,
+        supportsVision: defaultConfig.supportsVision !== false
+    };
+}
+
 async function callLLMAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null, options = {}) {
 	const llmSettings = { ...(settings || {}), ...(options.settings || {}) };
 	
@@ -420,6 +625,14 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			endpoint = llmSettings.ollamaendpoint?.textsetting || "http://localhost:11434";
 			model = model || llmSettings.ollamamodel?.textsetting || tmpModelFallback || null;
 			break;
+		case "localgemma":
+		case "localqwen": {
+			const localBrowserSettings = getLocalBrowserProviderSettings(provider, llmSettings, model);
+			model = localBrowserSettings.modelId;
+			endpoint = localBrowserSettings.remoteHost;
+			callback = callback || null;
+			break;
+		}
 		case "chatgpt":
 			endpoint = "https://api.openai.com/v1/chat/completions";
 			model = model || llmSettings.chatgptmodel?.textsetting || "gpt-4o-mini";
@@ -528,6 +741,88 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		}
 		return false;
 	}
+
+    if (!isLocalBrowserProvider(provider) && localBrowserLLMClient) {
+        try {
+            await disposeLocalBrowserLLMClient();
+        } catch (disposeError) {
+            console.warn('Failed to dispose local browser model worker:', disposeError);
+        }
+    }
+
+    if (isLocalBrowserProvider(provider)) {
+        let abortHandler = null;
+        const localBrowserSettings = getLocalBrowserProviderSettings(provider, llmSettings, model);
+        const localBrowserGeneration = options.localBrowserGeneration || {};
+        if (UUID) {
+            if (activeChatBotSessions[UUID]) {
+                activeChatBotSessions[UUID].abort();
+            }
+            if (!abortController) {
+                abortController = new AbortController();
+            }
+            activeChatBotSessions[UUID] = abortController;
+        }
+        return enqueueLocalBrowserLLMTask(async () => {
+        try {
+            if (abortController?.signal?.aborted) {
+                throw new DOMException('Aborted', 'AbortError');
+            }
+
+            const client = ensureLocalBrowserLLMClient();
+            const localBrowserStateless = !!options.localBrowserStateless || !!options.resetConversationBeforeGenerate;
+            const normalizedImages = (Array.isArray(images) ? images : (images ? [images] : []))
+                .map(normalizeLocalBrowserImage)
+                .filter(Boolean);
+            const requestImages = localBrowserSettings.supportsVision ? normalizedImages : [];
+            localBrowserActiveRequestState = {
+                callback,
+                buffer: ''
+            };
+
+            if (abortController?.signal) {
+                abortHandler = () => {
+                    void disposeLocalBrowserLLMClient().catch(() => {});
+                };
+                abortController.signal.addEventListener('abort', abortHandler, { once: true });
+            }
+
+            const result = await client.generate(provider, {
+                prompt,
+                systemPrompt: typeof options.systemPrompt === 'string' ? options.systemPrompt : '',
+                maxNewTokens: Number.isFinite(localBrowserGeneration.maxNewTokens) ? localBrowserGeneration.maxNewTokens : 220,
+                temperature: Number.isFinite(localBrowserGeneration.temperature) ? localBrowserGeneration.temperature : 0.65,
+                topP: Number.isFinite(localBrowserGeneration.topP) ? localBrowserGeneration.topP : 0.92,
+                images: requestImages,
+                stateless: localBrowserStateless
+            }, {
+                modelOverride: model,
+                remoteHost: endpoint
+            });
+
+            if (typeof callback === 'function' && !localBrowserActiveRequestState.buffer && result.text) {
+                callback(result.text);
+            }
+
+            return result.text || '';
+        } catch (error) {
+            if (error?.name === 'AbortError' || abortController?.signal?.aborted) {
+                return (localBrowserActiveRequestState?.buffer || '') + "💥";
+            }
+            throw wrapLLMError(error, {
+                message: error?.message || 'Local browser model inference failed.'
+            });
+        } finally {
+            if (abortController?.signal && abortHandler) {
+                abortController.signal.removeEventListener('abort', abortHandler);
+            }
+            localBrowserActiveRequestState = null;
+            if (UUID && activeChatBotSessions[UUID] === abortController) {
+                delete activeChatBotSessions[UUID];
+            }
+        }
+        });
+    }
 	
     if (provider === "ollama") {
 		
@@ -736,11 +1031,30 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		}
     // Replace the else block in callLLMAPI with:
 	} else { // non-Ollama Request, but rather ChatGPT compatible APIs
+		const normalizedImages = (Array.isArray(images) ? images : (images ? [images] : []))
+			.map(img => {
+				if (!img) return null;
+				if (typeof img === 'string') return img.trim();
+				if (typeof img === 'object') {
+					if (typeof img.image_url === 'string') return img.image_url.trim();
+					if (img.image_url && typeof img.image_url.url === 'string') return img.image_url.url.trim();
+					if (typeof img.url === 'string') return img.url.trim();
+				}
+				return null;
+			})
+			.filter(Boolean);
+
+		const userContent = normalizedImages.length
+			? [{ type: "text", text: prompt }].concat(
+				normalizedImages.map(url => ({ type: "image_url", image_url: { url } }))
+			)
+			: prompt;
+
 		const message = {
 			model: model,
 			messages: [{
 				role: "user",
-				content: prompt
+				content: userContent
 			}],
 			stream: callback !== null
 		};
@@ -1133,125 +1447,326 @@ function addSafePhrase(cleanedText, score=-1) {
 	//log("Added ("+score+"): "+cleanedText);
 }
 
+const CENSOR_CONTEXT_MAX_MESSAGES = 6;
+const CENSOR_CONTEXT_MAX_AGE_MS = 120000;
+const CENSOR_COMPACT_FRAGMENT_MAX_LENGTH = 2;
+const CENSOR_COMPACT_CANDIDATE_MIN_LENGTH = 4;
+const CENSOR_COMPACT_CANDIDATE_MAX_LENGTH = 16;
+const CENSOR_CONTEXT_CACHE_LIMIT = 24;
+let recentCensorMessages = [];
 
-let censorProcessingSlots = [false, false, false]; // ollama can handle 4 requests at a time by default I think, but 3 is a good number.
+function getActiveCensorProviderKey() {
+    return settings?.aiProvider?.optionsetting || "ollama";
+}
+
+function shouldUseBinaryCensorPrompt(providerKey) {
+    return providerKey === "localqwen";
+}
+
+function buildCensorContextEntry(data, cleanedText) {
+    const message = String(cleanedText || "").trim();
+    return {
+        chatname: data?.chatname || "",
+        type: data?.type || "",
+        userid: data?.userid || data?.chatname || "",
+        message,
+        chatmessage: message,
+        timestamp: Date.now(),
+        textonly: true
+    };
+}
+
+function rememberCensorContextMessage(data, cleanedText, blocked = false) {
+    const entry = buildCensorContextEntry(data, cleanedText);
+    if (!entry.message) {
+        return null;
+    }
+    entry.blocked = !!blocked;
+    if (!blocked) {
+        recentCensorMessages.unshift(entry);
+        if (recentCensorMessages.length > CENSOR_CONTEXT_CACHE_LIMIT) {
+            recentCensorMessages.length = CENSOR_CONTEXT_CACHE_LIMIT;
+        }
+        ChatContextManager.addMessage(entry);
+    }
+    return entry;
+}
+
+function resetCensorContextMessages() {
+    recentCensorMessages = [];
+}
+
+function getRecentCensorContextMessages(now = Date.now()) {
+    return recentCensorMessages
+        .filter((entry) => entry && (entry.message || entry.chatmessage))
+        .filter((entry) => !entry.blocked)
+        .filter((entry) => {
+            const timestamp = Number(entry.timestamp || 0);
+            return !timestamp || (now - timestamp) <= CENSOR_CONTEXT_MAX_AGE_MS;
+        })
+        .slice(0, CENSOR_CONTEXT_MAX_MESSAGES)
+        .map((entry) => ({
+            chatname: entry.chatname || "",
+            type: entry.type || "",
+            userid: entry.userid || entry.chatname || "",
+            message: String(entry.message || entry.chatmessage || "").trim(),
+            timestamp: entry.timestamp || now
+        }))
+        .filter((entry) => entry.message)
+        .reverse();
+}
+
+function normalizeCompactCensorText(value) {
+    return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function isCompactFragmentEligible(message) {
+    const normalized = normalizeCompactCensorText(message);
+    return !!normalized && normalized.length <= CENSOR_COMPACT_FRAGMENT_MAX_LENGTH;
+}
+
+function buildCompactSequenceCandidates(recentMessages, currentEntry) {
+    const sequence = recentMessages.concat(currentEntry ? [currentEntry] : []);
+    const candidates = [];
+    const latestUser = currentEntry?.chatname || "";
+    const roomFragments = sequence
+        .filter((entry) => isCompactFragmentEligible(entry.message))
+        .map((entry) => normalizeCompactCensorText(entry.message));
+    const sameUserFragments = latestUser
+        ? sequence
+            .filter((entry) => (entry.chatname || "") === latestUser && isCompactFragmentEligible(entry.message))
+            .map((entry) => normalizeCompactCensorText(entry.message))
+        : [];
+
+    function pushCandidate(scope, label, fragments) {
+        const compact = fragments.join("");
+        if (
+            compact.length < CENSOR_COMPACT_CANDIDATE_MIN_LENGTH ||
+            compact.length > CENSOR_COMPACT_CANDIDATE_MAX_LENGTH
+        ) {
+            return;
+        }
+        candidates.push({
+            scope,
+            label,
+            compact
+        });
+    }
+
+    pushCandidate("same-user", latestUser || "same user", sameUserFragments);
+    pushCandidate("room", "whole room", roomFragments);
+
+    return candidates;
+}
+
+function findCompactProfanityCandidate(candidates) {
+    for (const candidate of candidates) {
+        if (!candidate?.compact) {
+            continue;
+        }
+        if (Array.isArray(badWords)) {
+            const matchedFallback = badWords.some((entry) => normalizeCompactCensorText(entry) === candidate.compact);
+            if (matchedFallback) {
+                return candidate;
+            }
+        }
+        if (typeof isProfanity === "function" && isProfanity(candidate.compact)) {
+            return candidate;
+        }
+        if (typeof containsProfanity === "function" && containsProfanity(candidate.compact)) {
+            return candidate;
+        }
+    }
+    return null;
+}
+
+function shouldReviewSafePhraseWithContext(recentMessages, currentEntry) {
+    const latestUser = currentEntry?.chatname || "";
+    const sameUserRecentCount = latestUser
+        ? recentMessages.filter((entry) => (entry.chatname || "") === latestUser).length
+        : 0;
+    const sameUserShortCount = latestUser
+        ? recentMessages.filter((entry) => (entry.chatname || "") === latestUser && isCompactFragmentEligible(entry.message)).length
+        : 0;
+    const roomShortCount = recentMessages.filter((entry) => isCompactFragmentEligible(entry.message)).length;
+    const currentShort = isCompactFragmentEligible(currentEntry?.message);
+
+    return sameUserRecentCount >= 2 || (currentShort && sameUserShortCount >= 2) || (currentShort && roomShortCount >= 3);
+}
+
+function formatCensorRecentMessages(recentMessages) {
+    if (!recentMessages.length) {
+        return "None";
+    }
+    return recentMessages
+        .map((entry, index) => `${index + 1}. ${entry.chatname || "User"}: ${entry.message}`)
+        .join("\n");
+}
+
+function formatCompactCandidatesForPrompt(compactCandidates) {
+    if (!compactCandidates.length) {
+        return "None";
+    }
+    return compactCandidates
+        .map((candidate) => `- ${candidate.scope === "same-user" ? "Same-user" : "Whole-room"} short-fragment join for ${candidate.label}: ${candidate.compact}`)
+        .join("\n");
+}
+
+function buildCensorPrompt(data, cleanedText, recentMessages, compactCandidates, providerKey) {
+    const latestLine = `${data?.chatname || "User"}: ${cleanedText}`;
+    const recentHistory = formatCensorRecentMessages(recentMessages);
+    const compactHints = formatCompactCandidatesForPrompt(compactCandidates);
+
+    if (shouldUseBinaryCensorPrompt(providerKey)) {
+        return [
+            "Reply with only OK or BLOCK.",
+            "Judge whether the latest chat message should be allowed, considering the recent chat context.",
+            "BLOCK if the latest message is abusive by itself, or if the recent messages together clearly form abusive, profane, hateful, threatening, or insulting text, even when split across several short messages or users.",
+            "OK if the latest message and recent pattern are harmless, supportive, or ambiguous.",
+            "Do not explain your answer.",
+            "",
+            "Recent chat:",
+            recentHistory,
+            "",
+            "Compact candidates:",
+            compactHints,
+            "",
+            "Latest message:",
+            latestLine
+        ].join("\n");
+    }
+
+    return [
+        "Analyze the recent chat context and the latest message for any signs of hate, extreme negativity, foul language, swear words, bad words, profanity, racism, sexism, political messaging, civil war, violence, threats, or any content that may be offensive to a general public audience.",
+        "Messages may be long or very short, and offensive words may be spelled across multiple short messages or users.",
+        "Respond ONLY with a number between 0 and 5, where 0 means safe and 5 means clearly offensive.",
+        "Any profanity or curse word automatically qualifies as a 5.",
+        "",
+        "Recent chat:",
+        recentHistory,
+        "",
+        "Compact candidates:",
+        compactHints,
+        "",
+        "Latest message:",
+        latestLine
+    ].join("\n");
+}
+
+function parseBinaryCensorDecision(llmOutput) {
+    const normalized = String(llmOutput || "").trim().toUpperCase();
+    if (!normalized) {
+        return { blocked: true, parseOk: false, normalized: "" };
+    }
+    const match = normalized.match(/\b(BLOCK|OK|SAFE|ALLOW|PASS|APPROVE|APPROVED|CLEAN|YES|REJECT|DENY|UNSAFE|REMOVE|FILTER|NO)\b/);
+    const label = match ? match[1] : "";
+    if (!label) {
+        return { blocked: true, parseOk: false, normalized };
+    }
+    if (label === "BLOCK" || label === "REJECT" || label === "DENY" || label === "UNSAFE" || label === "REMOVE" || label === "FILTER" || label === "NO") {
+        return { blocked: true, parseOk: true, normalized: label };
+    }
+    return { blocked: false, parseOk: true, normalized: label };
+}
+
+function parseNumericCensorDecision(llmOutput) {
+    const normalized = String(llmOutput || "").trim();
+    const match = normalized.match(/[0-5]/);
+    if (!match) {
+        return { blocked: true, parseOk: false, normalized, score: null };
+    }
+    const score = parseInt(match[0], 10);
+    return {
+        blocked: score > 3,
+        parseOk: true,
+        normalized,
+        score
+    };
+}
+
+let censorProcessingSlots = [false, false, false]; // Non-local providers can use a few concurrent moderation requests.
 async function censorMessageWithLLM(data) {
     if (!data.chatmessage) {
         return true;
     }
 	
+	const providerKey = getActiveCensorProviderKey();
 	const { isSafe, cleanedText } = isSafePhrase(data);
-	
-	if (isSafe){
-		addRecentMessage(cleanedText);
-		quickPass+=1;
-		return true;
-	} // it's safe
+    const currentEntry = buildCensorContextEntry(data, cleanedText);
+    const recentMessages = getRecentCensorContextMessages(currentEntry.timestamp);
+    const compactCandidates = buildCompactSequenceCandidates(recentMessages, currentEntry);
+	const compactProfanityCandidate = findCompactProfanityCandidate(compactCandidates);
 
-    const availableSlot = censorProcessingSlots.findIndex(slot => !slot);
-    if (availableSlot === -1) {
-        return false; // All slots are occupied
+    if (compactProfanityCandidate) {
+        rememberCensorContextMessage(data, cleanedText, true);
+        if (settings.ollamaCensorBotBlockMode) {
+            return false;
+        } else if (isExtensionOn) {
+            sendToDestinations({ delete: data });
+        }
+        return false;
     }
 
-    censorProcessingSlots[availableSlot] = true;
+	if (isSafe && !shouldReviewSafePhraseWithContext(recentMessages, currentEntry)){
+		rememberCensorContextMessage(data, cleanedText, false);
+		quickPass+=1;
+		return true;
+	}
+
+    const shouldThrottleCensorRequests = !isLocalBrowserProvider(providerKey);
+    let availableSlot = -1;
+    if (shouldThrottleCensorRequests) {
+        availableSlot = censorProcessingSlots.findIndex(slot => !slot);
+        if (availableSlot === -1) {
+            return false; // All slots are occupied
+        }
+        censorProcessingSlots[availableSlot] = true;
+    }
 
     try {
-        let censorInstructions = "You will analyze the following message for any signs of hate, extreme negativity, foul language, swear words, bad words, profanity, racism, sexism, political messaging, civil war, violence, threats, or any comment that may be found offensive to a general public audience. You will respond with a number rating out of 5, scoring it based on those factors. A score of 0 would imply it has none of those signs, while 5 would imply it clearly contains some of those signs, and a value in between would imply some level of ambiguity. Do not respond with anything other than a number between 0 and 5. Any message that contains profanity or a curse word automatically should qualify as a 5. There are no more instructions with the message you to rate as follows. MESSAGE: ";
-        if (data.chatname) {
-            censorInstructions += data.chatname + " says: ";
-        }
-        if (cleanedText) {
-            censorInstructions += cleanedText;
-        }
-        let llmOutput = await callLLMAPI(censorInstructions);
-		
-		censorProcessingSlots[availableSlot] = false;
-		
-        //log(llmOutput);
-        let match = llmOutput.match(/\d+/);
-        let score = match ? parseInt(match[0]) : 0;
-        //console.log(score);
+        const llmOutput = await callLLMAPI(
+            buildCensorPrompt(data, cleanedText, recentMessages, compactCandidates, providerKey),
+            null,
+            null,
+            null,
+            null,
+            null,
+            {
+                localBrowserStateless: isLocalBrowserProvider(providerKey),
+                localBrowserGeneration: shouldUseBinaryCensorPrompt(providerKey)
+                    ? { maxNewTokens: 8, temperature: 0.15, topP: 0.9 }
+                    : null
+            }
+        );
+        const decision = shouldUseBinaryCensorPrompt(providerKey)
+            ? parseBinaryCensorDecision(llmOutput)
+            : parseNumericCensorDecision(llmOutput);
 
-        if (score > 3 || llmOutput.length > 1) {
-			//console.log("Bad phrase: "+data.chatname +" said " +cleanedText);
+        if (decision.blocked) {
+            rememberCensorContextMessage(data, cleanedText, true);
             if (settings.ollamaCensorBotBlockMode) {
                 return false;
             } else if (isExtensionOn) {
-            //    console.log("sending a delete out");
                 sendToDestinations({ delete: data });
             }
 			return false;
         } else {
-		//	console.log("safe word");
-			addSafePhrase(cleanedText, score);
-			ChatContextManager.addMessage(cleanedText);
+			addSafePhrase(cleanedText, decision.score || 0);
+			rememberCensorContextMessage(data, cleanedText, false);
             return true;
         }
     } catch (error) {
         console.warn("Error processing message:", error);
     } finally {
-        censorProcessingSlots[availableSlot] = false;
+        if (shouldThrottleCensorRequests && availableSlot !== -1) {
+            censorProcessingSlots[availableSlot] = false;
+        }
     }
     return false;
 }
 
 async function censorMessageWithHistory(data) {
-    if (!data.chatmessage) {
-        return true;
-    }
-    
-    let cleanedText = data.chatmessage;
-    if (!data.textonly) {
-        cleanedText = decodeAndCleanHtml(cleanedText);
-    }
-    
-    const availableSlot = censorProcessingSlots.findIndex(slot => !slot);
-    if (availableSlot === -1) {
-        return false; // All slots are occupied
-    }
-    censorProcessingSlots[availableSlot] = true;
-
-    try {
-        // Get recent messages from ChatContextManager's cache
-        const recentMessages = ChatContextManager.cache.recentMessages;
-        
-        let censorInstructions = `Analyze the following live text chat history and the latest message for any signs of hate, extreme negativity, foul language, swear words, bad words, profanity, racism, sexism, political messaging, civil war, violence, threats, or any content that may be offensive to a general public audience. Messages may be long or very short, such as a single letter or a collection of emoji-based characters. Pay special attention to words that might be spelled out across multiple messages. Respond ONLY with a number rating out of 5, where 0 implies no offensive content and 5 implies clearly offensive content. Any message containing profanity or curse words automatically qualifies as a 5. ONLY respond with a number between 0 and 5 and nothing else.
-
-Recent chat history:
-${recentMessages.map(m => m.message).join('\n')}
-
-Latest message:
-${data.chatname} says: ${cleanedText}`;
-
-        let llmOutput = await callLLMAPI(censorInstructions);
-        
-        censorProcessingSlots[availableSlot] = false;
-        
-        let match = llmOutput.match(/\d+/);
-        let score = match ? parseInt(match[0]) : 0;
-        
-        if (score > 3 || llmOutput.length > 1) {
-            if (settings.ollamaCensorBotBlockMode) {
-                return false;
-            } else if (isExtensionOn) {
-                sendToDestinations({ delete: data });
-            }
-            return false;
-        } else {
-            addSafePhrase(cleanedText, score);
-            ChatContextManager.addMessage({
-                chatname: data.chatname,
-                message: cleanedText,
-                timestamp: Date.now()
-            });
-            return true;
-        }
-    } catch (error) {
-        console.warn("Error processing message history:", error);
-    } finally {
-        censorProcessingSlots[availableSlot] = false;
-    }
-    return false;
+    return censorMessageWithLLM(data);
 }
 
 
@@ -1454,6 +1969,12 @@ async function processMessageWithOllama(data, idx=null) {
   //console.log("starting processing");
   isProcessing = true;
   try {
+    if (data?.bot) {
+      isProcessing = false;
+      noteChatBotDecision('ignored-bot-message', data);
+      return;
+    }
+
     // Rate limiting logic
     let ollamaRateLimitPerTab = 5000;
     if (settings.ollamaRateLimitPerTab) {
@@ -1477,6 +1998,24 @@ async function processMessageWithOllama(data, idx=null) {
     if ((data.type === "stageten" && botname === data.chatname) || !data.chatmessage || (!settings.noollamabotname && data.chatmessage.startsWith(botname + ":"))) {
       isProcessing = false;
       noteChatBotDecision('ignored-self-message', data);
+      return;
+    }
+
+    const allowHostReflectionResponse = Boolean(
+      data?.reflection &&
+      data?.hostReflection &&
+      settings?.chatbotRespondToReflections
+    );
+
+    if (data?.chatbotReflection) {
+      isProcessing = false;
+      noteChatBotDecision('ignored-chatbot-reflection', data);
+      return;
+    }
+
+    if (data?.reflection && !allowHostReflectionResponse) {
+      isProcessing = false;
+      noteChatBotDecision('ignored-reflection', data, { origin: data?.reflectionOrigin || '' });
       return;
     }
 
@@ -1506,14 +2045,6 @@ async function processMessageWithOllama(data, idx=null) {
       noteChatBotDecision('empty-after-cleaning', data);
       return;
     }
-
-    // Prevent self-replies
-    const allowHostReflectionResponse = Boolean(
-      data?.reflection &&
-      data?.hostReflection &&
-      settings?.chatbotRespondToReflections &&
-      !data?.chatbotReflection
-    );
 
     let hostReflectionKey = null;
     if (allowHostReflectionResponse) {
@@ -1626,6 +2157,8 @@ async function processMessageWithOllama(data, idx=null) {
 
 async function processUserInput(userInput, data, additionalInstructions, botname) {
   try {
+    additionalInstructions = resolveChatbotPromptVariables(additionalInstructions || '');
+
     // Build base prompt with context
     let promptBase = `${additionalInstructions || ''}\n\nYou are an AI chat assistant and a participant in a live group chat room.`;
 	
@@ -1668,87 +2201,84 @@ async function processUserInput(userInput, data, additionalInstructions, botname
     // Add current message
     
 
-    // Check if RAG is needed
+    // Try RAG first, but fall back cleanly if retrieval looks weak.
     if (await isRAGConfigured()) {
 	  const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
-	  
-	  const ragPrompt = `${promptBase}` + 
-		'If this message requires searching the knowledge database, respond with keywords to search. Otherwise respond with NO_RESPONSE. Keywords should be space-separated terms that will find relevant information in the database.' +
-		'\n\nDatabase info: ${databaseDescriptor}\n\n';
+	  const ragPrompt = `${promptBase}
+
+Decide if the current message needs a search of the custom knowledge database before responding.
+
+Database info:
+${databaseDescriptor}
+
+If a search is needed, produce a short search query with the most relevant keywords only.
+If no search is needed, say NO_RESPONSE.
+
+Prefer this exact format:
+[NEEDS_SEARCH]YES or NO[/NEEDS_SEARCH]
+[SEARCH_QUERY]keyword1 keyword2[/SEARCH_QUERY]`;
 
 	  const ragDecision = await callLLMAPI(ragPrompt);
-	  
-	  if (ragDecision && !ragDecision.toLowerCase().includes('no_response')) {
-		const searchResults = await performLunrSearch(ragDecision.trim());
-		return await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
-	  } else {
-		// Fall through to regular response handling
-		if (settings.alwaysRespondLLM) {
-		  promptBase += '\n\nRespond conversationally to the current group chat message, doing so directly and succinctly.';
+	  const parsedDecision = ragDecision ? parseDecision(ragDecision) : null;
+	  let ragSearchQuery = '';
+
+	  if (parsedDecision?.needsSearch && parsedDecision.searchQuery) {
+		ragSearchQuery = parsedDecision.searchQuery.trim();
+	  } else if (ragDecision && !ragDecision.toLowerCase().includes('no_response')) {
+		ragSearchQuery = ragDecision.trim();
+	  }
+
+	  if (ragSearchQuery) {
+		const searchResults = await performLunrSearch(ragSearchQuery);
+		if (searchResults.length) {
+			const ragResponse = await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
+			if (ragResponse) {
+				return ragResponse;
+			}
+		}
+	  }
+	}
+
+    // Regular response with context
+	let debugmode = false;
+	if (settings.ollamabotname?.textsetting) {
+		debugmode = settings.ollamabotname?.textsetting == "Tommas" ? true : false;
+	}
+	if (debugmode){
+		if (!settings.nollmcontext){
+			promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE, followed by stating why no response is needed.';
 		} else {
-		  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
+			promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is neede, followed by why no response was needed.';
+		}
+	} else if (settings.alwaysRespondLLM){
+		if (!settings.nollmcontext){
+			promptBase += '\n\nRespond conversationally to the current message, doing so directly and succinctly.';
+		} else {
+			promptBase += '\n\nRespond conversationally to the current group chat message, doing so directly and succinctly.';
 		}
 		
-		let response = await callLLMAPI(promptBase);
-		
-		if (botname && response.startsWith(botname+":")){
-			response = response.replace(botname+":","").trim();
-		}
-		
-		if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
-		  if (settings.alwaysRespondLLM && (response && !response.toLowerCase().startsWith('@@@@'))) {
-			return response;
-		  }
-		  return false;
-		}
-		
-		return response;
-	  }
 	} else {
-      // Regular response with context
-	  
-	  
-		let debugmode = false;
-		if (settings.ollamabotname?.textsetting) {
-			debugmode = settings.ollamabotname?.textsetting == "Tommas" ? true : false;
+		if (!settings.nollmcontext){
+			promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE to state you are choosing not to respond. Respond only with NO_RESPONSE if you have no reply.';
+		} else {
+			promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
 		}
-	  if (debugmode){
-		  if (!settings.nollmcontext){
-			  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE, followed by stating why no response is needed.';
-		  } else {
-			  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is neede, followed by why no response was needed.';
-		  }
-	  } else if (settings.alwaysRespondLLM){
-		  if (!settings.nollmcontext){
-			  promptBase += '\n\nRespond conversationally to the current message, doing so directly and succinctly.';
-		  } else {
-			  promptBase += '\n\nRespond conversationally to the current group chat message, doing so directly and succinctly.';
-		  }
-		  
-	  } else {
-		  if (!settings.nollmcontext){
-			  promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE to state you are choosing not to respond. Respond only with NO_RESPONSE if you have no reply.';
-		  } else {
-			  promptBase += '\n\nRespond conversationally to the current group chat message only if the message seems directed at you specifically, doing so directly and succinctly, or instead reply with NO_RESPONSE if no response is needed. Respond only with NO_RESPONSE if you have no reply.';
-		  }
-	  }
-	  //console.log(promptBase);
-      
-      let response = await callLLMAPI(promptBase);
-	  
-	  if (botname && response.startsWith(botname+":")){
+	}
+
+    let response = await callLLMAPI(promptBase);
+	
+	if (botname && response.startsWith(botname+":")){
 		response = response.replace(botname+":","").trim();
-	  }
-	  
-      if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
+	}
+	
+    if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
 		if (settings.alwaysRespondLLM && (response && !response.toLowerCase().startsWith('@@@@'))){
 			return response;
 		}
         return false;
-      }
-      
-      return response;
     }
+    
+    return response;
   } catch (error) {
     console.warn("Error in processUserInput:", error);
     return false;
@@ -2104,25 +2634,460 @@ async function clearLunrDatabase() {
     }
 }
 
+function normalizeLunrResults(results, strategy = 'default') {
+    const dedupedResults = new Map();
+    (results || []).forEach(result => {
+        if (!result || !result.ref) return;
+        const existing = dedupedResults.get(result.ref);
+        if (!existing || (result.score || 0) > existing.score) {
+            dedupedResults.set(result.ref, {
+                ref: result.ref,
+                score: result.score || 0,
+                strategy
+            });
+        }
+    });
+    return Array.from(dedupedResults.values()).sort((a, b) => b.score - a.score);
+}
+
+function tokenizeRAGSearchQuery(query) {
+    return Array.from(new Set(
+        String(query || '')
+            .split(/\s+/)
+            .map(term => term.trim().replace(/^["'`]+|["'`]+$/g, '').toLowerCase())
+            .filter(Boolean)
+    ));
+}
+
+function runBoostedLunrSearch(terms, options = {}) {
+    if (!globalLunrIndex || typeof globalLunrIndex.query !== 'function' || !Array.isArray(terms) || !terms.length) {
+        return [];
+    }
+
+    const requireAll = !!options.requireAll;
+    const fuzzy = !!options.fuzzy;
+    const presence = requireAll ? lunr.Query.presence.REQUIRED : lunr.Query.presence.OPTIONAL;
+    const fieldBoosts = [
+        { name: 'title', boost: 10 },
+        { name: 'summary', boost: 7 },
+        { name: 'content', boost: 5 },
+        { name: 'tags', boost: 3 },
+        { name: 'synonyms', boost: 2 }
+    ];
+
+    return globalLunrIndex.query(function(q) {
+        terms.forEach(term => {
+            fieldBoosts.forEach(field => {
+                q.term(term, {
+                    fields: [field.name],
+                    boost: field.boost,
+                    presence
+                });
+
+                if (fuzzy && term.length > 3) {
+                    q.term(term, {
+                        fields: [field.name],
+                        boost: Math.max(1, field.boost - 2),
+                        presence,
+                        editDistance: 1
+                    });
+                }
+            });
+        });
+    });
+}
+
+function filterSearchResultsByConfidence(searchResults) {
+    const normalizedResults = normalizeLunrResults(searchResults);
+    if (!normalizedResults.length) {
+        return [];
+    }
+
+    const topScore = normalizedResults[0].score || 0;
+    if (topScore <= 0) {
+        return normalizedResults.slice(0, 1);
+    }
+
+    const minScore = topScore * RAG_SCORE_RATIO_THRESHOLD;
+    const confidentResults = normalizedResults
+        .filter((result, index) => index === 0 || result.score >= minScore)
+        .slice(0, RAG_MAX_SEARCH_RESULTS);
+
+    if (confidentResults.length >= Math.min(RAG_MIN_SEARCH_RESULTS, normalizedResults.length)) {
+        return confidentResults;
+    }
+
+    return normalizedResults.slice(0, Math.min(RAG_MAX_SEARCH_RESULTS, Math.max(RAG_MIN_SEARCH_RESULTS, confidentResults.length || 1)));
+}
+
+function mergeLunrSearchStrategies(strategyResults = []) {
+    const merged = new Map();
+
+    strategyResults.forEach(strategyResult => {
+        if (!strategyResult?.results?.length) {
+            return;
+        }
+
+        const topScore = strategyResult.results[0]?.score || 0;
+        strategyResult.results.forEach((result, index) => {
+            const relativeScore = topScore > 0
+                ? ((result.score || 0) / topScore)
+                : (index === 0 ? 1 : 0);
+            const existing = merged.get(result.ref) || {
+                ref: result.ref,
+                score: 0,
+                rawScore: 0,
+                strategies: [],
+                strategyCount: 0,
+                strategy: strategyResult.strategy
+            };
+
+            existing.score += relativeScore * strategyResult.weight;
+            existing.rawScore = Math.max(existing.rawScore, result.score || 0);
+            if (!existing.strategies.includes(strategyResult.strategy)) {
+                existing.strategies.push(strategyResult.strategy);
+            }
+            existing.strategyCount = existing.strategies.length;
+            if (!existing.strategy || (relativeScore * strategyResult.weight) > (existing.primaryContribution || 0)) {
+                existing.strategy = strategyResult.strategy;
+                existing.primaryContribution = relativeScore * strategyResult.weight;
+            }
+
+            merged.set(result.ref, existing);
+        });
+    });
+
+    return Array.from(merged.values())
+        .map(result => ({
+            ...result,
+            score: result.score + (result.strategyCount * 0.35)
+        }))
+        .sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            if ((b.strategyCount || 0) !== (a.strategyCount || 0)) {
+                return (b.strategyCount || 0) - (a.strategyCount || 0);
+            }
+            return (b.rawScore || 0) - (a.rawScore || 0);
+        });
+}
+
+function tokenizeRAGDocumentText(value) {
+    return Array.from(new Set(
+        String(value || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]+/g, ' ')
+            .split(/\s+/)
+            .filter(Boolean)
+    ));
+}
+
+function isRAGNearTokenMatch(queryTerm, documentToken) {
+    if (!queryTerm || !documentToken) {
+        return false;
+    }
+    if (queryTerm === documentToken) {
+        return true;
+    }
+    if (Math.abs(queryTerm.length - documentToken.length) > 1) {
+        return false;
+    }
+    if (queryTerm.length <= 3 || documentToken.length <= 3) {
+        return false;
+    }
+
+    let queryIndex = 0;
+    let docIndex = 0;
+    let edits = 0;
+
+    while (queryIndex < queryTerm.length && docIndex < documentToken.length) {
+        if (queryTerm[queryIndex] === documentToken[docIndex]) {
+            queryIndex += 1;
+            docIndex += 1;
+            continue;
+        }
+
+        edits += 1;
+        if (edits > 1) {
+            return false;
+        }
+
+        if (queryTerm.length > documentToken.length) {
+            queryIndex += 1;
+        } else if (queryTerm.length < documentToken.length) {
+            docIndex += 1;
+        } else {
+            queryIndex += 1;
+            docIndex += 1;
+        }
+    }
+
+    if (queryIndex < queryTerm.length || docIndex < documentToken.length) {
+        edits += 1;
+    }
+
+    return edits <= 1;
+}
+
+function scoreRAGDocumentMatch(doc, queryTerms, queryText) {
+    if (!doc) {
+        return { score: 0, matchedPrimaryTerms: 0, exactPrimaryTerms: 0 };
+    }
+
+    const fieldConfigs = [
+        {
+            value: [doc.documentTitle, doc.title].filter(Boolean).join(' '),
+            exactBoost: 4.2,
+            fuzzyBoost: 2.2,
+            phraseBoost: 5.5,
+            primary: true
+        },
+        {
+            value: doc.summary || '',
+            exactBoost: 3.5,
+            fuzzyBoost: 1.8,
+            phraseBoost: 4.2,
+            primary: true
+        },
+        {
+            value: (doc.content || '').slice(0, 4000),
+            exactBoost: 2.8,
+            fuzzyBoost: 1.4,
+            phraseBoost: 3.4,
+            primary: true
+        },
+        {
+            value: Array.isArray(doc.tags) ? doc.tags.join(' ') : (doc.tags || ''),
+            exactBoost: 1.4,
+            fuzzyBoost: 0.5,
+            phraseBoost: 1.1,
+            primary: false
+        },
+        {
+            value: Array.isArray(doc.synonyms) ? doc.synonyms.join(' ') : (doc.synonyms || ''),
+            exactBoost: 1.2,
+            fuzzyBoost: 0.4,
+            phraseBoost: 0.8,
+            primary: false
+        }
+    ];
+
+    const normalizedQueryText = String(queryText || '').toLowerCase();
+    const primaryTermMatches = new Map();
+    let primaryExactTerms = 0;
+    let primaryFuzzyTerms = 0;
+    let metadataOnlyTerms = 0;
+    let score = 0;
+
+    fieldConfigs.forEach(field => {
+        const normalizedValue = String(field.value || '').toLowerCase();
+        const fieldTokens = tokenizeRAGDocumentText(field.value);
+        const fieldTokenSet = new Set(fieldTokens);
+        const hasPhraseMatch = normalizedQueryText && normalizedQueryText.length > 3 && normalizedValue.includes(normalizedQueryText);
+
+        if (hasPhraseMatch) {
+            score += field.phraseBoost;
+        }
+
+        queryTerms.forEach(term => {
+            let matched = false;
+            let fuzzyMatched = false;
+
+            if (fieldTokenSet.has(term) || normalizedValue.includes(term)) {
+                matched = true;
+                score += field.exactBoost;
+            } else if (term.length > 3 && fieldTokens.some(token => isRAGNearTokenMatch(term, token))) {
+                fuzzyMatched = true;
+                score += field.fuzzyBoost;
+            }
+
+            if (!matched && !fuzzyMatched) {
+                return;
+            }
+
+            if (field.primary) {
+                const existing = primaryTermMatches.get(term);
+                if (matched && existing !== 'exact') {
+                    primaryTermMatches.set(term, 'exact');
+                } else if (!existing && fuzzyMatched) {
+                    primaryTermMatches.set(term, 'fuzzy');
+                }
+            } else if (!primaryTermMatches.has(term)) {
+                metadataOnlyTerms += 1;
+            }
+        });
+    });
+
+    queryTerms.forEach(term => {
+        if (primaryTermMatches.get(term) === 'exact') {
+            primaryExactTerms += 1;
+        } else if (primaryTermMatches.get(term) === 'fuzzy') {
+            primaryFuzzyTerms += 1;
+        }
+    });
+
+    score += (primaryExactTerms * 2.6) + (primaryFuzzyTerms * 1.1);
+
+    if (queryTerms.length && primaryExactTerms === queryTerms.length) {
+        score += 6;
+    } else if (queryTerms.length && (primaryExactTerms + primaryFuzzyTerms) === queryTerms.length) {
+        score += 3;
+    }
+
+    if ((primaryExactTerms + primaryFuzzyTerms) === 0 && metadataOnlyTerms > 0) {
+        score -= 3.5;
+    }
+
+    return {
+        score,
+        matchedPrimaryTerms: primaryExactTerms + primaryFuzzyTerms,
+        exactPrimaryTerms: primaryExactTerms
+    };
+}
+
+async function rerankLunrSearchResults(query, mergedResults) {
+    const candidates = Array.isArray(mergedResults)
+        ? mergedResults.slice(0, RAG_MAX_RERANK_CANDIDATES)
+        : [];
+
+    if (!candidates.length) {
+        return [];
+    }
+
+    const queryTerms = tokenizeRAGSearchQuery(query);
+    const docs = await getDocumentsFromSearchResults(candidates);
+
+    return candidates
+        .map((result, index) => {
+            const docScore = scoreRAGDocumentMatch(docs[index], queryTerms, query);
+            return {
+                ...result,
+                score: (result.score * 3) + docScore.score,
+                docScore: docScore.score,
+                matchedPrimaryTerms: docScore.matchedPrimaryTerms,
+                exactPrimaryTerms: docScore.exactPrimaryTerms
+            };
+        })
+        .sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            if ((b.exactPrimaryTerms || 0) !== (a.exactPrimaryTerms || 0)) {
+                return (b.exactPrimaryTerms || 0) - (a.exactPrimaryTerms || 0);
+            }
+            if ((b.matchedPrimaryTerms || 0) !== (a.matchedPrimaryTerms || 0)) {
+                return (b.matchedPrimaryTerms || 0) - (a.matchedPrimaryTerms || 0);
+            }
+            return (b.rawScore || 0) - (a.rawScore || 0);
+        });
+}
+
+function scoreRAGEvidenceForUserInput(doc, userInput, baseScore = 0) {
+    const stopWords = new Set([
+        'a', 'an', 'and', 'are', 'can', 'did', 'do', 'does', 'for', 'from', 'how',
+        'i', 'in', 'is', 'it', 'my', 'of', 'on', 'or', 'the', 'to', 'what', 'when',
+        'where', 'who', 'why', 'you', 'your'
+    ]);
+    const userTerms = tokenizeRAGSearchQuery(userInput).filter(term => !stopWords.has(term));
+    const fallbackTerms = userTerms.length ? userTerms : tokenizeRAGSearchQuery(userInput);
+    const docMatch = scoreRAGDocumentMatch(doc, fallbackTerms, userInput);
+    const combinedText = [
+        doc?.documentTitle,
+        doc?.title,
+        doc?.summary,
+        doc?.content
+    ].filter(Boolean).join(' ').toLowerCase();
+    const normalizedInput = String(userInput || '').toLowerCase();
+    let score = (baseScore || 0) + docMatch.score;
+
+    if (/how long/.test(normalizedInput) && /\b\d+\b|\b(day|days|week|weeks|month|months|hour|hours|minute|minutes|business)\b/.test(combinedText)) {
+        score += 6;
+    }
+    if (/(when|what time|what day)/.test(normalizedInput) && /\b(mon|tues|wednes|thurs|fri|satur|sun)day\b|\b(am|pm|eastern|est|pst|cst)\b|\b\d{1,2}:\d{2}\b/.test(combinedText)) {
+        score += 6;
+    }
+    if (/(how old|age)/.test(normalizedInput) && /\b\d+\b|\b(year|years|old)\b/.test(combinedText)) {
+        score += 6;
+    }
+
+    return score;
+}
+
 async function performLunrSearch(query) {
     if (!globalLunrIndex) {
         await loadLunrIndex();
     }
-    const keywords = query.split(/\s+/);
-    const searchQuery = keywords.map(keyword => `+${keyword}`).join(' ');
-    const results = globalLunrIndex.search(query);
-    if (results.length === 0) {
-        //log("No results found for query:", query);
-        // Perform a more lenient search
-        return globalLunrIndex.search(keywords.map(word => `${word}~1`).join(' ')).map(result => ({
-            ref: result.ref,
-            score: result.score
-        }));
+    const keywords = tokenizeRAGSearchQuery(query);
+    if (!keywords.length) {
+        return [];
     }
-    return results.map(result => ({
-        ref: result.ref,
-        score: result.score
-    }));
+
+    const searchQuery = keywords.map(keyword => `+${keyword}`).join(' ');
+    const searchStrategies = [
+        {
+            strategy: 'required-terms',
+            weight: 1.35,
+            run: () => normalizeLunrResults(globalLunrIndex.search(searchQuery), 'required-terms')
+        },
+        {
+            strategy: 'boosted-required',
+            weight: 1.25,
+            run: () => normalizeLunrResults(runBoostedLunrSearch(keywords, { requireAll: true }), 'boosted-required')
+        },
+        {
+            strategy: 'boosted-fields',
+            weight: 1.1,
+            run: () => normalizeLunrResults(runBoostedLunrSearch(keywords, { requireAll: false }), 'boosted-fields')
+        },
+        {
+            strategy: 'legacy-query',
+            weight: 0.95,
+            run: () => normalizeLunrResults(globalLunrIndex.search(query), 'legacy-query')
+        },
+        {
+            strategy: 'boosted-fuzzy',
+            weight: 0.7,
+            run: () => normalizeLunrResults(runBoostedLunrSearch(keywords, { requireAll: false, fuzzy: true }), 'boosted-fuzzy')
+        },
+        {
+            strategy: 'legacy-fuzzy',
+            weight: 0.55,
+            run: () => normalizeLunrResults(globalLunrIndex.search(keywords.map(word => `${word}~1`).join(' ')), 'legacy-fuzzy')
+        }
+    ];
+
+    const collectedResults = [];
+    for (const strategy of searchStrategies) {
+        try {
+            const strategyResults = strategy.run();
+            if (strategyResults.length) {
+                collectedResults.push({
+                    strategy: strategy.strategy,
+                    weight: strategy.weight,
+                    results: strategyResults
+                });
+            }
+        } catch (error) {
+            console.warn("Error running Lunr search strategy:", error);
+        }
+    }
+
+    if (!collectedResults.length) {
+        return [];
+    }
+
+    try {
+        const mergedResults = mergeLunrSearchStrategies(collectedResults);
+        const rerankedResults = await rerankLunrSearchResults(query, mergedResults);
+        if (rerankedResults.length) {
+            return filterSearchResultsByConfidence(rerankedResults);
+        }
+        return filterSearchResultsByConfidence(mergedResults);
+    } catch (error) {
+        console.warn("Error reranking Lunr search results:", error);
+        return filterSearchResultsByConfidence(mergeLunrSearchStrategies(collectedResults));
+    }
 }
 
 async function generateResponseWithSearchResults(userInput, searchResults, chatname, additionalInstructions) {
@@ -2131,25 +3096,43 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
         
         //log("Relevant docs:", relevantDocs);
 
-        const validDocs = relevantDocs.filter(doc => doc !== null && doc.content);
+        const validDocs = relevantDocs
+            .map((doc, index) => {
+                if (!doc || !doc.content) {
+                    return null;
+                }
+                return {
+                    ...doc,
+                    evidenceScore: scoreRAGEvidenceForUserInput(doc, userInput, searchResults[index]?.score || 0)
+                };
+            })
+            .filter(Boolean)
+            .sort((a, b) => (b.evidenceScore || 0) - (a.evidenceScore || 0));
         
         if (validDocs.length === 0) {
             log("No valid documents found");
-            return `I'm sorry, but I couldn't find any specific information about "${userInput}" in my database.`;
+            return false;
         }
         
-        // Concatenate chunks until we approach 8K characters
+        // Concatenate a small set of strong chunks to avoid flooding the response prompt.
         let combinedContent = '';
-        let usedChunks = 0;
-        for (const doc of validDocs) {
-            if (combinedContent.length + doc.content.length > maxContextSize) {  // Leave some room for the prompt
+        for (const doc of validDocs.slice(0, RAG_MAX_EVIDENCE_DOCS)) {
+            const evidenceBlock = [
+                doc.documentTitle ? `Document: ${doc.documentTitle}` : '',
+                doc.title ? `Section: ${doc.title}` : '',
+                doc.summary ? `Summary: ${doc.summary}` : '',
+                `Content: ${doc.content}`
+            ].filter(Boolean).join('\n');
+
+            if (combinedContent.length + evidenceBlock.length > RAG_CONTEXT_CHAR_LIMIT) {
                 break;
             }
-            combinedContent += doc.content + '\n\n';
-            usedChunks++;
+            combinedContent += evidenceBlock + '\n\n';
         }
 
-        log("Combined content:", combinedContent);
+        if (!combinedContent.trim()) {
+            return false;
+        }
 
         const prompt = `You are an AI assistant. ${additionalInstructions || ''}
 
@@ -2161,48 +3144,67 @@ User Input: "${userInput}"
 Relevant Information:
 ${combinedContent}
 
-Provide a concise and informative response based on the above information. Your response should be suitable for a chat environment, ideally not exceeding 150 characters.`;
+Provide a concise and informative response based on the above information only when it clearly answers the user input.
+If the retrieved information is not enough to answer confidently, reply with NO_RESPONSE.
+Your response should be suitable for a chat environment, ideally not exceeding 150 characters.`;
 
-        return await callLLMAPI(prompt);
+        const response = await callLLMAPI(prompt);
+        if (!response || response.toLowerCase().includes('no_response')) {
+            return false;
+        }
+        return response;
     } catch (error) {
         console.warn("Error in generateResponseWithSearchResults:", error);
-        return "I'm sorry, I encountered an error while processing your request. Please try again later.";
+        return false;
     }
 }
 
 async function getDocumentsFromSearchResults(searchResults) {
     const db = await openLunrDatabase();
-    const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME], "readonly");
-    const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
     
     return Promise.all(searchResults.map(async result => {
-		log(result.ref);
-        const splitIndex = result.ref.split('_');
-		if (splitIndex.length<=2){
-			//console.warn(`Invalid document ID: ${result.ref}`);
-            return null;
-        }
-		const chunkIndex = splitIndex[splitIndex.length - 1];
-		const docId = "doc_"+splitIndex[splitIndex.length - 2];
-        
         try {
-            const request = store.get(docId);
-            const doc = await new Promise((resolve, reject) => {
+            const getStoredDoc = (key) => new Promise((resolve, reject) => {
+                const request = db
+                    .transaction([LUNR_DOCUMENT_STORE_NAME], "readonly")
+                    .objectStore(LUNR_DOCUMENT_STORE_NAME)
+                    .get(key);
                 request.onerror = () => reject(request.error);
                 request.onsuccess = () => resolve(request.result);
             });
-            
-            //log(`Retrieved document for id ${docId}:`, doc); // Add this line for debugging
+
+            let doc = await getStoredDoc(result.ref);
+            if (doc) {
+                return { 
+                    ref: result.ref,
+                    score: result.score || 0,
+                    documentTitle: doc.title || '',
+                    title: doc.title || '',
+                    content: doc.content, 
+                    tags: doc.tags, 
+                    synonyms: doc.synonyms,
+                    summary: doc.overallSummary
+                };
+            }
+
+            const lastUnderscoreIndex = result.ref.lastIndexOf('_');
+            const chunkIndex = lastUnderscoreIndex !== -1 ? result.ref.slice(lastUnderscoreIndex + 1) : '';
+            const hasChunkIndex = /^\d+$/.test(chunkIndex);
+            const docId = hasChunkIndex ? result.ref.slice(0, lastUnderscoreIndex) : result.ref;
+
+            doc = await getStoredDoc(docId);
 
             if (!doc) {
-                //console.warn(`Document not found for id: ${docId}`);
                 return null;
             }
             
-            if (doc.chunks && chunkIndex) {
-                const chunk = doc.chunks[parseInt(chunkIndex)];
-                //log(`Retrieved chunk for index ${chunkIndex}:`, chunk); // Add this line for debugging
+            if (doc.chunks && hasChunkIndex) {
+                const chunk = doc.chunks[parseInt(chunkIndex, 10)];
                 return chunk ? { 
+                    ref: result.ref,
+                    score: result.score || 0,
+                    documentTitle: doc.title || '',
+                    title: chunk.title || '',
                     content: chunk.content, 
                     tags: chunk.tags, 
                     synonyms: chunk.synonyms,
@@ -2211,6 +3213,10 @@ async function getDocumentsFromSearchResults(searchResults) {
             }
             
             return { 
+                ref: result.ref,
+                score: result.score || 0,
+                documentTitle: doc.title || '',
+                title: doc.title || '',
                 content: doc.content, 
                 tags: doc.tags, 
                 synonyms: doc.synonyms,
@@ -2695,30 +3701,7 @@ async function addDocumentToRAG(docId, content, title, tags = [], synonyms = [],
         });
     }
 
-    // Add to Lunr index
-    if (preprocessed) {
-        documentToStore.chunks.forEach((chunk, index) => {
-            globalLunrIndex.add({
-                id: `${docId}_${index}`,
-                title: chunk.title,
-                content: chunk.content,
-                summary: chunk.summary,
-                tags: chunk?.tags.join(' '),
-                synonyms: chunk?.synonyms.join(' ')
-            });
-        });
-    } else {
-        globalLunrIndex.add({
-            id: docId,
-            title: title,
-            content: content,
-            summary: content.substring(0, 200), // Use a substring of content as summary if not preprocessed
-            tags: tags.join(' '),
-            synonyms: synonyms.join(' ')
-        });
-    }
-
-    // Rebuild the Lunr index to include the new document
+    // Rebuild the Lunr index to include the new document.
     await rebuildIndex();
 
     await updateDatabaseDescriptor();
@@ -2935,8 +3918,48 @@ const MAX_TOKENS = 8000;
 const MAX_SUMMARY_MESSAGES = CACHE_SIZE;
 
 const ChatContextManager = { // summary and chat context
+    summary: null,
+    summaryTime: 0,
+    messageCount: 0,
+    cache: {
+        recentMessages: []
+    },
+
     needsSummary() {
         return !this.summary || this.messageCount >= 40 || (Date.now() - this.summaryTime) > SUMMARY_AGE;
+    },
+
+    addMessage(message) {
+        let normalized;
+
+        if (typeof message === 'string') {
+            normalized = {
+                message: message,
+                chatmessage: message,
+                timestamp: Date.now(),
+                textonly: true
+            };
+        } else if (message && typeof message === 'object') {
+            normalized = {
+                ...message,
+                message: message.message || message.chatmessage || '',
+                chatmessage: message.chatmessage || message.message || '',
+                timestamp: message.timestamp || Date.now()
+            };
+        } else {
+            return null;
+        }
+
+        if (!normalized.message && !normalized.chatmessage) {
+            return null;
+        }
+
+        this.cache.recentMessages.unshift(normalized);
+        if (this.cache.recentMessages.length > MAX_SUMMARY_MESSAGES) {
+            this.cache.recentMessages.length = MAX_SUMMARY_MESSAGES;
+        }
+        this.messageCount += 1;
+        return normalized;
     },
 
     async getContext(data) {
@@ -3143,6 +4166,10 @@ const ChatContextManager = { // summary and chat context
         }
     }
 };
+
+function addRecentMessage(message) {
+    return ChatContextManager.addMessage(message);
+}
 
 async function startAIScript() {
     try {

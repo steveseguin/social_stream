@@ -502,10 +502,16 @@ if (typeof chrome.runtime == "undefined") {
 	};
 
 	chrome.tabs.sendMessage = async function (tab = null, message = null, callback = null) {
-		var response = await ipcRenderer.sendSync("sendToTab", { message: message, tab: tab });
+		let response = false;
+		if (typeof callback === "function") {
+			response = await ipcRenderer.invoke("sendToTab-async", { message: message, tab: tab });
+		} else {
+			response = await ipcRenderer.sendSync("sendToTab", { message: message, tab: tab });
+		}
 		if (callback) {
 			callback(response);
 		}
+		return response;
 	};
 
 	chrome.debugger.sendCommand = async function (a = null, b = null, c = null, callback = null) {
@@ -1247,10 +1253,48 @@ function validateRoomId(roomId) {
 }
 var relaytargets = false;
 var loadedFirst = false;
+const SETTINGS_OBJECT_FIELD_PATTERN = /^(?:setting|both|param\d+|textparam\d+|numbersetting\d*|optionparam\d+|textsetting|optionsetting(?:2|10)?|json)$/;
+const SETTINGS_OBJECT_TOGGLE_PATTERN = /^(?:setting|both|param\d+)$/;
+
+function pruneSettingsObjects(settingsObject) {
+	if (!settingsObject || typeof settingsObject !== "object") {
+		return false;
+	}
+
+	let changed = false;
+
+	Object.keys(settingsObject).forEach(settingKey => {
+		const entry = settingsObject[settingKey];
+		if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+			return;
+		}
+
+		Object.keys(entry).forEach(fieldKey => {
+			if (SETTINGS_OBJECT_TOGGLE_PATTERN.test(fieldKey) && entry[fieldKey] === false) {
+				delete entry[fieldKey];
+				changed = true;
+			}
+		});
+
+		if (!("json" in entry) && "object" in entry) {
+			delete entry.object;
+			changed = true;
+		}
+
+		const remainingKeys = Object.keys(entry).filter(key => key !== "object");
+		if (!remainingKeys.length) {
+			delete settingsObject[settingKey];
+			changed = true;
+		}
+	});
+
+	return changed;
+}
 
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 	let reloadNeeded = false;
+	let normalizedSettings = false;
 	const { storedId, storedState } = getPersistedSession();
 	const isFirstRun = !storedId && !(item && item.streamID) && storedState === null && !(item && "state" in item);
 	const incomingStreamId = item && item.streamID ? item.streamID : storedId;
@@ -1321,6 +1365,8 @@ function loadSettings(item, resave = false) {
 
 	if (item && item.settings) {
 		settings = item.settings;
+		// Temporary migration cleanup for stale imported false toggle objects. Stop pruning on every import after May 31st 2026.
+		normalizedSettings = pruneSettingsObjects(settings);
 
 		Object.keys(patterns).forEach(pattern => {
 			settings[pattern] = findExistingEvents(pattern, { settings });
@@ -1364,13 +1410,14 @@ function loadSettings(item, resave = false) {
 		if (isSSAPP && ipcRenderer) {
 			ipcRenderer.sendSync("fromBackground", { streamID, password, settings, state: isExtensionOn });
 			//ipcRenderer.send('backgroundLoaded');
-			if (resave && settings) {
-				chrome.storage.local.set({ settings });
-				chrome.runtime.lastError;
-			}
 		}
 	} catch (e) {
 		console.error(e);
+	}
+
+	if ((resave || normalizedSettings) && settings) {
+		chrome.storage.local.set({ settings });
+		chrome.runtime.lastError;
 	}
 
 	toggleMidi();
@@ -1434,6 +1481,7 @@ function loadSettings(item, resave = false) {
 
 	setupSocket();
 	setupSocketDock();
+	handleVideoStatsSettingsChange();
 	handleStreamerBotSettingsChange();
 	loadedFirst = true;
 }
@@ -1530,6 +1578,437 @@ async function fetchWithTimeout(url, optionsOrTimeout = {}, timeoutOrHeaders = 8
 }
 // Make it globally available if needed by other parts of background.js, or export if using modules
 window.fetchWithTimeout = fetchWithTimeout;
+
+let videoStatsPollTimer = null;
+let videoStatsPollInFlight = false;
+let videoStatsLastOfflineKey = "";
+
+const VIDEO_STATS_DEFAULTS = {
+	source: "srt-live-server",
+	url: "http://127.0.0.1:8181/stats",
+	publisher: "publish/live/feed1",
+	application: "live",
+	key: "feed1",
+	label: "SRT",
+	intervalSeconds: 5
+};
+
+const VIDEO_STATS_SETTING_KEYS = new Set(["videostatspoller", "videostatssource", "videostatsurl", "videostatspublisher", "videostatsapplication", "videostatskey", "videostatsapikey", "videostatsusername", "videostatspassword", "videostatsinterval", "videostatslabel"]);
+
+function isVideoStatsSettingKey(settingKey) {
+	return VIDEO_STATS_SETTING_KEYS.has(settingKey);
+}
+
+function getSettingFlag(settingKey) {
+	const entry = settings && settings[settingKey];
+	return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+}
+
+function getSettingField(settingKey, fieldKey, fallback) {
+	const entry = settings && settings[settingKey];
+	if (entry && typeof entry === "object" && !Array.isArray(entry) && entry[fieldKey] !== undefined && entry[fieldKey] !== null && entry[fieldKey] !== "") {
+		return entry[fieldKey];
+	}
+	return fallback;
+}
+
+function getVideoStatsConfig() {
+	const source = String(getSettingField("videostatssource", "optionsetting", VIDEO_STATS_DEFAULTS.source) || VIDEO_STATS_DEFAULTS.source).trim() || VIDEO_STATS_DEFAULTS.source;
+	let intervalSeconds = parseInt(getSettingField("videostatsinterval", "numbersetting", VIDEO_STATS_DEFAULTS.intervalSeconds), 10);
+	if (!Number.isFinite(intervalSeconds)) {
+		intervalSeconds = VIDEO_STATS_DEFAULTS.intervalSeconds;
+	}
+	intervalSeconds = Math.max(1, Math.min(60, intervalSeconds));
+
+	return {
+		enabled: getSettingFlag("videostatspoller"),
+		source,
+		url: normalizeVideoStatsUrl(getSettingField("videostatsurl", "textsetting", VIDEO_STATS_DEFAULTS.url)),
+		publisher: String(getSettingField("videostatspublisher", "textsetting", VIDEO_STATS_DEFAULTS.publisher) || VIDEO_STATS_DEFAULTS.publisher).trim(),
+		application: String(getSettingField("videostatsapplication", "textsetting", VIDEO_STATS_DEFAULTS.application) || VIDEO_STATS_DEFAULTS.application).trim(),
+		key: String(getSettingField("videostatskey", "textsetting", VIDEO_STATS_DEFAULTS.key) || VIDEO_STATS_DEFAULTS.key).trim(),
+		apiKey: String(getSettingField("videostatsapikey", "textsetting", "") || "").trim(),
+		username: String(getSettingField("videostatsusername", "textsetting", "") || "").trim(),
+		password: String(getSettingField("videostatspassword", "textsetting", "") || ""),
+		label: String(getSettingField("videostatslabel", "textsetting", VIDEO_STATS_DEFAULTS.label) || VIDEO_STATS_DEFAULTS.label).trim(),
+		intervalMs: intervalSeconds * 1000
+	};
+}
+
+function normalizeVideoStatsUrl(url) {
+	url = String(url || "").trim();
+	if (!url) {
+		return VIDEO_STATS_DEFAULTS.url;
+	}
+	if (!/^https?:\/\//i.test(url)) {
+		url = "http://" + url;
+	}
+	return url;
+}
+
+function joinVideoStatsUrl(baseUrl, application, key) {
+	baseUrl = String(baseUrl || "").replace(/\/+$/, "");
+	application = String(application || "").replace(/^\/+|\/+$/g, "");
+	key = String(key || "").replace(/^\/+|\/+$/g, "");
+	if (!application && !key) {
+		return baseUrl;
+	}
+	if (!key) {
+		return baseUrl + "/" + application;
+	}
+	return baseUrl + "/" + application + "/" + key;
+}
+
+function parseVideoStatsNumber(value) {
+	if (value === null || value === undefined || value === "") {
+		return null;
+	}
+	const numeric = Number(value);
+	return Number.isFinite(numeric) ? numeric : null;
+}
+
+function roundVideoStatsNumber(value, digits = 3) {
+	const numeric = parseVideoStatsNumber(value);
+	if (numeric === null) {
+		return null;
+	}
+	const factor = Math.pow(10, digits);
+	return Math.round(numeric * factor) / factor;
+}
+
+function addVideoStatsNumber(meta, key, value, digits = 3) {
+	const numeric = roundVideoStatsNumber(value, digits);
+	if (numeric !== null) {
+		meta[key] = numeric;
+	}
+}
+
+function formatVideoStatsMs(value) {
+	const numeric = roundVideoStatsNumber(value, 0);
+	return numeric === null ? "" : numeric + " ms";
+}
+
+function formatVideoStatsKbps(value) {
+	const numeric = roundVideoStatsNumber(value, 0);
+	return numeric === null ? "" : numeric + " Kbps";
+}
+
+function createVideoStatsPayload(config, provider, stats) {
+	const meta = {
+		provider: provider || config.source,
+		source: config.source,
+		label: config.label || "Video",
+		online: stats.online !== false,
+		updatedAt: new Date().toISOString()
+	};
+
+	addVideoStatsNumber(meta, "bitrateKbps", stats.bitrateKbps, 0);
+	addVideoStatsNumber(meta, "rttMs", stats.rttMs, 1);
+	addVideoStatsNumber(meta, "bufferMs", stats.bufferMs, 0);
+	addVideoStatsNumber(meta, "recvRateMbps", stats.recvRateMbps, 3);
+	addVideoStatsNumber(meta, "bandwidthMbps", stats.bandwidthMbps, 3);
+	addVideoStatsNumber(meta, "droppedPackets", stats.droppedPackets, 0);
+	addVideoStatsNumber(meta, "lostPackets", stats.lostPackets, 0);
+	addVideoStatsNumber(meta, "droppedBytes", stats.droppedBytes, 0);
+	addVideoStatsNumber(meta, "lostBytes", stats.lostBytes, 0);
+	addVideoStatsNumber(meta, "uptimeSeconds", stats.uptimeSeconds, 0);
+	addVideoStatsNumber(meta, "viewers", stats.viewers, 0);
+	addVideoStatsNumber(meta, "durationSeconds", stats.durationSeconds, 0);
+
+	if (stats.video) {
+		meta.video = stats.video;
+	}
+	if (stats.audio) {
+		meta.audio = stats.audio;
+	}
+	if (stats.error) {
+		meta.error = stats.error;
+	}
+
+	const bitrateText = formatVideoStatsKbps(meta.bitrateKbps);
+	const rttText = formatVideoStatsMs(meta.rttMs);
+	const bufferText = formatVideoStatsMs(meta.bufferMs);
+	meta.summary = [bitrateText, rttText, bufferText].filter(Boolean).join(", ");
+
+	return {
+		type: "generic",
+		event: "video_stats",
+		meta
+	};
+}
+
+function getVideoStatsFetchOptions(config) {
+	const headers = {};
+
+	if (config.apiKey) {
+		headers.Authorization = config.apiKey;
+	}
+
+	if (config.source === "node-media-server" && config.username) {
+		headers.Authorization = "Basic " + btoa(config.username + ":" + config.password);
+	}
+
+	return {
+		cache: "no-store",
+		headers
+	};
+}
+
+async function fetchVideoStatsJson(url, config) {
+	const response = await fetchWithTimeout(url, getVideoStatsFetchOptions(config), 5000);
+	if (!response.ok) {
+		throw new Error("Stats request failed: HTTP " + response.status);
+	}
+	return await response.json();
+}
+
+async function fetchVideoStatsText(url, config) {
+	const response = await fetchWithTimeout(url, getVideoStatsFetchOptions(config), 5000);
+	if (!response.ok) {
+		throw new Error("Stats request failed: HTTP " + response.status);
+	}
+	return await response.text();
+}
+
+function selectPublisherStats(data, publisherName) {
+	if (!data || !data.publishers || typeof data.publishers !== "object") {
+		return null;
+	}
+
+	if (publisherName && data.publishers[publisherName]) {
+		return {
+			name: publisherName,
+			stats: data.publishers[publisherName]
+		};
+	}
+
+	const publisherKeys = Object.keys(data.publishers);
+	if (publisherKeys.length === 1) {
+		const fallbackName = publisherKeys[0];
+		return {
+			name: fallbackName,
+			stats: data.publishers[fallbackName]
+		};
+	}
+
+	return null;
+}
+
+async function fetchSrtLikeVideoStats(config, provider) {
+	const data = await fetchVideoStatsJson(config.url, config);
+	const selected = selectPublisherStats(data, config.publisher);
+	if (!selected || !selected.stats) {
+		throw new Error("Publisher not found in stats response");
+	}
+
+	const stats = selected.stats;
+	return createVideoStatsPayload(config, provider, {
+		online: true,
+		bitrateKbps: stats.bitrate,
+		rttMs: stats.rtt,
+		bufferMs: stats.msRcvBuf,
+		recvRateMbps: stats.mbpsRecvRate,
+		bandwidthMbps: stats.mbpsBandwidth,
+		droppedPackets: stats.pktRcvDrop,
+		lostPackets: stats.pktRcvLoss,
+		droppedBytes: stats.bytesRcvDrop,
+		lostBytes: stats.bytesRcvLoss,
+		uptimeSeconds: stats.uptime
+	});
+}
+
+function getDirectChildElement(parent, tagName) {
+	if (!parent) {
+		return null;
+	}
+	for (let i = 0; i < parent.children.length; i++) {
+		if (parent.children[i].tagName === tagName) {
+			return parent.children[i];
+		}
+	}
+	return null;
+}
+
+function getDirectChildText(parent, tagName) {
+	const child = getDirectChildElement(parent, tagName);
+	return child ? child.textContent : "";
+}
+
+function getNestedText(parent, path) {
+	let node = parent;
+	for (let i = 0; i < path.length; i++) {
+		node = getDirectChildElement(node, path[i]);
+		if (!node) {
+			return "";
+		}
+	}
+	return node.textContent || "";
+}
+
+function getOptionalVideoStatsObject(parent, fields) {
+	const output = {};
+	fields.forEach(field => {
+		const value = getNestedText(parent, field.path);
+		if (value !== "") {
+			const numeric = field.number ? parseVideoStatsNumber(value) : null;
+			output[field.key] = field.number && numeric !== null ? numeric : value;
+		}
+	});
+	return Object.keys(output).length ? output : null;
+}
+
+async function fetchNginxVideoStats(config) {
+	const xmlText = await fetchVideoStatsText(config.url, config);
+	const xmlDoc = new DOMParser().parseFromString(xmlText, "application/xml");
+	if (xmlDoc.getElementsByTagName("parsererror").length) {
+		throw new Error("Unable to parse NGINX stats XML");
+	}
+
+	let matchedStream = null;
+	const applications = Array.from(xmlDoc.getElementsByTagName("application"));
+	for (let i = 0; i < applications.length; i++) {
+		const application = applications[i];
+		if (getDirectChildText(application, "name") !== config.application) {
+			continue;
+		}
+		const live = getDirectChildElement(application, "live");
+		if (!live) {
+			continue;
+		}
+		const streams = Array.from(live.getElementsByTagName("stream"));
+		for (let j = 0; j < streams.length; j++) {
+			if (getDirectChildText(streams[j], "name") === config.key) {
+				matchedStream = streams[j];
+				break;
+			}
+		}
+		if (matchedStream) {
+			break;
+		}
+	}
+
+	if (!matchedStream) {
+		throw new Error("Stream not found in NGINX stats");
+	}
+
+	const bwVideo = parseVideoStatsNumber(getDirectChildText(matchedStream, "bw_video"));
+	const metaNode = getDirectChildElement(matchedStream, "meta");
+	const active = !!getDirectChildElement(matchedStream, "active");
+	const video = metaNode
+		? getOptionalVideoStatsObject(metaNode, [
+				{ key: "width", path: ["video", "width"], number: true },
+				{ key: "height", path: ["video", "height"], number: true },
+				{ key: "frameRate", path: ["video", "frame_rate"], number: true },
+				{ key: "codec", path: ["video", "codec"] },
+				{ key: "profile", path: ["video", "profile"] },
+				{ key: "level", path: ["video", "level"], number: true }
+			])
+		: null;
+	const audio = metaNode
+		? getOptionalVideoStatsObject(metaNode, [
+				{ key: "codec", path: ["audio", "codec"] },
+				{ key: "profile", path: ["audio", "profile"] },
+				{ key: "channels", path: ["audio", "channels"], number: true },
+				{ key: "sampleRate", path: ["audio", "sample_rate"], number: true }
+			])
+		: null;
+
+	return createVideoStatsPayload(config, "nginx-rtmp", {
+		online: active,
+		bitrateKbps: bwVideo === null ? null : bwVideo / 1024,
+		uptimeSeconds: parseVideoStatsNumber(getDirectChildText(matchedStream, "time")),
+		video,
+		audio
+	});
+}
+
+async function fetchNodeMediaVideoStats(config) {
+	const url = joinVideoStatsUrl(config.url, config.application, config.key);
+	const data = await fetchVideoStatsJson(url, config);
+	const stats = data && data.data && typeof data.data === "object" ? data.data : data;
+	if (!stats || typeof stats !== "object") {
+		throw new Error("Invalid Node Media Server stats response");
+	}
+
+	return createVideoStatsPayload(config, "node-media-server", {
+		online: stats.isLive !== false,
+		bitrateKbps: stats.bitrate,
+		viewers: stats.viewers,
+		durationSeconds: stats.duration
+	});
+}
+
+async function fetchVideoStatsPayload(config) {
+	if (config.source === "nginx-rtmp") {
+		return await fetchNginxVideoStats(config);
+	}
+	if (config.source === "node-media-server") {
+		return await fetchNodeMediaVideoStats(config);
+	}
+	if (config.source === "belabox-cloud") {
+		return await fetchSrtLikeVideoStats(config, "belabox-cloud");
+	}
+	return await fetchSrtLikeVideoStats(config, "srt-live-server");
+}
+
+function sendVideoStatsOffline(config, error) {
+	const message = error && error.message ? error.message : "Stats unavailable";
+	const offlineKey = config.source + "|" + config.url + "|" + message;
+	if (offlineKey === videoStatsLastOfflineKey) {
+		return;
+	}
+	videoStatsLastOfflineKey = offlineKey;
+	sendToDestinations(
+		createVideoStatsPayload(config, config.source, {
+			online: false,
+			error: message
+		})
+	);
+}
+
+async function pollVideoStats() {
+	if (videoStatsPollInFlight || !isExtensionOn) {
+		return;
+	}
+
+	const config = getVideoStatsConfig();
+	if (!config.enabled) {
+		stopVideoStatsPoller();
+		return;
+	}
+
+	videoStatsPollInFlight = true;
+	try {
+		const payload = await fetchVideoStatsPayload(config);
+		videoStatsLastOfflineKey = "";
+		sendToDestinations(payload);
+	} catch (e) {
+		console.warn("[VideoStats] Poll failed:", e);
+		sendVideoStatsOffline(config, e);
+	} finally {
+		videoStatsPollInFlight = false;
+	}
+}
+
+function stopVideoStatsPoller() {
+	if (videoStatsPollTimer) {
+		clearInterval(videoStatsPollTimer);
+		videoStatsPollTimer = null;
+	}
+	videoStatsPollInFlight = false;
+	videoStatsLastOfflineKey = "";
+}
+
+function handleVideoStatsSettingsChange() {
+	stopVideoStatsPoller();
+	const config = getVideoStatsConfig();
+	if (!config.enabled) {
+		return;
+	}
+
+	pollVideoStats();
+	videoStatsPollTimer = setInterval(pollVideoStats, config.intervalMs);
+}
 
 async function changeLg(lang) {
 	log("changeLg: " + lang);
@@ -2072,6 +2551,31 @@ var worksheet = false;
 var table = [];
 
 var newFileHandleExcel = false;
+
+function getExcelWorkbookBytes() {
+	const xlsbin = XLSX.write(workbook, {
+		bookType: "xlsx",
+		type: "binary"
+	});
+
+	const bytes = new Uint8Array(xlsbin.length);
+	for (let i = 0; i < xlsbin.length; i++) {
+		bytes[i] = xlsbin.charCodeAt(i) & 0xff;
+	}
+	return bytes;
+}
+
+async function writeExcelWorkbook() {
+	const xlsData = getExcelWorkbookBytes();
+	if (typeof newFileHandleExcel == "string") {
+		ipcRenderer.send("write-to-file", { filePath: newFileHandleExcel, data: xlsData });
+		return;
+	}
+	const writableStream = await newFileHandleExcel.createWritable();
+	await writableStream.write(xlsData);
+	await writableStream.close();
+}
+
 async function overwriteFileExcel(data = false) {
 	if (data == "setup") {
 		const opts = {
@@ -2092,7 +2596,14 @@ async function overwriteFileExcel(data = false) {
 		} finally {
 			await restorePreviousTabAfterPicker(restoreTarget);
 		}
+		if (!newFileHandleExcel) {
+			workbook = false;
+			worksheet = false;
+			table = [];
+			return;
+		}
 		workbook = XLSX.utils.book_new();
+		table = [];
 
 		data = [];
 
@@ -2100,28 +2611,7 @@ async function overwriteFileExcel(data = false) {
 		workbook.SheetNames.push("SocialStream-" + streamID);
 		workbook.Sheets["SocialStream-" + streamID] = worksheet;
 
-		var xlsbin = XLSX.write(workbook, {
-			bookType: "xlsx",
-			type: "binary"
-		});
-
-		var buffer = new ArrayBuffer(xlsbin.length),
-			array = new Uint8Array(buffer);
-		for (var i = 0; i < xlsbin.length; i++) {
-			array[i] = xlsbin.charCodeAt(i) & 0xff;
-		}
-		var xlsblob = new Blob([buffer], { type: "application/octet-stream" });
-		delete array;
-		delete buffer;
-		delete xlsbin;
-
-		if (typeof newFileHandleExcel == "string") {
-			ipcRenderer.send("write-to-file", { filePath: newFileHandleExcel, data: xlsblob });
-		} else {
-			const writableStream = await newFileHandleExcel.createWritable();
-			await writableStream.write(xlsblob);
-			await writableStream.close();
-		}
+		await writeExcelWorkbook();
 	} else if (newFileHandleExcel && data) {
 		for (var key in data) {
 			if (!table.includes(key)) {
@@ -2146,21 +2636,7 @@ async function overwriteFileExcel(data = false) {
 		XLSX.utils.sheet_add_aoa(worksheet, [table], { origin: 0 }); // replace header
 		XLSX.utils.sheet_add_aoa(worksheet, [column], { origin: -1 }); // append new line
 
-		const appendedXlsBin = XLSX.write(workbook, {
-			bookType: "xlsx",
-			type: "binary"
-		});
-
-		const appendedBuffer = new ArrayBuffer(appendedXlsBin.length);
-		const appendedArray = new Uint8Array(appendedBuffer);
-		for (let arrayIndex = 0; arrayIndex < appendedXlsBin.length; arrayIndex++) {
-			appendedArray[arrayIndex] = appendedXlsBin.charCodeAt(arrayIndex) & 0xff;
-		}
-		const appendedXlsBlob = new Blob([appendedBuffer], { type: "application/octet-stream" });
-
-		const writableStream = await newFileHandleExcel.createWritable();
-		await writableStream.write(appendedXlsBlob);
-		await writableStream.close();
+		await writeExcelWorkbook();
 	}
 }
 
@@ -2495,51 +2971,139 @@ function clearAllWithPrefix(prefix) {
 	}
 }
 
+function escapePronounBadgeText(value = "") {
+	return (value || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+function normalizePronounList(result) {
+	var normalized = {};
+
+	if (!result) {
+		return normalized;
+	}
+
+	if (Array.isArray(result)) {
+		for (var i = 0; i < result.length; i++) {
+			var entry = result[i];
+			if (!entry || !entry.name) {
+				continue;
+			}
+
+			var entryDisplay = entry.display || "";
+			if (!entryDisplay && entry.subject && entry.object) {
+				entryDisplay = entry.subject + "/" + entry.object;
+			}
+
+			entryDisplay = escapePronounBadgeText(entryDisplay);
+			if (entryDisplay) {
+				normalized[entry.name] = entryDisplay;
+			}
+		}
+
+		return normalized;
+	}
+
+	for (var key in result) {
+		if (!result.hasOwnProperty(key)) {
+			continue;
+		}
+
+		var value = result[key];
+		if (!value) {
+			continue;
+		}
+
+		if (typeof value === "string") {
+			normalized[key] = escapePronounBadgeText(value);
+			continue;
+		}
+
+		var valueDisplay = value.display || "";
+		if (!valueDisplay && value.subject && value.object) {
+			valueDisplay = value.subject + "/" + value.object;
+		}
+
+		valueDisplay = escapePronounBadgeText(valueDisplay);
+		if (valueDisplay) {
+			normalized[key] = valueDisplay;
+		}
+	}
+
+	return normalized;
+}
+
+function normalizePronounLookup(result) {
+	if (!result) {
+		return false;
+	}
+
+	if (Array.isArray(result)) {
+		return result[0] || false;
+	}
+
+	return result;
+}
+
+async function fetchPronounResponse(url) {
+	return fetch(url)
+		.then(response => {
+			const cacheControl = response.headers.get("Cache-Control");
+			let maxAge = 3600; // Default to 60 minutes
+
+			if (cacheControl) {
+				const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
+				if (maxAgeMatch && maxAgeMatch[1]) {
+					maxAge = parseInt(maxAgeMatch[1]);
+				}
+			}
+
+			return response.json().then(result => {
+				return {
+					maxAge: maxAge,
+					result: result
+				};
+			});
+		})
+		.catch(err => {
+			// console.error(err);
+			return false;
+		});
+}
+
 var Pronouns = false;
 async function getPronouns() {
 	if (!Pronouns) {
 		try {
-			Pronouns = getItemWithExpiry("Pronouns");
+			Pronouns = normalizePronounList(getItemWithExpiry("Pronouns"));
 
-			if (!Pronouns) {
-				Pronouns = await fetch("https://api.pronouns.alejo.io/v1/pronouns")
-					.then(response => {
-						const cacheControl = response.headers.get("Cache-Control");
-						let maxAge = 3600; // Default to 60 minutes
+			if (!Object.keys(Pronouns).length) {
+				var mergedPronouns = {};
+				var maxAge = 3600;
+				var pronounEndpoints = settings.pronounscombined ? ["https://api.pronouns.alejo.io/v1/pronouns", "https://pronouns.alejo.io/api/pronouns"] : ["https://api.pronouns.alejo.io/v1/pronouns"];
 
-						if (cacheControl) {
-							const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
-							if (maxAgeMatch && maxAgeMatch[1]) {
-								maxAge = parseInt(maxAgeMatch[1]);
-							}
+				for (var i = 0; i < pronounEndpoints.length; i++) {
+					var pronounResponse = await fetchPronounResponse(pronounEndpoints[i]);
+					if (!pronounResponse || !pronounResponse.result) {
+						continue;
+					}
+
+					var normalizedPronouns = normalizePronounList(pronounResponse.result);
+					if (!Object.keys(normalizedPronouns).length) {
+						continue;
+					}
+
+					maxAge = Math.min(maxAge, pronounResponse.maxAge || maxAge);
+					for (var key in normalizedPronouns) {
+						if (normalizedPronouns.hasOwnProperty(key)) {
+							mergedPronouns[key] = normalizedPronouns[key];
 						}
+					}
+				}
 
-						return response.json().then(result => {
-							for (const key in result) {
-								if (result.hasOwnProperty(key)) {
-									const { subject, object } = result[key];
-									result[key] = `${subject}/${object}`;
-
-									result[key] =
-										result[key]
-											.replace(/&/g, "&amp;") // i guess this counts as html
-											.replace(/</g, "&lt;")
-											.replace(/>/g, "&gt;")
-											.replace(/"/g, "&quot;")
-											.replace(/'/g, "&#039;") || "";
-								}
-							}
-
-							setItemWithExpiry("Pronouns", result, maxAge / 60);
-							return result;
-						});
-					})
-					.catch(err => {
-						// console.error(err);
-						return {};
-					});
-
-				if (!Pronouns) {
+				if (Object.keys(mergedPronouns).length) {
+					setItemWithExpiry("Pronouns", mergedPronouns, maxAge / 60);
+					Pronouns = mergedPronouns;
+				} else {
 					Pronouns = {};
 				}
 			} else {
@@ -2558,31 +3122,26 @@ async function getPronounsNames(username = "") {
 	}
 	try {
 		if (!(username in PronounsNames)) {
-			PronounsNames[username] = getItemWithExpiry("Pronouns:" + username);
+			PronounsNames[username] = normalizePronounLookup(getItemWithExpiry("Pronouns:" + username));
 
 			if (!PronounsNames[username]) {
-				PronounsNames[username] = await fetch("https://api.pronouns.alejo.io/v1/users/" + username)
-					.then(response => {
-						const cacheControl = response.headers.get("Cache-Control");
-						let maxAge = 3600; // Default to 60 minutes
+				var pronounUserEndpoints = settings.pronounscombined ? ["https://pronouns.alejo.io/api/users/" + username, "https://api.pronouns.alejo.io/v1/users/" + username] : ["https://api.pronouns.alejo.io/v1/users/" + username];
 
-						if (cacheControl) {
-							const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
-							if (maxAgeMatch && maxAgeMatch[1]) {
-								maxAge = parseInt(maxAgeMatch[1]);
-							}
-						}
-						//console.log(response);
-						return response.json().then(result => {
-							//console.log(result);
-							setItemWithExpiry("Pronouns:" + username, result, maxAge / 60);
-							return result;
-						});
-					})
-					.catch(err => {
-						//console.error(err);
-						return false;
-					});
+				for (var i = 0; i < pronounUserEndpoints.length; i++) {
+					var pronounResponse = await fetchPronounResponse(pronounUserEndpoints[i]);
+					if (!pronounResponse || !pronounResponse.result) {
+						continue;
+					}
+
+					var normalizedPronoun = normalizePronounLookup(pronounResponse.result);
+					if (!normalizedPronoun) {
+						continue;
+					}
+
+					setItemWithExpiry("Pronouns:" + username, normalizedPronoun, pronounResponse.maxAge / 60);
+					PronounsNames[username] = normalizedPronoun;
+					break;
+				}
 
 				if (!PronounsNames[username]) {
 					PronounsNames[username] = false;
@@ -3871,10 +4430,28 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				sendResponse({ success: false, error: payload });
 			}
 		} else if (request.cmd && request.cmd === "saveSetting") {
-			if (typeof settings[request.setting] == "object") {
-				if (!request.value) {
-					// pretty risky if something shares the same name.
-					delete settings[request.setting];
+			const typedSetting = typeof request.type === "string" && request.type !== "";
+			const existingSetting = settings[request.setting];
+			const isObjectSetting = existingSetting && typeof existingSetting === "object" && !Array.isArray(existingSetting);
+			const valueIsEmpty = request.value === "" || request.value === null || request.value === undefined;
+			const isToggleField = typedSetting && SETTINGS_OBJECT_TOGGLE_PATTERN.test(request.type);
+			const preserveSiblingFields = typedSetting && SETTINGS_OBJECT_FIELD_PATTERN.test(request.type);
+			const shouldDeleteValue = valueIsEmpty || (isToggleField && request.value === false);
+			if (isObjectSetting) {
+				if (shouldDeleteValue) {
+					if (preserveSiblingFields) {
+						delete settings[request.setting][request.type];
+						if (request.type == "json" || !("json" in settings[request.setting])) {
+							delete settings[request.setting]["object"];
+						}
+						const remainingKeys = Object.keys(settings[request.setting]).filter(key => key !== "object");
+						if (!remainingKeys.length) {
+							delete settings[request.setting];
+						}
+					} else {
+						// pretty risky if something shares the same name.
+						delete settings[request.setting];
+					}
 				} else {
 					settings[request.setting][request.type] = request.value;
 					if (request.type == "json") {
@@ -3882,7 +4459,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					}
 				}
 			} else if ("type" in request) {
-				if (!request.value) {
+				if (shouldDeleteValue) {
 					delete settings[request.setting];
 				} else {
 					settings[request.setting] = {};
@@ -3895,6 +4472,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} else {
 				settings[request.setting] = request.value;
 			}
+
+			pruneSettingsObjects(settings);
 
 			Object.keys(patterns).forEach(pattern => {
 				settings[pattern] = findExistingEvents(pattern, { settings });
@@ -4126,6 +4705,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "streamerbotpassword") {
 				handleStreamerBotSettingsChange();
 			}
+			if (isVideoStatsSettingKey(request.setting)) {
+				handleVideoStatsSettingsChange();
+			}
 			if (request.setting == "excludeReplyingTo") {
 				pushSettingChange();
 			}
@@ -4177,9 +4759,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "nosubcolor") {
 				pushSettingChange();
 			}
-			if (request.setting == "captureevents") {
-				pushSettingChange();
-			}
 			if (request.setting == "capturejoinedevent") {
 				pushSettingChange();
 			}
@@ -4215,6 +4794,15 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (settings.pronouns) {
 					clearAllWithPrefix("Pronouns");
 					Pronouns = false;
+					PronounsNames = {};
+					await getPronouns();
+				}
+			}
+			if (request.setting == "pronounscombined") {
+				clearAllWithPrefix("Pronouns");
+				Pronouns = false;
+				PronounsNames = {};
+				if (settings.pronouns) {
 					await getPronouns();
 				}
 			}
@@ -4423,7 +5011,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				(async () => {
 					let entries = [];
 					try {
-						const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`, { credentials: "omit" });
+						const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`, { credentials: "include" });
 						if (!resp.ok) {
 							sendEmojiResult(entries);
 							return;
@@ -5546,6 +6134,14 @@ async function sendToDestinations(message) {
 	}
 
 	var isAlertMessage = message && message.event;
+	var reactionEventName = "";
+	if (message && typeof message.event === "string") {
+		reactionEventName = message.event
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "_")
+			.replace(/^_+|_+$/g, "");
+	}
+	var isReactionMessage = reactionEventName === "reaction" || reactionEventName === "liked" || reactionEventName === "like";
 
 	try {
 		if (!(settings.excludeAlertsDock && isAlertMessage)) {
@@ -5580,6 +6176,14 @@ async function sendToDestinations(message) {
 	try {
 		if (settings.wordcloud) {
 			sendTargetP2P(message, "wordcloud");
+		}
+	} catch (e) {
+		console.error(e);
+	}
+
+	try {
+		if (isReactionMessage) {
+			sendTargetP2P(message, "reactions");
 		}
 	} catch (e) {
 		console.error(e);
@@ -9909,6 +10513,18 @@ function extractWaitlistMessage(chatMessage = "", trigger = "") {
 	}
 }
 
+function forgetWaitlistUser(entry) {
+	try {
+		if (!entry || !entry.type || !entry.chatname || !waitListUsers[entry.type]) {
+			return;
+		}
+		delete waitListUsers[entry.type][entry.chatname];
+		if (!Object.keys(waitListUsers[entry.type]).length) {
+			delete waitListUsers[entry.type];
+		}
+	} catch (e) {}
+}
+
 function processWaitlist(data) {
 	try {
 		if (!allowNewEntries) {
@@ -10098,10 +10714,16 @@ function removeWaitlist(n = 0) {
 			if (waitlist[i].waitStatus !== 1) {
 				if (n == 0) {
 					waitlist[i].waitStatus = 1;
+					if (settings.waitlistallowrejoin) {
+						forgetWaitlistUser(waitlist[i]);
+					}
 					sendWaitlistConfig(waitlist, true);
 					break;
 				} else if (cc == n) {
 					waitlist[i].waitStatus = 1;
+					if (settings.waitlistallowrejoin) {
+						forgetWaitlistUser(waitlist[i]);
+					}
 					sendWaitlistConfig(waitlist, true);
 					break;
 				} else {
@@ -10799,36 +11421,20 @@ async function processIncomingRequest(request, UUID = false) {
 				sendToDestinations({ vipUser: userToVIP });
 			}
 		} else if (request.action === "markUser" && request.value && request.value.chatname && request.value.type && request.value.role) {
+			let settingsKey = "";
 			if (request.value.role == "bot") {
-				if (!settings.botnamesext) {
-					settings.botnamesext = { textsetting: "" };
-				}
-				const markedlist = settings.botnamesext.textsetting.split(",").map(user => {
-					const parts = user.split(":").map(part => part.trim());
-					return { username: parts[0], type: parts[1] || "" };
-				});
-
-				let altSourceType = request.value.type || "";
-				if (altSourceType == "youtubeshorts") {
-					altSourceType = "youtube";
-				}
-
-				const userToMark = { username: request.value.userid || request.value.chatname, type: altSourceType };
-				const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
-
-				if (!isAlreadyMarked) {
-					settings.botnamesext.textsetting += (settings.botnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
-					chrome.storage.local.set({ settings: settings });
-					// Check for errors in chrome storage operations
-					if (chrome.runtime.lastError) {
-						console.error("Error updating settings:", chrome.runtime.lastError.message);
-					}
-				}
+				settingsKey = "botnamesext";
 			} else if (request.value.role == "mod") {
-				if (!settings.modnamesext) {
-					settings.modnamesext = { textsetting: "" };
+				settingsKey = "modnamesext";
+			} else if (request.value.role == "host") {
+				settingsKey = "hostnamesext";
+			}
+
+			if (settingsKey) {
+				if (!settings[settingsKey]) {
+					settings[settingsKey] = { textsetting: "" };
 				}
-				const markedlist = settings.modnamesext.textsetting.split(",").map(user => {
+				const markedlist = settings[settingsKey].textsetting.split(",").map(user => {
 					const parts = user.split(":").map(part => part.trim());
 					return { username: parts[0], type: parts[1] || "" };
 				});
@@ -10838,16 +11444,26 @@ async function processIncomingRequest(request, UUID = false) {
 					altSourceType = "youtube";
 				}
 
-				const userToMark = { username: request.value.userid || request.value.chatname, type: altSourceType };
+				const storageUsername = request.value.role == "host" ? request.value.chatname || request.value.userid || "" : request.value.userid || request.value.chatname || "";
+				const userToMark = { username: storageUsername, type: altSourceType };
+				const dockUserToMark = {
+					username: request.value.chatname || request.value.userid || storageUsername,
+					type: altSourceType,
+					role: request.value.role
+				};
 				const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
 
-				if (!isAlreadyMarked) {
-					settings.modnamesext.textsetting += (settings.modnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
+				if (!isAlreadyMarked && userToMark.username) {
+					settings[settingsKey].textsetting += (settings[settingsKey].textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
 					chrome.storage.local.set({ settings: settings });
 					// Check for errors in chrome storage operations
 					if (chrome.runtime.lastError) {
 						console.error("Error updating settings:", chrome.runtime.lastError.message);
 					}
+				}
+
+				if (isExtensionOn && dockUserToMark.username) {
+					sendToDestinations({ markUser: dockUserToMark });
 				}
 			}
 		} else if (request.action === "getChatSources") {
@@ -13852,7 +14468,7 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
-		if (data.chatmessage) {
+		if (data.chatmessage && !data.chatbotReflection) {
 			const botReplyEvents = settings["botReply"] || [];
 			for (const id of botReplyEvents) {
 				const event = settings[`botReplyMessageEvent${id}`];
@@ -13880,6 +14496,7 @@ async function applyBotActions(data, tab = false) {
 				const timeout = settings[`botReplyMessageTimeout${id}`]?.numbersetting || 0;
 				const msg = {
 					response,
+					outgoingOrigin: "chatbot",
 					...(data.tid && !settings[`botReplyAll${id}`] && { tid: data.tid })
 				};
 
@@ -15425,24 +16042,24 @@ async function triggerFakeRandomMessage() {
 	let attempts = 0;
 	const maxAttempts = 5;
 
+	// Keep the popup's legacy fake chat identities stable; alert-specific test personas live elsewhere.
 	// Keep generating new messages until we get one that's different from the last one
 	// or until we've tried a reasonable number of times
 	do {
 		data = {};
-		data.chatname = "Jess";
+		data.chatname = "John Doe";
 		data.nameColor = "";
 		data.chatbadges = "";
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
-		data.chatimg = "https://socialstream.ninja/media/user1.jpg";
+		data.chatimg = "";
 		data.type = "youtube";
 
 		if (Math.random() > 0.9) {
 			data.hasDonation = "2500 gold";
 			data.membership = "";
-			data.chatname = "Markus";
-			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
+			data.chatname = "Bob";
 			data.chatbadges = [];
 			var html = {};
 			html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
@@ -15452,14 +16069,14 @@ async function triggerFakeRandomMessage() {
 			data.hasDonation = "3 hearts";
 			data.membership = "";
 			data.chatmessage = "";
-			data.chatimg = "https://socialstream.ninja/media/user3.jpg";
-			data.chatname = "Priya";
+			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
+			data.chatname = "Lucy";
 			data.type = "youtubeshorts";
 		} else if (Math.random() > 0.7) {
 			data.hasDonation = "";
 			data.membership = "";
-			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
-			data.chatname = "DanTheMan";
+			data.chatimg = "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
+			data.chatname = "vdoninja";
 			data.type = "twitch";
 			data.event = "test";
 			var score = parseInt(Math.random() * 378);
@@ -15467,8 +16084,8 @@ async function triggerFakeRandomMessage() {
 		} else if (Math.random() > 0.6) {
 			data.hasDonation = "";
 			data.membership = "";
-			data.chatimg = "https://socialstream.ninja/media/user5.jpg";
-			data.chatname = "CaptainSquawk";
+			data.chatimg = "https://socialstream.ninja/media/sampleavatar.png";
+			data.chatname = "Steve";
 
 			data.vip = true;
 			data.chatmessage = '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦 https://vdo.ninja/';
@@ -15476,16 +16093,15 @@ async function triggerFakeRandomMessage() {
 			data.hasDonation = "";
 			data.nameColor = "#107516";
 			data.membership = "SPONSORSHIP";
-			data.chatimg = parseInt(Math.random() * 2) ? "https://socialstream.ninja/media/user1.jpg" : "https://socialstream.ninja/media/user3.jpg";
-			data.chatname = "Lily_" + randomDigits();
+			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/media/sampleavatar.png";
+			data.chatname = "Steve_" + randomDigits();
 			data.type = parseInt(Math.random() * 2) ? "slack" : "facebook";
 			data.chatmessage = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
 		} else if (Math.random() > 0.4) {
 			data.hasDonation = "";
 			data.highlightColor = "pink";
 			data.nameColor = "lightblue";
-			data.chatname = "Kai";
-			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
+			data.chatname = "NewGuest";
 			data.type = "twitch";
 			data.chatmessage = "hi";
 			data.chatbadges = ["https://vdo.ninja/media/icon.png", "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj", "https://socialstream.ninja/icons/announcement.png"];
@@ -15497,7 +16113,6 @@ async function triggerFakeRandomMessage() {
 			data.nameColor = "";
 			data.private = true;
 			data.chatname = "Sir Drinks-a-lot";
-			data.chatimg = "https://socialstream.ninja/media/user5.jpg";
 			data.type = "discord";
 			data.chatmessage = "☕☕☕ COFFEE!";
 			data.chatbadges = ["https://socialstream.ninja/icons/bot.png", "https://socialstream.ninja/icons/announcement.png"];
@@ -15506,7 +16121,7 @@ async function triggerFakeRandomMessage() {
 			data.membership = "";
 			data.chatmessage = "";
 			data.contentimg = "https://socialstream.ninja/media/logo.png";
-			data.chatname = "Ava";
+			data.chatname = "User123";
 			data.chatimg = "https://socialstream.ninja/media/user1.jpg";
 			data.type = "youtube";
 		} else if (Math.random() > 0.1) {
@@ -15515,12 +16130,11 @@ async function triggerFakeRandomMessage() {
 			data.question = true;
 			data.chatmessage = "Is this a test question?  🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓";
 			data.chatname = "Nich Lass";
-			data.chatimg = "https://socialstream.ninja/media/user3.jpg";
+			data.chatimg = "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj";
 			data.type = "zoom";
 		} else {
 			data.hasDonation = "";
 			data.membership = "SPONSORSHIP";
-			data.chatimg = "https://socialstream.ninja/media/user2.jpg";
 		}
 
 		attempts++;
@@ -15528,7 +16142,7 @@ async function triggerFakeRandomMessage() {
 
 	data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 	if (!data) {
-		return response;
+		return null;
 	}
 
 	try {
@@ -15537,7 +16151,7 @@ async function triggerFakeRandomMessage() {
 		console.warn(e);
 	}
 	if (!data) {
-		return response;
+		return null;
 	}
 
 	lastRandomTestMessageData = JSON.parse(JSON.stringify(data)); // Store a deep copy of the current message

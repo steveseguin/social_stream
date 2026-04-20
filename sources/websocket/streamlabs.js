@@ -32,6 +32,60 @@
     webhookCount: 0,
     errorCount: 0
   };
+  let settings = {};
+  const isExtension = !!(window.chrome && window.chrome.runtime && window.chrome.runtime.id);
+
+  function applySettings(nextSettings) {
+    settings = nextSettings && typeof nextSettings === 'object' ? nextSettings : {};
+  }
+
+  function handleBridgeRequest(request) {
+    let payload = request;
+    if (payload && payload.__ssappSendToTab) {
+      payload = payload.__ssappSendToTab;
+    }
+    if (!payload || typeof payload !== 'object') {
+      return false;
+    }
+    if (payload.settings) {
+      applySettings(payload.settings);
+      return true;
+    }
+    return false;
+  }
+
+  function initSettingsBridge() {
+    if (isExtension) {
+      try {
+        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+          if (handleBridgeRequest(request)) {
+            sendResponse(true);
+            return;
+          }
+          sendResponse(false);
+        });
+
+        chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, (response) => {
+          if (chrome.runtime.lastError) return;
+          if (response && response.settings) {
+            applySettings(response.settings);
+          }
+        });
+      } catch (error) {
+        console.warn('Failed to init Streamlabs settings bridge', error);
+      }
+    }
+    try {
+      window.addEventListener('message', (event) => {
+        if (!event.data || typeof event.data !== 'object' || !event.data.__ssappSendToTab) {
+          return;
+        }
+        handleBridgeRequest(event.data);
+      });
+    } catch (error) {
+      console.warn('Failed to init Streamlabs window bridge', error);
+    }
+  }
 
   function readFromStorage(key) {
     try {
@@ -189,6 +243,11 @@
     return String(value).trim();
   }
 
+  function getDonationFallbackMessage() {
+    const customText = sanitizeString(settings?.customDonationThankYou?.textsetting);
+    return customText || 'Thank you for your support!';
+  }
+
   function normalizeEventType(baseType, entry) {
     const normalized = (baseType || '').toLowerCase();
     if (normalized === 'subscription' && entry?.type) {
@@ -231,7 +290,7 @@
       const donation = deriveDonationValue(baseType, entry);
       const msg =
         sanitizeString(entry.message || entry.body || entry.text || entry.alert_message) ||
-        (donation ? 'Thank you for your support!' : sanitizeString(baseType));
+        (donation ? getDonationFallbackMessage() : sanitizeString(baseType));
 
       const numericAmount = sanitizeNumber(entry.amount);
       const meta = cleanMeta({
@@ -431,6 +490,7 @@
     });
   }
 
+  initSettingsBridge();
   wireControls();
   applyStoredSettings();
   window.addEventListener('beforeunload', () => disconnectSocket('Page closed'));

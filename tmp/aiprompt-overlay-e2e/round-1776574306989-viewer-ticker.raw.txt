@@ -1,0 +1,251 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSN Viewer Counters</title>
+<style>
+  :root {
+    --ssn-bg: rgba(0, 0, 0, 0.6);
+    --ssn-text: #ffffff;
+    --ssn-accent: #00ffcc;
+    --ssn-font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --ssn-border-radius: 8px;
+    --ssn-padding: 8px 16px;
+    --ssn-font-size: 18px;
+    --ssn-total-size: 24px;
+  }
+
+  body {
+    background: transparent;
+    margin: 0;
+    padding: 0;
+    font-family: var(--ssn-font);
+    color: var(--ssn-text);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #overlay-container {
+    width: 100%;
+    padding-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .counter-bar {
+    background: var(--ssn-bg);
+    backdrop-filter: blur(4px);
+    border-radius: var(--ssn-border-radius);
+    padding: var(--ssn-padding);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease;
+  }
+
+  .platform-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .platform-name {
+    text-transform: capitalize;
+    font-weight: 600;
+    font-size: 0.9em;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .count-value {
+    font-weight: 700;
+    font-size: var(--ssn-font-size);
+    color: var(--ssn-accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255,255,255,0.2);
+  }
+
+  .total-section {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    border-left: 1px solid rgba(255,255,255,0.2);
+    padding-left: 20px;
+  }
+
+  .total-label {
+    font-weight: 600;
+    font-size: 0.9em;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .total-value {
+    font-weight: 800;
+    font-size: var(--ssn-total-size);
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Animation for count changes */
+  .pop {
+    animation: pop-anim 0.3s ease-out;
+  }
+
+  @keyframes pop-anim {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); color: #fff; }
+    100% { transform: scale(1); }
+  }
+</style>
+</head>
+<body>
+
+<div id="overlay-container">
+  <div class="counter-bar" id="counter-bar">
+    <!-- Dynamic Content -->
+    <div id="platforms-list" style="display: flex; gap: 20px;"></div>
+    <div class="divider"></div>
+    <div class="total-section">
+      <span class="total-label">Total</span>
+      <span class="count-value total-value" id="total-count">0</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // State management
+  let currentCounts = {};
+  let previousTotal = 0;
+
+  // DOM Elements
+  const platformsList = document.getElementById('platforms-list');
+  const totalCountEl = document.getElementById('total-count');
+  const counterBar = document.getElementById('counter-bar');
+
+  // Helper: Format number with commas (e.g., 1,234)
+  function formatNumber(num) {
+    return num.toLocaleString();
+  }
+
+  // Helper: Create or update a platform element
+  function updatePlatformDisplay(platform, count) {
+    let el = document.getElementById('platform-' + platform);
+    
+    if (!el) {
+      // Create new element
+      el = document.createElement('div');
+      el.id = 'platform-' + platform;
+      el.className = 'platform-count';
+      el.innerHTML = `
+        <span class="platform-name">${platform}</span>
+        <span class="count-value">0</span>
+      `;
+      platformsList.appendChild(el);
+    }
+
+    const valueEl = el.querySelector('.count-value');
+    const text = formatNumber(count);
+    
+    if (valueEl.textContent !== text) {
+      valueEl.textContent = text;
+      // Trigger pop animation
+      valueEl.classList.remove('pop');
+      void valueEl.offsetWidth; // Trigger reflow
+      valueEl.classList.add('pop');
+    }
+  }
+
+  // Helper: Remove platform if count is 0
+  function removePlatform(platform) {
+    const el = document.getElementById('platform-' + platform);
+    if (el) {
+      el.remove();
+    }
+  }
+
+  // Main handler
+  function handlePayload(data) {
+    // Check for viewer_updates event
+    if (data && data.event === 'viewer_updates' && data.meta) {
+      const meta = data.meta;
+      
+      // 1. Calculate new total
+      let newTotal = 0;
+      const platforms = Object.keys(meta);
+      
+      // 2. Update UI for each platform
+      platforms.forEach(platform => {
+        const count = parseInt(meta[platform], 10) || 0;
+        if (count > 0) {
+          updatePlatformDisplay(platform, count);
+          newTotal += count;
+        } else {
+          removePlatform(platform);
+        }
+      });
+
+      // 3. Update Total Display
+      const totalText = formatNumber(newTotal);
+      if (totalCountEl.textContent !== totalText) {
+        totalCountEl.textContent = totalText;
+        totalCountEl.classList.remove('pop');
+        void totalCountEl.offsetWidth;
+        totalCountEl.classList.add('pop');
+      }
+    }
+  }
+
+  // Setup VDO.Ninja Bridge
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var roomID = params.get("session") || "";
+    var password = params.get("password") || "false";
+    var label = params.get("label") || "ssn_viewer_counter_" + Date.now();
+    var bridge = document.getElementById("ssn_bridge");
+    
+    // Create bridge if not exists
+    if (!bridge) {
+      bridge = document.createElement("iframe");
+      bridge.id = "ssn_bridge";
+      bridge.style.display = "none";
+      document.body.appendChild(bridge);
+    }
+
+    if (roomID) {
+      bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+        encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+        "&label=" + encodeURIComponent(label) +
+        "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+    }
+
+    window.addEventListener("message", function (event) {
+      var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+      if (typeof payload !== "undefined") handlePayload(payload);
+    });
+
+    // Expose for testing
+    window.handleOverlayPayload = handlePayload;
+  }());
+
+})();
+</script>
+</body>
+</html>
+```

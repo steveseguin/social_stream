@@ -59,6 +59,11 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </button>
+                <button class="mobile-nav-toggle" aria-label="Toggle navigation menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </div>
     </header>
@@ -71,10 +76,10 @@
                 <div class="alert-note">
                     <strong>Important:</strong> Stream events (follows, memberships, milestones, viewer counts, etc.) are always captured and forwarded. To hide all events in dock or featured overlays, add <code>&amp;hideevents</code> (dock also accepts <code>&amp;hideallevents</code>). To hide selected events, use <code>&amp;filterevents=subscription_gift,new_follower,gifted</code>. Donation-style items always pass through the dock filter regardless of settings.
                 </div>
-                <div class="alert-note" style="background: #e3f2fd; border-left-color: #1976d2;">
+                <div class="alert-note alert-info">
                     <strong>WebSocket Mode Required:</strong> For YouTube, Twitch, and Kick, most stream events (followers, subscriptions, raids, etc.) require <strong>WebSocket mode</strong> to be enabled in the extension settings. DOM capture alone mostly provides chat, viewer counts, and a limited set of heuristically detected system events. See platform sections below for details.
                 </div>
-                <div class="alert-note" style="background: #f3e8ff; border-left-color: #7c3aed;">
+                <div class="alert-note alert-tip">
                     <strong>Building Automations?</strong> Check out the <a href="../actions/event-flow-guide.html">Event Flow Guide</a> to learn how to use these event payloads in custom triggers, alerts, and workflows. The guide includes a <a href="../actions/event-flow-guide.html#template-variables">Template Variables Reference</a> for text formatting.
                 </div>
             </section>
@@ -228,6 +233,7 @@
                 <p>To keep dashboards and automations aligned, follow these conventions when extending <code>data.meta</code>:</p>
                 <ul>
                     <li><code>viewer_update</code>, <code>follower_update</code>, and <code>subscriber_update</code> use a plain integer <code>meta</code> value. The background script aggregates them into <code>viewer_updates</code> with an object keyed by <code>data.type</code>.</li>
+                    <li><code>video_stats</code> uses a structured <code>meta</code> object for external encoder/server health, including <code>provider</code>, <code>label</code>, <code>online</code>, <code>bitrateKbps</code>, <code>rttMs</code>, <code>bufferMs</code>, packet loss/drop counters, and optional codec details.</li>
                     <li>Donation-style events include a descriptive object: for example <code>{ amount, currency, supporter }</code> for Kick, <code>{ bits }</code> for Twitch cheers, <code>{ supporter, eventType }</code> for YouTube memberships.</li>
                     <li>Raids and hosts pass <code>{ fromId, fromLogin, viewers }</code> so overlays can display both streamer name and audience size.</li>
                     <li>Reward redemptions expose <code>{ rewardId, cost, alias }</code> alongside the prepared chat message.</li>
@@ -725,7 +731,7 @@
                             <tr>
                                 <td><code>liked</code></td>
                                 <td>Like storm summaries triggered by TikTok social cards.</td>
-                                <td>Requires identifiable user; otherwise suppressed.</td>
+                                <td><code>chatname</code> is included when TikTok exposes it; anonymous/system like cards may still emit.</td>
                             </tr>
                             <tr>
                                 <td><code>true</code> (boolean)</td>
@@ -1023,6 +1029,76 @@
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Polls the live viewer badge (every ~8s when enabled).</td>
                                 <td><code>meta</code> integer viewer count; sends 0 when parsing fails to clear stale entries.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="onlinechurch">
+                    <h3>Online Church</h3>
+                    <p class="source-note">Implementation: <code>sources/onlinechurch.js</code></p>
+                    <ul class="requirements">
+                        <li>Relies on DOM scraping of the public chat and media header.</li>
+                        <li>Viewer counts only refresh when <strong>Show viewer count</strong> or hype mode is enabled.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New entries appear under <code>#publicchat</code>.</td>
+                                <td>Standard chat payload with sender name, avatar, badges, and optional membership label when present in the DOM.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Polls the live occupancy badge in the media header every 10s.</td>
+                                <td><code>meta</code> integer viewer count; sends <code>0</code> when the badge is missing or unreadable to clear stale counters.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="shareplay">
+                    <h3>SharePlay.tv</h3>
+                    <p class="source-note">Implementation: <code>sources/shareplay.js</code></p>
+                    <ul class="requirements">
+                        <li>Relies on DOM scraping of the live chat drawer on SharePlay channel pages.</li>
+                        <li>Only newly inserted chat rows and cards are emitted after the scraper attaches; the existing backlog is intentionally ignored.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New chat rows appear inside the main chat feed.</td>
+                                <td>Standard chat payload with author, avatar, badge images, and HTML-preserved emotes. Thread replies also populate <code>initial</code>, <code>reply</code>, and <code>meta.reply</code> when the parent row is still present.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>raid</code></td>
+                                <td>SharePlay inserts a Blitz card into the live chat feed.</td>
+                                <td>Mapped to the canonical raid event. <code>meta.cardType</code> is <code>"blitz"</code>, with optional <code>meta.fromLogin</code> and <code>meta.viewers</code> when the card text exposes them.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>shoutout</code></td>
+                                <td>SharePlay inserts a shoutout/follow card into the chat feed.</td>
+                                <td>Emitted as <code>data.event = "shoutout"</code>. The card banner image is forwarded via <code>contentimg</code>, while <code>meta.cardType</code> and <code>meta.action</code> preserve the card label/button text.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Polls the visible header viewer badge every 10s.</td>
+                                <td><code>meta</code> integer viewer count; only emitted when <strong>Show viewer count</strong> or hype mode is enabled, and sends <code>0</code> if the badge becomes unreadable to clear stale counters.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1392,4 +1468,3 @@
     </script>
 </body>
 </html>
-

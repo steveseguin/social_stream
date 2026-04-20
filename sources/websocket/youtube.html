@@ -376,7 +376,20 @@ try {
 	var quickPollCount = 0
     var urlParams = new URLSearchParams(window.location.search);
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
+    var youtubeAuthAutoStartAttempted = false;
 	var slowerPollingMode = false; // Flag for slower polling mode (1.5x slower)
+
+    function hasYouTubeModeFlag(name) {
+        return urlParams.has(name) || hashParams.has(name);
+    }
+
+    function isYouTubeAuthOnlyMode() {
+        return hasYouTubeModeFlag('authonly') || hasYouTubeModeFlag('signinonly');
+    }
+
+    function shouldAutoStartYouTubeAuth() {
+        return hasYouTubeModeFlag('autostartauth') || hasYouTubeModeFlag('autoauth');
+    }
 	
 	// Check for slower polling mode from URL parameters
 	if (urlParams.has('slowerpoll') || hashParams.has('slowerpoll')) {
@@ -408,6 +421,7 @@ try {
 	var shortcutMap = new Map(); // For :word: patterns
 	var channelShortcutMap = new Map(); // Active stream/channel custom emoji only
 	var unicodeMap = new Map();  // For Unicode emoji characters
+	var channelEmojiFetchToken = 0;
 	
 	
 	// BTTV/7TV/FFZ emote support
@@ -418,8 +432,14 @@ try {
 	var EMOTELIST = false;
 
 	function flushPendingRelayMessages() {
-		if (!pendingRelayMessages.length || !liveChatId) {
+		if (!pendingRelayMessages.length) {
+			return;
+		}
+		if (!liveChatId) {
 			pendingRelayMessages.length = 0;
+			return;
+		}
+		if (!emojiAssetsReady) {
 			return;
 		}
 		var pending = pendingRelayMessages.slice();
@@ -742,31 +762,44 @@ function enableBackgroundKeepAlive() {
 	}
 
 	async function fetchChannelEmoji(vidId) {
+		const fetchToken = ++channelEmojiFetchToken;
+		clearChannelEmojiEntries();
+		if (!vidId) {
+			return;
+		}
 		const cacheKey = 'ytChannelEmoji_' + vidId;
 		const cacheTimeKey = 'ytChannelEmojiTime_' + vidId;
-
-		// Restore from cache if fresh
 		try {
+			// Restore from cache if fresh
 			const cached = localStorage.getItem(cacheKey);
 			const cachedTime = parseInt(localStorage.getItem(cacheTimeKey) || '0');
 			if (cached && (Date.now() - cachedTime) < INNERTUBE_EMOJI_CACHE_TTL) {
 				const entries = JSON.parse(cached);
+				if (fetchToken !== channelEmojiFetchToken) {
+					return;
+				}
 				applyChannelEmojiEntries(entries);
 				if (entries.length) console.log('Restored ' + entries.length + ' custom YouTube emoji from cache');
 				return;
 			}
 		} catch (e) {}
 
-		const entries = (await tryFetchEmojiViaExtensionBridge(vidId)) || (await tryFetchEmojiFromPage(vidId)) || (await tryFetchEmojiViaInnertubeAPI(vidId));
-		if (!entries?.length) return;
-
 		try {
+			const entries = (await tryFetchEmojiViaExtensionBridge(vidId)) || (await tryFetchEmojiFromPage(vidId)) || (await tryFetchEmojiViaInnertubeAPI(vidId));
+			if (fetchToken !== channelEmojiFetchToken) {
+				return;
+			}
+			if (!entries?.length) {
+				return;
+			}
+
 			localStorage.setItem(cacheKey, JSON.stringify(entries));
 			localStorage.setItem(cacheTimeKey, String(Date.now()));
-		} catch (e) {}
-
-		applyChannelEmojiEntries(entries);
-		console.log('Loaded ' + entries.length + ' custom YouTube emoji');
+			applyChannelEmojiEntries(entries);
+			console.log('Loaded ' + entries.length + ' custom YouTube emoji');
+		} catch (error) {
+			console.warn('Failed to load YouTube custom emoji', error);
+		}
 	}
 
 	function getTranslation(key, value = false) {
@@ -3115,6 +3148,7 @@ function enableBackgroundKeepAlive() {
 		lastMessageTime = null;
 		isPolling = false;
 		currentStream = null;
+		channelEmojiFetchToken++;
 		clearChannelEmojiEntries();
 		clearSourceIdentity();
 		messageQueue = [];
@@ -4116,6 +4150,7 @@ function enableBackgroundKeepAlive() {
 		
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
+		const authOnlyMode = isYouTubeAuthOnlyMode();
 		
 		// Re-check slower polling mode on page init
 		if (urlParams.has('slowerpoll') || hashParams.has('slowerpoll')) {
@@ -4125,11 +4160,14 @@ function enableBackgroundKeepAlive() {
 		
 		const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || urlParams.get("v") || hashParams.get("videoId");
 		const urlChannelParam = urlParams.get("channel") || urlParams.get("username") || urlParams.get("c") || hashParams.get("channel");
-		if (urlVideoIdParam || urlChannelParam) {
+		if (!authOnlyMode && (urlVideoIdParam || urlChannelParam)) {
 			sessionStorage.setItem("youtubeRedirectVideoId", urlVideoIdParam || "");
 			sessionStorage.setItem("youtubeRedirectChannel", urlChannelParam || "");
 		}
-		if (urlVideoIdParam) {
+		if (authOnlyMode) {
+			videoId = '';
+			channel = '';
+		} else if (urlVideoIdParam) {
 			videoId = urlVideoIdParam;
 			channel = '';
 			localStorage.setItem("youtubeVideoId", videoId);
@@ -4323,6 +4361,12 @@ function enableBackgroundKeepAlive() {
 			parseFragment(window.location.hash);
 		} else {
 			showAuthButton();
+			if (shouldAutoStartYouTubeAuth() && !youtubeAuthAutoStartAttempted) {
+				youtubeAuthAutoStartAttempted = true;
+				setTimeout(() => {
+					startExternalAuthFlow();
+				}, 0);
+			}
 		}
 		
 		loadEmojiData().catch(error => {

@@ -2,7 +2,7 @@
 (function(window) {
   'use strict';
   
-  const DEFAULT_REMOTE_PIPER_BASE = 'https://steveseguin.github.io/piper';
+  const DEFAULT_REMOTE_PIPER_BASE = 'https://largefiles.socialstream.ninja/piper';
   const trimTrailingSlash = (value) => typeof value === 'string' ? value.replace(/\/+$/, '') : '';
   
   class ProperPiperTTS {
@@ -519,7 +519,7 @@
         return ProperPiperTTS.remoteBaseUrl.trim().replace(/\/+$/, '');
       }
       if (typeof window !== 'undefined') {
-        const override = window.ProperPiperRemoteBaseUrl || window.PIPER_REMOTE_BASE_URL;
+        const override = window.SSN_PIPER_REMOTE_BASE || window.ProperPiperRemoteBaseUrl || window.PIPER_REMOTE_BASE_URL;
         if (typeof override === 'string' && override.trim()) {
           return override.trim().replace(/\/+$/, '');
         }

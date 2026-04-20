@@ -350,6 +350,11 @@
 				white-space: nowrap;
 			}
 
+			.bitrateMeta {
+				padding-left: 8px;
+				border-radius: 5px;
+			}
+
 			@media (max-width: 600px) {
 			  .modal .modal-content {
 				padding: 20px;
@@ -2680,6 +2685,12 @@
 								<span>VIP User</span>
 							</a>
 						</li>
+						<li class="context-menu__item" data-action="MarkHost">
+							<a href="#" class="context-menu__link" data-action="MarkHost">
+								ðŸŽ™ï¸
+								<span>Mark as Host</span>
+							</a>
+						</li>
 						<li class="context-menu__item" data-action="MarkMod">
 							<a href="#" class="context-menu__link" data-action="MarkMod">
 								🛡️
@@ -3395,8 +3406,11 @@
 			}
 
 			var blockMessageSelecting = false;
-			
-			
+			var featuredMode = false;
+			if (urlParams.has("featuredmode")) {
+				featuredMode = true;
+			}
+
 			var autoPinDonations = false;
 			if (urlParams.has("autopindonations") || urlParams.has("autopindonations")) {
 				autoPinDonations = true;
@@ -3575,6 +3589,10 @@
 			var showviewercount = false;
 			if (urlParams.has("showviewercount")) {
 				showviewercount = true;
+			}
+			var showbitrate = false;
+			if (urlParams.has("showbitrate") || urlParams.has("showbitratemeta") || urlParams.has("showvideobitrate")) {
+				showbitrate = true;
 			}
 
 			if (urlParams.has("session")) {
@@ -3832,18 +3850,78 @@
 			let audioContext = null;
 			let waitingForUserGesture = false;
 			var timeoutTone = null;
-			
+			var btKeepAliveTimer = null;
+
 			function initAudioContext() {
 				if (!audioContext && (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined')) {
 					try {
 						const AudioCtx = window.AudioContext || window.webkitAudioContext;
 						audioContext = new AudioCtx();
+						ensureBluetoothAudioKeepAlive();
 					} catch (e) {
 						// Don't warn about user gesture errors
 						if (!e.message || !e.message.includes('user gesture')) {
 							console.warn('Failed to create AudioContext:', e);
 						}
 					}
+				}
+			}
+
+			function stopBluetoothAudioKeepAlive() {
+				if (btKeepAliveTimer) {
+					clearInterval(btKeepAliveTimer);
+					btKeepAliveTimer = null;
+				}
+			}
+
+			function playBluetoothKeepAliveTone() {
+				if (!btKeepAlive) {
+					stopBluetoothAudioKeepAlive();
+					return;
+				}
+				if (!audioContext) {
+					initAudioContext();
+				}
+				if (!audioContext || (audioContext.state === "suspended") || (audioContext.state === "closed")) {
+					return;
+				}
+				try {
+					var oscillator = audioContext.createOscillator();
+					var gainNode = audioContext.createGain();
+					var startTime = audioContext.currentTime;
+
+					oscillator.type = "sine";
+					oscillator.frequency.setValueAtTime(18500, startTime);
+					gainNode.gain.setValueAtTime(0.00008, startTime);
+					gainNode.gain.exponentialRampToValueAtTime(0.0002, startTime + 0.02);
+					gainNode.gain.exponentialRampToValueAtTime(0.00001, startTime + 0.12);
+
+					oscillator.connect(gainNode);
+					gainNode.connect(audioContext.destination);
+
+					oscillator.start(startTime);
+					oscillator.stop(startTime + 0.12);
+					oscillator.onended = function() {
+						try {
+							oscillator.disconnect();
+							gainNode.disconnect();
+						} catch (e) {}
+					};
+				} catch (e) {
+					console.warn("Bluetooth keepalive tone failed:", e);
+				}
+			}
+
+			function ensureBluetoothAudioKeepAlive() {
+				if (!btKeepAlive) {
+					stopBluetoothAudioKeepAlive();
+					return;
+				}
+				if (!audioContext || (audioContext.state === "suspended") || (audioContext.state === "closed")) {
+					return;
+				}
+				if (!btKeepAliveTimer) {
+					btKeepAliveTimer = setInterval(playBluetoothKeepAliveTone, btKeepAliveIntervalMs);
 				}
 			}
 
@@ -3869,6 +3947,7 @@
 					try {
 						await audioContext.resume();
 						waitingForUserGesture = false;
+						ensureBluetoothAudioKeepAlive();
 					} catch (e) {
 						// Can't resume without user gesture, set flag to wait
 						if (!waitingForUserGesture) {
@@ -4246,6 +4325,19 @@
 				nobeepmod = true;
 			}
 
+			var btKeepAlive = false;
+			var btKeepAliveIntervalMs = 25000;
+			if (urlParams.has("btkeepalive") || urlParams.has("keepaliveaudio")) {
+				btKeepAlive = true;
+				var btKeepAliveParam = parseInt(urlParams.get("btkeepalive") || urlParams.get("keepaliveaudio"), 10);
+				if (!isNaN(btKeepAliveParam) && (btKeepAliveParam > 0)) {
+					if (btKeepAliveParam < 1000) {
+						btKeepAliveParam *= 1000;
+					}
+					btKeepAliveIntervalMs = Math.max(10000, btKeepAliveParam);
+				}
+			}
+
 			var overlapBeep = false;
 			if (urlParams.has("overlapbeep")) {
 				overlapBeep = true;
@@ -4574,8 +4666,13 @@
 				};
 				socketserver.onopen = function () {
 					conCon = 1;
-					socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 1 }));
-					console.log("output channel: 2, input channel: 1");
+					if (featuredMode) {
+						socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 2 }));
+						console.log("output channel: 2, input channel: 2");
+					} else {
+						socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 2, in: 1 }));
+						console.log("output channel: 2, input channel: 1");
+					}
 				};
 
 				socketserver.onerror = function (error) {
@@ -5056,7 +5153,7 @@
 					if (blockMessageSelecting2 || blockMessageSelecting) {
 						document.querySelector('[data-action="Block"]').classList.add("hidden");
 						document.querySelector('[data-action="Timeout"]').classList.add("hidden");
-						//document.querySelector('[data-action="MarkHost"]').classList.add("hidden");
+						document.querySelector('[data-action="MarkHost"]').classList.add("hidden");
 						document.querySelector('[data-action="MarkMod"]').classList.add("hidden");
 						document.querySelector('[data-action="MarkBot"]').classList.add("hidden");
 					}
@@ -5065,7 +5162,7 @@
 				try {
 					document.querySelector('[data-action="Delete"]').title = "Enable &sync mode to have messages be deleted in other synced docks also";
 					document.querySelector('[data-action="Timeout"]').title = "Enable &sync mode to timeout users across all synced docks";
-					//document.querySelector('[data-action="MarkHost"]').title = "Enable &sync mode to mark users as host across all synced docks";
+					document.querySelector('[data-action="MarkHost"]').title = "Enable &sync mode to mark users as host across all synced docks";
 					document.querySelector('[data-action="MarkMod"]').title = "Enable &sync mode to mark users as mod across all synced docks";
 					document.querySelector('[data-action="MarkBot"]').title = "Enable &sync mode to mark users as bot across all synced docks";
 				} catch (e) {}
@@ -5976,9 +6073,65 @@
 			var followers = {};
 			
 			var topBarElement = getById("topbar");
-			
+
+			function formatVideoBitrate(bitrateKbps){
+				var bitrate = parseFloat(bitrateKbps);
+				if (isNaN(bitrate) || bitrate <= 0) {
+					return "";
+				}
+				if (bitrate >= 1000) {
+					return (Math.round((bitrate / 1000) * 10) / 10) + " Mbps";
+				}
+				return Math.round(bitrate) + " Kbps";
+			}
+
+			function updateVideoBitrateMeta(meta){
+				if (!showbitrate) {
+					return false;
+				}
+				var ele = document.getElementById("bitrateMeta");
+				var bitrateValue = "";
+				if (meta) {
+					if (typeof meta.bitrateKbps !== "undefined") {
+						bitrateValue = meta.bitrateKbps;
+					} else if (typeof meta.bitrate !== "undefined") {
+						bitrateValue = meta.bitrate;
+					} else if (typeof meta.kbps !== "undefined") {
+						bitrateValue = meta.kbps;
+					}
+				}
+				var bitrateText = formatVideoBitrate(bitrateValue);
+				if (!bitrateText || (meta && meta.online === false)) {
+					if (ele) {
+						clearTimeout(ele.timeout);
+						ele.remove();
+					}
+					return true;
+				}
+				if (!ele) {
+					ele = document.createElement("div");
+					ele.id = "bitrateMeta";
+					ele.classList.add("viewerIcons");
+					ele.classList.add("bitrateMeta");
+					ele.title = "Video bitrate";
+					topBarElement.append(ele);
+				}
+				ele.innerText = bitrateText;
+				clearTimeout(ele.timeout);
+				ele.timeout = setTimeout(function(ele){
+					if (ele){
+						ele.remove();
+					}
+				}, 130000, ele);
+				return true;
+			}
+
 			function updateMeta(data){
 				if (data && data.event && ("meta" in data)){
+					if (data.event == "video_stats"){
+						updateVideoBitrateMeta(data.meta);
+						return true;
+					}
 					if (data.type && data.event == "follower_update"){
 						followers[data.type] = parseInt(data.meta) || 0;
 						return true;
@@ -6010,7 +6163,7 @@
 						if (showviewercount){
 							if (data.meta && typeof data.meta == "object"){
 								// First, remove any viewer elements not in the current update
-								topBarElement.querySelectorAll(".viewerIcons").forEach(ele => {
+								topBarElement.querySelectorAll(".viewerIcons[data-type]").forEach(ele => {
 									if (!data.meta.hasOwnProperty(ele.dataset.type)) {
 										clearTimeout(ele.timeout);
 										ele.remove();
@@ -6247,7 +6400,7 @@
 						shouldAdaptiveReload = atHistoryStart || distanceFromBottom > hardReloadDistance;
 					}
 				var reloadRecentHistory = options.reloadRecentHistory === true || shouldAdaptiveReload;
-				var clearBeforeReload = options.clearBeforeReload === true || (reloadRecentHistory && options.clearBeforeReload !== false);
+				var clearBeforeReload = options.clearBeforeReload === true;
 				historyBrowsing = false;
 				reachedOldest = false;
 				isLoadingHistory = false;
@@ -6321,6 +6474,9 @@
 			
 
 			function processInput(data, force=false) {
+				if (!data) {
+					return featuredMode ? true : false;
+				}
 				if ("mid" in data) {
 					if (data.mid && (syncDocks || force)) {
 						if (autoTimeoutEnabled) {
@@ -6647,6 +6803,7 @@
 								}
 							}
 						});
+						cleanUpOldNodes();
 						console.log("Loaded from remote DB storage");
 						historyReturnSyncPending = false;
 						flushMissedLiveBuffer();
@@ -6760,18 +6917,9 @@
 					return;
 				} else if ("markUser" in data) {
 					try {
-/* 						if (data.markUser.username && data.markUser.type && data.markUser.role) {
-							// Add marker class to all messages from this user
-							document.querySelectorAll("[data-chatname='" + data.markUser.username + "'][data-source-type='" + data.markUser.type + "']").forEach(ele => {
-								ele.classList.add(`marked-${data.markUser.role}`);
-							});
-							
-							if (data.markUser.type=="youtube"){
-								document.querySelectorAll("[data-chatname='" + data.markUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
-									ele.classList.add(`marked-${data.markUser.role}`);
-								});
-							}
-						} */
+						if (data.markUser.username && data.markUser.type && data.markUser.role) {
+							applyRoleMarker(data.markUser.username, data.markUser.type, data.markUser.role);
+						}
 						return true;
 					} catch (e) {
 						console.error(e);
@@ -7424,7 +7572,11 @@
 			function RecvDataWindow(room) {
 				var iframe = document.createElement("iframe");
 				iframe.connectedPeers = {};
-				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + obsremote + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + room;
+				if (featuredMode) {
+					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + room + "&scene&novideo&noaudio&cleanoutput&room=" + room;
+				} else {
+					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + obsremote + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + room;
+				}
 				// push and view, as we will connect with other docks also. I suppose I can have it only do this if &sync is enabled?
 				iframe.style.width = "0px";
 				iframe.style.height = "0px";
@@ -8357,13 +8509,39 @@
 			}
 			
 						
+			function applyRoleMarker(chatName, userType, role) {
+				if (!chatName || !userType || !role) {
+					return;
+				}
+
+				function applyRoleToType(typeToApply) {
+					document.querySelectorAll("[data-chatname='" + chatName + "'][data-source-type='" + typeToApply + "']").forEach(ele => {
+						ele.classList.add(`marked-${role}`);
+						if (role === "host") {
+							ele.classList.add("host");
+						} else if (role === "mod") {
+							ele.classList.add("mod");
+							ele.dataset.mod = "true";
+						} else if (role === "bot") {
+							ele.classList.add("bot");
+						}
+					});
+				}
+
+				applyRoleToType(userType);
+				if (userType == "youtube") {
+					applyRoleToType("youtubeshorts");
+				}
+			}
+
 			function markUserAs(element, role) {
-				const userId = element.getAttribute("data-chatname");
+				const chatName = element.getAttribute("data-chatname");
+				const userId = element.getAttribute("data-userid") || "";
 				const userType = element.getAttribute("data-source-type");
 				
-				if (userId && userType) {
-					
-					send2Extension({ action: "markUser", value: { chatname: userId, type: userType, role: role} });
+				if (chatName && userType) {
+					applyRoleMarker(chatName, userType, role);
+					send2Extension({ action: "markUser", value: { chatname: chatName, userid: userId, type: userType, role: role} });
 				
 				}
 			}
@@ -11205,6 +11383,8 @@
 							if (duration) {
 								timeoutUser(taskItemInContext, duration);
 							}
+						} else if (link.getAttribute("data-action") === "MarkHost") {
+							markUserAs(taskItemInContext, "host");
 						} else if (link.getAttribute("data-action") === "MarkMod") {
 							markUserAs(taskItemInContext, "mod");
 						} else if (link.getAttribute("data-action") === "MarkBot") {
@@ -11693,6 +11873,7 @@
 			
 			// Clean up audio context when page unloads
 			window.addEventListener('beforeunload', function() {
+				stopBluetoothAudioKeepAlive();
 				if (audioContext && audioContext.state !== 'closed') {
 					audioContext.close();
 				}
@@ -11718,6 +11899,7 @@
 					}
 					if (audioContext.state !== 'suspended') {
 						waitingForUserGesture = false;
+						ensureBluetoothAudioKeepAlive();
 						console.log('Audio context ready after user interaction');
 						document.removeEventListener('click', handler);
 						document.removeEventListener('touchstart', handler);

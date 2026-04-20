@@ -105,6 +105,13 @@ const SOURCE_LABELS = Object.freeze({
   youtubeshorts: 'YouTube Shorts'
 });
 
+const SOURCE_ALIASES = Object.freeze({
+  'ko-fi': 'kofi',
+  twitter: 'x',
+  'youtube-shorts': 'youtubeshorts',
+  'youtube_shorts': 'youtubeshorts'
+});
+
 const urlParams = new URLSearchParams(window.location.search);
 
 const CATEGORY_STYLE_PARAMS = {
@@ -147,6 +154,7 @@ const SOURCE_ICON_MAP = {
 };
 
 const settings = readSettings();
+const recentPayloads = [];
 
 const state = {
   iframe: null,
@@ -205,6 +213,63 @@ function normalizeKey(value) {
   return normalizeText(value).toLowerCase();
 }
 
+function normalizeSourceKey(value) {
+  const normalized = normalizeKey(value);
+  if (!normalized) {
+    return '';
+  }
+  return SOURCE_ALIASES[normalized] || normalized;
+}
+
+function parseSourceListParam(name) {
+  const rawValue = normalizeText(urlParams.get(name));
+  if (!rawValue) {
+    return new Set();
+  }
+  return new Set(
+    rawValue
+      .split(',')
+      .map((entry) => normalizeSourceKey(entry))
+      .filter(Boolean)
+  );
+}
+
+function normalizeSourceMatchValue(value) {
+  return normalizeText(value).replace(/\s+/g, ' ');
+}
+
+function normalizeSourceMatchKey(value) {
+  const normalized = normalizeSourceMatchValue(value);
+  return normalized ? normalized.toLowerCase() : '';
+}
+
+function parseSourceMatchListParam(name, aliases = []) {
+  const values = [name].concat(aliases);
+  const matches = new Set();
+
+  values.forEach((paramName) => {
+    const rawValue = normalizeText(urlParams.get(paramName));
+    if (!rawValue) {
+      return;
+    }
+    rawValue
+      .split(',')
+      .forEach((entry) => {
+        const exact = normalizeSourceMatchValue(entry);
+        const loose = normalizeSourceMatchKey(entry);
+        if (!exact) {
+          return;
+        }
+        matches.add(exact);
+        if (loose && loose !== exact) {
+          matches.add(loose);
+        }
+      });
+  });
+
+  return matches;
+}
+
 function humanizeKey(value) {
   const normalized = normalizeKey(value).replace(/[_-]+/g, ' ');
   if (!normalized) {
@@ -253,10 +318,10 @@ function createMediaPreviewDataUri(label, bgColor) {
 }
 
 function pickSourceKey(payload = {}) {
-  const directPlatform = normalizeKey(payload.platform);
+  const directPlatform = normalizeSourceKey(payload.platform);
   if (directPlatform) return directPlatform;
 
-  const payloadType = normalizeKey(payload.type);
+  const payloadType = normalizeSourceKey(payload.type);
   if (KNOWN_SOURCES.has(payloadType)) {
     return payloadType;
   }
@@ -269,7 +334,7 @@ function pickSourceKey(payload = {}) {
   ];
 
   for (const candidate of metaCandidates) {
-    const normalized = normalizeKey(candidate);
+    const normalized = normalizeSourceKey(candidate);
     if (normalized) {
       return normalized;
     }
@@ -301,6 +366,44 @@ function pickEventKey(payload = {}) {
   }
 
   return '';
+}
+
+function buildRecentPayloadSignature(payload = {}) {
+  return [
+    pickEventKey(payload),
+    pickSourceKey(payload),
+    normalizeText(payload.chatname),
+    normalizeText(payload.chatmessage),
+    normalizeText(payload.hasDonation),
+    normalizeText(payload.membership),
+    normalizeText(payload.contentimg),
+    normalizeText(payload.id || payload.meta?.eventId || payload.meta?.id)
+  ].join('|');
+}
+
+function isDuplicateAlertPayload(payload = {}) {
+  const now = Date.now();
+  const signature = buildRecentPayloadSignature(payload);
+  let index;
+
+  for (index = recentPayloads.length - 1; index >= 0; index -= 1) {
+    if (recentPayloads[index].expiresAt <= now) {
+      recentPayloads.splice(index, 1);
+    }
+  }
+
+  for (index = 0; index < recentPayloads.length; index += 1) {
+    if (recentPayloads[index].signature === signature) {
+      return true;
+    }
+  }
+
+  recentPayloads.push({
+    signature,
+    expiresAt: now + 2500
+  });
+
+  return false;
 }
 
 function pickActorName(payload = {}) {
@@ -378,6 +481,71 @@ function detectMediaType(url) {
     return 'video';
   }
   return 'image';
+}
+
+function isSourceAllowed(sourceKey) {
+  const normalized = normalizeSourceKey(sourceKey);
+  if (settings.includeSources.size) {
+    if (!(normalized && settings.includeSources.has(normalized))) {
+      return false;
+    }
+  }
+  if (normalized && settings.excludeSources.size && settings.excludeSources.has(normalized)) {
+    return false;
+  }
+  return true;
+}
+
+function collectSourceMatchKeys(payload = {}) {
+  const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : null;
+  return {
+    exact: [
+      payload.sourceId,
+      payload.source_id,
+      payload.channelId,
+      payload.channel_id,
+      payload.videoId,
+      payload.videoid,
+      meta?.sourceId,
+      meta?.source_id,
+      meta?.channelId,
+      meta?.channel_id,
+      meta?.videoId,
+      meta?.videoid
+    ]
+      .map((value) => normalizeSourceMatchValue(value))
+      .filter(Boolean),
+    loose: [
+      payload.sourceName,
+      payload.channel,
+      meta?.sourceName,
+      meta?.channel
+    ]
+      .map((value) => normalizeSourceMatchKey(value))
+      .filter(Boolean)
+  };
+}
+
+function isSourceMatchAllowed(payload = {}) {
+  const sourceMatchKeys = collectSourceMatchKeys(payload);
+  if (settings.includeSourceMatches.size) {
+    if (
+      !sourceMatchKeys.exact.some((key) => settings.includeSourceMatches.has(key)) &&
+      !sourceMatchKeys.loose.some((key) => settings.includeSourceMatches.has(key))
+    ) {
+      return false;
+    }
+  }
+  if (
+    settings.excludeSourceMatches.size &&
+    (
+      sourceMatchKeys.exact.some((key) => settings.excludeSourceMatches.has(key)) ||
+      sourceMatchKeys.loose.some((key) => settings.excludeSourceMatches.has(key))
+    )
+  ) {
+    return false;
+  }
+  return true;
 }
 
 function inferCategory(payload = {}) {
@@ -503,6 +671,12 @@ function buildAlertViewModel(payload = {}) {
 
   const eventKey = pickEventKey(payload);
   const sourceKey = pickSourceKey(payload);
+  if (!isSourceAllowed(sourceKey)) {
+    return null;
+  }
+  if (!isSourceMatchAllowed(payload)) {
+    return null;
+  }
   const sourceLabel = SOURCE_LABELS[sourceKey] || humanizeKey(sourceKey);
   const actor = pickActorName(payload);
   const amount = normalizeText(payload.hasDonation);
@@ -653,10 +827,21 @@ function readSettings() {
     disabledCategories[category] = urlParams.has(paramName);
   });
 
+  const hasServer = urlParams.has('server');
+  const hasServer2 = urlParams.has('server2');
+  const hasServer3 = urlParams.has('server3');
+  const hasLocalServer = urlParams.has('localserver');
   const remoteServerUrl =
     normalizeText(urlParams.get('server')) ||
     normalizeText(urlParams.get('server2')) ||
     normalizeText(urlParams.get('server3'));
+  let serverURL = hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja';
+
+  if (hasServer) {
+    serverURL = remoteServerUrl || (hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/api');
+  } else if (hasServer2 || hasServer3) {
+    serverURL = remoteServerUrl || (hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/extension');
+  }
 
   const queueEnabled = urlParams.has('queue')
     ? true
@@ -684,6 +869,10 @@ function readSettings() {
     hideSource: urlParams.has('hidesource'),
     hideAmount: urlParams.has('hideamount'),
     hideSubtitle: urlParams.has('hidesubtitle'),
+    includeSources: parseSourceListParam('sources'),
+    excludeSources: parseSourceListParam('hidesources'),
+    includeSourceMatches: parseSourceMatchListParam('sourceids', ['channels']),
+    excludeSourceMatches: parseSourceMatchListParam('hidesourceids', ['hidechannels']),
     align:
       normalizeText(urlParams.get('align')).toLowerCase() === 'center'
         ? 'center'
@@ -699,8 +888,8 @@ function readSettings() {
     previewOnly: urlParams.has('preview'),
     showStatus: urlParams.has('showstatus') || urlParams.has('debug') || urlParams.has('preview'),
     debug: urlParams.has('debug'),
-    useSocket: urlParams.has('server') || urlParams.has('server2') || urlParams.has('server3') || urlParams.has('localserver'),
-    serverURL: remoteServerUrl || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja'),
+    useSocket: hasServer || hasServer2 || hasServer3 || hasLocalServer,
+    serverURL,
     styles,
     disabledCategories
   };
@@ -849,8 +1038,16 @@ function handlePreviewMessage(previewMessage) {
     return;
   }
 
+  const previewSourceKey = pickSourceKey(payload);
   const model = buildAlertViewModel(payload);
   if (!model) {
+    if (!isSourceAllowed(previewSourceKey)) {
+      clearAlert({ clearQueue: true, preserveCooldown: true });
+      updateStatus(`${SOURCE_LABELS[previewSourceKey] || humanizeKey(previewSourceKey || 'source')} is filtered out`);
+    } else if (!isSourceMatchAllowed(payload)) {
+      clearAlert({ clearQueue: true, preserveCooldown: true });
+      updateStatus('This source/channel is filtered out');
+    }
     return;
   }
 
@@ -872,6 +1069,10 @@ function handleIncomingPayload(payload) {
     return;
   }
   flattenPayloads(payload).forEach((entry) => {
+    if (isDuplicateAlertPayload(entry)) {
+      log('duplicate alert payload skipped', entry);
+      return;
+    }
     const model = buildAlertViewModel(entry);
     if (!model) {
       return;
@@ -1408,3 +1609,72 @@ async function playAlertSound(model) {
     clearActiveGeneratedSound();
   }
 }
+
+window.__multiAlertsOverlay = {
+  getSettings() {
+    return {
+      roomID: settings.roomID,
+      password: settings.password,
+      showTime: settings.showTime,
+      cooldown: settings.cooldown,
+      queueEnabled: settings.queueEnabled,
+      maxQueue: settings.maxQueue,
+      minShowTime: settings.minShowTime,
+      beep: settings.beep,
+      beepVolume: settings.beepVolume,
+      customBeep: settings.customBeep,
+      categorySounds: Object.assign({}, settings.categorySounds),
+      compact: settings.compact,
+      hideAvatar: settings.hideAvatar,
+      hideMedia: settings.hideMedia,
+      hideSource: settings.hideSource,
+      hideAmount: settings.hideAmount,
+      hideSubtitle: settings.hideSubtitle,
+      includeSources: Array.from(settings.includeSources),
+      excludeSources: Array.from(settings.excludeSources),
+      includeSourceMatches: Array.from(settings.includeSourceMatches),
+      excludeSourceMatches: Array.from(settings.excludeSourceMatches),
+      align: settings.align,
+      scale: settings.scale,
+      mediaScale: settings.mediaScale,
+      headlineScale: settings.headlineScale,
+      detailScale: settings.detailScale,
+      pageBg: settings.pageBg,
+      chroma: settings.chroma,
+      previewOnly: settings.previewOnly,
+      showStatus: settings.showStatus,
+      debug: settings.debug,
+      useSocket: settings.useSocket,
+      serverURL: settings.serverURL,
+      styles: Object.assign({}, settings.styles),
+      disabledCategories: Object.assign({}, settings.disabledCategories)
+    };
+  },
+  getState() {
+    return {
+      queueLength: state.queue.length,
+      hasAlert: Boolean(state.currentAlert),
+      blockedUntil: state.blockedUntil,
+      currentCategory: state.currentAlert ? state.currentAlert.category : '',
+      currentTitle: state.currentAlert ? state.currentAlert.title : '',
+      statusText: elements.status ? elements.status.textContent : ''
+    };
+  },
+  preview(descriptor, options) {
+    if (options && typeof options === 'object') {
+      handlePreviewMessage({
+        __multiAlertsPreviewEnvelope: true,
+        payload: descriptor,
+        silent: Boolean(options.silent)
+      });
+      return;
+    }
+    handlePreviewMessage(descriptor);
+  },
+  sendPayload(payload) {
+    handleIncomingPayload(payload);
+  },
+  clear(options) {
+    clearAlert(options || {});
+  }
+};

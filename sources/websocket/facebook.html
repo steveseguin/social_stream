@@ -109,6 +109,21 @@
       font-size: 0.84rem;
       margin: 4px 0 0;
     }
+    .page-readout {
+      display: none;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--fb-border);
+      background: #0e131b;
+      color: var(--fb-text);
+      font-size: 0.95rem;
+      min-height: 38px;
+      align-items: center;
+    }
+    .page-readout.visible {
+      display: flex;
+    }
     .grid {
       display: grid;
       gap: 10px;
@@ -263,7 +278,7 @@
         <div class="hero-actions">
           <button id="connect-btn">Connect</button>
           <button id="disconnect-btn" class="button-secondary" disabled>Disconnect</button>
-          <button id="resolve-btn" class="button-outline">Resolve live video</button>
+          <button id="resolve-btn" class="button-outline">Find live stream</button>
           <span class="status-chip" id="status-chip">Disconnected</span>
         </div>
         <div class="hint" id="status-detail">Waiting for a Page access token and live video ID.</div>
@@ -278,6 +293,7 @@
                 <select id="page-select">
                   <option value="">Sign in to load your Pages</option>
                 </select>
+                <div id="page-select-single" class="page-readout"></div>
                 <div class="hint" id="page-select-hint">After sign-in, choose the Page to use.</div>
               </div>
             </div>
@@ -286,9 +302,8 @@
               <button id="clear-auth-btn" type="button" class="button-secondary">Clear sign-in</button>
             </div>
             <div class="row">
-              <label><input type="checkbox" id="auto-connect"> Auto-connect</label>
-              <label><input type="checkbox" id="live-filter" checked> Use live stream filter</label>
-              <label><input type="checkbox" id="viewer-count"> Poll viewer count</label>
+              <label><input type="checkbox" id="auto-connect" checked> Auto-connect</label>
+              <label><input type="checkbox" id="live-filter" checked> Live stream filter</label>
             </div>
             <details style="margin-top: 10px;">
               <summary>Advanced / manual setup</summary>
@@ -321,6 +336,10 @@
                   <input id="oauth-base" type="text" placeholder="https://auth.socialstream.ninja/auth/facebook/pages">
                   <div class="hint">Leave this alone unless support tells you to change it.</div>
                 </div>
+                <div>
+                  <label><input type="checkbox" id="viewer-count"> Poll viewer count</label>
+                  <div class="hint">When used with the Social Stream extension, this is controlled by the <code>showviewercount</code> setting instead.</div>
+                </div>
               </div>
             </details>
           </section>
@@ -331,6 +350,10 @@
               <div class="stat">
                 <div class="stat-label">Connection</div>
                 <div class="stat-value" id="status-text">Disconnected</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Viewers</div>
+                <div class="stat-value" id="viewer-count-display">-</div>
               </div>
               <div class="stat">
                 <div class="stat-label">Messages</div>

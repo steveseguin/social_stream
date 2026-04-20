@@ -1,0 +1,2293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>AI Prompt Page Builder</title>
+	<link rel="icon" href="./icons/bot.png">
+	<style>
+		:root {
+			--bg: #101214;
+			--panel: #171b1f;
+			--panel-2: #20262b;
+			--panel-3: #262d33;
+			--line: #333b42;
+			--line-soft: #262c31;
+			--text: #eef2f4;
+			--muted: #9ca9b3;
+			--muted-2: #6f7b84;
+			--accent: #30b47b;
+			--accent-2: #e0b84a;
+			--accent-blue: #5aa4ff;
+			--danger: #d25a5a;
+			--focus: #58c7a3;
+		}
+
+		* { box-sizing: border-box; }
+
+		html, body { height: 100%; }
+
+		body {
+			margin: 0;
+			background: var(--bg);
+			color: var(--text);
+			font-family: Arial, Helvetica, sans-serif;
+			overflow: hidden;
+		}
+
+		button, input, select, textarea { font: inherit; }
+
+		button, .file-button {
+			border: 1px solid var(--line);
+			background: var(--panel-2);
+			color: var(--text);
+			border-radius: 6px;
+			cursor: pointer;
+			padding: 8px 11px;
+			min-height: 36px;
+		}
+
+		button:hover, .file-button:hover { border-color: var(--focus); }
+
+		button.primary {
+			background: var(--accent);
+			border-color: var(--accent);
+			color: #07120d;
+			font-weight: 700;
+		}
+
+		button.ghost {
+			background: transparent;
+			border-color: var(--line-soft);
+			color: var(--muted);
+		}
+
+		button.ghost:hover { color: var(--text); }
+
+		button.danger { color: #ffdede; border-color: #7d3b3b; }
+
+		button:disabled { cursor: not-allowed; opacity: 0.55; }
+
+		label {
+			display: block;
+			color: var(--muted);
+			font-size: 13px;
+			margin: 10px 0 5px;
+		}
+
+		input, select, textarea {
+			width: 100%;
+			border: 1px solid var(--line);
+			background: #0d0f11;
+			color: var(--text);
+			border-radius: 6px;
+			padding: 10px;
+			outline: none;
+		}
+
+		input:focus, select:focus, textarea:focus { border-color: var(--focus); }
+
+		textarea {
+			resize: none;
+			line-height: 1.45;
+			min-height: 100px;
+		}
+
+		.app {
+			display: grid;
+			grid-template-columns: 290px minmax(0, 1fr);
+			height: 100vh;
+		}
+
+		.sidebar {
+			background: var(--panel);
+			border-right: 1px solid var(--line);
+			padding: 14px;
+			overflow: auto;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		.brand {
+			font-size: 18px;
+			font-weight: 800;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.brand .dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: var(--accent);
+			box-shadow: 0 0 10px var(--accent);
+		}
+
+		.page-list {
+			display: grid;
+			gap: 6px;
+		}
+
+		.page-tab {
+			width: 100%;
+			text-align: left;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			padding: 8px 10px;
+		}
+
+		.page-tab.active {
+			border-color: var(--accent);
+			background: #183226;
+		}
+
+		.button-row {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 8px;
+		}
+
+		.button-row.single { grid-template-columns: 1fr; }
+
+		.file-button {
+			display: block;
+			text-align: center;
+		}
+
+		.file-button input { display: none; }
+
+		.sidebar h3 {
+			font-size: 12px;
+			color: var(--muted-2);
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+			margin: 4px 0 0;
+			font-weight: 700;
+		}
+
+		.main {
+			display: grid;
+			grid-template-rows: auto minmax(0, 1fr);
+			min-width: 0;
+			height: 100vh;
+		}
+
+		.topbar {
+			display: flex;
+			gap: 8px;
+			align-items: center;
+			justify-content: space-between;
+			padding: 10px 16px;
+			border-bottom: 1px solid var(--line);
+			background: #121619;
+		}
+
+		.status {
+			color: var(--muted);
+			font-size: 13px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			min-width: 0;
+		}
+
+		.status.ok { color: #79d6ac; }
+		.status.warn { color: var(--accent-2); }
+		.status.error { color: #ff9898; }
+
+		.top-actions {
+			display: flex;
+			gap: 6px;
+			flex-wrap: wrap;
+			justify-content: flex-end;
+		}
+
+		.workspace {
+			display: grid;
+			grid-template-columns: 380px minmax(0, 1fr);
+			min-height: 0;
+		}
+
+		.prompt-pane, .build-pane {
+			min-height: 0;
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.prompt-pane {
+			border-right: 1px solid var(--line);
+			background: #111518;
+			padding: 14px;
+			gap: 8px;
+		}
+
+		.build-pane {
+			background: #0d1013;
+		}
+
+		#systemPrompt { height: 180px; }
+		#userRequest { height: 110px; }
+		#htmlEditor {
+			flex: 1;
+			min-height: 0;
+			font-family: Consolas, "Courier New", monospace;
+			font-size: 12.5px;
+			tab-size: 2;
+			border-radius: 0;
+			border: 0;
+			border-top: 1px solid var(--line);
+		}
+
+		.conversation {
+			flex: 1;
+			min-height: 120px;
+			border: 1px solid var(--line);
+			border-radius: 6px;
+			background: #0d0f11;
+			overflow: auto;
+			padding: 10px;
+		}
+
+		.msg {
+			border-bottom: 1px solid #222a30;
+			padding: 8px 0;
+			white-space: pre-wrap;
+			word-break: break-word;
+			font-size: 13px;
+		}
+
+		.msg:last-child { border-bottom: 0; }
+
+		.role {
+			color: var(--muted);
+			font-size: 11px;
+			text-transform: uppercase;
+			margin-bottom: 4px;
+		}
+
+		.msg.user .role { color: #89c6ff; }
+		.msg.assistant .role { color: #79d6ac; }
+
+		.stream-meta {
+			color: var(--muted);
+			font-size: 11px;
+			margin-bottom: 6px;
+			display: flex;
+			gap: 7px;
+			align-items: center;
+			flex-wrap: wrap;
+		}
+
+		.stream-meta .dot {
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: var(--accent);
+			animation: pulse 1.4s infinite;
+		}
+
+		.stream-meta.warn { color: var(--accent-2); }
+
+		.stream-preview {
+			color: var(--text);
+			font-family: Consolas, "Courier New", monospace;
+			font-size: 12px;
+			line-height: 1.45;
+			max-height: 170px;
+			overflow: auto;
+			white-space: pre-wrap;
+			word-break: break-word;
+			border-left: 2px solid rgba(88, 199, 163, 0.45);
+			padding-left: 8px;
+		}
+
+		.small {
+			color: var(--muted);
+			font-size: 12px;
+			line-height: 1.45;
+		}
+
+		.tiny {
+			color: var(--muted-2);
+			font-size: 11px;
+			line-height: 1.4;
+		}
+
+		details.guidance {
+			background: #0f1316;
+			border: 1px solid var(--line-soft);
+			border-radius: 6px;
+			padding: 6px 10px;
+		}
+
+		details.guidance summary {
+			cursor: pointer;
+			color: var(--muted);
+			font-size: 13px;
+			padding: 4px 0;
+			list-style: none;
+			user-select: none;
+		}
+
+		details.guidance summary::-webkit-details-marker { display: none; }
+		details.guidance summary::before {
+			content: "▸";
+			display: inline-block;
+			width: 14px;
+			color: var(--muted-2);
+			transition: transform 120ms;
+		}
+		details.guidance[open] summary::before { transform: rotate(90deg); }
+
+		.prompt-options {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			padding: 6px 2px 0;
+		}
+
+		.prompt-options .opt {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			color: var(--muted);
+			font-size: 12px;
+			margin: 0;
+			cursor: pointer;
+		}
+
+		.prompt-options input[type="checkbox"] {
+			width: auto;
+			margin: 0;
+			accent-color: var(--accent);
+		}
+
+		.status-pill {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 2px 8px;
+			border-radius: 999px;
+			background: rgba(88, 199, 163, 0.15);
+			color: #79d6ac;
+			font-size: 11px;
+			margin-left: 8px;
+		}
+
+		.status-pill.pending {
+			background: rgba(240, 200, 102, 0.15);
+			color: #f0c866;
+		}
+
+		.status-pill .dot {
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: currentColor;
+			animation: pulse 1.4s infinite;
+		}
+
+		@keyframes pulse {
+			0%, 100% { opacity: 1; }
+			50% { opacity: 0.3; }
+		}
+
+		.tabs {
+			display: flex;
+			border-bottom: 1px solid var(--line);
+			background: #121619;
+		}
+
+		.tab {
+			background: transparent;
+			border: 0;
+			border-bottom: 2px solid transparent;
+			border-radius: 0;
+			padding: 10px 16px;
+			color: var(--muted);
+			min-height: 0;
+		}
+
+		.tab:hover { color: var(--text); }
+
+		.tab.active {
+			color: var(--text);
+			border-bottom-color: var(--accent);
+		}
+
+		.tab-panels {
+			flex: 1;
+			min-height: 0;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.tab-panel {
+			flex: 1;
+			min-height: 0;
+			display: none;
+			flex-direction: column;
+		}
+
+		.tab-panel.active { display: flex; }
+
+		.preview-toolbar {
+			display: flex;
+			gap: 6px;
+			padding: 8px 12px;
+			border-bottom: 1px solid var(--line);
+			align-items: center;
+			flex-wrap: wrap;
+		}
+
+		.preview-toolbar select {
+			width: auto;
+			padding: 6px 8px;
+		}
+
+		.preview-toolbar .spacer { flex: 1; }
+
+		.event-buttons {
+			display: flex;
+			gap: 6px;
+			flex-wrap: wrap;
+			padding: 8px 12px;
+			border-bottom: 1px solid var(--line);
+			background: #10161a;
+		}
+
+		.event-buttons button {
+			padding: 6px 10px;
+			font-size: 12px;
+			min-height: 30px;
+		}
+
+		.preview-stage {
+			flex: 1;
+			min-height: 0;
+			position: relative;
+			overflow: auto;
+			background-color: #1a1e22;
+			background-image:
+				linear-gradient(45deg, #15181c 25%, transparent 25%),
+				linear-gradient(-45deg, #15181c 25%, transparent 25%),
+				linear-gradient(45deg, transparent 75%, #15181c 75%),
+				linear-gradient(-45deg, transparent 75%, #15181c 75%);
+			background-size: 20px 20px;
+			background-position: 0 0, 0 10px, 10px -10px, 10px 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 10px;
+		}
+
+		.preview-frame-wrap {
+			background: transparent;
+			border: 1px solid #000;
+			box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
+			overflow: hidden;
+			display: block;
+		}
+
+		.preview-frame-wrap.fit {
+			width: 100%;
+			height: 100%;
+		}
+
+		#previewFrame {
+			width: 100%;
+			height: 100%;
+			border: 0;
+			background: transparent;
+			display: block;
+		}
+
+		.console-bar {
+			padding: 6px 12px;
+			background: #271719;
+			border-top: 1px solid #4d2b2b;
+			color: #ffbaba;
+			font-size: 12px;
+			display: none;
+			gap: 8px;
+			align-items: center;
+		}
+
+		.console-bar.visible { display: flex; }
+
+		.console-bar .msg-text {
+			flex: 1;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			font-family: Consolas, monospace;
+		}
+
+		.console-bar button {
+			padding: 4px 10px;
+			min-height: 26px;
+			font-size: 12px;
+		}
+
+		.error-overlay-msg {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			padding: 14px 20px;
+			background: rgba(0,0,0,0.7);
+			border: 1px solid rgba(255,255,255,0.15);
+			border-radius: 8px;
+			color: var(--muted);
+			font-size: 13px;
+			max-width: 70%;
+			text-align: center;
+		}
+
+		.modal-backdrop {
+			position: fixed;
+			inset: 0;
+			background: rgba(0,0,0,0.7);
+			z-index: 50;
+			display: none;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+		}
+
+		.modal-backdrop.visible { display: flex; }
+
+		.modal {
+			background: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: 10px;
+			max-width: 880px;
+			width: 100%;
+			max-height: 90vh;
+			overflow: auto;
+			padding: 20px;
+		}
+
+		.modal h2 {
+			margin: 0 0 6px;
+			font-size: 20px;
+		}
+
+		.modal .tiny { margin-bottom: 14px; }
+
+		.template-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+			gap: 10px;
+		}
+
+		.template-card {
+			background: var(--panel-2);
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			padding: 12px;
+			cursor: pointer;
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			text-align: left;
+			color: var(--text);
+			min-height: 0;
+		}
+
+		.template-card:hover {
+			border-color: var(--accent);
+			background: var(--panel-3);
+		}
+
+		.template-card .title {
+			font-weight: 700;
+			font-size: 14px;
+		}
+
+		.template-card .desc {
+			color: var(--muted);
+			font-size: 12px;
+			line-height: 1.4;
+		}
+
+		.modal-actions {
+			display: flex;
+			justify-content: flex-end;
+			gap: 8px;
+			margin-top: 14px;
+		}
+
+		.badge {
+			display: inline-block;
+			padding: 2px 6px;
+			font-size: 10px;
+			letter-spacing: 0.04em;
+			background: #1f2a25;
+			color: #79d6ac;
+			border-radius: 4px;
+			text-transform: uppercase;
+		}
+
+		@media (max-width: 1020px) {
+			body { overflow: auto; }
+			.app, .workspace { display: block; height: auto; }
+			.sidebar, .main, .prompt-pane, .build-pane { height: auto; overflow: visible; }
+			.sidebar, .prompt-pane { border-right: 0; border-bottom: 1px solid var(--line); }
+			.topbar { align-items: flex-start; flex-direction: column; }
+			.top-actions { justify-content: flex-start; }
+			#htmlEditor, .preview-stage { min-height: 340px; }
+		}
+	</style>
+</head>
+<body>
+	<div class="app">
+		<aside class="sidebar">
+			<div class="brand"><span class="dot"></span> AI Overlay Builder</div>
+
+			<label for="pageName" style="margin-top:0;">Active page</label>
+			<input id="pageName" type="text" autocomplete="off" maxlength="80">
+
+			<h3>Saved pages</h3>
+			<div id="pageList" class="page-list"></div>
+
+			<div class="button-row">
+				<button id="newPage" type="button">New</button>
+				<button id="duplicatePage" type="button">Duplicate</button>
+			</div>
+			<div class="button-row">
+				<button id="openTemplates" type="button">Templates…</button>
+				<button id="deletePage" type="button" class="danger">Delete</button>
+			</div>
+
+			<h3>Import / export</h3>
+			<div class="button-row single">
+				<button id="exportPage" type="button" class="primary">Export HTML file</button>
+			</div>
+			<div class="button-row single">
+				<label class="file-button" for="importPage">Import HTML file<input id="importPage" type="file" accept=".html,.htm,text/html"></label>
+			</div>
+
+			<div class="tiny" id="storageStatus" style="margin-top:auto;"></div>
+		</aside>
+
+		<main class="main">
+			<div class="topbar">
+				<div id="connectionStatus" class="status">Starting…</div>
+				<div class="top-actions">
+					<button id="copyOverlayUrl" type="button" class="ghost" title="Copy the URL to paste into OBS or a browser source.">Copy overlay URL</button>
+					<button id="openOverlay" type="button" class="ghost" title="Open the current overlay in a new tab.">Open in tab</button>
+					<button id="clearConversation" type="button" class="ghost">Clear chat</button>
+				</div>
+			</div>
+
+			<div class="workspace">
+				<section class="prompt-pane">
+					<label for="userRequest" style="margin-top:0;">Describe what you want</label>
+					<textarea id="userRequest" spellcheck="true" placeholder="Build me a chat overlay with large avatars and a neon glow. Fade messages after 20 seconds."></textarea>
+
+					<div class="button-row">
+						<button id="sendPrompt" type="button" class="primary">Ask AI</button>
+						<button id="reviewAndPolish" type="button" title="Capture the current preview, send the screenshot to a vision-capable AI, and ask for polish suggestions applied as new HTML.">📸 Review & polish</button>
+					</div>
+					<div class="prompt-options">
+						<label class="opt">
+							<input type="checkbox" id="attachScreenshot">
+							<span>Attach preview screenshot (for vision-capable models)</span>
+						</label>
+						<label class="opt">
+							<input type="checkbox" id="autoFixErrors" checked>
+							<span>Auto-fix console errors (up to <span id="maxAutoFixLabel">2</span> retries)</span>
+						</label>
+					</div>
+
+					<div id="conversationLog" class="conversation" aria-live="polite"></div>
+
+					<div class="button-row">
+						<button id="fixError" type="button" disabled title="Send the last console error back to the AI and ask for a fix.">Fix last error</button>
+						<button id="openSettings" type="button" class="ghost" title="Preview shows where the AI backend lives. Edit in SSN's popup settings.">Where does the AI run?</button>
+					</div>
+
+					<details class="guidance" id="guidanceBox">
+						<summary>Bot guidance (system prompt)</summary>
+						<label for="systemPrompt" style="margin-top:8px;">Sent with every request. Edit to specialize this page.</label>
+						<textarea id="systemPrompt" spellcheck="true"></textarea>
+						<div class="tiny" style="margin-top:6px;">Tip: leave the defaults in place for most overlays — they already teach the AI how to read SSN payloads and keep output Chrome 80 friendly.</div>
+					</details>
+				</section>
+
+				<section class="build-pane">
+					<div class="tabs" role="tablist">
+						<button class="tab active" data-tab="preview" type="button">Preview</button>
+						<button class="tab" data-tab="code" type="button">HTML source</button>
+					</div>
+
+					<div class="tab-panels">
+						<div class="tab-panel active" data-tab="preview">
+							<div class="preview-toolbar">
+								<label style="margin:0; color:var(--muted);">Size</label>
+								<select id="previewSize">
+									<option value="fit">Fit pane</option>
+									<option value="1920x1080">1920 × 1080 (full HD)</option>
+									<option value="1280x720">1280 × 720 (720p)</option>
+									<option value="800x600">800 × 600 (small)</option>
+									<option value="400x600">400 × 600 (chat column)</option>
+								</select>
+								<button id="refreshPreview" type="button">Refresh</button>
+								<div class="spacer"></div>
+								<span class="tiny">Checkerboard = transparent overlay area</span>
+							</div>
+							<div class="event-buttons">
+								<span class="tiny" style="margin-right:4px; align-self:center;">Simulate:</span>
+								<button type="button" data-event="chat">💬 Chat</button>
+								<button type="button" data-event="follow">👋 Follow</button>
+								<button type="button" data-event="subscriber">⭐ Sub</button>
+								<button type="button" data-event="gifted">🎁 Gift sub</button>
+								<button type="button" data-event="donation">💸 Donation</button>
+								<button type="button" data-event="raid">🚀 Raid</button>
+								<button type="button" data-event="cheer">💎 Cheer</button>
+								<button type="button" data-event="viewer_updates">👁️ Viewer counts</button>
+								<button type="button" data-event="custom" title="Paste a JSON payload and send it to the preview.">＋ Custom JSON…</button>
+							</div>
+							<div class="preview-stage" id="previewStage">
+								<div class="preview-frame-wrap fit" id="previewFrameWrap">
+									<iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-popups allow-same-origin"></iframe>
+								</div>
+							</div>
+							<div class="console-bar" id="consoleBar">
+								<span class="msg-text" id="consoleBarText"></span>
+								<button type="button" id="consoleBarFix" class="primary">Fix with AI</button>
+								<button type="button" id="consoleBarDismiss" class="ghost">Dismiss</button>
+							</div>
+						</div>
+
+						<div class="tab-panel" data-tab="code">
+							<textarea id="htmlEditor" spellcheck="false"></textarea>
+						</div>
+					</div>
+				</section>
+			</div>
+		</main>
+	</div>
+
+	<div class="modal-backdrop" id="templatesModal" role="dialog" aria-modal="true">
+		<div class="modal">
+			<h2>Start from a template</h2>
+			<div class="tiny">Pick a starter. You can iterate on it with the AI. The current active page will be replaced — duplicate it first if you want to keep it.</div>
+			<div class="template-grid" id="templateGrid"></div>
+			<div class="modal-actions">
+				<button type="button" id="closeTemplates" class="ghost">Cancel</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal-backdrop" id="customEventModal" role="dialog" aria-modal="true">
+		<div class="modal" style="max-width:520px;">
+			<h2>Send custom payload</h2>
+			<div class="tiny">Paste any SSN payload as JSON. It will be delivered to the preview iframe as <code>event.data.dataReceived.overlayNinja</code>.</div>
+			<label for="customEventJson">JSON payload</label>
+			<textarea id="customEventJson" spellcheck="false" style="height:180px;font-family:Consolas,monospace;font-size:12px;"></textarea>
+			<div class="modal-actions">
+				<button type="button" id="customEventCancel" class="ghost">Cancel</button>
+				<button type="button" id="customEventSend" class="primary">Send</button>
+			</div>
+		</div>
+	</div>
+
+	<textarea id="default-system-prompt" hidden>You are helping the user build ONE standalone HTML overlay page for Social Stream Ninja (SSN), an open-source tool that consolidates live chat and stream events from YouTube, Twitch, Kick, TikTok, Facebook, Rumble, Discord, and many more.
+
+=== OUTPUT FORMAT — STRICT ===
+- When the user asks for a change, reply with ONE complete HTML document inside one ```html fenced block. Nothing else is needed; any prose outside the block is fine but the HTML block is the source of truth.
+- Always return the FULL file, not a diff. The app replaces the active page with the HTML block verbatim.
+- Keep it as a SINGLE self-contained file (inline CSS and JS). Only link to external CDNs if the user explicitly asks.
+- Keep the code Chrome 80 friendly: no ES modules, no top-level import/export, no optional chaining in inline JSON, and avoid experimental APIs without fallbacks.
+- Set <body> background to transparent unless the user asks for a background. Overlays sit on top of OBS scenes, so transparency is the default.
+
+=== HOW DATA ARRIVES ===
+Overlay pages receive data via a VDO.Ninja iframe bridge. Always include this bridge when the page needs live data. Messages arrive as window postMessage events:
+
+```html
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+  function handlePayload(data) {
+    // route chat, events, meta updates here
+  }
+  window.handleOverlayPayload = handlePayload; // lets the builder send test events
+}());
+</script>
+```
+
+Without ?session=YOUR_ID the bridge won't connect — but the builder still sends test payloads straight to the iframe via postMessage, so handlePayload must work with or without the bridge.
+
+DOM ordering matters: the `<iframe id="ssn_bridge">` element MUST exist in the DOM before the script that calls `document.getElementById("ssn_bridge")` runs. The safest patterns are (a) put the iframe tag first and the script right after in `<body>`, or (b) create the iframe in JS via `document.createElement("iframe")` and append it to body. Never put the iframe element below the script that reads it — `getElementById` will return null and setting `.src` throws.
+
+=== PAYLOAD FIELDS (the SSN schema) ===
+Most messages look like:
+{ id, type, chatname, chatmessage, chatimg, timestamp, hasDonation, membership, event, subtitle, meta, contentimg, nameColor, chatbadges, karma, bot, mod, host, vip, tid, private }
+
+- type: source platform string — "youtube", "twitch", "kick", "tiktok", "facebook", "rumble", "discord", "whatnot", etc.
+- chatname / chatmessage / chatimg: standard chat fields. chatimg is a URL (may be empty).
+- event: set only for SYSTEM notifications — leave unset/false for plain chat. Known values include "new_follower", "subscription_gift", "gifted", "subscriber", "raid", "hype", "shoutout", "supersticker", "viewer_update", "follower_update", "subscriber_update", "viewer_updates" (aggregated), plus custom ones.
+- hasDonation: string like "$5.00" for tips / super chats / bits when money was involved.
+- membership: string like "Tier 1", "Member (6 months)", etc.
+- subtitle: secondary info, often months subscribed or gift count.
+- meta: structured extra data. For counter events it can be a number or an object keyed by type (e.g. { youtube: 815, twitch: 221 }). `viewer_updates` is a FULL SNAPSHOT of the current per-platform counts — replace your whole state from data.meta on every update, do NOT merge it on top of old platform keys, or stale platforms will linger forever. For commerce overlays meta is also a snapshot object (auction_update, commerce_update).
+- contentimg: an image embedded in the message (emote, sticker, donation image).
+- nameColor: hex color for the username.
+- chatbadges: array of badge URLs.
+- bot / mod / host / vip: booleans.
+- private: true when the message was flagged private by SSN (e.g. from Discord DMs).
+
+Example chat payload:
+{ "chatname": "Jess", "chatmessage": "hello!", "chatimg": "https://.../user1.jpg", "type": "youtube" }
+
+Example follow event:
+{ "event": "new_follower", "chatname": "NewFan", "type": "twitch" }
+
+Example donation:
+{ "chatname": "GenerousViewer", "chatmessage": "keep it up!", "hasDonation": "$25.00", "type": "youtube" }
+
+Example viewer counter aggregate:
+{ "event": "viewer_updates", "meta": { "youtube": 815, "twitch": 221, "kick": 94 } }
+
+=== BUILDING RULES ===
+1. ALWAYS escape untrusted strings before inserting as HTML. Use textContent where possible. NEVER build inline HTML event handlers (onerror=, onclick=, etc.) inside a JS string — the escaping gets tangled and produces syntax errors. Instead, create the element, then `el.addEventListener("error", ...)` or `el.onerror = function () { ... }`. Same rule for inline `style="..."` built from dynamic values with quotes: prefer element.style.color = .... Build DOM with createElement + appendChild in ONE pass — don't rewrite .outerHTML on a node that's already in the tree, don't wipe the row with `.innerHTML = ""` mid-function, and never call insertBefore(newNode, refNode) unless refNode is already a child of the parent you're inserting into. Plan the node tree before you start creating elements.
+2. Filter by data.type / data.event early so the overlay stays focused on its job.
+3. When the user wants "chat", skip messages where data.event is set (unless they also ask for events).
+4. When the user wants "alerts" or "events", require data.event, data.hasDonation, or data.membership.
+5. Respect common URL params when they make sense: ?limit=50, ?onlytype=twitch, ?hidetype=bots, ?donationsonly, ?eventsonly, ?css= (external stylesheet).
+6. Animations should clean themselves up (remove elements, clear timers) to avoid memory leaks during long streams.
+7. Use CSS variables at :root so the user can easily tweak colors later.
+8. Keep the output concise enough to paste into OBS — aim for a single file under ~500 lines.
+9. If the user asks to "send" data back to SSN (e.g. feature a message), post into the bridge iframe with: bridge.contentWindow.postMessage({ sendData: { overlayNinja: payloadOrMessage }, type: "pcs" }, "*");
+10. If the request is ambiguous (e.g. "make it look cool"), pick a reasonable modern style and ship it. The user will iterate.
+11. EVERY alert card must render the actor's chatname prominently — never let auxiliary data (membership tier, gift count, raid viewers, donation amount) replace the name. The rendered card should always answer "who did this?" first. Use a template like `{chatname} {verb} {detail}`:
+   - Follower: "FollowerFran followed" (name + "followed")
+   - Subscriber: "SubSally subscribed — Member (2 months)" (name + verb + membership if present)
+   - Gifted sub: "GiftyGus gifted 5 subs" (name + count from subtitle / meta.gift_count)
+   - Donation: "DonorDana donated $25.00 — keep it up" (name + hasDonation verbatim + chatmessage if present)
+   - Raid: "RaidingRita is raiding with 42 viewers" (name + subtitle or meta.viewers)
+   Missing the name in ANY of these is a bug.
+12. Subscriber alerts should fire whether the payload has data.event === "subscriber", data.event === "resub", or just a data.membership string with no contradicting event. Gifted subs fire on data.event === "subscription_gift" or data.event === "gifted" and usually carry data.subtitle (gift count) or meta.gift_count.
+12a. Alerts arrive faster than their dismiss time during busy streams. Prefer STACKING: each alert gets its own card appended to the container and dismisses on its own timer, so multiple cards can be visible at once. Never build a single-banner overlay that hides behind a global `isAnimating` / `isBusy` flag — that silently drops payloads. Queuing-one-at-a-time is acceptable only if the user explicitly asks for it; stacking is the default.
+13. For counter / viewer / goal numbers, render integer values as-is (or with toLocaleString thousands separators) instead of collapsing to "1.2k" style suffixes — the raw number is what streamers and mods actually want to read. Only abbreviate when a value is above ~1,000,000 AND space is genuinely constrained.
+14. Reset / replace state on snapshot payloads (viewer_updates, auction_update, commerce_update); only accumulate on per-item events (new chat row, new alert).
+
+If the user asks a question that does not require a file change, answer normally without a ```html block. Otherwise, always return the full updated HTML.</textarea>
+
+	<textarea id="tmpl-blank" hidden><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Blank SSN Overlay</title>
+	<style>
+		* { box-sizing: border-box; }
+		html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: transparent; color: #fff; font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+		.stage { position: fixed; inset: 0; display: flex; align-items: flex-end; justify-content: flex-start; padding: 20px; pointer-events: none; }
+	</style>
+</head>
+<body>
+	<div class="stage" id="stage"></div>
+	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<script>
+	(function () {
+		var params = new URLSearchParams(location.search);
+		var roomID = params.get("session") || "";
+		var password = params.get("password") || "false";
+		var label = params.get("label") || "blank_overlay_" + Date.now();
+		var bridge = document.getElementById("ssn_bridge");
+		if (roomID) {
+			bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+				encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+				"&label=" + encodeURIComponent(label) +
+				"&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+		}
+		function handlePayload(data) {
+			// Describe what you want in the AI panel to fill this in.
+			console.log("payload", data);
+		}
+		window.handleOverlayPayload = handlePayload;
+		window.addEventListener("message", function (event) {
+			var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+			if (typeof payload !== "undefined") handlePayload(payload);
+		});
+	}());
+	</script>
+</body>
+</html></textarea>
+
+	<textarea id="tmpl-chat" hidden><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>SSN Chat Overlay</title>
+	<style>
+		:root {
+			--row-bg: rgba(0,0,0,0.55);
+			--row-border: rgba(255,255,255,0.1);
+			--name: #79d6ac;
+			--text: #f4f7f9;
+		}
+		* { box-sizing: border-box; }
+		html, body { margin: 0; height: 100%; background: transparent; color: var(--text); font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+		#feed { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+		.row { display: flex; gap: 10px; align-items: flex-start; background: var(--row-bg); border: 1px solid var(--row-border); border-radius: 10px; padding: 8px 12px; opacity: 0; transform: translateY(8px); animation: slideIn 220ms ease-out forwards; }
+		.avatar { width: 32px; height: 32px; border-radius: 50%; flex: 0 0 32px; background: #222; object-fit: cover; }
+		.body { min-width: 0; }
+		.name { font-weight: 700; color: var(--name); }
+		.text { margin-top: 2px; word-wrap: break-word; }
+		.platform { font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-left: 6px; letter-spacing: 0.05em; }
+		@keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
+		.row.fade-out { animation: fadeOut 300ms ease-in forwards; }
+		@keyframes fadeOut { to { opacity: 0; transform: translateY(-4px); } }
+	</style>
+</head>
+<body>
+	<div id="feed"></div>
+	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<script>
+	(function () {
+		var params = new URLSearchParams(location.search);
+		var roomID = params.get("session") || "";
+		var password = params.get("password") || "false";
+		var label = params.get("label") || "chat_overlay_" + Date.now();
+		var limit = Math.max(1, parseInt(params.get("limit") || "8", 10));
+		var showtime = Math.max(0, parseInt(params.get("showtime") || "0", 10));
+		var feed = document.getElementById("feed");
+		var bridge = document.getElementById("ssn_bridge");
+		if (roomID) {
+			bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+				encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+				"&label=" + encodeURIComponent(label) +
+				"&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+		}
+		function escapeHtml(value) {
+			var div = document.createElement("div");
+			div.textContent = value == null ? "" : String(value);
+			return div.innerHTML;
+		}
+		function addRow(data) {
+			if (data.event || data.bot) return;
+			var row = document.createElement("div");
+			row.className = "row";
+			var nameColor = data.nameColor ? ' style="color:' + escapeHtml(data.nameColor) + '"' : "";
+			row.innerHTML =
+				(data.chatimg ? '<img class="avatar" src="' + escapeHtml(data.chatimg) + '" alt="">' : '<div class="avatar"></div>') +
+				'<div class="body">' +
+					'<span class="name"' + nameColor + '>' + escapeHtml(data.chatname || "Anonymous") + '</span>' +
+					(data.type ? '<span class="platform">' + escapeHtml(data.type) + '</span>' : '') +
+					'<div class="text">' + escapeHtml(data.chatmessage || "") + '</div>' +
+				'</div>';
+			feed.appendChild(row);
+			while (feed.children.length > limit) {
+				feed.removeChild(feed.firstChild);
+			}
+			if (showtime > 0) {
+				setTimeout(function () {
+					row.classList.add("fade-out");
+					setTimeout(function () { if (row.parentNode) row.parentNode.removeChild(row); }, 320);
+				}, showtime);
+			}
+		}
+		window.handleOverlayPayload = addRow;
+		window.addEventListener("message", function (event) {
+			var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+			if (payload && typeof payload === "object") addRow(payload);
+		});
+	}());
+	</script>
+</body>
+</html></textarea>
+
+	<textarea id="tmpl-alerts" hidden><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>SSN Alert Banner</title>
+	<style>
+		:root { --bg: rgba(15, 20, 24, 0.92); --accent: #79d6ac; --gold: #f0c866; --pink: #ff79b8; --blue: #69b7ff; }
+		* { box-sizing: border-box; }
+		html, body { margin: 0; height: 100%; background: transparent; color: #fff; font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+		#stage { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); width: min(520px, calc(100% - 40px)); }
+		.alert { background: var(--bg); border-left: 6px solid var(--accent); border-radius: 10px; padding: 16px 18px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); opacity: 0; transform: translateY(-20px); animation: in 240ms ease-out forwards; }
+		.alert.sub { border-left-color: var(--gold); }
+		.alert.gifted { border-left-color: var(--pink); }
+		.alert.donation { border-left-color: var(--gold); }
+		.alert.raid { border-left-color: var(--blue); }
+		.kind { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; }
+		.alert.sub .kind { color: var(--gold); }
+		.alert.gifted .kind { color: var(--pink); }
+		.alert.donation .kind { color: var(--gold); }
+		.alert.raid .kind { color: var(--blue); }
+		.headline { font-size: 20px; font-weight: 800; margin-top: 4px; }
+		.detail { color: rgba(255,255,255,0.75); margin-top: 4px; }
+		.alert.out { animation: out 320ms ease-in forwards; }
+		@keyframes in { to { opacity: 1; transform: translateY(0); } }
+		@keyframes out { to { opacity: 0; transform: translateY(-16px); } }
+	</style>
+</head>
+<body>
+	<div id="stage"></div>
+	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<script>
+	(function () {
+		var params = new URLSearchParams(location.search);
+		var roomID = params.get("session") || "";
+		var password = params.get("password") || "false";
+		var label = params.get("label") || "alerts_" + Date.now();
+		var duration = Math.max(2000, parseInt(params.get("duration") || "6000", 10));
+		var stage = document.getElementById("stage");
+		var bridge = document.getElementById("ssn_bridge");
+		if (roomID) {
+			bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+				encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+				"&label=" + encodeURIComponent(label) +
+				"&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+		}
+		function escapeText(value) {
+			var d = document.createElement("div"); d.textContent = value == null ? "" : String(value); return d.innerHTML;
+		}
+		function show(kind, headline, detail) {
+			var div = document.createElement("div");
+			div.className = "alert " + kind;
+			div.innerHTML = '<div class="kind">' + escapeText(kind) + '</div>' +
+				'<div class="headline">' + escapeText(headline) + '</div>' +
+				(detail ? '<div class="detail">' + escapeText(detail) + '</div>' : '');
+			stage.appendChild(div);
+			setTimeout(function () { div.classList.add("out"); setTimeout(function () { if (div.parentNode) div.parentNode.removeChild(div); }, 340); }, duration);
+		}
+		function route(data) {
+			if (!data || typeof data !== "object") return;
+			if (data.hasDonation) {
+				show("donation", (data.chatname || "Someone") + " tipped " + data.hasDonation, data.chatmessage || "");
+			} else if (data.event === "new_follower") {
+				show("follow", (data.chatname || "Someone") + " followed!", data.type || "");
+			} else if (data.event === "subscription_gift" || data.event === "gifted") {
+				show("gifted", (data.chatname || "Someone") + " gifted " + (data.subtitle || (data.meta && data.meta.gift_count) || "a sub"), data.membership || "");
+			} else if (data.event === "subscriber" || data.membership) {
+				show("sub", (data.chatname || "Someone") + " subscribed!", data.membership || data.subtitle || "");
+			} else if (data.event === "raid") {
+				var viewers = (data.meta && data.meta.viewers) || data.subtitle || "";
+				show("raid", (data.chatname || "Someone") + " is raiding!", viewers ? (viewers + " viewers") : "");
+			}
+		}
+		window.handleOverlayPayload = route;
+		window.addEventListener("message", function (event) {
+			var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+			if (payload) route(payload);
+		});
+	}());
+	</script>
+</body>
+</html></textarea>
+
+	<textarea id="tmpl-viewer-ticker" hidden><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Viewer Counter Ticker</title>
+	<style>
+		* { box-sizing: border-box; }
+		html, body { margin: 0; height: 100%; background: transparent; color: #fff; font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+		#bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; gap: 24px; padding: 10px 16px; background: rgba(15,20,24,0.8); backdrop-filter: blur(10px); align-items: center; justify-content: center; font-weight: 700; letter-spacing: 0.04em; }
+		.chip { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,0.08); }
+		.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #79d6ac; box-shadow: 0 0 8px #79d6ac; }
+		.chip.youtube { color: #ff6b6b; } .chip.youtube .dot { background: #ff6b6b; box-shadow: 0 0 8px #ff6b6b; }
+		.chip.twitch { color: #c594ff; } .chip.twitch .dot { background: #c594ff; box-shadow: 0 0 8px #c594ff; }
+		.chip.kick { color: #79d6ac; } .chip.kick .dot { background: #79d6ac; box-shadow: 0 0 8px #79d6ac; }
+		.chip.tiktok { color: #ff79b8; } .chip.tiktok .dot { background: #ff79b8; box-shadow: 0 0 8px #ff79b8; }
+		.chip.total { color: #fff; background: rgba(121,214,172,0.15); }
+	</style>
+</head>
+<body>
+	<div id="bar"></div>
+	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<script>
+	(function () {
+		var params = new URLSearchParams(location.search);
+		var roomID = params.get("session") || "";
+		var password = params.get("password") || "false";
+		var label = params.get("label") || "viewers_" + Date.now();
+		var bar = document.getElementById("bar");
+		var counts = {};
+		var bridge = document.getElementById("ssn_bridge");
+		if (roomID) {
+			bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+				encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+				"&label=" + encodeURIComponent(label) +
+				"&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+		}
+		function render() {
+			var keys = Object.keys(counts).sort();
+			var total = 0;
+			var html = "";
+			for (var i = 0; i < keys.length; i++) {
+				var k = keys[i]; var v = counts[k] || 0; total += v;
+				html += '<div class="chip ' + k + '"><span class="dot"></span><span>' + k + ': ' + v.toLocaleString() + '</span></div>';
+			}
+			if (!keys.length) {
+				html = '<div class="chip total"><span class="dot"></span><span>Waiting for viewer counts…</span></div>';
+			} else {
+				html += '<div class="chip total"><span class="dot"></span><span>Total: ' + total.toLocaleString() + '</span></div>';
+			}
+			bar.innerHTML = html;
+		}
+		function route(data) {
+			if (!data) return;
+			if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
+				counts = Object.assign({}, data.meta);
+				render();
+			} else if (data.event === "viewer_update" && data.type && typeof data.meta === "number") {
+				counts[data.type] = data.meta;
+				render();
+			}
+		}
+		window.handleOverlayPayload = route;
+		window.addEventListener("message", function (event) {
+			var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+			if (payload) route(payload);
+		});
+		render();
+	}());
+	</script>
+</body>
+</html></textarea>
+
+	<textarea id="tmpl-goal" hidden><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Sub Goal Tracker</title>
+	<style>
+		* { box-sizing: border-box; }
+		html, body { margin: 0; height: 100%; background: transparent; color: #fff; font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+		#goal { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: min(460px, calc(100% - 40px)); background: rgba(15,20,24,0.88); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 14px 16px; }
+		.title { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #79d6ac; font-weight: 700; }
+		.value { font-size: 22px; font-weight: 800; margin-top: 4px; display: flex; justify-content: space-between; align-items: baseline; }
+		.value small { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 500; }
+		.bar { margin-top: 8px; height: 10px; border-radius: 999px; background: rgba(255,255,255,0.1); overflow: hidden; }
+		.fill { height: 100%; background: linear-gradient(90deg, #79d6ac, #f0c866); width: 0; transition: width 450ms ease-out; }
+	</style>
+</head>
+<body>
+	<div id="goal">
+		<div class="title" id="goalTitle">Sub goal</div>
+		<div class="value"><span id="progress">0</span><small>/ <span id="target">50</span></small></div>
+		<div class="bar"><div class="fill" id="fill"></div></div>
+	</div>
+	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<script>
+	(function () {
+		var params = new URLSearchParams(location.search);
+		var roomID = params.get("session") || "";
+		var password = params.get("password") || "false";
+		var label = params.get("label") || "goal_" + Date.now();
+		var target = Math.max(1, parseInt(params.get("target") || "50", 10));
+		var startAt = Math.max(0, parseInt(params.get("start") || "0", 10));
+		var title = params.get("title") || "Sub goal";
+		var progress = startAt;
+		document.getElementById("goalTitle").textContent = title;
+		document.getElementById("target").textContent = target;
+		update();
+		var bridge = document.getElementById("ssn_bridge");
+		if (roomID) {
+			bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+				encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+				"&label=" + encodeURIComponent(label) +
+				"&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+		}
+		function update() {
+			document.getElementById("progress").textContent = progress;
+			var pct = Math.min(100, Math.round((progress / target) * 100));
+			document.getElementById("fill").style.width = pct + "%";
+		}
+		function route(data) {
+			if (!data) return;
+			if (data.event === "subscription_gift" || data.event === "gifted") {
+				var n = (data.meta && data.meta.gift_count) || parseInt(data.subtitle, 10) || 1;
+				progress += n;
+				update();
+			} else if (data.event === "subscriber" || (data.membership && !data.event)) {
+				progress += 1;
+				update();
+			}
+		}
+		window.handleOverlayPayload = route;
+		window.addEventListener("message", function (event) {
+			var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+			if (payload) route(payload);
+		});
+	}());
+	</script>
+</body>
+</html></textarea>
+
+	<textarea id="tmpl-brb" hidden><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Starting Soon / BRB</title>
+	<style>
+		* { box-sizing: border-box; }
+		html, body { margin: 0; height: 100%; background: #0d1014; color: #fff; font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+		body { background: radial-gradient(circle at 30% 30%, rgba(121,214,172,0.15), transparent 50%), radial-gradient(circle at 70% 70%, rgba(240,200,102,0.1), transparent 45%), #0d1014; display: flex; align-items: center; justify-content: center; }
+		.card { text-align: center; padding: 32px 40px; backdrop-filter: blur(10px); background: rgba(15,20,24,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; }
+		.headline { font-size: 64px; font-weight: 900; letter-spacing: -0.02em; background: linear-gradient(90deg, #79d6ac, #f0c866); -webkit-background-clip: text; background-clip: text; color: transparent; }
+		.sub { color: rgba(255,255,255,0.7); margin-top: 6px; font-size: 18px; }
+		.timer { margin-top: 22px; font-size: 40px; font-variant-numeric: tabular-nums; font-weight: 800; color: #79d6ac; }
+		.chat { position: fixed; right: 24px; bottom: 24px; width: 320px; max-height: 50vh; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+		.chat .row { background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 10px; font-size: 13px; opacity: 0; transform: translateY(8px); animation: slideIn 220ms ease-out forwards; }
+		.chat .name { font-weight: 700; color: #79d6ac; margin-right: 6px; }
+		@keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
+	</style>
+</head>
+<body>
+	<div class="card">
+		<div class="headline" id="headline">Starting Soon</div>
+		<div class="sub" id="sub">Grab a seat, we go live in…</div>
+		<div class="timer" id="timer">05:00</div>
+	</div>
+	<div class="chat" id="chat"></div>
+	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<script>
+	(function () {
+		var params = new URLSearchParams(location.search);
+		var roomID = params.get("session") || "";
+		var password = params.get("password") || "false";
+		var label = params.get("label") || "brb_" + Date.now();
+		var minutes = Math.max(0, parseInt(params.get("minutes") || "5", 10));
+		var title = params.get("title"); if (title) document.getElementById("headline").textContent = title;
+		var subtitle = params.get("sub"); if (subtitle) document.getElementById("sub").textContent = subtitle;
+		var bridge = document.getElementById("ssn_bridge");
+		if (roomID) {
+			bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+				encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+				"&label=" + encodeURIComponent(label) +
+				"&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+		}
+		var end = Date.now() + minutes * 60000;
+		function pad(n) { n = Math.max(0, n|0); return (n < 10 ? "0" : "") + n; }
+		function tick() {
+			var remaining = Math.max(0, end - Date.now());
+			var m = Math.floor(remaining / 60000);
+			var s = Math.floor((remaining % 60000) / 1000);
+			document.getElementById("timer").textContent = pad(m) + ":" + pad(s);
+		}
+		setInterval(tick, 500); tick();
+		var chat = document.getElementById("chat");
+		function escapeText(value) { var d = document.createElement("div"); d.textContent = value == null ? "" : String(value); return d.innerHTML; }
+		function addChat(data) {
+			if (data.event || data.bot || !data.chatmessage) return;
+			var row = document.createElement("div");
+			row.className = "row";
+			row.innerHTML = '<span class="name">' + escapeText(data.chatname || "Anon") + ':</span>' + escapeText(data.chatmessage);
+			chat.insertBefore(row, chat.firstChild);
+			while (chat.children.length > 6) chat.removeChild(chat.lastChild);
+		}
+		window.handleOverlayPayload = addChat;
+		window.addEventListener("message", function (event) {
+			var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+			if (payload) addChat(payload);
+		});
+	}());
+	</script>
+</body>
+</html></textarea>
+
+	<script>
+	(function () {
+		var STORAGE_KEY = "ssnAiPromptPagesV2";
+		var LEGACY_KEY = "ssnAiPromptPagesV1";
+		var MAX_HISTORY = 20;
+
+		var state = null;
+		var bridgeFrame = null;
+		var bridgeReady = false;
+		var bridgeRoomID = "";
+		var bridgePassword = "false";
+		var pendingResponses = {};
+		var saveTimer = null;
+		var previewTimer = null;
+		var lastIframeError = null;
+		var currentTab = "preview";
+		var lastAppliedFromAI = false;
+		var autoFixAttempts = 0;
+		var MAX_AUTO_FIX = 2;
+		var html2canvasPromise = null;
+		var HTML2CANVAS_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+
+		var el = function (id) { return document.getElementById(id); };
+		var pageName = el("pageName");
+		var pageList = el("pageList");
+		var systemPrompt = el("systemPrompt");
+		var userRequest = el("userRequest");
+		var htmlEditor = el("htmlEditor");
+		var previewFrame = el("previewFrame");
+		var previewFrameWrap = el("previewFrameWrap");
+		var conversationLog = el("conversationLog");
+		var connectionStatus = el("connectionStatus");
+		var storageStatus = el("storageStatus");
+		var consoleBar = el("consoleBar");
+		var consoleBarText = el("consoleBarText");
+		var fixErrorBtn = el("fixError");
+		var previewSize = el("previewSize");
+		var templatesModal = el("templatesModal");
+		var templateGrid = el("templateGrid");
+		var customEventModal = el("customEventModal");
+		var customEventJson = el("customEventJson");
+		var attachScreenshot = el("attachScreenshot");
+		var autoFixErrors = el("autoFixErrors");
+
+		var defaultSystemPrompt = el("default-system-prompt").value;
+
+		var TEMPLATES = [
+			{ id: "blank", name: "Blank canvas", desc: "Minimal bridge + stage. Perfect starting point — describe what you want in the AI panel.", src: el("tmpl-blank").value },
+			{ id: "chat", name: "Chat overlay", desc: "Scrolling chat feed with avatars, platform tag, optional fade-out. Respects ?limit and ?showtime.", src: el("tmpl-chat").value },
+			{ id: "alerts", name: "Alert banner", desc: "Follows, subs, gifted subs, donations, and raids as animated alerts at the top of the screen.", src: el("tmpl-alerts").value },
+			{ id: "viewer-ticker", name: "Viewer counter ticker", desc: "Bottom bar with per-platform live viewer counts + combined total. Reads viewer_updates events.", src: el("tmpl-viewer-ticker").value },
+			{ id: "goal", name: "Sub goal tracker", desc: "Animated progress bar that fills on subscriber and gifted-sub events. Configurable via ?target and ?title.", src: el("tmpl-goal").value },
+			{ id: "brb", name: "Starting soon / BRB", desc: "Gradient card with countdown timer and mini chat. Configurable via ?minutes, ?title, ?sub.", src: el("tmpl-brb").value }
+		];
+
+		var EVENT_SAMPLES = {
+			chat: {
+				chatname: "Jess",
+				chatmessage: "this overlay looks amazing! 🔥",
+				chatimg: "https://socialstream.ninja/media/user1.jpg",
+				type: "youtube",
+				nameColor: "#79d6ac"
+			},
+			follow: {
+				event: "new_follower",
+				chatname: "NewFan42",
+				chatimg: "https://socialstream.ninja/media/user3.jpg",
+				type: "twitch"
+			},
+			subscriber: {
+				event: "subscriber",
+				chatname: "LoyalViewer",
+				chatmessage: "resubbing for month 6!",
+				chatimg: "https://socialstream.ninja/media/user5.jpg",
+				type: "youtube",
+				membership: "Member (6 months)",
+				subtitle: "6 months"
+			},
+			gifted: {
+				event: "subscription_gift",
+				chatname: "GenerousGifter",
+				chatimg: "https://socialstream.ninja/media/user2.jpg",
+				type: "twitch",
+				subtitle: "5",
+				membership: "Tier 1",
+				meta: { gift_count: 5 }
+			},
+			donation: {
+				chatname: "BigTipper",
+				chatmessage: "Keep crushing it!",
+				chatimg: "https://socialstream.ninja/media/user4.jpg",
+				type: "youtube",
+				hasDonation: "$25.00"
+			},
+			raid: {
+				event: "raid",
+				chatname: "AlliedStreamer",
+				chatimg: "https://socialstream.ninja/media/user6.jpg",
+				type: "twitch",
+				subtitle: "142 viewers",
+				meta: { viewers: 142 }
+			},
+			cheer: {
+				chatname: "BitsFriend",
+				chatmessage: "Cheer1000 enjoy!",
+				chatimg: "https://socialstream.ninja/media/user7.jpg",
+				type: "twitch",
+				hasDonation: "1000 bits",
+				meta: { bits: 1000 }
+			},
+			viewer_updates: {
+				event: "viewer_updates",
+				meta: { youtube: 815, twitch: 221, kick: 94, tiktok: 312 }
+			}
+		};
+
+		function makeId() { return "page-" + Date.now() + "-" + Math.floor(Math.random() * 1e6); }
+		function makeMessageId() { return Math.floor(Math.random() * 1e9); }
+		function cleanName(name) { name = String(name || "").trim(); return name || "Untitled page"; }
+
+		function defaultPage(seed) {
+			var tmpl = seed || TEMPLATES[0];
+			return {
+				id: makeId(),
+				name: tmpl.name,
+				systemPrompt: defaultSystemPrompt,
+				html: tmpl.src,
+				conversation: [],
+				updatedAt: Date.now()
+			};
+		}
+
+		function defaultState() {
+			var page = defaultPage(TEMPLATES[1]);
+			page.name = "Chat overlay";
+			return { version: 2, activeId: page.id, pages: [page] };
+		}
+
+		function loadState() {
+			try {
+				var raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
+				var parsed = raw ? JSON.parse(raw) : null;
+				if (!parsed || !parsed.pages || !parsed.pages.length) return defaultState();
+				for (var i = 0; i < parsed.pages.length; i++) {
+					var p = parsed.pages[i];
+					p.conversation = p.conversation || [];
+					p.systemPrompt = p.systemPrompt || defaultSystemPrompt;
+					p.html = p.html || TEMPLATES[0].src;
+					p.name = cleanName(p.name);
+				}
+				var activeExists = false;
+				for (var j = 0; j < parsed.pages.length; j++) {
+					if (parsed.pages[j].id === parsed.activeId) { activeExists = true; break; }
+				}
+				if (!activeExists) parsed.activeId = parsed.pages[0].id;
+				return parsed;
+			} catch (e) {
+				console.warn("Failed to load prompt pages", e);
+				return defaultState();
+			}
+		}
+
+		function saveState() {
+			try {
+				localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+				storageStatus.textContent = "Saved " + new Date().toLocaleTimeString();
+			} catch (e) {
+				storageStatus.textContent = "Local save failed: " + (e && e.message ? e.message : "unknown error");
+			}
+		}
+
+		function scheduleSave() {
+			clearTimeout(saveTimer);
+			saveTimer = setTimeout(saveState, 250);
+		}
+
+		function findPage(id) {
+			if (!state || !state.pages) return null;
+			for (var i = 0; i < state.pages.length; i++) {
+				if (state.pages[i].id === id) return state.pages[i];
+			}
+			return null;
+		}
+
+		function activePage() { return findPage(state.activeId) || state.pages[0]; }
+
+		function syncFormToPage() {
+			var page = activePage();
+			if (!page) return;
+			page.name = cleanName(pageName.value);
+			page.systemPrompt = systemPrompt.value || defaultSystemPrompt;
+			page.html = htmlEditor.value || "";
+			page.updatedAt = Date.now();
+		}
+
+		function renderPageList() {
+			pageList.innerHTML = "";
+			for (var i = 0; i < state.pages.length; i++) {
+				(function (page) {
+					var button = document.createElement("button");
+					button.type = "button";
+					button.className = "page-tab" + (page.id === state.activeId ? " active" : "");
+					button.textContent = cleanName(page.name);
+					button.title = cleanName(page.name);
+					button.addEventListener("click", function () {
+						syncFormToPage();
+						state.activeId = page.id;
+						saveState();
+						loadActivePage();
+					});
+					pageList.appendChild(button);
+				}(state.pages[i]));
+			}
+		}
+
+		function loadActivePage() {
+			var page = activePage();
+			pageName.value = cleanName(page.name);
+			systemPrompt.value = page.systemPrompt || defaultSystemPrompt;
+			htmlEditor.value = page.html || "";
+			hideConsoleBar();
+			renderPageList();
+			renderConversation();
+			refreshPreview();
+		}
+
+		function renderConversation() {
+			var page = activePage();
+			conversationLog.innerHTML = "";
+			var history = page.conversation || [];
+			if (!history.length) {
+				var empty = document.createElement("div");
+				empty.className = "small";
+				empty.textContent = "No messages yet. Describe what you want above and hit Ask AI.";
+				conversationLog.appendChild(empty);
+				return;
+			}
+			for (var i = 0; i < history.length; i++) {
+				appendConversationMessage(history[i].role, history[i].content, false);
+			}
+			conversationLog.scrollTop = conversationLog.scrollHeight;
+		}
+
+		function saveConversationMessage(role, content) {
+			var page = activePage();
+			page.conversation = page.conversation || [];
+			page.conversation.push({ role: role, content: content || "", at: Date.now() });
+			if (page.conversation.length > MAX_HISTORY) {
+				page.conversation = page.conversation.slice(page.conversation.length - MAX_HISTORY);
+			}
+			scheduleSave();
+		}
+
+		function appendConversationMessage(role, content, save) {
+			if (conversationLog.firstChild && conversationLog.firstChild.className === "small") {
+				conversationLog.innerHTML = "";
+			}
+			var wrap = document.createElement("div");
+			wrap.className = "msg " + role;
+			var roleDiv = document.createElement("div");
+			roleDiv.className = "role";
+			roleDiv.textContent = role;
+			var body = document.createElement("div");
+			body.textContent = content || "";
+			wrap.appendChild(roleDiv);
+			wrap.appendChild(body);
+			conversationLog.appendChild(wrap);
+			conversationLog.scrollTop = conversationLog.scrollHeight;
+			if (save) saveConversationMessage(role, content);
+			return body;
+		}
+
+		function logBuilder(level, message, detail) {
+			try {
+				var logger = (console && console[level]) ? console[level] : console.log;
+				if (detail !== undefined) logger.call(console, "[AI Prompt] " + message, detail);
+				else logger.call(console, "[AI Prompt] " + message);
+			} catch (e) {}
+		}
+
+		function setStatus(message, type) {
+			connectionStatus.textContent = message;
+			connectionStatus.className = "status" + (type ? " " + type : "");
+			if (type === "error") logBuilder("error", message);
+			else if (type === "warn") logBuilder("warn", message);
+		}
+
+		function formatElapsed(ms) {
+			var seconds = Math.max(0, Math.floor(ms / 1000));
+			if (seconds < 60) return seconds + "s";
+			return Math.floor(seconds / 60) + "m " + (seconds % 60) + "s";
+		}
+
+		function streamExcerpt(text) {
+			text = String(text || "").replace(/\r/g, "");
+			if (!text) return "";
+			var lines = text.split("\n");
+			var kept = [];
+			for (var i = 0; i < lines.length; i++) {
+				if (lines[i].trim()) kept.push(lines[i]);
+			}
+			var excerpt = (kept.length ? kept : lines).slice(-8).join("\n");
+			if (excerpt.length > 1600) excerpt = "..." + excerpt.slice(-1600);
+			return excerpt;
+		}
+
+		function updatePendingStream(pending, state) {
+			if (!pending || !pending.meta || !pending.preview) return;
+			var elapsed = formatElapsed(Date.now() - pending.requestedAt);
+			var chunks = pending.chunks || 0;
+			var chars = pending.text ? pending.text.length : 0;
+			var label = state || (chunks ? "Streaming" : "Waiting for first streamed token");
+			pending.meta.className = "stream-meta" + (!chunks && Date.now() - pending.requestedAt > 10000 ? " warn" : "");
+			pending.meta.innerHTML = '<span class="dot"></span><span>' + label + ' · ' + elapsed + ' · ' + chunks + ' chunks · ' + chars + ' chars</span>';
+			pending.preview.textContent = streamExcerpt(pending.text) || "No tokens received yet.";
+		}
+
+		function createPendingStreamView(body, pending) {
+			body.innerHTML = "";
+			pending.meta = document.createElement("div");
+			pending.preview = document.createElement("div");
+			pending.meta.className = "stream-meta";
+			pending.preview.className = "stream-preview";
+			body.appendChild(pending.meta);
+			body.appendChild(pending.preview);
+			updatePendingStream(pending);
+			pending.timer = setInterval(function () {
+				updatePendingStream(pending);
+			}, 1000);
+			pending.noChunkTimer = setTimeout(function () {
+				if (!pending.chunks) {
+					logBuilder("warn", "No streamed chunks received after 10 seconds", { target: pending.id });
+					updatePendingStream(pending, "Still waiting for first streamed token");
+				}
+			}, 10000);
+		}
+
+		function clearPendingTimers(pending) {
+			if (!pending) return;
+			if (pending.timer) clearInterval(pending.timer);
+			if (pending.noChunkTimer) clearTimeout(pending.noChunkTimer);
+			if (pending.timeoutTimer) clearTimeout(pending.timeoutTimer);
+			pending.timer = null;
+			pending.noChunkTimer = null;
+			pending.timeoutTimer = null;
+		}
+
+		function applyPreviewSize() {
+			var value = previewSize.value;
+			if (value === "fit") {
+				previewFrameWrap.classList.add("fit");
+				previewFrameWrap.style.width = "";
+				previewFrameWrap.style.height = "";
+				return;
+			}
+			var parts = value.split("x");
+			var w = parseInt(parts[0], 10);
+			var h = parseInt(parts[1], 10);
+			previewFrameWrap.classList.remove("fit");
+			previewFrameWrap.style.width = w + "px";
+			previewFrameWrap.style.height = h + "px";
+		}
+
+		function injectErrorReporter(source) {
+			var reporter = "<script>(function(){function send(err){try{parent.postMessage({__aiPromptError:true,message:String(err&&err.message||err),stack:err&&err.stack?String(err.stack):\"\"},\"*\");}catch(e){}}window.addEventListener(\"error\",function(e){send(e.error||e.message);});window.addEventListener(\"unhandledrejection\",function(e){send(e.reason||\"Unhandled promise rejection\");});var origErr=console.error;console.error=function(){var parts=[];for(var i=0;i<arguments.length;i++)parts.push(String(arguments[i]));send(parts.join(\" \"));origErr.apply(console,arguments);};}());<\/script>";
+			var lower = String(source || "").toLowerCase();
+			var headIdx = lower.indexOf("<head>");
+			if (headIdx >= 0) {
+				return source.slice(0, headIdx + 6) + reporter + source.slice(headIdx + 6);
+			}
+			return reporter + source;
+		}
+
+		function refreshPreview() {
+			syncFormToPage();
+			hideConsoleBar();
+			var html = htmlEditor.value || "";
+			previewFrame.srcdoc = html ? injectErrorReporter(html) : "";
+			scheduleSave();
+		}
+
+		function schedulePreview() {
+			clearTimeout(previewTimer);
+			previewTimer = setTimeout(refreshPreview, 650);
+		}
+
+		function showConsoleBar(message, stack) {
+			lastIframeError = message;
+			consoleBarText.textContent = message;
+			consoleBar.classList.add("visible");
+			fixErrorBtn.disabled = false;
+			logBuilder("error", "Preview error: " + message, stack || "");
+			maybeAutoFix();
+		}
+
+		function hideConsoleBar() {
+			lastIframeError = null;
+			consoleBar.classList.remove("visible");
+			fixErrorBtn.disabled = true;
+		}
+
+		function maybeAutoFix() {
+			if (!lastAppliedFromAI) return;
+			if (!autoFixErrors || !autoFixErrors.checked) return;
+			if (autoFixAttempts >= MAX_AUTO_FIX) {
+				setStatus("Auto-fix budget exhausted (" + MAX_AUTO_FIX + " tries). Use \"Fix last error\" to try again.", "warn");
+				return;
+			}
+			if (!bridgeFrame || !bridgeFrame.contentWindow) return;
+			autoFixAttempts += 1;
+			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " — the preview threw: " + lastIframeError + "\n\nPlease return a corrected, complete HTML document.";
+			setStatus("Auto-fixing error (attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + ")…", "warn");
+			setTimeout(function () {
+				hideConsoleBar();
+				sendPrompt(retryNote, { isAutoFix: true });
+			}, 400);
+		}
+
+		function loadHtml2Canvas() {
+			if (window.html2canvas) return Promise.resolve(window.html2canvas);
+			if (html2canvasPromise) return html2canvasPromise;
+			html2canvasPromise = new Promise(function (resolve, reject) {
+				var script = document.createElement("script");
+				script.src = HTML2CANVAS_URL;
+				script.async = true;
+				script.onload = function () {
+					if (window.html2canvas) resolve(window.html2canvas);
+					else reject(new Error("html2canvas loaded but global not found"));
+				};
+				script.onerror = function () { reject(new Error("Failed to load html2canvas from CDN")); };
+				document.head.appendChild(script);
+			});
+			return html2canvasPromise;
+		}
+
+		function capturePreviewDataUrl() {
+			return loadHtml2Canvas().then(function (h2c) {
+				var doc = previewFrame.contentDocument;
+				if (!doc || !doc.body) throw new Error("Preview iframe not ready for capture");
+				var rootEl = doc.documentElement;
+				var opts = {
+					backgroundColor: null,
+					scale: 1,
+					logging: false,
+					useCORS: true,
+					allowTaint: true,
+					width: Math.max(rootEl.clientWidth, 320),
+					height: Math.max(rootEl.clientHeight, 240),
+					windowWidth: Math.max(rootEl.clientWidth, 320),
+					windowHeight: Math.max(rootEl.clientHeight, 240)
+				};
+				return h2c(doc.body, opts).then(function (canvas) {
+					var MAX = 1280;
+					if (canvas.width > MAX || canvas.height > MAX) {
+						var scale = MAX / Math.max(canvas.width, canvas.height);
+						var scaled = document.createElement("canvas");
+						scaled.width = Math.round(canvas.width * scale);
+						scaled.height = Math.round(canvas.height * scale);
+						scaled.getContext("2d").drawImage(canvas, 0, 0, scaled.width, scaled.height);
+						canvas = scaled;
+					}
+					return canvas.toDataURL("image/png");
+				});
+			});
+		}
+
+		function reviewAndPolish() {
+			syncFormToPage();
+			setStatus("Capturing preview for review…", "warn");
+			capturePreviewDataUrl().then(function (dataUrl) {
+				var prompt = "Here is a rendered screenshot of the current overlay. Review the visual design and propose improvements: layout, spacing, color hierarchy, animations, legibility. Return the complete updated HTML file. Do not change core logic unless it's causing a visual problem.";
+				sendPrompt(prompt, { images: [dataUrl] });
+			}).catch(function (err) {
+				logBuilder("error", "Screenshot review failed", err);
+				setStatus("Screenshot failed: " + (err && err.message ? err.message : err), "error");
+			});
+		}
+
+		function sendSimulatedEvent(kind) {
+			if (kind === "custom") {
+				customEventJson.value = JSON.stringify({ chatname: "You", chatmessage: "hi", type: "youtube" }, null, 2);
+				customEventModal.classList.add("visible");
+				customEventJson.focus();
+				return;
+			}
+			var payload = EVENT_SAMPLES[kind];
+			if (!payload) return;
+			deliverToPreview(payload);
+		}
+
+		function deliverToPreview(payload) {
+			if (!previewFrame || !previewFrame.contentWindow) return;
+			previewFrame.contentWindow.postMessage({ dataReceived: { overlayNinja: payload } }, "*");
+		}
+
+		function buildPrompt(page, request) {
+			var history = page.conversation || [];
+			var recent = [];
+			var start = Math.max(0, history.length - 8);
+			for (var i = start; i < history.length; i++) {
+				recent.push(history[i].role.toUpperCase() + ":\n" + history[i].content);
+			}
+			return [
+				page.systemPrompt || defaultSystemPrompt,
+				"",
+				"=== CURRENT HTML FILE ===",
+				"```html",
+				page.html || "",
+				"```",
+				"",
+				"=== RECENT CONVERSATION ===",
+				recent.join("\n\n---\n\n") || "None yet.",
+				"",
+				"=== NEW REQUEST ===",
+				request,
+				"",
+				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally."
+			].join("\n");
+		}
+
+		function looksLikeHtml(value) {
+			return /^\s*(<!doctype html|<html[\s>]|<[a-z][\w-]*[\s>])/i.test(value || "");
+		}
+
+		function extractHtml(text) {
+			var fenced = text.match(/```html\s*([\s\S]*?)```/i) || text.match(/```\s*([\s\S]*?)```/i);
+			if (fenced && looksLikeHtml(fenced[1])) return fenced[1].trim();
+			var lower = text.toLowerCase();
+			var start = lower.indexOf("<!doctype html");
+			if (start < 0) start = lower.indexOf("<html");
+			var end = lower.lastIndexOf("</html>");
+			if (start >= 0 && end > start) return text.slice(start, end + 7).trim();
+			var trimmed = text.trim();
+			if (looksLikeHtml(trimmed)) return trimmed;
+			return "";
+		}
+
+		function parseErrorResponse(value) {
+			try {
+				var parsed = JSON.parse(value);
+				if (parsed && parsed.error) return parsed.error.message || "AI request failed.";
+			} catch (e) {}
+			return "";
+		}
+
+		function annotateErrorMessage(msg) {
+			if (!msg) return msg;
+			var lower = msg.toLowerCase();
+			if (lower.indexOf("failed to fetch") >= 0 || lower.indexOf("networkerror") >= 0 || lower.indexOf("typeerror") >= 0) {
+				return msg + "\n\nLikely causes:\n- The endpoint URL is wrong or the server is not running.\n- The AI endpoint is blocking browser/extension requests.\n- A local firewall, VPN, or CORS setting is blocking the request.";
+			}
+			if (lower.indexOf("not allowed") >= 0 && lower.indexOf("chatbot") >= 0) {
+				return msg + "\n\nEnable 'Private chat bot' (allowChatBot) in the SSN popup AI/LLM section, then reload.";
+			}
+			return msg;
+		}
+
+		function buildOverlayUrl() {
+			var base = location.origin + location.pathname.replace(/[^/]*$/, "");
+			var page = activePage();
+			var fileName = cleanName(page.name).replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, "-").toLowerCase() || "prompt-page";
+			var params = ["page=" + encodeURIComponent(fileName)];
+			if (bridgeRoomID) params.push("session=" + encodeURIComponent(bridgeRoomID));
+			if (bridgePassword && bridgePassword !== "false") params.push("password=" + encodeURIComponent(bridgePassword));
+			return base + "aiprompt-overlay.html?" + params.join("&");
+		}
+
+		function connectBridge() {
+			var urlParams = new URLSearchParams(location.search);
+			bridgeRoomID = urlParams.get("session") || "";
+			bridgePassword = urlParams.get("password") || "false";
+			if (!bridgeRoomID) {
+				setStatus("No session in URL. You can still build, preview, and export overlays. Add ?session=YOUR_ID to ask the AI.", "warn");
+				return;
+			}
+			bridgeReady = false;
+			bridgeFrame = document.createElement("iframe");
+			bridgeFrame.onload = function () {
+				bridgeReady = true;
+				setStatus("Connected to session " + bridgeRoomID + ". LLM provider + Private Chat Bot option must be enabled in SSN.", "ok");
+			};
+			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(bridgePassword) +
+				"&salt=vdo.ninja&label=aiprompt&view=" + encodeURIComponent(bridgeRoomID) +
+				"&scene&novideo&noaudio&cleanoutput&room=" + encodeURIComponent(bridgeRoomID);
+			bridgeFrame.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;";
+			document.body.appendChild(bridgeFrame);
+			setStatus("Connecting to session " + bridgeRoomID + "...", "warn");
+		}
+
+		function sendPrompt(requestOverride, opts) {
+			opts = opts || {};
+			syncFormToPage();
+			var page = activePage();
+			var request = (requestOverride != null) ? requestOverride : userRequest.value.trim();
+			if (!request) { setStatus("Enter a request first.", "warn"); return; }
+			if (!bridgeFrame || !bridgeFrame.contentWindow) {
+				setStatus("Add ?session=YOUR_SESSION_ID to the URL to reach the AI.", "error");
+				return;
+			}
+
+			if (!opts.isAutoFix) autoFixAttempts = 0;
+
+			var attachFlag = !!(attachScreenshot && attachScreenshot.checked);
+			var provided = Array.isArray(opts.images) ? opts.images : (opts.images ? [opts.images] : null);
+			var sentAfterBridgeWait = false;
+
+			var ensureBridgeReady = function (done) {
+				if (bridgeReady) {
+					done();
+					return;
+				}
+				sentAfterBridgeWait = true;
+				setStatus("Waiting for the session bridge before sending...", "warn");
+				var started = Date.now();
+				var waitTimer = setInterval(function () {
+					if (bridgeReady) {
+						clearInterval(waitTimer);
+						done();
+					} else if (Date.now() - started > 12000) {
+						clearInterval(waitTimer);
+						logBuilder("warn", "Sending before bridge reported ready after 12 seconds");
+						done();
+					}
+				}, 250);
+			};
+
+			var submit = function (images) {
+				var messageID = makeMessageId();
+				var prompt = buildPrompt(page, request);
+				if (requestOverride == null) userRequest.value = "";
+				var userMsg = request + ((images && images.length) ? ("\n\n[attached " + images.length + " screenshot" + (images.length > 1 ? "s" : "") + "]") : "");
+				appendConversationMessage("user", userMsg, true);
+				var assistantBody = appendConversationMessage("assistant", "Thinking…", false);
+
+				pendingResponses[messageID] = { id: messageID, body: assistantBody, text: "", chunks: 0, requestedAt: Date.now(), isAutoFix: !!opts.isAutoFix };
+				createPendingStreamView(assistantBody, pendingResponses[messageID]);
+				pendingResponses[messageID].timeoutTimer = setTimeout(function () {
+					var pending = pendingResponses[messageID];
+					if (!pending) return;
+					clearPendingTimers(pending);
+					var msg = pending.chunks ? "The AI stream started but never sent a final response." : "No AI response arrived. The session bridge or bot service may not be connected.";
+					pending.body.textContent = "Error: " + msg;
+					saveConversationMessage("assistant", "Error: " + msg);
+					delete pendingResponses[messageID];
+					logBuilder("error", msg, { target: messageID, chunks: pending.chunks, chars: pending.text.length });
+					setStatus("AI request timed out.", "error");
+				}, 90000);
+
+				var payload = { action: "chatbot", value: prompt, target: messageID, turbo: false };
+				if (images && images.length) payload.images = images;
+
+				bridgeFrame.contentWindow.postMessage({
+					sendData: { overlayNinja: payload },
+					type: "rpcs"
+				}, "*");
+				setStatus(sentAfterBridgeWait ? "AI request sent after bridge warmup." : (opts.isAutoFix ? "Auto-fix request sent." : "AI request sent."), "ok");
+			};
+
+			if (provided && provided.length) {
+				ensureBridgeReady(function () { submit(provided); });
+			} else if (attachFlag) {
+				setStatus("Capturing preview…", "warn");
+				capturePreviewDataUrl().then(function (dataUrl) { ensureBridgeReady(function () { submit([dataUrl]); }); })
+					.catch(function (err) {
+						logBuilder("warn", "Screenshot attachment failed; sending prompt without image", err);
+						setStatus("Screenshot failed: " + (err && err.message ? err.message : err) + " — sending without image.", "warn");
+						ensureBridgeReady(function () { submit(null); });
+					});
+			} else {
+				ensureBridgeReady(function () { submit(null); });
+			}
+		}
+
+		function receiveAIResponse(response, chunk) {
+			var id = response.target;
+			var pending = pendingResponses[id];
+			if (!pending) {
+				logBuilder("warn", "Received AI response for unknown target", response);
+				return;
+			}
+			var value = response.value || "";
+
+			if (chunk) {
+				pending.text += value;
+				pending.chunks += 1;
+				if (pending.chunks === 1 || pending.chunks % 20 === 0) {
+					logBuilder("log", "AI stream chunk " + pending.chunks + " for " + id + " (" + pending.text.length + " chars)");
+				}
+				updatePendingStream(pending);
+				conversationLog.scrollTop = conversationLog.scrollHeight;
+				return;
+			}
+
+			clearPendingTimers(pending);
+			var finalText = value || pending.text || "";
+			var errorMessage = parseErrorResponse(finalText);
+			if (errorMessage) {
+				var annotated = annotateErrorMessage(errorMessage);
+				logBuilder("error", "AI request failed: " + errorMessage, finalText);
+				pending.body.textContent = "Error: " + annotated;
+				saveConversationMessage("assistant", "Error: " + annotated);
+				delete pendingResponses[id];
+				setStatus("AI request failed.", "error");
+				return;
+			}
+
+			var html = extractHtml(finalText);
+			if (html) {
+				htmlEditor.value = html;
+				syncFormToPage();
+				lastAppliedFromAI = true;
+				refreshPreview();
+				var summaryIdx = finalText.indexOf("```");
+				var note = (summaryIdx > 0 ? finalText.slice(0, summaryIdx).trim() : "") || "Updated HTML applied.";
+				pending.body.textContent = note;
+				saveConversationMessage("assistant", note);
+				setStatus("HTML update applied.", "ok");
+			} else {
+				pending.body.textContent = finalText;
+				saveConversationMessage("assistant", finalText);
+				setStatus("AI response received.", "ok");
+			}
+			delete pendingResponses[id];
+		}
+
+		function exportPage() {
+			syncFormToPage();
+			var page = activePage();
+			var blob = new Blob([page.html || ""], { type: "text/html;charset=utf-8" });
+			var a = document.createElement("a");
+			var fileName = cleanName(page.name).replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, "-").toLowerCase() || "prompt-page";
+			a.href = URL.createObjectURL(blob);
+			a.download = fileName + ".html";
+			document.body.appendChild(a);
+			a.click();
+			setTimeout(function () {
+				URL.revokeObjectURL(a.href);
+				document.body.removeChild(a);
+			}, 1000);
+		}
+
+		function newPage(seed) {
+			syncFormToPage();
+			var page = defaultPage(seed);
+			if (!seed) page.name = "New prompt page";
+			state.pages.push(page);
+			state.activeId = page.id;
+			saveState();
+			loadActivePage();
+		}
+
+		function duplicatePage() {
+			syncFormToPage();
+			var current = activePage();
+			var copy = {
+				id: makeId(),
+				name: cleanName(current.name) + " copy",
+				systemPrompt: current.systemPrompt || defaultSystemPrompt,
+				html: current.html || TEMPLATES[0].src,
+				conversation: [],
+				updatedAt: Date.now()
+			};
+			state.pages.push(copy);
+			state.activeId = copy.id;
+			saveState();
+			loadActivePage();
+		}
+
+		function deletePage() {
+			if (state.pages.length <= 1) { setStatus("Keep at least one page.", "warn"); return; }
+			var current = activePage();
+			if (!confirm("Delete \"" + cleanName(current.name) + "\"?")) return;
+			var next = [];
+			for (var i = 0; i < state.pages.length; i++) {
+				if (state.pages[i].id !== current.id) next.push(state.pages[i]);
+			}
+			state.pages = next;
+			state.activeId = state.pages[0].id;
+			saveState();
+			loadActivePage();
+		}
+
+		function applyTemplate(tmpl) {
+			if (!confirm("Replace the active page's HTML with the \"" + tmpl.name + "\" template? (Existing HTML will be lost — use Duplicate first to keep it.)")) return;
+			htmlEditor.value = tmpl.src;
+			var page = activePage();
+			if (!page.conversation || !page.conversation.length) {
+				page.name = tmpl.name;
+				pageName.value = tmpl.name;
+			}
+			syncFormToPage();
+			refreshPreview();
+			renderPageList();
+			templatesModal.classList.remove("visible");
+			setStatus("Applied template: " + tmpl.name, "ok");
+		}
+
+		function renderTemplateGrid() {
+			templateGrid.innerHTML = "";
+			for (var i = 0; i < TEMPLATES.length; i++) {
+				(function (tmpl) {
+					var card = document.createElement("button");
+					card.type = "button";
+					card.className = "template-card";
+					card.innerHTML =
+						'<span class="badge">' + tmpl.id + '</span>' +
+						'<div class="title">' + tmpl.name + '</div>' +
+						'<div class="desc">' + tmpl.desc + '</div>';
+					card.addEventListener("click", function () { applyTemplate(tmpl); });
+					templateGrid.appendChild(card);
+				}(TEMPLATES[i]));
+			}
+		}
+
+		function importHtml(file) {
+			if (!file) return;
+			var reader = new FileReader();
+			reader.onload = function () {
+				syncFormToPage();
+				var page = defaultPage(TEMPLATES[0]);
+				page.name = file.name.replace(/\.(html|htm)$/i, "") || "Imported page";
+				page.html = String(reader.result || "");
+				state.pages.push(page);
+				state.activeId = page.id;
+				saveState();
+				loadActivePage();
+				setStatus("HTML imported.", "ok");
+			};
+			reader.readAsText(file);
+		}
+
+		function clearConversation() {
+			var page = activePage();
+			if (!page.conversation || !page.conversation.length) return;
+			if (!confirm("Clear this page's chat history?")) return;
+			page.conversation = [];
+			saveState();
+			renderConversation();
+		}
+
+		function copyOverlayUrl() {
+			syncFormToPage();
+			var url = buildOverlayUrl();
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(url).then(function () {
+					setStatus("Overlay URL copied: " + url, "ok");
+				}, function () {
+					prompt("Copy this overlay URL:", url);
+				});
+			} else {
+				prompt("Copy this overlay URL:", url);
+			}
+		}
+
+		function openOverlay() {
+			syncFormToPage();
+			var page = activePage();
+			var blob = new Blob([page.html || ""], { type: "text/html;charset=utf-8" });
+			var url = URL.createObjectURL(blob);
+			var win = window.open(url, "_blank");
+			if (!win) setStatus("Pop-up blocked. Allow pop-ups for this page.", "warn");
+			setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+		}
+
+		function setTab(name) {
+			currentTab = name;
+			var tabs = document.querySelectorAll(".tab");
+			for (var i = 0; i < tabs.length; i++) {
+				tabs[i].classList.toggle("active", tabs[i].getAttribute("data-tab") === name);
+			}
+			var panels = document.querySelectorAll(".tab-panel");
+			for (var j = 0; j < panels.length; j++) {
+				panels[j].classList.toggle("active", panels[j].getAttribute("data-tab") === name);
+			}
+			if (name === "preview") applyPreviewSize();
+		}
+
+		function bindEvents() {
+			el("newPage").addEventListener("click", function () { newPage(TEMPLATES[0]); });
+			el("duplicatePage").addEventListener("click", duplicatePage);
+			el("deletePage").addEventListener("click", deletePage);
+			el("openTemplates").addEventListener("click", function () { templatesModal.classList.add("visible"); });
+			el("closeTemplates").addEventListener("click", function () { templatesModal.classList.remove("visible"); });
+			el("exportPage").addEventListener("click", exportPage);
+			el("refreshPreview").addEventListener("click", refreshPreview);
+			el("sendPrompt").addEventListener("click", function () { sendPrompt(); });
+			el("reviewAndPolish").addEventListener("click", reviewAndPolish);
+			el("openSettings").addEventListener("click", function () {
+				alert("The AI runs in the Social Stream Ninja extension. Configure your LLM provider and model in SSN's popup → AI settings. Any provider that speaks the OpenAI chat-completions format works here, including local vLLM or Ollama endpoints.");
+			});
+			el("clearConversation").addEventListener("click", clearConversation);
+			el("copyOverlayUrl").addEventListener("click", copyOverlayUrl);
+			el("openOverlay").addEventListener("click", openOverlay);
+			el("importPage").addEventListener("change", function (event) {
+				importHtml(event.target.files && event.target.files[0]);
+				event.target.value = "";
+			});
+			pageName.addEventListener("input", function () { syncFormToPage(); renderPageList(); scheduleSave(); });
+			systemPrompt.addEventListener("input", function () { syncFormToPage(); scheduleSave(); });
+			htmlEditor.addEventListener("input", function () { lastAppliedFromAI = false; syncFormToPage(); scheduleSave(); schedulePreview(); });
+			userRequest.addEventListener("keydown", function (event) {
+				if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+					event.preventDefault();
+					sendPrompt();
+				}
+			});
+			previewSize.addEventListener("change", applyPreviewSize);
+
+			var tabs = document.querySelectorAll(".tab");
+			for (var i = 0; i < tabs.length; i++) {
+				tabs[i].addEventListener("click", function (e) { setTab(e.currentTarget.getAttribute("data-tab")); });
+			}
+
+			var eventBtns = document.querySelectorAll(".event-buttons button[data-event]");
+			for (var j = 0; j < eventBtns.length; j++) {
+				eventBtns[j].addEventListener("click", function (e) { sendSimulatedEvent(e.currentTarget.getAttribute("data-event")); });
+			}
+
+			el("customEventCancel").addEventListener("click", function () { customEventModal.classList.remove("visible"); });
+			el("customEventSend").addEventListener("click", function () {
+				try {
+					var parsed = JSON.parse(customEventJson.value || "null");
+					deliverToPreview(parsed);
+					customEventModal.classList.remove("visible");
+					setStatus("Custom payload sent to preview.", "ok");
+				} catch (err) {
+					logBuilder("warn", "Invalid custom payload JSON", err);
+					alert("Invalid JSON: " + err.message);
+				}
+			});
+
+			el("consoleBarDismiss").addEventListener("click", hideConsoleBar);
+			el("consoleBarFix").addEventListener("click", function () { askAiToFix(); });
+			fixErrorBtn.addEventListener("click", function () { askAiToFix(); });
+
+			window.addEventListener("message", function (event) {
+				var data = event.data || {};
+				if (data.__aiPromptError && previewFrame && event.source === previewFrame.contentWindow) {
+					showConsoleBar(data.message || "Unknown error in preview", data.stack || "");
+					return;
+				}
+				if (bridgeFrame && event.source === bridgeFrame.contentWindow) {
+					var payload = data.dataReceived && data.dataReceived.overlayNinja;
+					if (!payload) return;
+					if (payload.chatbotChunk && typeof payload.chatbotChunk.value !== "undefined") {
+						receiveAIResponse(payload.chatbotChunk, true);
+					} else if (payload.chatbotResponse && typeof payload.chatbotResponse.value !== "undefined") {
+						receiveAIResponse(payload.chatbotResponse, false);
+					}
+				}
+			});
+
+			window.addEventListener("beforeunload", function () {
+				syncFormToPage();
+				saveState();
+			});
+
+			window.addEventListener("resize", applyPreviewSize);
+		}
+
+		function askAiToFix() {
+			if (!lastIframeError) { setStatus("No error to fix yet.", "warn"); return; }
+			var msg = "The preview threw this error — please fix it and return the updated HTML:\n\n" + lastIframeError;
+			sendPrompt(msg);
+			hideConsoleBar();
+		}
+
+		state = loadState();
+		renderTemplateGrid();
+		bindEvents();
+		loadActivePage();
+		applyPreviewSize();
+		connectBridge();
+	}());
+	</script>
+</body>
+</html>

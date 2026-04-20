@@ -2213,11 +2213,13 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "poll", path: "poll.html" },
     { id: "battle", path: "battle.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
-    { id: "cohost", path: "cohost.html" },
+	{ id: "cohost", path: "cohost.html" },
     { id: "giveaway", path: "giveaway.html" },
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
+    { id: "aiprompt", path: "aiprompt.html" },
     { id: "eventsdashboard", path: "events.html" },
+	{ id: "reactions", path: "reactions.html" },
 	{ id: "flowactions", path: "actions.html" },
 	{ id: "custom-gif-commands", path: "gif.html" },
 	{ id: "spotify", path: "spotify-overlay.html" },
@@ -2870,7 +2872,7 @@ function update(response, sync = true) {
                 // A more robust way is if refreshLinks stores the raw URLs on the elements or returns them.
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
-                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
+                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
@@ -3059,7 +3061,8 @@ function handleAIProviderVisibility(provider) {
         "geminiApiKey", "geminimodel", "xaiApiKey", "xaimodel", "chatgptmodel",
         "deepseekApiKey", "deepseekmodel", "customAIEndpoint", "customAIModel",
         "openrouterApiKey", "openroutermodel", "bedrockAccessKey", "bedrockSecretKey",
-        "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey"
+        "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey",
+        "localgemmahost", "localbrowserhelp", "localgemmamodel", "localqwenmodel"
     ].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
@@ -3096,6 +3099,14 @@ function handleAIProviderVisibility(provider) {
     } else if (provider == "groq") {
         document.getElementById("groqApiKey").classList.remove("hidden");
         document.getElementById("groqmodel").classList.remove("hidden");
+    } else if (provider == "localgemma") {
+        document.getElementById("localgemmahost").classList.remove("hidden");
+        document.getElementById("localbrowserhelp").classList.remove("hidden");
+        document.getElementById("localgemmamodel").classList.remove("hidden");
+    } else if (provider == "localqwen") {
+        document.getElementById("localgemmahost").classList.remove("hidden");
+        document.getElementById("localbrowserhelp").classList.remove("hidden");
+        document.getElementById("localqwenmodel").classList.remove("hidden");
     }
 }
 
@@ -3129,7 +3140,8 @@ function collectLLMProviderTestSettings() {
         'deepseekApiKey', 'deepseekmodel', 'groqApiKey', 'groqmodel',
         'openrouterApiKey', 'openroutermodel', 'customAIEndpoint',
         'customAIModel', 'customAIApiKey', 'bedrockAccessKey',
-        'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel'
+        'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel',
+        'localgemmahost', 'localgemmamodel', 'localqwenmodel'
     ].forEach(key => {
         const input = document.querySelector(`[data-textsetting='${key}']`);
         if (input) {
@@ -3210,11 +3222,13 @@ async function testSelectedLLMProvider() {
             status.textContent = 'Failed';
             status.style.color = '#ff8a8a';
             output.textContent = formatLLMProviderTestError(response?.error || response?.message || response);
+            console.error('[LLM Test] Provider test failed:', response?.error || response?.message || response);
         }
     } catch (error) {
         status.textContent = 'Failed';
         status.style.color = '#ff8a8a';
         output.textContent = error?.message || String(error);
+        console.error('[LLM Test] Provider test threw:', error);
     } finally {
         output.style.display = 'block';
         button.disabled = false;
@@ -3722,6 +3736,7 @@ function getTargetMap() {
         'meta': 24,
         'multialerts': 25,
         'timer': 26,
+		'reactions': 27,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -3932,7 +3947,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     return true;
 }
 function handleExclusiveCases(ele, paramType, paramValue, sync) {
-    const exclusiveTypes = ['param1', 'param4', 'param5', 'param13'];
+    const exclusiveTypes = ['param1', 'param4', 'param5', 'param13', 'param25'];
     if (!exclusiveTypes.includes(paramType)) return;
 
     // Handle exclusive settings like darkmode/lightmode
@@ -3958,6 +3973,10 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
         param13: {
             'nobg': 'pagebg',
             'pagebg': 'nobg'
+        },
+        param25: {
+            'alignright': 'align=center',
+            'align=center': 'alignright'
         }
     };
 
@@ -4210,6 +4229,28 @@ function handleBothParam(ele, sync) {
     return true;
 }
 
+function updateVideoStatsSettingsVisibility(sourceValue) {
+    const sourceSelect = document.querySelector('select[data-optionsetting="videostatssource"]');
+    const source = sourceValue || (sourceSelect ? sourceSelect.value : "srt-live-server");
+    const usesPublisher = source === "srt-live-server" || source === "belabox-cloud";
+    const usesAppKey = source === "nginx-rtmp" || source === "node-media-server";
+    const usesApiKey = source === "srt-live-server";
+    const usesBasicAuth = source === "node-media-server";
+
+    document.querySelectorAll(".video-stats-publisher-field").forEach(ele => {
+        ele.classList.toggle("hidden", !usesPublisher);
+    });
+    document.querySelectorAll(".video-stats-app-field").forEach(ele => {
+        ele.classList.toggle("hidden", !usesAppKey);
+    });
+    document.querySelectorAll(".video-stats-api-key-field").forEach(ele => {
+        ele.classList.toggle("hidden", !usesApiKey);
+    });
+    document.querySelectorAll(".video-stats-basic-auth-field").forEach(ele => {
+        ele.classList.toggle("hidden", !usesBasicAuth);
+    });
+}
+
 function handleSetting(ele, sync) {
     if (!ele.dataset.setting) return false;
     
@@ -4247,6 +4288,10 @@ function handleSetting(ele, sync) {
     // Handle MIDI toggle
     if (ele.dataset.setting === "midi") {
         handleMidiToggle(ele.checked);
+    }
+
+    if (ele.dataset.setting === "videostatspoller") {
+        updateVideoStatsSettingsVisibility();
     }
     
     if (sync) {
@@ -4319,6 +4364,10 @@ function handleOptionSetting(ele, sync) {
             document.getElementById("multipleChoiceOptions").classList.add("hidden");
         }
     }
+
+    if (settingValue === "videostatssource") {
+        updateVideoStatsSettingsVisibility(ele.value);
+    }
     
     // Handle AI Provider settings
     if (settingValue === "aiProvider") {
@@ -4329,7 +4378,7 @@ function handleOptionSetting(ele, sync) {
 			'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
 			'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive',
 			'openrouterApiKey', 'openroutermodel', 'groqApiKey', 'groqmodel',
-			'customAIApiKey'
+			'customAIApiKey', 'localgemmahost', 'localbrowserhelp', 'localgemmamodel', 'localqwenmodel'
 		];
         
         aiProviderElements.forEach(id => {
@@ -4372,6 +4421,16 @@ function handleOptionSetting(ele, sync) {
             case 'groq':
                 document.getElementById("groqApiKey").classList.remove("hidden");
                 document.getElementById("groqmodel").classList.remove("hidden");
+                break;
+            case 'localgemma':
+                document.getElementById("localgemmahost").classList.remove("hidden");
+                document.getElementById("localbrowserhelp").classList.remove("hidden");
+                document.getElementById("localgemmamodel").classList.remove("hidden");
+                break;
+            case 'localqwen':
+                document.getElementById("localgemmahost").classList.remove("hidden");
+                document.getElementById("localbrowserhelp").classList.remove("hidden");
+                document.getElementById("localqwenmodel").classList.remove("hidden");
                 break;
             case 'custom':
                 document.getElementById("customAIEndpoint").classList.remove("hidden");
@@ -5437,7 +5496,9 @@ function refreshLinks(){
       'giveawaylink': 'giveaway',
       'creditslink': 'credits',
       'privatechatbotlink': 'privatechatbot',
+      'aipromptlink': 'aiprompt',
       'eventsdashboardlink': 'eventsdashboard',
+      'reactionslink': 'reactions',
       'custom-gif-commandslink': 'custom-gif-commands',
 	  'scoreboardlink': 'scoreboard',
 	  'spotifylink': 'spotify',
@@ -5474,6 +5535,56 @@ function refreshLinks(){
   }
 
   syncAllOverlayPreviews();
+}
+
+function flushDeferredCustomCssSettings() {
+	const cssTextareas = document.querySelectorAll("textarea[data-textparam1='cssb64'], textarea[data-textparam2='cssb64']");
+	for (var i = 0; i < cssTextareas.length; i++) {
+		const ele = cssTextareas[i];
+		if (ele.dataset.pendingSave !== "1") {
+			continue;
+		}
+		const paramType = ele.dataset.textparam1 ? "textparam1" : (ele.dataset.textparam2 ? "textparam2" : null);
+		const setting = paramType ? ele.dataset[paramType] : null;
+		if (!paramType || !setting) {
+			continue;
+		}
+		try {
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",
+				type: paramType,
+				target: ele.dataset.target || null,
+				setting: setting,
+				value: ele.value || ""
+			});
+			ele.dataset.lastCommittedValue = ele.value || "";
+			delete ele.dataset.pendingSave;
+		} catch (e) {
+			console.warn("Failed to flush deferred custom CSS setting", e);
+		}
+	}
+}
+
+function setupDeferredCustomCssFlush() {
+	const cssTextareas = document.querySelectorAll("textarea[data-textparam1='cssb64'], textarea[data-textparam2='cssb64']");
+	for (var i = 0; i < cssTextareas.length; i++) {
+		const ele = cssTextareas[i];
+		ele.addEventListener("input", function () {
+			this.dataset.pendingSave = "1";
+		});
+		ele.addEventListener("change", function () {
+			this.dataset.lastCommittedValue = this.value || "";
+			delete this.dataset.pendingSave;
+		});
+	}
+
+	window.addEventListener("pagehide", flushDeferredCustomCssSettings);
+	window.addEventListener("beforeunload", flushDeferredCustomCssSettings);
+	document.addEventListener("visibilitychange", function () {
+		if (document.hidden) {
+			flushDeferredCustomCssSettings();
+		}
+	});
 }
 
 function handleRangeInput(event) {
@@ -6461,139 +6572,76 @@ var KokoroTTS = false;
 var kokoroDownloadInProgress  = null;
 var kokoroTtsInstance = null;
 
+function getKokoroAssets() {
+	return window.SSNKokoroAssets || {
+		modelId: "onnx-community/Kokoro-82M-v1.0-ONNX",
+		getRemoteHost: function() {
+			return "https://largefiles.socialstream.ninja/";
+		},
+		getPreferredDtype: function(device) {
+			return device === "wasm" ? "q8" : "fp32";
+		}
+	};
+}
+
+function logKokoroProgress(progress) {
+	if (!progress) {
+		return;
+	}
+	if ((progress.status === "progress_total" || progress.status === "progress") && progress.total) {
+		const percentage = (progress.loaded / progress.total) * 100;
+		console.log("Kokoro download:", percentage.toFixed(1) + "%");
+	}
+}
+
+async function createKokoroTtsInstance(device) {
+	const kokoroAssets = getKokoroAssets();
+	return KokoroTTS.from_pretrained(kokoroAssets.modelId, {
+		dtype: kokoroAssets.getPreferredDtype(device),
+		device,
+		progress_callback: logKokoroProgress
+	});
+}
+
+async function initKokoroWithFallback(preferredDevice) {
+	const attempts = [preferredDevice];
+	let lastError = null;
+
+	if (preferredDevice === "webgpu") {
+		attempts.push("wasm", "auto");
+	}
+
+	for (const device of attempts) {
+		try {
+			console.log("Initializing Kokoro TTS with device:", device);
+			return await createKokoroTtsInstance(device);
+		} catch (error) {
+			lastError = error;
+			console.error(error);
+		}
+	}
+
+	throw lastError || new Error("Unable to initialize Kokoro TTS");
+}
+
 async function initKokoro() {
 	if (ssapp) return false;
 	if (kokoroDownloadInProgress) return false;
 	
 	if (!KokoroTTS) {
-	
-		async function openDB() {
-			return new Promise((resolve, reject) => {
-				const request = indexedDB.open('kokoroTTS', 1);
-				request.onerror = () => reject(request.error);
-				request.onsuccess = () => resolve(request.result);
-				request.onupgradeneeded = (event) => {
-					const db = event.target.result;
-					if (!db.objectStoreNames.contains('models')) {
-						db.createObjectStore('models');
-					}
-				};
-			});
-		}
-
-		async function getCachedModel() {
-			const db = await openDB();
-			return new Promise((resolve, reject) => {
-				const transaction = db.transaction('models', 'readonly');
-				const store = transaction.objectStore('models');
-				const request = store.get('kokoro-82M-v1.0');
-				request.onerror = () => reject(request.error);
-				request.onsuccess = () => resolve(request.result);
-			});
-		}
-
-		async function cacheModel(modelData) {
-			const db = await openDB();
-			return new Promise((resolve, reject) => {
-				const transaction = db.transaction('models', 'readwrite');
-				const store = transaction.objectStore('models');
-				const request = store.put(modelData, 'kokoro-82M-v1.0');
-				request.onerror = () => reject(request.error);
-				request.onsuccess = () => resolve();
-			});
-		}
-	
 		try {
+			const kokoroAssets = getKokoroAssets();
 			kokoroDownloadInProgress = true;
+			window.SSN_KOKORO_REMOTE_HOST = kokoroAssets.getRemoteHost();
 			console.log("Loading Kokoro dependencies...");
+			console.log("Using Kokoro asset host:", window.SSN_KOKORO_REMOTE_HOST);
 			const module = window.location.href.startsWith("chrome-extension://") ? await import('./thirdparty/kokoro-bundle.es.ext.js') : await import('./thirdparty/kokoro-bundle.es.js');
 			KokoroTTS = module.KokoroTTS;
 			TextSplitterStream = module.TextSplitterStream;
 			const detectWebGPU = module.detectWebGPU;
-			
-			// Initialize IndexedDB handling
-			const DB_NAME = 'kokoroTTS';
-			const STORE_NAME = 'models';
-			const MODEL_KEY = 'kokoro-82M-v1.0';
-			
 			let device = (await detectWebGPU()) ? "webgpu" : "wasm";
 			console.log("Using device:", device);
-			
-			// Check cache first
-			console.log("Checking cache for model...");
-			let modelData = await getCachedModel();
-			
-			if (!modelData) {
-				console.log("Downloading model...");
-				const modelUrl = 'https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx';
-				const response = await fetch(modelUrl);
-				const total = +response.headers.get('Content-Length');
-				let loaded = 0;
-				
-				const reader = response.body.getReader();
-				const chunks = [];
-				
-				while (true) {
-					const {done, value} = await reader.read();
-					if (done) break;
-					
-					chunks.push(value);
-					loaded += value.length;
-					
-					const percentage = (loaded / total) * 100;
-					console.log(`Downloading model: ${percentage.toFixed(1)}%`);
-				}
-				
-				const modelBlob = new Blob(chunks);
-				modelData = new Uint8Array(await modelBlob.arrayBuffer());
-				
-				console.log("Caching model...");
-				await cacheModel(modelData);
-			} else {
-				console.log("Loading model from cache");
-			}
-			
-			console.log("Initializing Kokoro TTS...");
-			try {
-				const customLoadFn = async () => modelData;
-				kokoroTtsInstance = await KokoroTTS.from_pretrained(
-					"onnx-community/Kokoro-82M-v1.0-ONNX",
-					{
-						dtype: device === "wasm" ? "q8" : "fp32",
-						device,
-						load_fn: customLoadFn
-					}
-				);
-
-			} catch(e){
-				console.error(e);
-				if (device === "webgpu"){
-					device = "wasm";
-					try {
-						const customLoadFn = async () => modelData;
-						kokoroTtsInstance = await KokoroTTS.from_pretrained(
-							"onnx-community/Kokoro-82M-v1.0-ONNX",
-							{
-								dtype: device === "wasm" ? "q8" : "fp32",
-								device,
-								load_fn: customLoadFn
-							}
-						);
-					} catch(e){
-						console.error(e);
-						device = "auto";
-						const customLoadFn = async () => modelData;
-						kokoroTtsInstance = await KokoroTTS.from_pretrained(
-							"onnx-community/Kokoro-82M-v1.0-ONNX",
-							{
-								dtype: "q8", //device === "wasm" ? "q8" : "fp16",
-								device,
-								load_fn: customLoadFn
-							}
-						);
-					}
-				}
-			}
+			kokoroTtsInstance = await initKokoroWithFallback(device);
 			
 			console.log("Kokoro TTS ready!");
 			kokoroDownloadInProgress = false;
@@ -8238,6 +8286,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
+
+	updateVideoStatsSettingsVisibility();
+
+	setupDeferredCustomCssFlush();
 	
 	// Override the language selector handler to reload the page
 	const languageSelectOverride = document.querySelector('select[data-optionsetting="translationlanguage"]');

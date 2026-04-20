@@ -16,7 +16,6 @@ const DEFAULT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.go
 const SUBSCRIBER_CACHE_KEY = 'youtube.subscriberCache';
 const SUBSCRIBER_CACHE_LIMIT = 200;
 const SUBSCRIBER_POLL_INTERVAL = 120000;
-const CAPTURE_EVENTS_KEY = 'settings.captureevents';
 
 const AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
 
@@ -1496,24 +1495,12 @@ export class YoutubePlugin extends BasePlugin {
     }
   }
 
-  shouldCaptureStreamEvents() {
-    const stored = storage.get(CAPTURE_EVENTS_KEY, null);
-    if (stored === null || stored === undefined) {
-      return true;
-    }
-    return Boolean(stored);
-  }
-
   startSubscriberWatcher() {
     if (this.subscriberFeatureUnavailable) {
       this.refreshSubscriberCapability();
       if (this.subscriberFeatureUnavailable) {
         return;
       }
-    }
-
-    if (!this.shouldCaptureStreamEvents()) {
-      return;
     }
     if (this.state !== 'connected') {
       return;
@@ -1522,7 +1509,7 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   scheduleSubscriberPoll(delay = SUBSCRIBER_POLL_INTERVAL) {
-    if (this.subscriberFeatureUnavailable || !this.shouldCaptureStreamEvents()) {
+    if (this.subscriberFeatureUnavailable) {
       return;
     }
     if (this.subscriberPollTimer) {
@@ -1535,7 +1522,7 @@ export class YoutubePlugin extends BasePlugin {
       } catch (err) {
         this.debugLog('YouTube subscriber poll failed', { error: err?.message || err });
       }
-      if (this.state === 'connected' && !this.subscriberFeatureUnavailable && this.shouldCaptureStreamEvents()) {
+      if (this.state === 'connected' && !this.subscriberFeatureUnavailable) {
         this.scheduleSubscriberPoll(SUBSCRIBER_POLL_INTERVAL);
       }
     }, Math.max(0, delay));
@@ -1554,10 +1541,6 @@ export class YoutubePlugin extends BasePlugin {
     }
     if (!this.isTokenValid()) {
       return;
-    }
-    if (!this.shouldCaptureStreamEvents()) {
-      return;
-
     }
 
     const headers = {
@@ -1811,6 +1794,5 @@ export class YoutubePlugin extends BasePlugin {
     return super.shouldAutoConnect() && this.isTokenValid();
   }
 }
-
 
 

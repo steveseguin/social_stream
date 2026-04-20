@@ -1173,6 +1173,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Disables chat, pin, and feature capabilities"
           },
           {
+            "key": "featuredmode",
+            "displayName": "featuredmode",
+            "aliases": [
+              "featuredmode"
+            ],
+            "values": "boolean",
+            "description": "Connects dock.html to the featured-message feed so it only receives selected messages"
+          },
+          {
             "key": "chatmode",
             "displayName": "chatmode",
             "aliases": [

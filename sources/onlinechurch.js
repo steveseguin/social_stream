@@ -66,18 +66,22 @@ try {
 	}
 	
 	const messageHistory = [];
-	const TWO_MINUTES = 2 * 60 * 1000;
+	const MESSAGE_HISTORY_TTL = 2 * 60 * 1000;
+	const STALE_MESSAGE_AGE = 90 * 1000;
+	const MESSAGE_SELECTOR = "[data-testid='messageContainer'], [data-testid='chat-message-container']";
+	var activeObserver = null;
+	var observedChatRoot = null;
 
 	function checkMessage(message) {
 		const now = Date.now();
-		messageHistory.forEach((entry, index) => {
-			if (now - entry.timestamp > TWO_MINUTES) {
-				messageHistory.splice(index, 1);
+		for (let i = messageHistory.length - 1; i >= 0; i--) {
+			if (now - messageHistory[i].timestamp > MESSAGE_HISTORY_TTL) {
+				messageHistory.splice(i, 1);
 			}
-		});
+		}
 		
 		const isDuplicate = messageHistory.some(entry => 
-			entry.content === message && now - entry.timestamp <= TWO_MINUTES
+			entry.content === message && now - entry.timestamp <= MESSAGE_HISTORY_TTL
 		);
 		
 		if (!isDuplicate) {
@@ -86,6 +90,191 @@ try {
 		}
 		return true;
 	}
+
+	function normalizeMessageElement(element){
+		if (!element || element.nodeType !== 1){
+			return null;
+		}
+		if (element.matches?.("[data-testid='messageContainer']")){
+			return element;
+		}
+		if (element.matches?.("[data-testid='chat-message-container']")){
+			return element.closest("[data-testid='messageContainer']") || element;
+		}
+		var direct = element.querySelector?.("[data-testid='messageContainer']");
+		if (direct){
+			return direct;
+		}
+		var nested = element.querySelector?.("[data-testid='chat-message-container']");
+		if (nested){
+			return nested.closest("[data-testid='messageContainer']") || nested;
+		}
+		return null;
+	}
+
+	function getMessageElementsFromNode(node){
+		var results = [];
+		var seen = new Set();
+		var pushIfValid = function(element){
+			var normalized = normalizeMessageElement(element);
+			if (!normalized || seen.has(normalized)){
+				return;
+			}
+			seen.add(normalized);
+			results.push(normalized);
+		};
+		pushIfValid(node);
+		if (node && node.nodeType === 1 && node.querySelectorAll){
+			node.querySelectorAll(MESSAGE_SELECTOR).forEach(pushIfValid);
+		}
+		return results;
+	}
+
+	function markExistingMessages(target){
+		if (!target || !target.querySelectorAll){
+			return;
+		}
+		target.querySelectorAll(MESSAGE_SELECTOR).forEach(function(element){
+			var normalized = normalizeMessageElement(element);
+			if (normalized){
+				normalized.ignore = true;
+				rememberMessageElement(normalized);
+			}
+		});
+	}
+
+	function getChatName(ele){
+		var selectors = [
+			"[data-testid='chat-message-container'] .flex.items-center p span:not([data-testid])",
+			"[data-testid='chat-message-container'] .flex.items-center p > span:first-child",
+			"[class^='senderName_name']"
+		];
+		for (var i = 0; i < selectors.length; i++){
+			try {
+				var node = ele.querySelector(selectors[i]);
+				var value = escapeHtml(node?.textContent || "").trim();
+				if (value){
+					return value;
+				}
+			} catch(e){}
+		}
+		return "";
+	}
+
+	function isTimeLabel(text){
+		if (!text){
+			return false;
+		}
+		return /^(just now|now|\d+\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks))$/i.test(text.trim());
+	}
+
+	function parseMessageAge(text){
+		if (!text){
+			return null;
+		}
+		text = text.replace(/\s+/g, " ").trim().toLowerCase();
+		if (text === "now" || text === "just now"){
+			return 0;
+		}
+		var match = text.match(/^(\d+)\s*(s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|week|weeks)$/i);
+		if (!match){
+			return null;
+		}
+		var value = parseInt(match[1], 10);
+		if (!Number.isFinite(value)){
+			return null;
+		}
+		var unit = match[2].toLowerCase();
+		if (unit === "s" || unit.indexOf("sec") === 0 || unit.indexOf("second") === 0){
+			return value * 1000;
+		}
+		if (unit === "m" || unit.indexOf("min") === 0 || unit.indexOf("minute") === 0){
+			return value * 60 * 1000;
+		}
+		if (unit === "h" || unit.indexOf("hr") === 0 || unit.indexOf("hour") === 0){
+			return value * 60 * 60 * 1000;
+		}
+		if (unit === "d" || unit.indexOf("day") === 0){
+			return value * 24 * 60 * 60 * 1000;
+		}
+		if (unit === "w" || unit.indexOf("week") === 0){
+			return value * 7 * 24 * 60 * 60 * 1000;
+		}
+		return null;
+	}
+
+	function getMessageAge(ele){
+		if (!ele || !ele.querySelectorAll){
+			return null;
+		}
+		var nodes = [];
+		try {
+			nodes = ele.querySelectorAll("time, span, p, div");
+		} catch(e){
+			return null;
+		}
+		for (var i = 0; i < nodes.length; i++){
+			var text = "";
+			try {
+				text = (nodes[i].textContent || "").replace(/\s+/g, " ").trim();
+			} catch(e){}
+			if (!text || text.length > 24){
+				continue;
+			}
+			var age = parseMessageAge(text);
+			if (age !== null){
+				return age;
+			}
+		}
+		return null;
+	}
+
+	function isStaleMessage(ele){
+		var age = getMessageAge(ele);
+		return age !== null && age > STALE_MESSAGE_AGE;
+	}
+
+	function getChatMessage(ele, chatname){
+		var selector = "[data-testid='chat-message-container'] p, [class^='messageBody_textWrapper'] > p";
+		var nodes = [];
+		try {
+			nodes = ele.querySelectorAll(selector);
+		} catch(e){}
+		for (var i = 0; i < nodes.length; i++){
+			try {
+				var node = nodes[i];
+				if (!node){
+					continue;
+				}
+				if (node.querySelector?.("[data-testid='senderName-label']")){
+					continue;
+				}
+				var text = getAllContentNodes(node).trim();
+				if (!text){
+					continue;
+				}
+				if ((chatname && text === chatname) || isTimeLabel(text)){
+					continue;
+				}
+				return text;
+			} catch(e){}
+		}
+		return "";
+	}
+
+	function rememberMessageElement(ele){
+		try {
+			var chatname = getChatName(ele).trim();
+			if (!chatname){
+				return;
+			}
+			var chatmessage = getChatMessage(ele, chatname).trim();
+			if (!chatmessage){
+				return;
+			}
+			checkMessage(chatname+"::"+chatmessage);
+		} catch(e){}
+	}
 	
 	async function processMessage(ele){	// twitch
 	
@@ -93,19 +282,18 @@ try {
 		//console.log(ele);
 		
 		try {
-			
-			if (ele.nextSibling || !ele.isConnected){
+			ele = normalizeMessageElement(ele);
+			if (!ele || !ele.isConnected){
 				return;
 			}
-			
-		  if (!ele.querySelector("[data-testid='message-timeWrapper']") || (ele.querySelector("[data-testid='message-timeWrapper']").textContent !== "now")){
-			return;  
-		  }
+			if (isStaleMessage(ele)){
+				return;
+			}
 			
 		  var chatsticker = false;
 		  var chatmessage = "";
 		  var nameColor = "";
-		  var chatname = escapeHtml(ele.querySelector("[class^='senderName_name']").textContent);
+		  var chatname = getChatName(ele);
 		  
 		  chatname = chatname.trim();
 		  if (!chatname){return;}
@@ -113,6 +301,7 @@ try {
 		  var chatbadges = [];
 		  var hasDonation = '';
 		  var contentimg = "";
+		  var membership = "";
 		  
 		  ele.querySelectorAll("[class^='senderName_iconWrapper'] svg").forEach(badge=>{
 			try {
@@ -129,14 +318,13 @@ try {
 				}
 			} catch(e){  }
 		  });
-		  
-		  
-		  
 		  try {
-			var eleContent = ele.querySelector("[class^='messageBody_textWrapper'] > p");
-			chatmessage = getAllContentNodes(eleContent).trim();
-		  } catch(e){ // donation?
-		  }
+			membership = escapeHtml(ele.querySelector("[data-testid='senderName-label']")?.textContent || "").trim();
+		  } catch(e){}
+		  
+		  
+		  
+		  chatmessage = getChatMessage(ele, chatname);
 		 
 		  if (chatmessage){
 			 chatmessage = chatmessage.trim();
@@ -167,7 +355,7 @@ try {
 	  data.chatimg = chatimg;
 	  data.contentimg = contentimg;
 	  data.hasDonation = hasDonation;
-	  data.membership = "";
+	  data.membership = membership;
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "onlinechurch";
 	  
@@ -208,6 +396,7 @@ try {
 	var settings = {};
 	// settings.textonlymode
 	// settings.captureevents
+	var lastViewerCount = null;
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
@@ -216,6 +405,91 @@ try {
 		}
 	});
 
+	function parseViewerCount(value){
+		if (!value && value !== 0){
+			return null;
+		}
+
+		var raw = String(value).replace(/,/g, "").trim().toUpperCase();
+		if (!raw){
+			return null;
+		}
+
+		var multiplier = 1;
+		if (raw.endsWith("K")){
+			multiplier = 1000;
+			raw = raw.slice(0, -1);
+		} else if (raw.endsWith("M")){
+			multiplier = 1000000;
+			raw = raw.slice(0, -1);
+		} else if (raw.endsWith("B")){
+			multiplier = 1000000000;
+			raw = raw.slice(0, -1);
+		}
+
+		raw = raw.replace(/[^\d.]/g, "");
+		if (!raw){
+			return null;
+		}
+
+		var parsed = parseFloat(raw);
+		if (!Number.isFinite(parsed)){
+			return null;
+		}
+
+		return Math.round(parsed * multiplier);
+	}
+
+	function getViewerCountFromDom(){
+		var selectors = [
+			"[data-testid='mediaHeader-occupancy']",
+			"[data-testid='mediaHeader'] [class*='ViewerCount']"
+		];
+
+		for (var i = 0; i < selectors.length; i++){
+			try {
+				var node = document.querySelector(selectors[i]);
+				var parsed = parseViewerCount(node && node.textContent);
+				if (Number.isFinite(parsed)){
+					return parsed;
+				}
+			} catch(e){}
+		}
+
+		return null;
+	}
+
+	function sendViewerCount(count){
+		try {
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				({message:{
+						type: "onlinechurch",
+						event: "viewer_update",
+						meta: count
+					}
+				}),
+				function () {}
+			);
+		} catch(e){}
+	}
+
+	function checkViewers(forceUpdate){
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)){
+			return;
+		}
+
+		var count = getViewerCountFromDom();
+		if (count === null){
+			count = 0;
+		}
+
+		if (forceUpdate || lastViewerCount !== count){
+			lastViewerCount = count;
+			sendViewerCount(count);
+		}
+	}
+	
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			
@@ -223,9 +497,19 @@ try {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].ignore){continue;}
-							mutation.addedNodes[i].ignore=true;
-							processMessage(mutation.addedNodes[i]);
+							var messages = getMessageElementsFromNode(mutation.addedNodes[i]);
+							if (!messages.length){continue;}
+							if (messages.length > 1 && !mutation.addedNodes[i].matches?.(MESSAGE_SELECTOR)){
+								messages.forEach(function(message){
+									message.ignore = true;
+								});
+								continue;
+							}
+							messages.forEach(function(message){
+								if (message.ignore){return;}
+								message.ignore = true;
+								processMessage(message);
+							});
 								
 						} catch(e){}
 					}
@@ -233,38 +517,35 @@ try {
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		markExistingMessages(target);
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+		if (activeObserver){
+			try {
+				activeObserver.disconnect();
+			} catch(e){}
+		}
+		activeObserver = new MutationObserver(onMutationsObserved);
+		activeObserver.observe(target, config);
 	}
 	
 	console.log("Social Stream injected");
 	
 	var checkReady = setInterval(function(){
 		
-		var mainChat = document.querySelector("#publicchat [data-testid='feed-objectList']");
+		var mainChat = document.querySelector("#publicchat");
 		if (mainChat){ // just in case 
-			if (mainChat.set){
+			if (observedChatRoot === mainChat && activeObserver && mainChat.isConnected){
 				return;
 			}
 			console.log("Social Stream Start");
-			mainChat.set = true;
-			
-			setTimeout(()=>{
-				var clear = document.querySelector("#publicchat [data-testid='feed-objectList']");
-				if (clear){
-					for (var i = 0;i<clear.length;i++){
-						clear[i].ignore = true; // don't let already loaded messages to re-load.
-						//console.log("doing what I shouldn't be doing?");
-						//processMessage(clear[i]);
-					}
-					//console.log("Social Stream ready to go");
-					onElementInserted(document.querySelector("#publicchat [data-testid='feed-objectList']"));
-				}
-			},1000);
+			observedChatRoot = mainChat;
+			onElementInserted(mainChat);
 		} 
 	},500);
+
+	setTimeout(function(){checkViewers(true);}, 2500);
+	setInterval(function(){checkViewers(false);}, 10000);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
 	try {

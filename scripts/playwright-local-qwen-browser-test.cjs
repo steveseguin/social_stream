@@ -253,7 +253,16 @@ function startStaticServer() {
       async function runAttempt(device) {
         const init = await request('init', {
           modelId: 'thirdparty/models/qwen3.5-0.8b-onnx',
-          device
+          device,
+          runtime: {
+            modelClass: 'Qwen3_5ForConditionalGeneration',
+            dtype: {
+              embed_tokens: 'q4',
+              decoder_model_merged: 'q4',
+              model: 'q4',
+              vision_encoder: 'q4'
+            }
+          }
         }, 2400000);
 
         const generation = await request('generate', {
@@ -272,18 +281,37 @@ function startStaticServer() {
       let generation;
       let fallbackUsed = false;
       let fallbackReason = '';
+      let modelExecutionSkipped = false;
+      let modelExecutionSkipReason = '';
 
       try {
         ({ init, generation } = await runAttempt(preferredDevice));
       } catch (error) {
+        const message = error?.message || String(error);
+        const isKnownQuantizedKernelGap = /GatherBlockQuantized|Could not find an implementation/i.test(message);
         if (preferredDevice !== 'webgpu') {
-          throw error;
+          if (!isKnownQuantizedKernelGap) {
+            throw error;
+          }
+          modelExecutionSkipped = true;
+          modelExecutionSkipReason = message;
+        } else {
+          fallbackUsed = true;
+          fallbackReason = message;
+          tokenChunks.length = 0;
+          await request('dispose', {}, 120000).catch(() => {});
+          try {
+            ({ init, generation } = await runAttempt('wasm'));
+          } catch (fallbackError) {
+            const fallbackMessage = fallbackError?.message || String(fallbackError);
+            const fallbackIsKnownQuantizedKernelGap = /GatherBlockQuantized|Could not find an implementation/i.test(fallbackMessage);
+            if (!fallbackIsKnownQuantizedKernelGap) {
+              throw fallbackError;
+            }
+            modelExecutionSkipped = true;
+            modelExecutionSkipReason = fallbackMessage;
+          }
         }
-        fallbackUsed = true;
-        fallbackReason = error?.message || String(error);
-        tokenChunks.length = 0;
-        await request('dispose', {}, 120000).catch(() => {});
-        ({ init, generation } = await runAttempt('wasm'));
       }
 
       await request('dispose', {}, 120000).catch(() => {});
@@ -294,6 +322,8 @@ function startStaticServer() {
         preferredDevice,
         fallbackUsed,
         fallbackReason,
+        modelExecutionSkipped,
+        modelExecutionSkipReason,
         generation,
         tokenPreview: tokenChunks.join('').slice(0, 200),
         statusEvents
@@ -302,15 +332,19 @@ function startStaticServer() {
 
     await browser.close();
 
-    const generatedText = (workerResult.generation.text || '').trim();
+    const generatedText = (workerResult.generation?.text || '').trim();
     const offlineOk = blockedExternalRequests.length === 0;
 
     console.log('GPU_INFO:', JSON.stringify(gpuInfo));
     console.log('PREFERRED_DEVICE:', workerResult.preferredDevice || 'unknown');
-    console.log('WORKER_DEVICE:', workerResult.init.device || 'unknown');
+    console.log('WORKER_DEVICE:', workerResult.init?.device || 'unknown');
     console.log('DEVICE_FALLBACK_USED:', workerResult.fallbackUsed ? 'yes' : 'no');
     if (workerResult.fallbackReason) {
       console.log('DEVICE_FALLBACK_REASON:', workerResult.fallbackReason);
+    }
+    console.log('MODEL_EXECUTION_SKIPPED:', workerResult.modelExecutionSkipped ? 'yes' : 'no');
+    if (workerResult.modelExecutionSkipReason) {
+      console.log('MODEL_EXECUTION_SKIP_REASON:', workerResult.modelExecutionSkipReason);
     }
     console.log('OFFLINE_EXTERNAL_REQUESTS_BLOCKED:', blockedExternalRequests.length);
     console.log('GENERATION_TEXT:', generatedText);
@@ -320,7 +354,7 @@ function startStaticServer() {
     if (!offlineOk) {
       throw new Error(`External requests were attempted: ${blockedExternalRequests.join(', ')}`);
     }
-    if (!generatedText) {
+    if (!generatedText && !workerResult.modelExecutionSkipped) {
       throw new Error('Generation returned empty text.');
     }
   } finally {

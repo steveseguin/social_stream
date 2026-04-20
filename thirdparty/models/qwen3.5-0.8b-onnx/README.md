@@ -4,9 +4,9 @@ This folder is the local runtime target for the in-browser cohost provider:
 
 - Provider: `Local Qwen 3.5 (Browser)` in `cohost.html`
 - Runtime: `thirdparty/transformersjs/` (fully local)
-- Worker: `cohost-local-qwen-worker.js`
+- Worker: `local-browser-model-worker.js` (`cohost-local-qwen-worker.js` is a compatibility shim)
 
-Populate this folder with the ONNX artifacts from `onnx-community/Qwen3.5-0.8B-ONNX`.
+Mirror the quantized Qwen 3.5 ONNX export into this folder or serve the same folder structure from your own asset host.
 
 Expected files:
 
@@ -24,4 +24,6 @@ Expected files:
 - `onnx/vision_encoder_q4.onnx`
 - `onnx/vision_encoder_q4.onnx_data`
 
-Use `scripts/setup-local-qwen35-browser.ps1` to fetch these files into this folder.
+Use `scripts/setup-local-qwen35-browser.ps1` to fetch these files from your self-hosted asset origin into this folder.
+
+The local browser providers are configured for self-hosted assets only. Do not point them at Hugging Face.

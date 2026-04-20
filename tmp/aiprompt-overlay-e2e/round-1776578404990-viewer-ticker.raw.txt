@@ -1,0 +1,181 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SSN Viewer Count Bar</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.75);
+    --bar-text: #ffffff;
+    --bar-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --bar-font-size: 18px;
+    --bar-padding: 10px 20px;
+    --bar-radius: 8px;
+    --bar-gap: 18px;
+    --bar-total-color: #ffcc00;
+    --bar-separator: #555555;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--bar-font);
+    font-size: var(--bar-font-size);
+    color: var(--bar-text);
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #viewer-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bar-bg);
+    border-radius: var(--bar-radius);
+    padding: var(--bar-padding);
+    display: flex;
+    align-items: center;
+    gap: var(--bar-gap);
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: opacity 0.3s ease;
+  }
+
+  .platform-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .platform-name {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    opacity: 0.85;
+    letter-spacing: 0.5px;
+  }
+
+  .platform-num {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .separator {
+    width: 1px;
+    height: 24px;
+    background: var(--bar-separator);
+    flex-shrink: 0;
+  }
+
+  .total-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    color: var(--bar-total-color);
+  }
+
+  .total-label {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+  }
+
+  .total-num {
+    font-weight: 700;
+    font-size: 1.15em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Fade-in animation */
+  #viewer-bar {
+    animation: fadeIn 0.5s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="viewer-bar"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "viewer_bar_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  function handlePayload(data) {
+    if (data && data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
+      renderBar(data.meta);
+    }
+  }
+
+  function renderBar(meta) {
+    var bar = document.getElementById("viewer-bar");
+    if (!bar) return;
+
+    var platforms = Object.keys(meta).sort();
+    var total = 0;
+    var html = "";
+
+    for (var i = 0; i < platforms.length; i++) {
+      var p = platforms[i];
+      var count = parseInt(meta[p], 10) || 0;
+      total += count;
+
+      if (i > 0) {
+        html += '<div class="separator"></div>';
+      }
+
+      html += '<div class="platform-count">';
+      html += '<span class="platform-name">' + escapeHTML(p) + '</span>';
+      html += '<span class="platform-num">' + count.toLocaleString() + '</span>';
+      html += '</div>';
+    }
+
+    html += '<div class="separator"></div>';
+    html += '<div class="total-count">';
+    html += '<span class="total-label">Total</span>';
+    html += '<span class="total-num">' + total.toLocaleString() + '</span>';
+    html += '</div>';
+
+    bar.innerHTML = html;
+  }
+
+  function escapeHTML(str) {
+    var div = document.createElement("div");
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```
