@@ -7,7 +7,8 @@
         channel: '',
         streamId: '',
         pollMs: 3000,
-        replayHistory: false
+        replayHistory: false,
+        useSse: true
     };
     const READY_STATE = {
         CONNECTING: 0,
@@ -17,6 +18,9 @@
     };
     const MAX_SEEN_IDS = 2000;
     const DIRECT_FETCH_ACCEPT = 'application/json,text/plain;q=0.9,*/*;q=0.8';
+    const RUMBLE_CHAT_API_BASE = 'https://web7.rumble.com/chat/api';
+    const SSE_BATCH_TIMEOUT_MS = 25000;
+    const SSE_BATCH_MAX_EVENTS = 25;
 
     const els = {};
     const state = {
@@ -38,6 +42,13 @@
         lastSelectedLabel: '',
         warnedStreamFallbackFor: '',
         warnedMissingLivestreams: false,
+        sseActive: false,
+        sseStreamId: '',
+        sseToken: 0,
+        sseTimer: null,
+        sseUsers: {},
+        sseFailedStreamId: '',
+        sseLoggedConnected: false,
         consecutiveErrors: 0
     };
     const websocketProxy = {
@@ -190,6 +201,14 @@
             return '';
         }
         return 'https://rumble.com/chat/popup/' + encodeURIComponent(streamId);
+    }
+
+    function buildChatStreamUrl(streamId) {
+        const normalized = normalizeStreamId(streamId);
+        if (!normalized || !/^\d+$/.test(normalized)) {
+            return '';
+        }
+        return RUMBLE_CHAT_API_BASE + '/chat/' + encodeURIComponent(normalized) + '/stream';
     }
 
     function clampPollMs(value) {
@@ -631,6 +650,120 @@
         return payload;
     }
 
+    function buildSseMessageKey(streamId, item) {
+        return [
+            'sse_chat',
+            streamId || '',
+            normalizeText(item && item.id),
+            normalizeText(item && item.time),
+            normalizeText(item && item.user_id),
+            normalizeText(item && item.text)
+        ].join('::');
+    }
+
+    function getSseUserImage(user) {
+        return normalizeText(user && (user['image.1'] || user.image_1 || (user.image && (user.image['1'] || user.image[1]))));
+    }
+
+    function getSseMessageText(item) {
+        let text = normalizeText(item && item.text);
+        if (text) {
+            return text;
+        }
+        if (!Array.isArray(item && item.blocks)) {
+            return '';
+        }
+        item.blocks.forEach(function (block) {
+            const blockText = normalizeText(block && block.data && block.data.text);
+            if (blockText) {
+                text += (text ? ' ' : '') + blockText;
+            }
+        });
+        return text;
+    }
+
+    function rememberSseUsers(users) {
+        (Array.isArray(users) ? users : []).forEach(function (user) {
+            const id = normalizeText(user && user.id);
+            if (!id) {
+                return;
+            }
+            state.sseUsers[id] = user;
+        });
+    }
+
+    function buildSseChatPayload(item, streamId, eventPayload) {
+        const payload = buildBasePayload();
+        const userId = normalizeText(item && item.user_id);
+        const user = state.sseUsers[userId] || {};
+        const username = normalizeText(user.username) || 'Rumble User';
+        const message = getSseMessageText(item);
+        const badges = Array.isArray(user.badges) ? user.badges.slice() : [];
+        const color = normalizeText(user.color);
+        if (!message) {
+            return null;
+        }
+        payload.chatname = username;
+        payload.chatmessage = message;
+        payload.chatimg = getSseUserImage(user);
+        payload.chatbadges = formatBadgesForDisplay(badges);
+        if (color) {
+            payload.nameColor = color;
+        }
+        payload.meta = {
+            source: 'rumble_sse',
+            streamId: normalizeText(streamId),
+            messageId: normalizeText(item && item.id),
+            requestId: normalizeText(eventPayload && eventPayload.request_id),
+            createdAt: normalizeText(item && item.time),
+            userId: userId,
+            userLink: normalizeText(user.link),
+            isFollower: !!user.is_follower,
+            messageType: normalizeText(item && item.type),
+            color: color,
+            badges: badges
+        };
+        payload.timestamp = payload.meta.createdAt;
+        return payload;
+    }
+
+    function processSseMessages(messages, streamId, eventPayload, seedOnly) {
+        let forwarded = 0;
+        let seeded = 0;
+        (Array.isArray(messages) ? messages : []).forEach(function (item) {
+            const key = buildSseMessageKey(streamId, item);
+            const payload = buildSseChatPayload(item, streamId, eventPayload);
+            if (!payload || !rememberEventId(key)) {
+                return;
+            }
+            if (seedOnly) {
+                appendFeedEntry(payload, { seeded: true });
+                seeded += 1;
+                return;
+            }
+            pushMessage(payload);
+            appendFeedEntry(payload);
+            forwarded += 1;
+        });
+        return { forwarded: forwarded, seeded: seeded };
+    }
+
+    function processSseEvent(eventPayload, streamId) {
+        const eventData = eventPayload && eventPayload.data ? eventPayload.data : {};
+        const seedOnly = eventPayload && eventPayload.type === 'init' && !state.cfg.replayHistory;
+        let results;
+        rememberSseUsers(eventData.users);
+        results = processSseMessages(eventData.messages, streamId, eventPayload, seedOnly);
+        if (!results.forwarded && !results.seeded) {
+            return;
+        }
+        if (seedOnly) {
+            log('Seeded ' + results.seeded + ' Rumble SSE chat message' + (results.seeded === 1 ? '' : 's') + ' without relaying them.', 'info');
+        } else {
+            log('Forwarded ' + results.forwarded + ' Rumble SSE chat message' + (results.forwarded === 1 ? '' : 's') + '.', 'info');
+        }
+    }
+
     function appendFeedEntry(payload, options) {
         let avatar;
         let badges;
@@ -683,7 +816,7 @@
         if (extAvailable() && chrome.runtime && chrome.runtime.id && !preferDirectFetch()) {
             return new Promise(function (resolve, reject) {
                 try {
-                    chrome.runtime.sendMessage(chrome.runtime.id, { cmd: 'rumbleFetchJson', url: url }, function (response) {
+                    chrome.runtime.sendMessage(chrome.runtime.id, { type: 'toBackground', data: { cmd: 'rumbleFetchJson', url: url } }, function (response) {
                         if (chrome.runtime.lastError) {
                             reject(new Error(chrome.runtime.lastError.message || 'Rumble background fetch failed'));
                             return;
@@ -729,6 +862,166 @@
             throw new Error((data && (data.error || data.message)) || ('HTTP ' + response.status));
         }
         return data;
+    }
+
+    function findSseBoundary(buffer) {
+        const crlf = buffer.indexOf('\r\n\r\n');
+        const lf = buffer.indexOf('\n\n');
+        if (crlf === -1) {
+            return lf === -1 ? null : { index: lf, length: 2 };
+        }
+        if (lf === -1 || crlf < lf) {
+            return { index: crlf, length: 4 };
+        }
+        return { index: lf, length: 2 };
+    }
+
+    function parseSseBlock(block) {
+        const lines = String(block || '').split(/\r?\n/);
+        const dataLines = [];
+        lines.forEach(function (line) {
+            if (!line || line.charAt(0) === ':') {
+                return;
+            }
+            if (line.indexOf('data:') === 0) {
+                dataLines.push(line.slice(5).replace(/^ /, ''));
+            }
+        });
+        if (!dataLines.length) {
+            return null;
+        }
+        try {
+            return JSON.parse(dataLines.join('\n'));
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function collectSseEventsFromBuffer(buffer, includeInit, maxEvents) {
+        const events = [];
+        let boundary;
+        while ((boundary = findSseBoundary(buffer)) && events.length < maxEvents) {
+            const block = buffer.slice(0, boundary.index);
+            const parsed = parseSseBlock(block);
+            buffer = buffer.slice(boundary.index + boundary.length);
+            if (!parsed) {
+                continue;
+            }
+            if (parsed.type === 'init' && !includeInit) {
+                continue;
+            }
+            events.push(parsed);
+        }
+        return { events: events, buffer: buffer };
+    }
+
+    async function fetchSseBatchDirect(streamId, includeInit) {
+        const streamUrl = buildChatStreamUrl(streamId);
+        const events = [];
+        let controller = null;
+        let timeoutId = null;
+        let timedOut = false;
+        let response;
+        let reader;
+        let buffer = '';
+        const decoder = new TextDecoder();
+        if (!streamUrl) {
+            throw new Error('Invalid Rumble chat stream ID.');
+        }
+        if (typeof AbortController !== 'undefined') {
+            controller = new AbortController();
+            timeoutId = setTimeout(function () {
+                timedOut = true;
+                try { controller.abort(); } catch (error) {}
+            }, SSE_BATCH_TIMEOUT_MS);
+        }
+        try {
+            response = await fetch(streamUrl, {
+                method: 'GET',
+                cache: 'no-store',
+                credentials: 'omit',
+                signal: controller ? controller.signal : undefined,
+                headers: {
+                    Accept: 'text/event-stream'
+                }
+            });
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            if (!response.body || typeof response.body.getReader !== 'function') {
+                const text = await response.text();
+                return collectSseEventsFromBuffer(text, includeInit, SSE_BATCH_MAX_EVENTS).events;
+            }
+            reader = response.body.getReader();
+            while (events.length < SSE_BATCH_MAX_EVENTS) {
+                let result;
+                try {
+                    result = await reader.read();
+                } catch (error) {
+                    if (timedOut) {
+                        break;
+                    }
+                    throw error;
+                }
+                if (!result || result.done) {
+                    break;
+                }
+                buffer += decoder.decode(result.value, { stream: true });
+                const collected = collectSseEventsFromBuffer(buffer, includeInit, SSE_BATCH_MAX_EVENTS - events.length);
+                buffer = collected.buffer;
+                Array.prototype.push.apply(events, collected.events);
+                if (includeInit && events.length) {
+                    break;
+                }
+                if (!includeInit && collected.events.length) {
+                    break;
+                }
+            }
+        } catch (error) {
+            if (!timedOut) {
+                throw error;
+            }
+        } finally {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            if (reader && typeof reader.cancel === 'function') {
+                try { await reader.cancel(); } catch (error) {}
+            }
+        }
+        return events;
+    }
+
+    function fetchSseBatch(streamId, includeInit) {
+        if (extAvailable() && chrome.runtime && chrome.runtime.id) {
+            return new Promise(function (resolve, reject) {
+                try {
+                    chrome.runtime.sendMessage(chrome.runtime.id, {
+                        type: 'toBackground',
+                        data: {
+                            cmd: 'rumbleFetchSseBatch',
+                            streamId: streamId,
+                            includeInit: !!includeInit,
+                            timeoutMs: SSE_BATCH_TIMEOUT_MS,
+                            maxEvents: SSE_BATCH_MAX_EVENTS
+                        }
+                    }, function (response) {
+                        if (chrome.runtime.lastError) {
+                            reject(new Error(chrome.runtime.lastError.message || 'Rumble SSE background fetch failed'));
+                            return;
+                        }
+                        if (!response || !response.ok) {
+                            reject(new Error((response && response.error) || 'Rumble SSE background fetch failed'));
+                            return;
+                        }
+                        resolve(Array.isArray(response.events) ? response.events : []);
+                    });
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+        return fetchSseBatchDirect(streamId, includeInit);
     }
 
     function validateSnapshot(data) {
@@ -867,6 +1160,81 @@
         state.lastStreamLive = isLive;
     }
 
+    function shouldUseSseForStream(stream) {
+        const streamId = normalizeStreamId(stream && stream.id);
+        return !!(state.cfg.useSse && streamId && /^\d+$/.test(streamId) && state.sseFailedStreamId !== streamId);
+    }
+
+    function stopSseLoop() {
+        state.sseToken += 1;
+        state.sseActive = false;
+        state.sseStreamId = '';
+        state.sseUsers = {};
+        state.sseLoggedConnected = false;
+        if (state.sseTimer) {
+            clearTimeout(state.sseTimer);
+            state.sseTimer = null;
+        }
+    }
+
+    function scheduleSseLoop(token, streamId, includeInit, delayMs) {
+        if (state.sseTimer) {
+            clearTimeout(state.sseTimer);
+            state.sseTimer = null;
+        }
+        state.sseTimer = setTimeout(function () {
+            runSseLoop(token, streamId, includeInit);
+        }, Math.max(0, delayMs || 0));
+    }
+
+    function runSseLoop(token, streamId, includeInit) {
+        if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {
+            return;
+        }
+        fetchSseBatch(streamId, includeInit).then(function (events) {
+            if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {
+                return;
+            }
+            if (!state.sseLoggedConnected) {
+                state.sseLoggedConnected = true;
+                log('Connected to Rumble SSE chat for avatars.', 'success');
+            }
+            (Array.isArray(events) ? events : []).forEach(function (eventPayload) {
+                processSseEvent(eventPayload, streamId);
+            });
+            scheduleSseLoop(token, streamId, false, 250);
+        }).catch(function (error) {
+            const message = (error && error.message) || String(error || 'Unknown error');
+            if (token !== state.sseToken) {
+                return;
+            }
+            state.sseFailedStreamId = streamId;
+            state.sseActive = false;
+            log('Rumble SSE chat failed; falling back to documented API chat polling. ' + message, 'warn');
+        });
+    }
+
+    function syncSseForStream(stream) {
+        const streamId = normalizeStreamId(stream && stream.id);
+        if (!streamId || !shouldUseSseForStream(stream)) {
+            if (state.sseActive) {
+                stopSseLoop();
+            }
+            return;
+        }
+        if (state.sseActive && state.sseStreamId === streamId) {
+            return;
+        }
+        stopSseLoop();
+        state.sseToken += 1;
+        state.sseActive = true;
+        state.sseStreamId = streamId;
+        state.sseUsers = {};
+        state.sseLoggedConnected = false;
+        log('Connecting to Rumble SSE chat stream.', 'info');
+        scheduleSseLoop(state.sseToken, streamId, true, 0);
+    }
+
     function processCollection(items, options) {
         let forwarded = 0;
         let seeded = 0;
@@ -894,10 +1262,11 @@
     function processSnapshot(snapshot, initialLoad) {
         const streamSelection = selectLivestream(snapshot);
         const stream = streamSelection.stream;
+        const useSseChat = shouldUseSseForStream(stream);
         const sourceFollowers = snapshot && snapshot.followers ? coerceInteger(snapshot.followers.num_followers) : null;
         const sourceSubscribers = snapshot && snapshot.subscribers ? coerceInteger(snapshot.subscribers.num_subscribers) : null;
         const viewers = stream ? coerceInteger(stream.watching_now) : null;
-        const recentMessages = stream && stream.chat ? combineLatestAndRecent(stream.chat.latest_message, stream.chat.recent_messages, function (item) {
+        const recentMessages = !useSseChat && stream && stream.chat ? combineLatestAndRecent(stream.chat.latest_message, stream.chat.recent_messages, function (item) {
             return buildChatKey(stream && stream.id ? stream.id : '', item);
         }) : [];
         const recentRants = stream && stream.chat ? combineLatestAndRecent(stream.chat.latest_rant, stream.chat.recent_rants, function (item) {
@@ -911,6 +1280,7 @@
 
         updateHeaderChips(snapshot, stream);
         maybeEmitStreamState(stream);
+        syncSseForStream(stream);
         if (sourceFollowers != null) {
             maybeEmitCounterEvent('follower_update', sourceFollowers, 'lastFollowerCount');
         }
@@ -1080,6 +1450,10 @@
             const replayValue = query.get('replay') != null ? query.get('replay') : hash.get('replay');
             state.cfg.replayHistory = replayValue !== '0' && replayValue !== 'false';
         }
+        if (query.get('sse') != null || hash.get('sse') != null) {
+            const sseValue = query.get('sse') != null ? query.get('sse') : hash.get('sse');
+            state.cfg.useSse = sseValue !== '0' && sseValue !== 'false';
+        }
     }
 
     function saveConfig() {
@@ -1132,6 +1506,8 @@
         state.lastFollowerCount = null;
         state.lastSubscriberCount = null;
         state.warnedStreamFallbackFor = '';
+        state.sseFailedStreamId = '';
+        stopSseLoop();
         websocketProxy.readyState = READY_STATE.CONNECTING;
         syncButtons();
         setSocketState('connecting', 'Connecting to the Rumble Live Stream API...');
@@ -1153,6 +1529,7 @@
 
     function disconnect(manual) {
         clearTimers();
+        stopSseLoop();
         state.active = false;
         websocketProxy.readyState = READY_STATE.CLOSED;
         setSocketState('disconnected', manual ? 'Disconnected from the Rumble API.' : 'Rumble polling stopped.');

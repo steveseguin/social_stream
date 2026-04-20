@@ -2866,6 +2866,8 @@ function update(response, sync = true) {
 
             // Refresh all page links.
             refreshLinks();
+			const aipromptUrl = baseURL + "aiprompt.html?session=" + response.streamID + password + "&v=" + chrome.runtime.getManifest().version;
+			if (document.getElementById("aiprompt") && document.getElementById("aipromptlink")) document.getElementById("aiprompt").raw = document.getElementById("aipromptlink").href = document.getElementById("aipromptlink").innerText = aipromptUrl;
 
             try {
                 // Define your link configurations: { linkId: 'idOfLinkElement', sourcePropertyProvider: () => document.getElementById('sourceElementId')?.raw || document.getElementById('idOfLinkElement').href }

@@ -679,9 +679,9 @@
 			<div class="topbar">
 				<div id="connectionStatus" class="status">Starting…</div>
 				<div class="top-actions">
+					<button id="savePage" type="button" class="ghost" title="Save the current overlay now.">Save</button>
 					<button id="copyOverlayUrl" type="button" class="ghost" title="Copy the URL to paste into OBS or a browser source.">Copy overlay URL</button>
 					<button id="openOverlay" type="button" class="ghost" title="Open the current overlay in a new tab.">Open in tab</button>
-					<button id="clearConversation" type="button" class="ghost">Clear chat</button>
 				</div>
 			</div>
 
@@ -706,6 +706,11 @@
 					</div>
 
 					<div id="conversationLog" class="conversation" aria-live="polite"></div>
+
+					<div class="button-row">
+						<button id="compactConversation" type="button" class="ghost" title="Summarize this chat into a shorter context note.">Compact chat</button>
+						<button id="clearConversation" type="button" class="ghost">Clear chat</button>
+					</div>
 
 					<div class="button-row">
 						<button id="fixError" type="button" disabled title="Send the last console error back to the AI and ask for a fix.">Fix last error</button>
@@ -766,6 +771,11 @@
 						</div>
 
 						<div class="tab-panel" data-tab="code">
+							<div class="preview-toolbar">
+								<span class="tiny">Current HTML</span>
+								<div class="spacer"></div>
+								<button id="clearTemplate" type="button" class="ghost" title="Clear the current page HTML.">Clear HTML</button>
+							</div>
 							<textarea id="htmlEditor" spellcheck="false"></textarea>
 						</div>
 					</div>
@@ -1335,6 +1345,8 @@ If the user asks a question that does not require a file change, answer normally
 		var MAX_AUTO_FIX = 2;
 		var html2canvasPromise = null;
 		var HTML2CANVAS_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+		var overlayPackageRequestTarget = null;
+		var overlayPackageLoaded = false;
 
 		var el = function (id) { return document.getElementById(id); };
 		var pageName = el("pageName");
@@ -1432,7 +1444,11 @@ If the user asks a question that does not require a file change, answer normally
 
 		function makeId() { return "page-" + Date.now() + "-" + Math.floor(Math.random() * 1e6); }
 		function makeMessageId() { return Math.floor(Math.random() * 1e9); }
-		function cleanName(name) { name = String(name || "").trim(); return name || "Untitled page"; }
+		function cleanName(name) {
+			name = String(name || "").toLowerCase().trim().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+			return name || "overlay";
+		}
+		function slugName(name) { return cleanName(name); }
 
 		function defaultPage(seed) {
 			var tmpl = seed || TEMPLATES[0];
@@ -1448,7 +1464,7 @@ If the user asks a question that does not require a file change, answer normally
 
 		function defaultState() {
 			var page = defaultPage(TEMPLATES[1]);
-			page.name = "Chat overlay";
+			page.name = "chat-overlay";
 			return { version: 2, activeId: page.id, pages: [page] };
 		}
 
@@ -1480,6 +1496,7 @@ If the user asks a question that does not require a file change, answer normally
 			try {
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 				storageStatus.textContent = "Saved " + new Date().toLocaleTimeString();
+				publishOverlays();
 			} catch (e) {
 				storageStatus.textContent = "Local save failed: " + (e && e.message ? e.message : "unknown error");
 			}
@@ -1500,10 +1517,93 @@ If the user asks a question that does not require a file change, answer normally
 
 		function activePage() { return findPage(state.activeId) || state.pages[0]; }
 
+		function uniqueOverlayKey(base, used) {
+			var root = slugName(base || "overlay");
+			var key = root;
+			var count = 2;
+			while (used[key]) {
+				key = root + "-" + count++;
+			}
+			used[key] = true;
+			return key;
+		}
+
+		function buildOverlayPackage() {
+			var overlays = {};
+			var order = [];
+			var used = {};
+			var activeKey = "";
+			for (var i = 0; state && state.pages && i < state.pages.length; i++) {
+				var page = state.pages[i];
+				var key = uniqueOverlayKey(page.name || page.id || ("overlay-" + (i + 1)), used);
+				if (page.id === state.activeId) activeKey = key;
+				order.push(key);
+				overlays[key] = {
+					id: key,
+					name: key,
+					slug: key,
+					pageId: page.id,
+					html: page.html || "",
+					systemPrompt: page.systemPrompt || defaultSystemPrompt,
+					conversation: page.conversation || [],
+					updatedAt: page.updatedAt || Date.now()
+				};
+			}
+			return { version: 1, activeOverlay: activeKey || order[0] || "overlay", order: order, overlays: overlays, updatedAt: Date.now() };
+		}
+
+		function publishOverlays() {
+			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
+			bridgeFrame.contentWindow.postMessage({
+				sendData: { overlayNinja: { action: "saveAiPromptOverlays", value: buildOverlayPackage() } },
+				type: "pcs"
+			}, "*");
+		}
+
+		function applyOverlayPackage(pack) {
+			var overlays = pack && pack.overlays;
+			if (!overlays) return false;
+			var order = (pack.order && pack.order.length) ? pack.order.slice() : Object.keys(overlays);
+			var pages = [];
+			for (var i = 0; i < order.length; i++) {
+				var key = order[i];
+				var item = overlays[key];
+				if (!item || !item.html) continue;
+				pages.push({
+					id: key,
+					name: cleanName(item.name || item.slug || key),
+					systemPrompt: item.systemPrompt || defaultSystemPrompt,
+					html: item.html || "",
+					conversation: item.conversation || [],
+					updatedAt: item.updatedAt || Date.now()
+				});
+			}
+			if (!pages.length) return false;
+			state = { version: 2, activeId: (pack.activeOverlay && overlays[pack.activeOverlay]) ? pack.activeOverlay : pages[0].id, pages: pages };
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+			loadActivePage();
+			setStatus("Loaded saved AI prompt overlays.", "ok");
+			return true;
+		}
+
+		function requestOverlayPackage() {
+			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
+			overlayPackageRequestTarget = makeMessageId();
+			overlayPackageLoaded = false;
+			bridgeFrame.contentWindow.postMessage({
+				sendData: { overlayNinja: { action: "getAiPromptOverlays", target: overlayPackageRequestTarget } },
+				type: "pcs"
+			}, "*");
+			setTimeout(function () {
+				if (!overlayPackageLoaded) publishOverlays();
+			}, 2500);
+		}
+
 		function syncFormToPage() {
 			var page = activePage();
 			if (!page) return;
 			page.name = cleanName(pageName.value);
+			if (pageName.value !== page.name) pageName.value = page.name;
 			page.systemPrompt = systemPrompt.value || defaultSystemPrompt;
 			page.html = htmlEditor.value || "";
 			page.updatedAt = Date.now();
@@ -1873,12 +1973,14 @@ If the user asks a question that does not require a file change, answer normally
 
 		function buildOverlayUrl() {
 			var base = location.origin + location.pathname.replace(/[^/]*$/, "");
-			var page = activePage();
-			var fileName = cleanName(page.name).replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, "-").toLowerCase() || "prompt-page";
-			var params = ["page=" + encodeURIComponent(fileName)];
+			var urlParams = new URLSearchParams(location.search);
+			var pack = buildOverlayPackage();
+			var params = [];
 			if (bridgeRoomID) params.push("session=" + encodeURIComponent(bridgeRoomID));
 			if (bridgePassword && bridgePassword !== "false") params.push("password=" + encodeURIComponent(bridgePassword));
-			return base + "aiprompt-overlay.html?" + params.join("&");
+			if (urlParams.get("v")) params.push("v=" + encodeURIComponent(urlParams.get("v")));
+			params.push("overlay=" + encodeURIComponent(pack.activeOverlay || "overlay"));
+			return base + "aioverlay.html?" + params.join("&");
 		}
 
 		function connectBridge() {
@@ -1893,6 +1995,7 @@ If the user asks a question that does not require a file change, answer normally
 			bridgeFrame = document.createElement("iframe");
 			bridgeFrame.onload = function () {
 				bridgeReady = true;
+				requestOverlayPackage();
 				setStatus("Connected to session " + bridgeRoomID + ". LLM provider + Private Chat Bot option must be enabled in SSN.", "ok");
 			};
 			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(bridgePassword) +
@@ -1944,11 +2047,12 @@ If the user asks a question that does not require a file change, answer normally
 				var messageID = makeMessageId();
 				var prompt = buildPrompt(page, request);
 				if (requestOverride == null) userRequest.value = "";
-				var userMsg = request + ((images && images.length) ? ("\n\n[attached " + images.length + " screenshot" + (images.length > 1 ? "s" : "") + "]") : "");
+				var displayRequest = opts.displayRequest || request;
+				var userMsg = displayRequest + ((images && images.length) ? ("\n\n[attached " + images.length + " screenshot" + (images.length > 1 ? "s" : "") + "]") : "");
 				appendConversationMessage("user", userMsg, true);
 				var assistantBody = appendConversationMessage("assistant", "Thinking…", false);
 
-				pendingResponses[messageID] = { id: messageID, body: assistantBody, text: "", chunks: 0, requestedAt: Date.now(), isAutoFix: !!opts.isAutoFix };
+				pendingResponses[messageID] = { id: messageID, body: assistantBody, text: "", chunks: 0, requestedAt: Date.now(), isAutoFix: !!opts.isAutoFix, isCompaction: !!opts.isCompaction };
 				createPendingStreamView(assistantBody, pendingResponses[messageID]);
 				pendingResponses[messageID].timeoutTimer = setTimeout(function () {
 					var pending = pendingResponses[messageID];
@@ -1969,7 +2073,7 @@ If the user asks a question that does not require a file change, answer normally
 					sendData: { overlayNinja: payload },
 					type: "rpcs"
 				}, "*");
-				setStatus(sentAfterBridgeWait ? "AI request sent after bridge warmup." : (opts.isAutoFix ? "Auto-fix request sent." : "AI request sent."), "ok");
+				setStatus(sentAfterBridgeWait ? "AI request sent after bridge warmup." : (opts.isAutoFix ? "Auto-fix request sent." : (opts.isCompaction ? "Compaction request sent." : "AI request sent.")), "ok");
 			};
 
 			if (provided && provided.length) {
@@ -2020,6 +2124,18 @@ If the user asks a question that does not require a file change, answer normally
 				return;
 			}
 
+			if (pending.isCompaction) {
+				var summary = String(finalText || "").trim();
+				if (!summary) summary = "Conversation compacted, but no summary was returned.";
+				activePage().conversation = [{ role: "assistant", content: "Conversation summary:\n" + summary, at: Date.now() }];
+				saveState();
+				renderConversation();
+				delete pendingResponses[id];
+				logBuilder("log", "Chat compacted", { chars: summary.length });
+				setStatus("Chat compacted.", "ok");
+				return;
+			}
+
 			var html = extractHtml(finalText);
 			if (html) {
 				htmlEditor.value = html;
@@ -2044,7 +2160,7 @@ If the user asks a question that does not require a file change, answer normally
 			var page = activePage();
 			var blob = new Blob([page.html || ""], { type: "text/html;charset=utf-8" });
 			var a = document.createElement("a");
-			var fileName = cleanName(page.name).replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, "-").toLowerCase() || "prompt-page";
+			var fileName = slugName(page.name);
 			a.href = URL.createObjectURL(blob);
 			a.download = fileName + ".html";
 			document.body.appendChild(a);
@@ -2058,7 +2174,7 @@ If the user asks a question that does not require a file change, answer normally
 		function newPage(seed) {
 			syncFormToPage();
 			var page = defaultPage(seed);
-			if (!seed) page.name = "New prompt page";
+			if (!seed) page.name = "new-prompt-page";
 			state.pages.push(page);
 			state.activeId = page.id;
 			saveState();
@@ -2070,7 +2186,7 @@ If the user asks a question that does not require a file change, answer normally
 			var current = activePage();
 			var copy = {
 				id: makeId(),
-				name: cleanName(current.name) + " copy",
+				name: cleanName(current.name) + "-copy",
 				systemPrompt: current.systemPrompt || defaultSystemPrompt,
 				html: current.html || TEMPLATES[0].src,
 				conversation: [],
@@ -2154,8 +2270,64 @@ If the user asks a question that does not require a file change, answer normally
 			renderConversation();
 		}
 
+		function headTailText(text, maxLength) {
+			text = String(text || "");
+			maxLength = maxLength || 900;
+			if (text.length <= maxLength) return text;
+			var edge = Math.max(120, Math.floor((maxLength - 28) / 2));
+			return text.slice(0, edge) + "\n...[middle removed]...\n" + text.slice(text.length - edge);
+		}
+
+		function buildCompactPrompt(conversation) {
+			var page = activePage();
+			var prompt = [
+				"Summarize this AI prompt-page builder chat into one short paragraph and, only if needed, one sentence of remaining next steps.",
+				"Preserve user intent, important design/code decisions, known errors, current state, and constraints.",
+				"Do not include code blocks, HTML, markdown fences, or new implementation instructions.",
+				"Current overlay name: " + cleanName(page && page.name),
+				"Current HTML length: " + String((page && page.html ? page.html.length : 0)) + " characters.",
+				"",
+				"Conversation:"
+			].join("\n");
+			for (var i = 0; i < conversation.length; i++) {
+				var msg = conversation[i] || {};
+				prompt += "\n\n" + String(msg.role || "message").toUpperCase() + " " + (i + 1) + ":\n" + headTailText(msg.content, 900);
+			}
+			return prompt;
+		}
+
+		function compactConversation() {
+			var page = activePage();
+			var conversation = (page && page.conversation) ? page.conversation : [];
+			if (!conversation.length) { setStatus("No chat to compact.", "warn"); return; }
+			if (!confirm("Compact this chat into one short summary message?")) return;
+			sendPrompt(buildCompactPrompt(conversation), {
+				isCompaction: true,
+				displayRequest: "Compact this chat into a shorter summary."
+			});
+		}
+
+		function saveNow() {
+			syncFormToPage();
+			saveState();
+			logBuilder("log", "Saved current overlay manually");
+			setStatus("Saved current overlay.", "ok");
+		}
+
+		function clearTemplate() {
+			if (!htmlEditor.value) { setStatus("Current HTML is already empty.", "warn"); return; }
+			if (!confirm("Clear the current page HTML?")) return;
+			htmlEditor.value = "";
+			lastAppliedFromAI = false;
+			syncFormToPage();
+			refreshPreview();
+			saveState();
+			setStatus("Current HTML cleared.", "ok");
+		}
+
 		function copyOverlayUrl() {
 			syncFormToPage();
+			saveState();
 			var url = buildOverlayUrl();
 			if (navigator.clipboard && navigator.clipboard.writeText) {
 				navigator.clipboard.writeText(url).then(function () {
@@ -2170,12 +2342,10 @@ If the user asks a question that does not require a file change, answer normally
 
 		function openOverlay() {
 			syncFormToPage();
-			var page = activePage();
-			var blob = new Blob([page.html || ""], { type: "text/html;charset=utf-8" });
-			var url = URL.createObjectURL(blob);
+			saveState();
+			var url = buildOverlayUrl();
 			var win = window.open(url, "_blank");
 			if (!win) setStatus("Pop-up blocked. Allow pop-ups for this page.", "warn");
-			setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
 		}
 
 		function setTab(name) {
@@ -2204,7 +2374,10 @@ If the user asks a question that does not require a file change, answer normally
 			el("openSettings").addEventListener("click", function () {
 				alert("The AI runs in the Social Stream Ninja extension. Configure your LLM provider and model in SSN's popup → AI settings. Any provider that speaks the OpenAI chat-completions format works here, including local vLLM or Ollama endpoints.");
 			});
+			el("savePage").addEventListener("click", saveNow);
+			el("compactConversation").addEventListener("click", compactConversation);
 			el("clearConversation").addEventListener("click", clearConversation);
+			el("clearTemplate").addEventListener("click", clearTemplate);
 			el("copyOverlayUrl").addEventListener("click", copyOverlayUrl);
 			el("openOverlay").addEventListener("click", openOverlay);
 			el("importPage").addEventListener("change", function (event) {
@@ -2262,6 +2435,9 @@ If the user asks a question that does not require a file change, answer normally
 						receiveAIResponse(payload.chatbotChunk, true);
 					} else if (payload.chatbotResponse && typeof payload.chatbotResponse.value !== "undefined") {
 						receiveAIResponse(payload.chatbotResponse, false);
+					} else if (payload.aiPromptOverlays && payload.aiPromptOverlays.target === overlayPackageRequestTarget) {
+						overlayPackageLoaded = true;
+						if (!applyOverlayPackage(payload.aiPromptOverlays.value || payload.aiPromptOverlays)) publishOverlays();
 					}
 				}
 			});

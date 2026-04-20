@@ -4926,7 +4926,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} else {
 				sendResponse({ state: isExtensionOn });
 			}
-			var letsGo = await processIncomingMessage(request.message, sender);
+			if (request.target) {
+				if (isExtensionOn) {
+					sendTargetP2P(request.message, request.target);
+				}
+			} else {
+				var letsGo = await processIncomingMessage(request.message, sender);
+			}
 		} else if ("messages" in request) {
 			// Handle batch messages from YouTube and TikTok
 			sendResponse({ state: isExtensionOn });
@@ -5129,6 +5135,18 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					ok: false,
 					status: error && typeof error.status !== "undefined" ? error.status : undefined,
 					error: error && error.message ? error.message : "Rumble fetch failed"
+				});
+			}
+			return true;
+		} else if (request.cmd && request.cmd === "rumbleFetchSseBatch") {
+			try {
+				const rumbleResponse = await fetchRumbleSseBatch(request);
+				sendResponse({ ok: true, status: rumbleResponse.status, chatId: rumbleResponse.chatId, events: rumbleResponse.events });
+			} catch (error) {
+				sendResponse({
+					ok: false,
+					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+					error: error && error.message ? error.message : "Rumble SSE fetch failed"
 				});
 			}
 			return true;
@@ -9088,6 +9106,151 @@ async function fetchRumbleJsonResponse(url) {
 	};
 }
 
+function buildRumbleSseUrlFromStreamId(streamId) {
+	const normalized = normalizeRumbleSettingText(streamId);
+	if (!normalized || !/^\d+$/.test(normalized)) {
+		throw new Error("Invalid Rumble chat stream ID");
+	}
+	return `https://web7.rumble.com/chat/api/chat/${encodeURIComponent(normalized)}/stream`;
+}
+
+function findRumbleSseBoundary(buffer) {
+	const crlf = buffer.indexOf("\r\n\r\n");
+	const lf = buffer.indexOf("\n\n");
+	if (crlf === -1) {
+		return lf === -1 ? null : { index: lf, length: 2 };
+	}
+	if (lf === -1 || crlf < lf) {
+		return { index: crlf, length: 4 };
+	}
+	return { index: lf, length: 2 };
+}
+
+function parseRumbleSseBlock(block) {
+	const lines = String(block || "").split(/\r?\n/);
+	const dataLines = [];
+	lines.forEach(line => {
+		if (!line || line.charAt(0) === ":") {
+			return;
+		}
+		if (line.indexOf("data:") === 0) {
+			dataLines.push(line.slice(5).replace(/^ /, ""));
+		}
+	});
+	if (!dataLines.length) {
+		return null;
+	}
+	try {
+		return JSON.parse(dataLines.join("\n"));
+	} catch (error) {
+		return null;
+	}
+}
+
+function collectRumbleSseEventsFromBuffer(buffer, includeInit, maxEvents) {
+	const events = [];
+	let boundary;
+	while ((boundary = findRumbleSseBoundary(buffer)) && events.length < maxEvents) {
+		const parsed = parseRumbleSseBlock(buffer.slice(0, boundary.index));
+		buffer = buffer.slice(boundary.index + boundary.length);
+		if (!parsed) {
+			continue;
+		}
+		if (parsed.type === "init" && !includeInit) {
+			continue;
+		}
+		events.push(parsed);
+	}
+	return { events, buffer };
+}
+
+async function fetchRumbleSseBatch(request = {}) {
+	const streamId = normalizeRumbleSettingText(request.streamId || request.chatId);
+	const streamUrl = buildRumbleSseUrlFromStreamId(streamId);
+	const includeInit = !!request.includeInit;
+	const timeoutMs = Math.max(3000, Math.min(parseInt(request.timeoutMs, 10) || 25000, 30000));
+	const maxEvents = Math.max(1, Math.min(parseInt(request.maxEvents, 10) || 25, 50));
+	const controller = new AbortController();
+	const decoder = new TextDecoder();
+	const events = [];
+	let timeoutId = null;
+	let timedOut = false;
+	let rumbleResponse = null;
+	let reader = null;
+	let buffer = "";
+
+	timeoutId = setTimeout(() => {
+		timedOut = true;
+		try {
+			controller.abort();
+		} catch (error) {}
+	}, timeoutMs);
+
+	try {
+		rumbleResponse = await fetch(streamUrl, {
+			method: "GET",
+			cache: "no-store",
+			credentials: "omit",
+			signal: controller.signal,
+			headers: {
+				Accept: "text/event-stream"
+			}
+		});
+		if (!rumbleResponse.ok) {
+			const httpError = new Error(`HTTP ${rumbleResponse.status}`);
+			httpError.status = rumbleResponse.status;
+			throw httpError;
+		}
+		if (!rumbleResponse.body || typeof rumbleResponse.body.getReader !== "function") {
+			throw new Error("Rumble SSE response was not readable");
+		}
+		reader = rumbleResponse.body.getReader();
+		while (events.length < maxEvents) {
+			let readResult;
+			try {
+				readResult = await reader.read();
+			} catch (error) {
+				if (timedOut) {
+					break;
+				}
+				throw error;
+			}
+			if (!readResult || readResult.done) {
+				break;
+			}
+			buffer += decoder.decode(readResult.value, { stream: true });
+			const collected = collectRumbleSseEventsFromBuffer(buffer, includeInit, maxEvents - events.length);
+			buffer = collected.buffer;
+			events.push(...collected.events);
+			if (includeInit && events.length) {
+				break;
+			}
+			if (!includeInit && collected.events.length) {
+				break;
+			}
+		}
+	} catch (error) {
+		if (!timedOut) {
+			throw error;
+		}
+	} finally {
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+		}
+		if (reader && typeof reader.cancel === "function") {
+			try {
+				await reader.cancel();
+			} catch (error) {}
+		}
+	}
+
+	return {
+		status: rumbleResponse ? rumbleResponse.status : 0,
+		chatId: streamId,
+		events
+	};
+}
+
 function selectRumbleLivestreamFromSnapshot(snapshot, preferredStreamId = "") {
 	const desiredId = normalizeRumbleSettingText(preferredStreamId).toLowerCase();
 	const streams = Array.isArray(snapshot && snapshot.livestreams) ? snapshot.livestreams : [];
@@ -9118,6 +9281,63 @@ function buildRumblePopupUrlFromChatId(chatId) {
 		return "";
 	}
 	return "https://rumble.com/chat/popup/" + encodeURIComponent(normalized);
+}
+
+function decodeRumbleBase36Id(value) {
+	const normalized = normalizeRumbleSettingText(value).replace(/^v/i, "");
+	const parsed = /^[a-z0-9]+$/i.test(normalized) ? parseInt(normalized, 36) : NaN;
+	return isFinite(parsed) && parsed > 0 ? String(parsed) : "";
+}
+
+async function resolveRumblePopupFromOembed(videoTarget) {
+	let parsedUrl;
+	let embedMatch;
+	let chatId;
+	let rumbleResponse;
+	try {
+		parsedUrl = new URL(normalizeRumbleApiUrlValue(videoTarget));
+	} catch (error) {
+		return null;
+	}
+	if (parsedUrl.protocol !== "https:" || !["rumble.com", "www.rumble.com"].includes(parsedUrl.hostname)) {
+		return null;
+	}
+	if (/^\/embed\/v[a-z0-9]+\/?$/i.test(parsedUrl.pathname || "")) {
+		chatId = decodeRumbleBase36Id((parsedUrl.pathname.match(/\/embed\/(v[a-z0-9]+)/i) || [])[1]);
+		if (chatId) {
+			return {
+				status: 200,
+				popupUrl: buildRumblePopupUrlFromChatId(chatId),
+				stream: null,
+				chatId,
+				videoId: chatId,
+				pageUrl: parsedUrl.toString()
+			};
+		}
+	}
+	if (!/^\/v[a-z0-9][^\/]*\.html?$/i.test(parsedUrl.pathname || "")) {
+		return null;
+	}
+	const oembedUrl = new URL("https://rumble.com/api/Media/oembed.json");
+	oembedUrl.searchParams.set("url", parsedUrl.toString());
+	rumbleResponse = await fetchRumbleJsonResponse(oembedUrl.toString());
+	embedMatch = String(rumbleResponse.data && rumbleResponse.data.html || "").match(/\/embed\/(v[a-z0-9]+)\//i);
+	chatId = decodeRumbleBase36Id(embedMatch && embedMatch[1]);
+	if (!chatId) {
+		return null;
+	}
+	return {
+		status: rumbleResponse.status,
+		popupUrl: buildRumblePopupUrlFromChatId(chatId),
+		stream: {
+			id: chatId,
+			title: normalizeRumbleSettingText(rumbleResponse.data && rumbleResponse.data.title),
+			is_live: !!(rumbleResponse.data && rumbleResponse.data.duration === 0)
+		},
+		chatId,
+		videoId: chatId,
+		pageUrl: parsedUrl.toString()
+	};
 }
 
 async function fetchRumbleHtmlResponse(url) {
@@ -9305,6 +9525,7 @@ function normalizeRumbleVideoTarget(value) {
 
 async function resolveRumblePopupFromVideoTarget(videoTarget) {
 	const normalized = normalizeRumbleVideoTarget(videoTarget);
+	let oembedResolved;
 	let fetched;
 	let identifiers;
 	if (normalized.popupUrl) {
@@ -9319,6 +9540,12 @@ async function resolveRumblePopupFromVideoTarget(videoTarget) {
 	if (!normalized.url) {
 		throw new Error("Missing Rumble video target");
 	}
+	try {
+		oembedResolved = await resolveRumblePopupFromOembed(normalized.url);
+		if (oembedResolved && oembedResolved.chatId) {
+			return oembedResolved;
+		}
+	} catch (error) {}
 	fetched = await fetchRumbleHtmlResponse(normalized.url);
 	identifiers = extractRumbleIdentifiersFromHtml(fetched.html);
 	if (!identifiers.chatId) {
@@ -11344,6 +11571,72 @@ try {
 	log("'chrome.debugger' not supported by this browser");
 }
 
+let aiPromptOverlays = { version: 1, activeOverlay: "", order: [], overlays: {} };
+
+function normalizeAiPromptOverlayKey(value) {
+	value = String(value || "")
+		.toLowerCase()
+		.trim()
+		.replace(/[^a-z0-9_-]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+	return value || "overlay";
+}
+
+function normalizeAiPromptOverlayStore(store) {
+	const source = store && store.overlays ? store.overlays : store || {};
+	const requestedOrder = store && Array.isArray(store.order) ? store.order : Object.keys(source);
+	const normalized = { version: 1, activeOverlay: "", order: [], overlays: {}, updatedAt: (store && store.updatedAt) || Date.now() };
+	const used = {};
+
+	function addOverlay(rawKey) {
+		const item = source[rawKey];
+		if (!item || !item.html) return;
+		let root = normalizeAiPromptOverlayKey(item.slug || item.id || item.name || rawKey);
+		let key = root;
+		let count = 2;
+		while (used[key]) key = root + "-" + count++;
+		used[key] = true;
+		normalized.order.push(key);
+		normalized.overlays[key] = {
+			id: key,
+			name: key,
+			slug: key,
+			html: String(item.html || ""),
+			systemPrompt: item.systemPrompt || "",
+			conversation: Array.isArray(item.conversation) ? item.conversation : [],
+			updatedAt: item.updatedAt || Date.now()
+		};
+	}
+
+	requestedOrder.forEach(addOverlay);
+	Object.keys(source).forEach(key => {
+		if (requestedOrder.indexOf(key) === -1) addOverlay(key);
+	});
+
+	const activeKey = normalizeAiPromptOverlayKey(store && store.activeOverlay);
+	normalized.activeOverlay = normalized.overlays[activeKey] ? activeKey : normalized.order[0] || "";
+	return normalized;
+}
+
+function loadAiPromptOverlays() {
+	return new Promise(resolve => {
+		chrome.storage.local.get(["aiPromptOverlays"], result => {
+			aiPromptOverlays = normalizeAiPromptOverlayStore(result && result.aiPromptOverlays);
+			resolve(aiPromptOverlays);
+		});
+	});
+}
+
+async function getAiPromptOverlays() {
+	await loadAiPromptOverlays();
+	return aiPromptOverlays;
+}
+
+function saveAiPromptOverlays(store) {
+	aiPromptOverlays = normalizeAiPromptOverlayStore(store);
+	chrome.storage.local.set({ aiPromptOverlays });
+}
+
 async function processIncomingRequest(request, UUID = false) {
 	// from the dock or chat bot, etc.
 	if (settings.disablehost) {
@@ -11560,6 +11853,11 @@ async function processIncomingRequest(request, UUID = false) {
 			if (UUID) {
 				initializeTimer(UUID);
 			}
+		} else if (request.action === "saveAiPromptOverlays" && request.value) {
+			saveAiPromptOverlays(request.value);
+		} else if (request.action === "getAiPromptOverlays" && UUID) {
+			const overlayStore = await getAiPromptOverlays();
+			sendDataP2P({ aiPromptOverlays: { target: request.target || null, value: overlayStore } }, UUID);
 		} else if (request.value && "target" in request && UUID && request.action === "chatbot") {
 			// target is the callback ID
 			if (isExtensionOn && settings.allowChatBot) {
