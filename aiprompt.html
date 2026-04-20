@@ -848,6 +848,7 @@ Overlay pages receive data via a VDO.Ninja iframe bridge. Always include this br
 ```
 
 Without ?session=YOUR_ID the bridge won't connect — but the builder still sends test payloads straight to the iframe via postMessage, so handlePayload must work with or without the bridge.
+Do NOT require `event.source === bridge.contentWindow`; builder test events and preview tools can come from the parent window. Only check `event.data.dataReceived.overlayNinja`.
 
 DOM ordering matters: the `<iframe id="ssn_bridge">` element MUST exist in the DOM before the script that calls `document.getElementById("ssn_bridge")` runs. The safest patterns are (a) put the iframe tag first and the script right after in `<body>`, or (b) create the iframe in JS via `document.createElement("iframe")` and append it to body. Never put the iframe element below the script that reads it — `getElementById` will return null and setting `.src` throws.
 
@@ -856,6 +857,7 @@ Most messages look like:
 { id, type, chatname, chatmessage, chatimg, timestamp, hasDonation, membership, event, subtitle, meta, contentimg, nameColor, chatbadges, karma, bot, mod, host, vip, tid, private }
 
 - type: source platform string — "youtube", "twitch", "kick", "tiktok", "facebook", "rumble", "discord", "whatnot", etc.
+- Source/platform icons can be derived from `type`: `https://socialstream.ninja/sources/images/` + lowercase/sanitized `data.type` + `.png` (for example `youtube.png`, `twitch.png`, `kick.png`). Use a normal `<img>` created in JS and hide it on `error`; do not use inline `onerror=`.
 - chatname / chatmessage / chatimg: standard chat fields. chatimg is a URL (may be empty).
 - event: set only for SYSTEM notifications — leave unset/false for plain chat. Known values include "new_follower", "subscription_gift", "gifted", "subscriber", "raid", "hype", "shoutout", "supersticker", "viewer_update", "follower_update", "subscriber_update", "viewer_updates" (aggregated), plus custom ones.
 - hasDonation: string like "$5.00" for tips / super chats / bits when money was involved.
@@ -902,6 +904,9 @@ Example viewer counter aggregate:
 12a. Alerts arrive faster than their dismiss time during busy streams. Prefer STACKING: each alert gets its own card appended to the container and dismisses on its own timer, so multiple cards can be visible at once. Never build a single-banner overlay that hides behind a global `isAnimating` / `isBusy` flag — that silently drops payloads. Queuing-one-at-a-time is acceptable only if the user explicitly asks for it; stacking is the default.
 13. For counter / viewer / goal numbers, render integer values as-is (or with toLocaleString thousands separators) instead of collapsing to "1.2k" style suffixes — the raw number is what streamers and mods actually want to read. Only abbreviate when a value is above ~1,000,000 AND space is genuinely constrained.
 14. Reset / replace state on snapshot payloads (viewer_updates, auction_update, commerce_update); only accumulate on per-item events (new chat row, new alert).
+15. Alert overlays must handle these exact shapes: donation via `data.hasDonation` even without `data.event`; member/sub via `data.membership` even without `data.event`; follow via `data.event === "new_follower"`; raid via `data.event === "raid"` plus `subtitle` or `meta.viewers`; gifted subs via `data.event === "subscription_gift"` or `"gifted"`.
+16. Do not gate alerts on `data.chatmessage`, `data.subtitle`, or `data.meta`; follow events commonly have only `{ chatname, event: "new_follower", type }`, membership events may only have `{ chatname, membership, type }`, and donation events may only have `{ chatname, hasDonation, type }`.
+17. Plain chat messages are valid when they only have `{ chatname, chatmessage, chatimg, type }` and no `event`; if the user asks for a chat overlay, do not require `event`, `hasDonation`, or `membership`.
 
 If the user asks a question that does not require a file change, answer normally without a ```html block. Otherwise, always return the full updated HTML.</textarea>
 
@@ -963,6 +968,7 @@ If the user asks a question that does not require a file change, answer normally
 		#feed { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
 		.row { display: flex; gap: 10px; align-items: flex-start; background: var(--row-bg); border: 1px solid var(--row-border); border-radius: 10px; padding: 8px 12px; opacity: 0; transform: translateY(8px); animation: slideIn 220ms ease-out forwards; }
 		.avatar { width: 32px; height: 32px; border-radius: 50%; flex: 0 0 32px; background: #222; object-fit: cover; }
+		.source-icon { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 8px; opacity: 0.85; border-radius: 3px; }
 		.body { min-width: 0; }
 		.name { font-weight: 700; color: var(--name); }
 		.text { margin-top: 2px; word-wrap: break-word; }
@@ -1001,13 +1007,17 @@ If the user asks a question that does not require a file change, answer normally
 			var row = document.createElement("div");
 			row.className = "row";
 			var nameColor = data.nameColor ? ' style="color:' + escapeHtml(data.nameColor) + '"' : "";
+			var safeType = data.type ? String(data.type).toLowerCase().replace(/[^a-z0-9_-]/g, "") : "";
 			row.innerHTML =
+				(safeType ? '<img class="source-icon" src="https://socialstream.ninja/sources/images/' + escapeHtml(safeType) + '.png" alt="">' : '') +
 				(data.chatimg ? '<img class="avatar" src="' + escapeHtml(data.chatimg) + '" alt="">' : '<div class="avatar"></div>') +
 				'<div class="body">' +
 					'<span class="name"' + nameColor + '>' + escapeHtml(data.chatname || "Anonymous") + '</span>' +
 					(data.type ? '<span class="platform">' + escapeHtml(data.type) + '</span>' : '') +
 					'<div class="text">' + escapeHtml(data.chatmessage || "") + '</div>' +
 				'</div>';
+			var icon = row.querySelector(".source-icon");
+			if (icon) icon.addEventListener("error", function () { icon.style.display = "none"; });
 			feed.appendChild(row);
 			while (feed.children.length > limit) {
 				feed.removeChild(feed.firstChild);
@@ -1044,6 +1054,8 @@ If the user asks a question that does not require a file change, answer normally
 		.alert.gifted { border-left-color: var(--pink); }
 		.alert.donation { border-left-color: var(--gold); }
 		.alert.raid { border-left-color: var(--blue); }
+		.topline { display: flex; align-items: center; gap: 7px; }
+		.source-icon { width: 16px; height: 16px; flex: 0 0 16px; opacity: 0.85; border-radius: 3px; }
 		.kind { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; }
 		.alert.sub .kind { color: var(--gold); }
 		.alert.gifted .kind { color: var(--pink); }
@@ -1077,28 +1089,37 @@ If the user asks a question that does not require a file change, answer normally
 		function escapeText(value) {
 			var d = document.createElement("div"); d.textContent = value == null ? "" : String(value); return d.innerHTML;
 		}
-		function show(kind, headline, detail) {
+		function sourceIconUrl(type) {
+			type = type ? String(type).toLowerCase().replace(/[^a-z0-9_-]/g, "") : "";
+			return type ? "https://socialstream.ninja/sources/images/" + type + ".png" : "";
+		}
+		function show(kind, headline, detail, type) {
 			var div = document.createElement("div");
+			var iconUrl = sourceIconUrl(type);
 			div.className = "alert " + kind;
-			div.innerHTML = '<div class="kind">' + escapeText(kind) + '</div>' +
+			div.innerHTML = '<div class="topline">' +
+				(iconUrl ? '<img class="source-icon" src="' + escapeText(iconUrl) + '" alt="">' : '') +
+				'<div class="kind">' + escapeText(kind) + '</div></div>' +
 				'<div class="headline">' + escapeText(headline) + '</div>' +
 				(detail ? '<div class="detail">' + escapeText(detail) + '</div>' : '');
+			var icon = div.querySelector(".source-icon");
+			if (icon) icon.addEventListener("error", function () { icon.style.display = "none"; });
 			stage.appendChild(div);
 			setTimeout(function () { div.classList.add("out"); setTimeout(function () { if (div.parentNode) div.parentNode.removeChild(div); }, 340); }, duration);
 		}
 		function route(data) {
 			if (!data || typeof data !== "object") return;
 			if (data.hasDonation) {
-				show("donation", (data.chatname || "Someone") + " tipped " + data.hasDonation, data.chatmessage || "");
+				show("donation", (data.chatname || "Someone") + " tipped " + data.hasDonation, data.chatmessage || "", data.type);
 			} else if (data.event === "new_follower") {
-				show("follow", (data.chatname || "Someone") + " followed!", data.type || "");
+				show("follow", (data.chatname || "Someone") + " followed!", data.type || "", data.type);
 			} else if (data.event === "subscription_gift" || data.event === "gifted") {
-				show("gifted", (data.chatname || "Someone") + " gifted " + (data.subtitle || (data.meta && data.meta.gift_count) || "a sub"), data.membership || "");
+				show("gifted", (data.chatname || "Someone") + " gifted " + (data.subtitle || (data.meta && data.meta.gift_count) || "a sub"), data.membership || "", data.type);
 			} else if (data.event === "subscriber" || data.membership) {
-				show("sub", (data.chatname || "Someone") + " subscribed!", data.membership || data.subtitle || "");
+				show("sub", (data.chatname || "Someone") + " subscribed!", data.membership || data.subtitle || "", data.type);
 			} else if (data.event === "raid") {
 				var viewers = (data.meta && data.meta.viewers) || data.subtitle || "";
-				show("raid", (data.chatname || "Someone") + " is raiding!", viewers ? (viewers + " viewers") : "");
+				show("raid", (data.chatname || "Someone") + " is raiding!", viewers ? (viewers + " viewers") : "", data.type);
 			}
 		}
 		window.handleOverlayPayload = route;
@@ -1926,7 +1947,8 @@ If the user asks a question that does not require a file change, answer normally
 				request,
 				"",
 				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
-				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks."
+				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks.",
+				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; support chat fields (chatname/chatmessage/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), and viewer_updates snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons."
 			].join("\n");
 		}
 
