@@ -3150,7 +3150,7 @@ function requestConfiguredLLM(prompt, options = {}) {
             const pending = configuredLLMBridgePending.get(target);
             configuredLLMBridgePending.delete(target);
             const chunkNote = pending && pending.chunks ? ' Partial response chunks arrived, but no final response was received.' : '';
-            reject(new Error('Configured LLM request timed out. Check that SSN is on, Private Chat Bot is enabled, and this page uses the same session as the popup.' + chunkNote));
+            reject(new Error('Configured LLM request timed out. Check that SSN is on and this page uses the same session as the popup. In the SSN popup, open Chat Bots and AI services > Chat Bot - Private Interface, then enable "Enable private chat bot option".' + chunkNote));
         }, options.timeoutMs || 180000);
         configuredLLMBridgePending.set(target, {
             resolve,
@@ -6759,7 +6759,7 @@ const providerUIConfig = {
     configuredllm: {
         label: 'SSN Configured LLM',
         apiKeyPlaceholder: 'Uses popup LLM provider',
-        apiKeyInfoHtml: 'Uses the LLM provider configured in the SSN popup. Requires this URL to include `?session=...` and Private Chat Bot enabled.',
+        apiKeyInfoHtml: 'Uses the LLM provider configured in the SSN popup. Requires this URL to include `?session=...`; also enable Chat Bots and AI services > Chat Bot - Private Interface > Enable private chat bot option.',
         defaultModel: '',
         modelPlaceholder: 'Optional model override passed to the configured LLM provider',
         disableCaptureSelection: false,

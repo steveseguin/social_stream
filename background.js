@@ -11984,7 +11984,7 @@ async function processIncomingRequest(request, UUID = false) {
 				sendDataP2P(
 					{
 						chatbotResponse: {
-							value: JSON.stringify({ error: { message: "Private Chat Bot is not enabled or Social Stream is off." } }),
+							value: JSON.stringify({ error: { message: "Private Chat Bot is off, or Social Stream is off. In the SSN popup, open Chat Bots and AI services > Chat Bot - Private Interface, then enable \"Enable private chat bot option\"." } }),
 							target: request.target
 						}
 					},
