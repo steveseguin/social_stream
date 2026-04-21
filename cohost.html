@@ -1224,6 +1224,10 @@ button:disabled {
 				</div>
 				<select id="customModelSelect" style="display:none; width:100%;"></select>
 				<div class="api-key-info" id="customEndpointInfo" style="display:none; width:100%;"></div>
+				<div class="api-key-container" id="configuredLLMTestContainer" style="display:none; width:100%;">
+					<button id="configuredLLMTest" type="button">Test Configured LLM</button>
+					<div class="api-key-info" id="configuredLLMInfo"></div>
+				</div>
 				<input type="text" id="modelOverride" placeholder="Optional model override" class="model-override">
 			</div>
 
@@ -1540,6 +1544,18 @@ const LOCAL_BROWSER_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja
 const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js";
 const CUSTOM_OPENAI_DEFAULT_ENDPOINT = "http://127.0.0.1:1234/v1";
 const CUSTOM_OPENAI_DEFAULT_MODEL = "";
+const CONFIGURED_LLM_BRIDGE_CHUNK_SIZE = 12000;
+const CONFIGURED_LLM_BRIDGE_PROBE_TTL = 45000;
+let configuredLLMBridgeFrame = null;
+let configuredLLMBridgeReady = false;
+let configuredLLMBridgeRoomID = "";
+let configuredLLMBridgePassword = "false";
+let configuredLLMBridgePromise = null;
+let configuredLLMBridgePending = new Map();
+let configuredLLMBridgeProbePending = new Map();
+let configuredLLMBridgeRequestCounter = 0;
+let configuredLLMBridgeVerifiedAt = 0;
+let configuredLLMImageSupport = localStorage.getItem('configuredLLMImageSupport') || 'unknown';
 function resolveLocalBrowserWorkerUrl() {
     try {
         return new URL(LOCAL_BROWSER_WORKER_PATH, window.location.href).href;
@@ -2964,6 +2980,243 @@ class LocalBrowserPublisher {
         });
     }
 }
+function makeConfiguredLLMRequestId() {
+    configuredLLMBridgeRequestCounter += 1;
+    return `cohost_llm_${Date.now()}_${configuredLLMBridgeRequestCounter}`;
+}
+function getConfiguredLLMSessionParams() {
+    const urlParams = new URLSearchParams(location.search);
+    return {
+        room: urlParams.get('session') || '',
+        password: urlParams.get('password') || 'false'
+    };
+}
+function setConfiguredLLMInfo(message, isError = false) {
+    const info = document.getElementById('configuredLLMInfo');
+    if (!info) return;
+    info.textContent = message || '';
+    info.style.color = isError ? '#ff9ea1' : '#a0a0a0';
+}
+function ensureConfiguredLLMBridge() {
+    const params = getConfiguredLLMSessionParams();
+    if (!params.room) {
+        return Promise.reject(new Error('Add ?session=YOUR_SESSION_ID to the cohost URL so it can reach the SSN background LLM provider.'));
+    }
+    if (
+        configuredLLMBridgeFrame &&
+        configuredLLMBridgeFrame.contentWindow &&
+        configuredLLMBridgeRoomID === params.room &&
+        configuredLLMBridgePassword === params.password
+    ) {
+        if (configuredLLMBridgeReady) return Promise.resolve();
+        if (configuredLLMBridgePromise) return configuredLLMBridgePromise;
+    }
+    configuredLLMBridgeReady = false;
+    configuredLLMBridgeVerifiedAt = 0;
+    configuredLLMBridgeRoomID = params.room;
+    configuredLLMBridgePassword = params.password;
+    if (configuredLLMBridgeFrame) {
+        try {
+            configuredLLMBridgeFrame.remove();
+        } catch (_error) {}
+    }
+    configuredLLMBridgePromise = new Promise((resolve, reject) => {
+        const frame = document.createElement('iframe');
+        let settled = false;
+        const done = () => {
+            if (settled) return;
+            settled = true;
+            configuredLLMBridgeReady = true;
+            configuredLLMBridgePromise = null;
+            resolve();
+        };
+        const fail = () => {
+            if (settled) return;
+            settled = true;
+            configuredLLMBridgeReady = false;
+            configuredLLMBridgePromise = null;
+            reject(new Error('Timed out connecting to the SSN session bridge.'));
+        };
+        frame.onload = done;
+        frame.src = 'https://vdo.socialstream.ninja/?ln&password=' + encodeURIComponent(configuredLLMBridgePassword) +
+            '&salt=vdo.ninja&label=cohost-llm&view=' + encodeURIComponent(configuredLLMBridgeRoomID) +
+            '&scene&novideo&noaudio&cleanoutput&room=' + encodeURIComponent(configuredLLMBridgeRoomID);
+        frame.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;';
+        configuredLLMBridgeFrame = frame;
+        document.body.appendChild(frame);
+        setTimeout(fail, 12000);
+    });
+    return configuredLLMBridgePromise;
+}
+function postConfiguredLLMBridgePayload(payload, messageType = 'rpcs') {
+    if (!configuredLLMBridgeFrame || !configuredLLMBridgeFrame.contentWindow) {
+        throw new Error('SSN session bridge is not connected.');
+    }
+    const text = JSON.stringify(payload);
+    if (text.length <= CONFIGURED_LLM_BRIDGE_CHUNK_SIZE) {
+        configuredLLMBridgeFrame.contentWindow.postMessage({
+            sendData: { overlayNinja: payload },
+            type: messageType
+        }, '*');
+        return 1;
+    }
+    const chunkId = makeConfiguredLLMRequestId();
+    const total = Math.ceil(text.length / CONFIGURED_LLM_BRIDGE_CHUNK_SIZE);
+    for (let i = 0; i < total; i++) {
+        configuredLLMBridgeFrame.contentWindow.postMessage({
+            sendData: {
+                overlayNinja: {
+                    action: 'ssnBridgeChunk',
+                    chunkId,
+                    index: i,
+                    total,
+                    value: text.slice(i * CONFIGURED_LLM_BRIDGE_CHUNK_SIZE, (i + 1) * CONFIGURED_LLM_BRIDGE_CHUNK_SIZE)
+                }
+            },
+            type: messageType
+        }, '*');
+    }
+    return total;
+}
+function resolveConfiguredLLMBridgeProbe(response) {
+    if (!response || typeof response.target === 'undefined') return;
+    const pending = configuredLLMBridgeProbePending.get(response.target);
+    if (!pending) return;
+    configuredLLMBridgeProbePending.delete(response.target);
+    clearTimeout(pending.timeoutId);
+    if (pending.retryTimer) clearTimeout(pending.retryTimer);
+    configuredLLMBridgeVerifiedAt = Date.now();
+    pending.resolve();
+}
+function probeConfiguredLLMBridge(options = {}) {
+    return ensureConfiguredLLMBridge().then(() => new Promise((resolve, reject) => {
+        if (Date.now() - configuredLLMBridgeVerifiedAt < CONFIGURED_LLM_BRIDGE_PROBE_TTL) {
+            resolve();
+            return;
+        }
+        const target = makeConfiguredLLMRequestId();
+        let attempts = 0;
+        const pending = {
+            resolve,
+            reject,
+            retryTimer: null,
+            timeoutId: null
+        };
+        const cleanupReject = (error) => {
+            configuredLLMBridgeProbePending.delete(target);
+            if (pending.retryTimer) clearTimeout(pending.retryTimer);
+            if (pending.timeoutId) clearTimeout(pending.timeoutId);
+            reject(error);
+        };
+        const sendProbe = () => {
+            if (!configuredLLMBridgeProbePending.has(target)) return;
+            attempts += 1;
+            try {
+                postConfiguredLLMBridgePayload({ action: 'getAiPromptOverlays', target }, 'rpcs');
+                if (typeof options.onProbe === 'function') {
+                    options.onProbe(attempts);
+                }
+            } catch (error) {
+                cleanupReject(error);
+                return;
+            }
+            pending.retryTimer = setTimeout(sendProbe, options.retryMs || 2500);
+        };
+        pending.timeoutId = setTimeout(() => {
+            cleanupReject(new Error('SSN background did not answer the session bridge probe. Check that SSN is on and this page uses the same session as the popup.'));
+        }, options.timeoutMs || 18000);
+        configuredLLMBridgeProbePending.set(target, pending);
+        sendProbe();
+    }));
+}
+function parseConfiguredLLMBridgeError(text) {
+    const value = String(text || '').trim();
+    if (!value || value.charAt(0) !== '{') return '';
+    try {
+        const parsed = JSON.parse(value);
+        return parsed?.error?.message || parsed?.message || '';
+    } catch (_error) {
+        return '';
+    }
+}
+function requestConfiguredLLM(prompt, options = {}) {
+    return probeConfiguredLLMBridge({
+        timeoutMs: options.probeTimeoutMs || 18000,
+        retryMs: options.probeRetryMs || 2500,
+        onProbe: options.onProbe
+    }).then(() => new Promise((resolve, reject) => {
+        const target = makeConfiguredLLMRequestId();
+        const timeoutId = setTimeout(() => {
+            const pending = configuredLLMBridgePending.get(target);
+            configuredLLMBridgePending.delete(target);
+            const chunkNote = pending && pending.chunks ? ' Partial response chunks arrived, but no final response was received.' : '';
+            reject(new Error('Configured LLM request timed out. Check that SSN is on, Private Chat Bot is enabled, and this page uses the same session as the popup.' + chunkNote));
+        }, options.timeoutMs || 180000);
+        configuredLLMBridgePending.set(target, {
+            resolve,
+            reject,
+            timeoutId,
+            text: '',
+            chunks: 0,
+            onChunk: typeof options.onChunk === 'function' ? options.onChunk : null
+        });
+        const payload = {
+            action: 'chatbot',
+            value: prompt,
+            target,
+            turbo: false
+        };
+        if (options.model) payload.model = options.model;
+        if (options.images && options.images.length) payload.images = options.images;
+        try {
+            const sentParts = postConfiguredLLMBridgePayload(payload);
+            if (typeof options.onSend === 'function') {
+                options.onSend({ target, parts: sentParts });
+            }
+        } catch (error) {
+            clearTimeout(timeoutId);
+            configuredLLMBridgePending.delete(target);
+            reject(error);
+        }
+    }));
+}
+function receiveConfiguredLLMBridgeResponse(response, isChunk = false) {
+    if (!response || typeof response.target === 'undefined') return;
+    const pending = configuredLLMBridgePending.get(response.target);
+    if (!pending) return;
+    const value = response.value == null ? '' : String(response.value);
+    if (isChunk) {
+        pending.text += value;
+        pending.chunks += 1;
+        if (pending.onChunk) pending.onChunk(value);
+        return;
+    }
+    clearTimeout(pending.timeoutId);
+    configuredLLMBridgePending.delete(response.target);
+    configuredLLMBridgeVerifiedAt = Date.now();
+    const finalText = value || pending.text || '';
+    const errorMessage = parseConfiguredLLMBridgeError(finalText);
+    if (errorMessage) {
+        pending.reject(new Error(errorMessage));
+    } else {
+        pending.resolve({
+            text: finalText,
+            chunks: pending.chunks
+        });
+    }
+}
+window.addEventListener('message', (event) => {
+    if (!configuredLLMBridgeFrame || event.source !== configuredLLMBridgeFrame.contentWindow) return;
+    const payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (!payload) return;
+    if (payload.chatbotChunk && typeof payload.chatbotChunk.value !== 'undefined') {
+        receiveConfiguredLLMBridgeResponse(payload.chatbotChunk, true);
+    } else if (payload.chatbotResponse && typeof payload.chatbotResponse.value !== 'undefined') {
+        receiveConfiguredLLMBridgeResponse(payload.chatbotResponse, false);
+    } else if (payload.aiPromptOverlays && typeof payload.aiPromptOverlays.target !== 'undefined') {
+        resolveConfiguredLLMBridgeProbe(payload.aiPromptOverlays);
+    }
+});
 class OpenAICompatiblePublisher {
     constructor(stream, apiKey, modelOverride = '', endpointOverride = '') {
         this.stream = stream;
@@ -3352,6 +3605,144 @@ class OpenAICompatiblePublisher {
             state: 'stopped',
             connected: 'no',
             lastEvent: 'publisher.stop'
+        });
+    }
+}
+class ConfiguredLLMPublisher extends OpenAICompatiblePublisher {
+    constructor(stream, modelOverride = '') {
+        super(stream, '', modelOverride, '');
+        this.providerLabel = 'SSN Configured LLM';
+        updateDiagnostics({
+            provider: this.providerLabel,
+            model: this.model || 'popup default',
+            state: 'initialized',
+            connected: 'no',
+            lastEvent: 'publisher.created',
+            lastError: '-'
+        });
+    }
+    buildPromptText(systemPrompt, prompt) {
+        const parts = [];
+        const systemText = (systemPrompt || '').trim();
+        if (systemText) {
+            parts.push('System instructions:\n' + systemText);
+        }
+        if (this.conversation.length) {
+            parts.push('Recent conversation:\n' + this.conversation.map((entry) => {
+                return (entry.role === 'assistant' ? 'Assistant' : 'User') + ': ' + entry.content;
+            }).join('\n'));
+        }
+        parts.push('User:\n' + prompt);
+        parts.push('Assistant:');
+        return parts.join('\n\n');
+    }
+    async connect() {
+        await probeConfiguredLLMBridge({
+            onProbe: (attempt) => setConfiguredLLMInfo('Checking SSN background bridge (attempt ' + attempt + ')...', false)
+        });
+        this.connected = true;
+        updateDiagnostics({
+            provider: this.providerLabel,
+            model: this.model || 'popup default',
+            state: 'connected',
+            connected: 'yes',
+            lastEvent: 'configuredllm.connect.ready',
+            lastError: '-'
+        });
+        resetVoiceTelemetry({
+            inputMode: 'Browser STT + optional image frame',
+            outputState: 'Text response only'
+        });
+        setConfiguredLLMInfo('Connected through the SSN session bridge. Uses the LLM provider configured in the popup.', false);
+    }
+    async start() {
+        this.stopped = false;
+        await this.connect();
+        if (this.stream.getAudioTracks().length > 0) {
+            await this.setupSpeechRecognition();
+        }
+        if (this.pendingGreeting) {
+            this.pendingGreeting = false;
+            this.sendPrompt('Hi, introduce yourself in a sentence for me. Be friendly to me.').catch(() => {});
+        }
+    }
+    async sendPrompt(text) {
+        const prompt = (text || '').trim();
+        if (!prompt) return;
+        if (!this.isConnected()) {
+            throw new Error('Configured LLM bridge is not connected.');
+        }
+        this.responseActive = true;
+        this.currentResponseText = '';
+        this.lastActivityTime = Date.now();
+        const systemPromptValue = (document.getElementById('systemPrompt')?.value || '').trim();
+        const videoSourceValue = (document.getElementById('videoSource')?.value || 'none');
+        const hasLiveVideo = videoSourceValue !== 'none' &&
+            this.stream.getVideoTracks().some((track) => track.readyState === 'live' && track.enabled);
+        const imageDataUrl = hasLiveVideo && configuredLLMImageSupport !== 'unsupported' ? this.captureFrameDataUrl() : '';
+        const promptText = this.buildPromptText(systemPromptValue, prompt);
+        updateDiagnostics({
+            state: 'responding',
+            connected: 'yes',
+            lastEvent: imageDataUrl ? 'configuredllm.generate.start.image' : 'configuredllm.generate.start',
+            lastError: '-'
+        });
+        try {
+            const result = await requestConfiguredLLM(promptText, {
+                model: this.model || '',
+                images: imageDataUrl ? [imageDataUrl] : [],
+                timeoutMs: 180000,
+                onProbe: (attempt) => setConfiguredLLMInfo('Checking SSN background bridge (attempt ' + attempt + ')...', false),
+                onSend: () => setConfiguredLLMInfo('Background bridge is ready; waiting for the configured LLM...', false),
+                onChunk: (chunk) => {
+                    setConfiguredLLMInfo('Receiving configured LLM response...', false);
+                    this.appendModelText(chunk);
+                }
+            });
+            const responseText = (result.text || '').trim();
+            if (!result.chunks && responseText) {
+                this.appendModelText(responseText);
+            }
+            if (!responseText && !this.currentResponseText) {
+                throw new Error('Configured LLM returned an empty response.');
+            }
+            this.conversation.push({ role: 'user', content: prompt });
+            this.conversation.push({ role: 'assistant', content: responseText || this.currentResponseText });
+            this.trimConversation();
+            this.finalizeResponse();
+            updateDiagnostics({
+                state: 'connected',
+                connected: 'yes',
+                lastEvent: imageDataUrl ? 'configuredllm.generate.done.image' : 'configuredllm.generate.done',
+                lastError: '-'
+            });
+            setConfiguredLLMInfo('Configured LLM response received.', false);
+        } catch (error) {
+            this.finalizeResponse();
+            updateDiagnostics({
+                state: 'error',
+                connected: this.connected ? 'yes' : 'no',
+                lastEvent: 'configuredllm.generate.error',
+                lastError: error.message || 'Configured LLM generation failed'
+            });
+            setConfiguredLLMInfo(error.message || 'Configured LLM generation failed', true);
+            throw error;
+        }
+    }
+    async reconnect() {
+        this.stop();
+        this.stopped = false;
+        await this.connect();
+        if (this.stream.getAudioTracks().length > 0) {
+            await this.setupSpeechRecognition();
+        }
+        return true;
+    }
+    stop() {
+        super.stop();
+        resetVoiceTelemetry({
+            inputMode: 'Browser STT + optional image frame',
+            outputState: 'Text response only'
         });
     }
 }
@@ -5049,6 +5440,8 @@ const customEndpointContainer = document.getElementById('customEndpointContainer
 const customModelSelect = document.getElementById('customModelSelect');
 const customEndpointInfo = document.getElementById('customEndpointInfo');
 const customModelsRefreshButton = document.getElementById('customModelsRefresh');
+const configuredLLMTestContainer = document.getElementById('configuredLLMTestContainer');
+const configuredLLMTestButton = document.getElementById('configuredLLMTest');
 let customModelList = [];
 let customModelsLoading = false;
 let customModelsQueuedRefresh = false;
@@ -5254,8 +5647,124 @@ async function refreshCustomModelList(showErrors = false) {
     }
 }
 
+function captureConfiguredLLMTestFrame() {
+    if (!preview || preview.readyState < 2 || !preview.videoWidth || !preview.videoHeight) {
+        return '';
+    }
+    const videoSourceValue = document.getElementById('videoSource')?.value || 'none';
+    if (videoSourceValue === 'none') {
+        return '';
+    }
+    const maxWidth = 640;
+    const scale = Math.min(1, maxWidth / preview.videoWidth);
+    const width = Math.max(1, Math.floor(preview.videoWidth * scale));
+    const height = Math.max(1, Math.floor(preview.videoHeight * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+    ctx.drawImage(preview, 0, 0, width, height);
+    return canvas.toDataURL('image/jpeg', 0.75);
+}
+
+async function testConfiguredLLMProvider() {
+    if (!configuredLLMTestButton) return;
+    const previousText = configuredLLMTestButton.textContent;
+    configuredLLMTestButton.disabled = true;
+    configuredLLMTestButton.textContent = 'Testing...';
+    const imageDataUrl = captureConfiguredLLMTestFrame();
+    const model = getEffectiveModelForProvider('configuredllm');
+    const prompt = imageDataUrl
+        ? 'Reply in one short sentence confirming the configured cohost LLM works and whether an image frame was received.'
+        : 'Reply in one short sentence confirming the configured cohost LLM works.';
+    try {
+        setConfiguredLLMInfo(imageDataUrl ? 'Testing configured LLM with an attached frame...' : 'Testing configured LLM with text only...', false);
+        let receivedChars = 0;
+        const result = await requestConfiguredLLM(prompt, {
+            model,
+            images: imageDataUrl ? [imageDataUrl] : [],
+            timeoutMs: 90000,
+            onProbe: (attempt) => setConfiguredLLMInfo('Checking SSN background bridge (attempt ' + attempt + ')...', false),
+            onSend: () => setConfiguredLLMInfo('Background bridge is ready; waiting for the configured LLM...', false),
+            onChunk: (chunk) => {
+                receivedChars += String(chunk || '').length;
+                setConfiguredLLMInfo('Receiving configured LLM response (' + receivedChars + ' chars)...', false);
+            }
+        });
+        const responseText = (result.text || '').trim();
+        const summary = responseText ? responseText.slice(0, 180) : 'Connected, but no text returned.';
+        if (imageDataUrl) {
+            configuredLLMImageSupport = 'supported';
+            localStorage.setItem('configuredLLMImageSupport', configuredLLMImageSupport);
+        }
+        setConfiguredLLMInfo((imageDataUrl ? 'Text + image request worked. ' : 'Text request worked. ') + summary, false);
+        updateDiagnostics({
+            provider: providerUIConfig.configuredllm.label,
+            model: model || 'popup default',
+            state: publisher ? diagnosticsState.state : 'idle',
+            lastEvent: imageDataUrl ? 'configuredllm.test.image.ok' : 'configuredllm.test.text.ok',
+            lastError: '-'
+        });
+    } catch (firstError) {
+        if (imageDataUrl) {
+            try {
+                setConfiguredLLMInfo('Image test failed; retrying text-only...', true);
+                let receivedChars = 0;
+                const result = await requestConfiguredLLM('Reply in one short sentence confirming the configured cohost LLM works without an image.', {
+                    model,
+                    timeoutMs: 90000,
+                    onProbe: (attempt) => setConfiguredLLMInfo('Checking SSN background bridge (attempt ' + attempt + ')...', false),
+                    onSend: () => setConfiguredLLMInfo('Background bridge is ready; waiting for the text-only response...', false),
+                    onChunk: (chunk) => {
+                        receivedChars += String(chunk || '').length;
+                        setConfiguredLLMInfo('Receiving text-only response (' + receivedChars + ' chars)...', false);
+                    }
+                });
+                const responseText = (result.text || '').trim();
+                configuredLLMImageSupport = 'unsupported';
+                localStorage.setItem('configuredLLMImageSupport', configuredLLMImageSupport);
+                setConfiguredLLMInfo('Text works, but image attachment failed: ' + (firstError.message || firstError) + (responseText ? ' Reply: ' + responseText.slice(0, 120) : ''), true);
+                updateDiagnostics({
+                    provider: providerUIConfig.configuredllm.label,
+                    model: model || 'popup default',
+                    lastEvent: 'configuredllm.test.image.failed.text.ok',
+                    lastError: firstError.message || String(firstError)
+                });
+            } catch (secondError) {
+                const message = secondError.message || firstError.message || 'Configured LLM test failed';
+                setConfiguredLLMInfo(message, true);
+                showError(message);
+                updateDiagnostics({
+                    provider: providerUIConfig.configuredllm.label,
+                    model: model || 'popup default',
+                    state: 'error',
+                    connected: 'no',
+                    lastEvent: 'configuredllm.test.failed',
+                    lastError: message
+                });
+            }
+        } else {
+            const message = firstError.message || 'Configured LLM test failed';
+            setConfiguredLLMInfo(message, true);
+            showError(message);
+            updateDiagnostics({
+                provider: providerUIConfig.configuredllm.label,
+                model: model || 'popup default',
+                state: 'error',
+                connected: 'no',
+                lastEvent: 'configuredllm.test.failed',
+                lastError: message
+            });
+        }
+    } finally {
+        configuredLLMTestButton.disabled = false;
+        configuredLLMTestButton.textContent = previousText;
+    }
+}
+
 function isRealtimeProvider(providerName) {
-    return providerName === 'chatgpt' || providerName === 'xai' || providerName === 'localqwen' || providerName === 'localgemma' || providerName === 'customopenai';
+    return providerName === 'chatgpt' || providerName === 'xai' || providerName === 'localqwen' || providerName === 'localgemma' || providerName === 'customopenai' || providerName === 'configuredllm';
 }
 
 function createPublisherForProvider(providerName, activeStream, apiKey) {
@@ -5269,6 +5778,9 @@ function createPublisherForProvider(providerName, activeStream, apiKey) {
     if (providerName === 'customopenai') {
         const endpoint = getEffectiveCustomEndpoint(providerName);
         return new OpenAICompatiblePublisher(activeStream, apiKey, effectiveModel, endpoint);
+    }
+    if (providerName === 'configuredllm') {
+        return new ConfiguredLLMPublisher(activeStream, effectiveModel);
     }
     return new RealtimePublisher(activeStream, apiKey, providerName, effectiveModel);
 }
@@ -6187,6 +6699,7 @@ providerSelect.innerHTML = `
     <option value="gemini">Google Gemini Live</option>
     <option value="localqwen">Local Qwen 3.5 0.8B (Browser)</option>
     <option value="localgemma">Local Gemma 4 E2B (Browser)</option>
+    <option value="configuredllm">SSN Configured LLM</option>
     <option value="customopenai">OpenAI-Compatible (Custom)</option>
     <option value="chatgpt">OpenAI Realtime</option>
     <option value="xai">xAI Realtime</option>
@@ -6243,6 +6756,17 @@ const providerUIConfig = {
         acceptsOptionalApiKey: true,
         supportsAudioResponse: false
     },
+    configuredllm: {
+        label: 'SSN Configured LLM',
+        apiKeyPlaceholder: 'Uses popup LLM provider',
+        apiKeyInfoHtml: 'Uses the LLM provider configured in the SSN popup. Requires this URL to include `?session=...` and Private Chat Bot enabled.',
+        defaultModel: '',
+        modelPlaceholder: 'Optional model override passed to the configured LLM provider',
+        disableCaptureSelection: false,
+        deviceNotice: 'Speech-to-text runs in-browser. If camera/screen is enabled, a frame is sent through the SSN LLM bridge for multimodal providers.',
+        requiresApiKey: false,
+        supportsAudioResponse: false
+    },
     chatgpt: {
         ...REALTIME_PROVIDER_CONFIG.chatgpt,
         modelPlaceholder: `Optional model override (default ${REALTIME_PROVIDER_CONFIG.chatgpt.defaultModel})`,
@@ -6263,6 +6787,7 @@ const defaultPrompts = {
     localqwen: "You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.",
     localgemma: "You are a concise, friendly social chat co-host. You can use visible context when it helps, but do not narrate the scene unless asked.",
     customopenai: "You are a concise, friendly social chat co-host. Keep answers practical and conversational.",
+    configuredllm: "You are a concise, friendly social chat co-host. Use visible context when it is attached and helpful. Keep answers practical and conversational.",
     chatgpt: "You are a friendly and helpful social chat assistant.",
     xai: "You are a friendly and helpful social chat assistant."
 };
@@ -6319,6 +6844,11 @@ function getVoiceModeSummary(providerName) {
                 inputMode: 'Browser STT -> text prompt',
                 outputState: 'Text response only'
             };
+        case 'configuredllm':
+            return {
+                inputMode: 'Browser STT + optional image frame',
+                outputState: 'Text response only'
+            };
         case 'chatgpt':
         case 'xai':
             return {
@@ -6344,6 +6874,7 @@ function applyProviderUI(providerName, restoreKey = true) {
     const requiresApiKey = config.requiresApiKey !== false;
     const acceptsOptionalApiKey = config.acceptsOptionalApiKey === true;
     const isCustomOpenAIProvider = providerName === 'customopenai';
+    const isConfiguredLLMProvider = providerName === 'configuredllm';
     if (restoreKey) {
         apiKeyInput.value = (requiresApiKey || acceptsOptionalApiKey) ? (localStorage.getItem(`apiKey_${providerName}`) || '') : '';
         modelOverrideInput.value = getStoredModelOverride(providerName);
@@ -6406,6 +6937,9 @@ function applyProviderUI(providerName, restoreKey = true) {
     if (customEndpointInfo) {
         customEndpointInfo.style.display = isCustomOpenAIProvider ? 'block' : 'none';
     }
+    if (configuredLLMTestContainer) {
+        configuredLLMTestContainer.style.display = isConfiguredLLMProvider ? 'flex' : 'none';
+    }
     if (isCustomOpenAIProvider) {
         const endpointValue = getEffectiveCustomEndpoint(providerName);
         customEndpointInput.value = endpointValue;
@@ -6419,6 +6953,15 @@ function applyProviderUI(providerName, restoreKey = true) {
         }
     } else {
         setCustomEndpointInfo('');
+    }
+    if (isConfiguredLLMProvider) {
+        const params = getConfiguredLLMSessionParams();
+        const supportNote = configuredLLMImageSupport === 'supported'
+            ? ' Image attachment previously worked.'
+            : (configuredLLMImageSupport === 'unsupported' ? ' Image attachment previously failed; text-only will be used.' : '');
+        setConfiguredLLMInfo(params.room
+            ? 'Uses the popup LLM provider through session ' + params.room + '. Test text now; image support is tested when camera/screen is active.' + supportNote
+            : 'Add ?session=YOUR_SESSION_ID to this URL to use the popup LLM provider.', !params.room);
     }
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.style.display = providerName === 'gemini' && responseTypeValue === 'audio' ? 'block' : 'none';
@@ -6529,6 +7072,15 @@ if (customModelSelect) {
             lastError: '-'
         });
         await restartActivePublisher();
+    });
+}
+if (configuredLLMTestButton) {
+    configuredLLMTestButton.addEventListener('click', () => {
+        testConfiguredLLMProvider().catch((error) => {
+            const message = error?.message || 'Configured LLM test failed';
+            setConfiguredLLMInfo(message, true);
+            showError(message);
+        });
     });
 }
 document.getElementById('providerSelect').addEventListener('change', async function() {

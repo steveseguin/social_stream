@@ -11416,9 +11416,19 @@ async function initTransport(roomStreamID, pass = false) {
 				// Receive overlay messages via SDK (support both event names and wrapper passthrough)
 				const handleSDKData = ev => {
 					try {
-						const pkt = ev.detail && (ev.detail.data || ev.detail);
-						const data = pkt && (pkt.detail?.data || pkt.data || pkt);
-						const uuid = ev.detail && (ev.detail.uuid || ev.detail.peer || ev.detail.id);
+						const detail = ev.detail || {};
+						const pkt = detail.data || detail;
+						let data = null;
+						if (pkt && pkt.detail && pkt.detail.data) {
+							data = pkt.detail.data;
+						} else if (pkt && pkt.pipe) {
+							data = pkt.pipe;
+						} else if (pkt && pkt.data) {
+							data = pkt.data;
+						} else {
+							data = pkt;
+						}
+						const uuid = detail.uuid || detail.UUID || detail.peer || detail.id || (pkt && (pkt.uuid || pkt.UUID || pkt.peer || pkt.id));
 						if (!data) return;
 						if (typeof data !== "object") return;
 						let payload = data.overlayNinja || null;
