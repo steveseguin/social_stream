@@ -784,6 +784,60 @@ h2 {
 .options_group {
     word-break: break-word;
 }
+.ai-tool-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.ai-tool-card h2,
+.ai-tool-card h3,
+.ai-tool-card h4 {
+    margin: 0;
+}
+.ai-tool-link {
+    margin: 0;
+}
+.ai-tool-link div {
+    max-height: none;
+    padding: 8px 10px;
+}
+.ai-tool-note,
+.ai-tool-copy,
+.cohost-tool-note {
+    margin: 0;
+    font-size: 0.9em;
+    line-height: 1.45;
+    opacity: 0.86;
+}
+.cohost-tool-panel {
+    margin-top: 4px;
+    padding: 12px;
+    border: 1px solid rgba(0, 166, 255, 0.28);
+    border-radius: 6px;
+    background: rgba(0, 166, 255, 0.08);
+}
+.cohost-tool-panel h4 {
+    margin-bottom: 8px;
+}
+.cohost-tool-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    word-break: normal;
+}
+.cohost-tool-row .switch {
+    flex: 0 0 auto;
+    margin-top: 1px;
+}
+.cohost-tool-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.cohost-tool-title {
+    font-weight: 600;
+}
 .lightblue{
 	color: #006f93;
 }
@@ -8885,14 +8939,14 @@ input:checked + .slider:before {
 					</label>
 					<div class="collapsible-text">
 						<div class="options">
-							<div class="options_group streaming_chat">
+							<div class="options_group streaming_chat ai-tool-card">
 								<h2 style="margin:0;">🧠 AI prompt page builder</h2>
-								<div class="link" style="margin:0;" title="Create, iterate, preview, and export AI-built HTML pages.">
+								<div class="link ai-tool-link" title="Create, iterate, preview, and export AI-built HTML pages.">
 									<div id="aiprompt" data-raw="" class="single_message">
 										<a target="_blank" id="aipromptlink" href="https://beta.socialstream.ninja/aiprompt.html">https://beta.socialstream.ninja/aiprompt.html</a>
 									</div>
 								</div>
-								<i>Requires the configured LLM provider above and the private chat bot option enabled.</i>
+								<p class="ai-tool-note">Requires the configured LLM provider above and the private chat bot option enabled.</p>
 							</div>
 						</div>
 					</div>
@@ -8906,29 +8960,32 @@ input:checked + .slider:before {
 					</label> 
 					<div class="collapsible-text">
 						<div class="options">
-							<div class="options_group streaming_chat">
+							<div class="options_group streaming_chat ai-tool-card">
 								<h3 data-translate="virtual-cohost">A virtual co-host that can both listen, see, and talk back</h3>
 								
-								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
+								<div class="link ai-tool-link" title="Open the multimodal co-host page.">
 									<div id="cohost" data-raw="" class="single_message">
 										<a target="_blank" id="cohostlink" href="https://beta.socialstream.ninja/cohost.html">https://beta.socialstream.ninja/cohost.html</a>
 									</div>
 								</div>
 								
-								<span>
-									This is a work-in-progress virtual AI co-host. It can currently view your screen, webcam, and listen to your microphone/audio. It will respond by text or audio, as you desire.<br /><br />
-									Down the road this will be able to access your live chat, start/stop your OBS stream, change scenes in OBS, handle events and interactive games with your audience, and participate in your stream as a virtual co-host.
-									
-								</span>
-								<h4>Co-host tool permissions</h4>
-								<div>
-									<label class="switch">
-										<input type="checkbox" id="cohostSpotifyControl" data-setting="cohostSpotifyControl" />
-										<span class="slider round"></span>
-									</label>
-									<span>Allow co-host Spotify controls when Spotify is enabled and connected</span>
+								<p class="ai-tool-copy">This work-in-progress AI co-host can view your screen or webcam, listen to microphone/audio, and respond by text or audio.</p>
+								<p class="ai-tool-copy">For the SSN Configured LLM provider, enable the <a href="#wrapper-chatbot-private-options">private chat bot option</a> above.</p>
+								<p class="ai-tool-copy">Future tool permissions can add live chat, OBS, stream events, games, and other interactive controls.</p>
+								<div class="cohost-tool-panel">
+									<h4>Co-host tool permissions</h4>
+									<div class="cohost-tool-row">
+										<label class="switch">
+											<input type="checkbox" id="cohostSpotifyControl" data-setting="cohostSpotifyControl" />
+											<span class="slider round"></span>
+										</label>
+										<div class="cohost-tool-copy">
+											<span class="cohost-tool-title">Spotify controls</span>
+											<span class="cohost-tool-note">Allow the co-host to pause, resume, skip, queue, and check songs when Spotify is enabled and connected.</span>
+										</div>
+									</div>
+									<p class="cohost-tool-note">Disabled tools are blocked by the background service even if the co-host asks for them.</p>
 								</div>
-								<small>Disabled tools are blocked by the background service even if the co-host asks for them.</small>
 							</div>
 							
 						</div>
