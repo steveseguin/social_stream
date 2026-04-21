@@ -1627,8 +1627,11 @@
 			let configuredLLMBridgePromise = null;
 			let configuredLLMBridgePending = new Map();
 			let configuredLLMBridgeProbePending = new Map();
+			let configuredLLMBridgeToolPending = new Map();
+			let configuredLLMBridgeToolStatusPending = new Map();
 			let configuredLLMBridgeRequestCounter = 0;
 			let configuredLLMBridgeVerifiedAt = 0;
+			let cohostToolStatusCache = null;
 			let configuredLLMImageSupport = localStorage.getItem("configuredLLMImageSupport") || "unknown";
 			function resolveLocalBrowserWorkerUrl() {
 				try {
@@ -3321,6 +3324,75 @@
 						})
 				);
 			}
+			function requestCohostToolStatus(options = {}) {
+				const now = Date.now();
+				if (cohostToolStatusCache && now - cohostToolStatusCache.receivedAt < (options.cacheMs || 30000)) {
+					return Promise.resolve(cohostToolStatusCache.value);
+				}
+				return probeConfiguredLLMBridge({
+					timeoutMs: options.probeTimeoutMs || 18000,
+					retryMs: options.probeRetryMs || 2500,
+					onProbe: options.onProbe
+				}).then(
+					() =>
+						new Promise((resolve, reject) => {
+							const target = makeConfiguredLLMRequestId();
+							const timeoutId = setTimeout(() => {
+								configuredLLMBridgeToolStatusPending.delete(target);
+								reject(new Error("SSN background did not answer the co-host tool status request."));
+							}, options.timeoutMs || 15000);
+							configuredLLMBridgeToolStatusPending.set(target, {
+								resolve,
+								reject,
+								timeoutId
+							});
+							try {
+								postConfiguredLLMBridgePayload({
+									action: "cohostToolStatus",
+									target
+								});
+							} catch (error) {
+								clearTimeout(timeoutId);
+								configuredLLMBridgeToolStatusPending.delete(target);
+								reject(error);
+							}
+						})
+				);
+			}
+			function requestCohostTool(tool, command, value = {}, options = {}) {
+				return probeConfiguredLLMBridge({
+					timeoutMs: options.probeTimeoutMs || 18000,
+					retryMs: options.probeRetryMs || 2500,
+					onProbe: options.onProbe
+				}).then(
+					() =>
+						new Promise((resolve, reject) => {
+							const target = makeConfiguredLLMRequestId();
+							const timeoutId = setTimeout(() => {
+								configuredLLMBridgeToolPending.delete(target);
+								reject(new Error("SSN background did not answer the co-host tool request."));
+							}, options.timeoutMs || 30000);
+							configuredLLMBridgeToolPending.set(target, {
+								resolve,
+								reject,
+								timeoutId
+							});
+							try {
+								postConfiguredLLMBridgePayload({
+									action: "cohostTool",
+									tool,
+									command,
+									value,
+									target
+								});
+							} catch (error) {
+								clearTimeout(timeoutId);
+								configuredLLMBridgeToolPending.delete(target);
+								reject(error);
+							}
+						})
+				);
+			}
 			function receiveConfiguredLLMBridgeResponse(response, isChunk = false) {
 				if (!response || typeof response.target === "undefined") return;
 				const pending = configuredLLMBridgePending.get(response.target);
@@ -3346,6 +3418,26 @@
 					});
 				}
 			}
+			function receiveConfiguredLLMBridgeToolStatus(response) {
+				if (!response || typeof response.target === "undefined") return;
+				const pending = configuredLLMBridgeToolStatusPending.get(response.target);
+				if (!pending) return;
+				clearTimeout(pending.timeoutId);
+				configuredLLMBridgeToolStatusPending.delete(response.target);
+				cohostToolStatusCache = {
+					receivedAt: Date.now(),
+					value: response.value || response
+				};
+				pending.resolve(cohostToolStatusCache.value);
+			}
+			function receiveConfiguredLLMBridgeToolResponse(response) {
+				if (!response || typeof response.target === "undefined") return;
+				const pending = configuredLLMBridgeToolPending.get(response.target);
+				if (!pending) return;
+				clearTimeout(pending.timeoutId);
+				configuredLLMBridgeToolPending.delete(response.target);
+				pending.resolve(response);
+			}
 			window.addEventListener("message", event => {
 				if (!configuredLLMBridgeFrame || event.source !== configuredLLMBridgeFrame.contentWindow) return;
 				const payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
@@ -3356,6 +3448,10 @@
 					receiveConfiguredLLMBridgeResponse(payload.chatbotResponse, false);
 				} else if (payload.aiPromptOverlays && typeof payload.aiPromptOverlays.target !== "undefined") {
 					resolveConfiguredLLMBridgeProbe(payload.aiPromptOverlays);
+				} else if (payload.cohostToolStatus && typeof payload.cohostToolStatus.target !== "undefined") {
+					receiveConfiguredLLMBridgeToolStatus(payload.cohostToolStatus);
+				} else if (payload.cohostToolResponse && typeof payload.cohostToolResponse.target !== "undefined") {
+					receiveConfiguredLLMBridgeToolResponse(payload.cohostToolResponse);
 				}
 			});
 			class OpenAICompatiblePublisher {
@@ -4090,6 +4186,80 @@
 					parts.push("Assistant:");
 					return parts.join("\n\n");
 				}
+				promptMentionsSpotify(prompt) {
+					return /\b(spotify|music|song|track|playlist|artist|album|play|pause|stop|resume|next|skip|previous|back|volume|queue|shuffle|repeat|now playing)\b/i.test(prompt || "");
+				}
+				async buildToolAwarePromptText(systemPrompt, prompt) {
+					const basePrompt = this.buildPromptText(systemPrompt, prompt);
+					if (!this.promptMentionsSpotify(prompt)) {
+						return basePrompt;
+					}
+					try {
+						const status = await requestCohostToolStatus({
+							onProbe: attempt => setConfiguredLLMInfo("Checking co-host tool permissions (attempt " + attempt + ")...", false)
+						});
+						const spotify = status && status.tools && status.tools.spotify;
+						if (!spotify || !spotify.available) {
+							return basePrompt;
+						}
+						return (
+							basePrompt +
+							"\n\nCo-host tools available:\n" +
+							"Spotify is enabled and permissioned. If the user asks you to control Spotify, include exactly one hidden command on its own line and keep the visible reply conversational.\n" +
+							'Hidden command format: [[COHOST_TOOL:{"tool":"spotify","command":"skip","args":{}}]]\n' +
+							"Spotify commands: skip, previous, pause, resume, toggle, nowPlaying, volume with args {\"volume\":0-100}, queue with args {\"query\":\"song or artist\"}, shuffle with args {\"state\":true|false|null}, repeat with args {\"mode\":\"off\"|\"track\"|\"context\"}."
+						);
+					} catch (error) {
+						console.warn("Unable to load co-host tool status:", error);
+						return basePrompt;
+					}
+				}
+				extractCohostToolCommands(text) {
+					const commands = [];
+					const cleaned = String(text || "")
+						.replace(/\[\[COHOST_TOOL:\s*({[\s\S]*?})\s*\]\]/g, function (_match, jsonText) {
+							try {
+								const parsed = JSON.parse(jsonText);
+								const tool = String(parsed.tool || "").trim();
+								const command = String(parsed.command || "").trim();
+								if (tool === "spotify" && command) {
+									commands.push({
+										tool,
+										command,
+										args: parsed.args && typeof parsed.args === "object" ? parsed.args : {}
+									});
+								}
+							} catch (error) {
+								console.warn("Invalid co-host tool command:", error);
+							}
+							return "";
+						})
+						.replace(/\n{3,}/g, "\n\n")
+						.trim();
+					return { text: cleaned, commands };
+				}
+				formatCohostToolResult(result) {
+					const message = result && result.message ? String(result.message) : "";
+					if (result && result.tool === "spotify") {
+						return message || (result.success ? "Spotify command completed." : "Spotify command failed.");
+					}
+					return message || (result && result.success ? "Tool command completed." : "Tool command failed.");
+				}
+				async runCohostToolCommands(commands) {
+					const summaries = [];
+					for (let i = 0; i < commands.length; i++) {
+						const command = commands[i];
+						try {
+							const result = await requestCohostTool(command.tool, command.command, command.args || {}, {
+								onProbe: attempt => setConfiguredLLMInfo("Checking co-host tool bridge (attempt " + attempt + ")...", false)
+							});
+							summaries.push(this.formatCohostToolResult(result));
+						} catch (error) {
+							summaries.push(error.message || "Co-host tool request failed.");
+						}
+					}
+					return summaries;
+				}
 				async connect() {
 					await probeConfiguredLLMBridge({
 						onProbe: attempt => setConfiguredLLMInfo("Checking SSN background bridge (attempt " + attempt + ")...", false)
@@ -4133,7 +4303,7 @@
 					const videoSourceValue = document.getElementById("videoSource")?.value || "none";
 					const hasLiveVideo = videoSourceValue !== "none" && this.stream.getVideoTracks().some(track => track.readyState === "live" && track.enabled);
 					const imageDataUrl = hasLiveVideo && configuredLLMImageSupport !== "unsupported" ? this.captureFrameDataUrl() : "";
-					const promptText = this.buildPromptText(systemPromptValue, prompt);
+					const promptText = await this.buildToolAwarePromptText(systemPromptValue, prompt);
 					updateDiagnostics({
 						state: "responding",
 						connected: "yes",
@@ -4149,20 +4319,26 @@
 							onSend: () => setConfiguredLLMInfo("Background bridge is ready; waiting for the configured LLM...", false),
 							onChunk: chunk => {
 								setConfiguredLLMInfo("Receiving configured LLM response...", false);
-								this.appendModelText(chunk);
 							}
 						});
-						const responseText = (result.text || "").trim();
-						if (!result.chunks && responseText) {
+						const parsedResponse = this.extractCohostToolCommands(result.text || "");
+						const responseText = parsedResponse.text;
+						if (responseText) {
 							this.appendModelText(responseText);
 						}
-						if (!responseText && !this.currentResponseText) {
+						const toolSummaries = parsedResponse.commands.length ? await this.runCohostToolCommands(parsedResponse.commands) : [];
+						if (toolSummaries.length) {
+							const toolText = toolSummaries.join("\n");
+							this.appendModelText((responseText ? "\n" : "") + toolText);
+						}
+						const finalAssistantText = [responseText].concat(toolSummaries).filter(Boolean).join("\n");
+						if (!finalAssistantText && !this.currentResponseText) {
 							throw new Error("Configured LLM returned an empty response.");
 						}
 						this.conversation.push({ role: "user", content: prompt });
-						this.conversation.push({ role: "assistant", content: responseText || this.currentResponseText });
+						this.conversation.push({ role: "assistant", content: finalAssistantText || this.currentResponseText });
 						this.trimConversation();
-						await this.speakTextResponse(responseText || this.currentResponseText).catch(error => {
+						await this.speakTextResponse(finalAssistantText || this.currentResponseText).catch(error => {
 							console.warn("TTS failed:", error);
 							updateVoiceTelemetry({
 								outputState: "TTS failed",

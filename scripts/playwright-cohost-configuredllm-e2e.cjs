@@ -84,7 +84,9 @@ async function addInitScript(page) {
                 var response = hasImage
                   ? 'Configured LLM bridge received text plus image.'
                   : 'Configured LLM bridge received text only.';
-                if (/visible|camera|image/i.test(prompt) && hasImage) {
+                if (/skip spotify/i.test(prompt)) {
+                  response = 'Sure, skipping Spotify now.\\n[[COHOST_TOOL:{"tool":"spotify","command":"skip","args":{}}]]';
+                } else if (/visible|camera|image/i.test(prompt) && hasImage) {
                   response = 'I can use the attached camera frame.';
                 } else if (/introduce yourself/i.test(prompt)) {
                   response = 'Hi, I am your SSN configured LLM co-host.';
@@ -112,6 +114,30 @@ async function addInitScript(page) {
                 }
                 if (payload.action === 'getAiPromptOverlays') {
                   send({ aiPromptOverlays: { target: payload.target, value: { version: 1, activeOverlay: '', order: [], overlays: {} } } });
+                  return;
+                }
+                if (payload.action === 'cohostToolStatus') {
+                  send({
+                    cohostToolStatus: {
+                      target: payload.target,
+                      value: { tools: { spotify: { enabled: true, configured: true, available: true } } },
+                      tools: { spotify: { enabled: true, configured: true, available: true } }
+                    }
+                  });
+                  return;
+                }
+                if (payload.action === 'cohostTool') {
+                  parent.__cohostToolCalls = parent.__cohostToolCalls || [];
+                  parent.__cohostToolCalls.push({ tool: payload.tool, command: payload.command, value: payload.value });
+                  send({
+                    cohostToolResponse: {
+                      target: payload.target,
+                      tool: payload.tool,
+                      command: payload.command,
+                      success: true,
+                      message: 'Skipped to the next Spotify track.'
+                    }
+                  });
                   return;
                 }
                 if (payload.action === 'chatbot') reply(payload);
@@ -192,6 +218,21 @@ async function waitForAssistantCount(page, count, timeout = 120000) {
     assert(state.diagProvider === 'SSN Configured LLM', 'Diagnostics should show SSN Configured LLM.');
     assert(state.diagState === 'connected', 'Configured LLM should remain connected.');
     assert(state.diagError === '-', 'Configured LLM should not show a diagnostic error.');
+
+    const beforeSpotifyPromptCount = await page.evaluate(() => document.querySelectorAll('#responses .assistant-message').length);
+    await page.waitForFunction(() => !document.getElementById('sendButton').disabled && document.getElementById('sendButton').textContent.trim() === 'Send', null, { timeout: 30000 });
+    await page.fill('.message-input', 'Please skip Spotify.');
+    await page.evaluate(() => document.getElementById('sendButton').click());
+    await waitForAssistantCount(page, beforeSpotifyPromptCount + 1);
+
+    state = await page.evaluate(() => ({
+      latestAssistant: Array.from(document.querySelectorAll('#responses .assistant-message')).pop().textContent.trim(),
+      toolCalls: window.__cohostToolCalls || []
+    }));
+    assert(/skipping Spotify/i.test(state.latestAssistant), `Visible Spotify reply missing: ${state.latestAssistant}`);
+    assert(/Skipped to the next Spotify track/i.test(state.latestAssistant), `Spotify tool result missing: ${state.latestAssistant}`);
+    assert(!/COHOST_TOOL/i.test(state.latestAssistant), `Hidden tool marker leaked into chat: ${state.latestAssistant}`);
+    assert(state.toolCalls.length === 1 && state.toolCalls[0].tool === 'spotify' && state.toolCalls[0].command === 'skip', 'Spotify tool call should be sent through the bridge.');
     assert(pageErrors.length === 0, `Unexpected page errors: ${pageErrors.join(' | ')}`);
 
     console.log('PASS cohost configured LLM e2e');
