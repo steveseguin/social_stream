@@ -5569,7 +5569,7 @@ input:checked + .slider:before {
 			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-source-options" />
-					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span>Filter by Platform / Channel</span></label>
+					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span>🔎 Filter by Platform / Channel</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
@@ -11558,7 +11558,7 @@ input:checked + .slider:before {
 			
                                 <div class="link" title="Points system scoreboard display">
 				<h2 class="scoreboard_mode_title">
-					<span data-translate="scoreboard">Scoreboard (🚧 Work in Progress)</span>
+					<span data-translate="scoreboard">Scoreboard</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#scoreboard" title="Jump to the scoreboard link options."><span data-translate="options">[options]</span></a>
 					<label for="help-scoreboard" class="help-link rounded_area" title="Click for detailed help">[?]</label>
@@ -11573,11 +11573,11 @@ input:checked + .slider:before {
 						<li>Viewer rankings display</li>
 						<li>Integration with chat activity</li>
 					</ul>
-					<div class="help-warning">⚠️ <strong>Work in Progress:</strong> This feature is still being developed and may have limited functionality.</div>
+					<div class="help-tip">💡 <strong>Tip:</strong> Enable the global Points System above to show persistent loyalty points, or use the local fallback options below for temporary chat activity scores.</div>
 				</div>
 				<h3>
 					<span data-translate="when-enabled-a-scoreboard">
-					   A real-time points tracking scoreboard. Display user points, rankings, and engagement scores with customizable triggers and rewards.
+					   A real-time points tracking scoreboard for loyalty points, chat activity, donations, and custom Event Flow score payloads.
 					</span>
 				</h3>
 				<div id="scoreboard" data-raw="" class="streaming_chat"><a href="" id="scoreboardlink"></a></div>
@@ -11738,14 +11738,17 @@ input:checked + .slider:before {
 								</div>
 								<br>
 								
-								<h3><span data-translate="points-triggers">Points Triggers</span></h3>
+								<h3><span data-translate="points-triggers">Local fallback scoring</span></h3>
+								<p style="margin-top: 0; opacity: 0.85;">
+									For persistent loyalty points, enable the <a href="#wrapper-global-points-options">global Points System</a>. These options are only for temporary scoreboard-only scoring.
+								</p>
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-param21="chatpoints" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="points-for-chat">
-										💬 Award points for chat messages
+										💬 Count chat messages as temporary points
 									</span>
 								</div>
 								<div>
@@ -11754,7 +11757,7 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="points-for-donations">
-										💰 Award points for donations
+										💰 Count donation amounts as temporary points
 									</span>
 								</div>
 								<div>
@@ -11763,7 +11766,7 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="custom-point-triggers">
-										🎯 Enable custom point triggers
+										🎯 Accept custom score fields from Event Flow payloads
 									</span>
 								</div>
 								<br>
