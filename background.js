@@ -10713,7 +10713,9 @@ function normalizeCohostSpotifyRequest(request) {
 		}
 		msg.volume = Math.max(0, Math.min(100, Math.round(volume)));
 	} else if (spotifyAction === "queue") {
-		const query = String(value.query || value.text || "").trim().slice(0, 200);
+		const query = String(value.query || value.text || "")
+			.trim()
+			.slice(0, 200);
 		if (!query) {
 			return { error: "Spotify queue command needs a song or artist query." };
 		}
@@ -10729,7 +10731,9 @@ function normalizeCohostSpotifyRequest(request) {
 			msg.state = null;
 		}
 	} else if (spotifyAction === "repeat") {
-		const mode = String(value.mode || "off").trim().toLowerCase();
+		const mode = String(value.mode || "off")
+			.trim()
+			.toLowerCase();
 		if (!["off", "track", "context"].includes(mode)) {
 			return { error: "Spotify repeat mode must be off, track, or context." };
 		}
@@ -12019,15 +12023,18 @@ async function processIncomingRequest(request, UUID = false) {
 				const result = await handleCohostToolRequest(request);
 				sendDataP2P({ cohostToolResponse: Object.assign({ target: request.target || null }, result) }, UUID);
 			} catch (error) {
-				sendDataP2P({
-					cohostToolResponse: {
-						target: request.target || null,
-						tool: request.tool || "",
-						command: request.command || "",
-						success: false,
-						message: error && error.message ? error.message : "Co-host tool request failed."
-					}
-				}, UUID);
+				sendDataP2P(
+					{
+						cohostToolResponse: {
+							target: request.target || null,
+							tool: request.tool || "",
+							command: request.command || "",
+							success: false,
+							message: error && error.message ? error.message : "Co-host tool request failed."
+						}
+					},
+					UUID
+				);
 			}
 		} else if (request.action === "getAiPromptOverlays" && UUID) {
 			const overlayStore = await getAiPromptOverlays();
