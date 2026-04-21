@@ -34,8 +34,19 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
             const doc = frame.contentDocument;
             doc.open();
             doc.write(`<!DOCTYPE html><html><body><script>
+              var chunks = {};
               window.addEventListener('message', function (event) {
                 var payload = event.data && event.data.sendData && event.data.sendData.overlayNinja;
+                if (payload && payload.action === 'ssnBridgeChunk') {
+                  var key = payload.chunkId;
+                  var entry = chunks[key] || { total: payload.total, parts: [], received: 0 };
+                  if (typeof entry.parts[payload.index] === 'undefined') entry.received++;
+                  entry.parts[payload.index] = payload.value || '';
+                  chunks[key] = entry;
+                  if (entry.received < entry.total) return;
+                  delete chunks[key];
+                  payload = JSON.parse(entry.parts.join(''));
+                }
                 if (!payload || payload.action !== 'chatbot') return;
                 function send(kind, value, delay) {
                   setTimeout(function () {

@@ -679,9 +679,9 @@
 			<div class="topbar">
 				<div id="connectionStatus" class="status">Starting…</div>
 				<div class="top-actions">
+					<button id="savePage" type="button" class="ghost" title="Save the current overlay now.">Save</button>
 					<button id="copyOverlayUrl" type="button" class="ghost" title="Copy the URL to paste into OBS or a browser source.">Copy overlay URL</button>
 					<button id="openOverlay" type="button" class="ghost" title="Open the current overlay in a new tab.">Open in tab</button>
-					<button id="clearConversation" type="button" class="ghost">Clear chat</button>
 				</div>
 			</div>
 
@@ -706,6 +706,11 @@
 					</div>
 
 					<div id="conversationLog" class="conversation" aria-live="polite"></div>
+
+					<div class="button-row">
+						<button id="compactConversation" type="button" class="ghost" title="Summarize this chat into a shorter context note.">Compact chat</button>
+						<button id="clearConversation" type="button" class="ghost">Clear chat</button>
+					</div>
 
 					<div class="button-row">
 						<button id="fixError" type="button" disabled title="Send the last console error back to the AI and ask for a fix.">Fix last error</button>
@@ -766,6 +771,11 @@
 						</div>
 
 						<div class="tab-panel" data-tab="code">
+							<div class="preview-toolbar">
+								<span class="tiny">Current HTML</span>
+								<div class="spacer"></div>
+								<button id="clearTemplate" type="button" class="ghost" title="Clear the current page HTML.">Clear HTML</button>
+							</div>
 							<textarea id="htmlEditor" spellcheck="false"></textarea>
 						</div>
 					</div>
@@ -838,6 +848,7 @@ Overlay pages receive data via a VDO.Ninja iframe bridge. Always include this br
 ```
 
 Without ?session=YOUR_ID the bridge won't connect — but the builder still sends test payloads straight to the iframe via postMessage, so handlePayload must work with or without the bridge.
+Do NOT require `event.source === bridge.contentWindow`; builder test events and preview tools can come from the parent window. Only check `event.data.dataReceived.overlayNinja`.
 
 DOM ordering matters: the `<iframe id="ssn_bridge">` element MUST exist in the DOM before the script that calls `document.getElementById("ssn_bridge")` runs. The safest patterns are (a) put the iframe tag first and the script right after in `<body>`, or (b) create the iframe in JS via `document.createElement("iframe")` and append it to body. Never put the iframe element below the script that reads it — `getElementById` will return null and setting `.src` throws.
 
@@ -846,6 +857,7 @@ Most messages look like:
 { id, type, chatname, chatmessage, chatimg, timestamp, hasDonation, membership, event, subtitle, meta, contentimg, nameColor, chatbadges, karma, bot, mod, host, vip, tid, private }
 
 - type: source platform string — "youtube", "twitch", "kick", "tiktok", "facebook", "rumble", "discord", "whatnot", etc.
+- Source/platform icons can be derived from `type`: `https://socialstream.ninja/sources/images/` + lowercase/sanitized `data.type` + `.png` (for example `youtube.png`, `twitch.png`, `kick.png`). Use a normal `<img>` created in JS and hide it on `error`; do not use inline `onerror=`.
 - chatname / chatmessage / chatimg: standard chat fields. chatimg is a URL (may be empty).
 - event: set only for SYSTEM notifications — leave unset/false for plain chat. Known values include "new_follower", "subscription_gift", "gifted", "subscriber", "raid", "hype", "shoutout", "supersticker", "viewer_update", "follower_update", "subscriber_update", "viewer_updates" (aggregated), plus custom ones.
 - hasDonation: string like "$5.00" for tips / super chats / bits when money was involved.
@@ -892,6 +904,9 @@ Example viewer counter aggregate:
 12a. Alerts arrive faster than their dismiss time during busy streams. Prefer STACKING: each alert gets its own card appended to the container and dismisses on its own timer, so multiple cards can be visible at once. Never build a single-banner overlay that hides behind a global `isAnimating` / `isBusy` flag — that silently drops payloads. Queuing-one-at-a-time is acceptable only if the user explicitly asks for it; stacking is the default.
 13. For counter / viewer / goal numbers, render integer values as-is (or with toLocaleString thousands separators) instead of collapsing to "1.2k" style suffixes — the raw number is what streamers and mods actually want to read. Only abbreviate when a value is above ~1,000,000 AND space is genuinely constrained.
 14. Reset / replace state on snapshot payloads (viewer_updates, auction_update, commerce_update); only accumulate on per-item events (new chat row, new alert).
+15. Alert overlays must handle these exact shapes: donation via `data.hasDonation` even without `data.event`; member/sub via `data.membership` even without `data.event`; follow via `data.event === "new_follower"`; raid via `data.event === "raid"` plus `subtitle` or `meta.viewers`; gifted subs via `data.event === "subscription_gift"` or `"gifted"`.
+16. Do not gate alerts on `data.chatmessage`, `data.subtitle`, or `data.meta`; follow events commonly have only `{ chatname, event: "new_follower", type }`, membership events may only have `{ chatname, membership, type }`, and donation events may only have `{ chatname, hasDonation, type }`.
+17. Plain chat messages are valid when they only have `{ chatname, chatmessage, chatimg, type }` and no `event`; if the user asks for a chat overlay, do not require `event`, `hasDonation`, or `membership`.
 
 If the user asks a question that does not require a file change, answer normally without a ```html block. Otherwise, always return the full updated HTML.</textarea>
 
@@ -953,6 +968,7 @@ If the user asks a question that does not require a file change, answer normally
 		#feed { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
 		.row { display: flex; gap: 10px; align-items: flex-start; background: var(--row-bg); border: 1px solid var(--row-border); border-radius: 10px; padding: 8px 12px; opacity: 0; transform: translateY(8px); animation: slideIn 220ms ease-out forwards; }
 		.avatar { width: 32px; height: 32px; border-radius: 50%; flex: 0 0 32px; background: #222; object-fit: cover; }
+		.source-icon { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 8px; opacity: 0.85; border-radius: 3px; }
 		.body { min-width: 0; }
 		.name { font-weight: 700; color: var(--name); }
 		.text { margin-top: 2px; word-wrap: break-word; }
@@ -991,13 +1007,17 @@ If the user asks a question that does not require a file change, answer normally
 			var row = document.createElement("div");
 			row.className = "row";
 			var nameColor = data.nameColor ? ' style="color:' + escapeHtml(data.nameColor) + '"' : "";
+			var safeType = data.type ? String(data.type).toLowerCase().replace(/[^a-z0-9_-]/g, "") : "";
 			row.innerHTML =
+				(safeType ? '<img class="source-icon" src="https://socialstream.ninja/sources/images/' + escapeHtml(safeType) + '.png" alt="">' : '') +
 				(data.chatimg ? '<img class="avatar" src="' + escapeHtml(data.chatimg) + '" alt="">' : '<div class="avatar"></div>') +
 				'<div class="body">' +
 					'<span class="name"' + nameColor + '>' + escapeHtml(data.chatname || "Anonymous") + '</span>' +
 					(data.type ? '<span class="platform">' + escapeHtml(data.type) + '</span>' : '') +
 					'<div class="text">' + escapeHtml(data.chatmessage || "") + '</div>' +
 				'</div>';
+			var icon = row.querySelector(".source-icon");
+			if (icon) icon.addEventListener("error", function () { icon.style.display = "none"; });
 			feed.appendChild(row);
 			while (feed.children.length > limit) {
 				feed.removeChild(feed.firstChild);
@@ -1034,6 +1054,8 @@ If the user asks a question that does not require a file change, answer normally
 		.alert.gifted { border-left-color: var(--pink); }
 		.alert.donation { border-left-color: var(--gold); }
 		.alert.raid { border-left-color: var(--blue); }
+		.topline { display: flex; align-items: center; gap: 7px; }
+		.source-icon { width: 16px; height: 16px; flex: 0 0 16px; opacity: 0.85; border-radius: 3px; }
 		.kind { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700; }
 		.alert.sub .kind { color: var(--gold); }
 		.alert.gifted .kind { color: var(--pink); }
@@ -1067,28 +1089,37 @@ If the user asks a question that does not require a file change, answer normally
 		function escapeText(value) {
 			var d = document.createElement("div"); d.textContent = value == null ? "" : String(value); return d.innerHTML;
 		}
-		function show(kind, headline, detail) {
+		function sourceIconUrl(type) {
+			type = type ? String(type).toLowerCase().replace(/[^a-z0-9_-]/g, "") : "";
+			return type ? "https://socialstream.ninja/sources/images/" + type + ".png" : "";
+		}
+		function show(kind, headline, detail, type) {
 			var div = document.createElement("div");
+			var iconUrl = sourceIconUrl(type);
 			div.className = "alert " + kind;
-			div.innerHTML = '<div class="kind">' + escapeText(kind) + '</div>' +
+			div.innerHTML = '<div class="topline">' +
+				(iconUrl ? '<img class="source-icon" src="' + escapeText(iconUrl) + '" alt="">' : '') +
+				'<div class="kind">' + escapeText(kind) + '</div></div>' +
 				'<div class="headline">' + escapeText(headline) + '</div>' +
 				(detail ? '<div class="detail">' + escapeText(detail) + '</div>' : '');
+			var icon = div.querySelector(".source-icon");
+			if (icon) icon.addEventListener("error", function () { icon.style.display = "none"; });
 			stage.appendChild(div);
 			setTimeout(function () { div.classList.add("out"); setTimeout(function () { if (div.parentNode) div.parentNode.removeChild(div); }, 340); }, duration);
 		}
 		function route(data) {
 			if (!data || typeof data !== "object") return;
 			if (data.hasDonation) {
-				show("donation", (data.chatname || "Someone") + " tipped " + data.hasDonation, data.chatmessage || "");
+				show("donation", (data.chatname || "Someone") + " tipped " + data.hasDonation, data.chatmessage || "", data.type);
 			} else if (data.event === "new_follower") {
-				show("follow", (data.chatname || "Someone") + " followed!", data.type || "");
+				show("follow", (data.chatname || "Someone") + " followed!", data.type || "", data.type);
 			} else if (data.event === "subscription_gift" || data.event === "gifted") {
-				show("gifted", (data.chatname || "Someone") + " gifted " + (data.subtitle || (data.meta && data.meta.gift_count) || "a sub"), data.membership || "");
+				show("gifted", (data.chatname || "Someone") + " gifted " + (data.subtitle || (data.meta && data.meta.gift_count) || "a sub"), data.membership || "", data.type);
 			} else if (data.event === "subscriber" || data.membership) {
-				show("sub", (data.chatname || "Someone") + " subscribed!", data.membership || data.subtitle || "");
+				show("sub", (data.chatname || "Someone") + " subscribed!", data.membership || data.subtitle || "", data.type);
 			} else if (data.event === "raid") {
 				var viewers = (data.meta && data.meta.viewers) || data.subtitle || "";
-				show("raid", (data.chatname || "Someone") + " is raiding!", viewers ? (viewers + " viewers") : "");
+				show("raid", (data.chatname || "Someone") + " is raiding!", viewers ? (viewers + " viewers") : "", data.type);
 			}
 		}
 		window.handleOverlayPayload = route;
@@ -1335,6 +1366,9 @@ If the user asks a question that does not require a file change, answer normally
 		var MAX_AUTO_FIX = 2;
 		var html2canvasPromise = null;
 		var HTML2CANVAS_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+		var overlayPackageRequestTarget = null;
+		var overlayPackageLoaded = false;
+		var BRIDGE_CHUNK_SIZE = 12000;
 
 		var el = function (id) { return document.getElementById(id); };
 		var pageName = el("pageName");
@@ -1432,7 +1466,11 @@ If the user asks a question that does not require a file change, answer normally
 
 		function makeId() { return "page-" + Date.now() + "-" + Math.floor(Math.random() * 1e6); }
 		function makeMessageId() { return Math.floor(Math.random() * 1e9); }
-		function cleanName(name) { name = String(name || "").trim(); return name || "Untitled page"; }
+		function cleanName(name) {
+			name = String(name || "").toLowerCase().trim().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+			return name || "overlay";
+		}
+		function slugName(name) { return cleanName(name); }
 
 		function defaultPage(seed) {
 			var tmpl = seed || TEMPLATES[0];
@@ -1448,7 +1486,7 @@ If the user asks a question that does not require a file change, answer normally
 
 		function defaultState() {
 			var page = defaultPage(TEMPLATES[1]);
-			page.name = "Chat overlay";
+			page.name = "chat-overlay";
 			return { version: 2, activeId: page.id, pages: [page] };
 		}
 
@@ -1480,6 +1518,7 @@ If the user asks a question that does not require a file change, answer normally
 			try {
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 				storageStatus.textContent = "Saved " + new Date().toLocaleTimeString();
+				publishOverlays();
 			} catch (e) {
 				storageStatus.textContent = "Local save failed: " + (e && e.message ? e.message : "unknown error");
 			}
@@ -1500,10 +1539,87 @@ If the user asks a question that does not require a file change, answer normally
 
 		function activePage() { return findPage(state.activeId) || state.pages[0]; }
 
+		function uniqueOverlayKey(base, used) {
+			var root = slugName(base || "overlay");
+			var key = root;
+			var count = 2;
+			while (used[key]) {
+				key = root + "-" + count++;
+			}
+			used[key] = true;
+			return key;
+		}
+
+		function buildOverlayPackage() {
+			var overlays = {};
+			var order = [];
+			var used = {};
+			var activeKey = "";
+			for (var i = 0; state && state.pages && i < state.pages.length; i++) {
+				var page = state.pages[i];
+				var key = uniqueOverlayKey(page.name || page.id || ("overlay-" + (i + 1)), used);
+				if (page.id === state.activeId) activeKey = key;
+				order.push(key);
+				overlays[key] = {
+					id: key,
+					name: key,
+					slug: key,
+					pageId: page.id,
+					html: page.html || "",
+					systemPrompt: page.systemPrompt || defaultSystemPrompt,
+					conversation: page.conversation || [],
+					updatedAt: page.updatedAt || Date.now()
+				};
+			}
+			return { version: 1, activeOverlay: activeKey || order[0] || "overlay", order: order, overlays: overlays, updatedAt: Date.now() };
+		}
+
+		function publishOverlays() {
+			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
+			postBridgeOverlayPayload({ action: "saveAiPromptOverlays", value: buildOverlayPackage() }, "pcs");
+		}
+
+		function applyOverlayPackage(pack) {
+			var overlays = pack && pack.overlays;
+			if (!overlays) return false;
+			var order = (pack.order && pack.order.length) ? pack.order.slice() : Object.keys(overlays);
+			var pages = [];
+			for (var i = 0; i < order.length; i++) {
+				var key = order[i];
+				var item = overlays[key];
+				if (!item || !item.html) continue;
+				pages.push({
+					id: key,
+					name: cleanName(item.name || item.slug || key),
+					systemPrompt: item.systemPrompt || defaultSystemPrompt,
+					html: item.html || "",
+					conversation: item.conversation || [],
+					updatedAt: item.updatedAt || Date.now()
+				});
+			}
+			if (!pages.length) return false;
+			state = { version: 2, activeId: (pack.activeOverlay && overlays[pack.activeOverlay]) ? pack.activeOverlay : pages[0].id, pages: pages };
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+			loadActivePage();
+			setStatus("Loaded saved AI prompt overlays.", "ok");
+			return true;
+		}
+
+		function requestOverlayPackage() {
+			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
+			overlayPackageRequestTarget = makeMessageId();
+			overlayPackageLoaded = false;
+			postBridgeOverlayPayload({ action: "getAiPromptOverlays", target: overlayPackageRequestTarget }, "pcs");
+			setTimeout(function () {
+				if (!overlayPackageLoaded) publishOverlays();
+			}, 2500);
+		}
+
 		function syncFormToPage() {
 			var page = activePage();
 			if (!page) return;
 			page.name = cleanName(pageName.value);
+			if (pageName.value !== page.name) pageName.value = page.name;
 			page.systemPrompt = systemPrompt.value || defaultSystemPrompt;
 			page.html = htmlEditor.value || "";
 			page.updatedAt = Date.now();
@@ -1678,7 +1794,7 @@ If the user asks a question that does not require a file change, answer normally
 		}
 
 		function injectErrorReporter(source) {
-			var reporter = "<script>(function(){function send(err){try{parent.postMessage({__aiPromptError:true,message:String(err&&err.message||err),stack:err&&err.stack?String(err.stack):\"\"},\"*\");}catch(e){}}window.addEventListener(\"error\",function(e){send(e.error||e.message);});window.addEventListener(\"unhandledrejection\",function(e){send(e.reason||\"Unhandled promise rejection\");});var origErr=console.error;console.error=function(){var parts=[];for(var i=0;i<arguments.length;i++)parts.push(String(arguments[i]));send(parts.join(\" \"));origErr.apply(console,arguments);};}());<\/script>";
+			var reporter = "<script>(function(){function send(message,stack){try{parent.postMessage({__aiPromptError:true,message:String(message&&message.message||message),stack:stack?String(stack):\"\"},\"*\");}catch(e){}}window.addEventListener(\"error\",function(e){var detail=\"\";if(e.filename)detail+=\"Source: \"+e.filename+\"\\n\";if(e.lineno)detail+=\"Line: \"+e.lineno+\" Column: \"+(e.colno||0)+\"\\n\";var stack=e.error&&e.error.stack?e.error.stack:detail;send(e.error||e.message,stack);});window.addEventListener(\"unhandledrejection\",function(e){send(e.reason||\"Unhandled promise rejection\",e.reason&&e.reason.stack?e.reason.stack:\"\");});var origErr=console.error;console.error=function(){var parts=[];for(var i=0;i<arguments.length;i++)parts.push(String(arguments[i]));send(parts.join(\" \"),\"\");origErr.apply(console,arguments);};}());<\/script>";
 			var lower = String(source || "").toLowerCase();
 			var headIdx = lower.indexOf("<head>");
 			if (headIdx >= 0) {
@@ -1701,7 +1817,7 @@ If the user asks a question that does not require a file change, answer normally
 		}
 
 		function showConsoleBar(message, stack) {
-			lastIframeError = message;
+			lastIframeError = stack ? (message + "\n\n" + stack) : message;
 			consoleBarText.textContent = message;
 			consoleBar.classList.add("visible");
 			fixErrorBtn.disabled = false;
@@ -1724,7 +1840,7 @@ If the user asks a question that does not require a file change, answer normally
 			}
 			if (!bridgeFrame || !bridgeFrame.contentWindow) return;
 			autoFixAttempts += 1;
-			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " — the preview threw: " + lastIframeError + "\n\nPlease return a corrected, complete HTML document.";
+			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " - the preview threw this error:\n\n" + lastIframeError + "\n\nReturn a corrected, complete HTML document. Focus only on fixing the runtime or syntax error first; keep the existing design unless the error requires changing it.";
 			setStatus("Auto-fixing error (attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + ")…", "warn");
 			setTimeout(function () {
 				hideConsoleBar();
@@ -1830,7 +1946,9 @@ If the user asks a question that does not require a file change, answer normally
 				"=== NEW REQUEST ===",
 				request,
 				"",
-				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally."
+				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
+				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks.",
+				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; support chat fields (chatname/chatmessage/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), and viewer_updates snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons."
 			].join("\n");
 		}
 
@@ -1873,12 +1991,14 @@ If the user asks a question that does not require a file change, answer normally
 
 		function buildOverlayUrl() {
 			var base = location.origin + location.pathname.replace(/[^/]*$/, "");
-			var page = activePage();
-			var fileName = cleanName(page.name).replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, "-").toLowerCase() || "prompt-page";
-			var params = ["page=" + encodeURIComponent(fileName)];
+			var urlParams = new URLSearchParams(location.search);
+			var pack = buildOverlayPackage();
+			var params = [];
 			if (bridgeRoomID) params.push("session=" + encodeURIComponent(bridgeRoomID));
 			if (bridgePassword && bridgePassword !== "false") params.push("password=" + encodeURIComponent(bridgePassword));
-			return base + "aiprompt-overlay.html?" + params.join("&");
+			if (urlParams.get("v")) params.push("v=" + encodeURIComponent(urlParams.get("v")));
+			params.push("overlay=" + encodeURIComponent(pack.activeOverlay || "overlay"));
+			return base + "aioverlay.html?" + params.join("&");
 		}
 
 		function connectBridge() {
@@ -1893,6 +2013,7 @@ If the user asks a question that does not require a file change, answer normally
 			bridgeFrame = document.createElement("iframe");
 			bridgeFrame.onload = function () {
 				bridgeReady = true;
+				requestOverlayPackage();
 				setStatus("Connected to session " + bridgeRoomID + ". LLM provider + Private Chat Bot option must be enabled in SSN.", "ok");
 			};
 			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(bridgePassword) +
@@ -1901,6 +2022,36 @@ If the user asks a question that does not require a file change, answer normally
 			bridgeFrame.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;";
 			document.body.appendChild(bridgeFrame);
 			setStatus("Connecting to session " + bridgeRoomID + "...", "warn");
+		}
+
+		function postBridgeOverlayPayload(payload, messageType) {
+			messageType = messageType || "rpcs";
+			var text = JSON.stringify(payload);
+			if (text.length <= BRIDGE_CHUNK_SIZE) {
+				bridgeFrame.contentWindow.postMessage({
+					sendData: { overlayNinja: payload },
+					type: messageType
+				}, "*");
+				return 1;
+			}
+
+			var chunkId = "aiprompt_" + Date.now() + "_" + makeMessageId();
+			var total = Math.ceil(text.length / BRIDGE_CHUNK_SIZE);
+			for (var i = 0; i < total; i++) {
+				bridgeFrame.contentWindow.postMessage({
+					sendData: {
+						overlayNinja: {
+							action: "ssnBridgeChunk",
+							chunkId: chunkId,
+							index: i,
+							total: total,
+							value: text.slice(i * BRIDGE_CHUNK_SIZE, (i + 1) * BRIDGE_CHUNK_SIZE)
+						}
+					},
+					type: messageType
+				}, "*");
+			}
+			return total;
 		}
 
 		function sendPrompt(requestOverride, opts) {
@@ -1944,11 +2095,12 @@ If the user asks a question that does not require a file change, answer normally
 				var messageID = makeMessageId();
 				var prompt = buildPrompt(page, request);
 				if (requestOverride == null) userRequest.value = "";
-				var userMsg = request + ((images && images.length) ? ("\n\n[attached " + images.length + " screenshot" + (images.length > 1 ? "s" : "") + "]") : "");
+				var displayRequest = opts.displayRequest || request;
+				var userMsg = displayRequest + ((images && images.length) ? ("\n\n[attached " + images.length + " screenshot" + (images.length > 1 ? "s" : "") + "]") : "");
 				appendConversationMessage("user", userMsg, true);
 				var assistantBody = appendConversationMessage("assistant", "Thinking…", false);
 
-				pendingResponses[messageID] = { id: messageID, body: assistantBody, text: "", chunks: 0, requestedAt: Date.now(), isAutoFix: !!opts.isAutoFix };
+				pendingResponses[messageID] = { id: messageID, body: assistantBody, text: "", chunks: 0, requestedAt: Date.now(), isAutoFix: !!opts.isAutoFix, isCompaction: !!opts.isCompaction };
 				createPendingStreamView(assistantBody, pendingResponses[messageID]);
 				pendingResponses[messageID].timeoutTimer = setTimeout(function () {
 					var pending = pendingResponses[messageID];
@@ -1965,11 +2117,10 @@ If the user asks a question that does not require a file change, answer normally
 				var payload = { action: "chatbot", value: prompt, target: messageID, turbo: false };
 				if (images && images.length) payload.images = images;
 
-				bridgeFrame.contentWindow.postMessage({
-					sendData: { overlayNinja: payload },
-					type: "rpcs"
-				}, "*");
-				setStatus(sentAfterBridgeWait ? "AI request sent after bridge warmup." : (opts.isAutoFix ? "Auto-fix request sent." : "AI request sent."), "ok");
+				var sentParts = postBridgeOverlayPayload(payload);
+				var sentLabel = sentAfterBridgeWait ? "AI request sent after bridge warmup." : (opts.isAutoFix ? "Auto-fix request sent." : (opts.isCompaction ? "Compaction request sent." : "AI request sent."));
+				if (sentParts > 1) sentLabel += " (" + sentParts + " chunks)";
+				setStatus(sentLabel, "ok");
 			};
 
 			if (provided && provided.length) {
@@ -2020,6 +2171,18 @@ If the user asks a question that does not require a file change, answer normally
 				return;
 			}
 
+			if (pending.isCompaction) {
+				var summary = String(finalText || "").trim();
+				if (!summary) summary = "Conversation compacted, but no summary was returned.";
+				activePage().conversation = [{ role: "assistant", content: "Conversation summary:\n" + summary, at: Date.now() }];
+				saveState();
+				renderConversation();
+				delete pendingResponses[id];
+				logBuilder("log", "Chat compacted", { chars: summary.length });
+				setStatus("Chat compacted.", "ok");
+				return;
+			}
+
 			var html = extractHtml(finalText);
 			if (html) {
 				htmlEditor.value = html;
@@ -2044,7 +2207,7 @@ If the user asks a question that does not require a file change, answer normally
 			var page = activePage();
 			var blob = new Blob([page.html || ""], { type: "text/html;charset=utf-8" });
 			var a = document.createElement("a");
-			var fileName = cleanName(page.name).replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, "-").toLowerCase() || "prompt-page";
+			var fileName = slugName(page.name);
 			a.href = URL.createObjectURL(blob);
 			a.download = fileName + ".html";
 			document.body.appendChild(a);
@@ -2058,7 +2221,7 @@ If the user asks a question that does not require a file change, answer normally
 		function newPage(seed) {
 			syncFormToPage();
 			var page = defaultPage(seed);
-			if (!seed) page.name = "New prompt page";
+			if (!seed) page.name = "new-prompt-page";
 			state.pages.push(page);
 			state.activeId = page.id;
 			saveState();
@@ -2070,7 +2233,7 @@ If the user asks a question that does not require a file change, answer normally
 			var current = activePage();
 			var copy = {
 				id: makeId(),
-				name: cleanName(current.name) + " copy",
+				name: cleanName(current.name) + "-copy",
 				systemPrompt: current.systemPrompt || defaultSystemPrompt,
 				html: current.html || TEMPLATES[0].src,
 				conversation: [],
@@ -2154,8 +2317,64 @@ If the user asks a question that does not require a file change, answer normally
 			renderConversation();
 		}
 
+		function headTailText(text, maxLength) {
+			text = String(text || "");
+			maxLength = maxLength || 900;
+			if (text.length <= maxLength) return text;
+			var edge = Math.max(120, Math.floor((maxLength - 28) / 2));
+			return text.slice(0, edge) + "\n...[middle removed]...\n" + text.slice(text.length - edge);
+		}
+
+		function buildCompactPrompt(conversation) {
+			var page = activePage();
+			var prompt = [
+				"Summarize this AI prompt-page builder chat into one short paragraph and, only if needed, one sentence of remaining next steps.",
+				"Preserve user intent, important design/code decisions, known errors, current state, and constraints.",
+				"Do not include code blocks, HTML, markdown fences, or new implementation instructions.",
+				"Current overlay name: " + cleanName(page && page.name),
+				"Current HTML length: " + String((page && page.html ? page.html.length : 0)) + " characters.",
+				"",
+				"Conversation:"
+			].join("\n");
+			for (var i = 0; i < conversation.length; i++) {
+				var msg = conversation[i] || {};
+				prompt += "\n\n" + String(msg.role || "message").toUpperCase() + " " + (i + 1) + ":\n" + headTailText(msg.content, 900);
+			}
+			return prompt;
+		}
+
+		function compactConversation() {
+			var page = activePage();
+			var conversation = (page && page.conversation) ? page.conversation : [];
+			if (!conversation.length) { setStatus("No chat to compact.", "warn"); return; }
+			if (!confirm("Compact this chat into one short summary message?")) return;
+			sendPrompt(buildCompactPrompt(conversation), {
+				isCompaction: true,
+				displayRequest: "Compact this chat into a shorter summary."
+			});
+		}
+
+		function saveNow() {
+			syncFormToPage();
+			saveState();
+			logBuilder("log", "Saved current overlay manually");
+			setStatus("Saved current overlay.", "ok");
+		}
+
+		function clearTemplate() {
+			if (!htmlEditor.value) { setStatus("Current HTML is already empty.", "warn"); return; }
+			if (!confirm("Clear the current page HTML?")) return;
+			htmlEditor.value = "";
+			lastAppliedFromAI = false;
+			syncFormToPage();
+			refreshPreview();
+			saveState();
+			setStatus("Current HTML cleared.", "ok");
+		}
+
 		function copyOverlayUrl() {
 			syncFormToPage();
+			saveState();
 			var url = buildOverlayUrl();
 			if (navigator.clipboard && navigator.clipboard.writeText) {
 				navigator.clipboard.writeText(url).then(function () {
@@ -2170,12 +2389,10 @@ If the user asks a question that does not require a file change, answer normally
 
 		function openOverlay() {
 			syncFormToPage();
-			var page = activePage();
-			var blob = new Blob([page.html || ""], { type: "text/html;charset=utf-8" });
-			var url = URL.createObjectURL(blob);
+			saveState();
+			var url = buildOverlayUrl();
 			var win = window.open(url, "_blank");
 			if (!win) setStatus("Pop-up blocked. Allow pop-ups for this page.", "warn");
-			setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
 		}
 
 		function setTab(name) {
@@ -2204,7 +2421,10 @@ If the user asks a question that does not require a file change, answer normally
 			el("openSettings").addEventListener("click", function () {
 				alert("The AI runs in the Social Stream Ninja extension. Configure your LLM provider and model in SSN's popup → AI settings. Any provider that speaks the OpenAI chat-completions format works here, including local vLLM or Ollama endpoints.");
 			});
+			el("savePage").addEventListener("click", saveNow);
+			el("compactConversation").addEventListener("click", compactConversation);
 			el("clearConversation").addEventListener("click", clearConversation);
+			el("clearTemplate").addEventListener("click", clearTemplate);
 			el("copyOverlayUrl").addEventListener("click", copyOverlayUrl);
 			el("openOverlay").addEventListener("click", openOverlay);
 			el("importPage").addEventListener("change", function (event) {
@@ -2262,6 +2482,9 @@ If the user asks a question that does not require a file change, answer normally
 						receiveAIResponse(payload.chatbotChunk, true);
 					} else if (payload.chatbotResponse && typeof payload.chatbotResponse.value !== "undefined") {
 						receiveAIResponse(payload.chatbotResponse, false);
+					} else if (payload.aiPromptOverlays && payload.aiPromptOverlays.target === overlayPackageRequestTarget) {
+						overlayPackageLoaded = true;
+						if (!applyOverlayPackage(payload.aiPromptOverlays.value || payload.aiPromptOverlays)) publishOverlays();
 					}
 				}
 			});
@@ -2276,7 +2499,7 @@ If the user asks a question that does not require a file change, answer normally
 
 		function askAiToFix() {
 			if (!lastIframeError) { setStatus("No error to fix yet.", "warn"); return; }
-			var msg = "The preview threw this error — please fix it and return the updated HTML:\n\n" + lastIframeError;
+			var msg = "The preview threw this error. Return a corrected, complete HTML document and focus on the failing syntax/runtime issue first:\n\n" + lastIframeError;
 			sendPrompt(msg);
 			hideConsoleBar();
 		}

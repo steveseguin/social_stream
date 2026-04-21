@@ -125,11 +125,15 @@
 		maxMessages: 501
 	});
 
-	function pushMessage(data) {
+	function pushMessage(data, target) {
 		try {
-			chrome.runtime.sendMessage(chrome.runtime.id, {
+			var payload = {
 				"message": data
-			}, function(e) {
+			};
+			if (target) {
+				payload.target = target;
+			}
+			chrome.runtime.sendMessage(chrome.runtime.id, payload, function(e) {
 				// Check for chrome runtime errors
 				if (chrome.runtime.lastError) {
 					console.error("[TikTok] Chrome runtime error:", chrome.runtime.lastError.message);
@@ -1335,6 +1339,7 @@
 		const shareFromMessage = compactMessage.includes("share");
 		const followFromMessage = compactMessage.includes("follow");
 		const likeFromMessage = compactMessage.includes("like");
+		let reactionsOnlyLikeEvent = false;
 
 		const isJoinEvent = eventHints.join || ((ital === true || eventHints.hasEventIndicator) && joinFromMessage);
 		const isShareEvent = eventHints.share || ((ital === true || eventHints.hasEventIndicator) && shareFromMessage);
@@ -1354,9 +1359,7 @@
 				return;
 			}
 		} else if (isLikeEvent) {
-			if (!settings.capturelikeevent) {
-				return;
-			}
+			reactionsOnlyLikeEvent = !settings.capturelikeevent;
 			ital = "liked";
 		}
 		if (settings.customtiktokstate) {
@@ -1447,7 +1450,7 @@
 			return;
 		}
 		lastMessageTime = Date.now();
-		pushMessage(data);
+		pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
 	}
 
 	function processEvent(ele) {
@@ -1595,6 +1598,7 @@
 		const shareFromMessage = compactMessage.includes("share");
 		const followFromMessage = compactMessage.includes("follow");
 		const likeFromMessage = compactMessage.includes("like");
+		let reactionsOnlyLikeEvent = false;
 
 		const isJoinEvent = eventHints.join || ((ital === true || eventHints.hasEventIndicator) && joinFromMessage);
 		const isShareEvent = eventHints.share || ((ital === true || eventHints.hasEventIndicator) && shareFromMessage);
@@ -1614,9 +1618,7 @@
 				return;
 			}
 		} else if (isLikeEvent) {
-			if (!settings.capturelikeevent) {
-				return;
-			}
+			reactionsOnlyLikeEvent = !settings.capturelikeevent;
 			ital = "liked";
 		}
 		let chatimg = "";
@@ -1662,7 +1664,7 @@
 			return;
 		}
 		lastMessageTime = Date.now();
-		pushMessage(data);
+		pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
 	}
 	var bigDUPE = false;
 	let observedDomElementForObserver1 = null;

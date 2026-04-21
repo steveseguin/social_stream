@@ -212,8 +212,8 @@ async function addSocketSpyInitScript(page) {
   });
 }
 
-async function addTikTokSourceInitScript(page) {
-  await page.addInitScript(() => {
+async function addTikTokSourceInitScript(page, captureLikeEvent) {
+  await page.addInitScript((allowMainLikeEvents) => {
     const messages = [];
     const runtimeListeners = [];
 
@@ -242,7 +242,7 @@ async function addTikTokSourceInitScript(page) {
           asyncCallback(callback, {
             state: true,
             settings: {
-              capturelikeevent: true,
+              capturelikeevent: !!allowMainLikeEvents,
               capturejoinedevent: true
             }
           });
@@ -271,7 +271,7 @@ async function addTikTokSourceInitScript(page) {
     window.chrome = { runtime };
     window.__chromeMessages = messages;
     window.__runtimeListeners = runtimeListeners;
-  });
+  }, captureLikeEvent);
 }
 
 async function setControlValue(page, selector, value, events) {
@@ -310,10 +310,10 @@ async function loadOverlay(page, url) {
   await page.waitForFunction(() => !!(window.__reactionsOverlay && window.__reactionsOverlay.getConfig));
 }
 
-async function runTikTokSourceLikeCaptureCheck(context) {
+async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent, expectedTarget) {
   const page = await context.newPage();
 
-  await addTikTokSourceInitScript(page);
+  await addTikTokSourceInitScript(page, captureLikeEvent);
   await page.route('https://www.tiktok.com/@playwright/live', async (route) => {
     await route.fulfill({
       status: 200,
@@ -344,10 +344,11 @@ async function runTikTokSourceLikeCaptureCheck(context) {
   const likedMessages = await page.evaluate(() => {
     return window.__chromeMessages
       .filter((entry) => entry.message && entry.message.event === 'liked')
-      .map((entry) => entry.message);
+      .map((entry) => Object.assign({ target: entry.target || '' }, entry.message));
   });
 
   assert(likedMessages.length === 1, 'TikTok source did not emit the anonymous liked event.');
+  assert((likedMessages[0].target || '') === (expectedTarget || ''), 'TikTok liked event used the wrong delivery target.');
   assert(likedMessages[0].type === 'tiktok', 'TikTok liked event has the wrong source type.');
   assert(likedMessages[0].chatname === '', 'Anonymous TikTok liked events should keep chatname empty.');
   assert(likedMessages[0].chatmessage === 'liked the LIVE', 'TikTok liked event message text changed unexpectedly.');
@@ -623,7 +624,8 @@ async function runTikTokSourceLikeCaptureCheck(context) {
       assert(joinPayload.in === check.expectedIn, `Socket in channel mismatch for ${check.url}.`);
     }
 
-    await runTikTokSourceLikeCaptureCheck(context);
+    await runTikTokSourceLikeCaptureCheck(context, false, 'reactions');
+    await runTikTokSourceLikeCaptureCheck(context, true, '');
 
     await browser.close();
 

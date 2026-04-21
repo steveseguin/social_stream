@@ -742,6 +742,31 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		return false;
 	}
 
+	function createStreamingLineProcessor(callback, appendToFull) {
+		let pending = "";
+		return {
+			push(chunk) {
+				pending += chunk || "";
+				const normalized = pending.replace(/\r\n/g, "\n");
+				const lines = normalized.split("\n");
+				pending = lines.pop() || "";
+				if (!lines.length) {
+					return false;
+				}
+				return handleChunk(lines.join("\n"), callback, appendToFull);
+			},
+			flush() {
+				if (!pending.trim()) {
+					pending = "";
+					return false;
+				}
+				const remaining = pending;
+				pending = "";
+				return handleChunk(remaining, callback, appendToFull);
+			}
+		};
+	}
+
     if (!isLocalBrowserProvider(provider) && localBrowserLLMClient) {
         try {
             await disposeLocalBrowserLLMClient();
@@ -1073,9 +1098,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					return new Promise((resolve, reject) => {
 						const channelId = `streaming-nodepost-${Date.now()}`;
 						let fullResponse = '';
+						const streamProcessor = createStreamingLineProcessor(callback, (resp) => {
+							fullResponse += resp;
+						});
 						
 						ipcRenderer.on(channelId, (event, chunk) => {
 							if (chunk === null) {
+								streamProcessor.flush();
 								resolve(fullResponse);
 							} else if (typeof chunk === 'object' && chunk.error) {
 								const err = createLLMError(buildContext(), {
@@ -1086,9 +1115,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 								});
 								reject(err);
 							} else {
-								handleChunk(chunk, callback, (resp) => { 
-									fullResponse += resp; 
-								});
+								streamProcessor.push(chunk);
 							}
 						});
 
@@ -1157,15 +1184,19 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					const reader = response.body.getReader();
 					const decoder = new TextDecoder();
 					let fullResponse = '';
+					const streamProcessor = createStreamingLineProcessor(callback, (resp) => {
+						fullResponse += resp;
+					});
 
 					while (true) {
 						const { done, value } = await reader.read();
-						if (done) break;
+						if (done) {
+							streamProcessor.flush();
+							break;
+						}
 						
-						const chunk = decoder.decode(value);
-						const isComplete = handleChunk(chunk, callback, (resp) => { 
-							fullResponse += resp; 
-						});
+						const chunk = decoder.decode(value, { stream: true });
+						const isComplete = streamProcessor.push(chunk);
 						
 						if (isComplete) break;
 					}
@@ -1231,15 +1262,17 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 if (isStreaming) {
                     response = await new Promise((resolve, reject) => {
                         const channelId = `streaming-nodepost-${Date.now()}`;
+                        const streamProcessor = createStreamingLineProcessor(callback, (resp, reasoning=false) => { fullResponse += resp; });
                         
                         ipcRenderer.on(channelId, (event, chunk) => {
                             if (chunk === null) {
+                                streamProcessor.flush();
                                 responseComplete = true;
                                 resolve({ ok: true });
                             } else if (typeof chunk === 'object' && chunk.error) {
                                 resolve(chunk);
                             } else {
-                                handleChunk(chunk, callback, (resp, reasoning=false) => { fullResponse += resp; }, reasoning=false);
+                                streamProcessor.push(chunk);
                             }
                         });
                         
@@ -1338,15 +1371,17 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 if (isStreaming) {
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
+                    const streamProcessor = createStreamingLineProcessor(callback, (resp, reasoning=false) => { fullResponse += resp; });
 
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) {
+                            streamProcessor.flush();
                             responseComplete = true;
                             break;
                         }
-                        const chunk = decoder.decode(value);
-                        handleChunk(chunk, callback, (resp, reasoning=false) => { fullResponse += resp; }, reasoning=false);
+                        const chunk = decoder.decode(value, { stream: true });
+                        streamProcessor.push(chunk);
                     }
                 } else {
                     const data = await response.json();

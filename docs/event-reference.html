@@ -731,7 +731,7 @@
                             <tr>
                                 <td><code>liked</code></td>
                                 <td>Like storm summaries triggered by TikTok social cards.</td>
-                                <td><code>chatname</code> is included when TikTok exposes it; anonymous/system like cards may still emit.</td>
+                                <td><code>chatname</code> is included when TikTok exposes it; anonymous/system like cards may still emit. The main chat/events feed setting does not block the dedicated reactions overlay.</td>
                             </tr>
                             <tr>
                                 <td><code>true</code> (boolean)</td>
@@ -1149,8 +1149,8 @@
                         <tbody>
                             <tr>
                                 <td><code>message</code></td>
-                                <td>New entries appear in <code>livestreams[].chat.recent_messages</code>.</td>
-                                <td>Standard chat payload. <code>meta.source</code> is <code>live_stream_api</code>; badge labels are normalized into display-friendly badge chips.</td>
+                                <td>New entries arrive from Rumble's SSE chat stream after the official API resolves <code>livestreams[].id</code>; falls back to <code>livestreams[].chat.recent_messages</code>.</td>
+                                <td>Standard chat payload. <code>meta.source</code> is <code>rumble_sse</code> when the SSE chat stream is available and includes avatar URLs from <code>users[].image.1</code>; otherwise it falls back to <code>live_stream_api</code> without avatars.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>donation</code></td>
@@ -1194,7 +1194,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">This transport is intended for channels you own or manage. Because the API URL contains a live stream key, do not expose it in overlays, logs, screenshots, or shared browser profiles.</p>
+                    <p class="field-highlights">This transport is intended for channels you own or manage. Because the API URL contains a live stream key, do not expose it in overlays, logs, screenshots, or shared browser profiles. Chat avatars come from Rumble's SSE chat stream once the official API resolves the stream ID; this transport does not scrape Rumble pages for avatars.</p>
                 </article>
             </section>
 
