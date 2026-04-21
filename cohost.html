@@ -1280,6 +1280,13 @@
 							<option value="audio" selected>Audio Response</option>
 							<option value="text">Text Response</option>
 						</select>
+						<select id="ttsProviderSelect" style="display: none" title="Text-to-speech voice engine">
+							<option value="system">System TTS</option>
+							<option value="kokoro">Kokoro TTS</option>
+							<option value="piper">Piper TTS</option>
+							<option value="espeak">eSpeak TTS</option>
+							<option value="kitten">Kitten TTS</option>
+						</select>
 						<select id="voiceSelect" style="display: none">
 							<option value="Puck">Puck (Conversational)</option>
 							<option value="Charon">Charon (Deep)</option>
@@ -1371,6 +1378,7 @@
 		</a>
 		<div id="puppet-container"></div>
 		<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
+		<script type="text/javascript" src="tts.js"></script>
 		<script>
 			class PuppetAvatar {
 				constructor(containerSelector) {
@@ -1851,6 +1859,7 @@
 			const LOCAL_GEMMA_DEFAULT_REMOTE_HOST = LOCAL_GEMMA_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
 			const LOCAL_BROWSER_BUNDLED_MODEL_CHECKS = new Map();
 			const BROWSER_TTS_AVAILABLE = typeof window !== "undefined" && "speechSynthesis" in window && typeof window.SpeechSynthesisUtterance !== "undefined";
+			const COHOST_TTS_AVAILABLE = BROWSER_TTS_AVAILABLE || (typeof window !== "undefined" && typeof window.TTS !== "undefined" && typeof window.TTS.speak === "function");
 			const MAX_DIAGNOSTIC_HISTORY = 80;
 			const diagnosticsState = {
 				provider: "-",
@@ -2423,7 +2432,7 @@
 					}
 				}
 				shouldUseBrowserTts() {
-					return BROWSER_TTS_AVAILABLE && document.getElementById("responseType")?.value === "audio";
+					return COHOST_TTS_AVAILABLE && document.getElementById("responseType")?.value === "audio";
 				}
 				clearActiveTtsRequest() {
 					this.ttsUtterance = null;
@@ -2445,6 +2454,17 @@
 						try {
 							window.speechSynthesis.cancel();
 						} catch (_error) {}
+					}
+					if (window.TTS) {
+						try {
+							window.TTS.clearQueue();
+						} catch (_error) {}
+						try {
+							if (window.TTS.audio) {
+								window.TTS.audio.pause();
+							}
+						} catch (_error) {}
+						window.TTS.premiumQueueActive = false;
 					}
 					this.ttsActive = false;
 				}
@@ -2520,6 +2540,72 @@
 					pushChunk(current);
 					return chunks;
 				}
+				shouldUseTtsLibrary() {
+					return typeof window.TTS !== "undefined" && typeof window.TTS.speak === "function";
+				}
+				waitForTtsLibraryIdle(text) {
+					return new Promise(resolve => {
+						const startedAt = Date.now();
+						const minWaitMs = 500;
+						const maxWaitMs = Math.min(180000, Math.max(12000, String(text || "").length * 140));
+						const checkIdle = () => {
+							if (this.stopped) {
+								resolve();
+								return;
+							}
+							const systemBusy = !!(window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking));
+							const premiumBusy = !!(window.TTS && (window.TTS.premiumQueueActive || (window.TTS.premiumQueueTTS && window.TTS.premiumQueueTTS.length)));
+							const waited = Date.now() - startedAt;
+							if (waited >= minWaitMs && !systemBusy && !premiumBusy) {
+								resolve();
+								return;
+							}
+							if (waited >= maxWaitMs) {
+								resolve();
+								return;
+							}
+							setTimeout(checkIdle, 250);
+						};
+						setTimeout(checkIdle, 250);
+					});
+				}
+				async speakTextWithTtsLibrary(text, emotionHint = "") {
+					if (!this.shouldUseTtsLibrary() || !text) return false;
+					this.pauseRecognitionForSpeech();
+					updateDiagnostics({
+						state: "responding",
+						connected: "yes",
+						lastEvent: `localbrowser.${this.providerKey}.tts.prepare`,
+						lastError: "-"
+					});
+					updateVoiceTelemetry({
+						outputState: getCohostTtsProviderLabel() + " queued",
+						outputPreview: text
+					});
+					try {
+						avatar.setEmotion(emotionHint || inferAvatarEmotionFromText(text) || "proud", true);
+						window.TTS.speak(text, true);
+						updateVoiceTelemetry({
+							outputState: getCohostTtsProviderLabel() + " speaking",
+							outputPreview: text
+						});
+						await this.waitForTtsLibraryIdle(text);
+						updateDiagnostics({
+							state: "connected",
+							connected: "yes",
+							lastEvent: `localbrowser.${this.providerKey}.tts.done`,
+							lastError: "-"
+						});
+						updateVoiceTelemetry({
+							outputState: getCohostTtsProviderLabel() + " done",
+							outputPreview: text
+						});
+						return true;
+					} finally {
+						avatar.setEmotion("happy", false);
+						this.resumeRecognitionAfterTts();
+					}
+				}
 				speakTextChunk(text, emotionHint = "") {
 					return new Promise((resolve, reject) => {
 						if (!BROWSER_TTS_AVAILABLE || !text) {
@@ -2581,6 +2667,9 @@
 					}
 					const speechEmotion = inferAvatarEmotionFromText(text);
 					const speechText = sanitizeTextForSpeech(text);
+					if (await this.speakTextWithTtsLibrary(speechText, speechEmotion)) {
+						return;
+					}
 					const chunks = this.buildSpeechChunks(speechText);
 					if (!chunks.length) {
 						if (speechEmotion) {
@@ -2852,7 +2941,7 @@
 					});
 					resetVoiceTelemetry({
 						inputMode: this.getVoiceInputMode(),
-						outputState: this.shouldUseBrowserTts() ? "Browser TTS ready" : "Text response only"
+						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 				}
 				async start() {
@@ -2922,7 +3011,13 @@
 						const finalText = (this.currentResponseText || result.text || "").trim();
 						const completionEvent = result.finishReason === "repetition_guard" ? `localbrowser.${this.providerKey}.generate.guarded` : `localbrowser.${this.providerKey}.generate.done`;
 						if (finalText) {
-							await this.speakTextResponse(finalText);
+							await this.speakTextResponse(finalText).catch(error => {
+								console.warn("TTS failed:", error);
+								updateVoiceTelemetry({
+									outputState: "TTS failed",
+									outputPreview: error?.message || String(error || "Unknown TTS error")
+								});
+							});
 						}
 						this.finalizeResponse();
 						updateDiagnostics({
@@ -2984,7 +3079,7 @@
 					this.cancelBrowserTts();
 					resetVoiceTelemetry({
 						inputMode: this.getVoiceInputMode(),
-						outputState: this.shouldUseBrowserTts() ? "Browser TTS ready" : "Text response only"
+						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 					if (this.recognition) {
 						try {
@@ -3260,6 +3355,7 @@
 					this.apiKey = (apiKey || "").trim();
 					this.model = (modelOverride || "").trim();
 					this.endpoint = (endpointOverride || CUSTOM_OPENAI_DEFAULT_ENDPOINT).trim();
+					this.providerLabel = "OpenAI-Compatible (Custom)";
 					this.connected = false;
 					this.stopped = false;
 					this.recognition = null;
@@ -3273,8 +3369,13 @@
 					this.lastActivityTime = Date.now();
 					this.maxTurns = 12;
 					this.conversation = [];
+					this.ttsUtterance = null;
+					this.ttsResolve = null;
+					this.ttsReject = null;
+					this.ttsActive = false;
+					this.resumeRecognitionAfterSpeech = false;
 					updateDiagnostics({
-						provider: "OpenAI-Compatible (Custom)",
+						provider: this.providerLabel,
 						model: this.model || "server default",
 						state: "initialized",
 						connected: "no",
@@ -3420,6 +3521,284 @@
 						messageFormatter.finalizeMessage();
 					}
 				}
+				shouldUseBrowserTts() {
+					return COHOST_TTS_AVAILABLE && document.getElementById("responseType")?.value === "audio";
+				}
+				getBrowserTtsEventPrefix() {
+					return (this.providerLabel || "cohost")
+						.toLowerCase()
+						.replace(/[^a-z0-9]+/g, ".")
+						.replace(/^\.+|\.+$/g, "");
+				}
+				clearActiveTtsRequest() {
+					this.ttsUtterance = null;
+					this.ttsResolve = null;
+					this.ttsReject = null;
+				}
+				cancelBrowserTts(errorMessage = "") {
+					const complete = errorMessage ? this.ttsReject : this.ttsResolve;
+					if (complete) {
+						if (errorMessage) {
+							complete(new Error(errorMessage));
+						} else {
+							complete();
+						}
+					} else {
+						this.clearActiveTtsRequest();
+					}
+					if (BROWSER_TTS_AVAILABLE) {
+						try {
+							window.speechSynthesis.cancel();
+						} catch (_error) {}
+					}
+					if (window.TTS) {
+						try {
+							window.TTS.clearQueue();
+						} catch (_error) {}
+						try {
+							if (window.TTS.audio) {
+								window.TTS.audio.pause();
+							}
+						} catch (_error) {}
+						window.TTS.premiumQueueActive = false;
+					}
+					this.ttsActive = false;
+				}
+				pauseRecognitionForSpeech() {
+					this.resumeRecognitionAfterSpeech = !micMuted && !!this.recognition;
+					this.ttsActive = true;
+					clearTimeout(this.recognitionTimeout);
+					if (this.recognition) {
+						try {
+							this.recognition.stop();
+						} catch (_error) {}
+					}
+					this.isRecognizing = false;
+				}
+				resumeRecognitionAfterTts() {
+					const shouldResume = this.resumeRecognitionAfterSpeech;
+					this.resumeRecognitionAfterSpeech = false;
+					this.ttsActive = false;
+					if (shouldResume && !this.stopped && !micMuted) {
+						this.restartRecognition();
+					}
+				}
+				buildSpeechChunks(text) {
+					const normalized = String(text || "")
+						.replace(/\s+/g, " ")
+						.trim();
+					if (!normalized) return [];
+					const maxChunkLength = 220;
+					const sentences = normalized.match(/[^.!?]+[.!?]*/g) || [normalized];
+					const chunks = [];
+					let current = "";
+					const pushChunk = value => {
+						const chunk = String(value || "").trim();
+						if (chunk) chunks.push(chunk);
+					};
+					for (const sentence of sentences) {
+						const part = sentence.trim();
+						if (!part) continue;
+						const nextValue = current ? `${current} ${part}` : part;
+						if (nextValue.length <= maxChunkLength) {
+							current = nextValue;
+							continue;
+						}
+						pushChunk(current);
+						if (part.length <= maxChunkLength) {
+							current = part;
+							continue;
+						}
+						const words = part.split(/\s+/);
+						let wordChunk = "";
+						for (const word of words) {
+							const nextWordChunk = wordChunk ? `${wordChunk} ${word}` : word;
+							if (nextWordChunk.length <= maxChunkLength) {
+								wordChunk = nextWordChunk;
+								continue;
+							}
+							pushChunk(wordChunk);
+							wordChunk = word;
+						}
+						current = wordChunk;
+					}
+					pushChunk(current);
+					return chunks;
+				}
+				shouldUseTtsLibrary() {
+					return typeof window.TTS !== "undefined" && typeof window.TTS.speak === "function";
+				}
+				waitForTtsLibraryIdle(text) {
+					return new Promise(resolve => {
+						const startedAt = Date.now();
+						const minWaitMs = 500;
+						const maxWaitMs = Math.min(180000, Math.max(12000, String(text || "").length * 140));
+						const checkIdle = () => {
+							if (this.stopped) {
+								resolve();
+								return;
+							}
+							const systemBusy = !!(window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking));
+							const premiumBusy = !!(window.TTS && (window.TTS.premiumQueueActive || (window.TTS.premiumQueueTTS && window.TTS.premiumQueueTTS.length)));
+							const waited = Date.now() - startedAt;
+							if (waited >= minWaitMs && !systemBusy && !premiumBusy) {
+								resolve();
+								return;
+							}
+							if (waited >= maxWaitMs) {
+								resolve();
+								return;
+							}
+							setTimeout(checkIdle, 250);
+						};
+						setTimeout(checkIdle, 250);
+					});
+				}
+				async speakTextWithTtsLibrary(text, emotionHint = "") {
+					if (!this.shouldUseTtsLibrary() || !text) return false;
+					this.pauseRecognitionForSpeech();
+					updateDiagnostics({
+						state: "responding",
+						connected: "yes",
+						lastEvent: `${this.getBrowserTtsEventPrefix()}.tts.prepare`,
+						lastError: "-"
+					});
+					updateVoiceTelemetry({
+						outputState: getCohostTtsProviderLabel() + " queued",
+						outputPreview: text
+					});
+					try {
+						avatar.setEmotion(emotionHint || inferAvatarEmotionFromText(text) || "proud", true);
+						window.TTS.speak(text, true);
+						updateVoiceTelemetry({
+							outputState: getCohostTtsProviderLabel() + " speaking",
+							outputPreview: text
+						});
+						await this.waitForTtsLibraryIdle(text);
+						updateDiagnostics({
+							state: "connected",
+							connected: "yes",
+							lastEvent: `${this.getBrowserTtsEventPrefix()}.tts.done`,
+							lastError: "-"
+						});
+						updateVoiceTelemetry({
+							outputState: getCohostTtsProviderLabel() + " done",
+							outputPreview: text
+						});
+						return true;
+					} finally {
+						avatar.setEmotion("happy", false);
+						this.resumeRecognitionAfterTts();
+					}
+				}
+				speakTextChunk(text, emotionHint = "") {
+					return new Promise((resolve, reject) => {
+						if (!BROWSER_TTS_AVAILABLE || !text) {
+							resolve();
+							return;
+						}
+						let settled = false;
+						const finishResolve = () => {
+							if (settled) return;
+							settled = true;
+							if (this.ttsResolve === finishResolve || this.ttsReject === finishReject) {
+								this.clearActiveTtsRequest();
+							}
+							resolve();
+						};
+						const finishReject = error => {
+							if (settled) return;
+							settled = true;
+							if (this.ttsResolve === finishResolve || this.ttsReject === finishReject) {
+								this.clearActiveTtsRequest();
+							}
+							reject(error instanceof Error ? error : new Error(String(error || "Browser speech synthesis failed.")));
+						};
+						const utterance = new SpeechSynthesisUtterance(text);
+						utterance.rate = 1.02;
+						utterance.pitch = 1;
+						utterance.volume = 1;
+						utterance.onstart = () => {
+							this.ttsActive = true;
+							avatar.setEmotion(emotionHint || inferAvatarEmotionFromText(text) || "proud", true);
+							updateDiagnostics({
+								state: "responding",
+								connected: "yes",
+								lastEvent: `${this.getBrowserTtsEventPrefix()}.tts.start`,
+								lastError: "-"
+							});
+						};
+						utterance.onend = () => finishResolve();
+						utterance.onerror = event => {
+							finishReject(new Error(event?.error || "Browser speech synthesis failed."));
+						};
+						this.ttsUtterance = utterance;
+						this.ttsResolve = finishResolve;
+						this.ttsReject = finishReject;
+						try {
+							window.speechSynthesis.speak(utterance);
+						} catch (error) {
+							finishReject(error);
+						}
+					});
+				}
+				async speakTextResponse(text) {
+					if (!this.shouldUseBrowserTts()) {
+						return;
+					}
+					const speechEmotion = inferAvatarEmotionFromText(text);
+					const speechText = sanitizeTextForSpeech(text);
+					if (await this.speakTextWithTtsLibrary(speechText, speechEmotion)) {
+						return;
+					}
+					const chunks = this.buildSpeechChunks(speechText);
+					if (!chunks.length) {
+						if (speechEmotion) {
+							avatar.pulseEmotion(speechEmotion, 1400, false);
+						}
+						updateVoiceTelemetry({
+							outputState: speechEmotion ? "Avatar emote only" : "Browser TTS skipped",
+							outputPreview: speechEmotion ? `[avatar:${speechEmotion}]` : "-"
+						});
+						return;
+					}
+					this.pauseRecognitionForSpeech();
+					updateDiagnostics({
+						state: "responding",
+						connected: "yes",
+						lastEvent: `${this.getBrowserTtsEventPrefix()}.tts.prepare`,
+						lastError: "-"
+					});
+					updateVoiceTelemetry({
+						outputState: "Browser TTS queued",
+						outputPreview: speechText
+					});
+					try {
+						window.speechSynthesis.cancel();
+						for (const chunk of chunks) {
+							if (this.stopped) return;
+							updateVoiceTelemetry({
+								outputState: "Browser TTS speaking",
+								outputPreview: chunk
+							});
+							await this.speakTextChunk(chunk, speechEmotion);
+						}
+						updateDiagnostics({
+							state: "connected",
+							connected: "yes",
+							lastEvent: `${this.getBrowserTtsEventPrefix()}.tts.done`,
+							lastError: "-"
+						});
+						updateVoiceTelemetry({
+							outputState: "Browser TTS done",
+							outputPreview: speechText
+						});
+					} finally {
+						this.clearActiveTtsRequest();
+						avatar.setEmotion("happy", false);
+						this.resumeRecognitionAfterTts();
+					}
+				}
 				async setupSpeechRecognition() {
 					const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 					if (!SpeechRecognition) {
@@ -3528,7 +3907,7 @@
 					});
 					resetVoiceTelemetry({
 						inputMode: "Browser STT -> text prompt",
-						outputState: "Text response only"
+						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 				}
 				async start() {
@@ -3594,6 +3973,13 @@
 						this.conversation.push({ role: "assistant", content: responseText });
 						this.trimConversation();
 						this.appendModelText(responseText);
+						await this.speakTextResponse(responseText).catch(error => {
+							console.warn("TTS failed:", error);
+							updateVoiceTelemetry({
+								outputState: "TTS failed",
+								outputPreview: error?.message || String(error || "Unknown TTS error")
+							});
+						});
 						this.finalizeResponse();
 						updateDiagnostics({
 							state: "connected",
@@ -3632,10 +4018,11 @@
 				stop() {
 					this.stopped = true;
 					this.connected = false;
+					this.cancelBrowserTts();
 					this.finalizeResponse();
 					resetVoiceTelemetry({
 						inputMode: "Browser STT -> text prompt",
-						outputState: "Text response only"
+						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 					if (this.recognition) {
 						try {
@@ -3700,7 +4087,7 @@
 					});
 					resetVoiceTelemetry({
 						inputMode: "Browser STT + optional image frame",
-						outputState: "Text response only"
+						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 					setConfiguredLLMInfo("Connected through the SSN session bridge. Uses the LLM provider configured in the popup.", false);
 				}
@@ -3757,6 +4144,13 @@
 						this.conversation.push({ role: "user", content: prompt });
 						this.conversation.push({ role: "assistant", content: responseText || this.currentResponseText });
 						this.trimConversation();
+						await this.speakTextResponse(responseText || this.currentResponseText).catch(error => {
+							console.warn("TTS failed:", error);
+							updateVoiceTelemetry({
+								outputState: "TTS failed",
+								outputPreview: error?.message || String(error || "Unknown TTS error")
+							});
+						});
 						this.finalizeResponse();
 						updateDiagnostics({
 							state: "connected",
@@ -3790,7 +4184,7 @@
 					super.stop();
 					resetVoiceTelemetry({
 						inputMode: "Browser STT + optional image frame",
-						outputState: "Text response only"
+						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 				}
 			}
@@ -5504,9 +5898,32 @@
 			const customModelsRefreshButton = document.getElementById("customModelsRefresh");
 			const configuredLLMTestContainer = document.getElementById("configuredLLMTestContainer");
 			const configuredLLMTestButton = document.getElementById("configuredLLMTest");
+			const ttsProviderSelect = document.getElementById("ttsProviderSelect");
 			let customModelList = [];
 			let customModelsLoading = false;
 			let customModelsQueuedRefresh = false;
+
+			function getStoredCohostTtsProvider() {
+				return localStorage.getItem("cohostTtsProvider") || "system";
+			}
+
+			function applyCohostTtsProvider(provider) {
+				const selectedProvider = provider || "system";
+				localStorage.setItem("cohostTtsProvider", selectedProvider);
+				if (ttsProviderSelect) {
+					ttsProviderSelect.value = selectedProvider;
+				}
+				if (!window.TTS) return;
+				window.TTS.TTSProvider = selectedProvider;
+				window.TTS.useKokoroTTS = selectedProvider === "kokoro";
+				window.TTS.usePiper = selectedProvider === "piper";
+				window.TTS.useEspeak = selectedProvider === "espeak";
+				window.TTS.useKitten = selectedProvider === "kitten";
+				if (selectedProvider !== "system" && !window.TTS.audio) {
+					window.TTS.audio = document.createElement("audio");
+					window.TTS.audio.onended = window.TTS.finishedAudio;
+				}
+			}
 
 			function normalizeModelOverride(providerName, value) {
 				let normalized = (value || "").trim();
@@ -6730,10 +7147,25 @@
 			document.getElementById("responseType").addEventListener("change", async function () {
 				const voiceSelect = document.getElementById("voiceSelect");
 				voiceSelect.style.display = providerSelect.value === "gemini" && this.value === "audio" ? "block" : "none";
+				const currentConfig = providerUIConfig[providerSelect.value] || providerUIConfig.gemini;
+				const showTtsProviderSelect = currentConfig.usesBrowserTts === true && this.value === "audio" && COHOST_TTS_AVAILABLE;
+				if (ttsProviderSelect) {
+					ttsProviderSelect.style.display = showTtsProviderSelect ? "block" : "none";
+					if (showTtsProviderSelect) {
+						applyCohostTtsProvider(ttsProviderSelect.value || getStoredCohostTtsProvider());
+					}
+				}
 				localStorage.setItem(`responseType_${providerSelect.value}`, this.value);
 				syncVoiceModeSummary(providerSelect.value);
 				await restartActivePublisher();
 			});
+			if (ttsProviderSelect) {
+				ttsProviderSelect.value = getStoredCohostTtsProvider();
+				ttsProviderSelect.addEventListener("change", function () {
+					applyCohostTtsProvider(this.value);
+					syncVoiceModeSummary(providerSelect.value);
+				});
+			}
 			messageInput.addEventListener("keypress", e => {
 				if (e.key === "Enter") {
 					sendButton.click();
@@ -6771,9 +7203,10 @@
 					defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
 					modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_DEFAULT_MODEL} on ${LOCAL_QWEN_DEFAULT_REMOTE_HOST})`,
 					disableCaptureSelection: false,
-					deviceNotice: BROWSER_TTS_AVAILABLE ? "Speech-to-text uses your browser/system default microphone. If Audio Response is selected, Local Qwen replies are spoken with your browser built-in text-to-speech. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames." : "Speech-to-text uses your browser/system default microphone. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames.",
+					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text uses your browser/system default microphone. If Audio Response is selected, Local Qwen replies are spoken with the selected TTS engine. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames." : "Speech-to-text uses your browser/system default microphone. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames.",
 					requiresApiKey: false,
-					supportsAudioResponse: BROWSER_TTS_AVAILABLE
+					supportsAudioResponse: COHOST_TTS_AVAILABLE,
+					usesBrowserTts: true
 				},
 				localgemma: {
 					label: "Local Gemma 4 E2B (Browser)",
@@ -6782,9 +7215,10 @@
 					defaultModel: LOCAL_GEMMA_DEFAULT_MODEL,
 					modelPlaceholder: `Optional model id/path (default ${LOCAL_GEMMA_DEFAULT_MODEL} on ${LOCAL_GEMMA_DEFAULT_REMOTE_HOST})`,
 					disableCaptureSelection: false,
-					deviceNotice: BROWSER_TTS_AVAILABLE ? "Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees. Audio responses use your browser built-in text-to-speech." : "Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees.",
+					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees. Audio responses use the selected TTS engine." : "Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees.",
 					requiresApiKey: false,
-					supportsAudioResponse: BROWSER_TTS_AVAILABLE
+					supportsAudioResponse: COHOST_TTS_AVAILABLE,
+					usesBrowserTts: true
 				},
 				customopenai: {
 					label: "OpenAI-Compatible (Custom)",
@@ -6793,10 +7227,11 @@
 					defaultModel: CUSTOM_OPENAI_DEFAULT_MODEL,
 					modelPlaceholder: "Optional model override or select a model from the endpoint",
 					disableCaptureSelection: false,
-					deviceNotice: "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is attached for multimodal models.",
+					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is attached for multimodal models. Audio responses use the selected TTS engine." : "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is attached for multimodal models.",
 					requiresApiKey: false,
 					acceptsOptionalApiKey: true,
-					supportsAudioResponse: false
+					supportsAudioResponse: COHOST_TTS_AVAILABLE,
+					usesBrowserTts: true
 				},
 				configuredllm: {
 					label: "SSN Configured LLM",
@@ -6805,9 +7240,10 @@
 					defaultModel: "",
 					modelPlaceholder: "Optional model override passed to the configured LLM provider",
 					disableCaptureSelection: false,
-					deviceNotice: "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is sent through the SSN LLM bridge for multimodal providers.",
+					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is sent through the SSN LLM bridge for multimodal providers. Audio responses use the selected TTS engine." : "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is sent through the SSN LLM bridge for multimodal providers.",
 					requiresApiKey: false,
-					supportsAudioResponse: false
+					supportsAudioResponse: COHOST_TTS_AVAILABLE,
+					usesBrowserTts: true
 				},
 				chatgpt: {
 					...REALTIME_PROVIDER_CONFIG.chatgpt,
@@ -6863,6 +7299,21 @@
 				}
 			}
 
+			function getCohostTtsProviderLabel() {
+				const labels = {
+					system: "System TTS",
+					kokoro: "Kokoro TTS",
+					piper: "Piper TTS",
+					espeak: "eSpeak TTS",
+					kitten: "Kitten TTS"
+				};
+				return labels[getStoredCohostTtsProvider()] || "System TTS";
+			}
+
+			function getBrowserTtsOutputState(responseTypeValue) {
+				return responseTypeValue === "audio" && COHOST_TTS_AVAILABLE ? getCohostTtsProviderLabel() + " ready" : "Text response only";
+			}
+
 			function getVoiceModeSummary(providerName) {
 				const responseTypeValue = document.getElementById("responseType")?.value || "text";
 				switch (providerName) {
@@ -6874,22 +7325,22 @@
 					case "localqwen":
 						return {
 							inputMode: "Browser STT -> text prompt",
-							outputState: responseTypeValue === "audio" && BROWSER_TTS_AVAILABLE ? "Browser TTS ready" : "Text response only"
+							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "localgemma":
 						return {
 							inputMode: "Browser STT + optional image frame",
-							outputState: responseTypeValue === "audio" && BROWSER_TTS_AVAILABLE ? "Browser TTS ready" : "Text response only"
+							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "customopenai":
 						return {
 							inputMode: "Browser STT -> text prompt",
-							outputState: "Text response only"
+							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "configuredllm":
 						return {
 							inputMode: "Browser STT + optional image frame",
-							outputState: "Text response only"
+							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "chatgpt":
 					case "xai":
@@ -6943,6 +7394,14 @@
 					}
 				}
 				const responseTypeValue = responseTypeSelect.value;
+				const showTtsProviderSelect = config.usesBrowserTts === true && responseTypeValue === "audio" && COHOST_TTS_AVAILABLE;
+				if (ttsProviderSelect) {
+					ttsProviderSelect.style.display = showTtsProviderSelect ? "block" : "none";
+					ttsProviderSelect.value = getStoredCohostTtsProvider();
+					if (showTtsProviderSelect) {
+						applyCohostTtsProvider(ttsProviderSelect.value);
+					}
+				}
 				videoSelect.disabled = config.disableCaptureSelection;
 				audioSelect.disabled = config.disableCaptureSelection;
 				if (config.disableCaptureSelection) {
@@ -7409,6 +7868,7 @@
 				}
 			}
 			document.addEventListener("DOMContentLoaded", () => {
+				applyCohostTtsProvider(getStoredCohostTtsProvider());
 				addClearHistoryButton();
 			});
 
