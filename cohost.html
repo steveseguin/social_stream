@@ -2571,6 +2571,7 @@
 				}
 				async speakTextWithTtsLibrary(text, emotionHint = "") {
 					if (!this.shouldUseTtsLibrary() || !text) return false;
+					const selectedProvider = getStoredCohostTtsProvider();
 					this.pauseRecognitionForSpeech();
 					updateDiagnostics({
 						state: "responding",
@@ -2584,12 +2585,19 @@
 					});
 					try {
 						avatar.setEmotion(emotionHint || inferAvatarEmotionFromText(text) || "proud", true);
-						window.TTS.speak(text, true);
 						updateVoiceTelemetry({
 							outputState: getCohostTtsProviderLabel() + " speaking",
 							outputPreview: text
 						});
-						await this.waitForTtsLibraryIdle(text);
+						const spoke = await runCohostTts(text, selectedProvider);
+						if (!spoke && selectedProvider !== "system") {
+							updateVoiceTelemetry({
+								outputState: getCohostTtsProviderLabel() + " failed; retrying System TTS",
+								outputPreview: text
+							});
+							await runCohostTts(text, "system");
+							applyCohostTtsProvider(selectedProvider);
+						}
 						updateDiagnostics({
 							state: "connected",
 							connected: "yes",
@@ -2603,6 +2611,7 @@
 						return true;
 					} finally {
 						avatar.setEmotion("happy", false);
+						applyCohostTtsProvider(selectedProvider);
 						this.resumeRecognitionAfterTts();
 					}
 				}
@@ -3656,6 +3665,7 @@
 				}
 				async speakTextWithTtsLibrary(text, emotionHint = "") {
 					if (!this.shouldUseTtsLibrary() || !text) return false;
+					const selectedProvider = getStoredCohostTtsProvider();
 					this.pauseRecognitionForSpeech();
 					updateDiagnostics({
 						state: "responding",
@@ -3669,12 +3679,19 @@
 					});
 					try {
 						avatar.setEmotion(emotionHint || inferAvatarEmotionFromText(text) || "proud", true);
-						window.TTS.speak(text, true);
 						updateVoiceTelemetry({
 							outputState: getCohostTtsProviderLabel() + " speaking",
 							outputPreview: text
 						});
-						await this.waitForTtsLibraryIdle(text);
+						const spoke = await runCohostTts(text, selectedProvider);
+						if (!spoke && selectedProvider !== "system") {
+							updateVoiceTelemetry({
+								outputState: getCohostTtsProviderLabel() + " failed; retrying System TTS",
+								outputPreview: text
+							});
+							await runCohostTts(text, "system");
+							applyCohostTtsProvider(selectedProvider);
+						}
 						updateDiagnostics({
 							state: "connected",
 							connected: "yes",
@@ -3688,6 +3705,7 @@
 						return true;
 					} finally {
 						avatar.setEmotion("happy", false);
+						applyCohostTtsProvider(selectedProvider);
 						this.resumeRecognitionAfterTts();
 					}
 				}
@@ -5925,6 +5943,59 @@
 				}
 			}
 
+			function runCohostTts(text, provider) {
+				const selectedProvider = provider || "system";
+				applyCohostTtsProvider(selectedProvider);
+				if (!window.TTS || typeof window.TTS.speak !== "function") {
+					return Promise.resolve(false);
+				}
+				const originalFinishedAudio = window.TTS.finishedAudio;
+				const originalConsoleError = console.error;
+				return new Promise(resolve => {
+					let settled = false;
+					let sawError = false;
+					let fallbackTimer = null;
+					const cleanup = () => {
+						window.TTS.finishedAudio = originalFinishedAudio;
+						console.error = originalConsoleError;
+						if (fallbackTimer) clearTimeout(fallbackTimer);
+					};
+					const done = ok => {
+						if (settled) return;
+						settled = true;
+						cleanup();
+						resolve(ok);
+					};
+					console.error = function patchedCohostTtsError() {
+						const message = Array.prototype.map.call(arguments, arg => String(arg && arg.message ? arg.message : arg)).join(" ");
+						if (/TTS|speech|audio|kokoro|piper|espeak|kitten/i.test(message)) {
+							sawError = true;
+						}
+						return originalConsoleError.apply(console, arguments);
+					};
+					window.TTS.finishedAudio = function patchedCohostFinishedAudio(event) {
+						try {
+							originalFinishedAudio.call(window.TTS, event);
+						} finally {
+							done(!sawError);
+						}
+					};
+					try {
+						window.TTS.speak(text, true);
+					} catch (error) {
+						originalConsoleError("TTS error:", error);
+						sawError = true;
+						done(false);
+						return;
+					}
+					if (selectedProvider === "system") {
+						fallbackTimer = setTimeout(() => done(!sawError), Math.min(180000, Math.max(12000, String(text || "").length * 140)));
+					} else {
+						fallbackTimer = setTimeout(() => done(false), Math.min(180000, Math.max(20000, String(text || "").length * 180)));
+					}
+				});
+			}
+
 			function normalizeModelOverride(providerName, value) {
 				let normalized = (value || "").trim();
 				if (!normalized) return "";
@@ -7389,7 +7460,7 @@
 					const savedResponseType = localStorage.getItem(`responseType_${providerName}`);
 					if (savedResponseType) {
 						responseTypeSelect.value = savedResponseType;
-					} else if (responseTypeSelect.value === "text") {
+					} else if (config.usesBrowserTts === true || responseTypeSelect.value === "text") {
 						responseTypeSelect.value = "audio";
 					}
 				}
