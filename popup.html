@@ -7985,12 +7985,16 @@ input:checked + .slider:before {
 										<option value="bedrock">AWS Bedrock API</option>
 										<option value="openrouter">OpenRouter API</option>
 										<option value="groq">Groq API</option>
+										<option value="hostedllm">SSN Hosted Trial LLM (experimental)</option>
 										<option value="custom">Custom API (OpenAI-compatible / llama.cpp)</option>
 									</select>
 								<div>
 								</div>	
 									<div style="width: 95%; font-size: 0.9em; opacity: 0.85; margin: 6px 0 10px 0;">
 										Ollama uses its own native API. For llama.cpp, LM Studio, vLLM, or other OpenAI-compatible servers, choose <strong>Custom API</strong>.
+									</div>
+									<div id="hostedLLMInfo" class="hidden" style="width: 95%; margin: 8px 0 10px 0; padding: 10px 12px; border-radius: 8px; background: var(--color-accent-subtle); font-size: 0.92em; line-height: 1.4;">
+										SSN Hosted Trial LLM should work without setup while the free trial token is available. If the free token is disabled or rate-limited later, enter your own token below or switch to Ollama / Custom API.
 									</div>
 									<div id="ollamaendpoint" class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
@@ -8030,6 +8034,16 @@ input:checked + .slider:before {
 									<div id="customAIApiKey" class="hidden textInputContainer" style="width: 95%;">
 										<input type="password" class="textInput" autocomplete="off" placeholder="Optional API key for compatible services" data-textsetting="customAIApiKey" />
 										<label for="customAIApiKey">&gt; Optional API Key</label>
+									</div>
+
+									<div id="hostedLLMToken" class="hidden textInputContainer" style="width: 95%;">
+										<input type="password" class="textInput" autocomplete="off" placeholder="Leave blank for current free trial token" data-textsetting="hostedLLMToken" />
+										<label for="hostedLLMToken">&gt; Hosted LLM token override</label>
+									</div>
+
+									<div id="hostedLLMEndpoint" class="hidden textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="Leave blank for SSN hosted endpoint" data-textsetting="hostedLLMEndpoint" />
+										<label for="hostedLLMEndpoint">&gt; Hosted LLM endpoint override</label>
 									</div>
 								</div>
 								
@@ -8117,6 +8131,12 @@ input:checked + .slider:before {
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: qwen2.5-7b-instruct or the alias exposed by your server" data-textsetting="customAIModel" />
 										<label for="customAIModel"><span data-translate="customAIModel">&gt; Model to use (server model id, not the .gguf filename)</span></label>
+									</div>
+								</div>
+								<div id="hostedLLMModel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="Leave blank for server default" data-textsetting="hostedLLMModel" />
+										<label for="hostedLLMModel">&gt; Hosted LLM model override</label>
 									</div>
 								</div>
 								

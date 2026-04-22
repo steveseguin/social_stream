@@ -3064,7 +3064,8 @@ function handleAIProviderVisibility(provider) {
         "deepseekApiKey", "deepseekmodel", "customAIEndpoint", "customAIModel",
         "openrouterApiKey", "openroutermodel", "bedrockAccessKey", "bedrockSecretKey",
         "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey",
-        "localgemmahost", "localbrowserhelp", "localgemmamodel", "localqwenmodel"
+        "localgemmahost", "localbrowserhelp", "localgemmamodel", "localqwenmodel",
+        "hostedLLMInfo", "hostedLLMToken", "hostedLLMEndpoint", "hostedLLMModel"
     ].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
@@ -3101,6 +3102,11 @@ function handleAIProviderVisibility(provider) {
     } else if (provider == "groq") {
         document.getElementById("groqApiKey").classList.remove("hidden");
         document.getElementById("groqmodel").classList.remove("hidden");
+    } else if (provider == "hostedllm") {
+        document.getElementById("hostedLLMInfo").classList.remove("hidden");
+        document.getElementById("hostedLLMToken").classList.remove("hidden");
+        document.getElementById("hostedLLMEndpoint").classList.remove("hidden");
+        document.getElementById("hostedLLMModel").classList.remove("hidden");
     } else if (provider == "localgemma") {
         document.getElementById("localgemmahost").classList.remove("hidden");
         document.getElementById("localbrowserhelp").classList.remove("hidden");
@@ -3166,7 +3172,8 @@ function collectLLMProviderTestSettings() {
         'openrouterApiKey', 'openroutermodel', 'customAIEndpoint',
         'customAIModel', 'customAIApiKey', 'bedrockAccessKey',
         'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel',
-        'localgemmahost', 'localgemmamodel', 'localqwenmodel'
+        'localgemmahost', 'localgemmamodel', 'localqwenmodel',
+        'hostedLLMToken', 'hostedLLMEndpoint', 'hostedLLMModel'
     ].forEach(key => {
         const input = document.querySelector(`[data-textsetting='${key}']`);
         if (input) {
@@ -4403,7 +4410,8 @@ function handleOptionSetting(ele, sync) {
 			'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
 			'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive',
 			'openrouterApiKey', 'openroutermodel', 'groqApiKey', 'groqmodel',
-			'customAIApiKey', 'localgemmahost', 'localbrowserhelp', 'localgemmamodel', 'localqwenmodel'
+			'customAIApiKey', 'localgemmahost', 'localbrowserhelp', 'localgemmamodel', 'localqwenmodel',
+			'hostedLLMInfo', 'hostedLLMToken', 'hostedLLMEndpoint', 'hostedLLMModel'
 		];
         
         aiProviderElements.forEach(id => {
@@ -4446,6 +4454,12 @@ function handleOptionSetting(ele, sync) {
             case 'groq':
                 document.getElementById("groqApiKey").classList.remove("hidden");
                 document.getElementById("groqmodel").classList.remove("hidden");
+                break;
+            case 'hostedllm':
+                document.getElementById("hostedLLMInfo").classList.remove("hidden");
+                document.getElementById("hostedLLMToken").classList.remove("hidden");
+                document.getElementById("hostedLLMEndpoint").classList.remove("hidden");
+                document.getElementById("hostedLLMModel").classList.remove("hidden");
                 break;
             case 'localgemma':
                 document.getElementById("localgemmahost").classList.remove("hidden");

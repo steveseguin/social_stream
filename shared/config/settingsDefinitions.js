@@ -378,6 +378,21 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "configure_llm_api",
     description: "Model identifier exposed by the custom OpenAI-compatible service."
   },
+  "hostedLLMEndpoint": {
+    type: "text",
+    category: "configure_llm_api",
+    description: "Optional endpoint override for the SSN Hosted Trial LLM."
+  },
+  "hostedLLMModel": {
+    type: "text",
+    category: "configure_llm_api",
+    description: "Optional model override for the SSN Hosted Trial LLM."
+  },
+  "hostedLLMToken": {
+    type: "text",
+    category: "configure_llm_api",
+    description: "Optional token override for the SSN Hosted Trial LLM."
+  },
   "localgemmahost": {
     type: "text",
     category: "configure_llm_api",
