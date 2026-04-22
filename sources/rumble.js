@@ -283,6 +283,34 @@
 		}
 	}
 
+	function getCurrentVideoPageUrl(){
+		try {
+			if (!isVideoPage()){
+				return "";
+			}
+			var parsed = new URL(window.location.href);
+			parsed.hash = "";
+			return parsed.toString();
+		} catch(e){
+			return isVideoPage() ? String(window.location.href || "").split("#")[0] : "";
+		}
+	}
+
+	function decodeRumbleEmbedId(value){
+		try {
+			var normalized = normalizeSettingText(value).replace(/^v/i, "");
+			var parsed = /^[a-z0-9]+$/i.test(normalized) ? parseInt(normalized, 36) : NaN;
+			return isFinite(parsed) && parsed > 0 ? String(parsed) : "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function buildRumblePopupUrl(chatId){
+		chatId = normalizeSettingText(chatId);
+		return chatId ? "https://rumble.com/chat/popup/" + encodeURIComponent(chatId) : "";
+	}
+
 	function isChannelPage(){
 		try {
 			return /^\/(c|user)\//i.test(window.location.pathname || "");
@@ -309,14 +337,87 @@
 		lastAttemptAt: 0,
 		lastErrorKey: ""
 	};
+	var rumbleOembedResolver = {
+		pending: false,
+		lastAttemptKey: "",
+		lastAttemptAt: 0,
+		lastFailureKey: "",
+		lastFailureAt: 0
+	};
+
+	function tryResolvePopupViaOembed(){
+		var videoUrl = getCurrentVideoPageUrl();
+		var requestKey = videoUrl;
+		var now = Date.now();
+		var endpoint;
+		if (!videoUrl || isPopupPage()){
+			return false;
+		}
+		if (rumbleOembedResolver.pending){
+			return true;
+		}
+		if ((rumbleOembedResolver.lastFailureKey === requestKey) && ((now - rumbleOembedResolver.lastFailureAt) < 30000)){
+			return false;
+		}
+		if ((rumbleOembedResolver.lastAttemptKey === requestKey) && ((now - rumbleOembedResolver.lastAttemptAt) < 10000)){
+			return true;
+		}
+		rumbleOembedResolver.pending = true;
+		rumbleOembedResolver.lastAttemptKey = requestKey;
+		rumbleOembedResolver.lastAttemptAt = now;
+		try {
+			endpoint = new URL("/api/Media/oembed.json", window.location.origin || "https://rumble.com").toString() + "?url=" + encodeURIComponent(videoUrl);
+		} catch(e){
+			endpoint = "https://rumble.com/api/Media/oembed.json?url=" + encodeURIComponent(videoUrl);
+		}
+		fetch(endpoint, {
+			method: "GET",
+			cache: "no-store",
+			credentials: "omit",
+			headers: {
+				Accept: "application/json"
+			}
+		}).then(function(response){
+			if (!response.ok){
+				throw new Error("HTTP " + response.status);
+			}
+			return response.json();
+		}).then(function(data){
+			var match = String((data && data.html) || "").match(/\/embed\/(v[a-z0-9]+)\//i);
+			var popupUrl = buildRumblePopupUrl(decodeRumbleEmbedId(match && match[1]));
+			rumbleOembedResolver.pending = false;
+			if (!popupUrl){
+				throw new Error("No Rumble embed ID in oEmbed response");
+			}
+			if (window.location.href !== popupUrl){
+				window.location.href = popupUrl;
+			}
+		}).catch(function(error){
+			rumbleOembedResolver.pending = false;
+			rumbleOembedResolver.lastFailureKey = requestKey;
+			rumbleOembedResolver.lastFailureAt = Date.now();
+			console.warn("Rumble oEmbed popup resolution failed", error && error.message ? error.message : error);
+		});
+		return true;
+	}
 
 	function tryResolvePopupViaBackground(){
 		var apiUrl = getRumbleApiUrlSetting();
 		var streamId = getRumbleStreamIdSetting();
-		var pageUrl = normalizeSettingText(window.location.href);
-		var requestKey = apiUrl + "::" + streamId + "::" + pageUrl;
+		var popupUrl = "";
+		var requestKey = apiUrl + "::" + streamId;
 		var now = Date.now();
 		if (!shouldAttemptPopupResolution()){
+			return false;
+		}
+		if (streamId && /^\d+$/.test(streamId)){
+			popupUrl = buildRumblePopupUrl(streamId);
+			if (popupUrl && window.location.href !== popupUrl){
+				window.location.href = popupUrl;
+			}
+			return true;
+		}
+		if (!apiUrl){
 			return false;
 		}
 		if (rumblePopupResolver.pending){
@@ -336,8 +437,7 @@
 			chrome.runtime.sendMessage(chrome.runtime.id, {
 				cmd: "resolveRumblePopupUrl",
 				apiUrl: apiUrl,
-				streamId: streamId,
-				pageUrl: pageUrl
+				streamId: streamId
 			}, function(response){
 				rumblePopupResolver.pending = false;
 				if (response && response.ok && response.popupUrl){
@@ -487,12 +587,12 @@
 				//	processMessage(ele);
 				//});
 			} 
-			if (!isPopupPage() && !tryResolvePopupViaBackground()){
+			if (!isPopupPage() && !tryResolvePopupViaOembed() && !tryResolvePopupViaBackground()){
 				tryResolvePopupViaDom();
 			}
 			
 		} else {
-			if (!tryResolvePopupViaBackground()){
+			if (!tryResolvePopupViaOembed() && !tryResolvePopupViaBackground()){
 				if (isLivePage() && document.querySelector('img[src="/img/astronaut-404.png"]')){
 					if (window.location.href.includes("/user/")){
 						window.location.href = window.location.href.replace("/user/","/");
