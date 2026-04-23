@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>SSN — Viewer Counts Bottom Bar</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.72);
+    --bar-radius: 8px;
+    --bar-padding: 10px 18px;
+    --font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-size: 14px;
+    --font-weight: 600;
+    --text-color: #ffffff;
+    --accent-color: #00d4ff;
+    --divider-color: rgba(255, 255, 255, 0.18);
+    --total-bg: rgba(255, 255, 255, 0.08);
+    --total-radius: 6px;
+    --total-padding: 6px 14px;
+    --total-font-size: 16px;
+    --total-font-weight: 700;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #viewer-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bar-bg);
+    border-radius: var(--bar-radius);
+    padding: var(--bar-padding);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+  }
+
+  #viewer-bar.visible {
+    opacity: 1;
+  }
+
+  .platform-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+  }
+
+  .platform-count .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .platform-count .label {
+    text-transform: capitalize;
+    opacity: 0.85;
+  }
+
+  .platform-count .count {
+    font-weight: 700;
+    color: var(--accent-color);
+  }
+
+  .divider {
+    width: 1px;
+    height: 20px;
+    background: var(--divider-color);
+    flex-shrink: 0;
+  }
+
+  .total-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--total-bg);
+    border-radius: var(--total-radius);
+    padding: var(--total-padding);
+    font-size: var(--total-font-size);
+    font-weight: var(--total-font-weight);
+    letter-spacing: 0.3px;
+  }
+
+  .total-box .total-label {
+    text-transform: uppercase;
+    font-size: 10px;
+    opacity: 0.6;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+  }
+
+  .total-box .total-count {
+    color: var(--accent-color);
+  }
+
+  /* Platform dot colors */
+  .dot-youtube { background: #ff0000; }
+  .dot-twitch { background: #9146ff; }
+  .dot-kick { background: #53fc18; }
+  .dot-tiktok { background: #fe2c55; }
+  .dot-facebook { background: #1877f2; }
+  .dot-rumble { background: #85c742; }
+  .dot-discord { background: #5865f2; }
+  .dot-whatnot { background: #ff6b35; }
+  .dot-default { background: #888; }
+</style>
+</head>
+<body>
+
+<div id="viewer-bar">
+  <div id="platforms-container"></div>
+  <div class="divider"></div>
+  <div class="total-box">
+    <span class="total-label">Total</span>
+    <span class="total-count" id="total-count">0</span>
+  </div>
+</div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+<script>
+(function () {
+  /* ---------- DOM refs ---------- */
+  var platformsContainer = document.getElementById("platforms-container");
+  var totalCountEl = document.getElementById("total-count");
+  var viewerBar = document.getElementById("viewer-bar");
+
+  /* ---------- State ---------- */
+  var platformCounts = {};
+
+  /* ---------- Helpers ---------- */
+  function formatNumber(n) {
+    if (typeof n !== "number" || isNaN(n)) return "0";
+    return n.toLocaleString("en-US");
+  }
+
+  function getDotClass(platform) {
+    var p = (platform || "").toLowerCase();
+    var map = {
+      youtube: "dot-youtube",
+      twitch: "dot-twitch",
+      kick: "dot-kick",
+      tiktok: "dot-tiktok",
+      facebook: "dot-facebook",
+      rumble: "dot-rumble",
+      discord: "dot-discord",
+      whatnot: "dot-whatnot"
+    };
+    return map[p] || "dot-default";
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    var platforms = platformsContainer;
+    platforms.innerHTML = "";
+
+    var total = 0;
+    var keys = Object.keys(platformCounts).sort();
+
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var val = platformCounts[key];
+      if (typeof val !== "number" || val < 0) continue;
+
+      total += val;
+
+      var row = document.createElement("div");
+      row.className = "platform-count";
+
+      var dot = document.createElement("span");
+      dot.className = "dot " + getDotClass(key);
+      row.appendChild(dot);
+
+      var label = document.createElement("span");
+      label.className = "label";
+      label.textContent = key;
+      row.appendChild(label);
+
+      var count = document.createElement("span");
+      count.className = "count";
+      count.textContent = formatNumber(val);
+      row.appendChild(count);
+
+      platforms.appendChild(row);
+    }
+
+    totalCountEl.textContent = formatNumber(total);
+
+    if (keys.length > 0) {
+      viewerBar.classList.add("visible");
+    } else {
+      viewerBar.classList.remove("visible");
+    }
+  }
+
+  /* ---------- Payload handler ---------- */
+  function handlePayload(data) {
+    if (!data) return;
+
+    /* Only process viewer_updates snapshots */
+    if (data.event !== "viewer_updates") return;
+    if (!data.meta || typeof data.meta !== "object") return;
+
+    /* Replace state entirely — do NOT merge */
+    platformCounts = {};
+    var keys = Object.keys(data.meta);
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      var v = data.meta[k];
+      if (typeof v === "number" && !isNaN(v)) {
+        platformCounts[k] = v;
+      } else if (typeof v === "string") {
+        var parsed = parseInt(v, 10);
+        if (!isNaN(parsed)) {
+          platformCounts[k] = parsed;
+        }
+      }
+    }
+
+    render();
+  }
+
+  /* ---------- Bridge setup ---------- */
+  var bridge = document.getElementById("ssn_bridge");
+  if (bridge) {
+    var params = new URLSearchParams(location.search);
+    var roomID = params.get("session") || "";
+    var password = params.get("password") || "false";
+    var label = params.get("label") || "custom_overlay_viewerbar_" + Date.now();
+
+    if (roomID) {
+      bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+        encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+        "&label=" + encodeURIComponent(label) +
+        "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+    }
+
+    window.addEventListener("message", function (event) {
+      var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+      if (typeof payload !== "undefined") {
+        handlePayload(payload);
+      }
+    });
+  }
+
+  /* ---------- Expose for testing ---------- */
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>

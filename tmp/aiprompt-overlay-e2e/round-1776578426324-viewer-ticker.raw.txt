@@ -1,0 +1,217 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Viewer Counts</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.85);
+    --bar-border: rgba(255, 255, 255, 0.15);
+    --text-color: #ffffff;
+    --text-muted: #aaaaaa;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-size: 16px;
+    --font-size-total: 20px;
+    --padding: 10px 20px;
+    --gap: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: transparent;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end; /* Bottom bar */
+    justify-content: center;
+  }
+
+  #container {
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+    background: var(--bar-bg);
+    border: 1px solid var(--bar-border);
+    border-radius: 8px;
+    padding: var(--padding);
+    margin-bottom: 20px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  }
+
+  #container.visible {
+    opacity: 1;
+  }
+
+  .platform-count {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+  }
+
+  .platform-name {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .platform-value {
+    font-size: var(--font-size);
+    font-weight: 700;
+  }
+
+  .divider {
+    width: 1px;
+    height: 30px;
+    background: var(--bar-border);
+  }
+
+  .total-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+  }
+
+  .total-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .total-value {
+    font-size: var(--font-size-total);
+    font-weight: 800;
+    color: #4caf50; /* Green for total */
+  }
+
+  /* Hide bridge iframe */
+  #ssn_bridge { display: none; }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <div id="platforms-list" style="display: flex; gap: var(--gap);">
+    <!-- Platform items injected here -->
+  </div>
+  
+  <div class="divider"></div>
+  
+  <div class="total-section">
+    <span class="total-label">Total</span>
+    <span class="total-value" id="total-count">0</span>
+  </div>
+</div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // 1. Setup Bridge
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // 2. State Management
+  var currentCounts = {};
+  var container = document.getElementById("container");
+  var platformsList = document.getElementById("platforms-list");
+  var totalCountEl = document.getElementById("total-count");
+
+  // 3. Render Logic
+  function renderCounts() {
+    var platforms = Object.keys(currentCounts).sort();
+    var total = 0;
+    
+    // Clear existing platform elements
+    platformsList.innerHTML = "";
+
+    if (platforms.length === 0) {
+      container.classList.remove("visible");
+      return;
+    }
+
+    container.classList.add("visible");
+
+    platforms.forEach(function (platform) {
+      var count = currentCounts[platform];
+      total += count;
+
+      var div = document.createElement("div");
+      div.className = "platform-count";
+
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "platform-name";
+      nameSpan.textContent = platform;
+
+      var valSpan = document.createElement("span");
+      valSpan.className = "platform-value";
+      valSpan.textContent = count.toLocaleString();
+
+      div.appendChild(nameSpan);
+      div.appendChild(valSpan);
+      platformsList.appendChild(div);
+    });
+
+    // Update total
+    totalCountEl.textContent = total.toLocaleString();
+  }
+
+  // 4. Message Handler
+  function handlePayload(data) {
+    // We only care about viewer_updates events
+    if (data && data.event === "viewer_updates" && data.meta) {
+      // Rule 14: meta is a FULL SNAPSHOT. Replace state, don't merge.
+      currentCounts = {};
+      
+      // Iterate over the meta object keys (platforms)
+      for (var key in data.meta) {
+        if (data.meta.hasOwnProperty(key)) {
+          var val = parseInt(data.meta[key], 10);
+          if (!isNaN(val)) {
+            currentCounts[key] = val;
+          }
+        }
+      }
+      
+      renderCounts();
+    }
+  }
+
+  // 5. Event Listeners
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  // Allow manual testing via console: window.handleOverlayPayload({ event: "viewer_updates", meta: { youtube: 100, twitch: 50 } });
+  window.handleOverlayPayload = handlePayload;
+
+})();
+</script>
+</body>
+</html>
+```
