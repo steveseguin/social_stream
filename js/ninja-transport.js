@@ -141,9 +141,20 @@
       // Route data payloads from peers to background.js
       const dataHandler = (ev) => {
         try {
-          const pkt = ev.detail && (ev.detail.data || ev.detail);
-          const uuid = ev.detail && (ev.detail.uuid || ev.detail.peer || ev.detail.id);
-          const data = pkt && (pkt.detail?.data || pkt.data || pkt);
+          const detail = ev.detail || {};
+          const pkt = detail.data || detail;
+          const uuid = detail.uuid || detail.UUID || detail.peer || detail.id ||
+            (pkt && (pkt.uuid || pkt.UUID || pkt.peer || pkt.id));
+          let data = null;
+          if (pkt && pkt.detail && pkt.detail.data) {
+            data = pkt.detail.data;
+          } else if (pkt && pkt.pipe) {
+            data = pkt.pipe;
+          } else if (pkt && pkt.data) {
+            data = pkt.data;
+          } else {
+            data = pkt;
+          }
           if (!data) return;
           if (data.overlayNinja) {
             // Mirror iframe event shape by dispatching a custom DOM event

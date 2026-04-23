@@ -784,6 +784,60 @@ h2 {
 .options_group {
     word-break: break-word;
 }
+.ai-tool-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.ai-tool-card h2,
+.ai-tool-card h3,
+.ai-tool-card h4 {
+    margin: 0;
+}
+.ai-tool-link {
+    margin: 0;
+}
+.ai-tool-link div {
+    max-height: none;
+    padding: 8px 10px;
+}
+.ai-tool-note,
+.ai-tool-copy,
+.cohost-tool-note {
+    margin: 0;
+    font-size: 0.9em;
+    line-height: 1.45;
+    opacity: 0.86;
+}
+.cohost-tool-panel {
+    margin-top: 4px;
+    padding: 12px;
+    border: 1px solid rgba(0, 166, 255, 0.28);
+    border-radius: 6px;
+    background: rgba(0, 166, 255, 0.08);
+}
+.cohost-tool-panel h4 {
+    margin-bottom: 8px;
+}
+.cohost-tool-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    word-break: normal;
+}
+.cohost-tool-row .switch {
+    flex: 0 0 auto;
+    margin-top: 1px;
+}
+.cohost-tool-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.cohost-tool-title {
+    font-weight: 600;
+}
 .lightblue{
 	color: #006f93;
 }
@@ -5515,7 +5569,7 @@ input:checked + .slider:before {
 			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-source-options" />
-					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span>Filter by Platform / Channel</span></label>
+					<label class="collapsible-label" for="wrapper-multi-alert-source-options"><span>🔎 Filter by Platform / Channel</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group">
@@ -7931,12 +7985,16 @@ input:checked + .slider:before {
 										<option value="bedrock">AWS Bedrock API</option>
 										<option value="openrouter">OpenRouter API</option>
 										<option value="groq">Groq API</option>
+										<option value="hostedllm">SSN Hosted Trial LLM (experimental)</option>
 										<option value="custom">Custom API (OpenAI-compatible / llama.cpp)</option>
 									</select>
 								<div>
 								</div>	
 									<div style="width: 95%; font-size: 0.9em; opacity: 0.85; margin: 6px 0 10px 0;">
 										Ollama uses its own native API. For llama.cpp, LM Studio, vLLM, or other OpenAI-compatible servers, choose <strong>Custom API</strong>.
+									</div>
+									<div id="hostedLLMInfo" class="hidden" style="width: 95%; margin: 8px 0 10px 0; padding: 10px 12px; border-radius: 8px; background: var(--color-accent-subtle); font-size: 0.92em; line-height: 1.4;">
+										SSN Hosted Trial LLM should work without setup while the free trial token is available. If the free token is disabled or rate-limited later, enter your own token below or switch to Ollama / Custom API.
 									</div>
 									<div id="ollamaendpoint" class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
@@ -7976,6 +8034,16 @@ input:checked + .slider:before {
 									<div id="customAIApiKey" class="hidden textInputContainer" style="width: 95%;">
 										<input type="password" class="textInput" autocomplete="off" placeholder="Optional API key for compatible services" data-textsetting="customAIApiKey" />
 										<label for="customAIApiKey">&gt; Optional API Key</label>
+									</div>
+
+									<div id="hostedLLMToken" class="hidden textInputContainer" style="width: 95%;">
+										<input type="password" class="textInput" autocomplete="off" placeholder="Leave blank for current free trial token" data-textsetting="hostedLLMToken" />
+										<label for="hostedLLMToken">&gt; Hosted LLM token override</label>
+									</div>
+
+									<div id="hostedLLMEndpoint" class="hidden textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="Leave blank for SSN hosted endpoint" data-textsetting="hostedLLMEndpoint" />
+										<label for="hostedLLMEndpoint">&gt; Hosted LLM endpoint override</label>
 									</div>
 								</div>
 								
@@ -8063,6 +8131,12 @@ input:checked + .slider:before {
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: qwen2.5-7b-instruct or the alias exposed by your server" data-textsetting="customAIModel" />
 										<label for="customAIModel"><span data-translate="customAIModel">&gt; Model to use (server model id, not the .gguf filename)</span></label>
+									</div>
+								</div>
+								<div id="hostedLLMModel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="Leave blank for server default" data-textsetting="hostedLLMModel" />
+										<label for="hostedLLMModel">&gt; Hosted LLM model override</label>
 									</div>
 								</div>
 								
@@ -8885,14 +8959,14 @@ input:checked + .slider:before {
 					</label>
 					<div class="collapsible-text">
 						<div class="options">
-							<div class="options_group streaming_chat">
+							<div class="options_group streaming_chat ai-tool-card">
 								<h2 style="margin:0;">🧠 AI prompt page builder</h2>
-								<div class="link" style="margin:0;" title="Create, iterate, preview, and export AI-built HTML pages.">
+								<div class="link ai-tool-link" title="Create, iterate, preview, and export AI-built HTML pages.">
 									<div id="aiprompt" data-raw="" class="single_message">
 										<a target="_blank" id="aipromptlink" href="https://beta.socialstream.ninja/aiprompt.html">https://beta.socialstream.ninja/aiprompt.html</a>
 									</div>
 								</div>
-								<i>Requires the configured LLM provider above and the private chat bot option enabled.</i>
+								<p class="ai-tool-note">Requires the configured LLM provider above and the private chat bot option enabled.</p>
 							</div>
 						</div>
 					</div>
@@ -8906,20 +8980,32 @@ input:checked + .slider:before {
 					</label> 
 					<div class="collapsible-text">
 						<div class="options">
-							<div class="options_group streaming_chat">
+							<div class="options_group streaming_chat ai-tool-card">
 								<h3 data-translate="virtual-cohost">A virtual co-host that can both listen, see, and talk back</h3>
 								
-								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
+								<div class="link ai-tool-link" title="Open the multimodal co-host page.">
 									<div id="cohost" data-raw="" class="single_message">
 										<a target="_blank" id="cohostlink" href="https://beta.socialstream.ninja/cohost.html">https://beta.socialstream.ninja/cohost.html</a>
 									</div>
 								</div>
 								
-								<span>
-									This is a work-in-progress virtual AI co-host. It can currently view your screen, webcam, and listen to your microphone/audio. It will respond by text or audio, as you desire.<br /><br />
-									Down the road this will be able to access your live chat, start/stop your OBS stream, change scenes in OBS, handle events and interactive games with your audience, and participate in your stream as a virtual co-host.
-									
-								</span>
+								<p class="ai-tool-copy">This work-in-progress AI co-host can view your screen or webcam, listen to microphone/audio, and respond by text or audio.</p>
+								<p class="ai-tool-copy">For the SSN Configured LLM provider, enable the <a href="#wrapper-chatbot-private-options">private chat bot option</a> above.</p>
+								<p class="ai-tool-copy">Future tool permissions can add live chat, OBS, stream events, games, and other interactive controls.</p>
+								<div class="cohost-tool-panel">
+									<h4>Co-host tool permissions</h4>
+									<div class="cohost-tool-row">
+										<label class="switch">
+											<input type="checkbox" id="cohostSpotifyControl" data-setting="cohostSpotifyControl" />
+											<span class="slider round"></span>
+										</label>
+										<div class="cohost-tool-copy">
+											<span class="cohost-tool-title">Spotify controls</span>
+											<span class="cohost-tool-note">Allow the co-host to pause, resume, skip, queue, and check songs when Spotify is enabled and connected.</span>
+										</div>
+									</div>
+									<p class="cohost-tool-note">Disabled tools are blocked by the background service even if the co-host asks for them.</p>
+								</div>
 							</div>
 							
 						</div>
@@ -11492,7 +11578,7 @@ input:checked + .slider:before {
 			
                                 <div class="link" title="Points system scoreboard display">
 				<h2 class="scoreboard_mode_title">
-					<span data-translate="scoreboard">Scoreboard (🚧 Work in Progress)</span>
+					<span data-translate="scoreboard">Scoreboard</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#scoreboard" title="Jump to the scoreboard link options."><span data-translate="options">[options]</span></a>
 					<label for="help-scoreboard" class="help-link rounded_area" title="Click for detailed help">[?]</label>
@@ -11507,11 +11593,11 @@ input:checked + .slider:before {
 						<li>Viewer rankings display</li>
 						<li>Integration with chat activity</li>
 					</ul>
-					<div class="help-warning">⚠️ <strong>Work in Progress:</strong> This feature is still being developed and may have limited functionality.</div>
+					<div class="help-tip">💡 <strong>Tip:</strong> Enable the global Points System above to show persistent loyalty points, or use the local fallback options below for temporary chat activity scores.</div>
 				</div>
 				<h3>
 					<span data-translate="when-enabled-a-scoreboard">
-					   A real-time points tracking scoreboard. Display user points, rankings, and engagement scores with customizable triggers and rewards.
+					   A real-time points tracking scoreboard for loyalty points, chat activity, donations, and custom Event Flow score payloads.
 					</span>
 				</h3>
 				<div id="scoreboard" data-raw="" class="streaming_chat"><a href="" id="scoreboardlink"></a></div>
@@ -11672,14 +11758,17 @@ input:checked + .slider:before {
 								</div>
 								<br>
 								
-								<h3><span data-translate="points-triggers">Points Triggers</span></h3>
+								<h3><span data-translate="points-triggers">Local fallback scoring</span></h3>
+								<p style="margin-top: 0; opacity: 0.85;">
+									For persistent loyalty points, enable the <a href="#wrapper-global-points-options">global Points System</a>. These options are only for temporary scoreboard-only scoring.
+								</p>
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-param21="chatpoints" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="points-for-chat">
-										💬 Award points for chat messages
+										💬 Count chat messages as temporary points
 									</span>
 								</div>
 								<div>
@@ -11688,7 +11777,7 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="points-for-donations">
-										💰 Award points for donations
+										💰 Count donation amounts as temporary points
 									</span>
 								</div>
 								<div>
@@ -11697,7 +11786,7 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="custom-point-triggers">
-										🎯 Enable custom point triggers
+										🎯 Accept custom score fields from Event Flow payloads
 									</span>
 								</div>
 								<br>

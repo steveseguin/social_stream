@@ -145,6 +145,17 @@
 		}
 	}
 
+	function sendMetaEvent(eventName, meta) {
+		if (!eventName || !meta) {
+			return;
+		}
+		pushMessage({
+			type: "tiktok",
+			event: eventName,
+			meta: meta
+		});
+	}
+
 	const tikTokStandardStatusState = {
 		initAt: Date.now(),
 		lastKey: "",
@@ -377,6 +388,17 @@
 			return "";
 		}
 		return resp;
+	}
+
+	function normalizeTikTokText(value) {
+		if (typeof value !== "string") {
+			return "";
+		}
+		return value.replace(/\s+/g, " ").trim();
+	}
+
+	function normalizeTikTokNameKey(value) {
+		return normalizeTikTokText(value).toLowerCase();
 	}
 
 	function rankToColor(rank, maxRank = 40) {
@@ -1449,6 +1471,7 @@
 			////console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
+		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
 		pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
 	}
@@ -1663,6 +1686,7 @@
 			////console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
+		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
 		pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
 	}
@@ -1674,6 +1698,8 @@
 	var counter = 0;
 	var lastMessageTime = Date.now();
 	var observerHealthCheckInterval = 60000; // Check every minute
+	var lastTopViewersSnapshot = "";
+	var tikTokTopViewersByName = {};
 
 	function parseTikTokViewerCountText(value) {
 		if (typeof value !== "string") {
@@ -1719,6 +1745,211 @@
 		} catch (e) {
 			return null;
 		}
+	}
+
+	function findTikTokTopViewersPanel() {
+		var container = document.querySelector("[data-e2e='live-chat-container']") || document;
+		var labels = container.querySelectorAll("div");
+		for (var i = 0; i < labels.length; i++) {
+			if (normalizeTikTokText(labels[i].textContent) !== "Viewers") {
+				continue;
+			}
+			var panel = labels[i];
+			for (var depth = 0; panel && depth < 6; depth++) {
+				if (panel.querySelector && panel.querySelector(".overflow-y-auto")) {
+					return panel;
+				}
+				panel = panel.parentElement;
+			}
+		}
+		return null;
+	}
+
+	function getTikTokTopViewersHeaderCount(panel) {
+		if (!panel) {
+			return null;
+		}
+		try {
+			var countNode = panel.querySelector(".P4-Regular.text-UIText3");
+			if (!countNode || !countNode.textContent) {
+				return null;
+			}
+			return parseTikTokViewerCountText(countNode.textContent);
+		} catch (e) {
+			return null;
+		}
+	}
+
+	function getTikTokTopViewerName(row, imageNode) {
+		try {
+			if (imageNode && imageNode.parentElement && imageNode.parentElement.nextElementSibling) {
+				var name = normalizeTikTokText(imageNode.parentElement.nextElementSibling.textContent);
+				if (name) {
+					return name;
+				}
+			}
+		} catch (e) {}
+		try {
+			var left = row.firstElementChild;
+			if (!left || !left.children) {
+				return "";
+			}
+			for (var i = 0; i < left.children.length; i++) {
+				var child = left.children[i];
+				if (child.querySelector && child.querySelector("img[src]")) {
+					continue;
+				}
+				var text = normalizeTikTokText(child.textContent);
+				if (text && !/^\d+$/.test(text)) {
+					return text;
+				}
+			}
+		} catch (e) {}
+		return "";
+	}
+
+	function parseTikTokTopViewerRows(panel) {
+		var viewers = [];
+		if (!panel) {
+			return viewers;
+		}
+		try {
+			var list = panel.querySelector(".overflow-y-auto");
+			if (!list || !list.children) {
+				return viewers;
+			}
+			for (var i = 0; i < list.children.length && viewers.length < 3; i++) {
+				var row = list.children[i];
+				if (!row || !row.textContent) {
+					continue;
+				}
+				var left = row.firstElementChild;
+				var rankNode = left && left.firstElementChild ? left.firstElementChild : null;
+				var rank = parseInt(normalizeTikTokText(rankNode ? rankNode.textContent : ""), 10);
+				var imageNode = row.querySelector("img[src]");
+				var name = getTikTokTopViewerName(row, imageNode);
+				if (!name || !Number.isFinite(rank)) {
+					continue;
+				}
+				var scoreNode = row.lastElementChild;
+				var scoreText = normalizeTikTokText(scoreNode ? scoreNode.textContent : "");
+				var score = parseTikTokViewerCountText(scoreText);
+				var viewer = {
+					rank: rank,
+					chatname: escapeHtml(name),
+					scoreText: scoreText
+				};
+				if (Number.isFinite(score)) {
+					viewer.score = score;
+				}
+				if (imageNode && imageNode.src) {
+					viewer.chatimg = imageNode.src + "";
+				}
+				viewers.push(viewer);
+			}
+		} catch (e) {}
+		return viewers;
+	}
+
+	function updateTikTokTopViewersCache(topViewers) {
+		tikTokTopViewersByName = {};
+		if (!topViewers || !topViewers.length) {
+			return;
+		}
+		for (var i = 0; i < topViewers.length; i++) {
+			var viewer = topViewers[i];
+			var key = normalizeTikTokNameKey(viewer.chatname);
+			if (!key) {
+				continue;
+			}
+			tikTokTopViewersByName[key] = {
+				rank: viewer.rank,
+				score: viewer.score,
+				scoreText: viewer.scoreText || "",
+				chatimg: viewer.chatimg || ""
+			};
+		}
+	}
+
+	function getTikTokTopViewerMeta(chatname) {
+		var key = normalizeTikTokNameKey(chatname);
+		if (!key || !tikTokTopViewersByName[key]) {
+			return null;
+		}
+		var viewer = tikTokTopViewersByName[key];
+		var meta = {
+			topViewer: true,
+			topViewerRank: viewer.rank
+		};
+		if (Number.isFinite(viewer.score)) {
+			meta.topViewerScore = viewer.score;
+		}
+		if (viewer.scoreText) {
+			meta.topViewerScoreText = viewer.scoreText;
+		}
+		return meta;
+	}
+
+	function addTikTokTopViewerMeta(data) {
+		if (!data || !data.chatname) {
+			return;
+		}
+		var topViewerMeta = getTikTokTopViewerMeta(data.chatname);
+		if (!topViewerMeta) {
+			return;
+		}
+		if (!data.meta) {
+			data.meta = {};
+		}
+		for (var key in topViewerMeta) {
+			if (Object.prototype.hasOwnProperty.call(topViewerMeta, key)) {
+				data.meta[key] = topViewerMeta[key];
+			}
+		}
+	}
+
+	function createTikTokTopViewersSnapshot() {
+		var panel = findTikTokTopViewersPanel();
+		if (!panel) {
+			return null;
+		}
+		var topViewers = parseTikTokTopViewerRows(panel);
+		if (!topViewers.length) {
+			return null;
+		}
+		var snapshot = {
+			topViewers: topViewers
+		};
+		var viewerCount = getTikTokTopViewersHeaderCount(panel);
+		if (Number.isFinite(viewerCount)) {
+			snapshot.viewerCount = viewerCount;
+		}
+		return snapshot;
+	}
+
+	function checkTikTokTopViewers() {
+		if (!isExtensionOn) {
+			return;
+		}
+		if (!StreamState.isValid() && StreamState.getCurrentChannel()) {
+			return;
+		}
+		var snapshot = createTikTokTopViewersSnapshot();
+		if (!snapshot) {
+			if (lastTopViewersSnapshot) {
+				lastTopViewersSnapshot = "";
+				updateTikTokTopViewersCache([]);
+				sendMetaEvent("top_viewers_update", { topViewers: [] });
+			}
+			return;
+		}
+		updateTikTokTopViewersCache(snapshot.topViewers);
+		var serialized = JSON.stringify(snapshot);
+		if (serialized === lastTopViewersSnapshot) {
+			return;
+		}
+		lastTopViewersSnapshot = serialized;
+		sendMetaEvent("top_viewers_update", snapshot);
 	}
 
 	function getTikTokStandardBlockedReason() {
@@ -1864,6 +2095,11 @@
 			} catch (e) {
 				////console.error(e);
 			}
+		}
+		if (counter % 15 == 1) {
+			try {
+				checkTikTokTopViewers();
+			} catch (e) {}
 		}
 		monitorTikTokStandardHealth();
 		

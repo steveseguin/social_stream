@@ -49,8 +49,10 @@ body {
 
 .reaction-content img,
 .reaction-content svg {
-	width: 100%;
-	height: 100%;
+	width: 100% !important;
+	height: 100% !important;
+	max-width: none !important;
+	max-height: none !important;
 	display: block;
 	object-fit: contain;
 }
@@ -385,6 +387,7 @@ body {
 
 		content.className = "reaction-content" + (className ? " " + className : "");
 		content.innerHTML = markup;
+		forceMediaToFill(content);
 		item.appendChild(content);
 
 		recordSpawn({
@@ -403,6 +406,20 @@ body {
 				item.parentNode.removeChild(item);
 			}
 		});
+	}
+
+	function forceMediaToFill(container) {
+		var media = container.querySelectorAll("img,svg");
+		var i;
+
+		for (i = 0; i < media.length; i++) {
+			media[i].removeAttribute("width");
+			media[i].removeAttribute("height");
+			media[i].style.setProperty("width", "100%", "important");
+			media[i].style.setProperty("height", "100%", "important");
+			media[i].style.setProperty("max-width", "none", "important");
+			media[i].style.setProperty("max-height", "none", "important");
+		}
 	}
 
 	function createHeartMarkup(index) {

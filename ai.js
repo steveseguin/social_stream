@@ -18,6 +18,19 @@ const RAG_MAX_RERANK_CANDIDATES = 16;
 const RAG_MAX_EVIDENCE_DOCS = 5;
 const RAG_CONTEXT_CHAR_LIMIT = Math.min(maxContextSize, 12000);
 const RAG_SCORE_RATIO_THRESHOLD = 0.35;
+const HOSTED_LLM_CONFIG_URL = "https://socialstream.ninja/llm-trial-config.json";
+const HOSTED_LLM_DEFAULT_CONFIG = {
+    enabled: true,
+    endpoint: "https://llm.socialstream.ninja/v1/chat/completions",
+    model: "default",
+    token: "test_token",
+    notice: "SSN Hosted Trial LLM is experimental and may be rate limited or disabled.",
+    signupUrl: "https://socialstream.ninja/llm"
+};
+let hostedLLMConfigCache = {
+    fetchedAt: 0,
+    config: null
+};
 
 class LLMServiceError extends Error {
     constructor(details = {}) {
@@ -40,6 +53,15 @@ function getLLMHint(status, code, details = {}) {
     const model = details.model || '';
     const message = String(details.message || '').toLowerCase();
 
+    if (provider === 'hostedllm' && (message.includes('failed to fetch') || message.includes('networkerror') || message.includes('network error'))) {
+        return 'The SSN hosted trial endpoint is unavailable from this browser. Try again later, use Ollama, or enter your own hosted token/endpoint.';
+    }
+    if (provider === 'hostedllm' && (status === 401 || status === 403)) {
+        return 'The free SSN hosted token may no longer be available. Enter your own token, sign up for limited hosted access, or use Ollama/Custom API instead.';
+    }
+    if (provider === 'hostedllm' && (status === 429 || (code && String(code).toLowerCase().includes('rate')))) {
+        return 'The SSN hosted trial is rate limited. Try again later, enter your own token, or use a local/custom provider.';
+    }
     if ((provider === 'custom' || provider === 'ollama') && (message.includes('failed to fetch') || message.includes('networkerror') || message.includes('network error'))) {
         return 'Check the endpoint URL, confirm the AI server is running, and verify Chrome or your firewall is not blocking the request.';
     }
@@ -102,6 +124,97 @@ function createLLMError(baseDetails, extra = {}) {
     const err = new LLMServiceError(merged);
     reportLLMError(err);
     return err;
+}
+
+function normalizeHostedLLMEndpoint(endpoint) {
+    const value = String(endpoint || "").trim();
+    if (!value) {
+        return HOSTED_LLM_DEFAULT_CONFIG.endpoint;
+    }
+    if (value.includes("/v1") && value.includes("/completions")) {
+        return value;
+    }
+    return value.replace(/\/+$/, "") + "/v1/chat/completions";
+}
+
+function mergeHostedLLMConfig(remoteConfig = {}) {
+    return {
+        ...HOSTED_LLM_DEFAULT_CONFIG,
+        ...(remoteConfig && typeof remoteConfig === "object" ? remoteConfig : {})
+    };
+}
+
+async function fetchHostedLLMConfig() {
+    const now = Date.now();
+    if (hostedLLMConfigCache.config && now - hostedLLMConfigCache.fetchedAt < 5 * 60 * 1000) {
+        return hostedLLMConfigCache.config;
+    }
+
+    let remoteConfig = null;
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const response = await fetch(HOSTED_LLM_CONFIG_URL, {
+            cache: "no-store",
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (response.ok) {
+            remoteConfig = await response.json();
+        }
+    } catch (error) {
+        remoteConfig = null;
+    }
+
+    hostedLLMConfigCache = {
+        fetchedAt: now,
+        config: mergeHostedLLMConfig(remoteConfig)
+    };
+    return hostedLLMConfigCache.config;
+}
+
+async function resolveHostedLLMSettings(llmSettings, modelOverride = null) {
+    const config = await fetchHostedLLMConfig();
+    const endpointOverride = String(llmSettings.hostedLLMEndpoint?.textsetting || "").trim();
+    const tokenOverride = String(llmSettings.hostedLLMToken?.textsetting || "").trim();
+    const modelSetting = String(llmSettings.hostedLLMModel?.textsetting || "").trim();
+    const endpoint = normalizeHostedLLMEndpoint(endpointOverride || config.endpoint);
+    const token = tokenOverride || config.apiKey || config.token || "";
+    const model = modelOverride || modelSetting || config.model || HOSTED_LLM_DEFAULT_CONFIG.model;
+    const trialUnavailable = config.enabled === false || config.available === false || config.trialEnabled === false;
+
+    if (trialUnavailable && !tokenOverride) {
+        throw createLLMError({
+            provider: "hostedllm",
+            model,
+            endpoint
+        }, {
+            status: 403,
+            code: "hosted_trial_unavailable",
+            message: config.notice || "The free SSN Hosted Trial LLM is currently unavailable.",
+            hint: "Please sign up to get your own limited-use token, enter it here, or switch to Ollama/Custom API."
+        });
+    }
+
+    if (!token) {
+        throw createLLMError({
+            provider: "hostedllm",
+            model,
+            endpoint
+        }, {
+            status: 401,
+            code: "hosted_trial_token_missing",
+            message: "The SSN Hosted Trial LLM token is missing.",
+            hint: "Leave the token field blank for the current free trial token, or enter your own hosted token if the trial has ended."
+        });
+    }
+
+    return {
+        endpoint,
+        apiKey: token,
+        model,
+        notice: config.notice || HOSTED_LLM_DEFAULT_CONFIG.notice
+    };
 }
 
 function noteChatBotDecision(reason, data, context = {}) {
@@ -677,6 +790,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			model = model || llmSettings.groqmodel?.textsetting || "llama-3.1-8b-instant";
 			apiKey = llmSettings.groqApiKey?.textsetting;
 			break;
+		case "hostedllm": {
+			const hostedSettings = await resolveHostedLLMSettings(llmSettings, model);
+			endpoint = hostedSettings.endpoint;
+			model = hostedSettings.model;
+			apiKey = hostedSettings.apiKey;
+			break;
+		}
 		case "custom":
 			endpoint = llmSettings.customAIEndpoint?.textsetting || "http://localhost:11434";
 			if (!endpoint.includes("/v1") || !endpoint.includes("/completions")){ // going to assume you already ended the completions URL

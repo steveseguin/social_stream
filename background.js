@@ -10666,6 +10666,103 @@ async function handleSpotifyAction(msg) {
 	return result;
 }
 
+function getCohostToolStatus() {
+	return {
+		tools: {
+			spotify: {
+				enabled: !!settings.cohostSpotifyControl,
+				configured: !!(settings.spotifyEnabled && spotify),
+				available: !!(settings.cohostSpotifyControl && settings.spotifyEnabled && spotify)
+			}
+		}
+	};
+}
+
+function normalizeCohostSpotifyRequest(request) {
+	const value = request && request.value && typeof request.value === "object" ? request.value : {};
+	const command = String(request.command || "").trim();
+	const actionMap = {
+		skip: "skip",
+		next: "skip",
+		previous: "previous",
+		prev: "previous",
+		pause: "pause",
+		stop: "pause",
+		resume: "resume",
+		play: "resume",
+		toggle: "toggle",
+		nowPlaying: "nowPlaying",
+		nowplaying: "nowPlaying",
+		volume: "volume",
+		queue: "queue",
+		shuffle: "shuffle",
+		repeat: "repeat"
+	};
+	const spotifyAction = actionMap[command] || actionMap[command.toLowerCase()];
+	if (!spotifyAction) {
+		return { error: "Unsupported Spotify command." };
+	}
+	const msg = {
+		spotifyAction,
+		sendToDock: false
+	};
+	if (spotifyAction === "volume") {
+		const volume = Number(value.volume);
+		if (!Number.isFinite(volume)) {
+			return { error: "Spotify volume command needs a 0-100 volume value." };
+		}
+		msg.volume = Math.max(0, Math.min(100, Math.round(volume)));
+	} else if (spotifyAction === "queue") {
+		const query = String(value.query || value.text || "")
+			.trim()
+			.slice(0, 200);
+		if (!query) {
+			return { error: "Spotify queue command needs a song or artist query." };
+		}
+		msg.query = query;
+	} else if (spotifyAction === "shuffle") {
+		if (typeof value.state === "boolean") {
+			msg.state = value.state;
+		} else if (value.state === null) {
+			msg.state = null;
+		} else if (typeof value.state === "string" && /^(true|false)$/i.test(value.state)) {
+			msg.state = value.state.toLowerCase() === "true";
+		} else {
+			msg.state = null;
+		}
+	} else if (spotifyAction === "repeat") {
+		const mode = String(value.mode || "off")
+			.trim()
+			.toLowerCase();
+		if (!["off", "track", "context"].includes(mode)) {
+			return { error: "Spotify repeat mode must be off, track, or context." };
+		}
+		msg.mode = mode;
+	}
+	return { msg };
+}
+
+async function handleCohostToolRequest(request) {
+	if (!request || request.tool !== "spotify") {
+		return { tool: request && request.tool ? request.tool : "", command: request && request.command ? request.command : "", success: false, message: "Unsupported co-host tool." };
+	}
+	if (!settings.cohostSpotifyControl) {
+		return { tool: "spotify", command: request.command || "", success: false, message: "Co-host Spotify control is disabled in the popup." };
+	}
+	const normalized = normalizeCohostSpotifyRequest(request);
+	if (normalized.error) {
+		return { tool: "spotify", command: request.command || "", success: false, message: normalized.error };
+	}
+	const result = await handleSpotifyAction(normalized.msg);
+	return {
+		tool: "spotify",
+		command: request.command || normalized.msg.spotifyAction,
+		success: !!(result && result.success),
+		message: result && result.message ? result.message : result && result.success ? "Spotify command completed." : "Spotify command failed.",
+		track: result && result.track ? result.track : null
+	};
+}
+
 function sendTickerP2P(data, uid = null) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
@@ -11416,9 +11513,19 @@ async function initTransport(roomStreamID, pass = false) {
 				// Receive overlay messages via SDK (support both event names and wrapper passthrough)
 				const handleSDKData = ev => {
 					try {
-						const pkt = ev.detail && (ev.detail.data || ev.detail);
-						const data = pkt && (pkt.detail?.data || pkt.data || pkt);
-						const uuid = ev.detail && (ev.detail.uuid || ev.detail.peer || ev.detail.id);
+						const detail = ev.detail || {};
+						const pkt = detail.data || detail;
+						let data = null;
+						if (pkt && pkt.detail && pkt.detail.data) {
+							data = pkt.detail.data;
+						} else if (pkt && pkt.pipe) {
+							data = pkt.pipe;
+						} else if (pkt && pkt.data) {
+							data = pkt.data;
+						} else {
+							data = pkt;
+						}
+						const uuid = detail.uuid || detail.UUID || detail.peer || detail.id || (pkt && (pkt.uuid || pkt.UUID || pkt.peer || pkt.id));
 						if (!data) return;
 						if (typeof data !== "object") return;
 						let payload = data.overlayNinja || null;
@@ -11908,6 +12015,27 @@ async function processIncomingRequest(request, UUID = false) {
 			}
 		} else if (request.action === "saveAiPromptOverlays" && request.value) {
 			saveAiPromptOverlays(request.value);
+		} else if (request.action === "cohostToolStatus" && UUID) {
+			const status = getCohostToolStatus();
+			sendDataP2P({ cohostToolStatus: { target: request.target || null, value: status, tools: status.tools } }, UUID);
+		} else if (request.action === "cohostTool" && UUID) {
+			try {
+				const result = await handleCohostToolRequest(request);
+				sendDataP2P({ cohostToolResponse: Object.assign({ target: request.target || null }, result) }, UUID);
+			} catch (error) {
+				sendDataP2P(
+					{
+						cohostToolResponse: {
+							target: request.target || null,
+							tool: request.tool || "",
+							command: request.command || "",
+							success: false,
+							message: error && error.message ? error.message : "Co-host tool request failed."
+						}
+					},
+					UUID
+				);
+			}
 		} else if (request.action === "getAiPromptOverlays" && UUID) {
 			const overlayStore = await getAiPromptOverlays();
 			sendDataP2P({ aiPromptOverlays: { target: request.target || null, value: overlayStore } }, UUID);
@@ -11974,7 +12102,7 @@ async function processIncomingRequest(request, UUID = false) {
 				sendDataP2P(
 					{
 						chatbotResponse: {
-							value: JSON.stringify({ error: { message: "Private Chat Bot is not enabled or Social Stream is off." } }),
+							value: JSON.stringify({ error: { message: 'Private Chat Bot is off, or Social Stream is off. In the SSN popup, open Chat Bots and AI services > Chat Bot - Private Interface, then enable "Enable private chat bot option".' } }),
 							target: request.target
 						}
 					},
