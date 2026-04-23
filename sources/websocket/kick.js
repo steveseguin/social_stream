@@ -130,6 +130,7 @@ const DEFAULT_CONFIG = {
 const PUSHER_KEY = '32cbd69e4b950bf97679';
 const PUSHER_WS_BASE = 'wss://ws-us2.pusher.com';
 const PUSHER_RECONNECT_DELAY_MS = 5000;
+const PUSHER_CONNECT_TIMEOUT_MS = 30000;
 const PUSHER_PING_INTERVAL_MS = 45000;
 const PUSHER_WATCHDOG_CHECK_MS = 30000;
 const PUSHER_STALE_MIN_MS = 180000;
@@ -198,6 +199,7 @@ const state = {
         connecting: false,
         pusherWs: null,
         pusherStatus: 'disconnected',
+        pusherConnectTimer: null,
         pusherPingTimer: null,
         pusherReconnectTimer: null,
         pusherWatchdogTimer: null,
@@ -3265,7 +3267,15 @@ function sendPusherFrame(event, data) {
     state.socket.pusherWs.send(JSON.stringify({ event, data }));
 }
 
+function clearPusherConnectTimer() {
+    if (state.socket.pusherConnectTimer) {
+        clearTimeout(state.socket.pusherConnectTimer);
+        state.socket.pusherConnectTimer = null;
+    }
+}
+
 function disconnectPusherSocket() {
+    clearPusherConnectTimer();
     if (state.socket.pusherPingTimer) {
         clearInterval(state.socket.pusherPingTimer);
         state.socket.pusherPingTimer = null;
@@ -3287,12 +3297,23 @@ function disconnectPusherSocket() {
     state.socket.pusherActivityTimeoutMs = 0;
 }
 
-function schedulePusherReconnect() {
+function schedulePusherReconnect(reason = 'unknown') {
     if (state.socket.pusherReconnectTimer) return;
+    log(`Scheduling Pusher reconnect (${reason}) in ${PUSHER_RECONNECT_DELAY_MS}ms.`);
     state.socket.pusherReconnectTimer = setTimeout(() => {
         state.socket.pusherReconnectTimer = null;
         connectPusherSocket();
     }, PUSHER_RECONNECT_DELAY_MS);
+}
+
+function recoverPusherSocket(reason, options = {}) {
+    const status = options.status || 'disconnected';
+    const error = options.error || '';
+    disconnectPusherSocket();
+    state.socket.status = status;
+    updateSocketState(error ? { status, error } : { status });
+    schedulePusherReconnect(reason);
+    syncBridgeChatMode();
 }
 
 function notePusherActivity() {
@@ -3313,11 +3334,7 @@ function startPusherWatchdog(activityTimeoutSeconds) {
         const staleAfterMs = Math.max(PUSHER_STALE_MIN_MS, state.socket.pusherActivityTimeoutMs * 3);
         if (!lastActivityAt || (Date.now() - lastActivityAt) <= staleAfterMs) return;
         log('Pusher chat socket went stale. Reconnecting chat.', 'warning');
-        disconnectPusherSocket();
-        state.socket.status = 'disconnected';
-        updateSocketState({ status: 'disconnected' });
-        schedulePusherReconnect();
-        syncBridgeChatMode();
+        recoverPusherSocket('watchdog_stale');
     }, checkIntervalMs);
 }
 
@@ -3358,6 +3375,7 @@ function handlePusherMessage(event) {
     if (eventName === 'pusher:connection_established') {
         let connectionData = {};
         try { connectionData = JSON.parse(payload.data || '{}'); } catch (_) {}
+        clearPusherConnectTimer();
         state.socket.pusherStatus = 'connected';
         state.socket.status = 'connected';
         updateSocketState({ status: 'connected' });
@@ -3432,21 +3450,35 @@ function connectPusherSocket() {
         state.socket.pusherStatus = 'disconnected';
         state.socket.status = 'disconnected';
         updateSocketState({ status: 'error', error: err?.message });
-        schedulePusherReconnect();
+        schedulePusherReconnect('connect_exception');
         return;
     }
-    state.socket.pusherWs.addEventListener('message', handlePusherMessage);
-    state.socket.pusherWs.addEventListener('close', (event) => {
-        log(`Pusher socket closed (code: ${event?.code || 'unknown'}).`);
-        state.socket.pusherStatus = 'disconnected';
-        state.socket.status = 'disconnected';
-        updateSocketState({ status: 'disconnected' });
-        schedulePusherReconnect();
-        // Pusher down — reconnect bridge with chat enabled as fallback
-        syncBridgeChatMode();
+    const ws = state.socket.pusherWs;
+    state.socket.pusherConnectTimer = setTimeout(() => {
+        if (state.socket.pusherWs !== ws || state.socket.pusherStatus !== 'connecting') return;
+        log('Pusher chat socket connection timed out. Reconnecting chat.', 'warning');
+        recoverPusherSocket('connect_timeout', {
+            status: 'error',
+            error: 'Pusher connection timed out'
+        });
+    }, PUSHER_CONNECT_TIMEOUT_MS);
+    ws.addEventListener('message', (event) => {
+        if (state.socket.pusherWs !== ws) return;
+        handlePusherMessage(event);
     });
-    state.socket.pusherWs.addEventListener('error', () => {
+    ws.addEventListener('close', (event) => {
+        if (state.socket.pusherWs !== ws) return;
+        clearPusherConnectTimer();
+        log(`Pusher socket closed (code: ${event?.code || 'unknown'}).`);
+        recoverPusherSocket(`close_${event?.code || 'unknown'}`);
+    });
+    ws.addEventListener('error', () => {
+        if (state.socket.pusherWs !== ws) return;
         log('Pusher socket error.', 'warning');
+        recoverPusherSocket('socket_error', {
+            status: 'error',
+            error: 'Pusher socket error'
+        });
     });
 }
 
