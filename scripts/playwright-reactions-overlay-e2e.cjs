@@ -496,6 +496,33 @@ async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent, expect
       assert(item.duration >= 2.3 && item.duration <= 3.9, 'Speed setting did not affect reaction duration as expected.');
     });
 
+    const imageScaleSnapshot = await overlayPage.evaluate(async () => {
+      const overlay = window.__reactionsOverlay;
+      const imageMarkup = '<img alt="reaction" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" style="width:12px;height:12px;max-width:12px;max-height:12px;">';
+
+      overlay.clearStage();
+      overlay.processPayload({
+        event: 'reaction',
+        type: 'zoom',
+        id: 'inline-image-scale',
+        chatmessage: imageMarkup
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 120));
+
+      const item = document.querySelector('.reaction');
+      const image = item && item.querySelector('img');
+      return {
+        itemWidth: item ? parseFloat(item.style.width) : 0,
+        imageWidth: image ? parseFloat(getComputedStyle(image).width) : 0,
+        imageHeight: image ? parseFloat(getComputedStyle(image).height) : 0
+      };
+    });
+
+    assert(imageScaleSnapshot.itemWidth >= 51.2 && imageScaleSnapshot.itemWidth <= 97.3, 'Image reaction did not receive the scale-adjusted wrapper size.');
+    assert(Math.abs(imageScaleSnapshot.imageWidth - imageScaleSnapshot.itemWidth) <= 0.75, 'Inline image width ignored the scale-adjusted wrapper size.');
+    assert(Math.abs(imageScaleSnapshot.imageHeight - imageScaleSnapshot.itemWidth) <= 0.75, 'Inline image height ignored the scale-adjusted wrapper size.');
+
     const likeSnapshot = await getOverlaySnapshot(overlayPage, {
       event: 'liked',
       type: 'tiktok',
