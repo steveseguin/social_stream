@@ -8159,7 +8159,7 @@ input:checked + .slider:before {
 									<span id="testSelectedLLMProviderStatus" style="display: inline-block; margin-left: 10px; font-size: 0.9em; opacity: 0.9;"></span>
 								</div>
 								<div id="testSelectedLLMProviderOutput" style="display: none; width: 95%; margin: 8px 0 0 0; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,0.06); white-space: pre-wrap; word-break: break-word; font-size: 0.92em;"></div>
-								
+
 							</div>
 						</div>
 					</div>
@@ -8227,7 +8227,11 @@ input:checked + .slider:before {
 										<input type="number" style="max-width: 7ch;" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
 									
 								</div>
-								
+								<div title="Maximum number of primary chat bot LLM replies that can run at the same time." style="margin:5px 0">
+									<span>Max parallel bot replies</span>
+										<input type="number" style="max-width: 5ch;" step="1" max="10" min="1" value="1" size="3" data-numbersetting="ollamaMaxParallelAgents" />
+								</div>
+
 								<div style="display: inline-block;" title="Include chat summaries with past context">
 									<label class="switch">
 										<input type="checkbox" id="llmsummary" data-setting="llmsummary" />

@@ -2037,8 +2037,38 @@ function checkTriggerWords(triggerString, sentence) {
 }
 
 let isProcessing = false;
+let activeBotResponseCount = 0;
 const lastResponseTime = {};
 // lastSentMessage is already declared in background.js
+
+function getMaxParallelBotResponses() {
+    const configured = settings?.ollamaMaxParallelAgents?.numbersetting;
+    let maxParallel = parseInt(configured, 10);
+    if (!Number.isFinite(maxParallel) || maxParallel < 1) {
+        maxParallel = 1;
+    }
+    return Math.min(maxParallel, 10);
+}
+
+function reserveBotResponseSlot(data) {
+    const maxParallel = getMaxParallelBotResponses();
+    if (isProcessing && activeBotResponseCount === 0) {
+        noteChatBotDecision('busy', data);
+        return false;
+    }
+    if (activeBotResponseCount >= maxParallel) {
+        noteChatBotDecision('parallel-limit', data, { active: activeBotResponseCount, max: maxParallel });
+        return false;
+    }
+    activeBotResponseCount += 1;
+    isProcessing = true;
+    return true;
+}
+
+function releaseBotResponseSlot() {
+    activeBotResponseCount = Math.max(0, activeBotResponseCount - 1);
+    isProcessing = activeBotResponseCount > 0;
+}
 
 const hostReflectionTracker = new Map();
 const HOST_REFLECTION_TTL_MS = 20 * 1000; // mirror duplicate reflection window
@@ -2119,13 +2149,11 @@ async function processMessageWithOllama(data, idx=null) {
   if (!data.tid) return;
   
   const currentTime = Date.now();
-  if (isProcessing) return;
+  if (!reserveBotResponseSlot(data)) return;
   
   //console.log("starting processing");
-  isProcessing = true;
   try {
     if (data?.bot) {
-      isProcessing = false;
       noteChatBotDecision('ignored-bot-message', data);
       return;
     }
@@ -2135,9 +2163,8 @@ async function processMessageWithOllama(data, idx=null) {
     if (settings.ollamaRateLimitPerTab) {
       ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting) || 0);
     }
-    
+
     if (data.type !== "stageten" && !settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
-      isProcessing = false;
       const waitMs = Math.max(0, ollamaRateLimitPerTab - (currentTime - lastResponseTime[data.tid]));
       noteChatBotDecision('rate-limited', data, { waitMs });
       return;
@@ -2151,7 +2178,6 @@ async function processMessageWithOllama(data, idx=null) {
 
     // Early return conditions
     if ((data.type === "stageten" && botname === data.chatname) || !data.chatmessage || (!settings.noollamabotname && data.chatmessage.startsWith(botname + ":"))) {
-      isProcessing = false;
       noteChatBotDecision('ignored-self-message', data);
       return;
     }
@@ -2163,13 +2189,11 @@ async function processMessageWithOllama(data, idx=null) {
     );
 
     if (data?.chatbotReflection) {
-      isProcessing = false;
       noteChatBotDecision('ignored-chatbot-reflection', data);
       return;
     }
 
     if (data?.reflection && !allowHostReflectionResponse) {
-      isProcessing = false;
       noteChatBotDecision('ignored-reflection', data, { origin: data?.reflectionOrigin || '' });
       return;
     }
@@ -2177,7 +2201,6 @@ async function processMessageWithOllama(data, idx=null) {
     // Trigger words check
     if (settings.bottriggerwords?.textsetting.trim()) { // bottriggerwords
       if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)) {
-        isProcessing = false;
         noteChatBotDecision('missing-trigger', data);
         return;
       }
@@ -2196,7 +2219,6 @@ async function processMessageWithOllama(data, idx=null) {
       .trim();
 
     if (!cleanedText) {
-      isProcessing = false;
       noteChatBotDecision('empty-after-cleaning', data);
       return;
     }
@@ -2206,7 +2228,6 @@ async function processMessageWithOllama(data, idx=null) {
       hostReflectionKey = getHostReflectionKey(data, cleanedText);
       pruneHostReflectionTracker();
       if (hostReflectionKey && hostReflectionTracker.has(hostReflectionKey)) {
-        isProcessing = false;
         noteChatBotDecision('reflection-already-handled', data);
         return;
       }
@@ -2215,7 +2236,6 @@ async function processMessageWithOllama(data, idx=null) {
     if (!allowHostReflectionResponse) {
       const score = fastMessageSimilarity(cleanedText, lastSentMessage);
       if (score > 0.5) {
-        isProcessing = false;
         noteChatBotDecision('too-similar-to-last-reply', data);
         return;
       }
@@ -2306,7 +2326,7 @@ async function processMessageWithOllama(data, idx=null) {
   } catch (error) {
     console.warn("Error processing message:", error);
   } finally {
-    isProcessing = false;
+    releaseBotResponseSlot();
   }
 }
 
