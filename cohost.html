@@ -1629,6 +1629,7 @@
 			let configuredLLMBridgeProbePending = new Map();
 			let configuredLLMBridgeToolPending = new Map();
 			let configuredLLMBridgeToolStatusPending = new Map();
+			let configuredLLMBridgeResponseChunks = new Map();
 			let configuredLLMBridgeRequestCounter = 0;
 			let configuredLLMBridgeVerifiedAt = 0;
 			let cohostToolStatusCache = null;
@@ -3438,9 +3439,31 @@
 				configuredLLMBridgeToolPending.delete(response.target);
 				pending.resolve(response);
 			}
+			function resolveConfiguredLLMBridgeChunk(payload) {
+				if (!payload || payload.action !== "ssnBridgeChunk") return payload;
+				const chunkId = String(payload.chunkId || "");
+				const index = parseInt(payload.index, 10);
+				const total = parseInt(payload.total, 10);
+				if (!chunkId || !Number.isFinite(index) || !Number.isFinite(total) || index < 0 || total < 1 || index >= total) return null;
+				let entry = configuredLLMBridgeResponseChunks.get(chunkId);
+				if (!entry || entry.total !== total) {
+					entry = { total, parts: [], received: 0 };
+					configuredLLMBridgeResponseChunks.set(chunkId, entry);
+				}
+				if (typeof entry.parts[index] === "undefined") entry.received++;
+				entry.parts[index] = String(payload.value || "");
+				if (entry.received < entry.total) return null;
+				configuredLLMBridgeResponseChunks.delete(chunkId);
+				try {
+					return JSON.parse(entry.parts.join(""));
+				} catch (error) {
+					console.error("Failed to parse chunked SSN bridge response:", error);
+					return null;
+				}
+			}
 			window.addEventListener("message", event => {
 				if (!configuredLLMBridgeFrame || event.source !== configuredLLMBridgeFrame.contentWindow) return;
-				const payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+				const payload = resolveConfiguredLLMBridgeChunk(event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja);
 				if (!payload) return;
 				if (payload.chatbotChunk && typeof payload.chatbotChunk.value !== "undefined") {
 					receiveConfiguredLLMBridgeResponse(payload.chatbotChunk, true);

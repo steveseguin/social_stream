@@ -1377,6 +1377,7 @@ If the user asks a question that does not require a file change, answer normally
 		var overlayPackageRequestTarget = null;
 		var overlayPackageLoaded = false;
 		var BRIDGE_CHUNK_SIZE = 12000;
+		var bridgeResponseChunks = {};
 
 		var el = function (id) { return document.getElementById(id); };
 		var pageName = el("pageName");
@@ -1585,7 +1586,7 @@ If the user asks a question that does not require a file change, answer normally
 
 		function publishOverlays() {
 			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
-			postBridgeOverlayPayload({ action: "saveAiPromptOverlays", value: buildOverlayPackage() }, "pcs");
+			postBridgeOverlayPayload({ action: "saveAiPromptOverlays", value: buildOverlayPackage() }, "rpcs");
 		}
 
 		function applyOverlayPackage(pack) {
@@ -1618,7 +1619,7 @@ If the user asks a question that does not require a file change, answer normally
 			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
 			overlayPackageRequestTarget = makeMessageId();
 			overlayPackageLoaded = false;
-			postBridgeOverlayPayload({ action: "getAiPromptOverlays", target: overlayPackageRequestTarget }, "pcs");
+			postBridgeOverlayPayload({ action: "getAiPromptOverlays", target: overlayPackageRequestTarget }, "rpcs");
 			setTimeout(function () {
 				if (!overlayPackageLoaded) publishOverlays();
 			}, 2500);
@@ -1884,7 +1885,7 @@ If the user asks a question that does not require a file change, answer normally
 					scale: 1,
 					logging: false,
 					useCORS: true,
-					allowTaint: true,
+					allowTaint: false,
 					width: Math.max(rootEl.clientWidth, 320),
 					height: Math.max(rootEl.clientHeight, 240),
 					windowWidth: Math.max(rootEl.clientWidth, 320),
@@ -2078,6 +2079,29 @@ If the user asks a question that does not require a file change, answer normally
 				}, "*");
 			}
 			return total;
+		}
+
+		function resolveBridgeChunk(payload) {
+			if (!payload || payload.action !== "ssnBridgeChunk") return payload;
+			var chunkId = String(payload.chunkId || "");
+			var index = parseInt(payload.index, 10);
+			var total = parseInt(payload.total, 10);
+			if (!chunkId || !isFinite(index) || !isFinite(total) || index < 0 || total < 1 || index >= total) return null;
+			var entry = bridgeResponseChunks[chunkId];
+			if (!entry || entry.total !== total) {
+				entry = { total: total, parts: [], received: 0 };
+				bridgeResponseChunks[chunkId] = entry;
+			}
+			if (typeof entry.parts[index] === "undefined") entry.received++;
+			entry.parts[index] = String(payload.value || "");
+			if (entry.received < entry.total) return null;
+			delete bridgeResponseChunks[chunkId];
+			try {
+				return JSON.parse(entry.parts.join(""));
+			} catch (e) {
+				logBuilder("error", "Failed to parse chunked bridge response", e);
+				return null;
+			}
 		}
 
 		function sendPrompt(requestOverride, opts) {
@@ -2505,7 +2529,7 @@ If the user asks a question that does not require a file change, answer normally
 					return;
 				}
 				if (bridgeFrame && event.source === bridgeFrame.contentWindow) {
-					var payload = data.dataReceived && data.dataReceived.overlayNinja;
+					var payload = resolveBridgeChunk(data.dataReceived && data.dataReceived.overlayNinja);
 					if (!payload) return;
 					if (payload.chatbotChunk && typeof payload.chatbotChunk.value !== "undefined") {
 						receiveAIResponse(payload.chatbotChunk, true);

@@ -12,14 +12,8 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   const server = await startStaticServer({ root: ROOT, host: HOST, port: PORT });
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
-  const page = await context.newPage();
 
-  const consoleErrors = [];
-  const pageErrors = [];
-  page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
-  page.on('pageerror', err => pageErrors.push(err.message));
-
-  await page.addInitScript(() => {
+  await context.addInitScript(() => {
     const srcDescriptor = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src');
     Object.defineProperty(HTMLIFrameElement.prototype, 'src', {
       configurable: true,
@@ -35,6 +29,28 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
             doc.open();
             doc.write(`<!DOCTYPE html><html><body><script>
               var chunks = {};
+              function sendPayload(payload) {
+                parent.postMessage({ dataReceived: { overlayNinja: payload } }, '*');
+              }
+              function sendMaybeChunked(payload) {
+                var text = JSON.stringify(payload);
+                var size = 800;
+                if (text.length <= size) {
+                  sendPayload(payload);
+                  return;
+                }
+                var chunkId = 'mock-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+                var total = Math.ceil(text.length / size);
+                for (var i = 0; i < total; i++) {
+                  sendPayload({
+                    action: 'ssnBridgeChunk',
+                    chunkId: chunkId,
+                    index: i,
+                    total: total,
+                    value: text.slice(i * size, (i + 1) * size)
+                  });
+                }
+              }
               window.addEventListener('message', function (event) {
                 var payload = event.data && event.data.sendData && event.data.sendData.overlayNinja;
                 if (payload && payload.action === 'ssnBridgeChunk') {
@@ -47,12 +63,29 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
                   delete chunks[key];
                   payload = JSON.parse(entry.parts.join(''));
                 }
-                if (!payload || payload.action !== 'chatbot') return;
+                if (!payload) return;
+                if (payload.action === 'saveAiPromptOverlays') {
+                  parent.__ssnAiPromptMockStore = payload.value || parent.__ssnAiPromptMockStore || null;
+                  try { parent.localStorage.setItem('__ssnAiPromptMockStore', JSON.stringify(parent.__ssnAiPromptMockStore)); } catch (e) {}
+                  return;
+                }
+                if (payload.action === 'getAiPromptOverlays') {
+                  var mockStore = parent.__ssnAiPromptMockStore || null;
+                  try { mockStore = mockStore || JSON.parse(parent.localStorage.getItem('__ssnAiPromptMockStore') || 'null'); } catch (e) {}
+                  sendMaybeChunked({
+                    aiPromptOverlays: {
+                      target: payload.target || null,
+                      value: mockStore || { version: 1, activeOverlay: '', order: [], overlays: {} }
+                    }
+                  });
+                  return;
+                }
+                if (payload.action !== 'chatbot') return;
                 function send(kind, value, delay) {
                   setTimeout(function () {
                     var out = {};
                     out[kind] = { target: payload.target, value: value };
-                    parent.postMessage({ dataReceived: { overlayNinja: out } }, '*');
+                    sendPayload(out);
                   }, delay);
                 }
                 send('chatbotChunk', '<!DOCTYPE html>\\\\n<html>\\\\n<body>\\\\n', 50);
@@ -61,6 +94,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
               });
             <\/script></body></html>`);
             doc.close();
+            if (typeof frame.onload === 'function') frame.onload(new Event('load'));
           }, 0);
           return;
         }
@@ -68,6 +102,13 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
       }
     });
   });
+
+  const page = await context.newPage();
+
+  const consoleErrors = [];
+  const pageErrors = [];
+  page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
+  page.on('pageerror', err => pageErrors.push(err.message));
 
   const url = `http://${HOST}:${PORT}/aiprompt.html?session=test-room`;
   await page.goto(url, { waitUntil: 'networkidle' });
@@ -190,6 +231,61 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   await overlayPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=chat-overlay`, { waitUntil: 'domcontentloaded' });
   await overlayPage.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
   await overlayPage.close();
+
+  // Remote extension responses can exceed bridge message size; aioverlay should reassemble chunked stores.
+  const remoteChunkPage = await context.newPage();
+  const largeRemoteStore = {
+    version: 1,
+    activeOverlay: 'remote-overlay',
+    order: ['remote-overlay'],
+    overlays: {
+      'remote-overlay': {
+        id: 'remote-overlay',
+        name: 'remote-overlay',
+        slug: 'remote-overlay',
+        html: '<!DOCTYPE html><html><body><div id="aioverlay-remote-chunk">remote chunk loaded</div><pre>' + 'x'.repeat(5000) + '</pre></body></html>',
+        updatedAt: Date.now()
+      }
+    }
+  };
+  await remoteChunkPage.addInitScript(store => {
+    localStorage.removeItem('ssnAiPromptPagesV2');
+    localStorage.removeItem('ssnAiPromptPagesV1');
+    localStorage.setItem('__ssnAiPromptMockStore', JSON.stringify(store));
+    window.__ssnAiPromptMockStore = store;
+  }, largeRemoteStore);
+  await remoteChunkPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=remote-overlay`, { waitUntil: 'domcontentloaded' });
+  try {
+    await remoteChunkPage.waitForSelector('#aioverlay-remote-chunk', { timeout: 3000 });
+  } catch (error) {
+    const debug = await remoteChunkPage.evaluate(() => ({
+      iframes: Array.prototype.slice.call(document.querySelectorAll('iframe')).map(frame => frame.src),
+      mockStore: !!window.__ssnAiPromptMockStore,
+      mockLocalLength: (localStorage.getItem('__ssnAiPromptMockStore') || '').length,
+      errorText: (document.getElementById('error') && document.getElementById('error').textContent) || '',
+      bodyStart: ((document.body && document.body.innerHTML) || '').slice(0, 300)
+    }));
+    throw new Error('Chunked remote overlay did not load. Debug: ' + JSON.stringify(debug).slice(0, 2500));
+  }
+  await remoteChunkPage.close();
+
+  const xssPage = await context.newPage();
+  await xssPage.addInitScript(() => {
+    localStorage.removeItem('ssnAiPromptPagesV2');
+    localStorage.removeItem('ssnAiPromptPagesV1');
+    localStorage.setItem('__ssnAiPromptMockStore', JSON.stringify({ version: 1, activeOverlay: '', order: [], overlays: {} }));
+    window.__ssnAiPromptMockStore = { version: 1, activeOverlay: '', order: [], overlays: {} };
+    window.__aioverlayXssHit = false;
+  });
+  const maliciousOverlay = encodeURIComponent('<img src=x onerror="window.__aioverlayXssHit=true">');
+  await xssPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=${maliciousOverlay}`, { waitUntil: 'domcontentloaded' });
+  await xssPage.waitForFunction(() => {
+    const error = document.getElementById('error');
+    return error && /No saved AI overlay found/.test(error.textContent || '');
+  }, null, { timeout: 3000 });
+  const xssHit = await xssPage.evaluate(() => window.__aioverlayXssHit);
+  assert(!xssHit, 'aioverlay error should escape overlay query HTML');
+  await xssPage.close();
 
   // No unexpected console or page errors from our own scripts (ignore iframe boom-test-error which is expected).
   const unexpected = [].concat(

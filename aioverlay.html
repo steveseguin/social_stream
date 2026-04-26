@@ -37,6 +37,7 @@
 		var requestTarget = Math.floor(Math.random() * 999999999);
 		var loaded = false;
 		var bridgeFrame = null;
+		var bridgeResponseChunks = {};
 
 		function normalizeOverlayKey(value) {
 			value = String(value || "").toLowerCase().trim().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
@@ -48,8 +49,14 @@
 			if (error) error.innerHTML = message;
 		}
 
+		function escapeHtml(value) {
+			return String(value || "").replace(/[&<>"']/g, function (ch) {
+				return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+			});
+		}
+
 		function showMissingOverlayError() {
-			showError("No saved AI overlay found for <code>overlay=" + (requestedOverlay || "active") + "</code>. Open <code>aiprompt.html</code>, save the overlay, then reload this page.");
+			showError("No saved AI overlay found for <code>overlay=" + escapeHtml(requestedOverlay || "active") + "</code>. Open <code>aiprompt.html</code>, save the overlay, then reload this page.");
 		}
 
 		function loadHtml(html) {
@@ -123,7 +130,7 @@
 			bridgeFrame.onload = function () {
 				bridgeFrame.contentWindow.postMessage({
 					sendData: { overlayNinja: { action: "getAiPromptOverlays", target: requestTarget } },
-					type: "pcs"
+					type: "rpcs"
 				}, "*");
 			};
 			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) +
@@ -134,8 +141,31 @@
 			return true;
 		}
 
+		function resolveBridgeChunk(payload) {
+			if (!payload || payload.action !== "ssnBridgeChunk") return payload;
+			var chunkId = String(payload.chunkId || "");
+			var index = parseInt(payload.index, 10);
+			var total = parseInt(payload.total, 10);
+			if (!chunkId || !isFinite(index) || !isFinite(total) || index < 0 || total < 1 || index >= total) return null;
+			var entry = bridgeResponseChunks[chunkId];
+			if (!entry || entry.total !== total) {
+				entry = { total: total, parts: [], received: 0 };
+				bridgeResponseChunks[chunkId] = entry;
+			}
+			if (typeof entry.parts[index] === "undefined") entry.received++;
+			entry.parts[index] = String(payload.value || "");
+			if (entry.received < entry.total) return null;
+			delete bridgeResponseChunks[chunkId];
+			try {
+				return JSON.parse(entry.parts.join(""));
+			} catch (e) {
+				console.error("[AI Overlay] Failed to parse chunked bridge response:", e);
+				return null;
+			}
+		}
+
 		window.addEventListener("message", function (event) {
-			var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+			var payload = resolveBridgeChunk(event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja);
 			var response = payload && payload.aiPromptOverlays;
 			if (!response || response.target !== requestTarget || loaded) return;
 			if (!loadFromPackage(response.value || response) && !loadFromLocalState()) {
