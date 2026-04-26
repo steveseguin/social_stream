@@ -579,6 +579,13 @@
 
 		.modal .tiny { margin-bottom: 14px; }
 
+		.modal-error {
+			margin-top: 8px;
+			color: #ff9898;
+			font-size: 12px;
+			line-height: 1.4;
+		}
+
 		.template-grid {
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -801,6 +808,7 @@
 			<div class="tiny">Paste any SSN payload as JSON. It will be delivered to the preview iframe as <code>event.data.dataReceived.overlayNinja</code>.</div>
 			<label for="customEventJson">JSON payload</label>
 			<textarea id="customEventJson" spellcheck="false" style="height:180px;font-family:Consolas,monospace;font-size:12px;"></textarea>
+			<div id="customEventError" class="modal-error" role="alert" aria-live="polite" hidden></div>
 			<div class="modal-actions">
 				<button type="button" id="customEventCancel" class="ghost">Cancel</button>
 				<button type="button" id="customEventSend" class="primary">Send</button>
@@ -1389,6 +1397,7 @@ If the user asks a question that does not require a file change, answer normally
 		var templateGrid = el("templateGrid");
 		var customEventModal = el("customEventModal");
 		var customEventJson = el("customEventJson");
+		var customEventError = el("customEventError");
 		var attachScreenshot = el("attachScreenshot");
 		var autoFixErrors = el("autoFixErrors");
 
@@ -1908,11 +1917,28 @@ If the user asks a question that does not require a file change, answer normally
 			});
 		}
 
+		function setCustomEventError(message) {
+			customEventError.textContent = message || "";
+			customEventError.hidden = !message;
+			if (message) customEventJson.setAttribute("aria-invalid", "true");
+			else customEventJson.removeAttribute("aria-invalid");
+		}
+
+		function openCustomEventModal() {
+			setCustomEventError("");
+			customEventModal.classList.add("visible");
+			customEventJson.focus();
+		}
+
+		function closeCustomEventModal() {
+			setCustomEventError("");
+			customEventModal.classList.remove("visible");
+		}
+
 		function sendSimulatedEvent(kind) {
 			if (kind === "custom") {
 				customEventJson.value = JSON.stringify({ chatname: "You", chatmessage: "hi", type: "youtube" }, null, 2);
-				customEventModal.classList.add("visible");
-				customEventJson.focus();
+				openCustomEventModal();
 				return;
 			}
 			var payload = EVENT_SAMPLES[kind];
@@ -2452,16 +2478,19 @@ If the user asks a question that does not require a file change, answer normally
 				eventBtns[j].addEventListener("click", function (e) { sendSimulatedEvent(e.currentTarget.getAttribute("data-event")); });
 			}
 
-			el("customEventCancel").addEventListener("click", function () { customEventModal.classList.remove("visible"); });
+			el("customEventCancel").addEventListener("click", closeCustomEventModal);
+			customEventJson.addEventListener("input", function () { setCustomEventError(""); });
 			el("customEventSend").addEventListener("click", function () {
 				try {
 					var parsed = JSON.parse(customEventJson.value || "null");
 					deliverToPreview(parsed);
-					customEventModal.classList.remove("visible");
+					closeCustomEventModal();
 					setStatus("Custom payload sent to preview.", "ok");
 				} catch (err) {
 					logBuilder("warn", "Invalid custom payload JSON", err);
-					alert("Invalid JSON: " + err.message);
+					setCustomEventError("Invalid JSON: " + err.message);
+					setStatus("Invalid custom payload JSON.", "warn");
+					customEventJson.focus();
 				}
 			});
 
