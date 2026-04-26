@@ -173,6 +173,24 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(copied.indexOf('aiprompt.html') === -1, `Copied URL should be the overlay, not the builder itself: ${copied}`);
   assert(/\.html/.test(copied), `Copied URL should point at an .html file: ${copied}`);
 
+  // aioverlay should load same-browser local overlays even when ?session= is present.
+  await page.evaluate(() => {
+    localStorage.setItem('ssnAiPromptPagesV2', JSON.stringify({
+      version: 2,
+      activeId: 'page-local',
+      pages: [{
+        id: 'page-local',
+        name: 'chat-overlay',
+        html: '<!DOCTYPE html><html><body><div id="aioverlay-local-regression">local overlay loaded</div></body></html>',
+        updatedAt: Date.now()
+      }]
+    }));
+  });
+  const overlayPage = await context.newPage();
+  await overlayPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=chat-overlay`, { waitUntil: 'domcontentloaded' });
+  await overlayPage.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
+  await overlayPage.close();
+
   // No unexpected console or page errors from our own scripts (ignore iframe boom-test-error which is expected).
   const unexpected = [].concat(
     consoleErrors.filter(t => t.indexOf('boom-test-error') === -1 && t.indexOf('VDO.Ninja') === -1),

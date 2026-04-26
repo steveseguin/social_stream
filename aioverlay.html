@@ -48,6 +48,10 @@
 			if (error) error.innerHTML = message;
 		}
 
+		function showMissingOverlayError() {
+			showError("No saved AI overlay found for <code>overlay=" + (requestedOverlay || "active") + "</code>. Open <code>aiprompt.html</code>, save the overlay, then reload this page.");
+		}
+
 		function loadHtml(html) {
 			if (loaded || !html) return;
 			loaded = true;
@@ -91,6 +95,7 @@
 				if (!item) continue;
 				if (normalizeOverlayKey(item.id) === key || normalizeOverlayKey(item.slug) === key || normalizeOverlayKey(item.name) === key) return item;
 			}
+			if (requestedOverlay) return null;
 			return overlays[(pack && pack.activeOverlay) || ""] || overlays[order[0]] || null;
 		}
 
@@ -101,6 +106,15 @@
 				return true;
 			}
 			return false;
+		}
+
+		function loadFromLocalState() {
+			try {
+				return loadFromPackage(localStateToPackage());
+			} catch (e) {
+				console.error("[AI Overlay] Failed to load local overlay state:", e);
+				return false;
+			}
 		}
 
 		function requestExtensionOverlays() {
@@ -124,19 +138,23 @@
 			var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
 			var response = payload && payload.aiPromptOverlays;
 			if (!response || response.target !== requestTarget || loaded) return;
-			if (!loadFromPackage(response.value || response)) {
-				showError("No saved AI overlay found for <code>overlay=" + (requestedOverlay || "active") + "</code>.");
+			if (!loadFromPackage(response.value || response) && !loadFromLocalState()) {
+				showMissingOverlayError();
 			}
 		});
+
+		if (loadFromLocalState()) {
+			return;
+		}
 
 		if (requestExtensionOverlays()) {
 			setTimeout(function () {
 				if (!loaded) showError("Waiting for saved AI overlays from the extension...");
 			}, 1500);
 			setTimeout(function () {
-				if (!loaded) showError("No saved AI overlay found for <code>overlay=" + (requestedOverlay || "active") + "</code>. Open <code>aiprompt.html</code>, save the overlay, then reload this page.");
+				if (!loaded && !loadFromLocalState()) showMissingOverlayError();
 			}, 10000);
-		} else if (!loadFromPackage(localStateToPackage())) {
+		} else {
 			showError("No saved AI overlay found. Add <code>?session=YOUR_SESSION&overlay=NAME</code> or open <code>aiprompt.html</code> in this browser first.");
 		}
 	}());
