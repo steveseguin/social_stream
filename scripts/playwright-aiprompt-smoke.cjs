@@ -213,6 +213,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(copied, `Copy URL should have produced a value, got: ${copied}`);
   assert(copied.indexOf('aiprompt.html') === -1, `Copied URL should be the overlay, not the builder itself: ${copied}`);
   assert(/\.html/.test(copied), `Copied URL should point at an .html file: ${copied}`);
+  assert(/[?&]label=dock(?:&|$)/.test(copied), `Copied named overlay URL should use label=dock: ${copied}`);
 
   // aioverlay should load same-browser local overlays even when ?session= is present.
   await page.evaluate(() => {
@@ -222,7 +223,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
       pages: [{
         id: 'page-local',
         name: 'chat-overlay',
-        html: '<!DOCTYPE html><html><body><div id="aioverlay-local-regression">local overlay loaded</div></body></html>',
+        html: '<!DOCTYPE html><html><body><div id="aioverlay-local-regression">local overlay loaded</div><iframe id="ssn_bridge"></iframe><script>(function(){var p=new URLSearchParams(location.search);var label=p.get("label")||"missing";document.body.setAttribute("data-bridge-label",label);document.getElementById("ssn_bridge").src="https://vdo.socialstream.ninja/?ln&view="+encodeURIComponent(p.get("session")||"")+"&label="+encodeURIComponent(label)+"&room="+encodeURIComponent(p.get("session")||"");}());<\/script></body></html>',
         updatedAt: Date.now()
       }]
     }));
@@ -230,6 +231,8 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   const overlayPage = await context.newPage();
   await overlayPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=chat-overlay`, { waitUntil: 'domcontentloaded' });
   await overlayPage.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
+  const overlayBridgeLabel = await overlayPage.$eval('body', el => el.getAttribute('data-bridge-label'));
+  assert(overlayBridgeLabel === 'dock', `Named aioverlay should hand label=dock to saved overlay bridge: ${overlayBridgeLabel}`);
   await overlayPage.close();
 
   // Remote extension responses can exceed bridge message size; aioverlay should reassemble chunked stores.

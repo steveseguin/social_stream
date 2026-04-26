@@ -2024,6 +2024,7 @@ If the user asks a question that does not require a file change, answer normally
 			if (bridgeRoomID) params.push("session=" + encodeURIComponent(bridgeRoomID));
 			if (bridgePassword && bridgePassword !== "false") params.push("password=" + encodeURIComponent(bridgePassword));
 			if (urlParams.get("v")) params.push("v=" + encodeURIComponent(urlParams.get("v")));
+			params.push("label=dock");
 			params.push("overlay=" + encodeURIComponent(pack.activeOverlay || "overlay"));
 			return base + "aioverlay.html?" + params.join("&");
 		}
