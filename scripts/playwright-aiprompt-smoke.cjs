@@ -227,23 +227,33 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
       pages: [{
         id: 'page-local',
         name: 'chat-overlay',
-        html: '<!DOCTYPE html><html><body><div id="aioverlay-local-regression">local overlay loaded</div><iframe id="ssn_bridge"></iframe><script>(function(){var p=new URLSearchParams(location.search);var label=p.get("label")||"missing";document.body.setAttribute("data-bridge-label",label);document.getElementById("ssn_bridge").src="https://vdo.socialstream.ninja/?ln&view="+encodeURIComponent(p.get("session")||"")+"&label="+encodeURIComponent(label)+"&room="+encodeURIComponent(p.get("session")||"");}());<\/script></body></html>',
+        html: '<!DOCTYPE html><html><body><div id="aioverlay-local-regression">local overlay loaded</div><script>window.addEventListener("message",function(e){var p=e.data&&e.data.dataReceived&&e.data.dataReceived.overlayNinja;if(p&&p.chatname){document.body.setAttribute("data-last-chat",p.chatname);}});<\/script></body></html>',
         updatedAt: Date.now()
       }]
     }));
   });
   const overlayPage = await context.newPage();
   await overlayPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=chat-overlay`, { waitUntil: 'domcontentloaded' });
-  await overlayPage.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
-  const overlayBridgeLabel = await overlayPage.$eval('body', el => el.getAttribute('data-bridge-label'));
-  assert(overlayBridgeLabel === 'dock', `Named aioverlay should hand label=dock to saved overlay bridge: ${overlayBridgeLabel}`);
+  await overlayPage.waitForSelector('#overlayFrame', { timeout: 3000 });
+  const overlayBridgeLabel = await overlayPage.$eval('#bridgeFrame', el => el.getAttribute('data-bridge-label'));
+  assert(overlayBridgeLabel === 'dock', `Named aioverlay should connect its wrapper bridge as label=dock: ${overlayBridgeLabel}`);
+  const overlayFrameHandle = await overlayPage.$('#overlayFrame');
+  const overlayInnerFrame = await overlayFrameHandle.contentFrame();
+  await overlayInnerFrame.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
+  const overlayBridgeFrame = await (await overlayPage.$('#bridgeFrame')).contentFrame();
+  await overlayBridgeFrame.evaluate(() => {
+    parent.postMessage({ dataReceived: { overlayNinja: { chatname: 'WrapperTester', chatmessage: 'hello', type: 'youtube' } } }, '*');
+  });
+  await overlayInnerFrame.waitForSelector('body[data-last-chat="WrapperTester"]', { timeout: 3000 });
   await overlayPage.close();
 
   const activeOverlayPage = await context.newPage();
   await activeOverlayPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room`, { waitUntil: 'domcontentloaded' });
-  await activeOverlayPage.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
-  const activeOverlayBridgeLabel = await activeOverlayPage.$eval('body', el => el.getAttribute('data-bridge-label'));
-  assert(activeOverlayBridgeLabel === 'dock', `Active aioverlay should hand label=dock to saved overlay bridge: ${activeOverlayBridgeLabel}`);
+  await activeOverlayPage.waitForSelector('#overlayFrame', { timeout: 3000 });
+  const activeOverlayBridgeLabel = await activeOverlayPage.$eval('#bridgeFrame', el => el.getAttribute('data-bridge-label'));
+  assert(activeOverlayBridgeLabel === 'dock', `Active aioverlay should connect its wrapper bridge as label=dock: ${activeOverlayBridgeLabel}`);
+  const activeInnerFrame = await (await activeOverlayPage.$('#overlayFrame')).contentFrame();
+  await activeInnerFrame.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
   await activeOverlayPage.close();
 
   // Remote extension responses can exceed bridge message size; aioverlay should reassemble chunked stores.
@@ -270,7 +280,9 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   }, largeRemoteStore);
   await remoteChunkPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=remote-overlay`, { waitUntil: 'domcontentloaded' });
   try {
-    await remoteChunkPage.waitForSelector('#aioverlay-remote-chunk', { timeout: 3000 });
+    await remoteChunkPage.waitForSelector('#overlayFrame', { timeout: 3000 });
+    const remoteInnerFrame = await (await remoteChunkPage.$('#overlayFrame')).contentFrame();
+    await remoteInnerFrame.waitForSelector('#aioverlay-remote-chunk', { timeout: 3000 });
   } catch (error) {
     const debug = await remoteChunkPage.evaluate(() => ({
       iframes: Array.prototype.slice.call(document.querySelectorAll('iframe')).map(frame => frame.src),

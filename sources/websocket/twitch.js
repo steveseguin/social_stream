@@ -271,10 +271,8 @@ let chatClient = null;
 let chatClientOffHandlers = [];
 let tmiClientFactory = null;
 const twitchDisplayNameByLogin = new Map();
-const deletedTwitchMessageIds = new Map();
-const moderatedTwitchLogins = new Map();
-const TWITCH_MODERATION_CACHE_TTL_MS = 120000;
-const TWITCH_MODERATION_CACHE_MAX = 500;
+const TWITCH_DELAYTWITCH_MS = 3000;
+const TWITCH_DELETE_DELAY_BUFFER_MS = 50;
 const WEBSOCKET_READY_STATE = {
   CONNECTING: 0,
   OPEN: 1,
@@ -826,66 +824,6 @@ function ensureClientFactory() {
 		return (normalized && twitchDisplayNameByLogin.get(normalized)) || login || '';
 	}
 
-	function pruneTwitchModerationCache(cache) {
-		const now = Date.now();
-		cache.forEach(function(expiresAt, key) {
-			if (!expiresAt || expiresAt <= now) {
-				cache.delete(key);
-			}
-		});
-		while (cache.size > TWITCH_MODERATION_CACHE_MAX) {
-			const oldest = cache.keys().next().value;
-			cache.delete(oldest);
-		}
-	}
-
-	function rememberDeletedTwitchMessageId(messageId) {
-		messageId = pickSourceControlMessageId(messageId);
-		if (!messageId) {
-			return;
-		}
-		pruneTwitchModerationCache(deletedTwitchMessageIds);
-		deletedTwitchMessageIds.set(messageId, Date.now() + TWITCH_MODERATION_CACHE_TTL_MS);
-	}
-
-	function wasTwitchMessageDeleted(messageId) {
-		messageId = pickSourceControlMessageId(messageId);
-		if (!messageId) {
-			return false;
-		}
-		pruneTwitchModerationCache(deletedTwitchMessageIds);
-		return deletedTwitchMessageIds.has(messageId);
-	}
-
-	function rememberModeratedTwitchLogin(login, ttlMs) {
-		const normalized = normalizeTwitchLogin(login);
-		if (!normalized) {
-			return;
-		}
-		pruneTwitchModerationCache(moderatedTwitchLogins);
-		moderatedTwitchLogins.set(normalized, Date.now() + (ttlMs || TWITCH_MODERATION_CACHE_TTL_MS));
-	}
-
-	function wasTwitchLoginModerated(login) {
-		const normalized = normalizeTwitchLogin(login);
-		if (!normalized) {
-			return false;
-		}
-		pruneTwitchModerationCache(moderatedTwitchLogins);
-		return moderatedTwitchLogins.has(normalized);
-	}
-
-	function shouldSuppressModeratedTwitchMessage(parsedMessage, login) {
-		if (wasTwitchLoginModerated(login)) {
-			return true;
-		}
-		const messageId = pickSourceControlMessageId(
-			parsedMessage && parsedMessage.tags && parsedMessage.tags.id,
-			parsedMessage && parsedMessage.__normalizedPayload && parsedMessage.__normalizedPayload.id
-		);
-		return wasTwitchMessageDeleted(messageId);
-	}
-
 	/*
 	AI/overlay contract for Twitch moderation:
 	Twitch moderation events are controls, not chat messages. Send them as
@@ -896,18 +834,45 @@ function ensureClientFactory() {
 	- { delete: { type:"twitch" } } removes all Twitch messages.
 	Custom overlays should handle delete payloads before their normal add-message path.
 	*/
-	function pushDeleteMessage(data) {
+	function sendDeleteMessage(data) {
 		if (!data || typeof data !== 'object') {
 			return;
 		}
 		try {
-			chrome.runtime.sendMessage(chrome.runtime.id, {
+			if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+				chrome.runtime.sendMessage(chrome.runtime.id, {
+					"delete": data
+				}, function(response) {
+					// Handle response if needed
+				});
+				return;
+			}
+			if (window.ninjafy && window.ninjafy.sendMessage) {
+				window.ninjafy.sendMessage(null, {
+					"delete": data
+				}, null, window.__SSAPP_TAB_ID__);
+				return;
+			}
+			if (window.parent && window.parent !== window) {
+				window.parent.postMessage({
+					"delete": data
+				}, '*');
+				return;
+			}
+			window.postMessage({
 				"delete": data
-			}, function(response) {
-				// Handle response if needed
-			});
+			}, '*');
 		} catch(e) {
 			console.error('Error sending Twitch moderation delete to socialstream:', e);
+		}
+	}
+
+	function pushDeleteMessage(data) {
+		sendDeleteMessage(data);
+		if (settings && settings.delaytwitch) {
+			setTimeout(function() {
+				sendDeleteMessage(data);
+			}, TWITCH_DELAYTWITCH_MS + TWITCH_DELETE_DELAY_BUFFER_MS);
 		}
 	}
 
@@ -921,7 +886,6 @@ function ensureClientFactory() {
 			const deletePayload = { type: 'twitch' };
 			const messageId = pickSourceControlMessageId(tags && tags['target-msg-id']);
 			if (messageId) {
-				rememberDeletedTwitchMessageId(messageId);
 				deletePayload.id = messageId;
 			}
 			const chatname = getRememberedTwitchDisplayName(username);
@@ -938,19 +902,13 @@ function ensureClientFactory() {
 		});
 
 		client.on('ban', function(chan, username) {
-			rememberModeratedTwitchLogin(username);
 			const chatname = getRememberedTwitchDisplayName(username);
 			if (chatname) {
 				pushDeleteMessage({ type: 'twitch', chatname: chatname });
 			}
 		});
 
-		client.on('timeout', function(chan, username, reason, duration) {
-			const timeoutMs = Math.min(
-				TWITCH_MODERATION_CACHE_TTL_MS,
-				Math.max(10000, (parseInt(duration, 10) || 0) * 1000)
-			);
-			rememberModeratedTwitchLogin(username, timeoutMs);
+		client.on('timeout', function(chan, username) {
 			const chatname = getRememberedTwitchDisplayName(username);
 			if (chatname) {
 				pushDeleteMessage({ type: 'twitch', chatname: chatname });
@@ -1342,7 +1300,6 @@ async function ensureChatClientInstance() {
 		}
 		console.log('Twitch chat cleared', payload);
 		if (payload.user) {
-			rememberModeratedTwitchLogin(payload.user);
 			const chatname = getRememberedTwitchDisplayName(payload.user);
 			if (chatname) {
 				pushDeleteMessage({ type: 'twitch', chatname: chatname });
@@ -2099,17 +2056,11 @@ async function ensureChatClientInstance() {
 			typeof normalizedEventType === 'string' ? normalizedEventType.toLowerCase() : '';
 		const user = parsedMessage.prefix.split('!')[0];
 		const message = normalizedPayload?.rawMessage ?? parsedMessage.trailing;
-		if (shouldSuppressModeratedTwitchMessage(parsedMessage, user)) {
-			return;
-		}
 		// Clean channel name from params (remove # prefix)
 		if (parsedMessage.params[0]) {
 			channel = parsedMessage.params[0].replace(/^#/, '');
 		}
 		const userInfo = await getUserInfo(user);
-		if (shouldSuppressModeratedTwitchMessage(parsedMessage, user)) {
-			return;
-		}
 		
 		// Parse subscriber info from badge tags
 		let subscriber = "";
@@ -2162,9 +2113,6 @@ async function ensureChatClientInstance() {
 		// Apply delay if enabled
 		if (settings.delaytwitch) {
 			await new Promise(resolve => setTimeout(resolve, 3000));
-		}
-		if (shouldSuppressModeratedTwitchMessage(parsedMessage, user)) {
-			return;
 		}
 		
 		// Parse bits/cheers from message
@@ -2284,9 +2232,6 @@ async function ensureChatClientInstance() {
 		// Message ID for deduplication
 		if (parsedMessage.tags && parsedMessage.tags.id) {
 			data.id = parsedMessage.tags.id;
-		}
-		if (shouldSuppressModeratedTwitchMessage(parsedMessage, user)) {
-			return;
 		}
 		
 		} catch(e){
