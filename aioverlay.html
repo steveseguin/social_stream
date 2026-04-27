@@ -49,6 +49,9 @@
 		var overlayReady = false;
 		var pendingPayloads = [];
 		var bridgeResponseChunks = {};
+		var overlayRequestTimer = null;
+		var overlayRequestStartedAt = 0;
+		var overlayResponseReceived = false;
 
 		if (params.get("inner") === "1") {
 			showError("");
@@ -184,17 +187,41 @@
 			bridgeFrame.id = "bridgeFrame";
 			bridgeFrame.dataset.bridgeLabel = params.get("label") || "dock";
 			bridgeFrame.onload = function () {
-				bridgeFrame.contentWindow.postMessage({
-					sendData: { overlayNinja: { action: "getAiPromptOverlays", target: requestTarget } },
-					type: "rpcs"
-				}, "*");
+				startOverlayRequestRetries();
 			};
 			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) +
-				"&salt=vdo.ninja&label=" + encodeURIComponent(bridgeFrame.dataset.bridgeLabel) + "&view=" + encodeURIComponent(roomID) +
-				"&scene&novideo&noaudio&cleanoutput&room=" + encodeURIComponent(roomID);
+				"&salt=vdo.ninja&notmobile&solo&label=" + encodeURIComponent(bridgeFrame.dataset.bridgeLabel) + "&view=" + encodeURIComponent(roomID) +
+				"&novideo&noaudio&cleanoutput&room=" + encodeURIComponent(roomID);
 			bridgeFrame.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;";
 			document.body.appendChild(bridgeFrame);
 			return true;
+		}
+
+		function postOverlayRequest() {
+			if (!bridgeFrame || !bridgeFrame.contentWindow || loaded || overlayResponseReceived) return;
+			bridgeFrame.contentWindow.postMessage({
+				sendData: { overlayNinja: { action: "getAiPromptOverlays", target: requestTarget } },
+				type: "rpcs"
+			}, "*");
+		}
+
+		function startOverlayRequestRetries() {
+			if (overlayRequestTimer || loaded || overlayResponseReceived) return;
+			overlayRequestStartedAt = Date.now();
+			postOverlayRequest();
+			overlayRequestTimer = setInterval(function () {
+				if (loaded || overlayResponseReceived || Date.now() - overlayRequestStartedAt > 9500) {
+					stopOverlayRequestRetries();
+					return;
+				}
+				postOverlayRequest();
+			}, 1000);
+		}
+
+		function stopOverlayRequestRetries() {
+			if (!overlayRequestTimer) return;
+			clearInterval(overlayRequestTimer);
+			overlayRequestTimer = null;
 		}
 
 		function resolveBridgeChunk(payload) {
@@ -222,9 +249,13 @@
 
 		window.addEventListener("message", function (event) {
 			if (bridgeFrame && event.source !== bridgeFrame.contentWindow) return;
-			var payload = resolveBridgeChunk(event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja);
+			var message = event.data || {};
+			if (message.action && !loaded && !overlayResponseReceived) postOverlayRequest();
+			var payload = resolveBridgeChunk(message.dataReceived && message.dataReceived.overlayNinja);
 			var response = payload && payload.aiPromptOverlays;
 			if (response && response.target === requestTarget) {
+				overlayResponseReceived = true;
+				stopOverlayRequestRetries();
 				if (!loaded && !loadFromPackage(response.value || response) && !loadFromLocalState()) {
 					showMissingOverlayError();
 				}
@@ -239,7 +270,10 @@
 				if (!loaded) showError("Waiting for saved AI overlays from the extension...");
 			}, 1500);
 			setTimeout(function () {
-				if (!loaded && !loadFromLocalState()) showMissingOverlayError();
+				if (!loaded && !loadFromLocalState()) {
+					stopOverlayRequestRetries();
+					showMissingOverlayError();
+				}
 			}, 10000);
 		} else if (!loadedLocal) {
 			showMissingOverlayError();

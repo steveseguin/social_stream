@@ -22,6 +22,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
       },
       set(value) {
         if (String(value).includes('vdo.socialstream.ninja')) {
+          this.setAttribute('data-mock-original-src', String(value));
           srcDescriptor.set.call(this, 'about:blank');
           const frame = this;
           setTimeout(() => {
@@ -71,6 +72,8 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
                   return;
                 }
                 if (payload.action === 'getAiPromptOverlays') {
+                  parent.__ssnAiPromptMockGetAttempts = (parent.__ssnAiPromptMockGetAttempts || 0) + 1;
+                  if (parent.__ssnAiPromptMockGetAttempts <= (parent.__ssnAiPromptMockDropOverlayGets || 0)) return;
                   var mockStore = parent.__ssnAiPromptMockStore || null;
                   try { mockStore = mockStore || JSON.parse(parent.localStorage.getItem('__ssnAiPromptMockStore') || 'null'); } catch (e) {}
                   sendMaybeChunked({
@@ -294,6 +297,41 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
     throw new Error('Chunked remote overlay did not load. Debug: ' + JSON.stringify(debug).slice(0, 2500));
   }
   await remoteChunkPage.close();
+
+  // aioverlay should retry the remote package request if the bridge drops the first send before peers connect.
+  const retryRemoteStore = {
+    version: 1,
+    activeOverlay: 'retry-overlay',
+    order: ['retry-overlay'],
+    overlays: {
+      'retry-overlay': {
+        id: 'retry-overlay',
+        name: 'retry-overlay',
+        slug: 'retry-overlay',
+        html: '<!DOCTYPE html><html><body><div id="aioverlay-retry-regression">retry overlay loaded</div></body></html>',
+        updatedAt: Date.now()
+      }
+    }
+  };
+  const retryPage = await context.newPage();
+  await retryPage.addInitScript(store => {
+    localStorage.removeItem('ssnAiPromptPagesV2');
+    localStorage.removeItem('ssnAiPromptPagesV1');
+    localStorage.setItem('__ssnAiPromptMockStore', JSON.stringify(store));
+    window.__ssnAiPromptMockStore = store;
+    window.__ssnAiPromptMockDropOverlayGets = 1;
+    window.__ssnAiPromptMockGetAttempts = 0;
+  }, retryRemoteStore);
+  await retryPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=retry-overlay`, { waitUntil: 'domcontentloaded' });
+  await retryPage.waitForSelector('#overlayFrame', { timeout: 5000 });
+  const retryInnerFrame = await (await retryPage.$('#overlayFrame')).contentFrame();
+  await retryInnerFrame.waitForSelector('#aioverlay-retry-regression', { timeout: 5000 });
+  const retryAttempts = await retryPage.evaluate(() => window.__ssnAiPromptMockGetAttempts || 0);
+  assert(retryAttempts >= 2, `aioverlay should retry dropped overlay package requests, got ${retryAttempts}`);
+  const retryBridgeSrc = await retryPage.$eval('#bridgeFrame', el => el.getAttribute('data-mock-original-src') || el.src);
+  assert(retryBridgeSrc.indexOf('&solo') >= 0 && retryBridgeSrc.indexOf('&notmobile') >= 0, `aioverlay bridge should use normal view-only params: ${retryBridgeSrc}`);
+  assert(retryBridgeSrc.indexOf('&scene') === -1, `aioverlay bridge should not use scene mode for view-only overlay loading: ${retryBridgeSrc}`);
+  await retryPage.close();
 
   const xssPage = await context.newPage();
   await xssPage.addInitScript(() => {
