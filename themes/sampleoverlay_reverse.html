@@ -178,21 +178,225 @@ body, html {
     }
     var password = "false";
     var featuredMode = false;
+    var deleteOnlyLast = urlParams.has("deleteonlylast");
 
     const messageListWrapper = document.getElementById('message-list-wrapper');
     const MAX_MESSAGES = urlParams.has("limit") ? parseInt(urlParams.get("limit")) : 20; // Adjust as needed
 	const showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 30000;
 	const messageTimestamps = new Map();
+	var overlayMessageCounter = 0;
+	var localBlockUserList = {};
+	var timedOutUsers = {};
 
     function adjustMessageWrapperScroll() {
         requestAnimationFrame(() => {
             messageListWrapper.style.transform = 'translateY(0)';
         });
     }
-    
+
+    function getOverlayMessages() {
+        return Array.from(messageListWrapper.querySelectorAll('.message'));
+    }
+
+    function getPayloadMessageId(data) {
+        if (data.mid !== undefined && data.mid !== null && data.mid !== "") {
+            return String(data.mid);
+        }
+        if (data.id !== undefined && data.id !== null && data.id !== "") {
+            return String(data.id);
+        }
+        if (data.messageId !== undefined && data.messageId !== null && data.messageId !== "") {
+            return String(data.messageId);
+        }
+        if (data.message_id !== undefined && data.message_id !== null && data.message_id !== "") {
+            return String(data.message_id);
+        }
+        if (data.meta && data.meta.messageId !== undefined && data.meta.messageId !== null && data.meta.messageId !== "") {
+            return String(data.meta.messageId);
+        }
+        if (data.meta && data.meta.message_id !== undefined && data.meta.message_id !== null && data.meta.message_id !== "") {
+            return String(data.meta.message_id);
+        }
+        overlayMessageCounter += 1;
+        return 'msg-' + Date.now() + '-' + overlayMessageCounter;
+    }
+
+    function removeOverlayMessage(message) {
+        if (!message) {
+            return;
+        }
+        messageTimestamps.delete(message.id);
+        if (message.parentNode) {
+            message.parentNode.removeChild(message);
+        }
+    }
+
+    function getNewestMessage(messages) {
+        return messages.reduce(function(newest, message) {
+            const newestNumber = Number(newest.dataset.mid);
+            const messageNumber = Number(message.dataset.mid);
+            if (!Number.isNaN(newestNumber) && !Number.isNaN(messageNumber)) {
+                return newestNumber > messageNumber ? newest : message;
+            }
+            return (messageTimestamps.get(newest.id) || 0) > (messageTimestamps.get(message.id) || 0) ? newest : message;
+        });
+    }
+
+    function removeMatchingMessages(matches, onlyLast) {
+        const messages = getOverlayMessages().filter(matches);
+        if (!messages.length) {
+            return false;
+        }
+        if (onlyLast) {
+            removeOverlayMessage(getNewestMessage(messages));
+        } else {
+            messages.forEach(removeOverlayMessage);
+        }
+        adjustMessageWrapperScroll();
+        return true;
+    }
+
+    function deleteMessageById(id) {
+        if (id === undefined || id === null || id === "") {
+            return false;
+        }
+        const idString = String(id);
+        return removeMatchingMessages(function(message) {
+            return message.dataset.mid === idString || message.id === idString;
+        }, true);
+    }
+
+    function deleteMessages(data, onlyLast) {
+        if (!data.delete || typeof data.delete !== "object") {
+            return false;
+        }
+        const deleteData = data.delete;
+        return removeMatchingMessages(function(message) {
+            if (deleteData.id !== undefined && deleteData.id !== null && deleteData.id !== "") {
+                const idString = String(deleteData.id);
+                return message.dataset.mid === idString || message.id === idString;
+            }
+            if (deleteData.chatname && message.dataset.chatname !== String(deleteData.chatname)) {
+                return false;
+            }
+            if (deleteData.type && message.dataset.sourceType !== String(deleteData.type)) {
+                return false;
+            }
+            return !!(deleteData.chatname || deleteData.type);
+        }, onlyLast || deleteData.onlyLast);
+    }
+
+    function removeUserMessages(username, type) {
+        if (!username) {
+            return false;
+        }
+        username = String(username);
+        type = type ? String(type) : "";
+        return removeMatchingMessages(function(message) {
+            if (message.dataset.chatname !== username) {
+                return false;
+            }
+            if (!type) {
+                return true;
+            }
+            return message.dataset.sourceType === type || (type === "youtube" && message.dataset.sourceType === "youtubeshorts");
+        }, false);
+    }
+
+    function addLocalBlock(username, type) {
+        if (!username) {
+            return;
+        }
+        username = String(username);
+        const types = type ? [String(type)] : ["*"];
+        if (type === "youtube") {
+            types.push("youtubeshorts");
+        }
+        if (!localBlockUserList[username]) {
+            localBlockUserList[username] = [];
+        }
+        types.forEach(function(blockType) {
+            if (!localBlockUserList[username].includes(blockType)) {
+                localBlockUserList[username].push(blockType);
+            }
+        });
+        setTimeout(function() {
+            if (!localBlockUserList[username]) {
+                return;
+            }
+            types.forEach(function(blockType) {
+                const index = localBlockUserList[username].indexOf(blockType);
+                if (index !== -1) {
+                    localBlockUserList[username].splice(index, 1);
+                }
+            });
+            if (!localBlockUserList[username].length) {
+                delete localBlockUserList[username];
+            }
+        }, 10000);
+    }
+
+    function isMessageBlocked(data) {
+        if (!data.chatname) {
+            return false;
+        }
+        const chatname = String(data.chatname);
+        const type = data.type ? String(data.type) : "";
+        if (localBlockUserList[chatname] && (localBlockUserList[chatname].includes(type) || localBlockUserList[chatname].includes("*"))) {
+            return true;
+        }
+        if (type && timedOutUsers[chatname + ":" + type]) {
+            if (timedOutUsers[chatname + ":" + type] < Date.now()) {
+                delete timedOutUsers[chatname + ":" + type];
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function clearAllMessages() {
+        getOverlayMessages().forEach(removeOverlayMessage);
+        messageListWrapper.style.transform = '';
+        adjustMessageWrapperScroll();
+    }
+
+    function handleControlPayload(data) {
+        if (!data || typeof data !== "object") {
+            return false;
+        }
+        if ("deleteMessage" in data) {
+            deleteMessageById(data.deleteMessage);
+            return true;
+        }
+        if ("clearAll" in data || data.action === "clear" || data.action === "clearAll") {
+            clearAllMessages();
+            return true;
+        }
+        if ("delete" in data) {
+            deleteMessages(data, deleteOnlyLast);
+            return true;
+        }
+        if ("timeoutUser" in data && data.timeoutUser) {
+            const timeoutName = data.timeoutUser.username || data.timeoutUser.chatname;
+            if (timeoutName && data.timeoutUser.type && data.timeoutUser.duration) {
+                timedOutUsers[String(timeoutName) + ":" + String(data.timeoutUser.type)] = Date.now() + (Number(data.timeoutUser.duration) * 1000);
+            }
+            removeUserMessages(timeoutName, data.timeoutUser.type);
+            return true;
+        }
+        if ("blockUser" in data && data.blockUser) {
+            const blockName = data.blockUser.chatname || data.blockUser.username;
+            addLocalBlock(blockName, data.blockUser.type);
+            removeUserMessages(blockName, data.blockUser.type);
+            return true;
+        }
+        return false;
+    }
+
 	setInterval(() => {
 		const now = Date.now();
-		const messages = Array.from(messageListWrapper.querySelectorAll('.message'));
+		const messages = getOverlayMessages();
 		
 		messages.forEach(message => {
 			const timestamp = messageTimestamps.get(message.id);
@@ -207,17 +411,33 @@ body, html {
 	}, 1000); 
 	
     function addMessageToOverlay(data) {
-		
+		if (handleControlPayload(data)) {
+			return;
+		}
+		if (!data || typeof data !== "object") {
+			return;
+		}
+		if (isMessageBlocked(data)) {
+			return;
+		}
+
 		if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
 			return;
 		}
 		
 		const messageDiv = document.createElement('div');
 		messageDiv.classList.add('message');
-		
+
 		// Generate unique ID and track timestamp for aging
-		const messageId = data.mid || 'msg-' + Date.now();
+		const messageId = getPayloadMessageId(data);
 		messageDiv.id = messageId;
+		messageDiv.dataset.mid = messageId;
+		if (data.chatname) {
+			messageDiv.dataset.chatname = data.chatname;
+		}
+		if (data.type) {
+			messageDiv.dataset.sourceType = data.type;
+		}
 		messageTimestamps.set(messageId, Date.now());
 		
 		var chatbadgesHtml = "";
@@ -293,13 +513,12 @@ body, html {
 		void messageDiv.offsetWidth; 
 		messageDiv.classList.add('visible');
 		
-		const messages = Array.from(messageListWrapper.querySelectorAll('.message'));
+		const messages = getOverlayMessages();
 		
 		if (messages.length > MAX_MESSAGES) {
 			const oldestMessage = messages[messages.length - 1]; 
 			if (oldestMessage) {
-				messageTimestamps.delete(oldestMessage.id);
-				messageListWrapper.removeChild(oldestMessage);
+				removeOverlayMessage(oldestMessage);
 			}
 		}
 		

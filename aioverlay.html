@@ -59,8 +59,8 @@
 			showError("No saved AI overlay found for <code>overlay=" + escapeHtml(requestedOverlay || "active") + "</code>. Open <code>aiprompt.html</code>, save the overlay, then reload this page.");
 		}
 
-		function ensureDockLabelForNamedOverlay() {
-			if (!requestedOverlay || !roomID || params.get("label")) return;
+		function ensureDockLabelForOverlay() {
+			if (!roomID || params.get("label")) return;
 			try {
 				var next = new URLSearchParams(location.search);
 				next.set("label", "dock");
@@ -72,7 +72,7 @@
 			if (loaded || !html) return;
 			loaded = true;
 			setTimeout(function () {
-				ensureDockLabelForNamedOverlay();
+				ensureDockLabelForOverlay();
 				document.open();
 				document.write(html);
 				document.close();

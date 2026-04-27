@@ -65,6 +65,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
                 }
                 if (!payload) return;
                 if (payload.action === 'saveAiPromptOverlays') {
+                  parent.__ssnAiPromptMockSaveActions = (parent.__ssnAiPromptMockSaveActions || 0) + 1;
                   parent.__ssnAiPromptMockStore = payload.value || parent.__ssnAiPromptMockStore || null;
                   try { parent.localStorage.setItem('__ssnAiPromptMockStore', JSON.stringify(parent.__ssnAiPromptMockStore)); } catch (e) {}
                   return;
@@ -116,6 +117,9 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   // Wait for core UI
   await page.waitForSelector('#pageList .page-tab');
   await page.waitForSelector('#previewFrame');
+  await page.waitForFunction(() => window.__ssnAiPromptMockSaveActions === 1, null, { timeout: 3000 });
+  const startupStore = await page.evaluate(() => window.__ssnAiPromptMockStore);
+  assert(startupStore && startupStore.overlays && startupStore.overlays['chat-overlay'], 'Empty remote sync should publish the local active overlay once sync settles');
 
   // The app seeds with Chat overlay template. Ensure editor has HTML.
   const htmlLen = await page.$eval('#htmlEditor', el => el.value.length);
@@ -234,6 +238,13 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   const overlayBridgeLabel = await overlayPage.$eval('body', el => el.getAttribute('data-bridge-label'));
   assert(overlayBridgeLabel === 'dock', `Named aioverlay should hand label=dock to saved overlay bridge: ${overlayBridgeLabel}`);
   await overlayPage.close();
+
+  const activeOverlayPage = await context.newPage();
+  await activeOverlayPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room`, { waitUntil: 'domcontentloaded' });
+  await activeOverlayPage.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
+  const activeOverlayBridgeLabel = await activeOverlayPage.$eval('body', el => el.getAttribute('data-bridge-label'));
+  assert(activeOverlayBridgeLabel === 'dock', `Active aioverlay should hand label=dock to saved overlay bridge: ${activeOverlayBridgeLabel}`);
+  await activeOverlayPage.close();
 
   // Remote extension responses can exceed bridge message size; aioverlay should reassemble chunked stores.
   const remoteChunkPage = await context.newPage();

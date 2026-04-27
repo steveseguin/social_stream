@@ -1376,6 +1376,7 @@ If the user asks a question that does not require a file change, answer normally
 		var HTML2CANVAS_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
 		var overlayPackageRequestTarget = null;
 		var overlayPackageLoaded = false;
+		var overlayPackageSyncPending = false;
 		var BRIDGE_CHUNK_SIZE = 12000;
 		var bridgeResponseChunks = {};
 
@@ -1528,7 +1529,7 @@ If the user asks a question that does not require a file change, answer normally
 			try {
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 				storageStatus.textContent = "Saved " + new Date().toLocaleTimeString();
-				publishOverlays();
+				if (!overlayPackageSyncPending) publishOverlays();
 			} catch (e) {
 				storageStatus.textContent = "Local save failed: " + (e && e.message ? e.message : "unknown error");
 			}
@@ -1619,9 +1620,13 @@ If the user asks a question that does not require a file change, answer normally
 			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
 			overlayPackageRequestTarget = makeMessageId();
 			overlayPackageLoaded = false;
+			overlayPackageSyncPending = true;
 			postBridgeOverlayPayload({ action: "getAiPromptOverlays", target: overlayPackageRequestTarget }, "rpcs");
 			setTimeout(function () {
-				if (!overlayPackageLoaded) publishOverlays();
+				if (!overlayPackageLoaded) {
+					overlayPackageSyncPending = false;
+					publishOverlays();
+				}
 			}, 2500);
 		}
 
@@ -1663,7 +1668,7 @@ If the user asks a question that does not require a file change, answer normally
 			hideConsoleBar();
 			renderPageList();
 			renderConversation();
-			refreshPreview();
+			refreshPreview({ skipSave: true });
 		}
 
 		function renderConversation() {
@@ -1813,12 +1818,13 @@ If the user asks a question that does not require a file change, answer normally
 			return reporter + source;
 		}
 
-		function refreshPreview() {
+		function refreshPreview(options) {
+			options = options || {};
 			syncFormToPage();
 			hideConsoleBar();
 			var html = htmlEditor.value || "";
 			previewFrame.srcdoc = html ? injectErrorReporter(html) : "";
-			scheduleSave();
+			if (!options.skipSave) scheduleSave();
 		}
 
 		function schedulePreview() {
@@ -2538,6 +2544,7 @@ If the user asks a question that does not require a file change, answer normally
 						receiveAIResponse(payload.chatbotResponse, false);
 					} else if (payload.aiPromptOverlays && payload.aiPromptOverlays.target === overlayPackageRequestTarget) {
 						overlayPackageLoaded = true;
+						overlayPackageSyncPending = false;
 						if (!applyOverlayPackage(payload.aiPromptOverlays.value || payload.aiPromptOverlays)) publishOverlays();
 					}
 				}
