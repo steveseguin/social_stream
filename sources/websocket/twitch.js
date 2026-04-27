@@ -2112,7 +2112,7 @@ async function ensureChatClientInstance() {
 		
 		// Apply delay if enabled
 		if (settings.delaytwitch) {
-			await new Promise(resolve => setTimeout(resolve, 3000));
+			await new Promise(resolve => setTimeout(resolve, TWITCH_DELAYTWITCH_MS));
 		}
 		
 		// Parse bits/cheers from message
