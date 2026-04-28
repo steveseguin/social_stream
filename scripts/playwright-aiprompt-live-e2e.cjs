@@ -145,6 +145,7 @@ async function main() {
                 if (!payload) return;
                 if (payload.action === 'saveAiPromptOverlays') {
                   store = payload.value || store;
+                  send({ aiPromptOverlaysSaved: { target: payload.target || null, ok: true, updatedAt: Date.now() } });
                   return;
                 }
                 if (payload.action === 'getAiPromptOverlays') {

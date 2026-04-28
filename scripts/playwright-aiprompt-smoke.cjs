@@ -69,6 +69,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
                   parent.__ssnAiPromptMockSaveActions = (parent.__ssnAiPromptMockSaveActions || 0) + 1;
                   parent.__ssnAiPromptMockStore = payload.value || parent.__ssnAiPromptMockStore || null;
                   try { parent.localStorage.setItem('__ssnAiPromptMockStore', JSON.stringify(parent.__ssnAiPromptMockStore)); } catch (e) {}
+                  sendPayload({ aiPromptOverlaysSaved: { target: payload.target || null, ok: true, updatedAt: Date.now() } });
                   return;
                 }
                 if (payload.action === 'getAiPromptOverlays') {

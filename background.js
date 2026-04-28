@@ -11748,7 +11748,15 @@ async function getAiPromptOverlays() {
 
 function saveAiPromptOverlays(store) {
 	aiPromptOverlays = normalizeAiPromptOverlayStore(store);
-	chrome.storage.local.set({ aiPromptOverlays });
+	return new Promise(resolve => {
+		chrome.storage.local.set({ aiPromptOverlays }, () => {
+			const error = chrome.runtime.lastError && chrome.runtime.lastError.message ? chrome.runtime.lastError.message : "";
+			if (error) {
+				console.error("Failed to save AI prompt overlays:", error);
+			}
+			resolve({ store: aiPromptOverlays, error });
+		});
+	});
 }
 
 function sendDataP2PChunked(data, UUID = false) {
@@ -12043,7 +12051,20 @@ async function processIncomingRequest(request, UUID = false) {
 				initializeTimer(UUID);
 			}
 		} else if (request.action === "saveAiPromptOverlays" && request.value) {
-			saveAiPromptOverlays(request.value);
+			const saveResult = await saveAiPromptOverlays(request.value);
+			if (UUID && request.target) {
+				sendDataP2P(
+					{
+						aiPromptOverlaysSaved: {
+							target: request.target,
+							ok: !saveResult.error,
+							error: saveResult.error || "",
+							updatedAt: saveResult.store && saveResult.store.updatedAt
+						}
+					},
+					UUID
+				);
+			}
 		} else if (request.action === "cohostToolStatus" && UUID) {
 			const status = getCohostToolStatus();
 			sendDataP2P({ cohostToolStatus: { target: request.target || null, value: status, tools: status.tools } }, UUID);

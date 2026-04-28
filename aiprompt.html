@@ -1377,6 +1377,11 @@ If the user asks a question that does not require a file change, answer normally
 		var overlayPackageRequestTarget = null;
 		var overlayPackageLoaded = false;
 		var overlayPackageSyncPending = false;
+		var overlayPackageLocalDirty = false;
+		var overlaySavePending = false;
+		var overlaySaveTarget = null;
+		var overlaySaveTimer = null;
+		var overlaySaveAttempts = 0;
 		var BRIDGE_CHUNK_SIZE = 12000;
 		var bridgeResponseChunks = {};
 
@@ -1526,8 +1531,8 @@ If the user asks a question that does not require a file change, answer normally
 		function saveState() {
 			try {
 				OverlayStore.writeState(state, localStorage);
-				storageStatus.textContent = "Saved " + new Date().toLocaleTimeString();
-				if (!overlayPackageSyncPending) publishOverlays();
+				storageStatus.textContent = "Saved locally " + new Date().toLocaleTimeString();
+				queueOverlayPublish();
 			} catch (e) {
 				storageStatus.textContent = "Local save failed: " + (e && e.message ? e.message : "unknown error");
 			}
@@ -1552,9 +1557,54 @@ If the user asks a question that does not require a file change, answer normally
 			return OverlayStore.buildPackage(state, { defaultSystemPrompt: defaultSystemPrompt });
 		}
 
+		function clearOverlaySaveTimer() {
+			if (!overlaySaveTimer) return;
+			clearTimeout(overlaySaveTimer);
+			overlaySaveTimer = null;
+		}
+
+		function queueOverlayPublish() {
+			overlaySavePending = true;
+			if (overlayPackageSyncPending) {
+				overlayPackageLocalDirty = true;
+				return;
+			}
+			publishOverlays();
+		}
+
 		function publishOverlays() {
-			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return;
-			postBridgeOverlayPayload({ action: "saveAiPromptOverlays", value: buildOverlayPackage() }, "rpcs");
+			if (!overlaySavePending || overlayPackageSyncPending) return false;
+			if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow || !bridgeRoomID) return false;
+			if (!overlaySaveTarget) {
+				overlaySaveTarget = makeMessageId();
+				overlaySaveAttempts = 0;
+			}
+			overlaySaveAttempts++;
+			postBridgeOverlayPayload({ action: "saveAiPromptOverlays", target: overlaySaveTarget, value: buildOverlayPackage() }, "rpcs");
+			storageStatus.textContent = "Saved locally; syncing overlay...";
+			clearOverlaySaveTimer();
+			if (overlaySaveAttempts < 10) {
+				overlaySaveTimer = setTimeout(function () {
+					if (overlaySavePending) publishOverlays();
+				}, 1000);
+			} else {
+				storageStatus.textContent = "Saved locally; backend sync not confirmed.";
+			}
+			return true;
+		}
+
+		function confirmOverlaySave(response) {
+			if (!response || response.target !== overlaySaveTarget) return false;
+			if (response.ok === false) {
+				storageStatus.textContent = "Saved locally; backend save failed: " + (response.error || "unknown error");
+				return true;
+			}
+			overlaySavePending = false;
+			overlaySaveTarget = null;
+			overlaySaveAttempts = 0;
+			clearOverlaySaveTimer();
+			storageStatus.textContent = "Saved and synced " + new Date().toLocaleTimeString();
+			return true;
 		}
 
 		function applyOverlayPackage(pack) {
@@ -1572,11 +1622,12 @@ If the user asks a question that does not require a file change, answer normally
 			overlayPackageRequestTarget = makeMessageId();
 			overlayPackageLoaded = false;
 			overlayPackageSyncPending = true;
+			overlayPackageLocalDirty = overlaySavePending;
 			postBridgeOverlayPayload({ action: "getAiPromptOverlays", target: overlayPackageRequestTarget }, "rpcs");
 			setTimeout(function () {
 				if (!overlayPackageLoaded) {
 					overlayPackageSyncPending = false;
-					publishOverlays();
+					queueOverlayPublish();
 				}
 			}, 2500);
 		}
@@ -2496,7 +2547,14 @@ If the user asks a question that does not require a file change, answer normally
 					} else if (payload.aiPromptOverlays && payload.aiPromptOverlays.target === overlayPackageRequestTarget) {
 						overlayPackageLoaded = true;
 						overlayPackageSyncPending = false;
-						if (!applyOverlayPackage(payload.aiPromptOverlays.value || payload.aiPromptOverlays)) publishOverlays();
+						if (overlayPackageLocalDirty) {
+							overlayPackageLocalDirty = false;
+							queueOverlayPublish();
+						} else if (!applyOverlayPackage(payload.aiPromptOverlays.value || payload.aiPromptOverlays)) {
+							queueOverlayPublish();
+						}
+					} else if (payload.aiPromptOverlaysSaved) {
+						confirmOverlaySave(payload.aiPromptOverlaysSaved);
 					}
 				}
 			});
