@@ -136,6 +136,19 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(templateCount >= 6, `Expected >=6 templates, got ${templateCount}`);
   await page.click('#closeTemplates');
 
+  // New pages from the same template should get stable unique overlay names.
+  await page.click('#newPage');
+  await page.click('#newPage');
+  const pageNames = await page.$$eval('#pageList .page-tab', els => els.map(el => el.textContent.trim()));
+  assert(new Set(pageNames).size === pageNames.length, `Overlay names should be unique: ${pageNames.join(', ')}`);
+  assert(pageNames.includes('blank-canvas'), `Expected blank-canvas page, got: ${pageNames.join(', ')}`);
+  assert(pageNames.includes('blank-canvas-2'), `Expected blank-canvas-2 page, got: ${pageNames.join(', ')}`);
+  await page.$$eval('#pageList .page-tab', els => {
+    const chat = els.find(el => el.textContent.trim() === 'chat-overlay');
+    if (chat) chat.click();
+  });
+  await page.waitForFunction(() => document.getElementById('pageName').value === 'chat-overlay');
+
   // Tab switching works.
   await page.click('.tab[data-tab="code"]');
   const codeActive = await page.$eval('.tab-panel[data-tab="code"]', el => el.classList.contains('active'));

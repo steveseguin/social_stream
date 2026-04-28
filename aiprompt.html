@@ -1547,12 +1547,41 @@ If the user asks a question that does not require a file change, answer normally
 			return OverlayStore.normalizeOverlayKey(name);
 		}
 		function slugName(name) { return cleanName(name); }
+		function reserveUniqueName(base, used) {
+			var root = cleanName(base || "overlay");
+			var name = root;
+			var count = 2;
+			while (used[name]) name = root + "-" + count++;
+			used[name] = true;
+			return name;
+		}
+		function uniquePageName(base, excludeId) {
+			var used = {};
+			if (state && state.pages) {
+				for (var i = 0; i < state.pages.length; i++) {
+					if (state.pages[i].id !== excludeId) used[cleanName(state.pages[i].name)] = true;
+				}
+			}
+			return reserveUniqueName(base, used);
+		}
+		function normalizePageNames(pages) {
+			var used = {};
+			var changed = false;
+			for (var i = 0; pages && i < pages.length; i++) {
+				var next = reserveUniqueName(pages[i].name || pages[i].id || ("overlay-" + (i + 1)), used);
+				if (pages[i].name !== next) {
+					pages[i].name = next;
+					changed = true;
+				}
+			}
+			return changed;
+		}
 
 		function defaultPage(seed) {
 			var tmpl = seed || TEMPLATES[0];
 			return {
 				id: makeId(),
-				name: tmpl.name,
+				name: cleanName(tmpl.name),
 				systemPrompt: defaultSystemPrompt,
 				html: tmpl.src,
 				conversation: [],
@@ -1577,6 +1606,7 @@ If the user asks a question that does not require a file change, answer normally
 					p.html = p.html || TEMPLATES[0].src;
 					p.name = cleanName(p.name);
 				}
+				normalizePageNames(parsed.pages);
 				var activeExists = false;
 				for (var j = 0; j < parsed.pages.length; j++) {
 					if (parsed.pages[j].id === parsed.activeId) { activeExists = true; break; }
@@ -1671,6 +1701,7 @@ If the user asks a question that does not require a file change, answer normally
 		function applyOverlayPackage(pack) {
 			var nextState = OverlayStore.packageToState(pack, { defaultSystemPrompt: defaultSystemPrompt, normalizeName: cleanName });
 			if (!nextState) return false;
+			normalizePageNames(nextState.pages);
 			state = nextState;
 			OverlayStore.writeState(state, localStorage);
 			loadActivePage();
@@ -1696,7 +1727,7 @@ If the user asks a question that does not require a file change, answer normally
 		function syncFormToPage() {
 			var page = activePage();
 			if (!page) return;
-			page.name = cleanName(pageName.value);
+			page.name = uniquePageName(pageName.value, page.id);
 			if (pageName.value !== page.name) pageName.value = page.name;
 			page.systemPrompt = systemPrompt.value || defaultSystemPrompt;
 			page.html = htmlEditor.value || "";
@@ -2341,7 +2372,7 @@ If the user asks a question that does not require a file change, answer normally
 		function newPage(seed) {
 			syncFormToPage();
 			var page = defaultPage(seed);
-			if (!seed) page.name = "new-prompt-page";
+			page.name = uniquePageName(seed ? seed.name : "new-prompt-page");
 			state.pages.push(page);
 			state.activeId = page.id;
 			saveState();
@@ -2353,7 +2384,7 @@ If the user asks a question that does not require a file change, answer normally
 			var current = activePage();
 			var copy = {
 				id: makeId(),
-				name: cleanName(current.name) + "-copy",
+				name: uniquePageName(cleanName(current.name) + "-copy"),
 				systemPrompt: current.systemPrompt || defaultSystemPrompt,
 				html: current.html || TEMPLATES[0].src,
 				conversation: [],
@@ -2384,8 +2415,8 @@ If the user asks a question that does not require a file change, answer normally
 			htmlEditor.value = tmpl.src;
 			var page = activePage();
 			if (!page.conversation || !page.conversation.length) {
-				page.name = tmpl.name;
-				pageName.value = tmpl.name;
+				page.name = uniquePageName(tmpl.name, page.id);
+				pageName.value = page.name;
 			}
 			syncFormToPage();
 			refreshPreview();
@@ -2417,7 +2448,7 @@ If the user asks a question that does not require a file change, answer normally
 			reader.onload = function () {
 				syncFormToPage();
 				var page = defaultPage(TEMPLATES[0]);
-				page.name = file.name.replace(/\.(html|htm)$/i, "") || "Imported page";
+				page.name = uniquePageName(file.name.replace(/\.(html|htm)$/i, "") || "Imported page");
 				page.html = String(reader.result || "");
 				state.pages.push(page);
 				state.activeId = page.id;
