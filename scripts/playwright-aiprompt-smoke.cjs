@@ -156,6 +156,48 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
     const feed = f && f.contentWindow && f.contentWindow.document.getElementById('feed');
     return feed && feed.querySelectorAll('.row').length >= 1;
   }, null, { timeout: 3000 });
+  await page.evaluate(() => {
+    const f = document.getElementById('previewFrame');
+    f.contentWindow.postMessage({
+      dataReceived: {
+        overlayNinja: {
+          chatname: 'EmoteUser',
+          chatmessage: 'hello <img id="emote-render-smoke" class="emote" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="emote">',
+          textonly: false,
+          type: 'youtube'
+        }
+      }
+    }, '*');
+  });
+  await page.waitForFunction(() => {
+    const f = document.getElementById('previewFrame');
+    const feed = f && f.contentWindow && f.contentWindow.document.getElementById('feed');
+    return !!(feed && feed.querySelector('#emote-render-smoke'));
+  }, null, { timeout: 3000 });
+  await page.evaluate(() => {
+    const f = document.getElementById('previewFrame');
+    f.contentWindow.postMessage({
+      dataReceived: {
+        overlayNinja: {
+          chatname: 'TextOnlyUser',
+          chatmessage: '<b id="textonly-should-not-render">literal</b>',
+          textonly: true,
+          type: 'youtube'
+        }
+      }
+    }, '*');
+  });
+  await page.waitForFunction(() => {
+    const f = document.getElementById('previewFrame');
+    const feed = f && f.contentWindow && f.contentWindow.document.getElementById('feed');
+    return !!(feed && feed.textContent.includes('<b id="textonly-should-not-render">literal</b>'));
+  }, null, { timeout: 3000 });
+  const textOnlyRendered = await page.evaluate(() => {
+    const f = document.getElementById('previewFrame');
+    const feed = f && f.contentWindow && f.contentWindow.document.getElementById('feed');
+    return !!(feed && feed.querySelector('#textonly-should-not-render'));
+  });
+  assert(!textOnlyRendered, 'textonly chatmessage should not render as HTML');
 
   // Follow event: the chat template ignores event-flagged messages (by design), so wrap handleOverlayPayload
   // to record everything it receives. The builder's postMessage still reaches the window listener in the iframe

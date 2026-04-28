@@ -862,11 +862,12 @@ DOM ordering matters: the `<iframe id="ssn_bridge">` element MUST exist in the D
 
 === PAYLOAD FIELDS (the SSN schema) ===
 Most messages look like:
-{ id, type, chatname, chatmessage, chatimg, timestamp, hasDonation, membership, event, subtitle, meta, contentimg, nameColor, chatbadges, karma, bot, mod, host, vip, tid, private }
+{ id, type, chatname, chatmessage, textonly, chatimg, timestamp, hasDonation, membership, event, subtitle, meta, contentimg, nameColor, chatbadges, karma, bot, mod, host, vip, tid, private }
 
 - type: source platform string — "youtube", "twitch", "kick", "tiktok", "facebook", "rumble", "discord", "whatnot", etc.
 - Source/platform icons can be derived from `type`: `https://socialstream.ninja/sources/images/` + lowercase/sanitized `data.type` + `.png` (for example `youtube.png`, `twitch.png`, `kick.png`). Use a normal `<img>` created in JS and hide it on `error`; do not use inline `onerror=`.
 - chatname / chatmessage / chatimg: standard chat fields. chatimg is a URL (may be empty).
+- chatmessage is renderable HTML by default so SSN emotes/icons/images show correctly. Only treat it as plain text when `data.textonly === true`. Render it into a dedicated message-body element with `innerHTML` when `!data.textonly`, and `textContent` when `data.textonly`. Keep other fields escaped/text-only unless noted.
 - event: set only for SYSTEM notifications — leave unset/false for plain chat. Known values include "new_follower", "subscription_gift", "gifted", "subscriber", "raid", "hype", "shoutout", "supersticker", "viewer_update", "follower_update", "subscriber_update", "viewer_updates" (aggregated), plus custom ones.
 - hasDonation: string like "$5.00" for tips / super chats / bits when money was involved.
 - membership: string like "Tier 1", "Member (6 months)", etc.
@@ -879,7 +880,7 @@ Most messages look like:
 - private: true when the message was flagged private by SSN (e.g. from Discord DMs).
 
 Example chat payload:
-{ "chatname": "Jess", "chatmessage": "hello!", "chatimg": "https://.../user1.jpg", "type": "youtube" }
+{ "chatname": "Jess", "chatmessage": "hello <img class=\"emote\" src=\"https://.../emote.png\" alt=\"emote\">", "textonly": false, "chatimg": "https://.../user1.jpg", "type": "youtube" }
 
 Example follow event:
 { "event": "new_follower", "chatname": "NewFan", "type": "twitch" }
@@ -891,6 +892,7 @@ Example viewer counter aggregate:
 { "event": "viewer_updates", "meta": { "youtube": 815, "twitch": 221, "kick": 94 } }
 
 === BUILDING RULES ===
+1a. Message-body rule: `data.chatmessage` is SSN's renderable HTML unless `data.textonly === true`. Put it in a dedicated message element with `innerHTML` when not text-only, and `textContent` when text-only; escape all other fields normally.
 1. ALWAYS escape untrusted strings before inserting as HTML. Use textContent where possible. NEVER build inline HTML event handlers (onerror=, onclick=, etc.) inside a JS string — the escaping gets tangled and produces syntax errors. Instead, create the element, then `el.addEventListener("error", ...)` or `el.onerror = function () { ... }`. Same rule for inline `style="..."` built from dynamic values with quotes: prefer element.style.color = .... Build DOM with createElement + appendChild in ONE pass — don't rewrite .outerHTML on a node that's already in the tree, don't wipe the row with `.innerHTML = ""` mid-function, and never call insertBefore(newNode, refNode) unless refNode is already a child of the parent you're inserting into. Plan the node tree before you start creating elements.
 2. Filter by data.type / data.event early so the overlay stays focused on its job.
 3. When the user wants "chat", skip messages where data.event is set (unless they also ask for events).
@@ -980,6 +982,7 @@ If the user asks a question that does not require a file change, answer normally
 		.body { min-width: 0; }
 		.name { font-weight: 700; color: var(--name); }
 		.text { margin-top: 2px; word-wrap: break-word; }
+		.text img { max-height: 1.35em; vertical-align: middle; }
 		.platform { font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-left: 6px; letter-spacing: 0.05em; }
 		@keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
 		.row.fade-out { animation: fadeOut 300ms ease-in forwards; }
@@ -1005,27 +1008,66 @@ If the user asks a question that does not require a file change, answer normally
 				"&label=" + encodeURIComponent(label) +
 				"&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
 		}
-		function escapeHtml(value) {
-			var div = document.createElement("div");
-			div.textContent = value == null ? "" : String(value);
-			return div.innerHTML;
+		function hideBrokenImage(img) {
+			img.addEventListener("error", function () { img.style.display = "none"; });
+		}
+		function setMessageHtml(el, data) {
+			var value = data.chatmessage == null ? "" : String(data.chatmessage);
+			if (data.textonly) {
+				el.textContent = value;
+			} else {
+				el.innerHTML = value;
+			}
+		}
+		function setNameColor(el, value) {
+			value = value == null ? "" : String(value).trim();
+			if (/^#[0-9a-f]{3,8}$/i.test(value) || /^rgba?\([0-9,\s.]+\)$/i.test(value)) {
+				el.style.color = value;
+			}
 		}
 		function addRow(data) {
 			if (data.event || data.bot) return;
 			var row = document.createElement("div");
 			row.className = "row";
-			var nameColor = data.nameColor ? ' style="color:' + escapeHtml(data.nameColor) + '"' : "";
 			var safeType = data.type ? String(data.type).toLowerCase().replace(/[^a-z0-9_-]/g, "") : "";
-			row.innerHTML =
-				(safeType ? '<img class="source-icon" src="https://socialstream.ninja/sources/images/' + escapeHtml(safeType) + '.png" alt="">' : '') +
-				(data.chatimg ? '<img class="avatar" src="' + escapeHtml(data.chatimg) + '" alt="">' : '<div class="avatar"></div>') +
-				'<div class="body">' +
-					'<span class="name"' + nameColor + '>' + escapeHtml(data.chatname || "Anonymous") + '</span>' +
-					(data.type ? '<span class="platform">' + escapeHtml(data.type) + '</span>' : '') +
-					'<div class="text">' + escapeHtml(data.chatmessage || "") + '</div>' +
-				'</div>';
-			var icon = row.querySelector(".source-icon");
-			if (icon) icon.addEventListener("error", function () { icon.style.display = "none"; });
+			if (safeType) {
+				var icon = document.createElement("img");
+				icon.className = "source-icon";
+				icon.src = "https://socialstream.ninja/sources/images/" + safeType + ".png";
+				icon.alt = "";
+				hideBrokenImage(icon);
+				row.appendChild(icon);
+			}
+			if (data.chatimg) {
+				var avatar = document.createElement("img");
+				avatar.className = "avatar";
+				avatar.src = String(data.chatimg);
+				avatar.alt = "";
+				hideBrokenImage(avatar);
+				row.appendChild(avatar);
+			} else {
+				var avatarFallback = document.createElement("div");
+				avatarFallback.className = "avatar";
+				row.appendChild(avatarFallback);
+			}
+			var body = document.createElement("div");
+			body.className = "body";
+			var name = document.createElement("span");
+			name.className = "name";
+			name.textContent = data.chatname || "Anonymous";
+			setNameColor(name, data.nameColor);
+			body.appendChild(name);
+			if (data.type) {
+				var platform = document.createElement("span");
+				platform.className = "platform";
+				platform.textContent = data.type;
+				body.appendChild(platform);
+			}
+			var text = document.createElement("div");
+			text.className = "text";
+			setMessageHtml(text, data);
+			body.appendChild(text);
+			row.appendChild(body);
 			feed.appendChild(row);
 			while (feed.children.length > limit) {
 				feed.removeChild(feed.firstChild);
@@ -1071,6 +1113,7 @@ If the user asks a question that does not require a file change, answer normally
 		.alert.raid .kind { color: var(--blue); }
 		.headline { font-size: 20px; font-weight: 800; margin-top: 4px; }
 		.detail { color: rgba(255,255,255,0.75); margin-top: 4px; }
+		.detail img { max-height: 1.35em; vertical-align: middle; }
 		.alert.out { animation: out 320ms ease-in forwards; }
 		@keyframes in { to { opacity: 1; transform: translateY(0); } }
 		@keyframes out { to { opacity: 0; transform: translateY(-16px); } }
@@ -1101,15 +1144,21 @@ If the user asks a question that does not require a file change, answer normally
 			type = type ? String(type).toLowerCase().replace(/[^a-z0-9_-]/g, "") : "";
 			return type ? "https://socialstream.ninja/sources/images/" + type + ".png" : "";
 		}
-		function show(kind, headline, detail, type) {
+		function show(kind, headline, detail, type, detailIsHtml) {
 			var div = document.createElement("div");
 			var iconUrl = sourceIconUrl(type);
 			div.className = "alert " + kind;
 			div.innerHTML = '<div class="topline">' +
 				(iconUrl ? '<img class="source-icon" src="' + escapeText(iconUrl) + '" alt="">' : '') +
 				'<div class="kind">' + escapeText(kind) + '</div></div>' +
-				'<div class="headline">' + escapeText(headline) + '</div>' +
-				(detail ? '<div class="detail">' + escapeText(detail) + '</div>' : '');
+				'<div class="headline">' + escapeText(headline) + '</div>';
+			if (detail) {
+				var detailEl = document.createElement("div");
+				detailEl.className = "detail";
+				if (detailIsHtml) detailEl.innerHTML = String(detail);
+				else detailEl.textContent = String(detail);
+				div.appendChild(detailEl);
+			}
 			var icon = div.querySelector(".source-icon");
 			if (icon) icon.addEventListener("error", function () { icon.style.display = "none"; });
 			stage.appendChild(div);
@@ -1118,7 +1167,7 @@ If the user asks a question that does not require a file change, answer normally
 		function route(data) {
 			if (!data || typeof data !== "object") return;
 			if (data.hasDonation) {
-				show("donation", (data.chatname || "Someone") + " tipped " + data.hasDonation, data.chatmessage || "", data.type);
+				show("donation", (data.chatname || "Someone") + " tipped " + data.hasDonation, data.chatmessage || "", data.type, !data.textonly);
 			} else if (data.event === "new_follower") {
 				show("follow", (data.chatname || "Someone") + " followed!", data.type || "", data.type);
 			} else if (data.event === "subscription_gift" || data.event === "gifted") {
@@ -1297,6 +1346,7 @@ If the user asks a question that does not require a file change, answer normally
 		.chat { position: fixed; right: 24px; bottom: 24px; width: 320px; max-height: 50vh; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
 		.chat .row { background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 10px; font-size: 13px; opacity: 0; transform: translateY(8px); animation: slideIn 220ms ease-out forwards; }
 		.chat .name { font-weight: 700; color: #79d6ac; margin-right: 6px; }
+		.chat .message img { max-height: 1.35em; vertical-align: middle; }
 		@keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
 	</style>
 </head>
@@ -1334,12 +1384,23 @@ If the user asks a question that does not require a file change, answer normally
 		}
 		setInterval(tick, 500); tick();
 		var chat = document.getElementById("chat");
-		function escapeText(value) { var d = document.createElement("div"); d.textContent = value == null ? "" : String(value); return d.innerHTML; }
+		function setMessageHtml(el, data) {
+			var value = data.chatmessage == null ? "" : String(data.chatmessage);
+			if (data.textonly) el.textContent = value;
+			else el.innerHTML = value;
+		}
 		function addChat(data) {
 			if (data.event || data.bot || !data.chatmessage) return;
 			var row = document.createElement("div");
 			row.className = "row";
-			row.innerHTML = '<span class="name">' + escapeText(data.chatname || "Anon") + ':</span>' + escapeText(data.chatmessage);
+			var name = document.createElement("span");
+			name.className = "name";
+			name.textContent = (data.chatname || "Anon") + ":";
+			var message = document.createElement("span");
+			message.className = "message";
+			setMessageHtml(message, data);
+			row.appendChild(name);
+			row.appendChild(message);
 			chat.insertBefore(row, chat.firstChild);
 			while (chat.children.length > 6) chat.removeChild(chat.lastChild);
 		}
@@ -1983,7 +2044,7 @@ If the user asks a question that does not require a file change, answer normally
 				"",
 				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
 				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks.",
-				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; support chat fields (chatname/chatmessage/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), and viewer_updates snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons."
+				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), and viewer_updates snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons."
 			].join("\n");
 		}
 
