@@ -335,6 +335,8 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   await retryPage.close();
 
   const xssPage = await context.newPage();
+  const xssConsoleErrors = [];
+  xssPage.on('console', msg => { if (msg.type() === 'error') xssConsoleErrors.push(msg.text()); });
   await xssPage.addInitScript(() => {
     localStorage.removeItem('ssnAiPromptPagesV2');
     localStorage.removeItem('ssnAiPromptPagesV1');
@@ -344,10 +346,11 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   });
   const maliciousOverlay = encodeURIComponent('<img src=x onerror="window.__aioverlayXssHit=true">');
   await xssPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=${maliciousOverlay}`, { waitUntil: 'domcontentloaded' });
-  await xssPage.waitForFunction(() => {
-    const error = document.getElementById('error');
-    return error && /No saved AI overlay found/.test(error.textContent || '');
-  }, null, { timeout: 3000 });
+  await xssPage.waitForFunction(() => window.__aioverlayXssHit === false, null, { timeout: 3000 });
+  for (let i = 0; i < 50 && !xssConsoleErrors.some(text => /No saved AI overlay found/.test(text)); i++) {
+    await xssPage.waitForTimeout(250);
+  }
+  assert(xssConsoleErrors.some(text => /No saved AI overlay found/.test(text)), 'aioverlay missing overlay should log to console');
   const xssHit = await xssPage.evaluate(() => window.__aioverlayXssHit);
   assert(!xssHit, 'aioverlay error should escape overlay query HTML');
   await xssPage.close();
