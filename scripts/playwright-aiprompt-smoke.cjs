@@ -241,9 +241,13 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   await overlayPage.waitForSelector('#overlayFrame', { timeout: 3000 });
   const overlayBridgeLabel = await overlayPage.$eval('#bridgeFrame', el => el.getAttribute('data-bridge-label'));
   assert(overlayBridgeLabel === 'dock', `Named aioverlay should connect its wrapper bridge as label=dock: ${overlayBridgeLabel}`);
+  const overlayFrameSrc = await overlayPage.$eval('#overlayFrame', el => el.getAttribute('src') || el.src);
+  assert(!/aioverlay\.html/i.test(overlayFrameSrc), `aioverlay should not load itself inside overlayFrame: ${overlayFrameSrc}`);
   const overlayFrameHandle = await overlayPage.$('#overlayFrame');
   const overlayInnerFrame = await overlayFrameHandle.contentFrame();
   await overlayInnerFrame.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
+  const nestedVdoFrames = await overlayInnerFrame.$$eval('iframe', els => els.filter(el => /vdo\.socialstream\.ninja/i.test(el.getAttribute('data-mock-original-src') || el.src || '')).length);
+  assert(nestedVdoFrames === 0, `Generated overlay iframe should not create its own VDO bridge inside aioverlay; got ${nestedVdoFrames}`);
   const overlayBridgeFrame = await (await overlayPage.$('#bridgeFrame')).contentFrame();
   await overlayBridgeFrame.evaluate(() => {
     parent.postMessage({ dataReceived: { overlayNinja: { chatname: 'WrapperTester', chatmessage: 'hello', type: 'youtube' } } }, '*');

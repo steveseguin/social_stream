@@ -41,23 +41,8 @@
 		var overlayRequestStartedAt = 0;
 		var overlayResponseReceived = false;
 
-		if (params.get("inner") === "1") {
-			return;
-		}
-
 		function showMissingOverlayError() {
 			console.error("[AI Overlay] No saved AI overlay found for overlay=" + (requestedOverlay || "active") + ". Open aiprompt.html, save the overlay, then reload this page.");
-		}
-
-		function buildInnerOverlayUrl() {
-			var next = new URLSearchParams(location.search);
-			next.delete("session");
-			next.delete("password");
-			next.delete("label");
-			next.delete("overlay");
-			next.set("inner", "1");
-			var query = next.toString();
-			return location.pathname + (query ? "?" + query : "") + location.hash;
 		}
 
 		function flushPendingPayloads() {
@@ -83,17 +68,20 @@
 			overlayFrame = document.createElement("iframe");
 			overlayFrame.id = "overlayFrame";
 			overlayFrame.allow = "midi;geolocation;microphone;";
-			overlayFrame.onload = function () {
+			overlayFrame.src = "about:blank";
+			document.body.appendChild(overlayFrame);
+			setTimeout(function () {
 				var doc = overlayFrame.contentDocument;
-				if (!doc) return;
+				if (!doc) {
+					console.error("[AI Overlay] Failed to create overlay iframe document.");
+					return;
+				}
 				doc.open();
 				doc.write(html);
 				doc.close();
 				overlayReady = true;
 				setTimeout(flushPendingPayloads, 0);
-			};
-			overlayFrame.src = buildInnerOverlayUrl();
-			document.body.appendChild(overlayFrame);
+			}, 0);
 		}
 
 		function loadFromPackage(pack) {
