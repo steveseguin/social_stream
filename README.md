@@ -134,7 +134,6 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - clouthub (no pop out; just the video page)
 - rumble.com (pop out chat)
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
-- Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
 - odysee.com (via the pop out chat I think)
 - Streamlabs alert box (https://streamlabs.com/alert-box/...; extension hook) and Streamlabs socket relay (`sources/websocket/streamlabs.html` with your Socket API token)
 - minnit.chat support (https://minnit.chat/xxxxxxxxxxx?mobile&popout)
@@ -164,12 +163,10 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - rooter.gg (no pop out; just pause the video I guess)
 - loco.com (no pop out; just pause the video I guess)
 - buzzit.ca (community member submitted integration)
-- afreecatv.com (pop out the chat; you can't close the main window it seems tho?)
 - nonolive.com (no pop out; partial support added so far only)
 - stageTEN.tv
 - live.vkplay.ru / live.vkvideo.ru (was vkplay.live) - pop out the chat
 - vk.com (open the live stream page; no pop out needed)
-- arena.tv (no pop out chat support, so just pause the video I guess)
 - bandlab.com (no pop out, so just pause the video I guess while chat open)
 - threads.net (a little funky star icon, right of the share icon, will select thread to push to dock)
 - floatplane.com (pop out chat; gotta keep the main window still open though? annoying..)
@@ -206,14 +203,11 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - bigo.tv (no pop out)
 - circle.so (and community domains like community.talkinghealthtech.com or members.firstinfam.com)
 - sooplive.com (pop out the chat to use)
-- sooplive.co.kr (pop out the chat to use)
 - on24.com ( Q&A - questions supported)
 - meetme
-- moonbeam.stream (no pop out)
 - music.gala.com (no pop out)
 - WebinarGeek (no pop out ; chat only)
 - live.fc2.com (no pop out)
-- noice.com (main video chat)
 - mixlr (paywalled. cannot support going forward until that's fixed)
 - parti.com (pop out chat)
 - live.nicovideo.jp (no pop out chat)
@@ -229,7 +223,6 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - nextcloud (requires domain added)
 - favorited (studio pop out chat)
 - simps.com/app (open https://simps.com/app/* for chat capture)
-- xeenon (not pop out ; dashboard)
 - streamelements (overlay page)
 - versus.cam (test chat page at https://versus.cam/?testchat)
 - patreon
@@ -244,6 +237,7 @@ There are additional sites supported, but not listed; refer to the sources folde
 
 Past supported sites that have ceased to exist.
 
+- 🪦 mobcrush (RIP August 2022)
 - 🪦 omlet.gg (RIP June 2023)
 - 🪦 glimesh (RIP July 2023)
 - 🪦 theta.tv (RIP Sept 2023)
@@ -253,8 +247,9 @@ Past supported sites that have ceased to exist.
 - 🪦 twitter.com (RIP May 2024. fight me.)
 - 🪦 vimm.tv (RIP June 2024)
 - 🪦 caffeine.tv (RIP June 2024)
-- 🪦 moonbeam (RIP Nov 2025)
+- 🪦 moonbeam.stream (RIP Nov 2025)
 - 🪦 soulbound.tv (RIP Nov 2025)
+- 🪦 noice.com (RIP Nov 2025)
 - 🪦 trovo.live (RIP April 2026)
 - 🪦 dlive.tv (RIP April 2026)
 
