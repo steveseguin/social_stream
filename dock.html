@@ -4128,7 +4128,12 @@
 			if (urlParams.has("hidecommands")) {
 				filtercommands = true;
 			}
-			
+
+			var hideAllCaps = false;
+			if (urlParams.has("hideallcaps")) {
+				hideAllCaps = true;
+			}
+
 			var doNotTTSBeep = false;
 			if (urlParams.has("quietcommands")) {
 				doNotTTSBeep = true;
@@ -8877,6 +8882,29 @@
 				return tmp.textContent || tmp.innerText || "";
 			}
 
+			function isAllCapsMessage(text) {
+				if (!text) {
+					return false;
+				}
+				text = stripHtmlFunction(text).replace(/\s\s+/g, " ").trim();
+				if (!text) {
+					return false;
+				}
+				var letterCount = 0;
+				for (var i = 0; i < text.length; i++) {
+					var char = text.charAt(i);
+					var upper = char.toUpperCase();
+					var lower = char.toLowerCase();
+					if (upper !== lower) {
+						letterCount++;
+						if (char !== upper) {
+							return false;
+						}
+					}
+				}
+				return letterCount > 3;
+			}
+
 			function escapeHtml(unsafe) {
 				try {
 					return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") || "";
@@ -9822,6 +9850,10 @@
 						}
 					} else {
 						data.chatmessage = "";
+					}
+
+					if (hideAllCaps && data.chatmessage && isAllCapsMessage(data.chatmessage)) {
+						return;
 					}
 
 					if (!suppressLiveSideEffects && electronSavePath && isStreamSetup) {
