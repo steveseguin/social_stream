@@ -829,7 +829,7 @@
 Overlay pages receive data via a VDO.Ninja iframe bridge. Always include this bridge when the page needs live data. Messages arrive as window postMessage events:
 
 ```html
-<iframe id="ssn_bridge" style="display:none;"></iframe>
+<iframe i&#100;="ssn_bridge" style="display:none;"></iframe>
 <script>
 (function () {
   var params = new URLSearchParams(location.search);
@@ -858,7 +858,7 @@ Overlay pages receive data via a VDO.Ninja iframe bridge. Always include this br
 Without ?session=YOUR_ID the bridge won't connect — but the builder still sends test payloads straight to the iframe via postMessage, so handlePayload must work with or without the bridge.
 Do NOT require `event.source === bridge.contentWindow`; builder test events and preview tools can come from the parent window. Only check `event.data.dataReceived.overlayNinja`.
 
-DOM ordering matters: the `<iframe id="ssn_bridge">` element MUST exist in the DOM before the script that calls `document.getElementById("ssn_bridge")` runs. The safest patterns are (a) put the iframe tag first and the script right after in `<body>`, or (b) create the iframe in JS via `document.createElement("iframe")` and append it to body. Never put the iframe element below the script that reads it — `getElementById` will return null and setting `.src` throws.
+DOM ordering matters: the `<iframe i&#100;="ssn_bridge">` element MUST exist in the DOM before the script that calls `document.getElementById("ssn_bridge")` runs. The safest patterns are (a) put the iframe tag first and the script right after in `<body>`, or (b) create the iframe in JS via `document.createElement("iframe")` and append it to body. Never put the iframe element below the script that reads it — `getElementById` will return null and setting `.src` throws.
 
 === PAYLOAD FIELDS (the SSN schema) ===
 Most messages look like:
@@ -932,8 +932,8 @@ If the user asks a question that does not require a file change, answer normally
 	</style>
 </head>
 <body>
-	<div class="stage" id="stage"></div>
-	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<div class="stage" i&#100;="stage"></div>
+	<iframe i&#100;="ssn_bridge" style="display:none;"></iframe>
 	<script>
 	(function () {
 		var params = new URLSearchParams(location.search);
@@ -991,7 +991,7 @@ If the user asks a question that does not require a file change, answer normally
 </head>
 <body>
 	<div id="feed"></div>
-	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<iframe i&#100;="ssn_bridge" style="display:none;"></iframe>
 	<script>
 	(function () {
 		var params = new URLSearchParams(location.search);
@@ -1120,8 +1120,8 @@ If the user asks a question that does not require a file change, answer normally
 	</style>
 </head>
 <body>
-	<div id="stage"></div>
-	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<div i&#100;="stage"></div>
+	<iframe i&#100;="ssn_bridge" style="display:none;"></iframe>
 	<script>
 	(function () {
 		var params = new URLSearchParams(location.search);
@@ -1209,7 +1209,7 @@ If the user asks a question that does not require a file change, answer normally
 </head>
 <body>
 	<div id="bar"></div>
-	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<iframe i&#100;="ssn_bridge" style="display:none;"></iframe>
 	<script>
 	(function () {
 		var params = new URLSearchParams(location.search);
@@ -1283,7 +1283,7 @@ If the user asks a question that does not require a file change, answer normally
 		<div class="value"><span id="progress">0</span><small>/ <span id="target">50</span></small></div>
 		<div class="bar"><div class="fill" id="fill"></div></div>
 	</div>
-	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<iframe i&#100;="ssn_bridge" style="display:none;"></iframe>
 	<script>
 	(function () {
 		var params = new URLSearchParams(location.search);
@@ -1357,7 +1357,7 @@ If the user asks a question that does not require a file change, answer normally
 		<div class="timer" id="timer">05:00</div>
 	</div>
 	<div class="chat" id="chat"></div>
-	<iframe id="ssn_bridge" style="display:none;"></iframe>
+	<iframe i&#100;="ssn_bridge" style="display:none;"></iframe>
 	<script>
 	(function () {
 		var params = new URLSearchParams(location.search);
