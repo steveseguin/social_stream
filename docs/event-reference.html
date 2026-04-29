@@ -890,7 +890,7 @@
                             <tr>
                                 <td><code>message</code></td>
                                 <td>Bridge chat payload.</td>
-                                <td><code>meta.plainText</code> contains emoji-free content; badges merge platform + profile cache.</td>
+                                <td><code>meta.plainText</code> contains emoji-free content; badges merge platform + profile cache. Thread replies populate <code>initial</code>, <code>reply</code>, and <code>meta.reply</code> when reply details or a cached parent message are available.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>reward</code></td>
@@ -939,7 +939,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in "kicks", the bridge converts them into <code>meta.amount</code> with <code>currency</code> fallback to "KICK". Chat payloads include <code>meta.messageId</code> when the bridge exposes a native Kick message ID so delete sync can target the correct message.</p>
+                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in "kicks", the bridge converts them into <code>meta.amount</code> with <code>currency</code> fallback to "KICK". Chat payloads include <code>meta.messageId</code> when the bridge exposes a native Kick message ID so delete sync can target the correct message. Reply payloads include <code>meta.reply</code> with the parent <code>messageId</code>, <code>author</code>, and <code>text</code> when known.</p>
 
                     <h4>Kick Websocket: Event Quick Reference</h4>
                     <table class="field-table">

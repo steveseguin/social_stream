@@ -137,6 +137,7 @@ const PUSHER_STALE_MIN_MS = 180000;
 
 const SUBSCRIPTION_RETRY_DELAY_MS = 10000;
 const CHAT_FEED_LIMIT = 100;
+const KICK_REPLY_CACHE_LIMIT = 200;
 const ALERT_FEED_LIMIT = 100;
 const EVENT_LOG_LIMIT = 100;
 const CHAT_SCROLL_THRESHOLD_PX = 48;
@@ -165,6 +166,7 @@ const state = {
     refreshPromise: null,
     authUser: null,
     profilePromise: null,
+    chatMessageCache: new Map(),
     profileCache: new Map(),
     profileFetches: new Map(),
     eventTypesUnavailable: false,
@@ -5990,7 +5992,9 @@ async function forwardChatMessage(evt, bridgeMeta) {
             messagePayload.sourceImg = channelBranding.sourceImg;
         }
         if (allowReplies && replyDetails) {
-            messagePayload.initial = replyDetails.label;
+            if (replyDetails.label) {
+                messagePayload.initial = replyDetails.label;
+            }
             messagePayload.reply = chatmessageHtml;
             if (textOnlyMode) {
                 const prefix = replyDetails.label ? `${replyDetails.label}: ` : '';
@@ -6001,10 +6005,31 @@ async function forwardChatMessage(evt, bridgeMeta) {
                 const safeReply = escapeHtml(replyDetails.label);
                 messagePayload.chatmessage = `<i><small>${safeReply}:&nbsp;</small></i> ${chatmessageHtml}`;
             }
+            const replyMeta = buildKickReplyMeta(replyDetails);
+            if (Object.keys(replyMeta).length) {
+                if (!messagePayload.meta) {
+                    messagePayload.meta = {};
+                }
+                messagePayload.meta.reply = replyMeta;
+            }
         }
         // Only include event for actual non-chat/system cases.
         if (normalizedEvent) {
             messagePayload.event = normalizedEvent;
+        }
+        const cacheContext = {
+            authorName: chatname,
+            userId: ids?.userId,
+            username: lookupUsername,
+            html: chatmessageHtml,
+            plainText: content || stripKickMessageHtml(chatmessageHtml)
+        };
+        rememberKickChatMessage(resolvedId, cacheContext);
+        if (nativeMessageId && nativeMessageId !== normalizeKickMessageId(resolvedId)) {
+            rememberKickChatMessage(nativeMessageId, cacheContext);
+        }
+        if (bridgeMessageId && bridgeMessageId !== normalizeKickMessageId(resolvedId)) {
+            rememberKickChatMessage(bridgeMessageId, cacheContext);
         }
         pushMessage(messagePayload);
         appendChatFeedMessage(messagePayload, content);
@@ -6233,26 +6258,175 @@ function extractChatDonationLabel(...sources) {
     return '';
 }
 
+function normalizeKickMessageId(value) {
+    if (value === undefined || value === null) {
+        return '';
+    }
+    return String(value).trim();
+}
+
+function pickKickMessageId(candidates) {
+    for (const candidate of candidates || []) {
+        const normalized = normalizeKickMessageId(candidate);
+        if (normalized) {
+            return normalized;
+        }
+    }
+    return '';
+}
+
+function looksLikeKickMessageId(value) {
+    const normalized = normalizeKickMessageId(value);
+    if (!normalized) {
+        return false;
+    }
+    return /^\d{5,}$/.test(normalized) ||
+        /^[0-9a-f]{16,}$/i.test(normalized) ||
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalized);
+}
+
+function stripKickMessageHtml(value) {
+    return typeof value === 'string'
+        ? value.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+        : '';
+}
+
+function normalizeKickReplyText(value) {
+    return typeof value === 'string'
+        ? value.replace(/\s+/g, ' ').trim()
+        : normalizeKickMessageId(value);
+}
+
+function lookupKickChatMessage(messageId) {
+    const normalizedId = normalizeKickMessageId(messageId);
+    if (!normalizedId || !state.chatMessageCache) {
+        return null;
+    }
+    return state.chatMessageCache.get(normalizedId) || null;
+}
+
+function rememberKickChatMessage(messageId, context = {}) {
+    const normalizedId = normalizeKickMessageId(messageId);
+    if (!normalizedId || !state.chatMessageCache) {
+        return;
+    }
+    if (state.chatMessageCache.has(normalizedId)) {
+        state.chatMessageCache.delete(normalizedId);
+    }
+    const html = typeof context.html === 'string' ? context.html : '';
+    const plainText = normalizeKickReplyText(context.plainText || stripKickMessageHtml(html));
+    state.chatMessageCache.set(normalizedId, {
+        messageId: normalizedId,
+        authorName: normalizeKickReplyText(context.authorName || ''),
+        userId: normalizeKickMessageId(context.userId),
+        username: normalizeKickReplyText(context.username || ''),
+        html,
+        plainText,
+        timestamp: Date.now()
+    });
+    while (state.chatMessageCache.size > KICK_REPLY_CACHE_LIMIT) {
+        const oldestKey = state.chatMessageCache.keys().next().value;
+        state.chatMessageCache.delete(oldestKey);
+    }
+}
+
+function extractReplyMessageId(value) {
+    if (!value || typeof value !== 'object') {
+        if (typeof value === 'number' || looksLikeKickMessageId(value)) {
+            return normalizeKickMessageId(value);
+        }
+        return '';
+    }
+    return pickKickMessageId([
+        value.id,
+        value.message_id,
+        value.messageId,
+        value.messageID,
+        value.chat_message_id,
+        value.chatMessageId,
+        value.reply_message_id,
+        value.replyMessageId,
+        value.reply_to_message_id,
+        value.replyToMessageId,
+        value.parent_message_id,
+        value.parentMessageId,
+        value.referenced_message_id,
+        value.referencedMessageId,
+        value.original_message_id,
+        value.originalMessageId,
+        value.initial_message_id,
+        value.initialMessageId,
+        value.data?.id,
+        value.data?.message_id,
+        value.data?.messageId,
+        value.message?.id,
+        value.message?.message_id,
+        value.message?.messageId
+    ]);
+}
+
+function buildKickReplyLabel(author, text) {
+    const cleanAuthor = normalizeKickReplyText(author || '');
+    const cleanText = normalizeKickReplyText(text || '');
+    if (cleanAuthor && cleanText) {
+        return `${cleanAuthor}: ${cleanText}`;
+    }
+    return cleanAuthor || cleanText || '';
+}
+
+function buildKickReplyMeta(replyDetails) {
+    const meta = {};
+    if (!replyDetails || typeof replyDetails !== 'object') {
+        return meta;
+    }
+    if (replyDetails.messageId) {
+        meta.messageId = String(replyDetails.messageId);
+    }
+    if (replyDetails.author) {
+        meta.author = replyDetails.author;
+    }
+    if (replyDetails.text) {
+        meta.text = replyDetails.text;
+    }
+    return meta;
+}
+
 function extractReplyDetails(message, payload) {
     const candidates = [
-        message?.reply_to,
-        message?.replyTo,
-        message?.replied_to,
-        message?.parent,
-        message?.thread?.parent,
-        message?.quoted_message,
-        message?.quote,
-        message?.reference,
-        message?.referenced_message,
-        message?.original_message,
-        message?.initial_message,
-        payload?.reply_to,
-        payload?.reply,
-        payload?.parent,
-        payload?.reference,
-        payload?.referenced_message,
-        payload?.original_message,
-        payload?.initial_message
+        { value: message?.reply_to_message_id, explicitId: true },
+        { value: message?.replyToMessageId, explicitId: true },
+        { value: message?.reply_to_id, explicitId: true },
+        { value: message?.replyToId, explicitId: true },
+        { value: message?.parent_message_id, explicitId: true },
+        { value: message?.parentMessageId, explicitId: true },
+        { value: message?.referenced_message_id, explicitId: true },
+        { value: message?.referencedMessageId, explicitId: true },
+        { value: message?.reply_to },
+        { value: message?.replyTo },
+        { value: message?.replied_to },
+        { value: message?.parent },
+        { value: message?.thread?.parent },
+        { value: message?.quoted_message },
+        { value: message?.quote },
+        { value: message?.reference },
+        { value: message?.referenced_message },
+        { value: message?.original_message },
+        { value: message?.initial_message },
+        { value: payload?.reply_to_message_id, explicitId: true },
+        { value: payload?.replyToMessageId, explicitId: true },
+        { value: payload?.reply_to_id, explicitId: true },
+        { value: payload?.replyToId, explicitId: true },
+        { value: payload?.parent_message_id, explicitId: true },
+        { value: payload?.parentMessageId, explicitId: true },
+        { value: payload?.referenced_message_id, explicitId: true },
+        { value: payload?.referencedMessageId, explicitId: true },
+        { value: payload?.reply_to },
+        { value: payload?.reply },
+        { value: payload?.parent },
+        { value: payload?.reference },
+        { value: payload?.referenced_message },
+        { value: payload?.original_message },
+        { value: payload?.initial_message }
     ];
     const visited = new Set();
     const nestedKeys = [
@@ -6272,12 +6446,24 @@ function extractReplyDetails(message, payload) {
         'initial_message'
     ];
 
-    const resolve = value => {
+    const resolve = (value, explicitId) => {
         if (!value) return null;
         if (typeof value === 'string' || typeof value === 'number') {
-            const text = String(value).trim();
+            const text = normalizeKickReplyText(value);
             if (!text) {
                 return null;
+            }
+            if (explicitId) {
+                const messageId = normalizeKickMessageId(value);
+                const cached = messageId ? lookupKickChatMessage(messageId) : null;
+                const cachedText = cached ? cached.plainText : '';
+                const cachedAuthor = cached ? cached.authorName : '';
+                return {
+                    text: cachedText || '',
+                    author: cachedAuthor || '',
+                    label: buildKickReplyLabel(cachedAuthor, cachedText),
+                    messageId
+                };
             }
             return {
                 text,
@@ -6287,7 +6473,7 @@ function extractReplyDetails(message, payload) {
         }
         if (Array.isArray(value)) {
             for (const item of value) {
-                const result = resolve(item);
+                const result = resolve(item, false);
                 if (result) {
                     return result;
                 }
@@ -6301,44 +6487,58 @@ function extractReplyDetails(message, payload) {
             return null;
         }
         visited.add(value);
-        const text = extractMessageContent(value);
-        if (text) {
-            const author = pickFirstString(
-                [
-                    value?.sender?.display_name,
-                    value?.sender?.username,
-                    value?.user?.display_name,
-                    value?.user?.username,
-                    value?.author?.display_name,
-                    value?.author?.username,
-                    value?.identity?.display_name,
-                    value?.identity?.username,
-                    value?.username,
-                    value?.name
-                ],
-                ''
-            );
-            const label = author ? `${author}: ${text}` : text;
+        const messageId = extractReplyMessageId(value);
+        const cached = messageId ? lookupKickChatMessage(messageId) : null;
+        const text = normalizeKickReplyText(extractMessageContent(value) || (cached ? cached.plainText : ''));
+        const author = pickFirstString(
+            [
+                value?.sender?.display_name,
+                value?.sender?.username,
+                value?.user?.display_name,
+                value?.user?.username,
+                value?.author?.display_name,
+                value?.author?.username,
+                value?.identity?.display_name,
+                value?.identity?.username,
+                value?.username,
+                value?.name,
+                cached ? cached.authorName : ''
+            ],
+            ''
+        );
+        if (!text) {
+            for (const key of nestedKeys) {
+                if (!Object.prototype.hasOwnProperty.call(value, key)) {
+                    continue;
+                }
+                const nested = resolve(value[key], false);
+                if (!nested) {
+                    continue;
+                }
+                const nestedText = normalizeKickReplyText(nested.text || '');
+                const nestedAuthor = author || nested.author || '';
+                return {
+                    text: nestedText,
+                    author: nestedAuthor,
+                    label: buildKickReplyLabel(nestedAuthor, nestedText) || nested.label || '',
+                    messageId: messageId || nested.messageId || ''
+                };
+            }
+        }
+        const label = buildKickReplyLabel(author, text);
+        if (label || messageId) {
             return {
                 text,
                 author,
-                label
+                label,
+                messageId
             };
-        }
-        for (const key of nestedKeys) {
-            if (!Object.prototype.hasOwnProperty.call(value, key)) {
-                continue;
-            }
-            const result = resolve(value[key]);
-            if (result) {
-                return result;
-            }
         }
         return null;
     };
 
     for (const candidate of candidates) {
-        const result = resolve(candidate);
+        const result = resolve(candidate.value, candidate.explicitId === true);
         if (result) {
             return result;
         }
@@ -7433,6 +7633,7 @@ function extractMessageContent(message) {
     if (text.trim()) {
         return text;
     }
+    if (typeof message.message === 'string') return message.message;
     if (typeof message.text === 'string') return message.text;
     if (typeof message.body === 'string') return message.body;
     if (typeof message.raw === 'string') return message.raw;
