@@ -1,0 +1,201 @@
+{
+  "descriptor": "Knowledge base with store shipping and refund policies, stream setup notes, weekly schedules, membership perks, giveaway rules, and digital support policies.",
+  "documents": [
+    {
+      "id": "doc_shipping",
+      "title": "Store Shipping Policy",
+      "mode": "processed",
+      "content": "# Shipping Policy\nOrders to Canada usually arrive in 5-7 business days.\nOrders to the United States usually arrive in 3-5 business days.\n\n# Returns Policy\nReturns are accepted within 30 days for unopened items.",
+      "analysis": {
+        "match": "Orders to Canada usually arrive in 5-7 business days.",
+        "summary": "Shipping timelines cover Canada, the United States, and a 30-day unopened-item return window.",
+        "tags": ["shipping", "canada", "delivery", "returns", "store"],
+        "synonyms": ["postage", "dispatch", "delivery times"],
+        "overallSummary": "Store order policies covering delivery timelines and return rules."
+      }
+    },
+    {
+      "id": "doc_setup",
+      "title": "Stream Setup Notes",
+      "mode": "processed",
+      "content": "# Camera Setup\nUse Camera 2 for face cam during solo streams.\n\n# Audio Setup\nSet OBS audio monitoring to Monitor and Output when routing alerts.\n\n# Knowledge Base\nRAG search answers from the custom knowledge base before the bot replies.",
+      "analysis": {
+        "match": "Use Camera 2 for face cam during solo streams.",
+        "summary": "Setup notes cover Camera 2, OBS audio monitoring, and how the bot uses the custom knowledge base.",
+        "tags": ["camera", "audio", "obs", "rag", "setup"],
+        "synonyms": ["configuration", "routing", "knowledge base"],
+        "overallSummary": "Stream setup notes covering camera, audio, and knowledge-base bot behavior."
+      }
+    },
+    {
+      "id": "doc_schedule",
+      "title": "Weekly Stream Schedule",
+      "mode": "raw",
+      "content": "Tuesday is retro night. Friday is community games night. Saturday starts at 7 PM Eastern.",
+      "tags": ["schedule", "stream"],
+      "synonyms": ["calendar", "showtimes", "friday plan", "start time"]
+    },
+    {
+      "id": "doc_membership",
+      "title": "Premium Membership Perks",
+      "mode": "raw",
+      "content": "Premium members get access to the Saturday aftershow and the Discord lounge.",
+      "tags": ["membership", "discord", "aftershow", "premium"],
+      "synonyms": ["member perks", "vip", "supporter benefits"]
+    },
+    {
+      "id": "doc_giveaway",
+      "title": "Giveaway Rules",
+      "mode": "processed",
+      "content": "# Giveaway Rules\nMonthly giveaway winners are announced on the first Tuesday of each month.\nEntrants must be at least 18 years old.",
+      "analysis": {
+        "match": "Monthly giveaway winners are announced on the first Tuesday of each month.",
+        "summary": "Giveaway rules cover winner timing and an 18 plus age requirement.",
+        "tags": ["giveaway", "contest", "age", "rules", "monthly"],
+        "synonyms": ["prize draw", "eligibility", "announcement"],
+        "overallSummary": "Giveaway rules with announcement timing and age eligibility."
+      }
+    },
+    {
+      "id": "doc_support",
+      "title": "Digital Support Policy",
+      "mode": "raw",
+      "content": "Digital download refunds are unavailable after the file has been downloaded.",
+      "tags": ["refunds", "downloads", "support", "digital"],
+      "synonyms": ["returns", "digital purchase", "chargeback"]
+    }
+  ],
+  "retrievalCases": [
+    {
+      "id": "r_exact_shipping_canada",
+      "level": "high",
+      "query": "shipping canada delivery",
+      "expectedTop1": "doc_shipping_0"
+    },
+    {
+      "id": "r_exact_schedule_friday",
+      "level": "high",
+      "query": "friday community games",
+      "expectedTop1": "doc_schedule"
+    },
+    {
+      "id": "r_exact_audio_setup",
+      "level": "high",
+      "query": "obs audio monitoring alerts",
+      "expectedTop1": "doc_setup_0"
+    },
+    {
+      "id": "r_synonym_shipping",
+      "level": "medium",
+      "query": "postage canada",
+      "expectedTop1": "doc_shipping_0"
+    },
+    {
+      "id": "r_synonym_schedule",
+      "level": "medium",
+      "query": "friday plan",
+      "expectedTop1": "doc_schedule"
+    },
+    {
+      "id": "r_synonym_membership",
+      "level": "medium",
+      "query": "member perks saturday",
+      "expectedTop1": "doc_membership"
+    },
+    {
+      "id": "r_typo_shipping",
+      "level": "low",
+      "query": "shiping caneda",
+      "expectedTop1": "doc_shipping_0"
+    },
+    {
+      "id": "r_typo_audio",
+      "level": "low",
+      "query": "obs alert monitorng",
+      "expectedTop1": "doc_setup_0"
+    },
+    {
+      "id": "r_digital_refund",
+      "level": "high",
+      "query": "digital download refund",
+      "expectedTop1": "doc_support"
+    },
+    {
+      "id": "r_unknown_topic",
+      "level": "none",
+      "query": "pizza topping",
+      "expectNoHit": true
+    }
+  ],
+  "questionCases": [
+    {
+      "id": "q_shipping_canada",
+      "level": "high",
+      "question": "How long does shipping to Canada take?",
+      "decisionQuery": "shipping canada delivery",
+      "expectedTop1": "doc_shipping_0",
+      "expectedAnswer": "Orders to Canada usually arrive in 5-7 business days.",
+      "answerMustContain": "Orders to Canada usually arrive in 5-7 business days."
+    },
+    {
+      "id": "q_schedule_friday",
+      "level": "high",
+      "question": "What happens on Friday?",
+      "decisionQuery": "friday community games",
+      "expectedTop1": "doc_schedule",
+      "expectedAnswer": "Friday is community games night.",
+      "answerMustContain": "Friday is community games night."
+    },
+    {
+      "id": "q_audio_setup",
+      "level": "medium",
+      "question": "How should I route alert audio in OBS?",
+      "decisionQuery": "obs audio monitoring alerts",
+      "expectedTop1": "doc_setup_0",
+      "expectedAnswer": "Set OBS audio monitoring to Monitor and Output when routing alerts.",
+      "answerMustContain": "Set OBS audio monitoring to Monitor and Output when routing alerts."
+    },
+    {
+      "id": "q_shipping_typo",
+      "level": "low",
+      "question": "How long does shiping to Caneda take?",
+      "decisionQuery": "shiping caneda",
+      "expectedTop1": "doc_shipping_0",
+      "expectedAnswer": "Orders to Canada usually arrive in 5-7 business days.",
+      "answerMustContain": "Orders to Canada usually arrive in 5-7 business days."
+    },
+    {
+      "id": "q_membership_aftershow",
+      "level": "medium",
+      "question": "What do premium members get on Saturday?",
+      "decisionQuery": "premium members saturday aftershow",
+      "expectedTop1": "doc_membership",
+      "expectedAnswer": "Premium members get access to the Saturday aftershow and the Discord lounge.",
+      "answerMustContain": "Premium members get access to the Saturday aftershow and the Discord lounge."
+    },
+    {
+      "id": "q_giveaway_age",
+      "level": "high",
+      "question": "How old do entrants need to be for the giveaway?",
+      "decisionQuery": "giveaway entrants age",
+      "expectedTop1": "doc_giveaway_0",
+      "expectedAnswer": "Entrants must be at least 18 years old.",
+      "answerMustContain": "Entrants must be at least 18 years old."
+    },
+    {
+      "id": "q_partial_returns",
+      "level": "partial",
+      "question": "Can I return opened items after 30 days?",
+      "decisionQuery": "returns opened items 30 days",
+      "expectedTop1": "doc_shipping_0",
+      "expectedAnswer": false
+    },
+    {
+      "id": "q_none_pizza",
+      "level": "none",
+      "question": "What's your favorite pizza topping?",
+      "shouldSearch": false,
+      "expectedAnswer": false
+    }
+  ]
+}

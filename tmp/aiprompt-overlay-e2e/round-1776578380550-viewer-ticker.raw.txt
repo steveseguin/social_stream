@@ -1,0 +1,217 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.75);
+    --bar-height: 40px;
+    --bar-padding: 10px 20px;
+    --text-color: #ffffff;
+    --text-muted: #aaaaaa;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-size: 16px;
+    --font-weight: 600;
+    --separator-color: rgba(255, 255, 255, 0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--font-family);
+    color: var(--text-color);
+  }
+
+  #viewer-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--bar-height);
+    background: var(--bar-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--bar-padding);
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    z-index: 9999;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+  }
+
+  #viewer-bar.visible {
+    opacity: 1;
+  }
+
+  .platform-group {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+  }
+
+  .platform-group:last-child {
+    margin-right: 0;
+  }
+
+  .platform-name {
+    color: var(--text-muted);
+    margin-right: 6px;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+  }
+
+  .platform-count {
+    color: var(--text-color);
+  }
+
+  .separator {
+    width: 1px;
+    height: 20px;
+    background: var(--separator-color);
+    margin: 0 15px;
+  }
+
+  .total-group {
+    display: flex;
+    align-items: center;
+    margin-left: 15px;
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+  }
+
+  .total-label {
+    color: var(--text-muted);
+    margin-right: 6px;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+  }
+
+  .total-count {
+    color: #4caf50; /* Green for total */
+    font-size: 1.1em;
+  }
+</style>
+</head>
+<body>
+
+<div id="viewer-bar">
+  <div id="platforms-container"></div>
+  <div class="separator"></div>
+  <div class="total-group">
+    <span class="total-label">Total</span>
+    <span class="total-count" id="total-count">0</span>
+  </div>
+</div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+<script>
+(function () {
+  // 1. Setup Bridge
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+  
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // 2. State Management
+  var currentCounts = {};
+  var bar = document.getElementById("viewer-bar");
+  var platformsContainer = document.getElementById("platforms-container");
+  var totalCountEl = document.getElementById("total-count");
+
+  // 3. Render Logic
+  function renderCounts() {
+    var keys = Object.keys(currentCounts);
+    
+    // Clear existing
+    platformsContainer.innerHTML = "";
+
+    if (keys.length === 0) {
+      bar.classList.remove("visible");
+      return;
+    }
+
+    bar.classList.add("visible");
+
+    var total = 0;
+
+    keys.forEach(function (platform, index) {
+      var count = currentCounts[platform];
+      
+      // Create Platform Group
+      var group = document.createElement("div");
+      group.className = "platform-group";
+
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "platform-name";
+      nameSpan.textContent = platform;
+
+      var countSpan = document.createElement("span");
+      countSpan.className = "platform-count";
+      countSpan.textContent = count.toLocaleString();
+
+      group.appendChild(nameSpan);
+      group.appendChild(countSpan);
+      platformsContainer.appendChild(group);
+
+      total += count;
+    });
+
+    // Update Total
+    totalCountEl.textContent = total.toLocaleString();
+  }
+
+  // 4. Message Handler
+  function handlePayload(data) {
+    // We only care about viewer_updates events
+    if (data && data.event === "viewer_updates" && data.meta) {
+      // Rule 14: Reset/replace state on snapshot payloads
+      currentCounts = {};
+      
+      // data.meta is an object like { youtube: 800, twitch: 200 }
+      for (var platform in data.meta) {
+        if (data.meta.hasOwnProperty(platform)) {
+          var val = parseInt(data.meta[platform], 10);
+          if (!isNaN(val)) {
+            currentCounts[platform] = val;
+          }
+        }
+      }
+      
+      renderCounts();
+    }
+  }
+
+  // 5. Event Listeners
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+  
+  // Initial render (hides bar if no data)
+  renderCounts();
+
+})();
+</script>
+</body>
+</html>
+```

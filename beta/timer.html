@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <title>Social Stream - Timer</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap');
+        :root { --page-scale: 1; --accent: #73f0d0; --panel: rgba(8,14,24,.78); --line: rgba(255,255,255,.12); --text: #f6f7fb; --muted: rgba(246,247,251,.72); --glow: rgba(115,240,208,.18); --track: rgba(255,255,255,.1); }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; min-height: 100%; background: transparent; color: var(--text); font-family: 'Space Grotesk', 'Sora', sans-serif; overflow: hidden; }
+        body { min-height: 100vh; background: radial-gradient(circle at 18% 18%, rgba(115,240,208,.15), transparent 34%), radial-gradient(circle at 84% 14%, rgba(255,180,90,.16), transparent 30%), linear-gradient(145deg, rgba(6,12,20,.96), rgba(18,42,72,.82)); }
+        body.warning { --accent: #ffb356; --glow: rgba(255,179,86,.2); }
+        body.danger { --accent: #ff6767; --glow: rgba(255,103,103,.2); }
+        body.done { --accent: #ff4da6; --glow: rgba(255,77,166,.2); }
+        #app { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 18px; padding: 24px; transform: scale(var(--page-scale)); transform-origin: center center; }
+        .panel { width: min(920px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 28px; box-shadow: 0 28px 90px rgba(0,0,0,.4), 0 0 40px var(--glow); backdrop-filter: blur(16px); }
+        #timerCard { padding: 24px; position: relative; overflow: hidden; }
+        #topbar, #meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+        .badge, .pill { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.09); color: var(--muted); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px var(--accent); }
+        #label { margin: 16px 0 12px; text-align: center; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-size: clamp(20px, 3vw, 34px); }
+        #timerWrap { position: relative; width: min(68vw, 620px); min-height: min(68vw, 620px); margin: 0 auto 16px; display: grid; place-items: center; }
+        #ringSvg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+        #ringTrack { fill: none; stroke: var(--track); stroke-width: 12; }
+        #ringProgress { fill: none; stroke: var(--accent); stroke-width: 14; stroke-linecap: round; transition: stroke-dashoffset .18s linear; }
+        #timerCore { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 32px; }
+        #sign { min-height: 18px; color: var(--accent); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+        #time { font-size: clamp(76px, 15vw, 188px); line-height: .9; font-weight: 700; letter-spacing: -.05em; }
+        #helper { min-height: 20px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+        #meta { justify-content: center; }
+        #controls { padding: 16px; display: none; }
+        #controls.show { display: block; }
+        #controlsGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .span2 { grid-column: span 2; }
+        .field label { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+        .field input, .field select, .btn { min-height: 46px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.07); color: var(--text); font: inherit; padding: 0 14px; outline: none; }
+        .btns { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+        .btn { cursor: pointer; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+        .btn.primary { background: rgba(115,240,208,.16); border-color: rgba(115,240,208,.34); }
+        .btn.warn { background: rgba(255,179,86,.15); border-color: rgba(255,179,86,.34); }
+        .btn.dangerBtn { background: rgba(255,103,103,.16); border-color: rgba(255,103,103,.34); }
+        body.compact #ringSvg { display: none; }
+        body.compact #timerWrap { width: 100%; min-height: 0; }
+        body.compact #timerCore, body.compact #label, body.compact #helper, body.compact #meta { align-items: flex-start; text-align: left; justify-content: flex-start; }
+        body.compact #time { font-size: clamp(62px, 11vw, 132px); }
+        body.ring #timerWrap { width: min(74vw, 680px); min-height: min(74vw, 680px); }
+        @media (max-width: 860px) { #controlsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .btns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (max-width: 560px) { #topbar { flex-direction: column; align-items: flex-start; } #controlsGrid, .btns { grid-template-columns: repeat(2, minmax(0, 1fr)); } .span2 { grid-column: span 2; } }
+    </style>
+</head>
+<body class="stage">
+    <div id="app">
+        <div class="panel" id="timerCard">
+            <div id="topbar">
+                <div class="badge"><span class="dot"></span><span id="modeText">Countdown</span></div>
+                <div class="badge" id="stateBadge">Ready</div>
+                <div class="badge" id="connectionBadge">Local</div>
+            </div>
+            <div id="label">Timer</div>
+            <div id="timerWrap">
+                <svg id="ringSvg" viewBox="0 0 220 220" aria-hidden="true">
+                    <circle id="ringTrack" cx="110" cy="110" r="92"></circle>
+                    <circle id="ringProgress" cx="110" cy="110" r="92"></circle>
+                </svg>
+                <div id="timerCore">
+                    <div id="sign"></div>
+                    <div id="time">05:00</div>
+                    <div id="helper">Ready</div>
+                </div>
+            </div>
+            <div id="meta">
+                <div class="pill" id="targetPill">Target 05:00</div>
+                <div class="pill" id="warningPill">Warn 01:00 / Danger 00:15</div>
+            </div>
+        </div>
+        <div class="panel" id="controls">
+            <div id="controlsGrid">
+                <div class="field span2"><label for="labelInput">Label</label><input id="labelInput" type="text" placeholder="Segment name" /></div>
+                <div class="field"><label for="timeInput">Time</label><input id="timeInput" type="text" placeholder="05:00 or 300" /></div>
+                <div class="field"><label for="modeInput">Mode</label><select id="modeInput"><option value="countdown">Countdown</option><option value="countup">Count up</option></select></div>
+                <div class="field"><label for="styleInput">Style</label><select id="styleInput"><option value="stage">Stage</option><option value="compact">Compact</option><option value="ring">Ring</option></select></div>
+                <div class="field"><label for="warnInput">Warn (sec)</label><input id="warnInput" type="number" min="0" max="999999" step="1" value="60" /></div>
+                <div class="field"><label for="dangerInput">Danger (sec)</label><input id="dangerInput" type="number" min="0" max="999999" step="1" value="15" /></div>
+                <div class="field"><label for="soundInput">Sound URL</label><input id="soundInput" type="text" placeholder="Optional custom sound URL" /></div>
+                <div class="btns">
+                    <button class="btn primary" id="applyButton" type="button">Apply</button>
+                    <button class="btn primary" id="startButton" type="button">Start</button>
+                    <button class="btn" id="pauseButton" type="button">Pause</button>
+                    <button class="btn warn" id="addButton" type="button">+30s</button>
+                    <button class="btn warn" id="subButton" type="button">-30s</button>
+                    <button class="btn dangerBtn" id="resetButton" type="button">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <audio id="doneSound" preload="auto" style="display:none;"></audio>
+    <script>
+        window.onerror = function (msg, url, line) { console.error(msg); console.error(line); return false; };
+        (function (w) {
+            if (w.URLSearchParams && typeof w.URLSearchParams.prototype.has === "function") { return; }
+            w.URLSearchParams = function (s) {
+                this.searchString = s || "";
+                this.get = function (n) {
+                    var r = new RegExp("[\\?&]" + n + "=([^&#]*)").exec(this.searchString);
+                    return r ? decodeURIComponent(r[1].replace(/\+/g, " ")) : null;
+                };
+                this.has = function (n) { return new RegExp("[\\?&]" + n + "(=|&|#|$)").test(this.searchString); };
+            };
+        })(window);
+        var urlParams = new URLSearchParams(window.location.search);
+        var sessionId = urlParams.get("session") || "";
+        var password = urlParams.get("password") || "false";
+        var isOperator = urlParams.has("operator") || urlParams.has("controls");
+        var socketserver = null;
+        var iframe = null;
+        var connectedPeers = {};
+        var extensionRegistered = false;
+        var soundTriggered = false;
+        var ringCircumference = 2 * Math.PI * 92;
+        var el = {
+            modeText: document.getElementById("modeText"),
+            stateBadge: document.getElementById("stateBadge"),
+            connectionBadge: document.getElementById("connectionBadge"),
+            label: document.getElementById("label"),
+            sign: document.getElementById("sign"),
+            time: document.getElementById("time"),
+            helper: document.getElementById("helper"),
+            targetPill: document.getElementById("targetPill"),
+            warningPill: document.getElementById("warningPill"),
+            ringProgress: document.getElementById("ringProgress"),
+            controls: document.getElementById("controls"),
+            labelInput: document.getElementById("labelInput"),
+            timeInput: document.getElementById("timeInput"),
+            modeInput: document.getElementById("modeInput"),
+            styleInput: document.getElementById("styleInput"),
+            warnInput: document.getElementById("warnInput"),
+            dangerInput: document.getElementById("dangerInput"),
+            soundInput: document.getElementById("soundInput"),
+            applyButton: document.getElementById("applyButton"),
+            startButton: document.getElementById("startButton"),
+            pauseButton: document.getElementById("pauseButton"),
+            addButton: document.getElementById("addButton"),
+            subButton: document.getElementById("subButton"),
+            resetButton: document.getElementById("resetButton"),
+            doneSound: document.getElementById("doneSound")
+        };
+        el.ringProgress.style.strokeDasharray = String(ringCircumference);
+        el.ringProgress.style.strokeDashoffset = String(ringCircumference);
+        function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+        function hasParam(n) { return urlParams.has(n); }
+        function normalizeStyle(v) { v = (v || "").toLowerCase(); return (v === "compact" || v === "ring") ? v : "stage"; }
+        function normalizeMode(v) { v = (v || "").toLowerCase(); return (v === "up" || v === "countup") ? "countup" : "countdown"; }
+        function parseSeconds(v, d) { var n = parseFloat(v); return isFinite(n) ? n : d; }
+        function parseDurationMs(v, d) {
+            if (v === null || v === undefined || v === "") { return d; }
+            if (typeof v === "number" && isFinite(v)) { return Math.round(v * 1000); }
+            var t = String(v).trim();
+            if (!t) { return d; }
+            if (/^-?\d+(\.\d+)?$/.test(t)) { return Math.round(parseFloat(t) * 1000); }
+            var neg = t.charAt(0) === "-";
+            if (neg || t.charAt(0) === "+") { t = t.substring(1); }
+            var p = t.split(":");
+            if (!p.length || p.length > 3) { return d; }
+            var total = 0, mul = 1, i;
+            for (i = p.length - 1; i >= 0; i -= 1) {
+                var num = parseFloat(p[i]);
+                if (!isFinite(num)) { return d; }
+                total += num * mul;
+                mul *= 60;
+            }
+            return Math.round((neg ? -total : total) * 1000);
+        }
+        function fmt(ms) {
+            var total = Math.floor(Math.abs(ms) / 1000);
+            var h = Math.floor(total / 3600);
+            var m = Math.floor((total % 3600) / 60);
+            var s = total % 60;
+            return h > 0 ? h + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0") : String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+        }
+        function defaultState() {
+            var mode = normalizeMode(urlParams.get("mode") || (hasParam("countup") ? "countup" : "countdown"));
+            var durationMs = Math.max(0, parseDurationMs(urlParams.get("duration"), 300000));
+            var soundUrl = urlParams.get("customsound") || "";
+            return {
+                version: 1,
+                mode: mode,
+                style: normalizeStyle(urlParams.get("style")),
+                label: urlParams.get("label") || "Timer",
+                durationMs: durationMs,
+                currentMs: parseDurationMs(urlParams.get("current"), mode === "countup" ? 0 : durationMs),
+                running: hasParam("autostart"),
+                startedAt: hasParam("autostart") ? Date.now() : 0,
+                warnAtMs: Math.max(0, parseDurationMs(urlParams.get("warn"), 60000)),
+                dangerAtMs: Math.max(0, parseDurationMs(urlParams.get("danger"), 15000)),
+                soundEnabled: !!soundUrl || hasParam("sound"),
+                soundUrl: soundUrl || (hasParam("sound") ? "./audio/bell.wav" : ""),
+                updatedAt: Date.now()
+            };
+        }
+        var state = defaultState();
+        function currentValue(now) {
+            if (!state.running) { return state.currentMs; }
+            var elapsed = Math.max(0, now - state.startedAt);
+            return state.mode === "countup" ? state.currentMs + elapsed : state.currentMs - elapsed;
+        }
+        function snapshot(now) {
+            var displayMs = currentValue(now);
+            var remain = state.mode === "countdown" ? displayMs : (state.durationMs > 0 ? state.durationMs - displayMs : null);
+            var done = state.mode === "countdown" ? displayMs <= 0 : (state.durationMs > 0 && displayMs >= state.durationMs);
+            var overtime = state.mode === "countdown" ? displayMs < 0 : (state.durationMs > 0 && displayMs > state.durationMs);
+            return { displayMs: displayMs, remain: remain, done: done, overtime: overtime, warning: remain !== null && remain <= state.warnAtMs && !done, danger: remain !== null && remain <= state.dangerAtMs && !done, progress: state.durationMs > 0 ? clamp(displayMs / state.durationMs, 0, 1) : 0 };
+        }
+        function exported(now) {
+            var s = snapshot(now || Date.now());
+            return { version: 1, mode: state.mode, style: state.style, label: state.label, durationMs: state.durationMs, currentMs: state.currentMs, running: state.running, startedAt: state.startedAt, warnAtMs: state.warnAtMs, dangerAtMs: state.dangerAtMs, soundEnabled: state.soundEnabled, soundUrl: state.soundUrl, updatedAt: state.updatedAt, displayMs: s.displayMs, remainingToTargetMs: s.remain, done: s.done, overtime: s.overtime, progress: s.progress };
+        }
+        function setSound() {
+            if (!state.soundEnabled) { el.doneSound.removeAttribute("src"); return; }
+            el.doneSound.src = state.soundUrl || "./audio/bell.wav";
+        }
+        function syncControls() {
+            el.labelInput.value = state.label || "";
+            el.timeInput.value = fmt(Math.max(0, state.durationMs || 0));
+            el.modeInput.value = state.mode;
+            el.styleInput.value = state.style;
+            el.warnInput.value = String(Math.round(state.warnAtMs / 1000));
+            el.dangerInput.value = String(Math.round(state.dangerAtMs / 1000));
+            el.soundInput.value = state.soundUrl || "";
+        }
+        function applyExported(obj) {
+            if (!obj || typeof obj !== "object") { return; }
+            state.mode = normalizeMode(obj.mode || state.mode);
+            state.style = normalizeStyle(obj.style || state.style);
+            state.label = typeof obj.label === "string" ? obj.label : state.label;
+            state.durationMs = Math.max(0, parseInt(obj.durationMs, 10) || 0);
+            state.currentMs = parseInt(obj.currentMs, 10);
+            if (!isFinite(state.currentMs)) { state.currentMs = state.mode === "countup" ? 0 : state.durationMs; }
+            state.running = !!obj.running;
+            state.startedAt = parseInt(obj.startedAt, 10) || 0;
+            state.warnAtMs = Math.max(0, parseInt(obj.warnAtMs, 10) || 0);
+            state.dangerAtMs = Math.max(0, parseInt(obj.dangerAtMs, 10) || 0);
+            state.soundEnabled = !!obj.soundEnabled;
+            state.soundUrl = typeof obj.soundUrl === "string" ? obj.soundUrl : "";
+            state.updatedAt = parseInt(obj.updatedAt, 10) || Date.now();
+            setSound();
+            syncControls();
+        }
+        function act(name, value) {
+            var now = Date.now();
+            name = String(name || "").toLowerCase();
+            if (name === "starttimer") {
+                if (!state.running) { state.currentMs = currentValue(now); state.running = true; state.startedAt = now; }
+            } else if (name === "pausetimer") {
+                if (state.running) { state.currentMs = currentValue(now); state.running = false; state.startedAt = 0; }
+            } else if (name === "toggletimer") {
+                act(state.running ? "pausetimer" : "starttimer");
+                return;
+            } else if (name === "resettimer") {
+                state.running = false;
+                state.startedAt = 0;
+                state.currentMs = state.mode === "countup" ? 0 : state.durationMs;
+                soundTriggered = false;
+            } else if (name === "timeradd" || name === "timersubtract") {
+                var delta = typeof value === "object" && value && value.seconds !== undefined ? parseSeconds(value.seconds, 30) : parseSeconds(value, 30);
+                if (name === "timersubtract") { delta *= -1; }
+                state.currentMs = currentValue(now) + Math.round(delta * 1000);
+                state.startedAt = state.running ? now : 0;
+                soundTriggered = false;
+            } else if (name === "settimer") {
+                var wasRunning = state.running;
+                var liveCurrent = currentValue(now);
+                var payload = (typeof value === "object" && value) ? value : { seconds: value };
+                var nextMode = payload.mode !== undefined ? normalizeMode(payload.mode) : state.mode;
+                var nextDuration = state.durationMs;
+                var nextCurrent = null;
+                if (payload.seconds !== undefined) { nextDuration = Math.max(0, parseDurationMs(payload.seconds, state.durationMs)); nextCurrent = nextMode === "countup" ? 0 : nextDuration; }
+                else if (payload.duration !== undefined) { nextDuration = Math.max(0, parseDurationMs(payload.duration, state.durationMs)); nextCurrent = nextMode === "countup" ? 0 : nextDuration; }
+                if (payload.current !== undefined) { nextCurrent = parseDurationMs(payload.current, nextCurrent === null ? state.currentMs : nextCurrent); }
+                if (payload.currentSeconds !== undefined) { nextCurrent = parseDurationMs(payload.currentSeconds, nextCurrent === null ? state.currentMs : nextCurrent); }
+                if (payload.label !== undefined) { state.label = String(payload.label || "Timer"); }
+                if (payload.warn !== undefined) { state.warnAtMs = Math.max(0, parseDurationMs(payload.warn, state.warnAtMs)); }
+                if (payload.warnSeconds !== undefined) { state.warnAtMs = Math.max(0, parseDurationMs(payload.warnSeconds, state.warnAtMs)); }
+                if (payload.danger !== undefined) { state.dangerAtMs = Math.max(0, parseDurationMs(payload.danger, state.dangerAtMs)); }
+                if (payload.dangerSeconds !== undefined) { state.dangerAtMs = Math.max(0, parseDurationMs(payload.dangerSeconds, state.dangerAtMs)); }
+                if (payload.sound !== undefined) { state.soundEnabled = !!payload.sound; }
+                if (payload.customsound !== undefined) { state.soundUrl = String(payload.customsound || ""); if (state.soundUrl) { state.soundEnabled = true; } }
+                if (payload.soundUrl !== undefined) { state.soundUrl = String(payload.soundUrl || ""); if (state.soundUrl) { state.soundEnabled = true; } }
+                var modeChanged = nextMode !== state.mode;
+                var nextRunning = payload.autostart !== undefined ? !!payload.autostart : (payload.running !== undefined ? !!payload.running : wasRunning);
+                state.mode = nextMode;
+                state.style = payload.style !== undefined ? normalizeStyle(payload.style) : state.style;
+                state.durationMs = nextDuration;
+                if (nextCurrent !== null) { state.currentMs = nextCurrent; }
+                else if (modeChanged) { state.currentMs = state.mode === "countup" ? 0 : nextDuration; }
+                else if (wasRunning) { state.currentMs = liveCurrent; }
+                state.running = nextRunning;
+                state.startedAt = nextRunning ? now : 0;
+                soundTriggered = false;
+            }
+            state.updatedAt = now;
+            setSound();
+            syncControls();
+        }
+        function actionName(action, cmd) {
+            var n = String(action || cmd || "").toLowerCase();
+            return /^(starttimer|pausetimer|toggletimer|resettimer|timeradd|timersubtract|settimer|gettimerstate)$/.test(n) ? n : "";
+        }
+        function respondState(token) {
+            if (!socketserver || socketserver.readyState !== WebSocket.OPEN || !token) { return; }
+            socketserver.send(JSON.stringify({ callback: { get: token, result: exported(Date.now()) } }));
+        }
+        function processInput(data) {
+            if (!data || typeof data !== "object") { return false; }
+            if (data.callback && data.callback.result && data.callback.result.currentMs !== undefined) { applyExported(data.callback.result); render(); return true; }
+            if (data.timer && typeof data.timer === "object") { applyExported(data.timer); render(); return true; }
+            var name = actionName(data.action, data.cmd);
+            if (!name) { return false; }
+            if (name === "gettimerstate") { respondState(data.get); return true; }
+            act(name, data.value);
+            render();
+            return true;
+        }
+        function connectionSummary() {
+            var hasExtension = false;
+            var keys = Object.keys(connectedPeers);
+            var i;
+            for (i = 0; i < keys.length; i += 1) { if (connectedPeers[keys[i]] === "SocialStream") { hasExtension = true; break; } }
+            var hasServer = !!(socketserver && socketserver.readyState === WebSocket.OPEN);
+            if (hasExtension && hasServer) { return "Extension + API"; }
+            if (hasExtension) { return "Extension"; }
+            if (hasServer) { return "API"; }
+            return "Local";
+        }
+        function render() {
+            var now = Date.now();
+            var s = snapshot(now);
+            var helper = "Ready";
+            var badge = "Ready";
+            var sign = "";
+            document.body.classList.remove("warning", "danger", "done", "stage", "compact", "ring");
+            document.body.classList.add(state.style);
+            if (s.done) { document.body.classList.add("done"); badge = s.overtime ? "Overtime" : "Done"; helper = s.overtime ? "Past target" : "Time reached"; }
+            else if (s.danger) { document.body.classList.add("danger"); badge = "Danger"; helper = "Closing"; }
+            else if (s.warning) { document.body.classList.add("warning"); badge = "Warning"; helper = "Approaching"; }
+            else if (state.running) { badge = "Running"; helper = "Live"; }
+            else if (state.currentMs !== (state.mode === "countup" ? 0 : state.durationMs)) { badge = "Paused"; helper = "Paused"; }
+            el.modeText.textContent = state.mode === "countup" ? "Count Up" : "Countdown";
+            el.stateBadge.textContent = badge;
+            el.connectionBadge.textContent = connectionSummary();
+            el.label.textContent = state.label || "Timer";
+            el.sign.textContent = s.displayMs < 0 && state.mode === "countdown" ? "+" : "";
+            el.time.textContent = fmt(s.displayMs);
+            el.helper.textContent = helper;
+            el.targetPill.textContent = state.mode === "countdown" ? (s.displayMs < 0 ? "Over by " + fmt(s.displayMs) : "Target " + fmt(state.durationMs)) : (state.durationMs > 0 ? (s.displayMs > state.durationMs ? "Over by " + fmt(s.displayMs - state.durationMs) : "Target " + fmt(state.durationMs)) : "Free count up");
+            el.warningPill.textContent = "Warn " + fmt(state.warnAtMs) + " / Danger " + fmt(state.dangerAtMs);
+            el.pauseButton.disabled = !state.running;
+            el.startButton.disabled = !!state.running;
+            el.ringProgress.style.strokeDashoffset = String(ringCircumference * (1 - s.progress));
+            if (state.soundEnabled && s.done && state.running && !soundTriggered) {
+                soundTriggered = true;
+                try {
+                    el.doneSound.currentTime = 0;
+                    var p = el.doneSound.play();
+                    if (p && typeof p.catch === "function") { p.catch(function () {}); }
+                } catch (e) {}
+            } else if (!s.done) {
+                soundTriggered = false;
+            }
+        }
+        function sendToExtension(data, uid) {
+            if (!iframe) { return false; }
+            try {
+                if (uid) { iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: uid }, "*"); return true; }
+                var keys = Object.keys(connectedPeers);
+                var i, sent = false;
+                for (i = 0; i < keys.length; i += 1) {
+                    if (connectedPeers[keys[i]] === "SocialStream") {
+                        iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: keys[i] }, "*");
+                        sent = true;
+                    }
+                }
+                return sent;
+            } catch (e) { console.error(e); }
+            return false;
+        }
+        function registerExtension() {
+            if (extensionRegistered || !sessionId) { return; }
+            var keys = Object.keys(connectedPeers);
+            var i;
+            for (i = 0; i < keys.length; i += 1) {
+                if (connectedPeers[keys[i]] === "SocialStream") {
+                    extensionRegistered = sendToExtension({ action: "registerTimer", value: { timer: exported(Date.now()), operator: isOperator } });
+                    return;
+                }
+            }
+        }
+        function setupIframe() {
+            if (!sessionId) { return; }
+            iframe = document.createElement("iframe");
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=" + encodeURIComponent(password) + "&solo&view=" + encodeURIComponent(sessionId) + "&novideo&noaudio&label=timer&cleanoutput&room=" + encodeURIComponent(sessionId);
+            iframe.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;border:0;";
+            document.body.appendChild(iframe);
+            window.addEventListener("message", function (event) {
+                if (!iframe || event.source !== iframe.contentWindow || !event.data) { return; }
+                if (event.data.dataReceived && event.data.dataReceived.overlayNinja) { processInput(event.data.dataReceived.overlayNinja); return; }
+                if (!event.data.action || !event.data.UUID) { return; }
+                if ((event.data.action === "push-connection-info" || event.data.action === "view-connection-info") && event.data.value && event.data.value.label) {
+                    connectedPeers[event.data.UUID] = event.data.value.label;
+                    registerExtension();
+                } else if ((event.data.action === "push-connection" || event.data.action === "view-connection") && !event.data.value) {
+                    delete connectedPeers[event.data.UUID];
+                    extensionRegistered = false;
+                } else if ("label" in event.data) {
+                    connectedPeers[event.data.UUID] = event.data.label;
+                    registerExtension();
+                }
+                render();
+            });
+        }
+        function connectWebSocket() {
+            if (!hasParam("server") || !sessionId) { return; }
+            var serverURL = urlParams.get("server") || (hasParam("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+            socketserver = new WebSocket(serverURL);
+            socketserver.onopen = function () {
+                try { socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 })); } catch (e) { console.error(e); }
+                render();
+            };
+            socketserver.onclose = function () { render(); setTimeout(connectWebSocket, 3000); };
+            socketserver.onerror = function () { try { socketserver.close(); } catch (e) {} };
+            socketserver.addEventListener("message", function (event) {
+                if (!event.data) { return; }
+                try { processInput(JSON.parse(event.data)); } catch (e) { console.error(e); }
+            });
+        }
+        function dispatch(name, value) {
+            act(name, value);
+            render();
+            sendToExtension({ action: name, value: value });
+            if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+                try { socketserver.send(JSON.stringify({ action: name, value: value, apiid: sessionId ? sessionId.split(",")[0] : "" })); } catch (e) { console.error(e); }
+            }
+        }
+        function controlPayload() {
+            var payload = {
+                label: el.labelInput.value || "Timer",
+                mode: el.modeInput.value,
+                style: el.styleInput.value,
+                warnSeconds: parseSeconds(el.warnInput.value, 60),
+                dangerSeconds: parseSeconds(el.dangerInput.value, 15),
+                soundUrl: el.soundInput.value || "",
+                sound: !!(el.soundInput.value || state.soundEnabled),
+            };
+            var targetMs = parseDurationMs(el.timeInput.value, null);
+            if (targetMs !== null && targetMs !== state.durationMs) {
+                if (el.modeInput.value === "countup") {
+                    payload.duration = el.timeInput.value || "00:00";
+                } else {
+                    payload.seconds = el.timeInput.value || "300";
+                }
+            }
+            return payload;
+        }
+        function applyCustomCss() {
+            var scale = parseFloat(urlParams.get("scale") || "1");
+            if (isFinite(scale) && scale > 0) { document.documentElement.style.setProperty("--page-scale", String(scale)); }
+            if (hasParam("css")) {
+                var link = document.createElement("link");
+                link.rel = "stylesheet";
+                link.href = urlParams.get("css");
+                document.head.appendChild(link);
+            }
+            if (hasParam("base64css") || hasParam("b64css") || hasParam("cssbase64") || hasParam("cssb64")) {
+                try {
+                    var css64 = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
+                    var style = document.createElement("style");
+                    style.textContent = decodeURIComponent(atob(css64));
+                    document.head.appendChild(style);
+                } catch (e) { console.error(e); }
+            }
+        }
+        el.applyButton.onclick = function () { dispatch("settimer", controlPayload()); };
+        el.startButton.onclick = function () { dispatch("starttimer"); };
+        el.pauseButton.onclick = function () { dispatch("pausetimer"); };
+        el.addButton.onclick = function () { dispatch("timeradd", 30); };
+        el.subButton.onclick = function () { dispatch("timersubtract", 30); };
+        el.resetButton.onclick = function () { dispatch("resettimer"); };
+        [el.labelInput, el.timeInput, el.warnInput, el.dangerInput, el.soundInput].forEach(function (node) {
+            node.addEventListener("keydown", function (event) { if (event.key === "Enter") { dispatch("settimer", controlPayload()); } });
+        });
+        [el.modeInput, el.styleInput].forEach(function (node) {
+            node.addEventListener("change", function () { dispatch("settimer", controlPayload()); });
+        });
+        applyCustomCss();
+        setSound();
+        syncControls();
+        if (isOperator) { el.controls.classList.add("show"); }
+        setupIframe();
+        connectWebSocket();
+        render();
+        setInterval(render, 100);
+    </script>
+</body>
+</html>

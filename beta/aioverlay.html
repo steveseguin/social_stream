@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>AI Overlay</title>
+	<style>
+		html, body {
+			margin: 0;
+			width: 100%;
+			height: 100%;
+			background: transparent;
+		}
+		#overlayFrame {
+			position: fixed;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			border: 0;
+			background: transparent;
+		}
+	</style>
+</head>
+<body>
+	<script src="./shared/aiPrompt/overlayStore.js"></script>
+	<script>
+	(function () {
+		var OverlayStore = window.SSNAiPromptOverlayStore;
+		var params = new URLSearchParams(location.search);
+		var requestedOverlay = params.get("overlay") || "";
+		var roomID = params.get("session") || "";
+		var password = params.get("password") || "false";
+		var requestTarget = Math.floor(Math.random() * 999999999);
+		var loaded = false;
+		var bridgeFrame = null;
+		var overlayFrame = null;
+		var overlayReady = false;
+		var pendingPayloads = [];
+		var bridgeResponseChunks = {};
+		var overlayRequestTimer = null;
+		var overlayRequestStartedAt = 0;
+		var overlayResponseReceived = false;
+
+		function showMissingOverlayError() {
+			console.error("[AI Overlay] No saved AI overlay found for overlay=" + (requestedOverlay || "active") + ". Open aiprompt.html, save the overlay, then reload this page.");
+		}
+
+		function flushPendingPayloads() {
+			if (!overlayReady || !overlayFrame || !overlayFrame.contentWindow) return;
+			while (pendingPayloads.length) {
+				overlayFrame.contentWindow.postMessage({ dataReceived: { overlayNinja: pendingPayloads.shift() } }, "*");
+			}
+		}
+
+		function forwardToOverlay(payload) {
+			if (!payload) return;
+			if (!overlayReady || !overlayFrame || !overlayFrame.contentWindow) {
+				pendingPayloads.push(payload);
+				if (pendingPayloads.length > 100) pendingPayloads.shift();
+				return;
+			}
+			overlayFrame.contentWindow.postMessage({ dataReceived: { overlayNinja: payload } }, "*");
+		}
+
+		function loadHtml(html) {
+			if (loaded || !html) return;
+			loaded = true;
+			overlayFrame = document.createElement("iframe");
+			overlayFrame.id = "overlayFrame";
+			overlayFrame.allow = "midi;geolocation;microphone;";
+			overlayFrame.src = "about:blank";
+			document.body.appendChild(overlayFrame);
+			setTimeout(function () {
+				var doc = overlayFrame.contentDocument;
+				if (!doc) {
+					console.error("[AI Overlay] Failed to create overlay iframe document.");
+					return;
+				}
+				doc.open();
+				doc.write(html);
+				doc.close();
+				overlayReady = true;
+				setTimeout(flushPendingPayloads, 0);
+			}, 0);
+		}
+
+		function loadFromPackage(pack) {
+			var overlay = OverlayStore.selectOverlay(pack, requestedOverlay);
+			if (overlay && overlay.html) {
+				loadHtml(overlay.html);
+				return true;
+			}
+			return false;
+		}
+
+		function loadFromLocalState() {
+			try {
+				return loadFromPackage(OverlayStore.localStateToPackage(localStorage));
+			} catch (e) {
+				console.error("[AI Overlay] Failed to load local overlay state:", e);
+				return false;
+			}
+		}
+
+		function requestExtensionOverlays() {
+			if (!roomID) return false;
+			bridgeFrame = document.createElement("iframe");
+			bridgeFrame.id = "bridgeFrame";
+			bridgeFrame.dataset.bridgeLabel = params.get("label") || "dock";
+			bridgeFrame.onload = function () {
+				startOverlayRequestRetries();
+			};
+			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) +
+				"&salt=vdo.ninja&notmobile&solo&label=" + encodeURIComponent(bridgeFrame.dataset.bridgeLabel) + "&view=" + encodeURIComponent(roomID) +
+				"&novideo&noaudio&cleanoutput&room=" + encodeURIComponent(roomID);
+			bridgeFrame.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;";
+			document.body.appendChild(bridgeFrame);
+			return true;
+		}
+
+		function postOverlayRequest() {
+			if (!bridgeFrame || !bridgeFrame.contentWindow || loaded || overlayResponseReceived) return;
+			bridgeFrame.contentWindow.postMessage({
+				sendData: { overlayNinja: { action: "getAiPromptOverlays", target: requestTarget } },
+				type: "rpcs"
+			}, "*");
+		}
+
+		function startOverlayRequestRetries() {
+			if (overlayRequestTimer || loaded || overlayResponseReceived) return;
+			overlayRequestStartedAt = Date.now();
+			postOverlayRequest();
+			overlayRequestTimer = setInterval(function () {
+				if (loaded || overlayResponseReceived || Date.now() - overlayRequestStartedAt > 9500) {
+					stopOverlayRequestRetries();
+					return;
+				}
+				postOverlayRequest();
+			}, 1000);
+		}
+
+		function stopOverlayRequestRetries() {
+			if (!overlayRequestTimer) return;
+			clearInterval(overlayRequestTimer);
+			overlayRequestTimer = null;
+		}
+
+		function resolveBridgeChunk(payload) {
+			if (!payload || payload.action !== "ssnBridgeChunk") return payload;
+			var chunkId = String(payload.chunkId || "");
+			var index = parseInt(payload.index, 10);
+			var total = parseInt(payload.total, 10);
+			if (!chunkId || !isFinite(index) || !isFinite(total) || index < 0 || total < 1 || index >= total) return null;
+			var entry = bridgeResponseChunks[chunkId];
+			if (!entry || entry.total !== total) {
+				entry = { total: total, parts: [], received: 0 };
+				bridgeResponseChunks[chunkId] = entry;
+			}
+			if (typeof entry.parts[index] === "undefined") entry.received++;
+			entry.parts[index] = String(payload.value || "");
+			if (entry.received < entry.total) return null;
+			delete bridgeResponseChunks[chunkId];
+			try {
+				return JSON.parse(entry.parts.join(""));
+			} catch (e) {
+				console.error("[AI Overlay] Failed to parse chunked bridge response:", e);
+				return null;
+			}
+		}
+
+		window.addEventListener("message", function (event) {
+			if (bridgeFrame && event.source !== bridgeFrame.contentWindow) return;
+			var message = event.data || {};
+			if (message.action && !loaded && !overlayResponseReceived) postOverlayRequest();
+			var payload = resolveBridgeChunk(message.dataReceived && message.dataReceived.overlayNinja);
+			var response = payload && payload.aiPromptOverlays;
+			if (response && response.target === requestTarget) {
+				overlayResponseReceived = true;
+				stopOverlayRequestRetries();
+				if (!loaded && !loadFromPackage(response.value || response) && !loadFromLocalState()) {
+					showMissingOverlayError();
+				}
+				return;
+			}
+			forwardToOverlay(payload);
+		});
+
+		var loadedLocal = loadFromLocalState();
+		if (requestExtensionOverlays()) {
+			setTimeout(function () {
+				if (!loaded) console.warn("[AI Overlay] Waiting for saved AI overlays from the extension...");
+			}, 1500);
+			setTimeout(function () {
+				if (!loaded && !loadFromLocalState()) {
+					stopOverlayRequestRetries();
+					showMissingOverlayError();
+				}
+			}, 10000);
+		} else if (!loadedLocal) {
+			showMissingOverlayError();
+		}
+	}());
+	</script>
+</body>
+</html>

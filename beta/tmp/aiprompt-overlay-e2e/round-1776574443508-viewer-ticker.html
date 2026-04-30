@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Viewer Counts Bottom Bar</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.75);
+    --bar-text: #ffffff;
+    --bar-accent: #00d4ff;
+    --bar-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --bar-radius: 8px;
+    --bar-padding: 10px 20px;
+    --bar-gap: 24px;
+    --bar-total-size: 1.4em;
+    --bar-platform-size: 0.95em;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: var(--bar-font);
+    color: var(--bar-text);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #viewer-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--bar-gap);
+    background: var(--bar-bg);
+    border-radius: var(--bar-radius);
+    padding: var(--bar-padding);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.08);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 9999;
+  }
+
+  #viewer-bar.visible {
+    opacity: 1;
+  }
+
+  .platform-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .platform-name {
+    font-size: var(--bar-platform-size);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.6);
+    font-weight: 600;
+  }
+
+  .platform-num {
+    font-size: var(--bar-platform-size);
+    font-weight: 700;
+    color: var(--bar-accent);
+    min-width: 3ch;
+    text-align: right;
+  }
+
+  .divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255,255,255,0.15);
+    flex-shrink: 0;
+  }
+
+  .total-block {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .total-label {
+    font-size: var(--bar-platform-size);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.5);
+    font-weight: 600;
+  }
+
+  .total-num {
+    font-size: var(--bar-total-size);
+    font-weight: 800;
+    color: #ffffff;
+    min-width: 4ch;
+    text-align: right;
+  }
+
+  /* Pulse animation on number change */
+  @keyframes countPulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+
+  .pulse {
+    animation: countPulse 0.35s ease-out;
+  }
+</style>
+</head>
+<body>
+
+<div id="viewer-bar">
+  <div id="platforms"></div>
+  <div class="divider"></div>
+  <div class="total-block">
+    <span class="total-label">Total</span>
+    <span class="total-num" id="total-num">0</span>
+  </div>
+</div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  /* ---- URL params ---- */
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_viewers_" + Date.now();
+
+  /* ---- State ---- */
+  var viewerState = {};   // { youtube: 800, twitch: 200, ... }
+  var prevTotal = 0;
+
+  /* ---- DOM refs ---- */
+  var bar = document.getElementById("viewer-bar");
+  var platformsEl = document.getElementById("platforms");
+  var totalEl = document.getElementById("total-num");
+
+  /* ---- Platform display names ---- */
+  var platformNames = {
+    youtube: "YouTube",
+    twitch: "Twitch",
+    kick: "Kick",
+    tiktok: "TikTok",
+    facebook: "Facebook",
+    rumble: "Rumble",
+    discord: "Discord",
+    whatnot: "Whatnot",
+    trovo: "Trovo",
+    mixer: "Mixer",
+    livestream: "LiveStream",
+    dlive: "DLive",
+    periscope: "Periscope",
+    bluedot: "BlueDot",
+    dlive: "DLive",
+    justin: "Justin.tv",
+    ustream: "UStream",
+    afreeca: "Afreeca",
+    nimo: "Nimo",
+    douban: "Douban",
+    huya: "Huya",
+    douyu: "DouYu",
+    showroom: "Showroom",
+    niconico: "Niconico",
+    bilibili: "Bilibili",
+    funshion: "Funshion",
+    zhanqi: "ZhanQi",
+    huajiao: "HuaJiao",
+    lpl: "LPL",
+    yalla: "Yalla",
+    mico: "Mico",
+    livecoin: "LiveCoin",
+    bigo: "Bigo",
+    mola: "Mola",
+    showroom: "Showroom",
+    maomao: "MaoMao",
+    yizhibo: "YiZhiBo",
+    pandatv: "PandaTV",
+    huya: "Huya",
+    douyu: "DouYu",
+    huomao: "HuoMao",
+    douyin: "Douyin",
+    kuaishou: "Kuaishou",
+    weibo: "Weibo",
+    xiaohongshu: "XHS",
+    qq: "QQ",
+    wechat: "WeChat",
+    instagram: "Instagram",
+    twitter: "Twitter",
+    threads: "Threads",
+    mastodon: "Mastodon",
+    bluesky: "Bluesky",
+    linkedin: "LinkedIn",
+    reddit: "Reddit",
+    telegram: "Telegram",
+    whatsapp: "WhatsApp",
+    signal: "Signal",
+    matrix: "Matrix",
+    irc: "IRC",
+    matrix: "Matrix",
+    xmpp: "XMPP",
+    zulip: "Zulip",
+    mattermost: "Mattermost",
+    slack: "Slack",
+    teams: "Teams",
+    zoom: "Zoom",
+    googlemeet: "Meet",
+    webex: "Webex",
+    gotomeeting: "GoTo",
+    ringcentral: "RingCentral",
+    jitsi: "Jitsi",
+    bigbluebutton: "BBB",
+    chime: "Chime",
+    bluejeans: "BlueJeans",
+    appear: "Appear",
+    whereby: "Whereby",
+    gather: "Gather",
+    spatial: "Spatial",
+    vrchat: "VRChat",
+    recroom: "RecRoom",
+    fortnite: "Fortnite",
+    roblox: "Roblox",
+    minecraft: "Minecraft",
+    secondlife: "Second Life",
+    spatialchat: "Spatial Chat",
+    discord: "Discord",
+    twitch: "Twitch",
+    youtube: "YouTube",
+    kick: "Kick",
+    tiktok: "TikTok",
+    facebook: "Facebook",
+    rumble: "Rumble",
+    trovo: "Trovo",
+    whatnot: "Whatnot",
+    livestream: "LiveStream",
+    dlive: "DLive",
+    periscope: "Periscope",
+    bluedot: "BlueDot",
+    justin: "Justin.tv",
+    ustream: "UStream",
+    afreeca: "Afreeca",
+    nimo: "Nimo",
+    douban: "Douban",
+    huya: "Huya",
+    douyu: "DouYu",
+    showroom: "Showroom",
+    niconico: "Niconico",
+    bilibili: "Bilibili",
+    funshion: "Funshion",
+    zhanqi: "ZhanQi",
+    huajiao: "HuaJiao",
+    lpl: "LPL",
+    yalla: "Yalla",
+    mico: "Mico",
+    livecoin: "LiveCoin",
+    bigo: "Bigo",
+    mola: "Mola",
+    maomao: "MaoMao",
+    yizhibo: "YiZhiBo",
+    pandatv: "PandaTV",
+    huomao: "HuoMao",
+    douyin: "Douyin",
+    kuaishou: "Kuaishou",
+    weibo: "Weibo",
+    xiaohongshu: "XHS",
+    qq: "QQ",
+    wechat: "WeChat",
+    instagram: "Instagram",
+    twitter: "Twitter",
+    threads: "Threads",
+    mastodon: "Mastodon",
+    bluesky: "Bluesky",
+    linkedin: "LinkedIn",
+    reddit: "Reddit",
+    telegram: "Telegram",
+    whatsapp: "WhatsApp",
+    signal: "Signal",
+    matrix: "Matrix",
+    irc: "IRC",
+    xmpp: "XMPP",
+    zulip: "Zulip",
+    mattermost: "Mattermost",
+    slack: "Slack",
+    teams: "Teams",
+    zoom: "Zoom",
+    googlemeet: "Meet",
+    webex: "Webex",
+    gotomeeting: "GoTo",
+    jitsi: "Jitsi",
+    bigbluebutton: "BBB",
+    chime: "Chime",
+    bluejeans: "BlueJeans",
+    appear: "Appear",
+    whereby: "Whereby",
+    gather: "Gather",
+    spatial: "Spatial",
+    vrchat: "VRChat",
+    recroom: "RecRoom",
+    fortnite: "Fortnite",
+    roblox: "Roblox",
+    minecraft: "Minecraft",
+    secondlife: "Second Life"
+  };
+
+  /* ---- Render ---- */
+  function render() {
+    var keys = Object.keys(viewerState);
+    var total = 0;
+
+    /* Clear existing platform elements */
+    platformsEl.innerHTML = "";
+
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var count = viewerState[key];
+      if (typeof count !== "number" || count < 0) continue;
+      total += count;
+
+      var block = document.createElement("div");
+      block.className = "platform-count";
+
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "platform-name";
+      nameSpan.textContent = platformNames[key] || key;
+
+      var numSpan = document.createElement("span");
+      numSpan.className = "platform-num";
+      numSpan.textContent = count.toLocaleString();
+
+      block.appendChild(nameSpan);
+      block.appendChild(numSpan);
+      platformsEl.appendChild(block);
+    }
+
+    /* Total */
+    var newTotal = total;
+    totalEl.textContent = newTotal.toLocaleString();
+
+    /* Pulse if total changed */
+    if (newTotal !== prevTotal) {
+      totalEl.classList.remove("pulse");
+      /* Force reflow to restart animation */
+      void totalEl.offsetWidth;
+      totalEl.classList.add("pulse");
+      prevTotal = newTotal;
+    }
+
+    /* Show bar if we have data */
+    if (keys.length > 0) {
+      bar.classList.add("visible");
+    }
+  }
+
+  /* ---- Handle payload ---- */
+  function handlePayload(data) {
+    if (!data) return;
+
+    /* Only process viewer_updates snapshots */
+    if (data.event === "viewer_updates" && data.meta) {
+      var meta = data.meta;
+      /* meta is a full snapshot — replace state entirely */
+      viewerState = {};
+      var keys = Object.keys(meta);
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        var v = meta[k];
+        /* Support both number and object with count property */
+        if (typeof v === "number") {
+          viewerState[k] = v;
+        } else if (v && typeof v === "object") {
+          viewerState[k] = typeof v.count === "number" ? v.count : 0;
+        }
+      }
+      render();
+    }
+  }
+
+  /* ---- Bridge setup ---- */
+  var bridge = document.getElementById("ssn_bridge");
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  /* Expose for testing */
+  window.handleOverlayPayload = handlePayload;
+  window.handlePayload = handlePayload;
+
+  /* ---- Initial render (empty state) ---- */
+  render();
+
+})();
+</script>
+</body>
+</html>

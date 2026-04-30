@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SSN Viewer Counts</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.75);
+    --bar-border: rgba(255, 255, 255, 0.12);
+    --text-color: #ffffff;
+    --text-muted: #aaaaaa;
+    --accent-youtube: #ff0000;
+    --accent-twitch: #9146ff;
+    --accent-kick: #53fc18;
+    --accent-tiktok: #ff0050;
+    --accent-facebook: #1877f2;
+    --accent-rumble: #99cc00;
+    --accent-discord: #5865f2;
+    --accent-default: #888888;
+    --font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    --font-size: 14px;
+    --font-size-total: 16px;
+    --padding-x: 12px;
+    --padding-y: 6px;
+    --gap: 16px;
+    --total-separator: 1px solid rgba(255,255,255,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #viewer-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap);
+    padding: var(--padding-y) var(--padding-x);
+    background: var(--bar-bg);
+    border-top: 1px solid var(--bar-border);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9999;
+    flex-wrap: wrap;
+  }
+
+  .platform-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .platform-count .platform-label {
+    font-size: var(--font-size);
+    color: var(--text-muted);
+    text-transform: capitalize;
+    font-weight: 500;
+  }
+
+  .platform-count .platform-count-value {
+    font-size: var(--font-size);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .platform-count .platform-count-value::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 2px;
+    vertical-align: middle;
+  }
+
+  .platform-count[data-platform="youtube"] .platform-count-value::before { background: var(--accent-youtube); }
+  .platform-count[data-platform="twitch"] .platform-count-value::before { background: var(--accent-twitch); }
+  .platform-count[data-platform="kick"] .platform-count-value::before { background: var(--accent-kick); }
+  .platform-count[data-platform="tiktok"] .platform-count-value::before { background: var(--accent-tiktok); }
+  .platform-count[data-platform="facebook"] .platform-count-value::before { background: var(--accent-facebook); }
+  .platform-count[data-platform="rumble"] .platform-count-value::before { background: var(--accent-rumble); }
+  .platform-count[data-platform="discord"] .platform-count-value::before { background: var(--accent-discord); }
+  .platform-count[data-platform="whatnot"] .platform-count-value::before { background: #ff6b35; }
+  .platform-count[data-platform="other"] .platform-count-value::before { background: var(--accent-default); }
+
+  .total-separator {
+    width: 1px;
+    height: 20px;
+    background: var(--total-separator);
+    flex-shrink: 0;
+  }
+
+  .total-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .total-count .total-label {
+    font-size: var(--font-size-total);
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .total-count .total-value {
+    font-size: var(--font-size-total);
+    font-weight: 700;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Fade-in animation for the bar */
+  #viewer-bar {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div id="viewer-bar">
+  <div id="platforms-container"></div>
+  <div class="total-separator"></div>
+  <div class="total-count">
+    <span class="total-label">Total</span>
+    <span class="total-value" id="total-value">0</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  // State: snapshot of per-platform viewer counts
+  var viewerState = {};
+  var platformsContainer = document.getElementById('platforms-container');
+  var totalValueEl = document.getElementById('total-value');
+
+  /**
+   * Escape HTML to prevent XSS from untrusted strings
+   */
+  function escapeHTML(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  /**
+   * Format number with thousands separators
+   */
+  function formatNumber(num) {
+    if (typeof num !== 'number' || isNaN(num)) return '0';
+    return num.toLocaleString('en-US');
+  }
+
+  /**
+   * Render the viewer counts bar based on current state
+   */
+  function render() {
+    var platforms = Object.keys(viewerState).sort();
+    var total = 0;
+
+    // Clear existing platform elements
+    platformsContainer.innerHTML = '';
+
+    platforms.forEach(function (platform) {
+      var count = viewerState[platform];
+      if (typeof count !== 'number' || isNaN(count)) count = 0;
+      total += count;
+
+      var platformEl = document.createElement('div');
+      platformEl.className = 'platform-count';
+      platformEl.setAttribute('data-platform', platform);
+
+      var valueEl = document.createElement('span');
+      valueEl.className = 'platform-count-value';
+      valueEl.textContent = formatNumber(count);
+
+      var labelEl = document.createElement('span');
+      labelEl.className = 'platform-label';
+      labelEl.textContent = platform;
+
+      platformEl.appendChild(valueEl);
+      platformEl.appendChild(labelEl);
+      platformsContainer.appendChild(platformEl);
+    });
+
+    // Update total
+    totalValueEl.textContent = formatNumber(total);
+  }
+
+  /**
+   * Handle incoming payloads from SSN bridge
+   */
+  function handlePayload(data) {
+    if (!data) return;
+
+    // Handle viewer_updates snapshot
+    if (data.event === 'viewer_updates' && data.meta) {
+      var meta = data.meta;
+
+      // meta should be an object with platform keys -> viewer counts
+      if (typeof meta === 'object' && !Array.isArray(meta)) {
+        viewerState = {};
+        Object.keys(meta).forEach(function (key) {
+          var val = meta[key];
+          if (typeof val === 'number' && !isNaN(val)) {
+            viewerState[key] = val;
+          } else if (typeof val === 'string') {
+            var parsed = parseInt(val, 10);
+            if (!isNaN(parsed)) {
+              viewerState[key] = parsed;
+            }
+          }
+        });
+        render();
+      }
+    }
+  }
+
+  // Set up the VDO.Ninja bridge
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var roomID = params.get('session') || '';
+    var password = params.get('password') || 'false';
+    var label = params.get('label') || 'viewer_counts_' + Date.now();
+    var bridge = document.getElementById('ssn_bridge');
+
+    if (roomID) {
+      bridge.src = 'https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=' +
+        encodeURIComponent(password) + '&view=' + encodeURIComponent(roomID) +
+        '&label=' + encodeURIComponent(label) +
+        '&noaudio&novideo&cleanoutput&room=' + encodeURIComponent(roomID);
+    }
+
+    window.addEventListener('message', function (event) {
+      var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+      if (typeof payload !== 'undefined') {
+        handlePayload(payload);
+      }
+    });
+
+    window.handleOverlayPayload = handlePayload;
+  })();
+
+  // Initial render (shows 0 until first snapshot arrives)
+  render();
+})();
+</script>
+
+<!-- VDO.Ninja Bridge -->
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SSN Chat Overlay</title>
+<style>
+  :root {
+    --bg-color: rgba(0, 0, 0, 0.6);
+    --text-color: #ffffff;
+    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --max-width: 600px;
+    --row-height: 40px;
+    --avatar-size: 32px;
+    --border-radius: 4px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 20px;
+    background: transparent;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  #chat-container {
+    width: 100%;
+    max-width: var(--max-width);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .chat-row {
+    display: flex;
+    align-items: center;
+    background: var(--bg-color);
+    padding: 4px 8px;
+    border-radius: var(--border-radius);
+    animation: fadeIn 0.3s ease-out;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: var(--row-height);
+  }
+
+  .chat-avatar {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    margin-right: 10px;
+    background: #333;
+    flex-shrink: 0;
+    object-fit: cover;
+  }
+
+  .chat-content {
+    display: flex;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .chat-name {
+    font-weight: 700;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  .chat-message {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="chat-container"></div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  // 1. Parse URL Params
+  var params = new URLSearchParams(location.search);
+  var limit = parseInt(params.get("limit"), 10) || 10;
+  var container = document.getElementById("chat-container");
+  var bridge = document.getElementById("ssn_bridge");
+
+  // 2. Setup Bridge
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "custom_overlay_chat_" + Date.now();
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  // 3. Helper: Escape HTML to prevent XSS
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
+  }
+
+  // 4. Render Function
+  function addChatMessage(data) {
+    // Filter: Must be chat (no event) and not a bot
+    if (data.event || data.bot) return;
+    if (!data.chatname || !data.chatmessage) return;
+
+    // Create Row
+    var row = document.createElement("div");
+    row.className = "chat-row";
+
+    // Avatar
+    var img = document.createElement("img");
+    img.className = "chat-avatar";
+    img.src = data.chatimg || "";
+    img.alt = "avatar";
+    // Fallback if image fails
+    img.onerror = function() { this.style.display = 'none'; };
+    row.appendChild(img);
+
+    // Content Wrapper
+    var contentDiv = document.createElement("div");
+    contentDiv.className = "chat-content";
+
+    // Name
+    var nameSpan = document.createElement("span");
+    nameSpan.className = "chat-name";
+    nameSpan.textContent = data.chatname;
+    if (data.nameColor) nameSpan.style.color = data.nameColor;
+    contentDiv.appendChild(nameSpan);
+
+    // Message
+    var msgSpan = document.createElement("span");
+    msgSpan.className = "chat-message";
+    msgSpan.textContent = data.chatmessage;
+    contentDiv.appendChild(msgSpan);
+
+    row.appendChild(contentDiv);
+
+    // Prepend to show newest at bottom (flex-direction: column-reverse logic via DOM order)
+    // Actually, standard chat usually puts newest at bottom.
+    // If we prepend, newest is top. Let's append for standard bottom-up flow.
+    container.appendChild(row);
+
+    // Enforce Limit
+    while (container.children.length > limit) {
+      container.removeChild(container.firstChild);
+    }
+  }
+
+  // 5. Message Handler
+  function handlePayload(data) {
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch (e) { return; }
+    }
+    if (data && data.chatname) {
+      addChatMessage(data);
+    }
+  }
+
+  // Listen for bridge messages
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") handlePayload(payload);
+  });
+
+  // Expose for testing
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+  "documents": [
+    {
+      "id": "doc_shipping",
+      "title": "Store Shipping Policy",
+      "mode": "processed",
+      "content": "# Shipping Policy\nOrders to Canada usually arrive in 5-7 business days.\nOrders to the United States usually arrive in 3-5 business days.\n\n# Returns Policy\nReturns are accepted within 30 days for unopened items."
+    },
+    {
+      "id": "doc_setup",
+      "title": "Stream Setup Notes",
+      "mode": "processed",
+      "content": "# Camera Setup\nUse Camera 2 for face cam during solo streams.\n\n# Audio Setup\nSet OBS audio monitoring to Monitor and Output when routing alerts.\n\n# Knowledge Base\nRAG search answers from the custom knowledge base before the bot replies."
+    },
+    {
+      "id": "doc_schedule",
+      "title": "Weekly Stream Schedule",
+      "mode": "raw",
+      "content": "Tuesday is retro night. Friday is community games night. Saturday starts at 7 PM Eastern.",
+      "tags": [
+        "schedule",
+        "stream"
+      ],
+      "synonyms": [
+        "calendar",
+        "showtimes",
+        "friday plan"
+      ]
+    }
+  ],
+  "cases": {
+    "canadaSearch": "shipping canada delivery",
+    "fridaySearch": "friday community games",
+    "fuzzySearch": "shiping caneda",
+    "canadaQuestion": "How long does shipping to Canada take?",
+    "fridayQuestion": "What happens on Friday?",
+    "offtopicQuestion": "What's your favorite pizza topping?"
+  },
+  "expected": {
+    "descriptor": "Knowledge base with store shipping timelines, stream setup notes, and the weekly stream schedule.",
+    "canadaAnswer": "Orders to Canada usually arrive in 5-7 business days.",
+    "fridayAnswer": "Friday is community games night."
+  }
+}

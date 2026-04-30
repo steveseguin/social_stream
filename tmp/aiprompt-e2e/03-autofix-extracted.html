@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - Chat Overlay</title>
+    <style>
+        /* --- CSS Variables for easy customization --- */
+        :root {
+            --bg-color: transparent;
+            --text-color: #ffffff;
+            --accent-color: #00ffcc;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --chat-width: 400px;
+            --chat-height: 600px;
+            --max-items: 10;
+        }
+
+        /* --- Base Styles --- */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* --- Chat Container --- */
+        #chat-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: var(--chat-width);
+            height: var(--chat-height);
+            display: flex;
+            flex-direction: column;
+            pointer-events: none; /* Let clicks pass through to OBS/Game */
+        }
+
+        /* --- Chat Items --- */
+        .chat-item {
+            background: rgba(0, 0, 0, 0.6);
+            border-left: 4px solid var(--accent-color);
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            animation: slideIn 0.3s ease-out forwards;
+            opacity: 0;
+            transform: translateX(20px);
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .chat-item.system {
+            border-left-color: #ffcc00;
+            font-style: italic;
+            background: rgba(50, 50, 0, 0.6);
+        }
+
+        .chat-item.donation {
+            border-left-color: #ff0055;
+            background: rgba(50, 0, 20, 0.6);
+            font-weight: bold;
+        }
+
+        /* --- Avatar & Name Layout --- */
+        .chat-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background-color: #333;
+            object-fit: cover;
+        }
+
+        .username {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .message-text {
+            margin-left: 32px; /* Align with text after avatar */
+        }
+
+        /* --- Animations --- */
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+        }
+
+        .chat-item.removing {
+            animation: fadeOut 0.5s ease-in forwards;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- VDO.Ninja Bridge (Hidden) -->
+    <iframe id="ssn_bridge" style="display:none;"></iframe>
+
+    <!-- Chat Feed Container -->
+    <div id="chat-container"></div>
+
+    <script>
+        (function () {
+            // --- Configuration ---
+            const MAX_ITEMS = 15; // Keep DOM light
+            const container = document.getElementById("chat-container");
+            const bridge = document.getElementById("ssn_bridge");
+            
+            // --- URL Params Parsing ---
+            const params = new URLSearchParams(location.search);
+            const roomID = params.get("session") || "";
+            const password = params.get("password") || "false";
+            const label = params.get("label") || "custom_overlay_" + Date.now();
+
+            // --- Bridge Setup ---
+            if (roomID) {
+                bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+                    encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+                    "&label=" + encodeURIComponent(label) +
+                    "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+            }
+
+            // --- Event Listener ---
+            window.addEventListener("message", function (event) {
+                // Handle data from VDO.Ninja bridge
+                var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+                
+                // Also handle direct test payloads from the builder script
+                if (!payload && event.data && event.data.overlayNinja) {
+                    payload = event.data.overlayNinja;
+                }
+
+                if (typeof payload !== "undefined") {
+                    handlePayload(payload);
+                }
+            });
+
+            // --- Main Handler ---
+            function handlePayload(data) {
+                if (!data) return;
+
+                // Determine type of message
+                var isSystem = !!data.event;
+                var isDonation = !!data.hasDonation;
+                
+                // Create DOM Element
+                var el = document.createElement("div");
+                el.className = "chat-item";
+                if (isSystem) el.classList.add("system");
+                if (isDonation) el.classList.add("donation");
+
+                // Build Content
+                var avatarHtml = "";
+                if (data.chatimg) {
+                    avatarHtml = '<img src="' + escapeHtml(data.chatimg) + '" class="avatar" onerror="this.style.display=\'none\'">';
+                } else {
+                    // Fallback avatar using initials or color
+                    avatarHtml = '<div class="avatar" style="background:#555; display:flex; align-items:center; justify-content:center; font-size:10px;">' + (data.chatname ? data.chatname.charAt(0).toUpperCase() : '?') + '</div>';
+                }
+
+                var nameHtml = '<span class="username" style="color:' + (data.nameColor || 'var(--accent-color)') + '">' + escapeHtml(data.chatname || 'Anonymous') + '</span>';
+                var msgHtml = escapeHtml(data.chatmessage || "");
+                
+                // Add donation amount if present
+                if (data.hasDonation) {
+                    msgHtml += " <span style='color:#ffcc00; margin-left:5px;'>(" + escapeHtml(data.hasDonation) + ")</span>";
+                }
+
+                // Add membership/sub info if present
+                if (data.membership) {
+                    msgHtml += " <span style='font-size:0.8em; opacity:0.7;'>[" + escapeHtml(data.membership) + "]</span>";
+                }
+
+                // Assemble HTML
+                if (isSystem) {
+                    // System events usually just have a name/event description
+                    el.innerHTML = '<div class="message-text">' + msgHtml + '</div>';
+                } else {
+                    el.innerHTML = 
+                        '<div class="chat-header">' + avatarHtml + nameHtml + '</div>' +
+                        '<div class="message-text">' + msgHtml + '</div>';
+                }
+
+                // Append to container
+                container.appendChild(el);
+
+                // Cleanup old items
+                while (container.children.length > MAX_ITEMS) {
+                    var oldItem = container.children[0];
+                    oldItem.classList.add("removing");
+                    // Remove from DOM after animation
+                    setTimeout(function() {
+                        if(oldItem.parentNode) oldItem.parentNode.removeChild(oldItem);
+                    }, 500);
+                }
+            }
+
+            // --- Utility: Escape HTML ---
+            function escapeHtml(text) {
+                if (!text) return "";
+                var div = document.createElement('div');
+                div.appendChild(document.createTextNode(text));
+                return div.innerHTML;
+            }
+
+            // --- Expose for testing ---
+            window.handleOverlayPayload = handlePayload;
+
+        }());
+    </script>
+</body>
+</html>

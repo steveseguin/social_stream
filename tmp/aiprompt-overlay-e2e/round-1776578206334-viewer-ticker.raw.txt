@@ -1,0 +1,254 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSN Viewer Count Bar</title>
+<style>
+  :root {
+    --bar-bg: rgba(0, 0, 0, 0.85);
+    --bar-border: rgba(255, 255, 255, 0.1);
+    --text-color: #ffffff;
+    --text-muted: #aaaaaa;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-size: 14px;
+    --font-size-total: 16px;
+    --font-weight: 600;
+    --padding-y: 8px;
+    --padding-x: 16px;
+    --gap: 16px;
+    --transition-speed: 0.3s;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: var(--font-family);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #viewer-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--bar-bg);
+    border-top: 1px solid var(--bar-border);
+    padding: var(--padding-y) var(--padding-x);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap);
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .platform-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .platform-name {
+    color: var(--text-muted);
+    font-size: var(--font-size);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .platform-value {
+    color: var(--text-color);
+    font-size: var(--font-size);
+    font-weight: var(--font-weight);
+    min-width: 2ch;
+    text-align: right;
+    transition: color var(--transition-speed);
+  }
+
+  .platform-value.changed {
+    color: #4ade80;
+  }
+
+  .divider {
+    width: 1px;
+    height: 20px;
+    background: var(--bar-border);
+    flex-shrink: 0;
+  }
+
+  .total-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .total-label {
+    color: var(--text-muted);
+    font-size: var(--font-size);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .total-value {
+    color: #ffffff;
+    font-size: var(--font-size-total);
+    font-weight: 700;
+    min-width: 2ch;
+    text-align: right;
+    transition: color var(--transition-speed);
+  }
+
+  .total-value.changed {
+    color: #4ade80;
+  }
+
+  .no-data {
+    color: var(--text-muted);
+    font-size: var(--font-size);
+    font-style: italic;
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+
+<div id="viewer-bar">
+  <span class="no-data" id="no-data">Waiting for viewer data…</span>
+</div>
+
+<iframe id="ssn_bridge" style="display:none;"></iframe>
+
+<script>
+(function () {
+  "use strict";
+
+  var params = new URLSearchParams(location.search);
+  var roomID = params.get("session") || "";
+  var password = params.get("password") || "false";
+  var label = params.get("label") || "viewer_bar_" + Date.now();
+  var bridge = document.getElementById("ssn_bridge");
+
+  if (roomID) {
+    bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" +
+      encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) +
+      "&label=" + encodeURIComponent(label) +
+      "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);
+  }
+
+  var currentMeta = null;
+  var bar = document.getElementById("viewer-bar");
+  var noData = document.getElementById("no-data");
+
+  function escapeText(str) {
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function formatNumber(n) {
+    return Number(n || 0).toLocaleString("en-US");
+  }
+
+  function highlightChanged(el) {
+    if (!el) return;
+    el.classList.add("changed");
+    clearTimeout(el._changeTimer);
+    el._changeTimer = setTimeout(function () {
+      el.classList.remove("changed");
+    }, 800);
+  }
+
+  function renderBar(meta) {
+    if (!meta || typeof meta !== "object") return;
+
+    if (noData) {
+      noData.style.display = "none";
+    }
+
+    var platforms = [];
+    var total = 0;
+    var keys = Object.keys(meta);
+
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var val = parseInt(meta[key], 10) || 0;
+      platforms.push({ name: key, value: val });
+      total += val;
+    }
+
+    if (platforms.length === 0) {
+      bar.innerHTML = '<span class="no-data">No platforms active</span>';
+      return;
+    }
+
+    var html = "";
+
+    for (var j = 0; j < platforms.length; j++) {
+      var p = platforms[j];
+      var oldVal = currentMeta && currentMeta[p.name] ? parseInt(currentMeta[p.name], 10) : null;
+      var changed = oldVal !== null && oldVal !== p.value;
+
+      if (j > 0) {
+        html += '<div class="divider"></div>';
+      }
+
+      html += '<div class="platform-count">';
+      html += '<span class="platform-name">' + escapeText(p.name) + '</span>';
+      html += '<span class="platform-value" data-platform="' + escapeText(p.name) + '">' + formatNumber(p.value) + '</span>';
+      html += '</div>';
+    }
+
+    html += '<div class="divider"></div>';
+    html += '<div class="total-count">';
+    html += '<span class="total-label">Total</span>';
+    html += '<span class="total-value" id="total-value">' + formatNumber(total) + '</span>';
+    html += '</div>';
+
+    bar.innerHTML = html;
+
+    if (currentMeta) {
+      for (var k = 0; k < platforms.length; k++) {
+        var el = bar.querySelector('.platform-value[data-platform="' + escapeText(platforms[k].name) + '"]');
+        if (el) highlightChanged(el);
+      }
+      var totalEl = document.getElementById("total-value");
+      if (totalEl) highlightChanged(totalEl);
+    }
+
+    currentMeta = meta;
+  }
+
+  function handlePayload(data) {
+    if (!data) return;
+
+    if (data.event === "viewer_updates" && data.meta) {
+      renderBar(data.meta);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+    if (typeof payload !== "undefined") {
+      handlePayload(payload);
+    }
+  });
+
+  window.handleOverlayPayload = handlePayload;
+})();
+</script>
+</body>
+</html>
+```
