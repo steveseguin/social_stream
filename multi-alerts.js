@@ -73,6 +73,36 @@ const DONATION_EVENTS = new Set([
 const BITS_EVENTS = new Set(['cheer', 'bits']);
 const RAID_EVENTS = new Set(['raid', 'host', 'hosting', 'redirect']);
 
+const EVENT_ALIASES = Object.freeze({
+  'channel_subscription_gifts': 'subscription_gift',
+  'channel_subscription_gift': 'subscription_gift',
+  'channel_subscription_new': 'new_subscriber',
+  'channel_subscription_start': 'new_subscriber',
+  'channel_subscription': 'new_subscriber',
+  'channel_followed': 'new_follower',
+  'follower_added': 'new_follower',
+  'subscription_gifts': 'subscription_gift',
+  'subscription_renewal': 'resub',
+  'member_milestone': 'membermilestone',
+  'membership_milestone': 'membermilestone',
+  'super_chat': 'donation',
+  'superchat': 'donation',
+  'super_sticker': 'supersticker',
+  'channel_cheer': 'cheer',
+  'channel_raid': 'raid',
+  'new-subscriber': 'new_subscriber',
+  'new_membership': 'sponsorship',
+  'new_member': 'sponsorship',
+  'membership': 'sponsorship',
+  'gift_membership': 'giftpurchase',
+  'membership_gift': 'giftpurchase',
+  'community_gift': 'giftpurchase',
+  'gifted_membership': 'giftredemption',
+  'gifted_memberships': 'giftpurchase',
+  'upgraded_membership': 'resub',
+  'membership_upgrade': 'resub'
+});
+
 const KNOWN_SOURCES = new Set([
   'amazon',
   'facebook',
@@ -213,6 +243,14 @@ function normalizeKey(value) {
   return normalizeText(value).toLowerCase();
 }
 
+function normalizeEventKey(value) {
+  const normalized = normalizeKey(value).replace(/[.\s]+/g, '_');
+  if (!normalized || normalized === 'false') {
+    return '';
+  }
+  return EVENT_ALIASES[normalized] || normalized;
+}
+
 function normalizeSourceKey(value) {
   const normalized = normalizeKey(value);
   if (!normalized) {
@@ -344,22 +382,28 @@ function pickSourceKey(payload = {}) {
 }
 
 function pickEventKey(payload = {}) {
-  const directEvent = normalizeKey(payload.event);
+  const directEvent = normalizeEventKey(payload.event);
   if (directEvent) return directEvent;
 
-  const payloadType = normalizeKey(payload.type);
+  const payloadType = normalizeEventKey(payload.type);
   if (payloadType && !KNOWN_SOURCES.has(payloadType)) {
     return payloadType;
   }
 
   const metaCandidates = [
+    payload.eventType,
+    payload.rawType,
+    payload.alertType,
+    payload.meta?.event,
     payload.meta?.eventType,
+    payload.meta?.originalEventType,
     payload.meta?.rawType,
-    payload.meta?.alertType
+    payload.meta?.alertType,
+    payload.meta?.eventName
   ];
 
   for (const candidate of metaCandidates) {
-    const normalized = normalizeKey(candidate);
+    const normalized = normalizeEventKey(candidate);
     if (normalized) {
       return normalized;
     }
@@ -368,13 +412,22 @@ function pickEventKey(payload = {}) {
   return '';
 }
 
+function pickDonationLabel(payload = {}) {
+  return normalizeText(
+    payload.hasDonation ||
+      payload.donation ||
+      payload.meta?.hasDonation ||
+      payload.meta?.donation
+  );
+}
+
 function buildRecentPayloadSignature(payload = {}) {
   return [
     pickEventKey(payload),
     pickSourceKey(payload),
     normalizeText(payload.chatname),
     normalizeText(payload.chatmessage),
-    normalizeText(payload.hasDonation),
+    pickDonationLabel(payload),
     normalizeText(payload.membership),
     normalizeText(payload.contentimg),
     normalizeText(payload.id || payload.meta?.eventId || payload.meta?.id)
@@ -548,13 +601,51 @@ function isSourceMatchAllowed(payload = {}) {
   return true;
 }
 
+function isGenericEventKey(eventKey) {
+  return eventKey === 'true' || eventKey === 'event' || eventKey === 'notification' || eventKey === 'system';
+}
+
+function inferCategoryFromText(payload = {}) {
+  const text = normalizeKey([
+    payload.chatmessage,
+    payload.title,
+    payload.subtitle,
+    payload.membership,
+    payload.meta?.eventType,
+    payload.meta?.rawType,
+    payload.meta?.alertType,
+    payload.meta?.eventName
+  ].join(' ')).replace(/<[^>]*>/g, ' ');
+
+  if (!text) {
+    return null;
+  }
+  if (/\b(raid|raiding|raided|host|hosting|hosted|redirect)\b/.test(text)) {
+    return ALERT_CATEGORIES.RAID;
+  }
+  if (/\b(cheer|cheered|cheering|bits?)\b/.test(text)) {
+    return ALERT_CATEGORIES.BITS;
+  }
+  if (/\b(donation|donated|tip|tipped|support|super_chat|super chat|supersticker|super sticker)\b/.test(text)) {
+    return ALERT_CATEGORIES.DONATION;
+  }
+  if (/\b(sub|subs|subscriber|subscribed|subscription|resub|member|membership|sponsor|sponsorship)\b/.test(text)) {
+    return ALERT_CATEGORIES.SUBSCRIPTION;
+  }
+  if (/\bfollow(?:ed|ing)?\b/.test(text)) {
+    return ALERT_CATEGORIES.FOLLOW;
+  }
+  return null;
+}
+
 function inferCategory(payload = {}) {
   const eventKey = pickEventKey(payload);
   if (COUNT_EVENTS.has(eventKey)) {
     return null;
   }
 
-  const donationLabel = normalizeKey(payload.hasDonation);
+  const donationLabel = normalizeKey(pickDonationLabel(payload));
+  const genericEvent = isGenericEventKey(eventKey);
 
   if (RAID_EVENTS.has(eventKey)) {
     return ALERT_CATEGORIES.RAID;
@@ -574,10 +665,19 @@ function inferCategory(payload = {}) {
   if (FOLLOW_EVENTS.has(eventKey)) {
     return ALERT_CATEGORIES.FOLLOW;
   }
-  if (!eventKey && donationLabel) {
+  if (donationLabel) {
     return /(^|\s)(bit|bits|cheer|cheers)\b/.test(donationLabel)
       ? ALERT_CATEGORIES.BITS
       : ALERT_CATEGORIES.DONATION;
+  }
+  if (genericEvent) {
+    const inferredCategory = inferCategoryFromText(payload);
+    if (inferredCategory) {
+      return inferredCategory;
+    }
+  }
+  if (!eventKey && normalizeText(payload.membership) && !normalizeText(payload.chatmessage)) {
+    return ALERT_CATEGORIES.SUBSCRIPTION;
   }
   return null;
 }
@@ -679,10 +779,15 @@ function buildAlertViewModel(payload = {}) {
   }
   const sourceLabel = SOURCE_LABELS[sourceKey] || humanizeKey(sourceKey);
   const actor = pickActorName(payload);
-  const amount = normalizeText(payload.hasDonation);
+  const amount = pickDonationLabel(payload);
   const subtitle = pickSubtitle(payload);
   const viewerCount = pickViewerCount(payload);
   const mediaUrl = pickMediaUrl(payload);
+  const cashValue = pickCashValue(payload, amount, sourceKey);
+  if (isValueAlertCategory(category) && settings.minDonationValue > 0 && cashValue < settings.minDonationValue) {
+    log('value alert skipped below minimum', { amount, cashValue, minimum: settings.minDonationValue, payload });
+    return null;
+  }
   const headline = buildHeadline(category, eventKey, actor, amount, viewerCount);
   const bodyText = buildBodyText(category, payload, viewerCount);
 
@@ -695,6 +800,7 @@ function buildAlertViewModel(payload = {}) {
     accent: CATEGORY_ACCENTS[category] || '#9146ff',
     actor,
     amount,
+    cashValue,
     subtitle,
     bodyText,
     headlineLead: headline.lead,
@@ -807,6 +913,50 @@ function parseNumberParam(name, fallbackValue) {
   return Number.isFinite(value) ? value : fallbackValue;
 }
 
+function parseCashValue(value, sourceKey = '') {
+  const rawValue = normalizeText(value);
+  if (!rawValue) {
+    return 0;
+  }
+  if (typeof convertToUSD === 'function') {
+    return Math.max(0, convertToUSD(rawValue, normalizeSourceKey(sourceKey)));
+  }
+  const fallbackValue = Number(rawValue.replace(/[^0-9.-]/g, ''));
+  return Number.isFinite(fallbackValue) ? Math.max(0, fallbackValue) : 0;
+}
+
+function getMinimumDonationValue() {
+  return parseCashValue(urlParams.get('mindonation') || urlParams.get('mincash'));
+}
+
+function pickCashValue(payload = {}, amountLabel = '', sourceKey = '') {
+  const labelValue = parseCashValue(amountLabel, sourceKey);
+  if (labelValue > 0) {
+    return labelValue;
+  }
+
+  const numericCandidates = [
+    payload.donoValue,
+    payload.donationValue,
+    payload.meta?.donoValue,
+    payload.meta?.donationValue,
+    payload.meta?.amount
+  ];
+
+  for (const candidate of numericCandidates) {
+    const numberValue = Number(candidate);
+    if (Number.isFinite(numberValue) && numberValue > 0) {
+      return numberValue;
+    }
+  }
+
+  return 0;
+}
+
+function isValueAlertCategory(category) {
+  return category === ALERT_CATEGORIES.DONATION || category === ALERT_CATEGORIES.BITS;
+}
+
 function normalizeColor(value) {
   const trimmed = normalizeText(value).replace(/^#/, '');
   if (!trimmed) return '';
@@ -857,6 +1007,7 @@ function readSettings() {
     queueEnabled,
     maxQueue: Math.max(1, Math.min(100, parseNumberParam('maxqueue', 20))),
     minShowTime: Math.max(1500, parseNumberParam('minshowtime', 3000)),
+    minDonationValue: getMinimumDonationValue(),
     beep: urlParams.has('beep'),
     beepVolume: Math.max(0, Math.min(1, parseNumberParam('beepvolume', 35) / 100)),
     customBeep: normalizeText(urlParams.get('custombeep')),
@@ -1092,8 +1243,14 @@ function flattenPayloads(payload) {
   if (Array.isArray(payload)) {
     return payload.flatMap((entry) => flattenPayloads(entry));
   }
+  if (payload.dataReceived && Object.prototype.hasOwnProperty.call(payload.dataReceived, 'overlayNinja')) {
+    return flattenPayloads(payload.dataReceived.overlayNinja);
+  }
   if (payload.overlayNinja !== undefined) {
     return flattenPayloads(payload.overlayNinja);
+  }
+  if (payload.sendData && Object.prototype.hasOwnProperty.call(payload.sendData, 'overlayNinja')) {
+    return flattenPayloads(payload.sendData.overlayNinja);
   }
   if (Array.isArray(payload.messages)) {
     return payload.messages.flatMap((entry) => flattenPayloads(entry));
@@ -1620,6 +1777,7 @@ window.__multiAlertsOverlay = {
       queueEnabled: settings.queueEnabled,
       maxQueue: settings.maxQueue,
       minShowTime: settings.minShowTime,
+      minDonationValue: settings.minDonationValue,
       beep: settings.beep,
       beepVolume: settings.beepVolume,
       customBeep: settings.customBeep,

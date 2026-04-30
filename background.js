@@ -6151,7 +6151,7 @@ async function sendToDestinations(message) {
 		}
 	}
 
-	var isAlertMessage = message && message.event;
+	var isAlertMessage = !!(message && (message.event || message.hasDonation || message.donation));
 	var reactionEventName = "";
 	if (message && typeof message.event === "string") {
 		reactionEventName = message.event

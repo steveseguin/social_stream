@@ -275,9 +275,10 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
 (async () => {
   const server = await startStaticServer({ root: ROOT, host: HOST, port: PORT });
   const blockedExternalRequests = [];
+  let browser = null;
 
   try {
-    const browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({ headless: true });
     const context = await browser.newContext();
 
     await context.route('**/*', async (route) => {
@@ -335,6 +336,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     await setControlValue(popupPage, "[data-optionparam25='raidstyle']", 'minimal', ['change']);
     await setControlValue(popupPage, '#multialertsources', 'twitch,youtube', ['input', 'change']);
     await setControlValue(popupPage, '#multialerthidesources', 'kick', ['input', 'change']);
+    await setControlValue(popupPage, '#multialertmindonation', '5', ['input', 'change']);
     await setCheckboxValue(popupPage, "[data-param25='compact']", true);
     await setCheckboxValue(popupPage, "[data-param25='align=center']", true);
 
@@ -398,6 +400,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(popupUrl.searchParams.get('raidstyle') === 'minimal', 'Popup did not add raidstyle=minimal.');
     assert(popupUrl.searchParams.get('sources') === 'twitch,youtube', 'Popup did not add sources filter.');
     assert(popupUrl.searchParams.get('hidesources') === 'kick', 'Popup did not add hidesources filter.');
+    assert(popupUrl.searchParams.get('mindonation') === '5', 'Popup did not add mindonation=5.');
     assert(popupUrl.searchParams.has('compact'), 'Popup did not add compact.');
     assert(popupUrl.searchParams.get('align') === 'center', 'Popup did not restore align=center.');
     assert(popupUrl.searchParams.get('scale') === '1.25', 'Popup did not add scale=1.25.');
@@ -442,6 +445,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(previewUrl.searchParams.get('pagebg') === '#112233', 'Preview iframe URL lost pagebg=#112233.');
     assert(previewUrl.searchParams.get('followstyle') === 'classic', 'Preview iframe URL lost followstyle=classic.');
     assert(previewUrl.searchParams.get('sources') === 'twitch,youtube', 'Preview iframe URL lost the sources filter.');
+    assert(previewUrl.searchParams.get('mindonation') === '5', 'Preview iframe URL lost mindonation=5.');
 
     await setControlValue(popupPage, '#multi-alert-preview-platform', 'twitch', ['change']);
     previewFrame = await waitForPreviewFrame(popupPage);
@@ -522,6 +526,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(baseSettings.styles.raid === 'minimal', 'Raid style preset did not parse.');
     assert(baseSettings.includeSources.join(',') === 'twitch,youtube', 'Sources filter did not parse.');
     assert(baseSettings.excludeSources.join(',') === 'kick', 'Hidesources filter did not parse.');
+    assert(baseSettings.minDonationValue === 5, 'Minimum donation value did not parse.');
 
     const followSnapshot = await getOverlaySnapshot(overlayPage, {
       category: 'follow',
@@ -715,6 +720,68 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(duplicateState.currentCategory === 'donation', 'Duplicate test should still show the original alert.');
     assert(duplicateState.queueLength === 0, 'Duplicate alert payload should not be queued a second time.');
 
+    await overlayPage.evaluate(() => {
+      window.__multiAlertsOverlay.clear({ clearQueue: true, preserveCooldown: false });
+      window.__multiAlertsOverlay.sendPayload({
+        type: 'twitch',
+        chatname: 'DonationOnlyTester',
+        chatmessage: 'Thanks!',
+        donation: '$12.34'
+      });
+    });
+    await overlayPage.waitForTimeout(120);
+    const donationOnlyState = await overlayPage.evaluate(() => window.__multiAlertsOverlay.getState());
+    assert(donationOnlyState.currentCategory === 'donation', 'Donation field without event should render as a donation alert.');
+
+    await overlayPage.evaluate(() => {
+      window.__multiAlertsOverlay.clear({ clearQueue: true, preserveCooldown: false });
+      window.__multiAlertsOverlay.sendPayload({
+        event: 'cheer',
+        type: 'twitch',
+        platform: 'twitch',
+        chatname: 'TinyBitsTester',
+        chatmessage: '100 bits should stay quiet',
+        hasDonation: '100 bits'
+      });
+    });
+    await overlayPage.waitForTimeout(120);
+    const lowValueState = await overlayPage.evaluate(() => window.__multiAlertsOverlay.getState());
+    assert(lowValueState.hasAlert === false, 'Low cash-value bits should not trigger an alert.');
+
+    await overlayPage.evaluate(() => {
+      window.__multiAlertsOverlay.clear({ clearQueue: true, preserveCooldown: false });
+      window.__multiAlertsOverlay.sendPayload({
+        dataReceived: {
+          overlayNinja: {
+            event: 'channel.subscription.gifts',
+            type: 'twitch',
+            platform: 'twitch',
+            chatname: 'AliasTester',
+            chatmessage: 'AliasTester gifted 3 subs!'
+          }
+        }
+      });
+    });
+    await overlayPage.waitForTimeout(120);
+    const wrappedAliasState = await overlayPage.evaluate(() => window.__multiAlertsOverlay.getState());
+    assert(wrappedAliasState.currentCategory === 'subscription', 'Wrapped websocket alias event should render as a subscription alert.');
+
+    await overlayPage.evaluate(() => {
+      window.__multiAlertsOverlay.clear({ clearQueue: true, preserveCooldown: false });
+      window.__multiAlertsOverlay.sendPayload({
+        message: {
+          event: true,
+          type: 'twitch',
+          platform: 'twitch',
+          chatname: 'GenericEventTester',
+          chatmessage: 'GenericEventTester gifted 5 Subs!'
+        }
+      });
+    });
+    await overlayPage.waitForTimeout(120);
+    const genericEventState = await overlayPage.evaluate(() => window.__multiAlertsOverlay.getState());
+    assert(genericEventState.currentCategory === 'subscription', 'Generic event=true subscription text should render as a subscription alert.');
+
     const customBeepUrl = new URL(popupUrl.toString());
     customBeepUrl.searchParams.delete('followsound');
     await loadOverlay(overlayPage, customBeepUrl.toString());
@@ -755,6 +822,7 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     assert(serverSettings.serverURL === 'wss://io.socialstream.ninja/api', 'Bare server should default to the API websocket endpoint.');
 
     await browser.close();
+    browser = null;
 
     if (blockedExternalRequests.length === 0) {
       console.log('Multi-alert overlay test passed.');
@@ -765,6 +833,9 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     console.error(error && error.stack ? error.stack : error);
     process.exitCode = 1;
   } finally {
+    if (browser) {
+      await browser.close();
+    }
     server.close();
   }
 })();
