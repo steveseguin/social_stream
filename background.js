@@ -1255,6 +1255,40 @@ var relaytargets = false;
 var loadedFirst = false;
 const SETTINGS_OBJECT_FIELD_PATTERN = /^(?:setting|both|param\d+|textparam\d+|numbersetting\d*|optionparam\d+|textsetting|optionsetting(?:2|10)?|json)$/;
 const SETTINGS_OBJECT_TOGGLE_PATTERN = /^(?:setting|both|param\d+)$/;
+const TEMP_VIEWER_COUNT_TTL = 70 * 60 * 1000;
+var temporaryViewerCountUntil = 0;
+var temporaryViewerCountTimer = null;
+
+function isTemporaryViewerCountActive() {
+	return temporaryViewerCountUntil && Date.now() < temporaryViewerCountUntil;
+}
+
+function getEffectiveSettingsForSources() {
+	if (!isTemporaryViewerCountActive() || settings.showviewercount) {
+		return settings;
+	}
+	const effectiveSettings = Object.assign({}, settings);
+	effectiveSettings.showviewercount = true;
+	return effectiveSettings;
+}
+
+function refreshTemporaryViewerCount(ttl) {
+	const parsedTtl = parseInt(ttl, 10);
+	const requestedTtl = Number.isFinite(parsedTtl) && parsedTtl > 0 ? parsedTtl : TEMP_VIEWER_COUNT_TTL;
+	const cappedTtl = Math.min(Math.max(requestedTtl, 5 * 60 * 1000), 2 * 60 * 60 * 1000);
+	temporaryViewerCountUntil = Date.now() + cappedTtl;
+
+	if (temporaryViewerCountTimer) {
+		clearTimeout(temporaryViewerCountTimer);
+	}
+	temporaryViewerCountTimer = setTimeout(function () {
+		temporaryViewerCountTimer = null;
+		temporaryViewerCountUntil = 0;
+		pushSettingChange();
+	}, cappedTtl + 1000);
+
+	pushSettingChange();
+}
 
 function pruneSettingsObjects(settingsObject) {
 	if (!settingsObject || typeof settingsObject !== "object") {
@@ -2145,13 +2179,14 @@ function checkIntervalState(intervalIndex) {
 }
 
 function pushSettingChange() {
+	const settingsForSources = getEffectiveSettingsForSources();
 	chrome.tabs.query({}, function (tabs) {
 		chrome.runtime.lastError;
 		for (var i = 0; i < tabs.length; i++) {
 			if (!tabs[i].url) {
 				continue;
 			}
-			chrome.tabs.sendMessage(tabs[i].id, { settings: settings, state: isExtensionOn }, function (response = false) {
+			chrome.tabs.sendMessage(tabs[i].id, { settings: settingsForSources, state: isExtensionOn }, function (response = false) {
 				chrome.runtime.lastError;
 			});
 		}
@@ -5175,7 +5210,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			return true;
 		} else if ("getSettings" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: getEffectiveSettingsForSources() }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 			if (hasSenderTabId) {
 				try {
 					priorityTabs.add(senderTabId);
@@ -11833,6 +11868,10 @@ async function handleBridgeChunkRequest(request, UUID) {
 
 async function processIncomingRequest(request, UUID = false) {
 	// from the dock or chat bot, etc.
+	if (request && request.action === "requestViewerCount") {
+		refreshTemporaryViewerCount(request.value && request.value.ttl);
+		return;
+	}
 	if (settings.disablehost) {
 		return;
 	}

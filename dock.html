@@ -3590,6 +3590,8 @@
 			if (urlParams.has("showviewercount")) {
 				showviewercount = true;
 			}
+			var viewerCountRequestTtl = 70 * 60 * 1000;
+			var viewerCountRequestRefresh = 60 * 60 * 1000;
 			var showbitrate = false;
 			if (urlParams.has("showbitrate") || urlParams.has("showbitratemeta") || urlParams.has("showvideobitrate")) {
 				showbitrate = true;
@@ -7617,6 +7619,8 @@
 							if (iframe.connectedPeers[e.data.UUID] === "dock") {
 								// this is a dock that wants to be synced with
 								syncDockAll(e.data.UUID);
+							} else if (iframe.connectedPeers[e.data.UUID] === "SocialStream") {
+								requestViewerCountProcessing(e.data.UUID);
 							}
 						}
 					} else if ("action" in e.data && e.data.UUID && e.data.value && e.data.action == "view-connection-info") {
@@ -7625,6 +7629,9 @@
 							iframe.connectedPeers[e.data.UUID] = e.data.value.label;
 							if (openChatAutomatically) {
 								send2Extension({ action: "openChat", value: null }, e.data.UUID);
+							}
+							if (iframe.connectedPeers[e.data.UUID] === "SocialStream") {
+								requestViewerCountProcessing(e.data.UUID);
 							}
 						}
 						
@@ -7801,6 +7808,15 @@
 			roomID.split(",").forEach(roomz => {
 				RecvDataWindow(roomz.trim());
 			});
+
+			if (showviewercount) {
+				setTimeout(function () {
+					requestViewerCountProcessing();
+				}, 5000);
+				setInterval(function () {
+					requestViewerCountProcessing();
+				}, viewerCountRequestRefresh);
+			}
 
 			function createElementFromHTML(htmlString) {
 				var div = document.createElement("div");
@@ -10883,8 +10899,15 @@
 				}
 			}
 
-			function send2Extension(data, uid = null) {
-				if (blockMessageSelecting || blockMessageSelecting3) {
+			function requestViewerCountProcessing(uid) {
+				if (!showviewercount) {
+					return;
+				}
+				send2Extension({ action: "requestViewerCount", value: { ttl: viewerCountRequestTtl } }, uid || null, true);
+			}
+
+			function send2Extension(data, uid = null, force) {
+				if (!force && (blockMessageSelecting || blockMessageSelecting3)) {
 					return;
 				}
 

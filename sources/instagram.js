@@ -358,6 +358,56 @@
 		return leaves;
 	}
 
+	function normalizeLiveText(text){
+		return (text || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+	}
+
+	function plainLiveText(text){
+		return normalizeLiveText((text || "")
+			.replace(/<[^>]*>/g, "")
+			.replace(/&nbsp;/gi, " ")
+			.replace(/&hellip;|&#8230;|&#x2026;/gi, "\u2026"));
+	}
+
+	function isLivePlaceholderText(text){
+		var value = plainLiveText(text);
+		return (value === "...") || (value === "\u2026");
+	}
+
+	function findLiveMessageLeaf(leaves, chatname){
+		var placeholderLeaf = null;
+		for (var i = leaves.length - 1; i >= 0; i--){
+			var leaf = leaves[i];
+			var text = normalizeLiveText(leaf.textContent || "");
+			if (!text){ continue; }
+			if (chatname && (text.toLowerCase() === chatname.toLowerCase())){ continue; }
+			if (isLivePlaceholderText(text)){
+				if (!placeholderLeaf){ placeholderLeaf = leaf; }
+				continue;
+			}
+			return leaf;
+		}
+		return placeholderLeaf;
+	}
+
+	function shouldDelayLivePlaceholder(row, chatmessage){
+		if (!isLivePlaceholderText(chatmessage)){
+			try {
+				if (row && row.dataset){ delete row.dataset.ssPlaceholderRetries; }
+			} catch(e){}
+			return false;
+		}
+		try {
+			if (!row || !row.dataset){ return false; }
+			var retries = parseInt(row.dataset.ssPlaceholderRetries || "0", 10) || 0;
+			if (retries < 4){
+				row.dataset.ssPlaceholderRetries = "" + (retries + 1);
+				return true;
+			}
+		} catch(e){}
+		return false;
+	}
+
 	function extractLiveBadges(row, profileImg, messageLeaf){
 		var badges = [];
 		var seen = {};
@@ -395,20 +445,13 @@
 
 		// Primary: row text begins with "<username>" - everything after is the
 		// message. Works regardless of how Instagram wraps the spans.
-		var fullText = (row.textContent || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+		var fullText = normalizeLiveText(row.textContent || "");
 		if (chatname && fullText.toLowerCase().indexOf(chatname.toLowerCase()) === 0){
 			var rest = fullText.slice(chatname.length).trim();
 			if (rest){
 				// Look for the message span so we can preserve inline HTML (emoji imgs).
 				var leaves = collectTextLeaves(row);
-				var msgLeaf = null;
-				for (var i = leaves.length - 1; i >= 0; i--){
-					var t = leaves[i].textContent.trim();
-					if (t.toLowerCase() !== chatname.toLowerCase()){
-						msgLeaf = leaves[i];
-						break;
-					}
-				}
+				var msgLeaf = findLiveMessageLeaf(leaves, chatname);
 				messageLeaf = msgLeaf;
 				chatmessage = msgLeaf ? getAllContentNodes(msgLeaf) : escapeHtml(rest);
 			}
@@ -420,7 +463,7 @@
 			if (leavesFb.length >= 2){
 				if (!chatname){ chatname = leavesFb[0].textContent.trim(); }
 				if (!chatmessage){
-					messageLeaf = leavesFb[leavesFb.length - 1];
+					messageLeaf = findLiveMessageLeaf(leavesFb, chatname) || leavesFb[leavesFb.length - 1];
 					chatmessage = getAllContentNodes(messageLeaf);
 				}
 			} else if (leavesFb.length === 1){
@@ -461,6 +504,7 @@
 		if (!isExtensionOn){ return false; }
 		var parsed = parseLiveRow(row);
 		if (!parsed){ return false; }
+		if (shouldDelayLivePlaceholder(row, parsed.chatmessage)){ return false; }
 
 		var data = {};
 		data.chatname = parsed.chatname;
