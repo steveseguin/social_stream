@@ -281,6 +281,15 @@
 		return false;
 	}
 
+	function isSsappContext(){
+		try {
+			if (window.ninjafy || window.electronApi || window.__ssapp){ return true; }
+			if (typeof window.__SSAPP_TAB_ID__ !== "undefined"){ return true; }
+			if (navigator.userAgent && navigator.userAgent.indexOf("Electron") !== -1){ return true; }
+		} catch(e){}
+		return false;
+	}
+
 	function nameFromAlt(img){
 		if (!img || !img.alt){ return ""; }
 		return (img.alt + "")
@@ -289,9 +298,11 @@
 			.trim();
 	}
 
-	// Walk up from an element until we hit a direct child of a <section>.
-	// That child is the "row" container.
+	// Walk up from an element until we find the comment row container.
 	function rowFromImage(img){
+		var section = img && img.closest ? img.closest("section") : null;
+		if (section && looksLikeRow(section)){ return section; }
+
 		var node = img;
 		while (node && node.parentElement && node.parentElement.nodeName !== "SECTION"){
 			node = node.parentElement;
@@ -570,6 +581,78 @@
 		return !reserved[parts[0].toLowerCase()];
 	}
 
+	var lastProfileLiveClickPath = "";
+	var lastProfileLiveClickTime = 0;
+
+	function isElementVisible(element){
+		if (!element){ return false; }
+		try {
+			var rect = element.getBoundingClientRect();
+			if (!rect || !rect.width || !rect.height){ return false; }
+			var style = window.getComputedStyle ? window.getComputedStyle(element) : null;
+			if (style && ((style.display === "none") || (style.visibility === "hidden") || (style.opacity === "0"))){ return false; }
+		} catch(e){}
+		return true;
+	}
+
+	function closestClickable(element){
+		var node = element;
+		while (node && node !== document.body){
+			if (node.getAttribute){
+				var role = node.getAttribute("role");
+				if ((role === "button") || (role === "link")){ return node; }
+			}
+			if (node.nodeName === "BUTTON" || node.nodeName === "A"){ return node; }
+			node = node.parentElement;
+		}
+		return null;
+	}
+
+	function clickElement(element){
+		if (!element){ return false; }
+		try { element.scrollIntoView({ block: "center", inline: "center" }); } catch(e){}
+		try {
+			element.dispatchEvent(new MouseEvent("mouseover", { view: window, bubbles: true, cancelable: true }));
+			element.dispatchEvent(new MouseEvent("mousedown", { view: window, bubbles: true, cancelable: true }));
+			element.dispatchEvent(new MouseEvent("mouseup", { view: window, bubbles: true, cancelable: true }));
+			element.dispatchEvent(new MouseEvent("click", { view: window, bubbles: true, cancelable: true }));
+			return true;
+		} catch(e){}
+		try {
+			element.click();
+			return true;
+		} catch(e){}
+		return false;
+	}
+
+	function findProfileLiveButton(){
+		var nodes = document.querySelectorAll("header span, header div, header button, header a");
+		for (var i = 0; i < nodes.length; i++){
+			var node = nodes[i];
+			if (((node.textContent || "").trim().toUpperCase()) !== "LIVE"){ continue; }
+			if (!isElementVisible(node)){ continue; }
+			var clickable = closestClickable(node);
+			if (!clickable || !isElementVisible(clickable)){ continue; }
+			if (!clickable.querySelector("img[alt*='profile picture'], img[alt*='profile photo'], canvas")){ continue; }
+			return clickable;
+		}
+		return null;
+	}
+
+	function maybeAutoOpenProfileLive(){
+		if (!isSsappContext()){ return false; }
+		if (isLivePage()){ return false; }
+		var path = window.location.pathname || "";
+		if (!isProfilePath(path)){ return false; }
+		var now = Date.now();
+		if ((lastProfileLiveClickPath === path) && ((now - lastProfileLiveClickTime) < 15000)){ return false; }
+		var button = findProfileLiveButton();
+		if (!button){ return false; }
+		lastProfileLiveClickPath = path;
+		lastProfileLiveClickTime = now;
+		return clickElement(button);
+	}
+
 	function isCommentPermalink(path){
 		return /^\/p\/[^\/]+\/c\/[^\/]+\/?$/i.test(path || "");
 	}
@@ -843,6 +926,7 @@
 					if (isLivePage()){
 						processLiveComments();
 					} else {
+						maybeAutoOpenProfileLive();
 						processFeed();
 					}
 				}
