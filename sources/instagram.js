@@ -9,6 +9,7 @@
 	var profileImageCache = {};
 	var profileImageCacheOrder = [];
 	var profileImageInflight = {};
+	var liveObserver = null;
 
 	function pushMessage(data) {
 		try {
@@ -400,7 +401,7 @@
 		try {
 			if (!row || !row.dataset){ return false; }
 			var retries = parseInt(row.dataset.ssPlaceholderRetries || "0", 10) || 0;
-			if (retries < 4){
+        if (retries < 20){
 				row.dataset.ssPlaceholderRetries = "" + (retries + 1);
 				return true;
 			}
@@ -524,8 +525,59 @@
 		return true;
 	}
 
+	function setupLiveObserver() {
+		if (liveObserver) { return; }
+		if (!isLivePage()) { return; }
+		var sections = document.querySelectorAll("section");
+		var targetSection = null;
+		for (var i = 0; i < sections.length; i++) {
+			var section = sections[i];
+			if (section.querySelectorAll(PROFILE_IMG_SELECTOR).length > 0) {
+				targetSection = section;
+				break;
+			}
+		}
+		if (!targetSection) { return; }
+		liveObserver = new MutationObserver(function(mutations) {
+			var rowsToReprocess = new Set();
+			mutations.forEach(function(mutation) {
+				if (mutation.type === "characterData") {
+					var parent = mutation.target.parentNode;
+					if (!parent) { return; }
+					var row = parent.closest("[data-ss-processed='live']");
+					if (row) { rowsToReprocess.add(row); }
+				}
+				if (mutation.type === "childList" && mutation.addedNodes.length) {
+					for (var j = 0; j < mutation.addedNodes.length; j++) {
+						var node = mutation.addedNodes[j];
+						if (node.nodeType !== 1) { continue; }
+						if (node.dataset && node.dataset.ssProcessed === "live") {
+							rowsToReprocess.add(node);
+						} else if (node.querySelectorAll) {
+							var rows = node.querySelectorAll("[data-ss-processed='live']");
+							for (var k = 0; k < rows.length; k++) { rowsToReprocess.add(rows[k]); }
+						}
+					}
+				}
+			});
+			if (rowsToReprocess.size) {
+				rowsToReprocess.forEach(function(row) {
+					try { delete row.dataset.ssProcessed; } catch(e){}
+				});
+				processLiveComments();
+			}
+		});
+		liveObserver.observe(targetSection, {
+			childList: true,
+			subtree: true,
+			characterData: true,
+			characterDataOldValue: true
+		});
+	}
+
 	function processLiveComments(){
 		if (!isExtensionOn){ return; }
+		if (isLivePage() && !liveObserver) { setupLiveObserver(); }
 		findLiveRows().forEach(function(row){
 			if (row.dataset && row.dataset.ssProcessed){ return; }
 			if (processLiveRow(row)){
@@ -963,26 +1015,30 @@
 
 	console.log("LOADED SocialStream EXTENSION");
 
-	setTimeout(function(){
-		setInterval(function(){
-			try {
-				if (isExtensionOn){
-					if (isLivePage()){
-						processLiveComments();
-					} else {
-						maybeAutoOpenProfileLive();
-						processFeed();
+		setTimeout(function(){
+			setInterval(function(){
+				try {
+					if (isExtensionOn){
+						if (isLivePage()){
+							processLiveComments();
+						} else {
+							maybeAutoOpenProfileLive();
+							processFeed();
+							if (liveObserver) {
+								liveObserver.disconnect();
+								liveObserver = null;
+							}
+						}
 					}
+				} catch(e){}
+
+				syncVideos();
+
+				if (isExtensionOn && (counter % 20 === 0)){
+					checkViewers();
 				}
-			} catch(e){}
-
-			syncVideos();
-
-			if (isExtensionOn && (counter % 20 === 0)){
-				checkViewers();
-			}
-			counter++;
-		}, 500);
-	}, 1500);
+				counter++;
+			}, 500);
+		}, 1500);
 
 })();
