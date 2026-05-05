@@ -2244,14 +2244,15 @@ TTS.initKitten = async function() {
             });
         }
         
-        // Configure WASM paths after loading
+        const kittenWasmPaths = {
+            wasm: baseUrl + '/thirdparty/kitten-tts/ort-wasm-simd-threaded.jsep.wasm'
+        };
+
+        // Configure the shared ONNX runtime too, for pages that reuse window.ort.
         if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
-            // Point to kitten-tts folder where we have all the required files
-            ort.env.wasm.wasmPaths = baseUrl + '/thirdparty/kitten-tts/';
+            ort.env.wasm.wasmPaths = baseUrl + '/thirdparty/';
             ort.env.wasm.numThreads = 1;
             ort.env.wasm.simd = false;
-            
-            console.log("Configured ONNX Runtime WASM paths for TTS:", ort.env.wasm.wasmPaths);
         }
         
         // Load Kitten TTS module - use absolute URL to avoid CORS issues
@@ -2267,8 +2268,7 @@ TTS.initKitten = async function() {
         const modelUrl = baseUrl + '/thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
         const voicesUrl = baseUrl + '/thirdparty/kitten-tts/voices.json';
         
-        // Initialize without wasmPath parameter - let ONNX runtime use its configured path
-        await TTS.kittenInstance.init(modelUrl, voicesUrl);
+        await TTS.kittenInstance.init(modelUrl, voicesUrl, kittenWasmPaths);
         
         // Get available voices
         TTS.kittenVoices = TTS.kittenInstance.getVoices();

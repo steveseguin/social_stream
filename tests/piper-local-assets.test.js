@@ -17,6 +17,7 @@ assert.ok(piperFile.includes("getVoiceAssetCandidates(this.voiceId"));
 assert.ok(piperFile.includes("return Object.values(LOCAL_VOICES_JSON.default);"));
 assert.ok(!properPiperFile.includes("https://steveseguin.github.io/piper"));
 assert.ok(properPiperFile.includes("const DEFAULT_REMOTE_PIPER_BASE = 'https://largefiles.socialstream.ninja/piper';"));
+assert.ok(properPiperFile.includes("const FALLBACK_REMOTE_PIPER_BASE = 'https://raw.githubusercontent.com/steveseguin/social_stream/beta/thirdparty/piper';"));
 assert.ok(properPiperFile.includes("window.SSN_PIPER_REMOTE_BASE || window.ProperPiperRemoteBaseUrl || window.PIPER_REMOTE_BASE_URL"));
 
 console.log("PASS piper local asset wiring");
