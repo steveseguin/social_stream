@@ -48,8 +48,18 @@
 
 	function getChannelSlugFromUrl() {
 		try {
-			var match = window.location.pathname.match(/^\/watch\/([^\/?#]+)/);
-			return match ? decodeURIComponent(match[1]) : "";
+			// Match /watch/{slug}, /overlay/chat/{token}?channel={slug},
+			// /overlay/chat-dock/{token}?channel={slug}, /u/{username}
+			var path = window.location.pathname;
+			var match =
+				path.match(/^\/watch\/([^\/?#]+)/) ||
+				path.match(/^\/u\/([^\/?#]+)/);
+			if (match) return decodeURIComponent(match[1]);
+			// Chat dock / overlay pages pass channel as query param
+			var params = new URLSearchParams(window.location.search);
+			var channel = params.get("channel");
+			if (channel) return decodeURIComponent(channel);
+			return "";
 		} catch (e) {
 			return "";
 		}
