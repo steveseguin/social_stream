@@ -1458,8 +1458,8 @@ const eventTemplates = {
       </label>
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
-          <input type="text" id="botReplyMessageCommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Triggering command" data-textsetting="botReplyMessageCommand${id}">
-          <label for="botReplyMessageCommand${id}">&gt; Triggering command. eg: !discord</label>
+          <input type="text" id="botReplyMessageCommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="!discord, !ds, !disc" data-textsetting="botReplyMessageCommand${id}">
+          <label for="botReplyMessageCommand${id}">&gt; Triggering command(s)</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="botReplyMessageValue${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue${id}">
@@ -1490,8 +1490,8 @@ const eventTemplates = {
       </label>
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
-          <input type="text" id="chatcommand${id}" class="textInput" autocomplete="off" placeholder="!someevent${id}" data-textsetting="chatcommand${id}">
-          <label for="chatcommand${id}">&gt; Chat Command</label>
+          <input type="text" id="chatcommand${id}" class="textInput" autocomplete="off" placeholder="!someevent${id}, !alias${id}" data-textsetting="chatcommand${id}">
+          <label for="chatcommand${id}">&gt; Chat Command(s)</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="chatwebhook${id}" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook${id}">
@@ -5780,8 +5780,8 @@ function createCommandEntry(command = '', url = '') {
     entry.className = 'custom-gif-command-entry';
     entry.innerHTML = `
         <div class="textInputContainer" style="width: 90%;">
-            <input type="text" class="textInput custom-command" value="${encodeHTML(command)}" autocomplete="off" placeholder="!command" data-textsetting="customGifCommand" />
-            <label><span data-translate="chat-command">&gt; Chat Command</span></label>
+            <input type="text" class="textInput custom-command" value="${encodeHTML(command)}" autocomplete="off" placeholder="!command, !alias" data-textsetting="customGifCommand" />
+            <label><span data-translate="chat-command">&gt; Chat Command(s)</span></label>
         </div>
         <div class="textInputContainer" style="width: 90%;">
             <input type="text" class="textInput custom-media-url" value="${encodeHTML(url)}" autocomplete="off" placeholder="https://media.giphy.com/media/..." data-textsetting="customGifUrl" />

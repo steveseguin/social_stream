@@ -20,6 +20,54 @@ var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 const fakeChatThrottleState = new Map();
 var sentimentAnalysisLoaded = false;
+const commandAliasCache = new Map();
+
+function getCommandAliases(commandString) {
+	if (!commandString) {
+		return [];
+	}
+	const cacheKey = String(commandString);
+	const cached = commandAliasCache.get(cacheKey);
+	if (cached) {
+		return cached;
+	}
+	const aliases = cacheKey.split(",").map(command => command.trim()).filter(Boolean).map(command => {
+		const escapedCommand = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		return {
+			command,
+			lower: command.toLowerCase(),
+			wordRegex: new RegExp(`^${escapedCommand}\\b|\\s${escapedCommand}\\b`, "i")
+		};
+	});
+	if (commandAliasCache.size > 500) {
+		commandAliasCache.clear();
+	}
+	commandAliasCache.set(cacheKey, aliases);
+	return aliases;
+}
+
+function commandAliasMatches(commandString, messageText, mode) {
+	if (typeof messageText === "undefined" || messageText === null) {
+		return false;
+	}
+	const aliases = getCommandAliases(commandString);
+	if (!aliases.length) {
+		return false;
+	}
+	const text = String(messageText);
+
+	if (mode === "exact") {
+		return aliases.some(alias => text === alias.command);
+	}
+	if (mode === "startsWith") {
+		const lowerText = text.toLowerCase();
+		return aliases.some(alias => lowerText.startsWith(alias.lower));
+	}
+	if (mode === "word") {
+		return aliases.some(alias => alias.wordRegex.test(text));
+	}
+	return aliases.some(alias => text.includes(alias.command));
+}
 
 // Spotify integration
 var spotify = null;
@@ -6241,8 +6289,9 @@ async function sendToDestinations(message) {
 	try {
 		if (settings.enableCustomGifCommands && settings["customGifCommands"]) {
 			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
+			const firstWord = message && message.chatmessage ? message.chatmessage.split(" ")[0] : "";
 			settings["customGifCommands"]["object"].forEach(values => {
-				if (message && message.chatmessage && values.url && values.command && message.chatmessage.split(" ")[0] === values.command) {
+				if (firstWord && values.url && values.command && commandAliasMatches(values.command, firstWord, "exact")) {
 					//  || "https://picsum.photos/1280/720?random="+values.command
 					sendTargetP2P({ ...message, ...{ contentimg: values.url } }, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
 				}
@@ -15061,7 +15110,7 @@ async function applyBotActions(data, tab = false) {
 
 				const isFullMatch = settings.botReplyMessageFull;
 				const messageText = data.textContent || data.chatmessage;
-				const messageMatches = isFullMatch ? messageText === command : messageText.includes(command);
+				const messageMatches = commandAliasMatches(command, messageText, isFullMatch ? "exact" : "contains");
 
 				if (!messageMatches) continue;
 
@@ -15095,10 +15144,7 @@ async function applyBotActions(data, tab = false) {
 
 				if (!event?.setting || !command || !note) continue;
 
-				const escapedCommand = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-				const regex = new RegExp(`^${escapedCommand}\\b|\\s${escapedCommand}\\b`, "i");
-
-				if (regex.test(data.chatmessage)) {
+				if (commandAliasMatches(command, data.chatmessage, "word")) {
 					triggerMidiNote(parseInt(note), device);
 					break;
 				}
@@ -15522,9 +15568,9 @@ async function applyBotActions(data, tab = false) {
 		for (const i of chatCommand) {
 			if (data.chatmessage && settings["chatevent" + i] && settings["chatcommand" + i] && settings["chatwebhook" + i]) {
 				let matches = false;
-				if (settings.chatwebhookstrict && data.chatmessage === settings["chatcommand" + i].textsetting) {
+				if (settings.chatwebhookstrict && commandAliasMatches(settings["chatcommand" + i].textsetting, data.chatmessage, "exact")) {
 					matches = true;
-				} else if (!settings.chatwebhookstrict && data.chatmessage.toLowerCase().startsWith(settings["chatcommand" + i].textsetting.toLowerCase())) {
+				} else if (!settings.chatwebhookstrict && commandAliasMatches(settings["chatcommand" + i].textsetting, data.chatmessage, "startsWith")) {
 					matches = true;
 				}
 
