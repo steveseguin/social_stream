@@ -13133,6 +13133,11 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 
 	if (isWebsocketSourceTabUrl(url)) {
 		if (relayMessageToWebsocketSourceTab(tab.id, data.response)) {
+			relayTabContext.storeMessage(data.response);
+			lastSentMessage = sanitizeMessageForTracking(data.response, false);
+			lastSentTimestamp = now;
+			lastMessageCounter = 0;
+			messageTimeout[tab.id] = now;
 			relayTabContext.markAutoIfNeeded();
 		}
 		return;

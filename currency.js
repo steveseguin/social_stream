@@ -3,7 +3,7 @@ var Currencies = { usd: { d: 2, s: "$" }, cad: { d: 2, s: "$" }, eur: { d: 2, s:
 function convertToUSD(valueStr, source = '') {
   // Currency conversion rates
   const currencyRates = {
-    EUR: 1.08,
+    EUR: 1.17,
     GBP: 1.26,
     JPY: 0.0067,
     CHF: 1.12,
@@ -14,10 +14,23 @@ function convertToUSD(valueStr, source = '') {
     NZD: 0.61,
     KRW: 0.00075,
     INR: 0.012,
-    BRL: 0.20,
+    BRL: 0.202,
     RUB: 0.011,
-    MXN: 0.057,
-    ARS: 0.00071,
+    MXN: 0.0575,
+    ARS: 0.000717,
+    BOB: 0.144,
+    CLP: 0.0011,
+    COP: 0.000268,
+    PEN: 0.286,
+    UYU: 0.0248,
+    PYG: 0.000161,
+    VES: 0.00203,
+    CRC: 0.0022,
+    GTQ: 0.131,
+    HNL: 0.0375,
+    DOP: 0.0168,
+    NIO: 0.0272,
+    PAB: 1.0,
     SEK: 0.093,
     NOK: 0.094,
     DKK: 0.14,
@@ -120,11 +133,44 @@ function convertToUSD(valueStr, source = '') {
   if (typeof valueStr !== 'string') valueStr = String(valueStr);
   valueStr = valueStr.trim();
   
-  // Extract numeric value, including negative numbers and decimal patterns
-  const numericMatch = valueStr.match(/-?[\d]+([.,][\d]+)?/);
+  function parseCurrencyAmount(rawValue) {
+    const match = String(rawValue).match(/-?\d[\d.,]*(?:\s\d{3})*/);
+    if (!match) return null;
+
+    let numericText = match[0].replace(/\s/g, '');
+    const lastComma = numericText.lastIndexOf(',');
+    const lastDot = numericText.lastIndexOf('.');
+    let decimalSeparator = '';
+
+    if (lastComma !== -1 && lastDot !== -1) {
+      decimalSeparator = lastComma > lastDot ? ',' : '.';
+    } else if (lastComma !== -1 || lastDot !== -1) {
+      const separator = lastComma !== -1 ? ',' : '.';
+      const lastSeparator = lastComma !== -1 ? lastComma : lastDot;
+      const decimals = numericText.length - lastSeparator - 1;
+      const count = (numericText.match(new RegExp('\\' + separator, 'g')) || []).length;
+      const integerPart = numericText.slice(0, lastSeparator).replace('-', '');
+      if (decimals > 0 && (decimals !== 3 || integerPart === '0') && count === 1) {
+        decimalSeparator = separator;
+      }
+    }
+
+    if (decimalSeparator) {
+      const thousandsSeparator = decimalSeparator === ',' ? '.' : ',';
+      numericText = numericText.split(thousandsSeparator).join('');
+      numericText = numericText.replace(decimalSeparator, '.');
+    } else {
+      numericText = numericText.replace(/[.,]/g, '');
+    }
+
+    return parseFloat(numericText);
+  }
+
+  // Extract numeric value, including negative numbers, decimals, and thousands separators.
+  const numericMatch = valueStr.match(/-?\d[\d.,]*(?:\s\d{3})*/);
   if (!numericMatch) return 0;
   
-  const amount = parseFloat(numericMatch[0].replace(',', '.'));
+  const amount = parseCurrencyAmount(valueStr);
   if (isNaN(amount)) return 0;
 
   // Clean the string for currency/type detection, preserve important symbols
@@ -138,7 +184,51 @@ function convertToUSD(valueStr, source = '') {
     AR: 'ARS',
     ARG: 'ARS',
     'ARGENTINE PESO': 'ARS',
-    'ARGENTINE PESOS': 'ARS'
+    'ARGENTINE PESOS': 'ARS',
+    BS: 'BOB',
+    BOB: 'BOB',
+    BOLIVIANO: 'BOB',
+    BOLIVIANOS: 'BOB',
+    CL: 'CLP',
+    CLP: 'CLP',
+    'CHILEAN PESO': 'CLP',
+    'CHILEAN PESOS': 'CLP',
+    COL: 'COP',
+    COP: 'COP',
+    'COLOMBIAN PESO': 'COP',
+    'COLOMBIAN PESOS': 'COP',
+    PEN: 'PEN',
+    SOL: 'PEN',
+    SOLES: 'PEN',
+    UYU: 'UYU',
+    URU: 'UYU',
+    'URUGUAYAN PESO': 'UYU',
+    'URUGUAYAN PESOS': 'UYU',
+    PYG: 'PYG',
+    GUARANI: 'PYG',
+    GUARANIES: 'PYG',
+    VES: 'VES',
+    VEF: 'VES',
+    BOLIVAR: 'VES',
+    BOLIVARES: 'VES',
+    CRC: 'CRC',
+    COLON: 'CRC',
+    COLONES: 'CRC',
+    GTQ: 'GTQ',
+    QUETZAL: 'GTQ',
+    QUETZALES: 'GTQ',
+    HNL: 'HNL',
+    LEMPIRA: 'HNL',
+    LEMPIRAS: 'HNL',
+    DOP: 'DOP',
+    'DOMINICAN PESO': 'DOP',
+    'DOMINICAN PESOS': 'DOP',
+    NIO: 'NIO',
+    CORDOBA: 'NIO',
+    CORDOBAS: 'NIO',
+    PAB: 'PAB',
+    BALBOA: 'PAB',
+    BALBOAS: 'PAB'
   };
 
   function hasCurrencyTerm(term) {
@@ -183,6 +273,9 @@ function convertToUSD(valueStr, source = '') {
   if (valueStr.includes('₹')) return amount * currencyRates.INR;
   if (valueStr.includes('R$')) return amount * currencyRates.BRL;
   if (valueStr.includes('₽')) return amount * currencyRates.RUB;
+  if (/S\/\.?/i.test(valueStr)) return amount * currencyRates.PEN;
+  if (valueStr.includes('₲')) return amount * currencyRates.PYG;
+  if (/\$U/i.test(valueStr)) return amount * currencyRates.UYU;
   
   // Default to USD if no specific currency found
   return amount;
