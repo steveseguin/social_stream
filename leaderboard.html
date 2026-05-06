@@ -1004,22 +1004,68 @@
             return 0;
         }
 
+        function isDonationMarkerValue(value) {
+            if (value === undefined || value === null || value === false || value === true) {
+                return false;
+            }
+            if (typeof value === 'number') {
+                return !isNaN(value) && value > 0;
+            }
+            const text = String(value).trim().toLowerCase();
+            return !!(text && text !== 'false' && text !== 'null' && text !== 'undefined' && text !== 'none' && text !== '0');
+        }
+
+        function getDonationMarker(data) {
+            if (!data || typeof data !== 'object') {
+                return null;
+            }
+            if (isDonationMarkerValue(data.hasDonation)) {
+                return data.hasDonation;
+            }
+            if (isDonationMarkerValue(data.donation)) {
+                return data.donation;
+            }
+            return null;
+        }
+
+        function getDonationAmount(data) {
+            const marker = getDonationMarker(data);
+            if (!isDonationMarkerValue(marker)) {
+                return 0;
+            }
+
+            const explicitValue = parseNumericValue(data.donoValue);
+            if (explicitValue > 0) {
+                return explicitValue;
+            }
+
+            if (typeof marker === 'number') {
+                return marker > 0 ? marker : 0;
+            }
+
+            const source = data.type ? String(data.type).toLowerCase() : '';
+            const amount = (typeof convertToUSD === 'function')
+                ? convertToUSD(marker, source)
+                : parseNumericValue(marker);
+
+            return (!isNaN(amount) && amount > 0) ? amount : 0;
+        }
+
         function getEngagementScore(user) {
             if (!user) return 0;
             return user.messageCount + (user.eventCount * 10) + (user.bitsOrCoins * 0.1);
         }
 
         function getCombinedScore(user, period) {
-            const engagementScore = getEngagementScore(user);
             const giftVal = showGiftValue ? user.giftValue : (user.giftsGiven * 50);
 
             if (period === 'day') {
-                return (user.dailyDonations * 100) + (user.dailyGifts * 50) + engagementScore;
+                return (user.dailyDonations * 100) + (user.dailyGifts * 50);
             }
             if (period === 'week') {
-                return (user.weeklyDonations * 100) + (user.weeklyGifts * 50) + engagementScore;
+                return (user.weeklyDonations * 100) + (user.weeklyGifts * 50);
             }
-            return (user.donations * 100) + giftVal + engagementScore;
+            return (user.donations * 100) + giftVal;
         }
         
         function handleGiftEvent(user, data, normalizedEvent) {
@@ -1229,9 +1275,9 @@
                             break;
                         case 'combined':
                         default:
-                            titleEl.textContent = period === 'day' ? 'Top Contributors Today' : 
+                            titleEl.textContent = period === 'day' ? 'Top Contributors Today' :
                                                 (period === 'week' ? 'Top Contributors This Week' : 'Top Contributors');
-                            subtitleEl.textContent = 'Gifts & Donations';
+                            subtitleEl.textContent = 'Gifts & Donations Score';
                             break;
                     }
                 }
@@ -1554,7 +1600,7 @@
                     case 'recent_donations':
                         return 'recent donation';
                     case 'combined':
-                        return period === 'day' ? 'today' : (period === 'week' ? 'this week' : 'total');
+                        return period === 'day' ? 'score today' : (period === 'week' ? 'score this week' : 'score');
                     default:
                         return 'score';
                 }
@@ -1739,29 +1785,16 @@
             if (data.verified) user.isVerified = true;
 
 
-            // Always process donations for topbar layout or when explicitly enabled
-            const rawDonationValue = data.hasDonation || data.donoValue;
+            // Only positive hasDonation/donation values count as donations.
+            const donationAmount = getDonationAmount(data);
             const isGiftEvent = normalizedEvent && GIFT_EVENT_TYPES.has(normalizedEvent);
 
-            if (rawDonationValue && !isGiftEvent && (showDonations || layout === 'topbar')) {
+            if (donationAmount > 0 && !isGiftEvent && (showDonations || layout === 'topbar')) {
                 try {
-                    const source = data.type ? data.type.toLowerCase() : '';
-                    let donationAmount = 0;
-                    
-                    if (typeof rawDonationValue === 'number') {
-                        donationAmount = rawDonationValue;
-                    } else {
-                        donationAmount = convertToUSD(rawDonationValue, source);
-                    }
-                    
-                    if (!isNaN(donationAmount) && donationAmount > 0) {
-                        user.donations += donationAmount;
-                        user.dailyDonations += donationAmount;
-                        user.weeklyDonations += donationAmount;
-                        
-                        // Update last donation time
-                        user.lastDonationTime = Date.now();
-                    }
+                    user.donations += donationAmount;
+                    user.dailyDonations += donationAmount;
+                    user.weeklyDonations += donationAmount;
+                    user.lastDonationTime = Date.now();
                 } catch (error) {
                     console.error(`Error processing donation:`, error);
                 }
@@ -1804,13 +1837,13 @@
                                            period === 'week' ? user.weeklyGifts > 0 : 
                                            user.giftsGiven > 0;
                                 case 'combined':
-                                    // Show users who have donated OR given gifts
+                                    // Show users who have donated or given gifts; engagement has its own mode.
                                     if (period === 'day') {
-                                        return user.dailyDonations > 0 || user.dailyGifts > 0 || user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
+                                        return user.dailyDonations > 0 || user.dailyGifts > 0;
                                     } else if (period === 'week') {
-                                        return user.weeklyDonations > 0 || user.weeklyGifts > 0 || user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
+                                        return user.weeklyDonations > 0 || user.weeklyGifts > 0;
                                     }
-                                    return user.donations > 0 || user.giftsGiven > 0 || user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
+                                    return user.donations > 0 || user.giftsGiven > 0;
                                 case 'engagement':
                                     // For engagement, show active users
                                     return user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
@@ -1896,10 +1929,10 @@
                         if (scoreEl && showScore) {
                             const scoreValue = user.score;
                             // Format as currency for donation/gift values
-                            if (layout === 'topbar' && (category === 'donations' || (category === 'gifts' && showGiftValue) || category === 'combined')) {
+                            if (layout === 'topbar' && (category === 'donations' || (category === 'gifts' && showGiftValue))) {
                                 scoreEl.textContent = scoreValue > 0 ? `$${scoreValue.toFixed(2)}` : '$0.00';
                             } else {
-                                scoreEl.textContent = scoreValue.toLocaleString();
+                                scoreEl.textContent = Math.round(scoreValue).toLocaleString();
                             }
                         }
                         
@@ -1964,11 +1997,7 @@
                                     ? (period === 'day' ? `$${user.dailyGiftValue.toFixed(2)}` : 
                                        period === 'week' ? `$${user.weeklyGiftValue.toFixed(2)}` : 
                                        `$${user.giftValue.toFixed(2)}`)
-                                    : layout === 'topbar' && category === 'combined'
-                                    ? (period === 'day' ? `$${(user.dailyDonations + user.dailyGiftValue).toFixed(2)}` : 
-                                       period === 'week' ? `$${(user.weeklyDonations + user.weeklyGiftValue).toFixed(2)}` : 
-                                       `$${(user.donations + user.giftValue).toFixed(2)}`)
-                                    : user.score.toLocaleString()
+                                    : Math.round(user.score).toLocaleString()
                             }</div>
                             <div class="score-label">${getScoreLabel()}</div>
                         </div>` : ''}
@@ -2087,7 +2116,7 @@
                             case 'combined':
                             default: {
                                 const combinedScore = getCombinedScore(user, scorePeriod);
-                                scoreDisplay = `$${combinedScore.toFixed(2)}`;
+                                scoreDisplay = `${Math.round(combinedScore).toLocaleString()} score`;
                                 break;
                             }
                         }
@@ -2111,13 +2140,13 @@
                 
                 // Today's combined top contributors
                 const todayUsers = allUsers
-                    .filter(u => u.dailyDonations > 0 || u.dailyGifts > 0 || getEngagementScore(u) > 0)
+                    .filter(u => u.dailyDonations > 0 || u.dailyGifts > 0)
                     .sort((a, b) => getCombinedScore(b, 'day') - getCombinedScore(a, 'day'))
                     .slice(0, topCount);
-                    
+
                 // This week's combined top contributors
                 const weekUsers = includeWeekly ? allUsers
-                    .filter(u => u.weeklyDonations > 0 || u.weeklyGifts > 0 || getEngagementScore(u) > 0)
+                    .filter(u => u.weeklyDonations > 0 || u.weeklyGifts > 0)
                     .sort((a, b) => getCombinedScore(b, 'week') - getCombinedScore(a, 'week'))
                     .slice(0, topCount) : [];
                     

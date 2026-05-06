@@ -371,7 +371,6 @@ Social Stream Ninja supports capturing live chat from a wide range of platforms:
 - **Trovo.live**
 - **Dlive.tv**
 - **Picarto.tv**
-- **Mobcrush**
 - **Odysee.com**
 - **Minnit.chat**
 - **Livepush.io**
@@ -393,11 +392,9 @@ Social Stream Ninja supports capturing live chat from a wide range of platforms:
 - **Rooter.gg**
 - **Loco.gg**
 - **Buzzit.ca**
-- **Afreecatv.com**
 - **Nonolive.com**
 - **StageTEN.tv**
 - **Live.vkplay.ru**
-- **Arena.tv**
 - **Blaze.stream**
 - **Bandlab.com**
 - **Threads.net**

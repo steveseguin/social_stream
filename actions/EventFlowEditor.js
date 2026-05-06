@@ -2897,15 +2897,15 @@ class EventFlowEditor {
 				this.populateMIDIInputDevices('prop-deviceId', node.config.deviceId);
 				break;
 			case 'fromSource':
-				const isCustomSource = node.config.source !== undefined && node.config.source !== null && !['*', 'afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
+				const isCustomSource = node.config.source !== undefined && node.config.source !== null && !['*', 'amazon', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
   'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
   'kiwiirc', 'kofi', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
-  'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'mobcrush', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
+  'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
   'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
-  'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive', 'soopliveco',
+  'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive',
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
   'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
@@ -2914,15 +2914,15 @@ class EventFlowEditor {
 				
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
 						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
-						    ${['afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
+						    ${['amazon', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
   'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
   'kiwiirc', 'kofi', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
-  'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'mobcrush', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
+  'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
   'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
-  'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive', 'soopliveco',
+  'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive',
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
   'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
@@ -3909,7 +3909,6 @@ class EventFlowEditor {
 					{ value: 'teams', label: 'Teams' },
 					{ value: 'slack', label: 'Slack' },
 					{ value: 'vimeo', label: 'Vimeo' },
-					{ value: 'afreecatv', label: 'AfreecaTV' },
 					{ value: 'bigo', label: 'Bigo Live' },
 					{ value: 'bilibili', label: 'Bilibili' },
 					{ value: 'chzzk', label: 'CHZZK' },
@@ -3930,7 +3929,7 @@ class EventFlowEditor {
 							<input type="text" class="property-input" id="prop-destination-custom" 
 								   value="${isCustomSend ? node.config.destination : ''}" 
 								   style="display: ${currentSendDestination === 'custom' ? 'block' : 'none'}; margin-top: 5px;"
-								   placeholder="Enter custom destination (e.g., 'arenasocial', 'channel_name')">
+								   placeholder="Enter custom destination (e.g., 'youtube', 'channel_name')">
                     <div class="property-help">Send generated messages (e.g., "Thank you" for donations, announcements, bot responses).</div>
                 </div>
                 <div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || 'Thank you {username}!'}</textarea><div class="property-help">Use {username}, {message}, {source} placeholders</div></div>
@@ -3974,7 +3973,6 @@ class EventFlowEditor {
 					{ value: 'teams', label: 'Teams' },
 					{ value: 'slack', label: 'Slack' },
 					{ value: 'vimeo', label: 'Vimeo' },
-					{ value: 'afreecatv', label: 'AfreecaTV' },
 					{ value: 'bigo', label: 'Bigo Live' },
 					{ value: 'bilibili', label: 'Bilibili' },
 					{ value: 'chzzk', label: 'CHZZK' },
@@ -3995,7 +3993,7 @@ class EventFlowEditor {
 							<input type="text" class="property-input" id="prop-destination-custom" 
 								   value="${isCustomRelayDest ? node.config.destination : ''}" 
 								   style="display: ${currentDestination === 'custom' ? 'block' : 'none'}; margin-top: 5px;"
-								   placeholder="Enter custom destination (e.g., 'arenasocial', 'channel_name')">
+								   placeholder="Enter custom destination (e.g., 'youtube', 'channel_name')">
                     <div class="property-help">Relays chat messages to other platforms. Source is always excluded to prevent loops.</div>
                 </div>
                 <div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || '[{source}] {username}: {message}'}</textarea></div>

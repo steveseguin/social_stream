@@ -4933,18 +4933,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				// }
 			}
 		} else if ("inject" in request) {
-			if (request.inject == "mobcrush") {
-				chrome.webNavigation.getAllFrames({ tabId: sender.tab.id }, frames => {
-					frames.forEach(f => {
-						if (f.frameId && f.frameType === "sub_frame" && f.url.includes("https://www.mobcrush.com/")) {
-							chrome.tabs.executeScript(sender.tab.id, {
-								frameId: f.frameId,
-								file: "mobcrush.js"
-							});
-						}
-					});
-				});
-			}
 			sendResponse({ state: isExtensionOn });
 		} else if ("delete" in request) {
 			sendResponse({ state: isExtensionOn });

@@ -68,11 +68,26 @@ function toDataURL(url, callback) {
 		var nameColor = "";
 		var name="";
 		try {
-			name = ele.querySelector(".channel-text").textContent.trim();
-			name = escapeHtml(name);
-			
-			var style = getComputedStyle(ele.querySelector(".channel-text"));
-			nameColor = style.color;
+			var nameEle = ele.querySelector(".channel-text");
+			if (nameEle){
+				name = nameEle.textContent.trim();
+				name = escapeHtml(name);
+				
+				var style = getComputedStyle(nameEle);
+				nameColor = style.color;
+			} else {
+				nameEle = ele.querySelector(".username [user_nick]");
+				if (nameEle){
+					name = nameEle.getAttribute("user_nick") || nameEle.textContent.trim();
+					name = escapeHtml(name);
+					var colorEle = ele.querySelector(".username .author[data-color]");
+					if (colorEle && colorEle.dataset && colorEle.dataset.color){
+						nameColor = "#" + colorEle.dataset.color;
+					} else if (nameEle.dataset && nameEle.dataset.color){
+						nameColor = "#" + nameEle.dataset.color;
+					}
+				}
+			}
 		} catch(e){
 		//	console.warn(e);
 		}
@@ -80,7 +95,11 @@ function toDataURL(url, callback) {
 		
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector("span[type^='body'][color='label/labelSecondary']"));
+			var msgEle = ele.querySelector("span[type^='body'][color='label/labelSecondary']");
+			if (!msgEle){
+				msgEle = ele.querySelector(".message-text");
+			}
+			msg = getAllContentNodes(msgEle);
 		} catch(e){
 		//	console.warn(e);
 		}

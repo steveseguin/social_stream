@@ -453,6 +453,32 @@ try {
 		});
 	}
 
+	function addYouTubeStatusEvent(message) {
+		try {
+			const eventsList = document.getElementById('events-list');
+			if (!eventsList || !message) {
+				return;
+			}
+			const eventItem = document.createElement('div');
+			eventItem.className = 'event-item';
+			eventItem.textContent = message;
+			eventsList.insertBefore(eventItem, eventsList.firstChild);
+		} catch (error) {
+			console.warn('Failed to render YouTube status event:', error);
+		}
+	}
+
+	function reportOutboundChatFailure(message) {
+		const statusMessage = message || 'YouTube host chat was not sent.';
+		console.warn(statusMessage);
+		addYouTubeStatusEvent(statusMessage);
+		try {
+			if (typeof window.ssWssNotify === 'function') {
+				window.ssWssNotify('error', statusMessage, { code: 'youtube_send_not_ready' });
+			}
+		} catch (_) {}
+	}
+
 	function markEmojiAssetsReady() {
 		if (emojiAssetsReady) {
 			return;
@@ -2507,7 +2533,11 @@ function enableBackgroundKeepAlive() {
 		const inputElement = document.querySelector('#input-text');
 		if (!inputElement) return;
 		var msg = inputElement.value.trim();
-		if (!msg || !liveChatId) {
+		if (!msg) {
+			return;
+		}
+		if (!liveChatId) {
+			reportOutboundChatFailure('YouTube host chat was not sent: no active live chat is connected.');
 			return;
 		}
 		handleSendMessage.isSending = true;
@@ -4399,11 +4429,17 @@ function enableBackgroundKeepAlive() {
 	// Handle messages from extension/dock via content script
 	{
 		const extensionMessageHandler = function(e) {
-			if (e.detail && e.detail.message && liveChatId) {
-				sendChatMessage(e.detail.message).catch(error => {
-					console.error('Failed to send extension message:', error);
-				});
+			if (!e.detail || !e.detail.message) {
+				return;
 			}
+			if (!liveChatId) {
+				reportOutboundChatFailure('YouTube host chat was not sent: no active live chat is connected.');
+				return;
+			}
+			sendChatMessage(e.detail.message).catch(error => {
+				console.error('Failed to send extension message:', error);
+				reportOutboundChatFailure('YouTube host chat failed to send: ' + (error && error.message ? error.message : error));
+			});
 		};
 		window.addEventListener('sendExtensionMessage', extensionMessageHandler);
 		registerCleanup(() => window.removeEventListener('sendExtensionMessage', extensionMessageHandler));

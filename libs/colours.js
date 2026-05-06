@@ -276,10 +276,6 @@ function getColorFromType(source) {
             return "#00A67E"; // OpenAI’s older primary green (or #8B5CF6 from new branding)
         
         // Lesser-known platforms: best guesses from logos or branding
-        case "afreecatv":
-            return "#0055C9"; 
-        case "arena":
-            return "#A200FF";
         case "bandlab":
             return "#FF0000";
         case "beamstream":
@@ -399,7 +395,6 @@ function getColorFromType(source) {
         case "socialstream":
             return "#BADA55";
         case "sooplive":
-        case "soopliveco":
             return "#FF66CC";
         case "stageten":
             return "#FF9800";
