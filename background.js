@@ -31,14 +31,18 @@ function getCommandAliases(commandString) {
 	if (cached) {
 		return cached;
 	}
-	const aliases = cacheKey.split(",").map(command => command.trim()).filter(Boolean).map(command => {
-		const escapedCommand = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-		return {
-			command,
-			lower: command.toLowerCase(),
-			wordRegex: new RegExp(`^${escapedCommand}\\b|\\s${escapedCommand}\\b`, "i")
-		};
-	});
+	const aliases = cacheKey
+		.split(",")
+		.map(command => command.trim())
+		.filter(Boolean)
+		.map(command => {
+			const escapedCommand = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			return {
+				command,
+				lower: command.toLowerCase(),
+				wordRegex: new RegExp(`^${escapedCommand}\\b|\\s${escapedCommand}\\b`, "i")
+			};
+		});
 	if (commandAliasCache.size > 500) {
 		commandAliasCache.clear();
 	}
