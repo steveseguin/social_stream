@@ -2,6 +2,43 @@
 	 
 	
 	var isExtensionOn = true;
+	function isSSAppContext() {
+		return !!(
+			window.ninjafy ||
+			window.electronApi ||
+			window.__ssapp ||
+			typeof window.__SSAPP_TAB_ID__ !== "undefined"
+		);
+	}
+
+	function normalizeSoopLiveUrl() {
+		if (!isSSAppContext()) {
+			return false;
+		}
+
+		try {
+			var url = new URL(window.location.href);
+			if (url.hostname === "www.sooplive.com" && url.pathname.indexOf("/chat/") === 0) {
+				var username = url.pathname.replace(/^\/chat\/+/, "").split("/")[0];
+				if (username) {
+					window.location.replace("https://play.sooplive.com/" + username + "/");
+					return true;
+				}
+			}
+
+			if (url.hostname === "play.sooplive.com" && url.pathname.length > 1 && url.searchParams.get("vtype") !== "chat") {
+				url.searchParams.set("vtype", "chat");
+				window.location.replace(url.toString());
+				return true;
+			}
+		} catch (e) {}
+
+		return false;
+	}
+
+	if (normalizeSoopLiveUrl()) {
+		return;
+	}
 function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
