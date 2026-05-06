@@ -353,8 +353,10 @@
 				if ((el.children[c].textContent || "").trim().length){ childHasText = true; break; }
 			}
 			if (childHasText){ continue; }
-			var text = (el.textContent || "").trim();
-			if (text){ leaves.push(el); }
+		var text = (el.textContent || "").trim();
+		if (!text){ continue; }
+		if (isLiveUIMarkerText(text)){ continue; }
+		leaves.push(el);
 		}
 		return leaves;
 	}
@@ -372,7 +374,15 @@
 
 	function isLivePlaceholderText(text){
 		var value = plainLiveText(text);
-		return (value === "...") || (value === "\u2026");
+		return (value === "...") || (value === "\u2026") || (value === "\u22EF");
+	}
+
+	function isLiveUIMarkerText(text){
+		var value = normalizeLiveText(text);
+		if (!value){ return false; }
+		if ((value === "\u22EF") || (value === "\u2026")){ return true; }
+		if (/^\.{2,}$/.test(value)){ return true; }
+		return false;
 	}
 
 	function findLiveMessageLeaf(leaves, chatname){
