@@ -16,7 +16,8 @@ function convertToUSD(valueStr, source = '') {
     INR: 0.012,
     BRL: 0.20,
     RUB: 0.011,
-    MXN: 0.058,
+    MXN: 0.057,
+    ARS: 0.00071,
     SEK: 0.093,
     NOK: 0.094,
     DKK: 0.14,
@@ -129,6 +130,35 @@ function convertToUSD(valueStr, source = '') {
   // Clean the string for currency/type detection, preserve important symbols
   const cleanValue = valueStr.toLowerCase().replace(/[$€£¥₩₹₽]/g, '').replace(/[^\w\s]/g, ' ').trim();
   
+  const currencyAliases = {
+    MX: 'MXN',
+    MEX: 'MXN',
+    'MEXICAN PESO': 'MXN',
+    'MEXICAN PESOS': 'MXN',
+    AR: 'ARS',
+    ARG: 'ARS',
+    'ARGENTINE PESO': 'ARS',
+    'ARGENTINE PESOS': 'ARS'
+  };
+
+  function hasCurrencyTerm(term) {
+    const escapedTerm = String(term).toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('(^|\\s|\\d)' + escapedTerm + '(?=\\s|\\d|$)').test(cleanValue);
+  }
+
+  // Check fiat currencies and common YouTube display aliases before platform words like "super chat".
+  for (const [alias, currency] of Object.entries(currencyAliases)) {
+    if (currencyRates[currency] && hasCurrencyTerm(alias)) {
+      return amount * currencyRates[currency];
+    }
+  }
+
+  for (const [currency, rate] of Object.entries(currencyRates)) {
+    if (hasCurrencyTerm(currency.toLowerCase())) {
+      return amount * rate;
+    }
+  }
+
   // Check for platform-specific currencies first
   if (source && platformAdjustments[source]) {
     for (const [currency, rate] of Object.entries(platformAdjustments[source])) {
@@ -141,13 +171,6 @@ function convertToUSD(valueStr, source = '') {
   // Check for virtual currencies
   for (const [currency, rate] of Object.entries(virtualCurrencies)) {
     if (cleanValue.includes(currency)) {
-      return amount * rate;
-    }
-  }
-  
-  // Check for fiat currencies
-  for (const [currency, rate] of Object.entries(currencyRates)) {
-    if (cleanValue.includes(currency.toLowerCase())) {
       return amount * rate;
     }
   }
