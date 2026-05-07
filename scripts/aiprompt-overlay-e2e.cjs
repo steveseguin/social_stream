@@ -13,8 +13,9 @@ const fs = require('fs');
 const path = require('path');
 const { startStaticServer } = require('./playwright-static-server.cjs');
 
-const ENDPOINT = process.argv[2] || process.env.AIPROMPT_ENDPOINT || 'http://10.0.0.214:8000/v1/chat/completions';
+const ENDPOINT = process.argv[2] || process.env.AIPROMPT_ENDPOINT || 'https://llm.socialstream.ninja/v1/chat/completions';
 const MODEL = process.argv[3] || process.env.AIPROMPT_MODEL || 'qwen3.6-35b-a3b-fp8';
+const API_KEY = process.argv[5] || process.env.AIPROMPT_API_KEY || 'test_token';
 
 const ROOT = process.cwd();
 const HOST = '127.0.0.1';
@@ -41,6 +42,20 @@ function extractHtml(text) {
   const end = lower.lastIndexOf('</html>');
   if (start >= 0 && end > start) return text.slice(start, end + 7).trim();
   return '';
+}
+
+function validateGeneratedHtmlContract(html) {
+  const errors = [];
+  if (!/window\.handleOverlayPayload\s*=/.test(html)) errors.push('missing window.handleOverlayPayload');
+  if (!/dataReceived[\s\S]{0,160}overlayNinja/.test(html)) errors.push('missing dataReceived.overlayNinja listener');
+  if (/vdo\.socialstream\.ninja|ssn_bridge/i.test(html)) {
+    if (!/params\.get\((["'])label\1\)\s*\|\|\s*(["'])dock\2/.test(html)) errors.push('bridge label does not default to dock');
+    if (/params\.get\((["'])label\1\)\s*\|\|\s*["'](?!dock["'])/i.test(html)) errors.push('bridge has unsafe non-dock fallback label');
+    if (/(?:random|date\.now\(\)|math\.random\(\))[\s\S]{0,80}label|label[\s\S]{0,80}(?:random|date\.now\(\)|math\.random\(\))/i.test(html)) errors.push('bridge label appears random/time-based');
+  } else {
+    errors.push('missing SSN bridge');
+  }
+  return errors;
 }
 
 async function generate({ request, starterHtml }) {
@@ -70,7 +85,7 @@ async function generate({ request, starterHtml }) {
   const started = Date.now();
   const res = await fetch(ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + API_KEY },
     body: JSON.stringify(body)
   });
   if (!res.ok) throw new Error('vLLM HTTP ' + res.status + ': ' + (await res.text()).slice(0, 200));
@@ -280,6 +295,32 @@ const TESTS = [
         }
       }
     ]
+  },
+  {
+    name: 'auction-widget',
+    request: 'I sell on Whatnot and need a sleek auction widget for OBS. Show the current item, bid, who is winning, bid count, and countdown timer. Make sure it updates live.',
+    assertions: [
+      {
+        name: 'renders initial auction_update snapshot',
+        async run(page) {
+          await sendPayload(page, { type: 'whatnot', event: 'auction_update', meta: { status: 'winning', statusText: 'Ava is Winning!', bidder: 'Ava', title: '500 Spot Silver Slab Mega Set - #191', category: 'Coins, U.S. currency', price: 88, priceText: '$88', bids: 7, bidsText: '7 Bids', timer: '00:19' } });
+          const seen = (await waitForText(page, t => t.indexOf('silver slab') >= 0 && t.indexOf('ava') >= 0 && t.indexOf('$88') >= 0 && t.indexOf('00:19') >= 0, 6000)).toLowerCase();
+          for (const token of ['silver slab', 'ava', '$88', '00:19']) {
+            if (seen.indexOf(token) < 0) throw new Error('missing auction token ' + token);
+          }
+        }
+      },
+      {
+        name: 'updates same auction item when only bid fields change',
+        async run(page) {
+          await sendPayload(page, { type: 'whatnot', event: 'auction_update', meta: { status: 'winning', statusText: 'Ben is Winning!', bidder: 'Ben', title: '500 Spot Silver Slab Mega Set - #191', category: 'Coins, U.S. currency', price: 95, priceText: '$95', bids: 8, bidsText: '8 Bids', timer: '00:12' } });
+          const seen = (await waitForText(page, t => t.indexOf('ben') >= 0 && t.indexOf('$95') >= 0 && t.indexOf('00:12') >= 0, 6000)).toLowerCase();
+          for (const token of ['ben', '$95', '00:12']) {
+            if (seen.indexOf(token) < 0) throw new Error('missing updated auction token ' + token);
+          }
+        }
+      }
+    ]
   }
 ];
 
@@ -312,6 +353,12 @@ async function runRound(label) {
       summary.push({ name: test.name, extracted: false });
       continue;
     }
+    const contractErrors = validateGeneratedHtmlContract(gen.html);
+    if (contractErrors.length) {
+      console.log('  [FAIL] generated HTML contract: ' + contractErrors.join('; '));
+      summary.push({ name: test.name, contract: false, contractErrors });
+      continue;
+    }
 
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
@@ -342,6 +389,7 @@ async function runRound(label) {
   for (const s of summary) {
     if (s.gen === false) { console.log('  ' + s.name + ': generation error'); continue; }
     if (s.extracted === false) { console.log('  ' + s.name + ': no HTML extracted'); continue; }
+    if (s.contract === false) { console.log('  ' + s.name + ': contract failed'); continue; }
     totalPass += s.passes; totalChecks += s.total;
     console.log('  ' + s.name + ': ' + s.passes + '/' + s.total);
   }

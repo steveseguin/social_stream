@@ -304,6 +304,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `ttskey` or `googlettskey` | string | Google Cloud TTS API key |
 | `elevenlabskey` | string | ElevenLabs TTS API key |
 | `speechifykey` | string | Speechify TTS API key |
+| `geminikey` | string | Gemini TTS API key |
 
 ### Google Cloud TTS Parameters
 
@@ -313,6 +314,15 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `googlepitch` | float | Google TTS pitch adjustment |
 | `googleaudioprofile` | string | Audio profile (e.g., "handset-class-device") |
 | `voicegoogle` | string | Google TTS voice name (e.g., "en-GB-Standard-A") |
+
+### Gemini TTS Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `geminimodel` | string | Gemini TTS model (e.g., "gemini-2.5-flash-preview-tts") |
+| `voicegemini` | string | Gemini prebuilt voice name (e.g., "Kore") |
+| `geminilang` | BCP-47 code | Optional Gemini speech language code (e.g., "th-TH") |
+| `geministyle` or `geminiprompt` | string | Gemini-only style instructions prepended to the TTS prompt |
 
 ### ElevenLabs TTS Parameters
 

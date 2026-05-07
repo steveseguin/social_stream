@@ -156,6 +156,7 @@ TTS.openAISettings = {
 TTS.geminiSettings = {
     model: "gemini-2.5-flash-preview-tts",
     voice: "Kore",
+    style: false,
     sampleRate: 24000
 };
 
@@ -654,6 +655,7 @@ TTS.configure = function(urlParams) {
     TTS.geminiSettings.model = urlParams.get("geminimodel") || TTS.geminiSettings.model;
     TTS.geminiSettings.voice = urlParams.get("voicegemini") || TTS.geminiSettings.voice;
     TTS.geminiSettings.lang = urlParams.get("geminilang") || false;
+    TTS.geminiSettings.style = urlParams.get("geministyle") || urlParams.get("geminiprompt") || false;
 
     // ElevenLabs settings
     TTS.elevenLabsSettings.latency = urlParams.has("elevenlatency") ? parseInt(urlParams.get("elevenlatency")) || 0 : TTS.voiceLatency;
@@ -1635,6 +1637,14 @@ TTS.pcm16ToWav = function(pcmBytes, sampleRate = 24000, numChannels = 1) {
     return new Blob([view.buffer, pcmBytes], { type: "audio/wav" });
 };
 
+TTS.buildGeminiTtsText = function(tts) {
+    const style = (TTS.geminiSettings.style || "").trim();
+    if (!style) {
+        return tts;
+    }
+    return style + "\n\n" + tts;
+};
+
 /**
  * Google Cloud TTS implementation
  * @param {string} tts - Text to speak
@@ -1754,11 +1764,11 @@ TTS.geminiTTS = async function(tts) {
 
     const payload = {
         model,
-        contents: [{ parts: [{ text: tts }]}],
+        contents: [{ parts: [{ text: TTS.buildGeminiTtsText(tts) }]}],
         generationConfig: {
             responseModalities: ["AUDIO"],
             speechConfig: {
-                ...(TTS.geminiSettings.lang && { language_code: TTS.geminiSettings.lang }),
+                ...(TTS.geminiSettings.lang && { languageCode: TTS.geminiSettings.lang }),
                 voiceConfig: {
                     prebuiltVoiceConfig: {
                         voiceName: TTS.geminiSettings.voice || "Kore"

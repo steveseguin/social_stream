@@ -2168,7 +2168,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
     'elevensimilarity', 'elevenstyle', 'elevenspeakerboost', 'elevenrate',
     'googleapikey', 'googlevoice', 'googleaudioprofile', 'googlerate', 'googlelang',
-    'geminikey', 'geminimodel', 'voicegemini',
+    'geminikey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt',
     'speechifykey', 'speechifyvoice', 'voicespeechify', 'speechifymodel', 'speechifylang', 'speechifyspeed',
     'kokorokey', 'voicekokoro', 'kokorospeed'
   ];
@@ -2362,7 +2362,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
         system: ['lang', 'voice', 'rate', 'pitch'],
         elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
         google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
-        gemini: ['geminikey', 'geminimodel', 'voicegemini'],
+        gemini: ['geminikey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt'],
         speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
         kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
         kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
@@ -5994,6 +5994,16 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 pitch: document.querySelector('[data-param1="googlepitch"]').checked ? parseFloat(document.querySelector('[data-numbersetting="googlepitch"]')?.value) || 0 : 0,
                 audioProfile: document.querySelector('[data-param1="googlepitch"]').checked ? document.querySelector('[data-optionparam1="googleaudioprofile"]')?.value : false
             },
+
+            // Gemini TTS settings
+            gemini: {
+                key: document.getElementById('geminiAPIKey')?.value,
+                model: document.getElementById('geminiModelSelect')?.value || 'gemini-2.5-flash-preview-tts',
+                voice: document.getElementById('geminiVoiceSelect')?.value || 'Kore',
+                lang: document.getElementById('geminiLangSelect')?.value || '',
+                style: document.getElementById('geminiStyleInstructions')?.value || '',
+                sampleRate: 24000
+            },
             
             // ElevenLabs settings
 			elevenLabs: {
@@ -6132,6 +6142,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             if (serviceName === 'Speechify TTS' && !settings.speechify.key) {
                 throw new Error('Speechify API key is required');
             }
+            if (provider === 'gemini' && !settings.gemini.key) {
+                throw new Error('Gemini API key is required');
+            }
             if (serviceName === 'OpenAI TTS' && !settings.openai.key) {
                 throw new Error('OpenAI API key is required');
             }
@@ -6165,6 +6178,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             } else if ((settings.service == "openai") && settings.openai.key) {
                 if (!this.premiumQueueActive) {
                     await this.openaiTTS(text, settings);
+                }
+            } else if ((settings.service == "gemini") && settings.gemini.key) {
+                if (!this.premiumQueueActive) {
+                    await this.geminiTTS(text, settings);
                 }
 			} else if (settings.service == "kokoro") {
                 if (!this.premiumQueueActive) {
@@ -6373,6 +6390,109 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             headers: { "content-type": "application/json; charset=UTF-8" },
             body: JSON.stringify(data)
         }, 'base64');
+    },
+
+    buildGeminiTtsText(text, settings) {
+        const style = (settings.gemini.style || "").trim();
+        if (!style) {
+            return text;
+        }
+        return style + "\n\n" + text;
+    },
+
+    pcm16ToWav(pcmBytes, sampleRate = 24000, numChannels = 1) {
+        const bytesPerSample = 2;
+        const blockAlign = numChannels * bytesPerSample;
+        const byteRate = sampleRate * blockAlign;
+        const dataLength = pcmBytes.length;
+        const buffer = new ArrayBuffer(44);
+        const view = new DataView(buffer);
+        const writeString = function(offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        };
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + dataLength, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, byteRate, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bytesPerSample * 8, true);
+        writeString(36, 'data');
+        view.setUint32(40, dataLength, true);
+
+        return new Blob([view.buffer, pcmBytes], { type: "audio/wav" });
+    },
+
+    async geminiTTS(text, settings) {
+        this.premiumQueueActive = true;
+        const model = settings.gemini.model || "gemini-2.5-flash-preview-tts";
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+        const speechConfig = {
+            voiceConfig: {
+                prebuiltVoiceConfig: {
+                    voiceName: settings.gemini.voice || "Kore"
+                }
+            }
+        };
+
+        if (settings.gemini.lang) {
+            speechConfig.languageCode = settings.gemini.lang;
+        }
+
+        const data = {
+            model,
+            contents: [{ parts: [{ text: this.buildGeminiTtsText(text, settings) }]}],
+            generationConfig: {
+                responseModalities: ["AUDIO"],
+                speechConfig
+            }
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json; charset=UTF-8",
+                    "x-goog-api-key": settings.gemini.key
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const contentType = response.headers.get("content-type") || "";
+                if (contentType.includes("application/json")) {
+                    const errorData = await response.json();
+                    throw new Error(errorData?.error?.message || errorData?.message || `Gemini TTS HTTP ${response.status}`);
+                }
+                throw new Error(`Gemini TTS HTTP ${response.status} ${response.statusText}`);
+            }
+
+            const json = await response.json();
+            const inlinePart = json?.candidates?.[0]?.content?.parts?.find(part => part.inlineData && part.inlineData.data);
+            const base64Audio = inlinePart?.inlineData?.data;
+            const mimeType = inlinePart?.inlineData?.mimeType || "";
+            if (!base64Audio) {
+                throw new Error("No audio content returned from Gemini");
+            }
+
+            const pcmBytes = Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0));
+            const audioBlob = mimeType.includes("wav")
+                ? new Blob([pcmBytes], { type: mimeType })
+                : this.pcm16ToWav(pcmBytes, settings.gemini.sampleRate || 24000, 1);
+            const blobUrl = URL.createObjectURL(audioBlob);
+            this.playAudio(blobUrl);
+        } catch (error) {
+            this.showFeedback(`Gemini TTS Error: ${error.message}`, 'error');
+            console.error("Gemini TTS error:", error);
+            this.finishedAudio();
+        }
     },
     
 	elevenLabsTTS(text, settings) {

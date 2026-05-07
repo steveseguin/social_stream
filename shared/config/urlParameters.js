@@ -2036,6 +2036,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "string",
             "description": "Speechify TTS API key"
+          },
+          {
+            "key": "geminikey",
+            "displayName": "geminikey",
+            "aliases": [
+              "geminikey"
+            ],
+            "values": "string",
+            "description": "Gemini TTS API key"
           }
         ]
       },
@@ -2079,6 +2088,50 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "string",
             "description": "Google TTS voice name (e.g., \"en-GB-Standard-A\")"
+          }
+        ]
+      },
+      {
+        "title": "Gemini TTS Parameters",
+        "slug": "gemini-tts-parameters",
+        "description": "",
+        "items": [
+          {
+            "key": "geminimodel",
+            "displayName": "geminimodel",
+            "aliases": [
+              "geminimodel"
+            ],
+            "values": "string",
+            "description": "Gemini TTS model (e.g., \"gemini-2.5-flash-preview-tts\")"
+          },
+          {
+            "key": "voicegemini",
+            "displayName": "voicegemini",
+            "aliases": [
+              "voicegemini"
+            ],
+            "values": "string",
+            "description": "Gemini prebuilt voice name (e.g., \"Kore\")"
+          },
+          {
+            "key": "geminilang",
+            "displayName": "geminilang",
+            "aliases": [
+              "geminilang"
+            ],
+            "values": "BCP-47 code",
+            "description": "Optional Gemini speech language code (e.g., \"th-TH\")"
+          },
+          {
+            "key": "geministyle",
+            "displayName": "geministyle or geminiprompt",
+            "aliases": [
+              "geministyle",
+              "geminiprompt"
+            ],
+            "values": "string",
+            "description": "Gemini-only style instructions prepended to the TTS prompt"
           }
         ]
       },
