@@ -466,7 +466,7 @@
 
 	function buildSocketUrl(channel) {
 		var url = new URL(normalizeWs(state.cfg.wsUrl));
-		url.searchParams.set("stream", channel);
+		url.searchParams.set("channel", channel);
 		if (state.cfg.token) url.searchParams.set("mode", "developer");
 		else url.searchParams.delete("mode");
 		return url.toString();
@@ -744,6 +744,13 @@
 			state.socket = null;
 			wsProxy.readyState = READY_STATE.CLOSED;
 			if (event && typeof event.code !== "undefined") reason += " (code " + event.code + (event.reason ? ", " + event.reason : "") + ")";
+			if (event && event.code === 1008 && /bad channel/i.test(String(event.reason || ""))) {
+				state.active = false;
+				setStatus("error", "VPZone rejected channel @" + channel + ".", { channel: channel, wsUrl: wsUrl });
+				log(reason + ". Check the VPZONE channel username.", "error");
+				syncButtons();
+				return;
+			}
 			if (!state.active || state.manualDisconnect) {
 				setStatus("disconnected", "Disconnected from VPZone.", { channel: channel, wsUrl: wsUrl });
 				log(reason + ".", "warn");
