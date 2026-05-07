@@ -1650,6 +1650,9 @@ function createTestMessage() {
 
   if (bits) {
     message.bits = bits;
+    if (!donationText) {
+      message.hasDonation = `${bits} bit${bits === 1 ? '' : 's'}`;
+    }
   }
   if (donationText) {
     message.hasDonation = donationText;
