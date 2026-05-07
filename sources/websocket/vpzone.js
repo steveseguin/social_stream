@@ -144,6 +144,26 @@
 		return raw || defaultRedirectUri();
 	}
 
+	function ssappOAuthHandler() {
+		try {
+			if (window.ninjafy && typeof window.ninjafy.startVpzoneOAuth === "function") return window.ninjafy.startVpzoneOAuth;
+		} catch (e) {}
+		try {
+			if (window.__ssapp && typeof window.__ssapp.startVpzoneOAuth === "function") return window.__ssapp.startVpzoneOAuth;
+		} catch (e) {}
+		return null;
+	}
+
+	function shouldUseSsappOAuth() {
+		try {
+			var query = new URLSearchParams(window.location.search || "");
+			var hash = new URLSearchParams(String(window.location.hash || "").replace(/^#/, ""));
+			return query.has("ssapp") || hash.has("ssapp") || window.location.protocol === "file:";
+		} catch (e) {
+			return window.location.protocol === "file:";
+		}
+	}
+
 	function loadTokens() {
 		try {
 			var saved = JSON.parse(localStorage.getItem(TOKEN_KEY) || "null");
@@ -288,6 +308,8 @@
 
 	function startOAuth() {
 		syncUiToState();
+		var externalOAuth = ssappOAuthHandler();
+		if (externalOAuth && shouldUseSsappOAuth()) return startExternalOAuth(externalOAuth);
 		var verifier = randomVerifier();
 		var stateValue = randomVerifier().slice(0, 32);
 		var redirectUri = normalizeRedirectUri(state.cfg.redirectUri);
@@ -311,6 +333,33 @@
 			url.searchParams.set("code_challenge", challenge);
 			url.searchParams.set("code_challenge_method", "S256");
 			window.location.href = url.toString();
+		});
+	}
+
+	function startExternalOAuth(handler) {
+		handler = handler || ssappOAuthHandler();
+		if (!handler) return Promise.reject(new Error("VPZONE desktop OAuth is unavailable."));
+		return handler({
+			clientId: state.cfg.clientId || DEFAULT_CLIENT_ID,
+			scopes: String(state.cfg.scopes || DEFAULT_SCOPES).split(/\s+/).filter(Boolean)
+		}).then(function (result) {
+			if (!result || !result.success) throw new Error((result && result.error) || "VPZONE OAuth did not complete.");
+			if (result.redirectUri) state.cfg.redirectUri = result.redirectUri;
+			if (result.access_token) {
+				storeTokenResponse(result);
+				log("VPZONE OAuth token acquired.", "success");
+				return result;
+			}
+			if (result.code) {
+				return exchangeOAuthCode(result.code, {
+					verifier: result.codeVerifier || "",
+					redirectUri: result.redirectUri || normalizeRedirectUri(state.cfg.redirectUri)
+				});
+			}
+			throw new Error("VPZONE OAuth did not return a token.");
+		}).then(function (result) {
+			connect();
+			return result;
 		});
 	}
 
@@ -776,6 +825,7 @@
 		}
 		if (els.wsUrl) els.wsUrl.addEventListener("change", function () { els.wsUrl.value = normalizeWs(els.wsUrl.value); });
 		if (els.token) els.token.addEventListener("change", function () { state.cfg.token = String(els.token.value || ""); updateAuthChip(); });
+		try { window.__SSAPP_START_VPZONE_AUTH__ = function () { return startExternalOAuth(); }; } catch (e) {}
 	}
 
 	function cacheElements() {
