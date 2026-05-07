@@ -3,7 +3,11 @@
 	const SOURCE_NAME = "VPZone";
 	const SOURCE_IMG = HOST + "/favicon.ico";
 	const CONFIG_KEY = "vpzoneWsConfig";
-	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.nexus-7.vpzone.tv/ws", token: "" };
+	const TOKEN_KEY = "vpzoneWsTokens";
+	const OAUTH_KEY = "vpzoneOAuthState";
+	const DEFAULT_CLIENT_ID = "e63ceeb6-e9e6-4732-a7eb-a8f1613a2686";
+	const DEFAULT_SCOPES = "profile:read channel:read chat:read";
+	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.nexus-7.vpzone.tv/ws", token: "", clientId: DEFAULT_CLIENT_ID, redirectUri: "", scopes: DEFAULT_SCOPES };
 	const RECONNECT_DELAY_MS = 4000;
 	const MAX_SEEN_IDS = 1500;
 	const READY_STATE = { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 };
@@ -22,10 +26,12 @@
 		manualDisconnect: false,
 		socket: null,
 		reconnectTimer: null,
+		refreshTimer: null,
 		currentChannel: "",
 		lastViewerCount: null,
 		lastStatus: "",
 		lastMessage: "",
+		tokens: null,
 		seenIds: new Set(),
 		seenOrder: []
 	};
@@ -102,6 +108,244 @@
 		return String(value || "").replace(/[_-]+/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
 	}
 
+	function base64Url(bytes) {
+		var binary = "";
+		var arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+		for (var i = 0; i < arr.length; i += 1) binary += String.fromCharCode(arr[i]);
+		return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+	}
+
+	function randomVerifier() {
+		var bytes = new Uint8Array(64);
+		try { crypto.getRandomValues(bytes); } catch (e) {
+			for (var i = 0; i < bytes.length; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+		}
+		return base64Url(bytes);
+	}
+
+	function codeChallenge(verifier) {
+		if (!window.crypto || !crypto.subtle || typeof TextEncoder === "undefined") {
+			return Promise.reject(new Error("PKCE requires crypto.subtle support."));
+		}
+		return crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)).then(function (digest) {
+			return base64Url(digest);
+		});
+	}
+
+	function defaultRedirectUri() {
+		var href = String(window.location.href || "").split("#")[0].split("?")[0];
+		if (!href) return "";
+		if (/^https:\/\/(?:beta\.)?socialstream\.ninja\//i.test(href)) return href.replace(/\.html$/i, "");
+		return href;
+	}
+
+	function normalizeRedirectUri(value) {
+		var raw = String(value || "").trim();
+		return raw || defaultRedirectUri();
+	}
+
+	function loadTokens() {
+		try {
+			var saved = JSON.parse(localStorage.getItem(TOKEN_KEY) || "null");
+			state.tokens = saved && saved.access_token ? saved : null;
+		} catch (e) {
+			state.tokens = null;
+		}
+		if (state.tokens && state.tokens.access_token) state.cfg.token = state.tokens.access_token;
+	}
+
+	function saveTokens() {
+		try {
+			if (state.tokens && state.tokens.access_token) localStorage.setItem(TOKEN_KEY, JSON.stringify(state.tokens));
+			else localStorage.removeItem(TOKEN_KEY);
+		} catch (e) {}
+	}
+
+	function scheduleRefresh() {
+		if (state.refreshTimer) {
+			clearTimeout(state.refreshTimer);
+			state.refreshTimer = null;
+		}
+		if (!state.tokens || !state.tokens.refresh_token || !state.tokens.expires_at) return;
+		var delay = Math.max(5000, Number(state.tokens.expires_at) - Date.now() - 60000);
+		state.refreshTimer = setTimeout(function () {
+			refreshOAuthToken().catch(function (error) {
+				log("OAuth refresh failed: " + ((error && error.message) || error), "error");
+				updateAuthChip();
+			});
+		}, delay);
+	}
+
+	function cleanupOAuthUrl() {
+		try {
+			var url = new URL(window.location.href);
+			["code", "state", "error", "error_description"].forEach(function (key) { url.searchParams.delete(key); });
+			history.replaceState({}, document.title, url.toString());
+		} catch (e) {}
+	}
+
+	function fetchJson(url, options) {
+		options = options || {};
+		return fetch(url, {
+			method: options.method || "GET",
+			cache: "no-store",
+			credentials: "omit",
+			headers: options.headers || { Accept: "application/json" },
+			body: options.body
+		}).then(function (response) {
+			return response.text().then(function (text) {
+				var json = {};
+				try { json = text ? JSON.parse(text) : {}; } catch (e) { json = { error: text || "Invalid JSON response" }; }
+				if (!response.ok) throw new Error((json && (json.error_description || json.error || json.message)) || ("HTTP " + response.status));
+				return json;
+			});
+		}).catch(function (error) {
+			if (!extAvailable()) throw error;
+			return new Promise(function (resolve, reject) {
+				try {
+					chrome.runtime.sendMessage(chrome.runtime.id, {
+						type: "toBackground",
+						data: {
+							cmd: "vpzoneFetchJson",
+							url: url,
+							method: options.method || "GET",
+							body: options.body || ""
+						}
+					}, function (response) {
+						if (chrome.runtime.lastError) {
+							reject(new Error(chrome.runtime.lastError.message || "VPZone background fetch failed"));
+							return;
+						}
+						if (!response || !response.ok) {
+							reject(new Error((response && response.error) || "VPZone background fetch failed"));
+							return;
+						}
+						resolve(response.data || {});
+					});
+				} catch (e) {
+					reject(e);
+				}
+			});
+		});
+	}
+
+	function tokenRequest(params) {
+		var body = new URLSearchParams();
+		Object.keys(params || {}).forEach(function (key) {
+			if (params[key] != null && params[key] !== "") body.set(key, params[key]);
+		});
+		return fetchJson(HOST + "/api/oauth/token", {
+			method: "POST",
+			headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+			body: body.toString()
+		});
+	}
+
+	function storeTokenResponse(json) {
+		if (!json || !json.access_token) throw new Error("VPZONE did not return an access token.");
+		state.tokens = {
+			access_token: json.access_token,
+			token_type: json.token_type || "Bearer",
+			refresh_token: json.refresh_token || (state.tokens && state.tokens.refresh_token) || "",
+			expires_at: json.expires_in ? Date.now() + (Number(json.expires_in) * 1000) : null
+		};
+		state.cfg.token = state.tokens.access_token;
+		saveTokens();
+		saveConfig();
+		syncStateToUi();
+		updateAuthChip();
+		scheduleRefresh();
+	}
+
+	function exchangeOAuthCode(code, saved) {
+		if (!code) return Promise.reject(new Error("Missing OAuth code."));
+		saved = saved || {};
+		return tokenRequest({
+			grant_type: "authorization_code",
+			client_id: state.cfg.clientId || DEFAULT_CLIENT_ID,
+			code: code,
+			redirect_uri: saved.redirectUri || normalizeRedirectUri(state.cfg.redirectUri),
+			code_verifier: saved.verifier || ""
+		}).then(function (json) {
+			storeTokenResponse(json);
+			log("VPZONE OAuth token acquired.", "success");
+			return json;
+		});
+	}
+
+	function refreshOAuthToken() {
+		if (!state.tokens || !state.tokens.refresh_token) return Promise.resolve(null);
+		return tokenRequest({
+			grant_type: "refresh_token",
+			client_id: state.cfg.clientId || DEFAULT_CLIENT_ID,
+			refresh_token: state.tokens.refresh_token
+		}).then(function (json) {
+			storeTokenResponse(json);
+			log("VPZONE OAuth token refreshed.", "success");
+			return json;
+		});
+	}
+
+	function startOAuth() {
+		syncUiToState();
+		var verifier = randomVerifier();
+		var stateValue = randomVerifier().slice(0, 32);
+		var redirectUri = normalizeRedirectUri(state.cfg.redirectUri);
+		var saved = {
+			state: stateValue,
+			verifier: verifier,
+			redirectUri: redirectUri,
+			channel: state.cfg.channel,
+			wsUrl: state.cfg.wsUrl,
+			scopes: state.cfg.scopes || DEFAULT_SCOPES,
+			createdAt: Date.now()
+		};
+		return codeChallenge(verifier).then(function (challenge) {
+			try { localStorage.setItem(OAUTH_KEY, JSON.stringify(saved)); } catch (e) {}
+			var url = new URL(HOST + "/oauth/authorize");
+			url.searchParams.set("response_type", "code");
+			url.searchParams.set("client_id", state.cfg.clientId || DEFAULT_CLIENT_ID);
+			url.searchParams.set("redirect_uri", redirectUri);
+			url.searchParams.set("scope", state.cfg.scopes || DEFAULT_SCOPES);
+			url.searchParams.set("state", stateValue);
+			url.searchParams.set("code_challenge", challenge);
+			url.searchParams.set("code_challenge_method", "S256");
+			window.location.href = url.toString();
+		});
+	}
+
+	function clearOAuth() {
+		state.tokens = null;
+		state.cfg.token = "";
+		saveTokens();
+		saveConfig();
+		syncStateToUi();
+		updateAuthChip();
+		log("VPZONE auth cleared.", "warn");
+	}
+
+	function handleOAuthCallback() {
+		var query = new URLSearchParams(window.location.search);
+		var code = query.get("code");
+		var returnedState = query.get("state");
+		var error = query.get("error");
+		var saved = {};
+		if (!code && !error) {
+			scheduleRefresh();
+			return Promise.resolve(false);
+		}
+		try { saved = JSON.parse(localStorage.getItem(OAUTH_KEY) || "{}") || {}; } catch (e) {}
+		cleanupOAuthUrl();
+		if (error) return Promise.reject(new Error(query.get("error_description") || error));
+		if (saved.state && returnedState && saved.state !== returnedState) return Promise.reject(new Error("OAuth state mismatch."));
+		if (saved.channel) state.cfg.channel = normalizeChannel(saved.channel);
+		if (saved.wsUrl) state.cfg.wsUrl = normalizeWs(saved.wsUrl);
+		if (saved.scopes) state.cfg.scopes = saved.scopes;
+		state.cfg.redirectUri = saved.redirectUri || normalizeRedirectUri(state.cfg.redirectUri);
+		try { localStorage.removeItem(OAUTH_KEY); } catch (e) {}
+		return exchangeOAuthCode(code, saved).then(function () { return true; });
+	}
+
 	function addLine(parent, className, html) {
 		if (!parent) return;
 		var entry = document.createElement("div");
@@ -138,6 +382,10 @@
 	}
 
 	function updateAuthChip() {
+		if (state.tokens && state.tokens.access_token) {
+			chip(els.authChip, "Auth: OAuth", "good");
+			return;
+		}
 		chip(els.authChip, state.cfg.token ? "Auth: token set" : "Auth: public", state.cfg.token ? "good" : "");
 	}
 
@@ -183,11 +431,17 @@
 		state.cfg.channel = normalizeChannel(saved.channel || "");
 		state.cfg.wsUrl = normalizeWs(saved.wsUrl || DEFAULT_CONFIG.wsUrl);
 		state.cfg.token = typeof saved.token === "string" ? saved.token : "";
+		state.cfg.clientId = typeof saved.clientId === "string" && saved.clientId ? saved.clientId : DEFAULT_CLIENT_ID;
+		state.cfg.redirectUri = normalizeRedirectUri(saved.redirectUri || "");
+		state.cfg.scopes = typeof saved.scopes === "string" && saved.scopes ? saved.scopes : DEFAULT_SCOPES;
 		query = new URLSearchParams(window.location.search);
 		hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
 		if (query.get("channel") || query.get("username") || query.get("streamUsername") || hash.get("channel") || hash.get("username")) state.cfg.channel = normalizeChannel(query.get("channel") || query.get("username") || query.get("streamUsername") || hash.get("channel") || hash.get("username"));
 		if (query.get("ws") || query.get("endpoint") || hash.get("ws") || hash.get("endpoint")) state.cfg.wsUrl = normalizeWs(query.get("ws") || query.get("endpoint") || hash.get("ws") || hash.get("endpoint"));
 		if (query.get("token") || query.get("auth") || hash.get("token") || hash.get("auth")) state.cfg.token = String(query.get("token") || query.get("auth") || hash.get("token") || hash.get("auth") || "");
+		if (query.get("client_id") || hash.get("client_id")) state.cfg.clientId = String(query.get("client_id") || hash.get("client_id") || DEFAULT_CLIENT_ID);
+		if (query.get("redirect_uri") || hash.get("redirect_uri")) state.cfg.redirectUri = normalizeRedirectUri(query.get("redirect_uri") || hash.get("redirect_uri"));
+		if (query.get("scope") || hash.get("scope")) state.cfg.scopes = String(query.get("scope") || hash.get("scope") || DEFAULT_SCOPES);
 	}
 
 	function saveConfig() {
@@ -512,6 +766,8 @@
 
 	function bindUi() {
 		if (els.save) els.save.addEventListener("click", function () { syncUiToState(); syncStateToUi(); log("Configuration saved.", "success"); });
+		if (els.authorize) els.authorize.addEventListener("click", function () { startOAuth().catch(function (error) { setStatus("error", "OAuth start failed: " + ((error && error.message) || error)); log("OAuth start failed: " + ((error && error.message) || error), "error"); }); });
+		if (els.clearAuth) els.clearAuth.addEventListener("click", function () { clearOAuth(); });
 		if (els.connect) els.connect.addEventListener("click", function () { try { connect(); } catch (error) { setStatus("error", "Connect failed: " + ((error && error.message) || error)); log("Connect failed: " + ((error && error.message) || error), "error"); syncButtons(); } });
 		if (els.disconnect) els.disconnect.addEventListener("click", function () { disconnect(true); });
 		if (els.channel) {
@@ -527,6 +783,8 @@
 		els.wsUrl = document.getElementById("ws-url");
 		els.token = document.getElementById("auth-token");
 		els.save = document.getElementById("save-config");
+		els.authorize = document.getElementById("authorize-btn");
+		els.clearAuth = document.getElementById("clear-auth-btn");
 		els.connect = document.getElementById("connect-btn");
 		els.disconnect = document.getElementById("disconnect-btn");
 		els.socketChip = document.getElementById("socket-chip");
@@ -542,6 +800,7 @@
 	function boot() {
 		cacheElements();
 		loadConfig();
+		loadTokens();
 		syncStateToUi();
 		chip(els.socketChip, "Socket: disconnected", "bad");
 		chip(els.viewerChip, "Viewers: -", "");
@@ -550,13 +809,18 @@
 		bridge();
 		syncButtons();
 		log("VPZone WebSocket source ready.", "success");
-		if (state.cfg.channel) {
-			try { connect(); } catch (error) {
-				setStatus("error", "Auto-connect failed: " + ((error && error.message) || error));
-				log("Auto-connect failed: " + ((error && error.message) || error), "error");
-				syncButtons();
+		handleOAuthCallback().then(function () {
+			if (state.cfg.channel) {
+				try { connect(); } catch (error) {
+					setStatus("error", "Auto-connect failed: " + ((error && error.message) || error));
+					log("Auto-connect failed: " + ((error && error.message) || error), "error");
+					syncButtons();
+				}
 			}
-		}
+		}).catch(function (error) {
+			setStatus("error", "OAuth failed: " + ((error && error.message) || error));
+			log("OAuth failed: " + ((error && error.message) || error), "error");
+		});
 		window.addEventListener("beforeunload", function () { disconnect(false); });
 	}
 

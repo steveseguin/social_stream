@@ -5169,13 +5169,23 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				return response;
 			}
 			try {
+				const method = String(request.method || "GET").toUpperCase();
+				if (method !== "GET" && !(method === "POST" && parsedUrl.pathname === "/api/oauth/token")) {
+					sendResponse({ ok: false, error: "VPZone fetch method not allowed" });
+					return response;
+				}
+				const headers = {
+					Accept: "application/json"
+				};
+				if (method === "POST") {
+					headers["Content-Type"] = "application/x-www-form-urlencoded";
+				}
 				const vpzoneResponse = await fetch(parsedUrl.toString(), {
-					method: "GET",
+					method,
 					cache: "no-store",
 					credentials: "omit",
-					headers: {
-						Accept: "application/json"
-					}
+					headers,
+					body: method === "POST" ? String(request.body || "") : undefined
 				});
 				const responseText = await vpzoneResponse.text();
 				let responseJson = {};
@@ -5188,7 +5198,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					sendResponse({
 						ok: false,
 						status: vpzoneResponse.status,
-						error: (responseJson && (responseJson.error || responseJson.message)) || `HTTP ${vpzoneResponse.status}`
+						error: (responseJson && (responseJson.error_description || responseJson.message || (typeof responseJson.error === "string" ? responseJson.error : responseJson.error && responseJson.error.message))) || `HTTP ${vpzoneResponse.status}`
 					});
 					return response;
 				}
@@ -9923,6 +9933,15 @@ async function openchat(target = null, force = false) {
 			if (joystickChannel) {
 				url += "?channel=" + encodeURIComponent(joystickChannel);
 			}
+		}
+		openURL(url);
+	}
+
+	if (target == "vpzonews" || (!target && settings.vpzone_username && settings.vpzone_username.textsetting)) {
+		let url = "https://socialstream.ninja/sources/websocket/vpzone";
+		const vpzoneChannel = settings.vpzone_username && settings.vpzone_username.textsetting ? settings.vpzone_username.textsetting.trim().replace(/^@+/, "") : "";
+		if (vpzoneChannel) {
+			url += "?channel=" + encodeURIComponent(vpzoneChannel);
 		}
 		openURL(url);
 	}
