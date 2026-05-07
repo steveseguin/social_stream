@@ -514,6 +514,49 @@
 		return textArray;
 	}
 
+	function getTwitchCheerActionBits(ele, chatmessage) {
+		var total = 0;
+
+		function parseAmount(value) {
+			value = (value || "").replace(/,/g, "").trim();
+			if (!/^\d+$/.test(value)) {
+				return 0;
+			}
+			return parseInt(value, 10) || 0;
+		}
+
+		function isCheerActionSource(value) {
+			return !!(value && value.indexOf("d3aqoihi2n8ty8.cloudfront.net/actions/") !== -1);
+		}
+
+		try {
+			var cheerImages = ele.querySelectorAll(".seventv-chat-message-body img.seventv-chat-emote[src], .seventv-chat-message-body img.seventv-chat-emote[srcset]");
+			for (var i = 0; i < cheerImages.length; i++) {
+				var img = cheerImages[i];
+				var src = img.getAttribute("srcset") || img.getAttribute("src") || "";
+				if (!isCheerActionSource(src)) {
+					continue;
+				}
+
+				var emoteBox = img.closest ? img.closest(".seventv-emote-box") : img.parentElement;
+				var amountNode = emoteBox && emoteBox.nextElementSibling;
+				total += parseAmount(amountNode ? amountNode.textContent : "");
+			}
+		} catch (e) {}
+
+		if (!total && chatmessage) {
+			try {
+				var cheerRegex = /<img\b(?=[^>]*(?:src|srcset)=["'][^"']*d3aqoihi2n8ty8\.cloudfront\.net\/actions\/[^"']*["'])[^>]*>\s*([0-9][\d,]*)/gi;
+				var match;
+				while ((match = cheerRegex.exec(chatmessage))) {
+					total += parseAmount(match[1]);
+				}
+			} catch (e) {}
+		}
+
+		return total;
+	}
+
 	function findKnockMessageNode(root, patterns) {
 		if (!root || !root.querySelectorAll) {
 			return null;
@@ -1062,6 +1105,17 @@
 			try {
 				var elements = ele.querySelectorAll(".paid-pinned-chat-message-content-container")[1]; // FFZ support
 				donations = escapeHtml(elements.textContent);
+			} catch (e) {}
+		}
+
+		if (!donations) {
+			try {
+				var cheerActionBits = getTwitchCheerActionBits(ele, chatmessage);
+				if (cheerActionBits == 1) {
+					donations = cheerActionBits + " " + getTranslation("bit");
+				} else if (cheerActionBits > 1) {
+					donations = cheerActionBits + " " + getTranslation("bits");
+				}
 			} catch (e) {}
 		}
 		
