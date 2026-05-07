@@ -3,7 +3,7 @@
 	const SOURCE_NAME = "VPZone";
 	const SOURCE_IMG = HOST + "/favicon.ico";
 	const CONFIG_KEY = "vpzoneWsConfig";
-	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://vpzone.tv/ws", token: "" };
+	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.nexus-7.vpzone.tv/ws", token: "" };
 	const RECONNECT_DELAY_MS = 4000;
 	const MAX_SEEN_IDS = 1500;
 	const READY_STATE = { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 };
