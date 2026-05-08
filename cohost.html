@@ -1380,6 +1380,78 @@
 		<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
 		<script type="text/javascript" src="tts.js"></script>
 		<script>
+			const cohostOverlayParams = new URLSearchParams(location.search);
+			let cohostOverlayLastSent = 0;
+			let cohostOverlaySendTimer = null;
+			let cohostOverlayPendingPayload = null;
+
+			function getCohostOverlayTarget() {
+				return cohostOverlayParams.get("aioverlay") || cohostOverlayParams.get("overlaylabel") || cohostOverlayParams.get("cohostOverlayLabel") || "cohost-overlay";
+			}
+
+			function shouldMirrorCohostOverlay() {
+				return !cohostOverlayParams.has("noaioverlay") && !cohostOverlayParams.has("nooverlay");
+			}
+
+			function sendCohostOverlayPayload(payload) {
+				if (!shouldMirrorCohostOverlay()) return;
+				const meta = Object.assign({
+					source: "cohost",
+					tts: false
+				}, payload || {});
+				const message = {
+					action: "aiOverlay",
+					target: getCohostOverlayTarget(),
+					meta
+				};
+				ensureConfiguredLLMBridge()
+					.then(() => {
+						postConfiguredLLMBridgePayload(message, "rpcs");
+					})
+					.catch(() => {});
+			}
+
+			function queueCohostOverlayPayload(payload, waitMs = 250) {
+				cohostOverlayPendingPayload = payload;
+				const now = Date.now();
+				const elapsed = now - cohostOverlayLastSent;
+				if (elapsed >= waitMs) {
+					cohostOverlayLastSent = now;
+					const nextPayload = cohostOverlayPendingPayload;
+					cohostOverlayPendingPayload = null;
+					sendCohostOverlayPayload(nextPayload);
+					return;
+				}
+				if (cohostOverlaySendTimer) return;
+				cohostOverlaySendTimer = setTimeout(() => {
+					cohostOverlaySendTimer = null;
+					cohostOverlayLastSent = Date.now();
+					const nextPayload = cohostOverlayPendingPayload;
+					cohostOverlayPendingPayload = null;
+					sendCohostOverlayPayload(nextPayload);
+				}, waitMs - elapsed);
+			}
+
+			function queueCohostOverlaySay(text, final = false) {
+				const value = String(text || "").trim();
+				if (!value) return;
+				queueCohostOverlayPayload({
+					command: "say",
+					text: value,
+					emotion: window.avatar?.currentEmotion || "happy",
+					talking: !final && !!window.avatar?.isTalking,
+					final: !!final
+				}, final ? 0 : 350);
+			}
+
+			function queueCohostOverlayEmote(emotion, talking) {
+				queueCohostOverlayPayload({
+					command: "emote",
+					emotion: emotion || "happy",
+					talking: !!talking
+				}, 300);
+			}
+
 			class PuppetAvatar {
 				constructor(containerSelector) {
 					this.container = document.querySelector(containerSelector);
@@ -1565,6 +1637,7 @@
 					const classes = [this.currentEmotion];
 					if (this.isTalking) classes.push("talking");
 					this.puppet.className = "puppet " + classes.join(" ");
+					queueCohostOverlayEmote(this.currentEmotion, this.isTalking);
 				}
 				blink() {
 					this.puppet.classList.add("blink");
@@ -1839,12 +1912,11 @@
 					localPath: "thirdparty/models/qwen3.5-0.8b-onnx",
 					remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
 					runtime: {
-						modelClass: "Qwen3_5ForConditionalGeneration",
+						modelClass: "Qwen3_5ForCausalLM",
 						dtype: {
 							embed_tokens: "q4",
 							decoder_model_merged: "q4",
-							model: "q4",
-							vision_encoder: "q4"
+							model: "q4"
 						}
 					},
 					supportsVision: false,
@@ -6014,6 +6086,7 @@
 					}
 					const contentDiv = this.currentMessageElement.querySelector(".markdown-content");
 					contentDiv.innerHTML = this.formatMarkdown(this.messageBuffer);
+					queueCohostOverlaySay(this.messageBuffer, false);
 					this.scrollToBottom();
 				}
 				replaceCurrentMessage(text) {
@@ -6031,6 +6104,7 @@
 					this.lastMessageTime = Date.now();
 					const contentDiv = this.currentMessageElement.querySelector(".markdown-content");
 					contentDiv.innerHTML = this.formatMarkdown(this.messageBuffer);
+					queueCohostOverlaySay(this.messageBuffer, false);
 					this.scrollToBottom();
 				}
 				finalizeMessage() {
@@ -6041,6 +6115,7 @@
 					this.lastMessageTime = Date.now();
 					if (completedText) {
 						window.avatar?.reactToText(completedText, "assistant");
+						queueCohostOverlaySay(completedText, true);
 					}
 				}
 				scrollToBottom() {

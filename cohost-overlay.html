@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>AI Stage Overlay - Social Stream Ninja</title>
+	<meta name="robots" content="noindex">
+	<style>
+		:root {
+			--overlay-scale: 1;
+			--accent: #43d9ad;
+			--bubble-bg: rgba(16, 19, 24, 0.88);
+			--bubble-color: #f8fafc;
+			--bubble-border: rgba(255, 255, 255, 0.18);
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html,
+		body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			overflow: hidden;
+			background: transparent;
+			font-family: "Avenir Next", "Segoe UI", Roboto, Arial, sans-serif;
+		}
+
+		body[data-page-bg] {
+			background: var(--page-bg, transparent);
+		}
+
+		#stage {
+			position: fixed;
+			display: flex;
+			align-items: flex-end;
+			gap: 18px;
+			padding: 32px;
+			transform: scale(var(--overlay-scale));
+			transition: opacity 180ms ease, transform 180ms ease;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		body.visible #stage {
+			opacity: 1;
+		}
+
+		body[data-position="bottom-left"] #stage {
+			left: 0;
+			bottom: 0;
+			transform-origin: bottom left;
+		}
+
+		body[data-position="bottom-center"] #stage {
+			left: 50%;
+			bottom: 0;
+			transform: translateX(-50%) scale(var(--overlay-scale));
+			transform-origin: bottom center;
+		}
+
+		body[data-position="top-left"] #stage {
+			left: 0;
+			top: 0;
+			align-items: flex-start;
+			transform-origin: top left;
+		}
+
+		body[data-position="top-right"] #stage {
+			right: 0;
+			top: 0;
+			align-items: flex-start;
+			transform-origin: top right;
+		}
+
+		body[data-position="top-center"] #stage {
+			left: 50%;
+			top: 0;
+			align-items: flex-start;
+			transform: translateX(-50%) scale(var(--overlay-scale));
+			transform-origin: top center;
+		}
+
+		body[data-position="bottom-right"] #stage,
+		body:not([data-position]) #stage {
+			right: 0;
+			bottom: 0;
+			transform-origin: bottom right;
+		}
+
+		#avatarWrap {
+			position: relative;
+			width: 168px;
+			height: 168px;
+			flex: 0 0 168px;
+			filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.35));
+		}
+
+		#avatarImage {
+			display: none;
+			width: 100%;
+			height: 100%;
+			border-radius: 50%;
+			object-fit: cover;
+			border: 4px solid rgba(255, 255, 255, 0.9);
+			background: #111827;
+		}
+
+		body.has-image #avatarImage {
+			display: block;
+		}
+
+		body.has-image .puppet {
+			display: none;
+		}
+
+		.puppet {
+			position: absolute;
+			inset: 0;
+			border-radius: 50%;
+			background: linear-gradient(145deg, #44d7b6, #2563eb);
+			border: 4px solid rgba(255, 255, 255, 0.9);
+			overflow: hidden;
+		}
+
+		.face {
+			position: absolute;
+			inset: 24px 22px 18px;
+			border-radius: 50%;
+			background: #fff7e8;
+		}
+
+		.eyes {
+			position: absolute;
+			left: 34px;
+			right: 34px;
+			top: 48px;
+			display: flex;
+			justify-content: space-between;
+		}
+
+		.eye {
+			width: 20px;
+			height: 24px;
+			border-radius: 50%;
+			background: #111827;
+			transition: transform 120ms ease, height 120ms ease;
+		}
+
+		.mouth {
+			position: absolute;
+			left: 50%;
+			bottom: 34px;
+			width: 48px;
+			height: 24px;
+			margin-left: -24px;
+			border: 5px solid #111827;
+			border-top: 0;
+			border-radius: 0 0 40px 40px;
+			transition: all 120ms ease;
+		}
+
+		.cheek {
+			position: absolute;
+			top: 76px;
+			width: 18px;
+			height: 10px;
+			border-radius: 50%;
+			background: rgba(244, 114, 182, 0.32);
+		}
+
+		.cheek.left {
+			left: 24px;
+		}
+
+		.cheek.right {
+			right: 24px;
+		}
+
+		.puppet.talking .mouth {
+			height: 32px;
+			border-radius: 50%;
+			border-top: 5px solid #111827;
+			background: #111827;
+		}
+
+		.puppet.thinking .mouth,
+		.puppet.confused .mouth {
+			width: 28px;
+			height: 12px;
+			margin-left: -14px;
+			border-radius: 999px;
+			border: 4px solid #111827;
+			background: transparent;
+		}
+
+		.puppet.worried .mouth,
+		.puppet.sad .mouth {
+			border-top: 5px solid #111827;
+			border-bottom: 0;
+			border-radius: 40px 40px 0 0;
+			bottom: 28px;
+		}
+
+		.puppet.excited .eye,
+		.puppet.proud .eye,
+		.puppet.celebrating .eye {
+			transform: scaleY(0.72);
+		}
+
+		.puppet.angry .eye {
+			transform: rotate(10deg) scaleY(0.72);
+		}
+
+		.puppet.sleepy .eye {
+			height: 5px;
+			margin-top: 10px;
+		}
+
+		.bubble {
+			position: relative;
+			max-width: min(680px, calc(100vw - 250px));
+			min-width: 220px;
+			padding: 18px 22px;
+			border-radius: 18px;
+			background: var(--bubble-bg);
+			border: 1px solid var(--bubble-border);
+			color: var(--bubble-color);
+			box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+			transform: translateY(-20px);
+			opacity: 0;
+			transition: opacity 160ms ease, transform 160ms ease;
+		}
+
+		body.has-text .bubble {
+			opacity: 1;
+			transform: translateY(-10px);
+		}
+
+		body[data-hide-bubble="true"] .bubble {
+			display: none;
+		}
+
+		.bubble:after {
+			content: "";
+			position: absolute;
+			right: -12px;
+			bottom: 28px;
+			border-width: 12px 0 12px 12px;
+			border-style: solid;
+			border-color: transparent transparent transparent var(--bubble-bg);
+		}
+
+		body[data-position$="left"] .bubble:after {
+			right: auto;
+			left: -12px;
+			border-width: 12px 12px 12px 0;
+			border-color: transparent var(--bubble-bg) transparent transparent;
+		}
+
+		.name {
+			margin-bottom: 6px;
+			color: var(--accent);
+			font-size: 18px;
+			font-weight: 800;
+			letter-spacing: 0.02em;
+		}
+
+		.text {
+			font-size: clamp(24px, 3.2vw, 42px);
+			line-height: 1.18;
+			font-weight: 700;
+			overflow-wrap: anywhere;
+			text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+		}
+
+		.status {
+			display: none;
+			position: fixed;
+			left: 12px;
+			bottom: 12px;
+			padding: 8px 10px;
+			border-radius: 8px;
+			background: rgba(0, 0, 0, 0.65);
+			color: rgba(255, 255, 255, 0.82);
+			font-size: 12px;
+		}
+
+		body.show-status .status {
+			display: block;
+		}
+	</style>
+</head>
+<body data-position="bottom-right">
+	<div id="stage">
+		<div class="bubble">
+			<div id="speakerName" class="name">AI</div>
+			<div id="speechText" class="text"></div>
+		</div>
+		<div id="avatarWrap">
+			<img id="avatarImage" alt="">
+			<div id="puppet" class="puppet happy">
+				<div class="face">
+					<div class="eyes">
+						<div class="eye"></div>
+						<div class="eye"></div>
+					</div>
+					<div class="cheek left"></div>
+					<div class="cheek right"></div>
+					<div class="mouth"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="status" class="status"></div>
+	<script>
+	(function () {
+		var urlParams = new URLSearchParams(location.search);
+		var sessionId = urlParams.get("session") || urlParams.get("room") || "";
+		var password = urlParams.get("password") || "false";
+		var label = urlParams.get("label") || "cohost-overlay";
+		var defaultName = urlParams.get("name") || urlParams.get("botname") || "AI";
+		var avatarUrl = urlParams.get("avatar") || "";
+		var position = urlParams.get("position") || "bottom-right";
+		var scale = parseFloat(urlParams.get("scale") || "1");
+		var hideAfter = parseInt(urlParams.get("hideafter") || "12000", 10);
+		var ttsEnabled = urlParams.has("tts") || urlParams.get("speak") === "1";
+		var stayVisible = !urlParams.has("hideidle");
+		var outChannel = parseInt(urlParams.get("out") || urlParams.get("outchan") || "3", 10);
+		var inChannel = parseInt(urlParams.get("in") || urlParams.get("inchan") || "4", 10);
+		var bridgeFrame = null;
+		var socket = null;
+		var hideTimer = null;
+		var chunks = {};
+		var state = {
+			visible: stayVisible,
+			text: "",
+			name: defaultName,
+			emotion: "happy",
+			talking: false,
+			avatar: avatarUrl,
+			lastPayload: null
+		};
+
+		var body = document.body;
+		var puppet = document.getElementById("puppet");
+		var speechText = document.getElementById("speechText");
+		var speakerName = document.getElementById("speakerName");
+		var avatarImage = document.getElementById("avatarImage");
+		var status = document.getElementById("status");
+
+		if (!isFinite(scale) || scale <= 0) scale = 1;
+		if (!isFinite(hideAfter) || hideAfter < 0) hideAfter = 12000;
+		if (!isFinite(outChannel)) outChannel = 3;
+		if (!isFinite(inChannel)) inChannel = 4;
+		document.documentElement.style.setProperty("--overlay-scale", String(scale));
+		body.setAttribute("data-position", position);
+		if (urlParams.has("hidebubble") || urlParams.get("bubble") === "0") {
+			body.setAttribute("data-hide-bubble", "true");
+		}
+		if (urlParams.get("pagebg")) {
+			document.documentElement.style.setProperty("--page-bg", urlParams.get("pagebg"));
+			body.setAttribute("data-page-bg", "true");
+		}
+		if (urlParams.has("status")) {
+			body.classList.add("show-status");
+		}
+
+		function setStatus(text) {
+			status.textContent = text || "";
+		}
+
+		function normalizeEmotion(emotion) {
+			var value = String(emotion || "").toLowerCase().trim();
+			var allowed = {
+				happy: true,
+				sad: true,
+				surprised: true,
+				angry: true,
+				thinking: true,
+				wink: true,
+				excited: true,
+				sleepy: true,
+				listening: true,
+				confused: true,
+				worried: true,
+				proud: true,
+				celebrating: true,
+				smirk: true
+			};
+			return allowed[value] ? value : "happy";
+		}
+
+		function setAvatar(url) {
+			state.avatar = String(url || "").trim();
+			if (state.avatar) {
+				avatarImage.src = state.avatar;
+				body.classList.add("has-image");
+			} else {
+				avatarImage.removeAttribute("src");
+				body.classList.remove("has-image");
+			}
+		}
+
+		avatarImage.onerror = function () {
+			body.classList.remove("has-image");
+		};
+
+		function setEmotion(emotion, talking) {
+			state.emotion = normalizeEmotion(emotion || state.emotion);
+			if (typeof talking !== "undefined") {
+				state.talking = !!talking;
+			}
+			puppet.className = "puppet " + state.emotion + (state.talking ? " talking" : "");
+		}
+
+		function showStage() {
+			state.visible = true;
+			body.classList.add("visible");
+		}
+
+		function hideStage() {
+			state.visible = false;
+			state.talking = false;
+			body.classList.remove("visible");
+			setEmotion(state.emotion, false);
+		}
+
+		function clearBubble() {
+			state.text = "";
+			state.talking = false;
+			speechText.textContent = "";
+			body.classList.remove("has-text");
+			setEmotion(state.emotion, false);
+			if (!stayVisible) {
+				hideStage();
+			}
+		}
+
+		function scheduleClear() {
+			if (hideTimer) {
+				clearTimeout(hideTimer);
+				hideTimer = null;
+			}
+			if (!hideAfter) return;
+			hideTimer = setTimeout(function () {
+				clearBubble();
+			}, hideAfter);
+		}
+
+		function speak(text) {
+			if (!ttsEnabled || !text || !("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+				return;
+			}
+			try {
+				window.speechSynthesis.cancel();
+				var utterance = new SpeechSynthesisUtterance(text);
+				utterance.onend = function () {
+					setEmotion(state.emotion, false);
+				};
+				utterance.onerror = function () {
+					setEmotion("worried", false);
+				};
+				window.speechSynthesis.speak(utterance);
+			} catch (e) {}
+		}
+
+		function applySay(meta) {
+			var text = meta.text || meta.value || meta.chatmessage || "";
+			state.text = String(text || "").trim();
+			if (!state.text) {
+				clearBubble();
+				return;
+			}
+			if (meta.name || meta.chatname) {
+				state.name = String(meta.name || meta.chatname);
+			}
+			if (meta.avatar || meta.chatimg) {
+				setAvatar(meta.avatar || meta.chatimg);
+			}
+			speakerName.textContent = state.name || defaultName;
+			speechText.textContent = state.text;
+			body.classList.add("has-text");
+			setEmotion(meta.emotion || meta.mood || state.emotion, meta.talking !== false);
+			showStage();
+			if (meta.tts || meta.speak) {
+				speak(state.text);
+			}
+			scheduleClear();
+		}
+
+		function targetMatches(payload) {
+			var target = payload && payload.target;
+			if (!target || target === "null" || target === "*") return true;
+			return String(target) === label;
+		}
+
+		function resolveChunk(payload) {
+			var chunkId;
+			var entry;
+			if (!payload || payload.action !== "ssnBridgeChunk") return payload;
+			chunkId = String(payload.chunkId || "");
+			if (!chunkId) return null;
+			entry = chunks[chunkId] || { total: parseInt(payload.total, 10), parts: [], count: 0 };
+			if (typeof entry.parts[payload.index] === "undefined") entry.count += 1;
+			entry.parts[payload.index] = String(payload.value || "");
+			chunks[chunkId] = entry;
+			if (entry.count < entry.total) return null;
+			delete chunks[chunkId];
+			try {
+				return JSON.parse(entry.parts.join(""));
+			} catch (e) {
+				return null;
+			}
+		}
+
+		function normalizePayload(input) {
+			var payload = input;
+			if (!payload) return null;
+			if (payload.dataReceived && payload.dataReceived.overlayNinja) {
+				payload = payload.dataReceived.overlayNinja;
+			}
+			if (payload.overlayNinja) {
+				payload = payload.overlayNinja;
+			}
+			payload = resolveChunk(payload);
+			if (!payload) return null;
+			if (payload.aiOverlay) {
+				payload = payload.aiOverlay;
+			}
+			return payload;
+		}
+
+		function processPayload(input) {
+			var payload = normalizePayload(input);
+			var meta;
+			var command;
+			if (!payload) return false;
+			if (!targetMatches(payload)) return false;
+			state.lastPayload = payload;
+
+			if (payload.action === "aiOverlay" || payload.action === "cohostOverlay") {
+				meta = payload.meta || {};
+			} else if (payload.chatmessage || payload.text) {
+				meta = payload;
+			} else {
+				return false;
+			}
+
+			command = String(meta.command || (meta.text || meta.chatmessage ? "say" : "emote")).toLowerCase();
+			if (command === "say" || command === "speak") {
+				applySay(meta);
+			} else if (command === "emote") {
+				setEmotion(meta.emotion || meta.mood || state.emotion, meta.talking);
+				showStage();
+			} else if (command === "show") {
+				showStage();
+			} else if (command === "hide") {
+				hideStage();
+			} else if (command === "clear") {
+				clearBubble();
+			} else if (command === "setavatar") {
+				setAvatar(meta.avatar || meta.url || "");
+				showStage();
+			}
+			return true;
+		}
+
+		function setupBridge() {
+			if (!sessionId || urlParams.has("preview")) return;
+			bridgeFrame = document.createElement("iframe");
+			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&solo&view=" + encodeURIComponent(sessionId) + "&novideo&noaudio&label=" + encodeURIComponent(label) + "&cleanoutput&room=" + encodeURIComponent(sessionId);
+			bridgeFrame.style.cssText = "width:0;height:0;border:0;position:absolute;left:-200px;top:-200px;";
+			document.body.appendChild(bridgeFrame);
+			window.addEventListener("message", function (event) {
+				if (event.source !== bridgeFrame.contentWindow) return;
+				processPayload(event.data);
+			});
+		}
+
+		function setupSocket(serverURL) {
+			var attempts = 1;
+			function connect() {
+				if (socket) {
+					socket.onclose = null;
+					socket.close();
+				}
+				socket = new WebSocket(serverURL);
+				socket.onopen = function () {
+					attempts = 1;
+					socket.send(JSON.stringify({ join: sessionId, out: outChannel, in: inChannel }));
+					setStatus("server connected");
+				};
+				socket.onerror = function () {
+					socket.close();
+				};
+				socket.onclose = function () {
+					setStatus("server reconnecting");
+					setTimeout(connect, Math.min(5000, 100 * attempts));
+					attempts += 1;
+				};
+				socket.addEventListener("message", function (event) {
+					var data;
+					if (!event.data) return;
+					try {
+						data = JSON.parse(event.data);
+						processPayload(data);
+					} catch (e) {}
+				});
+			}
+			connect();
+		}
+
+		function resolveSocketURL() {
+			if (urlParams.has("server")) {
+				return urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+			}
+			if (urlParams.has("server2") || urlParams.has("server3")) {
+				return urlParams.get("server2") || urlParams.get("server3") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension");
+			}
+			if (urlParams.has("localserver")) {
+				return "ws://127.0.0.1:3000";
+			}
+			return "";
+		}
+
+		setAvatar(avatarUrl);
+		speakerName.textContent = defaultName;
+		if (stayVisible) showStage();
+		setupBridge();
+		if (sessionId) {
+			var socketURL = resolveSocketURL();
+			if (socketURL) setupSocket(socketURL);
+		}
+
+		window.addEventListener("message", function (event) {
+			if (bridgeFrame && event.source === bridgeFrame.contentWindow) return;
+			processPayload(event.data);
+		});
+
+		window.__aiStageOverlay = {
+			processPayload: processPayload,
+			getState: function () {
+				return {
+					label: label,
+					visible: state.visible,
+					text: state.text,
+					name: state.name,
+					emotion: state.emotion,
+					talking: state.talking,
+					avatar: state.avatar,
+					lastPayload: state.lastPayload
+				};
+			},
+			clear: clearBubble,
+			hide: hideStage,
+			show: showStage
+		};
+	}());
+	</script>
+</body>
+</html>

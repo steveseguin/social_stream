@@ -10405,6 +10405,52 @@ function sendSpotifyOverlay(payload, uid = null) {
 	}
 }
 //////
+function getSettingTextValue(settingName, fallback = "") {
+	try {
+		const value = settings && settings[settingName];
+		if (value && typeof value === "object") {
+			if (typeof value.textsetting === "string") return value.textsetting.trim() || fallback;
+			for (const key in value) {
+				if (/^textparam\d+$/.test(key) && typeof value[key] === "string") {
+					return value[key].trim() || fallback;
+				}
+			}
+		}
+		if (typeof value === "string") return value.trim() || fallback;
+	} catch (e) {}
+	return fallback;
+}
+
+function getAiOverlayTargetLabel(requestedTarget = "") {
+	const requested = String(requestedTarget || "").trim();
+	if (requested && requested !== "null") return requested;
+	return getSettingTextValue("aiOverlayLabel", "cohost-overlay");
+}
+
+function normalizeAiOverlayPayload(input = {}, defaults = {}) {
+	const meta = Object.assign({}, defaults.meta || {}, input.meta || {});
+	const target = getAiOverlayTargetLabel(input.target || defaults.target || meta.target || "");
+	delete meta.target;
+	return {
+		action: "aiOverlay",
+		target,
+		meta
+	};
+}
+
+function sendAiOverlayCommand(input = {}, defaults = {}) {
+	const payload = normalizeAiOverlayPayload(input, defaults);
+	sendTargetP2P(payload, payload.target);
+	if (socketserverDock && socketserverDock.readyState === 1) {
+		try {
+			socketserverDock.send(JSON.stringify(payload));
+		} catch (e) {
+			console.warn("Failed to send AI overlay command over server mode:", e);
+		}
+	}
+	return payload;
+}
+
 function sendTargetP2P(data, target) {
 	// function to send data to the DOCk via the VDO.Ninja API
 	if (ninjaBridge && ninjaBridge.isReady()) {
@@ -11945,6 +11991,12 @@ async function processIncomingRequest(request, UUID = false) {
 	} else if ("action" in request) {
 		if (request.action === "openChat") {
 			openchat(request.value || null);
+		} else if (request.action === "aiOverlay" || request.action === "cohostOverlay") {
+			sendAiOverlayCommand(request, {
+				meta: {
+					source: request.action === "cohostOverlay" ? "cohost" : "ai"
+				}
+			});
 		} else if (request.action === "skipTTS") {
 			// Skip the currently playing TTS message
 			chrome.tabs.query({}, function (tabs) {

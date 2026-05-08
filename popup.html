@@ -9050,7 +9050,70 @@ input:checked + .slider:before {
 					</div>
                 </div>
             </div>
-			
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-ai-overlay-options" />
+					<label class="collapsible-label" for="wrapper-chatbot-ai-overlay-options">
+						<span>AI Stage Overlay</span>
+					</label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat ai-tool-card">
+								<h3 style="margin:0;">AI stage overlay</h3>
+								<div class="link ai-tool-link" title="Open the AI avatar overlay for OBS/browser sources.">
+									<div id="aioverlay" data-raw="" class="single_message">
+										<a target="_blank" id="aioverlaylink" href="https://beta.socialstream.ninja/cohost-overlay.html">https://beta.socialstream.ninja/cohost-overlay.html</a>
+									</div>
+								</div>
+								<p class="ai-tool-copy">Shows an AI avatar and speech bubble on stream. Co-host and chat bot services can send commands to it.</p>
+								<div style="display: inline-block;" title="Send primary chat bot replies to the AI stage overlay too.">
+									<label class="switch">
+										<input type="checkbox" id="aiOverlayFromChatBot" data-setting="aiOverlayFromChatBot" />
+										<span class="slider round"></span>
+									</label>
+									<span>Send primary chat bot replies to this overlay</span>
+								</div>
+								<div style="display: inline-block;" title="Let the AI stage overlay speak using browser text-to-speech. Default is off to avoid doubled audio.">
+									<label class="switch">
+										<input type="checkbox" id="aiOverlayTts" data-setting="aiOverlayTts" />
+										<span class="slider round"></span>
+									</label>
+									<span>Enable overlay TTS</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="aiOverlayLabel" class="textInput" autocomplete="off" placeholder="cohost-overlay" data-textsetting="aiOverlayLabel" />
+									<label for="aiOverlayLabel">&gt; Overlay label / target</label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="aiOverlayName" class="textInput" autocomplete="off" placeholder="NinjaBot" data-textsetting="aiOverlayName" />
+									<label for="aiOverlayName">&gt; Display name</label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" id="aiOverlayAvatar" class="textInput" autocomplete="off" placeholder="Optional avatar image URL" data-textsetting="aiOverlayAvatar" />
+									<label for="aiOverlayAvatar">&gt; Avatar image URL</label>
+								</div>
+								<div style="margin: 8px 0;">
+									<span>Position</span>
+									<select id="aiOverlayPosition" data-optionsetting="aiOverlayPosition" class="textInput" style="max-width: 260px;">
+										<option value="bottom-right">Bottom right</option>
+										<option value="bottom-left">Bottom left</option>
+										<option value="bottom-center">Bottom center</option>
+										<option value="top-right">Top right</option>
+										<option value="top-left">Top left</option>
+										<option value="top-center">Top center</option>
+									</select>
+								</div>
+								<div title="AI stage overlay scale.">
+									<span>Scale</span>
+									<input type="number" id="aiOverlayScale" style="max-width: 6ch;" step="0.05" max="4" min="0.25" value="1" data-numbersetting="aiOverlayScale" />
+								</div>
+								<p class="ai-tool-copy">The SSN Hosted Trial LLM is available under Configure LLM Service Provider for quick testing.</p>
+							</div>
+						</div>
+					</div>
+                </div>
+            </div>
+
 			<div class="link" title="Monitor donation events and activity in real-time">
 				<h2 class="events_dashboard_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">📊</span><span data-translate="eventsdashboard">Events Dashboard</span></span>

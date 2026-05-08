@@ -2155,6 +2155,95 @@ function createTabsFromSettings(response) {
 var streamID = false;
 var lastResponse = false;
 
+function getPopupVersionParam() {
+  try {
+    const manifestData = chrome.runtime.getManifest();
+    if (manifestData && manifestData.version) {
+      return `&v=${manifestData.version}`;
+    }
+  } catch (e) {
+    console.error("Error getting version from manifest:", e);
+  }
+  return "";
+}
+
+function getAiOverlayControlValue(id, fallback = "") {
+  const ele = document.getElementById(id);
+  if (!ele) return fallback;
+  if (ele.type === "checkbox") {
+    return ele.checked;
+  }
+  const value = (ele.value || "").trim();
+  return value || fallback;
+}
+
+function getAiOverlayPasswordParam(response) {
+  let password = "";
+  if (response && response.password) {
+    password = "&password=" + response.password;
+  }
+  if (urlParams.has("localserver")) {
+    password += "&localserver";
+  }
+  return password;
+}
+
+function updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, versionParam = "") {
+  const label = getAiOverlayControlValue("aiOverlayLabel", "cohost-overlay");
+  const name = getAiOverlayControlValue("aiOverlayName", "");
+  const avatar = getAiOverlayControlValue("aiOverlayAvatar", "");
+  const position = getAiOverlayControlValue("aiOverlayPosition", "bottom-right");
+  const scale = getAiOverlayControlValue("aiOverlayScale", "1");
+  const tts = !!getAiOverlayControlValue("aiOverlayTts", false);
+  const params = [
+    "session=" + encodeURIComponent(streamID),
+    "label=" + encodeURIComponent(label),
+    "position=" + encodeURIComponent(position)
+  ];
+  if (password) {
+    password.split("&").filter(Boolean).forEach(part => params.push(part));
+  }
+  if (name) params.push("name=" + encodeURIComponent(name));
+  if (avatar) params.push("avatar=" + encodeURIComponent(avatar));
+  if (scale && scale !== "1") params.push("scale=" + encodeURIComponent(scale));
+  if (tts) params.push("tts");
+  if (versionParam) {
+    versionParam.split("&").filter(Boolean).forEach(part => params.push(part));
+  }
+
+  const overlayUrl = baseURL + "cohost-overlay.html?" + params.join("&");
+  const overlayElement = document.getElementById("aioverlay");
+  const overlayLink = document.getElementById("aioverlaylink");
+  if (overlayElement) overlayElement.raw = overlayUrl;
+  if (overlayLink) {
+    overlayLink.href = overlayUrl;
+    overlayLink.innerText = hideLinks ? "Click to open link" : overlayUrl;
+  }
+
+  const cohostElement = document.getElementById("cohost");
+  const cohostLink = document.getElementById("cohostlink");
+  if (cohostElement && typeof cohostElement.raw === "string" && cohostElement.raw) {
+    let cohostUrl = removeQueryParamWithValue(cohostElement.raw, "aioverlay");
+    cohostUrl = updateURL("aioverlay=" + encodeURIComponent(label), cohostUrl);
+    cohostElement.raw = cleanURL(cohostUrl);
+    if (cohostLink) {
+      cohostLink.href = cohostElement.raw;
+      cohostLink.innerText = hideLinks ? "Click to open link" : cohostElement.raw;
+    }
+  }
+}
+
+function updateAiOverlayLinksFromCurrentState() {
+  if (!lastResponse || !lastResponse.streamID) return;
+  updateAiOverlayGeneratedLinks(
+    document.body.classList.contains("hidelinks"),
+    baseURL,
+    lastResponse.streamID,
+    getAiOverlayPasswordParam(lastResponse),
+    getPopupVersionParam()
+  );
+}
+
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
   // Get any custom parameters from the current URL
   let customParams = "";
@@ -2186,15 +2275,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     console.error("Error getting custom params:", e);
   }
   
-  let versionParam = "";
-  try {
-    const manifestData = chrome.runtime.getManifest();
-    if (manifestData && manifestData.version) {
-      versionParam = `&v=${manifestData.version}`;
-    }
-  } catch (e) {
-    console.error("Error getting version from manifest:", e);
-  }
+  let versionParam = getPopupVersionParam();
   
   // Configuration array with all page details
   const pages = [
@@ -2218,6 +2299,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "aiprompt", path: "aiprompt.html" },
+    { id: "aioverlay", path: "cohost-overlay.html" },
     { id: "eventsdashboard", path: "events.html" },
 	{ id: "reactions", path: "reactions.html" },
 	{ id: "flowactions", path: "actions.html" },
@@ -2259,6 +2341,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
       element.raw = fullURL;
     }
   });
+
+  updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, versionParam);
   
   // Update sample overlay and remote control URLs too
   const sampleOverlay = document.getElementById("sampleoverlay");
@@ -2874,7 +2958,7 @@ function update(response, sync = true) {
                 // A more robust way is if refreshLinks stores the raw URLs on the elements or returns them.
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
-                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink',
+                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aioverlaylink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
@@ -2946,6 +3030,7 @@ function update(response, sync = true) {
             }
 
             createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
+            updateAiOverlayLinksFromCurrentState();
 
             // Check if MIDI is enabled and initialize if needed
             const midiCheckbox = document.querySelector('input[data-setting="midi"]');
@@ -3753,6 +3838,7 @@ function getTargetMap() {
         'custom-gif-commands': 9,
         'chatbot': 10,
         'cohost': 11,
+        'aioverlay': 28,
         'tipjar': 12,
         'credits': 13,
         'giveaway': 14,
@@ -4316,6 +4402,10 @@ function handleSetting(ele, sync) {
     if (ele.dataset.setting === "hideyourlinks") {
         refreshLinks();
     }
+
+    if (ele.dataset.setting === "aiOverlayTts") {
+        updateAiOverlayLinksFromCurrentState();
+    }
     
     // Handle MIDI toggle
     if (ele.dataset.setting === "midi") {
@@ -4399,6 +4489,10 @@ function handleOptionSetting(ele, sync) {
 
     if (settingValue === "videostatssource") {
         updateVideoStatsSettingsVisibility(ele.value);
+    }
+
+    if (settingValue === "aiOverlayPosition") {
+        updateAiOverlayLinksFromCurrentState();
     }
     
     // Handle AI Provider settings
@@ -4912,11 +5006,17 @@ function updateSettings(ele, sync = true, value = null) {
             setting: ele.dataset.textsetting,
             value: ele.value
         }, function (response) {});
+        if (/^aiOverlay/.test(ele.dataset.textsetting)) {
+            updateAiOverlayLinksFromCurrentState();
+        }
         return;
     }
     
     // Handle number settings
     if (handleNumberSetting(ele, sync)) {
+        if (ele.dataset.numbersetting === "aiOverlayScale") {
+            updateAiOverlayLinksFromCurrentState();
+        }
         refreshLinks();
         return;
     }
@@ -5532,6 +5632,7 @@ function refreshLinks(){
       'battlelink': 'battle',
       'chatbotlink': 'chatbot',
       'cohostlink': 'cohost',
+      'aioverlaylink': 'aioverlay',
       'giveawaylink': 'giveaway',
       'creditslink': 'credits',
       'privatechatbotlink': 'privatechatbot',
