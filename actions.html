@@ -625,7 +625,147 @@
                 return null;
             }
         }
-        
+
+        function normalizeObsName(value) {
+            if (value === undefined || value === null) {
+                return '';
+            }
+            return String(value).trim();
+        }
+
+        async function tryGetObsSceneItemId(client, sceneName, sourceName) {
+            try {
+                const item = await client.call('GetSceneItemId', {
+                    sceneName: sceneName,
+                    sourceName: sourceName
+                });
+                if (item && item.sceneItemId !== undefined) {
+                    return item.sceneItemId;
+                }
+            } catch (error) {
+                return null;
+            }
+            return null;
+        }
+
+        function addObsName(map, value, fields) {
+            if (!value) {
+                return;
+            }
+            if (typeof value === 'string') {
+                map[value] = true;
+                return;
+            }
+            for (let i = 0; i < fields.length; i++) {
+                const name = normalizeObsName(value[fields[i]]);
+                if (name) {
+                    map[name] = true;
+                    return;
+                }
+            }
+        }
+
+        async function getObsSceneTargetMaps(client) {
+            const targets = {
+                scenes: Object.create(null),
+                groups: Object.create(null)
+            };
+
+            try {
+                const sceneList = await client.call('GetSceneList');
+                (sceneList.scenes || []).forEach((scene) => addObsName(targets.scenes, scene, ['sceneName']));
+            } catch (error) {
+                console.warn('[OBS WebSocket] Unable to load scene list:', error.message || error);
+            }
+
+            try {
+                const groupList = await client.call('GetGroupList');
+                (groupList.groups || []).forEach((group) => addObsName(targets.groups, group, ['groupName', 'sourceName', 'sceneName']));
+            } catch (error) {
+                console.warn('[OBS WebSocket] Unable to load group list:', error.message || error);
+            }
+
+            return targets;
+        }
+
+        async function getObsSceneItems(client, containerName, isGroup) {
+            try {
+                const result = await client.call(isGroup ? 'GetGroupSceneItemList' : 'GetSceneItemList', {
+                    sceneName: containerName
+                });
+                return result.sceneItems || [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        async function findObsSceneItemReference(client, containerName, sourceName, targets, isGroup, visited, depth) {
+            if (!containerName || !sourceName || depth > 8) {
+                return null;
+            }
+
+            const visitKey = (isGroup ? 'group:' : 'scene:') + containerName;
+            if (visited[visitKey]) {
+                return null;
+            }
+            visited[visitKey] = true;
+
+            const directId = await tryGetObsSceneItemId(client, containerName, sourceName);
+            if (directId !== null) {
+                return {
+                    sceneName: containerName,
+                    sceneItemId: directId,
+                    targetLabel: (isGroup ? 'group' : 'scene') + " '" + containerName + "'"
+                };
+            }
+
+            const sceneItems = await getObsSceneItems(client, containerName, isGroup);
+            for (let i = 0; i < sceneItems.length; i++) {
+                const childName = normalizeObsName(sceneItems[i].sourceName || sceneItems[i].sceneItemName);
+                if (!childName) {
+                    continue;
+                }
+
+                if (targets.groups[childName]) {
+                    const groupResult = await findObsSceneItemReference(client, childName, sourceName, targets, true, visited, depth + 1);
+                    if (groupResult) {
+                        return groupResult;
+                    }
+                } else if (targets.scenes[childName]) {
+                    const sceneResult = await findObsSceneItemReference(client, childName, sourceName, targets, false, visited, depth + 1);
+                    if (sceneResult) {
+                        return sceneResult;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        async function resolveObsSceneItemReference(client, payload) {
+            const sourceName = normalizeObsName(payload.sourceName);
+            const explicitGroupName = normalizeObsName(payload.groupName || payload.parentGroupName);
+            let sceneName = normalizeObsName(payload.sceneName);
+
+            if (!sourceName) {
+                return null;
+            }
+
+            if (!sceneName && !explicitGroupName) {
+                const currentScene = await client.call('GetCurrentProgramScene');
+                sceneName = currentScene.currentProgramSceneName;
+            }
+
+            const targets = await getObsSceneTargetMaps(client);
+            const visited = Object.create(null);
+
+            if (explicitGroupName) {
+                return findObsSceneItemReference(client, explicitGroupName, sourceName, targets, true, visited, 0);
+            }
+
+            return findObsSceneItemReference(client, sceneName, sourceName, targets, false, visited, 0);
+        }
+
         // Initialize OBS WebSocket connection
         async function initOBSWebSocket(forceReconnect = false) {
             if (typeof OBSWebSocket === 'undefined') {
@@ -1082,22 +1222,21 @@
                             break;
                         }
 
-                        // Get current scene to find the source
                         try {
-                            const data = await client.call('GetCurrentProgramScene');
-                            const sceneName = data.currentProgramSceneName;
-                            const sceneItemId = await client.call('GetSceneItemId', {
-                                sceneName: sceneName,
-                                sourceName: payload.sourceName
-                            });
+                            const sceneItem = await resolveObsSceneItemReference(client, payload);
+                            if (!sceneItem) {
+                                const targetName = payload.groupName || payload.sceneName || 'current scene';
+                                console.warn(`[OBS WebSocket] Source '${payload.sourceName}' not found in ${targetName}`);
+                                break;
+                            }
 
                             // Coerce string values to boolean when provided
                             const toBool = (v) => (v === true || v === 'true' || v === 1 || v === '1');
                             let enabled = undefined;
                             if (payload.visible === 'toggle' || payload.visible === undefined) {
                                 const itemState = await client.call('GetSceneItemEnabled', {
-                                    sceneName: sceneName,
-                                    sceneItemId: sceneItemId.sceneItemId
+                                    sceneName: sceneItem.sceneName,
+                                    sceneItemId: sceneItem.sceneItemId
                                 });
                                 enabled = !itemState.sceneItemEnabled;
                             } else {
@@ -1105,15 +1244,15 @@
                             }
 
                             await client.call('SetSceneItemEnabled', {
-                                sceneName: sceneName,
-                                sceneItemId: sceneItemId.sceneItemId,
+                                sceneName: sceneItem.sceneName,
+                                sceneItemId: sceneItem.sceneItemId,
                                 sceneItemEnabled: enabled
                             });
 
-                            console.log(`[OBS WebSocket] Source '${payload.sourceName}' set to ${enabled ? 'visible' : 'hidden'}`);
+                            console.log(`[OBS WebSocket] Source '${payload.sourceName}' set to ${enabled ? 'visible' : 'hidden'} in ${sceneItem.targetLabel}`);
                         } catch (err) {
                             if (err.message && err.message.includes('No scene items were found')) {
-                                console.warn(`[OBS WebSocket] Source '${payload.sourceName}' not found in the current scene`);
+                                console.warn(`[OBS WebSocket] Source '${payload.sourceName}' not found`);
                             } else {
                                 console.warn(`[OBS WebSocket] Could not toggle source '${payload.sourceName}':`, err.message || err);
                             }

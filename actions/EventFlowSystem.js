@@ -3135,7 +3135,9 @@ class EventFlowSystem {
                     const actionPayload = {
                         actionType: 'obsToggleSource',
                         sourceName: config.sourceName,
-                        visible: config.visible
+                        visible: config.visible,
+                        sceneName: config.sceneName || '',
+                        groupName: config.groupName || ''
                     };
                     
                     if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {

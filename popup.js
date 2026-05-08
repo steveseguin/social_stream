@@ -1458,8 +1458,8 @@ const eventTemplates = {
       </label>
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
-          <input type="text" id="botReplyMessageCommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Triggering command" data-textsetting="botReplyMessageCommand${id}">
-          <label for="botReplyMessageCommand${id}">&gt; Triggering command. eg: !discord</label>
+          <input type="text" id="botReplyMessageCommand${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="!discord, !ds, !disc" data-textsetting="botReplyMessageCommand${id}">
+          <label for="botReplyMessageCommand${id}">&gt; Triggering command(s)</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="botReplyMessageValue${id}" maxlength="200" class="textInput" autocomplete="off" placeholder="Message to respond with" data-textsetting="botReplyMessageValue${id}">
@@ -1490,8 +1490,8 @@ const eventTemplates = {
       </label>
       <div style="display:inline-block">
         <div class="textInputContainer" style="width: 235px">
-          <input type="text" id="chatcommand${id}" class="textInput" autocomplete="off" placeholder="!someevent${id}" data-textsetting="chatcommand${id}">
-          <label for="chatcommand${id}">&gt; Chat Command</label>
+          <input type="text" id="chatcommand${id}" class="textInput" autocomplete="off" placeholder="!someevent${id}, !alias${id}" data-textsetting="chatcommand${id}">
+          <label for="chatcommand${id}">&gt; Chat Command(s)</label>
         </div>
         <div class="textInputContainer" style="width: 235px">
           <input type="text" id="chatwebhook${id}" class="textInput" autocomplete="off" placeholder="Provide full URL" data-textsetting="chatwebhook${id}">
@@ -2155,6 +2155,95 @@ function createTabsFromSettings(response) {
 var streamID = false;
 var lastResponse = false;
 
+function getPopupVersionParam() {
+  try {
+    const manifestData = chrome.runtime.getManifest();
+    if (manifestData && manifestData.version) {
+      return `&v=${manifestData.version}`;
+    }
+  } catch (e) {
+    console.error("Error getting version from manifest:", e);
+  }
+  return "";
+}
+
+function getAiOverlayControlValue(id, fallback = "") {
+  const ele = document.getElementById(id);
+  if (!ele) return fallback;
+  if (ele.type === "checkbox") {
+    return ele.checked;
+  }
+  const value = (ele.value || "").trim();
+  return value || fallback;
+}
+
+function getAiOverlayPasswordParam(response) {
+  let password = "";
+  if (response && response.password) {
+    password = "&password=" + response.password;
+  }
+  if (urlParams.has("localserver")) {
+    password += "&localserver";
+  }
+  return password;
+}
+
+function updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, versionParam = "") {
+  const label = getAiOverlayControlValue("aiOverlayLabel", "cohost-overlay");
+  const name = getAiOverlayControlValue("aiOverlayName", "");
+  const avatar = getAiOverlayControlValue("aiOverlayAvatar", "");
+  const position = getAiOverlayControlValue("aiOverlayPosition", "bottom-right");
+  const scale = getAiOverlayControlValue("aiOverlayScale", "1");
+  const tts = !!getAiOverlayControlValue("aiOverlayTts", false);
+  const params = [
+    "session=" + encodeURIComponent(streamID),
+    "label=" + encodeURIComponent(label),
+    "position=" + encodeURIComponent(position)
+  ];
+  if (password) {
+    password.split("&").filter(Boolean).forEach(part => params.push(part));
+  }
+  if (name) params.push("name=" + encodeURIComponent(name));
+  if (avatar) params.push("avatar=" + encodeURIComponent(avatar));
+  if (scale && scale !== "1") params.push("scale=" + encodeURIComponent(scale));
+  if (tts) params.push("tts");
+  if (versionParam) {
+    versionParam.split("&").filter(Boolean).forEach(part => params.push(part));
+  }
+
+  const overlayUrl = baseURL + "cohost-overlay.html?" + params.join("&");
+  const overlayElement = document.getElementById("aioverlay");
+  const overlayLink = document.getElementById("aioverlaylink");
+  if (overlayElement) overlayElement.raw = overlayUrl;
+  if (overlayLink) {
+    overlayLink.href = overlayUrl;
+    overlayLink.innerText = hideLinks ? "Click to open link" : overlayUrl;
+  }
+
+  const cohostElement = document.getElementById("cohost");
+  const cohostLink = document.getElementById("cohostlink");
+  if (cohostElement && typeof cohostElement.raw === "string" && cohostElement.raw) {
+    let cohostUrl = removeQueryParamWithValue(cohostElement.raw, "aioverlay");
+    cohostUrl = updateURL("aioverlay=" + encodeURIComponent(label), cohostUrl);
+    cohostElement.raw = cleanURL(cohostUrl);
+    if (cohostLink) {
+      cohostLink.href = cohostElement.raw;
+      cohostLink.innerText = hideLinks ? "Click to open link" : cohostElement.raw;
+    }
+  }
+}
+
+function updateAiOverlayLinksFromCurrentState() {
+  if (!lastResponse || !lastResponse.streamID) return;
+  updateAiOverlayGeneratedLinks(
+    document.body.classList.contains("hidelinks"),
+    baseURL,
+    lastResponse.streamID,
+    getAiOverlayPasswordParam(lastResponse),
+    getPopupVersionParam()
+  );
+}
+
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
   // Get any custom parameters from the current URL
   let customParams = "";
@@ -2168,7 +2257,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
     'elevensimilarity', 'elevenstyle', 'elevenspeakerboost', 'elevenrate',
     'googleapikey', 'googlevoice', 'googleaudioprofile', 'googlerate', 'googlelang',
-    'geminikey', 'geminimodel', 'voicegemini',
+    'geminikey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt',
     'speechifykey', 'speechifyvoice', 'voicespeechify', 'speechifymodel', 'speechifylang', 'speechifyspeed',
     'kokorokey', 'voicekokoro', 'kokorospeed'
   ];
@@ -2186,15 +2275,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     console.error("Error getting custom params:", e);
   }
   
-  let versionParam = "";
-  try {
-    const manifestData = chrome.runtime.getManifest();
-    if (manifestData && manifestData.version) {
-      versionParam = `&v=${manifestData.version}`;
-    }
-  } catch (e) {
-    console.error("Error getting version from manifest:", e);
-  }
+  let versionParam = getPopupVersionParam();
   
   // Configuration array with all page details
   const pages = [
@@ -2218,6 +2299,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "aiprompt", path: "aiprompt.html" },
+    { id: "aioverlay", path: "cohost-overlay.html" },
     { id: "eventsdashboard", path: "events.html" },
 	{ id: "reactions", path: "reactions.html" },
 	{ id: "flowactions", path: "actions.html" },
@@ -2259,6 +2341,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
       element.raw = fullURL;
     }
   });
+
+  updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, versionParam);
   
   // Update sample overlay and remote control URLs too
   const sampleOverlay = document.getElementById("sampleoverlay");
@@ -2362,7 +2446,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
         system: ['lang', 'voice', 'rate', 'pitch'],
         elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
         google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
-        gemini: ['geminikey', 'geminimodel', 'voicegemini'],
+        gemini: ['geminikey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt'],
         speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
         kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
         kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
@@ -2874,7 +2958,7 @@ function update(response, sync = true) {
                 // A more robust way is if refreshLinks stores the raw URLs on the elements or returns them.
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
-                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink',
+                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aioverlaylink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
@@ -2946,6 +3030,7 @@ function update(response, sync = true) {
             }
 
             createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
+            updateAiOverlayLinksFromCurrentState();
 
             // Check if MIDI is enabled and initialize if needed
             const midiCheckbox = document.querySelector('input[data-setting="midi"]');
@@ -3753,6 +3838,7 @@ function getTargetMap() {
         'custom-gif-commands': 9,
         'chatbot': 10,
         'cohost': 11,
+        'aioverlay': 28,
         'tipjar': 12,
         'credits': 13,
         'giveaway': 14,
@@ -4316,6 +4402,10 @@ function handleSetting(ele, sync) {
     if (ele.dataset.setting === "hideyourlinks") {
         refreshLinks();
     }
+
+    if (ele.dataset.setting === "aiOverlayTts") {
+        updateAiOverlayLinksFromCurrentState();
+    }
     
     // Handle MIDI toggle
     if (ele.dataset.setting === "midi") {
@@ -4399,6 +4489,10 @@ function handleOptionSetting(ele, sync) {
 
     if (settingValue === "videostatssource") {
         updateVideoStatsSettingsVisibility(ele.value);
+    }
+
+    if (settingValue === "aiOverlayPosition") {
+        updateAiOverlayLinksFromCurrentState();
     }
     
     // Handle AI Provider settings
@@ -4912,11 +5006,17 @@ function updateSettings(ele, sync = true, value = null) {
             setting: ele.dataset.textsetting,
             value: ele.value
         }, function (response) {});
+        if (/^aiOverlay/.test(ele.dataset.textsetting)) {
+            updateAiOverlayLinksFromCurrentState();
+        }
         return;
     }
     
     // Handle number settings
     if (handleNumberSetting(ele, sync)) {
+        if (ele.dataset.numbersetting === "aiOverlayScale") {
+            updateAiOverlayLinksFromCurrentState();
+        }
         refreshLinks();
         return;
     }
@@ -5532,6 +5632,7 @@ function refreshLinks(){
       'battlelink': 'battle',
       'chatbotlink': 'chatbot',
       'cohostlink': 'cohost',
+      'aioverlaylink': 'aioverlay',
       'giveawaylink': 'giveaway',
       'creditslink': 'credits',
       'privatechatbotlink': 'privatechatbot',
@@ -5780,8 +5881,8 @@ function createCommandEntry(command = '', url = '') {
     entry.className = 'custom-gif-command-entry';
     entry.innerHTML = `
         <div class="textInputContainer" style="width: 90%;">
-            <input type="text" class="textInput custom-command" value="${encodeHTML(command)}" autocomplete="off" placeholder="!command" data-textsetting="customGifCommand" />
-            <label><span data-translate="chat-command">&gt; Chat Command</span></label>
+            <input type="text" class="textInput custom-command" value="${encodeHTML(command)}" autocomplete="off" placeholder="!command, !alias" data-textsetting="customGifCommand" />
+            <label><span data-translate="chat-command">&gt; Chat Command(s)</span></label>
         </div>
         <div class="textInputContainer" style="width: 90%;">
             <input type="text" class="textInput custom-media-url" value="${encodeHTML(url)}" autocomplete="off" placeholder="https://media.giphy.com/media/..." data-textsetting="customGifUrl" />
@@ -5994,6 +6095,16 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 pitch: document.querySelector('[data-param1="googlepitch"]').checked ? parseFloat(document.querySelector('[data-numbersetting="googlepitch"]')?.value) || 0 : 0,
                 audioProfile: document.querySelector('[data-param1="googlepitch"]').checked ? document.querySelector('[data-optionparam1="googleaudioprofile"]')?.value : false
             },
+
+            // Gemini TTS settings
+            gemini: {
+                key: document.getElementById('geminiAPIKey')?.value,
+                model: document.getElementById('geminiModelSelect')?.value || 'gemini-2.5-flash-preview-tts',
+                voice: document.getElementById('geminiVoiceSelect')?.value || 'Kore',
+                lang: document.getElementById('geminiLangSelect')?.value || '',
+                style: document.getElementById('geminiStyleInstructions')?.value || '',
+                sampleRate: 24000
+            },
             
             // ElevenLabs settings
 			elevenLabs: {
@@ -6132,6 +6243,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             if (serviceName === 'Speechify TTS' && !settings.speechify.key) {
                 throw new Error('Speechify API key is required');
             }
+            if (provider === 'gemini' && !settings.gemini.key) {
+                throw new Error('Gemini API key is required');
+            }
             if (serviceName === 'OpenAI TTS' && !settings.openai.key) {
                 throw new Error('OpenAI API key is required');
             }
@@ -6165,6 +6279,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             } else if ((settings.service == "openai") && settings.openai.key) {
                 if (!this.premiumQueueActive) {
                     await this.openaiTTS(text, settings);
+                }
+            } else if ((settings.service == "gemini") && settings.gemini.key) {
+                if (!this.premiumQueueActive) {
+                    await this.geminiTTS(text, settings);
                 }
 			} else if (settings.service == "kokoro") {
                 if (!this.premiumQueueActive) {
@@ -6373,6 +6491,109 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             headers: { "content-type": "application/json; charset=UTF-8" },
             body: JSON.stringify(data)
         }, 'base64');
+    },
+
+    buildGeminiTtsText(text, settings) {
+        const style = (settings.gemini.style || "").trim();
+        if (!style) {
+            return text;
+        }
+        return style + "\n\n" + text;
+    },
+
+    pcm16ToWav(pcmBytes, sampleRate = 24000, numChannels = 1) {
+        const bytesPerSample = 2;
+        const blockAlign = numChannels * bytesPerSample;
+        const byteRate = sampleRate * blockAlign;
+        const dataLength = pcmBytes.length;
+        const buffer = new ArrayBuffer(44);
+        const view = new DataView(buffer);
+        const writeString = function(offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        };
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + dataLength, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, byteRate, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bytesPerSample * 8, true);
+        writeString(36, 'data');
+        view.setUint32(40, dataLength, true);
+
+        return new Blob([view.buffer, pcmBytes], { type: "audio/wav" });
+    },
+
+    async geminiTTS(text, settings) {
+        this.premiumQueueActive = true;
+        const model = settings.gemini.model || "gemini-2.5-flash-preview-tts";
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+        const speechConfig = {
+            voiceConfig: {
+                prebuiltVoiceConfig: {
+                    voiceName: settings.gemini.voice || "Kore"
+                }
+            }
+        };
+
+        if (settings.gemini.lang) {
+            speechConfig.languageCode = settings.gemini.lang;
+        }
+
+        const data = {
+            model,
+            contents: [{ parts: [{ text: this.buildGeminiTtsText(text, settings) }]}],
+            generationConfig: {
+                responseModalities: ["AUDIO"],
+                speechConfig
+            }
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json; charset=UTF-8",
+                    "x-goog-api-key": settings.gemini.key
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const contentType = response.headers.get("content-type") || "";
+                if (contentType.includes("application/json")) {
+                    const errorData = await response.json();
+                    throw new Error(errorData?.error?.message || errorData?.message || `Gemini TTS HTTP ${response.status}`);
+                }
+                throw new Error(`Gemini TTS HTTP ${response.status} ${response.statusText}`);
+            }
+
+            const json = await response.json();
+            const inlinePart = json?.candidates?.[0]?.content?.parts?.find(part => part.inlineData && part.inlineData.data);
+            const base64Audio = inlinePart?.inlineData?.data;
+            const mimeType = inlinePart?.inlineData?.mimeType || "";
+            if (!base64Audio) {
+                throw new Error("No audio content returned from Gemini");
+            }
+
+            const pcmBytes = Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0));
+            const audioBlob = mimeType.includes("wav")
+                ? new Blob([pcmBytes], { type: mimeType })
+                : this.pcm16ToWav(pcmBytes, settings.gemini.sampleRate || 24000, 1);
+            const blobUrl = URL.createObjectURL(audioBlob);
+            this.playAudio(blobUrl);
+        } catch (error) {
+            this.showFeedback(`Gemini TTS Error: ${error.message}`, 'error');
+            console.error("Gemini TTS error:", error);
+            this.finishedAudio();
+        }
     },
     
 	elevenLabsTTS(text, settings) {

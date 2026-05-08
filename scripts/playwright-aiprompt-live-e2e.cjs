@@ -5,9 +5,9 @@ const ROOT = process.cwd();
 const HOST = "127.0.0.1";
 const PORT = Number(process.env.AIPROMPT_PORT || 4211);
 const ENDPOINT = process.env.AIPROMPT_ENDPOINT || process.argv[2] || "https://llm.socialstream.ninja/v1/chat/completions";
-const API_KEY = process.env.AIPROMPT_API_KEY || process.argv[3] || "";
-const MODEL = process.env.AIPROMPT_MODEL || process.argv[4] || "default";
-const RUNS = Number(process.env.AIPROMPT_RUNS || process.argv[5] || 3);
+const API_KEY = process.env.AIPROMPT_API_KEY || process.argv[3] || "test_token";
+const MODEL = process.env.AIPROMPT_MODEL || process.argv[4] || "qwen3.6-35b-a3b-fp8";
+const RUNS = Number(process.env.AIPROMPT_RUNS || process.argv[5] || 4);
 
 function assert(cond, msg) {
 	if (!cond) throw new Error(msg);
@@ -208,6 +208,14 @@ async function main() {
 		});
 	}
 
+	function assertGeneratedLiveHtml(html, runLabel) {
+		assert(/window\.handleOverlayPayload\s*=/.test(html), `${runLabel} missing window.handleOverlayPayload`);
+		assert(/dataReceived[\s\S]{0,160}overlayNinja/.test(html), `${runLabel} missing dataReceived.overlayNinja listener`);
+		assert(/params\.get\((["'])label\1\)\s*\|\|\s*(["'])dock\2/.test(html), `${runLabel} bridge label should default to dock`);
+		assert(!/params\.get\((["'])label\1\)\s*\|\|\s*["'](?!dock["'])/i.test(html), `${runLabel} has unsafe non-dock bridge label fallback`);
+		assert(!/(?:random|date\.now\(\)|math\.random\(\))[\s\S]{0,80}label|label[\s\S]{0,80}(?:random|date\.now\(\)|math\.random\(\))/i.test(html), `${runLabel} should not use random/time-based labels`);
+	}
+
 	async function waitForPreview(predicate, label, timeoutMs) {
 		const started = Date.now();
 		let lastSnapshot = null;
@@ -223,7 +231,7 @@ async function main() {
 	const scenarios = [
 		{
 			name: "chat-with-source-icon",
-			prompt: "Create a compact transparent chat overlay with avatar, name, message, platform tag, and a small source icon derived from data.type using https://socialstream.ninja/sources/images/{type}.png. Render plain chat payloads that only have chatname, chatmessage, chatimg, and type; do not require event, hasDonation, or membership for chat. Use old-school browser JavaScript and the SSN bridge. Expose window.handleOverlayPayload and do not filter message events by event.source. Return only the complete HTML.",
+			prompt: "I just want a clean chat overlay for OBS. Show avatar, name, message, and a small platform icon. Keep it transparent and make it work with live SSN messages.",
 			async validate() {
 				await sendPreviewPayload({ chatname: "Jess", chatmessage: "hello from youtube", chatimg: "https://socialstream.ninja/media/user1.jpg", type: "youtube" });
 				await waitForPreview(s => s.text.indexOf("jess") >= 0 && s.text.indexOf("hello from youtube") >= 0, "chat text");
@@ -232,7 +240,7 @@ async function main() {
 		},
 		{
 			name: "stacked-alerts",
-			prompt: "Change this overlay to stack donation, membership, follow, gifted sub, and raid alerts. Keep chatname prominent, support simultaneous alerts, include the source icon from data.type when available, expose window.handleOverlayPayload, and do not filter message events by event.source. Do not require chatmessage, subtitle, or meta for alerts; a follow can be just { chatname, event: \"new_follower\", type }. Return only the complete HTML.",
+			prompt: "Turn this into a hype alert overlay. I want follows, subs, gifted subs, donations, and raids to pop up at the same time if a bunch happen quickly.",
 			async validate() {
 				await sendPreviewPayload({ chatname: "DonorDana", chatmessage: "keep it up", hasDonation: "$25.00", type: "youtube" });
 				await sendPreviewPayload({ chatname: "SubSally", membership: "Member (6 months)", type: "twitch" });
@@ -244,12 +252,53 @@ async function main() {
 		},
 		{
 			name: "viewer-snapshot",
-			prompt: "Add a viewer counter ticker for viewer_updates meta snapshots at the bottom, preserving the existing alert behavior. The viewer_updates event is a full snapshot, so remove platforms missing from the newest meta object. Keep window.handleOverlayPayload exposed and do not filter message events by event.source. Return only the complete HTML.",
+			prompt: "Add a simple bottom viewer counter bar showing each platform and the total. It should stay accurate as platforms come and go.",
 			async validate() {
 				await sendPreviewPayload({ event: "viewer_updates", meta: { youtube: 815, twitch: 221, kick: 94 } });
 				await waitForPreview(s => s.text.indexOf("815") >= 0 && s.text.indexOf("221") >= 0 && s.text.indexOf("94") >= 0, "viewer snapshot counts");
 				await sendPreviewPayload({ event: "viewer_updates", meta: { youtube: 900 } });
 				await waitForPreview(s => s.text.indexOf("900") >= 0 && s.text.indexOf("94") === -1, "viewer snapshot replacement");
+			}
+		},
+		{
+			name: "auction-widget",
+			prompt: "I sell on Whatnot and need a sleek auction widget for OBS. Show the current item, bid, who is winning, bid count, and countdown timer. Make sure it updates live.",
+			async validate() {
+				await sendPreviewPayload({
+					type: "whatnot",
+					event: "auction_update",
+					meta: {
+						status: "winning",
+						statusText: "Ava is Winning!",
+						bidder: "Ava",
+						title: "500 Spot Silver Slab Mega Set - #191",
+						category: "Coins, U.S. currency",
+						price: 88,
+						priceText: "$88",
+						bids: 7,
+						bidsText: "7 Bids",
+						timer: "00:19",
+						shipping: "Shipping + Taxes are extra"
+					}
+				});
+				await waitForPreview(s => s.text.indexOf("silver slab") >= 0 && s.text.indexOf("ava") >= 0 && s.text.indexOf("$88") >= 0 && s.text.indexOf("00:19") >= 0, "initial auction snapshot", 8000);
+				await sendPreviewPayload({
+					type: "whatnot",
+					event: "auction_update",
+					meta: {
+						status: "winning",
+						statusText: "Ben is Winning!",
+						bidder: "Ben",
+						title: "500 Spot Silver Slab Mega Set - #191",
+						category: "Coins, U.S. currency",
+						price: 95,
+						priceText: "$95",
+						bids: 8,
+						bidsText: "8 Bids",
+						timer: "00:12"
+					}
+				});
+				await waitForPreview(s => s.text.indexOf("ben") >= 0 && s.text.indexOf("$95") >= 0 && s.text.indexOf("00:12") >= 0, "updated auction snapshot", 8000);
 			}
 		}
 	];
@@ -271,7 +320,7 @@ async function main() {
 			() => {
 				const status = document.getElementById("connectionStatus");
 				const text = (status && status.textContent) || "";
-				return text === "HTML update applied." || /AI request failed|timed out|budget exhausted/i.test(text);
+				return /^HTML update applied/.test(text) || /AI request failed|timed out|budget exhausted/i.test(text);
 			},
 			null,
 			{ timeout: 180000 }
@@ -287,13 +336,23 @@ async function main() {
 				hasConsoleError: consoleBar.classList.contains("visible"),
 				consoleText,
 				htmlLength: html.length,
-				hasHtml: /<html[\s>]/i.test(html) || /<!doctype html/i.test(html)
+				hasHtml: /<html[\s>]/i.test(html) || /<!doctype html/i.test(html),
+				html
 			};
 		});
-		results.push({ run: i + 1, scenario: scenario.name, prompt: scenario.prompt, ...snapshot });
-		assert(snapshot.status === "HTML update applied.", `run ${i + 1} failed status: ${snapshot.status}`);
+		const resultSnapshot = { ...snapshot };
+		delete resultSnapshot.html;
+		results.push({ run: i + 1, scenario: scenario.name, prompt: scenario.prompt, ...resultSnapshot });
+		assert(/^HTML update applied/.test(snapshot.status), `run ${i + 1} failed status: ${snapshot.status}`);
 		assert(!snapshot.hasConsoleError, `run ${i + 1} preview error: ${snapshot.consoleText}`);
 		assert(snapshot.hasHtml && snapshot.htmlLength > 500, `run ${i + 1} did not apply usable HTML`);
+		try {
+			assertGeneratedLiveHtml(snapshot.html, `run ${i + 1} ${scenario.name}`);
+		} catch (error) {
+			console.error("STRUCTURAL HTML FAILURE", error.message);
+			console.error(snapshot.html.slice(0, 10000));
+			throw error;
+		}
 		const handlerType = await page.evaluate(() => {
 			const frame = document.getElementById("previewFrame");
 			return frame && frame.contentWindow ? typeof frame.contentWindow.handleOverlayPayload : "missing-frame";
@@ -324,11 +383,11 @@ async function main() {
 	await page.waitForSelector("#consoleBar.visible", { timeout: 5000 });
 	await page.click("#consoleBarFix");
 	await page.waitForFunction(
-		() => {
-			const status = document.getElementById("connectionStatus");
-			const text = (status && status.textContent) || "";
-			return text === "HTML update applied." || /AI request failed|timed out|budget exhausted/i.test(text);
-		},
+			() => {
+				const status = document.getElementById("connectionStatus");
+				const text = (status && status.textContent) || "";
+				return /^HTML update applied/.test(text) || /AI request failed|timed out|budget exhausted/i.test(text);
+			},
 		null,
 		{ timeout: 180000 }
 	);
@@ -348,7 +407,7 @@ async function main() {
 		};
 	});
 	results.push(repair);
-	assert(repair.status === "HTML update applied.", "manual invalid-character fix failed status: " + repair.status);
+	assert(/^HTML update applied/.test(repair.status), "manual invalid-character fix failed status: " + repair.status);
 	assert(!repair.hasConsoleError, "manual invalid-character fix left preview error: " + repair.consoleText);
 	assert(!repair.stillHasInvalidQuotes, "manual invalid-character fix left smart quotes in script");
 

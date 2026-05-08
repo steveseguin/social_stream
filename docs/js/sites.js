@@ -534,19 +534,6 @@ document.addEventListener('DOMContentLoaded', function() {
             `
         },
         {
-            name: 'AfreecaTV',
-            icon: 'afreecatv.png',
-            description: 'Korean video streaming service.',
-            type: 'popout',
-            instructions: `
-                <ul>
-                    <li>Pop out the chat</li>
-                    <li>URL: https://play.afreecatv.com/*/*?vtype=chat</li>
-                    <li>You can't close the main window it seems though</li>
-                </ul>
-            `
-        },
-        {
             name: 'NonOLive',
             icon: 'nonolive.png',
             description: 'Live streaming platform popular in Asia.',
@@ -566,18 +553,6 @@ document.addEventListener('DOMContentLoaded', function() {
             instructions: `
                 <ul>
                     <li>URL: https://*.stageten.tv/* or https://stageten.tv/*</li>
-                </ul>
-            `
-        },
-        {
-            name: 'Arena.tv',
-            icon: 'arena.png',
-            description: 'Live streaming platform.',
-            type: 'standard',
-            instructions: `
-                <ul>
-                    <li>No pop out chat support</li>
-                    <li>Just pause the video while keeping the chat open</li>
                 </ul>
             `
         },
@@ -1224,18 +1199,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			instructions: `
 				<ul>
 					<li>URL: https://www.sooplive.com/chat/*</li>
-					<li>Pop out the chat to use</li>
-				</ul>
-			`
-		},
-		{
-			name: 'SoopLive Korea',
-			icon: 'sooplive.png',
-			description: 'Korean version of SoopLive streaming platform.',
-			type: 'popout',
-			instructions: `
-				<ul>
-					<li>URL: https://play.sooplive.co.kr/*?vtype=chat</li>
+					<li>URL: https://play.sooplive.com/*?vtype=chat</li>
 					<li>Pop out the chat to use</li>
 				</ul>
 			`
@@ -1306,17 +1270,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				<ul>
 					<li>URL: https://multichat.livepush.io/*</li>
 					<li>No input field support</li>
-				</ul>
-			`
-		},
-		{
-			name: 'Mobcrush',
-			icon: 'mobcrush.png',
-			description: 'Mobile gaming live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://studio.mobcrush.com/chatpopup.html</li>
 				</ul>
 			`
 		},
@@ -1424,17 +1377,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				<ul>
 					<li>URL: https://*.on24.com/view/*</li>
 					<li>Q&A questions supported</li>
-				</ul>
-			`
-		},
-		{
-			name: 'Arena Social',
-			icon: 'arenasocial.png',
-			description: 'Social streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://arena.social/live/*</li>
 				</ul>
 			`
 		},

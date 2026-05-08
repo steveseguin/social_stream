@@ -2972,8 +2972,9 @@ async function cleanupCurrentConnection() {
 		const event = payload.event;
 		const subscription = payload.subscription;
 		
-		// Skip if hideevents is enabled
-		if (settings.hideevents) {
+		// Skip non-donation events if hideevents is enabled.
+		const isDonationEvent = subscription && subscription.type === 'channel.cheer';
+		if (settings.hideevents && !isDonationEvent) {
 			return;
 		}
 

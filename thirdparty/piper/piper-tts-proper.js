@@ -3,6 +3,7 @@
   'use strict';
   
   const DEFAULT_REMOTE_PIPER_BASE = 'https://largefiles.socialstream.ninja/piper';
+  const FALLBACK_REMOTE_PIPER_BASE = 'https://raw.githubusercontent.com/steveseguin/social_stream/beta/thirdparty/piper';
   const trimTrailingSlash = (value) => typeof value === 'string' ? value.replace(/\/+$/, '') : '';
   
   class ProperPiperTTS {
@@ -557,9 +558,8 @@
       addBase(this.localPiperBase);
       addBase(this.extensionPiperBase);
       addBase(this.remoteBaseUrl);
-      if (this.remoteBaseUrl !== DEFAULT_REMOTE_PIPER_BASE) {
-        addBase(DEFAULT_REMOTE_PIPER_BASE);
-      }
+      if (this.remoteBaseUrl !== DEFAULT_REMOTE_PIPER_BASE) addBase(DEFAULT_REMOTE_PIPER_BASE);
+      if (this.remoteBaseUrl !== FALLBACK_REMOTE_PIPER_BASE) addBase(FALLBACK_REMOTE_PIPER_BASE);
       return bases;
     }
 
@@ -615,6 +615,7 @@
 
   ProperPiperTTS.remoteBaseUrl = null;
   ProperPiperTTS.DEFAULT_REMOTE_BASE = DEFAULT_REMOTE_PIPER_BASE;
+  ProperPiperTTS.FALLBACK_REMOTE_BASE = FALLBACK_REMOTE_PIPER_BASE;
   ProperPiperTTS.setRemoteBaseUrl = function(url) {
     if (typeof url === 'string' && url.trim()) {
       ProperPiperTTS.remoteBaseUrl = url.trim();

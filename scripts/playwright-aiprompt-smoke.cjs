@@ -93,9 +93,12 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
                     sendPayload(out);
                   }, delay);
                 }
-                send('chatbotChunk', '<!DOCTYPE html>\\\\n<html>\\\\n<body>\\\\n', 50);
-                send('chatbotChunk', '<div id="stream-smoke-ok">from streamed html</div>\\\\n', 150);
-                send('chatbotResponse', '<!DOCTYPE html><html><body><div id="stream-smoke-ok">done</div></body></html>', 500);
+                var response = parent.__ssnAiPromptMockChatbotResponse || '<!DOCTYPE html><html><body><div id="stream-smoke-ok">from streamed html</div></body></html>';
+                var chunkA = response.slice(0, Math.max(1, Math.floor(response.length / 2)));
+                var chunkB = response.slice(chunkA.length);
+                send('chatbotChunk', chunkA, 50);
+                send('chatbotChunk', chunkB || '<div id="stream-smoke-ok">from streamed html</div>', 150);
+                send('chatbotResponse', response, 500);
               });
             <\/script></body></html>`);
             doc.close();
@@ -252,7 +255,32 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(/chunks/.test(streamMeta), `Streaming meta should show chunk count, got: ${streamMeta}`);
   await page.waitForFunction(() => document.getElementById('htmlEditor').value.includes('stream-smoke-ok'), null, { timeout: 3000 });
   const finalStatus = await page.$eval('#connectionStatus', el => el.textContent);
-  assert(finalStatus === 'HTML update applied.', `Expected final AI status, got: ${finalStatus}`);
+  assert(/^HTML update applied/.test(finalStatus), `Expected final AI status, got: ${finalStatus}`);
+
+  await page.evaluate(() => {
+    window.__ssnAiPromptMockChatbotResponse = [
+      '<!DOCTYPE html>',
+      '<html><head><meta charset="UTF-8"><title>Bad Label</title></head><body>',
+      '<div id="auction-container"></div><iframe id="ssn_bridge" style="display:none;"></iframe>',
+      '<script>(function(){',
+      'var params = new URLSearchParams(location.search);',
+      'var roomID = params.get("session") || "";',
+      'var password = params.get("password") || "false";',
+      'var label = params.get("label") || "smooth_auction_" + Date.now();',
+      'var bridge = document.getElementById("ssn_bridge");',
+      'if (roomID) bridge.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&view=" + encodeURIComponent(roomID) + "&label=" + encodeURIComponent(label) + "&noaudio&novideo&cleanoutput&room=" + encodeURIComponent(roomID);',
+      'function handlePayload(data){ document.getElementById("auction-container").textContent = data && data.event || ""; }',
+      'window.handleOverlayPayload = handlePayload;',
+      'window.addEventListener("message", function(event){ var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja; if (payload) handlePayload(payload); });',
+      '}());<\/script></body></html>'
+    ].join('');
+  });
+  await page.fill('#userRequest', 'make an auction overlay');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /^HTML update applied/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const reviewedHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(/params\.get\("label"\)\s*\|\|\s*"dock"/.test(reviewedHtml), 'Generated HTML review should force normal live overlays to label=dock');
+  assert(!/smooth_auction/.test(reviewedHtml), 'Generated HTML review should remove random live overlay labels');
 
   // Error reporter: inject a broken template and confirm the console bar surfaces the error.
   await page.evaluate(() => {

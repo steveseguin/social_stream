@@ -1978,7 +1978,11 @@ class EventFlowEditor {
                 case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
                 case 'delay': return `Delay: ${node.config.delayMs || 1000}ms`;
                 case 'obsChangeScene': return `Scene: ${node.config.sceneName || 'Not set'}`;
-                case 'obsToggleSource': return `${node.config.sourceName || 'Source'}: ${node.config.visible === false ? 'Hide' : node.config.visible === true ? 'Show' : 'Toggle'}`;
+                case 'obsToggleSource': {
+                    const visibility = node.config.visible === false || node.config.visible === 'false' ? 'Hide' : node.config.visible === true || node.config.visible === 'true' ? 'Show' : 'Toggle';
+                    const target = node.config.groupName ? ` in ${node.config.groupName}` : node.config.sceneName ? ` in ${node.config.sceneName}` : '';
+                    return `${node.config.sourceName || 'Source'}${target}: ${visibility}`;
+                }
                 case 'obsSetSourceFilter': return `Filter: ${node.config.filterName || 'Not set'}`;
                 case 'obsMuteSource': return `${node.config.sourceName || 'Source'}: ${node.config.muted === true ? 'Mute' : node.config.muted === false ? 'Unmute' : 'Toggle'}`;
                 case 'obsStartRecording': return 'Start Recording';
@@ -2514,7 +2518,7 @@ class EventFlowEditor {
 					node.config = { sceneName: 'Scene 1' };
 					break;
 				case 'obsToggleSource':
-					node.config = { sourceName: 'Source 1', visible: 'toggle' };
+					node.config = { sourceName: 'Source 1', sceneName: '', groupName: '', visible: 'toggle' };
 					break;
 				case 'obsSetSourceFilter':
 					node.config = { sourceName: 'Source 1', filterName: 'Filter 1', enabled: 'toggle' };
@@ -2897,15 +2901,15 @@ class EventFlowEditor {
 				this.populateMIDIInputDevices('prop-deviceId', node.config.deviceId);
 				break;
 			case 'fromSource':
-				const isCustomSource = node.config.source !== undefined && node.config.source !== null && !['*', 'afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
+				const isCustomSource = node.config.source !== undefined && node.config.source !== null && !['*', 'amazon', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
   'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
   'kiwiirc', 'kofi', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
-  'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'mobcrush', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
+  'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
   'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
-  'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive', 'soopliveco',
+  'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive',
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
   'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
@@ -2914,15 +2918,15 @@ class EventFlowEditor {
 				
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
 						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
-						    ${['afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
+						    ${['amazon', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
   'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
   'kiwiirc', 'kofi', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
-  'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'mobcrush', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
+  'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
   'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
-  'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive', 'soopliveco',
+  'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive',
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
   'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
@@ -3909,7 +3913,6 @@ class EventFlowEditor {
 					{ value: 'teams', label: 'Teams' },
 					{ value: 'slack', label: 'Slack' },
 					{ value: 'vimeo', label: 'Vimeo' },
-					{ value: 'afreecatv', label: 'AfreecaTV' },
 					{ value: 'bigo', label: 'Bigo Live' },
 					{ value: 'bilibili', label: 'Bilibili' },
 					{ value: 'chzzk', label: 'CHZZK' },
@@ -3930,7 +3933,7 @@ class EventFlowEditor {
 							<input type="text" class="property-input" id="prop-destination-custom" 
 								   value="${isCustomSend ? node.config.destination : ''}" 
 								   style="display: ${currentSendDestination === 'custom' ? 'block' : 'none'}; margin-top: 5px;"
-								   placeholder="Enter custom destination (e.g., 'arenasocial', 'channel_name')">
+								   placeholder="Enter custom destination (e.g., 'youtube', 'channel_name')">
                     <div class="property-help">Send generated messages (e.g., "Thank you" for donations, announcements, bot responses).</div>
                 </div>
                 <div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || 'Thank you {username}!'}</textarea><div class="property-help">Use {username}, {message}, {source} placeholders</div></div>
@@ -3974,7 +3977,6 @@ class EventFlowEditor {
 					{ value: 'teams', label: 'Teams' },
 					{ value: 'slack', label: 'Slack' },
 					{ value: 'vimeo', label: 'Vimeo' },
-					{ value: 'afreecatv', label: 'AfreecaTV' },
 					{ value: 'bigo', label: 'Bigo Live' },
 					{ value: 'bilibili', label: 'Bilibili' },
 					{ value: 'chzzk', label: 'CHZZK' },
@@ -3995,7 +3997,7 @@ class EventFlowEditor {
 							<input type="text" class="property-input" id="prop-destination-custom" 
 								   value="${isCustomRelayDest ? node.config.destination : ''}" 
 								   style="display: ${currentDestination === 'custom' ? 'block' : 'none'}; margin-top: 5px;"
-								   placeholder="Enter custom destination (e.g., 'arenasocial', 'channel_name')">
+								   placeholder="Enter custom destination (e.g., 'youtube', 'channel_name')">
                     <div class="property-help">Relays chat messages to other platforms. Source is always excluded to prevent loops.</div>
                 </div>
                 <div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || '[{source}] {username}: {message}'}</textarea></div>
@@ -4537,9 +4539,21 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<label class="property-label">Source Name</label>
-						<input type="text" class="property-input" id="prop-sourceName" 
+						<input type="text" class="property-input" id="prop-sourceName"
 							value="${node.config.sourceName || ''}" placeholder="e.g., Webcam, Alert Box">
 						<div class="property-help">The exact name of the OBS source to toggle</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Scene Name (optional)</label>
+						<input type="text" class="property-input" id="prop-sceneName"
+							value="${node.config.sceneName || ''}" placeholder="Leave blank for current scene">
+						<div class="property-help">Use this to target a scene that is not currently active</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Group Name (optional)</label>
+						<input type="text" class="property-input" id="prop-groupName"
+							value="${node.config.groupName || ''}" placeholder="e.g., Alerts Group">
+						<div class="property-help">Use this when the source is inside an OBS group</div>
 					</div>
 					<div class="property-group">
 						<label class="property-label">Visibility</label>
@@ -4553,6 +4567,7 @@ class EventFlowEditor {
 					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>Version note:</strong><br>
 						This action requires OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; only add <code>&obspw=...</code> if OBS requires one.<br>
+						Leave Scene and Group blank to target the current scene; set Scene for nested/non-active scenes, or Group for sources inside an OBS group.<br>
 						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
 					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">

@@ -118,19 +118,19 @@ function toDataURL(url, callback) {
 		var chatimg = ""
 
 		try {
-			chatimg = ele.querySelector("[class*='styles_profile-image'] img[src]").src;
+			chatimg = ele.querySelector("[class*='_profile-image'] img[src]").src;
 		} catch(e){
 		}
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector("[class*='styles_comment__username__']").textContent.trim());
+			name = escapeHtml(ele.querySelector("[class*='_comment__username_']").textContent.trim());
 		} catch(e){
 		}
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector("div[class*='styles_comment__text']")).trim();
+			msg = getAllContentNodes(ele.querySelector("[class*='_comment__text__block']")).trim();
 		} catch(e){
 		}
 		
@@ -240,19 +240,19 @@ function toDataURL(url, callback) {
 
 	setInterval(function(){
 		try {
-			if (document.querySelector('[class^="styles_chat__list"]')){
-				if (!document.querySelector('[class^="styles_chat__list"]').marked){
-					document.querySelector('[class^="styles_chat__list"]').marked=true;
+			if (document.querySelector('[class*="_chat__list_"]')){
+				if (!document.querySelector('[class*="_chat__list_"]').marked){
+					document.querySelector('[class*="_chat__list_"]').marked=true;
 
 					console.log("CONNECTED chat detected");
 
 					setTimeout(function(){
 
-						[...document.querySelector('[class^="styles_chat__list"]').childNodes].forEach(ele=>{
+						[...document.querySelector('[class*="_chat__list_"]').childNodes].forEach(ele=>{
 							ele.skip=true;
 							//processMessage(ele);
 						});
-						onElementInserted(document.querySelector('[class^="styles_chat__list"]'));
+						onElementInserted(document.querySelector('[class*="_chat__list_"]'));
 
 					},1000);
 				}

@@ -103,7 +103,7 @@
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector(".user-name, [class*='_username_']").textContent);
+			name = escapeHtml(ele.querySelector(".user-name, [class*='_username_'], [class*='chatAuthor-']").textContent);
 		} catch(e){
 		}
 		
@@ -121,6 +121,8 @@
 		try {
 			if (ele.querySelector(".message-content")){
 				msg = getAllContentNodes(ele.querySelector(".message-content")).trim();
+			} else if (ele.querySelector("[class*='chatText-']")){
+				msg = getAllContentNodes(ele.querySelector("[class*='chatText-']")).trim();
 			} else {
 				msg = getAllContentNodes(ele).trim();
 				msg = msg.replace(name,"").trim();
@@ -143,6 +145,13 @@
 				//console.log("bad dataIndex");
 				return;
 			}
+		}
+		
+		if (ele.dataset.id){
+			if (ele.dataset.processedId === ele.dataset.id){
+				return;
+			}
+			ele.dataset.processedId = ele.dataset.id;
 		}
 		
 		ele.skip = true;
@@ -947,9 +956,10 @@
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							const addedNode = mutation.addedNodes[i];
-							if (addedNode.nodeType !== 1) continue; // Only process element nodes
+							if (addedNode.nodeType !== 1) continue;
 
 							if (addedNode.skip){continue;}
+							if (!addedNode.dataset.id && !addedNode.dataset.index && !addedNode.querySelector(".user-name, [class*='_username_'], [class*='chatAuthor-']")){continue;}
 
 							setTimeout(()=>{
 									processMessage(addedNode);
@@ -985,13 +995,14 @@
 		
 		checking = setInterval(function(){
 			try {
-				var container = document.querySelector("#chatting-container, [data-testid='chat-messages-container']");
+				var container = document.querySelector("#chatting-container, [data-testid='chat-messages-container'], [data-testid='message-list-container']");
 				if (container && !container.marked){
 					container.marked=true;
 
 					setTimeout(function(){
 						dataIndex = 0;
-						onElementInserted(container);
+						var observeTarget = container.querySelector("ul[class*='chatFeed-'], ul[aria-live='polite']") || container;
+						onElementInserted(observeTarget);
 					},2000);
 				}
 

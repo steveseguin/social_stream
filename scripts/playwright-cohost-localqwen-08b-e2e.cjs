@@ -286,7 +286,7 @@ function findWorkerMessages(log, type, predicate) {
 
     const initMessage = findWorkerMessages(state.workerLog, 'init', (entry) => String(entry.data.modelId || '').includes('qwen3.5-0.8b-onnx'))[0];
     assert(!!initMessage, 'Local Qwen 0.8B init was not sent.');
-    assert(initMessage.data.runtime && initMessage.data.runtime.modelClass === 'Qwen3_5ForConditionalGeneration', 'Local Qwen 0.8B init did not use the Qwen runtime.');
+    assert(initMessage.data.runtime && initMessage.data.runtime.modelClass === 'Qwen3_5ForCausalLM', 'Local Qwen 0.8B init did not use the Qwen runtime.');
     assert(initMessage.data.runtime && initMessage.data.runtime.dtype && initMessage.data.runtime.dtype.embed_tokens === 'q4', 'Local Qwen 0.8B init did not use the q4 runtime.');
 
     const generateMessages = findWorkerMessages(state.workerLog, 'generate');

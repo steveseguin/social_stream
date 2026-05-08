@@ -2,6 +2,43 @@
 	 
 	
 	var isExtensionOn = true;
+	function isSSAppContext() {
+		return !!(
+			window.ninjafy ||
+			window.electronApi ||
+			window.__ssapp ||
+			typeof window.__SSAPP_TAB_ID__ !== "undefined"
+		);
+	}
+
+	function normalizeSoopLiveUrl() {
+		if (!isSSAppContext()) {
+			return false;
+		}
+
+		try {
+			var url = new URL(window.location.href);
+			if (url.hostname === "www.sooplive.com" && url.pathname.indexOf("/chat/") === 0) {
+				var username = url.pathname.replace(/^\/chat\/+/, "").split("/")[0];
+				if (username) {
+					window.location.replace("https://play.sooplive.com/" + username + "/");
+					return true;
+				}
+			}
+
+			if (url.hostname === "play.sooplive.com" && url.pathname.length > 1 && url.searchParams.get("vtype") !== "chat") {
+				url.searchParams.set("vtype", "chat");
+				window.location.replace(url.toString());
+				return true;
+			}
+		} catch (e) {}
+
+		return false;
+	}
+
+	if (normalizeSoopLiveUrl()) {
+		return;
+	}
 function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
@@ -68,11 +105,26 @@ function toDataURL(url, callback) {
 		var nameColor = "";
 		var name="";
 		try {
-			name = ele.querySelector(".channel-text").textContent.trim();
-			name = escapeHtml(name);
-			
-			var style = getComputedStyle(ele.querySelector(".channel-text"));
-			nameColor = style.color;
+			var nameEle = ele.querySelector(".channel-text");
+			if (nameEle){
+				name = nameEle.textContent.trim();
+				name = escapeHtml(name);
+				
+				var style = getComputedStyle(nameEle);
+				nameColor = style.color;
+			} else {
+				nameEle = ele.querySelector(".username [user_nick]");
+				if (nameEle){
+					name = nameEle.getAttribute("user_nick") || nameEle.textContent.trim();
+					name = escapeHtml(name);
+					var colorEle = ele.querySelector(".username .author[data-color]");
+					if (colorEle && colorEle.dataset && colorEle.dataset.color){
+						nameColor = "#" + colorEle.dataset.color;
+					} else if (nameEle.dataset && nameEle.dataset.color){
+						nameColor = "#" + nameEle.dataset.color;
+					}
+				}
+			}
 		} catch(e){
 		//	console.warn(e);
 		}
@@ -80,7 +132,11 @@ function toDataURL(url, callback) {
 		
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector("span[type^='body'][color='label/labelSecondary']"));
+			var msgEle = ele.querySelector("span[type^='body'][color='label/labelSecondary']");
+			if (!msgEle){
+				msgEle = ele.querySelector(".message-text");
+			}
+			msg = getAllContentNodes(msgEle);
 		} catch(e){
 		//	console.warn(e);
 		}

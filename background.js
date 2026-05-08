@@ -20,6 +20,58 @@ var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 const fakeChatThrottleState = new Map();
 var sentimentAnalysisLoaded = false;
+const commandAliasCache = new Map();
+
+function getCommandAliases(commandString) {
+	if (!commandString) {
+		return [];
+	}
+	const cacheKey = String(commandString);
+	const cached = commandAliasCache.get(cacheKey);
+	if (cached) {
+		return cached;
+	}
+	const aliases = cacheKey
+		.split(",")
+		.map(command => command.trim())
+		.filter(Boolean)
+		.map(command => {
+			const escapedCommand = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			return {
+				command,
+				lower: command.toLowerCase(),
+				wordRegex: new RegExp(`^${escapedCommand}\\b|\\s${escapedCommand}\\b`, "i")
+			};
+		});
+	if (commandAliasCache.size > 500) {
+		commandAliasCache.clear();
+	}
+	commandAliasCache.set(cacheKey, aliases);
+	return aliases;
+}
+
+function commandAliasMatches(commandString, messageText, mode) {
+	if (typeof messageText === "undefined" || messageText === null) {
+		return false;
+	}
+	const aliases = getCommandAliases(commandString);
+	if (!aliases.length) {
+		return false;
+	}
+	const text = String(messageText);
+
+	if (mode === "exact") {
+		return aliases.some(alias => text === alias.command);
+	}
+	if (mode === "startsWith") {
+		const lowerText = text.toLowerCase();
+		return aliases.some(alias => lowerText.startsWith(alias.lower));
+	}
+	if (mode === "word") {
+		return aliases.some(alias => alias.wordRegex.test(text));
+	}
+	return aliases.some(alias => text.includes(alias.command));
+}
 
 // Spotify integration
 var spotify = null;
@@ -1255,6 +1307,40 @@ var relaytargets = false;
 var loadedFirst = false;
 const SETTINGS_OBJECT_FIELD_PATTERN = /^(?:setting|both|param\d+|textparam\d+|numbersetting\d*|optionparam\d+|textsetting|optionsetting(?:2|10)?|json)$/;
 const SETTINGS_OBJECT_TOGGLE_PATTERN = /^(?:setting|both|param\d+)$/;
+const TEMP_VIEWER_COUNT_TTL = 70 * 60 * 1000;
+var temporaryViewerCountUntil = 0;
+var temporaryViewerCountTimer = null;
+
+function isTemporaryViewerCountActive() {
+	return temporaryViewerCountUntil && Date.now() < temporaryViewerCountUntil;
+}
+
+function getEffectiveSettingsForSources() {
+	if (!isTemporaryViewerCountActive() || settings.showviewercount) {
+		return settings;
+	}
+	const effectiveSettings = Object.assign({}, settings);
+	effectiveSettings.showviewercount = true;
+	return effectiveSettings;
+}
+
+function refreshTemporaryViewerCount(ttl) {
+	const parsedTtl = parseInt(ttl, 10);
+	const requestedTtl = Number.isFinite(parsedTtl) && parsedTtl > 0 ? parsedTtl : TEMP_VIEWER_COUNT_TTL;
+	const cappedTtl = Math.min(Math.max(requestedTtl, 5 * 60 * 1000), 2 * 60 * 60 * 1000);
+	temporaryViewerCountUntil = Date.now() + cappedTtl;
+
+	if (temporaryViewerCountTimer) {
+		clearTimeout(temporaryViewerCountTimer);
+	}
+	temporaryViewerCountTimer = setTimeout(function () {
+		temporaryViewerCountTimer = null;
+		temporaryViewerCountUntil = 0;
+		pushSettingChange();
+	}, cappedTtl + 1000);
+
+	pushSettingChange();
+}
 
 function pruneSettingsObjects(settingsObject) {
 	if (!settingsObject || typeof settingsObject !== "object") {
@@ -2145,13 +2231,14 @@ function checkIntervalState(intervalIndex) {
 }
 
 function pushSettingChange() {
+	const settingsForSources = getEffectiveSettingsForSources();
 	chrome.tabs.query({}, function (tabs) {
 		chrome.runtime.lastError;
 		for (var i = 0; i < tabs.length; i++) {
 			if (!tabs[i].url) {
 				continue;
 			}
-			chrome.tabs.sendMessage(tabs[i].id, { settings: settings, state: isExtensionOn }, function (response = false) {
+			chrome.tabs.sendMessage(tabs[i].id, { settings: settingsForSources, state: isExtensionOn }, function (response = false) {
 				chrome.runtime.lastError;
 			});
 		}
@@ -4898,18 +4985,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				// }
 			}
 		} else if ("inject" in request) {
-			if (request.inject == "mobcrush") {
-				chrome.webNavigation.getAllFrames({ tabId: sender.tab.id }, frames => {
-					frames.forEach(f => {
-						if (f.frameId && f.frameType === "sub_frame" && f.url.includes("https://www.mobcrush.com/")) {
-							chrome.tabs.executeScript(sender.tab.id, {
-								frameId: f.frameId,
-								file: "mobcrush.js"
-							});
-						}
-					});
-				});
-			}
 			sendResponse({ state: isExtensionOn });
 		} else if ("delete" in request) {
 			sendResponse({ state: isExtensionOn });
@@ -5094,13 +5169,23 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				return response;
 			}
 			try {
+				const method = String(request.method || "GET").toUpperCase();
+				if (method !== "GET" && !(method === "POST" && parsedUrl.pathname === "/api/oauth/token")) {
+					sendResponse({ ok: false, error: "VPZone fetch method not allowed" });
+					return response;
+				}
+				const headers = {
+					Accept: "application/json"
+				};
+				if (method === "POST") {
+					headers["Content-Type"] = "application/x-www-form-urlencoded";
+				}
 				const vpzoneResponse = await fetch(parsedUrl.toString(), {
-					method: "GET",
+					method,
 					cache: "no-store",
 					credentials: "omit",
-					headers: {
-						Accept: "application/json"
-					}
+					headers,
+					body: method === "POST" ? String(request.body || "") : undefined
 				});
 				const responseText = await vpzoneResponse.text();
 				let responseJson = {};
@@ -5113,7 +5198,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					sendResponse({
 						ok: false,
 						status: vpzoneResponse.status,
-						error: (responseJson && (responseJson.error || responseJson.message)) || `HTTP ${vpzoneResponse.status}`
+						error: (responseJson && (responseJson.error_description || responseJson.message || (typeof responseJson.error === "string" ? responseJson.error : responseJson.error && responseJson.error.message))) || `HTTP ${vpzoneResponse.status}`
 					});
 					return response;
 				}
@@ -5175,7 +5260,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			return true;
 		} else if ("getSettings" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: getEffectiveSettingsForSources() }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
 			if (hasSenderTabId) {
 				try {
 					priorityTabs.add(senderTabId);
@@ -6218,8 +6303,9 @@ async function sendToDestinations(message) {
 	try {
 		if (settings.enableCustomGifCommands && settings["customGifCommands"]) {
 			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
+			const firstWord = message && message.chatmessage ? message.chatmessage.split(" ")[0] : "";
 			settings["customGifCommands"]["object"].forEach(values => {
-				if (message && message.chatmessage && values.url && values.command && message.chatmessage.split(" ")[0] === values.command) {
+				if (firstWord && values.url && values.command && commandAliasMatches(values.command, firstWord, "exact")) {
 					//  || "https://picsum.photos/1280/720?random="+values.command
 					sendTargetP2P({ ...message, ...{ contentimg: values.url } }, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
 				}
@@ -9851,6 +9937,15 @@ async function openchat(target = null, force = false) {
 		openURL(url);
 	}
 
+	if (target == "vpzonews" || (!target && settings.vpzone_username && settings.vpzone_username.textsetting)) {
+		let url = "https://socialstream.ninja/sources/websocket/vpzone";
+		const vpzoneChannel = settings.vpzone_username && settings.vpzone_username.textsetting ? settings.vpzone_username.textsetting.trim().replace(/^@+/, "") : "";
+		if (vpzoneChannel) {
+			url += "?channel=" + encodeURIComponent(vpzoneChannel);
+		}
+		openURL(url);
+	}
+
 	if ((target == "instagramlive" || !target) && settings.instagramlive_username && settings.instagramlive_username.textsetting) {
 		let url = "https://www.instagram.com/" + settings.instagramlive_username.textsetting + "/live/";
 		try {
@@ -10310,6 +10405,52 @@ function sendSpotifyOverlay(payload, uid = null) {
 	}
 }
 //////
+function getSettingTextValue(settingName, fallback = "") {
+	try {
+		const value = settings && settings[settingName];
+		if (value && typeof value === "object") {
+			if (typeof value.textsetting === "string") return value.textsetting.trim() || fallback;
+			for (const key in value) {
+				if (/^textparam\d+$/.test(key) && typeof value[key] === "string") {
+					return value[key].trim() || fallback;
+				}
+			}
+		}
+		if (typeof value === "string") return value.trim() || fallback;
+	} catch (e) {}
+	return fallback;
+}
+
+function getAiOverlayTargetLabel(requestedTarget = "") {
+	const requested = String(requestedTarget || "").trim();
+	if (requested && requested !== "null") return requested;
+	return getSettingTextValue("aiOverlayLabel", "cohost-overlay");
+}
+
+function normalizeAiOverlayPayload(input = {}, defaults = {}) {
+	const meta = Object.assign({}, defaults.meta || {}, input.meta || {});
+	const target = getAiOverlayTargetLabel(input.target || defaults.target || meta.target || "");
+	delete meta.target;
+	return {
+		action: "aiOverlay",
+		target,
+		meta
+	};
+}
+
+function sendAiOverlayCommand(input = {}, defaults = {}) {
+	const payload = normalizeAiOverlayPayload(input, defaults);
+	sendTargetP2P(payload, payload.target);
+	if (socketserverDock && socketserverDock.readyState === 1) {
+		try {
+			socketserverDock.send(JSON.stringify(payload));
+		} catch (e) {
+			console.warn("Failed to send AI overlay command over server mode:", e);
+		}
+	}
+	return payload;
+}
+
 function sendTargetP2P(data, target) {
 	// function to send data to the DOCk via the VDO.Ninja API
 	if (ninjaBridge && ninjaBridge.isReady()) {
@@ -11833,6 +11974,10 @@ async function handleBridgeChunkRequest(request, UUID) {
 
 async function processIncomingRequest(request, UUID = false) {
 	// from the dock or chat bot, etc.
+	if (request && request.action === "requestViewerCount") {
+		refreshTemporaryViewerCount(request.value && request.value.ttl);
+		return;
+	}
 	if (settings.disablehost) {
 		return;
 	}
@@ -11846,6 +11991,12 @@ async function processIncomingRequest(request, UUID = false) {
 	} else if ("action" in request) {
 		if (request.action === "openChat") {
 			openchat(request.value || null);
+		} else if (request.action === "aiOverlay" || request.action === "cohostOverlay") {
+			sendAiOverlayCommand(request, {
+				meta: {
+					source: request.action === "cohostOverlay" ? "cohost" : "ai"
+				}
+			});
 		} else if (request.action === "skipTTS") {
 			// Skip the currently playing TTS message
 			chrome.tabs.query({}, function (tabs) {
@@ -13094,6 +13245,11 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 
 	if (isWebsocketSourceTabUrl(url)) {
 		if (relayMessageToWebsocketSourceTab(tab.id, data.response)) {
+			relayTabContext.storeMessage(data.response);
+			lastSentMessage = sanitizeMessageForTracking(data.response, false);
+			lastSentTimestamp = now;
+			lastMessageCounter = 0;
+			messageTimeout[tab.id] = now;
 			relayTabContext.markAutoIfNeeded();
 		}
 		return;
@@ -15029,7 +15185,7 @@ async function applyBotActions(data, tab = false) {
 
 				const isFullMatch = settings.botReplyMessageFull;
 				const messageText = data.textContent || data.chatmessage;
-				const messageMatches = isFullMatch ? messageText === command : messageText.includes(command);
+				const messageMatches = commandAliasMatches(command, messageText, isFullMatch ? "exact" : "contains");
 
 				if (!messageMatches) continue;
 
@@ -15063,10 +15219,7 @@ async function applyBotActions(data, tab = false) {
 
 				if (!event?.setting || !command || !note) continue;
 
-				const escapedCommand = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-				const regex = new RegExp(`^${escapedCommand}\\b|\\s${escapedCommand}\\b`, "i");
-
-				if (regex.test(data.chatmessage)) {
+				if (commandAliasMatches(command, data.chatmessage, "word")) {
 					triggerMidiNote(parseInt(note), device);
 					break;
 				}
@@ -15490,9 +15643,9 @@ async function applyBotActions(data, tab = false) {
 		for (const i of chatCommand) {
 			if (data.chatmessage && settings["chatevent" + i] && settings["chatcommand" + i] && settings["chatwebhook" + i]) {
 				let matches = false;
-				if (settings.chatwebhookstrict && data.chatmessage === settings["chatcommand" + i].textsetting) {
+				if (settings.chatwebhookstrict && commandAliasMatches(settings["chatcommand" + i].textsetting, data.chatmessage, "exact")) {
 					matches = true;
-				} else if (!settings.chatwebhookstrict && data.chatmessage.toLowerCase().startsWith(settings["chatcommand" + i].textsetting.toLowerCase())) {
+				} else if (!settings.chatwebhookstrict && commandAliasMatches(settings["chatcommand" + i].textsetting, data.chatmessage, "startsWith")) {
 					matches = true;
 				}
 

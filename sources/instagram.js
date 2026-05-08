@@ -9,6 +9,7 @@
 	var profileImageCache = {};
 	var profileImageCacheOrder = [];
 	var profileImageInflight = {};
+	var liveObserver = null;
 
 	function pushMessage(data) {
 		try {
@@ -281,6 +282,15 @@
 		return false;
 	}
 
+	function isSsappContext(){
+		try {
+			if (window.ninjafy || window.electronApi || window.__ssapp){ return true; }
+			if (typeof window.__SSAPP_TAB_ID__ !== "undefined"){ return true; }
+			if (navigator.userAgent && navigator.userAgent.indexOf("Electron") !== -1){ return true; }
+		} catch(e){}
+		return false;
+	}
+
 	function nameFromAlt(img){
 		if (!img || !img.alt){ return ""; }
 		return (img.alt + "")
@@ -289,9 +299,11 @@
 			.trim();
 	}
 
-	// Walk up from an element until we hit a direct child of a <section>.
-	// That child is the "row" container.
+	// Walk up from an element until we find the comment row container.
 	function rowFromImage(img){
+		var section = img && img.closest ? img.closest("section") : null;
+		if (section && looksLikeRow(section)){ return section; }
+
 		var node = img;
 		while (node && node.parentElement && node.parentElement.nodeName !== "SECTION"){
 			node = node.parentElement;
@@ -341,10 +353,70 @@
 				if ((el.children[c].textContent || "").trim().length){ childHasText = true; break; }
 			}
 			if (childHasText){ continue; }
-			var text = (el.textContent || "").trim();
-			if (text){ leaves.push(el); }
+		var text = (el.textContent || "").trim();
+		if (!text){ continue; }
+		if (isLiveUIMarkerText(text)){ continue; }
+		leaves.push(el);
 		}
 		return leaves;
+	}
+
+	function normalizeLiveText(text){
+		return (text || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+	}
+
+	function plainLiveText(text){
+		return normalizeLiveText((text || "")
+			.replace(/<[^>]*>/g, "")
+			.replace(/&nbsp;/gi, " ")
+			.replace(/&hellip;|&#8230;|&#x2026;/gi, "\u2026"));
+	}
+
+	function isLivePlaceholderText(text){
+		var value = plainLiveText(text);
+		return (value === "...") || (value === "\u2026") || (value === "\u22EF");
+	}
+
+	function isLiveUIMarkerText(text){
+		var value = normalizeLiveText(text);
+		if (!value){ return false; }
+		if ((value === "\u22EF") || (value === "\u2026")){ return true; }
+		if (/^\.{2,}$/.test(value)){ return true; }
+		return false;
+	}
+
+	function findLiveMessageLeaf(leaves, chatname){
+		var placeholderLeaf = null;
+		for (var i = leaves.length - 1; i >= 0; i--){
+			var leaf = leaves[i];
+			var text = normalizeLiveText(leaf.textContent || "");
+			if (!text){ continue; }
+			if (chatname && (text.toLowerCase() === chatname.toLowerCase())){ continue; }
+			if (isLivePlaceholderText(text)){
+				if (!placeholderLeaf){ placeholderLeaf = leaf; }
+				continue;
+			}
+			return leaf;
+		}
+		return placeholderLeaf;
+	}
+
+	function shouldDelayLivePlaceholder(row, chatmessage){
+		if (!isLivePlaceholderText(chatmessage)){
+			try {
+				if (row && row.dataset){ delete row.dataset.ssPlaceholderRetries; }
+			} catch(e){}
+			return false;
+		}
+		try {
+			if (!row || !row.dataset){ return false; }
+			var retries = parseInt(row.dataset.ssPlaceholderRetries || "0", 10) || 0;
+        if (retries < 20){
+				row.dataset.ssPlaceholderRetries = "" + (retries + 1);
+				return true;
+			}
+		} catch(e){}
+		return false;
 	}
 
 	function extractLiveBadges(row, profileImg, messageLeaf){
@@ -384,20 +456,13 @@
 
 		// Primary: row text begins with "<username>" - everything after is the
 		// message. Works regardless of how Instagram wraps the spans.
-		var fullText = (row.textContent || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+		var fullText = normalizeLiveText(row.textContent || "");
 		if (chatname && fullText.toLowerCase().indexOf(chatname.toLowerCase()) === 0){
 			var rest = fullText.slice(chatname.length).trim();
 			if (rest){
 				// Look for the message span so we can preserve inline HTML (emoji imgs).
 				var leaves = collectTextLeaves(row);
-				var msgLeaf = null;
-				for (var i = leaves.length - 1; i >= 0; i--){
-					var t = leaves[i].textContent.trim();
-					if (t.toLowerCase() !== chatname.toLowerCase()){
-						msgLeaf = leaves[i];
-						break;
-					}
-				}
+				var msgLeaf = findLiveMessageLeaf(leaves, chatname);
 				messageLeaf = msgLeaf;
 				chatmessage = msgLeaf ? getAllContentNodes(msgLeaf) : escapeHtml(rest);
 			}
@@ -409,7 +474,7 @@
 			if (leavesFb.length >= 2){
 				if (!chatname){ chatname = leavesFb[0].textContent.trim(); }
 				if (!chatmessage){
-					messageLeaf = leavesFb[leavesFb.length - 1];
+					messageLeaf = findLiveMessageLeaf(leavesFb, chatname) || leavesFb[leavesFb.length - 1];
 					chatmessage = getAllContentNodes(messageLeaf);
 				}
 			} else if (leavesFb.length === 1){
@@ -450,6 +515,7 @@
 		if (!isExtensionOn){ return false; }
 		var parsed = parseLiveRow(row);
 		if (!parsed){ return false; }
+		if (shouldDelayLivePlaceholder(row, parsed.chatmessage)){ return false; }
 
 		var data = {};
 		data.chatname = parsed.chatname;
@@ -469,8 +535,59 @@
 		return true;
 	}
 
+	function setupLiveObserver() {
+		if (liveObserver) { return; }
+		if (!isLivePage()) { return; }
+		var sections = document.querySelectorAll("section");
+		var targetSection = null;
+		for (var i = 0; i < sections.length; i++) {
+			var section = sections[i];
+			if (section.querySelectorAll(PROFILE_IMG_SELECTOR).length > 0) {
+				targetSection = section;
+				break;
+			}
+		}
+		if (!targetSection) { return; }
+		liveObserver = new MutationObserver(function(mutations) {
+			var rowsToReprocess = new Set();
+			mutations.forEach(function(mutation) {
+				if (mutation.type === "characterData") {
+					var parent = mutation.target.parentNode;
+					if (!parent) { return; }
+					var row = parent.closest("[data-ss-processed='live']");
+					if (row) { rowsToReprocess.add(row); }
+				}
+				if (mutation.type === "childList" && mutation.addedNodes.length) {
+					for (var j = 0; j < mutation.addedNodes.length; j++) {
+						var node = mutation.addedNodes[j];
+						if (node.nodeType !== 1) { continue; }
+						if (node.dataset && node.dataset.ssProcessed === "live") {
+							rowsToReprocess.add(node);
+						} else if (node.querySelectorAll) {
+							var rows = node.querySelectorAll("[data-ss-processed='live']");
+							for (var k = 0; k < rows.length; k++) { rowsToReprocess.add(rows[k]); }
+						}
+					}
+				}
+			});
+			if (rowsToReprocess.size) {
+				rowsToReprocess.forEach(function(row) {
+					try { delete row.dataset.ssProcessed; } catch(e){}
+				});
+				processLiveComments();
+			}
+		});
+		liveObserver.observe(targetSection, {
+			childList: true,
+			subtree: true,
+			characterData: true,
+			characterDataOldValue: true
+		});
+	}
+
 	function processLiveComments(){
 		if (!isExtensionOn){ return; }
+		if (isLivePage() && !liveObserver) { setupLiveObserver(); }
 		findLiveRows().forEach(function(row){
 			if (row.dataset && row.dataset.ssProcessed){ return; }
 			if (processLiveRow(row)){
@@ -568,6 +685,78 @@
 			challenge: true
 		};
 		return !reserved[parts[0].toLowerCase()];
+	}
+
+	var lastProfileLiveClickPath = "";
+	var lastProfileLiveClickTime = 0;
+
+	function isElementVisible(element){
+		if (!element){ return false; }
+		try {
+			var rect = element.getBoundingClientRect();
+			if (!rect || !rect.width || !rect.height){ return false; }
+			var style = window.getComputedStyle ? window.getComputedStyle(element) : null;
+			if (style && ((style.display === "none") || (style.visibility === "hidden") || (style.opacity === "0"))){ return false; }
+		} catch(e){}
+		return true;
+	}
+
+	function closestClickable(element){
+		var node = element;
+		while (node && node !== document.body){
+			if (node.getAttribute){
+				var role = node.getAttribute("role");
+				if ((role === "button") || (role === "link")){ return node; }
+			}
+			if (node.nodeName === "BUTTON" || node.nodeName === "A"){ return node; }
+			node = node.parentElement;
+		}
+		return null;
+	}
+
+	function clickElement(element){
+		if (!element){ return false; }
+		try { element.scrollIntoView({ block: "center", inline: "center" }); } catch(e){}
+		try {
+			element.dispatchEvent(new MouseEvent("mouseover", { view: window, bubbles: true, cancelable: true }));
+			element.dispatchEvent(new MouseEvent("mousedown", { view: window, bubbles: true, cancelable: true }));
+			element.dispatchEvent(new MouseEvent("mouseup", { view: window, bubbles: true, cancelable: true }));
+			element.dispatchEvent(new MouseEvent("click", { view: window, bubbles: true, cancelable: true }));
+			return true;
+		} catch(e){}
+		try {
+			element.click();
+			return true;
+		} catch(e){}
+		return false;
+	}
+
+	function findProfileLiveButton(){
+		var nodes = document.querySelectorAll("header span, header div, header button, header a");
+		for (var i = 0; i < nodes.length; i++){
+			var node = nodes[i];
+			if (((node.textContent || "").trim().toUpperCase()) !== "LIVE"){ continue; }
+			if (!isElementVisible(node)){ continue; }
+			var clickable = closestClickable(node);
+			if (!clickable || !isElementVisible(clickable)){ continue; }
+			if (!clickable.querySelector("img[alt*='profile picture'], img[alt*='profile photo'], canvas")){ continue; }
+			return clickable;
+		}
+		return null;
+	}
+
+	function maybeAutoOpenProfileLive(){
+		if (!isSsappContext()){ return false; }
+		if (isLivePage()){ return false; }
+		var path = window.location.pathname || "";
+		if (!isProfilePath(path)){ return false; }
+		var now = Date.now();
+		if ((lastProfileLiveClickPath === path) && ((now - lastProfileLiveClickTime) < 15000)){ return false; }
+		var button = findProfileLiveButton();
+		if (!button){ return false; }
+		lastProfileLiveClickPath = path;
+		lastProfileLiveClickTime = now;
+		return clickElement(button);
 	}
 
 	function isCommentPermalink(path){
@@ -836,25 +1025,30 @@
 
 	console.log("LOADED SocialStream EXTENSION");
 
-	setTimeout(function(){
-		setInterval(function(){
-			try {
-				if (isExtensionOn){
-					if (isLivePage()){
-						processLiveComments();
-					} else {
-						processFeed();
+		setTimeout(function(){
+			setInterval(function(){
+				try {
+					if (isExtensionOn){
+						if (isLivePage()){
+							processLiveComments();
+						} else {
+							maybeAutoOpenProfileLive();
+							processFeed();
+							if (liveObserver) {
+								liveObserver.disconnect();
+								liveObserver = null;
+							}
+						}
 					}
+				} catch(e){}
+
+				syncVideos();
+
+				if (isExtensionOn && (counter % 20 === 0)){
+					checkViewers();
 				}
-			} catch(e){}
-
-			syncVideos();
-
-			if (isExtensionOn && (counter % 20 === 0)){
-				checkViewers();
-			}
-			counter++;
-		}, 500);
-	}, 1500);
+				counter++;
+			}, 500);
+		}, 1500);
 
 })();

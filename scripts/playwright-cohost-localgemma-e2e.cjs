@@ -324,9 +324,15 @@ function findWorkerMessages(log, type, predicate) {
     assert(gemmaState.diagEvent.includes('generate.done'), 'Local Gemma diagnostics did not report completion.');
     assert(gemmaState.responses.includes('[vision:1]'), 'Local Gemma response did not complete through the UI.');
 
+    await page.click('#startButton');
+    await page.waitForFunction(() => document.getElementById('startButton').dataset.started === 'false');
+
     await page.selectOption('#providerSelect', 'localqwen');
     await page.waitForFunction(() => document.getElementById('videoSource').disabled === false);
     await page.waitForFunction(() => document.getElementById('diagProvider').textContent.toLowerCase().includes('qwen'));
+    await page.click('#startButton');
+    await page.waitForFunction(() => document.getElementById('startButton').dataset.started === 'true');
+    await page.waitForFunction(() => !document.getElementById('sendButton').disabled && document.getElementById('sendButton').textContent.trim() === 'Send');
 
     await page.fill('.message-input', 'Confirm local qwen is active.');
     await page.press('.message-input', 'Enter');
@@ -344,7 +350,7 @@ function findWorkerMessages(log, type, predicate) {
 
     const qwenInit = findWorkerMessages(qwenState.workerLog, 'init', (entry) => String(entry.data.modelId || '').includes('qwen3.5-0.8b-onnx')).slice(-1)[0];
     assert(!!qwenInit, 'Local Qwen init was not sent after switching providers.');
-    assert(qwenInit.data.runtime && qwenInit.data.runtime.modelClass === 'Qwen3_5ForConditionalGeneration', 'Local Qwen init did not use the Qwen runtime.');
+    assert(qwenInit.data.runtime && qwenInit.data.runtime.modelClass === 'Qwen3_5ForCausalLM', 'Local Qwen init did not use the Qwen runtime.');
 
     const qwenManualGenerate = findWorkerMessages(qwenState.workerLog, 'generate', (entry) => entry.data.prompt === 'Confirm local qwen is active.')[0];
     assert(!!qwenManualGenerate, 'Local Qwen manual generate was not sent.');

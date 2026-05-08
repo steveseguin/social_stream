@@ -857,7 +857,7 @@ Overlay pages receive data via a VDO.Ninja iframe bridge. Always include this br
 
 Without ?session=YOUR_ID the bridge won't connect — but the builder still sends test payloads straight to the iframe via postMessage, so handlePayload must work with or without the bridge.
 Do NOT require `event.source === bridge.contentWindow`; builder test events and preview tools can come from the parent window. Only check `event.data.dataReceived.overlayNinja`.
-Use `label=dock` by default for normal live chat/events. Custom labels only receive targeted payloads, not the general live feed.
+Label rule: default live overlays MUST use `var label = params.get("label") || "dock";`. This includes chat, alerts, auction widgets, commerce widgets, counters, games, and tickers. Never invent a random/time-based/default-unique label for normal live data. Custom labels only receive targeted payloads, so use one only when the user explicitly asks for targeted/private/control messages or gives a specific `label=...`.
 
 DOM ordering matters: the `<iframe i&#100;="ssn_bridge">` element MUST exist in the DOM before the script that calls `document.getElementById("ssn_bridge")` runs. The safest patterns are (a) put the iframe tag first and the script right after in `<body>`, or (b) create the iframe in JS via `document.createElement("iframe")` and append it to body. Never put the iframe element below the script that reads it — `getElementById` will return null and setting `.src` throws.
 
@@ -892,6 +892,9 @@ Example donation:
 Example viewer counter aggregate:
 { "event": "viewer_updates", "meta": { "youtube": 815, "twitch": 221, "kick": 94 } }
 
+Example auction update:
+{ "type": "whatnot", "event": "auction_update", "meta": { "status": "winning", "statusText": "Ava is Winning!", "bidder": "Ava", "title": "500 Spot Silver Slab Mega Set - #191", "category": "Coins, U.S. currency", "price": 88, "priceText": "$88", "bids": 7, "bidsText": "7 Bids", "timer": "00:19", "shipping": "Shipping + Taxes are extra" } }
+
 === BUILDING RULES ===
 1a. Message-body rule: `data.chatmessage` is SSN's renderable HTML unless `data.textonly === true`. Put it in a dedicated message element with `innerHTML` when not text-only, and `textContent` when text-only; escape all other fields normally.
 1. ALWAYS escape untrusted strings before inserting as HTML. Use textContent where possible. NEVER build inline HTML event handlers (onerror=, onclick=, etc.) inside a JS string — the escaping gets tangled and produces syntax errors. Instead, create the element, then `el.addEventListener("error", ...)` or `el.onerror = function () { ... }`. Same rule for inline `style="..."` built from dynamic values with quotes: prefer element.style.color = .... Build DOM with createElement + appendChild in ONE pass — don't rewrite .outerHTML on a node that's already in the tree, don't wipe the row with `.innerHTML = ""` mid-function, and never call insertBefore(newNode, refNode) unless refNode is already a child of the parent you're inserting into. Plan the node tree before you start creating elements.
@@ -915,11 +918,12 @@ Example viewer counter aggregate:
 12a. Alerts arrive faster than their dismiss time during busy streams. Prefer STACKING: each alert gets its own card appended to the container and dismisses on its own timer, so multiple cards can be visible at once. Never build a single-banner overlay that hides behind a global `isAnimating` / `isBusy` flag — that silently drops payloads. Queuing-one-at-a-time is acceptable only if the user explicitly asks for it; stacking is the default.
 13. For counter / viewer / goal numbers, render integer values as-is (or with toLocaleString thousands separators) instead of collapsing to "1.2k" style suffixes — the raw number is what streamers and mods actually want to read. Only abbreviate when a value is above ~1,000,000 AND space is genuinely constrained.
 14. Reset / replace state on snapshot payloads (viewer_updates, auction_update, commerce_update); only accumulate on per-item events (new chat row, new alert).
+14a. Auction overlays listen to `data.event === "auction_update"` and render from `data.meta`. Update visible DOM on EVERY accepted auction payload, even if the title or bidder did not change. Prefer `meta.priceText` over formatting `meta.price`; prefer `meta.bidsText` over formatting `meta.bids`; show `meta.bidder` or `meta.statusText`; show `meta.timer` exactly when present.
 15. Alert overlays must handle these exact shapes: donation via `data.hasDonation` even without `data.event`; member/sub via `data.membership` even without `data.event`; follow via `data.event === "new_follower"`; raid via `data.event === "raid"` plus `subtitle` or `meta.viewers`; gifted subs via `data.event === "subscription_gift"` or `"gifted"`.
 16. Do not gate alerts on `data.chatmessage`, `data.subtitle`, or `data.meta`; follow events commonly have only `{ chatname, event: "new_follower", type }`, membership events may only have `{ chatname, membership, type }`, and donation events may only have `{ chatname, hasDonation, type }`.
 17. Plain chat messages are valid when they only have `{ chatname, chatmessage, chatimg, type }` and no `event`; if the user asks for a chat overlay, do not require `event`, `hasDonation`, or `membership`.
 
-If the user asks a question that does not require a file change, answer normally without a ```html block. Otherwise, always return the full updated HTML.</textarea>
+If the user asks a question that does not require a file change, answer normally without a ```html block. Be helpful in 2-5 short sentences, include the likely cause and next step when debugging, and do not force a terse one-line answer. Otherwise, always return the full updated HTML.</textarea>
 
 	<textarea id="tmpl-blank" hidden><!DOCTYPE html>
 <html lang="en">
@@ -2076,7 +2080,7 @@ If the user asks a question that does not require a file change, answer normally
 				"",
 				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
 				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks.",
-				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), and viewer_updates snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons."
+				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default the bridge label to dock via var label = params.get(\"label\") || \"dock\"; never use random/time-based labels for normal live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
 			].join("\n");
 		}
 
@@ -2095,6 +2099,36 @@ If the user asks a question that does not require a file change, answer normally
 			var trimmed = text.trim();
 			if (looksLikeHtml(trimmed)) return trimmed;
 			return "";
+		}
+
+		function requestAllowsCustomLabel(request) {
+			var value = String(request || "").toLowerCase();
+			return /(?:custom|specific|private|targeted|control)\s+label|label\s*=|send\s+(?:only\s+)?to\s+label|target(?:ed)?\s+(?:message|overlay|command|payload)/.test(value);
+		}
+
+		function htmlUsesLiveBridge(html) {
+			return /vdo\.socialstream\.ninja|ssn_bridge|dataReceived\s*&&\s*[^;]*overlayNinja|dataReceived\.overlayNinja/i.test(String(html || ""));
+		}
+
+		function reviewGeneratedHtml(html, request) {
+			var notes = [];
+			var reviewed = String(html || "");
+			if (htmlUsesLiveBridge(reviewed) && !requestAllowsCustomLabel(request)) {
+				var changedLabel = false;
+				reviewed = reviewed.replace(/((?:var|let|const)\s+label\s*=\s*params\.get\((["'])label\2\)\s*\|\|\s*)([^;]+)(;)/g, function (match, prefix, quote, fallback, suffix) {
+					if (/^\s*(["'])dock\1\s*$/.test(fallback)) return match;
+					changedLabel = true;
+					return prefix + '"dock"' + suffix;
+				});
+				if (changedLabel) notes.push("Changed the bridge fallback label to dock so the overlay receives normal live events.");
+			}
+			if (/event\.source\s*(?:!={1,2}|={2,3})/i.test(reviewed) && /dataReceived[\s\S]{0,120}overlayNinja/i.test(reviewed)) {
+				notes.push("Review warning: this overlay checks event.source; preview/test events may be ignored.");
+			}
+			if (/\.innerHTML\s*=\s*[^;]*(?:meta|description|title|bidder|price|status)/i.test(reviewed)) {
+				notes.push("Review warning: non-chat metadata is inserted with innerHTML; textContent is safer.");
+			}
+			return { html: reviewed, notes: notes };
 		}
 
 		function parseErrorResponse(value) {
@@ -2252,7 +2286,7 @@ If the user asks a question that does not require a file change, answer normally
 				appendConversationMessage("user", userMsg, true);
 				var assistantBody = appendConversationMessage("assistant", "Thinking…", false);
 
-				pendingResponses[messageID] = { id: messageID, body: assistantBody, text: "", chunks: 0, requestedAt: Date.now(), isAutoFix: !!opts.isAutoFix, isCompaction: !!opts.isCompaction };
+				pendingResponses[messageID] = { id: messageID, body: assistantBody, text: "", chunks: 0, requestedAt: Date.now(), requestText: request, isAutoFix: !!opts.isAutoFix, isCompaction: !!opts.isCompaction };
 				createPendingStreamView(assistantBody, pendingResponses[messageID]);
 				pendingResponses[messageID].timeoutTimer = setTimeout(function () {
 					var pending = pendingResponses[messageID];
@@ -2337,15 +2371,21 @@ If the user asks a question that does not require a file change, answer normally
 
 			var html = extractHtml(finalText);
 			if (html) {
+				var review = reviewGeneratedHtml(html, pending.requestText || "");
+				html = review.html;
 				htmlEditor.value = html;
 				syncFormToPage();
 				lastAppliedFromAI = true;
 				refreshPreview();
 				var summaryIdx = finalText.indexOf("```");
 				var note = (summaryIdx > 0 ? finalText.slice(0, summaryIdx).trim() : "") || "Updated HTML applied.";
+				if (review.notes.length) {
+					note += "\n\nSafety review:\n- " + review.notes.join("\n- ");
+					logBuilder("warn", "Generated HTML safety review", review.notes);
+				}
 				pending.body.textContent = note;
 				saveConversationMessage("assistant", note);
-				setStatus("HTML update applied.", "ok");
+				setStatus(review.notes.length ? "HTML update applied with safety review." : "HTML update applied.", "ok");
 			} else {
 				pending.body.textContent = finalText;
 				saveConversationMessage("assistant", finalText);

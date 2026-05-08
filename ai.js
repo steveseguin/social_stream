@@ -2090,6 +2090,45 @@ function getHostReflectionKey(data, message) {
     return `${tid}:${user}:${message}`;
 }
 
+function inferAiOverlayEmotion(text) {
+    const value = String(text || "");
+    if (/(sorry|can't|cannot|unable|error|failed|trouble)/i.test(value)) return "worried";
+    if (value.indexOf("?") >= 0) return "thinking";
+    if (/(great|awesome|nice|love|perfect|thanks|thank you|lol|haha|roast)/i.test(value)) return "proud";
+    if (value.indexOf("!") >= 0) return "excited";
+    return "happy";
+}
+
+function sendChatBotAiOverlay(text, data, botname, source = "chatbot") {
+    if (!settings?.aiOverlayFromChatBot || typeof sendAiOverlayCommand !== "function") {
+        return;
+    }
+    const responseText = String(text || "").trim();
+    if (!responseText) {
+        return;
+    }
+    sendAiOverlayCommand({
+        meta: {
+            command: "say",
+            text: responseText,
+            name: botname || "Chat Bot",
+            source,
+            emotion: inferAiOverlayEmotion(responseText),
+            talking: true,
+            tts: !!settings.aiOverlayTts
+        }
+    }, {
+        target: settings?.aiOverlayLabel?.textsetting || "",
+        meta: {
+            request: data ? {
+                chatname: data.chatname || "",
+                chatmessage: data.chatmessage || "",
+                type: data.type || ""
+            } : null
+        }
+    });
+}
+
 async function processSummary(data){
 	//console.log(data);
 	if (!data.tid) return data;
@@ -2130,6 +2169,7 @@ async function processSummary(data){
 			request: data,
 			tts: settings.ollamatts ? true : false
 		  }, "bot");
+		sendChatBotAiOverlay(summary, data, botname, "chatbot-summary");
 
 		  // Send to tabs if not overlay-only
 		if (!settings.ollamaoverlayonly) {
@@ -2282,7 +2322,8 @@ async function processMessageWithOllama(data, idx=null) {
         request: data,
         tts: settings.ollamatts ? true : false
       }, "bot");
-      
+      sendChatBotAiOverlay(response, data, botname, "chatbot");
+
       // SECONDARY FIX: Track bot's own message for overlay-only mode
       // Uncomment to test if overlay-only mode needs this
       // if (settings.ollamaoverlayonly) {
