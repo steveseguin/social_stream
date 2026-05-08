@@ -319,7 +319,7 @@
                     </tr>
                     <tr>
                         <td>Toggle Source</td>
-                        <td><code>GetCurrentProgramScene</code>, <code>GetSceneItemId</code>, <code>GetSceneItemEnabled</code>, <code>SetSceneItemEnabled</code></td>
+                        <td><code>GetCurrentProgramScene</code>, <code>GetSceneItemId</code>, <code>GetSceneItemEnabled</code>, <code>SetSceneItemEnabled</code>, optionally <code>GetGroupSceneItemList</code></td>
                     </tr>
                     <tr>
                         <td>Toggle Filter</td>
@@ -365,6 +365,10 @@
                     <div>
                         <label for="sourceName">Source Name</label>
                         <input id="sourceName" type="text" placeholder="Webcam">
+                    </div>
+                    <div>
+                        <label for="groupName">Group Name (optional)</label>
+                        <input id="groupName" type="text" placeholder="Alerts Group">
                     </div>
                     <div>
                         <label for="filterName">Filter Name</label>
@@ -418,6 +422,7 @@
             connectionStatus: document.getElementById('connectionStatus'),
             sceneName: document.getElementById('sceneName'),
             sourceName: document.getElementById('sourceName'),
+            groupName: document.getElementById('groupName'),
             filterName: document.getElementById('filterName'),
             inputName: document.getElementById('inputName'),
             requestType: document.getElementById('requestType'),
@@ -613,8 +618,12 @@
                 return;
             }
 
-            const currentScene = await callOBS('GetCurrentProgramScene');
-            const sceneName = currentScene.currentProgramSceneName;
+            const groupName = elements.groupName.value.trim();
+            let sceneName = groupName || elements.sceneName.value.trim();
+            if (!sceneName) {
+                const currentScene = await callOBS('GetCurrentProgramScene');
+                sceneName = currentScene.currentProgramSceneName;
+            }
             const item = await callOBS('GetSceneItemId', { sceneName, sourceName });
             const currentState = await callOBS('GetSceneItemEnabled', {
                 sceneName,

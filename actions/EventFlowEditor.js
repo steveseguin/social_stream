@@ -1978,7 +1978,11 @@ class EventFlowEditor {
                 case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
                 case 'delay': return `Delay: ${node.config.delayMs || 1000}ms`;
                 case 'obsChangeScene': return `Scene: ${node.config.sceneName || 'Not set'}`;
-                case 'obsToggleSource': return `${node.config.sourceName || 'Source'}: ${node.config.visible === false ? 'Hide' : node.config.visible === true ? 'Show' : 'Toggle'}`;
+                case 'obsToggleSource': {
+                    const visibility = node.config.visible === false || node.config.visible === 'false' ? 'Hide' : node.config.visible === true || node.config.visible === 'true' ? 'Show' : 'Toggle';
+                    const target = node.config.groupName ? ` in ${node.config.groupName}` : node.config.sceneName ? ` in ${node.config.sceneName}` : '';
+                    return `${node.config.sourceName || 'Source'}${target}: ${visibility}`;
+                }
                 case 'obsSetSourceFilter': return `Filter: ${node.config.filterName || 'Not set'}`;
                 case 'obsMuteSource': return `${node.config.sourceName || 'Source'}: ${node.config.muted === true ? 'Mute' : node.config.muted === false ? 'Unmute' : 'Toggle'}`;
                 case 'obsStartRecording': return 'Start Recording';
@@ -2514,7 +2518,7 @@ class EventFlowEditor {
 					node.config = { sceneName: 'Scene 1' };
 					break;
 				case 'obsToggleSource':
-					node.config = { sourceName: 'Source 1', visible: 'toggle' };
+					node.config = { sourceName: 'Source 1', sceneName: '', groupName: '', visible: 'toggle' };
 					break;
 				case 'obsSetSourceFilter':
 					node.config = { sourceName: 'Source 1', filterName: 'Filter 1', enabled: 'toggle' };
@@ -4535,9 +4539,21 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<label class="property-label">Source Name</label>
-						<input type="text" class="property-input" id="prop-sourceName" 
+						<input type="text" class="property-input" id="prop-sourceName"
 							value="${node.config.sourceName || ''}" placeholder="e.g., Webcam, Alert Box">
 						<div class="property-help">The exact name of the OBS source to toggle</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Scene Name (optional)</label>
+						<input type="text" class="property-input" id="prop-sceneName"
+							value="${node.config.sceneName || ''}" placeholder="Leave blank for current scene">
+						<div class="property-help">Use this to target a scene that is not currently active</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Group Name (optional)</label>
+						<input type="text" class="property-input" id="prop-groupName"
+							value="${node.config.groupName || ''}" placeholder="e.g., Alerts Group">
+						<div class="property-help">Use this when the source is inside an OBS group</div>
 					</div>
 					<div class="property-group">
 						<label class="property-label">Visibility</label>
@@ -4551,6 +4567,7 @@ class EventFlowEditor {
 					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>Version note:</strong><br>
 						This action requires OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; only add <code>&obspw=...</code> if OBS requires one.<br>
+						Leave Scene and Group blank to target the current scene; set Scene for nested/non-active scenes, or Group for sources inside an OBS group.<br>
 						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
 					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
