@@ -964,6 +964,46 @@
                     </table>
                 </article>
 
+                <article class="platform-card" id="vpzone-ws">
+                    <h3>VPZone - WebSocket</h3>
+                    <p class="source-note">Implementation: <code>sources/websocket/vpzone.js</code></p>
+                    <ul class="requirements">
+                        <li>Connects to the VPZone chat websocket with <code>?channel=USERNAME</code>; OAuth or a bearer token can be supplied for developer mode.</li>
+                        <li>Flat VPZone frames such as <code>type: "msg"</code> are normalized into standard chat payloads.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>VPZone <code>msg</code>, <code>message</code>, <code>new_message</code>, or <code>chat_message</code> websocket frame.</td>
+                                <td><code>chatname</code> comes from <code>username</code>; <code>chatmessage</code> comes from <code>body</code>; subscriber/owner flags are copied into <code>chatbadges</code> and <code>meta</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>VPZone <code>presence</code> frame with <code>count</code> or equivalent viewer field.</td>
+                                <td><code>meta</code> is the live viewer integer; contributes to aggregated <code>viewer_updates</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>new_subscriber</code></td>
+                                <td>VPZone <code>subscribe</code> / <code>subscription</code> frame.</td>
+                                <td><code>membership</code> is set to Subscriber when subscription flags are present.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td>VPZone <code>follow</code> frame.</td>
+                                <td>Mapped into the standard follower event shape.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
                 <article class="platform-card" id="joystick-ws">
                     <h3>Joystick - Bot WebSocket</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/joystick.js</code></p>

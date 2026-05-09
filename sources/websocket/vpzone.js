@@ -550,29 +550,48 @@
 	}
 
 	function eventTime(ev) {
-		return ev && (ev.createdAt || ev.timestamp || ev.sentAt) ? (ev.createdAt || ev.timestamp || ev.sentAt) : "";
+		return ev && (ev.createdAt || ev.timestamp || ev.sentAt || ev.ts) ? (ev.createdAt || ev.timestamp || ev.sentAt || ev.ts) : "";
 	}
 
 	function mapEventName(value) {
 		value = String(value || "").toLowerCase();
+		if (value === "msg" || value === "message" || value === "new_message" || value === "chat") return "chat_message";
 		if (value === "viewer_join") return "joined";
 		if (value === "viewer_quit") return "left";
 		if (value === "follow") return "new_follower";
-		if (value === "subscribe") return "new_subscriber";
+		if (value === "subscribe" || value === "subscription") return "new_subscriber";
 		return value;
+	}
+
+	function svgBadge(label, bg, width) {
+		width = width || Math.max(20, Math.round(String(label || "").length * 6.5) + 14);
+		return { html: '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="16" viewBox="0 0 ' + width + ' 16"><rect x="0.5" y="0.5" rx="3" ry="3" width="' + (width - 1) + '" height="15" fill="' + esc(bg || "#c084fc") + '"></rect><text x="' + (width / 2) + '" y="11" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#ffffff">' + esc(label || "") + "</text></svg>", type: "svg" };
+	}
+
+	function buildBadges(ev) {
+		var badges = [];
+		var subMonths = Number(ev.sub_months || ev.subMonths || 0);
+		var subLabel = subMonths >= 12 ? Math.floor(subMonths / 12) + "y" : (subMonths >= 1 ? subMonths + "m" : "SUB");
+		if (Array.isArray(ev.chatbadges)) badges = badges.concat(ev.chatbadges);
+		if (Array.isArray(ev.badges)) badges = badges.concat(ev.badges);
+		if (ev.is_owner || ev.isOwner) badges.push(svgBadge("OP", "#c071f5", 20));
+		if (ev.is_subscriber || ev.isSubscriber) badges.push(svgBadge(subLabel, ev.tier === "tier3" ? "#00E9E2" : (ev.tier === "tier2" ? "#FF6DE4" : "#f9376b")));
+		if (ev.metadata && ev.metadata.source === "twitch") badges.push(svgBadge("TW", "#9146FF", 20));
+		return badges;
 	}
 
 	function buildChat(ev) {
 		var data = basePayload();
 		data.chatname = esc(ev.actorDisplayName || ev.displayName || ev.actorUsername || ev.username || "VPZone User");
-		data.chatmessage = renderMessage(ev.message || ev.text || ev.body || "");
-		data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || "");
+		data.chatmessage = renderMessage(ev.message || ev.text || ev.body || ev.content || "");
+		data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage || "");
 		data.contentimg = absUrl(ev.contentimg || ev.contentImage || ev.imageUrl || "");
-		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : "";
-		data.nameColor = ev.actorNameColor || ev.nameColor || "#c084fc";
+		data.chatbadges = buildBadges(ev);
+		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : ((ev.is_subscriber || ev.isSubscriber) ? "Subscriber" : "");
+		data.nameColor = ev.actorNameColor || ev.nameColor || ev.color || "#c084fc";
 		data.userid = ev.actorUserId != null ? String(ev.actorUserId) : (ev.userId != null ? String(ev.userId) : (ev.actorUsername || ev.username || ""));
 		data.timestamp = eventTime(ev);
-		data.meta = { id: ev.id != null ? ev.id : null, streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "chat_message", transport: "websocket" };
+		data.meta = { id: ev.id != null ? ev.id : null, streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "chat_message", transport: "websocket", isSubscriber: !!(ev.is_subscriber || ev.isSubscriber), subMonths: Number(ev.sub_months || ev.subMonths || 0), isOwner: !!(ev.is_owner || ev.isOwner) };
 		return data.chatname && data.chatmessage ? data : null;
 	}
 
@@ -585,10 +604,11 @@
 		data = basePayload();
 		data.event = mapped;
 		data.chatname = esc(ev.actorDisplayName || ev.displayName || ev.actorUsername || ev.username || SOURCE_NAME);
-		data.chatmessage = mapped;
-		data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || "");
-		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : "";
-		data.nameColor = ev.actorNameColor || ev.nameColor || "#c084fc";
+		data.chatmessage = renderMessage(ev.body || ev.message || ev.text || mapped);
+		data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage || "");
+		data.chatbadges = buildBadges(ev);
+		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : ((ev.is_subscriber || ev.isSubscriber) ? "Subscriber" : "");
+		data.nameColor = ev.actorNameColor || ev.nameColor || ev.color || "#c084fc";
 		data.userid = ev.actorUserId != null ? String(ev.actorUserId) : (ev.userId != null ? String(ev.userId) : (ev.actorUsername || ev.username || ""));
 		data.timestamp = eventTime(ev);
 		data.meta = { id: ev.id != null ? ev.id : null, streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "", transport: "websocket" };
@@ -636,13 +656,21 @@
 		var key;
 		var data;
 		if (!ev || typeof ev !== "object") return;
-		key = ev.id != null ? ev.id : [eventTime(ev), ev.actorUsername || ev.username || "", ev.eventType || ev.type || "", ev.message || ev.text || ""].join("::");
+		key = ev.id != null ? ev.id : [eventTime(ev), ev.actorUsername || ev.username || "", ev.eventType || ev.type || "", ev.message || ev.text || ev.body || ev.content || ""].join("::");
 		if (!remember(key)) return;
-		data = String(ev.eventType || ev.type || "").toLowerCase() === "chat_message" ? buildChat(ev) : buildEvent(ev);
+		data = mapEventName(ev.eventType || ev.type || "") === "chat_message" ? buildChat(ev) : buildEvent(ev);
 		if (!data) return;
 		pushMessage(data);
 		appendFeed(data);
 		chip(els.lastEventChip, "Last event: " + nice(data.event || ev.eventType || ev.type || "message"), data.event ? "warn" : "good");
+	}
+
+	function isVpzoneFrame(payload) {
+		if (!payload || typeof payload !== "object") return false;
+		if (payload.eventType || payload.actorUsername || payload.actorDisplayName || payload.message) return true;
+		if (payload.username && (payload.body != null || payload.text != null || payload.content != null)) return true;
+		if (mapEventName(payload.type) === "chat_message") return true;
+		return false;
 	}
 
 	function routePayload(payload) {
@@ -652,6 +680,7 @@
 		if (!payload || typeof payload !== "object") return;
 		if (Array.isArray(payload.events)) { payload.events.forEach(routePayload); return; }
 		type = String(payload.type || "").toLowerCase();
+		if (type === "delete_message") return;
 		if (type === "presence") { handlePresence(payload); return; }
 		if (type === "stream_event" || type === "chat_event") {
 			ev = payload.event && typeof payload.event === "object" ? payload.event : payload.data;
@@ -669,7 +698,7 @@
 			else handleEvent(payload.event);
 			return;
 		}
-		if (payload.eventType || payload.actorUsername || payload.actorDisplayName || payload.message) {
+		if (isVpzoneFrame(payload)) {
 			if (String(payload.eventType || payload.type || "").toLowerCase() === "presence") handlePresence(payload);
 			else handleEvent(payload);
 			return;
