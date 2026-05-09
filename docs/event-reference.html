@@ -1145,6 +1145,51 @@
                     </table>
                 </article>
 
+                <article class="platform-card" id="velora">
+                    <h3>Velora</h3>
+                    <p class="source-note">Implementation: <code>sources/velora.js</code> and <code>sources/websocket/velora.js</code></p>
+                    <ul class="requirements">
+                        <li>Standard mode reads the visible chat DOM; WebSocket mode uses the Velora Events API with OAuth.</li>
+                        <li>Volts and channel point style cards are emitted as event payloads when exposed by the DOM or Events API.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New Velora chat rows appear or Events API chat messages arrive.</td>
+                                <td>Standard chat payload with badges, author color, links, and emotes preserved when not in text-only mode.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>volts</code></td>
+                                <td>Velora Volts cards or <code>channel.volts</code> Events API payloads arrive.</td>
+                                <td><code>hasDonation</code> carries the displayed Volts amount; DOM captures include <code>meta.source = "dom"</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><code>channel_points</code></td>
+                                <td>Velora channel point/redemption cards or <code>channel.channel_points_redemption</code> Events API payloads arrive.</td>
+                                <td><code>chatmessage</code> carries the redemption message or reward title; <code>meta.rewardTitle</code> identifies the reward when available.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>subscription</code></td>
+                                <td>Visible Velora activity row says a user became a channel member/subscriber.</td>
+                                <td><code>membership</code> carries the visible membership label.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Visible viewer count changes while viewer-count capture or hype mode is enabled.</td>
+                                <td><code>meta</code> integer viewer count.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
                 <article class="platform-card" id="rumble-dom">
                     <h3>Rumble - Standard DOM Capture</h3>
                     <p class="source-note">Implementation: <code>sources/rumble.js</code></p>

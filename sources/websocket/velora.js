@@ -1353,7 +1353,29 @@ function handleChannelPoints(data) {
     if (!data) return;
     const name = data.displayName || data.username || 'Someone';
     const reward = data.rewardTitle || 'channel point reward';
+    const message = data.userInput || data.message || data.input || '';
     addAlert(`${escapeHtml(name)} redeemed: ${escapeHtml(reward)}`, 'points');
+
+    pushMessage({
+        chatname: escapeHtml(name),
+        chatbadges: [],
+        backgroundColor: '',
+        textColor: '',
+        nameColor: '',
+        chatmessage: message ? escapeHtml(message) : escapeHtml(reward),
+        chatimg: '',
+        hasDonation: '',
+        membership: '',
+        contentimg: '',
+        textonly: false,
+        type: 'velora',
+        event: 'channel_points',
+        meta: {
+            rewardTitle: reward,
+            rewardCost: data.rewardCost || data.cost || '',
+            redemptionId: data.redemptionId || data.id || ''
+        }
+    });
 }
 
 // ─── Chat sending ─────────────────────────────────────────────────────────────
