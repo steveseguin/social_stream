@@ -1,6 +1,6 @@
 // Velora WebSocket integration for Social Stream
 // Uses the official Velora Events API (Socket.IO) with OAuth 2.0 PKCE user sign-in.
-// API docs: https://developer.velora.tv/developer/docs/events-api
+// API docs: https://developer.velora.tv/developer/docs/webhooks/events
 
 const VELORA_API_BASE = 'https://api.velora.tv';
 const VELORA_WS_URL = 'wss://api.velora.tv/ws/events';
@@ -1123,12 +1123,14 @@ function handleEvent(payload) {
             handleChatMessage(data);
             break;
         case 'channel.follow':
+        case 'user.follow':
             handleFollow(data);
             break;
         case 'channel.subscribe':
             handleSubscribe(data);
             break;
         case 'channel.subscription.gift':
+        case 'channel.gift':
             handleGiftSub(data);
             break;
         case 'channel.volts':
@@ -1138,6 +1140,7 @@ function handleEvent(payload) {
             handleRaid(data);
             break;
         case 'channel.channel_points_redemption':
+        case 'channel.points.redeem':
             handleChannelPoints(data);
             break;
         case 'channel.ban':
@@ -1232,9 +1235,14 @@ function handleChatMessage(data) {
 
 // ─── Alert events ─────────────────────────────────────────────────────────────
 
+function userDisplayName(user) {
+    if (!user) return '';
+    return user.displayName || user.display_name || user.name || user.username || user.login || '';
+}
+
 function handleFollow(data) {
     if (!data) return;
-    const name = data.displayName || data.username || 'Someone';
+    const name = userDisplayName(data.follower) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
     addAlert(`${escapeHtml(name)} followed!`, 'follow');
 
     pushMessage({
@@ -1256,8 +1264,9 @@ function handleFollow(data) {
 
 function handleSubscribe(data) {
     if (!data) return;
-    const name = data.displayName || data.username || 'Someone';
-    const months = data.subscriberMonths ? ` (${data.subscriberMonths} months)` : '';
+    const name = userDisplayName(data.subscriber) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
+    const monthsValue = data.months || data.subscriberMonths || data.subscriber_months || '';
+    const months = monthsValue ? ` (${monthsValue} months)` : '';
     addAlert(`${escapeHtml(name)} subscribed${months}!`, 'sub');
 
     pushMessage({
@@ -1279,7 +1288,7 @@ function handleSubscribe(data) {
 
 function handleGiftSub(data) {
     if (!data) return;
-    const gifterName = data.gifterDisplayName || data.gifterUsername || data.displayName || data.username || 'Anonymous';
+    const gifterName = userDisplayName(data.gifter) || userDisplayName(data.user) || data.gifterDisplayName || data.gifterUsername || data.displayName || data.username || 'Anonymous';
     const count = data.quantity || data.count || 1;
     const label = `sub${count !== 1 ? 's' : ''}`;
     addAlert(`${escapeHtml(gifterName)} gifted ${count} ${label}!`, 'gift');
@@ -1303,8 +1312,8 @@ function handleGiftSub(data) {
 
 function handleVolts(data) {
     if (!data) return;
-    const name = data.displayName || data.username || 'Someone';
-    const amount = data.amount || data.volts || '';
+    const name = userDisplayName(data.sender) || userDisplayName(data.from) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
+    const amount = data.amount || data.volts || data.amountVolts || data.quantity || data.value || '';
     const amountLabel = amount ? `${amount} Volts` : 'Volts';
     addAlert(`${escapeHtml(name)} sent ${amountLabel}!`, 'volts');
 
@@ -1327,8 +1336,8 @@ function handleVolts(data) {
 
 function handleRaid(data) {
     if (!data) return;
-    const name = data.fromDisplayName || data.fromUsername || data.displayName || data.username || 'Someone';
-    const viewers = data.viewerCount ?? data.viewers ?? '';
+    const name = userDisplayName(data.from) || userDisplayName(data.raider) || data.fromDisplayName || data.fromUsername || data.displayName || data.username || 'Someone';
+    const viewers = data.viewerCount ?? data.viewers ?? data.viewer_count ?? '';
     const viewerStr = viewers !== '' ? ` with ${viewers} viewers` : '';
     addAlert(`${escapeHtml(name)} raided${viewerStr}!`, 'raid');
 
@@ -1351,9 +1360,9 @@ function handleRaid(data) {
 
 function handleChannelPoints(data) {
     if (!data) return;
-    const name = data.displayName || data.username || 'Someone';
-    const reward = data.rewardTitle || 'channel point reward';
-    const message = data.userInput || data.message || data.input || '';
+    const name = userDisplayName(data.redeemer) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
+    const reward = data.rewardTitle || data.rewardName || data.itemName || data.reward?.title || data.reward?.name || data.item?.title || data.item?.name || 'channel point reward';
+    const message = data.userInput || data.user_input || data.message || data.input || data.text || '';
     addAlert(`${escapeHtml(name)} redeemed: ${escapeHtml(reward)}`, 'points');
 
     pushMessage({
@@ -1372,8 +1381,8 @@ function handleChannelPoints(data) {
         event: 'channel_points',
         meta: {
             rewardTitle: reward,
-            rewardCost: data.rewardCost || data.cost || '',
-            redemptionId: data.redemptionId || data.id || ''
+            rewardCost: data.rewardCost || data.reward_cost || data.cost || data.points || data.reward?.cost || data.item?.cost || '',
+            redemptionId: data.redemptionId || data.redemption_id || data.id || ''
         }
     });
 }
