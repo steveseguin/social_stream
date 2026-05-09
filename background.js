@@ -5170,15 +5170,22 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			try {
 				const method = String(request.method || "GET").toUpperCase();
-				if (method !== "GET" && !(method === "POST" && parsedUrl.pathname === "/api/oauth/token")) {
+				const isOAuthTokenPost = method === "POST" && parsedUrl.pathname === "/api/oauth/token";
+				const isChatMessagePost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat$/.test(parsedUrl.pathname);
+				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost) {
 					sendResponse({ ok: false, error: "VPZone fetch method not allowed" });
 					return response;
 				}
 				const headers = {
 					Accept: "application/json"
 				};
-				if (method === "POST") {
+				if (isOAuthTokenPost) {
 					headers["Content-Type"] = "application/x-www-form-urlencoded";
+				} else if (isChatMessagePost) {
+					headers["Content-Type"] = "application/json";
+					if (request.authToken && typeof request.authToken === "string") {
+						headers.Authorization = "Bearer " + request.authToken.replace(/[\r\n]/g, "");
+					}
 				}
 				const vpzoneResponse = await fetch(parsedUrl.toString(), {
 					method,
@@ -9938,7 +9945,7 @@ async function openchat(target = null, force = false) {
 	}
 
 	if (target == "vpzonews" || (!target && settings.vpzone_username && settings.vpzone_username.textsetting)) {
-		let url = "https://socialstream.ninja/sources/websocket/vpzone";
+		let url = "https://socialstream.ninja/sources/websocket/vpzone.html";
 		const vpzoneChannel = settings.vpzone_username && settings.vpzone_username.textsetting ? settings.vpzone_username.textsetting.trim().replace(/^@+/, "") : "";
 		if (vpzoneChannel) {
 			url += "?channel=" + encodeURIComponent(vpzoneChannel);

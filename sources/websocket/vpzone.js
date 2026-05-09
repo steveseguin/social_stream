@@ -6,7 +6,7 @@
 	const TOKEN_KEY = "vpzoneWsTokens";
 	const OAUTH_KEY = "vpzoneOAuthState";
 	const DEFAULT_CLIENT_ID = "e63ceeb6-e9e6-4732-a7eb-a8f1613a2686";
-	const DEFAULT_SCOPES = "profile:read channel:read chat:read";
+	const DEFAULT_SCOPES = "profile:read profile:write follows:read channel:read channel:write dashboard:read chat:read chat:write chat:moderate chat:announcements notifications:read notifications:write oauth:manage";
 	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.nexus-7.vpzone.tv/ws", token: "", clientId: DEFAULT_CLIENT_ID, redirectUri: "", scopes: DEFAULT_SCOPES };
 	const RECONNECT_DELAY_MS = 4000;
 	const MAX_SEEN_IDS = 1500;
@@ -38,9 +38,11 @@
 	const wsProxy = {
 		readyState: READY_STATE.CLOSED,
 		close: function () { disconnect(true); },
-		send: function () {
-			log("VPZone WebSocket source is read-only. Sending chat is not supported.", "warn");
-			return false;
+		send: function (rawMessage) {
+			sendChatMessage(rawMessage).catch(function (error) {
+				log("VPZone chat send failed: " + ((error && error.message) || error), "error");
+			});
+			return true;
 		}
 	};
 
@@ -106,6 +108,19 @@
 
 	function nice(value) {
 		return String(value || "").replace(/[_-]+/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+	}
+
+	function mergeScopes(value) {
+		var scopes = String((value || "") + " " + DEFAULT_SCOPES).split(/\s+/);
+		var seen = {};
+		var out = [];
+		scopes.forEach(function (scope) {
+			scope = String(scope || "").trim();
+			if (!scope || seen[scope]) return;
+			seen[scope] = true;
+			out.push(scope);
+		});
+		return out.join(" ");
 	}
 
 	function base64Url(bytes) {
@@ -204,19 +219,28 @@
 		} catch (e) {}
 	}
 
+	function jsonErrorMessage(json, fallback) {
+		if (json && json.error_description) return String(json.error_description);
+		if (json && typeof json.error === "string") return json.error;
+		if (json && json.error && json.error.message) return String(json.error.message);
+		if (json && json.message) return String(json.message);
+		return fallback;
+	}
+
 	function fetchJson(url, options) {
 		options = options || {};
+		var headers = options.headers || { Accept: "application/json" };
 		return fetch(url, {
 			method: options.method || "GET",
 			cache: "no-store",
 			credentials: "omit",
-			headers: options.headers || { Accept: "application/json" },
+			headers: headers,
 			body: options.body
 		}).then(function (response) {
 			return response.text().then(function (text) {
 				var json = {};
 				try { json = text ? JSON.parse(text) : {}; } catch (e) { json = { error: text || "Invalid JSON response" }; }
-				if (!response.ok) throw new Error((json && (json.error_description || json.error || json.message)) || ("HTTP " + response.status));
+				if (!response.ok) throw new Error(jsonErrorMessage(json, "HTTP " + response.status));
 				return json;
 			});
 		}).catch(function (error) {
@@ -229,7 +253,9 @@
 							cmd: "vpzoneFetchJson",
 							url: url,
 							method: options.method || "GET",
-							body: options.body || ""
+							body: options.body || "",
+							contentType: headers["Content-Type"] || headers["content-type"] || "",
+							authToken: options.authToken || ""
 						}
 					}, function (response) {
 						if (chrome.runtime.lastError) {
@@ -472,6 +498,43 @@
 		return url.toString();
 	}
 
+	function outgoingText(raw) {
+		var text = "";
+		var parsed;
+		if (raw && typeof raw === "object") {
+			text = raw.message || raw.chatmessage || raw.body || raw.text || raw.content || "";
+		} else {
+			text = String(raw == null ? "" : raw);
+			if (/^\s*\{/.test(text)) {
+				try {
+					parsed = JSON.parse(text);
+					if (parsed && typeof parsed === "object") text = parsed.message || parsed.chatmessage || parsed.body || parsed.text || parsed.content || text;
+				} catch (e) {}
+			}
+			if (/^PRIVMSG\s+/i.test(text) && text.indexOf(" :") !== -1) text = text.slice(text.indexOf(" :") + 2);
+			else if (text.indexOf(" :") !== -1 && text.indexOf("\r\n") === -1) text = text.slice(text.indexOf(" :") + 2);
+		}
+		return String(text || "").replace(/[\r\n]+$/g, "").trim();
+	}
+
+	function sendChatMessage(rawMessage) {
+		var message = outgoingText(rawMessage);
+		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
+		var token = String(state.cfg.token || "");
+		if (!message) return Promise.reject(new Error("Message is empty."));
+		if (!channel) return Promise.reject(new Error("Channel is required."));
+		if (!token) return Promise.reject(new Error("VPZone auth with chat:write is required."));
+		return fetchJson(HOST + "/api/v1/channels/" + encodeURIComponent(channel) + "/chat", {
+			method: "POST",
+			headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + token },
+			body: JSON.stringify({ message: message }),
+			authToken: token
+		}).then(function (json) {
+			log("Sent chat message to @" + channel + ".", "success");
+			return json;
+		});
+	}
+
 	function loadConfig() {
 		var query;
 		var hash;
@@ -482,7 +545,7 @@
 		state.cfg.token = typeof saved.token === "string" ? saved.token : "";
 		state.cfg.clientId = typeof saved.clientId === "string" && saved.clientId ? saved.clientId : DEFAULT_CLIENT_ID;
 		state.cfg.redirectUri = normalizeRedirectUri(saved.redirectUri || "");
-		state.cfg.scopes = typeof saved.scopes === "string" && saved.scopes ? saved.scopes : DEFAULT_SCOPES;
+		state.cfg.scopes = mergeScopes(typeof saved.scopes === "string" && saved.scopes ? saved.scopes : DEFAULT_SCOPES);
 		query = new URLSearchParams(window.location.search);
 		hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
 		if (query.get("channel") || query.get("username") || query.get("streamUsername") || hash.get("channel") || hash.get("username")) state.cfg.channel = normalizeChannel(query.get("channel") || query.get("username") || query.get("streamUsername") || hash.get("channel") || hash.get("username"));
@@ -490,7 +553,7 @@
 		if (query.get("token") || query.get("auth") || hash.get("token") || hash.get("auth")) state.cfg.token = String(query.get("token") || query.get("auth") || hash.get("token") || hash.get("auth") || "");
 		if (query.get("client_id") || hash.get("client_id")) state.cfg.clientId = String(query.get("client_id") || hash.get("client_id") || DEFAULT_CLIENT_ID);
 		if (query.get("redirect_uri") || hash.get("redirect_uri")) state.cfg.redirectUri = normalizeRedirectUri(query.get("redirect_uri") || hash.get("redirect_uri"));
-		if (query.get("scope") || hash.get("scope")) state.cfg.scopes = String(query.get("scope") || hash.get("scope") || DEFAULT_SCOPES);
+		if (query.get("scope") || hash.get("scope")) state.cfg.scopes = mergeScopes(query.get("scope") || hash.get("scope") || DEFAULT_SCOPES);
 	}
 
 	function saveConfig() {
@@ -824,7 +887,15 @@
 						if (request && typeof request === "object") {
 							if ("settings" in request) { state.settings = request.settings || {}; sendResponse(true); return; }
 							if ("state" in request) { state.isExtensionOn = !!request.state; sendResponse(true); return; }
-							if (request.type === "SEND_MESSAGE") { log("VPZone WebSocket source is read-only. Chat send is not supported.", "warn"); sendResponse(false); return; }
+							if (request.type === "SEND_MESSAGE") {
+								sendChatMessage(request.message).then(function () {
+									sendResponse(true);
+								}).catch(function (error) {
+									log("VPZone SEND_MESSAGE failed: " + ((error && error.message) || error), "error");
+									sendResponse(false);
+								});
+								return true;
+							}
 						}
 					} catch (error) {
 						log("Extension bridge error: " + ((error && error.message) || error), "error");
@@ -845,7 +916,11 @@
 			var request = event && event.data;
 			if (!request || typeof request !== "object") return;
 			if (request.__ssappSendToTab) request = request.__ssappSendToTab;
-			if (request.type === "SEND_MESSAGE") log("VPZone WebSocket source is read-only. Chat send is not supported.", "warn");
+			if (request.type === "SEND_MESSAGE") {
+				sendChatMessage(request.message).catch(function (error) {
+					log("VPZone postMessage SEND_MESSAGE failed: " + ((error && error.message) || error), "error");
+				});
+			}
 		});
 	}
 

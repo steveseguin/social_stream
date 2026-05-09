@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             name: 'VPZone.tv',
             icon: 'vpzone.png',
-            description: 'Live streaming platform with on-page chat capture and a read-only API page option.',
+            description: 'Live streaming platform with on-page chat capture and an authenticated API page option.',
             type: 'standard',
             instructions: `
                 <ul>
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>URL: https://vpzone.tv/stream/USERNAME</li>
                 </ul>
             `,
-            notes: 'A read-only API-backed source is also available at <code>sources/websocket/vpzone.html?channel=USERNAME</code>.'
+            notes: 'An API-backed source is also available at <code>sources/websocket/vpzone.html?channel=USERNAME</code>.'
         },
         {
             name: 'Slack',
