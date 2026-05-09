@@ -411,8 +411,19 @@
 		}
 
 		headerNode.querySelectorAll("[aria-label], [title]").forEach(function (badgeNode) {
-			var label = (badgeNode.getAttribute("aria-label") || badgeNode.getAttribute("title") || "").trim();
+			var title = (badgeNode.getAttribute("aria-label") || badgeNode.getAttribute("title") || "").trim();
+			var text = (badgeNode.textContent || "").trim();
+			var label = text && text.length <= 18 ? text : title;
 			var normalizedLabel = label.toLowerCase();
+			if (badgeNode.tagName === "IMG" || badgeNode.tagName === "SVG") {
+				return;
+			}
+			if (badgeNode.closest && badgeNode.closest(".break-words")) {
+				return;
+			}
+			if (/\d{1,2}\/\d{1,2}\/\d{4}|^\d{1,2}:\d{2}/.test(title || label)) {
+				return;
+			}
 			if (!label || seen.has(normalizedLabel)) {
 				return;
 			}
@@ -421,6 +432,28 @@
 		});
 
 		return badges;
+	}
+
+	function isLikelyTimeNode(node) {
+		var text = (node && node.textContent || "").trim();
+		var title = node && node.getAttribute ? (node.getAttribute("title") || "") : "";
+		return /^\d{1,2}:\d{2}(?:\s?[AP]M)?$/i.test(text) || /\d{1,2}\/\d{1,2}\/\d{4}/.test(title);
+	}
+
+	function findVpzoneMessageNode(row) {
+		var nodes = Array.from(row.querySelectorAll(".break-words, [class*='break-words']"));
+		return nodes.find(function (node) {
+			return node && !isLikelyTimeNode(node) && ((node.textContent || "").trim() || node.querySelector("img, svg, video"));
+		}) || null;
+	}
+
+	function findVpzoneTimeNode(row) {
+		var spans = Array.from(row.querySelectorAll("span"));
+		return spans.reverse().find(isLikelyTimeNode) || null;
+	}
+
+	function findVpzoneNameNode(row) {
+		return row.querySelector('a[href^="/u/"], a[href*="/u/"], span.font-semibold');
 	}
 
 	function buildBaseData() {
@@ -440,13 +473,14 @@
 	}
 
 	function parseMessageRow(row) {
-		var contentRoot = row.querySelector("div.min-w-0") || row.lastElementChild;
-		var headerNode = contentRoot ? getDirectChildrenByTag(contentRoot, "SPAN")[0] || null : null;
-		var nameNode = contentRoot ? contentRoot.querySelector("span.font-semibold") : null;
-		var messageNode = contentRoot ? getDirectChildrenByTag(contentRoot, "P")[0] || contentRoot.querySelector("p") : null;
+		var contentRoot = row.querySelector("div.min-w-0") || row.querySelector(".items-baseline") || row.lastElementChild;
+		var headerNode = contentRoot ? (contentRoot.classList && contentRoot.classList.contains("items-baseline") ? contentRoot : getDirectChildrenByTag(contentRoot, "SPAN")[0] || contentRoot) : null;
+		var nameNode = findVpzoneNameNode(row);
+		var messageNode = contentRoot ? getDirectChildrenByTag(contentRoot, "P")[0] || contentRoot.querySelector("p") || findVpzoneMessageNode(row) : findVpzoneMessageNode(row);
 		var avatarNode = getDirectChildrenByTag(row, "IMG").find(function (image) {
 			return image && (image.getAttribute("src") || image.src);
 		}) || null;
+		var timeNode = findVpzoneTimeNode(row);
 
 		if (!nameNode || !messageNode) {
 			return null;
@@ -466,12 +500,40 @@
 		data.nameColor = getComputedColor(nameNode, "color", "");
 		data.chatbadges = extractBadges(headerNode);
 		data.meta = {
-			timestamp: getDirectChildrenByTag(headerNode || document.createElement("span"), "SPAN").slice(-1)[0]?.textContent?.trim() || ""
+			timestamp: timeNode ? (timeNode.getAttribute("title") || timeNode.textContent || "").trim() : ""
 		};
 		return data;
 	}
 
 	function parseEventRow(row) {
+		var eventCardName = row.querySelector('a[href^="/u/"], a[href*="/u/"]');
+		var eventCardText = row.querySelector("p");
+		if (eventCardName && eventCardText && /followed/i.test(eventCardText.textContent || "")) {
+			var followData = buildBaseData();
+			followData.chatname = escapeHtml((eventCardName.textContent || "").trim());
+			followData.chatmessage = "followed";
+			followData.event = "followed";
+			followData.meta = {
+				timestamp: findVpzoneTimeNode(row) ? (findVpzoneTimeNode(row).textContent || "").trim() : ""
+			};
+			return followData.chatname ? followData : null;
+		}
+
+		var rowText = (row.textContent || "").replace(/\s+/g, " ").trim();
+		var simpleMatch = rowText.match(/^(.+?)\s+(?:just\s+)?(joined|left)$/i);
+		if (simpleMatch && simpleMatch[1] && simpleMatch[2]) {
+			var simpleType = simpleMatch[2].toLowerCase();
+			if (simpleType === "joined" && settings.capturejoinedevent === false) {
+				return null;
+			}
+			var simpleData = buildBaseData();
+			simpleData.chatname = escapeHtml(simpleMatch[1].trim());
+			simpleData.chatmessage = simpleType;
+			simpleData.event = simpleType;
+			simpleData.meta = { timestamp: "" };
+			return simpleData.chatname ? simpleData : null;
+		}
+
 		var spans = getDirectChildrenByTag(row, "SPAN");
 		if (!spans.length) {
 			return null;
@@ -506,7 +568,7 @@
 		if (!row || row.nodeType !== 1 || !row.isConnected || row.parentElement !== observedList) {
 			return null;
 		}
-		if (row.querySelector("p") && row.querySelector("span.font-semibold")) {
+		if ((row.querySelector("p") && row.querySelector("span.font-semibold")) || (findVpzoneNameNode(row) && findVpzoneMessageNode(row))) {
 			return parseMessageRow(row);
 		}
 		return parseEventRow(row);
