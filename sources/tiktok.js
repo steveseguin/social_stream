@@ -2023,6 +2023,57 @@
 			resetTikTokStandardPendingError();
 		}
 	}
+
+	function getTikTokMainObserverTarget() {
+		let target = null;
+		let subtree = false;
+		if (window.location.href.startsWith("https://livecenter.tiktok.com/common_live_chat")) {
+			target = document.querySelector('[data-e2e]');
+			if (target) {
+				target = target.parentNode;
+			}
+		} else {
+			target = document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
+			if (target) {
+				subtree = true;
+			}
+			if (!target) {
+				target = document.querySelector('.live-room-container div[data-index]:not([data-index="-1"])');
+				if (target) {
+					target = target.parentNode;
+					subtree = false;
+				} else {
+					target = document.querySelector('.live-room-container div.flex-1.overflow-y-scroll.overflow-x-hidden.box-border div.relative.w-full div.absolute.w-full.top-0.left-0');
+					if(target){
+						subtree = false;
+					}
+				}
+			}
+
+			if (!target) {
+				let potentialTargets = document.querySelectorAll('[data-index].w-full');
+				if (potentialTargets && potentialTargets.length > 3) {
+					target = potentialTargets[potentialTargets.length - 1].parentNode;
+					subtree = false;
+				}
+			}
+		}
+		if (!target) {
+			return null;
+		}
+		return {
+			target: target,
+			subtree: subtree
+		};
+	}
+
+	function getTikTokSecondaryObserverTarget(other) {
+		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"], [class="w-full h-auto overflow-hidden flex-shrink-0 max-h-[200px] min-h-32"]');
+		if (!target2 && other && other.isConnected && other.nextElementSibling) {
+			target2 = other.nextElementSibling;
+		}
+		return target2 || null;
+	}
 	
 	function start() {
 		if (!isExtensionOn) {
@@ -2102,11 +2153,18 @@
 			} catch (e) {}
 		}
 		monitorTikTokStandardHealth();
+
+		var mainTargetInfo = getTikTokMainObserverTarget();
 		
 		if (observer && observedDomElementForObserver1) {
 			// Check if the observed element is still connected
 			if (!observedDomElementForObserver1.isConnected) {
 				console.log("[TikTok] Observer target disconnected, will re-establish");
+				observer.disconnect();
+				observer = false;
+				observedDomElementForObserver1 = null;
+			} else if (mainTargetInfo && mainTargetInfo.target !== observedDomElementForObserver1) {
+				console.log("[TikTok] Observer target changed, will re-establish");
 				observer.disconnect();
 				observer = false;
 				observedDomElementForObserver1 = null;
@@ -2117,39 +2175,8 @@
 			}
 		}
 		//console.log("..................");
-		let target = null;
-		let subtree = false;
-		if (window.location.href.startsWith("https://livecenter.tiktok.com/common_live_chat")) {
-			target = document.querySelector('[data-e2e]');
-			if (target) {
-				target = target.parentNode;
-			}
-		} else {
-			target = document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
-			if (target) {
-				subtree = true;
-			}
-			if (!target) {
-				target = document.querySelector('.live-room-container div[data-index]:not([data-index="-1"])');
-				if (target) {
-					target = target.parentNode;
-					subtree = false;
-				} else {
-					target = document.querySelector('.live-room-container div.flex-1.overflow-y-scroll.overflow-x-hidden.box-border div.relative.w-full div.absolute.w-full.top-0.left-0');
-					if(target){
-						subtree = false;
-					}
-				}
-			}
-			
-			if (!target) {
-				let potentialTargets = document.querySelectorAll('[data-index].w-full');
-				if (potentialTargets && potentialTargets.length > 3) {
-					target = potentialTargets[potentialTargets.length - 1].parentNode;
-					subtree = false;
-				}
-			}
-		}
+		let target = mainTargetInfo ? mainTargetInfo.target : null;
+		let subtree = mainTargetInfo ? mainTargetInfo.subtree : false;
 		////console.log("target", target);
 		if (!target) {
 			////console.log("Start: No target found for main observer.");
@@ -2251,6 +2278,7 @@
 		if (!isExtensionOn) {
 			return;
 		}
+		var target2 = getTikTokSecondaryObserverTarget(other);
 		if (observer2 && observedDomElementForObserver2) {
 			// Check if the observed element is still connected
 			if (!observedDomElementForObserver2.isConnected) {
@@ -2258,13 +2286,14 @@
 				observer2.disconnect();
 				observer2 = false;
 				observedDomElementForObserver2 = null;
+			} else if (target2 && target2 !== observedDomElementForObserver2) {
+				console.log("[TikTok] Observer2 target changed, will re-establish");
+				observer2.disconnect();
+				observer2 = false;
+				observedDomElementForObserver2 = null;
 			} else {
 				return;
 			}
-		}
-		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"], [class="w-full h-auto overflow-hidden flex-shrink-0 max-h-[200px] min-h-32"]');
-		if (!target2 && other && other.isConnected && other.nextElementSibling) {
-			target2 = other.nextElementSibling;
 		}
 		if (!target2) {
 			return;

@@ -402,6 +402,7 @@
 
 	var lastURL =  "";
 	var observer = null;
+	var observerTarget = null;
 	
 	
 	function onElementInserted(target) {
@@ -429,10 +430,20 @@
 		};
 		
 		var config = { childList: true, subtree: false };
+		if (!target){return;}
+		if (observer && observerTarget === target && target.isConnected) {
+			return;
+		}
+		if (observer){
+			try {
+				observer.disconnect();
+			} catch(e){}
+		}
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
+		observerTarget = target;
 	}
 	
 	console.log("social stream injected");
@@ -593,19 +604,22 @@
 		checking = setInterval(function(){
 			try {
 				var container = document.querySelector('path[d="m12 5 7 7-7 7"]');
-				if (!container.marked){
+				var observeTarget = container && container.parentNode && container.parentNode.parentNode ? container.parentNode.parentNode.nextSibling : null;
+				if (container && observeTarget && (!container.marked || !observer || observerTarget !== observeTarget || !observeTarget.isConnected)){
 					container.marked=true;
 					
 					console.log("CONNECTED chat detected");
 
 					setTimeout(()=>{
+						var latestObserveTarget = container.parentNode && container.parentNode.parentNode ? container.parentNode.parentNode.nextSibling : null;
+						if (!latestObserveTarget){return;}
 						
-						container.parentNode.parentNode.nextSibling.childNodes.forEach(node=>{
+						latestObserveTarget.childNodes.forEach(node=>{
 							processMessage(node,false);
 						});
 						
 						dataIndex = 0;
-						onElementInserted(container.parentNode.parentNode.nextSibling);
+						onElementInserted(latestObserveTarget);
 					},2000);
 				}
 				checkViewers();

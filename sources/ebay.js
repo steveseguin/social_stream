@@ -946,6 +946,7 @@
 
 	var lastURL =  "";
 	var observer = null;
+	var observerTarget = null;
 	
 	
 	function onElementInserted(target) {
@@ -974,10 +975,20 @@
 		};
 		
 		var config = { childList: true, subtree: false };
+		if (!target){return;}
+		if (observer && observerTarget === target && target.isConnected) {
+			return;
+		}
+		if (observer){
+			try {
+				observer.disconnect();
+			} catch(e){}
+		}
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
+		observerTarget = target;
 	}
 	
 	console.log("social stream injected");
@@ -996,13 +1007,16 @@
 		checking = setInterval(function(){
 			try {
 				var container = document.querySelector("#chatting-container, [data-testid='chat-messages-container'], [data-testid='message-list-container']");
-				if (container && !container.marked){
+				if (container){
+					var observeTarget = container.querySelector("ul[class*='chatFeed-'], ul[aria-live='polite']") || container;
+				}
+				if (container && observeTarget && (!container.marked || !observer || observerTarget !== observeTarget || !observeTarget.isConnected)){
 					container.marked=true;
 
 					setTimeout(function(){
 						dataIndex = 0;
-						var observeTarget = container.querySelector("ul[class*='chatFeed-'], ul[aria-live='polite']") || container;
-						onElementInserted(observeTarget);
+						var latestObserveTarget = container.querySelector("ul[class*='chatFeed-'], ul[aria-live='polite']") || container;
+						onElementInserted(latestObserveTarget);
 					},2000);
 				}
 

@@ -1518,9 +1518,7 @@
 			});
 		};
 		var config = { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+		replaceKickChatObserver(target, "old", true, onMutationsObserved, config);
 	}
 	
 	function onElementInsertedNew(target, subtree=false) {
@@ -1566,9 +1564,83 @@
 			});
 		};
 		var config = { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] };
+		replaceKickChatObserver(target, "new", subtree, onMutationsObserved, config);
+	}
+
+	var kickChatObserver = null;
+	var kickChatObserverTarget = null;
+	var kickChatObserverMode = "";
+	var kickChatObserverSubtree = false;
+	var kickChatObserverWatchdog = null;
+
+	function replaceKickChatObserver(target, mode, subtree, onMutationsObserved, config) {
+		if (!target) {
+			return false;
+		}
+		subtree = Boolean(subtree);
+		if (kickChatObserver && kickChatObserverTarget === target && kickChatObserverMode === mode && kickChatObserverSubtree === subtree && target.isConnected) {
+			return true;
+		}
+		if (kickChatObserver) {
+			try {
+				kickChatObserver.disconnect();
+			} catch(e) {}
+		}
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+		kickChatObserver = new MutationObserver(onMutationsObserved);
+		kickChatObserver.observe(target, config);
+		kickChatObserverTarget = target;
+		kickChatObserverMode = mode;
+		kickChatObserverSubtree = subtree;
+		return true;
+	}
+
+	function getKickCurrentChatTarget() {
+		if (isPopoutChat) {
+			var targets = document.querySelectorAll("#chatroom-messages > div");
+			if (!targets.length) {
+				return null;
+			}
+			return {
+				mode: "new",
+				target: targets.length > 1 ? targets[1] : targets[0],
+				subtree: targets.length > 1
+			};
+		}
+		var oldTarget = document.getElementById("chatroom");
+		if (!oldTarget) {
+			return null;
+		}
+		return {
+			mode: "old",
+			target: oldTarget,
+			subtree: true
+		};
+	}
+
+	function refreshKickChatObserver() {
+		var current = getKickCurrentChatTarget();
+		if (!current || !current.target) {
+			return false;
+		}
+		if (kickChatObserver && kickChatObserverTarget === current.target && kickChatObserverMode === current.mode && kickChatObserverSubtree === Boolean(current.subtree) && current.target.isConnected) {
+			return true;
+		}
+		if (current.mode === "new") {
+			onElementInsertedNew(current.target, current.subtree);
+		} else {
+			onElementInsertedOld(current.target);
+		}
+		return true;
+	}
+
+	function startKickChatObserverWatchdog() {
+		if (kickChatObserverWatchdog) {
+			return;
+		}
+		kickChatObserverWatchdog = setInterval(function() {
+			refreshKickChatObserver();
+		}, 1000);
 	}
 	
 	var SevenTV = false;
@@ -1585,13 +1657,8 @@
 					if (document.getElementById("seventv-extension")){
 						SevenTV = true;
 					}
-					var clear = document.querySelectorAll("div[data-chat-entry]");
-					
-					if (document.querySelectorAll("#chatroom-messages > div").length>1){
-						onElementInsertedNew(document.querySelectorAll("#chatroom-messages > div")[1], true);
-					} else {
-						onElementInsertedNew(document.querySelectorAll("#chatroom-messages > div")[0], false);
-					}
+					refreshKickChatObserver();
+					startKickChatObserverWatchdog();
 				},3000);
 			}
 			if (!signedInUser){
@@ -1609,7 +1676,8 @@
 					for (var i = 0;i<clear.length;i++){
 						pastMessages.push(clear[i].dataset.chatEntry);
 					}
-					onElementInsertedOld(document.getElementById("chatroom"));
+					refreshKickChatObserver();
+					startKickChatObserverWatchdog();
 				},3000);
 			}
 		}

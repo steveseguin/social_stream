@@ -262,6 +262,7 @@
 
 	var lastURL =  "";
 	var observer = null;
+	var observerTarget = null;
 	
 	
 	function onElementInserted(target) {
@@ -289,10 +290,20 @@
 		};
 		
 		var config = { childList: true, subtree: true };
+		if (!target){return;}
+		if (observer && observerTarget === target && target.isConnected) {
+			return;
+		}
+		if (observer){
+			try {
+				observer.disconnect();
+			} catch(e){}
+		}
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
+		observerTarget = target;
 	}
 	
 	console.log("social stream injected");
@@ -309,7 +320,7 @@
 		checking = setInterval(function(){
 			try {
 				var container = document.querySelector(".comments-section");
-				if (!container.marked){
+				if (container && (!container.marked || !observer || observerTarget !== container || !container.isConnected)){
 					container.marked=true;
 
 					console.log("CONNECTED");
