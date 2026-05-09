@@ -691,11 +691,15 @@
 		});
 	}
 
+	function isViewerCountLabel(text) {
+		return /\b(?:viewers?|watching)\b/i.test(text || "");
+	}
+
 	function findViewerCountNode() {
 		var selector = "div.absolute.top-3.left-3 span";
 		var spans = Array.from(document.querySelectorAll(selector));
 		var match = spans.find(function (span) {
-			return /\bviewers?\b/i.test((span.textContent || "").trim());
+			return isViewerCountLabel((span.textContent || "").trim());
 		});
 		if (match) {
 			return match;
@@ -704,11 +708,15 @@
 		spans = Array.from(document.querySelectorAll("span"));
 		return spans.find(function (span) {
 			var text = (span.textContent || "").trim();
-			if (!/\bviewers?\b/i.test(text)) {
+			var title = span.getAttribute ? (span.getAttribute("title") || "") : "";
+			if (!isViewerCountLabel(text) && !isViewerCountLabel(title)) {
+				return false;
+			}
+			if (parseCountText(text + " " + title) === null) {
 				return false;
 			}
 			var parentText = span.parentElement ? span.parentElement.textContent || "" : "";
-			return /\bLIVE\b/i.test(parentText);
+			return /\bLIVE\b/i.test(parentText) || /\bwatching\b/i.test(text) || /\bwatching\b/i.test(title);
 		}) || null;
 	}
 
