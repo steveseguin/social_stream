@@ -694,6 +694,8 @@
 		push(obj.viewerCount); push(obj.viewer_count); push(obj.viewers); push(obj.count); push(obj.online);
 		if (obj.meta && typeof obj.meta === "object") { push(obj.meta.viewerCount); push(obj.meta.viewer_count); push(obj.meta.viewers); push(obj.meta.count); }
 		if (obj.presence && typeof obj.presence === "object") { push(obj.presence.viewerCount); push(obj.presence.viewer_count); push(obj.presence.viewers); push(obj.presence.count); }
+		if (obj.payload && typeof obj.payload === "object") { push(obj.payload.viewerCount); push(obj.payload.viewer_count); push(obj.payload.viewers); push(obj.payload.count); }
+		if (obj.data && typeof obj.data === "object") { push(obj.data.viewerCount); push(obj.data.viewer_count); push(obj.data.viewers); push(obj.data.count); }
 		for (var i = 0; i < values.length; i += 1) {
 			var num = Number(values[i]);
 			if (isFinite(num)) return num;

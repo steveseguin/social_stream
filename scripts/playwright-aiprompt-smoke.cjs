@@ -264,6 +264,31 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(/^HTML update applied/.test(finalStatus), `Expected final AI status, got: ${finalStatus}`);
 
   await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      'Changing just the label.',
+      '',
+      '```ssnpatch',
+      JSON.stringify({
+        reply: 'Changed the label without rebuilding the file.',
+        edits: [{
+          find: '<div id="patch-target">Original label</div>',
+          replace: '<div id="patch-target">Patched label</div>'
+        }]
+      }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: rename the label');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /^Patch update applied/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const patchedHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(patchedHtml.includes('Patched label'), 'ssnpatch should update the matched block');
+  assert(patchedHtml.includes('window.handleOverlayPayload'), 'ssnpatch should preserve unrelated code');
+
+  await page.evaluate(() => {
     window.__ssnAiPromptMockChatbotResponse = [
       '<!DOCTYPE html>',
       '<html><head><meta charset="UTF-8"><title>Bad Label</title></head><body>',

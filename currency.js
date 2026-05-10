@@ -31,6 +31,20 @@ function convertToUSD(valueStr, source = '') {
     DOP: 0.0168,
     NIO: 0.0272,
     PAB: 1.0,
+    AWG: 0.559,
+    BBD: 0.5,
+    BMD: 1.0,
+    BSD: 1.0,
+    BZD: 0.5,
+    CUP: 0.0417,
+    GYD: 0.0048,
+    HTG: 0.00765,
+    JMD: 0.00635,
+    KYD: 1.2,
+    SRD: 0.0267,
+    TTD: 0.1475,
+    XCD: 0.3704,
+    ANG: 0.559,
     SEK: 0.093,
     NOK: 0.094,
     DKK: 0.14,
@@ -228,12 +242,78 @@ function convertToUSD(valueStr, source = '') {
     CORDOBAS: 'NIO',
     PAB: 'PAB',
     BALBOA: 'PAB',
-    BALBOAS: 'PAB'
+    BALBOAS: 'PAB',
+    AWG: 'AWG',
+    AFL: 'AWG',
+    'ARUBAN FLORIN': 'AWG',
+    BBD: 'BBD',
+    BDS: 'BBD',
+    'BARBADIAN DOLLAR': 'BBD',
+    'BARBADOS DOLLAR': 'BBD',
+    BMD: 'BMD',
+    'BERMUDIAN DOLLAR': 'BMD',
+    'BERMUDA DOLLAR': 'BMD',
+    BSD: 'BSD',
+    'BAHAMIAN DOLLAR': 'BSD',
+    BZD: 'BZD',
+    BZ: 'BZD',
+    'BELIZE DOLLAR': 'BZD',
+    CUP: 'CUP',
+    'CUBAN PESO': 'CUP',
+    GYD: 'GYD',
+    'GUYANESE DOLLAR': 'GYD',
+    HTG: 'HTG',
+    'HAITIAN GOURDE': 'HTG',
+    JMD: 'JMD',
+    'JAMAICAN DOLLAR': 'JMD',
+    KYD: 'KYD',
+    'CAYMAN ISLANDS DOLLAR': 'KYD',
+    SRD: 'SRD',
+    'SURINAMESE DOLLAR': 'SRD',
+    TTD: 'TTD',
+    TT: 'TTD',
+    'TRINIDAD DOLLAR': 'TTD',
+    'TRINIDAD AND TOBAGO DOLLAR': 'TTD',
+    XCD: 'XCD',
+    EC: 'XCD',
+    'EAST CARIBBEAN DOLLAR': 'XCD',
+    ANG: 'ANG',
+    NAF: 'ANG',
+    'ANTILLEAN GUILDER': 'ANG',
+    'NETHERLANDS ANTILLEAN GUILDER': 'ANG',
+    'CARIBBEAN GUILDER': 'ANG'
   };
 
   function hasCurrencyTerm(term) {
     const escapedTerm = String(term).toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp('(^|\\s|\\d)' + escapedTerm + '(?=\\s|\\d|$)').test(cleanValue);
+  }
+
+  const currencySymbolPatterns = [
+    { pattern: /\bBZ\s*\$/i, currency: 'BZD' },
+    { pattern: /\bBDS\s*\$/i, currency: 'BBD' },
+    { pattern: /\bBD\s*\$/i, currency: 'BMD' },
+    { pattern: /\bBS\s*\$/i, currency: 'BSD' },
+    { pattern: /\bCI\s*\$/i, currency: 'KYD' },
+    { pattern: /\bJ\s*\$/i, currency: 'JMD' },
+    { pattern: /\bTT\s*\$/i, currency: 'TTD' },
+    { pattern: /\bEC\s*\$/i, currency: 'XCD' },
+    { pattern: /\bGY\s*\$/i, currency: 'GYD' },
+    { pattern: /\bSR\s*\$/i, currency: 'SRD' },
+    { pattern: /\bRD\s*\$/i, currency: 'DOP' },
+    { pattern: /\bC\s*\$/i, currency: 'NIO' },
+    { pattern: /\bQ(?=\s*\d)/i, currency: 'GTQ' },
+    { pattern: /\bL(?=\s*\d)/i, currency: 'HNL' },
+    { pattern: /\u20a1/i, currency: 'CRC' },
+    { pattern: /\u20b2/i, currency: 'PYG' },
+    { pattern: /\u0192|Afl\.?/i, currency: 'AWG' },
+    { pattern: /\bNAf\.?/i, currency: 'ANG' }
+  ];
+
+  for (const item of currencySymbolPatterns) {
+    if (currencyRates[item.currency] && item.pattern.test(valueStr)) {
+      return amount * currencyRates[item.currency];
+    }
   }
 
   // Check fiat currencies and common YouTube display aliases before platform words like "super chat".

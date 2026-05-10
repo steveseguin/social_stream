@@ -22,7 +22,7 @@ function parseSseLines(text, onText) {
 		if (!data || data === "[DONE]") continue;
 		const json = JSON.parse(data);
 		const delta = json.choices && json.choices[0] && json.choices[0].delta;
-		const text = delta && (delta.content || delta.reasoning_content || "");
+		const text = delta && (delta.content || delta.reasoning_content || delta.reasoning || "");
 		if (text) onText(text);
 	}
 }

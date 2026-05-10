@@ -820,10 +820,30 @@
 
 === OUTPUT FORMAT — STRICT ===
 - When the user asks for a change, reply with ONE complete HTML document inside one ```html fenced block. Nothing else is needed; any prose outside the block is fine but the HTML block is the source of truth.
-- Always return the FULL file, not a diff. The app replaces the active page with the HTML block verbatim.
+- For focused edits to the current overlay, prefer a compact exact-match patch inside one ```ssnpatch fenced block. The app applies this to the active `overlay.html` file and keeps the conversation context.
+- Use full HTML instead of a patch for brand-new overlays, major rewrites, or broad changes.
+- Never return both a full HTML file and an ssnpatch in the same response.
 - Keep it as a SINGLE self-contained file (inline CSS and JS). Only link to external CDNs if the user explicitly asks.
 - Keep the code Chrome 80 friendly: no ES modules, no top-level import/export, no optional chaining in inline JSON, and avoid experimental APIs without fallbacks.
 - Set <body> background to transparent unless the user asks for a background. Overlays sit on top of OBS scenes, so transparency is the default.
+
+Patch format for focused edits:
+```ssnpatch
+{
+  "reply": "Short user-facing summary.",
+  "edits": [
+    {
+      "find": "Exact text that exists once in overlay.html",
+      "replace": "Replacement text"
+    }
+  ]
+}
+```
+Patch rules:
+- Each `find` string MUST match exactly once in the current HTML. Include enough surrounding context to make it unique.
+- Keep `replace` as small as practical, but include the complete replacement for the matched block.
+- Use full HTML instead of a patch if the exact text is uncertain or many blocks need changing.
+- Do not use line numbers; they drift.
 
 === HOW DATA ARRIVES ===
 Overlay pages receive data via a VDO.Ninja iframe bridge. Always include this bridge when the page needs live data. Messages arrive as window postMessage events:
@@ -1449,6 +1469,7 @@ If the user asks a question that does not require a file change, answer normally
 		var overlaySaveTimer = null;
 		var overlaySaveAttempts = 0;
 		var BRIDGE_CHUNK_SIZE = 12000;
+		var AI_RESPONSE_TIMEOUT_MS = 180000;
 		var bridgeResponseChunks = {};
 
 		var el = function (id) { return document.getElementById(id); };
@@ -1963,6 +1984,19 @@ If the user asks a question that does not require a file change, answer normally
 			}, 400);
 		}
 
+		function maybeRetryPatchFailure(message) {
+			if (!autoFixErrors || !autoFixErrors.checked) return false;
+			if (autoFixAttempts >= MAX_AUTO_FIX) return false;
+			if (!bridgeFrame || !bridgeFrame.contentWindow) return false;
+			autoFixAttempts += 1;
+			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " - the ssnpatch could not be applied:\n\n" + message + "\n\nReturn only a corrected ```ssnpatch fenced JSON block. Use exact text copied from the current overlay HTML. Each find string must match exactly once. Do not return a full HTML file.";
+			setStatus("Retrying patch (attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + ")…", "warn");
+			setTimeout(function () {
+				sendPrompt(retryNote, { isAutoFix: true });
+			}, 400);
+			return true;
+		}
+
 		function loadHtml2Canvas() {
 			if (window.html2canvas) return Promise.resolve(window.html2canvas);
 			if (html2canvasPromise) return html2canvasPromise;
@@ -2078,8 +2112,9 @@ If the user asks a question that does not require a file change, answer normally
 				"=== NEW REQUEST ===",
 				request,
 				"",
-				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
+				"If the request needs a focused file change, prefer one ```ssnpatch fenced block with exact find/replace edits. If it needs a new overlay or broad rewrite, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
 				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks.",
+				"When returning ssnpatch, each edit.find string must occur exactly once in the current HTML. Include enough stable surrounding context to make it unique. Do not include line numbers. Do not return both ssnpatch and full HTML.",
 				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default chat/alert overlays to var label = params.get(\"label\") || \"dock\"; default dedicated auction/commerce/viewer meta overlays to var label = params.get(\"label\") || \"meta\"; never use random/time-based labels for live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
 			].join("\n");
 		}
@@ -2099,6 +2134,76 @@ If the user asks a question that does not require a file change, answer normally
 			var trimmed = text.trim();
 			if (looksLikeHtml(trimmed)) return trimmed;
 			return "";
+		}
+
+		function parsePatchJson(value) {
+			try {
+				var parsed = JSON.parse(String(value || "").trim());
+				var edits = parsed && (parsed.edits || parsed.patches || parsed.replacements);
+				if (edits && edits.length) {
+					parsed.edits = edits;
+					return parsed;
+				}
+			} catch (e) {}
+			return null;
+		}
+
+		function extractPatchResponse(text) {
+			text = String(text || "");
+			var fence = /```([a-z0-9_-]*)\s*([\s\S]*?)```/gi;
+			var match;
+			while ((match = fence.exec(text))) {
+				var lang = String(match[1] || "").toLowerCase();
+				if (lang && lang !== "ssnpatch" && lang !== "json") continue;
+				var parsed = parsePatchJson(match[2]);
+				if (parsed) return parsed;
+			}
+			return parsePatchJson(text);
+		}
+
+		function countExactMatches(source, needle) {
+			if (!needle) return 0;
+			var count = 0;
+			var index = 0;
+			while (true) {
+				index = source.indexOf(needle, index);
+				if (index < 0) break;
+				count++;
+				index += needle.length || 1;
+			}
+			return count;
+		}
+
+		function applyPatchResponse(patch, sourceHtml) {
+			var html = String(sourceHtml || "");
+			var edits = patch && patch.edits;
+			if (!edits || !edits.length) {
+				return { ok: false, error: "Patch did not include edits." };
+			}
+			for (var i = 0; i < edits.length; i++) {
+				var edit = edits[i] || {};
+				var find = edit.find;
+				if (typeof find === "undefined") find = edit.search;
+				var replace = edit.replace;
+				if (typeof replace === "undefined") replace = edit.replacement;
+				if (typeof find !== "string" || !find) {
+					return { ok: false, error: "Patch edit " + (i + 1) + " is missing a non-empty find string." };
+				}
+				if (typeof replace !== "string") {
+					return { ok: false, error: "Patch edit " + (i + 1) + " is missing a replacement string." };
+				}
+				var matches = countExactMatches(html, find);
+				if (matches !== 1) {
+					return { ok: false, error: "Patch edit " + (i + 1) + " find string matched " + matches + " times; expected exactly 1." };
+				}
+				html = html.replace(find, replace);
+			}
+			return {
+				ok: true,
+				html: html,
+				reply: String((patch && patch.reply) || "Patch applied."),
+				count: edits.length
+			};
 		}
 
 		function requestAllowsCustomLabel(request) {
@@ -2313,7 +2418,7 @@ If the user asks a question that does not require a file change, answer normally
 					delete pendingResponses[messageID];
 					logBuilder("error", msg, { target: messageID, chunks: pending.chunks, chars: pending.text.length });
 					setStatus("AI request timed out.", "error");
-				}, 90000);
+				}, AI_RESPONSE_TIMEOUT_MS);
 
 				var payload = { action: "chatbot", value: prompt, target: messageID, turbo: false };
 				if (images && images.length) payload.images = images;
@@ -2384,8 +2489,32 @@ If the user asks a question that does not require a file change, answer normally
 				return;
 			}
 
-			var html = extractHtml(finalText);
-			if (html) {
+			var patch = extractPatchResponse(finalText);
+			if (patch) {
+				var patchResult = applyPatchResponse(patch, htmlEditor.value || "");
+				if (!patchResult.ok) {
+					var patchError = "Patch could not be applied: " + patchResult.error;
+					pending.body.textContent = patchError;
+					saveConversationMessage("assistant", patchError);
+					logBuilder("error", patchError, finalText);
+					delete pendingResponses[id];
+					if (!maybeRetryPatchFailure(patchError)) {
+						setStatus(patchError, "error");
+					}
+					return;
+				}
+				htmlEditor.value = patchResult.html;
+				syncFormToPage();
+				lastAppliedFromAI = true;
+				refreshPreview();
+				var patchNote = patchResult.reply || "Patch applied.";
+				if (patchResult.count) patchNote += "\n\nApplied " + patchResult.count + " exact-match edit" + (patchResult.count === 1 ? "." : "s.");
+				pending.body.textContent = patchNote;
+				saveConversationMessage("assistant", patchNote);
+				setStatus("Patch update applied.", "ok");
+			} else {
+				var html = extractHtml(finalText);
+				if (html) {
 				var review = reviewGeneratedHtml(html, pending.requestText || "");
 				html = review.html;
 				htmlEditor.value = html;
@@ -2401,10 +2530,11 @@ If the user asks a question that does not require a file change, answer normally
 				pending.body.textContent = note;
 				saveConversationMessage("assistant", note);
 				setStatus(review.notes.length ? "HTML update applied with safety review." : "HTML update applied.", "ok");
-			} else {
+				} else {
 				pending.body.textContent = finalText;
 				saveConversationMessage("assistant", finalText);
 				setStatus("AI response received.", "ok");
+				}
 			}
 			delete pendingResponses[id];
 		}
