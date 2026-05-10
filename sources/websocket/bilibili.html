@@ -700,7 +700,7 @@
                         chatimg: avatarUrl,
                         textonly: true,
                         chatbadges: [],
-                        userId: userId.toString(),
+                        userid: userId.toString(),
                         admin: isAdmin,
                         moderator: isAdmin || isVIP || isSVIP
                     };
@@ -728,7 +728,7 @@
                     if (!giftData) return;
                     
                     const gift = {
-                        userId: giftData.uid,
+                        userid: giftData.uid,
                         username: giftData.uname,
                         avatar: giftData.face,
                         giftId: giftData.giftId,
@@ -779,7 +779,7 @@
                         textonly: true,
                         hasDonation: `${gift.num} × ${gift.giftName}`,
                         event: "gift",
-                        userId: gift.userId.toString(),
+                        userid: gift.userid.toString(),
                         title: "DONATION"
                     };
                     
@@ -806,7 +806,7 @@
                     if (!scData) return;
                     
                     const superChat = {
-                        userId: scData.uid,
+                        userid: scData.uid,
                         username: scData.user_info.uname,
                         avatar: scData.user_info.face,
                         message: scData.message,
@@ -870,7 +870,7 @@
                         textonly: true,
                         hasDonation: `¥${superChat.price}`,
                         event: "superchat",
-                        userId: superChat.userId.toString(),
+                        userid: superChat.userid.toString(),
                         title: "SUPER CHAT"
                     };
                     
@@ -924,7 +924,7 @@
                         chatmessage: `has entered the room`,
                         textonly: true,
                         event: "user_enter",
-                        userId: (userInfo.uid || userInfo.userId).toString(),
+                        userid: (userInfo.uid || userInfo.userId).toString(),
                         admin: isAdmin,
                         moderator: isAdmin || isGuard
                     };

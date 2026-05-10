@@ -6128,7 +6128,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
             messagePayload.meta = { messageId: nativeMessageId };
         }
         if (ids?.userId) {
-            messagePayload.userId = ids.userId;
+            messagePayload.userid = ids.userId;
         }
         if (lookupUsername) {
             messagePayload.username = lookupUsername;
@@ -7664,8 +7664,8 @@ function appendChatFeedMessage(message, plainText = '') {
     if (message.id != null) {
         line.dataset.messageId = String(message.id);
     }
-    if (message.userId != null) {
-        line.dataset.userId = String(message.userId);
+    if (message.userid != null) {
+        line.dataset.userId = String(message.userid);
     }
     if (message.username) {
         line.dataset.username = normalizeChannel(message.username);
