@@ -211,8 +211,8 @@ async function main() {
 	function assertGeneratedLiveHtml(html, runLabel) {
 		assert(/window\.handleOverlayPayload\s*=/.test(html), `${runLabel} missing window.handleOverlayPayload`);
 		assert(/dataReceived[\s\S]{0,160}overlayNinja/.test(html), `${runLabel} missing dataReceived.overlayNinja listener`);
-		assert(/params\.get\((["'])label\1\)\s*\|\|\s*(["'])dock\2/.test(html), `${runLabel} bridge label should default to dock`);
-		assert(!/params\.get\((["'])label\1\)\s*\|\|\s*["'](?!dock["'])/i.test(html), `${runLabel} has unsafe non-dock bridge label fallback`);
+		assert(/params\.get\((["'])label\1\)\s*\|\|\s*(["'])(?:dock|meta)\2/.test(html), `${runLabel} bridge label should default to dock or meta`);
+		assert(!/params\.get\((["'])label\1\)\s*\|\|\s*["'](?!(?:dock|meta)["'])/i.test(html), `${runLabel} has unsafe bridge label fallback`);
 		assert(!/(?:random|date\.now\(\)|math\.random\(\))[\s\S]{0,80}label|label[\s\S]{0,80}(?:random|date\.now\(\)|math\.random\(\))/i.test(html), `${runLabel} should not use random/time-based labels`);
 	}
 

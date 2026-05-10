@@ -35,6 +35,7 @@ assert.ok(!popupJs.includes("https://huggingface.co/onnx-community/Kokoro-82M-v1
 assert.ok(!ttsJs.includes("https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx"));
 assert.ok(ttsJs.includes('window.SSN_KOKORO_REMOTE_HOST = kokoroAssets.getRemoteHost();'));
 assert.ok(ttsJs.includes('dtype: kokoroAssets.getPreferredDtype(device),'));
+assert.ok(ttsJs.includes('urlParams.has("kokorospeed")'));
 assert.ok(!bundleWeb.includes("https://cdn.jsdelivr.net/npm/@huggingface/transformers@"));
 assert.ok(!bundleWeb.includes('remoteHost: "https://huggingface.co/"'));
 assert.ok(!bundleExtension.includes('remoteHost: "https://huggingface.co/"'));

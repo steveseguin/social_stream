@@ -152,6 +152,12 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(new Set(pageNames).size === pageNames.length, `Overlay names should be unique: ${pageNames.join(', ')}`);
   assert(pageNames.includes('blank-canvas'), `Expected blank-canvas page, got: ${pageNames.join(', ')}`);
   assert(pageNames.includes('blank-canvas-2'), `Expected blank-canvas-2 page, got: ${pageNames.join(', ')}`);
+  page.once('dialog', dialog => dialog.accept());
+  await page.click('#deletePage');
+  await page.waitForFunction(() => document.activeElement && document.activeElement.id === 'userRequest', null, { timeout: 3000 });
+  await page.keyboard.type('delete-focus-ok');
+  const deleteFocusValue = await page.$eval('#userRequest', el => el.value);
+  assert(deleteFocusValue.includes('delete-focus-ok'), 'Deleting an overlay should leave the AI prompt textbox focusable');
   await page.$$eval('#pageList .page-tab', els => {
     const chat = els.find(el => el.textContent.trim() === 'chat-overlay');
     if (chat) chat.click();
@@ -279,7 +285,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   await page.click('#sendPrompt');
   await page.waitForFunction(() => /^HTML update applied/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
   const reviewedHtml = await page.$eval('#htmlEditor', el => el.value);
-  assert(/params\.get\("label"\)\s*\|\|\s*"dock"/.test(reviewedHtml), 'Generated HTML review should force normal live overlays to label=dock');
+  assert(/params\.get\("label"\)\s*\|\|\s*"meta"/.test(reviewedHtml), 'Generated HTML review should force auction overlays to label=meta');
   assert(!/smooth_auction/.test(reviewedHtml), 'Generated HTML review should remove random live overlay labels');
 
   // Error reporter: inject a broken template and confirm the console bar surfaces the error.
@@ -310,7 +316,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(copied, `Copy URL should have produced a value, got: ${copied}`);
   assert(copied.indexOf('aiprompt.html') === -1, `Copied URL should be the overlay, not the builder itself: ${copied}`);
   assert(/\.html/.test(copied), `Copied URL should point at an .html file: ${copied}`);
-  assert(/[?&]label=dock(?:&|$)/.test(copied), `Copied named overlay URL should use label=dock: ${copied}`);
+  assert(/[?&]label=aioverlay(?:&|$)/.test(copied), `Copied named overlay URL should use label=aioverlay: ${copied}`);
 
   // aioverlay should load same-browser local overlays even when ?session= is present.
   await page.evaluate(() => {
@@ -329,7 +335,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   await overlayPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=chat-overlay`, { waitUntil: 'domcontentloaded' });
   await overlayPage.waitForSelector('#overlayFrame', { timeout: 3000 });
   const overlayBridgeLabel = await overlayPage.$eval('#bridgeFrame', el => el.getAttribute('data-bridge-label'));
-  assert(overlayBridgeLabel === 'dock', `Named aioverlay should connect its wrapper bridge as label=dock: ${overlayBridgeLabel}`);
+  assert(overlayBridgeLabel === 'aioverlay', `Named aioverlay should connect its wrapper bridge as label=aioverlay: ${overlayBridgeLabel}`);
   const overlayFrameSrc = await overlayPage.$eval('#overlayFrame', el => el.getAttribute('src') || el.src);
   assert(!/aioverlay\.html/i.test(overlayFrameSrc), `aioverlay should not load itself inside overlayFrame: ${overlayFrameSrc}`);
   const overlayFrameHandle = await overlayPage.$('#overlayFrame');
@@ -348,7 +354,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   await activeOverlayPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room`, { waitUntil: 'domcontentloaded' });
   await activeOverlayPage.waitForSelector('#overlayFrame', { timeout: 3000 });
   const activeOverlayBridgeLabel = await activeOverlayPage.$eval('#bridgeFrame', el => el.getAttribute('data-bridge-label'));
-  assert(activeOverlayBridgeLabel === 'dock', `Active aioverlay should connect its wrapper bridge as label=dock: ${activeOverlayBridgeLabel}`);
+  assert(activeOverlayBridgeLabel === 'aioverlay', `Active aioverlay should connect its wrapper bridge as label=aioverlay: ${activeOverlayBridgeLabel}`);
   const activeInnerFrame = await (await activeOverlayPage.$('#overlayFrame')).contentFrame();
   await activeInnerFrame.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
   await activeOverlayPage.close();

@@ -6236,6 +6236,7 @@ async function sendToDestinations(message) {
 					var viewerUpdateEvent = { event: "viewer_updates", meta: viewerCounts };
 					sendDataP2P(viewerUpdateEvent);
 					sendTargetP2P(viewerUpdateEvent, "meta");
+					sendTargetP2P(viewerUpdateEvent, "aioverlay");
 				}
 
 				return true;
@@ -6263,6 +6264,7 @@ async function sendToDestinations(message) {
 	try {
 		if (message && typeof message === "object" && Object.prototype.hasOwnProperty.call(message, "meta")) {
 			sendTargetP2P(message, "meta");
+			sendTargetP2P(message, "aioverlay");
 		}
 	} catch (e) {
 		console.error(e);
@@ -10106,19 +10108,19 @@ function sendDataP2P(data, UUID = false) {
 				ninjaBridge.send(data, UUID);
 				return;
 			}
-			// Prefer sending to docks; if none known yet, broadcast
-			var hasDock = false;
+			// Prefer sending to known overlay receivers; if none known yet, broadcast.
+			var hasOverlayReceiver = false;
 			try {
 				var peers = ninjaBridge.getPeers();
 				for (var k in peers) {
-					if (peers[k] === "dock") {
-						hasDock = true;
-						break;
+					if (peers[k] === "dock" || peers[k] === "aioverlay") {
+						hasOverlayReceiver = true;
 					}
 				}
 			} catch (e) {}
-			if (hasDock) {
+			if (hasOverlayReceiver) {
 				ninjaBridge.sendToLabel(data, "dock");
+				ninjaBridge.sendToLabel(data, "aioverlay");
 			} else {
 				ninjaBridge.send(data); // broadcast
 			}
@@ -10141,8 +10143,8 @@ function sendDataP2P(data, UUID = false) {
 				try {
 					UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
-					if (!label || label === "dock") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // the docks and emotes page are VIEWERS, since backend is PUSH-only
+					if (!label || label === "dock" || label === "aioverlay") {
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // the docks, emotes, and AI overlay page are VIEWERS, since backend is PUSH-only
 					}
 				} catch (e) {
 					console.error(e);

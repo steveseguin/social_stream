@@ -857,7 +857,7 @@ Overlay pages receive data via a VDO.Ninja iframe bridge. Always include this br
 
 Without ?session=YOUR_ID the bridge won't connect — but the builder still sends test payloads straight to the iframe via postMessage, so handlePayload must work with or without the bridge.
 Do NOT require `event.source === bridge.contentWindow`; builder test events and preview tools can come from the parent window. Only check `event.data.dataReceived.overlayNinja`.
-Label rule: default live overlays MUST use `var label = params.get("label") || "dock";`. This includes chat, alerts, auction widgets, commerce widgets, counters, games, and tickers. Never invent a random/time-based/default-unique label for normal live data. Custom labels only receive targeted payloads, so use one only when the user explicitly asks for targeted/private/control messages or gives a specific `label=...`.
+Label rule: default chat/alert/game/ticker overlays MUST use `var label = params.get("label") || "dock";`. Dedicated metadata overlays for auction_update, commerce_update, or viewer_updates should use `var label = params.get("label") || "meta";` so they receive meta-targeted payloads even when dock alerts are filtered. Never invent a random/time-based/default-unique label for live data. Custom labels only receive targeted payloads, so use one only when the user explicitly asks for targeted/private/control messages or gives a specific `label=...`.
 
 DOM ordering matters: the `<iframe i&#100;="ssn_bridge">` element MUST exist in the DOM before the script that calls `document.getElementById("ssn_bridge")` runs. The safest patterns are (a) put the iframe tag first and the script right after in `<body>`, or (b) create the iframe in JS via `document.createElement("iframe")` and append it to body. Never put the iframe element below the script that reads it — `getElementById` will return null and setting `.src` throws.
 
@@ -2080,7 +2080,7 @@ If the user asks a question that does not require a file change, answer normally
 				"",
 				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
 				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks.",
-				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default the bridge label to dock via var label = params.get(\"label\") || \"dock\"; never use random/time-based labels for normal live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
+				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default chat/alert overlays to var label = params.get(\"label\") || \"dock\"; default dedicated auction/commerce/viewer meta overlays to var label = params.get(\"label\") || \"meta\"; never use random/time-based labels for live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
 			].join("\n");
 		}
 
@@ -2110,17 +2110,27 @@ If the user asks a question that does not require a file change, answer normally
 			return /vdo\.socialstream\.ninja|ssn_bridge|dataReceived\s*&&\s*[^;]*overlayNinja|dataReceived\.overlayNinja/i.test(String(html || ""));
 		}
 
+		function htmlPrefersMetaLabel(html, request) {
+			var requestValue = String(request || "").toLowerCase();
+			if (/auction|whatnot|commerce|metadata|meta\s+overlay|viewer[\s_-]*(?:count|counter|ticker|bar|stats|snapshot|updates?)/.test(requestValue)) return true;
+			var htmlValue = String(html || "").toLowerCase();
+			return /(?:data\.)?event\s*={2,3}\s*["'](?:auction_update|commerce_update|viewer_updates?|viewer_update)["']/.test(htmlValue) ||
+				/["'](?:auction_update|commerce_update|viewer_updates?|viewer_update)["']\s*={2,3}\s*(?:data\.)?event/.test(htmlValue);
+		}
+
 		function reviewGeneratedHtml(html, request) {
 			var notes = [];
 			var reviewed = String(html || "");
 			if (htmlUsesLiveBridge(reviewed) && !requestAllowsCustomLabel(request)) {
+				var desiredLabel = htmlPrefersMetaLabel(reviewed, request) ? "meta" : "dock";
 				var changedLabel = false;
 				reviewed = reviewed.replace(/((?:var|let|const)\s+label\s*=\s*params\.get\((["'])label\2\)\s*\|\|\s*)([^;]+)(;)/g, function (match, prefix, quote, fallback, suffix) {
-					if (/^\s*(["'])dock\1\s*$/.test(fallback)) return match;
+					var expected = new RegExp("^\\s*([\"'])" + desiredLabel + "\\1\\s*$");
+					if (expected.test(fallback)) return match;
 					changedLabel = true;
-					return prefix + '"dock"' + suffix;
+					return prefix + '"' + desiredLabel + '"' + suffix;
 				});
-				if (changedLabel) notes.push("Changed the bridge fallback label to dock so the overlay receives normal live events.");
+				if (changedLabel) notes.push("Changed the bridge fallback label to " + desiredLabel + " so the overlay receives the right live events.");
 			}
 			if (/event\.source\s*(?:!={1,2}|={2,3})/i.test(reviewed) && /dataReceived[\s\S]{0,120}overlayNinja/i.test(reviewed)) {
 				notes.push("Review warning: this overlay checks event.source; preview/test events may be ignored.");
@@ -2159,7 +2169,12 @@ If the user asks a question that does not require a file change, answer normally
 			if (bridgeRoomID) params.push("session=" + encodeURIComponent(bridgeRoomID));
 			if (bridgePassword && bridgePassword !== "false") params.push("password=" + encodeURIComponent(bridgePassword));
 			if (urlParams.get("v")) params.push("v=" + encodeURIComponent(urlParams.get("v")));
-			params.push("label=dock");
+			["server", "server2", "server3", "localserver"].forEach(function (key) {
+				if (!urlParams.has(key)) return;
+				var value = urlParams.get(key);
+				params.push(value ? (key + "=" + encodeURIComponent(value)) : key);
+			});
+			params.push("label=aioverlay");
 			params.push("overlay=" + encodeURIComponent(pack.activeOverlay || "overlay"));
 			return base + "aioverlay.html?" + params.join("&");
 		}
@@ -2437,6 +2452,15 @@ If the user asks a question that does not require a file change, answer normally
 			loadActivePage();
 		}
 
+		function refocusPromptBox() {
+			setTimeout(function () {
+				try {
+					window.focus();
+					userRequest.focus();
+				} catch (e) {}
+			}, 0);
+		}
+
 		function deletePage() {
 			if (state.pages.length <= 1) { setStatus("Keep at least one page.", "warn"); return; }
 			var current = activePage();
@@ -2449,6 +2473,7 @@ If the user asks a question that does not require a file change, answer normally
 			state.activeId = state.pages[0].id;
 			saveState();
 			loadActivePage();
+			refocusPromptBox();
 		}
 
 		function applyTemplate(tmpl) {
