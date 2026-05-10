@@ -2312,6 +2312,9 @@
 				color: #fff !important;
 				background-color: #0066aa !important;
 			}
+			.context-menu__item--warn > .context-menu__link {
+				color: #8a5a00;
+			}
 			.context-menu__tip {
 				margin-left: 15px;
 				color: #777;
@@ -2319,6 +2322,23 @@
 				padding-top: 10px;
 				position: relative;
 				top: 7px;
+			}
+			#dockActionNotice {
+				position: fixed;
+				left: 50%;
+				top: 18px;
+				transform: translateX(-50%);
+				z-index: 99999;
+				max-width: min(520px, calc(100vw - 32px));
+				padding: 10px 14px;
+				border-radius: 6px;
+				background: rgba(20, 20, 20, 0.92);
+				color: #fff;
+				font-family: Arial, sans-serif;
+				font-size: 14px;
+				line-height: 1.35;
+				text-align: center;
+				box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
 			}
 			.hideMenuKeepScrollLock {
 				height: 0 !important;
@@ -5158,7 +5178,6 @@
 						document.querySelector('[data-action="Delete"]').title = "Using chat/view-only mode disables the ability to syncronize deleted messages with other docks";
 					}
 					if (blockMessageSelecting2 || blockMessageSelecting) {
-						document.querySelector('[data-action="Block"]').classList.add("hidden");
 						document.querySelector('[data-action="Timeout"]').classList.add("hidden");
 						document.querySelector('[data-action="MarkHost"]').classList.add("hidden");
 						document.querySelector('[data-action="MarkMod"]').classList.add("hidden");
@@ -6959,27 +6978,6 @@
 								});
 							}
 
-							// Remove user from local block list after 10 seconds
-							setTimeout(() => {
-								if (localBlockUserList && localBlockUserList[blockName]) {
-									const typeIndex = localBlockUserList[blockName].indexOf(data.blockUser.type);
-									if (typeIndex !== -1) {
-										localBlockUserList[blockName].splice(typeIndex, 1);
-									}
-
-									if (data.blockUser.type == "youtube") {
-										const shortsIndex = localBlockUserList[blockName].indexOf("youtubeshorts");
-										if (shortsIndex !== -1) {
-											localBlockUserList[blockName].splice(shortsIndex, 1);
-										}
-									}
-
-									if (localBlockUserList[blockName].length === 0) {
-										delete localBlockUserList[blockName];
-									}
-								}
-							}, 10000);
-							
 						} else if (data.blockUser.username) {
 							if (!localBlockUserList) {
 								localBlockUserList = {};
@@ -6994,19 +6992,6 @@
 							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "']").forEach(ele => {
 								ele.remove();
 							});
-							
-							// Remove user from local block list after 10 seconds
-							setTimeout(() => {
-								if (localBlockUserList && localBlockUserList[data.blockUser.username]) {
-									const index = localBlockUserList[data.blockUser.username].indexOf("*");
-									if (index !== -1) {
-										localBlockUserList[data.blockUser.username].splice(index, 1);
-										if (localBlockUserList[data.blockUser.username].length === 0) {
-											delete localBlockUserList[data.blockUser.username];
-										}
-									}
-								}
-							}, 10000);
 						}
 						return true;
 					} catch (e) {
@@ -8287,9 +8272,72 @@
 				element.remove();
 			}
 
+			var dockActionNoticeTimer = null;
+			function showDockActionNotice(message) {
+				var notice = document.getElementById("dockActionNotice");
+				if (!notice) {
+					notice = document.createElement("div");
+					notice.id = "dockActionNotice";
+					document.body.appendChild(notice);
+				}
+				notice.textContent = message;
+				notice.style.display = "block";
+				clearTimeout(dockActionNoticeTimer);
+				dockActionNoticeTimer = setTimeout(function () {
+					notice.style.display = "none";
+				}, 4500);
+			}
+
+			function hasSocialStreamCommandPeer() {
+				for (var i = 0; i < iframes.length; i++) {
+					var iframe = iframes[i];
+					if (!iframe || !iframe.connectedPeers) {
+						continue;
+					}
+					var keys = Object.keys(iframe.connectedPeers);
+					for (var j = 0; j < keys.length; j++) {
+						if (iframe.connectedPeers[keys[j]] === "SocialStream") {
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+
+			function getBlockUserUnavailableReason() {
+				if (blockMessageSelecting) {
+					return "Blocked locally only. View-only mode cannot save blocked users to the extension.";
+				}
+				if (blockMessageSelecting3) {
+					return "Blocked locally only. Helper mode cannot save blocked users to the extension.";
+				}
+				if (server3 && socketserverExtension && socketserverExtension.readyState === 1) {
+					return "";
+				}
+				if (hasSocialStreamCommandPeer()) {
+					return "";
+				}
+				return "Blocked locally only. Dock cannot reach the extension yet, so this will reset on refresh.";
+			}
+
+			function updateBlockUserMenuState() {
+				var blockItem = document.querySelector('[data-action="Block"]');
+				if (!blockItem) {
+					return;
+				}
+				var reason = getBlockUserUnavailableReason();
+				blockItem.title = reason || "All messages from user will be deleted; user will also get added to the hide-user list";
+				if (reason) {
+					blockItem.classList.add("context-menu__item--warn");
+				} else {
+					blockItem.classList.remove("context-menu__item--warn");
+				}
+			}
+
 			var localBlockUserList = false;
 			function blockUser(element) {
 				try{
+					var blockUnavailableReason = getBlockUserUnavailableReason();
 					var chatName = element.dataset.chatname;
 					var chatImg = element.dataset.chatimg || "";
 					var type = element.dataset.sourceType;
@@ -8325,23 +8373,14 @@
 						if (chatImg) {
 							sendBlob.chatimg = chatImg;
 						}
-						
+
 						//console.log(sendBlob);
-						
-						send2Extension({ action: "blockUser", value: sendBlob });
-						
-						// Remove user from local block list after 10 seconds
-						setTimeout(() => {
-							if (localBlockUserList && localBlockUserList[chatName]) {
-								const index = localBlockUserList[chatName].indexOf(type);
-								if (index !== -1) {
-									localBlockUserList[chatName].splice(index, 1);
-									if (localBlockUserList[chatName].length === 0) {
-										delete localBlockUserList[chatName];
-									}
-								}
-							}
-						}, 10000);
+
+						if (blockUnavailableReason) {
+							showDockActionNotice(blockUnavailableReason);
+						} else {
+							send2Extension({ action: "blockUser", value: sendBlob });
+						}
 					}
 				} catch(e){
 					console.error(e);
@@ -11321,6 +11360,7 @@
 
 					function toggleMenuOn() {
 						if (menuState !== 1) {
+							updateBlockUserMenuState();
 							menuState = 1;
 							menu.classList.add("context-menu--active");
 							document.addEventListener("click", menuClickListener);
