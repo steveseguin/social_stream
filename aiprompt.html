@@ -2155,6 +2155,19 @@ If the user asks a question that does not require a file change, answer normally
 			return null;
 		}
 
+		function looksLikePatchBlock(value) {
+			value = String(value || "");
+			return /"?(?:edits|patches|replacements)"?\s*:/.test(value) &&
+				/"?(?:find|search)"?\s*:/.test(value) &&
+				/"?(?:replace|replacement)"?\s*:/.test(value);
+		}
+
+		function hasHtmlFence(text) {
+			text = String(text || "");
+			var fence = /```html\s*([\s\S]*?)```/i.exec(text);
+			return !!(fence && looksLikeHtml(fence[1]));
+		}
+
 		function extractPatchResponse(text) {
 			text = String(text || "");
 			var fence = /```([a-z0-9_-]*)\s*([\s\S]*?)```/gi;
@@ -2162,10 +2175,10 @@ If the user asks a question that does not require a file change, answer normally
 			while ((match = fence.exec(text))) {
 				var lang = String(match[1] || "").toLowerCase();
 				if (lang && lang !== "ssnpatch" && lang !== "json") continue;
-				var parsed = parsePatchJson(match[2], lang === "ssnpatch");
+				var parsed = parsePatchJson(match[2], lang === "ssnpatch" || looksLikePatchBlock(match[2]));
 				if (parsed) return parsed;
 			}
-			return parsePatchJson(text, false);
+			return parsePatchJson(text, looksLikePatchBlock(text));
 		}
 
 		function countExactMatches(source, needle) {
@@ -2510,6 +2523,17 @@ If the user asks a question that does not require a file change, answer normally
 					delete pendingResponses[id];
 					if (!maybeRetryPatchFailure(patchParseError)) {
 						setStatus(patchParseError, "error");
+					}
+					return;
+				}
+				if (hasHtmlFence(finalText)) {
+					var mixedPatchError = "Patch could not be applied: The AI returned both ssnpatch and full HTML.";
+					pending.body.textContent = mixedPatchError;
+					saveConversationMessage("assistant", mixedPatchError);
+					logBuilder("error", mixedPatchError, finalText);
+					delete pendingResponses[id];
+					if (!maybeRetryPatchFailure(mixedPatchError)) {
+						setStatus(mixedPatchError, "error");
 					}
 					return;
 				}

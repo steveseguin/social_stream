@@ -322,6 +322,69 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
     const ta = document.getElementById('htmlEditor');
     ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
     ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```json',
+      '{"reply":"Bad json patch","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Patched \\ label</div>"}]}',
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: malformed json fence regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /Invalid patch JSON/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const malformedJsonFenceMessage = await page.evaluate(() => Array.from(document.querySelectorAll('.msg.assistant')).pop().textContent || '');
+  assert(malformedJsonFenceMessage.indexOf('```json') < 0, 'Malformed patch-shaped json fence should not be shown raw');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```',
+      '{"reply":"Bad unlabeled patch","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Patched \\ label</div>"}]}',
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: malformed unlabeled fence regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /Invalid patch JSON/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const malformedBareFenceMessage = await page.evaluate(() => Array.from(document.querySelectorAll('.msg.assistant')).pop().textContent || '');
+  assert(malformedBareFenceMessage.indexOf('```') < 0, 'Malformed unlabeled patch fence should not be shown raw');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div class="dupe">Same</div><div class="dupe">Same</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```ssnpatch',
+      JSON.stringify({ reply: 'Duplicate find', edits: [{ find: '<div class="dupe">Same</div>', replace: '<div class="dupe">Changed</div>' }] }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: duplicate find regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /matched 2 times/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const duplicatePatchHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(!duplicatePatchHtml.includes('Changed'), 'Duplicate find patch should not partially apply');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```html',
+      '<!DOCTYPE html><html><body><div id="patch-target">Wrong full rebuild</div></body></html>',
+      '```',
+      '```ssnpatch',
+      JSON.stringify({ reply: 'Mixed output', edits: [{ find: '<div id="patch-target">Original label</div>', replace: '<div id="patch-target">Patched label</div>' }] }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: mixed html and patch regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /both ssnpatch and full HTML/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const mixedPatchHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(mixedPatchHtml.includes('Original label'), 'Mixed HTML+patch response should not apply');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
     window.__ssnAiPromptMockChatbotResponse = '<!DOCTYPE html><html><body><div id="patch-target">Wrong full rebuild</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
   });
   await page.fill('#userRequest', 'patch only: do not rebuild the file');
@@ -528,7 +591,12 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
 
   // No unexpected console or page errors from our own scripts (ignore iframe boom-test-error which is expected).
   const unexpected = [].concat(
-    consoleErrors.filter(t => t.indexOf('boom-test-error') === -1 && t.indexOf('VDO.Ninja') === -1 && t.indexOf('Invalid patch JSON') === -1 && t.indexOf('patch-only output') === -1),
+    consoleErrors.filter(t => t.indexOf('boom-test-error') === -1 &&
+      t.indexOf('VDO.Ninja') === -1 &&
+      t.indexOf('Invalid patch JSON') === -1 &&
+      t.indexOf('matched 2 times') === -1 &&
+      t.indexOf('both ssnpatch and full HTML') === -1 &&
+      t.indexOf('patch-only output') === -1),
     pageErrors.filter(t => t.indexOf('boom-test-error') === -1)
   );
   // Allow errors from the VDO bridge iframe trying to load (no network to vdo.ninja in headless)

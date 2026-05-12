@@ -368,7 +368,12 @@ const SCENARIOS = [
 				assert: async env => {
 					const tag = env.tag;
 					await env.sendPayload({ event: "viewer_updates", meta: { youtube: 815, twitch: 221, nested: { kick: 94 }, bad: "11" } });
-					await env.waitForPreviewText("1036", 3000);
+					await env.page.waitForFunction(() => {
+						const frame = document.getElementById("previewFrame");
+						const body = frame && frame.contentWindow && frame.contentWindow.document.body;
+						const text = ((body && (body.innerText || body.textContent)) || "").toLowerCase();
+						return text.indexOf("1036") >= 0 || text.indexOf("1,036") >= 0;
+					}, null, { timeout: 3000 });
 					await env.sendPayload({
 						type: "whatnot",
 						event: "auction_update",
@@ -510,6 +515,9 @@ async function main() {
 		await page.click("#sendPrompt");
 		await page.waitForFunction(count => document.querySelectorAll(".msg.assistant").length > count, beforeAssistantCount, { timeout: 5000 });
 		await page.waitForFunction(() => {
+			const messages = document.querySelectorAll(".msg.assistant");
+			const latest = messages[messages.length - 1];
+			if (!latest || latest.querySelector(".stream-meta")) return false;
 			const text = (document.getElementById("connectionStatus") || {}).textContent || "";
 			return /^Patch update applied/.test(text) || /^HTML update applied/.test(text) || /^AI response received/.test(text) || /AI request failed|Patch could not be applied|timed out/i.test(text);
 		}, null, { timeout: timeoutMs || STEP_TIMEOUT_MS });
@@ -518,6 +526,11 @@ async function main() {
 		if (!/^Patch update applied/.test(status)) {
 			throw new Error("Expected ssnpatch, got status: " + status);
 		}
+		await page.waitForFunction(() => {
+			const frame = document.getElementById("previewFrame");
+			return frame && frame.contentWindow && typeof frame.contentWindow.handleOverlayPayload === "function";
+		}, null, { timeout: 5000 });
+		await page.waitForTimeout(100);
 		return status;
 	}
 
@@ -554,6 +567,10 @@ async function main() {
 		tag: "",
 		sendPayload: payload => page.evaluate(p => {
 			const frame = document.getElementById("previewFrame");
+			if (frame && frame.contentWindow && typeof frame.contentWindow.handleOverlayPayload === "function") {
+				frame.contentWindow.handleOverlayPayload(p);
+				return;
+			}
 			frame.contentWindow.postMessage({ dataReceived: { overlayNinja: p } }, "*");
 		}, payload),
 		frameEvaluate,

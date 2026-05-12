@@ -297,12 +297,20 @@ async function main() {
 		await page.click("#sendPrompt");
 		await page.waitForFunction(count => document.querySelectorAll(".msg.assistant").length > count, beforeAssistantCount, { timeout: 5000 });
 		await page.waitForFunction(() => {
+			const messages = document.querySelectorAll(".msg.assistant");
+			const latest = messages[messages.length - 1];
+			if (!latest || latest.querySelector(".stream-meta")) return false;
 			const text = (document.getElementById("connectionStatus") || {}).textContent || "";
 			return /^Patch update applied/.test(text) || /^HTML update applied/.test(text) || /AI request failed|Patch could not be applied|timed out/i.test(text);
 		}, null, { timeout: timeoutMs || 180000 });
 		const status = await page.$eval("#connectionStatus", el => el.textContent);
 		assert(/^Patch update applied/.test(status), "Expected ssnpatch to apply, got status: " + status);
 		await waitForAutoFixSettle(timeoutMs || 180000);
+		await page.waitForFunction(() => {
+			const frame = document.getElementById("previewFrame");
+			return frame && frame.contentWindow && typeof frame.contentWindow.handleOverlayPayload === "function";
+		}, null, { timeout: 5000 });
+		await page.waitForTimeout(100);
 	}
 
 	async function waitForAutoFixSettle(timeoutMs) {
