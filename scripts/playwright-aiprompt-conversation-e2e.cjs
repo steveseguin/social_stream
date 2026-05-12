@@ -232,9 +232,20 @@ async function main() {
 						doc.open();
 						doc.write(`<!DOCTYPE html><html><body><script>
               var store = null;
+              var chunks = {};
               function send(payload) { parent.postMessage({ dataReceived: { overlayNinja: payload } }, '*'); }
               window.addEventListener('message', function (event) {
                 var payload = event.data && event.data.sendData && event.data.sendData.overlayNinja;
+                if (payload && payload.action === 'ssnBridgeChunk') {
+                  var key = payload.chunkId;
+                  var entry = chunks[key] || { total: payload.total, parts: [], received: 0 };
+                  if (typeof entry.parts[payload.index] === 'undefined') entry.received++;
+                  entry.parts[payload.index] = payload.value || '';
+                  chunks[key] = entry;
+                  if (entry.received < entry.total) return;
+                  delete chunks[key];
+                  payload = JSON.parse(entry.parts.join(''));
+                }
                 if (!payload) return;
                 if (payload.action === 'saveAiPromptOverlays') {
                   store = payload.value || store;
@@ -281,8 +292,10 @@ async function main() {
 	}
 
 	async function askPatch(request, timeoutMs) {
+		const beforeAssistantCount = await page.$$eval(".msg.assistant", els => els.length);
 		await page.fill("#userRequest", request);
 		await page.click("#sendPrompt");
+		await page.waitForFunction(count => document.querySelectorAll(".msg.assistant").length > count, beforeAssistantCount, { timeout: 5000 });
 		await page.waitForFunction(() => {
 			const text = (document.getElementById("connectionStatus") || {}).textContent || "";
 			return /^Patch update applied/.test(text) || /^HTML update applied/.test(text) || /AI request failed|Patch could not be applied|timed out/i.test(text);

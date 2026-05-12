@@ -12153,7 +12153,8 @@ async function processIncomingRequest(request, UUID = false) {
 							if (!tabs[i].url) {
 								continue;
 							}
-							if (tabs[i].url.startsWith("https://socialstream.ninja/")) {
+							var websocketPlatform = getWebsocketSourcePlatformFromUrl(tabs[i].url);
+							if (tabs[i].url.startsWith("https://socialstream.ninja/") && !websocketPlatform) {
 								continue;
 							}
 							if (tabs[i].url.startsWith("https://www.youtube.com/watch") && !tabs[i].url.includes("&socialstream")) {
@@ -12171,13 +12172,19 @@ async function processIncomingRequest(request, UUID = false) {
 							if (tabs[i].url.startsWith("file://") && tabs[i].url.includes("index.html?")) {
 								continue;
 							}
-							if (tabs[i].url.startsWith("chrome-extension")) {
+							if (tabs[i].url.startsWith("chrome-extension") && !websocketPlatform) {
 								continue;
 							}
-							if (tabs[i].id && priorityTabs.has(tabs[i].id)) {
-								tabsList.unshift(tabs[i]);
+							var tab = tabs[i];
+							if (websocketPlatform) {
+								tab = Object.assign({}, tabs[i]);
+								tab.title = tab.title || websocketPlatform.charAt(0).toUpperCase() + websocketPlatform.slice(1) + " WebSocket";
+								tab.favIconUrl = tab.favIconUrl || "./sources/images/" + websocketPlatform + ".png";
+							}
+							if (tab.id && priorityTabs.has(tab.id)) {
+								tabsList.unshift(tab);
 							} else {
-								tabsList.push(tabs[i]);
+								tabsList.push(tab);
 							}
 						} catch (e) {}
 					}
@@ -12988,7 +12995,7 @@ function isRelayAllowedTabUrl(url) {
 		if (url.startsWith("chrome://")) {
 			return false;
 		}
-		if (url.startsWith("chrome-extension")) {
+		if (url.startsWith("chrome-extension") && !isWebsocketSourceTabUrl(url)) {
 			return false;
 		}
 	}
@@ -13127,7 +13134,7 @@ function relayStoreOnlyForTab(relayTabContext, message) {
 }
 
 function isWebsocketSourceTabUrl(url) {
-	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://")));
+	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
 }
 
 function relayMessageToWebsocketSourceTab(tabId, message) {

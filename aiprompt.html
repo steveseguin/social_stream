@@ -2115,10 +2115,10 @@ If the user asks a question that does not require a file change, answer normally
 				"=== NEW REQUEST ===",
 				request,
 				"",
-				"If the request needs a focused file change, prefer one ```ssnpatch fenced block containing strict valid JSON with exact find/replace edits. If it needs a new overlay or broad rewrite, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
+				"If the request explicitly asks for ssnpatch, patch only, or a focused edit, return only one ```ssnpatch fenced block containing strict valid JSON with exact find/replace edits. If it needs a new overlay or broad rewrite and the user did not ask for patch-only output, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
 				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks.",
 				"When returning ssnpatch, the fenced block content must parse as JSON. Escape backslashes as \\\\, quotes as \\\", and newlines as \\n inside string values. Each edit.find string must occur exactly once in the current HTML. Include enough stable surrounding context to make it unique. Do not include line numbers. Do not return both ssnpatch and full HTML.",
-				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default chat/alert overlays to var label = params.get(\"label\") || \"dock\"; default dedicated auction/commerce/viewer meta overlays to var label = params.get(\"label\") || \"meta\"; never use random/time-based labels for live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. If a requested live field has no visible element yet, add one and update it from payloads; do not calculate unused values. Treat 0 as valid and sum only numeric top-level values for viewer_updates unless asked otherwise. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
+				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default chat/alert overlays to var label = params.get(\"label\") || \"dock\"; default dedicated auction/commerce/viewer meta overlays to var label = params.get(\"label\") || \"meta\"; never use random/time-based labels for live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. When editing an existing live payload handler, preserve existing event branches and add the new branch without replacing unrelated behavior. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. If a requested live field has no visible element yet, add one and update it from payloads; do not calculate unused values. Treat 0 as valid and sum only numeric top-level values for viewer_updates unless asked otherwise. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
 			].join("\n");
 		}
 
@@ -2211,6 +2211,10 @@ If the user asks a question that does not require a file change, answer normally
 				reply: String((patch && patch.reply) || "Patch applied."),
 				count: edits.length
 			};
+		}
+
+		function requestRequiresPatch(request) {
+			return /\b(?:ssnpatch|patch\s*only|patch-only|do\s+not\s+rebuild|dont\s+rebuild|don't\s+rebuild|focused\s+edit|tiny\s+patch)\b/i.test(String(request || ""));
 		}
 
 		function requestAllowsCustomLabel(request) {
@@ -2533,6 +2537,17 @@ If the user asks a question that does not require a file change, answer normally
 			} else {
 				var html = extractHtml(finalText);
 				if (html) {
+				if (requestRequiresPatch(pending.requestText)) {
+					var patchOnlyError = "Patch could not be applied: The request asked for ssnpatch/patch-only output, but the AI returned full HTML.";
+					pending.body.textContent = patchOnlyError;
+					saveConversationMessage("assistant", patchOnlyError);
+					logBuilder("error", patchOnlyError, finalText);
+					delete pendingResponses[id];
+					if (!maybeRetryPatchFailure(patchOnlyError)) {
+						setStatus(patchOnlyError, "error");
+					}
+					return;
+				}
 				var review = reviewGeneratedHtml(html, pending.requestText || "");
 				html = review.html;
 				htmlEditor.value = html;

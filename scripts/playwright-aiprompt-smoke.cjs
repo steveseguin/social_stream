@@ -319,6 +319,18 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(malformedPatchState.status.indexOf('AI response received') < 0, 'Malformed ssnpatch should not fall through as a normal AI response');
   assert(malformedPatchState.html.includes('Original label'), 'Malformed ssnpatch should not alter HTML');
   await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = '<!DOCTYPE html><html><body><div id="patch-target">Wrong full rebuild</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+  });
+  await page.fill('#userRequest', 'patch only: do not rebuild the file');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /patch-only output, but the AI returned full HTML/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const patchOnlyHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(patchOnlyHtml.includes('Original label'), 'patch-only requests should not apply full HTML responses');
+  assert(!patchOnlyHtml.includes('Wrong full rebuild'), 'patch-only full HTML response should be rejected');
+  await page.evaluate(() => {
     document.getElementById('autoFixErrors').checked = true;
     window.__ssnAiPromptMockChatbotResponse = '<!DOCTYPE html><html><body><div id="stream-smoke-ok">from streamed html</div></body></html>';
   });
@@ -516,7 +528,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
 
   // No unexpected console or page errors from our own scripts (ignore iframe boom-test-error which is expected).
   const unexpected = [].concat(
-    consoleErrors.filter(t => t.indexOf('boom-test-error') === -1 && t.indexOf('VDO.Ninja') === -1 && t.indexOf('Invalid patch JSON') === -1),
+    consoleErrors.filter(t => t.indexOf('boom-test-error') === -1 && t.indexOf('VDO.Ninja') === -1 && t.indexOf('Invalid patch JSON') === -1 && t.indexOf('patch-only output') === -1),
     pageErrors.filter(t => t.indexOf('boom-test-error') === -1)
   );
   // Allow errors from the VDO bridge iframe trying to load (no network to vdo.ninja in headless)

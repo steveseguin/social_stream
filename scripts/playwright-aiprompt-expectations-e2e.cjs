@@ -363,8 +363,8 @@ const SCENARIOS = [
 			},
 			{
 				name: "viewer meta without breaking auction",
-				prompt: "Use ssnpatch only. Add support for viewer_updates too: sum only numeric top-level values in data.meta and show total viewers in #status. Keep auction_update behavior working and keep #status available for sold/viewer text.",
-				recovery: "Use ssnpatch only. Patch handlePayload so viewer_updates sums numeric top-level meta values only, writes the total to #status, and does not break auction_update rendering. If #status is also used for sold status, make sure both viewer total and auction status can still render visibly.",
+				prompt: "Use ssnpatch only. Add support for viewer_updates too: sum only numeric top-level values in data.meta and show total viewers in #status. Preserve the existing auction_update branch; auction payloads must still update title, bidder, price, bids, timer, and status after viewer_updates. Keep #status available for sold/viewer text.",
+				recovery: "Use ssnpatch only. Patch handlePayload so viewer_updates sums numeric top-level meta values only and writes the total to #status, but preserve the existing auction_update branch exactly or keep it functionally equivalent. Do not return before auction_update can run on auction payloads. If #status is also used for sold status, make sure both viewer total and auction status can still render visibly.",
 				assert: async env => {
 					const tag = env.tag;
 					await env.sendPayload({ event: "viewer_updates", meta: { youtube: 815, twitch: 221, nested: { kick: 94 }, bad: "11" } });
@@ -440,9 +440,20 @@ async function main() {
 						doc.open();
 						doc.write(`<!DOCTYPE html><html><body><script>
               var store = null;
+              var chunks = {};
               function send(payload) { parent.postMessage({ dataReceived: { overlayNinja: payload } }, '*'); }
               window.addEventListener('message', function (event) {
                 var payload = event.data && event.data.sendData && event.data.sendData.overlayNinja;
+                if (payload && payload.action === 'ssnBridgeChunk') {
+                  var key = payload.chunkId;
+                  var entry = chunks[key] || { total: payload.total, parts: [], received: 0 };
+                  if (typeof entry.parts[payload.index] === 'undefined') entry.received++;
+                  entry.parts[payload.index] = payload.value || '';
+                  chunks[key] = entry;
+                  if (entry.received < entry.total) return;
+                  delete chunks[key];
+                  payload = JSON.parse(entry.parts.join(''));
+                }
                 if (!payload) return;
                 if (payload.action === 'saveAiPromptOverlays') {
                   store = payload.value || store;
@@ -494,8 +505,10 @@ async function main() {
 	}
 
 	async function askAi(request, timeoutMs) {
+		const beforeAssistantCount = await page.$$eval(".msg.assistant", els => els.length);
 		await page.fill("#userRequest", request);
 		await page.click("#sendPrompt");
+		await page.waitForFunction(count => document.querySelectorAll(".msg.assistant").length > count, beforeAssistantCount, { timeout: 5000 });
 		await page.waitForFunction(() => {
 			const text = (document.getElementById("connectionStatus") || {}).textContent || "";
 			return /^Patch update applied/.test(text) || /^HTML update applied/.test(text) || /^AI response received/.test(text) || /AI request failed|Patch could not be applied|timed out/i.test(text);
@@ -595,7 +608,7 @@ async function main() {
 		let preview = "";
 		try { preview = await env.previewText(); } catch (e) { preview = "preview unavailable: " + (e && e.message || e); }
 		let html = "";
-		try { html = await page.$eval("#htmlEditor", el => String(el.value || "").slice(0, 1200)); } catch (e) { html = "html unavailable: " + (e && e.message || e); }
+		try { html = await page.$eval("#htmlEditor", el => String(el.value || "").slice(0, 4000)); } catch (e) { html = "html unavailable: " + (e && e.message || e); }
 		let status = "";
 		try { status = await page.$eval("#connectionStatus", el => el.textContent || ""); } catch (e) { status = "status unavailable"; }
 		let consoleText = "";
