@@ -9,13 +9,6 @@ const API_KEY = process.env.AIPROMPT_API_KEY || process.argv[3] || "test_token";
 const MODEL = process.env.AIPROMPT_MODEL || process.argv[4] || "qwen3.6-35b-a3b-fp8";
 const RUN_COUNT = Math.max(1, Number(process.env.AIPROMPT_CONVO_RUNS || process.argv[5] || 3));
 const LLM_CALL_TIMEOUT_MS = Math.max(30000, Number(process.env.AIPROMPT_LLM_TIMEOUT_MS || 240000));
-const PATCH_SYSTEM_PROMPT = [
-	"You are editing one Social Stream Ninja overlay file named overlay.html.",
-	"For focused changes, return only one ```ssnpatch fenced JSON block.",
-	"The JSON shape is {\"reply\":\"short summary\",\"edits\":[{\"find\":\"exact existing text\",\"replace\":\"replacement text\"}]} .",
-	"Each find string must appear exactly once in the current HTML. Include enough surrounding context. No line numbers.",
-	"Use plain old browser JavaScript. Incoming payloads arrive as event.data.dataReceived.overlayNinja and should be handled by window.handleOverlayPayload."
-].join("\n");
 const USER_PROMPT_VARIANTS = [
 	{
 		label: "low-context-auction",
@@ -271,14 +264,16 @@ async function main() {
 	await page.waitForFunction(() => /connected/i.test((document.getElementById("connectionStatus") || {}).textContent || ""), null, { timeout: 12000 });
 
 	async function seedHtml(html, pageName) {
-		await page.evaluate(([value, name, prompt]) => {
+		await page.evaluate(([value, name]) => {
+			const prompt = document.getElementById("default-system-prompt").value;
+			if (!/ssnpatch[\s\S]{0,220}valid JSON/i.test(prompt)) throw new Error("default prompt does not require valid JSON ssnpatch blocks");
 			document.getElementById("pageName").value = name;
 			document.getElementById("systemPrompt").value = prompt;
 			document.getElementById("htmlEditor").value = value;
 			document.getElementById("systemPrompt").dispatchEvent(new Event("input", { bubbles: true }));
 			document.getElementById("htmlEditor").dispatchEvent(new Event("input", { bubbles: true }));
 			document.getElementById("refreshPreview").click();
-		}, [html, pageName, PATCH_SYSTEM_PROMPT]);
+		}, [html, pageName]);
 		await page.waitForFunction(() => {
 			const frame = document.getElementById("previewFrame");
 			return frame && frame.contentWindow && typeof frame.contentWindow.handleOverlayPayload === "function";

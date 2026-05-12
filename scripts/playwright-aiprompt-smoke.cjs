@@ -133,6 +133,8 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(htmlLen > 200, `Editor should have template HTML (got length ${htmlLen})`);
   const promptText = await page.$eval('#default-system-prompt', el => el.value);
   assert(promptText.includes('var label = params.get("label") || "dock";'), 'AI prompt bridge guidance should default live overlays to label=dock');
+  assert(/ssnpatch[\s\S]{0,220}valid JSON/i.test(promptText), 'AI prompt should say ssnpatch blocks must be valid JSON');
+  assert(/escape backslashes/i.test(promptText), 'AI prompt should tell the model to escape backslashes in ssnpatch JSON');
   const customLiveFeedTemplateLabels = await page.$$eval('textarea[id^="tmpl-"]', els => els
     .filter(el => /vdo\.socialstream\.ninja/.test(el.value) && /params\.get\("label"\)\s*\|\|\s*"(?!dock")/.test(el.value))
     .map(el => el.id));
@@ -287,6 +289,39 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   const patchedHtml = await page.$eval('#htmlEditor', el => el.value);
   assert(patchedHtml.includes('Patched label'), 'ssnpatch should update the matched block');
   assert(patchedHtml.includes('window.handleOverlayPayload'), 'ssnpatch should preserve unrelated code');
+
+  await page.evaluate(() => {
+    document.getElementById('autoFixErrors').checked = false;
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      'Trying a malformed patch.',
+      '',
+      '```ssnpatch',
+      '{"reply":"Bad patch","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Patched \\ label</div>"}]}',
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: malformed json regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /Patch could not be applied/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const malformedPatchState = await page.evaluate(() => {
+    const last = Array.from(document.querySelectorAll('.msg.assistant')).pop();
+    return {
+      status: document.getElementById('connectionStatus').textContent || '',
+      message: last ? last.textContent || '' : '',
+      html: document.getElementById('htmlEditor').value || ''
+    };
+  });
+  assert(/Invalid patch JSON/.test(malformedPatchState.message), 'Malformed ssnpatch should surface a parse error');
+  assert(malformedPatchState.message.indexOf('```ssnpatch') < 0, 'Malformed ssnpatch should not be shown raw to the user');
+  assert(malformedPatchState.status.indexOf('AI response received') < 0, 'Malformed ssnpatch should not fall through as a normal AI response');
+  assert(malformedPatchState.html.includes('Original label'), 'Malformed ssnpatch should not alter HTML');
+  await page.evaluate(() => {
+    document.getElementById('autoFixErrors').checked = true;
+    window.__ssnAiPromptMockChatbotResponse = '<!DOCTYPE html><html><body><div id="stream-smoke-ok">from streamed html</div></body></html>';
+  });
 
   await page.evaluate(() => {
     window.__ssnAiPromptMockChatbotResponse = [
@@ -481,7 +516,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
 
   // No unexpected console or page errors from our own scripts (ignore iframe boom-test-error which is expected).
   const unexpected = [].concat(
-    consoleErrors.filter(t => t.indexOf('boom-test-error') === -1 && t.indexOf('VDO.Ninja') === -1),
+    consoleErrors.filter(t => t.indexOf('boom-test-error') === -1 && t.indexOf('VDO.Ninja') === -1 && t.indexOf('Invalid patch JSON') === -1),
     pageErrors.filter(t => t.indexOf('boom-test-error') === -1)
   );
   // Allow errors from the VDO bridge iframe trying to load (no network to vdo.ninja in headless)

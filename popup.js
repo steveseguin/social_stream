@@ -2873,7 +2873,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
             if (commandsList) {
                 commandsList.innerHTML = '';
                 commands.forEach(cmd => {
-                    commandsList.appendChild(createCommandEntry(cmd.command, cmd.url)); // Assuming createCommandEntry is defined
+                    commandsList.appendChild(createCommandEntry(cmd.command, cmd.url, cmd.id)); // Assuming createCommandEntry is defined
                 });
             }
         } catch(e) { console.error("Error parsing customGifCommands JSON:", e); }
@@ -4890,13 +4890,72 @@ function handleColorAndPalette(ele) {
     return false;
 }
 
+const CUSTOM_GIF_COMMAND_LIMIT = 20;
+
+function getCustomGifCommandEntryId(command, url, id) {
+    if (id) return String(id);
+    const source = String(command || '') + '|' + String(url || '');
+    if (source === '|') {
+        return 'gif_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    }
+    let hash = 0;
+    for (let i = 0; i < source.length; i++) {
+        hash = ((hash << 5) - hash + source.charCodeAt(i)) | 0;
+    }
+    return 'gif_' + Math.abs(hash);
+}
+
+function getCustomGifCommandAliases(command) {
+    return String(command || '').split(',').map(alias => alias.trim()).filter(Boolean);
+}
+
+function getCustomGifCommandSourceUrl(entry) {
+    const sourceDiv = document.getElementById('custom-gif-commands');
+    let url = sourceDiv && sourceDiv.raw ? sourceDiv.raw : '';
+    if (!url) {
+        alert('Main GIF overlay link is not ready yet.');
+        return '';
+    }
+
+    const commandInput = entry?.querySelector('.custom-command');
+    const mediaUrlInput = entry?.querySelector('.custom-media-url');
+    const id = getCustomGifCommandEntryId(commandInput?.value?.trim() || '', mediaUrlInput?.value?.trim() || '', entry?.dataset.commandId);
+    if (entry) entry.dataset.commandId = id;
+
+    url = removeQueryParamWithValue(url, 'gifid');
+    url = removeQueryParamWithValue(url, 'gifcommand');
+    return cleanURL(updateURL('gifid=' + encodeURIComponent(id), url));
+}
+
+function copyCustomGifCommandSource(entry, button) {
+    const command = entry?.querySelector('.custom-command')?.value?.trim() || '';
+    if (!command) {
+        alert('Add a chat command first.');
+        entry?.querySelector('.custom-command')?.focus();
+        return;
+    }
+
+    const url = getCustomGifCommandSourceUrl(entry);
+    if (!url) return;
+
+    navigator.clipboard.writeText(url).then(function() {
+        button?.classList.add('flashing');
+        setTimeout(() => button?.classList.remove('flashing'), 500);
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+
 function handleCustomGifCommand(ele, sync) {
     if (!ele.closest('.custom-gif-command-entry')) return false;
     
-    const commands = Array.from(document.querySelectorAll('.custom-gif-command-entry')).map(entry => ({
-        command: entry.querySelector('.custom-command')?.value?.trim() || '',
-        url: entry.querySelector('.custom-media-url')?.value?.trim() || ''
-    }));
+    const commands = Array.from(document.querySelectorAll('.custom-gif-command-entry')).map(entry => {
+        const command = entry.querySelector('.custom-command')?.value?.trim() || '';
+        const url = entry.querySelector('.custom-media-url')?.value?.trim() || '';
+        const id = getCustomGifCommandEntryId(command, url, entry.dataset.commandId);
+        entry.dataset.commandId = id;
+        return { id, command, url };
+    });
     
     if (sync) {
         chrome.runtime.sendMessage({
@@ -5850,7 +5909,10 @@ function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia') 
 function triggerCustomGifPreview(entry) {
     const commandInput = entry?.querySelector('.custom-command');
     const mediaUrlInput = entry?.querySelector('.custom-media-url');
+    const command = commandInput?.value?.trim() || '!preview';
     const mediaUrl = mediaUrlInput?.value?.trim();
+    const id = getCustomGifCommandEntryId(command, mediaUrl, entry?.dataset.commandId);
+    if (entry) entry.dataset.commandId = id;
 
     if (!mediaUrl) {
         alert('Add or upload a GIF, image, or video URL first.');
@@ -5863,12 +5925,17 @@ function triggerCustomGifPreview(entry) {
         target: 'gif',
         type: 'popup',
         chatname: 'GIF Test',
-        chatmessage: commandInput?.value?.trim() || '!preview',
-        contentimg: mediaUrl
+        chatmessage: command,
+        contentimg: mediaUrl,
+        meta: {
+            customGifCommandId: id,
+            customGifCommand: getCustomGifCommandAliases(command)[0] || command,
+            customGifCommands: getCustomGifCommandAliases(command)
+        }
     }, function () {});
 }
 
-function createCommandEntry(command = '', url = '') {
+function createCommandEntry(command = '', url = '', id = '') {
     function encodeHTML(str) {
         return String(str ?? '').replace(/&/g, '&amp;')
                   .replace(/</g, '&lt;')
@@ -5879,6 +5946,7 @@ function createCommandEntry(command = '', url = '') {
 
     const entry = document.createElement('div');
     entry.className = 'custom-gif-command-entry';
+    entry.dataset.commandId = getCustomGifCommandEntryId(command, url, id);
     entry.innerHTML = `
         <div class="textInputContainer" style="width: 90%;">
             <input type="text" class="textInput custom-command" value="${encodeHTML(command)}" autocomplete="off" placeholder="!command, !alias" data-textsetting="customGifCommand" />
@@ -5895,6 +5963,9 @@ function createCommandEntry(command = '', url = '') {
             <button class="testCustomGifCommand" type="button" title="Preview this media in the gif.html overlay">
                 <span>Test</span>
             </button>
+            <button class="copyCustomGifCommandSource" type="button" title="Copy a browser-source link for only this command">
+                <span>Copy Source</span>
+            </button>
             <button class="removeCustomGifCommand" type="button">
                 <span data-translate="remove">Remove</span>
             </button>
@@ -5907,6 +5978,10 @@ function createCommandEntry(command = '', url = '') {
 
     entry.querySelector('.testCustomGifCommand').addEventListener('click', function() {
         triggerCustomGifPreview(entry);
+    });
+
+    entry.querySelector('.copyCustomGifCommandSource').addEventListener('click', function() {
+        copyCustomGifCommandSource(entry, this);
     });
 
     entry.querySelector('.removeCustomGifCommand').addEventListener('click', function() {
@@ -7396,6 +7471,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
 		const commandsList = document.getElementById('customGifCommandsList');
+		if (commandsList && commandsList.querySelectorAll('.custom-gif-command-entry').length >= CUSTOM_GIF_COMMAND_LIMIT) {
+			alert('Custom GIF Commands are limited to 20 entries.');
+			return;
+		}
 		const newCommandEntry = createCommandEntry();
 		commandsList.appendChild(newCommandEntry);
 		updateSettings(newCommandEntry, true);

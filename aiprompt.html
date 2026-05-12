@@ -820,14 +820,14 @@
 
 === OUTPUT FORMAT — STRICT ===
 - When the user asks for a change, reply with ONE complete HTML document inside one ```html fenced block. Nothing else is needed; any prose outside the block is fine but the HTML block is the source of truth.
-- For focused edits to the current overlay, prefer a compact exact-match patch inside one ```ssnpatch fenced block. The app applies this to the active `overlay.html` file and keeps the conversation context.
+- For focused edits to the current overlay, prefer a compact exact-match patch inside one ```ssnpatch fenced block. The fenced content must be valid JSON because the app applies it with JSON.parse() to the active `overlay.html` file.
 - Use full HTML instead of a patch for brand-new overlays, major rewrites, or broad changes.
 - Never return both a full HTML file and an ssnpatch in the same response.
 - Keep it as a SINGLE self-contained file (inline CSS and JS). Only link to external CDNs if the user explicitly asks.
 - Keep the code Chrome 80 friendly: no ES modules, no top-level import/export, no optional chaining in inline JSON, and avoid experimental APIs without fallbacks.
 - Set <body> background to transparent unless the user asks for a background. Overlays sit on top of OBS scenes, so transparency is the default.
 
-Patch format for focused edits:
+Patch format for focused edits (strict JSON; escape backslashes as `\\`, quotes as `\"`, and newlines as `\n` inside string values):
 ```ssnpatch
 {
   "reply": "Short user-facing summary.",
@@ -842,6 +842,7 @@ Patch format for focused edits:
 Patch rules:
 - Each `find` string MUST match exactly once in the current HTML. Include enough surrounding context to make it unique.
 - Keep `replace` as small as practical, but include the complete replacement for the matched block.
+- The block must parse as JSON. Do not use raw JavaScript strings, unescaped backslashes, comments, trailing commas, or markdown inside the JSON.
 - Use full HTML instead of a patch if the exact text is uncertain or many blocks need changing.
 - Do not use line numbers; they drift.
 
@@ -1991,7 +1992,7 @@ If the user asks a question that does not require a file change, answer normally
 			if (autoFixAttempts >= MAX_AUTO_FIX) return false;
 			if (!bridgeFrame || !bridgeFrame.contentWindow) return false;
 			autoFixAttempts += 1;
-			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " - the ssnpatch could not be applied:\n\n" + message + "\n\nReturn only a corrected ```ssnpatch fenced JSON block. Use exact text copied from the current overlay HTML. Each find string must match exactly once. Do not return a full HTML file.";
+			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " - the ssnpatch could not be applied:\n\n" + message + "\n\nReturn only a corrected ```ssnpatch fenced JSON block. The block content must be valid JSON; escape backslashes, quotes, and newlines inside string values. Use exact text copied from the current overlay HTML. Each find string must match exactly once. Do not return a full HTML file.";
 			setStatus("Retrying patch (attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + ")…", "warn");
 			setTimeout(function () {
 				sendPrompt(retryNote, { isAutoFix: true });
@@ -2114,9 +2115,9 @@ If the user asks a question that does not require a file change, answer normally
 				"=== NEW REQUEST ===",
 				request,
 				"",
-				"If the request needs a focused file change, prefer one ```ssnpatch fenced block with exact find/replace edits. If it needs a new overlay or broad rewrite, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
+				"If the request needs a focused file change, prefer one ```ssnpatch fenced block containing strict valid JSON with exact find/replace edits. If it needs a new overlay or broad rewrite, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
 				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks.",
-				"When returning ssnpatch, each edit.find string must occur exactly once in the current HTML. Include enough stable surrounding context to make it unique. Do not include line numbers. Do not return both ssnpatch and full HTML.",
+				"When returning ssnpatch, the fenced block content must parse as JSON. Escape backslashes as \\\\, quotes as \\\", and newlines as \\n inside string values. Each edit.find string must occur exactly once in the current HTML. Include enough stable surrounding context to make it unique. Do not include line numbers. Do not return both ssnpatch and full HTML.",
 				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default chat/alert overlays to var label = params.get(\"label\") || \"dock\"; default dedicated auction/commerce/viewer meta overlays to var label = params.get(\"label\") || \"meta\"; never use random/time-based labels for live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. If a requested live field has no visible element yet, add one and update it from payloads; do not calculate unused values. Treat 0 as valid and sum only numeric top-level values for viewer_updates unless asked otherwise. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
 			].join("\n");
 		}
@@ -2138,15 +2139,19 @@ If the user asks a question that does not require a file change, answer normally
 			return "";
 		}
 
-		function parsePatchJson(value) {
+		function parsePatchJson(value, reportErrors) {
+			var text = String(value || "").trim();
 			try {
-				var parsed = JSON.parse(String(value || "").trim());
+				var parsed = JSON.parse(text);
 				var edits = parsed && (parsed.edits || parsed.patches || parsed.replacements);
 				if (edits && edits.length) {
 					parsed.edits = edits;
 					return parsed;
 				}
-			} catch (e) {}
+				if (reportErrors) return { __ssnPatchError: "Patch JSON parsed, but did not include a non-empty edits array." };
+			} catch (e) {
+				if (reportErrors) return { __ssnPatchError: "Invalid patch JSON: " + ((e && e.message) || e) };
+			}
 			return null;
 		}
 
@@ -2157,10 +2162,10 @@ If the user asks a question that does not require a file change, answer normally
 			while ((match = fence.exec(text))) {
 				var lang = String(match[1] || "").toLowerCase();
 				if (lang && lang !== "ssnpatch" && lang !== "json") continue;
-				var parsed = parsePatchJson(match[2]);
+				var parsed = parsePatchJson(match[2], lang === "ssnpatch");
 				if (parsed) return parsed;
 			}
-			return parsePatchJson(text);
+			return parsePatchJson(text, false);
 		}
 
 		function countExactMatches(source, needle) {
@@ -2493,6 +2498,17 @@ If the user asks a question that does not require a file change, answer normally
 
 			var patch = extractPatchResponse(finalText);
 			if (patch) {
+				if (patch.__ssnPatchError) {
+					var patchParseError = "Patch could not be applied: " + patch.__ssnPatchError;
+					pending.body.textContent = patchParseError;
+					saveConversationMessage("assistant", patchParseError);
+					logBuilder("error", patchParseError, finalText);
+					delete pendingResponses[id];
+					if (!maybeRetryPatchFailure(patchParseError)) {
+						setStatus(patchParseError, "error");
+					}
+					return;
+				}
 				var patchResult = applyPatchResponse(patch, htmlEditor.value || "");
 				if (!patchResult.ok) {
 					var patchError = "Patch could not be applied: " + patchResult.error;

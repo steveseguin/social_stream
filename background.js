@@ -73,6 +73,27 @@ function commandAliasMatches(commandString, messageText, mode) {
 	return aliases.some(alias => text.includes(alias.command));
 }
 
+function getCustomGifCommandEntryId(command, url, id) {
+	if (id) return String(id);
+	const source = String(command || "") + "|" + String(url || "");
+	let hash = 0;
+	for (let i = 0; i < source.length; i++) {
+		hash = ((hash << 5) - hash + source.charCodeAt(i)) | 0;
+	}
+	return "gif_" + Math.abs(hash);
+}
+
+function getMatchedCommandAlias(commandString, messageText) {
+	const text = String(messageText || "");
+	const aliases = getCommandAliases(commandString);
+	for (let i = 0; i < aliases.length; i++) {
+		if (text === aliases[i].command) {
+			return aliases[i].command;
+		}
+	}
+	return text;
+}
+
 // Spotify integration
 var spotify = null;
 var latestSpotifyOverlay = null;
@@ -6316,7 +6337,13 @@ async function sendToDestinations(message) {
 			settings["customGifCommands"]["object"].forEach(values => {
 				if (firstWord && values.url && values.command && commandAliasMatches(values.command, firstWord, "exact")) {
 					//  || "https://picsum.photos/1280/720?random="+values.command
-					sendTargetP2P({ ...message, ...{ contentimg: values.url } }, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
+					const aliases = getCommandAliases(values.command).map(alias => alias.command);
+					const gifMeta = Object.assign({}, message.meta || {}, {
+						customGifCommandId: getCustomGifCommandEntryId(values.command, values.url, values.id),
+						customGifCommand: getMatchedCommandAlias(values.command, firstWord),
+						customGifCommands: aliases
+					});
+					sendTargetP2P({ ...message, ...{ contentimg: values.url, meta: gifMeta } }, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
 				}
 			});
 		}
