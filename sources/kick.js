@@ -1338,7 +1338,7 @@
 			data.reply = originalMessage;
 		}
 		
-		if (eventName && looksLikeKickRewardMessage(chatmessage)){
+		if (looksLikeKickRewardMessage(chatmessage)){
 			eventName = "reward";
 		}
 	  data.event = eventName;
