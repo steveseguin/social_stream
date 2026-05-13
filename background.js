@@ -10036,76 +10036,35 @@ async function openchat(target = null, force = false) {
 		openURL(url, true);
 	}
 
-	if ((target == "custom1" || !target) && settings.custom1_url) {
-		let url = settings.custom1_url.textsetting;
+	function openCustomUrlSlot(index) {
+		const urlSetting = settings["custom" + index + "_url"];
+		if (!urlSetting || !urlSetting.textsetting) return;
+
+		let url = urlSetting.textsetting.trim();
+		if (!url) return;
 		if (!url.startsWith("http")) {
 			url = "https://" + url;
 		}
-		openURL(url, settings.custom1_url_newwindow);
+
+		const newWindowSetting = settings["custom" + index + "_url_newwindow"];
+		const newWindow = !!(newWindowSetting && newWindowSetting.setting !== false);
+		openURL(url, newWindow);
 	}
 
-	if ((target == "custom2" || !target) && settings.custom2_url) {
-		let url = settings.custom2_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom2_url_newwindow);
+	if (target && /^custom\d+$/.test(target)) {
+		openCustomUrlSlot(parseInt(target.replace("custom", ""), 10));
+		return;
 	}
 
-	if ((target == "custom3" || !target) && settings.custom3_url) {
-		let url = settings.custom3_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom3_url_newwindow);
-	}
-
-	if ((target == "custom4" || !target) && settings.custom4_url) {
-		let url = settings.custom4_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom4_url_newwindow);
-	}
-
-	if ((target == "custom5" || !target) && settings.custom5_url) {
-		let url = settings.custom5_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom5_url_newwindow);
-	}
-
-	if ((target == "custom6" || !target) && settings.custom6_url) {
-		let url = settings.custom6_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom6_url_newwindow);
-	}
-
-	if ((target == "custom7" || !target) && settings.custom7_url) {
-		let url = settings.custom7_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom7_url_newwindow);
-	}
-
-	if ((target == "custom8" || !target) && settings.custom8_url) {
-		let url = settings.custom8_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom8_url_newwindow);
-	}
-
-	if ((target == "custom9" || !target) && settings.custom9_url) {
-		let url = settings.custom9_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom9_url_newwindow);
+	if (!target) {
+		Object.keys(settings)
+			.map(key => {
+				const match = key.match(/^custom(\d+)_url$/);
+				return match ? parseInt(match[1], 10) : 0;
+			})
+			.filter(index => index > 0)
+			.sort((a, b) => a - b)
+			.forEach(openCustomUrlSlot);
 	}
 }
 

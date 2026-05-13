@@ -1318,6 +1318,107 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+const DEFAULT_CUSTOM_URL_SLOT_COUNT = 9;
+let highestRenderedCustomUrlSlot = DEFAULT_CUSTOM_URL_SLOT_COUNT;
+let pendingCustomUrlSettings = null;
+
+function getCustomUrlSlotFromKey(key) {
+    const match = String(key || '').match(/^custom(\d+)_url(?:_newwindow)?$/);
+    if (!match) return 0;
+    const index = parseInt(match[1], 10);
+    return Number.isFinite(index) ? index : 0;
+}
+
+function attachCustomUrlRowHandlers(row) {
+    const checkbox = row.querySelector("input[type='checkbox']");
+    if (checkbox) {
+        checkbox.onchange = updateSettings;
+    }
+
+    const textInput = row.querySelector("input[type='text']");
+    if (textInput) {
+        textInput.onchange = updateSettings;
+    }
+
+    const openButton = row.querySelector("button[data-action='openchat']");
+    if (openButton) {
+        openButton.onclick = function(e) {
+            chrome.runtime.sendMessage({
+                cmd: this.dataset.action,
+                ctrl: e.ctrlKey || false,
+                value: this.dataset.value || null
+            }, function() {
+                log("ignore callback for this action");
+            });
+        };
+    }
+}
+
+function ensureCustomUrlSlot(index) {
+    index = parseInt(index, 10);
+    if (!Number.isFinite(index) || index <= 0) return;
+    highestRenderedCustomUrlSlot = Math.max(highestRenderedCustomUrlSlot, index);
+    if (index <= DEFAULT_CUSTOM_URL_SLOT_COUNT || document.getElementById("custom" + index + "_url")) return;
+
+    const container = document.getElementById("custom-url-dynamic-container");
+    if (!container) return;
+
+    const row = document.createElement("div");
+    row.className = "custom-url-entry";
+    row.dataset.customUrlIndex = String(index);
+    row.innerHTML = `
+        <div>
+            <label class="switch">
+                <input type="checkbox" id="custom${index}_url_newwindow" data-setting="custom${index}_url_newwindow" />
+                <span class="slider round"></span>
+            </label>
+            <span> Open custom URL ${index} on new window </span>
+        </div>
+        <div class="textInputContainer" style="width: 95%;">
+            <input type="text" id="custom${index}_url" class="textInput" autocomplete="off" placeholder="eg: https://somedomain/chat/popup" data-textsetting="custom${index}_url" />
+            <label for="custom${index}_url"><span>&gt; Custom URL ${index}</span></label>
+        </div>
+        <center>
+            <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom${index}">
+                <span><span data-translate="open-chat">Open chat</span></span>
+            </button>
+        </center>
+    `;
+    container.appendChild(row);
+    attachCustomUrlRowHandlers(row);
+}
+
+function renderSavedCustomUrlSlots(savedSettings) {
+    pendingCustomUrlSettings = savedSettings || pendingCustomUrlSettings;
+    if (!document.getElementById("custom-url-dynamic-container")) return;
+
+    let highest = DEFAULT_CUSTOM_URL_SLOT_COUNT;
+    Object.keys(savedSettings || {}).forEach(function(key) {
+        const index = getCustomUrlSlotFromKey(key);
+        if (index > highest) highest = index;
+    });
+    for (let index = DEFAULT_CUSTOM_URL_SLOT_COUNT + 1; index <= highest; index++) {
+        ensureCustomUrlSlot(index);
+    }
+}
+
+function setupDynamicCustomUrlControls() {
+    const addButton = document.getElementById("addCustomUrl");
+    if (!addButton || addButton.dataset.bound) return;
+    addButton.dataset.bound = "true";
+    addButton.onclick = function() {
+        const nextIndex = highestRenderedCustomUrlSlot + 1;
+        ensureCustomUrlSlot(nextIndex);
+        const input = document.getElementById("custom" + nextIndex + "_url");
+        if (input) {
+            input.focus();
+        }
+    };
+    if (pendingCustomUrlSettings) {
+        renderSavedCustomUrlSlots(pendingCustomUrlSettings);
+    }
+}
+
 function addBlockedWord(word) {
     const input = document.getElementById('blockedwordsInput');
     if (!input || !word) return;
@@ -2996,6 +3097,7 @@ function update(response, sync = true) {
 
         if ('settings' in response && (response.streamID || ssapp)) {
             setupTtsProviders(response); // Handle TTS provider setting initialization
+            renderSavedCustomUrlSlots(response.settings);
 
             const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
             const paramNums = Object.values(targetMap);
@@ -7253,6 +7355,7 @@ function initHotkeys() {
 
 document.addEventListener("DOMContentLoaded", async function(event) {
     await ensureSourcesListLoaded();
+    setupDynamicCustomUrlControls();
 
     // Initialize hotkey system
     initHotkeys();
