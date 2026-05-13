@@ -421,7 +421,7 @@
 
 			.hl-imgContent {
 				max-height: 100vh;
-				max-width: 40%;
+				max-width: calc(100vw - 20px);
 				display: inline-block;
 				position: absolute;
 				margin: 0;
@@ -430,6 +430,7 @@
 				z-index: 0;
 				bottom: 0px;
 				height: max(100%, 200px);
+				overflow: hidden;
 			}
 			
 			.largeImage {
@@ -450,6 +451,7 @@
 				object-fit: contain;
 				display: block;
 				margin: 0;
+				width: 100%;
 				height: 100%;
 				min-height: calc(var(--author-avatar-size) + 30px);
 				max-width: 100%;
@@ -2054,8 +2056,6 @@
 					//img.style.transform = "scale("+ar+")";
 
 					if (message.innerText.length) {
-						message.style.maxWidth = "calc(100vw - " + (width + 35) + "px)";
-						message.style.width = "fit-content";
 						imgContent.style.right = "unset";
 
 						var offset = 0;
@@ -2068,7 +2068,17 @@
 						if (offset < document.getElementById("message").clientWidth + 19) {
 							offset = document.getElementById("message").clientWidth + 19;
 						}
+						if (offset > window.innerWidth - 100) {
+							offset = Math.max(20, window.innerWidth - 100);
+						}
+						var maxWidth = Math.max(80, window.innerWidth - offset - 20);
+						if (width > maxWidth) {
+							width = maxWidth;
+							imgContent.style.width = width + "px";
+						}
 
+						message.style.maxWidth = "calc(100vw - " + (width + 35) + "px)";
+						message.style.width = "fit-content";
 						imgContent.style.left = offset + "px";
 					} else {
 						message.style.maxWidth = "300px";
@@ -2087,6 +2097,14 @@
 							if (offset < 500) {
 								offset = 500;
 							}
+						}
+						if (offset > window.innerWidth - 100) {
+							offset = Math.max(20, window.innerWidth - 100);
+						}
+						var maxWidth = Math.max(80, window.innerWidth - offset - 20);
+						if (width > maxWidth) {
+							width = maxWidth;
+							imgContent.style.width = width + "px";
 						}
 						imgContent.style.left = offset + "px";
 					}
@@ -2629,16 +2647,16 @@
 					
 					if (!data.chatmessage && data.contentimg){
 					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video>';
+						data.chatmessage = '<video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.style.display=\'none\'" /></video>';
 					  } else {
-						data.chatmessage = '<img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" />';
+						data.chatmessage = '<img id="img" src="' + data.contentimg + '"  onerror="this.style.display=\'none\'" />';
 					  }
 					  largeImage = true;
 					} else if (data.contentimg){
 					  if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></video></div>';
+						addImage = '<div id="imgContent" class="hl-imgContent"><video loop="true" autoplay="true" muted="true" id="img" src="' + data.contentimg + '"  onerror="this.parentNode.style.display=\'none\'" /></video></div>';
 					  } else {
-						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parent.style.display=\'none\'" /></div>';
+						addImage = '<div id="imgContent" class="hl-imgContent"><img id="img" src="' + data.contentimg + '"  onerror="this.parentNode.style.display=\'none\'" /></div>';
 					  }
 					} else {
 					  data.contentimg = "";
@@ -3081,6 +3099,8 @@
 							  this.src = this.srcBackup;
 							  this.srcBackup = null;
 							  delete this.srcBackup;
+							} else if (this.parentNode && this.parentNode.id === "imgContent") {
+							  this.parentNode.style.display = "none";
 							} else if (this.alt.length !== 2) {
 							  this.style.display = "none";
 							} else {
