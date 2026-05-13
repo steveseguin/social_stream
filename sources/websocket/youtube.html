@@ -24,6 +24,20 @@
             <div class="auth-section">
                 <a id="auth-link" class="auth-button">Sign in with YouTube</a>
                 <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Custom YouTube project active</div>
+                <div id="yt-access-selector" class="auth-method-selector">
+                    <label class="auth-method-label">YouTube access:</label>
+                    <div class="auth-method-options">
+                        <label class="auth-method-option">
+                            <input type="radio" name="yt-access-level" value="readonly" checked>
+                            <span>Read only</span>
+                        </label>
+                        <label class="auth-method-option">
+                            <input type="radio" name="yt-access-level" value="admin">
+                            <span>Admin controls</span>
+                        </label>
+                    </div>
+                    <div class="credentials-note" style="margin-top:8px;">Admin access is needed to send chat, moderate chat, ban users, or edit stream details. Google may also show video deletion permission.</div>
+                </div>
                 <div id="auth-method-selector" class="auth-method-selector hidden">
                     <label class="auth-method-label">Sign-in method:</label>
                     <div class="auth-method-options">
@@ -230,20 +244,38 @@ try {
      * {"type": "img", "src": badgeUrl} when images are available
      * {"type": "text", "text": emoji} as fallback
      */
-    var YT_SCOPES = [
+    var YT_READONLY_SCOPES = [
         'https://www.googleapis.com/auth/youtube.readonly',
-        'https://www.googleapis.com/auth/youtube',
-        'https://www.googleapis.com/auth/youtube.force-ssl',
         'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
     ];
+    var YT_ADMIN_SCOPES = YT_READONLY_SCOPES.concat([
+        'https://www.googleapis.com/auth/youtube.force-ssl'
+    ]);
     var AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
     var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var YT_ACCESS_LEVEL_KEY = 'youtubeOAuthAccessLevel';
     var YT_AUTH_SOURCE_KEY = 'youtubeOAuthSource';
     var YT_AUTH_SOURCE_HOSTED = 'default_hosted';
     var YT_AUTH_SOURCE_CUSTOM = 'custom_ssapp';
     var clientId = DEFAULT_YT_CLIENT_ID;
     var clientSecretOverride = '';
     var apiKeyOverride = '';
+
+	function normalizeYouTubeAccessLevel(value) {
+		return String(value || '').toLowerCase() === 'admin' ? 'admin' : 'readonly';
+	}
+
+	function getYouTubeAccessLevel() {
+		return normalizeYouTubeAccessLevel(localStorage.getItem(YT_ACCESS_LEVEL_KEY));
+	}
+
+	function setYouTubeAccessLevel(value) {
+		localStorage.setItem(YT_ACCESS_LEVEL_KEY, normalizeYouTubeAccessLevel(value));
+	}
+
+	function getYouTubeOAuthScopes() {
+		return getYouTubeAccessLevel() === 'admin' ? YT_ADMIN_SCOPES : YT_READONLY_SCOPES;
+	}
     function getRuntimeParams() {
         return {
             query: new URLSearchParams(window.location.search),
@@ -2323,13 +2355,14 @@ function enableBackgroundKeepAlive() {
 		const state = stateOverride || nonce(15);
 		setExpectedOAuthState(state);
 		const redirectTarget = redirectOverride || redirectURI;
+		const scopes = getYouTubeOAuthScopes();
 		return {
 			state,
 			redirectUri: redirectTarget,
 			url: AUTH_BASE_URL + '/auth' +
 				'?client_id=' + clientId +
 				'&redirect_uri=' + encodeURIComponent(redirectTarget) +
-				'&scope=' + encodeURIComponent(YT_SCOPES.join(' ')) +
+				'&scope=' + encodeURIComponent(scopes.join(' ')) +
 				'&state=' + state
 		};
 	}
@@ -2479,7 +2512,7 @@ function enableBackgroundKeepAlive() {
 		try {
 			const result = await startOAuthFn({
 				clientId: useCustomDesktopAuth ? clientId : DEFAULT_YT_CLIENT_ID,
-				scopes: YT_SCOPES,
+				scopes: getYouTubeOAuthScopes(),
 				state,
 				authBase: useCustomDesktopAuth ? null : AUTH_BASE_URL,
 				authMode: useCustomDesktopAuth ? 'custom_google' : 'hosted'
@@ -4285,6 +4318,20 @@ function enableBackgroundKeepAlive() {
 			});
 		}
 		syncAuthMethodSelectorVisibility();
+		const accessLevelRadios = document.querySelectorAll('input[name="yt-access-level"]');
+		if (accessLevelRadios && accessLevelRadios.length) {
+			const selectedAccessLevel = getYouTubeAccessLevel();
+			accessLevelRadios.forEach(function(radio) {
+				radio.checked = radio.value === selectedAccessLevel;
+				const changeHandler = function() {
+					if (radio.checked) {
+						setYouTubeAccessLevel(radio.value);
+					}
+				};
+				radio.addEventListener('change', changeHandler);
+				registerCleanup(() => radio.removeEventListener('change', changeHandler));
+			});
+		}
 
 		const authLink = document.getElementById('auth-link');
 		if (authLink) {

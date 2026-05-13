@@ -21,8 +21,6 @@ const AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
 
 const YT_SCOPES = [
   'https://www.googleapis.com/auth/youtube.readonly',
-  'https://www.googleapis.com/auth/youtube',
-  'https://www.googleapis.com/auth/youtube.force-ssl',
   'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
 ];
 
@@ -1794,5 +1792,4 @@ export class YoutubePlugin extends BasePlugin {
     return super.shouldAutoConnect() && this.isTokenValid();
   }
 }
-
 

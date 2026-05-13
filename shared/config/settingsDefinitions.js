@@ -1278,6 +1278,21 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "management",
     description: "When enabled, relay all messages (!NOT RECOMMENDED!)."
   },
+  "relayaccountroles": {
+    type: "text",
+    category: "management",
+    description: "Comma-separated SSApp account roles that may send relayed messages. Blank allows all roles. Roles: normal, host, bot, relay."
+  },
+  "blockrelayaccountroles": {
+    type: "text",
+    category: "management",
+    description: "Comma-separated SSApp account roles that must not send relayed messages. Roles: normal, host, bot, relay."
+  },
+  "botreplyaccountroles": {
+    type: "text",
+    category: "management",
+    description: "Comma-separated SSApp account roles used for bot and auto-reply output. Blank keeps the original source tab behavior."
+  },
   "blockChannelPointRelays": {
     type: "boolean",
     category: "management",

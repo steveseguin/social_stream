@@ -12938,6 +12938,61 @@ function markAutoMessageForTab(tabId) {
 	lastAutoMessagePerTab[tabId] = tabMessageActivityCounter[tabId] || 0;
 }
 
+function normalizeAccountRole(role) {
+	const value = String(role || "normal")
+		.trim()
+		.toLowerCase();
+	return ["host", "bot", "relay"].includes(value) ? value : "normal";
+}
+
+function normalizeAccountRoleListValue(role) {
+	const value = String(role || "")
+		.trim()
+		.toLowerCase();
+	return ["normal", "host", "bot", "relay"].includes(value) ? value : "";
+}
+
+function getAccountRoleListSetting(key) {
+	try {
+		const entry = settings?.[key];
+		const raw = entry && typeof entry === "object" && "textsetting" in entry ? entry.textsetting || "" : entry || "";
+		return String(raw)
+			.split(",")
+			.map(role =>
+				String(role || "")
+					.trim()
+					.toLowerCase()
+			)
+			.filter(role => role)
+			.map(role => normalizeAccountRoleListValue(role))
+			.filter((role, index, roles) => role && roles.indexOf(role) === index);
+	} catch (e) {
+		return [];
+	}
+}
+
+function getTabAccountRole(tab) {
+	if (!tab || typeof tab !== "object") {
+		return "normal";
+	}
+	return normalizeAccountRole(tab.accountRole || tab.ssnAccountRole || tab.sourceAccountRole);
+}
+
+function tabMatchesAccountRoles(tab, allowRoles = [], blockRoles = []) {
+	const role = getTabAccountRole(tab);
+	if (blockRoles.length && blockRoles.includes(role)) {
+		return false;
+	}
+	if (allowRoles.length && !allowRoles.includes(role)) {
+		return false;
+	}
+	return true;
+}
+
+function shouldApplyRelayAccountRoleFilter(data, relayMode) {
+	return !!(relayMode || data?.relayRoleControlled);
+}
+
 function hasExplicitRelayTabTargets(data, reverse = false) {
 	return !reverse && "tid" in data && data.tid !== false && data.tid !== null;
 }
@@ -13404,32 +13459,56 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 	try {
 		let tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
-		tabs = filterRelayCandidateTabs(tabs, data, reverse);
+		let routingData = data;
+		const chatbotDestinationRoles = messageOrigin === "chatbot" || data.botRoleControlled ? getAccountRoleListSetting("botreplyaccountroles") : [];
+		const dispatchMessageOrigin = chatbotDestinationRoles.length && data.botRoleControlled ? "chatbot" : messageOrigin;
+
+		if (chatbotDestinationRoles.length) {
+			let sourceDestination = data.destination || false;
+			if (!sourceDestination && data.tid !== undefined && data.tid !== null && data.tid !== false) {
+				const sourceTabIds = getRelayTargetTabIdSet(data.tid);
+				const sourceTab = tabs.find(tab => sourceTabIds.has(tab.id));
+				if (sourceTab) {
+					sourceDestination = (sourceTab.id ? await getSourceType(sourceTab.id) : false) || getLegacySSAppRelaySourceType(sourceTab);
+				}
+			}
+			routingData = {
+				...data,
+				tid: false,
+				...(sourceDestination ? { destination: sourceDestination } : {})
+			};
+		}
+
+		const relayRoleAllowList = shouldApplyRelayAccountRoleFilter(routingData, relayMode) ? getAccountRoleListSetting("relayaccountroles") : [];
+		const relayRoleBlockList = shouldApplyRelayAccountRoleFilter(routingData, relayMode) ? getAccountRoleListSetting("blockrelayaccountroles") : [];
+
+		const roleRoutingReverse = reverse || !!chatbotDestinationRoles.length;
+		tabs = filterRelayCandidateTabs(tabs, routingData, roleRoutingReverse);
 
 		var published = {};
 		let processedAnyTab = false;
 
 		const processTab = async tab => {
 			processedAnyTab = true;
-			await dispatchRelayMessageToTab(tab, data, {
+			await dispatchRelayMessageToTab(tab, routingData, {
 				now: now,
 				overrideTimeout: overrideTimeout,
 				relayMode: relayMode,
-				messageOrigin: messageOrigin,
+				messageOrigin: dispatchMessageOrigin,
 				shouldCheckDynamicPerTab: shouldCheckDynamicPerTab,
 				rumbleCooldownMs: RUMBLE_COOLDOWN_MS
 			});
 		};
 
-		const hasSpecificTids = hasExplicitRelayTabTargets(data, reverse);
-		const needsValidation = data.destination || relayMode;
+		const hasSpecificTids = hasExplicitRelayTabTargets(routingData, roleRoutingReverse);
+		const needsValidation = routingData.destination || relayMode || chatbotDestinationRoles.length || relayRoleAllowList.length || relayRoleBlockList.length;
 
-		await processRelayTabBatch(tabs, published, !hasSpecificTids || needsValidation ? tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) : null, processTab);
+		await processRelayTabBatch(tabs, published, !hasSpecificTids || needsValidation ? tab => isValidTab(tab, routingData, reverse, published, now, overrideTimeout, relayMode, { chatbotDestinationRoles, relayRoleAllowList, relayRoleBlockList }) : null, processTab);
 
 		// If no platform match was found, fall back to matching a custom destination against the tab URL.
-		if (data.destination && !processedAnyTab) {
+		if (routingData.destination && !processedAnyTab) {
 			published = {};
-			await processRelayTabBatch(tabs, published, tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url" }), processTab);
+			await processRelayTabBatch(tabs, published, tab => isValidTab(tab, routingData, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url", chatbotDestinationRoles, relayRoleAllowList, relayRoleBlockList }), processTab);
 		}
 	} catch (error) {
 		//console.log('Error in sendMessageToTabs:', error);
@@ -13445,6 +13524,8 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 	if (!isRelayAllowedTabUrl(tab.url)) return false;
 	if (tab.url in published) return false;
 	if (!matchesRelayTabFilter(tab, data, reverse)) return false;
+	if (options.chatbotDestinationRoles?.length && !tabMatchesAccountRoles(tab, options.chatbotDestinationRoles, [])) return false;
+	if (shouldApplyRelayAccountRoleFilter(data, relayMode) && !tabMatchesAccountRoles(tab, options.relayRoleAllowList || [], options.relayRoleBlockList || [])) return false;
 	let sourceType = false;
 	if (tab.id) {
 		sourceType = await getSourceType(tab.id);
@@ -14929,7 +15010,7 @@ async function applyBotActions(data, tab = false) {
 			const joke = jokes[score];
 
 			//messageTimeout = Date.now();
-			const jokeMessage = {};
+			const jokeMessage = { botRoleControlled: true };
 
 			if (data.reflection) {
 				jokeMessage.response = joke["setup"];
@@ -14998,7 +15079,7 @@ async function applyBotActions(data, tab = false) {
 
 		if (settings.autohi && data.chatname && data.chatmessage && !data.reflection) {
 			if (["hi", "sup", "hello", "hey", "yo", "hi!", "hey!"].includes(data.chatmessage.toLowerCase())) {
-				const hiMessage = {};
+				const hiMessage = { botRoleControlled: true };
 				if (data.tid) {
 					hiMessage.tid = data.tid;
 				}
@@ -15086,7 +15167,7 @@ async function applyBotActions(data, tab = false) {
 			let roll = Math.floor(Math.random() * maxRoll) + 1;
 
 			//messageTimeout = Date.now();
-			const diceResultMessage = {};
+			const diceResultMessage = { botRoleControlled: true };
 
 			if (data.tid) {
 				diceResultMessage.tid = data.tid;
@@ -15094,7 +15175,7 @@ async function applyBotActions(data, tab = false) {
 				sendMessageToTabs(diceResultMessage, false, null, true, false, 5100);
 			}
 
-			var msg2 = {};
+			var msg2 = { botRoleControlled: true };
 			if (data.tid) {
 				msg2.tid = data.tid;
 			}
@@ -15361,6 +15442,7 @@ async function applyBotActions(data, tab = false) {
 				donationRelayMessage.url = tab.url;
 			}
 
+			donationRelayMessage.relayRoleControlled = true;
 			donationRelayMessage.response = sanitizeRelay(data.chatname, true, "Someone") + " on " + data.type + " donated " + sanitizeRelay(data.hasDonation, true) + ". Thank you";
 			sendMessageToTabs(donationRelayMessage, true, null, false, false, 100);
 			//}
