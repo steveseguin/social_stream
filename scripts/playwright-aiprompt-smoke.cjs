@@ -93,12 +93,23 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
                     sendPayload(out);
                   }, delay);
                 }
-                var response = parent.__ssnAiPromptMockChatbotResponse || '<!DOCTYPE html><html><body><div id="stream-smoke-ok">from streamed html</div></body></html>';
-                var chunkA = response.slice(0, Math.max(1, Math.floor(response.length / 2)));
-                var chunkB = response.slice(chunkA.length);
-                send('chatbotChunk', chunkA, 50);
-                send('chatbotChunk', chunkB || '<div id="stream-smoke-ok">from streamed html</div>', 150);
-                send('chatbotResponse', response, 500);
+                var response;
+                if (parent.__ssnAiPromptMockChatbotResponses && parent.__ssnAiPromptMockChatbotResponses.length) {
+                  response = parent.__ssnAiPromptMockChatbotResponses.shift();
+                } else {
+                  response = parent.__ssnAiPromptMockChatbotResponse || '<!DOCTYPE html><html><body><div id="stream-smoke-ok">from streamed html</div></body></html>';
+                }
+                var finalDelay = typeof parent.__ssnAiPromptMockFinalDelay === 'number' ? parent.__ssnAiPromptMockFinalDelay : 500;
+                if (!parent.__ssnAiPromptMockNoChunks) {
+                  var chunkA = response.slice(0, Math.max(1, Math.floor(response.length / 2)));
+                  var chunkB = response.slice(chunkA.length);
+                  send('chatbotChunk', chunkA, 50);
+                  send('chatbotChunk', chunkB || '<div id="stream-smoke-ok">from streamed html</div>', 150);
+                }
+                if (!parent.__ssnAiPromptMockNoFinal) {
+                  send('chatbotResponse', response, finalDelay);
+                  if (parent.__ssnAiPromptMockDuplicateFinal) send('chatbotResponse', response, finalDelay + 120);
+                }
               });
             <\/script></body></html>`);
             doc.close();
@@ -118,7 +129,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
   page.on('pageerror', err => pageErrors.push(err.message));
 
-  const url = `http://${HOST}:${PORT}/aiprompt.html?session=test-room`;
+  const url = `http://${HOST}:${PORT}/aiprompt.html?session=test-room&aitimeout=1000`;
   await page.goto(url, { waitUntil: 'networkidle' });
 
   // Wait for core UI
@@ -394,7 +405,155 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(patchOnlyHtml.includes('Original label'), 'patch-only requests should not apply full HTML responses');
   assert(!patchOnlyHtml.includes('Wrong full rebuild'), 'patch-only full HTML response should be rejected');
   await page.evaluate(() => {
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```json',
+      JSON.stringify({ answer: 'json is fine when it is not a patch' }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'Answer only, no HTML: return a small json example');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /^AI response received/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const plainJsonMessage = await page.evaluate(() => Array.from(document.querySelectorAll('.msg.assistant')).pop().textContent || '');
+  assert(plainJsonMessage.includes('json is fine when it is not a patch'), 'Non-patch json answers should display normally');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = '```ssnpatch\n{"reply":"Truncated","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Broken';
+  });
+  await page.fill('#userRequest', 'patch only: truncated patch regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /Invalid patch JSON/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const truncatedMessage = await page.evaluate(() => Array.from(document.querySelectorAll('.msg.assistant')).pop().textContent || '');
+  assert(truncatedMessage.indexOf('```ssnpatch') < 0, 'Truncated patch-shaped response should not be shown raw');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```ssnpatch',
+      '{"reply":"Bad first","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Broken \\ label</div>"}]}',
+      '```',
+      '```ssnpatch',
+      JSON.stringify({ reply: 'Valid second', edits: [{ find: '<div id="patch-target">Original label</div>', replace: '<div id="patch-target">Should not apply</div>' }] }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: invalid first valid second regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /Invalid patch JSON/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const twoFenceHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(!twoFenceHtml.includes('Should not apply'), 'Invalid first patch fence should fail closed before later valid fences');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```ssnpatch',
+      JSON.stringify({
+        reply: 'Remove handler',
+        edits: [{
+          find: '<script>window.handleOverlayPayload=function(){};</script>',
+          replace: '<script>console.log("handler removed");</script>'
+        }]
+      }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: remove handler regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /removed window\.handleOverlayPayload/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const removeHandlerHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(removeHandlerHtml.includes('window.handleOverlayPayload'), 'Patch removing handler should not apply');
+  await page.evaluate(() => {
+    const source = '<!DOCTYPE html><html><body><script>function handlePayload(data){document.body.dataset.first="1";}window.handleOverlayPayload=handlePayload;<\/script></body></html>';
+    const ta = document.getElementById('htmlEditor');
+    ta.value = source;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```ssnpatch',
+      JSON.stringify({
+        reply: 'Duplicate handler',
+        edits: [{
+          find: 'window.handleOverlayPayload=handlePayload;',
+          replace: 'function handlePayload(data){document.body.dataset.second="1";}window.handleOverlayPayload=handlePayload;'
+        }]
+      }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: duplicate handler regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /duplicate handlePayload function/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const duplicateHandlerHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert((duplicateHandlerHtml.match(/function handlePayload/g) || []).length === 1, 'Duplicate handlePayload patch should not apply');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockNoChunks = true;
+    window.__ssnAiPromptMockDuplicateFinal = true;
+    window.__ssnAiPromptMockFinalDelay = 100;
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```ssnpatch',
+      JSON.stringify({ reply: 'Duplicate final', edits: [{ find: '<div id="patch-target">Original label</div>', replace: '<div id="patch-target">Duplicate final patched</div>' }] }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: duplicate final regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /^Patch update applied/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  await page.waitForTimeout(350);
+  const duplicateFinalHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert((duplicateFinalHtml.match(/Duplicate final patched/g) || []).length === 1, 'Duplicate final response should apply once only');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockDuplicateFinal = false;
+    window.__ssnAiPromptMockNoChunks = true;
+    window.__ssnAiPromptMockFinalDelay = 1500;
+    window.__ssnAiPromptMockChatbotResponse = '<!DOCTYPE html><html><body><div id="patch-target">Late response applied</div></body></html>';
+  });
+  await page.fill('#userRequest', 'return late html after timeout regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /^AI request timed out/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  await page.waitForTimeout(900);
+  const lateResponseHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(!lateResponseHtml.includes('Late response applied'), 'Late response after timeout should be ignored');
+  await page.evaluate(() => {
+    const badPatch = [
+      '```ssnpatch',
+      '{"reply":"Still bad","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Broken \\ label</div>"}]}',
+      '```'
+    ].join('\n');
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
     document.getElementById('autoFixErrors').checked = true;
+    window.__ssnAiPromptMockNoChunks = true;
+    window.__ssnAiPromptMockFinalDelay = 100;
+    window.__ssnAiPromptMockChatbotResponses = [badPatch, badPatch, badPatch, badPatch];
+  });
+  const beforeAutoFixAssistants = await page.$$eval('.msg.assistant', els => els.length);
+  await page.fill('#userRequest', 'patch only: auto fix exhaustion regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(before => {
+    const status = document.getElementById('connectionStatus').textContent || '';
+    return /Invalid patch JSON/.test(status) && document.querySelectorAll('.msg.assistant').length >= before + 3;
+  }, beforeAutoFixAssistants, { timeout: 8000 });
+  const exhaustedCount = await page.$$eval('.msg.assistant', els => els.length);
+  await page.waitForTimeout(1200);
+  const exhaustedCountLater = await page.$$eval('.msg.assistant', els => els.length);
+  assert(exhaustedCountLater === exhaustedCount, 'Auto-fix should stop after the retry budget is exhausted');
+  await page.evaluate(() => {
+    document.getElementById('autoFixErrors').checked = true;
+    window.__ssnAiPromptMockChatbotResponses = null;
+    window.__ssnAiPromptMockNoChunks = false;
+    window.__ssnAiPromptMockNoFinal = false;
+    window.__ssnAiPromptMockDuplicateFinal = false;
+    window.__ssnAiPromptMockFinalDelay = 500;
     window.__ssnAiPromptMockChatbotResponse = '<!DOCTYPE html><html><body><div id="stream-smoke-ok">from streamed html</div></body></html>';
   });
 
@@ -596,6 +755,10 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
       t.indexOf('Invalid patch JSON') === -1 &&
       t.indexOf('matched 2 times') === -1 &&
       t.indexOf('both ssnpatch and full HTML') === -1 &&
+      t.indexOf('removed window.handleOverlayPayload') === -1 &&
+      t.indexOf('duplicate handlePayload function') === -1 &&
+      t.indexOf('AI request timed out') === -1 &&
+      t.indexOf('No AI response arrived') === -1 &&
       t.indexOf('patch-only output') === -1),
     pageErrors.filter(t => t.indexOf('boom-test-error') === -1)
   );
