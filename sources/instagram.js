@@ -265,11 +265,12 @@
 	// Parsing strategy avoids Instagram's obfuscated class names (which rotate).
 	// We find comment rows by looking for profile-picture <img> elements inside
 	// a <section>, then walk up to the row container. The username comes from
-	// the image's alt text ("<name>'s profile picture" — stable semantic HTML),
-	// and the message is whatever text follows it in the row.
+	// the visible username text, and the message is whatever text follows it in
+	// the row.
 
 	var LIVE_COMMENT_INPUT_SELECTOR = "footer textarea, footer input, footer [contenteditable='true'], [aria-label='Add a comment…']";
 	var PROFILE_IMG_SELECTOR = "img[alt*='profile picture'], img[alt*='profile photo']";
+	var PROFILE_IMG_FALLBACK_SELECTOR = "img[src]";
 
 	var COMMENT_PERMALINK_SELECTOR = "a[href*='/c/']";
 
@@ -277,9 +278,33 @@
 		try {
 			var path = window.location.pathname || "";
 			if (path.includes("/live") || path.includes("%2Flive")){ return true; }
-			if (document.querySelector("svg[aria-label='Viewer count icon']")){ return true; }
+			if (findViewerCountIcon()){ return true; }
 		} catch(e){}
 		return false;
+	}
+
+	function hasViewerCountText(scope){
+		if (!scope || !scope.querySelectorAll){ return false; }
+		var spans = scope.querySelectorAll("span");
+		for (var i = 0; i < spans.length; i++){
+			var text = (spans[i].textContent || "").trim();
+			if (/^\d[\d.,]*\s*[KM]?$/i.test(text)){ return true; }
+		}
+		return false;
+	}
+
+	function findViewerCountIcon(){
+		var icon = document.querySelector("svg[aria-label='Viewer count icon']");
+		if (icon){ return icon; }
+		var svgs = document.querySelectorAll("header svg[role='img']");
+		for (var i = 0; i < svgs.length; i++){
+			var scope = svgs[i].parentElement;
+			for (var depth = 0; scope && depth < 5; depth++){
+				if (hasViewerCountText(scope)){ return svgs[i]; }
+				scope = scope.parentElement;
+			}
+		}
+		return null;
 	}
 
 	function isSsappContext(){
@@ -293,10 +318,61 @@
 
 	function nameFromAlt(img){
 		if (!img || !img.alt){ return ""; }
-		return (img.alt + "")
+		var alt = (img.alt + "").trim();
+		var englishName = alt
 			.replace(/['’]s profile picture.*$/i, "")
 			.replace(/['’]s profile photo.*$/i, "")
 			.trim();
+		if (englishName && (englishName !== alt)){ return englishName; }
+
+		var localizedName = alt
+			.replace(/^.*\bperfil\b\s+(de|del|do|da)\s+/i, "")
+			.replace(/^.*\bprofil\b\s+(de|du|von)\s+/i, "")
+			.replace(/^.*\bprofile\b\s+(of)\s+/i, "")
+			.trim();
+		if (localizedName && (localizedName !== alt)){ return localizedName; }
+		return alt;
+	}
+
+	function isLikelyProfileImage(img){
+		if (!img || !img.src){ return false; }
+		var alt = ((img.alt || "") + "").toLowerCase();
+		if ((alt.indexOf("profile picture") !== -1) || (alt.indexOf("profile photo") !== -1)){ return true; }
+		if ((alt.indexOf("perfil") !== -1) || (alt.indexOf("profil") !== -1)){ return true; }
+		if (img.closest && img.closest("[role='link'], a[href]")){ return true; }
+		return false;
+	}
+
+	function getProfileImgCandidates(scope){
+		var candidates = [];
+		if (!scope || !scope.querySelectorAll){ return candidates; }
+		var imgs = scope.querySelectorAll(PROFILE_IMG_FALLBACK_SELECTOR);
+		for (var i = 0; i < imgs.length; i++){
+			if (isLikelyProfileImage(imgs[i])){ candidates.push(imgs[i]); }
+		}
+		return candidates;
+	}
+
+	function getProfileImgFromRow(row){
+		if (!row || !row.querySelector){ return null; }
+		var img = row.querySelector(PROFILE_IMG_SELECTOR);
+		if (img){ return img; }
+		var candidates = getProfileImgCandidates(row);
+		if (candidates.length){ return candidates[0]; }
+		return row.querySelector(PROFILE_IMG_FALLBACK_SELECTOR);
+	}
+
+	function findLiveUsername(row, profileImg){
+		var altName = nameFromAlt(profileImg);
+		var leaves = collectTextLeaves(row);
+		for (var i = 0; i < leaves.length; i++){
+			var text = normalizeLiveText(leaves[i].textContent || "");
+			if (!text){ continue; }
+			if (altName && (text.toLowerCase() === altName.toLowerCase())){ return text; }
+			if (text.length > 80){ continue; }
+			return text;
+		}
+		return altName;
 	}
 
 	// Walk up from an element until we find the comment row container.
@@ -319,7 +395,7 @@
 	function looksLikeRow(node){
 		if (!node || !node.querySelector){ return false; }
 		if (node.querySelector("header, video, footer")){ return false; }
-		var pics = node.querySelectorAll(PROFILE_IMG_SELECTOR);
+		var pics = getProfileImgCandidates(node);
 		if (pics.length !== 1){ return false; }
 		return true;
 	}
@@ -327,7 +403,7 @@
 	function findLiveRows(){
 		var rows = [];
 		var seen = new Set();
-		var imgs = document.querySelectorAll("section " + PROFILE_IMG_SELECTOR);
+		var imgs = document.querySelectorAll("section " + PROFILE_IMG_FALLBACK_SELECTOR);
 		for (var i = 0; i < imgs.length; i++){
 			var row = rowFromImage(imgs[i]);
 			if (!row){ continue; }
@@ -447,9 +523,9 @@
 	function parseLiveRow(row){
 		if (!row || !row.querySelector){ return null; }
 
-		var profileImg = row.querySelector(PROFILE_IMG_SELECTOR) || row.querySelector("img[src]");
+		var profileImg = getProfileImgFromRow(row) || row.querySelector("img[src]");
 		var chatimg = profileImg ? (profileImg.src + "") : "";
-		var chatname = nameFromAlt(profileImg);
+		var chatname = findLiveUsername(row, profileImg);
 		var chatmessage = "";
 		var streamEvent = false;
 		var messageLeaf = null;
@@ -542,7 +618,7 @@
 		var targetSection = null;
 		for (var i = 0; i < sections.length; i++) {
 			var section = sections[i];
-			if (section.querySelectorAll(PROFILE_IMG_SELECTOR).length > 0) {
+			if (getProfileImgCandidates(section).length > 0) {
 				targetSection = section;
 				break;
 			}
@@ -599,7 +675,7 @@
 	function checkViewers(){
 		if (!(settings.showviewercount || settings.hypemode)){ return; }
 		try {
-			var icon = document.querySelector("svg[aria-label='Viewer count icon']");
+			var icon = findViewerCountIcon();
 			if (!icon){ return; }
 			// Walk upward and look for a nearby numeric span in the header.
 			var scope = icon.closest("header") || icon.parentElement;
@@ -739,7 +815,7 @@
 			if (!isElementVisible(node)){ continue; }
 			var clickable = closestClickable(node);
 			if (!clickable || !isElementVisible(clickable)){ continue; }
-			if (!clickable.querySelector("img[alt*='profile picture'], img[alt*='profile photo'], canvas")){ continue; }
+			if (!clickable.querySelector("canvas") && !getProfileImgCandidates(clickable).length){ continue; }
 			return clickable;
 		}
 		return null;
