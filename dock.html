@@ -12034,7 +12034,8 @@
 			}
 
 			function initHotkeys() {
-				const storage = (chrome && chrome.storage && chrome.storage.sync) ? chrome.storage.sync : null;
+				const runtime = (typeof chrome !== "undefined" && chrome && chrome.runtime) ? chrome.runtime : null;
+				const storage = (typeof chrome !== "undefined" && chrome && chrome.storage && chrome.storage.sync) ? chrome.storage.sync : null;
 				if (!storage) {
 					const hotkeys = DEFAULT_HOTKEYS;
 					document.addEventListener('keydown', (e) => {
@@ -12046,8 +12047,8 @@
 						const action = hotkeys[combo];
 						if (action) {
 							e.preventDefault();
-							if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
-								chrome.runtime.sendMessage({ cmd: action });
+							if (runtime && runtime.sendMessage) {
+								runtime.sendMessage({ cmd: action });
 							}
 						}
 					});
@@ -12065,7 +12066,9 @@
 						const action = hotkeys[combo];
 						if (action) {
 							e.preventDefault();
-							chrome.runtime.sendMessage({ cmd: action });
+							if (runtime && runtime.sendMessage) {
+								runtime.sendMessage({ cmd: action });
+							}
 						}
 					});
 				});
