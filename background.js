@@ -5519,6 +5519,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "resetwaitlist") {
 			resetWaitlist();
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resettipjar") {
+			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
+			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
 			sendResponse({ state: isExtensionOn });
@@ -8618,6 +8621,9 @@ function setupSocket() {
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
 				resp = true;
+			} else if (data.action && data.action === "resettipjar") {
+				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
+				resp = true;
 			} else if (data.action && data.action === "resetpoll") {
 				sendTargetP2P({ cmd: "resetpoll" }, "poll");
 				resp = true;
@@ -10118,7 +10124,7 @@ function sendDataP2P(data, UUID = false) {
 			try {
 				var peers = ninjaBridge.getPeers();
 				for (var k in peers) {
-					if (peers[k] === "dock" || peers[k] === "aioverlay") {
+					if (peers[k] === "dock" || peers[k] === "aioverlay" || peers[k] === "tipjar") {
 						hasOverlayReceiver = true;
 					}
 				}
@@ -10126,6 +10132,7 @@ function sendDataP2P(data, UUID = false) {
 			if (hasOverlayReceiver) {
 				ninjaBridge.sendToLabel(data, "dock");
 				ninjaBridge.sendToLabel(data, "aioverlay");
+				ninjaBridge.sendToLabel(data, "tipjar");
 			} else {
 				ninjaBridge.send(data); // broadcast
 			}
@@ -10148,7 +10155,7 @@ function sendDataP2P(data, UUID = false) {
 				try {
 					UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
-					if (!label || label === "dock" || label === "aioverlay") {
+					if (!label || label === "dock" || label === "aioverlay" || label === "tipjar") {
 						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // the docks, emotes, and AI overlay page are VIEWERS, since backend is PUSH-only
 					}
 				} catch (e) {

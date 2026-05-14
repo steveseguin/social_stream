@@ -11059,7 +11059,7 @@
 									} else {
 										iframe.contentWindow.postMessage({ sendData: { overlayNinja: { mid: false } }, type: "pcs", UUID: UUID }, "*");
 									}
-								} else if (label === "overlay") {
+								} else if (label === "overlay" || label === "tipjar") {
 									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*"); // send only to viewers of this stream; not back to the chrome extension..
 								} else if (label === false) {
 									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*"); // send only to viewers of this stream; not back to the chrome extension..
