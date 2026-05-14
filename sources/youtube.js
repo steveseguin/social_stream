@@ -1453,7 +1453,6 @@
 	});
 	
 	function checkType(ele, callback) {
-		console.log(ele);
 	  // Handle redirect banners (YouTube Raids) specifically before skipping other banners
 	  if (ele.tagName == "yt-live-chat-banner-redirect-renderer".toUpperCase()) {
 		callback(ele, "redirect");

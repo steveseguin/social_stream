@@ -5164,12 +5164,31 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						const data = JSON.parse(html.slice(jsonStart, end));
 						const emojis = (data && data.contents && data.contents.liveChatRenderer && data.contents.liveChatRenderer.emojis) || [];
 						for (const emoji of emojis) {
-							if (!emoji.isCustomEmoji) continue;
 							const thumbs = emoji.image && emoji.image.thumbnails;
 							if (!thumbs || !thumbs.length) continue;
+							const shortcuts = Array.isArray(emoji.shortcuts) ? emoji.shortcuts.filter(Boolean) : [];
+							if (!shortcuts.length && emoji.emojiId) {
+								const idLabel = String(emoji.emojiId).split("/").pop();
+								if (idLabel) {
+									shortcuts.push(":" + idLabel + ":");
+								}
+							}
+							if (!shortcuts.length) continue;
+							const normalizedShortcuts = [];
+							shortcuts.forEach(function (shortcut) {
+								if (!shortcut || typeof shortcut !== "string") return;
+								const trimmed = shortcut.trim();
+								if (!trimmed) return;
+								if (normalizedShortcuts.indexOf(trimmed) === -1) normalizedShortcuts.push(trimmed);
+								if (trimmed.charAt(0) !== ":" && trimmed.charAt(trimmed.length - 1) !== ":" && trimmed.indexOf(" ") === -1) {
+									const colonShortcut = ":" + trimmed + ":";
+									if (normalizedShortcuts.indexOf(colonShortcut) === -1) normalizedShortcuts.push(colonShortcut);
+								}
+							});
+							if (!normalizedShortcuts.length) continue;
 							const url = thumbs[thumbs.length - 1].url;
-							const alt = (emoji.shortcuts && emoji.shortcuts[0]) || (emoji.emojiId || "").split("/").pop() || "emoji";
-							entries.push({ shortcuts: emoji.shortcuts || [], url, id: emoji.emojiId || "", alt });
+							const alt = normalizedShortcuts[0] || (emoji.emojiId || "").split("/").pop() || "emoji";
+							entries.push({ shortcuts: normalizedShortcuts, url, id: emoji.emojiId || "", alt });
 						}
 					} catch (e) {
 						console.log("Background YouTube emoji fetch failed:", e);
