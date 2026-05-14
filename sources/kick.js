@@ -551,6 +551,9 @@
 		
 		if (settings.textonlymode) {
 			element.childNodes.forEach(node=>{
+				if (isKickIgnoredContentNode(node)) {
+					return;
+				}
 				if (node.childNodes.length){
 					resp += getAllContentNodes(node);
 				} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
@@ -564,6 +567,9 @@
 		
 		
 		element.childNodes.forEach(node=>{
+			if (isKickIgnoredContentNode(node)) {
+				return;
+			}
 			if (node.childNodes.length){
 				if (node.classList && node.classList.contains("seventv-painted-content")){
 					resp += node.outerHTML;
@@ -682,12 +688,72 @@
 	const KICK_MESSAGE_CONTAINER_SELECTOR = "[data-index], [data-chat-entry]";
 	const KICK_DELETE_TEXTS = new Set(["deleted by a moderator", "(deleted)"]);
 	const KICK_BADGE_SELECTOR = ".badge-tooltip img[src], .badge-tooltip svg, .base-badge img[src], .base-badge svg, .badge img[src], .badge svg, div[data-state] img[src], div[data-state] svg";
-	const KICK_MESSAGE_CONTENT_SELECTOR = ".chat-entry-content, .chat-emote-container, .break-all, seventv-container, .seventv-painted-content";
+	const KICK_MESSAGE_CONTENT_SELECTOR = ".chat-entry-content, .chat-emote-container, .break-all, seventv-container, .seventv-painted-content, span[class*='font-normal'], div[class*='font-normal']";
+	const KICK_MOD_ACTIONS_SELECTOR = "[style*='chatroom-mod-actions-display'], button[aria-label='Delete'], button[aria-label='Pin'], button[aria-label='Reply'], button[aria-label='Ban'], button[aria-label='Timeout'], button[aria-label='Block']";
 
 	function getKickUsernameButton(ele) {
 		return ele.querySelector("button.inline.font-bold[data-prevent-expand]")
 			|| ele.querySelector("button[title]")
 			|| ele.querySelector("button.font-bold.inline");
+	}
+
+	function isKickIgnoredContentNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return false;
+		}
+		if (node.matches && node.matches(KICK_MOD_ACTIONS_SELECTOR)) {
+			return true;
+		}
+		return Boolean(node.closest && node.closest(KICK_MOD_ACTIONS_SELECTOR));
+	}
+
+	function isKickMessageTextNode(node) {
+		if (!node || node.nodeType !== 1 || isKickIgnoredContentNode(node)) {
+			return false;
+		}
+		if (node.closest && node.closest("button")) {
+			return false;
+		}
+		return Boolean(node.matches && node.matches(".chat-entry-content, .chat-emote-container, .break-all, seventv-container, .seventv-painted-content, span[class*='font-normal'], div[class*='font-normal']"));
+	}
+
+	function getKickInlineMessageNode(ele) {
+		var usernameBtn = getKickUsernameButton(ele);
+		var current = usernameBtn ? usernameBtn.parentElement : null;
+		while (current && current !== ele) {
+			var separator = current.nextElementSibling;
+			var content = separator ? separator.nextElementSibling : null;
+			if (separator && content && isKickMessageTextNode(content)) {
+				return content;
+			}
+			current = current.parentElement;
+		}
+		var nodes = ele.querySelectorAll("span[class*='font-normal'], div[class*='font-normal']");
+		for (var i = 0; i < nodes.length; i++) {
+			if (isKickMessageTextNode(nodes[i])) {
+				return nodes[i];
+			}
+		}
+		return null;
+	}
+
+	function getKickReplyLabel(ele) {
+		if (!ele || !ele.querySelectorAll) {
+			return "";
+		}
+		var buttons = ele.querySelectorAll("button");
+		for (var i = 0; i < buttons.length; i++) {
+			var button = buttons[i];
+			if (!button || button.getAttribute("aria-label") || isKickIgnoredContentNode(button)) {
+				continue;
+			}
+			var text = normalizeKickText(button.textContent || "");
+			var className = typeof button.className === "string" ? button.className : "";
+			if (text && (text.indexOf("Replying to") === 0 || className.indexOf("text-xs") !== -1)) {
+				return escapeHtml(text);
+			}
+		}
+		return "";
 	}
 
 	function getKickBadgeScope(ele) {
@@ -703,7 +769,7 @@
 			}
 			current = current.parentElement;
 		}
-		return ele;
+		return null;
 	}
 
 	function collectKickBadges(ele) {
@@ -1238,15 +1304,19 @@
 	   
 	  if (!settings.textonlymode){
 		  try {
-			chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
+			var inlineMessageNode = getKickInlineMessageNode(ele);
+			if (inlineMessageNode) {
+				chatmessage = getAllContentNodes(inlineMessageNode).trim();
+			}
+			chatNodes = chatmessage ? [] : ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
 			
 			if (!chatNodes.length){
-				chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container, .break-all");
+				chatNodes = chatmessage ? [] : ele.querySelectorAll(".chat-entry-content, .chat-emote-container, .break-all");
 			} else {
 				chatNodes = ele.querySelectorAll("seventv-container, .chat-emote-container, .seventv-painted-content"); // 7tv support, as of june 20th
 			}
 			
-			if (!chatNodes.length){
+			if (!chatmessage && !chatNodes.length){
 				let tmp = ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
 				if (tmp){
 					chatmessage = getAllContentNodes(tmp);
@@ -1256,7 +1326,7 @@
 		  } catch(e){
 		  }
 	  } else {
-		let tmp = ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
+		let tmp = getKickInlineMessageNode(ele) || ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
 		if (tmp){
 			chatmessage = getAllContentNodes(tmp);
 			chatmessage = chatmessage.trim();
@@ -1298,17 +1368,14 @@
 	  
 	  
 	  if (!settings.excludeReplyingTo){
-		  let reply = ele.querySelector(".text-xs button");
+		  let reply = getKickReplyLabel(ele);
 		  if (reply){
-				reply = getAllContentNodes(reply.parentNode).trim();
-				if (reply){
-					replyMessage = reply;
-					originalMessage = chatmessage;
-					if (settings.textonlymode) {
-						chatmessage = reply + ": " + chatmessage;
-					} else {
-						chatmessage = "<i><small>"+reply + ":&nbsp;</small></i> " + chatmessage;
-					}
+				replyMessage = reply;
+				originalMessage = chatmessage;
+				if (settings.textonlymode) {
+					chatmessage = reply + ": " + chatmessage;
+				} else {
+					chatmessage = "<i><small>"+reply + ":&nbsp;</small></i> " + chatmessage;
 				}
 		  }
 	  }

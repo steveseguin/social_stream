@@ -6277,6 +6277,7 @@ function mapKickChatEventToSocialStream(rawType, plainMessage = '', donationLabe
         typeLower === 'message' ||
         typeLower === 'chatroom_message' ||
         typeLower === 'chat.message.sent' ||
+        typeLower.indexOf('reply') !== -1 ||
         typeLower === 'user' ||
         typeLower === 'bot'
     ) {
