@@ -115,8 +115,8 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - mixcloud.com (pop out chat)
 - ms teams (teams.live.com and teams.microsoft.com)
 - vimeo.com (either the vimeo.com/events/xxx pages or https://vimeo.com/live-chat/xxxxxxxxx/interaction/)
-- instagram live (instagram.com/*/live/),  css note:  `[data.type = "instagramlive"]`
-- Instagram post non-live comments (REQUIRES the TOGGLE in menu to enable it), css note: `[data.type = "instagram"]`
+- instagram live (instagram.com/*/live/), payload type / css note: `[data.type = "instagramlive"]`
+- Instagram post non-live comments (REQUIRES the TOGGLE in menu to enable it), payload type / css note: `[data.type = "instagram"]`
 - instafeed.me (no pop out; alternative instagram live support)
 - tiktok live (tiktok.com/*/live -- the chat must be left open/visible if using the extension version)
 - webex live chat (not the pop out)

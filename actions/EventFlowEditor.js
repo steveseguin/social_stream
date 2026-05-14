@@ -492,6 +492,7 @@ class EventFlowEditor {
             { value: 'facebook', label: 'Facebook' },
             { value: 'tiktok', label: 'TikTok' },
             { value: 'instagram', label: 'Instagram' },
+            { value: 'instagramlive', label: 'Instagram Live' },
             { value: 'rumble', label: 'Rumble' },
             { value: 'kofi', label: 'Ko-fi' },
             { value: 'bmac', label: 'Buy Me a Coffee' },

@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>No need to pop out the chat</li>
                 </ul>
             `,
-            notes: 'CSS note for styling: [data.type = "instagramlive"]'
+            notes: 'Payload type: <code>instagramlive</code>. CSS note for styling: [data.type = "instagramlive"]'
         },
         {
             name: 'Instagram Post Comments',
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>Navigate to any Instagram post to capture comments</li>
                 </ul>
             `,
-            notes: 'CSS note for styling: [data.type = "instagram"]'
+            notes: 'Payload type: <code>instagram</code>. CSS note for styling: [data.type = "instagram"]'
         },
         {
             name: 'X Live (Twitter)',
