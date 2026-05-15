@@ -9,6 +9,11 @@
 	var sourceImg = "";
 	var sourceName = "VPZone";
 	var seenWsMessageIds = new Map();
+	// Set once the WS interceptor delivers its first frame. After that, the
+	// DOM scraper becomes redundant (and produces duplicates), so we skip
+	// the DOM-driven emit path. Stays true for the lifetime of the page —
+	// SPA navigations reset it via the URL-change handler at the bottom.
+	var wsCaptureActive = false;
 	var currentChannelSlug = "";
 	var avatarCache = new Map();
 	var avatarPending = new Set();
@@ -125,6 +130,10 @@
 		try { msg = JSON.parse(raw); } catch (e) { return; }
 		if (!msg || typeof msg !== "object") return;
 
+		// First frame proves the page's chat WS is being intercepted — disable
+		// the DOM scraper to stop emitting duplicates of every message/event.
+		wsCaptureActive = true;
+
 		var now = Date.now();
 		pruneSeenWs(now);
 
@@ -145,10 +154,18 @@
 
 		var ts = msg.ts || "";
 
-		if (msg.type === "follow" || msg.type === "subscription" || msg.type === "raid") {
+		if (msg.type === "follow" || msg.type === "subscription" || msg.type === "raid" || msg.type === "gift" || msg.type === "clip") {
+			// Prefer metadata.username when present — gift events name the
+			// recipient there, and other handlers use it as the canonical actor
+			// when the top-level field is missing.
+			var actorName = (msg.metadata && msg.metadata.username) || msg.username || "";
+			if (!actorName) return;
+			var actorAvatar = avatarCache.get(String(actorName).toLowerCase()) || "";
+			if (!actorAvatar) fetchAvatar(actorName);
 			emitWsMessage({
-				chatname: escapeHtmlMaybe(msg.username || ""),
+				chatname: escapeHtmlMaybe(actorName),
 				chatmessage: escapeHtmlMaybe(msg.body || msg.type),
+				chatimg: actorAvatar,
 				event: msg.type,
 				membership: msg.type === "subscription" ? (msg.metadata && msg.metadata.tier ? "Subscriber (" + msg.metadata.tier + ")" : "Subscriber") : "",
 				meta: { timestamp: ts, raw: msg.metadata || {} }
@@ -158,9 +175,22 @@
 
 		if (msg.type === "system") {
 			var kind = msg.metadata && msg.metadata.kind;
+			// VPZONE's join-announcement system frames have no real actor —
+			// dropping them avoids "system: alice just joined" rows that
+			// social_stream can't attribute or theme correctly.
+			if (!kind && /\bjust\s+joined\b/i.test(String(msg.body || ""))) return;
+			// level_up (and similar) carry the real user in metadata.username;
+			// the top-level field is hard-coded to "system" server-side.
+			var sysName = (msg.metadata && msg.metadata.username) || msg.username || "system";
+			var sysAvatar = "";
+			if (sysName && sysName !== "system") {
+				sysAvatar = avatarCache.get(String(sysName).toLowerCase()) || "";
+				if (!sysAvatar) fetchAvatar(sysName);
+			}
 			emitWsMessage({
-				chatname: escapeHtmlMaybe(msg.username || "system"),
+				chatname: escapeHtmlMaybe(sysName),
 				chatmessage: escapeHtmlMaybe(msg.body || ""),
+				chatimg: sysAvatar,
 				event: kind || "system",
 				meta: { timestamp: ts, kind: kind || "" }
 			});
@@ -610,6 +640,16 @@
 			return;
 		}
 
+		// The WS interceptor is the source of truth when active — every chat
+		// message and event arrives there first, so emitting from the DOM row
+		// would just duplicate it. We still mark the row as seen so we don't
+		// re-evaluate it on subsequent mutations.
+		if (wsCaptureActive) {
+			row.dataset.ssnVpzoneSeen = "true";
+			row.dataset.ssnVpzoneQueued = "false";
+			return;
+		}
+
 		var data = parseRow(row);
 		if (!data) {
 			return;
@@ -861,6 +901,7 @@
 			avatarCache.clear();
 			avatarPending.clear();
 			lastViewerCount = null;
+			wsCaptureActive = false;
 			currentChannelSlug = getChannelSlugFromUrl();
 		}
 		attachObserver();

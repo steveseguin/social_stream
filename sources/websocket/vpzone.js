@@ -33,7 +33,10 @@
 		lastMessage: "",
 		tokens: null,
 		seenIds: new Set(),
-		seenOrder: []
+		seenOrder: [],
+		avatarCache: new Map(),
+		avatarPending: new Map(),
+		avatarNegativeUntil: new Map()
 	};
 	const wsProxy = {
 		readyState: READY_STATE.CLOSED,
@@ -612,6 +615,39 @@
 		return { chatbadges: [], backgroundColor: "", textColor: "", chatimg: "", hasDonation: "", membership: "", contentimg: "", textonly: !!(state.settings && state.settings.textonlymode), type: "vpzone", sourceName: SOURCE_NAME, sourceImg: SOURCE_IMG };
 	}
 
+	// VPZONE chat frames don't carry an avatar URL — fetch from the public
+	// profile-card endpoint (no auth, ~5min CDN cache server-side) and remember
+	// per username. Negative lookups are cached briefly to avoid hammering the
+	// API when a chatter doesn't have a profile yet.
+	function fetchAvatar(username) {
+		if (!username) return Promise.resolve("");
+		var key = String(username).toLowerCase();
+		if (key === "system" || key === "anonymous") return Promise.resolve("");
+		var cached = state.avatarCache.get(key);
+		if (cached) return Promise.resolve(cached);
+		var until = state.avatarNegativeUntil.get(key);
+		if (until && until > Date.now()) return Promise.resolve("");
+		var pending = state.avatarPending.get(key);
+		if (pending) return pending;
+		var promise = fetchJson(HOST + "/api/chat/profile-card/" + encodeURIComponent(username))
+			.then(function (json) {
+				var url = json && json.avatar_url ? absUrl(String(json.avatar_url)) : "";
+				if (url) state.avatarCache.set(key, url);
+				else state.avatarNegativeUntil.set(key, Date.now() + 5 * 60 * 1000);
+				return url;
+			})
+			.catch(function () {
+				state.avatarNegativeUntil.set(key, Date.now() + 60 * 1000);
+				return "";
+			})
+			.then(function (url) {
+				state.avatarPending.delete(key);
+				return url;
+			});
+		state.avatarPending.set(key, promise);
+		return promise;
+	}
+
 	function eventTime(ev) {
 		return ev && (ev.createdAt || ev.timestamp || ev.sentAt || ev.ts) ? (ev.createdAt || ev.timestamp || ev.sentAt || ev.ts) : "";
 	}
@@ -623,6 +659,10 @@
 		if (value === "viewer_quit") return "left";
 		if (value === "follow") return "new_follower";
 		if (value === "subscribe" || value === "subscription") return "new_subscriber";
+		if (value === "gift") return "gift_subscription";
+		if (value === "raid") return "raid";
+		if (value === "clip") return "clip";
+		if (value === "level_up") return "level_up";
 		return value;
 	}
 
@@ -644,8 +684,10 @@
 	}
 
 	function buildChat(ev) {
+		var rawName = ev.actorDisplayName || ev.displayName || ev.actorUsername || ev.username || "";
+		if (!rawName || String(rawName).toLowerCase() === "system") return null;
 		var data = basePayload();
-		data.chatname = esc(ev.actorDisplayName || ev.displayName || ev.actorUsername || ev.username || "VPZone User");
+		data.chatname = esc(rawName);
 		data.chatmessage = renderMessage(ev.message || ev.text || ev.body || ev.content || "");
 		data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage || "");
 		data.contentimg = absUrl(ev.contentimg || ev.contentImage || ev.imageUrl || "");
@@ -664,9 +706,11 @@
 		if (!mapped || mapped === "presence" || mapped === "chat_message") return null;
 		if (state.settings.hideevents) return null;
 		if (mapped === "joined" && state.settings.capturejoinedevent === false) return null;
+		var rawName = ev.actorDisplayName || ev.displayName || ev.actorUsername || ev.username || "";
+		if (!rawName || String(rawName).toLowerCase() === "system") return null;
 		data = basePayload();
 		data.event = mapped;
-		data.chatname = esc(ev.actorDisplayName || ev.displayName || ev.actorUsername || ev.username || SOURCE_NAME);
+		data.chatname = esc(rawName);
 		data.chatmessage = renderMessage(ev.body || ev.message || ev.text || mapped);
 		data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage || "");
 		data.chatbadges = buildBadges(ev);
@@ -717,17 +761,50 @@
 		if (state.settings.showviewercount || state.settings.hypemode) pushMessage({ type: "vpzone", event: "viewer_update", meta: count, sourceName: SOURCE_NAME, sourceImg: SOURCE_IMG });
 	}
 
+	// System frames whose body is just an announcement (e.g. join messages from
+	// the server fallback path) carry no user identity worth surfacing. We drop
+	// them so the dock doesn't render "system: alice just joined" rows.
+	function isJoinAnnouncement(ev) {
+		if (!ev) return false;
+		var t = String(ev.eventType || ev.type || "").toLowerCase();
+		if (t !== "system") return false;
+		if (ev.metadata && ev.metadata.kind) return false;
+		var body = String(ev.body || ev.message || ev.text || "");
+		return /\bjust\s+joined\b/i.test(body);
+	}
+
+	// Some VPZONE system frames identify the real actor via `metadata.username`
+	// (level_up, etc.) rather than the top-level `username` which is hard-coded
+	// to "system". Lift it so downstream renderers attribute the row correctly.
+	function liftSystemActor(ev) {
+		if (!ev || String(ev.eventType || ev.type || "").toLowerCase() !== "system") return;
+		var meta = ev.metadata;
+		if (!meta || typeof meta !== "object") return;
+		var name = meta.username || meta.actorUsername || meta.user || "";
+		if (!name) return;
+		ev.actorUsername = name;
+		ev.actorDisplayName = meta.display_name || meta.actorDisplayName || name;
+		if (meta.kind) ev.type = String(meta.kind);
+	}
+
 	function handleEvent(ev) {
 		var key;
-		var data;
 		if (!ev || typeof ev !== "object") return;
+		if (isJoinAnnouncement(ev)) return;
+		liftSystemActor(ev);
 		key = ev.id != null ? ev.id : [eventTime(ev), ev.actorUsername || ev.username || "", ev.eventType || ev.type || "", ev.message || ev.text || ev.body || ev.content || ""].join("::");
 		if (!remember(key)) return;
-		data = mapEventName(ev.eventType || ev.type || "") === "chat_message" ? buildChat(ev) : buildEvent(ev);
-		if (!data) return;
-		pushMessage(data);
-		appendFeed(data);
-		chip(els.lastEventChip, "Last event: " + nice(data.event || ev.eventType || ev.type || "message"), data.event ? "warn" : "good");
+		var actor = ev.actorUsername || ev.username || "";
+		var hasCarriedAvatar = !!(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage);
+		var enrich = hasCarriedAvatar ? Promise.resolve("") : fetchAvatar(actor);
+		enrich.then(function (avatarUrl) {
+			if (avatarUrl && !hasCarriedAvatar) ev.avatarUrl = avatarUrl;
+			var data = mapEventName(ev.eventType || ev.type || "") === "chat_message" ? buildChat(ev) : buildEvent(ev);
+			if (!data) return;
+			pushMessage(data);
+			appendFeed(data);
+			chip(els.lastEventChip, "Last event: " + nice(data.event || ev.eventType || ev.type || "message"), data.event ? "warn" : "good");
+		});
 	}
 
 	function isVpzoneFrame(payload) {
@@ -838,10 +915,20 @@
 			state.socket = null;
 			wsProxy.readyState = READY_STATE.CLOSED;
 			if (event && typeof event.code !== "undefined") reason += " (code " + event.code + (event.reason ? ", " + event.reason : "") + ")";
-			if (event && event.code === 1008 && /bad channel/i.test(String(event.reason || ""))) {
+			// 1008 = policy violation. The VPZONE chat server uses it for
+			// "bad channel", "banned", and other unrecoverable rejections —
+			// reconnecting would just loop forever, so stop the worker and
+			// surface a meaningful message based on the close reason.
+			if (event && event.code === 1008) {
 				state.active = false;
-				setStatus("error", "VPZone rejected channel @" + channel + ".", { channel: channel, wsUrl: wsUrl });
-				log(reason + ". Check the VPZONE channel username.", "error");
+				var rejReason = String(event.reason || "");
+				var msg = /bad channel/i.test(rejReason)
+					? "VPZone rejected channel @" + channel + "."
+					: /banned/i.test(rejReason)
+						? "VPZone banned this account from @" + channel + "."
+						: "VPZone rejected the connection: " + (rejReason || "policy violation");
+				setStatus("error", msg, { channel: channel, wsUrl: wsUrl });
+				log(reason + ". " + msg, "error");
 				syncButtons();
 				return;
 			}
