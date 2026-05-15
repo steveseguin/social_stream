@@ -72,15 +72,38 @@ function toDataURL(url, callback) {
 		return resp;
 	}
 
+	var messageSelector = "[data-testid='chatline'], .mixcloud-live-chat-row";
+	var chatContainerSelector = ".mixcloud-live-chat-container, .mixcloud-live-chat-chat-window";
+
 	function getMessageElement(ele){
 		if (!ele || ele.nodeType !== 1){return null;}
-		if (ele.matches && (ele.matches("[data-testid='chatline']") || ele.matches(".mixcloud-live-chat-row"))){
+		if (ele.matches && ele.matches(messageSelector)){
 			return ele;
 		}
+		if (ele.closest){
+			var parentMessage = ele.closest(messageSelector);
+			if (parentMessage){
+				return parentMessage;
+			}
+		}
 		if (ele.querySelector){
-			return ele.querySelector("[data-testid='chatline'], .mixcloud-live-chat-row");
+			return ele.querySelector(messageSelector);
 		}
 		return null;
+	}
+
+	function getChatContainerFromRow(row){
+		if (!row || !row.parentElement){return null;}
+		var parent = row.parentElement;
+		while (parent && parent !== document.body){
+			try {
+				if (parent.querySelectorAll(messageSelector).length > 1){
+					return parent;
+				}
+			} catch(e){}
+			parent = parent.parentElement;
+		}
+		return row.parentElement;
 	}
 
 	function getProfileLink(ele){
@@ -346,7 +369,7 @@ function toDataURL(url, callback) {
 			processMessage(node);
 		}
 		if (node.querySelectorAll){
-			var rows = node.querySelectorAll("[data-testid='chatline'], .mixcloud-live-chat-row");
+			var rows = node.querySelectorAll(messageSelector);
 			for (var j = 0; j < rows.length; j++){
 				processMessage(rows[j]);
 			}
@@ -366,7 +389,7 @@ function toDataURL(url, callback) {
 				}
 			});
 		};
-		var existingRows = target.querySelectorAll("[data-testid='chatline'], .mixcloud-live-chat-row");
+		var existingRows = target.querySelectorAll(messageSelector);
 		for (var i = 0; i < existingRows.length; i++){
 			existingRows[i].marked = true;
 		}
@@ -383,10 +406,18 @@ function toDataURL(url, callback) {
 			observeChatContainer(targets[i]);
 		}
 	}
+
+	function observeDiscoveredChatContainers() {
+		var rows = document.querySelectorAll(messageSelector);
+		for (var i = 0; i < rows.length; i++){
+			observeChatContainer(getChatContainerFromRow(rows[i]));
+		}
+	}
 	console.log("social stream injected");
 
 	setInterval(function(){
-		onElementInserted(".mixcloud-live-chat-container, .mixcloud-live-chat-chat-window");
+		onElementInserted(chatContainerSelector);
+		observeDiscoveredChatContainers();
 	},1000);
 
 })();
