@@ -53,10 +53,11 @@
 
 	function getChannelSlugFromUrl() {
 		try {
-			// Match /watch/{slug}, /overlay/chat/{token}?channel={slug},
+			// Match /stream/{slug}, /watch/{slug}, /overlay/chat/{token}?channel={slug},
 			// /overlay/chat-dock/{token}?channel={slug}, /u/{username}
 			var path = window.location.pathname;
 			var match =
+				path.match(/^\/stream\/([^\/?#]+)/) ||
 				path.match(/^\/watch\/([^\/?#]+)/) ||
 				path.match(/^\/u\/([^\/?#]+)/);
 			if (match) return decodeURIComponent(match[1]);

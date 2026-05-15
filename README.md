@@ -229,6 +229,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - streamelements (overlay page)
 - versus.cam (test chat page at https://versus.cam/?testchat)
 - patreon
+- arena.social (open https://arena.social/live/*)
 - velora.tv (no popup; just channel watch page)
 - blaze.stream (no popup; just channel watch page)
 
@@ -255,7 +256,7 @@ Past supported sites that have ceased to exist or been retired.
 - 🪦 dlive.tv (RIP April 2026)
 - 🪦 Mobcrush (RIP August 2022)
 - 🪦 AfreecaTV / sooplive.co.kr (merged into sooplive.com)
-- 🪦 ArenaTV / Arena Social (livestreaming systems shut down)
+- 🪦 ArenaTV (livestreaming system shut down)
 
   (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 

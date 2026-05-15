@@ -1381,6 +1381,17 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'Arena Social',
+			icon: 'arenasocial.png',
+			description: 'Social streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://arena.social/live/*</li>
+				</ul>
+			`
+		},
+		{
 			name: 'Blaze',
 			icon: 'blaze.png',
 			description: 'Social streaming platform.',
