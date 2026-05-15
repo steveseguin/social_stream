@@ -6287,7 +6287,6 @@ async function sendToDestinations(message) {
 		}
 	}
 
-	var isAlertMessage = !!(message && (message.event || message.hasDonation || message.donation));
 	var reactionEventName = "";
 	if (message && typeof message.event === "string") {
 		reactionEventName = message.event
@@ -6295,10 +6294,16 @@ async function sendToDestinations(message) {
 			.replace(/[^a-z0-9]+/g, "_")
 			.replace(/^_+|_+$/g, "");
 	}
+	var isDonationMessage = !!(message && (message.hasDonation || message.donation));
+	var donationAlertText = message ? String(message.hasDonation || message.donation || "").toLowerCase() : "";
+	var isRewardAlert = !!(reactionEventName === "channel_points" || reactionEventName === "reward" || (message && message.reward) || donationAlertText.includes("points"));
+	var isDonationAlert = !!(isDonationMessage && !isRewardAlert);
+	var isAlertMessage = !!(message && (message.event || isDonationMessage));
+	var excludeFromDockAsAlert = !!(settings.excludeAlertsDock && isAlertMessage && !isDonationAlert);
 	var isReactionMessage = reactionEventName === "reaction" || reactionEventName === "liked" || reactionEventName === "like";
 
 	try {
-		if (!(settings.excludeAlertsDock && isAlertMessage)) {
+		if (!excludeFromDockAsAlert) {
 			sendDataP2P(message);
 		}
 	} catch (e) {
