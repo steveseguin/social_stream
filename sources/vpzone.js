@@ -9,6 +9,8 @@
 	var sourceImg = "";
 	var sourceName = "VPZone";
 	var seenWsMessageIds = new Map();
+	var captureStartedAt = Date.now();
+	var staleHistoryWindowMs = 30000;
 	// Set once the WS interceptor delivers its first frame. After that, the
 	// DOM scraper becomes redundant (and produces duplicates), so we skip
 	// the DOM-driven emit path. Stays true for the lifetime of the page —
@@ -76,6 +78,26 @@
 		seenWsMessageIds.forEach(function (ts, id) {
 			if (now - ts > 60000) seenWsMessageIds.delete(id);
 		});
+	}
+
+	function normalizeTimestampMs(value) {
+		if (value === null || typeof value === "undefined" || value === "") return 0;
+		if (typeof value === "number") {
+			if (!isFinite(value) || value <= 0) return 0;
+			return value < 1000000000000 ? value * 1000 : value;
+		}
+		var text = String(value || "").trim();
+		var numeric = Number(text);
+		if (isFinite(numeric) && numeric > 0) {
+			return numeric < 1000000000000 ? numeric * 1000 : numeric;
+		}
+		var parsed = Date.parse(text);
+		return isFinite(parsed) && parsed > 0 ? parsed : 0;
+	}
+
+	function isStaleInitialTimestamp(value) {
+		var timestamp = normalizeTimestampMs(value);
+		return !!timestamp && timestamp < captureStartedAt - staleHistoryWindowMs;
 	}
 
 	function escapeHtmlMaybe(text) {
@@ -154,6 +176,7 @@
 		if (msg.id) seenWsMessageIds.set(msg.id, now);
 
 		var ts = msg.ts || "";
+		if (isStaleInitialTimestamp(ts)) return;
 
 		if (msg.type === "follow" || msg.type === "subscription" || msg.type === "raid" || msg.type === "gift" || msg.type === "clip") {
 			// Prefer metadata.username when present — gift events name the
@@ -682,6 +705,10 @@
 		row.dataset.ssnVpzoneSeen = "true";
 		row.dataset.ssnVpzoneQueued = "false";
 
+		if (data.meta && isStaleInitialTimestamp(data.meta.timestamp)) {
+			return;
+		}
+
 		if (isDuplicate(data)) {
 			return;
 		}
@@ -956,6 +983,7 @@
 			avatarCache.clear();
 			avatarPending.clear();
 			lastViewerCount = null;
+			captureStartedAt = Date.now();
 			wsCaptureActive = false;
 			currentChannelSlug = getChannelSlugFromUrl();
 		}
