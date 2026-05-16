@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
             instructions: `
                 <ul>
                     <li>Open the regular stream page with the chat column visible</li>
-                    <li>URL: https://vpzone.tv/stream/USERNAME</li>
+                    <li>URL: https://vpzone.tv/watch/USERNAME</li>
                 </ul>
             `,
             notes: 'An API-backed source is also available at <code>sources/websocket/vpzone.html?channel=USERNAME</code>.'
