@@ -472,6 +472,11 @@
 	}
 
 	function findVpzoneMessageNode(row) {
+		var directBody = row.querySelector('[data-chat-body="true"]');
+		if (directBody) {
+			return directBody;
+		}
+
 		var nodes = Array.from(row.querySelectorAll(".break-words, [class*='break-words']"));
 		return nodes.find(function (node) {
 			return node && !isLikelyTimeNode(node) && ((node.textContent || "").trim() || node.querySelector("img, svg, video"));
@@ -479,12 +484,17 @@
 	}
 
 	function findVpzoneTimeNode(row) {
+		var directTime = row.querySelector('[data-chat-timestamp="true"]');
+		if (directTime) {
+			return directTime;
+		}
+
 		var spans = Array.from(row.querySelectorAll("span"));
 		return spans.reverse().find(isLikelyTimeNode) || null;
 	}
 
 	function findVpzoneNameNode(row) {
-		return row.querySelector('a[href^="/u/"], a[href*="/u/"], span.font-semibold');
+		return row.querySelector('[data-chat-username="true"], a[href^="/u/"], a[href*="/u/"], span.font-semibold');
 	}
 
 	function buildBaseData() {
@@ -504,20 +514,29 @@
 	}
 
 	function parseMessageRow(row) {
-		var contentRoot = row.querySelector("div.min-w-0") || row.querySelector(".items-baseline") || row.lastElementChild;
+		var dataBodyNode = row.querySelector('[data-chat-body="true"]');
+		var dataNameNode = row.querySelector('[data-chat-username="true"]');
+		var contentRoot = row.querySelector("div.min-w-0") || row.querySelector(".items-baseline") || (dataBodyNode && dataBodyNode.parentElement) || row.lastElementChild;
 		var headerNode = contentRoot ? (contentRoot.classList && contentRoot.classList.contains("items-baseline") ? contentRoot : getDirectChildrenByTag(contentRoot, "SPAN")[0] || contentRoot) : null;
+		if (dataNameNode) {
+			headerNode = dataNameNode.closest(".flex") || row.firstElementChild || headerNode;
+		}
 		var nameNode = findVpzoneNameNode(row);
-		var messageNode = contentRoot ? getDirectChildrenByTag(contentRoot, "P")[0] || contentRoot.querySelector("p") || findVpzoneMessageNode(row) : findVpzoneMessageNode(row);
+		var messageNode = dataBodyNode || (contentRoot ? getDirectChildrenByTag(contentRoot, "P")[0] || contentRoot.querySelector("p") || findVpzoneMessageNode(row) : findVpzoneMessageNode(row));
 		var avatarNode = getDirectChildrenByTag(row, "IMG").find(function (image) {
 			return image && (image.getAttribute("src") || image.src);
 		}) || null;
 		var timeNode = findVpzoneTimeNode(row);
 
-		if (!nameNode || !messageNode) {
+		var attrName = row.getAttribute("data-username") || row.dataset.username || "";
+		var attrTimestamp = row.getAttribute("data-timestamp") || row.dataset.timestamp || "";
+		var attrMessageId = row.getAttribute("data-msg-id") || row.dataset.msgId || "";
+
+		if (!messageNode || (!nameNode && !attrName)) {
 			return null;
 		}
 
-		var chatname = escapeHtml((nameNode.textContent || "").trim());
+		var chatname = escapeHtml((nameNode ? nameNode.textContent : attrName || "").trim());
 		var chatmessage = getAllContentNodes(messageNode).trim();
 
 		if (!chatname || !chatmessage) {
@@ -531,7 +550,8 @@
 		data.nameColor = getComputedColor(nameNode, "color", "");
 		data.chatbadges = extractBadges(headerNode);
 		data.meta = {
-			timestamp: timeNode ? (timeNode.getAttribute("title") || timeNode.textContent || "").trim() : ""
+			timestamp: attrTimestamp || (timeNode ? (timeNode.getAttribute("title") || timeNode.textContent || "").trim() : ""),
+			messageId: attrMessageId || ""
 		};
 		return data;
 	}
@@ -598,6 +618,9 @@
 	function parseRow(row) {
 		if (!row || row.nodeType !== 1 || !row.isConnected || row.parentElement !== observedList) {
 			return null;
+		}
+		if (row.matches && row.matches('[data-chat-message="true"]')) {
+			return parseMessageRow(row);
 		}
 		if ((row.querySelector("p") && row.querySelector("span.font-semibold")) || (findVpzoneNameNode(row) && findVpzoneMessageNode(row))) {
 			return parseMessageRow(row);
@@ -779,33 +802,64 @@
 	}
 
 	function findChatInput() {
-		return document.querySelector('input[placeholder="Send a message"]');
+		var inputs = Array.from(document.querySelectorAll("input[placeholder], textarea[placeholder]"));
+		return inputs.find(function (input) {
+			var placeholder = input.getAttribute("placeholder") || "";
+			return /^(send a message|reply as\b)/i.test(placeholder);
+		}) || null;
+	}
+
+	function isVpzoneOverlayChatPage() {
+		return /^\/overlay\/(?:chat|chat-dock)\//i.test(window.location.pathname || "");
+	}
+
+	function findDataChatList() {
+		return document.querySelector('[data-chat-container="true"]');
+	}
+
+	function hasChatRows(element) {
+		if (!element || !element.querySelector) {
+			return false;
+		}
+		return !!element.querySelector('[data-chat-message="true"], [data-chat-body="true"], .items-baseline, [class*="items-baseline"], .break-words, [class*="break-words"]');
 	}
 
 	function findChatList() {
+		var dataChatList = findDataChatList();
+		if (dataChatList) {
+			return dataChatList;
+		}
+
 		var input = findChatInput();
-		if (!input) {
-			return null;
-		}
-
-		var current = input;
-		while (current && current !== document.body) {
-			var previous = current.previousElementSibling;
-			if (previous && previous.classList && previous.classList.contains("overflow-y-auto")) {
-				return previous;
+		if (input) {
+			var current = input;
+			while (current && current !== document.body) {
+				var previous = current.previousElementSibling;
+				if (previous && previous.classList && (previous.classList.contains("overflow-y-auto") || /\boverflow-y-auto\b/.test(previous.className || ""))) {
+					return previous;
+				}
+				current = current.parentElement;
 			}
-			current = current.parentElement;
+
+			var panel = input.parentElement;
+			while (panel && panel !== document.body) {
+				var inputCandidates = Array.from(panel.querySelectorAll("div.overflow-y-auto, div[class*='overflow-y-auto']")).filter(function (element) {
+					return element !== observedList && (hasChatRows(element) || element.querySelector("p, span"));
+				});
+				if (inputCandidates.length) {
+					return inputCandidates[0];
+				}
+				panel = panel.parentElement;
+			}
 		}
 
-		var panel = input.parentElement;
-		while (panel && panel !== document.body) {
-			var candidates = Array.from(panel.querySelectorAll("div.overflow-y-auto")).filter(function (element) {
-				return element !== observedList && element.querySelector("p, span");
+		if (isVpzoneOverlayChatPage()) {
+			var overlayCandidates = Array.from(document.querySelectorAll("div.overflow-y-auto, div[class*='overflow-y-auto']")).filter(function (element) {
+				return element !== observedList && (hasChatRows(element) || /flex-1/.test(element.className || ""));
 			});
-			if (candidates.length) {
-				return candidates[0];
+			if (overlayCandidates.length) {
+				return overlayCandidates[0];
 			}
-			panel = panel.parentElement;
 		}
 
 		return null;
