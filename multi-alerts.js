@@ -16,6 +16,14 @@ const CATEGORY_LABELS = Object.freeze({
   [ALERT_CATEGORIES.RAID]: 'Incoming Raid'
 });
 
+const CATEGORY_LABEL_KEYS = Object.freeze({
+  [ALERT_CATEGORIES.FOLLOW]: 'alert-title-new-follower',
+  [ALERT_CATEGORIES.SUBSCRIPTION]: 'alert-title-new-subscriber',
+  [ALERT_CATEGORIES.DONATION]: 'alert-title-new-donation',
+  [ALERT_CATEGORIES.BITS]: 'alert-title-new-cheer',
+  [ALERT_CATEGORIES.RAID]: 'alert-title-incoming-raid'
+});
+
 const CATEGORY_ACCENTS = Object.freeze({
   [ALERT_CATEGORIES.FOLLOW]: '#ff68b3',
   [ALERT_CATEGORIES.SUBSCRIPTION]: '#8b5cf6',
@@ -143,6 +151,7 @@ const SOURCE_ALIASES = Object.freeze({
 });
 
 const urlParams = new URLSearchParams(window.location.search);
+let translation = {};
 
 const CATEGORY_STYLE_PARAMS = {
   [ALERT_CATEGORIES.FOLLOW]: 'followstyle',
@@ -242,6 +251,47 @@ function normalizeText(value) {
 function normalizeKey(value) {
   return normalizeText(value).toLowerCase();
 }
+
+function getTranslation(key, fallback = '') {
+  try {
+    if (translation && translation.innerHTML && Object.prototype.hasOwnProperty.call(translation.innerHTML, key)) {
+      return translation.innerHTML[key];
+    }
+    if (translation && translation.miscellaneous && Object.prototype.hasOwnProperty.call(translation.miscellaneous, key)) {
+      return translation.miscellaneous[key];
+    }
+  } catch (_) {}
+  return fallback || key.replace(/-/g, ' ');
+}
+
+function formatTranslation(key, fallback, values = {}) {
+  let template = getTranslation(key, fallback);
+  Object.keys(values).forEach((valueKey) => {
+    template = template.replace(new RegExp(`\\{${valueKey}\\}`, 'g'), values[valueKey]);
+  });
+  return template;
+}
+
+function getCategoryLabel(category) {
+  return getTranslation(CATEGORY_LABEL_KEYS[category] || 'alert-title-new-alert', CATEGORY_LABELS[category] || 'New Alert');
+}
+
+async function loadTranslationFromUrl() {
+  const lang = normalizeText(urlParams.get('ln') || urlParams.get('lang') || urlParams.get('language')).replace(/_/g, '-');
+  if (!lang) {
+    return;
+  }
+  try {
+    const response = await fetch(`./translations/${encodeURIComponent(lang)}.json`, { cache: 'no-store' });
+    if (response.ok) {
+      translation = await response.json();
+    }
+  } catch (error) {
+    log('translation load failed', error);
+  }
+}
+
+loadTranslationFromUrl();
 
 function normalizeEventKey(value) {
   const normalized = normalizeKey(value).replace(/[.\s]+/g, '_');
@@ -685,43 +735,65 @@ function inferCategory(payload = {}) {
 function buildHeadline(category, eventKey, actor, amount, viewerCount) {
   switch (category) {
     case ALERT_CATEGORIES.FOLLOW:
-      return { lead: actor, tail: 'just followed' };
+      return { lead: actor, tail: getTranslation('alert-just-followed', 'just followed') };
     case ALERT_CATEGORIES.SUBSCRIPTION:
       if (eventKey === 'subscription_gift' || eventKey === 'giftpurchase') {
-        return { lead: actor, tail: amount ? `gifted ${amount}` : 'gifted memberships' };
+        return {
+          lead: actor,
+          tail: amount
+            ? formatTranslation('alert-gifted-amount', 'gifted {amount}', { amount })
+            : getTranslation('alert-gifted-memberships', 'gifted memberships')
+        };
       }
       if (eventKey === 'giftredemption') {
-        return { lead: actor, tail: 'received a gifted membership' };
+        return { lead: actor, tail: getTranslation('alert-received-gifted-membership', 'received a gifted membership') };
       }
       if (eventKey === 'resub') {
-        return { lead: actor, tail: 'renewed their support' };
+        return { lead: actor, tail: getTranslation('alert-renewed-support', 'renewed their support') };
       }
       if (eventKey === 'membermilestone') {
-        return { lead: actor, tail: 'hit a membership milestone' };
+        return { lead: actor, tail: getTranslation('alert-membership-milestone', 'hit a membership milestone') };
       }
-      return { lead: actor, tail: 'just subscribed' };
+      return { lead: actor, tail: getTranslation('alert-just-subscribed', 'just subscribed') };
     case ALERT_CATEGORIES.DONATION:
       if (eventKey === 'gift') {
-        return { lead: actor, tail: amount ? `sent ${amount}` : 'sent a gift' };
+        return {
+          lead: actor,
+          tail: amount
+            ? formatTranslation('alert-sent-amount', 'sent {amount}', { amount })
+            : getTranslation('alert-sent-gift', 'sent a gift')
+        };
       }
-      return { lead: actor, tail: amount ? `sent ${amount}` : 'sent support' };
+      return {
+        lead: actor,
+        tail: amount
+          ? formatTranslation('alert-sent-amount', 'sent {amount}', { amount })
+          : getTranslation('alert-sent-support', 'sent support')
+      };
     case ALERT_CATEGORIES.BITS:
-      return { lead: actor, tail: amount ? `cheered ${amount}` : 'cheered' };
+      return {
+        lead: actor,
+        tail: amount
+          ? formatTranslation('alert-cheered-amount', 'cheered {amount}', { amount })
+          : getTranslation('alert-cheered', 'cheered')
+      };
     case ALERT_CATEGORIES.RAID:
       return {
         lead: actor,
-        tail: viewerCount ? `is raiding with ${viewerCount} viewers` : 'is raiding'
+        tail: viewerCount
+          ? formatTranslation('alert-raiding-with-viewers', 'is raiding with {viewers} viewers', { viewers: viewerCount })
+          : getTranslation('alert-is-raiding', 'is raiding')
       };
     default:
-      return { lead: actor, tail: 'triggered an alert' };
+      return { lead: actor, tail: getTranslation('alert-triggered', 'triggered an alert') };
   }
 }
 
 function buildTitle(category, eventKey) {
   if (category === ALERT_CATEGORIES.DONATION && eventKey === 'gift') {
-    return 'New Gift';
+    return getTranslation('alert-title-new-gift', 'New Gift');
   }
-  return CATEGORY_LABELS[category] || 'New Alert';
+  return getCategoryLabel(category) || getTranslation('alert-title-new-alert', 'New Alert');
 }
 
 function buildBodyText(category, payload, viewerCount) {
@@ -730,16 +802,18 @@ function buildBodyText(category, payload, viewerCount) {
   const subtitle = pickSubtitle(payload);
 
   if (category === ALERT_CATEGORIES.RAID && viewerCount) {
-    return rawMessage || `Welcome the raid from ${pickActorName(payload)}.`;
+    return rawMessage || formatTranslation('alert-welcome-raid-from', 'Welcome the raid from {name}.', {
+      name: pickActorName(payload)
+    });
   }
   if (category === ALERT_CATEGORIES.DONATION) {
     if (eventKey === 'gift') {
-      return rawMessage || 'A gift just landed.';
+      return rawMessage || getTranslation('alert-gift-landed', 'A gift just landed.');
     }
-    return rawMessage || 'Thank you for the support!';
+    return rawMessage || getTranslation('alert-thanks-support', 'Thank you for the support!');
   }
   if (category === ALERT_CATEGORIES.BITS) {
-    return rawMessage || 'The hype meter just moved.';
+    return rawMessage || getTranslation('alert-hype-meter', 'The hype meter just moved.');
   }
   if (category === ALERT_CATEGORIES.SUBSCRIPTION) {
     if (rawMessage) {
@@ -749,12 +823,12 @@ function buildBodyText(category, payload, viewerCount) {
       return subtitle;
     }
     if (eventKey === 'giftpurchase' || eventKey === 'subscription_gift') {
-      return 'Gift support is rolling in.';
+      return getTranslation('alert-gift-support', 'Gift support is rolling in.');
     }
-    return 'A new supporter joined the stream.';
+    return getTranslation('alert-new-supporter', 'A new supporter joined the stream.');
   }
   if (category === ALERT_CATEGORIES.FOLLOW) {
-    return subtitle || rawMessage || 'Thanks for joining the community.';
+    return subtitle || rawMessage || getTranslation('alert-thanks-community', 'Thanks for joining the community.');
   }
   return rawMessage || subtitle;
 }
@@ -852,7 +926,7 @@ function createMockAlertPayload(category, overrides = {}) {
       payload = {
         ...common,
         event: 'new_follower',
-        chatmessage: `${baseName} has started following`
+        chatmessage: formatTranslation('twitch-started-following-message', '{name} has started following', { name: baseName })
       };
       break;
     case ALERT_CATEGORIES.SUBSCRIPTION:
@@ -1204,13 +1278,13 @@ function handlePreviewMessage(previewMessage) {
 
   if (settings.disabledCategories[model.category]) {
     clearAlert({ clearQueue: true, preserveCooldown: true });
-    updateStatus(`${CATEGORY_LABELS[model.category] || 'This alert type'} is disabled`);
+    updateStatus(`${getCategoryLabel(model.category) || 'This alert type'} is disabled`);
     return;
   }
 
   clearAlert({ clearQueue: true, preserveCooldown: true });
   displayAlert(model, previewOptions);
-  updateStatus(`Previewing ${CATEGORY_LABELS[model.category] || 'alert'}`);
+  updateStatus(`Previewing ${getCategoryLabel(model.category) || 'alert'}`);
 }
 
 function handleIncomingPayload(payload) {
@@ -1469,7 +1543,7 @@ function renderAlert(model) {
   if (model.viewerCount) {
     const viewers = document.createElement('span');
     viewers.className = 'alert-pill';
-    viewers.textContent = `${model.viewerCount} viewers`;
+    viewers.textContent = formatTranslation('alert-viewer-count', '{count} viewers', { count: model.viewerCount });
     metaRow.appendChild(viewers);
   }
 

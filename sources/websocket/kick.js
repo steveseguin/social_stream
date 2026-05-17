@@ -665,6 +665,27 @@ function isTextOnlyMode() {
     return setting === true;
 }
 
+function getTranslation(key, fallback = '') {
+    try {
+        if (settings && settings.translation && settings.translation.innerHTML && Object.prototype.hasOwnProperty.call(settings.translation.innerHTML, key)) {
+            return settings.translation.innerHTML[key];
+        }
+        if (settings && settings.translation && settings.translation.miscellaneous && Object.prototype.hasOwnProperty.call(settings.translation.miscellaneous, key)) {
+            return settings.translation.miscellaneous[key];
+        }
+    } catch (_) {}
+    return fallback || String(key || '').replace(/-/g, ' ');
+}
+
+function formatTranslation(key, fallback, values = {}) {
+    let template = getTranslation(key, fallback);
+    Object.keys(values || {}).forEach(valueKey => {
+        const value = values[valueKey] == null ? '' : String(values[valueKey]);
+        template = template.replace(new RegExp(`\\{${valueKey}\\}`, 'g'), () => value);
+    });
+    return template;
+}
+
 function resetThirdPartyEmoteCache() {
     BTTV = false;
     SEVENTV = false;
@@ -6784,7 +6805,11 @@ function forwardFollower(evt, bridgeMeta) {
             evt?.user?.avatar
         ) ||
         null;
-    const chatmessage = follower ? `${follower} started following` : 'New follower';
+    const newFollowerLabel = getTranslation('kick-new-follower-message', 'New follower');
+    const startedFollowingLabel = getTranslation('kick-started-following-message', 'started following');
+    const chatmessage = follower
+        ? formatTranslation('kick-follower-alert-message', '{name} started following', { name: follower })
+        : newFollowerLabel;
 
     pushMessage({
         type: 'kick',
@@ -6795,8 +6820,8 @@ function forwardFollower(evt, bridgeMeta) {
     });
     appendAlertsFeedEntry({
         kind: 'follower',
-        actor: follower || 'New follower',
-        message: 'started following',
+        actor: follower || newFollowerLabel,
+        message: startedFollowingLabel,
         avatar: chatimg || ''
     });
 
@@ -6842,7 +6867,7 @@ function forwardFollower(evt, bridgeMeta) {
     }
 
     const prefix = bridgeMeta?.verified === false ? '[FOLLOW ⚠]' : '[FOLLOW]';
-    log(`${prefix} ${follower || 'New follower'}`);
+    log(`${prefix} ${follower || newFollowerLabel}`);
 }
 
 
@@ -6927,21 +6952,42 @@ function forwardSubscription(eventType, evt, bridgeMeta) {
     let chatmessage;
     if (isGift) {
         eventName = 'subscription_gift';
-        chatname = gifter || subscriber || 'Kick viewer';
+        chatname = gifter || subscriber || getTranslation('kick-viewer-label', 'Kick viewer');
         const giftedCount = totalGifted && totalGifted > 0 ? totalGifted : 1;
-        const receiverLabel = subscriber && subscriber !== chatname ? ` to ${subscriber}` : '';
-        chatmessage = `${chatname} gifted ${giftedCount} sub${giftedCount === 1 ? '' : 's'}${receiverLabel}!`;
+        const receiverLabel = subscriber && subscriber !== chatname
+            ? formatTranslation('kick-gift-recipient-suffix', ' to {recipient}', { recipient: subscriber })
+            : '';
+        chatmessage = giftedCount === 1
+            ? formatTranslation('kick-gifted-one-sub-message', '{name} gifted 1 sub{recipient}!', {
+                name: chatname,
+                recipient: receiverLabel
+            })
+            : formatTranslation('kick-gifted-subs-message', '{name} gifted {count} subs{recipient}!', {
+                name: chatname,
+                count: giftedCount,
+                recipient: receiverLabel
+            });
     } else if (isRenewal) {
         eventName = 'resub';
-        chatname = subscriber || gifter || 'Kick viewer';
+        chatname = subscriber || gifter || getTranslation('kick-viewer-label', 'Kick viewer');
         const months = duration && duration > 0 ? duration : null;
-        const durationLabel = months ? ` for ${months} month${months === 1 ? '' : 's'}` : '';
-        chatmessage = `${chatname} renewed their sub${durationLabel}!`;
+        const durationLabel = months
+            ? (months === 1
+                ? getTranslation('kick-sub-duration-one-month', ' for 1 month')
+                : formatTranslation('kick-sub-duration-months', ' for {months} months', { months }))
+            : '';
+        chatmessage = formatTranslation('kick-renewed-sub-message', '{name} renewed their sub{duration}!', {
+            name: chatname,
+            duration: durationLabel
+        });
     } else {
         eventName = 'new_subscriber';
-        chatname = subscriber || gifter || 'Kick viewer';
-        const planLabel = plan ? ` at ${plan}` : '';
-        chatmessage = `${chatname} subscribed${planLabel}!`;
+        chatname = subscriber || gifter || getTranslation('kick-viewer-label', 'Kick viewer');
+        const planLabel = plan ? formatTranslation('kick-sub-plan-suffix', ' at {plan}', { plan }) : '';
+        chatmessage = formatTranslation('kick-subscribed-message', '{name} subscribed{plan}!', {
+            name: chatname,
+            plan: planLabel
+        });
     }
     const chatimg = eventName === 'subscription_gift'
         ? (gifterImage || subscriberImage)
@@ -7002,8 +7048,8 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
     if (note) {
         messageSegments.push(note);
     }
-    const chatmessage = messageSegments.length ? messageSegments.join(' • ') : 'New support received!';
-    const chatname = supporter || 'Kick supporter';
+    const chatmessage = messageSegments.length ? messageSegments.join(' • ') : getTranslation('kick-new-support-received', 'New support received!');
+    const chatname = supporter || getTranslation('kick-supporter-label', 'Kick supporter');
     const chatimg =
         supporterProfile.avatar ||
         pickImage(
@@ -7047,7 +7093,9 @@ function forwardLiveStatus(evt, bridgeMeta) {
     const isLive = explicitLiveState === true || evt?.is_live === true;
     const hasExplicitOffline = explicitLiveState === false || evt?.is_live === false;
     const chatname = 'Kick';
-    const chatmessage = isLive ? 'Stream is now LIVE' : 'Stream is now OFFLINE';
+    const chatmessage = isLive
+        ? getTranslation('stream-is-now-live', 'Stream is now LIVE')
+        : getTranslation('stream-is-now-offline', 'Stream is now OFFLINE');
     pushMessage({
         type: 'kick',
         event: isLive ? 'stream_online' : 'stream_offline',
@@ -7515,7 +7563,9 @@ function appendAlertsFeedEntry({ kind = 'event', actor = '', message = '', avata
 
     const tag = document.createElement('span');
     tag.className = 'alerts-kind';
-    tag.textContent = kind === 'donation' ? 'DONATION' : (kind === 'follower' ? 'FOLLOW' : 'EVENT');
+    tag.textContent = kind === 'donation'
+        ? getTranslation('kick-alert-tag-donation', 'DONATION')
+        : (kind === 'follower' ? getTranslation('kick-alert-tag-follow', 'FOLLOW') : getTranslation('kick-alert-tag-event', 'EVENT'));
     top.appendChild(tag);
 
     const time = document.createElement('time');
@@ -7530,7 +7580,7 @@ function appendAlertsFeedEntry({ kind = 'event', actor = '', message = '', avata
     if (actorText && message) {
         body.textContent = `${actorText} - ${message}`;
     } else {
-        body.textContent = message || actorText || 'New event';
+        body.textContent = message || actorText || getTranslation('kick-new-event-message', 'New event');
     }
     textWrap.appendChild(body);
 

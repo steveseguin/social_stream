@@ -268,6 +268,29 @@
         return String(value == null ? '' : value).trim();
     }
 
+    function getTranslation(key, fallback) {
+        try {
+            if (state.settings && state.settings.translation && state.settings.translation.innerHTML && Object.prototype.hasOwnProperty.call(state.settings.translation.innerHTML, key)) {
+                return state.settings.translation.innerHTML[key];
+            }
+            if (state.settings && state.settings.translation && state.settings.translation.miscellaneous && Object.prototype.hasOwnProperty.call(state.settings.translation.miscellaneous, key)) {
+                return state.settings.translation.miscellaneous[key];
+            }
+        } catch (error) {}
+        return fallback || String(key || '').replace(/-/g, ' ');
+    }
+
+    function formatTranslation(key, fallback, values) {
+        let template = getTranslation(key, fallback);
+        Object.keys(values || {}).forEach(function (valueKey) {
+            const value = values[valueKey] == null ? '' : String(values[valueKey]);
+            template = template.replace(new RegExp('\\{' + valueKey + '\\}', 'g'), function () {
+                return value;
+            });
+        });
+        return template;
+    }
+
     function normalizeChannelLabel(value) {
         return normalizeText(value);
     }
@@ -655,7 +678,7 @@
         const amountLabel = formatDollarAmount(item && item.amount_dollars, item && item.amount_cents);
         payload.chatname = username;
         payload.chatbadges = formatBadgesForDisplay(item && item.badges);
-        payload.chatmessage = payload.chatmessage || 'Sent a rant';
+        payload.chatmessage = payload.chatmessage || getTranslation('rumble-sent-rant-message', 'Sent a rant');
         payload.event = 'donation';
         payload.hasDonation = amountLabel;
         payload.meta = Object.assign({}, payload.meta || {}, {
@@ -679,7 +702,7 @@
         const payload = buildBasePayload();
         const username = normalizeText(item && (item.username || item.user)) || 'Rumble User';
         payload.chatname = username;
-        payload.chatmessage = 'Started following';
+        payload.chatmessage = getTranslation('rumble-started-following-message', 'Started following');
         payload.event = 'new_follower';
         payload.meta = {
             source: 'live_stream_api',
@@ -695,9 +718,9 @@
         const username = normalizeText(item && (item.username || item.user)) || 'Rumble User';
         const amountLabel = formatDollarAmount(item && item.amount_dollars, item && item.amount_cents);
         payload.chatname = username;
-        payload.chatmessage = 'Subscribed';
+        payload.chatmessage = getTranslation('rumble-subscribed-message', 'Subscribed');
         payload.event = 'new_subscriber';
-        payload.membership = 'SUBSCRIBER';
+        payload.membership = getTranslation('rumble-subscriber-label', 'SUBSCRIBER');
         payload.subtitle = amountLabel || '';
         payload.meta = {
             source: 'live_stream_api',
@@ -716,10 +739,12 @@
         const count = Math.max(1, coerceInteger(item && item.total_gifts) || 1);
         const purchaser = normalizeText(item && item.purchased_by) || 'Rumble User';
         payload.chatname = purchaser;
-        payload.chatmessage = 'Gifted ' + count + ' Rumble subscription' + (count === 1 ? '' : 's');
+        payload.chatmessage = count === 1
+            ? formatTranslation('rumble-gifted-subscription-message', 'Gifted 1 Rumble subscription', { count: count })
+            : formatTranslation('rumble-gifted-subscriptions-message', 'Gifted {count} Rumble subscriptions', { count: count });
         payload.event = 'subscription_gift';
-        payload.membership = 'SUBSCRIBER';
-        payload.hasDonation = count + ' Gifted';
+        payload.membership = getTranslation('rumble-subscriber-label', 'SUBSCRIBER');
+        payload.hasDonation = formatTranslation('rumble-gifted-count-label', '{count} Gifted', { count: count });
         payload.meta = {
             source: 'live_stream_api',
             apiType: snapshot && snapshot.type ? String(snapshot.type) : '',

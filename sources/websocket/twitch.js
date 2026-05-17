@@ -372,6 +372,26 @@ try{
 		return key.replaceAll('-', ' ');
 	}
 
+	function formatTranslation(key, fallback, values = {}) {
+		let template = getTranslation(key, fallback);
+		Object.keys(values).forEach(function(valueKey) {
+			template = template.replace(new RegExp("\\{" + valueKey + "\\}", "g"), values[valueKey]);
+		});
+		return template;
+	}
+
+	function getSubscriberLabel() {
+		return getTranslation('twitch-subscriber-label', 'Subscriber');
+	}
+
+	function formatBitAmount(bits) {
+		const amount = parseInt(bits, 10);
+		if (amount === 1) {
+			return amount + " " + getTranslation('twitch-bit-singular', 'bit');
+		}
+		return amount + " " + getTranslation('twitch-bit-plural', 'bits');
+	}
+
 	const TWITCH_ADVANCED_CONTROLS_STORAGE_KEY = 'twitchWsAdvancedControls';
 
 	function getAdvancedControlSettings() {
@@ -2072,7 +2092,7 @@ async function ensureChatClientInstance() {
 			const badges = parsedMessage.tags.badges.split(',');
 			badges.forEach(badge => {
 				if (badge.startsWith('subscriber/')) {
-					subscriber = "Subscriber";
+					subscriber = getSubscriberLabel();
 					const months = badge.split('/')[1];
 					if (months && months !== "0") {
 						subtitle = months + (months === "1" ? "-Month" : "-Months");
@@ -2119,10 +2139,8 @@ async function ensureChatClientInstance() {
 		let hasDonation = "";
 		if (parsedMessage.tags && parsedMessage.tags.bits) {
 			const bits = parseInt(parsedMessage.tags.bits);
-			if (bits === 1) {
-				hasDonation = bits + " bit";
-			} else if (bits > 1) {
-				hasDonation = bits + " bits";
+			if (bits > 0) {
+				hasDonation = formatBitAmount(bits);
 			}
 		}
 		
@@ -2226,7 +2244,7 @@ async function ensureChatClientInstance() {
 		data.type = "twitch";
 		
 		if (hasDonation) {
-			data.title = "CHEERS";
+			data.title = getTranslation("cheers", "CHEERS");
 		}
 		
 		// Message ID for deduplication
@@ -2263,6 +2281,8 @@ async function ensureChatClientInstance() {
 		const msgId = parsedMessage.tags['msg-id'];
 		const displayName = parsedMessage.tags['display-name'] || '';
 		const systemMsg = parsedMessage.tags['system-msg'] || '';
+		const normalizedPayload = parsedMessage.__normalizedPayload || null;
+		const useTranslatedNoticeText = !!(normalizedPayload && settings.translation);
 		
 		let eventData = {
 			type: "twitch",
@@ -2273,17 +2293,24 @@ async function ensureChatClientInstance() {
 		switch(msgId) {
 			case 'raid':
 				const raidViewerCount = parsedMessage.tags['msg-param-viewerCount'] || '0';
-				eventData.chatmessage = systemMsg || `${displayName} is raiding with ${raidViewerCount} viewers!`;
+				const raidMessage = formatTranslation('twitch-raid-with-viewers', '{name} is raiding with {viewers} viewers!', {
+					name: displayName,
+					viewers: raidViewerCount
+				});
+				eventData.chatmessage = useTranslatedNoticeText ? raidMessage : (systemMsg || raidMessage);
 				eventData.event = 'raid';
 				addEvent(`Raid: ${displayName} with ${raidViewerCount} viewers`);
 				break;
 				
 			case 'sub':
 			case 'resub':
-				eventData.chatmessage = systemMsg;
+				const subscriptionMessage = msgId === 'sub'
+					? formatTranslation('twitch-subscribed-message', '{name} has subscribed', { name: displayName })
+					: formatTranslation('twitch-resubscribed-message', '{name} resubscribed', { name: displayName });
+				eventData.chatmessage = useTranslatedNoticeText ? subscriptionMessage : (systemMsg || subscriptionMessage);
 				eventData.event = msgId === 'sub' ? 'new_subscriber' : 'resub';
 				if (settings.limitedtwitchmemberchat) {
-					eventData.membership = "Subscriber";
+					eventData.membership = getSubscriberLabel();
 				}
 				if (parsedMessage.trailing) {
 					eventData.chatmessage += " - " + parsedMessage.trailing;
@@ -2295,10 +2322,13 @@ async function ensureChatClientInstance() {
 			case 'anonsubgift':
 			case 'submysterygift':
 			case 'anonsubmysterygift':
-				eventData.chatmessage = systemMsg;
+				const giftMessage = formatTranslation('twitch-gifted-a-sub-message', '{name} gifted a sub', {
+					name: displayName || getTranslation('someone', 'Someone')
+				});
+				eventData.chatmessage = useTranslatedNoticeText ? giftMessage : (systemMsg || giftMessage);
 				eventData.event = 'subscription_gift';
 				if (settings.limitedtwitchmemberchat) {
-					eventData.membership = "Subscriber";
+					eventData.membership = getSubscriberLabel();
 				}
 				addEvent(`Gift Sub: ${displayName || 'Anonymous'}`);
 				break;
@@ -2980,8 +3010,9 @@ async function cleanupCurrentConnection() {
 
 		switch (subscription.type) {
 		case 'channel.follow':
-			const followSuffix = getTranslation('has-started-following', 'has started following');
-			const followMessage = `${event.user_name} ${followSuffix}`.trim();
+			const followMessage = formatTranslation('twitch-started-following-message', '{name} has started following', {
+				name: event.user_name
+			});
 			pushMessage({
 				type: "twitch",
 				event: 'new_follower',
@@ -3001,13 +3032,18 @@ async function cleanupCurrentConnection() {
 			break;
 
 		case 'channel.subscribe':
-			const subscribeSuffix = getTranslation('has-subscribed', 'has subscribed');
-			const tierLabel = event.tier ? ` ${getTranslation('at-tier', 'at tier')} ${event.tier}` : '';
-			const subscribeMessage = `${event.user_name} ${subscribeSuffix}${tierLabel}`.trim();
+			const subscribeMessage = event.tier
+				? formatTranslation('twitch-subscribed-at-tier-message', '{name} has subscribed at tier {tier}', {
+					name: event.user_name,
+					tier: event.tier
+				})
+				: formatTranslation('twitch-subscribed-message', '{name} has subscribed', {
+					name: event.user_name
+				});
 			pushMessage({
 				type: "twitch",
 				event: 'new_subscriber',
-				membership: settings.limitedtwitchmemberchat ? "Subscriber" : "",
+				membership: settings.limitedtwitchmemberchat ? getSubscriberLabel() : "",
 				chatmessage: subscribeMessage,
 				chatname: event.user_name,
 				userid: event.user_id,
@@ -3028,10 +3064,12 @@ async function cleanupCurrentConnection() {
 				pushMessage({
 					type: 'twitch',
 					event: 'resub',
-					membership: settings.limitedtwitchmemberchat ? "Subscriber" : "",
+					membership: settings.limitedtwitchmemberchat ? getSubscriberLabel() : "",
 					chatname: event.user_name,
 					userid: event.user_id,
-					chatmessage: event.message?.text || `${event.user_name} resubscribed`,
+					chatmessage: event.message?.text || formatTranslation('twitch-resubscribed-message', '{name} resubscribed', {
+						name: event.user_name
+					}),
 					meta: {
 						userId: event.user_id,
 						tier: event.tier,
@@ -3047,9 +3085,13 @@ async function cleanupCurrentConnection() {
 				pushMessage({
 					type: "twitch",
 					event: 'subscription_gift',
-					membership: settings.limitedtwitchmemberchat ? "Subscriber" : "",
+					membership: settings.limitedtwitchmemberchat ? getSubscriberLabel() : "",
 					chatname: event.user_name,
-					chatmessage: `${event.user_name} has gifted ${event.total} tier ${event.tier} subs!`,
+					chatmessage: formatTranslation('twitch-gifted-subs-message', '{name} has gifted {total} tier {tier} subs!', {
+						name: event.user_name,
+						total: event.total,
+						tier: event.tier
+					}),
 					userid: event.user_id,
 					total: event.total,
 					tier: event.tier,
@@ -3068,9 +3110,9 @@ async function cleanupCurrentConnection() {
 					userid: event.user_id,
 					bits: event.bits,
 					chatmessage: event.message,
-					hasDonation: event.bits + " bits",
+					hasDonation: formatBitAmount(event.bits),
 					meta: { userId: event.user_id, bits: event.bits },
-					title: "CHEERS",
+					title: getTranslation("cheers", "CHEERS"),
 					textonly: settings.textonlymode || false
 				});
 				// Add to recent events
@@ -3122,7 +3164,9 @@ async function cleanupCurrentConnection() {
 					event: 'raid',
 					chatname: event.from_broadcaster_user_name,
 					userid: event.from_broadcaster_user_id,
-					chatmessage: `Raiding with ${event.viewers} viewers!`,
+					chatmessage: formatTranslation('twitch-raiding-with-viewers', 'Raiding with {viewers} viewers!', {
+						viewers: event.viewers
+					}),
 					meta: {
 						fromId: event.from_broadcaster_user_id,
 						fromLogin: event.from_broadcaster_user_login,

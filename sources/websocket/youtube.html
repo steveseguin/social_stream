@@ -918,6 +918,17 @@ function enableBackgroundKeepAlive() {
 		return "";
 	}
 
+	function hasConfiguredTranslation() {
+		return !!(settings && settings.translation && (settings.translation.innerHTML || settings.translation.miscellaneous));
+	}
+
+	function chooseTranslatedAlertText(translatedText, sourceText) {
+		if (hasConfiguredTranslation()) {
+			return translatedText;
+		}
+		return sourceText || translatedText;
+	}
+
 	var currentSourceName = "";
 	var currentSourceImage = "";
 
@@ -3931,7 +3942,7 @@ function enableBackgroundKeepAlive() {
 	function processGiftRedemption(giftData) {
 		try {
 			const fallbackMessage = getTranslation("membership-gift-received-message", "received a gift membership");
-			const displayMessage = giftData.displayMessage || fallbackMessage;
+			const displayMessage = chooseTranslatedAlertText(fallbackMessage, giftData.displayMessage);
 			const redemptionLabel = getTranslation("membership-gift-redeemed-event", "Gift Redeemed");
 			const membershipLabel = giftData.memberLevelName || getTranslation("membership-generic", "Membership");
 			addEvent(`${redemptionLabel}: ${giftData.authorName} - ${membershipLabel}`);
@@ -3986,7 +3997,7 @@ function enableBackgroundKeepAlive() {
 			const membershipWord = giftCount === 1 ? singularMembership : pluralMembership;
 			const levelSuffix = giftData.memberLevelName ? ` (${giftData.memberLevelName})` : "";
 			const defaultMessage = `${giftVerb} ${giftCount} ${membershipWord}${levelSuffix}`;
-			const displayMessage = giftData.displayMessage || defaultMessage;
+			const displayMessage = chooseTranslatedAlertText(defaultMessage, giftData.displayMessage);
 			const purchaseLabel = getTranslation("membership-gift-purchase-event", "Gift Purchase");
 			const levelDescriptor = giftData.memberLevelName ? `${giftCount} x ${giftData.memberLevelName}` : `${giftCount} ${membershipWord}`;
 			addEvent(`${purchaseLabel}: ${giftData.authorName} - ${levelDescriptor}`);
@@ -4035,7 +4046,7 @@ function enableBackgroundKeepAlive() {
 	function processNewSponsorship(sponsorData) {
 		try {
 			const fallbackMessage = getTranslation("membership-new-member-message", "just became a member!");
-			const displayMessage = sponsorData.displayMessage || fallbackMessage;
+			const displayMessage = chooseTranslatedAlertText(fallbackMessage, sponsorData.displayMessage);
 			const sponsorLabel = getTranslation("membership-new-sponsor-event", "New Sponsor");
 			const membershipLabel = sponsorData.memberLevelName || getTranslation("membership-generic", "Membership");
 			addEvent(`${sponsorLabel}: ${sponsorData.authorName} - ${membershipLabel}`);
@@ -4095,7 +4106,7 @@ function enableBackgroundKeepAlive() {
 			if (months > 0) {
 				fallbackMessage = `${celebratesWord} ${months} ${monthWord} ${ofWord} ${membershipWord}`;
 			}
-			const displayMessage = milestoneData.displayMessage || fallbackMessage;
+			const displayMessage = chooseTranslatedAlertText(fallbackMessage, milestoneData.displayMessage);
 			const milestoneLabel = getTranslation("membership-milestone-event", "Member Milestone");
 			const monthsDescriptor = months > 0 ? `${months} ${monthWord}` : genericMilestone;
 			const levelDescriptor = milestoneData.memberLevelName ? `${monthsDescriptor} - ${milestoneData.memberLevelName}` : monthsDescriptor;

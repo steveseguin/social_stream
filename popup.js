@@ -2345,9 +2345,24 @@ function updateAiOverlayLinksFromCurrentState() {
   );
 }
 
+function getSelectedTranslationLinkParam() {
+  let lang = "";
+  try {
+    const languageSelect = document.querySelector('select[data-optionsetting="translationlanguage"]');
+    lang = languageSelect && languageSelect.value ? languageSelect.value : "";
+  } catch (e) {}
+  try {
+    if (!lang && lastResponse && lastResponse.settings && lastResponse.settings.translationlanguage) {
+      lang = lastResponse.settings.translationlanguage.optionsetting || "";
+    }
+  } catch (e) {}
+  lang = (lang || "").trim();
+  return lang ? `&ln=${encodeURIComponent(lang)}` : "";
+}
+
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
   // Get any custom parameters from the current URL
-  let customParams = "";
+  let customParams = getSelectedTranslationLinkParam();
   try {
     const currentUrl = new URL(window.location.href);
     
