@@ -375,7 +375,10 @@ try{
 	function formatTranslation(key, fallback, values = {}) {
 		let template = getTranslation(key, fallback);
 		Object.keys(values).forEach(function(valueKey) {
-			template = template.replace(new RegExp("\\{" + valueKey + "\\}", "g"), values[valueKey]);
+			const replacement = values[valueKey] == null ? '' : String(values[valueKey]);
+			template = template.replace(new RegExp("\\{" + valueKey + "\\}", "g"), function() {
+				return replacement;
+			});
 		});
 		return template;
 	}
@@ -2322,10 +2325,18 @@ async function ensureChatClientInstance() {
 			case 'anonsubgift':
 			case 'submysterygift':
 			case 'anonsubmysterygift':
+				const giftRecipient = parsedMessage.tags['msg-param-recipient-display-name'] ||
+					parsedMessage.tags['msg-param-recipient-user-name'] ||
+					(normalizedPayload && normalizedPayload.raw && normalizedPayload.raw.recipient) ||
+					(normalizedPayload && normalizedPayload.recipient) ||
+					'';
 				const giftMessage = formatTranslation('twitch-gifted-a-sub-message', '{name} gifted a sub', {
 					name: displayName || getTranslation('someone', 'Someone')
 				});
-				eventData.chatmessage = useTranslatedNoticeText ? giftMessage : (systemMsg || giftMessage);
+				const giftMessageWithRecipient = giftRecipient
+					? giftMessage + ' ' + getTranslation('membership-to-word', 'to') + ' ' + giftRecipient
+					: giftMessage;
+				eventData.chatmessage = useTranslatedNoticeText ? giftMessageWithRecipient : (systemMsg || giftMessageWithRecipient);
 				eventData.event = 'subscription_gift';
 				if (settings.limitedtwitchmemberchat) {
 					eventData.membership = getSubscriberLabel();

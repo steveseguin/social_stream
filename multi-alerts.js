@@ -267,7 +267,8 @@ function getTranslation(key, fallback = '') {
 function formatTranslation(key, fallback, values = {}) {
   let template = getTranslation(key, fallback);
   Object.keys(values).forEach((valueKey) => {
-    template = template.replace(new RegExp(`\\{${valueKey}\\}`, 'g'), values[valueKey]);
+    const replacement = values[valueKey] == null ? '' : String(values[valueKey]);
+    template = template.replace(new RegExp(`\\{${valueKey}\\}`, 'g'), () => replacement);
   });
   return template;
 }

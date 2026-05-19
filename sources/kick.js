@@ -690,6 +690,7 @@
 	const KICK_BADGE_SELECTOR = ".badge-tooltip img[src], .badge-tooltip svg, .base-badge img[src], .base-badge svg, .badge img[src], .badge svg, div[data-state] img[src], div[data-state] svg";
 	const KICK_MESSAGE_CONTENT_SELECTOR = ".chat-entry-content, .chat-emote-container, .break-all, seventv-container, .seventv-painted-content, span[class*='font-normal'], div[class*='font-normal']";
 	const KICK_MOD_ACTIONS_SELECTOR = "[style*='chatroom-mod-actions-display'], button[aria-label='Delete'], button[aria-label='Pin'], button[aria-label='Reply'], button[aria-label='Ban'], button[aria-label='Timeout'], button[aria-label='Block']";
+	const KICK_MOD_ACTIONS_CLOSEST_SELECTOR = "button[aria-label='Delete'], button[aria-label='Pin'], button[aria-label='Reply'], button[aria-label='Ban'], button[aria-label='Timeout'], button[aria-label='Block']";
 
 	function getKickUsernameButton(ele) {
 		return ele.querySelector("button.inline.font-bold[data-prevent-expand]")
@@ -704,7 +705,7 @@
 		if (node.matches && node.matches(KICK_MOD_ACTIONS_SELECTOR)) {
 			return true;
 		}
-		return Boolean(node.closest && node.closest(KICK_MOD_ACTIONS_SELECTOR));
+		return Boolean(node.closest && node.closest(KICK_MOD_ACTIONS_CLOSEST_SELECTOR));
 	}
 
 	function isKickMessageTextNode(node) {
