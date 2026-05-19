@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>No need to pop out the chat</li>
                 </ul>
             `,
-            notes: 'CSS note for styling: [data.type = "instagramlive"]'
+            notes: 'Payload type: <code>instagramlive</code>. CSS note for styling: [data.type = "instagramlive"]'
         },
         {
             name: 'Instagram Post Comments',
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li>Navigate to any Instagram post to capture comments</li>
                 </ul>
             `,
-            notes: 'CSS note for styling: [data.type = "instagram"]'
+            notes: 'Payload type: <code>instagram</code>. CSS note for styling: [data.type = "instagram"]'
         },
         {
             name: 'X Live (Twitter)',
@@ -190,15 +190,15 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             name: 'VPZone.tv',
             icon: 'vpzone.png',
-            description: 'Live streaming platform with on-page chat capture and a read-only API page option.',
+            description: 'Live streaming platform with on-page chat capture and an authenticated API page option.',
             type: 'standard',
             instructions: `
                 <ul>
                     <li>Open the regular stream page with the chat column visible</li>
-                    <li>URL: https://vpzone.tv/stream/USERNAME</li>
+                    <li>URL: https://vpzone.tv/watch/USERNAME</li>
                 </ul>
             `,
-            notes: 'A read-only API-backed source is also available at <code>sources/websocket/vpzone.html?channel=USERNAME</code>.'
+            notes: 'An API-backed source is also available at <code>sources/websocket/vpzone.html?channel=USERNAME</code>.'
         },
         {
             name: 'Slack',
@@ -1377,6 +1377,17 @@ document.addEventListener('DOMContentLoaded', function() {
 				<ul>
 					<li>URL: https://*.on24.com/view/*</li>
 					<li>Q&A questions supported</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Arena Social',
+			icon: 'arenasocial.png',
+			description: 'Social streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://arena.social/live/*</li>
 				</ul>
 			`
 		},

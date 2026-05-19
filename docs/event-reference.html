@@ -181,7 +181,7 @@
                             <td>New subs and gifted subs</td>
                             <td>Follow alerts + follower total</td>
                             <td>Rants/tips (amount + currency)</td>
-                            <td>Viewer totals, subscriber totals, live status, and read-only chat feed</td>
+                            <td>Viewer totals, subscriber totals, live status, and chat feed</td>
                         </tr>
                     </tbody>
                 </table>
@@ -199,6 +199,11 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <tr>
+                            <td><code>data.type</code></td>
+                            <td>string</td>
+                            <td>Source identifier used by overlays, filters, and Event Flow. Instagram keeps live chat as <code>instagramlive</code> and non-live comments as <code>instagram</code>.</td>
+                        </tr>
                         <tr>
                             <td><code>data.event</code></td>
                             <td>string | boolean</td>
@@ -238,6 +243,7 @@
                     <li>Raids and hosts pass <code>{ fromId, fromLogin, viewers }</code> so overlays can display both streamer name and audience size.</li>
                     <li>Reward redemptions expose <code>{ rewardId, cost, alias }</code> alongside the prepared chat message.</li>
                     <li>Chat transports that support source-control delete sync should expose the platform-native chat identifier as <code>meta.messageId</code> instead of relying on the dock's internal <code>data-mid</code> value.</li>
+                    <li>SSApp source identity metadata may add <code>meta.ssnAccountRole</code>, <code>meta.ssnSourceId</code>, and <code>meta.ssnSession</code> when a source is assigned a non-normal account role.</li>
                     <li>Event Flow can request a highlight by setting <code>meta.featured = true</code> on the chat payload, which auto-features the message in dock/featured overlays.</li>
                     <li>AI stage overlay commands use <code>{ action: "aiOverlay", target, meta }</code>; keep all command details such as <code>command</code>, <code>text</code>, <code>emotion</code>, <code>avatar</code>, and <code>tts</code> inside <code>meta</code>.</li>
                     <li>If a platform exposes multiple counters together, prefer a structured object with explicit keys (<code>meta.viewer_count</code>, <code>meta.follower_count</code>) instead of overloading strings.</li>
@@ -324,7 +330,7 @@
                     <h3>YouTube – Websocket/Data API Capture</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/youtube.html</code>, shared helpers under <code>shared/</code></p>
                     <ul class="requirements">
-                        <li>Requires OAuth with scopes <code>youtube.readonly</code>, <code>youtube</code>, <code>youtube.force-ssl</code>, and <code>youtube.channel-memberships.creator</code>. Tokens live in <code>localStorage</code>.</li>
+                        <li>Defaults to OAuth scopes <code>youtube.readonly</code> and <code>youtube.channel-memberships.creator</code>. Optional admin controls add <code>youtube.force-ssl</code> for chat sending, moderation, bans, and stream-detail edits.</li>
                         <li>Channel statistics respect the per-setting toggles (<code>showsubscount</code>, <code>showviewercount</code>).</li>
                         <li>The API cannot deliver custom badge imagery; badge fallbacks use emoji icons noted below.</li>
                         <li>New subscriber alerts use the <code>myRecentSubscribers</code> API (polled every 5 minutes). Note: YouTube API has up to 4-hour delay and only shows subscribers with public subscription lists.</li>
@@ -968,7 +974,7 @@
                     <h3>VPZone - WebSocket</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/vpzone.js</code></p>
                     <ul class="requirements">
-                        <li>Connects to the VPZone chat websocket with <code>?channel=USERNAME</code>; OAuth or a bearer token can be supplied for developer mode.</li>
+                        <li>Connects to the VPZone chat websocket with <code>?channel=USERNAME</code>; OAuth or a bearer token can be supplied for developer mode and chat sending.</li>
                         <li>Flat VPZone frames such as <code>type: "msg"</code> are normalized into standard chat payloads.</li>
                     </ul>
                     <table class="event-table">
@@ -1140,6 +1146,51 @@
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Polls the visible header viewer badge every 10s.</td>
                                 <td><code>meta</code> integer viewer count; only emitted when <strong>Show viewer count</strong> or hype mode is enabled, and sends <code>0</code> if the badge becomes unreadable to clear stale counters.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="velora">
+                    <h3>Velora</h3>
+                    <p class="source-note">Implementation: <code>sources/velora.js</code> and <code>sources/websocket/velora.js</code></p>
+                    <ul class="requirements">
+                        <li>Standard mode reads the visible chat DOM; WebSocket mode uses the Velora Events API with OAuth.</li>
+                        <li>Volts and channel point style cards are emitted as event payloads when exposed by the DOM or Events API.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New Velora chat rows appear or Events API chat messages arrive.</td>
+                                <td>Standard chat payload with badges, author color, links, and emotes preserved when not in text-only mode.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>volts</code></td>
+                                <td>Velora Volts cards or <code>channel.volts</code> Events API payloads arrive.</td>
+                                <td><code>hasDonation</code> carries the displayed Volts amount; DOM captures include <code>meta.source = "dom"</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><code>channel_points</code></td>
+                                <td>Velora channel point/redemption cards or <code>channel.channel_points_redemption</code> Events API payloads arrive.</td>
+                                <td><code>chatmessage</code> carries the redemption message or reward title; <code>meta.rewardTitle</code> identifies the reward when available.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>subscription</code></td>
+                                <td>Visible Velora activity row says a user became a channel member/subscriber.</td>
+                                <td><code>membership</code> carries the visible membership label.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Visible viewer count changes while viewer-count capture or hype mode is enabled.</td>
+                                <td><code>meta</code> integer viewer count.</td>
                             </tr>
                         </tbody>
                     </table>

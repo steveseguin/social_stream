@@ -820,10 +820,31 @@
 
 === OUTPUT FORMAT — STRICT ===
 - When the user asks for a change, reply with ONE complete HTML document inside one ```html fenced block. Nothing else is needed; any prose outside the block is fine but the HTML block is the source of truth.
-- Always return the FULL file, not a diff. The app replaces the active page with the HTML block verbatim.
+- For focused edits to the current overlay, prefer a compact exact-match patch inside one ```ssnpatch fenced block. The fenced content must be valid JSON because the app applies it with JSON.parse() to the active `overlay.html` file.
+- Use full HTML instead of a patch for brand-new overlays, major rewrites, or broad changes.
+- Never return both a full HTML file and an ssnpatch in the same response.
 - Keep it as a SINGLE self-contained file (inline CSS and JS). Only link to external CDNs if the user explicitly asks.
 - Keep the code Chrome 80 friendly: no ES modules, no top-level import/export, no optional chaining in inline JSON, and avoid experimental APIs without fallbacks.
 - Set <body> background to transparent unless the user asks for a background. Overlays sit on top of OBS scenes, so transparency is the default.
+
+Patch format for focused edits (strict JSON; escape backslashes as `\\`, quotes as `\"`, and newlines as `\n` inside string values):
+```ssnpatch
+{
+  "reply": "Short user-facing summary.",
+  "edits": [
+    {
+      "find": "Exact text that exists once in overlay.html",
+      "replace": "Replacement text"
+    }
+  ]
+}
+```
+Patch rules:
+- Each `find` string MUST match exactly once in the current HTML. Include enough surrounding context to make it unique.
+- Keep `replace` as small as practical, but include the complete replacement for the matched block.
+- The block must parse as JSON. Do not use raw JavaScript strings, unescaped backslashes, comments, trailing commas, or markdown inside the JSON.
+- Use full HTML instead of a patch if the exact text is uncertain or many blocks need changing.
+- Do not use line numbers; they drift.
 
 === HOW DATA ARRIVES ===
 Overlay pages receive data via a VDO.Ninja iframe bridge. Always include this bridge when the page needs live data. Messages arrive as window postMessage events:
@@ -857,7 +878,7 @@ Overlay pages receive data via a VDO.Ninja iframe bridge. Always include this br
 
 Without ?session=YOUR_ID the bridge won't connect — but the builder still sends test payloads straight to the iframe via postMessage, so handlePayload must work with or without the bridge.
 Do NOT require `event.source === bridge.contentWindow`; builder test events and preview tools can come from the parent window. Only check `event.data.dataReceived.overlayNinja`.
-Label rule: default live overlays MUST use `var label = params.get("label") || "dock";`. This includes chat, alerts, auction widgets, commerce widgets, counters, games, and tickers. Never invent a random/time-based/default-unique label for normal live data. Custom labels only receive targeted payloads, so use one only when the user explicitly asks for targeted/private/control messages or gives a specific `label=...`.
+Label rule: default chat/alert/game/ticker overlays MUST use `var label = params.get("label") || "dock";`. Dedicated metadata overlays for auction_update, commerce_update, or viewer_updates should use `var label = params.get("label") || "meta";` so they receive meta-targeted payloads even when dock alerts are filtered. Never invent a random/time-based/default-unique label for live data. Custom labels only receive targeted payloads, so use one only when the user explicitly asks for targeted/private/control messages or gives a specific `label=...`.
 
 DOM ordering matters: the `<iframe i&#100;="ssn_bridge">` element MUST exist in the DOM before the script that calls `document.getElementById("ssn_bridge")` runs. The safest patterns are (a) put the iframe tag first and the script right after in `<body>`, or (b) create the iframe in JS via `document.createElement("iframe")` and append it to body. Never put the iframe element below the script that reads it — `getElementById` will return null and setting `.src` throws.
 
@@ -919,6 +940,8 @@ Example auction update:
 13. For counter / viewer / goal numbers, render integer values as-is (or with toLocaleString thousands separators) instead of collapsing to "1.2k" style suffixes — the raw number is what streamers and mods actually want to read. Only abbreviate when a value is above ~1,000,000 AND space is genuinely constrained.
 14. Reset / replace state on snapshot payloads (viewer_updates, auction_update, commerce_update); only accumulate on per-item events (new chat row, new alert).
 14a. Auction overlays listen to `data.event === "auction_update"` and render from `data.meta`. Update visible DOM on EVERY accepted auction payload, even if the title or bidder did not change. Prefer `meta.priceText` over formatting `meta.price`; prefer `meta.bidsText` over formatting `meta.bids`; show `meta.bidder` or `meta.statusText`; show `meta.timer` exactly when present.
+14b. When editing an existing overlay to show new live fields (timer, bids, viewer totals, status, platform), add visible DOM elements for those fields if they do not already exist, then update those elements from every matching payload. Do not compute values into unused variables.
+14c. Metadata fields may be strings, numbers, zero, empty strings, or missing. Treat `0` as a valid value; avoid `value || fallback` when zero should render. For viewer_updates, sum only numeric top-level meta values unless the user asks otherwise.
 15. Alert overlays must handle these exact shapes: donation via `data.hasDonation` even without `data.event`; member/sub via `data.membership` even without `data.event`; follow via `data.event === "new_follower"`; raid via `data.event === "raid"` plus `subtitle` or `meta.viewers`; gifted subs via `data.event === "subscription_gift"` or `"gifted"`.
 16. Do not gate alerts on `data.chatmessage`, `data.subtitle`, or `data.meta`; follow events commonly have only `{ chatname, event: "new_follower", type }`, membership events may only have `{ chatname, membership, type }`, and donation events may only have `{ chatname, hasDonation, type }`.
 17. Plain chat messages are valid when they only have `{ chatname, chatmessage, chatimg, type }` and no `event`; if the user asks for a chat overlay, do not require `event`, `hasDonation`, or `membership`.
@@ -1449,6 +1472,8 @@ If the user asks a question that does not require a file change, answer normally
 		var overlaySaveTimer = null;
 		var overlaySaveAttempts = 0;
 		var BRIDGE_CHUNK_SIZE = 12000;
+		var aiTimeoutParam = parseInt(new URLSearchParams(location.search).get("aitimeout") || "180000", 10);
+		var AI_RESPONSE_TIMEOUT_MS = isFinite(aiTimeoutParam) ? Math.max(500, aiTimeoutParam) : 180000;
 		var bridgeResponseChunks = {};
 
 		var el = function (id) { return document.getElementById(id); };
@@ -1963,6 +1988,19 @@ If the user asks a question that does not require a file change, answer normally
 			}, 400);
 		}
 
+		function maybeRetryPatchFailure(message) {
+			if (!autoFixErrors || !autoFixErrors.checked) return false;
+			if (autoFixAttempts >= MAX_AUTO_FIX) return false;
+			if (!bridgeFrame || !bridgeFrame.contentWindow) return false;
+			autoFixAttempts += 1;
+			var retryNote = "Auto-fix attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + " - the ssnpatch could not be applied:\n\n" + message + "\n\nReturn only a corrected ```ssnpatch fenced JSON block. The block content must be valid JSON; escape backslashes, quotes, and newlines inside string values. Use exact text copied from the current overlay HTML. Each find string must match exactly once. Do not return a full HTML file.";
+			setStatus("Retrying patch (attempt " + autoFixAttempts + "/" + MAX_AUTO_FIX + ")…", "warn");
+			setTimeout(function () {
+				sendPrompt(retryNote, { isAutoFix: true });
+			}, 400);
+			return true;
+		}
+
 		function loadHtml2Canvas() {
 			if (window.html2canvas) return Promise.resolve(window.html2canvas);
 			if (html2canvasPromise) return html2canvasPromise;
@@ -2078,9 +2116,10 @@ If the user asks a question that does not require a file change, answer normally
 				"=== NEW REQUEST ===",
 				request,
 				"",
-				"If the request needs a file change, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
+				"If the request explicitly asks for ssnpatch, patch only, or a focused edit, return only one ```ssnpatch fenced block containing strict valid JSON with exact find/replace edits. If it needs a new overlay or broad rewrite and the user did not ask for patch-only output, return ONE complete HTML document inside one ```html fenced block. If it's just a question, answer normally.",
 				"Before returning HTML, check every <script> block for valid plain JavaScript syntax. If you include dynamic text inside JavaScript, quote it with JSON-safe string literals. Do not leave raw prose, markdown, smart quotes, or stray punctuation inside <script> blocks.",
-				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default the bridge label to dock via var label = params.get(\"label\") || \"dock\"; never use random/time-based labels for normal live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
+				"When returning ssnpatch, the fenced block content must parse as JSON. Escape backslashes as \\\\, quotes as \\\", and newlines as \\n inside string values. Each edit.find string must occur exactly once in the current HTML. Include enough stable surrounding context to make it unique. Do not include line numbers. Do not return both ssnpatch and full HTML.",
+				"Live-data minimums: expose window.handleOverlayPayload = handlePayload; accept postMessage payloads without filtering event.source; default chat/alert overlays to var label = params.get(\"label\") || \"dock\"; default dedicated auction/commerce/viewer meta overlays to var label = params.get(\"label\") || \"meta\"; never use random/time-based labels for live chat/events/auction/counter overlays; support chat fields (chatname/chatmessage/textonly/chatimg/type), alert fields (hasDonation, membership, new_follower, raid, gifted/subscription_gift), viewer_updates snapshots, and auction_update snapshots. Plain chat is valid without event/hasDonation/membership; alert events are valid even when chatmessage, subtitle, or meta is missing. When editing an existing live payload handler, preserve existing event branches and add the new branch without replacing unrelated behavior. Do not create a second handlePayload function or second window.handleOverlayPayload assignment; merge new logic into the existing handler. data.chatmessage is renderable HTML unless data.textonly === true; render only that field with innerHTML in a dedicated message element when not text-only, and use textContent when text-only. Auction overlays must update visible DOM on every auction_update payload and should render meta.title, meta.priceText/price, meta.bidder/statusText, meta.bidsText/bids, and meta.timer. If a requested live field has no visible element yet, add one and update it from payloads; do not calculate unused values. Treat 0 as valid and sum only numeric top-level values for viewer_updates unless asked otherwise. Derive source icons from data.type with https://socialstream.ninja/sources/images/{type}.png and hide broken icons. For plain questions, answer in 2-5 helpful short sentences without HTML."
 			].join("\n");
 		}
 
@@ -2101,6 +2140,110 @@ If the user asks a question that does not require a file change, answer normally
 			return "";
 		}
 
+		function parsePatchJson(value, reportErrors) {
+			var text = String(value || "").trim();
+			try {
+				var parsed = JSON.parse(text);
+				var edits = parsed && (parsed.edits || parsed.patches || parsed.replacements);
+				if (edits && edits.length) {
+					parsed.edits = edits;
+					return parsed;
+				}
+				if (reportErrors) return { __ssnPatchError: "Patch JSON parsed, but did not include a non-empty edits array." };
+			} catch (e) {
+				if (reportErrors) return { __ssnPatchError: "Invalid patch JSON: " + ((e && e.message) || e) };
+			}
+			return null;
+		}
+
+		function looksLikePatchBlock(value) {
+			value = String(value || "");
+			return /"?(?:edits|patches|replacements)"?\s*:/.test(value) &&
+				/"?(?:find|search)"?\s*:/.test(value) &&
+				/"?(?:replace|replacement)"?\s*:/.test(value);
+		}
+
+		function hasHtmlFence(text) {
+			text = String(text || "");
+			var fence = /```html\s*([\s\S]*?)```/i.exec(text);
+			return !!(fence && looksLikeHtml(fence[1]));
+		}
+
+		function extractPatchResponse(text) {
+			text = String(text || "");
+			var fence = /```([a-z0-9_-]*)\s*([\s\S]*?)```/gi;
+			var match;
+			while ((match = fence.exec(text))) {
+				var lang = String(match[1] || "").toLowerCase();
+				if (lang && lang !== "ssnpatch" && lang !== "json") continue;
+				var parsed = parsePatchJson(match[2], lang === "ssnpatch" || looksLikePatchBlock(match[2]));
+				if (parsed) return parsed;
+			}
+			return parsePatchJson(text, looksLikePatchBlock(text));
+		}
+
+		function countExactMatches(source, needle) {
+			if (!needle) return 0;
+			var count = 0;
+			var index = 0;
+			while (true) {
+				index = source.indexOf(needle, index);
+				if (index < 0) break;
+				count++;
+				index += needle.length || 1;
+			}
+			return count;
+		}
+
+		function applyPatchResponse(patch, sourceHtml) {
+			var html = String(sourceHtml || "");
+			var edits = patch && patch.edits;
+			if (!edits || !edits.length) {
+				return { ok: false, error: "Patch did not include edits." };
+			}
+			for (var i = 0; i < edits.length; i++) {
+				var edit = edits[i] || {};
+				var find = edit.find;
+				if (typeof find === "undefined") find = edit.search;
+				var replace = edit.replace;
+				if (typeof replace === "undefined") replace = edit.replacement;
+				if (typeof find !== "string" || !find) {
+					return { ok: false, error: "Patch edit " + (i + 1) + " is missing a non-empty find string." };
+				}
+				if (typeof replace !== "string") {
+					return { ok: false, error: "Patch edit " + (i + 1) + " is missing a replacement string." };
+				}
+				var matches = countExactMatches(html, find);
+				if (matches !== 1) {
+					return { ok: false, error: "Patch edit " + (i + 1) + " find string matched " + matches + " times; expected exactly 1." };
+				}
+				html = html.replace(find, replace);
+			}
+			if (/window\.handleOverlayPayload\s*=/.test(sourceHtml) && !/window\.handleOverlayPayload\s*=/.test(html)) {
+				return { ok: false, error: "Patch removed window.handleOverlayPayload from an existing live overlay." };
+			}
+			var sourceHandlerFunctions = (String(sourceHtml || "").match(/function\s+handlePayload\s*\(/g) || []).length;
+			var patchedHandlerFunctions = (html.match(/function\s+handlePayload\s*\(/g) || []).length;
+			if (sourceHandlerFunctions && patchedHandlerFunctions > sourceHandlerFunctions) {
+				return { ok: false, error: "Patch added a duplicate handlePayload function instead of merging into the existing handler." };
+			}
+			var sourceHandlerAssignments = (String(sourceHtml || "").match(/window\.handleOverlayPayload\s*=/g) || []).length;
+			var patchedHandlerAssignments = (html.match(/window\.handleOverlayPayload\s*=/g) || []).length;
+			if (sourceHandlerAssignments && patchedHandlerAssignments > sourceHandlerAssignments) {
+				return { ok: false, error: "Patch added a duplicate window.handleOverlayPayload assignment." };
+			}
+			return {
+				ok: true,
+				html: html,
+				reply: String((patch && patch.reply) || "Patch applied."),
+				count: edits.length
+			};
+		}
+
+		function requestRequiresPatch(request) {
+			return /\b(?:ssnpatch|patch\s*only|patch-only|do\s+not\s+rebuild|dont\s+rebuild|don't\s+rebuild|focused\s+edit|tiny\s+patch)\b/i.test(String(request || ""));
+		}
+
 		function requestAllowsCustomLabel(request) {
 			var value = String(request || "").toLowerCase();
 			return /(?:custom|specific|private|targeted|control)\s+label|label\s*=|send\s+(?:only\s+)?to\s+label|target(?:ed)?\s+(?:message|overlay|command|payload)/.test(value);
@@ -2110,17 +2253,27 @@ If the user asks a question that does not require a file change, answer normally
 			return /vdo\.socialstream\.ninja|ssn_bridge|dataReceived\s*&&\s*[^;]*overlayNinja|dataReceived\.overlayNinja/i.test(String(html || ""));
 		}
 
+		function htmlPrefersMetaLabel(html, request) {
+			var requestValue = String(request || "").toLowerCase();
+			if (/auction|whatnot|commerce|metadata|meta\s+overlay|viewer[\s_-]*(?:count|counter|ticker|bar|stats|snapshot|updates?)/.test(requestValue)) return true;
+			var htmlValue = String(html || "").toLowerCase();
+			return /(?:data\.)?event\s*={2,3}\s*["'](?:auction_update|commerce_update|viewer_updates?|viewer_update)["']/.test(htmlValue) ||
+				/["'](?:auction_update|commerce_update|viewer_updates?|viewer_update)["']\s*={2,3}\s*(?:data\.)?event/.test(htmlValue);
+		}
+
 		function reviewGeneratedHtml(html, request) {
 			var notes = [];
 			var reviewed = String(html || "");
 			if (htmlUsesLiveBridge(reviewed) && !requestAllowsCustomLabel(request)) {
+				var desiredLabel = htmlPrefersMetaLabel(reviewed, request) ? "meta" : "dock";
 				var changedLabel = false;
 				reviewed = reviewed.replace(/((?:var|let|const)\s+label\s*=\s*params\.get\((["'])label\2\)\s*\|\|\s*)([^;]+)(;)/g, function (match, prefix, quote, fallback, suffix) {
-					if (/^\s*(["'])dock\1\s*$/.test(fallback)) return match;
+					var expected = new RegExp("^\\s*([\"'])" + desiredLabel + "\\1\\s*$");
+					if (expected.test(fallback)) return match;
 					changedLabel = true;
-					return prefix + '"dock"' + suffix;
+					return prefix + '"' + desiredLabel + '"' + suffix;
 				});
-				if (changedLabel) notes.push("Changed the bridge fallback label to dock so the overlay receives normal live events.");
+				if (changedLabel) notes.push("Changed the bridge fallback label to " + desiredLabel + " so the overlay receives the right live events.");
 			}
 			if (/event\.source\s*(?:!={1,2}|={2,3})/i.test(reviewed) && /dataReceived[\s\S]{0,120}overlayNinja/i.test(reviewed)) {
 				notes.push("Review warning: this overlay checks event.source; preview/test events may be ignored.");
@@ -2159,7 +2312,12 @@ If the user asks a question that does not require a file change, answer normally
 			if (bridgeRoomID) params.push("session=" + encodeURIComponent(bridgeRoomID));
 			if (bridgePassword && bridgePassword !== "false") params.push("password=" + encodeURIComponent(bridgePassword));
 			if (urlParams.get("v")) params.push("v=" + encodeURIComponent(urlParams.get("v")));
-			params.push("label=dock");
+			["server", "server2", "server3", "localserver"].forEach(function (key) {
+				if (!urlParams.has(key)) return;
+				var value = urlParams.get(key);
+				params.push(value ? (key + "=" + encodeURIComponent(value)) : key);
+			});
+			params.push("label=aioverlay");
 			params.push("overlay=" + encodeURIComponent(pack.activeOverlay || "overlay"));
 			return base + "aioverlay.html?" + params.join("&");
 		}
@@ -2298,7 +2456,7 @@ If the user asks a question that does not require a file change, answer normally
 					delete pendingResponses[messageID];
 					logBuilder("error", msg, { target: messageID, chunks: pending.chunks, chars: pending.text.length });
 					setStatus("AI request timed out.", "error");
-				}, 90000);
+				}, AI_RESPONSE_TIMEOUT_MS);
 
 				var payload = { action: "chatbot", value: prompt, target: messageID, turbo: false };
 				if (images && images.length) payload.images = images;
@@ -2369,8 +2527,65 @@ If the user asks a question that does not require a file change, answer normally
 				return;
 			}
 
-			var html = extractHtml(finalText);
-			if (html) {
+			var patch = extractPatchResponse(finalText);
+			if (patch) {
+				if (patch.__ssnPatchError) {
+					var patchParseError = "Patch could not be applied: " + patch.__ssnPatchError;
+					pending.body.textContent = patchParseError;
+					saveConversationMessage("assistant", patchParseError);
+					logBuilder("error", patchParseError, finalText);
+					delete pendingResponses[id];
+					if (!maybeRetryPatchFailure(patchParseError)) {
+						setStatus(patchParseError, "error");
+					}
+					return;
+				}
+				if (hasHtmlFence(finalText)) {
+					var mixedPatchError = "Patch could not be applied: The AI returned both ssnpatch and full HTML.";
+					pending.body.textContent = mixedPatchError;
+					saveConversationMessage("assistant", mixedPatchError);
+					logBuilder("error", mixedPatchError, finalText);
+					delete pendingResponses[id];
+					if (!maybeRetryPatchFailure(mixedPatchError)) {
+						setStatus(mixedPatchError, "error");
+					}
+					return;
+				}
+				var patchResult = applyPatchResponse(patch, htmlEditor.value || "");
+				if (!patchResult.ok) {
+					var patchError = "Patch could not be applied: " + patchResult.error;
+					pending.body.textContent = patchError;
+					saveConversationMessage("assistant", patchError);
+					logBuilder("error", patchError, finalText);
+					delete pendingResponses[id];
+					if (!maybeRetryPatchFailure(patchError)) {
+						setStatus(patchError, "error");
+					}
+					return;
+				}
+				htmlEditor.value = patchResult.html;
+				syncFormToPage();
+				lastAppliedFromAI = true;
+				refreshPreview();
+				var patchNote = patchResult.reply || "Patch applied.";
+				if (patchResult.count) patchNote += "\n\nApplied " + patchResult.count + " exact-match edit" + (patchResult.count === 1 ? "." : "s.");
+				pending.body.textContent = patchNote;
+				saveConversationMessage("assistant", patchNote);
+				setStatus("Patch update applied.", "ok");
+			} else {
+				var html = extractHtml(finalText);
+				if (html) {
+				if (requestRequiresPatch(pending.requestText)) {
+					var patchOnlyError = "Patch could not be applied: The request asked for ssnpatch/patch-only output, but the AI returned full HTML.";
+					pending.body.textContent = patchOnlyError;
+					saveConversationMessage("assistant", patchOnlyError);
+					logBuilder("error", patchOnlyError, finalText);
+					delete pendingResponses[id];
+					if (!maybeRetryPatchFailure(patchOnlyError)) {
+						setStatus(patchOnlyError, "error");
+					}
+					return;
+				}
 				var review = reviewGeneratedHtml(html, pending.requestText || "");
 				html = review.html;
 				htmlEditor.value = html;
@@ -2386,10 +2601,11 @@ If the user asks a question that does not require a file change, answer normally
 				pending.body.textContent = note;
 				saveConversationMessage("assistant", note);
 				setStatus(review.notes.length ? "HTML update applied with safety review." : "HTML update applied.", "ok");
-			} else {
+				} else {
 				pending.body.textContent = finalText;
 				saveConversationMessage("assistant", finalText);
 				setStatus("AI response received.", "ok");
+				}
 			}
 			delete pendingResponses[id];
 		}
@@ -2437,6 +2653,15 @@ If the user asks a question that does not require a file change, answer normally
 			loadActivePage();
 		}
 
+		function refocusPromptBox() {
+			setTimeout(function () {
+				try {
+					window.focus();
+					userRequest.focus();
+				} catch (e) {}
+			}, 0);
+		}
+
 		function deletePage() {
 			if (state.pages.length <= 1) { setStatus("Keep at least one page.", "warn"); return; }
 			var current = activePage();
@@ -2449,6 +2674,7 @@ If the user asks a question that does not require a file change, answer normally
 			state.activeId = state.pages[0].id;
 			saveState();
 			loadActivePage();
+			refocusPromptBox();
 		}
 
 		function applyTemplate(tmpl) {

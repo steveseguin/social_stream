@@ -77,6 +77,77 @@
 		}
 	}
 
+	function normalizeDonationText(text) {
+		if (text === undefined || text === null) {
+			return "";
+		}
+		return String(text).replace(/\s+/g, " ").trim();
+	}
+
+	function looksLikeDonationText(text) {
+		text = normalizeDonationText(text);
+		if (!text || !/\d/.test(text)) {
+			return false;
+		}
+		if (/[\u0024\u20ac\u00a3\u00a5\u20b9\u20a9\u20aa\u20b1\u0e3f\u20ab\u20b4\u20a6\u20a1\u20b2\u20b5\u20ad\u20ae\u20b8\u20ba\u20bd\u20bc\u20be\u20bf]/.test(text)) {
+			return true;
+		}
+		return /\b(USD|CAD|AUD|NZD|EUR|GBP|JPY|CNY|HKD|TWD|KRW|INR|BRL|MXN|ARS|CLP|COP|PEN|PHP|SGD|MYR|THB|IDR|VND|ILS|TRY|ZAR|SEK|NOK|DKK|CHF|PLN|CZK|HUF|RON|RUB|UAH)\b/i.test(text);
+	}
+
+	function getElementTextValue(element) {
+		if (!element) {
+			return "";
+		}
+		return normalizeDonationText(element.innerText || element.textContent || element.getAttribute("aria-label") || element.getAttribute("title") || "");
+	}
+
+	function isYouTubePaidChatNode(ele) {
+		return !!(ele && (ele.tagName == "YT-LIVE-CHAT-PAID-MESSAGE-RENDERER" || ele.tagName == "YT-LIVE-CHAT-PAID-STICKER-RENDERER"));
+	}
+
+	function getYouTubeDonationAmount(ele) {
+		var selectors = [
+			"#purchase-amount",
+			"#purchase-amount-chip",
+			"[id*='purchase-amount']",
+			"[class*='purchase-amount']"
+		];
+		for (var i = 0; i < selectors.length; i++) {
+			try {
+				var matches = ele.querySelectorAll(selectors[i]);
+				for (var j = 0; j < matches.length; j++) {
+					var directText = getElementTextValue(matches[j]);
+					if (directText) {
+						return escapeHtml(directText);
+					}
+				}
+			} catch (e) {}
+		}
+		if (!isYouTubePaidChatNode(ele)) {
+			return "";
+		}
+		try {
+			var labelled = ele.querySelectorAll("[aria-label], [title]");
+			for (var k = 0; k < labelled.length; k++) {
+				var labelText = getElementTextValue(labelled[k]);
+				if (labelText.length <= 80 && looksLikeDonationText(labelText)) {
+					return escapeHtml(labelText);
+				}
+			}
+		} catch (e) {}
+		try {
+			var textNodes = ele.querySelectorAll("span, div, yt-formatted-string");
+			for (var n = 0; n < textNodes.length; n++) {
+				var text = getElementTextValue(textNodes[n]);
+				if (text.length <= 40 && looksLikeDonationText(text)) {
+					return escapeHtml(text);
+				}
+			}
+		} catch (e) {}
+		return "";
+	}
+
 	function setupDeletionObserver(target) {
 	  const deletionObserver = new MutationObserver((mutations) => {
 		mutations.forEach((mutation) => {
@@ -114,6 +185,29 @@
 
 	const messageHistory = new Set();
 	const avatarHistory = new Map();
+
+	function retryYouTubeMessageWhenReady(ele, eventType) {
+		try {
+			if (!ele || !ele.isConnected) {
+				return false;
+			}
+			var retryCount = parseInt(ele.dataset.ssnRetryCount || "0", 10) || 0;
+			if (retryCount >= 4) {
+				return false;
+			}
+			ele.dataset.ssnRetryCount = String(retryCount + 1);
+			ele.skip = false;
+			if (ele.id) {
+				messageHistory.delete(ele.id);
+			}
+			setTimeout(function () {
+				processMessage(ele, eventType);
+			}, Math.max(captureDelay || 200, 500));
+			return true;
+		} catch (e) {
+			return false;
+		}
+	}
 	
 	function cloneSvgWithResolvedUse(svgElement) {
 		const clonedSvg = svgElement.cloneNode(true);
@@ -744,6 +838,7 @@
 			var nameElement = ele.querySelector("#author-name");
 			chatname = escapeHtml(nameElement.innerText);
 			if (!chatname){
+				retryYouTubeMessageWhenReady(ele, eventType);
 				return 8;
 			}
 			
@@ -828,7 +923,7 @@
 
 		var chatdonation = "";
 		try {
-			chatdonation = escapeHtml(ele.querySelector("#purchase-amount").innerText);
+			chatdonation = getYouTubeDonationAmount(ele);
 		} catch (e) {}
 
 		var chatmembership = "";
@@ -864,8 +959,16 @@
 
 		if (chatsticker) {
 			try {
-				chatdonation = escapeHtml(ele.querySelector("#purchase-amount-chip").innerText);
+				chatdonation = chatdonation || getYouTubeDonationAmount(ele);
 			} catch (e) {}
+		}
+
+		var isPaidChatNode = isYouTubePaidChatNode(ele);
+		if (isPaidChatNode && !chatdonation) {
+			if (retryYouTubeMessageWhenReady(ele, eventType)) {
+				return 11;
+			}
+			chatdonation = getTranslation("donation", "DONATION");
 		}
 
 		var chatbadges = [];  
@@ -1144,6 +1247,7 @@
 			}
 			
 			if (!chatmessage){
+				retryYouTubeMessageWhenReady(ele, eventType);
 				return 10;
 			}
 		}
@@ -1453,7 +1557,6 @@
 	});
 	
 	function checkType(ele, callback) {
-		console.log(ele);
 	  // Handle redirect banners (YouTube Raids) specifically before skipping other banners
 	  if (ele.tagName == "yt-live-chat-banner-redirect-renderer".toUpperCase()) {
 		callback(ele, "redirect");

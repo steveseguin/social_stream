@@ -24,6 +24,20 @@
             <div class="auth-section">
                 <a id="auth-link" class="auth-button">Sign in with YouTube</a>
                 <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Custom YouTube project active</div>
+                <div id="yt-access-selector" class="auth-method-selector">
+                    <label class="auth-method-label">YouTube access:</label>
+                    <div class="auth-method-options">
+                        <label class="auth-method-option">
+                            <input type="radio" name="yt-access-level" value="readonly" checked>
+                            <span>Read only</span>
+                        </label>
+                        <label class="auth-method-option">
+                            <input type="radio" name="yt-access-level" value="admin">
+                            <span>Admin controls</span>
+                        </label>
+                    </div>
+                    <div class="credentials-note" style="margin-top:8px;">Admin access is needed to send chat, moderate chat, ban users, or edit stream details. Google may also show video deletion permission.</div>
+                </div>
                 <div id="auth-method-selector" class="auth-method-selector hidden">
                     <label class="auth-method-label">Sign-in method:</label>
                     <div class="auth-method-options">
@@ -230,20 +244,38 @@ try {
      * {"type": "img", "src": badgeUrl} when images are available
      * {"type": "text", "text": emoji} as fallback
      */
-    var YT_SCOPES = [
+    var YT_READONLY_SCOPES = [
         'https://www.googleapis.com/auth/youtube.readonly',
-        'https://www.googleapis.com/auth/youtube',
-        'https://www.googleapis.com/auth/youtube.force-ssl',
         'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
     ];
+    var YT_ADMIN_SCOPES = YT_READONLY_SCOPES.concat([
+        'https://www.googleapis.com/auth/youtube.force-ssl'
+    ]);
     var AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
     var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var YT_ACCESS_LEVEL_KEY = 'youtubeOAuthAccessLevel';
     var YT_AUTH_SOURCE_KEY = 'youtubeOAuthSource';
     var YT_AUTH_SOURCE_HOSTED = 'default_hosted';
     var YT_AUTH_SOURCE_CUSTOM = 'custom_ssapp';
     var clientId = DEFAULT_YT_CLIENT_ID;
     var clientSecretOverride = '';
     var apiKeyOverride = '';
+
+	function normalizeYouTubeAccessLevel(value) {
+		return String(value || '').toLowerCase() === 'admin' ? 'admin' : 'readonly';
+	}
+
+	function getYouTubeAccessLevel() {
+		return normalizeYouTubeAccessLevel(localStorage.getItem(YT_ACCESS_LEVEL_KEY));
+	}
+
+	function setYouTubeAccessLevel(value) {
+		localStorage.setItem(YT_ACCESS_LEVEL_KEY, normalizeYouTubeAccessLevel(value));
+	}
+
+	function getYouTubeOAuthScopes() {
+		return getYouTubeAccessLevel() === 'admin' ? YT_ADMIN_SCOPES : YT_READONLY_SCOPES;
+	}
     function getRuntimeParams() {
         return {
             query: new URLSearchParams(window.location.search),
@@ -422,6 +454,7 @@ try {
 	var channelShortcutMap = new Map(); // Active stream/channel custom emoji only
 	var unicodeMap = new Map();  // For Unicode emoji characters
 	var channelEmojiFetchToken = 0;
+	var channelEmojiAssetsReady = true;
 	
 	
 	// BTTV/7TV/FFZ emote support
@@ -439,7 +472,7 @@ try {
 			pendingRelayMessages.length = 0;
 			return;
 		}
-		if (!emojiAssetsReady) {
+		if (!areEmojiAssetsReadyForMessages()) {
 			return;
 		}
 		var pending = pendingRelayMessages.slice();
@@ -487,6 +520,18 @@ try {
 		flushPendingRelayMessages();
 	}
 
+	function markChannelEmojiAssetsReady(fetchToken) {
+		if (fetchToken && fetchToken !== channelEmojiFetchToken) {
+			return;
+		}
+		channelEmojiAssetsReady = true;
+		flushPendingRelayMessages();
+	}
+
+	function areEmojiAssetsReadyForMessages() {
+		return emojiAssetsReady && channelEmojiAssetsReady;
+	}
+
 	function processEmojiData(data) {
 	  emojiData = data;
 	  // Clear existing data if any
@@ -524,6 +569,9 @@ try {
 function setTrackedTimeout(callback, delay, isBackground = false) {
 	const timeoutHandle = setTimeout(() => {
 		activeTimeouts.delete(timeoutHandle);  // Remove from tracking when timeout fires
+		if (fetchTimeout === timeoutHandle) {
+			fetchTimeout = null;
+		}
 		callback();
 	}, delay);
 	activeTimeouts.add(timeoutHandle);
@@ -643,15 +691,34 @@ function enableBackgroundKeepAlive() {
 	}
 
 	function buildYouTubeEmojiEntries(emojis) {
-		if (!emojis?.length) return null;
+		if (!emojis || !emojis.length) return null;
 		const entries = [];
 		for (const emoji of emojis) {
-			if (!emoji.isCustomEmoji) continue;
-			const thumbs = emoji.image?.thumbnails;
-			if (!thumbs?.length) continue;
+			const thumbs = emoji && emoji.image && emoji.image.thumbnails;
+			if (!thumbs || !thumbs.length) continue;
+			const shortcuts = Array.isArray(emoji.shortcuts) ? emoji.shortcuts.filter(Boolean) : [];
+			if (!shortcuts.length && emoji.emojiId) {
+				const idLabel = String(emoji.emojiId).split('/').pop();
+				if (idLabel) {
+					shortcuts.push(':' + idLabel + ':');
+				}
+			}
+			if (!shortcuts.length) continue;
+			const normalizedShortcuts = [];
+			shortcuts.forEach(function(shortcut) {
+				if (!shortcut || typeof shortcut !== 'string') return;
+				const trimmed = shortcut.trim();
+				if (!trimmed) return;
+				if (normalizedShortcuts.indexOf(trimmed) === -1) normalizedShortcuts.push(trimmed);
+				if (trimmed.charAt(0) !== ':' && trimmed.charAt(trimmed.length - 1) !== ':' && trimmed.indexOf(' ') === -1) {
+					const colonShortcut = ':' + trimmed + ':';
+					if (normalizedShortcuts.indexOf(colonShortcut) === -1) normalizedShortcuts.push(colonShortcut);
+				}
+			});
+			if (!normalizedShortcuts.length) continue;
 			const url = thumbs[thumbs.length - 1].url;
-			const alt = emoji.shortcuts?.[0] || (emoji.emojiId || '').split('/').pop() || 'emoji';
-			entries.push({ shortcuts: emoji.shortcuts || [], url, id: emoji.emojiId || '', alt });
+			const alt = normalizedShortcuts[0] || (emoji.emojiId || '').split('/').pop() || 'emoji';
+			entries.push({ shortcuts: normalizedShortcuts, url, id: emoji.emojiId || '', alt });
 		}
 		return entries.length ? entries : null;
 	}
@@ -789,8 +856,10 @@ function enableBackgroundKeepAlive() {
 
 	async function fetchChannelEmoji(vidId) {
 		const fetchToken = ++channelEmojiFetchToken;
+		channelEmojiAssetsReady = false;
 		clearChannelEmojiEntries();
 		if (!vidId) {
+			markChannelEmojiAssetsReady(fetchToken);
 			return;
 		}
 		const cacheKey = 'ytChannelEmoji_' + vidId;
@@ -806,6 +875,7 @@ function enableBackgroundKeepAlive() {
 				}
 				applyChannelEmojiEntries(entries);
 				if (entries.length) console.log('Restored ' + entries.length + ' custom YouTube emoji from cache');
+				markChannelEmojiAssetsReady(fetchToken);
 				return;
 			}
 		} catch (e) {}
@@ -816,6 +886,7 @@ function enableBackgroundKeepAlive() {
 				return;
 			}
 			if (!entries?.length) {
+				markChannelEmojiAssetsReady(fetchToken);
 				return;
 			}
 
@@ -823,8 +894,10 @@ function enableBackgroundKeepAlive() {
 			localStorage.setItem(cacheTimeKey, String(Date.now()));
 			applyChannelEmojiEntries(entries);
 			console.log('Loaded ' + entries.length + ' custom YouTube emoji');
+			markChannelEmojiAssetsReady(fetchToken);
 		} catch (error) {
 			console.warn('Failed to load YouTube custom emoji', error);
+			markChannelEmojiAssetsReady(fetchToken);
 		}
 	}
 
@@ -843,6 +916,17 @@ function enableBackgroundKeepAlive() {
 			return key.replace(/-/g, " ");
 		}
 		return "";
+	}
+
+	function hasConfiguredTranslation() {
+		return !!(settings && settings.translation && (settings.translation.innerHTML || settings.translation.miscellaneous));
+	}
+
+	function chooseTranslatedAlertText(translatedText, sourceText) {
+		if (hasConfiguredTranslation()) {
+			return translatedText;
+		}
+		return sourceText || translatedText;
 	}
 
 	var currentSourceName = "";
@@ -1457,7 +1541,7 @@ function enableBackgroundKeepAlive() {
 		if (!shortcutMap.size && !channelShortcutMap.size && !unicodeMap.size) return result;
 		
 		// Process shortcut emotes
-		const shortcutRegex = /:([\w_-]+):/g;
+		const shortcutRegex = /:([^:\s<>]+):/g;
 		result = result.replace(shortcutRegex, (match) => {
 			const emojiInfo = channelShortcutMap.get(match) || shortcutMap.get(match);
 			if (!emojiInfo) return match;
@@ -2145,6 +2229,38 @@ function enableBackgroundKeepAlive() {
 			handleLiveChatEnded();
 			return;
 		}
+		if (error && error.ytStatus === 401) {
+			await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+			scheduleAuthRetry();
+			return;
+		}
+		if (error && error.ytStatus === 403) {
+			if (isQuotaError(error)) {
+				console.error('YouTube API quota exceeded');
+				showQuotaBanner();
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					span.style.color = "red";
+					span.innerHTML = "YouTube API quota limit hit. You can switch to standard YouTube scraping mode in Social Stream Ninja as an alternative until the quota resets.";
+					textarea.appendChild(span);
+				}
+				updateHeaderInfo(username, 'Quota Exceeded');
+				fetchTimeout = setTrackedTimeout(fetchChatMessages, 300000, !isPageVisible);
+				return;
+			}
+			console.warn('Access forbidden - chat may be disabled or restricted');
+			fetchTimeout = setTrackedTimeout(fetchChatMessages, 30000, !isPageVisible);
+			return;
+		}
+		if (error && error.ytStatus === 429) {
+			console.warn('Rate limited by YouTube API');
+			showQuotaBanner();
+			const backoffTime = Math.min(60000 * Math.pow(2, quickPollCount), 300000);
+			quickPollCount++;
+			fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
+			return;
+		}
 		console.error('Error fetching chat messages:', error);
 		// Use exponential backoff for errors
 		const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000); // Max 1 minute
@@ -2323,13 +2439,14 @@ function enableBackgroundKeepAlive() {
 		const state = stateOverride || nonce(15);
 		setExpectedOAuthState(state);
 		const redirectTarget = redirectOverride || redirectURI;
+		const scopes = getYouTubeOAuthScopes();
 		return {
 			state,
 			redirectUri: redirectTarget,
 			url: AUTH_BASE_URL + '/auth' +
 				'?client_id=' + clientId +
 				'&redirect_uri=' + encodeURIComponent(redirectTarget) +
-				'&scope=' + encodeURIComponent(YT_SCOPES.join(' ')) +
+				'&scope=' + encodeURIComponent(scopes.join(' ')) +
 				'&state=' + state
 		};
 	}
@@ -2479,7 +2596,7 @@ function enableBackgroundKeepAlive() {
 		try {
 			const result = await startOAuthFn({
 				clientId: useCustomDesktopAuth ? clientId : DEFAULT_YT_CLIENT_ID,
-				scopes: YT_SCOPES,
+				scopes: getYouTubeOAuthScopes(),
 				state,
 				authBase: useCustomDesktopAuth ? null : AUTH_BASE_URL,
 				authMode: useCustomDesktopAuth ? 'custom_google' : 'hosted'
@@ -2772,7 +2889,7 @@ function enableBackgroundKeepAlive() {
 	  updatePollSpinner(5000);
 	}
 		function queueMessage(messageData) {
-			if (emojiAssetsReady) {
+			if (areEmojiAssetsReadyForMessages()) {
 				processMessage(messageData);
 			} else {
 				pendingRelayMessages.push(messageData);
@@ -3179,6 +3296,7 @@ function enableBackgroundKeepAlive() {
 		isPolling = false;
 		currentStream = null;
 		channelEmojiFetchToken++;
+		channelEmojiAssetsReady = true;
 		clearChannelEmojiEntries();
 		clearSourceIdentity();
 		messageQueue = [];
@@ -3824,7 +3942,7 @@ function enableBackgroundKeepAlive() {
 	function processGiftRedemption(giftData) {
 		try {
 			const fallbackMessage = getTranslation("membership-gift-received-message", "received a gift membership");
-			const displayMessage = giftData.displayMessage || fallbackMessage;
+			const displayMessage = chooseTranslatedAlertText(fallbackMessage, giftData.displayMessage);
 			const redemptionLabel = getTranslation("membership-gift-redeemed-event", "Gift Redeemed");
 			const membershipLabel = giftData.memberLevelName || getTranslation("membership-generic", "Membership");
 			addEvent(`${redemptionLabel}: ${giftData.authorName} - ${membershipLabel}`);
@@ -3879,7 +3997,7 @@ function enableBackgroundKeepAlive() {
 			const membershipWord = giftCount === 1 ? singularMembership : pluralMembership;
 			const levelSuffix = giftData.memberLevelName ? ` (${giftData.memberLevelName})` : "";
 			const defaultMessage = `${giftVerb} ${giftCount} ${membershipWord}${levelSuffix}`;
-			const displayMessage = giftData.displayMessage || defaultMessage;
+			const displayMessage = chooseTranslatedAlertText(defaultMessage, giftData.displayMessage);
 			const purchaseLabel = getTranslation("membership-gift-purchase-event", "Gift Purchase");
 			const levelDescriptor = giftData.memberLevelName ? `${giftCount} x ${giftData.memberLevelName}` : `${giftCount} ${membershipWord}`;
 			addEvent(`${purchaseLabel}: ${giftData.authorName} - ${levelDescriptor}`);
@@ -3928,7 +4046,7 @@ function enableBackgroundKeepAlive() {
 	function processNewSponsorship(sponsorData) {
 		try {
 			const fallbackMessage = getTranslation("membership-new-member-message", "just became a member!");
-			const displayMessage = sponsorData.displayMessage || fallbackMessage;
+			const displayMessage = chooseTranslatedAlertText(fallbackMessage, sponsorData.displayMessage);
 			const sponsorLabel = getTranslation("membership-new-sponsor-event", "New Sponsor");
 			const membershipLabel = sponsorData.memberLevelName || getTranslation("membership-generic", "Membership");
 			addEvent(`${sponsorLabel}: ${sponsorData.authorName} - ${membershipLabel}`);
@@ -3988,7 +4106,7 @@ function enableBackgroundKeepAlive() {
 			if (months > 0) {
 				fallbackMessage = `${celebratesWord} ${months} ${monthWord} ${ofWord} ${membershipWord}`;
 			}
-			const displayMessage = milestoneData.displayMessage || fallbackMessage;
+			const displayMessage = chooseTranslatedAlertText(fallbackMessage, milestoneData.displayMessage);
 			const milestoneLabel = getTranslation("membership-milestone-event", "Member Milestone");
 			const monthsDescriptor = months > 0 ? `${months} ${monthWord}` : genericMilestone;
 			const levelDescriptor = milestoneData.memberLevelName ? `${monthsDescriptor} - ${milestoneData.memberLevelName}` : monthsDescriptor;
@@ -4285,6 +4403,20 @@ function enableBackgroundKeepAlive() {
 			});
 		}
 		syncAuthMethodSelectorVisibility();
+		const accessLevelRadios = document.querySelectorAll('input[name="yt-access-level"]');
+		if (accessLevelRadios && accessLevelRadios.length) {
+			const selectedAccessLevel = getYouTubeAccessLevel();
+			accessLevelRadios.forEach(function(radio) {
+				radio.checked = radio.value === selectedAccessLevel;
+				const changeHandler = function() {
+					if (radio.checked) {
+						setYouTubeAccessLevel(radio.value);
+					}
+				};
+				radio.addEventListener('change', changeHandler);
+				registerCleanup(() => radio.removeEventListener('change', changeHandler));
+			});
+		}
 
 		const authLink = document.getElementById('auth-link');
 		if (authLink) {

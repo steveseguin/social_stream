@@ -1318,6 +1318,107 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+const DEFAULT_CUSTOM_URL_SLOT_COUNT = 9;
+let highestRenderedCustomUrlSlot = DEFAULT_CUSTOM_URL_SLOT_COUNT;
+let pendingCustomUrlSettings = null;
+
+function getCustomUrlSlotFromKey(key) {
+    const match = String(key || '').match(/^custom(\d+)_url(?:_newwindow)?$/);
+    if (!match) return 0;
+    const index = parseInt(match[1], 10);
+    return Number.isFinite(index) ? index : 0;
+}
+
+function attachCustomUrlRowHandlers(row) {
+    const checkbox = row.querySelector("input[type='checkbox']");
+    if (checkbox) {
+        checkbox.onchange = updateSettings;
+    }
+
+    const textInput = row.querySelector("input[type='text']");
+    if (textInput) {
+        textInput.onchange = updateSettings;
+    }
+
+    const openButton = row.querySelector("button[data-action='openchat']");
+    if (openButton) {
+        openButton.onclick = function(e) {
+            chrome.runtime.sendMessage({
+                cmd: this.dataset.action,
+                ctrl: e.ctrlKey || false,
+                value: this.dataset.value || null
+            }, function() {
+                log("ignore callback for this action");
+            });
+        };
+    }
+}
+
+function ensureCustomUrlSlot(index) {
+    index = parseInt(index, 10);
+    if (!Number.isFinite(index) || index <= 0) return;
+    highestRenderedCustomUrlSlot = Math.max(highestRenderedCustomUrlSlot, index);
+    if (index <= DEFAULT_CUSTOM_URL_SLOT_COUNT || document.getElementById("custom" + index + "_url")) return;
+
+    const container = document.getElementById("custom-url-dynamic-container");
+    if (!container) return;
+
+    const row = document.createElement("div");
+    row.className = "custom-url-entry";
+    row.dataset.customUrlIndex = String(index);
+    row.innerHTML = `
+        <div>
+            <label class="switch">
+                <input type="checkbox" id="custom${index}_url_newwindow" data-setting="custom${index}_url_newwindow" />
+                <span class="slider round"></span>
+            </label>
+            <span> Open custom URL ${index} on new window </span>
+        </div>
+        <div class="textInputContainer" style="width: 95%;">
+            <input type="text" id="custom${index}_url" class="textInput" autocomplete="off" placeholder="eg: https://somedomain/chat/popup" data-textsetting="custom${index}_url" />
+            <label for="custom${index}_url"><span>&gt; Custom URL ${index}</span></label>
+        </div>
+        <center>
+            <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom${index}">
+                <span><span data-translate="open-chat">Open chat</span></span>
+            </button>
+        </center>
+    `;
+    container.appendChild(row);
+    attachCustomUrlRowHandlers(row);
+}
+
+function renderSavedCustomUrlSlots(savedSettings) {
+    pendingCustomUrlSettings = savedSettings || pendingCustomUrlSettings;
+    if (!document.getElementById("custom-url-dynamic-container")) return;
+
+    let highest = DEFAULT_CUSTOM_URL_SLOT_COUNT;
+    Object.keys(savedSettings || {}).forEach(function(key) {
+        const index = getCustomUrlSlotFromKey(key);
+        if (index > highest) highest = index;
+    });
+    for (let index = DEFAULT_CUSTOM_URL_SLOT_COUNT + 1; index <= highest; index++) {
+        ensureCustomUrlSlot(index);
+    }
+}
+
+function setupDynamicCustomUrlControls() {
+    const addButton = document.getElementById("addCustomUrl");
+    if (!addButton || addButton.dataset.bound) return;
+    addButton.dataset.bound = "true";
+    addButton.onclick = function() {
+        const nextIndex = highestRenderedCustomUrlSlot + 1;
+        ensureCustomUrlSlot(nextIndex);
+        const input = document.getElementById("custom" + nextIndex + "_url");
+        if (input) {
+            input.focus();
+        }
+    };
+    if (pendingCustomUrlSettings) {
+        renderSavedCustomUrlSlots(pendingCustomUrlSettings);
+    }
+}
+
 function addBlockedWord(word) {
     const input = document.getElementById('blockedwordsInput');
     if (!input || !word) return;
@@ -2244,9 +2345,24 @@ function updateAiOverlayLinksFromCurrentState() {
   );
 }
 
+function getSelectedTranslationLinkParam() {
+  let lang = "";
+  try {
+    const languageSelect = document.querySelector('select[data-optionsetting="translationlanguage"]');
+    lang = languageSelect && languageSelect.value ? languageSelect.value : "";
+  } catch (e) {}
+  try {
+    if (!lang && lastResponse && lastResponse.settings && lastResponse.settings.translationlanguage) {
+      lang = lastResponse.settings.translationlanguage.optionsetting || "";
+    }
+  } catch (e) {}
+  lang = (lang || "").trim();
+  return lang ? `&ln=${encodeURIComponent(lang)}` : "";
+}
+
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
   // Get any custom parameters from the current URL
-  let customParams = "";
+  let customParams = getSelectedTranslationLinkParam();
   try {
     const currentUrl = new URL(window.location.href);
     
@@ -2873,7 +2989,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
             if (commandsList) {
                 commandsList.innerHTML = '';
                 commands.forEach(cmd => {
-                    commandsList.appendChild(createCommandEntry(cmd.command, cmd.url)); // Assuming createCommandEntry is defined
+                    commandsList.appendChild(createCommandEntry(cmd.command, cmd.url, cmd.id)); // Assuming createCommandEntry is defined
                 });
             }
         } catch(e) { console.error("Error parsing customGifCommands JSON:", e); }
@@ -2996,6 +3112,7 @@ function update(response, sync = true) {
 
         if ('settings' in response && (response.streamID || ssapp)) {
             setupTtsProviders(response); // Handle TTS provider setting initialization
+            renderSavedCustomUrlSlots(response.settings);
 
             const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
             const paramNums = Object.values(targetMap);
@@ -4890,13 +5007,72 @@ function handleColorAndPalette(ele) {
     return false;
 }
 
+const CUSTOM_GIF_COMMAND_LIMIT = 20;
+
+function getCustomGifCommandEntryId(command, url, id) {
+    if (id) return String(id);
+    const source = String(command || '') + '|' + String(url || '');
+    if (source === '|') {
+        return 'gif_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    }
+    let hash = 0;
+    for (let i = 0; i < source.length; i++) {
+        hash = ((hash << 5) - hash + source.charCodeAt(i)) | 0;
+    }
+    return 'gif_' + Math.abs(hash);
+}
+
+function getCustomGifCommandAliases(command) {
+    return String(command || '').split(',').map(alias => alias.trim()).filter(Boolean);
+}
+
+function getCustomGifCommandSourceUrl(entry) {
+    const sourceDiv = document.getElementById('custom-gif-commands');
+    let url = sourceDiv && sourceDiv.raw ? sourceDiv.raw : '';
+    if (!url) {
+        alert('Main GIF overlay link is not ready yet.');
+        return '';
+    }
+
+    const commandInput = entry?.querySelector('.custom-command');
+    const mediaUrlInput = entry?.querySelector('.custom-media-url');
+    const id = getCustomGifCommandEntryId(commandInput?.value?.trim() || '', mediaUrlInput?.value?.trim() || '', entry?.dataset.commandId);
+    if (entry) entry.dataset.commandId = id;
+
+    url = removeQueryParamWithValue(url, 'gifid');
+    url = removeQueryParamWithValue(url, 'gifcommand');
+    return cleanURL(updateURL('gifid=' + encodeURIComponent(id), url));
+}
+
+function copyCustomGifCommandSource(entry, button) {
+    const command = entry?.querySelector('.custom-command')?.value?.trim() || '';
+    if (!command) {
+        alert('Add a chat command first.');
+        entry?.querySelector('.custom-command')?.focus();
+        return;
+    }
+
+    const url = getCustomGifCommandSourceUrl(entry);
+    if (!url) return;
+
+    navigator.clipboard.writeText(url).then(function() {
+        button?.classList.add('flashing');
+        setTimeout(() => button?.classList.remove('flashing'), 500);
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+
 function handleCustomGifCommand(ele, sync) {
     if (!ele.closest('.custom-gif-command-entry')) return false;
     
-    const commands = Array.from(document.querySelectorAll('.custom-gif-command-entry')).map(entry => ({
-        command: entry.querySelector('.custom-command')?.value?.trim() || '',
-        url: entry.querySelector('.custom-media-url')?.value?.trim() || ''
-    }));
+    const commands = Array.from(document.querySelectorAll('.custom-gif-command-entry')).map(entry => {
+        const command = entry.querySelector('.custom-command')?.value?.trim() || '';
+        const url = entry.querySelector('.custom-media-url')?.value?.trim() || '';
+        const id = getCustomGifCommandEntryId(command, url, entry.dataset.commandId);
+        entry.dataset.commandId = id;
+        return { id, command, url };
+    });
     
     if (sync) {
         chrome.runtime.sendMessage({
@@ -5850,7 +6026,10 @@ function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia') 
 function triggerCustomGifPreview(entry) {
     const commandInput = entry?.querySelector('.custom-command');
     const mediaUrlInput = entry?.querySelector('.custom-media-url');
+    const command = commandInput?.value?.trim() || '!preview';
     const mediaUrl = mediaUrlInput?.value?.trim();
+    const id = getCustomGifCommandEntryId(command, mediaUrl, entry?.dataset.commandId);
+    if (entry) entry.dataset.commandId = id;
 
     if (!mediaUrl) {
         alert('Add or upload a GIF, image, or video URL first.');
@@ -5863,12 +6042,17 @@ function triggerCustomGifPreview(entry) {
         target: 'gif',
         type: 'popup',
         chatname: 'GIF Test',
-        chatmessage: commandInput?.value?.trim() || '!preview',
-        contentimg: mediaUrl
+        chatmessage: command,
+        contentimg: mediaUrl,
+        meta: {
+            customGifCommandId: id,
+            customGifCommand: getCustomGifCommandAliases(command)[0] || command,
+            customGifCommands: getCustomGifCommandAliases(command)
+        }
     }, function () {});
 }
 
-function createCommandEntry(command = '', url = '') {
+function createCommandEntry(command = '', url = '', id = '') {
     function encodeHTML(str) {
         return String(str ?? '').replace(/&/g, '&amp;')
                   .replace(/</g, '&lt;')
@@ -5879,6 +6063,7 @@ function createCommandEntry(command = '', url = '') {
 
     const entry = document.createElement('div');
     entry.className = 'custom-gif-command-entry';
+    entry.dataset.commandId = getCustomGifCommandEntryId(command, url, id);
     entry.innerHTML = `
         <div class="textInputContainer" style="width: 90%;">
             <input type="text" class="textInput custom-command" value="${encodeHTML(command)}" autocomplete="off" placeholder="!command, !alias" data-textsetting="customGifCommand" />
@@ -5895,6 +6080,9 @@ function createCommandEntry(command = '', url = '') {
             <button class="testCustomGifCommand" type="button" title="Preview this media in the gif.html overlay">
                 <span>Test</span>
             </button>
+            <button class="copyCustomGifCommandSource" type="button" title="Copy a browser-source link for only this command">
+                <span>Copy Source</span>
+            </button>
             <button class="removeCustomGifCommand" type="button">
                 <span data-translate="remove">Remove</span>
             </button>
@@ -5907,6 +6095,10 @@ function createCommandEntry(command = '', url = '') {
 
     entry.querySelector('.testCustomGifCommand').addEventListener('click', function() {
         triggerCustomGifPreview(entry);
+    });
+
+    entry.querySelector('.copyCustomGifCommandSource').addEventListener('click', function() {
+        copyCustomGifCommandSource(entry, this);
     });
 
     entry.querySelector('.removeCustomGifCommand').addEventListener('click', function() {
@@ -5982,7 +6174,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     voice: null,
     voices: null,
     premiumQueueActive: false,
-    feedbackTimeout: null,
+    currentTtsSection: "",
+    feedbackTimeouts: {},
     
     init(voices) {
         this.voices = voices;
@@ -5990,203 +6183,263 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             this.audio = document.createElement("audio");
             this.audio.onended = () => this.finishedAudio();
         }
-        const menuWrapper = document.querySelector('#ttsButton');
-        if (menuWrapper) {
-            const container = document.createElement('div');
-            container.className = 'tts-test-container';
-            
-            const testButton = document.createElement('button');
-            testButton.textContent = "Test";
-            testButton.className = "tts-test-button";
-            testButton.onclick = () => this.testTTS();
-            
-            const feedback = document.createElement('div');
-            feedback.className = 'tts-feedback hidden';
-            feedback.id = 'ttsFeedback';
-            
-            container.appendChild(testButton);
-            container.appendChild(feedback);
-            menuWrapper.replaceWith(container);
-			
-			if (document.getElementById("listElevenLabsVoicesBtn")){
-				document.getElementById('listElevenLabsVoicesBtn')?.addEventListener('click', async (e) => {
-					this.listElevenLabsVoices();
-				});
-			}
-            
-            // Add styles if they don't exist
-            if (!document.getElementById('ttsFeedbackStyles')) {
-                const style = document.createElement('style');
-                style.id = 'ttsFeedbackStyles';
-                style.textContent = `
-                    .tts-test-container {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 8px;
-                        margin: 10px 0;
-                    }
-                    .tts-feedback {
-                        padding: 8px 12px;
-                        border-radius: 4px;
-                        font-size: 14px;
-                        transition: opacity 0.3s ease;
-                    }
-                    .tts-feedback.hidden {
-                        display: none;
-                        opacity: 0;
-                    }
-                    .tts-feedback.info {
-                        background: #fff3cd;
-                        border: 1px solid #ffeeba;
-                        color: #856404;
-                    }
-                    .tts-feedback.error {
-                        background: #f8d7da;
-                        border: 1px solid #f5c6cb;
-                        color: #721c24;
-                    }
-                    .tts-feedback.success {
-                        background: #d4edda;
-                        border: 1px solid #c3e6cb;
-                        color: #155724;
-                    }
-                `;
-                document.head.appendChild(style);
-            }
+        this.addTestButton("");
+        this.addTestButton("2");
+        this.addTestButton("10");
+        this.addTestButton("18");
+		
+		const listElevenLabsVoicesBtn = document.getElementById("listElevenLabsVoicesBtn");
+		if (listElevenLabsVoicesBtn && !listElevenLabsVoicesBtn.dataset.ttsListenerAttached){
+			listElevenLabsVoicesBtn.dataset.ttsListenerAttached = "true";
+			listElevenLabsVoicesBtn.addEventListener('click', async (e) => {
+				this.listElevenLabsVoices();
+			});
+		}
+        
+        // Add styles if they don't exist
+        if (!document.getElementById('ttsFeedbackStyles')) {
+            const style = document.createElement('style');
+            style.id = 'ttsFeedbackStyles';
+            style.textContent = `
+                .tts-test-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin: 10px 0;
+                }
+                .tts-feedback {
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    transition: opacity 0.3s ease;
+                }
+                .tts-feedback.hidden {
+                    display: none;
+                    opacity: 0;
+                }
+                .tts-feedback.info {
+                    background: #fff3cd;
+                    border: 1px solid #ffeeba;
+                    color: #856404;
+                }
+                .tts-feedback.warning {
+                    background: #fff3cd;
+                    border: 1px solid #ffeeba;
+                    color: #856404;
+                }
+                .tts-feedback.error {
+                    background: #f8d7da;
+                    border: 1px solid #f5c6cb;
+                    color: #721c24;
+                }
+                .tts-feedback.success {
+                    background: #d4edda;
+                    border: 1px solid #c3e6cb;
+                    color: #155724;
+                }
+            `;
+            document.head.appendChild(style);
         }
     },
 	
+	getSectionKey(section) {
+        return section ? String(section) : "1";
+    },
 
-    getSettings() {
+    getFeedbackId(section) {
+        return section ? `ttsFeedback${section}` : 'ttsFeedback';
+    },
+
+    getProviderSelect(section) {
+        return document.getElementById(`ttsProvider${section || ""}`);
+    },
+
+    addTestButton(section) {
+        const provider = this.getProviderSelect(section);
+        if (!provider) return;
+
+        const containerId = section ? `ttsTestContainer${section}` : 'ttsTestContainer';
+        if (document.getElementById(containerId)) return;
+
+        let menuWrapper = document.querySelector(`#ttsButton${section || ""}`);
+        if (!menuWrapper) {
+            menuWrapper = document.createElement('div');
+            menuWrapper.id = `ttsButton${section || ""}`;
+            const providerWrapper = provider.closest('.textInputContainer') || provider.parentElement;
+            if (!providerWrapper) return;
+            providerWrapper.insertAdjacentElement('afterend', menuWrapper);
+        }
+
+        const container = document.createElement('div');
+        container.className = 'tts-test-container';
+        container.id = containerId;
+        
+        const testButton = document.createElement('button');
+        testButton.textContent = "Test";
+        testButton.className = "tts-test-button";
+        testButton.onclick = () => this.testTTS(section);
+        
+        const feedback = document.createElement('div');
+        feedback.className = 'tts-feedback hidden';
+        feedback.id = this.getFeedbackId(section);
+        
+        container.appendChild(testButton);
+        container.appendChild(feedback);
+        menuWrapper.replaceWith(container);
+    },
+
+    getSettings(section = "") {
+        const sectionKey = this.getSectionKey(section);
+        const numberSuffix = section ? section : "";
+        const getId = (base) => document.getElementById(`${base}${section || ""}`);
+        const getParam = (key) => document.querySelector(`input[data-param${sectionKey}="${key}"]`)?.checked;
+        const getNumber = (key, fallback) => {
+            let ele = document.querySelector(`input[data-numbersetting${numberSuffix}="${key}"]`);
+            if (!ele && section) {
+                ele = document.querySelector(`input[data-numbersetting="${key}"]`);
+            }
+            const value = parseFloat(ele?.value);
+            return Number.isFinite(value) ? value : fallback;
+        };
+        const getInt = (key, fallback) => {
+            let ele = document.querySelector(`input[data-numbersetting${numberSuffix}="${key}"]`);
+            if (!ele && section) {
+                ele = document.querySelector(`input[data-numbersetting="${key}"]`);
+            }
+            const value = parseInt(ele?.value);
+            return Number.isFinite(value) ? value : fallback;
+        };
+        const getOption = (key, fallback = "") => {
+            const ele = document.querySelector(`[data-optionparam${sectionKey}="${key}"]`);
+            return ele ? ele.value : fallback;
+        };
+        const getText = (key, fallback = "") => {
+            const ele = document.querySelector(`input[data-textparam${sectionKey}="${key}"],textarea[data-textparam${sectionKey}="${key}"]`);
+            return ele ? ele.value : fallback;
+        };
+        const systemLanguageSelect = section === "2" ? document.getElementById('languageSelect2') : getId('systemLanguageSelect');
+        const systemLanguageEnabled = getParam('lang');
+        const openaiVoiceSelect = getId('openaiVoiceSelect');
+        const openaiModelSelect = document.querySelector(`[data-optionparam${sectionKey}="openaimodel"]`);
         const settings = {
             // Global settings
-            speech: document.querySelector('[data-param1="speech"]')?.checked,
-            volume: document.querySelector('[data-param1="volume"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="volume"]')?.value) || 1.0 : 1.0,
-			service: document.getElementById('ttsProvider').value || "system",
+            speech: getParam('speech'),
+            volume: getParam('volume') ? getNumber('volume', 1.0) : 1.0,
+			service: this.getProviderSelect(section)?.value || "system",
             
             // System TTS settings
             system: {
-                lang: document.getElementById('systemLanguageSelect')?.selectedOptions[0]?.dataset.lang || 'en-US',
-                voice: document.getElementById('systemLanguageSelect')?.selectedOptions[0]?.dataset.name,
-                rate: document.querySelector('[data-param1="rate"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="rate"]')?.value) || 1.0 : 1.0,
-                pitch: document.querySelector('[data-param1="pitch"]').checked ? (parseFloat(document.querySelector('[data-numbersetting="pitch"]')?.value) || 1.0) : 1.0
+                lang: systemLanguageEnabled ? systemLanguageSelect?.selectedOptions[0]?.dataset.lang || 'en-US' : 'en-US',
+                voice: systemLanguageEnabled ? systemLanguageSelect?.selectedOptions[0]?.dataset.name : null,
+                rate: getParam('rate') ? getNumber('rate', 1.0) : 1.0,
+                pitch: getParam('pitch') ? getNumber('pitch', 1.0) : 1.0
             },
 			
 			// Kokoro TTS settings
             kokoro: {
-                voice: document.getElementById('kokoroVoiceSelect')?.selectedOptions[0]?.value || "af_aoede",
-                rate: document.querySelector('[data-param1="kokorospeed"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="kokorospeed"]')?.value) || 1.0 : 1.0,
+                voice: getId('kokoroVoiceSelect')?.selectedOptions[0]?.value || "af_aoede",
+                rate: getParam('kokorospeed') ? getNumber('kokorospeed', 1.0) : 1.0,
             },
             
             // Kitten TTS settings
             kitten: {
-                voice: document.getElementById('kittenVoiceSelect')?.selectedOptions[0]?.value || "expr-voice-4-f",
-                speed: document.querySelector('[data-param1="kittenspeed"]')?.checked ?  
-                    parseFloat(document.querySelector('[data-numbersetting="kittenspeed"]')?.value) || 1.0 : 1.0,
+                voice: getId('kittenVoiceSelect')?.selectedOptions[0]?.value || "expr-voice-4-f",
+                speed: getParam('kittenspeed') ? getNumber('kittenspeed', 1.0) : 1.0,
                 sampleRate: 24000  // Fixed value - not configurable in new library
             },
             
             // Google Cloud TTS settings
             google: {
-                key: document.getElementById('googleAPIKey')?.value || document.getElementById('ttskey')?.value,
-                voice: document.getElementById('googleVoiceName')?.value,
-                lang:  document.querySelector('[data-param1="googlelang"]').checked ?  document.querySelector('[data-optionparam1="googlelang"]')?.value || 'en-US' : "en-US",
-                rate: document.querySelector('[data-param1="googlerate"]').checked ? parseFloat(document.querySelector('[data-numbersetting="googlerate"]')?.value) || 1.0 : 1.0,
-                pitch: document.querySelector('[data-param1="googlepitch"]').checked ? parseFloat(document.querySelector('[data-numbersetting="googlepitch"]')?.value) || 0 : 0,
-                audioProfile: document.querySelector('[data-param1="googlepitch"]').checked ? document.querySelector('[data-optionparam1="googleaudioprofile"]')?.value : false
+                key: getId('googleAPIKey')?.value || getText('ttskey') || document.getElementById('ttskey')?.value,
+                voice: getId('googleVoiceName')?.value || getText('voicegoogle'),
+                lang: getParam('googlelang') ? getOption('googlelang', 'en-US') : "en-US",
+                rate: getParam('googlerate') ? getNumber('googlerate', 1.0) : 1.0,
+                pitch: getParam('googlepitch') ? getNumber('googlepitch', 0) : 0,
+                audioProfile: getParam('googlepitch') ? getOption('googleaudioprofile', false) : false
             },
 
             // Gemini TTS settings
             gemini: {
-                key: document.getElementById('geminiAPIKey')?.value,
-                model: document.getElementById('geminiModelSelect')?.value || 'gemini-2.5-flash-preview-tts',
-                voice: document.getElementById('geminiVoiceSelect')?.value || 'Kore',
-                lang: document.getElementById('geminiLangSelect')?.value || '',
-                style: document.getElementById('geminiStyleInstructions')?.value || '',
+                key: getId('geminiAPIKey')?.value || getText('geminikey'),
+                model: getId('geminiModelSelect')?.value || getOption('geminimodel', 'gemini-2.5-flash-preview-tts'),
+                voice: getId('geminiVoiceSelect')?.value || getOption('voicegemini', 'Kore'),
+                lang: getId('geminiLangSelect')?.value || getOption('geminilang', ''),
+                style: getId('geminiStyleInstructions')?.value || getText('geministyle'),
                 sampleRate: 24000
             },
             
             // ElevenLabs settings
 			elevenLabs: {
-				key: document.getElementById('elevenLabsKey')?.value,
-				voice: document.getElementById('elevenLabsVoiceID')?.value,
-				model: document.querySelector('[data-param1="elevenlabsmodel"]').checked ? 
-					document.querySelector('[data-optionparam1="elevenlabsmodel"]')?.value || 'eleven_multilingual_v2' : 'eleven_multilingual_v2',
-				latency: document.querySelector('[data-param1="elevenlatency"]').checked ? 
-					parseInt(document.querySelector('[data-numbersetting="elevenlatency"]')?.value) || 0 : 4,
-				stability: document.querySelector('[data-param1="elevenstability"]').checked ? 
-					parseFloat(document.querySelector('[data-numbersetting="elevenstability"]')?.value) || 0.5 : 0.5,
-				similarityBoost: document.querySelector('[data-param1="elevensimilarity"]').checked ? 
-					parseFloat(document.querySelector('[data-numbersetting="elevensimilarity"]')?.value) || 0.75 : 0.75,
-				style: document.querySelector('[data-param1="elevenstyle"]').checked ? 
-					parseFloat(document.querySelector('[data-numbersetting="elevenstyle"]')?.value) || 0.5 : 0.5,
-				speakerBoost: document.querySelector('[data-param1="elevenspeakerboost"]')?.checked || false,
-				speakingRate: document.querySelector('[data-param1="elevenrate"]').checked ? 
-					parseFloat(document.querySelector('[data-numbersetting="elevenrate"]')?.value) || 1.0 : 1.0
+				key: getId('elevenLabsKey')?.value || getText('elevenlabskey'),
+				voice: getId('elevenLabsVoiceID')?.value || getText('voice11'),
+				model: getParam('elevenlabsmodel') ? getOption('elevenlabsmodel', 'eleven_multilingual_v2') : 'eleven_multilingual_v2',
+				latency: getParam(section === "2" ? 'latency' : 'elevenlatency') ? getInt(section === "2" ? 'latency' : 'elevenlatency', 0) : 4,
+				stability: getParam('elevenstability') ? getNumber('elevenstability', 0.5) : 0.5,
+				similarityBoost: getParam('elevensimilarity') ? getNumber('elevensimilarity', 0.75) : 0.75,
+				style: getParam('elevenstyle') ? getNumber('elevenstyle', 0.5) : 0.5,
+				speakerBoost: getParam('elevenspeakerboost') || false,
+				speakingRate: getParam('elevenrate') ? getNumber('elevenrate', 1.0) : 1.0
 			},
             
             // Speechify settings
             speechify: {
-                key: document.getElementById('speechifyAPIKey')?.value,
-                voice: document.getElementById('speechifyVoiceID')?.value,
-                lang: document.querySelector('[data-param1="speechifylang"]').checked ? document.querySelector('[data-optionparam1="speechifylang"]')?.value || 'en-US' : 'en-US',
-                speed: document.querySelector('[data-param1="speechifyspeed"]').checked ? parseFloat(document.querySelector('[data-numbersetting="speechifyspeed"]')?.value) || 1.0 : 1.0,
-                model: document.querySelector('[data-param1="speechifymodel"]').checked ? document.querySelector('[data-optionparam1="speechifymodel"]')?.value || 'simba-english' : 'simba-english'
+                key: getId('speechifyAPIKey')?.value || getText('speechifykey'),
+                voice: getId('speechifyVoiceID')?.value || getText('voicespeechify'),
+                lang: getParam('speechifylang') ? getOption('speechifylang', 'en-US') : 'en-US',
+                speed: getParam('speechifyspeed') ? getNumber('speechifyspeed', 1.0) : 1.0,
+                model: getParam('speechifymodel') ? getOption('speechifymodel', 'simba-english') : 'simba-english'
             },
             
             // OpenAI settings
             openai: {
-                key: document.getElementById('openaiAPIKey')?.value,
-                endpoint: document.getElementById('openaiEndpoint')?.value || "https://api.openai.com/v1/audio/speech",
+                key: getId('openaiAPIKey')?.value || getText('openaikey'),
+                endpoint: getId('openaiEndpoint')?.value || getText('openaiendpoint', "https://api.openai.com/v1/audio/speech"),
                 voice: (() => {
-                    const voiceSelect = document.getElementById('openaiVoiceSelect');
-                    if (voiceSelect?.value === 'custom') {
-                        const customVoice = document.getElementById('openaiCustomVoice')?.value;
+                    if (openaiVoiceSelect?.value === 'custom') {
+                        const customVoice = getId('openaiCustomVoice')?.value || getText('openaicustomvoice');
                         return customVoice || 'alloy';
                     }
-                    return voiceSelect?.value || 'alloy';
+                    return openaiVoiceSelect?.value || getOption('voiceopenai', 'alloy');
                 })(),
                 model: (() => {
-                    if (document.querySelector('[data-param1="openaimodel"]').checked) {
-                        const modelSelect = document.querySelector('[data-optionparam1="openaimodel"]');
-                        if (modelSelect?.value === 'custom') {
-                            const customModel = document.getElementById('openaiCustomModel')?.value;
+                    if (getParam('openaimodel')) {
+                        if (openaiModelSelect?.value === 'custom') {
+                            const customModel = getId('openaiCustomModel')?.value || getText('openaicustommodelx');
                             return customModel || 'tts-1';
                         }
-                        return modelSelect?.value || 'tts-1';
+                        return openaiModelSelect?.value || 'tts-1';
                     }
                     return 'tts-1';
                 })(),
-                speed: document.querySelector('[data-param1="openaispeed"]').checked ? 
-                    parseFloat(document.querySelector('[data-numbersetting="openaispeed"]')?.value) || 1.0 : 1.0,
-                format: document.querySelector('[data-param1="openaiformat"]').checked ? 
-                    document.querySelector('[data-optionparam1="openaiformat"]')?.value || 'mp3' : 'mp3'
+                speed: getParam('openaispeed') ? getNumber('openaispeed', 1.0) : 1.0,
+                format: getParam('openaiformat') ? getOption('openaiformat', 'mp3') : 'mp3'
             }
         };
         
         return settings;
     },
     
-    showFeedback(message, type = 'info') {
-        const feedback = document.getElementById('ttsFeedback');
+    showFeedback(message, type = 'info', section = this.currentTtsSection || "") {
+        const feedback = document.getElementById(this.getFeedbackId(section));
         if (feedback) {
             feedback.textContent = message;
             feedback.className = `tts-feedback ${type}`;
             
-            if (this.feedbackTimeout) {
-                clearTimeout(this.feedbackTimeout);
+            const sectionKey = this.getSectionKey(section);
+            if (this.feedbackTimeouts[sectionKey]) {
+                clearTimeout(this.feedbackTimeouts[sectionKey]);
             }
             
-            this.feedbackTimeout = setTimeout(() => {
+            this.feedbackTimeouts[sectionKey] = setTimeout(() => {
                 feedback.className = 'tts-feedback hidden';
             }, 5000);
         }
     },
 	
-    getServiceName() {
-        const settings = this.getSettings();
+    getServiceName(section = "") {
+        const settings = this.getSettings(section);
 		if (settings.service) {
-            const provider = document.getElementById('ttsProvider');
+            const provider = this.getProviderSelect(section);
             if (provider && provider.selectedIndex >= 0) {
                 return provider.options[provider.selectedIndex].innerText;
             }
@@ -6198,35 +6451,35 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         return 'System TTS';
     },
     
-    testTTS() {
+    testTTS(section = "") {
         const testPhrase = "The quick brown fox jumps over the lazy dog";
-        const serviceName = this.getServiceName();
+        const serviceName = this.getServiceName(section);
         
         // Check if the provider supports testing
-        const provider = document.getElementById('ttsProvider').value || "system";
+        const provider = this.getProviderSelect(section)?.value || "system";
         if (provider === 'piper' || provider === 'espeak') {
             let warningMsg = getTranslation("tts-test-not-available", "Testing is not available for {provider}. This TTS provider works during streaming only.");
             warningMsg = warningMsg.replace('{provider}', serviceName);
-            this.showFeedback(warningMsg, 'error');
+            this.showFeedback(warningMsg, 'error', section);
             return;
         }
         
         if (provider === 'kitten') {
             let warningMsg = getTranslation("tts-test-limited", "Testing for {provider} requires significant browser resources. Works best during streaming.");
             warningMsg = warningMsg.replace('{provider}', serviceName);
-            this.showFeedback(warningMsg, 'warning');
+            this.showFeedback(warningMsg, 'warning', section);
             // Continue with test despite warning
         }
         
-        this.showFeedback(`Testing ${serviceName}...`, 'info');
+        this.showFeedback(`Testing ${serviceName}...`, 'info', section);
         
         const originalOnEnded = this.audio?.onended;
-        const settings = this.getSettings();
+        const settings = this.getSettings(section);
 
         // Add success feedback after audio plays
         if (this.audio) {
             this.audio.onended = () => {
-                this.showFeedback(`${serviceName} test completed successfully`, 'success');
+                this.showFeedback(`${serviceName} test completed successfully`, 'success', section);
                 this.audio.onended = originalOnEnded;
                 this.finishedAudio();
             };
@@ -6234,31 +6487,32 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 
         try {
             // Check for required API keys if using premium services
-            if (serviceName === 'Google Cloud TTS' && !settings.google.key) {
+            if (provider === 'google' && !settings.google.key) {
                 throw new Error('Google Cloud API key is required');
             }
-            if (serviceName === 'ElevenLabs TTS' && !settings.elevenLabs.key) {
+            if (provider === 'elevenlabs' && !settings.elevenLabs.key) {
                 throw new Error('ElevenLabs API key is required');
             }
-            if (serviceName === 'Speechify TTS' && !settings.speechify.key) {
+            if (provider === 'speechify' && !settings.speechify.key) {
                 throw new Error('Speechify API key is required');
             }
             if (provider === 'gemini' && !settings.gemini.key) {
                 throw new Error('Gemini API key is required');
             }
-            if (serviceName === 'OpenAI TTS' && !settings.openai.key) {
+            if (provider === 'openai' && !settings.openai.key) {
                 throw new Error('OpenAI API key is required');
             }
 
-            this.speak(testPhrase, true);
+            this.speak(testPhrase, true, section);
         } catch (error) {
-            this.showFeedback(`${serviceName} Error: ${error.message}`, 'error');
+            this.showFeedback(`${serviceName} Error: ${error.message}`, 'error', section);
             console.error(error);
         }
     },
 	
-	async speak(text, allow = false) {
-        const settings = this.getSettings();
+	async speak(text, allow = false, section = "") {
+        this.currentTtsSection = section;
+        const settings = this.getSettings(section);
         
         if (!settings.speech && !allow) return;
         if (!text) return;
@@ -6266,31 +6520,31 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         try {
             if ((settings.service == "google") && settings.google.key) {
                 if (!this.premiumQueueActive) {
-                    await this.googleTTS(text, settings);
+                    await this.googleTTS(text, settings, section);
                 } 
             } else if ((settings.service == "elevenlabs") && settings.elevenLabs.key) {
                 if (!this.premiumQueueActive) {
-                    await this.elevenLabsTTS(text, settings);
+                    await this.elevenLabsTTS(text, settings, section);
                 } 
             } else if ((settings.service == "speechify") && settings.speechify.key) {
                 if (!this.premiumQueueActive) {
-                    await this.speechifyTTS(text, settings);
+                    await this.speechifyTTS(text, settings, section);
                 }
             } else if ((settings.service == "openai") && settings.openai.key) {
                 if (!this.premiumQueueActive) {
-                    await this.openaiTTS(text, settings);
+                    await this.openaiTTS(text, settings, section);
                 }
             } else if ((settings.service == "gemini") && settings.gemini.key) {
                 if (!this.premiumQueueActive) {
-                    await this.geminiTTS(text, settings);
+                    await this.geminiTTS(text, settings, section);
                 }
 			} else if (settings.service == "kokoro") {
                 if (!this.premiumQueueActive) {
-                    await this.kokoroTTS(text, settings);
+                    await this.kokoroTTS(text, settings, section);
                 }
             } else if (settings.service == "kitten") {
                 if (!this.premiumQueueActive) {
-                    await this.kittenTTS(text, settings);
+                    await this.kittenTTS(text, settings, section);
                 }
             } else if (!settings.service || (settings.service == "system")) {
                 this.systemTTS(text, settings);
@@ -7116,6 +7370,7 @@ function initHotkeys() {
 
 document.addEventListener("DOMContentLoaded", async function(event) {
     await ensureSourcesListLoaded();
+    setupDynamicCustomUrlControls();
 
     // Initialize hotkey system
     initHotkeys();
@@ -7334,6 +7589,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
 		const commandsList = document.getElementById('customGifCommandsList');
+		if (commandsList && commandsList.querySelectorAll('.custom-gif-command-entry').length >= CUSTOM_GIF_COMMAND_LIMIT) {
+			alert('Custom GIF Commands are limited to 20 entries.');
+			return;
+		}
 		const newCommandEntry = createCommandEntry();
 		commandsList.appendChild(newCommandEntry);
 		updateSettings(newCommandEntry, true);
@@ -8758,6 +9017,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						setTimeout(function(){
 							window.location.reload();
 						},100);
+					});
+				}
+			} else if (msg.cmd == "resettipjar"){
+				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal amount to $0?");
+				if (confirmResetTipJar){
+					chrome.runtime.sendMessage(msg, function (response) {
+						log("ignore callback for this action");
 					});
 				}
 			} else {

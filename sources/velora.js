@@ -81,6 +81,7 @@
 	var channelName = "";
 	
 	var processedMessages = new Set();
+	var processedEvents = new Set();
 
 	function getChatMessageRoot(ele){
 		if (!ele || !ele.isConnected || !ele.querySelector){ return null; }
@@ -234,6 +235,130 @@
 		pushMessage(data);
 	}
 
+	function makeBaseData(){
+		return {
+			chatbadges: [],
+			backgroundColor: "",
+			textColor: "",
+			nameColor: "",
+			chatimg: "",
+			hasDonation: "",
+			membership: "",
+			contentimg: "",
+			textonly: settings.textonlymode || false,
+			type: "velora"
+		};
+	}
+
+	function rememberEvent(key, row){
+		key = String(key || "").replace(/\s+/g, " ").trim();
+		if (!key || processedEvents.has(key)){
+			if (row){ row.skip = true; }
+			return false;
+		}
+		processedEvents.add(key);
+		if (processedEvents.size > 200){
+			processedEvents.delete(processedEvents.values().next().value);
+		}
+		if (row){ row.skip = true; }
+		return true;
+	}
+
+	function nearestVeloraEventRow(ele){
+		if (!ele || !ele.closest){ return null; }
+		return ele.closest(".mx-1.my-1\\.5") || ele.closest("[class*='mx-1'][class*='my-1.5']") || ele.closest(".group") || ele;
+	}
+
+	function parseVoltsEvent(row){
+		var amountNode = null;
+		var nameNode = null;
+		try {
+			var spans = Array.from(row.querySelectorAll("span"));
+			amountNode = spans.find(function(span){
+				return /\b\d[\d,.]*\s*V(?:olts?)?\b/i.test((span.textContent || "").trim());
+			}) || null;
+			if (!amountNode){ return null; }
+			nameNode = spans.find(function(span){
+				var text = (span.textContent || "").trim();
+				return text && span !== amountNode && !/\b\d[\d,.]*\s*V(?:olts?)?\b/i.test(text);
+			}) || null;
+		} catch(e){
+			return null;
+		}
+		var amountText = amountNode ? (amountNode.textContent || "").trim() : "";
+		var name = nameNode ? (nameNode.textContent || "").trim() : "";
+		if (!name || !amountText){ return null; }
+		var data = makeBaseData();
+		data.chatname = escapeHtml(name);
+		data.chatmessage = "";
+		data.hasDonation = escapeHtml(amountText.replace(/\bV\b/i, "Volts"));
+		data.event = "volts";
+		data.meta = {
+			amountText: amountText,
+			source: "dom"
+		};
+		return data;
+	}
+
+	function parseChannelPointsEvent(row){
+		var labelNode = null;
+		var valueNode = null;
+		try {
+			var divs = Array.from(row.querySelectorAll("div"));
+			labelNode = divs.find(function(div){
+				return /\bsays\b/i.test((div.textContent || "").trim()) && (div.textContent || "").trim().length < 80;
+			}) || null;
+			if (!labelNode){ return null; }
+			valueNode = labelNode.parentElement ? Array.from(labelNode.parentElement.querySelectorAll("span")).find(function(span){
+				return (span.textContent || "").trim();
+			}) : null;
+		} catch(e){
+			return null;
+		}
+		var label = labelNode ? (labelNode.textContent || "").trim() : "";
+		var match = label.match(/^(.+?)\s+says$/i);
+		var name = match && match[1] ? match[1].trim() : "";
+		var message = valueNode ? getAllContentNodes(valueNode).trim() : "";
+		if (!name || !message){ return null; }
+		var data = makeBaseData();
+		data.chatname = escapeHtml(name);
+		data.chatmessage = message;
+		data.event = "channel_points";
+		data.meta = {
+			rewardTitle: "Says",
+			source: "dom"
+		};
+		return data;
+	}
+
+	function parseSimpleActivityEvent(row){
+		var text = (row && row.textContent || "").replace(/\s+/g, " ").trim();
+		var match;
+		var data;
+		if (!text){ return null; }
+		match = text.match(/^(.+?)\s+just became a\s+(.+?)!?$/i);
+		if (!match){ return null; }
+		data = makeBaseData();
+		data.chatname = escapeHtml(match[1].trim());
+		data.chatmessage = escapeHtml("became a " + match[2].trim());
+		data.membership = escapeHtml(match[2].trim());
+		data.event = "subscription";
+		data.meta = { source: "dom" };
+		return data;
+	}
+
+	function processEventNode(ele){
+		var row = nearestVeloraEventRow(ele);
+		var data;
+		if (!row || row.skip || getChatMessageRoot(row)){ return; }
+		data = parseVoltsEvent(row) || parseChannelPointsEvent(row) || parseSimpleActivityEvent(row);
+		if (!data){ return; }
+		if (!rememberEvent("event|\u00b6|" + (data.event || "") + "|\u00b6|" + (data.chatname || "") + "|\u00b6|" + (data.chatmessage || "") + "|\u00b6|" + (data.hasDonation || "") + "|\u00b6|" + (row.textContent || ""), row)){
+			return;
+		}
+		pushMessage(data);
+	}
+
 	function pushMessage(data){
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -370,6 +495,12 @@
 								} else if (addedNode.querySelectorAll){
 									addedNode.querySelectorAll(".chat-message-content").forEach(function(chatNode){
 										processMessage(chatNode);
+									});
+								}
+								processEventNode(addedNode);
+								if (addedNode.querySelectorAll){
+									addedNode.querySelectorAll(".mx-1.my-1\\.5, [class*='mx-1'][class*='my-1.5'], .flex.items-baseline").forEach(function(eventNode){
+										processEventNode(eventNode);
 									});
 								}
 							},300);

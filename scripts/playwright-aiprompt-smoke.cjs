@@ -93,12 +93,23 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
                     sendPayload(out);
                   }, delay);
                 }
-                var response = parent.__ssnAiPromptMockChatbotResponse || '<!DOCTYPE html><html><body><div id="stream-smoke-ok">from streamed html</div></body></html>';
-                var chunkA = response.slice(0, Math.max(1, Math.floor(response.length / 2)));
-                var chunkB = response.slice(chunkA.length);
-                send('chatbotChunk', chunkA, 50);
-                send('chatbotChunk', chunkB || '<div id="stream-smoke-ok">from streamed html</div>', 150);
-                send('chatbotResponse', response, 500);
+                var response;
+                if (parent.__ssnAiPromptMockChatbotResponses && parent.__ssnAiPromptMockChatbotResponses.length) {
+                  response = parent.__ssnAiPromptMockChatbotResponses.shift();
+                } else {
+                  response = parent.__ssnAiPromptMockChatbotResponse || '<!DOCTYPE html><html><body><div id="stream-smoke-ok">from streamed html</div></body></html>';
+                }
+                var finalDelay = typeof parent.__ssnAiPromptMockFinalDelay === 'number' ? parent.__ssnAiPromptMockFinalDelay : 500;
+                if (!parent.__ssnAiPromptMockNoChunks) {
+                  var chunkA = response.slice(0, Math.max(1, Math.floor(response.length / 2)));
+                  var chunkB = response.slice(chunkA.length);
+                  send('chatbotChunk', chunkA, 50);
+                  send('chatbotChunk', chunkB || '<div id="stream-smoke-ok">from streamed html</div>', 150);
+                }
+                if (!parent.__ssnAiPromptMockNoFinal) {
+                  send('chatbotResponse', response, finalDelay);
+                  if (parent.__ssnAiPromptMockDuplicateFinal) send('chatbotResponse', response, finalDelay + 120);
+                }
               });
             <\/script></body></html>`);
             doc.close();
@@ -118,7 +129,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
   page.on('pageerror', err => pageErrors.push(err.message));
 
-  const url = `http://${HOST}:${PORT}/aiprompt.html?session=test-room`;
+  const url = `http://${HOST}:${PORT}/aiprompt.html?session=test-room&aitimeout=1000`;
   await page.goto(url, { waitUntil: 'networkidle' });
 
   // Wait for core UI
@@ -133,6 +144,8 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(htmlLen > 200, `Editor should have template HTML (got length ${htmlLen})`);
   const promptText = await page.$eval('#default-system-prompt', el => el.value);
   assert(promptText.includes('var label = params.get("label") || "dock";'), 'AI prompt bridge guidance should default live overlays to label=dock');
+  assert(/ssnpatch[\s\S]{0,220}valid JSON/i.test(promptText), 'AI prompt should say ssnpatch blocks must be valid JSON');
+  assert(/escape backslashes/i.test(promptText), 'AI prompt should tell the model to escape backslashes in ssnpatch JSON');
   const customLiveFeedTemplateLabels = await page.$$eval('textarea[id^="tmpl-"]', els => els
     .filter(el => /vdo\.socialstream\.ninja/.test(el.value) && /params\.get\("label"\)\s*\|\|\s*"(?!dock")/.test(el.value))
     .map(el => el.id));
@@ -152,6 +165,12 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(new Set(pageNames).size === pageNames.length, `Overlay names should be unique: ${pageNames.join(', ')}`);
   assert(pageNames.includes('blank-canvas'), `Expected blank-canvas page, got: ${pageNames.join(', ')}`);
   assert(pageNames.includes('blank-canvas-2'), `Expected blank-canvas-2 page, got: ${pageNames.join(', ')}`);
+  page.once('dialog', dialog => dialog.accept());
+  await page.click('#deletePage');
+  await page.waitForFunction(() => document.activeElement && document.activeElement.id === 'userRequest', null, { timeout: 3000 });
+  await page.keyboard.type('delete-focus-ok');
+  const deleteFocusValue = await page.$eval('#userRequest', el => el.value);
+  assert(deleteFocusValue.includes('delete-focus-ok'), 'Deleting an overlay should leave the AI prompt textbox focusable');
   await page.$$eval('#pageList .page-tab', els => {
     const chat = els.find(el => el.textContent.trim() === 'chat-overlay');
     if (chat) chat.click();
@@ -258,6 +277,287 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(/^HTML update applied/.test(finalStatus), `Expected final AI status, got: ${finalStatus}`);
 
   await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      'Changing just the label.',
+      '',
+      '```ssnpatch',
+      JSON.stringify({
+        reply: 'Changed the label without rebuilding the file.',
+        edits: [{
+          find: '<div id="patch-target">Original label</div>',
+          replace: '<div id="patch-target">Patched label</div>'
+        }]
+      }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: rename the label');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /^Patch update applied/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const patchedHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(patchedHtml.includes('Patched label'), 'ssnpatch should update the matched block');
+  assert(patchedHtml.includes('window.handleOverlayPayload'), 'ssnpatch should preserve unrelated code');
+
+  await page.evaluate(() => {
+    document.getElementById('autoFixErrors').checked = false;
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      'Trying a malformed patch.',
+      '',
+      '```ssnpatch',
+      '{"reply":"Bad patch","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Patched \\ label</div>"}]}',
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: malformed json regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /Patch could not be applied/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const malformedPatchState = await page.evaluate(() => {
+    const last = Array.from(document.querySelectorAll('.msg.assistant')).pop();
+    return {
+      status: document.getElementById('connectionStatus').textContent || '',
+      message: last ? last.textContent || '' : '',
+      html: document.getElementById('htmlEditor').value || ''
+    };
+  });
+  assert(/Invalid patch JSON/.test(malformedPatchState.message), 'Malformed ssnpatch should surface a parse error');
+  assert(malformedPatchState.message.indexOf('```ssnpatch') < 0, 'Malformed ssnpatch should not be shown raw to the user');
+  assert(malformedPatchState.status.indexOf('AI response received') < 0, 'Malformed ssnpatch should not fall through as a normal AI response');
+  assert(malformedPatchState.html.includes('Original label'), 'Malformed ssnpatch should not alter HTML');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```json',
+      '{"reply":"Bad json patch","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Patched \\ label</div>"}]}',
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: malformed json fence regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /Invalid patch JSON/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const malformedJsonFenceMessage = await page.evaluate(() => Array.from(document.querySelectorAll('.msg.assistant')).pop().textContent || '');
+  assert(malformedJsonFenceMessage.indexOf('```json') < 0, 'Malformed patch-shaped json fence should not be shown raw');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```',
+      '{"reply":"Bad unlabeled patch","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Patched \\ label</div>"}]}',
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: malformed unlabeled fence regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /Invalid patch JSON/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const malformedBareFenceMessage = await page.evaluate(() => Array.from(document.querySelectorAll('.msg.assistant')).pop().textContent || '');
+  assert(malformedBareFenceMessage.indexOf('```') < 0, 'Malformed unlabeled patch fence should not be shown raw');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div class="dupe">Same</div><div class="dupe">Same</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```ssnpatch',
+      JSON.stringify({ reply: 'Duplicate find', edits: [{ find: '<div class="dupe">Same</div>', replace: '<div class="dupe">Changed</div>' }] }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: duplicate find regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /matched 2 times/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const duplicatePatchHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(!duplicatePatchHtml.includes('Changed'), 'Duplicate find patch should not partially apply');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```html',
+      '<!DOCTYPE html><html><body><div id="patch-target">Wrong full rebuild</div></body></html>',
+      '```',
+      '```ssnpatch',
+      JSON.stringify({ reply: 'Mixed output', edits: [{ find: '<div id="patch-target">Original label</div>', replace: '<div id="patch-target">Patched label</div>' }] }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: mixed html and patch regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /both ssnpatch and full HTML/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const mixedPatchHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(mixedPatchHtml.includes('Original label'), 'Mixed HTML+patch response should not apply');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = '<!DOCTYPE html><html><body><div id="patch-target">Wrong full rebuild</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+  });
+  await page.fill('#userRequest', 'patch only: do not rebuild the file');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /patch-only output, but the AI returned full HTML/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const patchOnlyHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(patchOnlyHtml.includes('Original label'), 'patch-only requests should not apply full HTML responses');
+  assert(!patchOnlyHtml.includes('Wrong full rebuild'), 'patch-only full HTML response should be rejected');
+  await page.evaluate(() => {
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```json',
+      JSON.stringify({ answer: 'json is fine when it is not a patch' }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'Answer only, no HTML: return a small json example');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /^AI response received/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const plainJsonMessage = await page.evaluate(() => Array.from(document.querySelectorAll('.msg.assistant')).pop().textContent || '');
+  assert(plainJsonMessage.includes('json is fine when it is not a patch'), 'Non-patch json answers should display normally');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = '```ssnpatch\n{"reply":"Truncated","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Broken';
+  });
+  await page.fill('#userRequest', 'patch only: truncated patch regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /Invalid patch JSON/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const truncatedMessage = await page.evaluate(() => Array.from(document.querySelectorAll('.msg.assistant')).pop().textContent || '');
+  assert(truncatedMessage.indexOf('```ssnpatch') < 0, 'Truncated patch-shaped response should not be shown raw');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```ssnpatch',
+      '{"reply":"Bad first","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Broken \\ label</div>"}]}',
+      '```',
+      '```ssnpatch',
+      JSON.stringify({ reply: 'Valid second', edits: [{ find: '<div id="patch-target">Original label</div>', replace: '<div id="patch-target">Should not apply</div>' }] }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: invalid first valid second regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /Invalid patch JSON/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const twoFenceHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(!twoFenceHtml.includes('Should not apply'), 'Invalid first patch fence should fail closed before later valid fences');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```ssnpatch',
+      JSON.stringify({
+        reply: 'Remove handler',
+        edits: [{
+          find: '<script>window.handleOverlayPayload=function(){};</script>',
+          replace: '<script>console.log("handler removed");</script>'
+        }]
+      }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: remove handler regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /removed window\.handleOverlayPayload/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const removeHandlerHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(removeHandlerHtml.includes('window.handleOverlayPayload'), 'Patch removing handler should not apply');
+  await page.evaluate(() => {
+    const source = '<!DOCTYPE html><html><body><script>function handlePayload(data){document.body.dataset.first="1";}window.handleOverlayPayload=handlePayload;<\/script></body></html>';
+    const ta = document.getElementById('htmlEditor');
+    ta.value = source;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```ssnpatch',
+      JSON.stringify({
+        reply: 'Duplicate handler',
+        edits: [{
+          find: 'window.handleOverlayPayload=handlePayload;',
+          replace: 'function handlePayload(data){document.body.dataset.second="1";}window.handleOverlayPayload=handlePayload;'
+        }]
+      }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: duplicate handler regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /duplicate handlePayload function/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  const duplicateHandlerHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert((duplicateHandlerHtml.match(/function handlePayload/g) || []).length === 1, 'Duplicate handlePayload patch should not apply');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockNoChunks = true;
+    window.__ssnAiPromptMockDuplicateFinal = true;
+    window.__ssnAiPromptMockFinalDelay = 100;
+    window.__ssnAiPromptMockChatbotResponse = [
+      '```ssnpatch',
+      JSON.stringify({ reply: 'Duplicate final', edits: [{ find: '<div id="patch-target">Original label</div>', replace: '<div id="patch-target">Duplicate final patched</div>' }] }, null, 2),
+      '```'
+    ].join('\n');
+  });
+  await page.fill('#userRequest', 'patch only: duplicate final regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /^Patch update applied/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  await page.waitForTimeout(350);
+  const duplicateFinalHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert((duplicateFinalHtml.match(/Duplicate final patched/g) || []).length === 1, 'Duplicate final response should apply once only');
+  await page.evaluate(() => {
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    window.__ssnAiPromptMockDuplicateFinal = false;
+    window.__ssnAiPromptMockNoChunks = true;
+    window.__ssnAiPromptMockFinalDelay = 1500;
+    window.__ssnAiPromptMockChatbotResponse = '<!DOCTYPE html><html><body><div id="patch-target">Late response applied</div></body></html>';
+  });
+  await page.fill('#userRequest', 'return late html after timeout regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(() => /^AI request timed out/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
+  await page.waitForTimeout(900);
+  const lateResponseHtml = await page.$eval('#htmlEditor', el => el.value);
+  assert(!lateResponseHtml.includes('Late response applied'), 'Late response after timeout should be ignored');
+  await page.evaluate(() => {
+    const badPatch = [
+      '```ssnpatch',
+      '{"reply":"Still bad","edits":[{"find":"<div id=\\"patch-target\\">Original label</div>","replace":"<div id=\\"patch-target\\">Broken \\ label</div>"}]}',
+      '```'
+    ].join('\n');
+    const ta = document.getElementById('htmlEditor');
+    ta.value = '<!DOCTYPE html><html><body><div id="patch-target">Original label</div><script>window.handleOverlayPayload=function(){};<\/script></body></html>';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    document.getElementById('autoFixErrors').checked = true;
+    window.__ssnAiPromptMockNoChunks = true;
+    window.__ssnAiPromptMockFinalDelay = 100;
+    window.__ssnAiPromptMockChatbotResponses = [badPatch, badPatch, badPatch, badPatch];
+  });
+  const beforeAutoFixAssistants = await page.$$eval('.msg.assistant', els => els.length);
+  await page.fill('#userRequest', 'patch only: auto fix exhaustion regression');
+  await page.click('#sendPrompt');
+  await page.waitForFunction(before => {
+    const status = document.getElementById('connectionStatus').textContent || '';
+    return /Invalid patch JSON/.test(status) && document.querySelectorAll('.msg.assistant').length >= before + 3;
+  }, beforeAutoFixAssistants, { timeout: 8000 });
+  const exhaustedCount = await page.$$eval('.msg.assistant', els => els.length);
+  await page.waitForTimeout(1200);
+  const exhaustedCountLater = await page.$$eval('.msg.assistant', els => els.length);
+  assert(exhaustedCountLater === exhaustedCount, 'Auto-fix should stop after the retry budget is exhausted');
+  await page.evaluate(() => {
+    document.getElementById('autoFixErrors').checked = true;
+    window.__ssnAiPromptMockChatbotResponses = null;
+    window.__ssnAiPromptMockNoChunks = false;
+    window.__ssnAiPromptMockNoFinal = false;
+    window.__ssnAiPromptMockDuplicateFinal = false;
+    window.__ssnAiPromptMockFinalDelay = 500;
+    window.__ssnAiPromptMockChatbotResponse = '<!DOCTYPE html><html><body><div id="stream-smoke-ok">from streamed html</div></body></html>';
+  });
+
+  await page.evaluate(() => {
     window.__ssnAiPromptMockChatbotResponse = [
       '<!DOCTYPE html>',
       '<html><head><meta charset="UTF-8"><title>Bad Label</title></head><body>',
@@ -279,7 +579,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   await page.click('#sendPrompt');
   await page.waitForFunction(() => /^HTML update applied/.test(document.getElementById('connectionStatus').textContent || ''), null, { timeout: 5000 });
   const reviewedHtml = await page.$eval('#htmlEditor', el => el.value);
-  assert(/params\.get\("label"\)\s*\|\|\s*"dock"/.test(reviewedHtml), 'Generated HTML review should force normal live overlays to label=dock');
+  assert(/params\.get\("label"\)\s*\|\|\s*"meta"/.test(reviewedHtml), 'Generated HTML review should force auction overlays to label=meta');
   assert(!/smooth_auction/.test(reviewedHtml), 'Generated HTML review should remove random live overlay labels');
 
   // Error reporter: inject a broken template and confirm the console bar surfaces the error.
@@ -310,7 +610,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   assert(copied, `Copy URL should have produced a value, got: ${copied}`);
   assert(copied.indexOf('aiprompt.html') === -1, `Copied URL should be the overlay, not the builder itself: ${copied}`);
   assert(/\.html/.test(copied), `Copied URL should point at an .html file: ${copied}`);
-  assert(/[?&]label=dock(?:&|$)/.test(copied), `Copied named overlay URL should use label=dock: ${copied}`);
+  assert(/[?&]label=aioverlay(?:&|$)/.test(copied), `Copied named overlay URL should use label=aioverlay: ${copied}`);
 
   // aioverlay should load same-browser local overlays even when ?session= is present.
   await page.evaluate(() => {
@@ -329,7 +629,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   await overlayPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room&overlay=chat-overlay`, { waitUntil: 'domcontentloaded' });
   await overlayPage.waitForSelector('#overlayFrame', { timeout: 3000 });
   const overlayBridgeLabel = await overlayPage.$eval('#bridgeFrame', el => el.getAttribute('data-bridge-label'));
-  assert(overlayBridgeLabel === 'dock', `Named aioverlay should connect its wrapper bridge as label=dock: ${overlayBridgeLabel}`);
+  assert(overlayBridgeLabel === 'aioverlay', `Named aioverlay should connect its wrapper bridge as label=aioverlay: ${overlayBridgeLabel}`);
   const overlayFrameSrc = await overlayPage.$eval('#overlayFrame', el => el.getAttribute('src') || el.src);
   assert(!/aioverlay\.html/i.test(overlayFrameSrc), `aioverlay should not load itself inside overlayFrame: ${overlayFrameSrc}`);
   const overlayFrameHandle = await overlayPage.$('#overlayFrame');
@@ -348,7 +648,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
   await activeOverlayPage.goto(`http://${HOST}:${PORT}/aioverlay.html?session=test-room`, { waitUntil: 'domcontentloaded' });
   await activeOverlayPage.waitForSelector('#overlayFrame', { timeout: 3000 });
   const activeOverlayBridgeLabel = await activeOverlayPage.$eval('#bridgeFrame', el => el.getAttribute('data-bridge-label'));
-  assert(activeOverlayBridgeLabel === 'dock', `Active aioverlay should connect its wrapper bridge as label=dock: ${activeOverlayBridgeLabel}`);
+  assert(activeOverlayBridgeLabel === 'aioverlay', `Active aioverlay should connect its wrapper bridge as label=aioverlay: ${activeOverlayBridgeLabel}`);
   const activeInnerFrame = await (await activeOverlayPage.$('#overlayFrame')).contentFrame();
   await activeInnerFrame.waitForSelector('#aioverlay-local-regression', { timeout: 3000 });
   await activeOverlayPage.close();
@@ -450,7 +750,16 @@ function assert(cond, msg) { if (!cond) throw new Error(msg); }
 
   // No unexpected console or page errors from our own scripts (ignore iframe boom-test-error which is expected).
   const unexpected = [].concat(
-    consoleErrors.filter(t => t.indexOf('boom-test-error') === -1 && t.indexOf('VDO.Ninja') === -1),
+    consoleErrors.filter(t => t.indexOf('boom-test-error') === -1 &&
+      t.indexOf('VDO.Ninja') === -1 &&
+      t.indexOf('Invalid patch JSON') === -1 &&
+      t.indexOf('matched 2 times') === -1 &&
+      t.indexOf('both ssnpatch and full HTML') === -1 &&
+      t.indexOf('removed window.handleOverlayPayload') === -1 &&
+      t.indexOf('duplicate handlePayload function') === -1 &&
+      t.indexOf('AI request timed out') === -1 &&
+      t.indexOf('No AI response arrived') === -1 &&
+      t.indexOf('patch-only output') === -1),
     pageErrors.filter(t => t.indexOf('boom-test-error') === -1)
   );
   // Allow errors from the VDO bridge iframe trying to load (no network to vdo.ninja in headless)

@@ -1457,6 +1457,14 @@ input:checked + .slider:before {
     background-color: #0284c7;
 }
 
+.copyCustomGifCommandSource {
+    background-color: #16a34a;
+}
+
+.copyCustomGifCommandSource:hover {
+    background-color: #15803d;
+}
+
 .removeCustomGifCommand {
     padding: 5px 10px;
     background-color: #ff0000;
@@ -6767,6 +6775,24 @@ input:checked + .slider:before {
 										🎯 <span data-translate="relaytargets">Pick <b>relay destinations</b>. (None implies all)</span>
 									</div>
 								</div>
+								<div>
+									<div class="textInputContainer" style="width: 95%;" title="SSApp account roles allowed to send relayed messages. Blank allows all roles.">
+										<input type="text" id="relayaccountroles" class="textInput" autocomplete="off" placeholder="eg: relay,bot" data-textsetting="relayaccountroles" />
+										<span>Only relay through these SSApp account roles</span>
+									</div>
+								</div>
+								<div>
+									<div class="textInputContainer" style="width: 95%;" title="SSApp account roles blocked from sending relayed messages.">
+										<input type="text" id="blockrelayaccountroles" class="textInput" autocomplete="off" placeholder="eg: host" data-textsetting="blockrelayaccountroles" />
+										<span>Do not relay through these SSApp account roles</span>
+									</div>
+								</div>
+								<div>
+									<div class="textInputContainer" style="width: 95%;" title="SSApp account roles used for bot and auto replies. Blank keeps the original source tab behavior.">
+										<input type="text" id="botreplyaccountroles" class="textInput" autocomplete="off" placeholder="eg: bot" data-textsetting="botreplyaccountroles" />
+										<span>Send bot replies through these SSApp account roles</span>
+									</div>
+								</div>
 								<br />
 								<div>
                                     <label class="switch">
@@ -7812,6 +7838,12 @@ input:checked + .slider:before {
                                 <center>
                                     <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="custom9">
                                         <span><span data-translate="open-chat">Open chat</span></span>
+                                    </button>
+                                </center>
+                                <div id="custom-url-dynamic-container"></div>
+                                <center>
+                                    <button id="addCustomUrl" class="glowingButton" type="button" style="margin-top: 8px; margin-left: 0px;">
+                                        <span>Add custom URL</span>
                                     </button>
                                 </center>
                             </div>
@@ -10055,7 +10087,12 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="show-control-panel">🎛️ Show control panel</span>
                                 </div>
-                                
+                                <div>
+                                    <button class="glowingButton" style="width: 220px; border: 1px solid #000; padding: 2px;" data-action="resettipjar" data-target="tipjar">
+                                        <span style="font-size: 0.8em;">Reset saved amount</span>
+                                    </button>
+                                </div>
+
                                 <h3><span data-translate="style-and-theme">Style and Theme</span></h3>
                                 <div>
                                     <label><span data-translate="display-style">Display Style</span></label>

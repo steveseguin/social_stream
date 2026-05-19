@@ -612,6 +612,31 @@
             }, 15000);
         }
 
+        function clearJarContents() {
+            if (style !== 'jar' || !world || typeof Matter === 'undefined' || !Matter.Composite) return;
+            const bodies = Matter.Composite.allBodies(world);
+            bodies.forEach(body => {
+                if (!body.isStatic) {
+                    Matter.World.remove(world, body);
+                }
+            });
+        }
+
+        function resetTipJarAmount(showNotice) {
+            currentAmount = 0;
+            updateAmount(0);
+            clearJarContents();
+            if (showNotice) {
+                showNotification('Tip jar amount reset.');
+            }
+        }
+
+        function isTipJarResetCommand(data) {
+            if (!data || typeof data !== 'object') return false;
+            const command = String(data.cmd || data.action || data.tipjarCommand || '').toLowerCase();
+            return command === 'resettipjar' || command === 'reset_tipjar' || command === 'tipjar_reset';
+        }
+
         function updateAmount(amount) {
             currentAmount += amount;
             
@@ -772,6 +797,11 @@
                 data = data.content;
             }
 
+            if (isTipJarResetCommand(data)) {
+                resetTipJarAmount(true);
+                return;
+            }
+
             if (data.donation || data.hasDonation) {
                 const donationString = data.donation || data.hasDonation;
                 const sourceType = data.type ? String(data.type).toLowerCase() : '';
@@ -844,11 +874,7 @@
         
         document.getElementById('reset-amount').addEventListener('click', () => {
             if (confirm('Are you sure you want to reset the tip jar amount to $0?')) {
-                currentAmount = 0;
-                updateAmount(0);
-                if (persistent) {
-                    localStorage.setItem('tipjar_amount', '0');
-                }
+                resetTipJarAmount(false);
             }
         });
         
@@ -1046,7 +1072,7 @@
 
         // IFRAME setup for Social Stream Ninja
         const iframe = document.createElement("iframe");
-        const filename = "dock";
+        const filename = "tipjar";
         iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + 
             (password || "false") + "&solo&view=" + roomID + "&novideo&noaudio&label=" + 
             filename + "&cleanoutput&room=" + roomID;

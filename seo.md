@@ -395,6 +395,7 @@ Social Stream Ninja supports capturing live chat from a wide range of platforms:
 - **Nonolive.com**
 - **StageTEN.tv**
 - **Live.vkplay.ru**
+- **Arena.social**
 - **Blaze.stream**
 - **Bandlab.com**
 - **Threads.net**

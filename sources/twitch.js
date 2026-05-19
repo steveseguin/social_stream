@@ -1601,6 +1601,10 @@
 		}
 	}
 					
+	var twitchChatObserver = null;
+	var twitchChatObserverTarget = null;
+	var twitchChatObserverWatchdog = null;
+
 	function onElementInsertedTwitch(target) {
 		var onMutationsObserved = function(mutations) {
 			if (!isExtensionOn || isEmbeddedPopout()) {
@@ -1687,9 +1691,47 @@
 			attributeOldValue: true, // Optionally capture the old value of the attribute
 			attributeFilter: ["data-a-target", "class"] // Observe Twitch delete markers on current and legacy DOMs
 		};
+		replaceTwitchChatObserver(target, onMutationsObserved, config);
+	}
+
+	function replaceTwitchChatObserver(target, onMutationsObserved, config) {
+		if (!target) {
+			return false;
+		}
+		if (twitchChatObserver && twitchChatObserverTarget === target && target.isConnected) {
+			return true;
+		}
+		if (twitchChatObserver) {
+			try {
+				twitchChatObserver.disconnect();
+			} catch(e) {}
+		}
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+		twitchChatObserver = new MutationObserver(onMutationsObserved);
+		twitchChatObserver.observe(target, config);
+		twitchChatObserverTarget = target;
+		return true;
+	}
+
+	function refreshTwitchChatObserver() {
+		var target = document.querySelector(checkElement);
+		if (!target) {
+			return false;
+		}
+		if (twitchChatObserver && twitchChatObserverTarget === target && target.isConnected) {
+			return true;
+		}
+		onElementInsertedTwitch(target);
+		return true;
+	}
+
+	function startTwitchChatObserverWatchdog() {
+		if (twitchChatObserverWatchdog) {
+			return;
+		}
+		twitchChatObserverWatchdog = setInterval(function () {
+			refreshTwitchChatObserver();
+		}, 1000);
 	}
 
 	console.log("Social Stream injected");
@@ -1761,6 +1803,7 @@
 					}
 
 					onElementInsertedTwitch(target);
+					startTwitchChatObserverWatchdog();
 
 					if (document.querySelector('[data-a-target="consent-banner-accept"]')) {
 						document.querySelector('[data-a-target="consent-banner-accept"]').click();

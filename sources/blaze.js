@@ -274,6 +274,7 @@
 
 	var lastURL =  "";
 	var observer = null;
+	var observerTarget = null;
 	
 	
 	function onElementInserted(target) {
@@ -326,10 +327,20 @@
 			attributes: true,
 			attributeFilter: ["data-index", "data-item-index", "data-known-size"]
 		};
+		if (!target){return;}
+		if (observer && observerTarget === target && target.isConnected) {
+			return;
+		}
+		if (observer){
+			try {
+				observer.disconnect();
+			} catch(e){}
+		}
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
+		observerTarget = target;
 	}
 	
 	console.log("social stream injected");
@@ -346,7 +357,7 @@
 		checking = setInterval(function(){
 			try {
 				var container = document.querySelector("[data-testid='virtuoso-item-list']");
-				if (!container.marked){
+				if (container && (!container.marked || !observer || observerTarget !== container || !container.isConnected)){
 					container.marked=true;
 
 					console.log("CONNECTED chat detected");

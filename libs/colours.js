@@ -227,7 +227,7 @@ function getColorFromType(source) {
         case "whatsapp":
             return "#25D366"; // WhatsApp Green
         case "tiktok":
-            return "#000000"; // TikTok often uses black + accent colors
+            return "#FE2C55"; // TikTok vivid pink
         case "discord":
             return "#5865F2"; // Discord Blurple
         case "reddit": 
@@ -259,7 +259,7 @@ function getColorFromType(source) {
         case "restream":
             return "#FF5E54"; // Restream Orange-Red
         case "tiktok":
-            return "#000000"; 
+            return "#FE2C55";
         case "twitchcasting":
         case "twitcasting":
             return "#00B7FF"; // TwitCasting Blue

@@ -9,6 +9,13 @@
 	var sourceImg = "";
 	var sourceName = "VPZone";
 	var seenWsMessageIds = new Map();
+	var captureStartedAt = Date.now();
+	var staleHistoryWindowMs = 30000;
+	// Set once the WS interceptor delivers its first frame. After that, the
+	// DOM scraper becomes redundant (and produces duplicates), so we skip
+	// the DOM-driven emit path. Stays true for the lifetime of the page —
+	// SPA navigations reset it via the URL-change handler at the bottom.
+	var wsCaptureActive = false;
 	var currentChannelSlug = "";
 	var avatarCache = new Map();
 	var avatarPending = new Set();
@@ -48,10 +55,11 @@
 
 	function getChannelSlugFromUrl() {
 		try {
-			// Match /watch/{slug}, /overlay/chat/{token}?channel={slug},
+			// Match /stream/{slug}, /watch/{slug}, /overlay/chat/{token}?channel={slug},
 			// /overlay/chat-dock/{token}?channel={slug}, /u/{username}
 			var path = window.location.pathname;
 			var match =
+				path.match(/^\/stream\/([^\/?#]+)/) ||
 				path.match(/^\/watch\/([^\/?#]+)/) ||
 				path.match(/^\/u\/([^\/?#]+)/);
 			if (match) return decodeURIComponent(match[1]);
@@ -70,6 +78,26 @@
 		seenWsMessageIds.forEach(function (ts, id) {
 			if (now - ts > 60000) seenWsMessageIds.delete(id);
 		});
+	}
+
+	function normalizeTimestampMs(value) {
+		if (value === null || typeof value === "undefined" || value === "") return 0;
+		if (typeof value === "number") {
+			if (!isFinite(value) || value <= 0) return 0;
+			return value < 1000000000000 ? value * 1000 : value;
+		}
+		var text = String(value || "").trim();
+		var numeric = Number(text);
+		if (isFinite(numeric) && numeric > 0) {
+			return numeric < 1000000000000 ? numeric * 1000 : numeric;
+		}
+		var parsed = Date.parse(text);
+		return isFinite(parsed) && parsed > 0 ? parsed : 0;
+	}
+
+	function isStaleInitialTimestamp(value) {
+		var timestamp = normalizeTimestampMs(value);
+		return !!timestamp && timestamp < captureStartedAt - staleHistoryWindowMs;
 	}
 
 	function escapeHtmlMaybe(text) {
@@ -125,6 +153,10 @@
 		try { msg = JSON.parse(raw); } catch (e) { return; }
 		if (!msg || typeof msg !== "object") return;
 
+		// First frame proves the page's chat WS is being intercepted — disable
+		// the DOM scraper to stop emitting duplicates of every message/event.
+		wsCaptureActive = true;
+
 		var now = Date.now();
 		pruneSeenWs(now);
 
@@ -144,11 +176,20 @@
 		if (msg.id) seenWsMessageIds.set(msg.id, now);
 
 		var ts = msg.ts || "";
+		if (isStaleInitialTimestamp(ts)) return;
 
-		if (msg.type === "follow" || msg.type === "subscription" || msg.type === "raid") {
+		if (msg.type === "follow" || msg.type === "subscription" || msg.type === "raid" || msg.type === "gift" || msg.type === "clip") {
+			// Prefer metadata.username when present — gift events name the
+			// recipient there, and other handlers use it as the canonical actor
+			// when the top-level field is missing.
+			var actorName = (msg.metadata && msg.metadata.username) || msg.username || "";
+			if (!actorName) return;
+			var actorAvatar = avatarCache.get(String(actorName).toLowerCase()) || "";
+			if (!actorAvatar) fetchAvatar(actorName);
 			emitWsMessage({
-				chatname: escapeHtmlMaybe(msg.username || ""),
+				chatname: escapeHtmlMaybe(actorName),
 				chatmessage: escapeHtmlMaybe(msg.body || msg.type),
+				chatimg: actorAvatar,
 				event: msg.type,
 				membership: msg.type === "subscription" ? (msg.metadata && msg.metadata.tier ? "Subscriber (" + msg.metadata.tier + ")" : "Subscriber") : "",
 				meta: { timestamp: ts, raw: msg.metadata || {} }
@@ -158,9 +199,22 @@
 
 		if (msg.type === "system") {
 			var kind = msg.metadata && msg.metadata.kind;
+			// VPZONE's join-announcement system frames have no real actor —
+			// dropping them avoids "system: alice just joined" rows that
+			// social_stream can't attribute or theme correctly.
+			if (!kind && /\bjust\s+joined\b/i.test(String(msg.body || ""))) return;
+			// level_up (and similar) carry the real user in metadata.username;
+			// the top-level field is hard-coded to "system" server-side.
+			var sysName = (msg.metadata && msg.metadata.username) || msg.username || "system";
+			var sysAvatar = "";
+			if (sysName && sysName !== "system") {
+				sysAvatar = avatarCache.get(String(sysName).toLowerCase()) || "";
+				if (!sysAvatar) fetchAvatar(sysName);
+			}
 			emitWsMessage({
-				chatname: escapeHtmlMaybe(msg.username || "system"),
+				chatname: escapeHtmlMaybe(sysName),
 				chatmessage: escapeHtmlMaybe(msg.body || ""),
+				chatimg: sysAvatar,
 				event: kind || "system",
 				meta: { timestamp: ts, kind: kind || "" }
 			});
@@ -411,8 +465,19 @@
 		}
 
 		headerNode.querySelectorAll("[aria-label], [title]").forEach(function (badgeNode) {
-			var label = (badgeNode.getAttribute("aria-label") || badgeNode.getAttribute("title") || "").trim();
+			var title = (badgeNode.getAttribute("aria-label") || badgeNode.getAttribute("title") || "").trim();
+			var text = (badgeNode.textContent || "").trim();
+			var label = text && text.length <= 18 ? text : title;
 			var normalizedLabel = label.toLowerCase();
+			if (badgeNode.tagName === "IMG" || badgeNode.tagName === "SVG") {
+				return;
+			}
+			if (badgeNode.closest && badgeNode.closest(".break-words")) {
+				return;
+			}
+			if (/\d{1,2}\/\d{1,2}\/\d{4}|^\d{1,2}:\d{2}/.test(title || label)) {
+				return;
+			}
 			if (!label || seen.has(normalizedLabel)) {
 				return;
 			}
@@ -421,6 +486,38 @@
 		});
 
 		return badges;
+	}
+
+	function isLikelyTimeNode(node) {
+		var text = (node && node.textContent || "").trim();
+		var title = node && node.getAttribute ? (node.getAttribute("title") || "") : "";
+		return /^\d{1,2}:\d{2}(?:\s?[AP]M)?$/i.test(text) || /\d{1,2}\/\d{1,2}\/\d{4}/.test(title);
+	}
+
+	function findVpzoneMessageNode(row) {
+		var directBody = row.querySelector('[data-chat-body="true"]');
+		if (directBody) {
+			return directBody;
+		}
+
+		var nodes = Array.from(row.querySelectorAll(".break-words, [class*='break-words']"));
+		return nodes.find(function (node) {
+			return node && !isLikelyTimeNode(node) && ((node.textContent || "").trim() || node.querySelector("img, svg, video"));
+		}) || null;
+	}
+
+	function findVpzoneTimeNode(row) {
+		var directTime = row.querySelector('[data-chat-timestamp="true"]');
+		if (directTime) {
+			return directTime;
+		}
+
+		var spans = Array.from(row.querySelectorAll("span"));
+		return spans.reverse().find(isLikelyTimeNode) || null;
+	}
+
+	function findVpzoneNameNode(row) {
+		return row.querySelector('[data-chat-username="true"], a[href^="/u/"], a[href*="/u/"], span.font-semibold');
 	}
 
 	function buildBaseData() {
@@ -440,19 +537,29 @@
 	}
 
 	function parseMessageRow(row) {
-		var contentRoot = row.querySelector("div.min-w-0") || row.lastElementChild;
-		var headerNode = contentRoot ? getDirectChildrenByTag(contentRoot, "SPAN")[0] || null : null;
-		var nameNode = contentRoot ? contentRoot.querySelector("span.font-semibold") : null;
-		var messageNode = contentRoot ? getDirectChildrenByTag(contentRoot, "P")[0] || contentRoot.querySelector("p") : null;
+		var dataBodyNode = row.querySelector('[data-chat-body="true"]');
+		var dataNameNode = row.querySelector('[data-chat-username="true"]');
+		var contentRoot = row.querySelector("div.min-w-0") || row.querySelector(".items-baseline") || (dataBodyNode && dataBodyNode.parentElement) || row.lastElementChild;
+		var headerNode = contentRoot ? (contentRoot.classList && contentRoot.classList.contains("items-baseline") ? contentRoot : getDirectChildrenByTag(contentRoot, "SPAN")[0] || contentRoot) : null;
+		if (dataNameNode) {
+			headerNode = dataNameNode.closest(".flex") || row.firstElementChild || headerNode;
+		}
+		var nameNode = findVpzoneNameNode(row);
+		var messageNode = dataBodyNode || (contentRoot ? getDirectChildrenByTag(contentRoot, "P")[0] || contentRoot.querySelector("p") || findVpzoneMessageNode(row) : findVpzoneMessageNode(row));
 		var avatarNode = getDirectChildrenByTag(row, "IMG").find(function (image) {
 			return image && (image.getAttribute("src") || image.src);
 		}) || null;
+		var timeNode = findVpzoneTimeNode(row);
 
-		if (!nameNode || !messageNode) {
+		var attrName = row.getAttribute("data-username") || row.dataset.username || "";
+		var attrTimestamp = row.getAttribute("data-timestamp") || row.dataset.timestamp || "";
+		var attrMessageId = row.getAttribute("data-msg-id") || row.dataset.msgId || "";
+
+		if (!messageNode || (!nameNode && !attrName)) {
 			return null;
 		}
 
-		var chatname = escapeHtml((nameNode.textContent || "").trim());
+		var chatname = escapeHtml((nameNode ? nameNode.textContent : attrName || "").trim());
 		var chatmessage = getAllContentNodes(messageNode).trim();
 
 		if (!chatname || !chatmessage) {
@@ -466,12 +573,41 @@
 		data.nameColor = getComputedColor(nameNode, "color", "");
 		data.chatbadges = extractBadges(headerNode);
 		data.meta = {
-			timestamp: getDirectChildrenByTag(headerNode || document.createElement("span"), "SPAN").slice(-1)[0]?.textContent?.trim() || ""
+			timestamp: attrTimestamp || (timeNode ? (timeNode.getAttribute("title") || timeNode.textContent || "").trim() : ""),
+			messageId: attrMessageId || ""
 		};
 		return data;
 	}
 
 	function parseEventRow(row) {
+		var eventCardName = row.querySelector('a[href^="/u/"], a[href*="/u/"]');
+		var eventCardText = row.querySelector("p");
+		if (eventCardName && eventCardText && /followed/i.test(eventCardText.textContent || "")) {
+			var followData = buildBaseData();
+			followData.chatname = escapeHtml((eventCardName.textContent || "").trim());
+			followData.chatmessage = "followed";
+			followData.event = "followed";
+			followData.meta = {
+				timestamp: findVpzoneTimeNode(row) ? (findVpzoneTimeNode(row).textContent || "").trim() : ""
+			};
+			return followData.chatname ? followData : null;
+		}
+
+		var rowText = (row.textContent || "").replace(/\s+/g, " ").trim();
+		var simpleMatch = rowText.match(/^(.+?)\s+(?:just\s+)?(joined|left)$/i);
+		if (simpleMatch && simpleMatch[1] && simpleMatch[2]) {
+			var simpleType = simpleMatch[2].toLowerCase();
+			if (simpleType === "joined" && settings.capturejoinedevent === false) {
+				return null;
+			}
+			var simpleData = buildBaseData();
+			simpleData.chatname = escapeHtml(simpleMatch[1].trim());
+			simpleData.chatmessage = simpleType;
+			simpleData.event = simpleType;
+			simpleData.meta = { timestamp: "" };
+			return simpleData.chatname ? simpleData : null;
+		}
+
 		var spans = getDirectChildrenByTag(row, "SPAN");
 		if (!spans.length) {
 			return null;
@@ -506,7 +642,10 @@
 		if (!row || row.nodeType !== 1 || !row.isConnected || row.parentElement !== observedList) {
 			return null;
 		}
-		if (row.querySelector("p") && row.querySelector("span.font-semibold")) {
+		if (row.matches && row.matches('[data-chat-message="true"]')) {
+			return parseMessageRow(row);
+		}
+		if ((row.querySelector("p") && row.querySelector("span.font-semibold")) || (findVpzoneNameNode(row) && findVpzoneMessageNode(row))) {
 			return parseMessageRow(row);
 		}
 		return parseEventRow(row);
@@ -548,6 +687,16 @@
 			return;
 		}
 
+		// The WS interceptor is the source of truth when active — every chat
+		// message and event arrives there first, so emitting from the DOM row
+		// would just duplicate it. We still mark the row as seen so we don't
+		// re-evaluate it on subsequent mutations.
+		if (wsCaptureActive) {
+			row.dataset.ssnVpzoneSeen = "true";
+			row.dataset.ssnVpzoneQueued = "false";
+			return;
+		}
+
 		var data = parseRow(row);
 		if (!data) {
 			return;
@@ -555,6 +704,10 @@
 
 		row.dataset.ssnVpzoneSeen = "true";
 		row.dataset.ssnVpzoneQueued = "false";
+
+		if (data.meta && isStaleInitialTimestamp(data.meta.timestamp)) {
+			return;
+		}
 
 		if (isDuplicate(data)) {
 			return;
@@ -629,11 +782,15 @@
 		});
 	}
 
+	function isViewerCountLabel(text) {
+		return /\b(?:viewers?|watching)\b/i.test(text || "");
+	}
+
 	function findViewerCountNode() {
 		var selector = "div.absolute.top-3.left-3 span";
 		var spans = Array.from(document.querySelectorAll(selector));
 		var match = spans.find(function (span) {
-			return /\bviewers?\b/i.test((span.textContent || "").trim());
+			return isViewerCountLabel((span.textContent || "").trim());
 		});
 		if (match) {
 			return match;
@@ -642,11 +799,15 @@
 		spans = Array.from(document.querySelectorAll("span"));
 		return spans.find(function (span) {
 			var text = (span.textContent || "").trim();
-			if (!/\bviewers?\b/i.test(text)) {
+			var title = span.getAttribute ? (span.getAttribute("title") || "") : "";
+			if (!isViewerCountLabel(text) && !isViewerCountLabel(title)) {
+				return false;
+			}
+			if (parseCountText(text + " " + title) === null) {
 				return false;
 			}
 			var parentText = span.parentElement ? span.parentElement.textContent || "" : "";
-			return /\bLIVE\b/i.test(parentText);
+			return /\bLIVE\b/i.test(parentText) || /\bwatching\b/i.test(text) || /\bwatching\b/i.test(title);
 		}) || null;
 	}
 
@@ -668,33 +829,64 @@
 	}
 
 	function findChatInput() {
-		return document.querySelector('input[placeholder="Send a message"]');
+		var inputs = Array.from(document.querySelectorAll("input[placeholder], textarea[placeholder]"));
+		return inputs.find(function (input) {
+			var placeholder = input.getAttribute("placeholder") || "";
+			return /^(send a message|reply as\b)/i.test(placeholder);
+		}) || null;
+	}
+
+	function isVpzoneOverlayChatPage() {
+		return /^\/overlay\/(?:chat|chat-dock)\//i.test(window.location.pathname || "");
+	}
+
+	function findDataChatList() {
+		return document.querySelector('[data-chat-container="true"]');
+	}
+
+	function hasChatRows(element) {
+		if (!element || !element.querySelector) {
+			return false;
+		}
+		return !!element.querySelector('[data-chat-message="true"], [data-chat-body="true"], .items-baseline, [class*="items-baseline"], .break-words, [class*="break-words"]');
 	}
 
 	function findChatList() {
+		var dataChatList = findDataChatList();
+		if (dataChatList) {
+			return dataChatList;
+		}
+
 		var input = findChatInput();
-		if (!input) {
-			return null;
-		}
-
-		var current = input;
-		while (current && current !== document.body) {
-			var previous = current.previousElementSibling;
-			if (previous && previous.classList && previous.classList.contains("overflow-y-auto")) {
-				return previous;
+		if (input) {
+			var current = input;
+			while (current && current !== document.body) {
+				var previous = current.previousElementSibling;
+				if (previous && previous.classList && (previous.classList.contains("overflow-y-auto") || /\boverflow-y-auto\b/.test(previous.className || ""))) {
+					return previous;
+				}
+				current = current.parentElement;
 			}
-			current = current.parentElement;
+
+			var panel = input.parentElement;
+			while (panel && panel !== document.body) {
+				var inputCandidates = Array.from(panel.querySelectorAll("div.overflow-y-auto, div[class*='overflow-y-auto']")).filter(function (element) {
+					return element !== observedList && (hasChatRows(element) || element.querySelector("p, span"));
+				});
+				if (inputCandidates.length) {
+					return inputCandidates[0];
+				}
+				panel = panel.parentElement;
+			}
 		}
 
-		var panel = input.parentElement;
-		while (panel && panel !== document.body) {
-			var candidates = Array.from(panel.querySelectorAll("div.overflow-y-auto")).filter(function (element) {
-				return element !== observedList && element.querySelector("p, span");
+		if (isVpzoneOverlayChatPage()) {
+			var overlayCandidates = Array.from(document.querySelectorAll("div.overflow-y-auto, div[class*='overflow-y-auto']")).filter(function (element) {
+				return element !== observedList && (hasChatRows(element) || /flex-1/.test(element.className || ""));
 			});
-			if (candidates.length) {
-				return candidates[0];
+			if (overlayCandidates.length) {
+				return overlayCandidates[0];
 			}
-			panel = panel.parentElement;
 		}
 
 		return null;
@@ -791,6 +983,8 @@
 			avatarCache.clear();
 			avatarPending.clear();
 			lastViewerCount = null;
+			captureStartedAt = Date.now();
+			wsCaptureActive = false;
 			currentChannelSlug = getChannelSlugFromUrl();
 		}
 		attachObserver();

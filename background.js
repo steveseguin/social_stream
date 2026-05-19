@@ -73,6 +73,27 @@ function commandAliasMatches(commandString, messageText, mode) {
 	return aliases.some(alias => text.includes(alias.command));
 }
 
+function getCustomGifCommandEntryId(command, url, id) {
+	if (id) return String(id);
+	const source = String(command || "") + "|" + String(url || "");
+	let hash = 0;
+	for (let i = 0; i < source.length; i++) {
+		hash = ((hash << 5) - hash + source.charCodeAt(i)) | 0;
+	}
+	return "gif_" + Math.abs(hash);
+}
+
+function getMatchedCommandAlias(commandString, messageText) {
+	const text = String(messageText || "");
+	const aliases = getCommandAliases(commandString);
+	for (let i = 0; i < aliases.length; i++) {
+		if (text === aliases[i].command) {
+			return aliases[i].command;
+		}
+	}
+	return text;
+}
+
 // Spotify integration
 var spotify = null;
 var latestSpotifyOverlay = null;
@@ -5143,12 +5164,31 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						const data = JSON.parse(html.slice(jsonStart, end));
 						const emojis = (data && data.contents && data.contents.liveChatRenderer && data.contents.liveChatRenderer.emojis) || [];
 						for (const emoji of emojis) {
-							if (!emoji.isCustomEmoji) continue;
 							const thumbs = emoji.image && emoji.image.thumbnails;
 							if (!thumbs || !thumbs.length) continue;
+							const shortcuts = Array.isArray(emoji.shortcuts) ? emoji.shortcuts.filter(Boolean) : [];
+							if (!shortcuts.length && emoji.emojiId) {
+								const idLabel = String(emoji.emojiId).split("/").pop();
+								if (idLabel) {
+									shortcuts.push(":" + idLabel + ":");
+								}
+							}
+							if (!shortcuts.length) continue;
+							const normalizedShortcuts = [];
+							shortcuts.forEach(function (shortcut) {
+								if (!shortcut || typeof shortcut !== "string") return;
+								const trimmed = shortcut.trim();
+								if (!trimmed) return;
+								if (normalizedShortcuts.indexOf(trimmed) === -1) normalizedShortcuts.push(trimmed);
+								if (trimmed.charAt(0) !== ":" && trimmed.charAt(trimmed.length - 1) !== ":" && trimmed.indexOf(" ") === -1) {
+									const colonShortcut = ":" + trimmed + ":";
+									if (normalizedShortcuts.indexOf(colonShortcut) === -1) normalizedShortcuts.push(colonShortcut);
+								}
+							});
+							if (!normalizedShortcuts.length) continue;
 							const url = thumbs[thumbs.length - 1].url;
-							const alt = (emoji.shortcuts && emoji.shortcuts[0]) || (emoji.emojiId || "").split("/").pop() || "emoji";
-							entries.push({ shortcuts: emoji.shortcuts || [], url, id: emoji.emojiId || "", alt });
+							const alt = normalizedShortcuts[0] || (emoji.emojiId || "").split("/").pop() || "emoji";
+							entries.push({ shortcuts: normalizedShortcuts, url, id: emoji.emojiId || "", alt });
 						}
 					} catch (e) {
 						console.log("Background YouTube emoji fetch failed:", e);
@@ -5170,15 +5210,22 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			try {
 				const method = String(request.method || "GET").toUpperCase();
-				if (method !== "GET" && !(method === "POST" && parsedUrl.pathname === "/api/oauth/token")) {
+				const isOAuthTokenPost = method === "POST" && parsedUrl.pathname === "/api/oauth/token";
+				const isChatMessagePost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat$/.test(parsedUrl.pathname);
+				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost) {
 					sendResponse({ ok: false, error: "VPZone fetch method not allowed" });
 					return response;
 				}
 				const headers = {
 					Accept: "application/json"
 				};
-				if (method === "POST") {
+				if (isOAuthTokenPost) {
 					headers["Content-Type"] = "application/x-www-form-urlencoded";
+				} else if (isChatMessagePost) {
+					headers["Content-Type"] = "application/json";
+					if (request.authToken && typeof request.authToken === "string") {
+						headers.Authorization = "Bearer " + request.authToken.replace(/[\r\n]/g, "");
+					}
 				}
 				const vpzoneResponse = await fetch(parsedUrl.toString(), {
 					method,
@@ -5471,6 +5518,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "resetwaitlist") {
 			resetWaitlist();
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resettipjar") {
+			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
@@ -6229,6 +6279,7 @@ async function sendToDestinations(message) {
 					var viewerUpdateEvent = { event: "viewer_updates", meta: viewerCounts };
 					sendDataP2P(viewerUpdateEvent);
 					sendTargetP2P(viewerUpdateEvent, "meta");
+					sendTargetP2P(viewerUpdateEvent, "aioverlay");
 				}
 
 				return true;
@@ -6236,7 +6287,6 @@ async function sendToDestinations(message) {
 		}
 	}
 
-	var isAlertMessage = !!(message && (message.event || message.hasDonation || message.donation));
 	var reactionEventName = "";
 	if (message && typeof message.event === "string") {
 		reactionEventName = message.event
@@ -6244,10 +6294,16 @@ async function sendToDestinations(message) {
 			.replace(/[^a-z0-9]+/g, "_")
 			.replace(/^_+|_+$/g, "");
 	}
+	var isDonationMessage = !!(message && (message.hasDonation || message.donation));
+	var donationAlertText = message ? String(message.hasDonation || message.donation || "").toLowerCase() : "";
+	var isRewardAlert = !!(reactionEventName === "channel_points" || reactionEventName === "reward" || (message && message.reward) || donationAlertText.includes("points"));
+	var isDonationAlert = !!(isDonationMessage && !isRewardAlert);
+	var isAlertMessage = !!(message && (message.event || isDonationMessage));
+	var excludeFromDockAsAlert = !!(settings.excludeAlertsDock && isAlertMessage && !isDonationAlert);
 	var isReactionMessage = reactionEventName === "reaction" || reactionEventName === "liked" || reactionEventName === "like";
 
 	try {
-		if (!(settings.excludeAlertsDock && isAlertMessage)) {
+		if (!excludeFromDockAsAlert) {
 			sendDataP2P(message);
 		}
 	} catch (e) {
@@ -6256,6 +6312,7 @@ async function sendToDestinations(message) {
 	try {
 		if (message && typeof message === "object" && Object.prototype.hasOwnProperty.call(message, "meta")) {
 			sendTargetP2P(message, "meta");
+			sendTargetP2P(message, "aioverlay");
 		}
 	} catch (e) {
 		console.error(e);
@@ -6307,7 +6364,13 @@ async function sendToDestinations(message) {
 			settings["customGifCommands"]["object"].forEach(values => {
 				if (firstWord && values.url && values.command && commandAliasMatches(values.command, firstWord, "exact")) {
 					//  || "https://picsum.photos/1280/720?random="+values.command
-					sendTargetP2P({ ...message, ...{ contentimg: values.url } }, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
+					const aliases = getCommandAliases(values.command).map(alias => alias.command);
+					const gifMeta = Object.assign({}, message.meta || {}, {
+						customGifCommandId: getCustomGifCommandEntryId(values.command, values.url, values.id),
+						customGifCommand: getMatchedCommandAlias(values.command, firstWord),
+						customGifCommands: aliases
+					});
+					sendTargetP2P({ ...message, ...{ contentimg: values.url, meta: gifMeta } }, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
 				}
 			});
 		}
@@ -8563,6 +8626,9 @@ function setupSocket() {
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
 				resp = true;
+			} else if (data.action && data.action === "resettipjar") {
+				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
+				resp = true;
 			} else if (data.action && data.action === "resetpoll") {
 				sendTargetP2P({ cmd: "resetpoll" }, "poll");
 				resp = true;
@@ -9938,7 +10004,7 @@ async function openchat(target = null, force = false) {
 	}
 
 	if (target == "vpzonews" || (!target && settings.vpzone_username && settings.vpzone_username.textsetting)) {
-		let url = "https://socialstream.ninja/sources/websocket/vpzone";
+		let url = "https://socialstream.ninja/sources/websocket/vpzone.html";
 		const vpzoneChannel = settings.vpzone_username && settings.vpzone_username.textsetting ? settings.vpzone_username.textsetting.trim().replace(/^@+/, "") : "";
 		if (vpzoneChannel) {
 			url += "?channel=" + encodeURIComponent(vpzoneChannel);
@@ -10000,76 +10066,35 @@ async function openchat(target = null, force = false) {
 		openURL(url, true);
 	}
 
-	if ((target == "custom1" || !target) && settings.custom1_url) {
-		let url = settings.custom1_url.textsetting;
+	function openCustomUrlSlot(index) {
+		const urlSetting = settings["custom" + index + "_url"];
+		if (!urlSetting || !urlSetting.textsetting) return;
+
+		let url = urlSetting.textsetting.trim();
+		if (!url) return;
 		if (!url.startsWith("http")) {
 			url = "https://" + url;
 		}
-		openURL(url, settings.custom1_url_newwindow);
+
+		const newWindowSetting = settings["custom" + index + "_url_newwindow"];
+		const newWindow = !!(newWindowSetting && newWindowSetting.setting !== false);
+		openURL(url, newWindow);
 	}
 
-	if ((target == "custom2" || !target) && settings.custom2_url) {
-		let url = settings.custom2_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom2_url_newwindow);
+	if (target && /^custom\d+$/.test(target)) {
+		openCustomUrlSlot(parseInt(target.replace("custom", ""), 10));
+		return;
 	}
 
-	if ((target == "custom3" || !target) && settings.custom3_url) {
-		let url = settings.custom3_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom3_url_newwindow);
-	}
-
-	if ((target == "custom4" || !target) && settings.custom4_url) {
-		let url = settings.custom4_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom4_url_newwindow);
-	}
-
-	if ((target == "custom5" || !target) && settings.custom5_url) {
-		let url = settings.custom5_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom5_url_newwindow);
-	}
-
-	if ((target == "custom6" || !target) && settings.custom6_url) {
-		let url = settings.custom6_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom6_url_newwindow);
-	}
-
-	if ((target == "custom7" || !target) && settings.custom7_url) {
-		let url = settings.custom7_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom7_url_newwindow);
-	}
-
-	if ((target == "custom8" || !target) && settings.custom8_url) {
-		let url = settings.custom8_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom8_url_newwindow);
-	}
-
-	if ((target == "custom9" || !target) && settings.custom9_url) {
-		let url = settings.custom9_url.textsetting;
-		if (!url.startsWith("http")) {
-			url = "https://" + url;
-		}
-		openURL(url, settings.custom9_url_newwindow);
+	if (!target) {
+		Object.keys(settings)
+			.map(key => {
+				const match = key.match(/^custom(\d+)_url$/);
+				return match ? parseInt(match[1], 10) : 0;
+			})
+			.filter(index => index > 0)
+			.sort((a, b) => a - b)
+			.forEach(openCustomUrlSlot);
 	}
 }
 
@@ -10099,19 +10124,20 @@ function sendDataP2P(data, UUID = false) {
 				ninjaBridge.send(data, UUID);
 				return;
 			}
-			// Prefer sending to docks; if none known yet, broadcast
-			var hasDock = false;
+			// Prefer sending to known overlay receivers; if none known yet, broadcast.
+			var hasOverlayReceiver = false;
 			try {
 				var peers = ninjaBridge.getPeers();
 				for (var k in peers) {
-					if (peers[k] === "dock") {
-						hasDock = true;
-						break;
+					if (peers[k] === "dock" || peers[k] === "aioverlay" || peers[k] === "tipjar") {
+						hasOverlayReceiver = true;
 					}
 				}
 			} catch (e) {}
-			if (hasDock) {
+			if (hasOverlayReceiver) {
 				ninjaBridge.sendToLabel(data, "dock");
+				ninjaBridge.sendToLabel(data, "aioverlay");
+				ninjaBridge.sendToLabel(data, "tipjar");
 			} else {
 				ninjaBridge.send(data); // broadcast
 			}
@@ -10134,8 +10160,8 @@ function sendDataP2P(data, UUID = false) {
 				try {
 					UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
-					if (!label || label === "dock") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // the docks and emotes page are VIEWERS, since backend is PUSH-only
+					if (!label || label === "dock" || label === "aioverlay" || label === "tipjar") {
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // the docks, emotes, and AI overlay page are VIEWERS, since backend is PUSH-only
 					}
 				} catch (e) {
 					console.error(e);
@@ -12117,7 +12143,8 @@ async function processIncomingRequest(request, UUID = false) {
 							if (!tabs[i].url) {
 								continue;
 							}
-							if (tabs[i].url.startsWith("https://socialstream.ninja/")) {
+							var websocketPlatform = getWebsocketSourcePlatformFromUrl(tabs[i].url);
+							if (tabs[i].url.startsWith("https://socialstream.ninja/") && !websocketPlatform) {
 								continue;
 							}
 							if (tabs[i].url.startsWith("https://www.youtube.com/watch") && !tabs[i].url.includes("&socialstream")) {
@@ -12135,13 +12162,19 @@ async function processIncomingRequest(request, UUID = false) {
 							if (tabs[i].url.startsWith("file://") && tabs[i].url.includes("index.html?")) {
 								continue;
 							}
-							if (tabs[i].url.startsWith("chrome-extension")) {
+							if (tabs[i].url.startsWith("chrome-extension") && !websocketPlatform) {
 								continue;
 							}
-							if (tabs[i].id && priorityTabs.has(tabs[i].id)) {
-								tabsList.unshift(tabs[i]);
+							var tab = tabs[i];
+							if (websocketPlatform) {
+								tab = Object.assign({}, tabs[i]);
+								tab.title = tab.title || websocketPlatform.charAt(0).toUpperCase() + websocketPlatform.slice(1) + " WebSocket";
+								tab.favIconUrl = tab.favIconUrl || "./sources/images/" + websocketPlatform + ".png";
+							}
+							if (tab.id && priorityTabs.has(tab.id)) {
+								tabsList.unshift(tab);
 							} else {
-								tabsList.push(tabs[i]);
+								tabsList.push(tab);
 							}
 						} catch (e) {}
 					}
@@ -12895,6 +12928,61 @@ function markAutoMessageForTab(tabId) {
 	lastAutoMessagePerTab[tabId] = tabMessageActivityCounter[tabId] || 0;
 }
 
+function normalizeAccountRole(role) {
+	const value = String(role || "normal")
+		.trim()
+		.toLowerCase();
+	return ["host", "bot", "relay"].includes(value) ? value : "normal";
+}
+
+function normalizeAccountRoleListValue(role) {
+	const value = String(role || "")
+		.trim()
+		.toLowerCase();
+	return ["normal", "host", "bot", "relay"].includes(value) ? value : "";
+}
+
+function getAccountRoleListSetting(key) {
+	try {
+		const entry = settings?.[key];
+		const raw = entry && typeof entry === "object" && "textsetting" in entry ? entry.textsetting || "" : entry || "";
+		return String(raw)
+			.split(",")
+			.map(role =>
+				String(role || "")
+					.trim()
+					.toLowerCase()
+			)
+			.filter(role => role)
+			.map(role => normalizeAccountRoleListValue(role))
+			.filter((role, index, roles) => role && roles.indexOf(role) === index);
+	} catch (e) {
+		return [];
+	}
+}
+
+function getTabAccountRole(tab) {
+	if (!tab || typeof tab !== "object") {
+		return "normal";
+	}
+	return normalizeAccountRole(tab.accountRole || tab.ssnAccountRole || tab.sourceAccountRole);
+}
+
+function tabMatchesAccountRoles(tab, allowRoles = [], blockRoles = []) {
+	const role = getTabAccountRole(tab);
+	if (blockRoles.length && blockRoles.includes(role)) {
+		return false;
+	}
+	if (allowRoles.length && !allowRoles.includes(role)) {
+		return false;
+	}
+	return true;
+}
+
+function shouldApplyRelayAccountRoleFilter(data, relayMode) {
+	return !!(relayMode || data?.relayRoleControlled);
+}
+
 function hasExplicitRelayTabTargets(data, reverse = false) {
 	return !reverse && "tid" in data && data.tid !== false && data.tid !== null;
 }
@@ -12952,7 +13040,7 @@ function isRelayAllowedTabUrl(url) {
 		if (url.startsWith("chrome://")) {
 			return false;
 		}
-		if (url.startsWith("chrome-extension")) {
+		if (url.startsWith("chrome-extension") && !isWebsocketSourceTabUrl(url)) {
 			return false;
 		}
 	}
@@ -13091,7 +13179,7 @@ function relayStoreOnlyForTab(relayTabContext, message) {
 }
 
 function isWebsocketSourceTabUrl(url) {
-	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://")));
+	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
 }
 
 function relayMessageToWebsocketSourceTab(tabId, message) {
@@ -13361,32 +13449,56 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 	try {
 		let tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
-		tabs = filterRelayCandidateTabs(tabs, data, reverse);
+		let routingData = data;
+		const chatbotDestinationRoles = messageOrigin === "chatbot" || data.botRoleControlled ? getAccountRoleListSetting("botreplyaccountroles") : [];
+		const dispatchMessageOrigin = chatbotDestinationRoles.length && data.botRoleControlled ? "chatbot" : messageOrigin;
+
+		if (chatbotDestinationRoles.length) {
+			let sourceDestination = data.destination || false;
+			if (!sourceDestination && data.tid !== undefined && data.tid !== null && data.tid !== false) {
+				const sourceTabIds = getRelayTargetTabIdSet(data.tid);
+				const sourceTab = tabs.find(tab => sourceTabIds.has(tab.id));
+				if (sourceTab) {
+					sourceDestination = (sourceTab.id ? await getSourceType(sourceTab.id) : false) || getLegacySSAppRelaySourceType(sourceTab);
+				}
+			}
+			routingData = {
+				...data,
+				tid: false,
+				...(sourceDestination ? { destination: sourceDestination } : {})
+			};
+		}
+
+		const relayRoleAllowList = shouldApplyRelayAccountRoleFilter(routingData, relayMode) ? getAccountRoleListSetting("relayaccountroles") : [];
+		const relayRoleBlockList = shouldApplyRelayAccountRoleFilter(routingData, relayMode) ? getAccountRoleListSetting("blockrelayaccountroles") : [];
+
+		const roleRoutingReverse = reverse || !!chatbotDestinationRoles.length;
+		tabs = filterRelayCandidateTabs(tabs, routingData, roleRoutingReverse);
 
 		var published = {};
 		let processedAnyTab = false;
 
 		const processTab = async tab => {
 			processedAnyTab = true;
-			await dispatchRelayMessageToTab(tab, data, {
+			await dispatchRelayMessageToTab(tab, routingData, {
 				now: now,
 				overrideTimeout: overrideTimeout,
 				relayMode: relayMode,
-				messageOrigin: messageOrigin,
+				messageOrigin: dispatchMessageOrigin,
 				shouldCheckDynamicPerTab: shouldCheckDynamicPerTab,
 				rumbleCooldownMs: RUMBLE_COOLDOWN_MS
 			});
 		};
 
-		const hasSpecificTids = hasExplicitRelayTabTargets(data, reverse);
-		const needsValidation = data.destination || relayMode;
+		const hasSpecificTids = hasExplicitRelayTabTargets(routingData, roleRoutingReverse);
+		const needsValidation = routingData.destination || relayMode || chatbotDestinationRoles.length || relayRoleAllowList.length || relayRoleBlockList.length;
 
-		await processRelayTabBatch(tabs, published, !hasSpecificTids || needsValidation ? tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) : null, processTab);
+		await processRelayTabBatch(tabs, published, !hasSpecificTids || needsValidation ? tab => isValidTab(tab, routingData, reverse, published, now, overrideTimeout, relayMode, { chatbotDestinationRoles, relayRoleAllowList, relayRoleBlockList }) : null, processTab);
 
 		// If no platform match was found, fall back to matching a custom destination against the tab URL.
-		if (data.destination && !processedAnyTab) {
+		if (routingData.destination && !processedAnyTab) {
 			published = {};
-			await processRelayTabBatch(tabs, published, tab => isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url" }), processTab);
+			await processRelayTabBatch(tabs, published, tab => isValidTab(tab, routingData, reverse, published, now, overrideTimeout, relayMode, { destinationMode: "url", chatbotDestinationRoles, relayRoleAllowList, relayRoleBlockList }), processTab);
 		}
 	} catch (error) {
 		//console.log('Error in sendMessageToTabs:', error);
@@ -13402,6 +13514,8 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 	if (!isRelayAllowedTabUrl(tab.url)) return false;
 	if (tab.url in published) return false;
 	if (!matchesRelayTabFilter(tab, data, reverse)) return false;
+	if (options.chatbotDestinationRoles?.length && !tabMatchesAccountRoles(tab, options.chatbotDestinationRoles, [])) return false;
+	if (shouldApplyRelayAccountRoleFilter(data, relayMode) && !tabMatchesAccountRoles(tab, options.relayRoleAllowList || [], options.relayRoleBlockList || [])) return false;
 	let sourceType = false;
 	if (tab.id) {
 		sourceType = await getSourceType(tab.id);
@@ -14886,7 +15000,7 @@ async function applyBotActions(data, tab = false) {
 			const joke = jokes[score];
 
 			//messageTimeout = Date.now();
-			const jokeMessage = {};
+			const jokeMessage = { botRoleControlled: true };
 
 			if (data.reflection) {
 				jokeMessage.response = joke["setup"];
@@ -14955,7 +15069,7 @@ async function applyBotActions(data, tab = false) {
 
 		if (settings.autohi && data.chatname && data.chatmessage && !data.reflection) {
 			if (["hi", "sup", "hello", "hey", "yo", "hi!", "hey!"].includes(data.chatmessage.toLowerCase())) {
-				const hiMessage = {};
+				const hiMessage = { botRoleControlled: true };
 				if (data.tid) {
 					hiMessage.tid = data.tid;
 				}
@@ -15043,7 +15157,7 @@ async function applyBotActions(data, tab = false) {
 			let roll = Math.floor(Math.random() * maxRoll) + 1;
 
 			//messageTimeout = Date.now();
-			const diceResultMessage = {};
+			const diceResultMessage = { botRoleControlled: true };
 
 			if (data.tid) {
 				diceResultMessage.tid = data.tid;
@@ -15051,7 +15165,7 @@ async function applyBotActions(data, tab = false) {
 				sendMessageToTabs(diceResultMessage, false, null, true, false, 5100);
 			}
 
-			var msg2 = {};
+			var msg2 = { botRoleControlled: true };
 			if (data.tid) {
 				msg2.tid = data.tid;
 			}
@@ -15318,6 +15432,7 @@ async function applyBotActions(data, tab = false) {
 				donationRelayMessage.url = tab.url;
 			}
 
+			donationRelayMessage.relayRoleControlled = true;
 			donationRelayMessage.response = sanitizeRelay(data.chatname, true, "Someone") + " on " + data.type + " donated " + sanitizeRelay(data.hasDonation, true) + ". Thank you";
 			sendMessageToTabs(donationRelayMessage, true, null, false, false, 100);
 			//}

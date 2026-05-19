@@ -492,6 +492,7 @@ class EventFlowEditor {
             { value: 'facebook', label: 'Facebook' },
             { value: 'tiktok', label: 'TikTok' },
             { value: 'instagram', label: 'Instagram' },
+            { value: 'instagramlive', label: 'Instagram Live' },
             { value: 'rumble', label: 'Rumble' },
             { value: 'kofi', label: 'Ko-fi' },
             { value: 'bmac', label: 'Buy Me a Coffee' },
@@ -2901,7 +2902,7 @@ class EventFlowEditor {
 				this.populateMIDIInputDevices('prop-deviceId', node.config.deviceId);
 				break;
 			case 'fromSource':
-				const isCustomSource = node.config.source !== undefined && node.config.source !== null && !['*', 'amazon', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
+				const isCustomSource = node.config.source !== undefined && node.config.source !== null && !['*', 'amazon', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
   'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
@@ -2918,7 +2919,7 @@ class EventFlowEditor {
 				
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
 						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
-						    ${['amazon', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
+						    ${['amazon', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
   'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
   'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
   'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',

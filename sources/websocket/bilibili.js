@@ -1,9 +1,40 @@
 var settings = {};
 
+function getTranslation(key, fallback) {
+    try {
+        if (settings && settings.translation && settings.translation.innerHTML && Object.prototype.hasOwnProperty.call(settings.translation.innerHTML, key)) {
+            return settings.translation.innerHTML[key];
+        }
+        if (settings && settings.translation && settings.translation.miscellaneous && Object.prototype.hasOwnProperty.call(settings.translation.miscellaneous, key)) {
+            return settings.translation.miscellaneous[key];
+        }
+    } catch (e) {}
+    return fallback || String(key || '').replace(/-/g, ' ');
+}
+
+function translateBilibiliPayload(data) {
+    if (!data || typeof data !== "object") {
+        return data;
+    }
+    if (data.title === "DONATION") {
+        data.title = getTranslation("donation", "DONATION");
+    } else if (data.title === "SUPER CHAT") {
+        data.title = getTranslation("super-chat-label", "SUPER CHAT");
+    }
+    if (data.chatmessage === "has entered the room") {
+        data.chatmessage = getTranslation("source-user-entered-room", "has entered the room");
+    } else if (data.chatmessage === "Stream is now LIVE") {
+        data.chatmessage = getTranslation("stream-is-now-live", "Stream is now LIVE");
+    } else if (data.chatmessage === "Stream is now OFFLINE") {
+        data.chatmessage = getTranslation("stream-is-now-offline", "Stream is now OFFLINE");
+    }
+    return data;
+}
+
 // Listen for IRC messages from the page
 window.addEventListener('bilibiliMessage', function(e) {
     if (e.detail) {
-        pushMessage(e.detail);
+        pushMessage(translateBilibiliPayload(e.detail));
     }
 });
 

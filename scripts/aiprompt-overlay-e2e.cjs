@@ -49,8 +49,8 @@ function validateGeneratedHtmlContract(html) {
   if (!/window\.handleOverlayPayload\s*=/.test(html)) errors.push('missing window.handleOverlayPayload');
   if (!/dataReceived[\s\S]{0,160}overlayNinja/.test(html)) errors.push('missing dataReceived.overlayNinja listener');
   if (/vdo\.socialstream\.ninja|ssn_bridge/i.test(html)) {
-    if (!/params\.get\((["'])label\1\)\s*\|\|\s*(["'])dock\2/.test(html)) errors.push('bridge label does not default to dock');
-    if (/params\.get\((["'])label\1\)\s*\|\|\s*["'](?!dock["'])/i.test(html)) errors.push('bridge has unsafe non-dock fallback label');
+    if (!/params\.get\((["'])label\1\)\s*\|\|\s*(["'])(?:dock|meta)\2/.test(html)) errors.push('bridge label does not default to dock or meta');
+    if (/params\.get\((["'])label\1\)\s*\|\|\s*["'](?!(?:dock|meta)["'])/i.test(html)) errors.push('bridge has unsafe fallback label');
     if (/(?:random|date\.now\(\)|math\.random\(\))[\s\S]{0,80}label|label[\s\S]{0,80}(?:random|date\.now\(\)|math\.random\(\))/i.test(html)) errors.push('bridge label appears random/time-based');
   } else {
     errors.push('missing SSN bridge');

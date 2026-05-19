@@ -617,7 +617,9 @@ TTS.configure = function(urlParams) {
     }
 
     // Kokoro settings
-    TTS.kokoroSettings.speed = urlParams.has("korospeed") ? parseFloat(urlParams.get("korospeed")) || 1.0 : TTS.rate;
+    TTS.kokoroSettings.speed = urlParams.has("kokorospeed")
+        ? parseFloat(urlParams.get("kokorospeed")) || 1.0
+        : (urlParams.has("korospeed") ? parseFloat(urlParams.get("korospeed")) || 1.0 : TTS.rate);
     TTS.kokoroSettings.voiceName = urlParams.get("voicekokoro") || "af_aoede";
 
     // Piper TTS settings  

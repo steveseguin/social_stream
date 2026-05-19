@@ -115,8 +115,8 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - mixcloud.com (pop out chat)
 - ms teams (teams.live.com and teams.microsoft.com)
 - vimeo.com (either the vimeo.com/events/xxx pages or https://vimeo.com/live-chat/xxxxxxxxx/interaction/)
-- instagram live (instagram.com/*/live/),  css note:  `[data.type = "instagramlive"]`
-- Instagram post non-live comments (REQUIRES the TOGGLE in menu to enable it), css note: `[data.type = "instagram"]`
+- instagram live (instagram.com/*/live/), payload type / css note: `[data.type = "instagramlive"]`
+- Instagram post non-live comments (REQUIRES the TOGGLE in menu to enable it), payload type / css note: `[data.type = "instagram"]`
 - instafeed.me (no pop out; alternative instagram live support)
 - tiktok live (tiktok.com/*/live -- the chat must be left open/visible if using the extension version)
 - webex live chat (not the pop out)
@@ -229,6 +229,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - streamelements (overlay page)
 - versus.cam (test chat page at https://versus.cam/?testchat)
 - patreon
+- arena.social (open https://arena.social/live/*)
 - velora.tv (no popup; just channel watch page)
 - blaze.stream (no popup; just channel watch page)
 
@@ -255,7 +256,7 @@ Past supported sites that have ceased to exist or been retired.
 - 🪦 dlive.tv (RIP April 2026)
 - 🪦 Mobcrush (RIP August 2022)
 - 🪦 AfreecaTV / sooplive.co.kr (merged into sooplive.com)
-- 🪦 ArenaTV / Arena Social (livestreaming systems shut down)
+- 🪦 ArenaTV (livestreaming system shut down)
 
   (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 

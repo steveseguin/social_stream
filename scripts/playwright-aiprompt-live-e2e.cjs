@@ -22,7 +22,7 @@ function parseSseLines(text, onText) {
 		if (!data || data === "[DONE]") continue;
 		const json = JSON.parse(data);
 		const delta = json.choices && json.choices[0] && json.choices[0].delta;
-		const text = delta && (delta.content || delta.reasoning_content || "");
+		const text = delta && (delta.content || delta.reasoning_content || delta.reasoning || "");
 		if (text) onText(text);
 	}
 }
@@ -211,8 +211,8 @@ async function main() {
 	function assertGeneratedLiveHtml(html, runLabel) {
 		assert(/window\.handleOverlayPayload\s*=/.test(html), `${runLabel} missing window.handleOverlayPayload`);
 		assert(/dataReceived[\s\S]{0,160}overlayNinja/.test(html), `${runLabel} missing dataReceived.overlayNinja listener`);
-		assert(/params\.get\((["'])label\1\)\s*\|\|\s*(["'])dock\2/.test(html), `${runLabel} bridge label should default to dock`);
-		assert(!/params\.get\((["'])label\1\)\s*\|\|\s*["'](?!dock["'])/i.test(html), `${runLabel} has unsafe non-dock bridge label fallback`);
+		assert(/params\.get\((["'])label\1\)\s*\|\|\s*(["'])(?:dock|meta)\2/.test(html), `${runLabel} bridge label should default to dock or meta`);
+		assert(!/params\.get\((["'])label\1\)\s*\|\|\s*["'](?!(?:dock|meta)["'])/i.test(html), `${runLabel} has unsafe bridge label fallback`);
 		assert(!/(?:random|date\.now\(\)|math\.random\(\))[\s\S]{0,80}label|label[\s\S]{0,80}(?:random|date\.now\(\)|math\.random\(\))/i.test(html), `${runLabel} should not use random/time-based labels`);
 	}
 

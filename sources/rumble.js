@@ -497,6 +497,9 @@
 		}
 	);
 
+	var rumbleChatObserver = null;
+	var rumbleChatObserverTarget = null;
+
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
@@ -513,10 +516,19 @@
 			});
 		};
 		if (!target){return;}
+		if (rumbleChatObserver && rumbleChatObserverTarget === target && target.isConnected) {
+			return;
+		}
+		if (rumbleChatObserver) {
+			try {
+				rumbleChatObserver.disconnect();
+			} catch(e) {}
+		}
 		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+		rumbleChatObserver = new MutationObserver(onMutationsObserved);
+		rumbleChatObserver.observe(target, config);
+		rumbleChatObserverTarget = target;
 	}
 	
 	console.log("social stream injected");
@@ -577,11 +589,12 @@
 	},10000);
 
 	setInterval(function(){
-		if (document.querySelector('.chat--height')){
-			if (!document.querySelector('.chat--height').marked){
-				document.querySelector('.chat--height').marked=true;
-				
-				onElementInserted(document.querySelector('.chat--height'));
+		var chatContainer = document.querySelector('.chat--height');
+		if (chatContainer){
+			if (!chatContainer.marked || !rumbleChatObserver || rumbleChatObserverTarget !== chatContainer || !chatContainer.isConnected){
+				chatContainer.marked=true;
+
+				onElementInserted(chatContainer);
 				checkViewers();
 				//document.querySelectorAll(".chat-history--row").forEach(ele=>{
 				//	processMessage(ele);

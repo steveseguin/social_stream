@@ -566,6 +566,7 @@ function getById(id) {
     };
 })(window);
 var urlParams = new URLSearchParams(window.location.search);
+var translation = {};
 var iframe = null;
 var roomID = "test";
 var darkmode = null;
@@ -582,6 +583,59 @@ var hidereplies = false;
 var uniqueId = "";
 var sourceTypes = {};
 var computedStyle = getComputedStyle(document.documentElement);
+
+function getTranslation(key, fallback) {
+    try {
+        if (translation && translation.innerHTML && Object.prototype.hasOwnProperty.call(translation.innerHTML, key)) {
+            return translation.innerHTML[key];
+        }
+        if (translation && translation.miscellaneous && Object.prototype.hasOwnProperty.call(translation.miscellaneous, key)) {
+            return translation.miscellaneous[key];
+        }
+    } catch (e) {}
+    return fallback || String(key || "").replace(/-/g, " ");
+}
+
+function loadTranslationFromUrl() {
+    var lang = urlParams.get("ln") || urlParams.get("lang") || urlParams.get("language") || "";
+    lang = (lang + "").trim().replace("_", "-");
+    if (!lang) {
+        return;
+    }
+    fetch("./translations/" + encodeURIComponent(lang) + ".json", { cache: "no-store" })
+        .then(function(response) {
+            if (!response.ok) {
+                return null;
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            if (data) {
+                translation = data;
+                applyHypeTitle();
+            }
+        })
+        .catch(function(e) {
+            console.error(e);
+        });
+}
+
+function getHypeTitleText() {
+    if (showViewers && showChatters) {
+        return getTranslation("hype-title-chatters-and-viewers", "Active chatters and viewers in the last 5-minutes");
+    }
+    if (showViewers) {
+        return getTranslation("hype-title-viewer-count", "Current viewer count");
+    }
+    return getTranslation("hype-title-chatters", "Active chatters in the last 5-minutes");
+}
+
+function applyHypeTitle() {
+    if (hypeTitle) {
+        hypeTitle.textContent = getHypeTitleText();
+    }
+}
+
 function normalizeColorParam(value) {
     if (typeof value !== "string") return null;
     var trimmed = value.trim();
@@ -835,17 +889,8 @@ if (urlParams.has("chattersonly")) {
         hypeContainer.classList.add("short");
     }
 }
-var titleText = "";
-if (showViewers && showChatters) {
-    titleText = "Active chatters and viewers in the last 5-minutes";
-} else if (showViewers) {
-    titleText = "Current viewer count";
-} else {
-    titleText = "Active chatters in the last 5-minutes";
-}
-if (hypeTitle) {
-    hypeTitle.textContent = titleText;
-}
+applyHypeTitle();
+loadTranslationFromUrl();
 let style = "default";
 if (urlParams.has("style")) {
     style = urlParams.get("style");

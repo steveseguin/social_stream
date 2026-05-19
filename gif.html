@@ -63,6 +63,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const mediaContainer = document.getElementById('mediaContainer');
         const mediaContent = document.getElementById('mediaContent');
+        const customGifFilterId = (urlParams.get('gifid') || '').trim();
+        const customGifFilterCommand = (urlParams.get('gifcommand') || '').trim().toLowerCase();
         if (urlParams.has('stretch')) document.body.classList.add('stretch');
         let mediaQueue = [];
         let isPlaying = false;
@@ -74,13 +76,40 @@
 		const embeddedDisplayTime = urlParams.has('showtime') ? minDisplayTime : Math.max(minDisplayTime, 5000);
 		const mediaProbeTimeout = 4000;
 
+        function shouldShowCustomGifData(data) {
+            if (!customGifFilterId && !customGifFilterCommand) return true;
+
+            const meta = data && data.meta ? data.meta : {};
+            if (customGifFilterId && String(meta.customGifCommandId || '') === customGifFilterId) {
+                return true;
+            }
+
+            if (customGifFilterCommand) {
+                const command = String(meta.customGifCommand || '').toLowerCase();
+                if (command === customGifFilterCommand) return true;
+
+                const commands = Array.isArray(meta.customGifCommands) ? meta.customGifCommands : [];
+                for (let i = 0; i < commands.length; i++) {
+                    if (String(commands[i] || '').toLowerCase() === customGifFilterCommand) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         function processData(data) {
            //console.log(data);
-            
+
             if (data.content) {
                 data = data.content;
             }
-            
+
+            if (!shouldShowCustomGifData(data)) {
+                return;
+            }
+
 			// the URL should be a direct image/video/audio/svg, but it might also be a link to tenor/giphy.
 			
 			// Here, we want to show contentimg as an near full window or full window

@@ -290,7 +290,7 @@
     <div class="wrap">
         <section class="card">
             <h1>VPZone WebSocket Source</h1>
-            <p>Read-only VPZone websocket bridge. It subscribes to a stream username and forwards <code>chat_message</code>, follow/subscription events, and optional presence viewer counts.</p>
+            <p>VPZone websocket bridge. It subscribes to a stream username, forwards chat/events/viewer counts, and sends chat when OAuth or the bearer token has <code>chat:write</code>.</p>
             <p class="hint">URL params supported: <code>?channel=lordwaffl3</code>, <code>?ws=wss://chat.nexus-7.vpzone.tv/ws</code>, and <code>?token=YOUR_BEARER_TOKEN</code>.</p>
         </section>
 
@@ -324,7 +324,7 @@
                 <span id="auth-chip" class="chip">Auth: public</span>
             </div>
             <p id="status-text" class="hint">Enter a VPZone channel and connect.</p>
-            <p class="hint">OAuth uses the Social Stream Ninja public PKCE app. A manual bearer token still works.</p>
+            <p class="hint">OAuth uses the Social Stream Ninja public PKCE app with all documented VPZone API scopes. A manual bearer token still works.</p>
             <p class="hint">Chat dock shortcut: <a id="channel-link" class="link" href="https://vpzone.tv" target="_blank" rel="noopener">vpzone.tv</a></p>
         </section>
 
@@ -340,5 +340,6 @@
             </section>
         </section>
     </div>
+    <script src="vpzone.js"></script>
 </body>
 </html>

@@ -311,7 +311,7 @@
 										// Regular chat message
 										messageData.event = false;
 										messageData.chatmessage = eventData.data?.message || eventData.data?.text || "";
-										messageData.userId = eventData.data?.userId || eventData.data?.providerId || "";
+										messageData.userid = eventData.data?.userId || eventData.data?.providerId || "";
 									} else if (eventData.type === 'redemption') {
 										messageData.event = "reward";
 										messageData.chatmessage = `Redeemed ${eventData.data?.redemptionName || 'reward'}`;
