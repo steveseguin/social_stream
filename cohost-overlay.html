@@ -12,6 +12,14 @@
 			--bubble-bg: rgba(16, 19, 24, 0.88);
 			--bubble-color: #f8fafc;
 			--bubble-border: rgba(255, 255, 255, 0.18);
+			--puppet-primary: #22314a;
+			--puppet-bg: #9be7ff;
+			--puppet-bg-deep: #63c8ef;
+			--puppet-outline: rgba(19, 37, 63, 0.14);
+			--puppet-mouth: #24324b;
+			--puppet-blush: rgba(255, 135, 162, 0.68);
+			--puppet-shadow: rgba(7, 19, 39, 0.26);
+			--puppet-face-inset: 22px;
 		}
 
 		* {
@@ -92,10 +100,9 @@
 
 		#avatarWrap {
 			position: relative;
-			width: 168px;
-			height: 168px;
-			flex: 0 0 168px;
-			filter: drop-shadow(0 20px 28px rgba(0, 0, 0, 0.35));
+			width: 300px;
+			height: 300px;
+			flex: 0 0 300px;
 		}
 
 		#avatarImage {
@@ -117,106 +124,612 @@
 		}
 
 		.puppet {
-			position: absolute;
-			inset: 0;
+			width: 300px;
+			height: 300px;
+			position: relative;
+			overflow: visible;
+			isolation: isolate;
+			background: radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.95) 0 10%, rgba(255, 255, 255, 0) 25%), radial-gradient(circle at 50% 115%, rgba(255, 255, 255, 0.72) 0, rgba(255, 255, 255, 0) 55%), linear-gradient(180deg, var(--puppet-bg) 0%, var(--puppet-bg-deep) 100%);
+			border: 1px solid var(--puppet-outline);
 			border-radius: 50%;
-			background: linear-gradient(145deg, #44d7b6, #2563eb);
-			border: 4px solid rgba(255, 255, 255, 0.9);
-			overflow: hidden;
+			box-shadow:
+				0 24px 60px var(--puppet-shadow),
+				inset 0 -16px 24px rgba(255, 255, 255, 0.24),
+				inset 0 8px 18px rgba(255, 255, 255, 0.34);
+			transition: transform 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease;
+			animation: floatBob 4.6s ease-in-out infinite;
+		}
+
+		.puppet::before,
+		.puppet::after {
+			content: "";
+			position: absolute;
+			border-radius: 50%;
+			pointer-events: none;
+		}
+
+		.puppet::before {
+			inset: 10px;
+			background: radial-gradient(circle at 35% 20%, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0) 42%);
+			opacity: 0.85;
+		}
+
+		.puppet::after {
+			inset: -12px;
+			background: radial-gradient(circle, rgba(111, 214, 255, 0.2), rgba(111, 214, 255, 0) 68%);
+			filter: blur(16px);
+			z-index: -1;
+			animation: auraPulse 6s ease-in-out infinite;
 		}
 
 		.face {
+			width: 180px;
 			position: absolute;
-			inset: 24px 22px 18px;
-			border-radius: 50%;
-			background: #fff7e8;
+			left: 50%;
+			top: 50%;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			transform: translate(-50%, -50%);
+			transition: transform 0.3s ease, filter 0.3s ease;
+			animation: idleFace 7s ease-in-out infinite;
 		}
 
 		.eyes {
-			position: absolute;
-			left: 34px;
-			right: 34px;
-			top: 48px;
 			display: flex;
+			width: 100%;
+			padding: 0 var(--puppet-face-inset);
+			box-sizing: border-box;
+			align-items: center;
 			justify-content: space-between;
+			transition: all 0.3s ease;
 		}
 
 		.eye {
-			width: 20px;
-			height: 24px;
+			width: 34px;
+			height: 34px;
 			border-radius: 50%;
-			background: #111827;
-			transition: transform 120ms ease, height 120ms ease;
+			background: linear-gradient(180deg, var(--puppet-primary) 0%, #111827 100%);
+			position: relative;
+			box-shadow: inset 0 -4px 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.15);
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			overflow: hidden;
+		}
+
+		.eye::before {
+			content: "";
+			position: absolute;
+			width: 11px;
+			height: 11px;
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 50%;
+			top: 6px;
+			left: 6px;
+			box-shadow: 4px 6px 0 -2px rgba(255, 255, 255, 0.55);
+			transition: all 0.3s ease;
+		}
+
+		.eye::after {
+			content: "";
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, var(--puppet-bg) 64%, var(--puppet-bg-deep) 100%);
+			transform: translateY(-120%);
+			transition: transform 0.15s ease;
+		}
+
+		.eyebrows {
+			position: absolute;
+			width: 100%;
+			top: -24px;
+			left: 0;
+			display: flex;
+			justify-content: space-between;
+			padding: 0 calc(var(--puppet-face-inset) - 2px);
+			box-sizing: border-box;
+			opacity: 0;
+			transition: opacity 0.25s ease;
+		}
+
+		.eyebrow {
+			width: 38px;
+			height: 8px;
+			background: var(--puppet-primary);
+			border-radius: 999px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+			transition: all 0.3s ease;
+			transform-origin: center;
 		}
 
 		.mouth {
+			width: 78px;
+			height: 40px;
+			border: 6px solid var(--puppet-mouth);
+			border-top: 0;
+			border-radius: 0 0 48px 48px;
+			margin: 32px auto 0;
+			position: relative;
+			overflow: hidden;
+			transform-origin: center;
+			box-shadow: inset 0 -4px 0 rgba(255, 255, 255, 0.12);
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+
+		.mouth::before {
+			content: "";
 			position: absolute;
 			left: 50%;
-			bottom: 34px;
-			width: 48px;
-			height: 24px;
-			margin-left: -24px;
-			border: 5px solid #111827;
-			border-top: 0;
-			border-radius: 0 0 40px 40px;
-			transition: all 120ms ease;
+			bottom: -4px;
+			transform: translateX(-50%);
+			width: 56%;
+			height: 48%;
+			background: rgba(255, 150, 170, 0.58);
+			border-radius: 50% 50% 70% 70%;
+			opacity: 0.24;
+			transition: inherit;
+		}
+
+		.cheeks {
+			position: absolute;
+			width: 100%;
+			top: 34%;
+			left: 0;
+			display: flex;
+			justify-content: space-between;
+			padding: 0 var(--puppet-face-inset);
+			box-sizing: border-box;
+			opacity: 0;
+			transition: all 0.3s ease;
 		}
 
 		.cheek {
-			position: absolute;
-			top: 76px;
-			width: 18px;
-			height: 10px;
+			width: 26px;
+			height: 16px;
 			border-radius: 50%;
-			background: rgba(244, 114, 182, 0.32);
+			background: var(--puppet-blush);
+			transform: scale(0);
+			filter: blur(1px);
+			transition: all 0.3s ease;
 		}
 
-		.cheek.left {
-			left: 24px;
+		@keyframes talking {
+			0%,
+			100% {
+				height: 30px;
+				width: 66px;
+				transform: translateY(0) scaleX(1);
+				border-radius: 20px 20px 36px 36px;
+			}
+			50% {
+				height: 54px;
+				width: 56px;
+				transform: translateY(3px) scaleX(0.94);
+				border-radius: 22px 22px 30px 30px;
+			}
 		}
 
-		.cheek.right {
-			right: 24px;
+		@keyframes softTalking {
+			0%,
+			100% {
+				height: 40px;
+				transform: translateY(0) scaleX(1);
+			}
+			50% {
+				height: 52px;
+				transform: translateY(2px) scaleX(0.96);
+			}
 		}
 
-		.puppet.talking .mouth {
-			height: 32px;
+		@keyframes blink {
+			0% {
+				transform: translateY(-120%);
+			}
+			50% {
+				transform: translateY(0);
+			}
+			100% {
+				transform: translateY(110%);
+			}
+		}
+
+		@keyframes floatBob {
+			0%,
+			100% {
+				transform: translateY(0) scale(1);
+			}
+			50% {
+				transform: translateY(-5px) scale(1.01);
+			}
+		}
+
+		@keyframes idleFace {
+			0%,
+			100% {
+				transform: translate(-50%, -50%) rotate(-1deg);
+			}
+			50% {
+				transform: translate(-49%, -51%) rotate(1deg);
+			}
+		}
+
+		@keyframes shadowFloat {
+			0%,
+			100% {
+				transform: translateX(-50%) scaleX(1);
+				opacity: 0.28;
+			}
+			50% {
+				transform: translateX(-50%) scaleX(0.92);
+				opacity: 0.18;
+			}
+		}
+
+		@keyframes auraPulse {
+			0%,
+			100% {
+				transform: scale(1);
+				opacity: 0.18;
+			}
+			50% {
+				transform: scale(1.05);
+				opacity: 0.28;
+			}
+		}
+
+		@keyframes attentiveTilt {
+			0%,
+			100% {
+				transform: translate(-50%, -50%) rotate(0deg);
+			}
+			50% {
+				transform: translate(-49%, -51%) rotate(2deg);
+			}
+		}
+
+		@keyframes nervousWobble {
+			0%,
+			100% {
+				transform: translate(-50%, -50%) rotate(0deg);
+			}
+			25% {
+				transform: translate(-49%, -50%) rotate(1.5deg);
+			}
+			75% {
+				transform: translate(-51%, -50%) rotate(-1.5deg);
+			}
+		}
+
+		@keyframes celebrateBob {
+			0%,
+			100% {
+				transform: translateY(0) scale(1);
+			}
+			30% {
+				transform: translateY(-12px) scale(1.03);
+			}
+			60% {
+				transform: translateY(-4px) scale(0.99);
+			}
+		}
+
+		@keyframes cheerfulBounce {
+			0%,
+			100% {
+				transform: translate(-50%, -50%) rotate(0deg) scale(1);
+			}
+			25% {
+				transform: translate(-50%, -54%) rotate(-4deg) scale(1.02);
+			}
+			75% {
+				transform: translate(-50%, -47%) rotate(4deg) scale(0.98);
+			}
+		}
+
+		.talking .mouth {
+			animation: talking 0.32s ease-in-out infinite;
+		}
+
+		.blink .eye::after {
+			animation: blink 0.16s ease forwards;
+		}
+
+		.happy .mouth {
+			height: 58px;
+			border-radius: 0 0 84px 84px;
+			transform: translateY(0) scale(0.92);
+		}
+
+		.happy .cheeks {
+			opacity: 1;
+		}
+
+		.happy .cheek {
+			transform: scale(1);
+		}
+
+		.happy.talking .mouth {
+			animation: softTalking 0.36s ease-in-out infinite;
+		}
+
+		.sad .mouth {
+			transform: rotate(180deg) translateY(-18px) scale(0.8);
+			width: 60px;
+			height: 30px;
+		}
+
+		.sad .eyebrows {
+			opacity: 1;
+		}
+
+		.sad .eyebrow {
+			transform: rotate(-15deg) translateY(5px);
+			opacity: 1;
+		}
+
+		.sad .eyebrow:last-child {
+			transform: rotate(15deg) translateY(5px);
+		}
+
+		.surprised .mouth {
+			height: 80px;
+			width: 60px;
 			border-radius: 50%;
-			border-top: 5px solid #111827;
-			background: #111827;
+			transform: translateY(6px);
 		}
 
-		.puppet.thinking .mouth,
-		.puppet.confused .mouth {
-			width: 28px;
+		.surprised .eye {
+			height: 45px;
+			width: 45px;
+			transform: translateY(-5px);
+		}
+
+		.surprised .eyebrows {
+			opacity: 1;
+		}
+
+		.surprised .eyebrow {
+			transform: translateY(-5px);
+			opacity: 1;
+		}
+
+		.angry .eyebrows {
+			opacity: 1;
+		}
+
+		.angry .eyebrow {
+			transform: rotate(30deg) translateY(-2px);
+			opacity: 1;
+		}
+
+		.angry .eyebrow:last-child {
+			transform: rotate(-30deg) translateY(-2px);
+		}
+
+		.angry .mouth {
+			width: 60px;
+			height: 20px;
+			transform: rotate(-10deg) translateY(10px);
+			border-radius: 0 0 20px 20px;
+		}
+
+		.angry .eye::before {
+			width: 8px;
+			height: 8px;
+			top: 12px;
+			left: 12px;
+		}
+
+		.thinking .eye {
+			height: 14px;
+			border-radius: 10px;
+			transform: translateY(4px);
+		}
+
+		.thinking .mouth {
+			width: 40px;
 			height: 12px;
-			margin-left: -14px;
-			border-radius: 999px;
-			border: 4px solid #111827;
-			background: transparent;
+			border-radius: 8px;
+			transform: rotate(-10deg) translate(20px, 10px);
 		}
 
-		.puppet.worried .mouth,
-		.puppet.sad .mouth {
-			border-top: 5px solid #111827;
-			border-bottom: 0;
-			border-radius: 40px 40px 0 0;
-			bottom: 28px;
+		.thinking .eyebrows {
+			opacity: 1;
 		}
 
-		.puppet.excited .eye,
-		.puppet.proud .eye,
-		.puppet.celebrating .eye {
-			transform: scaleY(0.72);
+		.thinking .eyebrow:last-child {
+			transform: rotate(-15deg) translateY(-2px);
+			opacity: 1;
 		}
 
-		.puppet.angry .eye {
-			transform: rotate(10deg) scaleY(0.72);
+		.listening .face {
+			animation: attentiveTilt 1.8s ease-in-out infinite;
 		}
 
-		.puppet.sleepy .eye {
+		.listening .eye {
+			width: 30px;
+			height: 40px;
+			transform: translateY(-1px);
+		}
+
+		.listening .eyebrows {
+			opacity: 1;
+		}
+
+		.listening .eyebrow {
+			transform: rotate(10deg) translateY(-6px);
+			opacity: 1;
+		}
+
+		.listening .eyebrow:last-child {
+			transform: rotate(-10deg) translateY(-6px);
+		}
+
+		.listening .mouth {
+			width: 52px;
+			height: 18px;
+			border-radius: 0 0 20px 20px;
+			transform: translateY(12px) scale(0.94);
+		}
+
+		.confused .eyebrows {
+			opacity: 1;
+		}
+
+		.confused .eyebrow:first-child {
+			transform: rotate(-18deg) translate(-3px, -8px);
+			opacity: 1;
+		}
+
+		.confused .eyebrow:last-child {
+			transform: rotate(18deg) translate(3px, 6px);
+			opacity: 1;
+		}
+
+		.confused .eye:first-child {
+			transform: scaleY(1.04);
+		}
+
+		.confused .eye:last-child {
+			transform: scaleY(0.82) translateY(4px);
+		}
+
+		.confused .mouth {
+			width: 56px;
+			height: 18px;
+			border-radius: 0 0 18px 18px;
+			transform: rotate(-12deg) translate(18px, 10px);
+		}
+
+		.worried .face {
+			animation: nervousWobble 1.5s ease-in-out infinite;
+		}
+
+		.worried .eyebrows {
+			opacity: 1;
+		}
+
+		.worried .eyebrow:first-child {
+			transform: rotate(-18deg) translateY(-4px);
+			opacity: 1;
+		}
+
+		.worried .eyebrow:last-child {
+			transform: rotate(18deg) translateY(-4px);
+			opacity: 1;
+		}
+
+		.worried .eye {
+			width: 30px;
+			height: 38px;
+		}
+
+		.worried .mouth {
+			width: 58px;
+			height: 18px;
+			border-radius: 0 0 22px 22px;
+			transform: rotate(180deg) translateY(-12px) scale(0.9);
+		}
+
+		.proud .face {
+			transform: translate(-50%, -52%);
+		}
+
+		.proud .eyebrows {
+			opacity: 1;
+		}
+
+		.proud .eyebrow {
+			transform: translateY(-2px);
+			opacity: 1;
+		}
+
+		.proud .mouth {
+			width: 74px;
+			height: 34px;
+			transform: translateY(6px) rotate(4deg);
+			border-radius: 0 0 52px 52px;
+		}
+
+		.proud .cheeks {
+			opacity: 0.85;
+		}
+
+		.proud .cheek {
+			transform: scale(0.82);
+			background: rgba(255, 172, 184, 0.72);
+		}
+
+		.wink .eye:first-child {
 			height: 5px;
-			margin-top: 10px;
+			margin-top: 15px;
+			border-radius: 5px;
+		}
+
+		.puppet.excited,
+		.puppet.celebrating {
+			animation: celebrateBob 0.68s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+		}
+
+		.excited .face {
+			animation: cheerfulBounce 0.55s ease-in-out infinite;
+		}
+
+		.celebrating .face {
+			animation: cheerfulBounce 0.45s ease-in-out infinite;
+		}
+
+		.excited .cheeks,
+		.celebrating .cheeks {
+			opacity: 1;
+		}
+
+		.excited .cheek {
+			transform: scale(1.2);
+			background: rgba(255, 117, 145, 0.82);
+		}
+
+		.celebrating .cheek {
+			transform: scale(1.3);
+			background: rgba(255, 117, 145, 0.88);
+		}
+
+		.sleepy .eye {
+			height: 8px;
+			border-radius: 4px;
+			transform: translateY(12px);
+		}
+
+		.sleepy .mouth {
+			height: 25px;
+			width: 40px;
+			transform: translateY(10px);
+		}
+
+		.shadow {
+			position: absolute;
+			bottom: -15px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 90%;
+			height: 20px;
+			background: var(--puppet-shadow);
+			border-radius: 50%;
+			transition: all 0.3s ease;
+			filter: blur(5px);
+			animation: shadowFloat 4.6s ease-in-out infinite;
+		}
+
+		.excited .shadow {
+			width: 84%;
+			opacity: 0.2;
+			transform: translateX(-50%) scaleX(0.88);
+		}
+
+		.celebrating .shadow {
+			width: 82%;
+			opacity: 0.18;
+			transform: translateX(-50%) scaleX(0.84);
 		}
 
 		.bubble {
@@ -305,14 +818,21 @@
 			<img id="avatarImage" alt="">
 			<div id="puppet" class="puppet happy">
 				<div class="face">
+					<div class="eyebrows">
+						<div class="eyebrow"></div>
+						<div class="eyebrow"></div>
+					</div>
 					<div class="eyes">
 						<div class="eye"></div>
 						<div class="eye"></div>
 					</div>
-					<div class="cheek left"></div>
-					<div class="cheek right"></div>
+					<div class="cheeks">
+						<div class="cheek"></div>
+						<div class="cheek"></div>
+					</div>
 					<div class="mouth"></div>
 				</div>
+				<div class="shadow"></div>
 			</div>
 		</div>
 	</div>

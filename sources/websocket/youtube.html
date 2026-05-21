@@ -887,7 +887,7 @@ function enableBackgroundKeepAlive() {
 	}
 
 	function renderYouTubeRichRuns(runs) {
-		const rendered = { html: '', plainText: '' };
+		const rendered = { html: '', plainText: '', matchText: '' };
 		if (!Array.isArray(runs)) {
 			return rendered;
 		}
@@ -897,6 +897,7 @@ function enableBackgroundKeepAlive() {
 			}
 			if (typeof run.text === 'string') {
 				rendered.plainText += run.text;
+				rendered.matchText += run.text;
 				let textHtml = strictEscapeHtml(run.text);
 				if (EMOTELIST) {
 					textHtml = replaceEmotesWithImages(textHtml);
@@ -907,13 +908,17 @@ function enableBackgroundKeepAlive() {
 			if (run.emoji) {
 				const emoji = run.emoji;
 				const plainText = getEmojiPlainText(emoji);
+				const labelText = emoji.image && emoji.image.accessibility && emoji.image.accessibility.accessibilityData
+					? emoji.image.accessibility.accessibilityData.label
+					: '';
 				const url = getBestYouTubeThumbnailUrl(emoji.image && emoji.image.thumbnails);
 				const altText = resolveEmojiAltAttribute({
 					url: url,
 					id: emoji.emojiId || '',
-					alt: plainText || (emoji.image && emoji.image.accessibility && emoji.image.accessibility.accessibilityData ? emoji.image.accessibility.accessibilityData.label : '')
+					alt: labelText || plainText
 				}, plainText || 'emoji');
 				rendered.plainText += plainText;
+				rendered.matchText += labelText || plainText;
 				if (url) {
 					rendered.html += `<img src="${strictEscapeHtml(url)}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
 				} else {
@@ -928,7 +933,7 @@ function enableBackgroundKeepAlive() {
 		if (value === undefined || value === null) {
 			return '';
 		}
-		return String(value).toLowerCase().replace(/:/g, '').replace(/\s+/g, ' ').trim();
+		return String(value).toLowerCase().replace(/[:_\s]+/g, '').trim();
 	}
 
 	function buildRichMessageFallbackKey(authorChannelId, text) {
@@ -937,19 +942,26 @@ function enableBackgroundKeepAlive() {
 		return authorKey && textKey ? authorKey + '|' + textKey : '';
 	}
 
+	function addRichFallbackKey(keys, authorChannelId, text) {
+		const key = buildRichMessageFallbackKey(authorChannelId, text);
+		if (key && keys.indexOf(key) === -1) {
+			keys.push(key);
+		}
+	}
+
 	function rememberRichMessage(richMessage) {
-		if (!richMessage || (!richMessage.id && !richMessage.fallbackKey)) {
+		if (!richMessage || (!richMessage.id && !(richMessage.fallbackKeys && richMessage.fallbackKeys.length))) {
 			return;
 		}
 		if (richMessage.id) {
 			richMessageById.set(richMessage.id, richMessage);
 		}
-		if (richMessage.fallbackKey) {
-			richMessageByFallbackKey.set(richMessage.fallbackKey, richMessage);
-		}
+		(richMessage.fallbackKeys || []).forEach(function(key) {
+			richMessageByFallbackKey.set(key, richMessage);
+		});
 		richMessageCacheOrder.push({
 			id: richMessage.id || '',
-			key: richMessage.fallbackKey || '',
+			keys: richMessage.fallbackKeys || [],
 			value: richMessage
 		});
 		while (richMessageCacheOrder.length > MAX_RICH_MESSAGE_CACHE) {
@@ -960,9 +972,11 @@ function enableBackgroundKeepAlive() {
 			if (old.id && richMessageById.get(old.id) === old.value) {
 				richMessageById.delete(old.id);
 			}
-			if (old.key && richMessageByFallbackKey.get(old.key) === old.value) {
-				richMessageByFallbackKey.delete(old.key);
-			}
+			(old.keys || []).forEach(function(key) {
+				if (key && richMessageByFallbackKey.get(key) === old.value) {
+					richMessageByFallbackKey.delete(key);
+				}
+			});
 		}
 	}
 
@@ -1015,6 +1029,9 @@ function enableBackgroundKeepAlive() {
 		const authorName = getSimpleText(renderer.authorName);
 		const authorChannelId = renderer.authorExternalChannelId || renderer.authorExternalChannelID || '';
 		const profileImageUrl = getBestYouTubeThumbnailUrl(renderer.authorPhoto && renderer.authorPhoto.thumbnails);
+		const fallbackKeys = [];
+		addRichFallbackKey(fallbackKeys, authorChannelId, rendered.plainText);
+		addRichFallbackKey(fallbackKeys, authorChannelId, rendered.matchText);
 		const richMessage = {
 			id: renderer.id || '',
 			authorName: authorName,
@@ -1022,9 +1039,9 @@ function enableBackgroundKeepAlive() {
 			profileImageUrl: profileImageUrl,
 			html: rendered.html,
 			plainText: rendered.plainText,
-			badges: buildRichBadges(renderer.authorBadges)
+			badges: buildRichBadges(renderer.authorBadges),
+			fallbackKeys: fallbackKeys
 		};
-		richMessage.fallbackKey = buildRichMessageFallbackKey(authorChannelId, rendered.plainText);
 		return richMessage;
 	}
 
@@ -1054,6 +1071,26 @@ function enableBackgroundKeepAlive() {
 	function extractRichChatContinuation(data) {
 		const liveChatRenderer = data && data.contents && data.contents.liveChatRenderer;
 		const liveChatContinuation = data && data.continuationContents && data.continuationContents.liveChatContinuation;
+		const subMenuItems = liveChatRenderer &&
+			liveChatRenderer.header &&
+			liveChatRenderer.header.liveChatHeaderRenderer &&
+			liveChatRenderer.header.liveChatHeaderRenderer.viewSelector &&
+			liveChatRenderer.header.liveChatHeaderRenderer.viewSelector.sortFilterSubMenuRenderer &&
+			liveChatRenderer.header.liveChatHeaderRenderer.viewSelector.sortFilterSubMenuRenderer.subMenuItems;
+		if (Array.isArray(subMenuItems)) {
+			for (let i = 0; i < subMenuItems.length; i++) {
+				const item = subMenuItems[i] || {};
+				if (String(item.title || '').toLowerCase() !== 'live chat') {
+					continue;
+				}
+				const continuation =
+					(item.continuation && item.continuation.reloadContinuationData && item.continuation.reloadContinuationData.continuation) ||
+					(item.continuation && item.continuation.invalidationContinuationData && item.continuation.invalidationContinuationData.continuation);
+				if (continuation) {
+					return continuation;
+				}
+			}
+		}
 		const continuations = (liveChatContinuation && liveChatContinuation.continuations) || (liveChatRenderer && liveChatRenderer.continuations) || [];
 		for (let i = 0; i < continuations.length; i++) {
 			const item = continuations[i] || {};
@@ -1231,8 +1268,18 @@ function enableBackgroundKeepAlive() {
 		if (messageData.messageId && richMessageById.has(messageData.messageId)) {
 			return richMessageById.get(messageData.messageId);
 		}
-		const fallbackKey = buildRichMessageFallbackKey(messageData.authorChannelId, messageData.plainTextMessage || messageData.message || '');
-		return fallbackKey ? richMessageByFallbackKey.get(fallbackKey) || null : null;
+		const candidateTexts = [
+			messageData.plainTextMessage || '',
+			messageData.message || '',
+			stripHtmlContent(messageData.message || '')
+		];
+		for (let i = 0; i < candidateTexts.length; i++) {
+			const fallbackKey = buildRichMessageFallbackKey(messageData.authorChannelId, candidateTexts[i]);
+			if (fallbackKey && richMessageByFallbackKey.has(fallbackKey)) {
+				return richMessageByFallbackKey.get(fallbackKey);
+			}
+		}
+		return null;
 	}
 
 	function renderChatBadgesForPage(badges) {
