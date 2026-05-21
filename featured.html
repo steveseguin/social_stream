@@ -1615,7 +1615,10 @@
 				isIFrame = true;
 			}
 
-			if (urlParams.has("chroma")) {
+			if (urlParams.has("transparent") || urlParams.has("transparency")) {
+				document.body.style.backgroundColor = "transparent";
+				document.documentElement.style.backgroundColor = "transparent";
+			} else if (urlParams.has("chroma")) {
 				var chroma = urlParams.get("chroma") || "0F0";
 				document.body.style.backgroundColor = "#" + chroma;
 			}

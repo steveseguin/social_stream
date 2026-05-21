@@ -1111,6 +1111,7 @@ function readSettings() {
     detailScale: Math.max(0.8, Math.min(1.8, parseNumberParam('detailscale', 1))),
     pageBg: normalizeColor(urlParams.get('pagebg')),
     chroma: normalizeColor(urlParams.get('chroma')),
+    transparent: urlParams.has('transparent') || urlParams.has('transparency'),
     previewOnly: urlParams.has('preview'),
     showStatus: urlParams.has('showstatus') || urlParams.has('debug') || urlParams.has('preview'),
     debug: urlParams.has('debug'),
@@ -1136,7 +1137,9 @@ function applyPagePresentation() {
     document.body.classList.add('embedded-mode');
   }
 
-  if (settings.chroma) {
+  if (settings.transparent) {
+    document.body.style.background = 'transparent';
+  } else if (settings.chroma) {
     document.body.style.background = settings.chroma;
   } else if (settings.pageBg) {
     document.body.style.background = settings.pageBg;
@@ -1874,6 +1877,7 @@ window.__multiAlertsOverlay = {
       detailScale: settings.detailScale,
       pageBg: settings.pageBg,
       chroma: settings.chroma,
+      transparent: settings.transparent,
       previewOnly: settings.previewOnly,
       showStatus: settings.showStatus,
       debug: settings.debug,
