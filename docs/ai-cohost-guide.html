@@ -95,7 +95,7 @@
                 <div class="cohost-guide-grid">
                     <div class="cohost-guide-card">
                         <h3>Dock Controls</h3>
-                        <p>Right-click a chat message in the dock and choose <strong>AI Co-host</strong>. The dock can read the message, ask the AI for an answer, or create a light roast draft.</p>
+                        <p>When the stage overlay is connected, right-click a chat message in the dock and choose <strong>Co-host</strong>. The dock can read the message, ask the AI for an answer, or create a light roast draft.</p>
                     </div>
                     <div class="cohost-guide-card">
                         <h3>AI Stage Overlay</h3>
@@ -115,10 +115,10 @@
                     <li>Add the AI stage overlay to OBS: <code>cohost-overlay.html?session=YOUR_SESSION_ID&amp;tts</code>.</li>
                     <li>For AI answers, configure an LLM provider in the popup. For quick testing, choose <strong>SSN Hosted Trial LLM</strong>, which uses <code>llm.socialstream.ninja</code>.</li>
                     <li>Enable <strong>Chat Bots and AI services &gt; Chat Bot - Private Interface &gt; Enable private chat bot option</strong>.</li>
-                    <li>Right-click a dock message and select <strong>AI Co-host</strong>.</li>
+                    <li>Right-click a dock message and select <strong>Co-host</strong>. The menu is hidden until the stage overlay is detected.</li>
                 </ol>
                 <div class="guide-note">
-                    <p><strong>Tip:</strong> Use the same <code>session</code> value for the dock and co-host overlay. If audio is wanted from OBS, include <code>&amp;tts</code> on the overlay URL.</p>
+                    <p><strong>Tip:</strong> Use the same <code>session</code> value for the dock and co-host overlay. If audio is wanted from OBS, include <code>&amp;tts</code> on the overlay URL. The "Send primary chat bot replies to this overlay" option is not required for right-click co-host actions.</p>
                 </div>
             </div>
 
@@ -195,9 +195,9 @@
             <div class="guide-card">
                 <h2>Status And Troubleshooting</h2>
                 <ul class="guide-list">
-                    <li>The dock has an AI co-host status button. Click it to see what is connected.</li>
-                    <li>If Read is disabled, the co-host overlay is not detected in the same session.</li>
+                    <li>If the Co-host menu is missing, the co-host overlay is not detected in the same session.</li>
                     <li>If Answer or Light Roast is disabled, the SSN bridge or Private Chat Bot is not available.</li>
+                    <li>The primary chat bot overlay toggle is optional and does not enable dock right-click co-host actions.</li>
                     <li>If text appears but no audio plays, add <code>&amp;tts</code> or <code>&amp;speak=1</code> to the overlay URL.</li>
                     <li>If AI requests time out, check that Social Stream is on, the session matches, Private Chat Bot is enabled, and the selected LLM provider is reachable.</li>
                     <li>If the hosted trial AI stops responding, it may be disabled or rate-limited; switch to your own token, Ollama, or Custom API.</li>

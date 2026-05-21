@@ -2351,19 +2351,6 @@
 				text-align: center;
 				box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
 			}
-			#cohost_status {
-				position: relative;
-			}
-			#cohost_status[data-kind="ready"] {
-				box-shadow: inset 0 0 0 2px #22c55e;
-			}
-			#cohost_status[data-kind="busy"] {
-				box-shadow: inset 0 0 0 2px #f59e0b;
-			}
-			#cohost_status[data-kind="error"],
-			#cohost_status[data-kind="warn"] {
-				box-shadow: inset 0 0 0 2px #ef4444;
-			}
 			#cohostApproval {
 				position: fixed;
 				right: 14px;
@@ -2725,8 +2712,6 @@
 			    <button class="imgButton imgSmallButton" id="tts" data-state="0" style="background-image: url(./icons/tts_incoming_messages_off.png)" title="Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech"></button>
 			</div>
 
-			<button class="imgButton imgSmallButton" id="cohost_status" data-kind="warn" onclick="showCohostSetupStatus();" style="background-image: url(./icons/chatbot.svg)" title="AI Co-host - checking setup"></button>
-
 			<!-- Scroll button -->
 			<button class="imgButton imgSmallButton" id="jumpto" data-state="0" onclick="jumptoBottom();" style="background-image: url(./icons/scroll_to_bottom_off.png)" title="Scroll to bottom"></button>
 		</div>
@@ -2837,21 +2822,30 @@
 						<span>Text to Speech</span>
 					</a>
 				</li>
-				<li class="context-menu__item context-menu__item--has-submenu" data-action="CohostActions">
+				<li class="context-menu__item context-menu__item--has-submenu hidden" data-action="CohostActions">
 					<a href="#" class="context-menu__link" data-action="CohostActions">
-						AI
-						<span>AI Co-host</span>
-						<span style="float:right">â–¸</span>
+						<span aria-hidden="true">&#x1F916;</span>
+						<span>Co-host</span>
+						<span style="float:right">&#9656;</span>
 					</a>
 					<ul class="context-menu__submenu">
 						<li class="context-menu__item" data-action="CohostRead">
-							<a href="#" class="context-menu__link" data-action="CohostRead">Read on Co-host</a>
+							<a href="#" class="context-menu__link" data-action="CohostRead">
+								<span aria-hidden="true">&#x1F50A;</span>
+								<span>Read on Co-host</span>
+							</a>
 						</li>
 						<li class="context-menu__item" data-action="CohostAnswer">
-							<a href="#" class="context-menu__link" data-action="CohostAnswer">Answer</a>
+							<a href="#" class="context-menu__link" data-action="CohostAnswer">
+								<span aria-hidden="true">&#x1F4AC;</span>
+								<span>Answer</span>
+							</a>
 						</li>
 						<li class="context-menu__item" data-action="CohostRoast">
-							<a href="#" class="context-menu__link" data-action="CohostRoast">Light Roast</a>
+							<a href="#" class="context-menu__link" data-action="CohostRoast">
+								<span aria-hidden="true">&#x1F60F;</span>
+								<span>Light Roast</span>
+							</a>
 						</li>
 					</ul>
 				</li>
@@ -3237,6 +3231,8 @@
 			var cohostLLMPending = {};
 			var cohostLLMRequestCounter = 0;
 			var cohostApprovalPayload = null;
+			var cohostStatusMessage = "";
+			var cohostStatusKind = "warn";
 			var treatTikTokFansAsMembers = urlParams.has("tiktokfans");
 			var channel = null;
 			var iframes = [];
@@ -6626,16 +6622,13 @@
 							if (label === "SocialStream") {
 								summary.extension = true;
 							}
-							if (label === cohostOverlayTarget || label === "cohost-overlay" || label === "overlay" || label === "ai-overlay" || label === false) {
+							if (isCohostOverlayLabel(label)) {
 								summary.overlay = true;
 							}
 						}
 					}
 				} catch (e) {}
 				if (socketserver || socketserverExtension) {
-					if (socketserver && socketserver.readyState === 1) {
-						summary.overlay = true;
-					}
 					if (socketserverExtension && socketserverExtension.readyState === 1) {
 						summary.extension = true;
 					}
@@ -6643,11 +6636,41 @@
 				return summary;
 			}
 
+			function isCohostOverlayLabel(label) {
+				return label === cohostOverlayTarget || label === "cohost-overlay" || label === "ai-overlay";
+			}
+
+			function sendCohostOverlayData(data) {
+				var sent = false;
+				if (!data) return false;
+				try {
+					if (socketserver && socketserver.readyState === 1) {
+						if (data.out) {
+							delete data.out;
+						}
+						socketserver.send(JSON.stringify(data));
+						sent = true;
+					}
+					iframes.forEach(function (iframe) {
+						var peers = iframe.connectedPeers || {};
+						var keys = Object.keys(peers);
+						for (var i = 0; i < keys.length; i++) {
+							var UUID = keys[i];
+							if (isCohostOverlayLabel(peers[UUID])) {
+								iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+								sent = true;
+							}
+						}
+					});
+				} catch (e) {
+					console.error(e);
+				}
+				return sent;
+			}
+
 			function setCohostDockStatus(message, kind) {
-				var button = getById("cohost_status");
-				if (!button) return;
-				button.dataset.kind = kind || "warn";
-				button.title = "AI Co-host - " + (message || "unknown");
+				cohostStatusMessage = message || "";
+				cohostStatusKind = kind || "warn";
 			}
 
 			function refreshCohostDockStatus() {
@@ -6682,7 +6705,7 @@
 					message += " Open cohost-overlay.html?session=" + roomID + "&tts in OBS/browser source.";
 				}
 				if (!peers.extension) {
-					message += " Answer/Roast also needs SSN on with Private Chat Bot enabled.";
+					message += " Answer/Roast need Social Stream on with Private Chat Bot enabled. The primary chat bot overlay toggle is not required.";
 				}
 				if (typeof showDockActionNotice === "function") {
 					showDockActionNotice(message);
@@ -6693,12 +6716,16 @@
 
 			function updateCohostContextMenuState() {
 				var peers = getCohostPeerSummary();
+				var parentItem = document.querySelector('[data-action="CohostActions"]');
 				var readItem = document.querySelector('[data-action="CohostRead"]');
 				var answerItem = document.querySelector('[data-action="CohostAnswer"]');
 				var roastItem = document.querySelector('[data-action="CohostRoast"]');
+				if (parentItem) parentItem.classList.toggle("hidden", !peers.overlay);
 				if (readItem) readItem.classList.toggle("context-menu__item--disabled", !peers.overlay);
 				if (answerItem) answerItem.classList.toggle("context-menu__item--disabled", !peers.extension);
 				if (roastItem) roastItem.classList.toggle("context-menu__item--disabled", !peers.extension);
+				if (answerItem) answerItem.title = peers.extension ? "" : "Requires Social Stream and Private Chat Bot enabled.";
+				if (roastItem) roastItem.title = peers.extension ? "" : "Requires Social Stream and Private Chat Bot enabled.";
 			}
 
 			function cohostHtmlToText(value) {
@@ -6745,7 +6772,7 @@
 					showCohostSetupStatus();
 					return false;
 				}
-				sendDataP2P({
+				var payload = {
 					action: "cohostOverlay",
 					target: cohostOverlayTarget,
 					meta: {
@@ -6759,7 +6786,11 @@
 						chatname: opts.chatname || "",
 						chatimg: opts.chatimg || ""
 					}
-				});
+				};
+				if (!sendCohostOverlayData(payload)) {
+					showCohostSetupStatus();
+					return false;
+				}
 				setCohostDockStatus("sent to overlay", "ready");
 				return true;
 			}

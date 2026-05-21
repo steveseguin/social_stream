@@ -20,6 +20,10 @@ on:
                 description: Public large asset host
                 required: false
                 default: https://largefiles.socialstream.ninja/
+            prefix:
+                description: Optional object-key prefix filter
+                required: false
+                default: ""
 
 permissions:
     contents: read
@@ -32,6 +36,7 @@ jobs:
             CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
             SSN_R2_BUCKET: ${{ inputs.bucket }}
             SSN_LARGE_ASSET_HOST: ${{ inputs.host }}
+            SSN_R2_PREFIX: ${{ inputs.prefix }}
         steps:
             - uses: actions/checkout@v4
 

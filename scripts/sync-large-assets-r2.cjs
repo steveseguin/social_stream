@@ -14,11 +14,14 @@ function readArg(name, fallback) {
 
 const thresholdMb = Number(readArg("--threshold-mb", process.env.SSN_R2_THRESHOLD_MB || 25));
 const thresholdBytes = thresholdMb * 1024 * 1024;
+const maxWranglerUploadMb = Number(readArg("--max-wrangler-upload-mb", process.env.SSN_R2_MAX_WRANGLER_UPLOAD_MB || 300));
+const maxWranglerUploadBytes = maxWranglerUploadMb * 1024 * 1024;
 const bucketName = readArg("--bucket", process.env.SSN_R2_BUCKET || process.env.CLOUDFLARE_R2_BUCKET || process.env.KOKORO_R2_BUCKET || "ssnlargefiles");
 const publicHost = normalizeHost(readArg("--host", process.env.SSN_LARGE_ASSET_HOST || "https://largefiles.socialstream.ninja/"));
 const shouldUpload = args.has("--upload");
 const shouldVerify = args.has("--verify") || shouldUpload;
 const shouldSkipExisting = !args.has("--no-skip-existing");
+const onlyPrefix = readArg("--prefix", process.env.SSN_R2_PREFIX || "");
 
 const skippedDirs = new Set([".git", ".claude", "node_modules", ".npm-cache", "tmp", "tests/artifacts", "electron_app_reference", "social_stream_v3"]);
 
@@ -91,6 +94,10 @@ async function remoteHead(asset) {
 }
 
 function upload(asset) {
+	if (asset.bytes > maxWranglerUploadBytes) {
+		console.log("upload-skip-too-large", asset.objectKey, `(${formatMb(asset.mb)} > ${maxWranglerUploadMb} MiB wrangler limit)`);
+		return false;
+	}
 	const objectPath = bucketName + "/" + asset.objectKey;
 	const result = spawnSync("npx", ["--yes", "wrangler", "r2", "object", "put", objectPath, "--file", asset.fullPath, "--remote"], {
 		cwd: repoRoot,
@@ -101,47 +108,48 @@ function upload(asset) {
 	if (result.status !== 0) {
 		throw new Error("Upload failed for " + asset.path);
 	}
+	return true;
 }
 
 async function main() {
 	if (!Number.isFinite(thresholdMb) || thresholdMb <= 0) {
 		throw new Error("--threshold-mb must be a positive number.");
 	}
-	if (shouldUpload && (!process.env.CLOUDFLARE_API_TOKEN || !process.env.CLOUDFLARE_ACCOUNT_ID)) {
-		throw new Error("CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required for --upload.");
-	}
 
 	const trackedFiles = getTrackedFiles();
 	const assets = [];
 	walk(repoRoot, assets);
-	assets.sort((a, b) => b.bytes - a.bytes || a.path.localeCompare(b.path));
+	const filteredAssets = onlyPrefix ? assets.filter(asset => asset.objectKey.startsWith(onlyPrefix)) : assets;
+	filteredAssets.sort((a, b) => b.bytes - a.bytes || a.path.localeCompare(b.path));
 
 	console.log("Large asset R2 plan");
 	console.log("bucket:", bucketName);
 	console.log("host:", publicHost || "(none)");
 	console.log("threshold:", thresholdMb + " MiB");
+	console.log("max wrangler upload:", maxWranglerUploadMb + " MiB");
+	if (onlyPrefix) console.log("prefix:", onlyPrefix);
 	console.log("mode:", shouldUpload ? "upload" : shouldVerify ? "verify" : "dry-run");
 	console.log("");
 
-	if (!assets.length) {
+	if (!filteredAssets.length) {
 		console.log("No matching assets found.");
 		return;
 	}
 
-	for (const asset of assets) {
+	for (const asset of filteredAssets) {
 		asset.tracked = trackedFiles.has(asset.path);
 		console.log(`${formatMb(asset.mb)}\t${asset.tracked ? "tracked" : "local"}\t${asset.path}`);
 		console.log(`  -> ${asset.objectKey}`);
 	}
 	console.log("");
 
-	let totalBytes = assets.reduce((sum, asset) => sum + asset.bytes, 0);
-	console.log(`count: ${assets.length}`);
+	let totalBytes = filteredAssets.reduce((sum, asset) => sum + asset.bytes, 0);
+	console.log(`count: ${filteredAssets.length}`);
 	console.log(`total: ${formatMb(totalBytes / 1024 / 1024)}`);
 
 	if (!shouldVerify) return;
 
-	for (const asset of assets) {
+	for (const asset of filteredAssets) {
 		let head = null;
 		try {
 			head = await remoteHead(asset);
@@ -157,8 +165,9 @@ async function main() {
 		}
 
 		if (shouldUpload) {
-			upload(asset);
-			console.log("uploaded", asset.objectKey);
+			if (upload(asset)) {
+				console.log("uploaded", asset.objectKey);
+			}
 		}
 	}
 }
