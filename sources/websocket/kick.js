@@ -3720,8 +3720,8 @@ function connectPusherSocket() {
 
 async function resolveChannelForPusher() {
     if (state.socket.chatroomId) return;
-    const slug = state.channelSlug?.trim();
-    if (!slug) return;
+    const initialSlug = state.channelSlug?.trim();
+    if (!initialSlug) return;
 
     // 1. If signed in, resolve channel metadata via official API (broadcaster_user_id, slug, etc)
     const canUseAuthenticatedLookup = Boolean(state.tokens?.access_token) && !isTokenExpired();
@@ -3734,26 +3734,40 @@ async function resolveChannelForPusher() {
         if (state.socket.chatroomId) return;
     }
 
+    const requestedSlug = normalizeChannel(state.channelSlug || initialSlug);
+    const slugCandidates = getKickSlugLookupCandidates(requestedSlug);
+    if (!slugCandidates.length) return;
+
     // 2. Try bridge cache (fast, no auth needed)
     try {
         const base = getBridgeBaseUrl();
-        const lookupResp = await fetch(`${base}/kick/lookup?slug=${encodeURIComponent(slug)}`);
-        if (lookupResp.ok) {
+        for (const lookupSlug of slugCandidates) {
+            const lookupResp = await fetch(`${base}/kick/lookup?slug=${encodeURIComponent(lookupSlug)}`);
+            if (!lookupResp.ok) {
+                continue;
+            }
             const data = await lookupResp.json();
+            const resolvedSlug = normalizeChannel(data?.slug || lookupSlug);
             if (data.chatroom_id) {
                 state.socket.chatroomId = String(data.chatroom_id);
                 if (data.broadcaster_user_id && !state.channelId) {
                     state.channelId = Number(data.broadcaster_user_id);
-                    state.channelName = data.slug || slug;
-                    state.lastResolvedSlug = normalizeChannel(slug);
+                    state.channelName = data.slug || resolvedSlug || lookupSlug;
                 }
-                log(`Resolved chatroom ${data.chatroom_id} for ${slug} (bridge cache, source: ${data.chatroom_source || 'unknown'}).`);
+                state.lastResolvedSlug = resolvedSlug || lookupSlug;
+                if (resolvedSlug && resolvedSlug !== requestedSlug) {
+                    applyResolvedKickSlug(requestedSlug, resolvedSlug, `bridge lookup @${lookupSlug}`);
+                }
+                log(`Resolved chatroom ${data.chatroom_id} for ${resolvedSlug || lookupSlug} (bridge cache, source: ${data.chatroom_source || 'unknown'}).`);
                 return;
             }
             if (data.broadcaster_user_id && !state.channelId) {
                 state.channelId = Number(data.broadcaster_user_id);
-                state.channelName = data.slug || slug;
-                state.lastResolvedSlug = normalizeChannel(slug);
+                state.channelName = data.slug || resolvedSlug || lookupSlug;
+                state.lastResolvedSlug = resolvedSlug || lookupSlug;
+                if (resolvedSlug && resolvedSlug !== requestedSlug) {
+                    applyResolvedKickSlug(requestedSlug, resolvedSlug, `bridge lookup @${lookupSlug}`);
+                }
             }
         }
     } catch (err) {
@@ -3761,27 +3775,33 @@ async function resolveChannelForPusher() {
     }
 
     // 3. Try legacy kick.com/api/v2 directly (works same-origin on kick.com, may fail elsewhere)
-    try {
-        const legacyResp = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`);
-        if (legacyResp.ok) {
-            const data = await legacyResp.json();
-            const chatroomId = data?.chatroom?.id ?? data?.chatroom_id;
-            if (chatroomId) {
-                state.socket.chatroomId = String(chatroomId);
-                const broadcasterId = data?.user_id ?? data?.broadcaster_user_id;
-                if (broadcasterId && !state.channelId) {
-                    state.channelId = Number(broadcasterId);
-                    state.channelName = data?.slug || slug;
-                    state.lastResolvedSlug = normalizeChannel(slug);
+    for (const lookupSlug of slugCandidates) {
+        try {
+            const legacyResp = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(lookupSlug)}`);
+            if (legacyResp.ok) {
+                const data = await legacyResp.json();
+                const resolvedSlug = extractKickChannelSlug(data) || lookupSlug;
+                const chatroomId = data?.chatroom?.id ?? data?.chatroom_id;
+                if (chatroomId) {
+                    state.socket.chatroomId = String(chatroomId);
+                    const broadcasterId = data?.user_id ?? data?.broadcaster_user_id;
+                    if (broadcasterId && !state.channelId) {
+                        state.channelId = Number(broadcasterId);
+                        state.channelName = data?.slug || resolvedSlug || lookupSlug;
+                    }
+                    state.lastResolvedSlug = resolvedSlug || lookupSlug;
+                    if (resolvedSlug && resolvedSlug !== requestedSlug) {
+                        applyResolvedKickSlug(requestedSlug, resolvedSlug, `legacy API lookup @${lookupSlug}`);
+                    }
+                    log(`Resolved chatroom ${chatroomId} for ${resolvedSlug || lookupSlug} (legacy API direct).`);
+                    // Save to bridge cache if signed in
+                    postChatroomToCache(resolvedSlug || lookupSlug, chatroomId, broadcasterId);
+                    return;
                 }
-                log(`Resolved chatroom ${chatroomId} for ${slug} (legacy API direct).`);
-                // Save to bridge cache if signed in
-                postChatroomToCache(slug, chatroomId, broadcasterId);
-                return;
             }
+        } catch (_) {
+            // Cloudflare block or CORS - expected, not an error
         }
-    } catch (_) {
-        // Cloudflare block or CORS — expected, not an error
     }
 
     log('Could not resolve chatroomId. Sign in or pass ?chatroom_id= URL param.', 'warning');
@@ -4924,77 +4944,84 @@ async function fetchKickLivestreamByBroadcasterId(broadcasterUserIdInput) {
 
 async function fetchKickChannelBySlug(slugInput, options = {}) {
     const debugContext = typeof options?.debugContext === 'string' ? options.debugContext.trim() : '';
-    const slugLower = normalizeChannel(slugInput);
-    if (!slugLower) {
+    const requestedSlug = normalizeChannel(slugInput);
+    if (!requestedSlug) {
         return null;
     }
-    const encodedSlug = encodeURIComponent(slugLower);
-    const fallbackPaths = [
-        `/public/v1/channels?slug=${encodedSlug}`,
-        `/channels/${encodedSlug}`,
-        `/public/v1/channels/${encodedSlug}`
-    ];
-    const paths = [];
-    if (preferredKickChannelLookupPath) {
-        paths.push(preferredKickChannelLookupPath.replace('{slug}', encodedSlug));
-    }
-    for (const path of fallbackPaths) {
-        if (!paths.includes(path)) {
-            paths.push(path);
-        }
-    }
+    const slugCandidates = getKickSlugLookupCandidates(requestedSlug);
     let lastError = null;
-    for (const path of paths) {
-        try {
-            if (debugContext) {
-                logKickViewerDebug(`${debugContext}: request ${path}`);
+    for (const lookupSlug of slugCandidates) {
+        const encodedSlug = encodeURIComponent(lookupSlug);
+        const fallbackPaths = [
+            `/public/v1/channels?slug=${encodedSlug}`,
+            `/channels/${encodedSlug}`,
+            `/public/v1/channels/${encodedSlug}`
+        ];
+        const paths = [];
+        if (preferredKickChannelLookupPath) {
+            paths.push(preferredKickChannelLookupPath.replace('{slug}', encodedSlug));
+        }
+        for (const path of fallbackPaths) {
+            if (!paths.includes(path)) {
+                paths.push(path);
             }
-            const data = await apiFetch(path);
-            const channel = pickKickChannelBySlug(unwrapKickChannelPayload(data), slugLower, {
-                allowSingletonWithoutSlug: !path.includes('?slug=')
-            });
-            if (channel && typeof channel === 'object') {
-                if (path.includes('?slug=')) {
-                    preferredKickChannelLookupPath = '/public/v1/channels?slug={slug}';
-                } else if (path.includes('/public/v1/channels/')) {
-                    preferredKickChannelLookupPath = '/public/v1/channels/{slug}';
-                } else if (path.includes('/channels/')) {
-                    preferredKickChannelLookupPath = '/channels/{slug}';
+        }
+        for (const path of paths) {
+            try {
+                if (debugContext) {
+                    logKickViewerDebug(`${debugContext}: request ${path}`);
+                }
+                const data = await apiFetch(path);
+                const channel = pickKickChannelBySlug(unwrapKickChannelPayload(data), lookupSlug, {
+                    allowSingletonWithoutSlug: !path.includes('?slug=')
+                });
+                if (channel && typeof channel === 'object') {
+                    if (path.includes('?slug=')) {
+                        preferredKickChannelLookupPath = '/public/v1/channels?slug={slug}';
+                    } else if (path.includes('/public/v1/channels/')) {
+                        preferredKickChannelLookupPath = '/public/v1/channels/{slug}';
+                    } else if (path.includes('/channels/')) {
+                        preferredKickChannelLookupPath = '/channels/{slug}';
+                    }
+                    const resolvedSlug = extractKickChannelSlug(channel) || lookupSlug;
+                    if (resolvedSlug !== requestedSlug) {
+                        applyResolvedKickSlug(requestedSlug, resolvedSlug, lookupSlug !== requestedSlug ? `alternate lookup @${lookupSlug}` : 'canonical lookup');
+                    }
+                    if (debugContext) {
+                        logKickViewerDebug(`${debugContext}: success via ${path}`);
+                    }
+                    return channel;
                 }
                 if (debugContext) {
-                    logKickViewerDebug(`${debugContext}: success via ${path}`);
+                    logKickViewerDebug(`${debugContext}: payload via ${path} did not match @${lookupSlug}.`, 'warning');
                 }
-                return channel;
-            }
-            if (debugContext) {
-                logKickViewerDebug(`${debugContext}: payload via ${path} did not match @${slugLower}.`, 'warning');
-            }
-        } catch (err) {
-            lastError = err;
-            const status = getKickApiErrorStatus(err);
-            if (status === 400 || status === 404 || status === 405 || status === 501) {
+            } catch (err) {
+                lastError = err;
+                const status = getKickApiErrorStatus(err);
+                if (status === 400 || status === 404 || status === 405 || status === 501) {
+                    if (debugContext) {
+                        logKickViewerDebug(`${debugContext}: path failed ${path} status=${status}`, 'warning');
+                    }
+                    if (
+                        preferredKickChannelLookupPath &&
+                        path === preferredKickChannelLookupPath.replace('{slug}', encodedSlug)
+                    ) {
+                        preferredKickChannelLookupPath = '';
+                    }
+                    continue;
+                }
                 if (debugContext) {
-                    logKickViewerDebug(`${debugContext}: path failed ${path} status=${status}`, 'warning');
+                    logKickViewerDebug(`${debugContext}: path failed ${path} error=${err?.message || err}`, 'warning');
                 }
-                if (
-                    preferredKickChannelLookupPath &&
-                    path === preferredKickChannelLookupPath.replace('{slug}', encodedSlug)
-                ) {
-                    preferredKickChannelLookupPath = '';
-                }
-                continue;
+                throw err;
             }
-            if (debugContext) {
-                logKickViewerDebug(`${debugContext}: path failed ${path} error=${err?.message || err}`, 'warning');
-            }
-            throw err;
         }
     }
     if (lastError) {
         throw lastError;
     }
     if (debugContext) {
-        logKickViewerDebug(`${debugContext}: no channel payload found for @${slugLower}.`, 'warning');
+        logKickViewerDebug(`${debugContext}: no channel payload found for @${requestedSlug}.`, 'warning');
     }
     return null;
 }
@@ -5397,15 +5424,20 @@ async function resolveChannelId(force = false) {
         channel?.channelId ??
         channel?.id ??
         null;
+    const resolvedSlug = extractKickChannelSlug(channel);
+    const effectiveSlug = resolvedSlug || slugLower;
+    if (resolvedSlug && resolvedSlug !== slugLower) {
+        applyResolvedKickSlug(slugLower, resolvedSlug, 'channel API lookup');
+    }
     state.channelId = channel.broadcaster_user_id;
-    state.channelName = channel.slug || channel.channel_description || slugInput;
-    state.lastResolvedSlug = slugLower;
+    state.channelName = channel.slug || channel.channel_description || effectiveSlug || slugInput;
+    state.lastResolvedSlug = effectiveSlug;
     if (!state.socket.userId && state.channelId != null) {
         state.socket.userId = String(state.channelId);
     }
     if (resolvedChatroomId != null) {
         state.socket.chatroomId = String(resolvedChatroomId);
-        postChatroomToCache(slugLower, resolvedChatroomId, channel.broadcaster_user_id);
+        postChatroomToCache(effectiveSlug, resolvedChatroomId, channel.broadcaster_user_id);
     }
     if (resolvedSocketChannelId != null) {
         state.socket.channelId = String(resolvedSocketChannelId);
@@ -5427,7 +5459,7 @@ async function resolveChannelId(force = false) {
     refreshKickStreamInfo().catch((err) => {
         logKickWs(`Unable to refresh Kick stream info after channel resolve: ${err?.message || err}`, 'warning');
     });
-    if (force || state.channelId !== previousId || previousSlug !== slugLower) {
+    if (force || state.channelId !== previousId || previousSlug !== effectiveSlug) {
         requestThirdPartyEmotes({ force: true });
     }
     // Replay any events that were queued before channel resolution
