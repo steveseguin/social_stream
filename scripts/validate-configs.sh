@@ -3,8 +3,24 @@
 # Validate all settings/config*.json files contain well-formed JSON.
 set -euo pipefail
 
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "python3 is required to validate config JSON files." >&2
+python_cmd=()
+for candidate in python3 python py; do
+  if ! command -v "$candidate" >/dev/null 2>&1; then
+    continue
+  fi
+  if [ "$candidate" = "py" ]; then
+    if py -3 -c "import json" >/dev/null 2>&1; then
+      python_cmd=(py -3)
+      break
+    fi
+  elif "$candidate" -c "import json" >/dev/null 2>&1; then
+    python_cmd=("$candidate")
+    break
+  fi
+done
+
+if [ ${#python_cmd[@]} -eq 0 ]; then
+  echo "python3, python, or py is required to validate config JSON files." >&2
   exit 1
 fi
 
@@ -18,7 +34,7 @@ fi
 
 failed=0
 for file in "${files[@]}"; do
-  if python3 - "$file" <<'PY'; then
+  if "${python_cmd[@]}" - "$file" <<'PY'; then
 import json
 import sys
 
