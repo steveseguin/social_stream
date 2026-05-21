@@ -455,6 +455,16 @@ try {
 	var unicodeMap = new Map();  // For Unicode emoji characters
 	var channelEmojiFetchToken = 0;
 	var channelEmojiAssetsReady = true;
+	var richChatContinuation = null;
+	var richChatContinuationVideoId = '';
+	var richChatApiKey = '';
+	var richChatFetchPromise = null;
+	var richChatLastFetchTime = 0;
+	var richMessageById = new Map();
+	var richMessageByFallbackKey = new Map();
+	var richMessageCacheOrder = [];
+	const MAX_RICH_MESSAGE_CACHE = 500;
+	const RICH_CHAT_MIN_FETCH_INTERVAL_MS = 1000;
 	
 	
 	// BTTV/7TV/FFZ emote support
@@ -764,6 +774,14 @@ function enableBackgroundKeepAlive() {
 		return JSON.parse(html.slice(jsonStart, end));
 	}
 
+	function extractYouTubeInnertubeApiKeyFromHtml(html) {
+		if (!html || typeof html !== 'string') {
+			return '';
+		}
+		const match = html.match(/"INNERTUBE_API_KEY"\s*:\s*"([^"]+)"/) || html.match(/'INNERTUBE_API_KEY'\s*:\s*'([^']+)'/);
+		return match && match[1] ? match[1] : '';
+	}
+
 	function hasYouTubeExtensionBridge() {
 		try {
 			return document.documentElement.getAttribute('data-ss-youtube-bridge') === '1';
@@ -819,6 +837,428 @@ function enableBackgroundKeepAlive() {
 			console.log('YouTube emoji Innertube get_live_chat failed:', e.message || e);
 			return null;
 		}
+	}
+
+	function normalizeYouTubeImageUrl(url) {
+		if (!url || typeof url !== 'string') {
+			return '';
+		}
+		return url
+			.replace(/=w16-h16-/g, '=w48-h48-')
+			.replace(/=w24-h24-/g, '=w64-h64-')
+			.replace(/=s16-/g, '=s48-')
+			.replace(/=s24-/g, '=s48-');
+	}
+
+	function getBestYouTubeThumbnailUrl(thumbnails) {
+		if (!Array.isArray(thumbnails) || !thumbnails.length) {
+			return '';
+		}
+		const thumb = thumbnails[thumbnails.length - 1] || thumbnails[0];
+		return normalizeYouTubeImageUrl(thumb && thumb.url ? thumb.url : '');
+	}
+
+	function getSimpleText(textObject) {
+		if (!textObject) {
+			return '';
+		}
+		if (typeof textObject.simpleText === 'string') {
+			return textObject.simpleText;
+		}
+		if (Array.isArray(textObject.runs)) {
+			return textObject.runs.map(function(run) {
+				return run && typeof run.text === 'string' ? run.text : '';
+			}).join('');
+		}
+		return '';
+	}
+
+	function getEmojiPlainText(emoji) {
+		if (!emoji) {
+			return '';
+		}
+		if (Array.isArray(emoji.shortcuts) && emoji.shortcuts.length) {
+			return emoji.shortcuts[0] || '';
+		}
+		const label = emoji.image && emoji.image.accessibility && emoji.image.accessibility.accessibilityData
+			? emoji.image.accessibility.accessibilityData.label
+			: '';
+		return label || emoji.emojiId || '';
+	}
+
+	function renderYouTubeRichRuns(runs) {
+		const rendered = { html: '', plainText: '' };
+		if (!Array.isArray(runs)) {
+			return rendered;
+		}
+		runs.forEach(function(run) {
+			if (!run) {
+				return;
+			}
+			if (typeof run.text === 'string') {
+				rendered.plainText += run.text;
+				let textHtml = strictEscapeHtml(run.text);
+				if (EMOTELIST) {
+					textHtml = replaceEmotesWithImages(textHtml);
+				}
+				rendered.html += textHtml;
+				return;
+			}
+			if (run.emoji) {
+				const emoji = run.emoji;
+				const plainText = getEmojiPlainText(emoji);
+				const url = getBestYouTubeThumbnailUrl(emoji.image && emoji.image.thumbnails);
+				const altText = resolveEmojiAltAttribute({
+					url: url,
+					id: emoji.emojiId || '',
+					alt: plainText || (emoji.image && emoji.image.accessibility && emoji.image.accessibility.accessibilityData ? emoji.image.accessibility.accessibilityData.label : '')
+				}, plainText || 'emoji');
+				rendered.plainText += plainText;
+				if (url) {
+					rendered.html += `<img src="${strictEscapeHtml(url)}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
+				} else {
+					rendered.html += strictEscapeHtml(plainText);
+				}
+			}
+		});
+		return rendered;
+	}
+
+	function normalizeRichMatchText(value) {
+		if (value === undefined || value === null) {
+			return '';
+		}
+		return String(value).toLowerCase().replace(/:/g, '').replace(/\s+/g, ' ').trim();
+	}
+
+	function buildRichMessageFallbackKey(authorChannelId, text) {
+		const authorKey = String(authorChannelId || '').trim();
+		const textKey = normalizeRichMatchText(text);
+		return authorKey && textKey ? authorKey + '|' + textKey : '';
+	}
+
+	function rememberRichMessage(richMessage) {
+		if (!richMessage || (!richMessage.id && !richMessage.fallbackKey)) {
+			return;
+		}
+		if (richMessage.id) {
+			richMessageById.set(richMessage.id, richMessage);
+		}
+		if (richMessage.fallbackKey) {
+			richMessageByFallbackKey.set(richMessage.fallbackKey, richMessage);
+		}
+		richMessageCacheOrder.push({
+			id: richMessage.id || '',
+			key: richMessage.fallbackKey || '',
+			value: richMessage
+		});
+		while (richMessageCacheOrder.length > MAX_RICH_MESSAGE_CACHE) {
+			const old = richMessageCacheOrder.shift();
+			if (!old) {
+				continue;
+			}
+			if (old.id && richMessageById.get(old.id) === old.value) {
+				richMessageById.delete(old.id);
+			}
+			if (old.key && richMessageByFallbackKey.get(old.key) === old.value) {
+				richMessageByFallbackKey.delete(old.key);
+			}
+		}
+	}
+
+	function resetRichChatCache() {
+		richChatContinuation = null;
+		richChatContinuationVideoId = '';
+		richChatApiKey = '';
+		richChatFetchPromise = null;
+		richChatLastFetchTime = 0;
+		richMessageById.clear();
+		richMessageByFallbackKey.clear();
+		richMessageCacheOrder = [];
+	}
+
+	function buildRichBadges(authorBadges) {
+		const badges = [];
+		const seen = {};
+		if (!Array.isArray(authorBadges)) {
+			return badges;
+		}
+		authorBadges.forEach(function(badge) {
+			const renderer = badge && (badge.liveChatAuthorBadgeRenderer || badge.metadataBadgeRenderer);
+			if (!renderer) {
+				return;
+			}
+			const customThumbnail = renderer.customThumbnail || renderer.custom_thumbnail;
+			const url = getBestYouTubeThumbnailUrl(customThumbnail && customThumbnail.thumbnails);
+			if (!url || seen[url]) {
+				return;
+			}
+			seen[url] = true;
+			badges.push({
+				type: 'img',
+				src: url,
+				label: renderer.tooltip || (renderer.accessibility && renderer.accessibility.accessibilityData ? renderer.accessibility.accessibilityData.label : '')
+			});
+		});
+		return badges;
+	}
+
+	function buildRichMessageFromRenderer(renderer) {
+		if (!renderer) {
+			return null;
+		}
+		const runs = renderer.message && Array.isArray(renderer.message.runs) ? renderer.message.runs : [];
+		if (!runs.length) {
+			return null;
+		}
+		const rendered = renderYouTubeRichRuns(runs);
+		const authorName = getSimpleText(renderer.authorName);
+		const authorChannelId = renderer.authorExternalChannelId || renderer.authorExternalChannelID || '';
+		const profileImageUrl = getBestYouTubeThumbnailUrl(renderer.authorPhoto && renderer.authorPhoto.thumbnails);
+		const richMessage = {
+			id: renderer.id || '',
+			authorName: authorName,
+			authorChannelId: authorChannelId,
+			profileImageUrl: profileImageUrl,
+			html: rendered.html,
+			plainText: rendered.plainText,
+			badges: buildRichBadges(renderer.authorBadges)
+		};
+		richMessage.fallbackKey = buildRichMessageFallbackKey(authorChannelId, rendered.plainText);
+		return richMessage;
+	}
+
+	function collectRichMessagesFromNode(node) {
+		if (!node || typeof node !== 'object') {
+			return;
+		}
+		const renderer = node.liveChatTextMessageRenderer || node.liveChatPaidMessageRenderer;
+		if (renderer) {
+			const richMessage = buildRichMessageFromRenderer(renderer);
+			if (richMessage) {
+				rememberRichMessage(richMessage);
+			}
+		}
+		if (Array.isArray(node)) {
+			node.forEach(collectRichMessagesFromNode);
+			return;
+		}
+		Object.keys(node).forEach(function(key) {
+			if (key === 'responseContext' || key === 'trackingParams' || key === 'serviceTrackingParams') {
+				return;
+			}
+			collectRichMessagesFromNode(node[key]);
+		});
+	}
+
+	function extractRichChatContinuation(data) {
+		const liveChatRenderer = data && data.contents && data.contents.liveChatRenderer;
+		const liveChatContinuation = data && data.continuationContents && data.continuationContents.liveChatContinuation;
+		const continuations = (liveChatContinuation && liveChatContinuation.continuations) || (liveChatRenderer && liveChatRenderer.continuations) || [];
+		for (let i = 0; i < continuations.length; i++) {
+			const item = continuations[i] || {};
+			const continuation =
+				(item.timedContinuationData && item.timedContinuationData.continuation) ||
+				(item.invalidationContinuationData && item.invalidationContinuationData.continuation) ||
+				(item.reloadContinuationData && item.reloadContinuationData.continuation);
+			if (continuation) {
+				return continuation;
+			}
+		}
+		return '';
+	}
+
+	function collectRichChatData(data) {
+		if (!data || typeof data !== 'object') {
+			return;
+		}
+		if (data.innertubeApiKey) {
+			richChatApiKey = String(data.innertubeApiKey);
+		}
+		collectRichMessagesFromNode(data);
+		const emojis = data?.contents?.liveChatRenderer?.emojis || data?.continuationContents?.liveChatContinuation?.emojis;
+		const entries = buildYouTubeEmojiEntries(emojis);
+		if (entries && entries.length) {
+			applyChannelEmojiEntries(entries);
+			markChannelEmojiAssetsReady(channelEmojiFetchToken);
+		}
+		const continuation = extractRichChatContinuation(data);
+		if (continuation) {
+			richChatContinuation = continuation;
+		}
+	}
+
+	async function fetchRichChatViaExtensionBridge(vidId, continuation) {
+		return new Promise(function(resolve) {
+			if (!hasYouTubeExtensionBridge()) {
+				resolve(null);
+				return;
+			}
+			const requestId = 'ytrich_' + vidId + '_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+			var done = false;
+			var timeout = setTimeout(function() {
+				if (done) return;
+				done = true;
+				window.removeEventListener('youtubeRichChatLoaded', handler);
+				resolve(null);
+			}, 6000);
+			var handler = function(e) {
+				if (!e.detail || e.detail.requestId !== requestId) return;
+				if (done) return;
+				done = true;
+				clearTimeout(timeout);
+				window.removeEventListener('youtubeRichChatLoaded', handler);
+				resolve(e.detail.youtubeRichChat || null);
+			};
+			window.addEventListener('youtubeRichChatLoaded', handler);
+			window.dispatchEvent(new CustomEvent('youtubeRichChatRequest', {
+				detail: {
+					videoId: vidId,
+					continuation: continuation || '',
+					apiKey: richChatApiKey || '',
+					requestId: requestId
+				},
+				bubbles: true
+			}));
+		});
+	}
+
+	async function fetchRichChatInitialData(vidId) {
+		const bridgeData = await fetchRichChatViaExtensionBridge(vidId, '');
+		if (bridgeData) {
+			return bridgeData;
+		}
+		const controller = new AbortController();
+		const timeout = setTimeout(function() {
+			controller.abort();
+		}, 8000);
+		try {
+			const response = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${vidId}`, {
+				credentials: 'include',
+				signal: controller.signal
+			});
+			if (!response.ok) {
+				return null;
+			}
+			const html = await response.text();
+			const data = extractYouTubeInitialData(html);
+			const apiKey = extractYouTubeInnertubeApiKeyFromHtml(html);
+			if (data && apiKey) {
+				data.innertubeApiKey = apiKey;
+			}
+			return data;
+		} catch (error) {
+			console.log('YouTube rich chat initial fetch failed:', error && error.message ? error.message : error);
+			return null;
+		} finally {
+			clearTimeout(timeout);
+		}
+	}
+
+	async function fetchRichChatContinuationData(vidId, continuation) {
+		const bridgeData = await fetchRichChatViaExtensionBridge(vidId, continuation);
+		if (bridgeData) {
+			return bridgeData;
+		}
+		const token = getStoredToken();
+		if (!token || !continuation) {
+			return null;
+		}
+		const ctx = { context: { client: { clientName: 'WEB', clientVersion: '2.20240101.00.00', hl: 'en' } } };
+		const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', method: 'POST' };
+		try {
+			const requestUrl = richChatApiKey
+				? 'https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=' + encodeURIComponent(richChatApiKey)
+				: 'https://www.youtube.com/youtubei/v1/live_chat/get_live_chat';
+			const response = await fetchWithTimeout(requestUrl, 8000, {
+				...headers,
+				body: JSON.stringify({ ...ctx, continuation: continuation })
+			});
+			return await response.json();
+		} catch (error) {
+			console.log('YouTube rich chat continuation fetch failed:', error && error.message ? error.message : error);
+			return null;
+		}
+	}
+
+	async function syncYouTubeRichChatData(vidId) {
+		if (!vidId) {
+			return false;
+		}
+		if (richChatFetchPromise) {
+			return richChatFetchPromise;
+		}
+		if (Date.now() - richChatLastFetchTime < RICH_CHAT_MIN_FETCH_INTERVAL_MS) {
+			return false;
+		}
+		richChatFetchPromise = (async function() {
+			const expectedVideoId = vidId;
+			try {
+				if (richChatContinuationVideoId !== vidId) {
+					resetRichChatCache();
+					richChatContinuationVideoId = vidId;
+				}
+				if (!richChatContinuation) {
+					const initialData = await fetchRichChatInitialData(vidId);
+					if (richChatContinuationVideoId !== expectedVideoId) {
+						return false;
+					}
+					collectRichChatData(initialData);
+				}
+				if (richChatContinuation) {
+					const continuationData = await fetchRichChatContinuationData(vidId, richChatContinuation);
+					if (richChatContinuationVideoId !== expectedVideoId) {
+						return false;
+					}
+					collectRichChatData(continuationData);
+				}
+				return true;
+			} catch (error) {
+				console.log('YouTube rich chat sync failed:', error && error.message ? error.message : error);
+				return false;
+			} finally {
+				richChatLastFetchTime = Date.now();
+				richChatFetchPromise = null;
+			}
+		})();
+		return richChatFetchPromise;
+	}
+
+	function getRichMessageForMessageData(messageData) {
+		if (!messageData) {
+			return null;
+		}
+		if (messageData.messageId && richMessageById.has(messageData.messageId)) {
+			return richMessageById.get(messageData.messageId);
+		}
+		const fallbackKey = buildRichMessageFallbackKey(messageData.authorChannelId, messageData.plainTextMessage || messageData.message || '');
+		return fallbackKey ? richMessageByFallbackKey.get(fallbackKey) || null : null;
+	}
+
+	function renderChatBadgesForPage(badges) {
+		if (!Array.isArray(badges)) {
+			return typeof badges === 'string' ? badges : '';
+		}
+		return badges.map(function(badge) {
+			if (!badge) {
+				return '';
+			}
+			if (typeof badge === 'string') {
+				return `<img class="chat-badge" src="${strictEscapeHtml(badge)}" />`;
+			}
+			if (badge.type === 'img' && badge.src) {
+				const label = strictEscapeHtml(badge.label || badge.title || '');
+				const title = label ? ` title="${label}"` : '';
+				return `<img class="chat-badge" src="${strictEscapeHtml(badge.src)}"${title} />`;
+			}
+			if (badge.type === 'svg' && badge.html) {
+				return `<span class="chat-badge">${badge.html}</span>`;
+			}
+			if (badge.type === 'text' && badge.text) {
+				return `<span class="chat-badge">${strictEscapeHtml(badge.text)}</span>`;
+			}
+			return '';
+		}).join('');
 	}
 
 	async function tryFetchEmojiViaExtensionBridge(vidId) {
@@ -1942,6 +2382,11 @@ function enableBackgroundKeepAlive() {
 			const recommendedInterval = data.pollingIntervalMillis || 5000;
 			youtubeRecommendedInterval = recommendedInterval; // Store for future reference
 			lastSuccessfulPollTime = Date.now(); // Track successful poll time
+			if (data.items && data.items.length > 0) {
+				await syncYouTubeRichChatData((currentStream && currentStream.id) || videoId).catch(function(error) {
+					console.log('YouTube rich chat prefetch failed:', error && error.message ? error.message : error);
+				});
+			}
 			
 			if (data.items && data.items.length > 0) {
 				// Process initial backlog timestamp
@@ -3298,6 +3743,7 @@ function enableBackgroundKeepAlive() {
 		channelEmojiFetchToken++;
 		channelEmojiAssetsReady = true;
 		clearChannelEmojiEntries();
+		resetRichChatCache();
 		clearSourceIdentity();
 		messageQueue = [];
 		pendingRelayMessages = [];
@@ -3551,7 +3997,10 @@ function enableBackgroundKeepAlive() {
 				}
 				
 				fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
-				if (currentStream?.id) fetchChannelEmoji(currentStream.id).catch(() => {});
+				if (currentStream?.id) {
+					fetchChannelEmoji(currentStream.id).catch(() => {});
+					syncYouTubeRichChatData(currentStream.id).catch(() => {});
+				}
 			} else {
                  const noChatMessage = document.createElement("div");
                  noChatMessage.style.color = "orange";
@@ -3626,6 +4075,8 @@ function enableBackgroundKeepAlive() {
 				return; // Skip non-member messages
 			}
 			
+			const richMessage = getRichMessageForMessageData(messageData);
+			const richBadges = richMessage && Array.isArray(richMessage.badges) ? richMessage.badges.slice() : [];
 			let chatbadges = [];
 			let nameColor = '';
 			
@@ -3642,12 +4093,16 @@ function enableBackgroundKeepAlive() {
 				}
 			}
 			if (messageData.isChatSponsor) { 
-				// Note: YouTube API doesn't provide member badge images
-				// In the future, if we can get badge URLs, use: {"type": "img", "src": badgeUrl}
-				chatbadges.push({"type": "text", "text": "⭐"}); // Star for member/sponsor
+				if (richBadges.length) {
+					chatbadges = chatbadges.concat(richBadges);
+				} else {
+					chatbadges.push({"type": "text", "text": "⭐"}); // Star for member/sponsor
+				}
 				if (!settings.nosubcolor && !nameColor) { // Don't override mod color
 					nameColor = "#107516";
 				}
+			} else if (richBadges.length) {
+				chatbadges = chatbadges.concat(richBadges);
 			}
 
 			//console.log("Processing message:", messageData.message, "EMOTELIST available:", !!EMOTELIST);
@@ -3655,9 +4110,11 @@ function enableBackgroundKeepAlive() {
 				console.warn('Message data missing message property:', messageData);
 			}
 				const messageText = messageData.message || '';
-				const messageWithEmojis = replaceEmojis(messageText);
 				const textOnlyMode = Boolean(settings.textonlymode);
-				let basePlainText = (typeof messageData.plainTextMessage === 'string' && messageData.plainTextMessage.trim())
+				const messageWithEmojis = (!textOnlyMode && richMessage && richMessage.html) ? richMessage.html : replaceEmojis(messageText);
+				let basePlainText = (richMessage && richMessage.plainText)
+					? richMessage.plainText
+					: (typeof messageData.plainTextMessage === 'string' && messageData.plainTextMessage.trim())
 					? messageData.plainTextMessage
 					: stripHtmlContent(messageWithEmojis || messageText);
 				if (!basePlainText && messageText) {
@@ -3695,11 +4152,7 @@ function enableBackgroundKeepAlive() {
 					if (textarea) {
 						const shouldStick = shouldStickToBottom(textarea);
 						var span = document.createElement("div");
-						let badgeHtml = '';
-						// Display badges in the same order as they're sent
-						if (messageData.isChatOwner) { badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>'; }
-						if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; }
-						if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; }
+						const badgeHtml = renderChatBadgesForPage(chatbadges);
 						
 						const renderedMessage = textOnlyMode ? strictEscapeHtml(finalChatMessage) : finalChatMessage;
 						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: ${renderedMessage}`;

@@ -2281,6 +2281,7 @@
 			function handleCohostLiveChatPayload(input) {
 				const message = normalizeCohostLiveChatPayload(input);
 				if (!message || !rememberCohostLiveChatMessage(message)) return false;
+				cohostLiveChatConnected = true;
 				cohostLiveChatCount += 1;
 				setCohostLiveChatStatus("connected", message.name + ": " + message.text);
 				if (shouldPromptFromCohostLiveChat(message)) {
@@ -2337,11 +2338,10 @@
 					return false;
 				}
 				cohostLiveChatSocket.onopen = function () {
-					cohostLiveChatConnected = true;
 					try {
 						cohostLiveChatSocket.send(JSON.stringify({ join: room, out: 3, in: 4 }));
 					} catch (_error) {}
-					setCohostLiveChatStatus("connected websocket", "waiting for chat");
+					setCohostLiveChatStatus("websocket ready", "waiting for first chat");
 				};
 				cohostLiveChatSocket.onmessage = function (event) {
 					if (!event.data) return;
@@ -2379,8 +2379,7 @@
 				frame.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(params.password) + "&push&notmobile&label=cohost&view=" + encodeURIComponent(params.room) + "&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + encodeURIComponent(params.room);
 				frame.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;border:0;";
 				frame.onload = function () {
-					cohostLiveChatConnected = true;
-					setCohostLiveChatStatus("connected bridge", "waiting for chat");
+					setCohostLiveChatStatus("bridge ready", "waiting for first chat");
 				};
 				cohostLiveChatFrame = frame;
 				document.body.appendChild(frame);
