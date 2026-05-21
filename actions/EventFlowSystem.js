@@ -2939,7 +2939,7 @@ class EventFlowSystem {
 						actionType: 'play_media', // This corresponds to the 'actionType' in actions.html
 						url: config.mediaUrl,
 						mediaType: config.mediaType || 'iframe',
-						duration: config.duration || 10000, // Pass duration to actions.html
+						duration: config.duration ?? 10000, // Pass duration to actions.html
 						// Positioning and sizing (percent-based)
 						width: (typeof config.width === 'number') ? config.width : undefined,
 						height: (typeof config.height === 'number') ? config.height : undefined,

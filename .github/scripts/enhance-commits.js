@@ -10,7 +10,7 @@ const SAMPLE_LINES_PER_FILE = 200; // Maximum lines to include per file
 
 // Z.AI GLM API Configuration
 const ZAI_API_ENDPOINT = 'https://api.z.ai/api/coding/paas/v4/chat/completions';
-const ZAI_MODEL = 'glm-4.7';
+const ZAI_MODEL = 'glm-5.1';
 
 // --- Error Handling ---
 class ScriptError extends Error {
