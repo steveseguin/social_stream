@@ -124,6 +124,7 @@
 		}
 
 		.puppet {
+			box-sizing: content-box;
 			width: 300px;
 			height: 300px;
 			position: relative;
@@ -138,6 +139,10 @@
 				inset 0 8px 18px rgba(255, 255, 255, 0.34);
 			transition: transform 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease;
 			animation: floatBob 4.6s ease-in-out infinite;
+		}
+
+		.puppet * {
+			transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 		}
 
 		.puppet::before,
@@ -915,8 +920,7 @@
 				confused: true,
 				worried: true,
 				proud: true,
-				celebrating: true,
-				smirk: true
+				celebrating: true
 			};
 			return allowed[value] ? value : "happy";
 		}
