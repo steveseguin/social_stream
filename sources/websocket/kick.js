@@ -521,6 +521,44 @@ function normalizeKickChatType(value) {
     return 'user';
 }
 
+function getKickSlugLookupCandidates(value) {
+    const normalized = normalizeChannel(value);
+    if (!normalized) {
+        return [];
+    }
+    const candidates = [normalized];
+    const addCandidate = (candidate) => {
+        const clean = normalizeChannel(candidate);
+        if (clean && !candidates.includes(clean)) {
+            candidates.push(clean);
+        }
+    };
+    if (normalized.includes('_')) {
+        addCandidate(normalized.replace(/_/g, '-'));
+    }
+    if (normalized.includes('-')) {
+        addCandidate(normalized.replace(/-/g, '_'));
+    }
+    return candidates;
+}
+
+function applyResolvedKickSlug(requestedSlug, resolvedSlug, reason = '') {
+    const requested = normalizeChannel(requestedSlug);
+    const canonical = normalizeChannel(resolvedSlug);
+    if (!canonical || canonical === normalizeChannel(state.channelSlug)) {
+        return;
+    }
+    state.channelSlug = canonical;
+    state.channelSlugSource = 'resolved';
+    state.autoStart.lastSlug = '';
+    persistConfig();
+    updateInputsFromState();
+    notifyLiteStatus('channel');
+    const requestedLabel = requested ? `@${requested}` : 'the requested channel';
+    const suffix = reason ? ` (${reason})` : '';
+    logKickWs(`Resolved Kick slug ${requestedLabel} to @${canonical}${suffix}.`);
+}
+
 function notifyLiteStatus(reason) {
     if (!isLiteEmbedded()) return;
     sendLiteMessage('kick-lite-status', { status: getLiteStatusSnapshot(), reason });
