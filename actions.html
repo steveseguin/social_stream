@@ -1149,7 +1149,7 @@
                             useLayer: payload.useLayer,
                             clearFirst: payload.clearFirst
                         };
-                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration || defaultDuration, opts);
+                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration ?? defaultDuration, opts);
                     } else {
                         console.warn("Play media action received without a URL.");
                     }
@@ -1572,7 +1572,7 @@
 
         // Function to play media with optional positioned area (percent-based)
 		function playMediaFullscreen(url, mediaType, duration, opts = {}) {
-			duration = duration || defaultDuration;
+			duration = duration ?? defaultDuration;
 			// Determine target container - use layer system if opts.useLayer is true
 			const useLayer = !!opts.useLayer;
 			const targetContainer = useLayer ? overlayLayers.media : mediaContainer;

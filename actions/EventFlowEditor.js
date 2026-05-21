@@ -2025,7 +2025,7 @@ class EventFlowEditor {
                 // Media & Layer actions
                 case 'playTenorGiphy': {
                     const url = node.config.mediaUrl || '';
-                    const duration = node.config.duration || 10000;
+                    const duration = node.config.duration ?? 10000;
                     const shortUrl = url.length > 25 ? url.substring(0, 25) + '...' : url;
                     return `${shortUrl} (${duration}ms)`;
                 }
@@ -4238,7 +4238,7 @@ class EventFlowEditor {
 						 </div>
 						 <div class="property-group">
 							<label class="property-label">Duration (ms, 0 for manual close)</label>
-							<input type="number" class="property-input" id="prop-duration" value="${node.config.duration || 10000}" min="0">
+							<input type="number" class="property-input" id="prop-duration" value="${node.config.duration ?? 10000}" min="0">
 							<div class="property-help">How long the media stays on screen. 0 means it stays until the next 'play_media' action or manual intervention.</div>
 						</div>
 						<div class="property-group">
