@@ -6663,7 +6663,7 @@
 						for (var i = 0; i < keys.length; i++) {
 							var UUID = keys[i];
 							if (isCohostOverlayLabel(peers[UUID])) {
-								iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+								iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: UUID }, "*");
 								sent = true;
 							}
 						}

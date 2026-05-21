@@ -145,6 +145,15 @@
 			transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 		}
 
+		.puppet .face,
+		.puppet .eye,
+		.puppet .eyebrow,
+		.puppet .mouth,
+		.puppet .cheek,
+		.puppet .shadow {
+			box-sizing: content-box;
+		}
+
 		.puppet::before,
 		.puppet::after {
 			content: "";
@@ -1117,7 +1126,7 @@
 		function setupBridge() {
 			if (!sessionId || urlParams.has("preview")) return;
 			bridgeFrame = document.createElement("iframe");
-			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&solo&view=" + encodeURIComponent(sessionId) + "&novideo&noaudio&label=" + encodeURIComponent(label) + "&cleanoutput&room=" + encodeURIComponent(sessionId);
+			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&push&notmobile&label=" + encodeURIComponent(label) + "&view=" + encodeURIComponent(sessionId) + "&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + encodeURIComponent(sessionId);
 			bridgeFrame.style.cssText = "width:0;height:0;border:0;position:absolute;left:-200px;top:-200px;";
 			bridgeFrame.onload = function () {
 				setStatus("bridge ready");
