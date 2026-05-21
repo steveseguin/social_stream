@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Co-host Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Setup and workflow guide for the Social Stream Ninja AI co-host, dock controls, and AI stage overlay.">
+    <style>
+        .cohost-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .cohost-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .cohost-guide-card h3 {
+            margin-top: 0;
+        }
+        .cohost-flow {
+            margin: 18px 0;
+            padding: 18px;
+            border-left: 4px solid #00a6ff;
+            background: rgba(0, 166, 255, 0.08);
+        }
+        .cohost-code {
+            display: block;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            background: #111827;
+            color: #e5e7eb;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+        .dark-mode .cohost-guide-card {
+            background: #161b22;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../media/logo.png" alt="Social Stream Ninja logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="download.html">Download</a></li>
+                    <li><a href="guides.html" class="active">Guides</a></li>
+                    <li><a href="commands.html">Commands &amp; API</a></li>
+                    <li><a href="supported-sites.html">Supported Sites</a></li>
+                    <li><a href="templates.html">Templates</a></li>
+                    <li><a href="services.html">Hire</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>AI Co-host Guide</h1>
+            <p>How the dock controls, private chat bot, and AI stage overlay work together.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>What It Does</h2>
+                <p>The AI co-host is split into a control side and a playout side. The streamer controls it from <code>dock.html</code>, while OBS captures <code>cohost-overlay.html</code> as the on-stream avatar and speech bubble.</p>
+                <div class="cohost-guide-grid">
+                    <div class="cohost-guide-card">
+                        <h3>Dock Controls</h3>
+                        <p>Right-click a chat message in the dock and choose <strong>AI Co-host</strong>. The dock can read the message, ask the AI for an answer, or create a light roast draft.</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>AI Stage Overlay</h3>
+                        <p>The overlay shows the avatar, speech bubble, and optional browser text-to-speech audio. This is the browser source you put in OBS.</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>Private Chat Bot</h3>
+                        <p>Answer and Light Roast use the configured LLM provider through the Private Chat Bot bridge. Read does not require AI.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Basic Setup</h2>
+                <ol class="guide-steps">
+                    <li>Open the Streaming Chat dock with your session: <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
+                    <li>Add the AI stage overlay to OBS: <code>cohost-overlay.html?session=YOUR_SESSION_ID&amp;tts</code>.</li>
+                    <li>For AI answers, configure an LLM provider in the popup.</li>
+                    <li>Enable <strong>Chat Bots and AI services &gt; Chat Bot - Private Interface &gt; Enable private chat bot option</strong>.</li>
+                    <li>Right-click a dock message and select <strong>AI Co-host</strong>.</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>Tip:</strong> Use the same <code>session</code> value for the dock and co-host overlay. If audio is wanted from OBS, include <code>&amp;tts</code> on the overlay URL.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>How The Pages Talk</h2>
+                <p>The dock and overlay use the existing Social Stream session bridge. Messages are sent as <code>overlayNinja</code> payloads and targeted by label.</p>
+                <div class="cohost-flow">
+                    <p><strong>Read on Co-host:</strong> dock sends the selected chat message directly to <code>cohost-overlay.html</code>.</p>
+                    <p><strong>Answer / Light Roast:</strong> dock sends a private chatbot request to the SSN background service, shows the AI draft in the dock, then sends it to the overlay only after the streamer clicks Speak.</p>
+                </div>
+                <pre class="cohost-code">{
+  "action": "cohostOverlay",
+  "target": "cohost-overlay",
+  "meta": {
+    "command": "say",
+    "text": "The line the avatar should say",
+    "speak": true,
+    "emotion": "happy"
+  }
+}</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2>Available Actions</h2>
+                <table class="field-table">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Requires</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Read on Co-host</td>
+                            <td>Connected <code>cohost-overlay.html</code></td>
+                            <td>Reads the selected chat message on the overlay.</td>
+                        </tr>
+                        <tr>
+                            <td>Answer</td>
+                            <td>Private Chat Bot + configured LLM</td>
+                            <td>Creates a short answer draft for streamer approval.</td>
+                        </tr>
+                        <tr>
+                            <td>Light Roast</td>
+                            <td>Private Chat Bot + configured LLM</td>
+                            <td>Creates a short, playful, PG draft for streamer approval.</td>
+                        </tr>
+                        <tr>
+                            <td>Speak</td>
+                            <td>Approval panel draft</td>
+                            <td>Sends the approved text to the AI stage overlay.</td>
+                        </tr>
+                        <tr>
+                            <td>Copy</td>
+                            <td>Approval panel draft</td>
+                            <td>Copies the draft without sending it to the overlay.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Status And Troubleshooting</h2>
+                <ul class="guide-list">
+                    <li>The dock has an AI co-host status button. Click it to see what is connected.</li>
+                    <li>If Read is disabled, the co-host overlay is not detected in the same session.</li>
+                    <li>If Answer or Light Roast is disabled, the SSN bridge or Private Chat Bot is not available.</li>
+                    <li>If text appears but no audio plays, add <code>&amp;tts</code> or <code>&amp;speak=1</code> to the overlay URL.</li>
+                    <li>If AI requests time out, check that Social Stream is on, the session matches, and Private Chat Bot is enabled.</li>
+                    <li>If multiple overlays are open, make sure the overlay label matches the dock target. The default label is <code>cohost-overlay</code>.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Useful URL Parameters</h2>
+                <ul class="guide-list">
+                    <li><code>session=YOUR_SESSION_ID</code> - required for the dock and overlay to share a room.</li>
+                    <li><code>tts</code> or <code>speak=1</code> - lets the overlay speak with browser TTS.</li>
+                    <li><code>label=cohost-overlay</code> - sets the overlay target label.</li>
+                    <li><code>name=NinjaBot</code> - sets the display name on the overlay.</li>
+                    <li><code>avatar=https://...</code> - uses a custom avatar image.</li>
+                    <li><code>position=bottom-right</code> - controls stage placement.</li>
+                    <li><code>scale=1.2</code> - scales the overlay.</li>
+                    <li><code>status</code> - shows connection/status text on the overlay.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Design Notes</h2>
+                <ul class="guide-list">
+                    <li>The overlay is the playout source, so OBS captures the visual and audio output.</li>
+                    <li>The dock is the control surface, so streamer approval stays off-stream.</li>
+                    <li>Generated responses are not auto-spoken; the streamer must approve them first.</li>
+                    <li>Non-standard command details live inside <code>meta</code>, keeping payloads predictable for overlays and automations.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

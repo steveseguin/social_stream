@@ -374,6 +374,12 @@
 			status.textContent = text || "";
 		}
 
+		if (!sessionId) {
+			setStatus("no session; waiting for direct messages");
+		} else if (!urlParams.has("server") && !urlParams.has("server2") && !urlParams.has("server3")) {
+			setStatus("bridge connecting");
+		}
+
 		function normalizeEmotion(emotion) {
 			var value = String(emotion || "").toLowerCase().trim();
 			var allowed = {
@@ -454,6 +460,11 @@
 
 		function speak(text) {
 			if (!ttsEnabled || !text || !("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+				if (text && !ttsEnabled) {
+					setStatus("text shown; add &tts or &speak=1 for audio");
+				} else if (text) {
+					setStatus("text shown; browser TTS unavailable");
+				}
 				return;
 			}
 			try {
@@ -461,10 +472,13 @@
 				var utterance = new SpeechSynthesisUtterance(text);
 				utterance.onend = function () {
 					setEmotion(state.emotion, false);
+					setStatus("speech done");
 				};
 				utterance.onerror = function () {
 					setEmotion("worried", false);
+					setStatus("speech failed");
 				};
+				setStatus("speaking");
 				window.speechSynthesis.speak(utterance);
 			} catch (e) {}
 		}
@@ -489,6 +503,8 @@
 			showStage();
 			if (meta.tts || meta.speak) {
 				speak(state.text);
+			} else {
+				setStatus("text shown");
 			}
 			scheduleClear();
 		}
@@ -532,6 +548,9 @@
 			if (payload.aiOverlay) {
 				payload = payload.aiOverlay;
 			}
+			if (payload.cohostOverlay) {
+				payload = payload.cohostOverlay;
+			}
 			return payload;
 		}
 
@@ -542,6 +561,7 @@
 			if (!payload) return false;
 			if (!targetMatches(payload)) return false;
 			state.lastPayload = payload;
+			setStatus("payload received " + new Date().toLocaleTimeString());
 
 			if (payload.action === "aiOverlay" || payload.action === "cohostOverlay") {
 				meta = payload.meta || {};
@@ -575,6 +595,9 @@
 			bridgeFrame = document.createElement("iframe");
 			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&solo&view=" + encodeURIComponent(sessionId) + "&novideo&noaudio&label=" + encodeURIComponent(label) + "&cleanoutput&room=" + encodeURIComponent(sessionId);
 			bridgeFrame.style.cssText = "width:0;height:0;border:0;position:absolute;left:-200px;top:-200px;";
+			bridgeFrame.onload = function () {
+				setStatus("bridge ready");
+			};
 			document.body.appendChild(bridgeFrame);
 			window.addEventListener("message", function (event) {
 				if (event.source !== bridgeFrame.contentWindow) return;

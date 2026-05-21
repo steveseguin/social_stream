@@ -245,7 +245,7 @@
                     <li>Chat transports that support source-control delete sync should expose the platform-native chat identifier as <code>meta.messageId</code> instead of relying on the dock's internal <code>data-mid</code> value.</li>
                     <li>SSApp source identity metadata may add <code>meta.ssnAccountRole</code>, <code>meta.ssnSourceId</code>, and <code>meta.ssnSession</code> when a source is assigned a non-normal account role.</li>
                     <li>Event Flow can request a highlight by setting <code>meta.featured = true</code> on the chat payload, which auto-features the message in dock/featured overlays.</li>
-                    <li>AI stage overlay commands use <code>{ action: "aiOverlay", target, meta }</code>; keep all command details such as <code>command</code>, <code>text</code>, <code>emotion</code>, <code>avatar</code>, and <code>tts</code> inside <code>meta</code>.</li>
+                    <li>AI stage overlay commands use <code>{ action: "aiOverlay", target, meta }</code> or dock-controlled co-host playout uses <code>{ action: "cohostOverlay", target, meta }</code>; keep all command details such as <code>command</code>, <code>text</code>, <code>emotion</code>, <code>avatar</code>, and <code>tts</code> inside <code>meta</code>.</li>
                     <li>If a platform exposes multiple counters together, prefer a structured object with explicit keys (<code>meta.viewer_count</code>, <code>meta.follower_count</code>) instead of overloading strings.</li>
                     <li>Commerce overlays should use snapshot objects under <code>meta</code> (for example <code>auction_update</code> and <code>commerce_update</code>) and avoid ad-hoc top-level fields.</li>
                 </ul>
@@ -882,7 +882,7 @@
                     <h3>Kick – Websocket/Bridge</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/kick.js</code> with shared helpers under <code>providers/kick/core.js</code></p>
                     <ul class="requirements">
-                        <li>OAuth via the Social Stream Kick bridge. Scopes: <code>user:read</code>, <code>channel:read</code>, <code>chat:write</code>, <code>events:subscribe</code>. Tokens are refreshed automatically.</li>
+                        <li>OAuth via the Social Stream Kick bridge. Core scopes include <code>user:read</code>, <code>channel:read</code>, <code>chat:write</code>, <code>events:subscribe</code>, <code>channel:rewards:read</code>, and <code>kicks:read</code>. Tokens are refreshed automatically.</li>
                         <li>Kick webhook provisioning may take several minutes; the UI lists active subscriptions per channel.</li>
                     </ul>
                     <table class="event-table">
@@ -901,8 +901,8 @@
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>reward</code></td>
-                                <td>Bridge chat/system payloads that look like redemptions (for example “has redeemed …”) or carry reward-like native event types.</td>
-                                <td>Normalized from chat text/native type heuristics to stay aligned with Kick DOM capture.</td>
+                                <td><code>channel.reward.redemption.updated</code>, plus bridge chat/system payloads that look like redemptions.</td>
+                                <td><code>meta</code> includes reward/redemption id, title, cost, status, user input, and redeemer.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>new_subscriber</code></td>
@@ -921,8 +921,8 @@
                             </tr>
                             <tr>
                                 <td><code>donation</code></td>
-                                <td>Support/tip events detected via event type heuristics.</td>
-                                <td><code>meta</code> contains { amount, currency, supporter, message }; <code>hasDonation</code> is intentionally left blank to avoid double rendering until a common format is agreed.</td>
+                                <td><code>kicks.gifted</code> and support/tip events detected via event type heuristics.</td>
+                                <td><code>hasDonation</code> carries the formatted amount; <code>meta</code> contains { amount, currency, supporter, message, giftName }.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>new_follower</code></td>
@@ -946,7 +946,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in "kicks", the bridge converts them into <code>meta.amount</code> with <code>currency</code> fallback to "KICK". Chat payloads include <code>meta.messageId</code> when the bridge exposes a native Kick message ID so delete sync can target the correct message. Reply payloads include <code>meta.reply</code> with the parent <code>messageId</code>, <code>author</code>, and <code>text</code> when known.</p>
+                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in KICKs, the bridge converts them into <code>hasDonation</code> plus <code>meta.amount</code> with <code>currency</code> fallback to "KICKs". Chat payloads include <code>meta.messageId</code> when the bridge exposes a native Kick message ID so delete sync can target the correct message. Reply payloads include <code>meta.reply</code> with the parent <code>messageId</code>, <code>author</code>, and <code>text</code> when known.</p>
 
                     <h4>Kick Websocket: Event Quick Reference</h4>
                     <table class="field-table">
@@ -961,8 +961,8 @@
                             <tr><td><code>new_subscriber</code></td><td>New subscription</td></tr>
                             <tr><td><code>resub</code></td><td>Subscription renewal</td></tr>
                             <tr><td><code>subscription_gift</code></td><td>Gifted subs</td></tr>
-                            <tr><td><code>reward</code></td><td>Reward/redemption-style chat or system message</td></tr>
-                            <tr><td><code>donation</code></td><td>Tip/support event</td></tr>
+                            <tr><td><code>reward</code></td><td>Channel reward redemption or reward-style chat/system message</td></tr>
+                            <tr><td><code>donation</code></td><td>Tip/support/KICKs gift event</td></tr>
                             <tr><td><code>follower_update</code></td><td>Total follower count</td></tr>
                             <tr><td><code>stream_online</code></td><td>Stream went live</td></tr>
                             <tr><td><code>stream_offline</code></td><td>Stream ended</td></tr>
@@ -1446,7 +1446,7 @@
                         </tr>
                         <tr>
                             <td>Kick: Standard vs Websocket</td>
-                            <td>Standard emits lightweight markers (<code>gift</code>, <code>reward</code>, boolean <code>true</code>, <code>viewer_update</code>). Websocket adds full event support: <code>reward</code>, <code>new_follower</code>, <code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, <code>donation</code>, <code>stream_online</code>/<code>stream_offline</code>, <code>follower_update</code>.</td>
+                            <td>Standard emits lightweight markers (<code>gift</code>, <code>reward</code>, boolean <code>true</code>, <code>viewer_update</code>). Websocket adds full event support: <code>reward</code>, <code>new_follower</code>, <code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, <code>donation</code>, <code>stream_online</code>/<code>stream_offline</code>, <code>follower_update</code>, including API reward redemptions and KICKs gifts.</td>
                             <td>Websocket mode is richer; automation built around Standard-only event names should be reviewed when switching.</td>
                         </tr>
                         <tr>
