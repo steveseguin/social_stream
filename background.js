@@ -10129,7 +10129,7 @@ function sendDataP2P(data, UUID = false) {
 			try {
 				var peers = ninjaBridge.getPeers();
 				for (var k in peers) {
-					if (peers[k] === "dock" || peers[k] === "aioverlay" || peers[k] === "tipjar") {
+					if (peers[k] === "dock" || peers[k] === "aioverlay" || peers[k] === "cohost" || peers[k] === "tipjar") {
 						hasOverlayReceiver = true;
 					}
 				}
@@ -10137,6 +10137,7 @@ function sendDataP2P(data, UUID = false) {
 			if (hasOverlayReceiver) {
 				ninjaBridge.sendToLabel(data, "dock");
 				ninjaBridge.sendToLabel(data, "aioverlay");
+				ninjaBridge.sendToLabel(data, "cohost");
 				ninjaBridge.sendToLabel(data, "tipjar");
 			} else {
 				ninjaBridge.send(data); // broadcast
@@ -10160,8 +10161,8 @@ function sendDataP2P(data, UUID = false) {
 				try {
 					UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
-					if (!label || label === "dock" || label === "aioverlay" || label === "tipjar") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // the docks, emotes, and AI overlay page are VIEWERS, since backend is PUSH-only
+					if (!label || label === "dock" || label === "aioverlay" || label === "cohost" || label === "tipjar") {
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // docks, AI pages, and overlay-style pages are VIEWERS, since backend is PUSH-only
 					}
 				} catch (e) {
 					console.error(e);

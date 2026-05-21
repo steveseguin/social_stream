@@ -6590,8 +6590,14 @@
 			}
 
 			try {
-				if (window.location.host !== "socialstream.ninja") {
-					// don't check if not private hosted, since it won't exist
+				var dockHost = window.location.hostname || window.location.host || "";
+				if (
+					dockHost !== "socialstream.ninja" &&
+					dockHost !== "beta.socialstream.ninja" &&
+					dockHost !== "cfpages.socialstream.ninja" &&
+					!/\.pages\.dev$/i.test(dockHost)
+				) {
+					// Only private/self-hosted copies should try to load local custom actions.
 					var script = document.createElement("script");
 					script.onload = function () {
 						console.log("Loaded personal actions");
