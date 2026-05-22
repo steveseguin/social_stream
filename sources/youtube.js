@@ -1372,6 +1372,7 @@
 		} catch (e) {}
 	}
 	var settings = {};
+	var youtubeSettingsLoaded = false;
 	var BTTV = false;
 	var videosMuted = false;
 	var SEVENTV = false;
@@ -1634,7 +1635,6 @@
 	var youtubeAutoScrollDelayMs = 3000;
 	var youtubeAutoScrollTimer = null;
 	var youtubeAutoScrollOffBottomSince = 0;
-	var youtubeSettingsLoaded = false;
 
 	function applyLargerFont() {
 		if (!largerFontApplied) {
@@ -1709,6 +1709,29 @@
 		return true;
 	}
 
+	function clickYouTubeShowMoreButton(ele) {
+		var doc = (ele && ele.ownerDocument) ? ele.ownerDocument : document;
+		var showMore = null;
+		try {
+			showMore = doc.querySelector("yt-live-chat-item-list-renderer #show-more button, #show-more button, #show-more");
+		} catch (e) {}
+		if (!showMore) {
+			return false;
+		}
+		try {
+			var wrapper = showMore.closest ? (showMore.closest("#show-more") || showMore) : showMore;
+			var style = doc.defaultView && doc.defaultView.getComputedStyle ? doc.defaultView.getComputedStyle(wrapper) : null;
+			if (wrapper.hidden || (style && (style.display === "none" || style.visibility === "hidden"))) {
+				return false;
+			}
+		} catch (e) {}
+		try {
+			showMore.click();
+			return true;
+		} catch (e) {}
+		return false;
+	}
+
 	function keepYouTubeChatAtBottom(ele, force) {
 		if (!ele || !ele.isConnected || !shouldKeepYouTubeChatAtBottom()) {
 			return;
@@ -1720,6 +1743,7 @@
 		youtubeLastAutoScrollAt = now;
 		var scroller = getYouTubeChatScrollerElement(ele);
 		var target = scroller || ele;
+		clickYouTubeShowMoreButton(ele);
 		try {
 			target.scrollTop = target.scrollHeight;
 			if (typeof target.scrollTo === "function") {
