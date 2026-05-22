@@ -5276,7 +5276,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						innertubeApiKey: extractApiKey(html)
 					};
 				};
-				const slimWatchData = function (data, apiKey, context) {
+				const slimWatchData = function (data, watchApiKey, context) {
 					const liveChatRenderer =
 						data &&
 						data.contents &&
@@ -5290,7 +5290,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 								conversationBar: { liveChatRenderer }
 							}
 						},
-						innertubeApiKey: apiKey,
+						innertubeApiKey: watchApiKey,
 						innertubeContext: context
 					};
 				};
@@ -5302,8 +5302,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						"Referer": referer || "https://www.youtube.com/"
 					};
 				};
-				const fetchWatchConfig = async function (videoId) {
-					const resp = await fetch(`https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`, {
+				const fetchWatchConfig = async function (targetVideoId) {
+					const resp = await fetch(`https://www.youtube.com/watch?v=${encodeURIComponent(targetVideoId)}`, {
 						headers: { "Accept-Language": "en-US,en;q=0.9", "Referer": "https://www.youtube.com/" }
 					});
 					if (!resp.ok) return null;
@@ -5315,29 +5315,29 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						context: buildInnertubeContext(extractClientVersion(html), extractVisitorData(html))
 					};
 				};
-				const fetchPublicInitialData = async function (videoId) {
-					const config = await fetchWatchConfig(videoId);
+				const fetchPublicInitialData = async function (targetVideoId) {
+					const config = await fetchWatchConfig(targetVideoId);
 					if (!config) return null;
 					const resp = await fetch(`https://www.youtube.com/youtubei/v1/next?key=${encodeURIComponent(config.apiKey)}`, {
 						method: "POST",
-						headers: getInnertubeHeaders(`https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`),
-						body: JSON.stringify(Object.assign({}, config.context, { videoId }))
+						headers: getInnertubeHeaders(`https://www.youtube.com/watch?v=${encodeURIComponent(targetVideoId)}`),
+						body: JSON.stringify(Object.assign({}, config.context, { videoId: targetVideoId }))
 					});
 					if (!resp.ok) return null;
 					return slimWatchData(await resp.json(), config.apiKey, config.context);
 				};
-				const fetchPublicContinuationData = async function (videoId, continuation, apiKey) {
-					if (!continuation) return null;
-					let config = await fetchWatchConfig(videoId);
-					if (!config && apiKey) {
-						config = { apiKey, context: buildInnertubeContext("", "") };
+				const fetchPublicContinuationData = async function (targetVideoId, continuationToken, fallbackApiKey) {
+					if (!continuationToken) return null;
+					let config = await fetchWatchConfig(targetVideoId);
+					if (!config && fallbackApiKey) {
+						config = { apiKey: fallbackApiKey, context: buildInnertubeContext("", "") };
 					}
 					if (!config) return null;
-					if (apiKey) config.apiKey = apiKey;
+					if (fallbackApiKey) config.apiKey = fallbackApiKey;
 					const resp = await fetch(`https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=${encodeURIComponent(config.apiKey)}`, {
 						method: "POST",
-						headers: getInnertubeHeaders(`https://www.youtube.com/live_chat?is_popout=1&v=${encodeURIComponent(videoId)}`),
-						body: JSON.stringify(Object.assign({}, config.context, { continuation }))
+						headers: getInnertubeHeaders(`https://www.youtube.com/live_chat?is_popout=1&v=${encodeURIComponent(targetVideoId)}`),
+						body: JSON.stringify(Object.assign({}, config.context, { continuation: continuationToken }))
 					});
 					if (!resp.ok) return null;
 					const data = await resp.json();
