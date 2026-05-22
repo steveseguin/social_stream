@@ -1427,6 +1427,7 @@
 				
 				if ("settings" in request) {
 					settings = request.settings;
+					youtubeSettingsLoaded = true;
 					sendResponse(true);
 					if (settings.bttv) {
 						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {});
@@ -1524,6 +1525,7 @@
 		response = response || {};
 		if ("settings" in response) {
 			settings = response.settings;
+			youtubeSettingsLoaded = true;
 
 			if (settings.bttv && !BTTV) {
 				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
@@ -1627,6 +1629,12 @@
 	var youtubeEmptySince = 0;
 	var youtubeLastObserverRefreshAt = 0;
 	var youtubeObserverRefreshCooldownMs = 4000;
+	var youtubeLastAutoScrollAt = 0;
+	var youtubeAutoScrollCooldownMs = 250;
+	var youtubeAutoScrollDelayMs = 3000;
+	var youtubeAutoScrollTimer = null;
+	var youtubeAutoScrollOffBottomSince = 0;
+	var youtubeSettingsLoaded = false;
 
 	function applyLargerFont() {
 		if (!largerFontApplied) {
@@ -1672,6 +1680,100 @@
 		return ele.parentElement || null;
 	}
 
+	function getYouTubeChatScrollerElement(ele) {
+		var doc = (ele && ele.ownerDocument) ? ele.ownerDocument : document;
+		var scroller = null;
+		try {
+			if (ele && typeof ele.closest === "function") {
+				scroller = ele.closest("#item-scroller");
+			}
+		} catch (e) {}
+		if (!scroller) {
+			try {
+				scroller = doc.querySelector("yt-live-chat-item-list-renderer #item-scroller, #chat-messages #item-scroller, #item-scroller");
+			} catch (e) {}
+		}
+		return scroller || null;
+	}
+
+	function shouldKeepYouTubeChatAtBottom() {
+		return !!(youtubeSettingsLoaded && isExtensionOn && !settings.disableYoutubeAutoScroll);
+	}
+
+	function isYouTubeChatNearBottom(ele) {
+		var scroller = getYouTubeChatScrollerElement(ele);
+		var target = scroller || ele;
+		try {
+			return (target.scrollHeight - target.scrollTop - target.clientHeight) <= 80;
+		} catch (e) {}
+		return true;
+	}
+
+	function keepYouTubeChatAtBottom(ele, force) {
+		if (!ele || !ele.isConnected || !shouldKeepYouTubeChatAtBottom()) {
+			return;
+		}
+		var now = Date.now();
+		if (!force && (now - youtubeLastAutoScrollAt) < youtubeAutoScrollCooldownMs) {
+			return;
+		}
+		youtubeLastAutoScrollAt = now;
+		var scroller = getYouTubeChatScrollerElement(ele);
+		var target = scroller || ele;
+		try {
+			target.scrollTop = target.scrollHeight;
+			if (typeof target.scrollTo === "function") {
+				target.scrollTo(0, target.scrollHeight);
+			}
+			target.dispatchEvent(new Event("scroll", { bubbles: true }));
+		} catch (e) {}
+		try {
+			if (ele.lastElementChild && typeof ele.lastElementChild.scrollIntoView === "function") {
+				ele.lastElementChild.scrollIntoView(false);
+			}
+		} catch (e) {}
+		try {
+			var listRenderer = ele.closest && ele.closest("yt-live-chat-item-list-renderer");
+			if (listRenderer && typeof listRenderer.scrollToBottom === "function") {
+				listRenderer.scrollToBottom();
+			} else if (listRenderer && typeof listRenderer.scrollToBottom_ === "function") {
+				listRenderer.scrollToBottom_();
+			}
+		} catch (e) {}
+		youtubeAutoScrollOffBottomSince = 0;
+	}
+
+	function scheduleYouTubeChatAutoScroll(ele) {
+		if (!ele || !shouldKeepYouTubeChatAtBottom()) {
+			return;
+		}
+		if (isYouTubeChatNearBottom(ele)) {
+			youtubeAutoScrollOffBottomSince = 0;
+			try {
+				clearTimeout(youtubeAutoScrollTimer);
+			} catch (e) {}
+			youtubeAutoScrollTimer = null;
+			return;
+		}
+		if (!youtubeAutoScrollOffBottomSince) {
+			youtubeAutoScrollOffBottomSince = Date.now();
+		}
+		if (youtubeAutoScrollTimer) {
+			return;
+		}
+		youtubeAutoScrollTimer = setTimeout(function () {
+			youtubeAutoScrollTimer = null;
+			if (!ele || !ele.isConnected || !shouldKeepYouTubeChatAtBottom()) {
+				return;
+			}
+			if (isYouTubeChatNearBottom(ele)) {
+				youtubeAutoScrollOffBottomSince = 0;
+				return;
+			}
+			keepYouTubeChatAtBottom(ele, true);
+		}, Math.max(0, youtubeAutoScrollDelayMs - (Date.now() - youtubeAutoScrollOffBottomSince)));
+	}
+
 	function disconnectYouTubeChatObservers() {
 		try {
 			if (youtubeChatObserver) {
@@ -1688,6 +1790,11 @@
 				youtubeChatStructureObserver.disconnect();
 			}
 		} catch (e) {}
+		try {
+			clearTimeout(youtubeAutoScrollTimer);
+		} catch (e) {}
+		youtubeAutoScrollTimer = null;
+		youtubeAutoScrollOffBottomSince = 0;
 		youtubeChatObserver = null;
 		youtubeDeletionObserver = null;
 		youtubeChatStructureObserver = null;
@@ -1747,12 +1854,15 @@
 		youtubeDeletionObserver = setupDeletionObserver(ele);
 		seedYouTubeChatItems(ele);
 		youtubeChatObserver = onElementInserted(ele, function (ele2, eventtype=false) {
+			scheduleYouTubeChatAutoScroll(ele);
 			setTimeout(() => processMessage(ele2, eventtype), captureDelay);
 		});
 		youtubeChatStructureObserver = observeYouTubeChatStructure(youtubeObservedItemsHost);
 		youtubeEmptySince = 0;
 		youtubeLastObserverRefreshAt = Date.now();
 		youtubeChatHadMessages = (ele.childElementCount || 0) > 1;
+		keepYouTubeChatAtBottom(ele, true);
+		scheduleYouTubeChatAutoScroll(ele);
 	}
 
 	function maybeRefreshYouTubeChatObserver(ele) {
@@ -1771,6 +1881,7 @@
 		if (itemCount > 1) {
 			youtubeChatHadMessages = true;
 			youtubeEmptySince = 0;
+			scheduleYouTubeChatAutoScroll(ele);
 			return;
 		}
 		if (itemCount > 0 || !youtubeChatHadMessages) {
@@ -1794,6 +1905,7 @@
 	  let ele = getYouTubeChatItemsElement();
 	  if (ele) {
 		maybeRefreshYouTubeChatObserver(ele);
+		scheduleYouTubeChatAutoScroll(ele);
 	  } else if (!ele && document.querySelector("iframe#hyperchat") && !document.querySelector("iframe#hyperchat").marked) {
 			try {
 				var ele22 = document.querySelector("iframe#hyperchat").contentWindow.document.body.querySelector(".content");
