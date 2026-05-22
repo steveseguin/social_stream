@@ -4182,7 +4182,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     return true;
 }
 function handleExclusiveCases(ele, paramType, paramValue, sync) {
-    const exclusiveTypes = ['param1', 'param4', 'param5', 'param13', 'param25'];
+    const exclusiveTypes = ['param1', 'param2', 'param4', 'param5', 'param13', 'param25'];
     if (!exclusiveTypes.includes(paramType)) return;
 
     // Handle exclusive settings like darkmode/lightmode
@@ -4192,6 +4192,10 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
             'lightmode': 'darkmode',
             'onlytwitch': 'hidetwitch',
             'hidetwitch': 'onlytwitch'
+        },
+        param2: {
+            'transparent': 'chroma',
+            'chroma': 'transparent'
         },
         param4: {
             'alignright': 'align=center',
@@ -4211,17 +4215,22 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
         },
         param25: {
             'alignright': 'align=center',
-            'align=center': 'alignright'
+            'align=center': 'alignright',
+            'transparent': ['pagebg', 'chroma=00ff00'],
+            'pagebg': ['transparent', 'chroma=00ff00'],
+            'chroma=00ff00': ['transparent', 'pagebg']
         }
     };
 
     if (exclusiveMap[paramType] && exclusiveMap[paramType][paramValue]) {
-        const oppositeKey = exclusiveMap[paramType][paramValue];
-        const oppositeEle = document.querySelector(`input[data-${paramType}='${oppositeKey}']`);
-        if (oppositeEle && oppositeEle.checked) {
-            oppositeEle.checked = false;
-            updateSettings(oppositeEle, sync);
-        }
+        const oppositeKeys = [].concat(exclusiveMap[paramType][paramValue]);
+        oppositeKeys.forEach(oppositeKey => {
+            const oppositeEle = document.querySelector(`input[data-${paramType}='${oppositeKey}']`);
+            if (oppositeEle && oppositeEle.checked) {
+                oppositeEle.checked = false;
+                updateSettings(oppositeEle, sync);
+            }
+        });
     }
     
     // Handle special case for 'badkarma'

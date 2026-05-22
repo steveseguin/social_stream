@@ -382,15 +382,18 @@
             
             async getWebSocketUrl() {
                 try {
-                    const response = await fetch(`https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id=${this.realRoomId}&type=0`);
+                    const response = await fetch(`https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id=${this.realRoomId}&platform=pc&player=web`);
                     const data = await response.json();
-                    
+
                     if (data.code === 0) {
                         this.token = data.data.token;
-                        const hostList = data.data.host_list;
+                        const hostList = data.data.host_server_list || data.data.host_list || [];
                         const host = hostList[0]; // Use the first host
-                        
-                        return `wss://${host.host}:${host.wss_port}/sub`;
+                        if (!host || !host.host) {
+                            throw new Error("No WebSocket host returned");
+                        }
+
+                        return `wss://${host.host}:${host.wss_port || 443}/sub`;
                     } else {
                         throw new Error(`Failed to get WebSocket URL: ${data.message}`);
                     }
@@ -787,12 +790,7 @@
                     if (window?.messageBridge) {
                         window.messageBridge.broadcast(formattedMessage);
                     }
-                    
-                    // Send to extension
-                    if (window?.messageBridge) {
-                        window.messageBridge.broadcast(formattedMessage);
-                    }
-                    
+
                     // Trigger gift event
                     this.trigger('gift', formattedMessage);
                 } catch (error) {
@@ -1205,11 +1203,11 @@
             function handleRoomInfo(info) {
                 // Update room information display
                 if (info.online) {
-                    const viewerCountElement = document.querySelector('.stat-item:contains("👥")');
+                    const stats = document.querySelector('.stats');
+                    const viewerCountElement = stats ? stats.querySelector('.stat-item') : null;
                     if (viewerCountElement) {
                         viewerCountElement.innerHTML = `<i>👥</i> ${info.online}`;
                     } else {
-                        const stats = document.querySelector('.stats');
                         if (stats) {
                             const onlineDiv = document.createElement('div');
                             onlineDiv.className = 'stat-item';

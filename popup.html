@@ -4409,6 +4409,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="green-page-background">🟢 Green page background </span>
                                 </div>
+                                <div title="Useful for standalone pop-out overlays.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="transparent" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="force-transparent-background">Force transparent background </span><span class="obs-transparent-note"> (Useful for standalone pop-out overlays)</span>
+                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="center" />
@@ -5734,6 +5741,13 @@ input:checked + .slider:before {
 									</label>
 									<span>Hide amount / value pills</span>
 								</div>
+								<div title="Useful for standalone pop-out overlays.">
+									<label class="switch">
+										<input type="checkbox" data-param25="transparent" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="force-transparent-background">Force transparent background </span><span class="obs-transparent-note"> (Useful for standalone pop-out overlays)</span>
+								</div>
 								<div title="Use a solid page background instead of transparency.">
 									<label class="switch">
 										<input type="checkbox" data-param25="pagebg" />
@@ -6130,6 +6144,14 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <img class="icon" src="./sources/images/youtube.png" style="display: inline-block;" />🔤 <span data-translate="youtubeLargerFont"> Larger font for Youtube Popout chat</span>
+                                </div>
+
+                                <div title="Turn off the YouTube Popout chat auto-scroll keeper.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="disableYoutubeAutoScroll" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <img class="icon" src="./sources/images/youtube.png" style="display: inline-block;" /> <span>Disable YouTube Popout auto-scroll keeper</span>
                                 </div>
 
                                 <div title="Only forward Streamlabs-exclusive events (Cloudbot redemption, merch, Streamlabs tipping). Hides follows/subs/raids/etc.">
@@ -8128,7 +8150,7 @@ input:checked + .slider:before {
 									<label for="localgemmahost">&gt; Self-hosted browser model asset origin</label>
 								</div>
 								<div id="localbrowserhelp" class="hidden" style="width: 95%; font-size: 0.9em; opacity: 0.85; margin: 4px 0 10px 0;">
-									Browser models load weights from your own host instead of an API. Leave the model field blank to use the selected provider's default folder.
+									Local Qwen can use the SSN largefiles host. Local Gemma requires your own mirrored Gemma folder; SSN largefiles does not currently include Gemma assets. Leave the model field blank to use the selected provider's default folder.
 								</div>
 								<div id="localgemmamodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">
@@ -9060,7 +9082,9 @@ input:checked + .slider:before {
 								</div>
 								
 								<p class="ai-tool-copy">This work-in-progress AI co-host can view your screen or webcam, listen to microphone/audio, and respond by text or audio.</p>
+								<p class="ai-tool-copy">With a session link, it can also receive the SSN live chat feed; it defaults to monitor-only, and the Live Chat panel can opt into answering questions.</p>
 								<p class="ai-tool-copy">For the SSN Configured LLM provider, enable the <a href="#wrapper-chatbot-private-options">private chat bot option</a> above.</p>
+								<p class="ai-tool-copy"><a href="./docs/ai-cohost-guide.html" target="_blank">AI co-host guide</a></p>
 								<p class="ai-tool-copy">Future tool permissions can add live chat, OBS, stream events, games, and other interactive controls.</p>
 								<div class="cohost-tool-panel">
 									<h4>Co-host tool permissions</h4>
@@ -9086,24 +9110,26 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-ai-overlay-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-ai-overlay-options">
-						<span>AI Stage Overlay</span>
+						<span>&#x1F3AD; AI Stage Overlay</span>
 					</label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat ai-tool-card">
-								<h3 style="margin:0;">AI stage overlay</h3>
+								<h3 style="margin:0;">&#x1F3AD; AI stage overlay</h3>
 								<div class="link ai-tool-link" title="Open the AI avatar overlay for OBS/browser sources.">
 									<div id="aioverlay" data-raw="" class="single_message">
 										<a target="_blank" id="aioverlaylink" href="https://beta.socialstream.ninja/cohost-overlay.html">https://beta.socialstream.ninja/cohost-overlay.html</a>
 									</div>
 								</div>
 								<p class="ai-tool-copy">Shows an AI avatar and speech bubble on stream. Co-host and chat bot services can send commands to it.</p>
-								<div style="display: inline-block;" title="Send primary chat bot replies to the AI stage overlay too.">
+								<p class="ai-tool-copy"><a href="./docs/ai-cohost-guide.html" target="_blank">AI co-host and stage overlay guide</a></p>
+								<div style="display: inline-block;" title="Optional: also send primary chat bot replies to the AI stage overlay. This is not needed for dock right-click co-host actions.">
 									<label class="switch">
 										<input type="checkbox" id="aiOverlayFromChatBot" data-setting="aiOverlayFromChatBot" />
 										<span class="slider round"></span>
 									</label>
-									<span>Send primary chat bot replies to this overlay</span>
+									<span>Also send primary chat bot replies to this overlay</span>
+									<small style="display:block; margin:4px 0 0 50px; opacity:0.75;">Not needed for dock right-click co-host actions.</small>
 								</div>
 								<div style="display: inline-block;" title="Let the AI stage overlay speak using browser text-to-speech. Default is off to avoid doubled audio.">
 									<label class="switch">
@@ -9139,7 +9165,7 @@ input:checked + .slider:before {
 									<span>Scale</span>
 									<input type="number" id="aiOverlayScale" style="max-width: 6ch;" step="0.05" max="4" min="0.25" value="1" data-numbersetting="aiOverlayScale" />
 								</div>
-								<p class="ai-tool-copy">The SSN Hosted Trial LLM is available under Configure LLM Service Provider for quick testing.</p>
+								<p class="ai-tool-copy">The SSN Hosted Trial LLM uses llm.socialstream.ninja as a free simple option for testing while the trial is available.</p>
 							</div>
 						</div>
 					</div>

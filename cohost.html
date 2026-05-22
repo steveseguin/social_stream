@@ -277,11 +277,23 @@
 			}
 
 			#actionStatusSummary,
-			#voiceStatusSummary {
+			#voiceStatusSummary,
+			#liveChatStatusSummary {
 				background: #181818;
 				border: 1px solid #2a2a2a;
 				border-radius: 10px;
 				padding: 10px 12px;
+			}
+
+			.live-chat-actions {
+				display: grid;
+				grid-template-columns: 1fr auto;
+				gap: 8px;
+			}
+
+			.live-chat-actions button {
+				width: auto;
+				white-space: nowrap;
 			}
 
 			#error {
@@ -1320,6 +1332,23 @@
 					<textarea placeholder="This is where you can specify an initial instruction prompt." id="systemPrompt" rows="4"></textarea>
 				</div>
 
+				<div class="control-group">
+					<div class="control-group-header">Live Chat</div>
+					<div class="live-chat-actions">
+						<select id="liveChatMode" title="How incoming SSN chat should be used by the co-host">
+							<option value="off">Off</option>
+							<option value="monitor">Monitor only (default)</option>
+							<option value="questions">Questions and mentions</option>
+							<option value="all">Every message</option>
+						</select>
+						<button id="liveChatReconnect" type="button">Reconnect</button>
+					</div>
+					<div id="liveChatStatusSummary" class="api-key-info">
+						<div><strong>Feed:</strong> <span id="liveChatStatusLine">Waiting for setup</span></div>
+						<div><strong>Last:</strong> <span id="liveChatLastLine">-</span></div>
+					</div>
+				</div>
+
 				<button id="startButton">Start and Connect</button>
 				<div id="actionStatusSummary" class="api-key-info">
 					<div><strong>Status:</strong> <span id="actionStatusLine">Idle</span></div>
@@ -1340,6 +1369,7 @@
 							<div class="diagnostics-line"><span class="diag-label">Conn:</span><span id="diagConnected" class="diag-value">no</span></div>
 							<div class="diagnostics-line"><span class="diag-label">Event:</span><span id="diagEvent" class="diag-value">-</span></div>
 							<div class="diagnostics-line"><span class="diag-label">Time:</span><span id="diagUpdated" class="diag-value">-</span></div>
+							<div class="diagnostics-line"><span class="diag-label">Chat:</span><span id="diagChat" class="diag-value">off</span></div>
 						</div>
 						<div class="diagnostics-line" style="margin-top: 4px"><span class="diag-label">Err:</span><span id="diagError" class="diag-value">-</span></div>
 						<div class="diagnostics-actions">
@@ -1886,8 +1916,8 @@
 				if (providerKey === "localgemma") {
 					return {
 						key: "localgemma",
-						label: "Local Gemma 4 E2B (Browser)",
-						providerLabel: "Local Gemma 4 (Browser)",
+						label: "Local Gemma 4 E2B (Browser, self-hosted)",
+						providerLabel: "Local Gemma 4 (Browser, self-hosted)",
 						modelId: "gemma4-e2b-it-onnx",
 						localPath: "thirdparty/models/gemma4-e2b-it-onnx",
 						remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
@@ -1953,6 +1983,33 @@
 			let sendButton = null;
 			let SEND_BUTTON_IDLE_TEXT = "Send";
 			let manualSendBusy = false;
+			const COHOST_LIVE_CHAT_DEFAULT_MODE = "monitor";
+			const COHOST_LIVE_CHAT_STORAGE_KEY = "cohostLiveChatMode";
+			const COHOST_LIVE_CHAT_MIN_PROMPT_MS = 3500;
+			const COHOST_LIVE_CHAT_MAX_QUEUE = 5;
+			const COHOST_LIVE_CHAT_MAX_PROMPT_AGE_MS = 45000;
+			const COHOST_LIVE_CHAT_RESPONSE_SETTLE_MS = 1200;
+			let cohostLiveChatFrame = null;
+			let cohostLiveChatSocket = null;
+			let cohostLiveChatReconnectTimer = null;
+			let cohostLiveChatPromptTimer = null;
+			let cohostLiveChatMode = COHOST_LIVE_CHAT_DEFAULT_MODE;
+			let cohostLiveChatConnected = false;
+			let cohostLiveChatPromptBusy = false;
+			let cohostLiveChatLastPromptAt = 0;
+			let cohostLiveChatLastResponseAt = 0;
+			let cohostLiveChatCount = 0;
+			let cohostLiveChatIgnored = 0;
+			let cohostLiveChatPrompted = 0;
+			let cohostLiveChatQueue = [];
+			let cohostLiveChatSeen = new Map();
+			const cohostLiveChatState = {
+				mode: COHOST_LIVE_CHAT_DEFAULT_MODE,
+				status: "idle",
+				last: "-",
+				error: "",
+				updated: Date.now()
+			};
 			const voiceTelemetryState = {
 				inputMode: "-",
 				inputState: "idle",
@@ -2016,6 +2073,329 @@
 					outputPreview: "-",
 					...overrides
 				});
+			}
+			function getCohostSessionParams() {
+				const params = new URLSearchParams(location.search);
+				return {
+					room: params.get("session") || "",
+					password: params.get("password") || "false"
+				};
+			}
+			function getCohostLiveChatModeFromUrl() {
+				if (cohostOverlayParams.has("nochat")) return "off";
+				if (!cohostOverlayParams.has("livechat") && !cohostOverlayParams.has("chat")) return "";
+				const value = (cohostOverlayParams.get("livechat") || cohostOverlayParams.get("chat") || "questions").toLowerCase();
+				if (value === "1" || value === "true" || value === "on") return "questions";
+				if (value === "0" || value === "false" || value === "none") return "off";
+				if (value === "all" || value === "monitor" || value === "questions" || value === "off") return value;
+				return "questions";
+			}
+			function getStoredCohostLiveChatMode() {
+				const urlMode = getCohostLiveChatModeFromUrl();
+				if (urlMode) return urlMode;
+				const stored = localStorage.getItem(COHOST_LIVE_CHAT_STORAGE_KEY);
+				return stored === "off" || stored === "monitor" || stored === "questions" || stored === "all" ? stored : COHOST_LIVE_CHAT_DEFAULT_MODE;
+			}
+			function renderCohostLiveChatStatus() {
+				cohostLiveChatState.mode = cohostLiveChatMode;
+				cohostLiveChatState.updated = Date.now();
+				const statusLine = document.getElementById("liveChatStatusLine");
+				const lastLine = document.getElementById("liveChatLastLine");
+				const diagChat = document.getElementById("diagChat");
+				const base = cohostLiveChatMode === "off" ? "off" : cohostLiveChatState.status || "idle";
+				const summary = base + " | " + cohostLiveChatCount + " received, " + cohostLiveChatPrompted + " sent";
+				if (statusLine) statusLine.textContent = cohostLiveChatState.error || summary;
+				if (lastLine) lastLine.textContent = cohostLiveChatState.last || "-";
+				if (diagChat) diagChat.textContent = summary;
+			}
+			function setCohostLiveChatStatus(status, last, error) {
+				cohostLiveChatState.status = status || cohostLiveChatState.status || "idle";
+				if (typeof last !== "undefined") cohostLiveChatState.last = last || "-";
+				cohostLiveChatState.error = error || "";
+				renderCohostLiveChatStatus();
+			}
+			function cohostLiveChatHtmlToText(value) {
+				if (value === null || typeof value === "undefined") return "";
+				try {
+					const div = document.createElement("div");
+					div.innerHTML = String(value);
+					return (div.textContent || div.innerText || "").replace(/\s+/g, " ").trim();
+				} catch (_error) {
+					return String(value || "").replace(/\s+/g, " ").trim();
+				}
+			}
+			function unwrapCohostLiveChatPayload(input) {
+				let payload = input;
+				if (!payload) return null;
+				if (payload.dataReceived && payload.dataReceived.overlayNinja) payload = payload.dataReceived.overlayNinja;
+				if (payload.overlayNinja) payload = payload.overlayNinja;
+				if (payload.contents) payload = payload.contents;
+				if (payload.action === "ssnBridgeChunk" || payload.chatbotChunk || payload.chatbotResponse || payload.aiPromptOverlays || payload.cohostToolResponse || payload.cohostToolStatus) return null;
+				if (payload.action === "aiOverlay" || payload.action === "cohostOverlay" || payload.action === "chatbot") return null;
+				return payload;
+			}
+			function normalizeCohostLiveChatPayload(input) {
+				const payload = unwrapCohostLiveChatPayload(input);
+				if (!payload || typeof payload !== "object") return null;
+				const text = cohostLiveChatHtmlToText(payload.chatmessage || payload.message || payload.text || "");
+				if (!text) return null;
+				const name = cohostLiveChatHtmlToText(payload.chatname || payload.name || payload.username || "Viewer") || "Viewer";
+				const platform = cohostLiveChatHtmlToText(payload.type || payload.platform || "chat") || "chat";
+				const id = payload.id || payload.mid || payload.messageId || "";
+				const key = [id, platform, name, text].join("|");
+				return {
+					id,
+					key,
+					name,
+					text,
+					platform,
+					raw: payload
+				};
+			}
+			function rememberCohostLiveChatMessage(message) {
+				if (!message || !message.key) return false;
+				if (cohostLiveChatSeen.has(message.key)) return false;
+				cohostLiveChatSeen.set(message.key, Date.now());
+				if (cohostLiveChatSeen.size > 120) {
+					const keys = Array.from(cohostLiveChatSeen.keys());
+					for (let i = 0; i < keys.length - 80; i++) {
+						cohostLiveChatSeen.delete(keys[i]);
+					}
+				}
+				return true;
+			}
+			function shouldPromptFromCohostLiveChat(message) {
+				if (!message || cohostLiveChatMode === "off" || cohostLiveChatMode === "monitor") return false;
+				if (cohostLiveChatMode === "all") return true;
+				const text = message.text || "";
+				return text.indexOf("?") !== -1 || /(^|\s)@(cohost|host|ai|bot)\b/i.test(text) || /\b(cohost|host|ai|bot)\b/i.test(text);
+			}
+			function formatCohostLiveChatPrompt(message) {
+				return [
+					"Live chat message from " + message.name + " on " + message.platform + ":",
+					message.text,
+					"",
+					"Reply as the stream co-host in one short, natural sentence. If it is not worth answering, give a brief friendly acknowledgement."
+				].join("\n");
+			}
+			function isCohostLiveChatPromptReady() {
+				const streamStarted = document.getElementById("startButton")?.dataset?.started === "true";
+				const state = String(diagnosticsState.state || "").toLowerCase();
+				const recentlyResponded = Date.now() - cohostLiveChatLastResponseAt < COHOST_LIVE_CHAT_RESPONSE_SETTLE_MS;
+				const connected = !publisher || typeof publisher.isConnected !== "function" || publisher.isConnected();
+				return !!publisher && connected && streamStarted && !manualSendBusy && !cohostLiveChatPromptBusy && !publisher.responseActive && !recentlyResponded && state !== "responding" && state !== "starting" && state !== "connecting" && state !== "loading" && state !== "restarting";
+			}
+			function isCohostLiveChatStreamActive() {
+				const streamStarted = document.getElementById("startButton")?.dataset?.started === "true";
+				const connected = !publisher || typeof publisher.isConnected !== "function" || publisher.isConnected();
+				return !!publisher && connected && streamStarted;
+			}
+			function clearCohostLiveChatQueue() {
+				cohostLiveChatQueue = [];
+				if (cohostLiveChatPromptTimer) {
+					clearTimeout(cohostLiveChatPromptTimer);
+					cohostLiveChatPromptTimer = null;
+				}
+			}
+			function dropExpiredCohostLiveChatPrompts() {
+				const now = Date.now();
+				let dropped = 0;
+				while (cohostLiveChatQueue.length && now - (cohostLiveChatQueue[0].queuedAt || now) > COHOST_LIVE_CHAT_MAX_PROMPT_AGE_MS) {
+					cohostLiveChatQueue.shift();
+					dropped += 1;
+				}
+				if (dropped) {
+					cohostLiveChatIgnored += dropped;
+				}
+			}
+			function queueCohostLiveChatPrompt(message) {
+				if (!message) return false;
+				if (!isCohostLiveChatStreamActive()) {
+					setCohostLiveChatStatus("waiting for AI", message.name + ": " + message.text);
+					return false;
+				}
+				message.queuedAt = Date.now();
+				cohostLiveChatQueue.push(message);
+				if (cohostLiveChatQueue.length > COHOST_LIVE_CHAT_MAX_QUEUE) {
+					const overflow = cohostLiveChatQueue.length - COHOST_LIVE_CHAT_MAX_QUEUE;
+					cohostLiveChatQueue.splice(0, overflow);
+					cohostLiveChatIgnored += overflow;
+				}
+				setCohostLiveChatStatus("queued", message.name + ": " + message.text);
+				scheduleCohostLiveChatDrain();
+				return true;
+			}
+			function scheduleCohostLiveChatDrain(delay) {
+				if (cohostLiveChatPromptTimer) clearTimeout(cohostLiveChatPromptTimer);
+				cohostLiveChatPromptTimer = setTimeout(drainCohostLiveChatQueue, typeof delay === "number" ? delay : 800);
+			}
+			function drainCohostLiveChatQueue() {
+				cohostLiveChatPromptTimer = null;
+				if (!cohostLiveChatQueue.length || cohostLiveChatMode === "off" || cohostLiveChatMode === "monitor") return;
+				if (!isCohostLiveChatStreamActive()) {
+					clearCohostLiveChatQueue();
+					setCohostLiveChatStatus("waiting for AI", "start the co-host to answer chat");
+					return;
+				}
+				dropExpiredCohostLiveChatPrompts();
+				if (!cohostLiveChatQueue.length) {
+					renderCohostLiveChatStatus();
+					return;
+				}
+				if (!isCohostLiveChatPromptReady()) {
+					scheduleCohostLiveChatDrain(1200);
+					return;
+				}
+				const wait = COHOST_LIVE_CHAT_MIN_PROMPT_MS - (Date.now() - cohostLiveChatLastPromptAt);
+				if (wait > 0) {
+					scheduleCohostLiveChatDrain(wait);
+					return;
+				}
+				const message = cohostLiveChatQueue.shift();
+				sendCohostLiveChatPrompt(message);
+			}
+			async function sendCohostLiveChatPrompt(message) {
+				if (!message || !publisher) return;
+				cohostLiveChatPromptBusy = true;
+				cohostLiveChatLastPromptAt = Date.now();
+				setCohostLiveChatStatus("sending to AI", message.name + ": " + message.text);
+				try {
+					const displayText = "Live chat - " + message.name + ": " + message.text;
+					messageFormatter.appendMessage(displayText, true);
+					updateVoiceTelemetry({
+						inputState: "Live chat prompt",
+						inputPreview: displayText
+					});
+					await publisher.sendPrompt(formatCohostLiveChatPrompt(message));
+					cohostLiveChatPrompted += 1;
+				} catch (error) {
+					const errorMessage = error && error.message ? error.message : "Failed to send live chat to co-host.";
+					setCohostLiveChatStatus("error", message.name + ": " + message.text, errorMessage);
+					showError(errorMessage);
+				} finally {
+					cohostLiveChatPromptBusy = false;
+					renderCohostLiveChatStatus();
+					scheduleCohostLiveChatDrain(800);
+				}
+			}
+			function handleCohostLiveChatPayload(input) {
+				const message = normalizeCohostLiveChatPayload(input);
+				if (!message || !rememberCohostLiveChatMessage(message)) return false;
+				cohostLiveChatConnected = true;
+				cohostLiveChatCount += 1;
+				setCohostLiveChatStatus("connected", message.name + ": " + message.text);
+				if (shouldPromptFromCohostLiveChat(message)) {
+					if (!queueCohostLiveChatPrompt(message)) {
+						cohostLiveChatIgnored += 1;
+						renderCohostLiveChatStatus();
+					}
+				} else {
+					cohostLiveChatIgnored += 1;
+					renderCohostLiveChatStatus();
+				}
+				return true;
+			}
+			function stopCohostLiveChatBridge() {
+				if (cohostLiveChatReconnectTimer) {
+					clearTimeout(cohostLiveChatReconnectTimer);
+					cohostLiveChatReconnectTimer = null;
+				}
+				if (cohostLiveChatPromptTimer) {
+					clearTimeout(cohostLiveChatPromptTimer);
+					cohostLiveChatPromptTimer = null;
+				}
+				if (cohostLiveChatFrame) {
+					try {
+						cohostLiveChatFrame.remove();
+					} catch (_error) {}
+					cohostLiveChatFrame = null;
+				}
+				if (cohostLiveChatSocket) {
+					try {
+						cohostLiveChatSocket.onclose = null;
+						cohostLiveChatSocket.onerror = null;
+						cohostLiveChatSocket.onmessage = null;
+						cohostLiveChatSocket.close();
+					} catch (_error) {}
+					cohostLiveChatSocket = null;
+				}
+				cohostLiveChatConnected = false;
+			}
+			function getCohostLiveChatSocketUrl() {
+				if (cohostOverlayParams.has("server")) return cohostOverlayParams.get("server") || (cohostOverlayParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja");
+				if (cohostOverlayParams.has("server2") || cohostOverlayParams.has("server3")) return cohostOverlayParams.get("server2") || cohostOverlayParams.get("server3") || (cohostOverlayParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension");
+				if (cohostOverlayParams.has("localserver")) return "ws://127.0.0.1:3000";
+				return "";
+			}
+			function startCohostLiveChatSocket(room) {
+				const serverUrl = getCohostLiveChatSocketUrl();
+				if (!serverUrl) return false;
+				setCohostLiveChatStatus("connecting websocket", "session " + room);
+				try {
+					cohostLiveChatSocket = new WebSocket(serverUrl);
+				} catch (error) {
+					setCohostLiveChatStatus("websocket error", "waiting to retry", error && error.message ? error.message : "Unable to open live chat websocket.");
+					return false;
+				}
+				cohostLiveChatSocket.onopen = function () {
+					try {
+						cohostLiveChatSocket.send(JSON.stringify({ join: room, out: 3, in: 4 }));
+					} catch (_error) {}
+					setCohostLiveChatStatus("websocket ready", "waiting for first chat");
+				};
+				cohostLiveChatSocket.onmessage = function (event) {
+					if (!event.data) return;
+					try {
+						handleCohostLiveChatPayload(JSON.parse(event.data));
+					} catch (error) {
+						console.warn("Unable to parse co-host live chat websocket payload:", error);
+					}
+				};
+				cohostLiveChatSocket.onerror = function () {
+					setCohostLiveChatStatus("websocket error", "waiting to retry");
+				};
+				cohostLiveChatSocket.onclose = function () {
+					cohostLiveChatConnected = false;
+					if (cohostLiveChatMode === "off") return;
+					setCohostLiveChatStatus("disconnected", "retrying live chat feed");
+					cohostLiveChatReconnectTimer = setTimeout(startCohostLiveChatBridge, 2500);
+				};
+				return true;
+			}
+			function startCohostLiveChatBridge() {
+				stopCohostLiveChatBridge();
+				if (cohostLiveChatMode === "off") {
+					setCohostLiveChatStatus("off", "-");
+					return;
+				}
+				const params = getCohostSessionParams();
+				if (!params.room) {
+					setCohostLiveChatStatus("missing session", "add ?session=YOUR_SESSION_ID", "Live chat needs ?session=YOUR_SESSION_ID.");
+					return;
+				}
+				if (startCohostLiveChatSocket(params.room)) return;
+				setCohostLiveChatStatus("connecting bridge", "session " + params.room);
+				const frame = document.createElement("iframe");
+				frame.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(params.password) + "&push&notmobile&label=cohost&view=" + encodeURIComponent(params.room) + "&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + encodeURIComponent(params.room);
+				frame.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;border:0;";
+				frame.onload = function () {
+					setCohostLiveChatStatus("bridge ready", "waiting for first chat");
+				};
+				cohostLiveChatFrame = frame;
+				document.body.appendChild(frame);
+			}
+			function applyCohostLiveChatMode(mode, persist = true) {
+				const value = mode === "off" || mode === "monitor" || mode === "questions" || mode === "all" ? mode : COHOST_LIVE_CHAT_DEFAULT_MODE;
+				const previousValue = cohostLiveChatMode;
+				cohostLiveChatMode = value;
+				cohostLiveChatState.mode = value;
+				if (previousValue !== value || value === "off" || value === "monitor") {
+					clearCohostLiveChatQueue();
+				}
+				const select = document.getElementById("liveChatMode");
+				if (select && select.value !== value) select.value = value;
+				if (persist) localStorage.setItem(COHOST_LIVE_CHAT_STORAGE_KEY, value);
+				startCohostLiveChatBridge();
 			}
 			function humanizeDiagnosticEvent(value) {
 				const raw = String(value || "").trim();
@@ -2109,6 +2489,7 @@
 				document.getElementById("diagEvent").textContent = diagnosticsState.lastEvent || "-";
 				document.getElementById("diagError").textContent = diagnosticsState.lastError || "-";
 				document.getElementById("diagUpdated").textContent = formatDiagnosticsTime(diagnosticsState.updated);
+				renderCohostLiveChatStatus();
 				renderActionStatusSummary();
 				syncSendButtonAvailability();
 			}
@@ -2156,6 +2537,15 @@
 					voice: {
 						...voiceTelemetryState,
 						updatedIso: new Date(voiceTelemetryState.updated).toISOString()
+					},
+					liveChat: {
+						...cohostLiveChatState,
+						connected: cohostLiveChatConnected,
+						received: cohostLiveChatCount,
+						ignored: cohostLiveChatIgnored,
+						sentToAi: cohostLiveChatPrompted,
+						queueLength: cohostLiveChatQueue.length,
+						updatedIso: new Date(cohostLiveChatState.updated).toISOString()
 					},
 					history: diagnosticsHistory.slice()
 				};
@@ -3197,11 +3587,7 @@
 				return `cohost_llm_${Date.now()}_${configuredLLMBridgeRequestCounter}`;
 			}
 			function getConfiguredLLMSessionParams() {
-				const urlParams = new URLSearchParams(location.search);
-				return {
-					room: urlParams.get("session") || "",
-					password: urlParams.get("password") || "false"
-				};
+				return getCohostSessionParams();
 			}
 			function setConfiguredLLMInfo(message, isError = false) {
 				const info = document.getElementById("configuredLLMInfo");
@@ -3548,6 +3934,10 @@
 				} else if (payload.cohostToolResponse && typeof payload.cohostToolResponse.target !== "undefined") {
 					receiveConfiguredLLMBridgeToolResponse(payload.cohostToolResponse);
 				}
+			});
+			window.addEventListener("message", event => {
+				if (!cohostLiveChatFrame || event.source !== cohostLiveChatFrame.contentWindow) return;
+				handleCohostLiveChatPayload(event.data);
 			});
 			class OpenAICompatiblePublisher {
 				constructor(stream, apiKey, modelOverride = "", endpointOverride = "") {
@@ -5066,6 +5456,7 @@
 					this.pingInterval = null;
 					this.lastHeartbeatResponse = Date.now();
 					this.conversationHistory = [];
+					this.responseActive = false;
 					this.maxTokens = 20000; // Set below the 32K limit
 					this.loadConversationHistory();
 					updateDiagnostics({
@@ -5314,6 +5705,7 @@
 								if (modelTextResponse) {
 									this.addAssistantMessage(modelTextResponse);
 								}
+								this.responseActive = false;
 								if (messageFormatter && !messageFormatter.messageComplete) {
 									messageFormatter.finalizeMessage();
 								}
@@ -5380,6 +5772,7 @@
 				}
 				_sendPromptInternal(text) {
 					if (this.isConnected()) {
+						this.responseActive = true;
 						const message = {
 							clientContent: {
 								turns: [
@@ -5398,11 +5791,12 @@
 						console.log("Sending prompt");
 						this.ws.send(JSON.stringify(message));
 						updateDiagnostics({
-							state: "connected",
+							state: "responding",
 							connected: "yes",
 							lastEvent: "prompt.sent"
 						});
 					} else {
+						this.responseActive = false;
 						console.error("WebSocket still not ready after reconnect attempt");
 						updateDiagnostics({
 							state: "disconnected",
@@ -5809,6 +6203,7 @@
 				async start() {
 					try {
 						this.stopped = false;
+						this.responseActive = false;
 						this.reconnectAttempts = 0;
 						await this.connect();
 						await this.setupAudioProcessing();
@@ -5901,6 +6296,7 @@
 				}
 				stop() {
 					this.stopped = true;
+					this.responseActive = false;
 					this.clearAllTimers();
 					this._reconnectPromise = null;
 					if (this.ws) {
@@ -6114,9 +6510,11 @@
 					this.messageComplete = true;
 					this.lastMessageTime = Date.now();
 					if (completedText) {
+						cohostLiveChatLastResponseAt = Date.now();
 						window.avatar?.reactToText(completedText, "assistant");
 						queueCohostOverlaySay(completedText, true);
 					}
+					scheduleCohostLiveChatDrain(500);
 				}
 				scrollToBottom() {
 					responsesDiv.scrollTop = responsesDiv.scrollHeight;
@@ -6645,6 +7043,7 @@
 					if (publisher) {
 						startButton.textContent = "Starting...";
 						startButton.disabled = true;
+						clearCohostLiveChatQueue();
 						publisher.stop();
 						publisher = null;
 						if (stream) {
@@ -6712,6 +7111,7 @@
 						lastEvent: "stream.started",
 						lastError: "-"
 					});
+					scheduleCohostLiveChatDrain(500);
 					window.avatar?.pulseEmotion("celebrating", 1400, false);
 				} catch (err) {
 					console.error(err);
@@ -7353,6 +7753,20 @@
 			messageInput = document.querySelector(".message-input");
 			sendButton = document.querySelector("#sendButton");
 			SEND_BUTTON_IDLE_TEXT = sendButton.textContent.trim() || "Send";
+			const liveChatModeSelect = document.getElementById("liveChatMode");
+			const liveChatReconnectButton = document.getElementById("liveChatReconnect");
+			if (liveChatModeSelect) {
+				liveChatModeSelect.value = getStoredCohostLiveChatMode();
+				liveChatModeSelect.addEventListener("change", function () {
+					applyCohostLiveChatMode(this.value, true);
+				});
+			}
+			if (liveChatReconnectButton) {
+				liveChatReconnectButton.addEventListener("click", function () {
+					startCohostLiveChatBridge();
+				});
+			}
+			applyCohostLiveChatMode(liveChatModeSelect ? liveChatModeSelect.value : getStoredCohostLiveChatMode(), false);
 			function resetSendButton() {
 				sendButton.textContent = SEND_BUTTON_IDLE_TEXT;
 			}
@@ -7431,6 +7845,7 @@
 				});
 				startButton.textContent = "Starting...";
 				startButton.disabled = true;
+				clearCohostLiveChatQueue();
 				publisher.stop();
 				publisher = null;
 				try {
@@ -7463,6 +7878,7 @@
 						lastEvent: "stream.restart.success",
 						lastError: "-"
 					});
+					scheduleCohostLiveChatDrain(500);
 					window.avatar?.pulseEmotion("celebrating", 1200, false);
 				} catch (err) {
 					console.error(err);
@@ -7521,7 +7937,7 @@
 			providerSelect.innerHTML = `
     <option value="gemini">Google Gemini Live</option>
     <option value="localqwen">Local Qwen 3.5 0.8B (Browser)</option>
-    <option value="localgemma">Local Gemma 4 E2B (Browser)</option>
+    <option value="localgemma">Local Gemma 4 E2B (Browser, self-hosted)</option>
     <option value="configuredllm">SSN Configured LLM</option>
     <option value="customopenai">OpenAI-Compatible (Custom)</option>
     <option value="chatgpt">OpenAI Realtime</option>
@@ -7554,11 +7970,11 @@
 					usesBrowserTts: true
 				},
 				localgemma: {
-					label: "Local Gemma 4 E2B (Browser)",
+					label: "Local Gemma 4 E2B (Browser, self-hosted)",
 					apiKeyPlaceholder: "No API key required",
-					apiKeyInfoHtml: "Uses your self-hosted Gemma 4 model files and local browser runtime. No third-party AI API key is used.",
+					apiKeyInfoHtml: "Requires Gemma 4 model files mirrored on your own asset host; the SSN largefiles host does not currently include Gemma assets. No third-party AI API key is used.",
 					defaultModel: LOCAL_GEMMA_DEFAULT_MODEL,
-					modelPlaceholder: `Optional model id/path (default ${LOCAL_GEMMA_DEFAULT_MODEL} on ${LOCAL_GEMMA_DEFAULT_REMOTE_HOST})`,
+					modelPlaceholder: `Optional model id/path (default folder ${LOCAL_GEMMA_DEFAULT_MODEL}; set host to your Gemma mirror)`,
 					disableCaptureSelection: false,
 					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees. Audio responses use the selected TTS engine." : "Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees.",
 					requiresApiKey: false,

@@ -6,8 +6,8 @@
     var LOCAL_BROWSER_MODELS = {
         localgemma: {
             key: 'localgemma',
-            label: 'Local Gemma 4 E2B (Browser)',
-            providerLabel: 'Local Gemma 4 (Browser)',
+            label: 'Local Gemma 4 E2B (Browser, self-hosted)',
+            providerLabel: 'Local Gemma 4 (Browser, self-hosted)',
             modelId: 'gemma4-e2b-it-onnx',
             localPath: 'thirdparty/models/gemma4-e2b-it-onnx',
             remoteHost: DEFAULT_REMOTE_HOST,

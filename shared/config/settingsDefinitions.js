@@ -98,6 +98,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "miscellaneous_options_for_sites",
     description: "Instead of Top Chat, which is default, auto-select Live Chat; Youtube Live chat pop out."
   },
+  "disableYoutubeAutoScroll": {
+    type: "boolean",
+    category: "miscellaneous_options_for_sites",
+    description: "Turn off the YouTube Popout chat auto-scroll keeper."
+  },
   "autohi": {
     type: "boolean",
     category: "management",

@@ -2315,6 +2315,17 @@
 			.context-menu__item--warn > .context-menu__link {
 				color: #8a5a00;
 			}
+			.context-menu__item--disabled {
+				opacity: 0.45;
+				cursor: not-allowed;
+			}
+			.context-menu__item--disabled:hover {
+				background-color: transparent !important;
+				color: inherit !important;
+			}
+			.context-menu__item--disabled:hover > * {
+				color: #0066aa !important;
+			}
 			.context-menu__tip {
 				margin-left: 15px;
 				color: #777;
@@ -2339,6 +2350,61 @@
 				line-height: 1.35;
 				text-align: center;
 				box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+			}
+			#cohostApproval {
+				position: fixed;
+				right: 14px;
+				bottom: calc((54px + var(--locked-chatbar)) / var(--scale-output));
+				z-index: 99998;
+				width: min(360px, calc(100vw - 28px));
+				padding: 12px;
+				border-radius: 8px;
+				background: rgba(20, 20, 20, 0.94);
+				color: #fff;
+				font-family: Arial, sans-serif;
+				box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+			}
+			#cohostApproval.hidden {
+				display: none;
+			}
+			#cohostApprovalTitle {
+				font-size: 12px;
+				font-weight: bold;
+				margin-bottom: 8px;
+				color: #b7dcff;
+			}
+			#cohostApprovalText {
+				max-height: 160px;
+				overflow: auto;
+				font-size: 14px;
+				line-height: 1.35;
+				white-space: pre-wrap;
+				overflow-wrap: anywhere;
+			}
+			#cohostApprovalActions {
+				display: flex;
+				gap: 8px;
+				margin-top: 10px;
+			}
+			#cohostApprovalActions button {
+				flex: 1;
+				padding: 7px 9px;
+				border: 0;
+				border-radius: 5px;
+				cursor: pointer;
+				font-size: 13px;
+			}
+			#cohostApprovalSpeak {
+				background: #1d8f54;
+				color: #fff;
+			}
+			#cohostApprovalCopy {
+				background: #315f8f;
+				color: #fff;
+			}
+			#cohostApprovalCancel {
+				background: #555;
+				color: #fff;
 			}
 			.hideMenuKeepScrollLock {
 				height: 0 !important;
@@ -2701,25 +2767,25 @@
 						</li>
 						<li class="context-menu__item" data-action="VIP">
 							<a href="#" class="context-menu__link" data-action="VIP">
-								⭐
+								&#11088;
 								<span>VIP User</span>
 							</a>
 						</li>
 						<li class="context-menu__item" data-action="MarkHost">
 							<a href="#" class="context-menu__link" data-action="MarkHost">
-								ðŸŽ™ï¸
+								&#127897;&#65039;
 								<span>Mark as Host</span>
 							</a>
 						</li>
 						<li class="context-menu__item" data-action="MarkMod">
 							<a href="#" class="context-menu__link" data-action="MarkMod">
-								🛡️
+								&#128737;&#65039;
 								<span>Mark as Mod</span>
 							</a>
 						</li>
 						<li class="context-menu__item" data-action="MarkBot">
 							<a href="#" class="context-menu__link" data-action="MarkBot">
-								🤖
+								&#129302;
 								<span>Mark as Bot</span>
 							</a>
 						</li>
@@ -2756,6 +2822,33 @@
 						<span>Text to Speech</span>
 					</a>
 				</li>
+				<li class="context-menu__item context-menu__item--has-submenu hidden" data-action="CohostActions">
+					<a href="#" class="context-menu__link" data-action="CohostActions">
+						<span aria-hidden="true">&#x1F916;</span>
+						<span>Co-host</span>
+						<span style="float:right">&#9656;</span>
+					</a>
+					<ul class="context-menu__submenu">
+						<li class="context-menu__item" data-action="CohostRead">
+							<a href="#" class="context-menu__link" data-action="CohostRead">
+								<span aria-hidden="true">&#x1F50A;</span>
+								<span>Read on Co-host</span>
+							</a>
+						</li>
+						<li class="context-menu__item" data-action="CohostAnswer">
+							<a href="#" class="context-menu__link" data-action="CohostAnswer">
+								<span aria-hidden="true">&#x1F4AC;</span>
+								<span>Answer</span>
+							</a>
+						</li>
+						<li class="context-menu__item" data-action="CohostRoast">
+							<a href="#" class="context-menu__link" data-action="CohostRoast">
+								<span aria-hidden="true">&#x1F60F;</span>
+								<span>Light Roast</span>
+							</a>
+						</li>
+					</ul>
+				</li>
 				<li class="context-menu__item" data-action="Copy">
 					<a href="#" class="context-menu__link" data-action="Copy">
 						📋
@@ -2779,6 +2872,16 @@
 			</ul>
 		</nav>
 		
+		<div id="cohostApproval" class="hidden">
+			<div id="cohostApprovalTitle">AI Co-host draft</div>
+			<div id="cohostApprovalText"></div>
+			<div id="cohostApprovalActions">
+				<button id="cohostApprovalSpeak" type="button">Speak</button>
+				<button id="cohostApprovalCopy" type="button">Copy</button>
+				<button id="cohostApprovalCancel" type="button">Cancel</button>
+			</div>
+		</div>
+
 		<div id="obsControlModal" class="hidden">
 		  <div class="modal-content">
 			<h2>OBS Remote Control</h2>
@@ -3124,6 +3227,12 @@
 			var tainted = false;
 
 			var urlParams = new URLSearchParams(window.location.search);
+			var cohostOverlayTarget = urlParams.get("aioverlay") || urlParams.get("overlaylabel") || urlParams.get("cohostOverlayLabel") || "cohost-overlay";
+			var cohostLLMPending = {};
+			var cohostLLMRequestCounter = 0;
+			var cohostApprovalPayload = null;
+			var cohostStatusMessage = "";
+			var cohostStatusKind = "warn";
 			var treatTikTokFansAsMembers = urlParams.has("tiktokfans");
 			var channel = null;
 			var iframes = [];
@@ -6481,8 +6590,14 @@
 			}
 
 			try {
-				if (window.location.host !== "socialstream.ninja") {
-					// don't check if not private hosted, since it won't exist
+				var dockHost = window.location.hostname || window.location.host || "";
+				if (
+					dockHost !== "socialstream.ninja" &&
+					dockHost !== "beta.socialstream.ninja" &&
+					dockHost !== "cfpages.socialstream.ninja" &&
+					!/\.pages\.dev$/i.test(dockHost)
+				) {
+					// Only private/self-hosted copies should try to load local custom actions.
 					var script = document.createElement("script");
 					script.onload = function () {
 						console.log("Loaded personal actions");
@@ -6499,9 +6614,392 @@
 
 			
 
+			function getCohostPeerSummary() {
+				var summary = { overlay: false, extension: false, labels: [] };
+				try {
+					for (var i = 0; i < iframes.length; i++) {
+						var peers = iframes[i].connectedPeers || {};
+						var keys = Object.keys(peers);
+						for (var j = 0; j < keys.length; j++) {
+							var label = peers[keys[j]];
+							if (summary.labels.indexOf(label) === -1) {
+								summary.labels.push(label);
+							}
+							if (label === "SocialStream") {
+								summary.extension = true;
+							}
+							if (isCohostOverlayLabel(label)) {
+								summary.overlay = true;
+							}
+						}
+					}
+				} catch (e) {}
+				if (socketserver || socketserverExtension) {
+					if (socketserverExtension && socketserverExtension.readyState === 1) {
+						summary.extension = true;
+					}
+				}
+				return summary;
+			}
+
+			function isCohostOverlayLabel(label) {
+				return label === cohostOverlayTarget || label === "cohost-overlay" || label === "ai-overlay";
+			}
+
+			function sendCohostOverlayData(data) {
+				var sent = false;
+				if (!data) return false;
+				try {
+					if (socketserver && socketserver.readyState === 1) {
+						if (data.out) {
+							delete data.out;
+						}
+						socketserver.send(JSON.stringify(data));
+						sent = true;
+					}
+					iframes.forEach(function (iframe) {
+						var peers = iframe.connectedPeers || {};
+						var keys = Object.keys(peers);
+						for (var i = 0; i < keys.length; i++) {
+							var UUID = keys[i];
+							if (isCohostOverlayLabel(peers[UUID])) {
+								iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: UUID }, "*");
+								sent = true;
+							}
+						}
+					});
+				} catch (e) {
+					console.error(e);
+				}
+				return sent;
+			}
+
+			function setCohostDockStatus(message, kind) {
+				cohostStatusMessage = message || "";
+				cohostStatusKind = kind || "warn";
+			}
+
+			function refreshCohostDockStatus() {
+				var peers = getCohostPeerSummary();
+				if (Object.keys(cohostLLMPending).length) {
+					setCohostDockStatus("AI thinking", "busy");
+					updateCohostContextMenuState();
+					return;
+				}
+				if (cohostApprovalPayload) {
+					setCohostDockStatus("draft ready", "ready");
+					updateCohostContextMenuState();
+					return;
+				}
+				if (!roomID) {
+					setCohostDockStatus("no session", "error");
+				} else if (!peers.overlay) {
+					setCohostDockStatus("open cohost-overlay.html?session=" + roomID + "&tts", "warn");
+				} else if (!peers.extension) {
+					setCohostDockStatus("overlay ready; AI needs SSN bridge", "warn");
+				} else {
+					setCohostDockStatus("ready", "ready");
+				}
+				updateCohostContextMenuState();
+			}
+
+			function showCohostSetupStatus() {
+				refreshCohostDockStatus();
+				var peers = getCohostPeerSummary();
+				var message = "Co-host overlay: " + (peers.overlay ? "connected" : "not detected") + ". AI bridge: " + (peers.extension ? "connected" : "not detected") + ".";
+				if (!peers.overlay) {
+					message += " Open cohost-overlay.html?session=" + roomID + "&tts in OBS/browser source.";
+				}
+				if (!peers.extension) {
+					message += " Answer/Roast need Social Stream on with Private Chat Bot enabled. The primary chat bot overlay toggle is not required.";
+				}
+				if (typeof showDockActionNotice === "function") {
+					showDockActionNotice(message);
+				} else {
+					alert(message);
+				}
+			}
+
+			function updateCohostContextMenuState() {
+				var peers = getCohostPeerSummary();
+				var parentItem = document.querySelector('[data-action="CohostActions"]');
+				var readItem = document.querySelector('[data-action="CohostRead"]');
+				var answerItem = document.querySelector('[data-action="CohostAnswer"]');
+				var roastItem = document.querySelector('[data-action="CohostRoast"]');
+				if (parentItem) parentItem.classList.toggle("hidden", !peers.overlay);
+				if (readItem) readItem.classList.toggle("context-menu__item--disabled", !peers.overlay);
+				if (answerItem) answerItem.classList.toggle("context-menu__item--disabled", !peers.extension);
+				if (roastItem) roastItem.classList.toggle("context-menu__item--disabled", !peers.extension);
+				if (answerItem) answerItem.title = peers.extension ? "" : "Requires Social Stream and Private Chat Bot enabled.";
+				if (roastItem) roastItem.title = peers.extension ? "" : "Requires Social Stream and Private Chat Bot enabled.";
+			}
+
+			function cohostHtmlToText(value) {
+				var text = "";
+				if (value === null || typeof value === "undefined") return "";
+				try {
+					var div = document.createElement("div");
+					div.innerHTML = String(value);
+					text = div.textContent || div.innerText || "";
+				} catch (e) {
+					text = String(value || "");
+				}
+				return text.replace(/\s+/g, " ").trim();
+			}
+
+			function getCohostMessageText(element) {
+				var raw = element && element.rawContents ? element.rawContents : {};
+				var text = cohostHtmlToText(raw.chatmessage || raw.message || raw.text || "");
+				if (!text && element) {
+					var messageNode = element.querySelector(".hl-content") || element.querySelector(".hl-message");
+					text = cohostHtmlToText(messageNode ? messageNode.innerHTML : element.innerHTML);
+				}
+				return text;
+			}
+
+			function getCohostMessageName(element) {
+				var raw = element && element.rawContents ? element.rawContents : {};
+				var name = raw.chatname || raw.name || raw.username || "";
+				if (!name && element) {
+					var nameNode = element.querySelector(".hl-name");
+					name = nameNode ? nameNode.textContent : "";
+				}
+				return cohostHtmlToText(name) || "Viewer";
+			}
+
+			function sendCohostOverlaySay(text, options) {
+				var opts = options || {};
+				var value = cohostHtmlToText(text);
+				if (!value) {
+					setCohostDockStatus("no readable message", "error");
+					return false;
+				}
+				if (!getCohostPeerSummary().overlay) {
+					showCohostSetupStatus();
+					return false;
+				}
+				var payload = {
+					action: "cohostOverlay",
+					target: cohostOverlayTarget,
+					meta: {
+						command: "say",
+						source: "dock",
+						name: opts.name || "AI",
+						text: value,
+						tts: opts.tts !== false,
+						speak: opts.tts !== false,
+						emotion: opts.emotion || "happy",
+						chatname: opts.chatname || "",
+						chatimg: opts.chatimg || ""
+					}
+				};
+				if (!sendCohostOverlayData(payload)) {
+					showCohostSetupStatus();
+					return false;
+				}
+				setCohostDockStatus("sent to overlay", "ready");
+				return true;
+			}
+
+			function buildCohostPrompt(mode, element) {
+				var raw = element && element.rawContents ? element.rawContents : {};
+				var name = getCohostMessageName(element);
+				var text = getCohostMessageText(element);
+				var platform = raw.type || element.dataset.sourceType || "chat";
+				var task = mode === "roast"
+					? "Write one short playful PG roast back to the viewer. Keep it friendly, no hate, no threats, no sexual content, no slurs, and do not punch down."
+					: "Write one short helpful answer to the viewer.";
+				return [
+					"You are a concise live-stream AI co-host.",
+					task,
+					"Output only the line the co-host should say. Keep it under 220 characters.",
+					"Platform: " + platform,
+					"Viewer: " + name,
+					"Message: " + text
+				].join("\n");
+			}
+
+			function makeCohostLLMRequestId() {
+				cohostLLMRequestCounter += 1;
+				return "dock_cohost_" + Date.now() + "_" + cohostLLMRequestCounter;
+			}
+
+			function requestCohostLLM(mode, element) {
+				var peers = getCohostPeerSummary();
+				var text = getCohostMessageText(element);
+				if (!text) {
+					setCohostDockStatus("no readable message", "error");
+					return;
+				}
+				if (!peers.extension) {
+					showCohostSetupStatus();
+					return;
+				}
+				var target = makeCohostLLMRequestId();
+				var timeoutId = setTimeout(function () {
+					var pending = cohostLLMPending[target];
+					delete cohostLLMPending[target];
+					if (pending) {
+						setCohostDockStatus("AI timed out", "error");
+						if (typeof showDockActionNotice === "function") {
+							showDockActionNotice("AI Co-host timed out. Check Private Chat Bot setup in the SSN popup.");
+						}
+					}
+				}, 90000);
+				cohostLLMPending[target] = {
+					mode: mode,
+					element: element,
+					text: "",
+					timeoutId: timeoutId
+				};
+				setCohostDockStatus("AI thinking", "busy");
+				send2Extension({
+					action: "chatbot",
+					value: buildCohostPrompt(mode, element),
+					target: target,
+					turbo: false
+				}, null, true);
+			}
+
+			function parseCohostLLMError(value) {
+				var text = String(value || "").trim();
+				if (!text || text.charAt(0) !== "{") return "";
+				try {
+					var parsed = JSON.parse(text);
+					return (parsed.error && parsed.error.message) || parsed.message || "";
+				} catch (e) {
+					return "";
+				}
+			}
+
+			function handleCohostLLMChunk(response) {
+				if (!response || !response.target || !cohostLLMPending[response.target]) return false;
+				cohostLLMPending[response.target].text += response.value == null ? "" : String(response.value);
+				setCohostDockStatus("AI responding", "busy");
+				return true;
+			}
+
+			function handleCohostLLMResponse(response) {
+				if (!response || !response.target || !cohostLLMPending[response.target]) return false;
+				var pending = cohostLLMPending[response.target];
+				clearTimeout(pending.timeoutId);
+				delete cohostLLMPending[response.target];
+				var finalText = cohostHtmlToText(response.value || pending.text || "");
+				var errorMessage = parseCohostLLMError(response.value || pending.text || "");
+				if (errorMessage) {
+					setCohostDockStatus("AI not configured", "error");
+					if (typeof showDockActionNotice === "function") {
+						showDockActionNotice(errorMessage);
+					}
+					return true;
+				}
+				if (!finalText) {
+					setCohostDockStatus("AI returned empty", "error");
+					return true;
+				}
+				showCohostApproval(finalText, pending.mode, pending.element);
+				setCohostDockStatus("draft ready", "ready");
+				return true;
+			}
+
+			function showCohostApproval(text, mode, element) {
+				var panel = getById("cohostApproval");
+				var title = getById("cohostApprovalTitle");
+				var textNode = getById("cohostApprovalText");
+				if (!panel || !title || !textNode) return;
+				cohostApprovalPayload = {
+					text: text,
+					mode: mode,
+					element: element
+				};
+				title.textContent = mode === "roast" ? "AI Co-host light roast" : "AI Co-host answer";
+				textNode.textContent = text;
+				panel.classList.remove("hidden");
+			}
+
+			function hideCohostApproval() {
+				var panel = getById("cohostApproval");
+				cohostApprovalPayload = null;
+				if (panel) panel.classList.add("hidden");
+			}
+
+			function copyCohostApprovalText() {
+				if (!cohostApprovalPayload || !cohostApprovalPayload.text) return;
+				var text = cohostApprovalPayload.text;
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(text).catch(function () {
+						copyTextFallback(text);
+					});
+				} else {
+					copyTextFallback(text);
+				}
+				setCohostDockStatus("draft copied", "ready");
+			}
+
+			function copyTextFallback(text) {
+				var textarea = document.createElement("textarea");
+				textarea.value = text;
+				document.body.appendChild(textarea);
+				textarea.select();
+				document.execCommand("copy");
+				document.body.removeChild(textarea);
+			}
+
+			function speakCohostApproval() {
+				if (!cohostApprovalPayload) return;
+				var element = cohostApprovalPayload.element;
+				var raw = element && element.rawContents ? element.rawContents : {};
+				if (!sendCohostOverlaySay(cohostApprovalPayload.text, {
+					name: "AI",
+					emotion: cohostApprovalPayload.mode === "roast" ? "smirk" : "happy",
+					chatname: getCohostMessageName(element),
+					chatimg: raw.chatimg || ""
+				})) {
+					return;
+				}
+				hideCohostApproval();
+			}
+
+			function handleCohostMenuAction(action, element) {
+				if (!element) return false;
+				if (action === "CohostRead") {
+					var raw = element.rawContents || {};
+					var text = getCohostMessageText(element);
+					if (!getCohostPeerSummary().overlay) {
+						showCohostSetupStatus();
+						return true;
+					}
+					sendCohostOverlaySay(text, {
+						name: getCohostMessageName(element),
+						emotion: "happy",
+						chatname: getCohostMessageName(element),
+						chatimg: raw.chatimg || ""
+					});
+					return true;
+				}
+				if (action === "CohostAnswer") {
+					requestCohostLLM("answer", element);
+					return true;
+				}
+				if (action === "CohostRoast") {
+					requestCohostLLM("roast", element);
+					return true;
+				}
+				return false;
+			}
+
 			function processInput(data, force=false) {
 				if (!data) {
 					return featuredMode ? true : false;
+				}
+				if (data.chatbotChunk && handleCohostLLMChunk(data.chatbotChunk)) {
+					return true;
+				}
+				if (data.chatbotResponse && handleCohostLLMResponse(data.chatbotResponse)) {
+					return true;
+				}
+				if (data.chatbotChunk || data.chatbotResponse) {
+					return true;
 				}
 				if ("mid" in data) {
 					if (data.mid && (syncDocks || force)) {
@@ -7793,6 +8291,18 @@
 			roomID.split(",").forEach(roomz => {
 				RecvDataWindow(roomz.trim());
 			});
+
+			if (getById("cohostApprovalSpeak")) {
+				getById("cohostApprovalSpeak").addEventListener("click", speakCohostApproval);
+			}
+			if (getById("cohostApprovalCopy")) {
+				getById("cohostApprovalCopy").addEventListener("click", copyCohostApprovalText);
+			}
+			if (getById("cohostApprovalCancel")) {
+				getById("cohostApprovalCancel").addEventListener("click", hideCohostApproval);
+			}
+			refreshCohostDockStatus();
+			setInterval(refreshCohostDockStatus, 3000);
 
 			if (showviewercount) {
 				setTimeout(function () {
@@ -11361,6 +11871,7 @@
 					function toggleMenuOn() {
 						if (menuState !== 1) {
 							updateBlockUserMenuState();
+							updateCohostContextMenuState();
 							menuState = 1;
 							menu.classList.add("context-menu--active");
 							document.addEventListener("click", menuClickListener);
@@ -11420,21 +11931,27 @@
 					}
 
 					async function menuItemListener(link) {
-						if (link.getAttribute("data-action") === "Delete") {
+						var action = link.getAttribute("data-action");
+						var actionItem = link.classList && link.classList.contains("context-menu__item") ? link : link.parentNode;
+						if (actionItem && actionItem.classList && actionItem.classList.contains("context-menu__item--disabled")) {
+							showCohostSetupStatus();
+							return;
+						}
+						if (action === "Delete") {
 							deleteMessage(taskItemInContext);
-						} else if (link.getAttribute("data-action") === "Block") {
+						} else if (action === "Block") {
 							blockUser(taskItemInContext);
-						} else if (link.getAttribute("data-action") === "Feature") {
-							selectedMessage(false, taskItemInContext); 
-						} else if (link.getAttribute("data-action") === "History") {
+						} else if (action === "Feature") {
+							selectedMessage(false, taskItemInContext);
+						} else if (action === "History") {
 							getUserHistory(taskItemInContext);
-						} else if (link.getAttribute("data-action") === "Reply") {
+						} else if (action === "Reply") {
 							replyToUser(taskItemInContext);
-						} else if (link.getAttribute("data-action") === "VIP") {
+						} else if (action === "VIP") {
 							toggleVIPUser(taskItemInContext);
-						} else if (link.getAttribute("data-action") === "Copy") {
+						} else if (action === "Copy") {
 							copyTextToClipboard(taskItemInContext);
-						} else if (link.getAttribute("data-action") === "Pin") {
+						} else if (action === "Pin") {
 							if (taskItemInContext.classList.contains("pinned")) {
 								unpinIt(taskItemInContext);
 								syncDataAny({ unpin: [taskItemInContext.dataset.mid] });
@@ -11459,13 +11976,13 @@
 								updateQueueButton();
 								syncQueueP2P(false, taskItemInContext);
 							}
-						} else if (link.getAttribute("data-action") === "UserActions") {
+						} else if (action === "UserActions" || action === "CohostActions") {
 							// Do nothing - let the submenu handle it
 							return;
-						} else if (link.getAttribute("data-action") === "Timeout") {
+						} else if (action === "Timeout") {
 							// Do nothing - let the submenu handle it
 							return;
-						} else if (link.getAttribute("data-action").startsWith("Timeout")) {
+						} else if (action && action.startsWith("Timeout")) {
 							const timeouts = {
 								"Timeout30s": 30,
 								"Timeout2m": 120,
@@ -11478,17 +11995,19 @@
 							if (duration) {
 								timeoutUser(taskItemInContext, duration);
 							}
-						} else if (link.getAttribute("data-action") === "MarkHost") {
+						} else if (handleCohostMenuAction(action, taskItemInContext)) {
+							// handled by AI co-host
+						} else if (action === "MarkHost") {
 							markUserAs(taskItemInContext, "host");
-						} else if (link.getAttribute("data-action") === "MarkMod") {
+						} else if (action === "MarkMod") {
 							markUserAs(taskItemInContext, "mod");
-						} else if (link.getAttribute("data-action") === "MarkBot") {
+						} else if (action === "MarkBot") {
 							markUserAs(taskItemInContext, "bot");
 						}
-						
+
 						// Always close menu after an action is performed from a submenu
 						// Only keep menu open if we're on a parent menu item with submenu
-						if (link.getAttribute("data-action") === "UserActions" || link.getAttribute("data-action") === "Timeout") {
+						if (action === "UserActions" || action === "CohostActions" || action === "Timeout") {
 							// Don't close when clicking parent menu items with submenus
 							return;
 						} else {

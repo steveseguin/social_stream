@@ -259,6 +259,28 @@ function requestYouTubeEmoji(videoId, requestId = null) {
 	});
 }
 
+function requestYouTubeRichChat(videoId, continuation = "", requestId = null, apiKey = "") {
+	if (!videoId || typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+		return;
+	}
+
+	var payload = {
+		getYouTubeRichChat: true,
+		videoId: String(videoId),
+		continuation: continuation ? String(continuation) : "",
+		apiKey: apiKey ? String(apiKey) : ""
+	};
+	if (requestId) {
+		payload.requestId = String(requestId);
+	}
+
+	chrome.runtime.sendMessage(chrome.runtime.id, payload, function () {
+		if (chrome.runtime.lastError) {
+			console.log('YouTube rich chat request error:', chrome.runtime.lastError.message);
+		}
+	});
+}
+
 function processExtensionQueue() {
 	if (isProcessingExtensionQueue || extensionRelayQueue.length === 0) {
 		return;
@@ -342,6 +364,13 @@ window.addEventListener('youtubeEmojiRequest', function(e) {
 		return;
 	}
 	requestYouTubeEmoji(e.detail.videoId, e.detail.requestId || null);
+});
+
+window.addEventListener('youtubeRichChatRequest', function(e) {
+	if (!e.detail || !e.detail.videoId) {
+		return;
+	}
+	requestYouTubeRichChat(e.detail.videoId, e.detail.continuation || "", e.detail.requestId || null, e.detail.apiKey || "");
 });
 
 function deepMerge(target, source) {
@@ -467,6 +496,18 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				window.dispatchEvent(new CustomEvent('youtubeEmojiLoaded', {
 					detail: {
 						youtubeEmoji: request.youtubeEmoji,
+						requestId: request.requestId || null,
+						videoId: request.videoId || null
+					},
+					bubbles: true
+				}));
+				sendResponse(true);
+				return;
+			}
+			if ("youtubeRichChat" in request) {
+				window.dispatchEvent(new CustomEvent('youtubeRichChatLoaded', {
+					detail: {
+						youtubeRichChat: request.youtubeRichChat,
 						requestId: request.requestId || null,
 						videoId: request.videoId || null
 					},

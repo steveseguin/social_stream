@@ -194,6 +194,17 @@ export function createYouTubeLiveChatContextResolver(options = {}) {
       return null;
     };
 
+    const attemptByHandle = async (handle) => {
+      const url = new URL(`${API_ROOT}/channels`);
+      url.searchParams.set('part', 'snippet,statistics');
+      url.searchParams.set('forHandle', handle);
+      const data = await fetchJson(url.toString(), { fetchImpl, token: tokenRef, signal });
+      if (Array.isArray(data.items) && data.items.length > 0) {
+        return data.items[0];
+      }
+      return null;
+    };
+
     const attemptBySearch = async (query) => {
       const searchUrl = new URL(`${API_ROOT}/search`);
       searchUrl.searchParams.set('part', 'snippet');
@@ -219,11 +230,15 @@ export function createYouTubeLiveChatContextResolver(options = {}) {
     }
 
     if (!channelItem && trimmed.startsWith('@')) {
-      channelItem = await attemptBySearch(trimmed);
+      channelItem = await attemptByHandle(trimmed);
     }
 
     if (!channelItem && !trimmed.startsWith('UC') && !trimmed.startsWith('@')) {
       channelItem = await attemptByUsername(trimmed);
+    }
+
+    if (!channelItem && !trimmed.startsWith('UC')) {
+      channelItem = await attemptByHandle(trimmed);
     }
 
     if (!channelItem) {

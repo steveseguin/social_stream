@@ -4711,6 +4711,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "youtubeLargerFont") {
 				pushSettingChange();
 			}
+			if (request.setting == "disableYoutubeAutoScroll") {
+				pushSettingChange();
+			}
 			if (request.setting == "youtubeAudioPicker") {
 				pushSettingChange();
 			}
@@ -5194,6 +5197,103 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						console.log("Background YouTube emoji fetch failed:", e);
 					}
 					sendEmojiResult(entries);
+				})();
+			}
+		} else if ("getYouTubeRichChat" in request) {
+			sendResponse({ state: isExtensionOn });
+			if (request.videoId && sender.tab && sender.tab.id) {
+				const tabId = sender.tab.id;
+				const videoId = String(request.videoId);
+				const continuation = request.continuation ? String(request.continuation) : "";
+				const requestId = request.requestId ? String(request.requestId) : null;
+				const apiKey = request.apiKey ? String(request.apiKey) : "";
+				const sendRichChatResult = function (data) {
+					chrome.tabs.sendMessage(tabId, { youtubeRichChat: data || null, requestId, videoId }, function () {
+						chrome.runtime.lastError;
+					});
+				};
+				const extractInitialData = function (html) {
+					const markers = ['ytInitialData"] = ', "ytInitialData'] = ", "var ytInitialData = "];
+					let jsonStart = -1;
+					for (const m of markers) {
+						const idx = html.indexOf(m);
+						if (idx !== -1) {
+							jsonStart = idx + m.length;
+							break;
+						}
+					}
+					if (jsonStart === -1) return null;
+					let depth = 0,
+						inStr = false,
+						esc = false,
+						end = -1;
+					for (let scanIndex = jsonStart; scanIndex < html.length; scanIndex++) {
+						const c = html[scanIndex];
+						if (esc) {
+							esc = false;
+							continue;
+						}
+						if (c === "\\" && inStr) {
+							esc = true;
+							continue;
+						}
+						if (c === '"') {
+							inStr = !inStr;
+							continue;
+						}
+						if (inStr) continue;
+						if (c === "{") depth++;
+						else if (c === "}" && --depth === 0) {
+							end = scanIndex + 1;
+							break;
+						}
+					}
+					if (end === -1) return null;
+					return JSON.parse(html.slice(jsonStart, end));
+				};
+				const extractApiKey = function (html) {
+					const match = html.match(/"INNERTUBE_API_KEY"\s*:\s*"([^"]+)"/) || html.match(/'INNERTUBE_API_KEY'\s*:\s*'([^']+)'/);
+					return match && match[1] ? match[1] : "";
+				};
+				const slimInitialData = function (data, html) {
+					const liveChatRenderer = data && data.contents && data.contents.liveChatRenderer;
+					if (!liveChatRenderer) return data || null;
+					return {
+						contents: { liveChatRenderer },
+						innertubeApiKey: extractApiKey(html)
+					};
+				};
+				(async () => {
+					try {
+						if (continuation) {
+							const requestUrl = apiKey ? `https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=${encodeURIComponent(apiKey)}` : "https://www.youtube.com/youtubei/v1/live_chat/get_live_chat";
+							const resp = await fetch(requestUrl, {
+								method: "POST",
+								credentials: "include",
+								headers: { "Content-Type": "application/json" },
+								body: JSON.stringify({
+									context: { client: { clientName: "WEB", clientVersion: "2.20240101.00.00", hl: "en" } },
+									continuation
+								})
+							});
+							if (!resp.ok) {
+								sendRichChatResult(null);
+								return;
+							}
+							sendRichChatResult(await resp.json());
+							return;
+						}
+						const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${encodeURIComponent(videoId)}`, { credentials: "include" });
+						if (!resp.ok) {
+							sendRichChatResult(null);
+							return;
+						}
+						const html = await resp.text();
+						sendRichChatResult(slimInitialData(extractInitialData(html), html));
+					} catch (e) {
+						console.log("Background YouTube rich chat fetch failed:", e);
+						sendRichChatResult(null);
+					}
 				})();
 			}
 		} else if (request.cmd && request.cmd === "vpzoneFetchJson") {
@@ -10129,7 +10229,7 @@ function sendDataP2P(data, UUID = false) {
 			try {
 				var peers = ninjaBridge.getPeers();
 				for (var k in peers) {
-					if (peers[k] === "dock" || peers[k] === "aioverlay" || peers[k] === "tipjar") {
+					if (peers[k] === "dock" || peers[k] === "aioverlay" || peers[k] === "cohost" || peers[k] === "tipjar") {
 						hasOverlayReceiver = true;
 					}
 				}
@@ -10137,6 +10237,7 @@ function sendDataP2P(data, UUID = false) {
 			if (hasOverlayReceiver) {
 				ninjaBridge.sendToLabel(data, "dock");
 				ninjaBridge.sendToLabel(data, "aioverlay");
+				ninjaBridge.sendToLabel(data, "cohost");
 				ninjaBridge.sendToLabel(data, "tipjar");
 			} else {
 				ninjaBridge.send(data); // broadcast
@@ -10160,8 +10261,8 @@ function sendDataP2P(data, UUID = false) {
 				try {
 					UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
-					if (!label || label === "dock" || label === "aioverlay" || label === "tipjar") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // the docks, emotes, and AI overlay page are VIEWERS, since backend is PUSH-only
+					if (!label || label === "dock" || label === "aioverlay" || label === "cohost" || label === "tipjar") {
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // docks, AI pages, and overlay-style pages are VIEWERS, since backend is PUSH-only
 					}
 				} catch (e) {
 					console.error(e);
@@ -12111,7 +12212,8 @@ async function processIncomingRequest(request, UUID = false) {
 					altSourceType = "youtube";
 				}
 
-				const storageUsername = request.value.role == "host" ? request.value.chatname || request.value.userid || "" : request.value.userid || request.value.chatname || "";
+				const useCaptureNameForRoles = request.value.role == "host" || (request.value.role == "bot" && (altSourceType == "youtube" || altSourceType == "kick"));
+				const storageUsername = useCaptureNameForRoles ? request.value.chatname || request.value.userid || "" : request.value.userid || request.value.chatname || "";
 				const userToMark = { username: storageUsername, type: altSourceType };
 				const dockUserToMark = {
 					username: request.value.chatname || request.value.userid || storageUsername,
@@ -14684,6 +14786,23 @@ async function applyBotActions(data, tab = false) {
 			altSourceType = "youtube";
 		}
 
+		const normalizeRoleIdentifier = value => {
+			if (value === undefined || value === null) return "";
+			return String(value).toLowerCase().trim().replace(/^@+/, "");
+		};
+		const roleUserIdLower = normalizeRoleIdentifier(data.userid);
+		const roleChatNameLower = normalizeRoleIdentifier(data.chatname);
+		const useCaptureNameForRoles = altSourceType == "youtube" || altSourceType == "kick";
+		const primaryRoleIdentifier = useCaptureNameForRoles ? roleChatNameLower || roleUserIdLower : roleUserIdLower || roleChatNameLower;
+		const roleIdentifierMatches = name => {
+			name = normalizeRoleIdentifier(name);
+			if (!name) return false;
+			if (settings.matchRolesByDisplayName) {
+				return name === roleUserIdLower || name === roleChatNameLower;
+			}
+			return name === primaryRoleIdentifier;
+		};
+
 		if (settings.blacklistuserstoggle && settings.blacklistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
@@ -14746,9 +14865,7 @@ async function applyBotActions(data, tab = false) {
 		}
 		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const bots = settings.botnamesext.textsetting
 					.toLowerCase()
@@ -14763,10 +14880,7 @@ async function applyBotActions(data, tab = false) {
 					const typeMatches = !type || type === altSourceType;
 					if (!typeMatches) return false;
 
-					if (settings.matchRolesByDisplayName) {
-						return name === userIdLower || name === chatNameLower;
-					}
-					return name === (userIdLower || chatNameLower);
+					return roleIdentifierMatches(name);
 				});
 			} catch (e) {
 				errorlog(e);

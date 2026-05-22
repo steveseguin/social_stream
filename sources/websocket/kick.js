@@ -127,6 +127,18 @@ const DEFAULT_CONFIG = {
     bridgeUrl: 'https://kick-bridge.socialstream.ninja/events'
 };
 
+const KICK_OAUTH_SCOPES = [
+    'user:read',
+    'channel:read',
+    'channel:write',
+    'channel:rewards:read',
+    'chat:write',
+    'events:subscribe',
+    'moderation:ban',
+    'moderation:chat_message:manage',
+    'kicks:read'
+];
+
 const PUSHER_KEY = '32cbd69e4b950bf97679';
 const PUSHER_WS_BASE = 'wss://ws-us2.pusher.com';
 const PUSHER_RECONNECT_DELAY_MS = 5000;
@@ -507,6 +519,44 @@ function normalizeKickChatType(value) {
         return 'bot';
     }
     return 'user';
+}
+
+function getKickSlugLookupCandidates(value) {
+    const normalized = normalizeChannel(value);
+    if (!normalized) {
+        return [];
+    }
+    const candidates = [normalized];
+    const addCandidate = (candidate) => {
+        const clean = normalizeChannel(candidate);
+        if (clean && !candidates.includes(clean)) {
+            candidates.push(clean);
+        }
+    };
+    if (normalized.includes('_')) {
+        addCandidate(normalized.replace(/_/g, '-'));
+    }
+    if (normalized.includes('-')) {
+        addCandidate(normalized.replace(/-/g, '_'));
+    }
+    return candidates;
+}
+
+function applyResolvedKickSlug(requestedSlug, resolvedSlug, reason = '') {
+    const requested = normalizeChannel(requestedSlug);
+    const canonical = normalizeChannel(resolvedSlug);
+    if (!canonical || canonical === normalizeChannel(state.channelSlug)) {
+        return;
+    }
+    state.channelSlug = canonical;
+    state.channelSlugSource = 'resolved';
+    state.autoStart.lastSlug = '';
+    persistConfig();
+    updateInputsFromState();
+    notifyLiteStatus('channel');
+    const requestedLabel = requested ? `@${requested}` : 'the requested channel';
+    const suffix = reason ? ` (${reason})` : '';
+    logKickWs(`Resolved Kick slug ${requestedLabel} to @${canonical}${suffix}.`);
 }
 
 function notifyLiteStatus(reason) {
@@ -3489,6 +3539,13 @@ function mapPusherEventToPacket(eventName, data) {
     if (eventName === 'App\\Events\\ChatMessageDeletedEvent' || eventName === 'App\\Events\\MessageDeletedEvent') {
         return { type: 'chat.message.deleted', body: data, source: 'socket' };
     }
+    const normalizedEventName = String(eventName || '').toLowerCase();
+    if (normalizedEventName.includes('reward') && normalizedEventName.includes('redemption')) {
+        return { type: 'channel.reward.redemption.updated', body: data, source: 'socket' };
+    }
+    if (normalizedEventName.includes('kicks') && normalizedEventName.includes('gift')) {
+        return { type: 'kicks.gifted', body: data, source: 'socket' };
+    }
     if (eventName === 'App\\Events\\GiftedSubscriptionsEvent' || eventName === 'App\\Events\\GiftPurchaseEvent') {
         return { type: 'channel.subscription.gifts', body: data, source: 'socket' };
     }
@@ -3663,8 +3720,8 @@ function connectPusherSocket() {
 
 async function resolveChannelForPusher() {
     if (state.socket.chatroomId) return;
-    const slug = state.channelSlug?.trim();
-    if (!slug) return;
+    const initialSlug = state.channelSlug?.trim();
+    if (!initialSlug) return;
 
     // 1. If signed in, resolve channel metadata via official API (broadcaster_user_id, slug, etc)
     const canUseAuthenticatedLookup = Boolean(state.tokens?.access_token) && !isTokenExpired();
@@ -3677,26 +3734,40 @@ async function resolveChannelForPusher() {
         if (state.socket.chatroomId) return;
     }
 
+    const requestedSlug = normalizeChannel(state.channelSlug || initialSlug);
+    const slugCandidates = getKickSlugLookupCandidates(requestedSlug);
+    if (!slugCandidates.length) return;
+
     // 2. Try bridge cache (fast, no auth needed)
     try {
         const base = getBridgeBaseUrl();
-        const lookupResp = await fetch(`${base}/kick/lookup?slug=${encodeURIComponent(slug)}`);
-        if (lookupResp.ok) {
+        for (const lookupSlug of slugCandidates) {
+            const lookupResp = await fetch(`${base}/kick/lookup?slug=${encodeURIComponent(lookupSlug)}`);
+            if (!lookupResp.ok) {
+                continue;
+            }
             const data = await lookupResp.json();
+            const resolvedSlug = normalizeChannel(data?.slug || lookupSlug);
             if (data.chatroom_id) {
                 state.socket.chatroomId = String(data.chatroom_id);
                 if (data.broadcaster_user_id && !state.channelId) {
                     state.channelId = Number(data.broadcaster_user_id);
-                    state.channelName = data.slug || slug;
-                    state.lastResolvedSlug = normalizeChannel(slug);
+                    state.channelName = data.slug || resolvedSlug || lookupSlug;
                 }
-                log(`Resolved chatroom ${data.chatroom_id} for ${slug} (bridge cache, source: ${data.chatroom_source || 'unknown'}).`);
+                state.lastResolvedSlug = resolvedSlug || lookupSlug;
+                if (resolvedSlug && resolvedSlug !== requestedSlug) {
+                    applyResolvedKickSlug(requestedSlug, resolvedSlug, `bridge lookup @${lookupSlug}`);
+                }
+                log(`Resolved chatroom ${data.chatroom_id} for ${resolvedSlug || lookupSlug} (bridge cache, source: ${data.chatroom_source || 'unknown'}).`);
                 return;
             }
             if (data.broadcaster_user_id && !state.channelId) {
                 state.channelId = Number(data.broadcaster_user_id);
-                state.channelName = data.slug || slug;
-                state.lastResolvedSlug = normalizeChannel(slug);
+                state.channelName = data.slug || resolvedSlug || lookupSlug;
+                state.lastResolvedSlug = resolvedSlug || lookupSlug;
+                if (resolvedSlug && resolvedSlug !== requestedSlug) {
+                    applyResolvedKickSlug(requestedSlug, resolvedSlug, `bridge lookup @${lookupSlug}`);
+                }
             }
         }
     } catch (err) {
@@ -3704,27 +3775,33 @@ async function resolveChannelForPusher() {
     }
 
     // 3. Try legacy kick.com/api/v2 directly (works same-origin on kick.com, may fail elsewhere)
-    try {
-        const legacyResp = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`);
-        if (legacyResp.ok) {
-            const data = await legacyResp.json();
-            const chatroomId = data?.chatroom?.id ?? data?.chatroom_id;
-            if (chatroomId) {
-                state.socket.chatroomId = String(chatroomId);
-                const broadcasterId = data?.user_id ?? data?.broadcaster_user_id;
-                if (broadcasterId && !state.channelId) {
-                    state.channelId = Number(broadcasterId);
-                    state.channelName = data?.slug || slug;
-                    state.lastResolvedSlug = normalizeChannel(slug);
+    for (const lookupSlug of slugCandidates) {
+        try {
+            const legacyResp = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(lookupSlug)}`);
+            if (legacyResp.ok) {
+                const data = await legacyResp.json();
+                const resolvedSlug = extractKickChannelSlug(data) || lookupSlug;
+                const chatroomId = data?.chatroom?.id ?? data?.chatroom_id;
+                if (chatroomId) {
+                    state.socket.chatroomId = String(chatroomId);
+                    const broadcasterId = data?.user_id ?? data?.broadcaster_user_id;
+                    if (broadcasterId && !state.channelId) {
+                        state.channelId = Number(broadcasterId);
+                        state.channelName = data?.slug || resolvedSlug || lookupSlug;
+                    }
+                    state.lastResolvedSlug = resolvedSlug || lookupSlug;
+                    if (resolvedSlug && resolvedSlug !== requestedSlug) {
+                        applyResolvedKickSlug(requestedSlug, resolvedSlug, `legacy API lookup @${lookupSlug}`);
+                    }
+                    log(`Resolved chatroom ${chatroomId} for ${resolvedSlug || lookupSlug} (legacy API direct).`);
+                    // Save to bridge cache if signed in
+                    postChatroomToCache(resolvedSlug || lookupSlug, chatroomId, broadcasterId);
+                    return;
                 }
-                log(`Resolved chatroom ${chatroomId} for ${slug} (legacy API direct).`);
-                // Save to bridge cache if signed in
-                postChatroomToCache(slug, chatroomId, broadcasterId);
-                return;
             }
+        } catch (_) {
+            // Cloudflare block or CORS - expected, not an error
         }
-    } catch (_) {
-        // Cloudflare block or CORS — expected, not an error
     }
 
     log('Could not resolve chatroomId. Sign in or pass ?chatroom_id= URL param.', 'warning');
@@ -3799,7 +3876,7 @@ async function startAuthFlow() {
         response_type: 'code',
         client_id: state.clientId,
         redirect_uri: redirectUri,
-        scope: 'user:read channel:read channel:write chat:write events:subscribe moderation:ban moderation:chat_message:manage',
+        scope: KICK_OAUTH_SCOPES.join(' '),
         code_challenge: challenge,
         code_challenge_method: 'S256',
         state: stateParam
@@ -3831,7 +3908,7 @@ async function startExternalAuthFlow() {
         logKickWs('Starting external Kick OAuth flow.');
         const result = await startOAuthFn({
             clientId: state.clientId,
-            scopes: ['user:read', 'channel:read', 'channel:write', 'chat:write', 'events:subscribe', 'moderation:ban', 'moderation:chat_message:manage']
+            scopes: KICK_OAUTH_SCOPES.slice()
         });
 
         if (!result || !result.success || !result.code) {
@@ -4867,77 +4944,84 @@ async function fetchKickLivestreamByBroadcasterId(broadcasterUserIdInput) {
 
 async function fetchKickChannelBySlug(slugInput, options = {}) {
     const debugContext = typeof options?.debugContext === 'string' ? options.debugContext.trim() : '';
-    const slugLower = normalizeChannel(slugInput);
-    if (!slugLower) {
+    const requestedSlug = normalizeChannel(slugInput);
+    if (!requestedSlug) {
         return null;
     }
-    const encodedSlug = encodeURIComponent(slugLower);
-    const fallbackPaths = [
-        `/public/v1/channels?slug=${encodedSlug}`,
-        `/channels/${encodedSlug}`,
-        `/public/v1/channels/${encodedSlug}`
-    ];
-    const paths = [];
-    if (preferredKickChannelLookupPath) {
-        paths.push(preferredKickChannelLookupPath.replace('{slug}', encodedSlug));
-    }
-    for (const path of fallbackPaths) {
-        if (!paths.includes(path)) {
-            paths.push(path);
-        }
-    }
+    const slugCandidates = getKickSlugLookupCandidates(requestedSlug);
     let lastError = null;
-    for (const path of paths) {
-        try {
-            if (debugContext) {
-                logKickViewerDebug(`${debugContext}: request ${path}`);
+    for (const lookupSlug of slugCandidates) {
+        const encodedSlug = encodeURIComponent(lookupSlug);
+        const fallbackPaths = [
+            `/public/v1/channels?slug=${encodedSlug}`,
+            `/channels/${encodedSlug}`,
+            `/public/v1/channels/${encodedSlug}`
+        ];
+        const paths = [];
+        if (preferredKickChannelLookupPath) {
+            paths.push(preferredKickChannelLookupPath.replace('{slug}', encodedSlug));
+        }
+        for (const path of fallbackPaths) {
+            if (!paths.includes(path)) {
+                paths.push(path);
             }
-            const data = await apiFetch(path);
-            const channel = pickKickChannelBySlug(unwrapKickChannelPayload(data), slugLower, {
-                allowSingletonWithoutSlug: !path.includes('?slug=')
-            });
-            if (channel && typeof channel === 'object') {
-                if (path.includes('?slug=')) {
-                    preferredKickChannelLookupPath = '/public/v1/channels?slug={slug}';
-                } else if (path.includes('/public/v1/channels/')) {
-                    preferredKickChannelLookupPath = '/public/v1/channels/{slug}';
-                } else if (path.includes('/channels/')) {
-                    preferredKickChannelLookupPath = '/channels/{slug}';
+        }
+        for (const path of paths) {
+            try {
+                if (debugContext) {
+                    logKickViewerDebug(`${debugContext}: request ${path}`);
+                }
+                const data = await apiFetch(path);
+                const channel = pickKickChannelBySlug(unwrapKickChannelPayload(data), lookupSlug, {
+                    allowSingletonWithoutSlug: !path.includes('?slug=')
+                });
+                if (channel && typeof channel === 'object') {
+                    if (path.includes('?slug=')) {
+                        preferredKickChannelLookupPath = '/public/v1/channels?slug={slug}';
+                    } else if (path.includes('/public/v1/channels/')) {
+                        preferredKickChannelLookupPath = '/public/v1/channels/{slug}';
+                    } else if (path.includes('/channels/')) {
+                        preferredKickChannelLookupPath = '/channels/{slug}';
+                    }
+                    const resolvedSlug = extractKickChannelSlug(channel) || lookupSlug;
+                    if (resolvedSlug !== requestedSlug) {
+                        applyResolvedKickSlug(requestedSlug, resolvedSlug, lookupSlug !== requestedSlug ? `alternate lookup @${lookupSlug}` : 'canonical lookup');
+                    }
+                    if (debugContext) {
+                        logKickViewerDebug(`${debugContext}: success via ${path}`);
+                    }
+                    return channel;
                 }
                 if (debugContext) {
-                    logKickViewerDebug(`${debugContext}: success via ${path}`);
+                    logKickViewerDebug(`${debugContext}: payload via ${path} did not match @${lookupSlug}.`, 'warning');
                 }
-                return channel;
-            }
-            if (debugContext) {
-                logKickViewerDebug(`${debugContext}: payload via ${path} did not match @${slugLower}.`, 'warning');
-            }
-        } catch (err) {
-            lastError = err;
-            const status = getKickApiErrorStatus(err);
-            if (status === 400 || status === 404 || status === 405 || status === 501) {
+            } catch (err) {
+                lastError = err;
+                const status = getKickApiErrorStatus(err);
+                if (status === 400 || status === 404 || status === 405 || status === 501) {
+                    if (debugContext) {
+                        logKickViewerDebug(`${debugContext}: path failed ${path} status=${status}`, 'warning');
+                    }
+                    if (
+                        preferredKickChannelLookupPath &&
+                        path === preferredKickChannelLookupPath.replace('{slug}', encodedSlug)
+                    ) {
+                        preferredKickChannelLookupPath = '';
+                    }
+                    continue;
+                }
                 if (debugContext) {
-                    logKickViewerDebug(`${debugContext}: path failed ${path} status=${status}`, 'warning');
+                    logKickViewerDebug(`${debugContext}: path failed ${path} error=${err?.message || err}`, 'warning');
                 }
-                if (
-                    preferredKickChannelLookupPath &&
-                    path === preferredKickChannelLookupPath.replace('{slug}', encodedSlug)
-                ) {
-                    preferredKickChannelLookupPath = '';
-                }
-                continue;
+                throw err;
             }
-            if (debugContext) {
-                logKickViewerDebug(`${debugContext}: path failed ${path} error=${err?.message || err}`, 'warning');
-            }
-            throw err;
         }
     }
     if (lastError) {
         throw lastError;
     }
     if (debugContext) {
-        logKickViewerDebug(`${debugContext}: no channel payload found for @${slugLower}.`, 'warning');
+        logKickViewerDebug(`${debugContext}: no channel payload found for @${requestedSlug}.`, 'warning');
     }
     return null;
 }
@@ -5163,6 +5247,8 @@ function deriveEventSubscriptions(types) {
         'channel.subscription.new',
         'channel.subscription.renewal',
         'channel.subscription.gifts',
+        'channel.reward.redemption.updated',
+        'kicks.gifted',
         'livestream.status.updated'
     ];
     const subscriptions = [];
@@ -5338,15 +5424,20 @@ async function resolveChannelId(force = false) {
         channel?.channelId ??
         channel?.id ??
         null;
+    const resolvedSlug = extractKickChannelSlug(channel);
+    const effectiveSlug = resolvedSlug || slugLower;
+    if (resolvedSlug && resolvedSlug !== slugLower) {
+        applyResolvedKickSlug(slugLower, resolvedSlug, 'channel API lookup');
+    }
     state.channelId = channel.broadcaster_user_id;
-    state.channelName = channel.slug || channel.channel_description || slugInput;
-    state.lastResolvedSlug = slugLower;
+    state.channelName = channel.slug || channel.channel_description || effectiveSlug || slugInput;
+    state.lastResolvedSlug = effectiveSlug;
     if (!state.socket.userId && state.channelId != null) {
         state.socket.userId = String(state.channelId);
     }
     if (resolvedChatroomId != null) {
         state.socket.chatroomId = String(resolvedChatroomId);
-        postChatroomToCache(slugLower, resolvedChatroomId, channel.broadcaster_user_id);
+        postChatroomToCache(effectiveSlug, resolvedChatroomId, channel.broadcaster_user_id);
     }
     if (resolvedSocketChannelId != null) {
         state.socket.channelId = String(resolvedSocketChannelId);
@@ -5368,7 +5459,7 @@ async function resolveChannelId(force = false) {
     refreshKickStreamInfo().catch((err) => {
         logKickWs(`Unable to refresh Kick stream info after channel resolve: ${err?.message || err}`, 'warning');
     });
-    if (force || state.channelId !== previousId || previousSlug !== slugLower) {
+    if (force || state.channelId !== previousId || previousSlug !== effectiveSlug) {
         requestThirdPartyEmotes({ force: true });
     }
     // Replay any events that were queued before channel resolution
@@ -5961,6 +6052,14 @@ function processBridgeEvent(packet, isReplay = false) {
         forwardSubscription(type, body, bridgeMeta);
         return;
     }
+    if (type === 'channel.reward.redemption.updated') {
+        forwardRewardRedemption(type, body, bridgeMeta);
+        return;
+    }
+    if (type === 'kicks.gifted') {
+        forwardKicksGifted(type, body, bridgeMeta);
+        return;
+    }
     if (/support|donat|tip|kick/i.test(type)) {
         forwardSupportEvent(type, body, bridgeMeta);
         return;
@@ -6317,12 +6416,16 @@ function mapKickChatEventToSocialStream(rawType, plainMessage = '', donationLabe
 
 function extractChatDonationLabel(...sources) {
     const visited = new Set();
-    const amountFields = ['amount', 'value', 'total', 'quantity', 'kicks', 'price', 'amount_total', 'price_amount'];
+    const amountFields = ['amount', 'value', 'total', 'quantity', 'kicks', 'gifted_amount', 'gift_amount', 'price', 'amount_total', 'price_amount'];
     const currencyFields = ['currency', 'unit', 'unit_name', 'currency_code', 'symbol', 'currencySymbol'];
     const nestedKeys = [
         'donation',
         'tip',
         'support',
+        'gift',
+        'kicks',
+        'kicks_gift',
+        'kicksGift',
         'purchase',
         'payment',
         'monetization',
@@ -6871,6 +6974,132 @@ function forwardFollower(evt, bridgeMeta) {
 }
 
 
+function takeNumber(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value;
+    }
+    if (typeof value === 'string') {
+        const normalized = value.replace(/,/g, '').trim();
+        if (!normalized) {
+            return null;
+        }
+        const parsed = Number(normalized);
+        if (Number.isFinite(parsed)) {
+            return parsed;
+        }
+        const match = normalized.match(/-?\d+(?:\.\d+)?/);
+        if (match) {
+            const extracted = Number(match[0]);
+            if (Number.isFinite(extracted)) {
+                return extracted;
+            }
+        }
+    }
+    return null;
+}
+
+function formatKickAmountLabel(amount, currency) {
+    if (amount == null || amount === '') {
+        return '';
+    }
+    const amountText = typeof amount === 'number' && Number.isFinite(amount)
+        ? String(amount)
+        : String(amount).trim();
+    if (!amountText) {
+        return '';
+    }
+    const currencyText = typeof currency === 'string' ? currency.trim() : '';
+    return currencyText ? `${amountText} ${currencyText}` : amountText;
+}
+
+function forwardRewardRedemption(eventType, evt, bridgeMeta) {
+    const reward = evt?.reward || evt?.channel_reward || evt?.reward_detail || {};
+    const redeemerSources = [
+        evt?.redeemer,
+        evt?.user,
+        evt?.sender,
+        evt?.profile,
+        evt
+    ];
+    const { profile: redeemerProfile } = gatherProfileState(...redeemerSources);
+    const redeemer = redeemerProfile.displayName || pickDisplayName([
+        evt?.redeemer?.display_name,
+        evt?.redeemer?.username,
+        evt?.user?.display_name,
+        evt?.user?.username,
+        evt?.sender?.display_name,
+        evt?.sender?.username,
+        evt?.username
+    ]);
+    const chatimg =
+        redeemerProfile.avatar ||
+        pickImage(
+            evt?.redeemer?.profile_picture,
+            evt?.redeemer?.profilePicture,
+            evt?.redeemer?.avatar,
+            evt?.user?.profile_picture,
+            evt?.user?.profilePicture,
+            evt?.user?.avatar,
+            evt?.sender?.profile_picture,
+            evt?.sender?.profilePicture,
+            evt?.sender?.avatar
+        );
+    const rewardTitle = pickFirstString([
+        reward?.title,
+        reward?.name,
+        evt?.reward_title,
+        evt?.rewardName,
+        evt?.title
+    ], getTranslation('kick-reward-label', 'Reward'));
+    const userInput = pickFirstString([
+        evt?.user_input,
+        evt?.userInput,
+        evt?.input,
+        evt?.message,
+        evt?.comment,
+        reward?.user_input
+    ], '');
+    const status = pickFirstString([evt?.status, evt?.redemption_status], '');
+    const rawRedemptionId = evt?.id ?? evt?.redemption_id ?? evt?.redemptionId ?? null;
+    const rawRewardId = reward?.id ?? evt?.reward_id ?? evt?.rewardId ?? null;
+    const redemptionId = rawRedemptionId == null ? '' : String(rawRedemptionId).trim();
+    const rewardId = rawRewardId == null ? '' : String(rawRewardId).trim();
+    const cost = takeNumber(reward?.cost ?? evt?.cost ?? evt?.reward_cost);
+    const description = pickFirstString([reward?.description, evt?.description], '');
+    const redeemedAt = pickFirstString([evt?.redeemed_at, evt?.redeemedAt, evt?.created_at], '');
+    const messageSegments = [];
+    if (rewardTitle) {
+        messageSegments.push(rewardTitle);
+    }
+    if (userInput) {
+        messageSegments.push(userInput);
+    }
+    const chatmessage = messageSegments.join(' - ') || getTranslation('kick-reward-redeemed-message', 'Reward redeemed');
+    const meta = {
+        eventType,
+        redemptionId: redemptionId || null,
+        rewardId: rewardId || null,
+        rewardTitle,
+        cost: cost ?? null,
+        status: status || null,
+        userInput,
+        redeemedAt,
+        description,
+        redeemer
+    };
+    pushMessage({
+        type: 'kick',
+        event: 'reward',
+        chatname: redeemer || getTranslation('kick-viewer-label', 'Kick viewer'),
+        chatmessage: escapeHtml(chatmessage),
+        chatimg: chatimg || '',
+        meta
+    });
+    const prefix = bridgeMeta?.verified === false ? '[REWARD !]' : '[REWARD]';
+    log(`${prefix} ${redeemer || 'Kick viewer'} - ${chatmessage}${status ? ` (${status})` : ''}`);
+}
+
+
 function forwardSubscription(eventType, evt, bridgeMeta) {
     const subscriberSources = [
         evt?.subscriber,
@@ -6901,18 +7130,6 @@ function forwardSubscription(eventType, evt, bridgeMeta) {
         evt?.gifted_by?.display_name,
         evt?.gifted_by?.username
     ]);
-    const takeNumber = value => {
-        if (typeof value === 'number' && Number.isFinite(value)) {
-            return value;
-        }
-        if (typeof value === 'string') {
-            const parsed = parseInt(value, 10);
-            if (Number.isFinite(parsed)) {
-                return parsed;
-            }
-        }
-        return null;
-    };
     const subscriberImage =
         subscriberProfile.avatar ||
         pickImage(
@@ -7004,7 +7221,94 @@ function forwardSubscription(eventType, evt, bridgeMeta) {
     log(`${prefix} ${chatmessage}`);
 }
 
+function forwardKicksGifted(eventType, evt, bridgeMeta) {
+    const gift = evt?.gift || evt?.kicks || evt?.kicks_gift || {};
+    const supporterSources = [
+        evt?.sender,
+        evt?.supporter,
+        evt?.gifter,
+        evt?.user,
+        evt
+    ];
+    const { profile: supporterProfile } = gatherProfileState(...supporterSources);
+    const supporter = supporterProfile.displayName || pickDisplayName([
+        evt?.sender?.display_name,
+        evt?.sender?.username,
+        evt?.supporter?.display_name,
+        evt?.supporter?.username,
+        evt?.gifter?.display_name,
+        evt?.gifter?.username,
+        evt?.user?.display_name,
+        evt?.user?.username,
+        evt?.username
+    ]);
+    const amount = takeNumber(gift?.amount ?? gift?.value ?? evt?.amount ?? evt?.kicks ?? evt?.kicks_total);
+    const currency = pickFirstString([evt?.currency, evt?.unit, gift?.currency, gift?.unit], 'KICKs');
+    const amountLabel = formatKickAmountLabel(amount, currency);
+    const giftName = pickFirstString([gift?.name, gift?.title, evt?.gift_name, evt?.title], '');
+    const giftType = pickFirstString([gift?.type, evt?.gift_type], '');
+    const tier = pickFirstString([gift?.tier, evt?.tier], '');
+    const note = extractMessageContent(gift?.message || evt?.message || evt?.comment || evt?.note || '') || '';
+    const pinnedTimeSeconds = takeNumber(gift?.pinned_time_seconds ?? gift?.pinnedTimeSeconds ?? evt?.pinned_time_seconds);
+    const messageSegments = [];
+    if (amountLabel) {
+        messageSegments.push(amountLabel);
+    }
+    if (giftName) {
+        messageSegments.push(giftName);
+    }
+    if (note) {
+        messageSegments.push(note);
+    }
+    const chatmessage = messageSegments.length ? messageSegments.join(' - ') : getTranslation('kick-new-support-received', 'New support received!');
+    const chatname = supporter || getTranslation('kick-supporter-label', 'Kick supporter');
+    const chatimg =
+        supporterProfile.avatar ||
+        pickImage(
+            evt?.sender?.profile_picture,
+            evt?.sender?.profilePicture,
+            evt?.sender?.avatar,
+            evt?.supporter?.profile_picture,
+            evt?.supporter?.avatar,
+            evt?.gifter?.profile_picture,
+            evt?.gifter?.avatar,
+            evt?.user?.profile_picture,
+            evt?.user?.avatar
+        );
+    const meta = {
+        eventType,
+        supporter,
+        amount,
+        currency,
+        message: note,
+        giftName,
+        giftType,
+        tier,
+        pinnedTimeSeconds: pinnedTimeSeconds ?? null,
+        createdAt: pickFirstString([evt?.created_at, evt?.createdAt], '')
+    };
+    pushMessage({
+        type: 'kick',
+        event: 'donation',
+        chatname,
+        chatmessage: escapeHtml(chatmessage),
+        chatimg: chatimg || '',
+        hasDonation: amountLabel,
+        meta
+    });
+    appendAlertsFeedEntry({
+        kind: 'donation',
+        actor: chatname,
+        message: chatmessage,
+        avatar: chatimg || ''
+    });
+    const noteLabel = note ? ` - ${note}` : '';
+    const prefix = bridgeMeta?.verified === false ? '[KICKS !]' : '[KICKS]';
+    log(`${prefix} ${supporter || 'Kick supporter'}${amountLabel ? ` - ${amountLabel}` : ''}${noteLabel}`);
+}
+
 function forwardSupportEvent(eventType, evt, bridgeMeta) {
+    const gift = evt?.gift || evt?.kicks || evt?.kicks_gift || null;
     const supporterSources = [
         evt?.supporter,
         evt?.sender,
@@ -7025,8 +7329,8 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
         evt?.gifter?.username,
         evt?.username
     ]);
-    let amount = evt?.amount ?? evt?.value ?? evt?.kicks ?? evt?.total ?? null;
-    let currency = evt?.currency || evt?.unit || evt?.unit_name || null;
+    let amount = evt?.amount ?? evt?.value ?? evt?.kicks ?? evt?.total ?? gift?.amount ?? gift?.value ?? null;
+    let currency = evt?.currency || evt?.unit || evt?.unit_name || gift?.currency || gift?.unit || null;
     if (evt?.support) {
         amount = amount ?? evt.support.amount ?? evt.support.total;
         currency = currency || evt.support.currency || evt.support.unit;
@@ -7037,13 +7341,22 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
     }
     if (typeof evt?.kicks_total === 'number' && amount == null) {
         amount = evt.kicks_total;
-        currency = currency || 'KICK';
+        currency = currency || 'KICKs';
     }
-    const note = extractMessageContent(evt?.message || evt?.comment || evt?.note || evt?.support?.message || evt?.tip?.message || evt) || '';
-    const amountLabel = amount != null ? `${amount}${currency ? ' ' + currency : ''}` : '';
+    if (gift && amount != null && !currency) {
+        currency = 'KICKs';
+    }
+    const giftName = pickFirstString([gift?.name, gift?.title, evt?.gift_name], '');
+    const giftType = pickFirstString([gift?.type, evt?.gift_type], '');
+    const tier = pickFirstString([gift?.tier, evt?.tier], '');
+    const note = extractMessageContent(gift?.message || evt?.message || evt?.comment || evt?.note || evt?.support?.message || evt?.tip?.message || evt) || '';
+    const amountLabel = formatKickAmountLabel(amount, currency);
     const messageSegments = [];
     if (amountLabel) {
         messageSegments.push(amountLabel);
+    }
+    if (giftName) {
+        messageSegments.push(giftName);
     }
     if (note) {
         messageSegments.push(note);
@@ -7067,7 +7380,10 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
         supporter,
         amount,
         currency,
-        message: note
+        message: note,
+        giftName,
+        giftType,
+        tier
     };
     pushMessage({
         type: 'kick',
@@ -7075,6 +7391,7 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
         chatname,
         chatmessage: escapeHtml(chatmessage),
         chatimg: chatimg || '',
+        hasDonation: amountLabel,
         meta
     });
     appendAlertsFeedEntry({
