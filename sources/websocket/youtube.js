@@ -240,7 +240,7 @@ function requestEmotesForVideo(videoId, channelId, options = {}) {
 }
 
 function requestYouTubeEmoji(videoId, requestId = null) {
-	if (!videoId || typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+	if (!videoId) {
 		return;
 	}
 
@@ -252,15 +252,11 @@ function requestYouTubeEmoji(videoId, requestId = null) {
 		payload.requestId = String(requestId);
 	}
 
-	chrome.runtime.sendMessage(chrome.runtime.id, payload, function () {
-		if (chrome.runtime.lastError) {
-			console.log('YouTube emoji request error:', chrome.runtime.lastError.message);
-		}
-	});
+	sendYouTubeBackgroundRequest(payload, 'YouTube emoji request');
 }
 
 function requestYouTubeRichChat(videoId, continuation = "", requestId = null, apiKey = "") {
-	if (!videoId || typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.id) {
+	if (!videoId) {
 		return;
 	}
 
@@ -274,11 +270,26 @@ function requestYouTubeRichChat(videoId, continuation = "", requestId = null, ap
 		payload.requestId = String(requestId);
 	}
 
-	chrome.runtime.sendMessage(chrome.runtime.id, payload, function () {
-		if (chrome.runtime.lastError) {
-			console.log('YouTube rich chat request error:', chrome.runtime.lastError.message);
+	sendYouTubeBackgroundRequest(payload, 'YouTube rich chat request');
+}
+
+function sendYouTubeBackgroundRequest(payload, label) {
+	try {
+		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id) {
+			chrome.runtime.sendMessage(chrome.runtime.id, payload, function () {
+				if (chrome.runtime.lastError) {
+					console.log(label + ' error:', chrome.runtime.lastError.message);
+				}
+			});
+			return;
 		}
-	});
+		if (window.ninjafy && window.ninjafy.sendMessage) {
+			var tabId = (typeof window.__SSAPP_TAB_ID__ !== "undefined") ? window.__SSAPP_TAB_ID__ : null;
+			window.ninjafy.sendMessage(null, payload, null, tabId);
+		}
+	} catch (error) {
+		console.log(label + ' error:', error && error.message ? error.message : error);
+	}
 }
 
 function processExtensionQueue() {
