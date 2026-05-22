@@ -5277,12 +5277,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					};
 				};
 				const slimWatchData = function (data, watchApiKey, context) {
-					const liveChatRenderer =
-						data &&
-						data.contents &&
-						data.contents.twoColumnWatchNextResults &&
-						data.contents.twoColumnWatchNextResults.conversationBar &&
-						data.contents.twoColumnWatchNextResults.conversationBar.liveChatRenderer;
+					const liveChatRenderer = data && data.contents && data.contents.twoColumnWatchNextResults && data.contents.twoColumnWatchNextResults.conversationBar && data.contents.twoColumnWatchNextResults.conversationBar.liveChatRenderer;
 					if (!liveChatRenderer) return null;
 					return {
 						contents: {
@@ -5298,13 +5293,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					return {
 						"Content-Type": "application/json",
 						"Accept-Language": "en-US,en;q=0.9",
-						"Origin": "https://www.youtube.com",
-						"Referer": referer || "https://www.youtube.com/"
+						Origin: "https://www.youtube.com",
+						Referer: referer || "https://www.youtube.com/"
 					};
 				};
 				const fetchWatchConfig = async function (targetVideoId) {
 					const resp = await fetch(`https://www.youtube.com/watch?v=${encodeURIComponent(targetVideoId)}`, {
-						headers: { "Accept-Language": "en-US,en;q=0.9", "Referer": "https://www.youtube.com/" }
+						headers: { "Accept-Language": "en-US,en;q=0.9", Referer: "https://www.youtube.com/" }
 					});
 					if (!resp.ok) return null;
 					const html = await resp.text();
@@ -5371,7 +5366,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 							return;
 						}
 						const html = await resp.text();
-						sendRichChatResult(slimInitialData(extractInitialData(html), html) || await fetchPublicInitialData(videoId));
+						sendRichChatResult(slimInitialData(extractInitialData(html), html) || (await fetchPublicInitialData(videoId)));
 					} catch (e) {
 						console.log("Background YouTube rich chat fetch failed:", e);
 						sendRichChatResult(null);
