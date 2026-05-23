@@ -8,6 +8,7 @@
         streamId: '',
         pollMs: 3000,
         replayHistory: false,
+        followerCountMode: 'source',
         useSse: true
     };
     const READY_STATE = {
@@ -349,6 +350,45 @@
     function coerceInteger(value) {
         const parsed = parseInt(value, 10);
         return isFinite(parsed) ? parsed : null;
+    }
+
+    function firstInteger(values) {
+        for (let i = 0; i < values.length; i++) {
+            const numeric = coerceInteger(values[i]);
+            if (numeric != null) {
+                return numeric;
+            }
+        }
+        return null;
+    }
+
+    function normalizeFollowerCountMode(value) {
+        const normalized = normalizeText(value).toLowerCase();
+        return normalized === 'total' || normalized === 'all' || normalized === 'account' ? 'total' : 'source';
+    }
+
+    function getFollowerCounts(snapshot) {
+        const followers = snapshot && snapshot.followers ? snapshot.followers : {};
+        return {
+            source: firstInteger([
+                followers.num_followers,
+                followers.followers,
+                followers.follower_count
+            ]),
+            total: firstInteger([
+                followers.num_followers_total,
+                followers.num_follower_total,
+                followers.total_followers,
+                followers.total_follower_count
+            ])
+        };
+    }
+
+    function getEffectiveFollowerCount(counts) {
+        if (state.cfg.followerCountMode === 'total' && counts && counts.total != null) {
+            return counts.total;
+        }
+        return counts ? counts.source : null;
     }
 
     function formatInteger(value) {
@@ -919,6 +959,14 @@
     }
 
     async function fetchJson(url) {
+        if (window.ninjafy && typeof window.ninjafy.fetchRumbleJson === 'function') {
+            const result = await window.ninjafy.fetchRumbleJson(url);
+            if (!result || !result.ok) {
+                throw new Error((result && result.error) || 'Rumble Electron fetch failed');
+            }
+            return result.data;
+        }
+
         if (extAvailable() && chrome.runtime && chrome.runtime.id && !preferDirectFetch()) {
             return new Promise(function (resolve, reject) {
                 try {
@@ -1173,10 +1221,14 @@
     function updateHeaderChips(snapshot, stream) {
         let sourceLabel = normalizeChannelLabel(state.cfg.channel);
         const sourceType = normalizeText(snapshot && snapshot.type);
-        const followers = snapshot && snapshot.followers ? coerceInteger(snapshot.followers.num_followers) : null;
+        const followerCounts = getFollowerCounts(snapshot);
+        const followers = getEffectiveFollowerCount(followerCounts);
         const subscribers = snapshot && snapshot.subscribers ? coerceInteger(snapshot.subscribers.num_subscribers) : null;
         const viewers = stream ? coerceInteger(stream.watching_now) : null;
         const streamLabel = stream && stream.title ? String(stream.title) : (stream ? 'Selected stream' : 'No active stream');
+        const followerLabelSuffix = state.cfg.followerCountMode === 'total'
+            ? (followerCounts.total != null ? ' total' : ' (total unavailable)')
+            : '';
 
         if (!sourceLabel) {
             if (sourceType === 'user') {
@@ -1194,7 +1246,7 @@
         setChip(els.sourceChip, 'Source: ' + sourceLabel + (sourceType ? ' [' + sourceType + ']' : ''), sourceType ? 'good' : '');
         setChip(els.streamChip, 'Stream: ' + streamLabel, stream && stream.is_live ? 'good' : (stream ? 'warn' : 'bad'));
         setChip(els.viewerChip, 'Viewers: ' + formatInteger(viewers), viewers != null ? 'good' : '');
-        setChip(els.followerChip, 'Followers: ' + formatInteger(followers), followers != null ? 'good' : '');
+        setChip(els.followerChip, 'Followers: ' + formatInteger(followers) + followerLabelSuffix, followers != null ? 'good' : '');
         setChip(els.subscriberChip, 'Subscribers: ' + formatInteger(subscribers), subscribers != null ? 'good' : '');
         updatePopupControls(stream);
     }
@@ -1369,7 +1421,8 @@
         const streamSelection = selectLivestream(snapshot);
         const stream = streamSelection.stream;
         const useSseChat = shouldUseSseForStream(stream);
-        const sourceFollowers = snapshot && snapshot.followers ? coerceInteger(snapshot.followers.num_followers) : null;
+        const followerCounts = getFollowerCounts(snapshot);
+        const sourceFollowers = getEffectiveFollowerCount(followerCounts);
         const sourceSubscribers = snapshot && snapshot.subscribers ? coerceInteger(snapshot.subscribers.num_subscribers) : null;
         const viewers = stream ? coerceInteger(stream.watching_now) : null;
         const recentMessages = !useSseChat && stream && stream.chat ? combineLatestAndRecent(stream.chat.latest_message, stream.chat.recent_messages, function (item) {
@@ -1552,6 +1605,9 @@
         if (query.get('poll') || query.get('interval') || hash.get('poll') || hash.get('interval')) {
             state.cfg.pollMs = clampPollMs(query.get('poll') || query.get('interval') || hash.get('poll') || hash.get('interval'));
         }
+        if (query.get('followerMode') || query.get('followers') || hash.get('followerMode') || hash.get('followers')) {
+            state.cfg.followerCountMode = normalizeFollowerCountMode(query.get('followerMode') || query.get('followers') || hash.get('followerMode') || hash.get('followers'));
+        }
         if (query.get('replay') != null || hash.get('replay') != null) {
             const replayValue = query.get('replay') != null ? query.get('replay') : hash.get('replay');
             state.cfg.replayHistory = replayValue !== '0' && replayValue !== 'false';
@@ -1559,6 +1615,29 @@
         if (query.get('sse') != null || hash.get('sse') != null) {
             const sseValue = query.get('sse') != null ? query.get('sse') : hash.get('sse');
             state.cfg.useSse = sseValue !== '0' && sseValue !== 'false';
+        }
+        state.cfg.followerCountMode = normalizeFollowerCountMode(state.cfg.followerCountMode);
+    }
+
+    async function loadSourceWindowConfig() {
+        let result;
+        if (!window.ninjafy || typeof window.ninjafy.getSourceWindowConfig !== 'function') {
+            return;
+        }
+        try {
+            result = await window.ninjafy.getSourceWindowConfig();
+        } catch (error) {
+            log('Unable to read SSApp source config: ' + ((error && error.message) || error), 'warn');
+            return;
+        }
+        if (!result || !result.ok) {
+            return;
+        }
+        if (result.rumbleApiUrl) {
+            state.cfg.apiUrl = normalizeApiUrl(result.rumbleApiUrl);
+        }
+        if (result.rumbleFollowerCountMode) {
+            state.cfg.followerCountMode = normalizeFollowerCountMode(result.rumbleFollowerCountMode);
         }
     }
 
@@ -1573,6 +1652,7 @@
         state.cfg.channel = normalizeChannelLabel(els.channelLabel ? els.channelLabel.value : state.cfg.channel);
         state.cfg.streamId = normalizeStreamId(els.streamId ? els.streamId.value : state.cfg.streamId);
         state.cfg.pollMs = clampPollMs(els.pollMs ? els.pollMs.value : state.cfg.pollMs);
+        state.cfg.followerCountMode = normalizeFollowerCountMode(state.cfg.followerCountMode);
         state.cfg.replayHistory = !!(els.replayHistory && els.replayHistory.checked);
         saveConfig();
     }
@@ -1827,11 +1907,12 @@
         els.logEmpty = document.getElementById('log-empty');
     }
 
-    function bootstrap() {
+    async function bootstrap() {
         enableBackgroundKeepAlive();
         initEls();
         bridge();
         loadConfig();
+        await loadSourceWindowConfig();
         applyConfigToUi();
         bindUi();
         syncButtons();
