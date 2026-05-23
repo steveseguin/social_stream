@@ -33,10 +33,10 @@
                         </label>
                         <label class="auth-method-option">
                             <input type="radio" name="yt-access-level" value="admin">
-                            <span>Admin controls</span>
+                            <span>Write access</span>
                         </label>
                     </div>
-                    <div class="credentials-note" style="margin-top:8px;">Admin access is needed to send chat, moderate chat, ban users, or edit stream details. Google may also show video deletion permission.</div>
+                    <div class="credentials-note" style="margin-top:8px;">Write access is needed to send chat, moderate chat, ban users, or edit stream details. Google may show broad YouTube management permissions, including video deletion, because YouTube does not provide a chat-only write scope.</div>
                 </div>
                 <div id="auth-method-selector" class="auth-method-selector hidden">
                     <label class="auth-method-label">Sign-in method:</label>
@@ -381,6 +381,16 @@ try {
     let channelStatsInterval; // Separate interval for channel stats
     let fetchTimeout; // Track fetch timeout to clear on disconnect
     let lastKnownViewers = null;
+	var viewerCountFallbackVideoId = '';
+	var viewerCountMissingPolls = 0;
+	var viewerCountFallbackLastAttempt = 0;
+	var viewerCountFallbackBlockedUntil = 0;
+	var viewerCountFallbackHadSuccess = false;
+	var viewerCountFallbackLastValue = null;
+	const VIEWER_COUNT_MISSING_THRESHOLD = 3;
+	const VIEWER_COUNT_FALLBACK_SUCCESS_INTERVAL_MS = 2 * 60 * 1000;
+	const VIEWER_COUNT_FALLBACK_ZERO_INTERVAL_MS = 10 * 60 * 1000;
+	const VIEWER_COUNT_FALLBACK_FAILURE_COOLDOWN_MS = 15 * 60 * 1000;
     var lastMessageTime = null;
     var liveChatId = null;
     var nextPageToken = null;
@@ -458,6 +468,7 @@ try {
 	var richChatContinuation = null;
 	var richChatContinuationVideoId = '';
 	var richChatApiKey = '';
+	var richChatInnertubeContext = null;
 	var richChatFetchPromise = null;
 	var richChatLastFetchTime = 0;
 	var richMessageById = new Map();
@@ -782,12 +793,117 @@ function enableBackgroundKeepAlive() {
 		return match && match[1] ? match[1] : '';
 	}
 
+	function extractYouTubeInnertubeClientVersionFromHtml(html) {
+		if (!html || typeof html !== 'string') {
+			return '';
+		}
+		const match = html.match(/"INNERTUBE_CLIENT_VERSION"\s*:\s*"([^"]+)"/) || html.match(/'INNERTUBE_CLIENT_VERSION'\s*:\s*'([^']+)'/);
+		return match && match[1] ? match[1] : '';
+	}
+
+	function extractYouTubeVisitorDataFromHtml(html) {
+		if (!html || typeof html !== 'string') {
+			return '';
+		}
+		const match = html.match(/"VISITOR_DATA"\s*:\s*"([^"]+)"/) || html.match(/'VISITOR_DATA'\s*:\s*'([^']+)'/);
+		return match && match[1] ? match[1] : '';
+	}
+
 	function hasYouTubeExtensionBridge() {
 		try {
 			return document.documentElement.getAttribute('data-ss-youtube-bridge') === '1';
 		} catch (e) {
 			return false;
 		}
+	}
+
+	function getElectronFetchBridge() {
+		const bridge = window.ninjafy || window.electronApi || window.__ssapp;
+		return bridge && typeof bridge.noCORSFetch === 'function' ? bridge : null;
+	}
+
+	function getYouTubeInnertubeHeaders(referer) {
+		return {
+			'Content-Type': 'application/json',
+			'Accept-Language': 'en-US,en;q=0.9',
+			'Origin': 'https://www.youtube.com',
+			'Referer': referer || 'https://www.youtube.com/'
+		};
+	}
+
+	function buildYouTubeInnertubePayloadContext(clientVersion, visitorData) {
+		const client = {
+			clientName: 'WEB',
+			clientVersion: clientVersion || '2.20240101.00.00',
+			hl: 'en'
+		};
+		if (visitorData) {
+			client.visitorData = visitorData;
+		}
+		return { context: { client: client } };
+	}
+
+	async function fetchTextViaElectronBridge(url, options) {
+		const bridge = getElectronFetchBridge();
+		if (!bridge) {
+			return null;
+		}
+		try {
+			const args = {
+				url: applyApiKeyOverride(url),
+				method: (options && options.method) || 'GET',
+				headers: options && options.headers ? options.headers : undefined,
+				timeout: options && options.timeout ? options.timeout : 10000
+			};
+			if (options && options.body !== undefined) {
+				args.body = options.body;
+			}
+			const response = await bridge.noCORSFetch(args);
+			if (!response || response.error || typeof response.status !== 'number' || response.status < 200 || response.status >= 300) {
+				return null;
+			}
+			return typeof response.data === 'string' ? response.data : '';
+		} catch (error) {
+			console.log('YouTube Electron fetch failed:', error && error.message ? error.message : error);
+			return null;
+		}
+	}
+
+	async function fetchJsonViaElectronBridge(url, options) {
+		const text = await fetchTextViaElectronBridge(url, options);
+		if (!text) {
+			return null;
+		}
+		try {
+			return JSON.parse(text);
+		} catch (error) {
+			console.log('YouTube Electron JSON parse failed:', error && error.message ? error.message : error);
+			return null;
+		}
+	}
+
+	async function fetchYouTubeWatchInnertubeConfig(vidId) {
+		const html = await fetchTextViaElectronBridge('https://www.youtube.com/watch?v=' + encodeURIComponent(vidId), {
+			headers: {
+				'Accept-Language': 'en-US,en;q=0.9',
+				'Referer': 'https://www.youtube.com/'
+			},
+			timeout: 10000
+		});
+		if (!html) {
+			return null;
+		}
+		const apiKey = extractYouTubeInnertubeApiKeyFromHtml(html);
+		if (!apiKey) {
+			return null;
+		}
+		return {
+			apiKey: apiKey,
+			context: buildYouTubeInnertubePayloadContext(
+				extractYouTubeInnertubeClientVersionFromHtml(html),
+				extractYouTubeVisitorDataFromHtml(html)
+			)
+		};
 	}
 
 	async function tryFetchEmojiFromPage(vidId) {
@@ -804,6 +920,44 @@ function enableBackgroundKeepAlive() {
 			return buildYouTubeEmojiEntries(data?.contents?.liveChatRenderer?.emojis);
 		} catch (e) {
 			console.log('YouTube emoji page fetch failed, trying Innertube API:', e.message || e);
+			return null;
+		}
+	}
+
+	async function tryFetchEmojiViaPublicInnertubeAPI(vidId) {
+		const config = await fetchYouTubeWatchInnertubeConfig(vidId);
+		if (!config) {
+			return null;
+		}
+		let continuation;
+		try {
+			const d = await fetchJsonViaElectronBridge('https://www.youtube.com/youtubei/v1/next?key=' + encodeURIComponent(config.apiKey), {
+				method: 'POST',
+				headers: getYouTubeInnertubeHeaders('https://www.youtube.com/watch?v=' + encodeURIComponent(vidId)),
+				body: Object.assign({}, config.context, { videoId: vidId }),
+				timeout: 10000
+			});
+			const liveChatRenderer = d?.contents?.twoColumnWatchNextResults?.conversationBar?.liveChatRenderer;
+			const conts = liveChatRenderer && liveChatRenderer.continuations;
+			continuation = conts?.[0]?.reloadContinuationData?.continuation
+						|| conts?.[0]?.invalidationContinuationData?.continuation
+						|| conts?.[0]?.timedContinuationData?.continuation;
+		} catch (e) {
+			console.log('YouTube public emoji Innertube /next failed:', e.message || e);
+			return null;
+		}
+		if (!continuation) return null;
+
+		try {
+			const d = await fetchJsonViaElectronBridge('https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=' + encodeURIComponent(config.apiKey), {
+				method: 'POST',
+				headers: getYouTubeInnertubeHeaders('https://www.youtube.com/live_chat?is_popout=1&v=' + encodeURIComponent(vidId)),
+				body: Object.assign({}, config.context, { continuation: continuation }),
+				timeout: 10000
+			});
+			return buildYouTubeEmojiEntries(d?.continuationContents?.liveChatContinuation?.emojis);
+		} catch (e) {
+			console.log('YouTube public emoji Innertube get_live_chat failed:', e.message || e);
 			return null;
 		}
 	}
@@ -984,6 +1138,7 @@ function enableBackgroundKeepAlive() {
 		richChatContinuation = null;
 		richChatContinuationVideoId = '';
 		richChatApiKey = '';
+		richChatInnertubeContext = null;
 		richChatFetchPromise = null;
 		richChatLastFetchTime = 0;
 		richMessageById.clear();
@@ -1071,6 +1226,7 @@ function enableBackgroundKeepAlive() {
 	function extractRichChatContinuation(data) {
 		const liveChatRenderer = data && data.contents && data.contents.liveChatRenderer;
 		const liveChatContinuation = data && data.continuationContents && data.continuationContents.liveChatContinuation;
+		const watchLiveChatRenderer = data?.contents?.twoColumnWatchNextResults?.conversationBar?.liveChatRenderer;
 		const subMenuItems = liveChatRenderer &&
 			liveChatRenderer.header &&
 			liveChatRenderer.header.liveChatHeaderRenderer &&
@@ -1091,7 +1247,7 @@ function enableBackgroundKeepAlive() {
 				}
 			}
 		}
-		const continuations = (liveChatContinuation && liveChatContinuation.continuations) || (liveChatRenderer && liveChatRenderer.continuations) || [];
+		const continuations = (liveChatContinuation && liveChatContinuation.continuations) || (liveChatRenderer && liveChatRenderer.continuations) || (watchLiveChatRenderer && watchLiveChatRenderer.continuations) || [];
 		for (let i = 0; i < continuations.length; i++) {
 			const item = continuations[i] || {};
 			const continuation =
@@ -1112,8 +1268,11 @@ function enableBackgroundKeepAlive() {
 		if (data.innertubeApiKey) {
 			richChatApiKey = String(data.innertubeApiKey);
 		}
+		if (data.innertubeContext) {
+			richChatInnertubeContext = data.innertubeContext;
+		}
 		collectRichMessagesFromNode(data);
-		const emojis = data?.contents?.liveChatRenderer?.emojis || data?.continuationContents?.liveChatContinuation?.emojis;
+		const emojis = data?.contents?.liveChatRenderer?.emojis || data?.contents?.twoColumnWatchNextResults?.conversationBar?.liveChatRenderer?.emojis || data?.continuationContents?.liveChatContinuation?.emojis;
 		const entries = buildYouTubeEmojiEntries(emojis);
 		if (entries && entries.length) {
 			applyChannelEmojiEntries(entries);
@@ -1160,10 +1319,50 @@ function enableBackgroundKeepAlive() {
 		});
 	}
 
+	async function fetchRichChatInitialViaPublicInnertube(vidId) {
+		const config = await fetchYouTubeWatchInnertubeConfig(vidId);
+		if (!config) {
+			return null;
+		}
+		const data = await fetchJsonViaElectronBridge('https://www.youtube.com/youtubei/v1/next?key=' + encodeURIComponent(config.apiKey), {
+			method: 'POST',
+			headers: getYouTubeInnertubeHeaders('https://www.youtube.com/watch?v=' + encodeURIComponent(vidId)),
+			body: Object.assign({}, config.context, { videoId: vidId }),
+			timeout: 10000
+		});
+		if (data) {
+			data.innertubeApiKey = config.apiKey;
+			data.innertubeContext = config.context;
+		}
+		return data;
+	}
+
+	async function fetchRichChatContinuationViaPublicInnertube(vidId, continuation) {
+		if (!continuation || !richChatApiKey) {
+			return null;
+		}
+		const context = richChatInnertubeContext || buildYouTubeInnertubePayloadContext('', '');
+		const data = await fetchJsonViaElectronBridge('https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=' + encodeURIComponent(richChatApiKey), {
+			method: 'POST',
+			headers: getYouTubeInnertubeHeaders('https://www.youtube.com/live_chat?is_popout=1&v=' + encodeURIComponent(vidId)),
+			body: Object.assign({}, context, { continuation: continuation }),
+			timeout: 10000
+		});
+		if (data) {
+			data.innertubeApiKey = richChatApiKey;
+			data.innertubeContext = context;
+		}
+		return data;
+	}
+
 	async function fetchRichChatInitialData(vidId) {
 		const bridgeData = await fetchRichChatViaExtensionBridge(vidId, '');
 		if (bridgeData) {
 			return bridgeData;
+		}
+		const publicInnertubeData = await fetchRichChatInitialViaPublicInnertube(vidId);
+		if (publicInnertubeData) {
+			return publicInnertubeData;
 		}
 		const controller = new AbortController();
 		const timeout = setTimeout(function() {
@@ -1196,6 +1395,10 @@ function enableBackgroundKeepAlive() {
 		const bridgeData = await fetchRichChatViaExtensionBridge(vidId, continuation);
 		if (bridgeData) {
 			return bridgeData;
+		}
+		const publicInnertubeData = await fetchRichChatContinuationViaPublicInnertube(vidId, continuation);
+		if (publicInnertubeData) {
+			return publicInnertubeData;
 		}
 		const token = getStoredToken();
 		if (!token || !continuation) {
@@ -1368,7 +1571,7 @@ function enableBackgroundKeepAlive() {
 		} catch (e) {}
 
 		try {
-			const entries = (await tryFetchEmojiViaExtensionBridge(vidId)) || (await tryFetchEmojiFromPage(vidId)) || (await tryFetchEmojiViaInnertubeAPI(vidId));
+			const entries = (await tryFetchEmojiViaExtensionBridge(vidId)) || (await tryFetchEmojiViaPublicInnertubeAPI(vidId)) || (await tryFetchEmojiFromPage(vidId)) || (await tryFetchEmojiViaInnertubeAPI(vidId));
 			if (fetchToken !== channelEmojiFetchToken) {
 				return;
 			}
@@ -3670,10 +3873,101 @@ function enableBackgroundKeepAlive() {
 	}
 	
 
+	function resetViewerCountFallbackState(videoId) {
+		viewerCountFallbackVideoId = videoId || '';
+		viewerCountMissingPolls = 0;
+		viewerCountFallbackLastAttempt = 0;
+		viewerCountFallbackBlockedUntil = 0;
+		viewerCountFallbackHadSuccess = false;
+		viewerCountFallbackLastValue = null;
+	}
+
+	function ensureViewerCountFallbackVideo(videoId) {
+		videoId = videoId || '';
+		if (viewerCountFallbackVideoId !== videoId) {
+			resetViewerCountFallbackState(videoId);
+		}
+	}
+
+	function normalizeViewerCount(value) {
+		const count = parseInt(value, 10);
+		if (!isNaN(count) && count >= 0) {
+			return count;
+		}
+		return null;
+	}
+
+	function shouldTryViewerCountFallback(stats) {
+		if (!currentStream || !currentStream.id || !liveChatId) {
+			return false;
+		}
+		const details = stats && stats.liveStreamingDetails;
+		if (!details || details.actualEndTime) {
+			return false;
+		}
+		return true;
+	}
+
+	async function fetchViewerCountFallback(videoId) {
+		const response = await fetchWithTimeout(
+			'https://api.socialstream.ninja/youtube/viewers?video=' + encodeURIComponent(videoId),
+			5000
+		);
+		const data = await response.json();
+		if (!data || !Object.prototype.hasOwnProperty.call(data, 'viewers')) {
+			throw new Error('Fallback response missing viewers');
+		}
+		const count = normalizeViewerCount(data.viewers);
+		if (count === null) {
+			throw new Error('Fallback response had invalid viewers');
+		}
+		return count;
+	}
+
+	async function maybeFetchViewerCountFallback(stats) {
+		const videoIdForStats = currentStream && currentStream.id;
+		ensureViewerCountFallbackVideo(videoIdForStats);
+		if (!shouldTryViewerCountFallback(stats)) {
+			return null;
+		}
+		viewerCountMissingPolls += 1;
+		if (viewerCountMissingPolls < VIEWER_COUNT_MISSING_THRESHOLD) {
+			return null;
+		}
+
+		const now = Date.now();
+		if (viewerCountFallbackBlockedUntil && now < viewerCountFallbackBlockedUntil) {
+			return null;
+		}
+		const fallbackRetryInterval = viewerCountFallbackLastValue === 0
+			? VIEWER_COUNT_FALLBACK_ZERO_INTERVAL_MS
+			: VIEWER_COUNT_FALLBACK_SUCCESS_INTERVAL_MS;
+		if (viewerCountFallbackHadSuccess && viewerCountFallbackLastAttempt && now - viewerCountFallbackLastAttempt < fallbackRetryInterval) {
+			return null;
+		}
+
+		viewerCountFallbackLastAttempt = now;
+		try {
+			const count = await fetchViewerCountFallback(videoIdForStats);
+			viewerCountFallbackHadSuccess = true;
+			viewerCountFallbackLastValue = count;
+			viewerCountFallbackBlockedUntil = 0;
+			return count;
+		} catch (error) {
+			viewerCountFallbackHadSuccess = false;
+			viewerCountFallbackLastValue = null;
+			viewerCountFallbackBlockedUntil = now + VIEWER_COUNT_FALLBACK_FAILURE_COOLDOWN_MS;
+			console.warn('YouTube viewer fallback disabled temporarily:', error && error.message ? error.message : error);
+			return null;
+		}
+	}
+
     async function getStreamStats() {
         if (!currentStream || !currentStream.id) return;
+		ensureViewerCountFallbackVideo(currentStream.id);
         const token = getStoredToken();
         if (!token) return;
+		let shouldEmitViewerUpdate = lastKnownViewers !== null;
         try {
             const response = await fetchWithTimeout(
                 `https://www.googleapis.com/youtube/v3/videos?part=statistics,liveStreamingDetails&id=${currentStream.id}`, 5000,
@@ -3684,24 +3978,31 @@ function enableBackgroundKeepAlive() {
             if (data.items && data.items.length > 0) {
                 const stats = data.items[0];
                 const concurrentViewers = stats?.liveStreamingDetails?.concurrentViewers;
-                if (concurrentViewers !== undefined && concurrentViewers !== null && concurrentViewers !== '') {
-                    lastKnownViewers = concurrentViewers;
-                } else if (lastKnownViewers === null) {
-                    lastKnownViewers = 0;
+				const parsedViewers = normalizeViewerCount(concurrentViewers);
+                if (parsedViewers !== null) {
+                    lastKnownViewers = parsedViewers;
+					viewerCountMissingPolls = 0;
+					viewerCountFallbackHadSuccess = false;
+					viewerCountFallbackLastValue = null;
+					viewerCountFallbackBlockedUntil = 0;
+					shouldEmitViewerUpdate = true;
+                } else {
+					const fallbackViewers = await maybeFetchViewerCountFallback(stats);
+					if (fallbackViewers !== null) {
+						lastKnownViewers = fallbackViewers;
+						shouldEmitViewerUpdate = true;
+					}
                 }
                 if (stats.statistics && stats.statistics.likeCount) {
                     updateStats('likes_update', { meta: stats.statistics.likeCount });
                 }
-            } else if (lastKnownViewers === null) {
-                lastKnownViewers = 0;
             }
         } catch (error) {
             console.error('Error fetching stream stats:', error);
-            if (lastKnownViewers === null) {
-                lastKnownViewers = 0;
-            }
         }
-        updateStats('viewer_update', { meta: lastKnownViewers });
+		if (shouldEmitViewerUpdate && lastKnownViewers !== null) {
+			updateStats('viewer_update', { meta: lastKnownViewers });
+		}
     }
 
     function isViewerTrackingEnabled() {
@@ -3775,6 +4076,7 @@ function enableBackgroundKeepAlive() {
 		channelStatsInterval = null;
 		fetchTimeout = null;
 		lastKnownViewers = null;
+		resetViewerCountFallbackState(null);
 		
 		// Track disconnection time and video ID
 		if (liveChatId && currentStream) {
@@ -4003,12 +4305,15 @@ function enableBackgroundKeepAlive() {
             document.getElementById('textarea').appendChild(connectMessageDiv);
             if (streamInfoToUse) {
                 const initialConcurrentViewers = streamInfoToUse?.liveStreamingDetails?.concurrentViewers;
-                if (initialConcurrentViewers !== undefined && initialConcurrentViewers !== null && initialConcurrentViewers !== '') {
-                    lastKnownViewers = initialConcurrentViewers;
+				const parsedInitialViewers = normalizeViewerCount(initialConcurrentViewers);
+                if (parsedInitialViewers !== null) {
+                    lastKnownViewers = parsedInitialViewers;
+					updateStats('viewer_update', { meta: lastKnownViewers });
                 } else {
-                    lastKnownViewers = 0;
+                    lastKnownViewers = null;
+					const viewerCount = document.getElementById('viewer-count');
+					if (viewerCount) viewerCount.textContent = '-';
                 }
-                updateStats('viewer_update', { meta: lastKnownViewers });
                 if (streamInfoToUse.statistics && streamInfoToUse.statistics.likeCount) {
                     updateStats('likes_update', { meta: streamInfoToUse.statistics.likeCount });
                 } else {
