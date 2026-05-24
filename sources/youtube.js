@@ -1640,14 +1640,14 @@
 	var youtubeRecentChatActivityTimes = [];
 	var youtubeLastResourceCount = 0;
 	var youtubeLastResourceActivityAt = Date.now();
-	var youtubeStaleReloadMinMs = 75 * 1000;
+	var youtubeStaleReloadMinMs = 60 * 1000;
 	var youtubeStaleReloadMaxMs = 5 * 60 * 1000;
 	var youtubeStaleReloadActivityWindowMs = 5 * 60 * 1000;
 	var youtubeStaleReloadResourceGraceMs = 90 * 1000;
 	var youtubeStaleReloadMinMessages = 3;
 	var youtubeStaleReloadStorageKey = "ssn_youtube_stale_reload_times";
 	var youtubeStaleReloadWindowMs = 60 * 60 * 1000;
-	var youtubeStaleReloadMaxPerWindow = 6;
+	var youtubeStaleReloadMaxPerWindow = 60;
 
 	try {
 		if (performance && performance.setResourceTimingBufferSize) {
