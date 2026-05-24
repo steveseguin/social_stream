@@ -1637,9 +1637,12 @@
 	var youtubeAutoScrollOffBottomSince = 0;
 	var youtubeLastChatActivityAt = Date.now();
 	var youtubeLiveChatActivityCount = 0;
+	var youtubeRecentChatActivityTimes = [];
 	var youtubeLastResourceCount = 0;
 	var youtubeLastResourceActivityAt = Date.now();
-	var youtubeStaleReloadMs = 5 * 60 * 1000;
+	var youtubeStaleReloadMinMs = 75 * 1000;
+	var youtubeStaleReloadMaxMs = 5 * 60 * 1000;
+	var youtubeStaleReloadActivityWindowMs = 5 * 60 * 1000;
 	var youtubeStaleReloadResourceGraceMs = 90 * 1000;
 	var youtubeStaleReloadMinMessages = 3;
 	var youtubeStaleReloadStorageKey = "ssn_youtube_stale_reload_times";
@@ -1815,8 +1818,13 @@
 	}
 
 	function markYouTubeChatActivity() {
-		youtubeLastChatActivityAt = Date.now();
+		var now = Date.now();
+		youtubeLastChatActivityAt = now;
 		youtubeLiveChatActivityCount += 1;
+		youtubeRecentChatActivityTimes.push(now);
+		if (youtubeRecentChatActivityTimes.length > 30) {
+			youtubeRecentChatActivityTimes.shift();
+		}
 	}
 
 	function isYouTubeChatActivityNode(ele) {
@@ -1874,6 +1882,29 @@
 		} catch (e) {}
 	}
 
+	function getYouTubeStaleReloadMs(now) {
+		youtubeRecentChatActivityTimes = youtubeRecentChatActivityTimes.filter(function (value) {
+			return value > 0 && now - value < youtubeStaleReloadActivityWindowMs;
+		});
+		if (youtubeRecentChatActivityTimes.length < 5) {
+			return youtubeStaleReloadMaxMs;
+		}
+		var gapTotal = 0;
+		var gapCount = 0;
+		for (var i = 1; i < youtubeRecentChatActivityTimes.length; i++) {
+			var gap = youtubeRecentChatActivityTimes[i] - youtubeRecentChatActivityTimes[i - 1];
+			if (gap > 0) {
+				gapTotal += gap;
+				gapCount += 1;
+			}
+		}
+		if (!gapCount) {
+			return youtubeStaleReloadMaxMs;
+		}
+		var averageGap = gapTotal / gapCount;
+		return Math.min(youtubeStaleReloadMaxMs, Math.max(youtubeStaleReloadMinMs, averageGap * 6));
+	}
+
 	function maybeReloadStaleYouTubeChat(ele) {
 		if (!ele || !ele.isConnected || !youtubeSettingsLoaded || !isExtensionOn) {
 			return;
@@ -1890,8 +1921,9 @@
 
 		var now = Date.now();
 		updateYouTubeResourceActivity(now);
+		var staleReloadMs = getYouTubeStaleReloadMs(now);
 
-		if (now - youtubeLastChatActivityAt < youtubeStaleReloadMs) {
+		if (now - youtubeLastChatActivityAt < staleReloadMs) {
 			return;
 		}
 		if (now - youtubeLastResourceActivityAt > youtubeStaleReloadResourceGraceMs) {
@@ -1903,7 +1935,10 @@
 			return;
 		}
 
-		console.warn("[YouTube] Live chat DOM appears stale while network activity continues; reloading chat popout.");
+		console.warn("[YouTube] Live chat DOM appears stale while network activity continues; reloading chat popout.", {
+			secondsSinceChatActivity: Math.round((now - youtubeLastChatActivityAt) / 1000),
+			staleReloadSeconds: Math.round(staleReloadMs / 1000)
+		});
 		recordYouTubeStaleReload(now);
 		try {
 			window.location.reload();
