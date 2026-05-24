@@ -1635,6 +1635,22 @@
 	var youtubeAutoScrollDelayMs = 3000;
 	var youtubeAutoScrollTimer = null;
 	var youtubeAutoScrollOffBottomSince = 0;
+	var youtubeLastChatActivityAt = Date.now();
+	var youtubeLiveChatActivityCount = 0;
+	var youtubeLastResourceCount = 0;
+	var youtubeLastResourceActivityAt = Date.now();
+	var youtubeStaleReloadMs = 5 * 60 * 1000;
+	var youtubeStaleReloadResourceGraceMs = 90 * 1000;
+	var youtubeStaleReloadMinMessages = 3;
+	var youtubeStaleReloadStorageKey = "ssn_youtube_stale_reload_times";
+	var youtubeStaleReloadWindowMs = 60 * 60 * 1000;
+	var youtubeStaleReloadMaxPerWindow = 6;
+
+	try {
+		if (performance && performance.setResourceTimingBufferSize) {
+			performance.setResourceTimingBufferSize(10000);
+		}
+	} catch (e) {}
 
 	function applyLargerFont() {
 		if (!largerFontApplied) {
@@ -1798,6 +1814,106 @@
 		}, Math.max(0, youtubeAutoScrollDelayMs - (Date.now() - youtubeAutoScrollOffBottomSince)));
 	}
 
+	function markYouTubeChatActivity() {
+		youtubeLastChatActivityAt = Date.now();
+		youtubeLiveChatActivityCount += 1;
+	}
+
+	function isYouTubeChatActivityNode(ele) {
+		try {
+			return !!(ele && ele.tagName && (
+				ele.tagName.startsWith("YT-LIVE-CHAT-") ||
+				ele.tagName.startsWith("YTD-SPONSORSHIPS-") ||
+				ele.tagName === "YT-GIFT-MESSAGE-VIEW-MODEL"
+			));
+		} catch (e) {}
+		return false;
+	}
+
+	function updateYouTubeResourceActivity(now) {
+		try {
+			if (!performance || !performance.getEntriesByType) {
+				return false;
+			}
+			var resourceCount = performance.getEntriesByType("resource").length || 0;
+			if (resourceCount > youtubeLastResourceCount) {
+				youtubeLastResourceCount = resourceCount;
+				youtubeLastResourceActivityAt = now;
+				return true;
+			}
+		} catch (e) {}
+		return false;
+	}
+
+	function getRecentYouTubeStaleReloads(now) {
+		try {
+			var raw = sessionStorage.getItem(youtubeStaleReloadStorageKey);
+			var values = raw ? JSON.parse(raw) : [];
+			if (!Array.isArray(values)) {
+				values = [];
+			}
+			values = values
+				.map(function (value) {
+					return parseInt(value, 10) || 0;
+				})
+				.filter(function (value) {
+					return value > 0 && now - value < youtubeStaleReloadWindowMs;
+				});
+			sessionStorage.setItem(youtubeStaleReloadStorageKey, JSON.stringify(values));
+			return values;
+		} catch (e) {
+			return [];
+		}
+	}
+
+	function recordYouTubeStaleReload(now) {
+		try {
+			var values = getRecentYouTubeStaleReloads(now);
+			values.push(now);
+			sessionStorage.setItem(youtubeStaleReloadStorageKey, JSON.stringify(values));
+		} catch (e) {}
+	}
+
+	function maybeReloadStaleYouTubeChat(ele) {
+		if (!ele || !ele.isConnected || !youtubeSettingsLoaded || !isExtensionOn) {
+			return;
+		}
+		if (settings.disableYoutubeStaleReload) {
+			return;
+		}
+		if (!window.location.href.includes("youtube.com/live_chat") && !window.location.href.includes("studio.youtube.com/live_chat")) {
+			return;
+		}
+		if (youtubeLiveChatActivityCount < youtubeStaleReloadMinMessages) {
+			return;
+		}
+
+		var now = Date.now();
+		updateYouTubeResourceActivity(now);
+
+		if (now - youtubeLastChatActivityAt < youtubeStaleReloadMs) {
+			return;
+		}
+		if (now - youtubeLastResourceActivityAt > youtubeStaleReloadResourceGraceMs) {
+			return;
+		}
+
+		var reloads = getRecentYouTubeStaleReloads(now);
+		if (reloads.length >= youtubeStaleReloadMaxPerWindow) {
+			return;
+		}
+
+		console.warn("[YouTube] Live chat DOM appears stale while network activity continues; reloading chat popout.");
+		recordYouTubeStaleReload(now);
+		try {
+			window.location.reload();
+		} catch (e) {
+			try {
+				window.location.href = window.location.href;
+			} catch (e2) {}
+		}
+	}
+
 	function disconnectYouTubeChatObservers() {
 		try {
 			if (youtubeChatObserver) {
@@ -1878,6 +1994,9 @@
 		youtubeDeletionObserver = setupDeletionObserver(ele);
 		seedYouTubeChatItems(ele);
 		youtubeChatObserver = onElementInserted(ele, function (ele2, eventtype=false) {
+			if (isYouTubeChatActivityNode(ele2)) {
+				markYouTubeChatActivity();
+			}
 			scheduleYouTubeChatAutoScroll(ele);
 			setTimeout(() => processMessage(ele2, eventtype), captureDelay);
 		});
@@ -1930,6 +2049,7 @@
 	  if (ele) {
 		maybeRefreshYouTubeChatObserver(ele);
 		scheduleYouTubeChatAutoScroll(ele);
+		maybeReloadStaleYouTubeChat(ele);
 	  } else if (!ele && document.querySelector("iframe#hyperchat") && !document.querySelector("iframe#hyperchat").marked) {
 			try {
 				var ele22 = document.querySelector("iframe#hyperchat").contentWindow.document.body.querySelector(".content");
