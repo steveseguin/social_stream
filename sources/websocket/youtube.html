@@ -453,6 +453,10 @@ try {
 	var isPageVisible = true;
 	var lastVisibilityChange = Date.now();
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
+	var liveChatGrpcStreamId = null;
+	var liveChatGrpcUnsubscribe = null;
+	var liveChatGrpcFallbackActive = false;
+	var liveChatGrpcStopping = false;
 	var tokenRefreshPromise = null;
 	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.";
 	const INNERTUBE_EMOJI_CACHE_TTL = 24 * 60 * 60 * 1000;
@@ -703,12 +707,44 @@ function enableBackgroundKeepAlive() {
 	}
 	
 	function applyChannelEmojiEntries(entries) {
-		clearChannelEmojiEntries();
 		for (const entry of entries) {
-			for (const s of (entry.shortcuts || [])) {
-				channelShortcutMap.set(s, { url: entry.url, id: entry.id, alt: entry.alt });
+			rememberChannelEmojiEntry(entry);
+		}
+	}
+
+	function normalizeYouTubeEmojiShortcuts(shortcuts) {
+		const normalizedShortcuts = [];
+		function addShortcut(shortcut) {
+			if (!shortcut || typeof shortcut !== 'string') return;
+			const trimmed = shortcut.trim();
+			if (!trimmed) return;
+			if (normalizedShortcuts.indexOf(trimmed) === -1) normalizedShortcuts.push(trimmed);
+			if (trimmed.charAt(0) !== ':' && trimmed.charAt(trimmed.length - 1) !== ':' && trimmed.indexOf(' ') === -1) {
+				const colonShortcut = ':' + trimmed + ':';
+				if (normalizedShortcuts.indexOf(colonShortcut) === -1) normalizedShortcuts.push(colonShortcut);
 			}
 		}
+		(shortcuts || []).forEach(addShortcut);
+		return normalizedShortcuts;
+	}
+
+	function rememberChannelEmojiEntry(entry) {
+		if (!entry || !entry.url) {
+			return false;
+		}
+		const normalizedShortcuts = normalizeYouTubeEmojiShortcuts(entry.shortcuts || []);
+		if (!normalizedShortcuts.length) {
+			return false;
+		}
+		const emojiInfo = {
+			url: entry.url,
+			id: entry.id || '',
+			alt: entry.alt || normalizedShortcuts[0]
+		};
+		normalizedShortcuts.forEach(function(shortcut) {
+			channelShortcutMap.set(shortcut, emojiInfo);
+		});
+		return true;
 	}
 
 	function buildYouTubeEmojiEntries(emojis) {
@@ -724,18 +760,7 @@ function enableBackgroundKeepAlive() {
 					shortcuts.push(':' + idLabel + ':');
 				}
 			}
-			if (!shortcuts.length) continue;
-			const normalizedShortcuts = [];
-			shortcuts.forEach(function(shortcut) {
-				if (!shortcut || typeof shortcut !== 'string') return;
-				const trimmed = shortcut.trim();
-				if (!trimmed) return;
-				if (normalizedShortcuts.indexOf(trimmed) === -1) normalizedShortcuts.push(trimmed);
-				if (trimmed.charAt(0) !== ':' && trimmed.charAt(trimmed.length - 1) !== ':' && trimmed.indexOf(' ') === -1) {
-					const colonShortcut = ':' + trimmed + ':';
-					if (normalizedShortcuts.indexOf(colonShortcut) === -1) normalizedShortcuts.push(colonShortcut);
-				}
-			});
+			const normalizedShortcuts = normalizeYouTubeEmojiShortcuts(shortcuts);
 			if (!normalizedShortcuts.length) continue;
 			const url = thumbs[thumbs.length - 1].url;
 			const alt = normalizedShortcuts[0] || (emoji.emojiId || '').split('/').pop() || 'emoji';
@@ -820,6 +845,24 @@ function enableBackgroundKeepAlive() {
 	function getElectronFetchBridge() {
 		const bridge = window.ninjafy || window.electronApi || window.__ssapp;
 		return bridge && typeof bridge.noCORSFetch === 'function' ? bridge : null;
+	}
+
+	function getYouTubeLiveChatGrpcBridge() {
+		const bridgeCandidates = [window.ninjafy, window.electronApi, window.__ssapp];
+		for (const bridge of bridgeCandidates) {
+			if (!bridge || typeof bridge.startYouTubeLiveChatGrpcStream !== 'function') {
+				continue;
+			}
+			if (typeof bridge.stopYouTubeLiveChatGrpcStream !== 'function' || typeof bridge.onYouTubeLiveChatGrpcEvent !== 'function') {
+				continue;
+			}
+			return bridge;
+		}
+		return null;
+	}
+
+	function hasYouTubeLiveChatGrpcBridge() {
+		return !!getYouTubeLiveChatGrpcBridge();
 	}
 
 	function getYouTubeInnertubeHeaders(referer) {
@@ -1040,6 +1083,33 @@ function enableBackgroundKeepAlive() {
 		return label || emoji.emojiId || '';
 	}
 
+	function isYouTubeNotoEmojiUrl(url) {
+		return typeof url === 'string' && /fonts\.gstatic\.com\/s\/e\/notoemoji/i.test(url);
+	}
+
+	function rememberChannelEmojiFromRichEmoji(emoji, plainText, labelText, url) {
+		if (!emoji || !url || isYouTubeNotoEmojiUrl(url)) {
+			return false;
+		}
+		const shortcuts = [];
+		if (Array.isArray(emoji.shortcuts)) {
+			emoji.shortcuts.forEach(function(shortcut) {
+				if (shortcut) shortcuts.push(shortcut);
+			});
+		}
+		if (plainText) shortcuts.push(plainText);
+		if (labelText) shortcuts.push(labelText);
+		if (!shortcuts.length && emoji.emojiId) {
+			shortcuts.push(String(emoji.emojiId).split('/').pop());
+		}
+		return rememberChannelEmojiEntry({
+			shortcuts: shortcuts,
+			url: url,
+			id: emoji.emojiId || '',
+			alt: getAsciiLabel(labelText) || getAsciiLabel(plainText) || emoji.emojiId || ''
+		});
+	}
+
 	function renderYouTubeRichRuns(runs) {
 		const rendered = { html: '', plainText: '', matchText: '' };
 		if (!Array.isArray(runs)) {
@@ -1066,6 +1136,7 @@ function enableBackgroundKeepAlive() {
 					? emoji.image.accessibility.accessibilityData.label
 					: '';
 				const url = getBestYouTubeThumbnailUrl(emoji.image && emoji.image.thumbnails);
+				rememberChannelEmojiFromRichEmoji(emoji, plainText, labelText, url);
 				const altText = resolveEmojiAltAttribute({
 					url: url,
 					id: emoji.emojiId || '',
@@ -1337,6 +1408,51 @@ function enableBackgroundKeepAlive() {
 		return data;
 	}
 
+	async function fetchRichChatInitialViaLiveChatPage(vidId) {
+		const liveChatUrl = 'https://www.youtube.com/live_chat?is_popout=1&v=' + encodeURIComponent(vidId);
+		const headers = {
+			'Accept-Language': 'en-US,en;q=0.9',
+			'Referer': 'https://www.youtube.com/watch?v=' + encodeURIComponent(vidId)
+		};
+		let html = await fetchTextViaElectronBridge(liveChatUrl, {
+			headers: headers,
+			timeout: 10000
+		});
+		if (!html) {
+			const controller = new AbortController();
+			const timeout = setTimeout(function() {
+				controller.abort();
+			}, 8000);
+			try {
+				const response = await fetch(liveChatUrl, {
+					credentials: 'include',
+					headers: headers,
+					signal: controller.signal
+				});
+				if (response.ok) {
+					html = await response.text();
+				}
+			} catch (error) {
+				console.log('YouTube rich chat page fetch failed:', error && error.message ? error.message : error);
+			} finally {
+				clearTimeout(timeout);
+			}
+		}
+		if (!html) {
+			return null;
+		}
+		const data = extractYouTubeInitialData(html);
+		const apiKey = extractYouTubeInnertubeApiKeyFromHtml(html);
+		if (data && apiKey) {
+			data.innertubeApiKey = apiKey;
+			data.innertubeContext = buildYouTubeInnertubePayloadContext(
+				extractYouTubeInnertubeClientVersionFromHtml(html),
+				extractYouTubeVisitorDataFromHtml(html)
+			);
+		}
+		return data || null;
+	}
+
 	async function fetchRichChatContinuationViaPublicInnertube(vidId, continuation) {
 		if (!continuation || !richChatApiKey) {
 			return null;
@@ -1360,35 +1476,15 @@ function enableBackgroundKeepAlive() {
 		if (bridgeData) {
 			return bridgeData;
 		}
+		const liveChatPageData = await fetchRichChatInitialViaLiveChatPage(vidId);
+		if (liveChatPageData) {
+			return liveChatPageData;
+		}
 		const publicInnertubeData = await fetchRichChatInitialViaPublicInnertube(vidId);
 		if (publicInnertubeData) {
 			return publicInnertubeData;
 		}
-		const controller = new AbortController();
-		const timeout = setTimeout(function() {
-			controller.abort();
-		}, 8000);
-		try {
-			const response = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${vidId}`, {
-				credentials: 'include',
-				signal: controller.signal
-			});
-			if (!response.ok) {
-				return null;
-			}
-			const html = await response.text();
-			const data = extractYouTubeInitialData(html);
-			const apiKey = extractYouTubeInnertubeApiKeyFromHtml(html);
-			if (data && apiKey) {
-				data.innertubeApiKey = apiKey;
-			}
-			return data;
-		} catch (error) {
-			console.log('YouTube rich chat initial fetch failed:', error && error.message ? error.message : error);
-			return null;
-		} finally {
-			clearTimeout(timeout);
-		}
+		return null;
 	}
 
 	async function fetchRichChatContinuationData(vidId, continuation) {
@@ -2479,7 +2575,7 @@ function enableBackgroundKeepAlive() {
 			}
 			
 			// Only resume if we have an active connection and aren't already polling
-			if (liveChatId && !isPolling && !fetchTimeout) {
+			if (liveChatId && !liveChatGrpcStreamId && !isPolling && !fetchTimeout) {
 				const timeSinceLastPoll = Date.now() - lastPollingTime;
 				const timeSinceLastSuccess = Date.now() - lastSuccessfulPollTime;
 				const requiredInterval = youtubeRecommendedInterval || 5000;
@@ -2543,6 +2639,343 @@ function enableBackgroundKeepAlive() {
 		fetchTimeout = setTrackedTimeout(fetchChatMessages, resumeDelay, !isPageVisible);
 		return resumeDelay;
 	}
+
+	function normalizeGrpcLiveChatType(type) {
+		const typeMap = {
+			TEXT_MESSAGE_EVENT: 'textMessageEvent',
+			TOMBSTONE: 'tombstone',
+			FAN_FUNDING_EVENT: 'fanFundingEvent',
+			CHAT_ENDED_EVENT: 'chatEndedEvent',
+			SPONSOR_ONLY_MODE_STARTED_EVENT: 'sponsorOnlyModeStartedEvent',
+			SPONSOR_ONLY_MODE_ENDED_EVENT: 'sponsorOnlyModeEndedEvent',
+			NEW_SPONSOR_EVENT: 'newSponsorEvent',
+			MEMBER_MILESTONE_CHAT_EVENT: 'memberMilestoneChatEvent',
+			MEMBERSHIP_GIFTING_EVENT: 'membershipGiftingEvent',
+			GIFT_MEMBERSHIP_RECEIVED_EVENT: 'giftMembershipReceivedEvent',
+			MESSAGE_DELETED_EVENT: 'messageDeletedEvent',
+			MESSAGE_RETRACTED_EVENT: 'messageRetractedEvent',
+			USER_BANNED_EVENT: 'userBannedEvent',
+			SUPER_CHAT_EVENT: 'superChatEvent',
+			SUPER_STICKER_EVENT: 'superStickerEvent',
+			POLL_EVENT: 'pollEvent',
+			GIFT_EVENT: 'giftEvent'
+		};
+		return typeMap[type] || type;
+	}
+
+	function normalizeLiveChatMessageItem(item) {
+		if (!item || typeof item !== 'object') return item;
+		if (!item.snippet || typeof item.snippet !== 'object') return item;
+		const normalized = Object.assign({}, item);
+		normalized.snippet = Object.assign({}, item.snippet);
+		normalized.snippet.type = normalizeGrpcLiveChatType(normalized.snippet.type);
+		return normalized;
+	}
+
+	function schedulePollingFallback(delayMs = 2000) {
+		if (!liveChatId || fetchTimeout || isPolling) return;
+		fetchTimeout = setTrackedTimeout(fetchChatMessages, delayMs, !isPageVisible);
+	}
+
+	function extractYouTubeShortcutTokens(value) {
+		if (!value || typeof value !== 'string') {
+			return [];
+		}
+		return value.match(/:[A-Za-z0-9_][A-Za-z0-9_\-]*:/g) || [];
+	}
+
+	function hasUnresolvedYouTubeChannelEmojiShortcut(value) {
+		return extractYouTubeShortcutTokens(value).some(function(shortcut) {
+			return shortcut.indexOf(':_') === 0 && !channelShortcutMap.has(shortcut) && !shortcutMap.has(shortcut);
+		});
+	}
+
+	function liveChatItemNeedsRichEmojiSync(item) {
+		if (!item || !item.snippet) {
+			return false;
+		}
+		const textMessageDetails = item.snippet.textMessageDetails || {};
+		return hasUnresolvedYouTubeChannelEmojiShortcut(item.snippet.displayMessage || '') ||
+			hasUnresolvedYouTubeChannelEmojiShortcut(textMessageDetails.messageText || '');
+	}
+
+	async function processLiveChatResponseData(data, options = {}) {
+		data = data && typeof data === 'object' ? data : {};
+		const shouldScheduleNextPoll = options.scheduleNextPoll !== false;
+		const awaitRichChatSync = options.awaitRichChatSync === true;
+		const recommendedInterval = data.pollingIntervalMillis || youtubeRecommendedInterval || 5000;
+		youtubeRecommendedInterval = recommendedInterval;
+		lastSuccessfulPollTime = Date.now();
+
+		const normalizedItems = Array.isArray(data.items) ? data.items.map(normalizeLiveChatMessageItem) : [];
+		const richChatVideoId = (currentStream && currentStream.id) || videoId;
+		if (normalizedItems.length > 0 && richChatVideoId) {
+			const richChatPromise = syncYouTubeRichChatData(richChatVideoId).catch(function(error) {
+				console.log('YouTube rich chat prefetch failed:', error && error.message ? error.message : error);
+			});
+			if (awaitRichChatSync || normalizedItems.some(liveChatItemNeedsRichEmojiSync)) {
+				await richChatPromise;
+			}
+		}
+
+		if (normalizedItems.length > 0) {
+			if (initialBacklogProcessing && !initialBacklogTimestamp) {
+				const timestamps = normalizedItems
+					.map(item => item && item.snippet ? new Date(item.snippet.publishedAt).getTime() : NaN)
+					.filter(Number.isFinite);
+				if (timestamps.length) {
+					initialBacklogTimestamp = Math.max(...timestamps);
+					console.log('Initial backlog cutoff timestamp set:', new Date(initialBacklogTimestamp));
+				}
+			}
+
+			normalizedItems.forEach(item => {
+				if (!item || !item.snippet || !item.authorDetails) return;
+				const publishedAt = new Date(item.snippet.publishedAt);
+				const messageTime = publishedAt.getTime();
+				if (!Number.isFinite(messageTime)) return;
+				if (!lastMessageTime || publishedAt > lastMessageTime) {
+					const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
+					const isSpecialEvent = item.snippet.type === 'giftMembershipReceivedEvent' ||
+										  item.snippet.type === 'newSponsorEvent' ||
+										  item.snippet.type === 'membershipGiftingEvent' ||
+										  item.snippet.type === 'memberMilestoneChatEvent' ||
+										  item.snippet.type === 'superStickerEvent';
+
+					if (!isBacklogMessage && !isSpecialEvent) {
+						const textMessageDetails = item.snippet.textMessageDetails || {};
+						const messageReplyDetails = textMessageDetails.messageReplyDetails || null;
+						const normalizedReplyDetails = messageReplyDetails
+							? {
+								messageId: messageReplyDetails.messageId || null,
+								channelId: messageReplyDetails.channelId || null,
+								commentId: messageReplyDetails.commentId || null,
+								raw: messageReplyDetails
+							}
+							: null;
+						queueMessage({
+							messageId: item.id,
+							authorName: item.authorDetails.displayName.replace(/^@/, ''),
+							message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
+							plainTextMessage: textMessageDetails.messageText || '',
+							profileImageUrl: item.authorDetails.profileImageUrl,
+							isChatOwner: item.authorDetails.isChatOwner,
+							isChatSponsor: item.authorDetails.isChatSponsor,
+							isChatModerator: item.authorDetails.isChatModerator,
+							authorChannelId: item.authorDetails.channelId,
+							publishedAt,
+							skipEvent: isBacklogMessage,
+							isMembershipMessage: false,
+							replyDetails: normalizedReplyDetails,
+							replyMessageId: normalizedReplyDetails ? normalizedReplyDetails.messageId : null,
+							replyChannelId: normalizedReplyDetails ? normalizedReplyDetails.channelId : null
+						});
+					}
+
+					if (item.snippet.type === 'giftMembershipReceivedEvent' && item.snippet.giftMembershipReceivedDetails) {
+						const giftDetails = item.snippet.giftMembershipReceivedDetails;
+						if (!isBacklogMessage) {
+							processGiftRedemption({
+								authorName: item.authorDetails.displayName.replace(/^@/, ''),
+								gifterChannelId: giftDetails.gifterChannelId,
+								memberLevelName: giftDetails.memberLevelName,
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								authorChannelId: item.authorDetails.channelId,
+								displayMessage: item.snippet.displayMessage
+							});
+						}
+					}
+
+					if (item.snippet.type === 'newSponsorEvent' && item.snippet.newSponsorDetails) {
+						if (!isBacklogMessage) {
+							processNewSponsorship({
+								authorName: item.authorDetails.displayName.replace(/^@/, ''),
+								memberLevelName: item.snippet.newSponsorDetails.memberLevelName,
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								authorChannelId: item.authorDetails.channelId,
+								displayMessage: item.snippet.displayMessage
+							});
+						}
+					}
+
+					if (item.snippet.type === 'membershipGiftingEvent' && item.snippet.membershipGiftingDetails) {
+						const giftingDetails = item.snippet.membershipGiftingDetails;
+						if (!isBacklogMessage) {
+							processGiftPurchase({
+								authorName: item.authorDetails.displayName.replace(/^@/, ''),
+								giftCount: giftingDetails.giftMembershipsCount || 1,
+								memberLevelName: giftingDetails.giftMembershipsLevelName,
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								authorChannelId: item.authorDetails.channelId,
+								displayMessage: item.snippet.displayMessage
+							});
+						}
+					}
+
+					if (item.snippet.type === 'memberMilestoneChatEvent' && item.snippet.memberMilestoneChatDetails) {
+						const milestoneDetails = item.snippet.memberMilestoneChatDetails;
+						if (!isBacklogMessage) {
+							processMemberMilestone({
+								authorName: item.authorDetails.displayName.replace(/^@/, ''),
+								memberMonth: milestoneDetails.memberMonth,
+								memberLevelName: milestoneDetails.memberLevelName,
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								authorChannelId: item.authorDetails.channelId,
+								displayMessage: item.snippet.displayMessage,
+								isChatOwner: item.authorDetails.isChatOwner,
+								isChatModerator: item.authorDetails.isChatModerator,
+								isChatSponsor: item.authorDetails.isChatSponsor
+							});
+						}
+					}
+
+					if (item.snippet.type === 'superStickerEvent' && item.snippet.superStickerDetails) {
+						const stickerDetails = item.snippet.superStickerDetails;
+						if (!isBacklogMessage) {
+							let stickerBadges = [];
+							if (item.authorDetails.isChatOwner) stickerBadges.push({"type": "text", "text": "👑"});
+							if (item.authorDetails.isChatModerator) stickerBadges.push({"type": "text", "text": "🛡️"});
+							if (item.authorDetails.isChatSponsor) stickerBadges.push({"type": "text", "text": "⭐"});
+
+							processSuperSticker({
+								authorName: item.authorDetails.displayName.replace(/^@/, ''),
+								amount: stickerDetails.amountDisplayString,
+								stickerId: stickerDetails.superStickerMetadata?.stickerId,
+								altText: stickerDetails.superStickerMetadata?.altText,
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								authorChannelId: item.authorDetails.channelId,
+								badges: stickerBadges.length > 0 ? stickerBadges : "",
+								displayMessage: item.snippet.displayMessage
+							});
+						}
+					}
+
+					if (item.snippet.superChatDetails) {
+						if (!isBacklogMessage) {
+							let superChatBadges = [];
+							if (item.authorDetails.isChatOwner) superChatBadges.push({"type": "text", "text": "👑"});
+							if (item.authorDetails.isChatModerator) superChatBadges.push({"type": "text", "text": "🛡️"});
+							if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
+
+							processSuperChat({
+								authorName: item.authorDetails.displayName.replace(/^@/, ''),
+								amount: item.snippet.superChatDetails.amountDisplayString,
+								message: item.snippet.superChatDetails.userComment,
+								tier: item.snippet.superChatDetails.tier,
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								authorChannelId: item.authorDetails.channelId,
+								badges: superChatBadges.length > 0 ? superChatBadges : ""
+							});
+						}
+					}
+					if (item.snippet.membershipDetails) {
+						const membershipEventInfo = deriveMembershipEventContext(item.snippet, item.snippet.membershipDetails);
+						if (!isBacklogMessage) {
+							const membershipMessage = item.snippet.displayMessage || '';
+							if (membershipMessage) {
+								const membershipDetailsCopy = item.snippet.membershipDetails ? { ...item.snippet.membershipDetails } : null;
+								const membershipPayload = {
+									messageId: item.id,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
+									message: membershipMessage,
+									plainTextMessage: membershipMessage,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									isChatOwner: item.authorDetails.isChatOwner,
+									isChatSponsor: item.authorDetails.isChatSponsor,
+									isChatModerator: item.authorDetails.isChatModerator,
+									authorChannelId: item.authorDetails.channelId,
+									publishedAt,
+									skipEvent: isBacklogMessage,
+									isMembershipMessage: true
+								};
+								if (membershipDetailsCopy) {
+									membershipPayload.meta = {
+										membershipDetails: membershipDetailsCopy,
+										snippetType: item.snippet.type
+									};
+								}
+								queueMessage(membershipPayload);
+							} else {
+								let membershipBadges = [];
+								if (item.authorDetails.isChatOwner) membershipBadges.push({"type": "text", "text": "👑"});
+								if (item.authorDetails.isChatModerator) membershipBadges.push({"type": "text", "text": "🛡️"});
+								membershipBadges.push({"type": "text", "text": "⭐"});
+
+								processMembership({
+										authorName: item.authorDetails.displayName.replace(/^@/, ''),
+										level: item.snippet.membershipDetails.memberLevelName,
+										profileImageUrl: item.authorDetails.profileImageUrl,
+										authorChannelId: item.authorDetails.channelId,
+										badges: membershipBadges,
+										membershipDetails: item.snippet.membershipDetails,
+										rawSnippetType: item.snippet.type,
+										eventType: membershipEventInfo.eventType
+								});
+							}
+						}
+					}
+
+					lastMessageTime = publishedAt;
+				}
+			});
+		}
+
+		nextPageToken = data.nextPageToken || nextPageToken;
+		const itemCount = normalizedItems.length;
+
+		if (initialBacklogProcessing && itemCount < LIVE_CHAT_MAX_RESULTS) {
+			initialBacklogProcessing = false;
+			console.log('Initial backlog processing complete');
+		}
+
+		if (itemCount >= LIVE_CHAT_MAX_RESULTS) {
+			consecutiveMaxMessages++;
+			if (consecutiveMaxMessages >= 3 && slowerPollingMode) {
+				slowerPollingMode = false;
+				console.log('High chat activity detected - disabling slower polling mode');
+			}
+		} else {
+			consecutiveMaxMessages = 0;
+		}
+
+		if (itemCount === 0) {
+			consecutiveEmptyPolls++;
+		} else {
+			consecutiveEmptyPolls = 0;
+		}
+
+		quickPollCount = 0;
+
+		if (!shouldScheduleNextPoll) {
+			return;
+		}
+
+		let nextPollInterval = recommendedInterval;
+		if (consecutiveEmptyPolls >= QUIET_CHAT_IDLE_THRESHOLD) {
+			nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_IDLE_INTERVAL_MS);
+		} else if (consecutiveEmptyPolls >= QUIET_CHAT_BACKOFF_THRESHOLD) {
+			nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_BACKOFF_INTERVAL_MS);
+		} else if (consecutiveEmptyPolls > 0) {
+			nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_MIN_INTERVAL_MS);
+		}
+
+		if (slowerPollingMode) {
+			nextPollInterval = Math.floor(nextPollInterval * 1.5);
+		}
+
+		if (!isPageVisible) {
+			nextPollInterval = Math.max(backgroundPollingInterval, recommendedInterval);
+		}
+
+		if (fetchTimeout) {
+			clearTimeout(fetchTimeout);
+			fetchTimeout = null;
+		}
+
+		updatePollSpinner(nextPollInterval);
+		fetchTimeout = setTrackedTimeout(fetchChatMessages, nextPollInterval, !isPageVisible);
+	}
+
 	async function fetchChatMessages() {
 		if (!liveChatId || isPolling) return;
 		
@@ -2627,297 +3060,7 @@ function enableBackgroundKeepAlive() {
 			}
 			
 			const data = await response.json();
-			
-			// ALWAYS respect YouTube's polling interval
-			const recommendedInterval = data.pollingIntervalMillis || 5000;
-			youtubeRecommendedInterval = recommendedInterval; // Store for future reference
-			lastSuccessfulPollTime = Date.now(); // Track successful poll time
-			if (data.items && data.items.length > 0) {
-				await syncYouTubeRichChatData((currentStream && currentStream.id) || videoId).catch(function(error) {
-					console.log('YouTube rich chat prefetch failed:', error && error.message ? error.message : error);
-				});
-			}
-			
-			if (data.items && data.items.length > 0) {
-				// Process initial backlog timestamp
-				if (initialBacklogProcessing && !initialBacklogTimestamp && data.items.length > 0) {
-					const timestamps = data.items.map(item => new Date(item.snippet.publishedAt).getTime());
-					initialBacklogTimestamp = Math.max(...timestamps);
-					console.log('Initial backlog cutoff timestamp set:', new Date(initialBacklogTimestamp));
-				}
-				
-				
-				// Process all message types in a single loop
-				data.items.forEach(item => {
-				
-					const publishedAt = new Date(item.snippet.publishedAt);
-					const messageTime = publishedAt.getTime();
-					if (!lastMessageTime || publishedAt > lastMessageTime) {
-						const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
-						
-						// Check if this is a special event type that should not be processed as a regular message
-						const isSpecialEvent = item.snippet.type === 'giftMembershipReceivedEvent' ||
-											  item.snippet.type === 'newSponsorEvent' ||
-											  item.snippet.type === 'membershipGiftingEvent' ||
-											  item.snippet.type === 'memberMilestoneChatEvent' ||
-											  item.snippet.type === 'superStickerEvent';
-						
-						// Process regular messages (skip if it's a special event)
-							if (!isBacklogMessage && !isSpecialEvent) {
-								const textMessageDetails = item.snippet.textMessageDetails || {};
-								const messageReplyDetails = textMessageDetails.messageReplyDetails || null;
-								const normalizedReplyDetails = messageReplyDetails
-									? {
-										messageId: messageReplyDetails.messageId || null,
-										channelId: messageReplyDetails.channelId || null,
-										commentId: messageReplyDetails.commentId || null,
-										raw: messageReplyDetails
-									}
-									: null;
-								queueMessage({
-									messageId: item.id,
-									authorName: item.authorDetails.displayName.replace(/^@/, ''),
-									message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
-									plainTextMessage: textMessageDetails.messageText || '',
-									profileImageUrl: item.authorDetails.profileImageUrl,
-									isChatOwner: item.authorDetails.isChatOwner,
-									isChatSponsor: item.authorDetails.isChatSponsor,
-									isChatModerator: item.authorDetails.isChatModerator,
-									authorChannelId: item.authorDetails.channelId,
-									publishedAt,
-									skipEvent: isBacklogMessage,
-									isMembershipMessage: false, // Regular messages are not membership messages
-									replyDetails: normalizedReplyDetails,
-									replyMessageId: normalizedReplyDetails ? normalizedReplyDetails.messageId : null,
-									replyChannelId: normalizedReplyDetails ? normalizedReplyDetails.channelId : null
-								});
-							}
-						
-						// Process special message types
-						
-						// Handle gift membership received events
-						if (item.snippet.type === 'giftMembershipReceivedEvent' && item.snippet.giftMembershipReceivedDetails) {
-							const giftDetails = item.snippet.giftMembershipReceivedDetails;
-							if (!isBacklogMessage) {
-								processGiftRedemption({
-									authorName: item.authorDetails.displayName.replace(/^@/, ''),
-									gifterChannelId: giftDetails.gifterChannelId,
-									memberLevelName: giftDetails.memberLevelName,
-									profileImageUrl: item.authorDetails.profileImageUrl,
-									authorChannelId: item.authorDetails.channelId,
-									displayMessage: item.snippet.displayMessage
-								});
-							}
-						}
-						
-						// Handle new sponsor events (new memberships)
-						if (item.snippet.type === 'newSponsorEvent' && item.snippet.newSponsorDetails) {
-							if (!isBacklogMessage) {
-								processNewSponsorship({
-									authorName: item.authorDetails.displayName.replace(/^@/, ''),
-									memberLevelName: item.snippet.newSponsorDetails.memberLevelName,
-									profileImageUrl: item.authorDetails.profileImageUrl,
-									authorChannelId: item.authorDetails.channelId,
-									displayMessage: item.snippet.displayMessage
-								});
-							}
-						}
-						
-						// Handle membership gift purchase events
-						if (item.snippet.type === 'membershipGiftingEvent' && item.snippet.membershipGiftingDetails) {
-							const giftingDetails = item.snippet.membershipGiftingDetails;
-							if (!isBacklogMessage) {
-								processGiftPurchase({
-									authorName: item.authorDetails.displayName.replace(/^@/, ''),
-									giftCount: giftingDetails.giftMembershipsCount || 1,
-									memberLevelName: giftingDetails.giftMembershipsLevelName,
-									profileImageUrl: item.authorDetails.profileImageUrl,
-									authorChannelId: item.authorDetails.channelId,
-									displayMessage: item.snippet.displayMessage
-								});
-							}
-						}
-						
-						// Handle member milestone events
-						if (item.snippet.type === 'memberMilestoneChatEvent' && item.snippet.memberMilestoneChatDetails) {
-							const milestoneDetails = item.snippet.memberMilestoneChatDetails;
-							if (!isBacklogMessage) {
-								processMemberMilestone({
-									authorName: item.authorDetails.displayName.replace(/^@/, ''),
-									memberMonth: milestoneDetails.memberMonth,
-									memberLevelName: milestoneDetails.memberLevelName,
-									profileImageUrl: item.authorDetails.profileImageUrl,
-									authorChannelId: item.authorDetails.channelId,
-									displayMessage: item.snippet.displayMessage,
-									isChatOwner: item.authorDetails.isChatOwner,
-									isChatModerator: item.authorDetails.isChatModerator,
-									isChatSponsor: item.authorDetails.isChatSponsor
-								});
-							}
-						}
-						
-						// Handle super sticker events
-						if (item.snippet.type === 'superStickerEvent' && item.snippet.superStickerDetails) {
-							const stickerDetails = item.snippet.superStickerDetails;
-							if (!isBacklogMessage) {
-								// Build badges for super sticker author
-								let stickerBadges = [];
-								if (item.authorDetails.isChatOwner) stickerBadges.push({"type": "text", "text": "👑"});
-								if (item.authorDetails.isChatModerator) stickerBadges.push({"type": "text", "text": "🛡️"});
-								if (item.authorDetails.isChatSponsor) stickerBadges.push({"type": "text", "text": "⭐"});
-								
-								processSuperSticker({
-									authorName: item.authorDetails.displayName.replace(/^@/, ''), // Remove @ prefix if present
-									amount: stickerDetails.amountDisplayString,
-									stickerId: stickerDetails.superStickerMetadata?.stickerId,
-									altText: stickerDetails.superStickerMetadata?.altText,
-									profileImageUrl: item.authorDetails.profileImageUrl,
-									authorChannelId: item.authorDetails.channelId,
-									badges: stickerBadges.length > 0 ? stickerBadges : "",
-									displayMessage: item.snippet.displayMessage
-								});
-							}
-						}
-						
-						if (item.snippet.superChatDetails) {
-							if (!isBacklogMessage) {
-								// Build badges for super chat author
-								let superChatBadges = [];
-								if (item.authorDetails.isChatOwner) superChatBadges.push({"type": "text", "text": "👑"});
-								if (item.authorDetails.isChatModerator) superChatBadges.push({"type": "text", "text": "🛡️"});
-								if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
-
-								processSuperChat({
-									authorName: item.authorDetails.displayName.replace(/^@/, ''),
-									amount: item.snippet.superChatDetails.amountDisplayString,
-									message: item.snippet.superChatDetails.userComment,
-									tier: item.snippet.superChatDetails.tier,
-									profileImageUrl: item.authorDetails.profileImageUrl,
-									authorChannelId: item.authorDetails.channelId,
-									badges: superChatBadges.length > 0 ? superChatBadges : ""
-								});
-							}
-						}
-						if (item.snippet.membershipDetails) {
-							const membershipEventInfo = deriveMembershipEventContext(item.snippet, item.snippet.membershipDetails);
-							if (!isBacklogMessage) {
-								// Process membership events with the isMembershipMessage flag
-								const membershipMessage = item.snippet.displayMessage || '';
-								if (membershipMessage) {
-									const membershipDetailsCopy = item.snippet.membershipDetails ? { ...item.snippet.membershipDetails } : null;
-										// This is a monthly featured message from a member
-											const membershipPayload = {
-												messageId: item.id,
-												authorName: item.authorDetails.displayName.replace(/^@/, ''),
-												message: membershipMessage,
-												plainTextMessage: membershipMessage,
-												profileImageUrl: item.authorDetails.profileImageUrl,
-												isChatOwner: item.authorDetails.isChatOwner,
-												isChatSponsor: item.authorDetails.isChatSponsor,
-												isChatModerator: item.authorDetails.isChatModerator,
-												authorChannelId: item.authorDetails.channelId,
-											publishedAt,
-											skipEvent: isBacklogMessage,
-											isMembershipMessage: true // This is a special membership message
-										};
-										if (membershipDetailsCopy) {
-											membershipPayload.meta = {
-												membershipDetails: membershipDetailsCopy,
-												snippetType: item.snippet.type
-											};
-										}
-										queueMessage(membershipPayload);
-									} else {
-										// Build badges for membership author
-										let membershipBadges = [];
-										if (item.authorDetails.isChatOwner) membershipBadges.push({"type": "text", "text": "👑"});
-										if (item.authorDetails.isChatModerator) membershipBadges.push({"type": "text", "text": "🛡️"});
-										membershipBadges.push({"type": "text", "text": "⭐"}); // Always add member badge
-										
-										// New membership, renewal, or upgrade without a message
-										processMembership({
-												authorName: item.authorDetails.displayName.replace(/^@/, ''),
-												level: item.snippet.membershipDetails.memberLevelName,
-												profileImageUrl: item.authorDetails.profileImageUrl,
-												authorChannelId: item.authorDetails.channelId,
-												badges: membershipBadges,
-												membershipDetails: item.snippet.membershipDetails,
-												rawSnippetType: item.snippet.type,
-												eventType: membershipEventInfo.eventType
-										});
-									}
-								}
-							}
-						
-						// Update timestamp once for all message types
-						lastMessageTime = publishedAt;
-					}
-				});
-			}
-			
-			// Update pagination token
-			nextPageToken = data.nextPageToken;
-			
-			const itemCount = Array.isArray(data.items) ? data.items.length : 0;
-			
-			// Handle completion of initial backlog
-			if (initialBacklogProcessing && itemCount < LIVE_CHAT_MAX_RESULTS) {
-				initialBacklogProcessing = false;
-				console.log('Initial backlog processing complete');
-			}
-			
-			// Track consecutive max message polls
-			if (itemCount >= LIVE_CHAT_MAX_RESULTS) {
-				consecutiveMaxMessages++;
-				if (consecutiveMaxMessages >= 3 && slowerPollingMode) {
-					slowerPollingMode = false;
-					console.log('High chat activity detected - disabling slower polling mode');
-				}
-			} else {
-				consecutiveMaxMessages = 0; // Reset counter if not maxed
-			}
-			
-			if (itemCount === 0) {
-				consecutiveEmptyPolls++;
-			} else {
-				consecutiveEmptyPolls = 0;
-			}
-			
-			// Reset quick poll count on successful request
-			quickPollCount = 0;
-			
-			// Calculate next poll interval
-			let nextPollInterval = recommendedInterval;
-			if (consecutiveEmptyPolls >= QUIET_CHAT_IDLE_THRESHOLD) {
-				nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_IDLE_INTERVAL_MS);
-			} else if (consecutiveEmptyPolls >= QUIET_CHAT_BACKOFF_THRESHOLD) {
-				nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_BACKOFF_INTERVAL_MS);
-			} else if (consecutiveEmptyPolls > 0) {
-				nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_MIN_INTERVAL_MS);
-			}
-			
-			// Apply slower polling mode if enabled (1.5x slower)
-			if (slowerPollingMode) {
-				nextPollInterval = Math.floor(nextPollInterval * 1.5);
-			}
-			
-			// Only adjust for background, never go below recommended interval
-			if (!isPageVisible) {
-				nextPollInterval = Math.max(backgroundPollingInterval, recommendedInterval);
-			}
-			
-			// Clear any existing timeout before setting new one
-			if (fetchTimeout) {
-				clearTimeout(fetchTimeout);
-				fetchTimeout = null;
-			}
-			
-			// Update spinner to show actual polling interval
-			updatePollSpinner(nextPollInterval);
-			
-			// Schedule next poll
-			fetchTimeout = setTrackedTimeout(fetchChatMessages, nextPollInterval, !isPageVisible);
-			
+			await processLiveChatResponseData(data, { scheduleNextPoll: true });
 	} catch (error) {
 		if (error && error.ytReason === 'liveChatEnded') {
 			console.log('YouTube reported live chat ended; stopping polling.');
@@ -2971,6 +3114,100 @@ function enableBackgroundKeepAlive() {
 		} finally {
 			isPolling = false;
 		}
+	}
+
+	function updateLiveChatGrpcIndicator(text) {
+		const pollTime = document.getElementById('poll-time');
+		if (pollTime && text) {
+			pollTime.textContent = text;
+		}
+	}
+
+	function ensureLiveChatGrpcListener(bridge) {
+		if (liveChatGrpcUnsubscribe || !bridge) {
+			return;
+		}
+		liveChatGrpcUnsubscribe = bridge.onYouTubeLiveChatGrpcEvent(function(event) {
+			if (!event || event.streamId !== liveChatGrpcStreamId) {
+				return;
+			}
+			if (event.type === 'data') {
+				processLiveChatResponseData(event.payload || {}, { scheduleNextPoll: false }).catch(function(error) {
+					console.error('Error processing YouTube gRPC chat payload:', error);
+				});
+				return;
+			}
+			if (event.type === 'error') {
+				console.warn('YouTube gRPC stream error:', event.error && event.error.message ? event.error.message : event.error);
+				liveChatGrpcStreamId = null;
+				if (!liveChatGrpcStopping) {
+					liveChatGrpcFallbackActive = true;
+					updateLiveChatGrpcIndicator('poll');
+					schedulePollingFallback(2000);
+				}
+				return;
+			}
+			if (event.type === 'end') {
+				liveChatGrpcStreamId = null;
+				if (!liveChatGrpcStopping && liveChatId && !liveChatGrpcFallbackActive) {
+					setTrackedTimeout(function() {
+						startYouTubeLiveChatGrpcStream().catch(function(error) {
+							console.warn('YouTube gRPC reconnect failed:', error && error.message ? error.message : error);
+							liveChatGrpcFallbackActive = true;
+							updateLiveChatGrpcIndicator('poll');
+							schedulePollingFallback(2000);
+						});
+					}, 1000, !isPageVisible);
+				}
+			}
+		});
+	}
+
+	async function stopYouTubeLiveChatGrpcStream() {
+		const bridge = getYouTubeLiveChatGrpcBridge();
+		const streamId = liveChatGrpcStreamId;
+		liveChatGrpcStreamId = null;
+		liveChatGrpcStopping = true;
+		try {
+			if (bridge && streamId) {
+				await bridge.stopYouTubeLiveChatGrpcStream(streamId);
+			}
+		} catch (error) {
+			console.warn('Failed to stop YouTube gRPC stream:', error && error.message ? error.message : error);
+		} finally {
+			liveChatGrpcStopping = false;
+		}
+	}
+
+	async function startYouTubeLiveChatGrpcStream() {
+		if (!liveChatId || liveChatGrpcStreamId || liveChatGrpcFallbackActive) {
+			return false;
+		}
+		const bridge = getYouTubeLiveChatGrpcBridge();
+		if (!bridge) {
+			return false;
+		}
+		const token = getStoredToken();
+		if (!token) {
+			return false;
+		}
+		ensureLiveChatGrpcListener(bridge);
+		const result = await bridge.startYouTubeLiveChatGrpcStream({
+			accessToken: token,
+			liveChatId,
+			apiKey: apiKeyOverride || '',
+			part: ['id', 'snippet', 'authorDetails'],
+			pageToken: nextPageToken || '',
+			profileImageSize: 88,
+			maxResults: LIVE_CHAT_MAX_RESULTS
+		});
+		if (!result || !result.success || !result.streamId) {
+			console.warn('YouTube gRPC stream unavailable:', result && result.error && result.error.message ? result.error.message : result);
+			return false;
+		}
+		liveChatGrpcStreamId = result.streamId;
+		updateLiveChatGrpcIndicator('live');
+		return true;
 	}
 	
 
@@ -3584,11 +3821,7 @@ function enableBackgroundKeepAlive() {
 	  updatePollSpinner(5000);
 	}
 		function queueMessage(messageData) {
-			if (areEmojiAssetsReadyForMessages()) {
-				processMessage(messageData);
-			} else {
-				pendingRelayMessages.push(messageData);
-			}
+			processMessage(messageData);
 
 			// If page isn't visible, queue for later DOM rendering
 			if (!isPageVisible) {
@@ -4053,6 +4286,7 @@ function enableBackgroundKeepAlive() {
         }
     }
 	function clearPolling() {
+		stopYouTubeLiveChatGrpcStream().catch(() => {});
 		// Clear all tracked timeouts
 		activeTimeouts.forEach(timeout => {
 			try {
@@ -4101,6 +4335,7 @@ function enableBackgroundKeepAlive() {
 		consecutiveEmptyPolls = 0;
 		lastSuccessfulPollTime = 0;
 		youtubeRecommendedInterval = 5000; // Reset to default
+		liveChatGrpcFallbackActive = false;
 		
 		const chatHeader = document.querySelector('.chat-container h3');
 		if (chatHeader) {
@@ -4348,7 +4583,14 @@ function enableBackgroundKeepAlive() {
 					}
 				}
 				
-				fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
+				if (hasYouTubeLiveChatGrpcBridge()) {
+					const streamStarted = await startYouTubeLiveChatGrpcStream();
+					if (!streamStarted) {
+						fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
+					}
+				} else {
+					fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
+				}
 				if (currentStream?.id) {
 					fetchChannelEmoji(currentStream.id).catch(() => {});
 					syncYouTubeRichChatData(currentStream.id).catch(() => {});

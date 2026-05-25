@@ -1,4 +1,9 @@
 .hidden { display: none!important; }
+:root {
+	--yt-scrollbar-track: #f1f3f4;
+	--yt-scrollbar-thumb: #ff3b30;
+	--yt-scrollbar-thumb-hover: #d93025;
+}
 html {
 	height: 100%;
 }
@@ -9,6 +14,41 @@ body {
 	padding: 0;
 	height: 100vh;
 	overflow: hidden;
+}
+.main-content,
+#textarea,
+#events-list,
+.sidebar-content {
+	scrollbar-color: var(--yt-scrollbar-thumb) var(--yt-scrollbar-track);
+	scrollbar-width: thin;
+}
+.main-content::-webkit-scrollbar,
+#textarea::-webkit-scrollbar,
+#events-list::-webkit-scrollbar,
+.sidebar-content::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+.main-content::-webkit-scrollbar-track,
+#textarea::-webkit-scrollbar-track,
+#events-list::-webkit-scrollbar-track,
+.sidebar-content::-webkit-scrollbar-track {
+	background: var(--yt-scrollbar-track);
+	border-radius: 10px;
+}
+.main-content::-webkit-scrollbar-thumb,
+#textarea::-webkit-scrollbar-thumb,
+#events-list::-webkit-scrollbar-thumb,
+.sidebar-content::-webkit-scrollbar-thumb {
+	background: var(--yt-scrollbar-thumb);
+	border: 2px solid var(--yt-scrollbar-track);
+	border-radius: 10px;
+}
+.main-content::-webkit-scrollbar-thumb:hover,
+#textarea::-webkit-scrollbar-thumb:hover,
+#events-list::-webkit-scrollbar-thumb:hover,
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+	background: var(--yt-scrollbar-thumb-hover);
 }
 .quota-warning {
     background: #fef3c7; /* light amber */
@@ -741,6 +781,11 @@ body:has(.auth:not(.hidden)) {
 
 /* Dark mode styles */
 @media (prefers-color-scheme: dark) {
+	:root {
+		--yt-scrollbar-track: #2a2a2a;
+		--yt-scrollbar-thumb: #ff4d4f;
+		--yt-scrollbar-thumb-hover: #ff6b6d;
+	}
     body {
         background-color: #181818;
         color: #f1f1f1;
