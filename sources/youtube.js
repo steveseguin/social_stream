@@ -1905,6 +1905,21 @@
 		return Math.min(youtubeStaleReloadMaxMs, Math.max(youtubeStaleReloadMinMs, averageGap * 6));
 	}
 
+	// YouTube live chat can stall in Electron while the page is still alive:
+	// resource activity continues, but yt-live-chat-item-list-renderer stops adding chat DOM nodes.
+	// Soak tests on 2026-05-24:
+	// - Reloading the live_chat popout consistently restarted DOM/message flow.
+	// - Trusted Electron wheel input via webContents.sendInputEvent also restarted the feed repeatedly
+	//   without sending a chat message. Standalone could do this from the main process, but
+	//   youtube.js cannot create that trusted input by itself, and we are not using it yet because
+	//   it may steal focus from fullscreen apps/games.
+	// - Synthetic WheelEvent/scroll/focus/visibility/online events from page JS did not restart it.
+	// - show-more clicks, scrollTop nudges, window resize, and YouTube component requestUpdate/
+	//   notifyResize/yt-resize nudges did not reliably restart it.
+	// - Reinjecting this source script once appeared to coincide with recovery in a harness run, but
+	//   it risks duplicate observers and does not address the underlying stalled YouTube DOM feed.
+	// Keep the reload as the common extension/browser fallback until standalone has a verified
+	// no-focus-steal main-process bridge for trusted wheel input.
 	function maybeReloadStaleYouTubeChat(ele) {
 		if (!ele || !ele.isConnected || !youtubeSettingsLoaded || !isExtensionOn) {
 			return;
