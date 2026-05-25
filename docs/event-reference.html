@@ -298,8 +298,8 @@
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>jeweldonation</code></td>
-                                <td>Gift-card style promos (eg. YouTube “Jewels”).</td>
-                                <td>Parses jewel count into <code>hasDonation</code> (“500 Jewels”) and numeric <code>donoValue</code> for USD estimation.</td>
+                                <td>YouTube Gifts powered by Jewels (<code>yt-gift-message-view-model</code>).</td>
+                                <td>Parses jewel count into <code>hasDonation</code> (“500 Jewels”); DOM capture may include numeric <code>donoValue</code>.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>donation</code></td>
@@ -354,6 +354,11 @@
                                 <td class="donation-event"><code>supersticker</code></td>
                                 <td>Super Stickers (message text fallback only, no image from API).</td>
                                 <td><code>hasDonation</code> holds the amount; <code>chatmessage</code> contains decoded description text.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>jeweldonation</code></td>
+                                <td>YouTube <code>giftEvent</code> messages when viewers redeem Jewels for Gifts.</td>
+                                <td><code>hasDonation</code> holds “N Jewels”; <code>donoValue</code> estimates Ruby revenue in USD; <code>contentimg</code> uses the gift asset URL when exposed; <code>meta.youtubeGift</code> carries <code>giftName</code>, <code>jewelsAmount</code>, <code>giftUrl</code>, visual-effect/combo fields, and estimated Ruby revenue.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>sponsorship</code></td>
@@ -1335,7 +1340,7 @@
                         </tr>
                         <tr>
                             <td><strong>Donation/tip</strong></td>
-                            <td><code>donation</code> (Super Chat)</td>
+                            <td><code>donation</code> (Super Chat), <code>jeweldonation</code> (Gifts)</td>
                             <td><code>cheer</code> (bits)</td>
                             <td><code>donation</code></td>
                         </tr>
@@ -1389,7 +1394,7 @@
                     <li><strong>YouTube uses <code>sponsorship</code></strong> for new members, while Twitch and Kick use <code>new_subscriber</code>. Consider checking both when building cross-platform triggers.</li>
                     <li><strong><code>resub</code> is consistent</strong> across all three platforms for renewals.</li>
                     <li><strong>Gift events differ:</strong> YouTube uses <code>giftpurchase</code>/<code>giftredemption</code>, while Twitch and Kick use <code>subscription_gift</code>.</li>
-                    <li><strong>Donations vary by platform:</strong> YouTube has Super Chats (<code>donation</code>), Twitch has bits (<code>cheer</code>), and Kick has tips (<code>donation</code>).</li>
+                    <li><strong>Donations vary by platform:</strong> YouTube has Super Chats (<code>donation</code>) and Gifts (<code>jeweldonation</code>), Twitch has bits (<code>cheer</code>), and Kick has tips (<code>donation</code>).</li>
                     <li><strong><code>new_follower</code> is now consistent</strong> across all three platforms, but YouTube has a 4-hour API delay and only shows subscribers with public subscription lists.</li>
                 </ul>
             </section>
@@ -1451,7 +1456,7 @@
                         </tr>
                         <tr>
                             <td>YouTube: Standard vs Websocket</td>
-                            <td>Shared: <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>donation</code>, <code>viewer_update</code>. Standard-only: <code>jeweldonation</code>, <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>.</td>
+                            <td>Shared: <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>donation</code>, <code>jeweldonation</code>, <code>viewer_update</code>. Standard-only: <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>.</td>
                             <td>Core event names are aligned across both.</td>
                         </tr>
                         <tr>

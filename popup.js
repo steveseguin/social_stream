@@ -9192,6 +9192,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	// Handle per-type alert sound upload buttons
 	const alertSoundUploads = [
+		{ btnId: 'uploadMultiAlertSoundBtn', inputId: 'multi-alert-custombeep' },
 		{ btnId: 'uploadFollowSoundBtn', inputId: 'multi-alert-followsound' },
 		{ btnId: 'uploadSubSoundBtn', inputId: 'multi-alert-subsound' },
 		{ btnId: 'uploadDonoSoundBtn', inputId: 'multi-alert-donosound' },

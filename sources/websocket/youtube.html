@@ -2699,6 +2699,55 @@ function enableBackgroundKeepAlive() {
 			hasUnresolvedYouTubeChannelEmojiShortcut(textMessageDetails.messageText || '');
 	}
 
+	function parseYouTubeGiftInteger(value) {
+		if (value === undefined || value === null || value === '') {
+			return null;
+		}
+		if (typeof value === 'number') {
+			return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : null;
+		}
+		const parsed = parseInt(String(value).replace(/,/g, '').trim(), 10);
+		return Number.isFinite(parsed) ? Math.max(0, parsed) : null;
+	}
+
+	function extractYouTubeGiftMetadata(snippet) {
+		if (!snippet || typeof snippet !== 'object') {
+			return null;
+		}
+		const eventDetails = snippet.giftEventDetails || snippet.gift_event_details || null;
+		const eventMetadata = eventDetails && typeof eventDetails === 'object'
+			? (eventDetails.giftMetadata || eventDetails.gift_metadata || eventDetails)
+			: null;
+		const directDetails = snippet.giftDetails || snippet.gift_details || null;
+		const rawType = typeof snippet.type === 'string' ? snippet.type : '';
+		const gift = (eventMetadata && typeof eventMetadata === 'object' ? eventMetadata : null) ||
+			(directDetails && typeof directDetails === 'object' ? directDetails : null);
+
+		if (!gift && rawType !== 'giftEvent') {
+			return null;
+		}
+
+		const safeGift = gift || {};
+		const duration = safeGift.giftDuration || safeGift.gift_duration || null;
+		const normalizedDuration = duration && typeof duration === 'object'
+			? {
+				seconds: parseYouTubeGiftInteger(duration.seconds),
+				nanos: parseYouTubeGiftInteger(duration.nanos)
+			}
+			: null;
+
+		return {
+			giftName: safeGift.giftName || safeGift.gift_name || '',
+			jewelsAmount: parseYouTubeGiftInteger(safeGift.jewelsAmount ?? safeGift.jewels_amount),
+			giftUrl: safeGift.giftUrl || safeGift.gift_url || '',
+			altText: safeGift.altText || safeGift.alt_text || '',
+			language: safeGift.language || '',
+			giftDuration: normalizedDuration,
+			hasVisualEffect: Boolean(safeGift.hasVisualEffect || safeGift.has_visual_effect),
+			comboCount: parseYouTubeGiftInteger(safeGift.comboCount ?? safeGift.combo_count)
+		};
+	}
+
 	async function processLiveChatResponseData(data, options = {}) {
 		data = data && typeof data === 'object' ? data : {};
 		const shouldScheduleNextPoll = options.scheduleNextPoll !== false;
@@ -2736,7 +2785,10 @@ function enableBackgroundKeepAlive() {
 				if (!Number.isFinite(messageTime)) return;
 				if (!lastMessageTime || publishedAt > lastMessageTime) {
 					const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
-					const isSpecialEvent = item.snippet.type === 'giftMembershipReceivedEvent' ||
+					const giftMetadata = extractYouTubeGiftMetadata(item.snippet);
+					const isGiftEvent = item.snippet.type === 'giftEvent' || !!giftMetadata;
+					const isSpecialEvent = isGiftEvent ||
+										  item.snippet.type === 'giftMembershipReceivedEvent' ||
 										  item.snippet.type === 'newSponsorEvent' ||
 										  item.snippet.type === 'membershipGiftingEvent' ||
 										  item.snippet.type === 'memberMilestoneChatEvent' ||
@@ -2846,6 +2898,32 @@ function enableBackgroundKeepAlive() {
 								authorChannelId: item.authorDetails.channelId,
 								badges: stickerBadges.length > 0 ? stickerBadges : "",
 								displayMessage: item.snippet.displayMessage
+							});
+						}
+					}
+
+					if (isGiftEvent && giftMetadata) {
+						if (!isBacklogMessage) {
+							let giftBadges = [];
+							if (item.authorDetails.isChatOwner) giftBadges.push({"type": "text", "text": "👑"});
+							if (item.authorDetails.isChatModerator) giftBadges.push({"type": "text", "text": "🛡️"});
+							if (item.authorDetails.isChatSponsor) giftBadges.push({"type": "text", "text": "⭐"});
+
+							processYouTubeGift({
+								messageId: item.id,
+								authorName: item.authorDetails.displayName.replace(/^@/, ''),
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								authorChannelId: item.authorDetails.channelId,
+								badges: giftBadges.length > 0 ? giftBadges : [{"type": "text", "text": "🎁"}],
+								displayMessage: item.snippet.displayMessage,
+								giftName: giftMetadata.giftName,
+								jewelsAmount: giftMetadata.jewelsAmount,
+								giftUrl: giftMetadata.giftUrl,
+								altText: giftMetadata.altText,
+								language: giftMetadata.language,
+								giftDuration: giftMetadata.giftDuration,
+								hasVisualEffect: giftMetadata.hasVisualEffect,
+								comboCount: giftMetadata.comboCount
 							});
 						}
 					}
@@ -4856,6 +4934,90 @@ function enableBackgroundKeepAlive() {
 			}));
 		} catch (e) {
 			console.error('Error processing super chat:', e);
+		}
+	}
+	function processYouTubeGift(giftData) {
+		try {
+			const giftLabel = giftData.giftName || giftData.altText || getTranslation("youtube-gift-label", "Gift");
+			const jewelAmount = Number(giftData.jewelsAmount);
+			const hasJewels = Number.isFinite(jewelAmount) && jewelAmount > 0;
+			const jewelText = hasJewels ? `${jewelAmount} Jewels` : "";
+			const fallbackMessage = jewelText
+				? `${getTranslation("youtube-gift-sent-message", "sent a gift")}: ${giftLabel} (${jewelText})`
+				: `${getTranslation("youtube-gift-sent-message", "sent a gift")}: ${giftLabel}`;
+			const displayMessage = chooseTranslatedAlertText(fallbackMessage, giftData.displayMessage);
+			const eventLabel = getTranslation("youtube-gift-event", "Gift");
+			const eventSuffix = jewelText ? `${giftLabel} - ${jewelText}` : giftLabel;
+			addEvent(`${eventLabel}: ${giftData.authorName} - ${eventSuffix}`);
+
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
+					var span = document.createElement("div");
+					const safeAuthor = strictEscapeHtml(giftData.authorName || '');
+					const safeGiftLabel = strictEscapeHtml(giftLabel);
+					const safeJewels = strictEscapeHtml(jewelText);
+					span.innerHTML = jewelText
+						? `<strong>${safeAuthor}</strong> <span>${safeJewels}</span>: ${safeGiftLabel}`
+						: `<strong>${safeAuthor}</strong>: ${safeGiftLabel}`;
+					textarea.appendChild(span);
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					if (shouldStick) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+
+			const estimatedRevenueUsd = hasJewels ? jewelAmount / 200 : null;
+			const metaGift = {
+				eventType: "jeweldonation"
+			};
+			if (giftData.messageId) metaGift.messageId = String(giftData.messageId);
+			if (giftData.giftName) metaGift.giftName = String(giftData.giftName);
+			if (giftData.altText) metaGift.altText = String(giftData.altText);
+			if (hasJewels) {
+				metaGift.jewelsAmount = jewelAmount;
+				metaGift.estimatedRubyRevenueUsd = estimatedRevenueUsd;
+			}
+			if (giftData.giftUrl) metaGift.giftUrl = String(giftData.giftUrl);
+			if (giftData.language) metaGift.language = String(giftData.language);
+			if (giftData.giftDuration && (Number.isFinite(giftData.giftDuration.seconds) || Number.isFinite(giftData.giftDuration.nanos))) {
+				metaGift.giftDuration = {};
+				if (Number.isFinite(giftData.giftDuration.seconds)) metaGift.giftDuration.seconds = giftData.giftDuration.seconds;
+				if (Number.isFinite(giftData.giftDuration.nanos)) metaGift.giftDuration.nanos = giftData.giftDuration.nanos;
+			}
+			if (typeof giftData.hasVisualEffect === "boolean") metaGift.hasVisualEffect = giftData.hasVisualEffect;
+			if (giftData.comboCount !== null && giftData.comboCount !== undefined && Number.isFinite(Number(giftData.comboCount))) metaGift.comboCount = Number(giftData.comboCount);
+
+			const payload = {
+				chatname: escapeHtml(giftData.authorName),
+				chatbadges: giftData.badges || [{"type": "text", "text": "🎁"}],
+				userid: giftData.authorChannelId,
+				backgroundColor: "",
+				textColor: "#111",
+				chatmessage: escapeHtml(displayMessage),
+				chatimg: giftData.profileImageUrl || "",
+				hasDonation: jewelText,
+				membership: "",
+				subtitle: giftLabel,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "jeweldonation",
+				textonly: settings.textonlymode || false,
+				meta: { youtubeGift: metaGift }
+			};
+			if (giftData.giftUrl) {
+				payload.contentimg = giftData.giftUrl;
+			}
+			if (estimatedRevenueUsd !== null) {
+				payload.donoValue = estimatedRevenueUsd;
+			}
+			pushMessage(applySourceIdentity(payload));
+		} catch (e) {
+			console.error('Error processing YouTube gift:', e);
 		}
 	}
 	function deriveMembershipEventContext(snippet, membershipDetails) {
