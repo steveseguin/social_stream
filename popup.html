@@ -5892,7 +5892,7 @@ input:checked + .slider:before {
 									<button type="button" id="multi-alert-preview-mute" class="overlayButton" style="flex: 0 0 auto; min-width: 0; white-space: nowrap; opacity: 0.6;" title="Mute preview sound">🔊</button>
 								</div>
 								<div style="width: 100%; height: 280px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(10,12,18,0.94), rgba(19,24,35,0.92));">
-									<iframe id="multi-alerts-preview-frame" title="Multi alert preview" style="width: 100%; height: 100%; border: 0; background: transparent;" loading="lazy"></iframe>
+									<iframe id="multi-alerts-preview-frame" title="Multi alert preview" style="width: 100%; height: 100%; border: 0; background: transparent;" loading="lazy" allow="autoplay"></iframe>
 								</div>
 								<small style="display: block; margin-top: 10px; opacity: 0.8;">Use the buttons above to send test alerts into the preview. This uses the real multi-alert overlay renderer in a local iframe, so theme, visibility, disabled categories, media, and timing changes match the live browser source.</small>
 							</div>
@@ -7335,9 +7335,10 @@ input:checked + .slider:before {
                                     <label for="highlightword"><span data-translate="highlightword">&gt; Mark as trivial event if body contains</span></label>
                                 </div>
 
-                                <div class="textInputContainer" style="width: 95%;">
+                                <div class="textInputContainer" style="width: 95%; position: relative;">
                                     <input type="text" id="default_avatar" class="textInput" autocomplete="off" placeholder="Default avatar image URL" data-textsetting="defaultavatar" />
                                     <label for="default_avatar"><span data-translate="default-avatar-image-url">&gt; Default avatar image URL</span></label>
+                                    <button type="button" id="uploadDefaultAvatarBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
                             </div>
                         </div>
@@ -9147,9 +9148,10 @@ input:checked + .slider:before {
 									<input type="text" id="aiOverlayName" class="textInput" autocomplete="off" placeholder="NinjaBot" data-textsetting="aiOverlayName" />
 									<label for="aiOverlayName">&gt; Display name</label>
 								</div>
-								<div class="textInputContainer" style="width: 95%;">
+								<div class="textInputContainer" style="width: 95%; position: relative;">
 									<input type="text" id="aiOverlayAvatar" class="textInput" autocomplete="off" placeholder="Optional avatar image URL" data-textsetting="aiOverlayAvatar" />
 									<label for="aiOverlayAvatar">&gt; Avatar image URL</label>
+									<button type="button" id="uploadAiOverlayAvatarBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
 								</div>
 								<div style="margin: 8px 0;">
 									<span>Position</span>
@@ -10206,9 +10208,10 @@ input:checked + .slider:before {
                                     <label><span data-translate="custom-title">Custom Title:</span></label>
                                     <input type="text" data-optionparam12="title" class="textInput" placeholder="Stream Goal" />
                                 </div>
-                                <div>
+                                <div style="position: relative; width: 95%;">
                                     <label><span data-translate="custom-jar-image">Custom Jar Image URL:</span></label>
-                                    <input type="text" data-optionparam12="jarimage" class="textInput" placeholder="https://example.com/jar.png" />
+                                    <input type="text" id="streamGoalJarImage" data-optionparam12="jarimage" class="textInput" placeholder="https://example.com/jar.png" />
+                                    <button type="button" id="uploadStreamGoalJarImageBtn" style="position: absolute; right: 5px; bottom: 5px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
 								
                             </div>
@@ -10342,9 +10345,10 @@ input:checked + .slider:before {
                                         <span class="range-value" id="waitlist-sound-volume-display">30%</span>
                                     </span>
                                 </div>
-                                <div class="textInputContainer" style="width: 95%;" title="Specify a URL for a custom sound audio file">
+                                <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom sound audio file">
                                     <input type="text" id="customsound" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/sound.wav" data-textparam5="customsound" />
                                     <label for="customsound"><span data-translate="customsound">&gt; URL for custom sound audio file</span></label>
+                                    <button type="button" id="uploadWaitlistSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
                                 <div>
                                     <label class="switch">

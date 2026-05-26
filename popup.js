@@ -9220,6 +9220,21 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	});
 
+	const hostedMediaUploads = [
+		{ btnId: 'uploadDefaultAvatarBtn', inputId: 'default_avatar' },
+		{ btnId: 'uploadAiOverlayAvatarBtn', inputId: 'aiOverlayAvatar' },
+		{ btnId: 'uploadStreamGoalJarImageBtn', inputId: 'streamGoalJarImage' },
+		{ btnId: 'uploadWaitlistSoundBtn', inputId: 'customsound' }
+	];
+	hostedMediaUploads.forEach(({ btnId, inputId }) => {
+		const btn = document.getElementById(btnId);
+		if (btn) {
+			btn.onclick = function() {
+				openHostedMediaUploadForInput(document.getElementById(inputId), btnId);
+			};
+		}
+	});
+
 	const uploadFeaturedFallbackBtn = document.getElementById('uploadFeaturedFallbackBtn');
 	if (uploadFeaturedFallbackBtn) {
 		uploadFeaturedFallbackBtn.onclick = function() {
