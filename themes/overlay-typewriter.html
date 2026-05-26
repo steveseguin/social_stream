@@ -479,7 +479,7 @@ body::before {
     function initAudioContext() {
         if (!audioContext && (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined')) {
             try {
-                const AudioCtx = AudioContext || webkitAudioContext;
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
                 audioContext = new AudioCtx();
             } catch (e) {
                 // Don't warn about user gesture errors
@@ -780,7 +780,13 @@ body::before {
     });
     
     // Resume audio context on user interaction if needed
+    let audioUnlockListenersAttached = false;
     function setupUserInteractionHandler() {
+        if (audioUnlockListenersAttached) {
+            return;
+        }
+        audioUnlockListenersAttached = true;
+        const eventNames = ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'];
         const handler = async function() {
             if (!audioContext && typeof initAudioContext === 'function') {
                 initAudioContext();
@@ -800,20 +806,19 @@ body::before {
             if (audioContext.state !== 'suspended') {
                 waitingForUserGesture = false;
                 console.log('Audio context ready after user interaction');
-                document.removeEventListener('click', handler);
-                document.removeEventListener('touchstart', handler);
-                document.removeEventListener('keydown', handler);
+                eventNames.forEach(function(eventName) {
+                    document.removeEventListener(eventName, handler);
+                });
+                audioUnlockListenersAttached = false;
             }
         };
-        
-        // Only add listeners if we're waiting for user gesture
-        if (waitingForUserGesture) {
-            document.addEventListener('click', handler);
-            document.addEventListener('touchstart', handler);
-            document.addEventListener('keydown', handler);
-        }
+        eventNames.forEach(function(eventName) {
+            document.addEventListener(eventName, handler);
+        });
     }
-    
+
+    setupUserInteractionHandler();
+
     // Check periodically if we need to set up user interaction handlers
     setInterval(() => {
         if (waitingForUserGesture && audioContext) {

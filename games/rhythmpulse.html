@@ -493,16 +493,27 @@
                 masterGain.gain.value = DEFAULT_VOLUME;
                 masterGain.connect(audioContext.destination);
                 
-                // Resume audio context on user interaction if needed
-                if (audioContext.state === 'suspended') {
-                    document.addEventListener('click', () => {
-                        audioContext.resume();
-                    }, { once: true });
-                }
+                attachAudioUnlockListeners();
             } catch (error) {
                 console.error('Failed to initialize Web Audio API:', error);
                 audioEnabled = false;
             }
+        }
+
+        function resumeAudio() {
+            if (!audioContext || audioContext.state !== 'suspended') {
+                return Promise.resolve(!!audioContext);
+            }
+            return audioContext.resume().then(() => true).catch(() => false);
+        }
+
+        function attachAudioUnlockListeners() {
+            const handler = () => {
+                resumeAudio();
+            };
+            ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(eventName => {
+                document.addEventListener(eventName, handler, { once: true });
+            });
         }
 
         // Sound synthesizers
@@ -631,6 +642,13 @@
 
         // Play drum sound
         function playDrumSound(soundType) {
+            if (!audioEnabled || !audioContext || !drumSounds[soundType]) return;
+            if (audioContext.state === 'suspended') {
+                resumeAudio().then(running => {
+                    if (running) drumSounds[soundType](audioContext.currentTime);
+                });
+                return;
+            }
             if (drumSounds[soundType]) {
                 drumSounds[soundType](audioContext.currentTime);
             }

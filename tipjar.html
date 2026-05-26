@@ -792,12 +792,36 @@
             }, 4000);
         }
 
+        let primingDonationSound = false;
+        let donationSoundPrimed = false;
+        function primeDonationSound() {
+            if (!sound || donationSoundPrimed) return;
+            primingDonationSound = true;
+            playDonationSound();
+        }
+
         function playDonationSound() {
             if (!sound) return;
             const audio = new Audio('data:audio/wav;base64,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XrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFA==');
-            audio.volume = 0.5;
-            audio.play().catch(() => {});
+            audio.volume = primingDonationSound ? 0 : 0.5;
+            audio.play().then(function() {
+                if (primingDonationSound) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    donationSoundPrimed = true;
+                    primingDonationSound = false;
+                }
+            }).catch(function() {
+                if (primingDonationSound) {
+                    donationSoundPrimed = false;
+                    primingDonationSound = false;
+                }
+            });
         }
+
+        ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(function(eventName) {
+            document.addEventListener(eventName, primeDonationSound);
+        });
 
         function readNumberParam(name, fallback, minValue) {
             const raw = urlParams.get(name);

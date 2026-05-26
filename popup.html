@@ -12824,7 +12824,7 @@ input:checked + .slider:before {
 					<p>Displays a dynamic word cloud that grows based on what your chat is saying. Popular words appear larger.</p>
 					<ul>
 						<li>Real-time word frequency visualization</li>
-						<li>Single-word messages contribute to the cloud</li>
+						<li>Single-word messages contribute by default</li>
 						<li>Customizable appearance and filters</li>
 						<li>Great for polls or seeing chat trends</li>
 					</ul>
@@ -12832,7 +12832,7 @@ input:checked + .slider:before {
 				</div>
                 <h3>
                     <span data-translate="when-enabled-a-wordcloud">
-                       A wordcloud overlay. Chat messages that contain a single word are allowed.
+                       A wordcloud overlay. Chat messages that contain a single word are counted by default.
                     </span>
                 </h3>
 				<div id="wordcloud" data-raw="" class="streaming_chat"><a href="" id="wordcloudlink"></a></div>
@@ -12852,7 +12852,16 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="enable-the-wordcloud">🚦 Enable </span>
                                 </div>
-								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param7="allwords" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										Count words from all chat messages
+									</span>
+								</div>
+
                                 <h3><span data-translate="other-customization-options">Other customization options</span></h3>
                                 <div>
                                     <span data-translate="font-family">

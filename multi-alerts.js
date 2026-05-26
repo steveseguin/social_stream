@@ -209,7 +209,9 @@ const state = {
   activeOscillator: null,
   activeGain: null,
   lastAudioTime: 0,
-  audioKeepAlive: null
+  audioKeepAlive: null,
+  audioUnlocked: false,
+  statusTimer: null
 };
 
 const elements = {
@@ -220,6 +222,7 @@ const elements = {
 
 applyPagePresentation();
 attachWindowListeners();
+attachAudioUnlockListeners();
 if (settings.previewOnly) {
   updateStatus('Preview ready');
 }
@@ -1644,9 +1647,28 @@ function shouldRenderBodyText(model) {
   return bodyText.toLowerCase() !== combinedHeadline;
 }
 
-function updateStatus(text) {
+function updateStatus(text, autoHideMs) {
   if (!elements.status) return;
+  if (state.statusTimer) {
+    clearTimeout(state.statusTimer);
+    state.statusTimer = null;
+  }
   elements.status.textContent = text;
+  if (autoHideMs) {
+    state.statusTimer = setTimeout(function () {
+      if (elements.status && elements.status.textContent === text) {
+        elements.status.textContent = '';
+      }
+      state.statusTimer = null;
+    }, autoHideMs);
+  }
+}
+
+function clearBlockedAudioStatus() {
+  if (!elements.status) return;
+  if (/^Audio blocked/.test(elements.status.textContent || '')) {
+    updateStatus('');
+  }
 }
 
 function clearActiveGeneratedSound(oscillator = null, gain = null) {
@@ -1720,16 +1742,52 @@ function ensureAudioContext() {
   if (!state.audioContext) {
     state.audioContext = new AudioContextCtor();
   }
-  if (state.audioContext.state === 'suspended') {
-    state.audioContext.resume();
-  }
   return state.audioContext;
+}
+
+async function resumeAudioContext() {
+  var ctx = ensureAudioContext();
+  if (!ctx) return null;
+  if (ctx.state === 'suspended' && ctx.resume) {
+    try {
+      await ctx.resume();
+    } catch (error) {
+      log('audio context resume failed', error);
+    }
+  }
+  if (ctx.state === 'running') {
+    state.audioUnlocked = true;
+    clearBlockedAudioStatus();
+  }
+  return ctx;
+}
+
+function attachAudioUnlockListeners() {
+  var eventNames = ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'];
+  var unlock = function () {
+    resumeAudioContext().then(function (ctx) {
+      if (ctx && ctx.state === 'running') {
+        audioKeepAliveBlip();
+        eventNames.forEach(function (eventName) {
+          window.removeEventListener(eventName, unlock);
+        });
+      }
+    });
+  };
+  eventNames.forEach(function (eventName) {
+    window.addEventListener(eventName, unlock, { passive: true });
+  });
 }
 
 function audioKeepAliveBlip() {
   try {
-    var ctx = ensureAudioContext();
+    var ctx = state.audioContext || ensureAudioContext();
     if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      resumeAudioContext();
+      return;
+    }
+    if (ctx.state !== 'running') return;
     var buf = ctx.createBuffer(1, ctx.sampleRate * 0.02, ctx.sampleRate);
     var src = ctx.createBufferSource();
     src.buffer = buf;
@@ -1752,8 +1810,8 @@ async function primeAudioPipeline() {
   var now = Date.now();
   if (state.lastAudioTime && (now - state.lastAudioTime < PRIME_STALE_MS)) return;
   try {
-    var ctx = ensureAudioContext();
-    if (!ctx) return;
+    var ctx = await resumeAudioContext();
+    if (!ctx || ctx.state !== 'running') return;
     var buf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
     var src = ctx.createBufferSource();
     src.buffer = buf;
@@ -1766,6 +1824,13 @@ async function primeAudioPipeline() {
     state.lastAudioTime = Date.now();
   } catch (e) {
     log('audio prime failed', e);
+  }
+}
+
+function noteBlockedAudio(error) {
+  var name = error && error.name ? String(error.name) : '';
+  if (name === 'NotAllowedError' || name === 'AbortError') {
+    updateStatus('Audio blocked - click the overlay once to enable sound', 5000);
   }
 }
 
@@ -1802,15 +1867,21 @@ async function playAlertSound(model) {
       state.lastAudioTime = Date.now();
       return;
     } catch (error) {
+      noteBlockedAudio(error);
       log('custom beep failed', error);
     }
   }
 
   try {
+    var ctx = await resumeAudioContext();
+    if (!ctx || ctx.state !== 'running') {
+      updateStatus('Audio blocked - click the overlay once to enable sound', 5000);
+      return;
+    }
     await primeAudioPipeline();
 
-    const oscillator = state.audioContext.createOscillator();
-    const gain = state.audioContext.createGain();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
     oscillator.connect(gain);
     gain.connect(state.audioContext.destination);
     state.activeOscillator = oscillator;
@@ -1824,7 +1895,7 @@ async function playAlertSound(model) {
       [ALERT_CATEGORIES.RAID]: 460
     })[model.category] || 580;
 
-    const now = state.audioContext.currentTime;
+    const now = ctx.currentTime;
     oscillator.type = model.category === ALERT_CATEGORIES.RAID ? 'triangle' : 'sine';
     oscillator.frequency.setValueAtTime(baseFrequency, now);
     oscillator.frequency.exponentialRampToValueAtTime(baseFrequency * 1.18, now + 0.08);

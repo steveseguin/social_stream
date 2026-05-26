@@ -69,7 +69,34 @@
         let mediaQueue = [];
         let isPlaying = false;
         
-		var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+		var audioContext = null;
+		function ensureAudioContext() {
+			if (!audioContext && (window.AudioContext || window.webkitAudioContext)) {
+				var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+				audioContext = new AudioContextCtor();
+			}
+			return audioContext;
+		}
+		async function resumeAudioContext() {
+			var ctx = ensureAudioContext();
+			if (!ctx) {
+				return null;
+			}
+			if (ctx.state === 'suspended') {
+				await ctx.resume();
+			}
+			return ctx;
+		}
+		function attachAudioUnlockListeners() {
+			var handler = function() {
+				resumeAudioContext().catch(function(e) {
+					console.warn('Audio context resume failed after user interaction', e);
+				});
+			};
+			['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(function(eventName) {
+				document.addEventListener(eventName, handler, { once: true });
+			});
+		}
 		
 		const fadeoutTime = 300;
 		const minDisplayTime = parseInt(urlParams.get('showtime')) || (fadeoutTime + 1);
@@ -414,13 +441,17 @@
             video.muted = urlParams.has('muted');
             video.oncanplay = async () => {
                 mediaContent.replaceWith(video);
-                fadeIn();
+				fadeIn();
 				try {
-					if (audioContext.state == "suspended") {
-						await audioContext.resume();
+					if (!video.muted) {
+						await resumeAudioContext();
 					}
-					video.play();
-				} catch(e){}
+					await video.play();
+				} catch(e) {
+					console.warn('Video playback blocked:', e);
+					playNextMedia();
+					return;
+				}
                 
                 const videoDuration = video.duration * 1000; 
                 const displayTime = Math.max(videoDuration, minDisplayTime);
@@ -457,10 +488,13 @@
             audio.muted = urlParams.has('muted');
             audio.oncanplay = async () => {
                 fadeIn();
-				if (audioContext.state == "suspended") {
-					await audioContext.resume();
+				try {
+					await resumeAudioContext();
+					await audio.play();
+				} catch(e) {
+					console.warn('Audio playback blocked:', e);
+					playNextMedia();
 				}
-                audio.play();
             };
             audio.onended = () => {
                 fadeOut(() => playNextMedia());
@@ -525,15 +559,7 @@
         });
 
         // Handle audio context for browsers that require user interaction
-        document.addEventListener('click', () => {
-            if (window.AudioContext || window.webkitAudioContext) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const audioContext = new AudioContext();
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-            }
-        });
+        attachAudioUnlockListeners();
 		
 		function getUint24(view, pos) {
             return (view.getUint8(pos) | (view.getUint8(pos + 1) << 8) | (view.getUint8(pos + 2) << 16));

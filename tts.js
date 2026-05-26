@@ -56,27 +56,34 @@ TTS.initAudioContext = function() {
     }
 };
 
-document.addEventListener('click', function() {
-    //console.log("Document clicked, initializing AudioContext");
-    TTS.initAudioContext();
-    // Try to play a silent sound to unblock audio
-    try {
-        const silentSound = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0]);
-        const audioBuffer = TTS.audioContext.createBuffer(1, 8, 44100);
-        const source = TTS.audioContext.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(TTS.audioContext.destination);
-        source.start(0);
-        //console.log("Silent sound played to unblock audio");
-    } catch (e) {
-        console.warn("Failed to play silent sound:", e);
+TTS.unlockAudioContext = function() {
+    var ctx = TTS.initAudioContext();
+    if (!ctx) {
+        return;
     }
-}, { once: true });
+    var prime = function() {
+        try {
+            var audioBuffer = ctx.createBuffer(1, 8, 44100);
+            var source = ctx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(ctx.destination);
+            source.start(0);
+        } catch (e) {
+            console.warn("Failed to prime audio:", e);
+        }
+    };
+    if (ctx.state === "suspended") {
+        ctx.resume().then(prime).catch(function(err) {
+            console.warn("Could not resume audio context:", err);
+        });
+    } else {
+        prime();
+    }
+};
 
-document.addEventListener('keydown', function() {
-    //console.log("Key pressed, initializing AudioContext");
-    TTS.initAudioContext();
-}, { once: true });
+["pointerdown", "mousedown", "touchstart", "keydown", "click"].forEach(function(eventName) {
+    document.addEventListener(eventName, TTS.unlockAudioContext, { once: true });
+});
 
 
 TTS.isSafari = function() {

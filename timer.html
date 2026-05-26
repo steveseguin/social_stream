@@ -120,6 +120,7 @@
         var connectedPeers = {};
         var extensionRegistered = false;
         var soundTriggered = false;
+        var soundPrimed = false;
         var ringCircumference = 2 * Math.PI * 92;
         var el = {
             modeText: document.getElementById("modeText"),
@@ -221,6 +222,36 @@
         function setSound() {
             if (!state.soundEnabled) { el.doneSound.removeAttribute("src"); return; }
             el.doneSound.src = state.soundUrl || "./audio/bell.wav";
+            soundPrimed = false;
+        }
+        function primeDoneSound() {
+            if (soundPrimed || !state.soundEnabled) { return; }
+            try {
+                setSound();
+                var oldVolume = el.doneSound.volume;
+                el.doneSound.volume = 0;
+                var p = el.doneSound.play();
+                if (p && typeof p.then === "function") {
+                    p.then(function () {
+                        el.doneSound.pause();
+                        el.doneSound.currentTime = 0;
+                        el.doneSound.volume = oldVolume;
+                        soundPrimed = true;
+                    }).catch(function () {
+                        el.doneSound.volume = oldVolume;
+                    });
+                } else {
+                    el.doneSound.pause();
+                    el.doneSound.currentTime = 0;
+                    el.doneSound.volume = oldVolume;
+                    soundPrimed = true;
+                }
+            } catch (e) {}
+        }
+        function attachSoundUnlockListeners() {
+            ["pointerdown", "mousedown", "touchstart", "keydown", "click"].forEach(function (eventName) {
+                document.addEventListener(eventName, primeDoneSound);
+            });
         }
         function syncControls() {
             el.labelInput.value = state.label || "";
@@ -365,7 +396,7 @@
                 try {
                     el.doneSound.currentTime = 0;
                     var p = el.doneSound.play();
-                    if (p && typeof p.catch === "function") { p.catch(function () {}); }
+                    if (p && typeof p.catch === "function") { p.catch(function () { soundPrimed = false; }); }
                 } catch (e) {}
             } else if (!s.done) {
                 soundTriggered = false;
@@ -488,6 +519,7 @@
         el.addButton.onclick = function () { dispatch("timeradd", 30); };
         el.subButton.onclick = function () { dispatch("timersubtract", 30); };
         el.resetButton.onclick = function () { dispatch("resettimer"); };
+        attachSoundUnlockListeners();
         [el.labelInput, el.timeInput, el.warnInput, el.dangerInput, el.soundInput].forEach(function (node) {
             node.addEventListener("keydown", function (event) { if (event.key === "Enter") { dispatch("settimer", controlPayload()); } });
         });
