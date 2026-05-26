@@ -162,6 +162,9 @@
             border-radius: 4px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        body.hide-metrics .stats-container {
+            display: none !important;
+        }
         .stats-container h3 {
             margin: 0 0 10px 0;
             font-size: 16px;
@@ -445,6 +448,10 @@
                     <input type="checkbox" id="sync-block-users">
                     <span>Sync dock blocks to Twitch bans</span>
                 </label>
+                <label class="auth-method-option" style="display:flex; margin-bottom:12px;">
+                    <input type="checkbox" id="hide-metrics">
+                    <span>Hide dashboard metrics</span>
+                </label>
                 <div class="moderation-input-grid">
                     <input type="text" id="stream-title" class="channel-input" placeholder="Stream title">
                     <input type="text" id="stream-category" class="channel-input" placeholder="Game / category">
@@ -467,12 +474,14 @@
 				const parsed = JSON.parse(localStorage.getItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
 				return {
 					syncDeleteMessages: !!parsed.syncDeleteMessages,
-					syncBlockUsers: !!parsed.syncBlockUsers
+					syncBlockUsers: !!parsed.syncBlockUsers,
+					hideMetrics: !!parsed.hideMetrics
 				};
 			} catch (_) {
 				return {
 					syncDeleteMessages: false,
-					syncBlockUsers: false
+					syncBlockUsers: false,
+					hideMetrics: false
 				};
 			}
 		}
@@ -480,9 +489,14 @@
 		function saveAdvancedControlSettings() {
 			const payload = {
 				syncDeleteMessages: !!document.getElementById('sync-delete-messages')?.checked,
-				syncBlockUsers: !!document.getElementById('sync-block-users')?.checked
+				syncBlockUsers: !!document.getElementById('sync-block-users')?.checked,
+				hideMetrics: !!document.getElementById('hide-metrics')?.checked
 			};
 			localStorage.setItem(TWITCH_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+		}
+
+		function applyMetricsVisibility() {
+			document.body.classList.toggle('hide-metrics', !!document.getElementById('hide-metrics')?.checked);
 		}
 
 		function signOut() {
@@ -536,6 +550,7 @@
 			const controlSettings = loadAdvancedControlSettings();
 			const syncDeleteMessages = document.getElementById('sync-delete-messages');
 			const syncBlockUsers = document.getElementById('sync-block-users');
+			const hideMetrics = document.getElementById('hide-metrics');
 			if (syncDeleteMessages) {
 				syncDeleteMessages.checked = controlSettings.syncDeleteMessages;
 				syncDeleteMessages.addEventListener('change', saveAdvancedControlSettings);
@@ -543,6 +558,14 @@
 			if (syncBlockUsers) {
 				syncBlockUsers.checked = controlSettings.syncBlockUsers;
 				syncBlockUsers.addEventListener('change', saveAdvancedControlSettings);
+			}
+			if (hideMetrics) {
+				hideMetrics.checked = controlSettings.hideMetrics;
+				applyMetricsVisibility();
+				hideMetrics.addEventListener('change', function() {
+					saveAdvancedControlSettings();
+					applyMetricsVisibility();
+				});
 			}
 
             if (aliasInput) {

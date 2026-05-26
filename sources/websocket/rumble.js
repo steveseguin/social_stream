@@ -9,7 +9,8 @@
         pollMs: 3000,
         replayHistory: false,
         followerCountMode: 'source',
-        useSse: true
+        useSse: true,
+        hideMetrics: false
     };
     const READY_STATE = {
         CONNECTING: 0,
@@ -1617,6 +1618,7 @@
             state.cfg.useSse = sseValue !== '0' && sseValue !== 'false';
         }
         state.cfg.followerCountMode = normalizeFollowerCountMode(state.cfg.followerCountMode);
+        state.cfg.hideMetrics = !!state.cfg.hideMetrics;
     }
 
     async function loadSourceWindowConfig() {
@@ -1654,6 +1656,8 @@
         state.cfg.pollMs = clampPollMs(els.pollMs ? els.pollMs.value : state.cfg.pollMs);
         state.cfg.followerCountMode = normalizeFollowerCountMode(state.cfg.followerCountMode);
         state.cfg.replayHistory = !!(els.replayHistory && els.replayHistory.checked);
+        state.cfg.hideMetrics = !!(els.hideMetrics && els.hideMetrics.checked);
+        applyMetricsVisibility();
         saveConfig();
     }
 
@@ -1672,6 +1676,16 @@
         }
         if (els.replayHistory) {
             els.replayHistory.checked = !!state.cfg.replayHistory;
+        }
+        if (els.hideMetrics) {
+            els.hideMetrics.checked = !!state.cfg.hideMetrics;
+        }
+        applyMetricsVisibility();
+    }
+
+    function applyMetricsVisibility() {
+        if (typeof document !== 'undefined' && document.body) {
+            document.body.classList.toggle('hide-metrics', !!state.cfg.hideMetrics);
         }
     }
 
@@ -1822,6 +1836,13 @@
                 disconnect(true);
             });
         }
+        if (els.hideMetrics) {
+            els.hideMetrics.addEventListener('change', function () {
+                state.cfg.hideMetrics = !!els.hideMetrics.checked;
+                applyMetricsVisibility();
+                saveConfig();
+            });
+        }
         if (els.refresh) {
             els.refresh.addEventListener('click', function () {
                 refreshNow().catch(function (error) {
@@ -1900,6 +1921,7 @@
         els.viewerChip = document.getElementById('viewer-chip');
         els.followerChip = document.getElementById('follower-chip');
         els.subscriberChip = document.getElementById('subscriber-chip');
+        els.hideMetrics = document.getElementById('hide-metrics');
         els.advancedSection = document.getElementById('advanced-section');
         els.feed = document.getElementById('feed');
         els.feedEmpty = document.getElementById('feed-empty');

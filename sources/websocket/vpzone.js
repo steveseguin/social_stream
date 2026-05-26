@@ -7,7 +7,7 @@
 	const OAUTH_KEY = "vpzoneOAuthState";
 	const DEFAULT_CLIENT_ID = "e63ceeb6-e9e6-4732-a7eb-a8f1613a2686";
 	const DEFAULT_SCOPES = "profile:read profile:write follows:read channel:read channel:write dashboard:read chat:read chat:write chat:moderate chat:announcements notifications:read notifications:write oauth:manage";
-	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.nexus-7.vpzone.tv/ws", token: "", clientId: DEFAULT_CLIENT_ID, redirectUri: "", scopes: DEFAULT_SCOPES };
+	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.nexus-7.vpzone.tv/ws", token: "", clientId: DEFAULT_CLIENT_ID, redirectUri: "", scopes: DEFAULT_SCOPES, hideMetrics: false };
 	const RECONNECT_DELAY_MS = 4000;
 	const MAX_SEEN_IDS = 1500;
 	const READY_STATE = { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 };
@@ -549,6 +549,7 @@
 		state.cfg.clientId = typeof saved.clientId === "string" && saved.clientId ? saved.clientId : DEFAULT_CLIENT_ID;
 		state.cfg.redirectUri = normalizeRedirectUri(saved.redirectUri || "");
 		state.cfg.scopes = mergeScopes(typeof saved.scopes === "string" && saved.scopes ? saved.scopes : DEFAULT_SCOPES);
+		state.cfg.hideMetrics = !!saved.hideMetrics;
 		query = new URLSearchParams(window.location.search);
 		hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
 		if (query.get("channel") || query.get("username") || query.get("streamUsername") || hash.get("channel") || hash.get("username")) state.cfg.channel = normalizeChannel(query.get("channel") || query.get("username") || query.get("streamUsername") || hash.get("channel") || hash.get("username"));
@@ -567,6 +568,8 @@
 		state.cfg.channel = normalizeChannel(els.channel ? els.channel.value : state.cfg.channel);
 		state.cfg.wsUrl = normalizeWs(els.wsUrl ? els.wsUrl.value : state.cfg.wsUrl);
 		state.cfg.token = String(els.token ? els.token.value : state.cfg.token || "");
+		state.cfg.hideMetrics = !!(els.hideMetrics && els.hideMetrics.checked);
+		applyMetricsVisibility();
 		saveConfig();
 		updateAuthChip();
 		updateLink();
@@ -576,8 +579,16 @@
 		if (els.channel) els.channel.value = state.cfg.channel || "";
 		if (els.wsUrl) els.wsUrl.value = state.cfg.wsUrl || DEFAULT_CONFIG.wsUrl;
 		if (els.token) els.token.value = state.cfg.token || "";
+		if (els.hideMetrics) els.hideMetrics.checked = !!state.cfg.hideMetrics;
+		applyMetricsVisibility();
 		updateAuthChip();
 		updateLink();
+	}
+
+	function applyMetricsVisibility() {
+		if (typeof document !== "undefined" && document.body) {
+			document.body.classList.toggle("hide-metrics", !!state.cfg.hideMetrics);
+		}
 	}
 
 	function syncButtons() {
@@ -1025,6 +1036,7 @@
 		}
 		if (els.wsUrl) els.wsUrl.addEventListener("change", function () { els.wsUrl.value = normalizeWs(els.wsUrl.value); });
 		if (els.token) els.token.addEventListener("change", function () { state.cfg.token = String(els.token.value || ""); updateAuthChip(); });
+		if (els.hideMetrics) els.hideMetrics.addEventListener("change", function () { state.cfg.hideMetrics = !!els.hideMetrics.checked; applyMetricsVisibility(); saveConfig(); });
 		try { window.__SSAPP_START_VPZONE_AUTH__ = function () { return startExternalOAuth(); }; } catch (e) {}
 	}
 
@@ -1037,6 +1049,7 @@
 		els.clearAuth = document.getElementById("clear-auth-btn");
 		els.connect = document.getElementById("connect-btn");
 		els.disconnect = document.getElementById("disconnect-btn");
+		els.hideMetrics = document.getElementById("hide-metrics");
 		els.socketChip = document.getElementById("socket-chip");
 		els.viewerChip = document.getElementById("viewer-chip");
 		els.lastEventChip = document.getElementById("last-event-chip");

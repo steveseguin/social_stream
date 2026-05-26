@@ -187,6 +187,10 @@
                         <input type="checkbox" id="sync-block-users">
                         <span>Sync dock blocks to YouTube bans</span>
                     </label>
+                    <label class="auth-method-option" style="display:flex;">
+                        <input type="checkbox" id="hide-metrics">
+                        <span>Hide dashboard metrics</span>
+                    </label>
                     <input type="text" id="stream-title" class="channel-input" placeholder="Video title">
                     <input type="text" id="stream-description" class="channel-input" placeholder="Video description">
                     <input type="text" id="stream-category" class="channel-input" placeholder="Video category name or ID">
@@ -1805,12 +1809,14 @@ function enableBackgroundKeepAlive() {
 			const parsed = JSON.parse(localStorage.getItem(YT_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
 			return {
 				syncDeleteMessages: !!parsed.syncDeleteMessages,
-				syncBlockUsers: !!parsed.syncBlockUsers
+				syncBlockUsers: !!parsed.syncBlockUsers,
+				hideMetrics: !!parsed.hideMetrics
 			};
 		} catch (_) {
 			return {
 				syncDeleteMessages: false,
-				syncBlockUsers: false
+				syncBlockUsers: false,
+				hideMetrics: false
 			};
 		}
 	}
@@ -1818,9 +1824,14 @@ function enableBackgroundKeepAlive() {
 	function saveAdvancedControlSettings() {
 		const payload = {
 			syncDeleteMessages: !!document.getElementById('sync-delete-messages')?.checked,
-			syncBlockUsers: !!document.getElementById('sync-block-users')?.checked
+			syncBlockUsers: !!document.getElementById('sync-block-users')?.checked,
+			hideMetrics: !!document.getElementById('hide-metrics')?.checked
 		};
 		localStorage.setItem(YT_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+	}
+
+	function applyMetricsVisibility() {
+		document.body.classList.toggle('hide-metrics', !!document.getElementById('hide-metrics')?.checked);
 	}
 
 	function normalizeChannelLookupCacheKey(channelIdentifier) {
@@ -5551,6 +5562,7 @@ function enableBackgroundKeepAlive() {
 		const advancedControlSettings = loadAdvancedControlSettings();
 		const syncDeleteMessages = document.getElementById('sync-delete-messages');
 		const syncBlockUsers = document.getElementById('sync-block-users');
+		const hideMetrics = document.getElementById('hide-metrics');
 		if (syncDeleteMessages) {
 			syncDeleteMessages.checked = advancedControlSettings.syncDeleteMessages;
 			syncDeleteMessages.addEventListener('change', saveAdvancedControlSettings);
@@ -5560,6 +5572,16 @@ function enableBackgroundKeepAlive() {
 			syncBlockUsers.checked = advancedControlSettings.syncBlockUsers;
 			syncBlockUsers.addEventListener('change', saveAdvancedControlSettings);
 			registerCleanup(() => syncBlockUsers.removeEventListener('change', saveAdvancedControlSettings));
+		}
+		if (hideMetrics) {
+			hideMetrics.checked = advancedControlSettings.hideMetrics;
+			applyMetricsVisibility();
+			const hideMetricsHandler = function() {
+				saveAdvancedControlSettings();
+				applyMetricsVisibility();
+			};
+			hideMetrics.addEventListener('change', hideMetricsHandler);
+			registerCleanup(() => hideMetrics.removeEventListener('change', hideMetricsHandler));
 		}
 		const refreshStreamInfoButton = document.getElementById('refresh-stream-info');
 		if (refreshStreamInfoButton) {

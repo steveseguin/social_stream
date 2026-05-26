@@ -305,6 +305,10 @@
             align-content: start;
         }
 
+        body.hide-metrics .count-metric {
+            display: none !important;
+        }
+
         .metric-label {
             font-size: 12px;
             font-weight: 700;
@@ -613,15 +617,15 @@
                         <div class="metric-label">Stream</div>
                         <div id="stream-chip" class="chip">Stream: -</div>
                     </div>
-                    <div class="metric">
+                    <div class="metric count-metric">
                         <div class="metric-label">Viewers</div>
                         <div id="viewer-chip" class="chip">Viewers: -</div>
                     </div>
-                    <div class="metric">
+                    <div class="metric count-metric">
                         <div class="metric-label">Followers</div>
                         <div id="follower-chip" class="chip">Followers: -</div>
                     </div>
-                    <div class="metric">
+                    <div class="metric count-metric">
                         <div class="metric-label">Subscribers</div>
                         <div id="subscriber-chip" class="chip">Subscribers: -</div>
                     </div>
@@ -659,6 +663,10 @@
                         <label class="checkbox">
                             <input id="replay-history" type="checkbox" />
                             <span>Replay recent history on first connect</span>
+                        </label>
+                        <label class="checkbox">
+                            <input id="hide-metrics" type="checkbox" />
+                            <span>Hide dashboard metrics</span>
                         </label>
                     </div>
 

@@ -117,7 +117,8 @@ const state = {
     sseBuffer: '',
     eventsConnected: false,
     eventTransport: '',
-    connectedChannel: ''
+    connectedChannel: '',
+    hideMetrics: false
 };
 
 const els = {};
@@ -425,6 +426,7 @@ function loadConfig() {
         if (!raw) return;
         const conf = JSON.parse(raw);
         if (conf.redirectUri) state.redirectUri = conf.redirectUri;
+        state.hideMetrics = !!conf.hideMetrics;
     } catch (e) {}
 }
 
@@ -446,9 +448,16 @@ function applyRuntimeOverrides() {
 function persistConfig() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            redirectUri: state.redirectUri
+            redirectUri: state.redirectUri,
+            hideMetrics: !!state.hideMetrics
         }));
     } catch (e) {}
+}
+
+function applyMetricsVisibility() {
+    if (typeof document !== 'undefined' && document.body) {
+        document.body.classList.toggle('hide-metrics', !!state.hideMetrics);
+    }
 }
 
 function loadTokens() {
@@ -1771,6 +1780,7 @@ function initElements() {
         authState: q('auth-state'),
         channelLabel: q('channel-label'),
         viewerCount: q('viewer-count'),
+        hideMetrics: q('hide-metrics'),
         socketState: q('socket-state'),
         bridgeState: q('bridge-state'),
         chatFeed: q('chat-feed'),
@@ -1810,6 +1820,14 @@ function bindEvents() {
             }
         });
     }
+
+    if (els.hideMetrics) {
+        els.hideMetrics.addEventListener('change', () => {
+            state.hideMetrics = !!els.hideMetrics.checked;
+            applyMetricsVisibility();
+            persistConfig();
+        });
+    }
 }
 
 try {
@@ -1824,6 +1842,10 @@ async function init() {
     loadConfig();
     applyRuntimeOverrides();
     loadTokens();
+    if (els.hideMetrics) {
+        els.hideMetrics.checked = !!state.hideMetrics;
+    }
+    applyMetricsVisibility();
 
     if (els.redirectUriHint) {
         els.redirectUriHint.textContent = getRedirectUri();

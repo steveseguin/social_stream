@@ -228,7 +228,8 @@ const state = {
     },
     advancedControls: {
         syncDeleteMessages: false,
-        syncBlockUsers: false
+        syncBlockUsers: false,
+        hideMetrics: false
     },
     streamInfoCache: null
 };
@@ -2052,6 +2053,7 @@ function initElements() {
         chatStatus: q('chat-status'),
         syncDeleteMessages: q('sync-delete-messages'),
         syncBlockUsers: q('sync-block-users'),
+        hideMetrics: q('hide-metrics'),
         streamAdminTarget: q('stream-admin-target'),
         streamTitle: q('stream-title'),
         streamCategory: q('stream-category'),
@@ -2065,9 +2067,11 @@ function loadAdvancedControls() {
         const parsed = JSON.parse(localStorage.getItem(KICK_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
         state.advancedControls.syncDeleteMessages = !!parsed.syncDeleteMessages;
         state.advancedControls.syncBlockUsers = !!parsed.syncBlockUsers;
+        state.advancedControls.hideMetrics = !!parsed.hideMetrics;
     } catch (_) {
         state.advancedControls.syncDeleteMessages = false;
         state.advancedControls.syncBlockUsers = false;
+        state.advancedControls.hideMetrics = false;
     }
     if (els.syncDeleteMessages) {
         els.syncDeleteMessages.checked = state.advancedControls.syncDeleteMessages;
@@ -2075,14 +2079,25 @@ function loadAdvancedControls() {
     if (els.syncBlockUsers) {
         els.syncBlockUsers.checked = state.advancedControls.syncBlockUsers;
     }
+    if (els.hideMetrics) {
+        els.hideMetrics.checked = state.advancedControls.hideMetrics;
+    }
+    applyMetricsVisibility();
 }
 
 function persistAdvancedControls() {
     const payload = {
         syncDeleteMessages: !!state.advancedControls.syncDeleteMessages,
-        syncBlockUsers: !!state.advancedControls.syncBlockUsers
+        syncBlockUsers: !!state.advancedControls.syncBlockUsers,
+        hideMetrics: !!state.advancedControls.hideMetrics
     };
     localStorage.setItem(KICK_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+}
+
+function applyMetricsVisibility() {
+    if (typeof document !== 'undefined' && document.body) {
+        document.body.classList.toggle('hide-metrics', !!state.advancedControls.hideMetrics);
+    }
 }
 
 function normalizeSourceControlPlatform(type) {
@@ -2721,6 +2736,13 @@ function bindEvents() {
         els.syncBlockUsers.addEventListener('change', () => {
             state.advancedControls.syncBlockUsers = !!els.syncBlockUsers.checked;
             persistAdvancedControls();
+        });
+    }
+    if (els.hideMetrics) {
+        els.hideMetrics.addEventListener('change', () => {
+            state.advancedControls.hideMetrics = !!els.hideMetrics.checked;
+            persistAdvancedControls();
+            applyMetricsVisibility();
         });
     }
     if (els.refreshStreamInfo) {

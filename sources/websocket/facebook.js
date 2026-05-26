@@ -51,6 +51,7 @@ const state = {
   autoConnect: true,
   liveFilter: true,
   viewerCount: false,
+  hideMetrics: false,
   connected: false,
   polling: false,
   pollTimer: null,
@@ -86,6 +87,7 @@ function cacheElements() {
   els.autoConnect = document.getElementById('auto-connect');
   els.liveFilter = document.getElementById('live-filter');
   els.viewerCount = document.getElementById('viewer-count');
+  els.hideMetrics = document.getElementById('hide-metrics');
   els.showToken = document.getElementById('show-token');
   els.signinBtn = document.getElementById('signin-btn');
   els.clearAuthBtn = document.getElementById('clear-auth-btn');
@@ -383,6 +385,7 @@ function loadConfig() {
       ? Boolean(saved.liveFilter)
       : true;
   state.viewerCount = saved.viewerCount !== undefined ? Boolean(saved.viewerCount) : false;
+  state.hideMetrics = saved.hideMetrics !== undefined ? Boolean(saved.hideMetrics) : false;
 }
 
 function saveConfig() {
@@ -394,7 +397,8 @@ function saveConfig() {
     pollInterval: state.pollInterval,
     autoConnect: state.autoConnect,
     liveFilter: state.liveFilter,
-    viewerCount: state.viewerCount
+    viewerCount: state.viewerCount,
+    hideMetrics: state.hideMetrics
   };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -466,6 +470,8 @@ function updateInputs() {
   if (els.pollInterval) els.pollInterval.value = state.pollInterval;
   if (els.autoConnect) els.autoConnect.checked = state.autoConnect;
   if (els.liveFilter) els.liveFilter.checked = state.liveFilter;
+  if (els.hideMetrics) els.hideMetrics.checked = state.hideMetrics;
+  applyMetricsVisibility();
   updateViewerCountControl();
   updateActionButtons();
 }
@@ -478,6 +484,8 @@ function syncStateFromInputs() {
   state.pollInterval = clamp((els.pollInterval && els.pollInterval.value) || DEFAULT_POLL_INTERVAL, MIN_POLL_INTERVAL, MAX_POLL_INTERVAL);
   state.autoConnect = !!(els.autoConnect && els.autoConnect.checked);
   state.liveFilter = !!(els.liveFilter && els.liveFilter.checked);
+  state.hideMetrics = !!(els.hideMetrics && els.hideMetrics.checked);
+  applyMetricsVisibility();
   if (!extension.settingsLoaded) {
     state.viewerCount = !!(els.viewerCount && els.viewerCount.checked);
   }
@@ -489,6 +497,12 @@ function syncStateFromInputs() {
   if (els.pageId) els.pageId.value = state.pageId;
   if (els.pollInterval) els.pollInterval.value = state.pollInterval;
   updateActionButtons();
+}
+
+function applyMetricsVisibility() {
+  if (typeof document !== 'undefined' && document.body) {
+    document.body.classList.toggle('hide-metrics', !!state.hideMetrics);
+  }
 }
 
 function updateViewerCountControl() {
@@ -1285,7 +1299,8 @@ function bindEvents() {
       }
     });
   });
-  [els.autoConnect, els.liveFilter, els.viewerCount].forEach((checkbox) => {
+  [els.autoConnect, els.liveFilter, els.viewerCount, els.hideMetrics].forEach((checkbox) => {
+    if (!checkbox) return;
     checkbox.addEventListener('change', () => {
       syncStateFromInputs();
       saveConfig();

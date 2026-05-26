@@ -198,6 +198,10 @@
             gap: 15px;
             margin-top: 5px;
         }
+
+        body.hide-metrics .stats {
+            display: none !important;
+        }
         
         .stat-item {
             display: flex;
@@ -223,6 +227,12 @@
                 <div class="input-group">
                     <label for="cookie">Cookie (Optional, for sending messages):</label>
                     <textarea id="cookie" placeholder="SESSDATA=xxx; bili_jct=xxx; buvid3=xxx"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" id="hideMetrics">
+                        Hide dashboard metrics
+                    </label>
                 </div>
                 <button id="connectBtn">Connect</button>
                 <button id="disconnectBtn" disabled>Disconnect</button>
@@ -1118,6 +1128,24 @@
             const connectBtn = document.getElementById('connectBtn');
             const disconnectBtn = document.getElementById('disconnectBtn');
             const sendBtn = document.getElementById('sendBtn');
+            const hideMetrics = document.getElementById('hideMetrics');
+
+            function applyMetricsVisibility() {
+                document.body.classList.toggle('hide-metrics', !!(hideMetrics && hideMetrics.checked));
+            }
+
+            if (hideMetrics) {
+                try {
+                    hideMetrics.checked = localStorage.getItem('bilibiliHideMetrics') === '1';
+                } catch (e) {}
+                applyMetricsVisibility();
+                hideMetrics.addEventListener('change', function() {
+                    try {
+                        localStorage.setItem('bilibiliHideMetrics', hideMetrics.checked ? '1' : '0');
+                    } catch (e) {}
+                    applyMetricsVisibility();
+                });
+            }
             
             // Initialize messageBridge for extension communication
             window.messageBridge = new MessageBridge();
