@@ -72,6 +72,12 @@ const SUBSCRIPTION_EVENTS = new Set([
 const DONATION_EVENTS = new Set([
   'donation',
   'gift',              // TikTok gifts, Kick DOM gifts
+  'gift_sent',
+  'gift_message',
+  'live_gift',
+  'tiktok_gift',
+  'title_gifter',
+  'top_gifter',
   'supersticker',
   'thankyou',
   'jeweldonation',
@@ -96,6 +102,13 @@ const EVENT_ALIASES = Object.freeze({
   'super_chat': 'donation',
   'superchat': 'donation',
   'super_sticker': 'supersticker',
+  'gift_send': 'gift_sent',
+  'gift_sent_to_user': 'gift_sent',
+  'gift_message': 'gift',
+  'live_gift': 'gift',
+  'tiktok_gift': 'gift',
+  'title_gifter': 'gift',
+  'top_gifter': 'gift',
   'channel_cheer': 'cheer',
   'channel_raid': 'raid',
   'new-subscriber': 'new_subscriber',
@@ -200,8 +213,11 @@ const state = {
   socket: null,
   queue: [],
   currentAlert: null,
+  currentAlertNode: null,
+  alertSequence: 0,
   showTimer: null,
   cleanupTimer: null,
+  watchdogTimer: null,
   cooldownTimer: null,
   reconnectTimer: null,
   blockedUntil: 0,
@@ -253,6 +269,35 @@ function normalizeText(value) {
 
 function normalizeKey(value) {
   return normalizeText(value).toLowerCase();
+}
+
+function pickFirstText(candidates) {
+  for (const candidate of candidates) {
+    const normalized = normalizeText(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return '';
+}
+
+function pickNameFromValue(value) {
+  if (!value) {
+    return '';
+  }
+  if (typeof value !== 'object') {
+    return normalizeText(value);
+  }
+  return pickFirstText([
+    value.nickname,
+    value.displayName,
+    value.display_name,
+    value.uniqueId,
+    value.unique_id,
+    value.username,
+    value.userName,
+    value.name
+  ]);
 }
 
 function getTranslation(key, fallback = '') {
@@ -467,17 +512,41 @@ function pickEventKey(payload = {}) {
 }
 
 function pickDonationLabel(payload = {}) {
-  return normalizeText(
-    payload.hasDonation ||
-      payload.donation ||
-      payload.meta?.hasDonation ||
-      payload.meta?.donation
-  );
+  const directLabel = pickFirstText([
+    payload.hasDonation,
+    payload.donation,
+    payload.meta?.hasDonation,
+    payload.meta?.donation
+  ]);
+  if (directLabel) {
+    return directLabel;
+  }
+
+  const giftName = pickGiftName(payload);
+  if (!giftName) {
+    return '';
+  }
+
+  const giftCount = pickGiftCount(payload);
+  return giftCount > 1 ? `${giftName} x${giftCount}` : giftName;
 }
 
 function buildRecentPayloadSignature(payload = {}) {
+  const eventKey = pickEventKey(payload);
+  if (isGiftEventKey(eventKey)) {
+    return [
+      'gift',
+      pickSourceKey(payload),
+      pickActorName(payload),
+      pickGiftRecipient(payload),
+      pickGiftName(payload),
+      normalizeText(payload.contentimg || payload.contentImage || payload.meta?.contentimg || payload.meta?.mediaUrl),
+      normalizeGiftSignatureText(payload.chatmessage)
+    ].join('|');
+  }
+
   return [
-    pickEventKey(payload),
+    eventKey,
     pickSourceKey(payload),
     normalizeText(payload.chatname),
     normalizeText(payload.chatmessage),
@@ -486,6 +555,14 @@ function buildRecentPayloadSignature(payload = {}) {
     normalizeText(payload.contentimg),
     normalizeText(payload.id || payload.meta?.eventId || payload.meta?.id)
   ].join('|');
+}
+
+function normalizeGiftSignatureText(value) {
+  return normalizeText(value)
+    .replace(/\s*[x\u00d7]\s*\d+\b/gi, '')
+    .replace(/\b\d+\s*(coins?|gifts?)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function isDuplicateAlertPayload(payload = {}) {
@@ -513,7 +590,212 @@ function isDuplicateAlertPayload(payload = {}) {
   return false;
 }
 
+function pickGiftActorName(payload = {}) {
+  const candidates = [
+    payload.gifter,
+    payload.gifterName,
+    payload.senderName,
+    payload.fromUser,
+    payload.from,
+    payload.meta?.gifter,
+    payload.meta?.gifterName,
+    payload.meta?.senderName,
+    payload.meta?.fromUser,
+    payload.meta?.from,
+    payload.raw?.gifter,
+    payload.raw?.sender,
+    payload.raw?.user,
+    payload.raw?.fromUser,
+    payload.raw?.from_user
+  ];
+  for (const candidate of candidates) {
+    const normalized = pickNameFromValue(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return '';
+}
+
+function pickGiftRecipient(payload = {}) {
+  const candidates = [
+    payload.recipient,
+    payload.recipientName,
+    payload.giftRecipient,
+    payload.giftRecipientName,
+    payload.receiver,
+    payload.receiverName,
+    payload.targetUser,
+    payload.targetUsername,
+    payload.toUser,
+    payload.to_user,
+    payload.meta?.recipient,
+    payload.meta?.recipientName,
+    payload.meta?.giftRecipient,
+    payload.meta?.giftRecipientName,
+    payload.meta?.receiver,
+    payload.meta?.receiverName,
+    payload.meta?.targetUser,
+    payload.meta?.targetUsername,
+    payload.meta?.toUser,
+    payload.meta?.to_user,
+    payload.raw?.recipient,
+    payload.raw?.recipientName,
+    payload.raw?.giftRecipient,
+    payload.raw?.giftRecipientName,
+    payload.raw?.receiver,
+    payload.raw?.receiverName,
+    payload.raw?.targetUser,
+    payload.raw?.targetUsername,
+    payload.raw?.toUser,
+    payload.raw?.to_user
+  ];
+  for (const candidate of candidates) {
+    const normalized = pickNameFromValue(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return '';
+}
+
+function pickGiftTitleGifter(payload = {}) {
+  const explicitLabel = pickFirstText([
+    payload.titleGifter,
+    payload.title_gifter,
+    payload.gifterTitle,
+    payload.gifter_title,
+    payload.topGifter,
+    payload.top_gifter,
+    payload.topGifterTitle,
+    payload.top_gifter_title,
+    payload.meta?.titleGifter,
+    payload.meta?.title_gifter,
+    payload.meta?.gifterTitle,
+    payload.meta?.gifter_title,
+    payload.meta?.topGifter,
+    payload.meta?.top_gifter,
+    payload.meta?.topGifterTitle,
+    payload.meta?.top_gifter_title,
+    payload.raw?.titleGifter,
+    payload.raw?.title_gifter,
+    payload.raw?.gifterTitle,
+    payload.raw?.gifter_title,
+    payload.raw?.topGifter,
+    payload.raw?.top_gifter,
+    payload.raw?.topGifterTitle,
+    payload.raw?.top_gifter_title
+  ]);
+  if (explicitLabel) {
+    return explicitLabel;
+  }
+
+  const rankCandidates = [
+    payload.topGifterRank,
+    payload.top_gifter_rank,
+    payload.meta?.topGifterRank,
+    payload.meta?.top_gifter_rank,
+    payload.raw?.topGifterRank,
+    payload.raw?.top_gifter_rank
+  ];
+  for (const candidate of rankCandidates) {
+    const rank = Number(candidate);
+    if (Number.isFinite(rank) && rank > 0) {
+      return `Top gifter #${Math.floor(rank)}`;
+    }
+  }
+  return '';
+}
+
+function pickGiftName(payload = {}) {
+  const gift = payload.gift || payload.extendedGiftInfo || payload.extended_gift_info || {};
+  const metaGift = payload.meta?.gift || payload.meta?.extendedGiftInfo || payload.meta?.extended_gift_info || {};
+  const rawGift = payload.raw?.gift || payload.raw?.extendedGiftInfo || payload.raw?.extended_gift_info || {};
+  return pickFirstText([
+    payload.giftName,
+    payload.gift_name,
+    payload.giftTitle,
+    payload.gift_title,
+    payload.title,
+    payload.meta?.giftName,
+    payload.meta?.gift_name,
+    payload.meta?.giftTitle,
+    payload.meta?.gift_title,
+    payload.meta?.title,
+    gift.giftName,
+    gift.gift_name,
+    gift.name,
+    gift.title,
+    metaGift.giftName,
+    metaGift.gift_name,
+    metaGift.name,
+    metaGift.title,
+    rawGift.giftName,
+    rawGift.gift_name,
+    rawGift.name,
+    rawGift.title
+  ]);
+}
+
+function pickGiftCount(payload = {}) {
+  const gift = payload.gift || payload.extendedGiftInfo || payload.extended_gift_info || {};
+  const metaGift = payload.meta?.gift || payload.meta?.extendedGiftInfo || payload.meta?.extended_gift_info || {};
+  const rawGift = payload.raw?.gift || payload.raw?.extendedGiftInfo || payload.raw?.extended_gift_info || {};
+  const candidates = [
+    payload.repeatCount,
+    payload.repeat_count,
+    payload.combo,
+    payload.count,
+    payload.quantity,
+    payload.meta?.repeatCount,
+    payload.meta?.repeat_count,
+    payload.meta?.comboCount,
+    payload.meta?.combo_count,
+    payload.meta?.groupCount,
+    payload.meta?.group_count,
+    payload.meta?.count,
+    payload.meta?.quantity,
+    gift.repeatCount,
+    gift.repeat_count,
+    gift.combo,
+    gift.count,
+    gift.quantity,
+    metaGift.repeatCount,
+    metaGift.repeat_count,
+    metaGift.combo,
+    metaGift.count,
+    metaGift.quantity,
+    rawGift.repeatCount,
+    rawGift.repeat_count,
+    rawGift.combo,
+    rawGift.count,
+    rawGift.quantity
+  ];
+  for (const candidate of candidates) {
+    const numberValue = Number(candidate);
+    if (Number.isFinite(numberValue) && numberValue > 1) {
+      return numberValue;
+    }
+  }
+  return 1;
+}
+
+function isGiftEventKey(eventKey) {
+  return eventKey === 'gift' ||
+    eventKey === 'gift_sent' ||
+    eventKey === 'giftpurchase' ||
+    eventKey === 'giftredemption' ||
+    eventKey === 'subscription_gift';
+}
+
 function pickActorName(payload = {}) {
+  if (isGiftEventKey(pickEventKey(payload))) {
+    const giftActor = pickGiftActorName(payload);
+    if (giftActor) {
+      return giftActor;
+    }
+  }
+
   const candidates = [
     payload.chatname,
     payload.meta?.supporter,
@@ -540,6 +822,30 @@ function pickSubtitle(payload = {}) {
       payload.meta?.plan ||
       payload.meta?.level
   );
+}
+
+function buildAlertSubtitle(category, payload = {}, eventKey = '', actor = '') {
+  const parts = [];
+  const baseSubtitle = pickSubtitle(payload);
+  if (baseSubtitle) {
+    parts.push(baseSubtitle);
+  }
+
+  if (category === ALERT_CATEGORIES.DONATION && isGiftEventKey(eventKey)) {
+    const recipient = pickGiftRecipient(payload);
+    const recipientKey = normalizeKey(recipient);
+    const actorKey = normalizeKey(actor);
+    if (recipient && recipientKey !== actorKey && !normalizeKey(parts.join(' ')).includes(recipientKey)) {
+      parts.push(formatTranslation('alert-gift-recipient', 'To {recipient}', { recipient }));
+    }
+
+    const titleGifter = pickGiftTitleGifter(payload);
+    if (titleGifter && !normalizeKey(parts.join(' ')).includes(normalizeKey(titleGifter))) {
+      parts.push(titleGifter);
+    }
+  }
+
+  return parts.join(' - ');
 }
 
 function pickViewerCount(payload = {}) {
@@ -760,7 +1066,7 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount) {
       }
       return { lead: actor, tail: getTranslation('alert-just-subscribed', 'just subscribed') };
     case ALERT_CATEGORIES.DONATION:
-      if (eventKey === 'gift') {
+      if (isGiftEventKey(eventKey)) {
         return {
           lead: actor,
           tail: amount
@@ -794,7 +1100,7 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount) {
 }
 
 function buildTitle(category, eventKey) {
-  if (category === ALERT_CATEGORIES.DONATION && eventKey === 'gift') {
+  if (category === ALERT_CATEGORIES.DONATION && isGiftEventKey(eventKey)) {
     return getTranslation('alert-title-new-gift', 'New Gift');
   }
   return getCategoryLabel(category) || getTranslation('alert-title-new-alert', 'New Alert');
@@ -811,8 +1117,15 @@ function buildBodyText(category, payload, viewerCount) {
     });
   }
   if (category === ALERT_CATEGORIES.DONATION) {
-    if (eventKey === 'gift') {
-      return rawMessage || getTranslation('alert-gift-landed', 'A gift just landed.');
+    if (isGiftEventKey(eventKey)) {
+      if (rawMessage) {
+        return rawMessage;
+      }
+      const recipient = pickGiftRecipient(payload);
+      if (recipient) {
+        return formatTranslation('alert-gift-sent-to', 'Gift sent to {recipient}.', { recipient });
+      }
+      return getTranslation('alert-gift-landed', 'A gift just landed.');
     }
     return rawMessage || getTranslation('alert-thanks-support', 'Thank you for the support!');
   }
@@ -858,7 +1171,7 @@ function buildAlertViewModel(payload = {}) {
   const sourceLabel = SOURCE_LABELS[sourceKey] || humanizeKey(sourceKey);
   const actor = pickActorName(payload);
   const amount = pickDonationLabel(payload);
-  const subtitle = pickSubtitle(payload);
+  const subtitle = buildAlertSubtitle(category, payload, eventKey, actor);
   const viewerCount = pickViewerCount(payload);
   const mediaUrl = pickMediaUrl(payload);
   const cashValue = pickCashValue(payload, amount, sourceKey);
@@ -1361,9 +1674,27 @@ function queueAlert(model) {
   displayAlert(model);
 }
 
+function clearDisplayTimers() {
+  if (state.showTimer) {
+    window.clearTimeout(state.showTimer);
+    state.showTimer = null;
+  }
+  if (state.cleanupTimer) {
+    window.clearTimeout(state.cleanupTimer);
+    state.cleanupTimer = null;
+  }
+  if (state.watchdogTimer) {
+    window.clearTimeout(state.watchdogTimer);
+    state.watchdogTimer = null;
+  }
+}
+
 function displayAlert(model, options = {}) {
+  clearDisplayTimers();
   const card = renderAlert(model);
+  const alertToken = ++state.alertSequence;
   state.currentAlert = model;
+  state.currentAlertNode = card;
   elements.stage.innerHTML = '';
   elements.stage.appendChild(card);
   elements.stage.classList.add('has-alert');
@@ -1389,19 +1720,35 @@ function displayAlert(model, options = {}) {
   const hideLead = Math.min(550, Math.max(280, Math.round(effectiveShowTime * 0.16)));
 
   state.showTimer = window.setTimeout(() => {
-    card.classList.add('is-hiding');
+    state.showTimer = null;
+    if (state.alertSequence === alertToken && card.isConnected) {
+      card.classList.add('is-hiding');
+    }
   }, Math.max(0, effectiveShowTime - hideLead));
 
   state.cleanupTimer = window.setTimeout(() => {
-    finalizeAlert(card);
+    state.cleanupTimer = null;
+    finalizeAlert(card, alertToken);
   }, effectiveShowTime);
+
+  state.watchdogTimer = window.setTimeout(() => {
+    state.watchdogTimer = null;
+    finalizeAlert(card, alertToken);
+  }, effectiveShowTime + Math.max(1500, settings.cooldown + 1000));
 }
 
-function finalizeAlert(card) {
+function finalizeAlert(card, alertToken) {
+  if (alertToken && state.alertSequence !== alertToken) {
+    return;
+  }
+  clearDisplayTimers();
   if (card?.isConnected) {
     card.remove();
+  } else if (state.currentAlertNode?.isConnected) {
+    state.currentAlertNode.remove();
   }
   state.currentAlert = null;
+  state.currentAlertNode = null;
   elements.stage.classList.remove('has-alert');
 
   const effectiveCooldown = state.queue.length > 3 ? Math.min(settings.cooldown, 200) : settings.cooldown;
@@ -1427,14 +1774,7 @@ function processQueue() {
 }
 
 function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
-  if (state.showTimer) {
-    window.clearTimeout(state.showTimer);
-    state.showTimer = null;
-  }
-  if (state.cleanupTimer) {
-    window.clearTimeout(state.cleanupTimer);
-    state.cleanupTimer = null;
-  }
+  clearDisplayTimers();
   if (state.cooldownTimer) {
     window.clearTimeout(state.cooldownTimer);
     state.cooldownTimer = null;
@@ -1447,6 +1787,8 @@ function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
     TTS.clearQueue();
   }
   state.currentAlert = null;
+  state.currentAlertNode = null;
+  state.alertSequence += 1;
   elements.stage.innerHTML = '';
   elements.stage.classList.remove('has-alert');
   if (!preserveCooldown) {

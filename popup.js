@@ -4217,8 +4217,8 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
             'alignright': 'align=center',
             'align=center': 'alignright',
             'transparent': ['pagebg', 'chroma=00ff00'],
-            'pagebg': ['transparent', 'chroma=00ff00'],
-            'chroma=00ff00': ['transparent', 'pagebg']
+            'pagebg': 'transparent',
+            'chroma=00ff00': 'transparent'
         }
     };
 
