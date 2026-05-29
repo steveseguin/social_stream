@@ -1265,6 +1265,9 @@
 		if (brandedImageURL) {
 			data.sourceImg = brandedImageURL;
 		}
+		if (channelName){
+			data.sourceName = channelName;
+		}
 		if (crossChat){
 			data.sourceImg = crossChat;
 		}

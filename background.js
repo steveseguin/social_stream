@@ -59,18 +59,18 @@ function commandAliasMatches(commandString, messageText, mode) {
 		return false;
 	}
 	const text = String(messageText);
+	const lowerText = text.toLowerCase();
 
 	if (mode === "exact") {
-		return aliases.some(alias => text === alias.command);
+		return aliases.some(alias => lowerText === alias.lower);
 	}
 	if (mode === "startsWith") {
-		const lowerText = text.toLowerCase();
 		return aliases.some(alias => lowerText.startsWith(alias.lower));
 	}
 	if (mode === "word") {
 		return aliases.some(alias => alias.wordRegex.test(text));
 	}
-	return aliases.some(alias => text.includes(alias.command));
+	return aliases.some(alias => lowerText.includes(alias.lower));
 }
 
 function getCustomGifCommandEntryId(command, url, id) {
@@ -85,9 +85,10 @@ function getCustomGifCommandEntryId(command, url, id) {
 
 function getMatchedCommandAlias(commandString, messageText) {
 	const text = String(messageText || "");
+	const lowerText = text.toLowerCase();
 	const aliases = getCommandAliases(commandString);
 	for (let i = 0; i < aliases.length; i++) {
-		if (text === aliases[i].command) {
+		if (lowerText === aliases[i].lower) {
 			return aliases[i].command;
 		}
 	}
@@ -4519,6 +4520,27 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "testLLMProvider") {
 			try {
 				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null });
+				sendResponse({ success: true, response: llmResponse });
+			} catch (error) {
+				let payload;
+				if (typeof LLMServiceError !== "undefined" && error instanceof LLMServiceError) {
+					payload = {
+						provider: error.provider,
+						status: error.status,
+						code: error.code,
+						message: error.message,
+						hint: error.hint || null
+					};
+				} else {
+					payload = {
+						message: error?.message || "Unexpected error"
+					};
+				}
+				sendResponse({ success: false, error: payload });
+			}
+		} else if (request.cmd && request.cmd === "classifyMessageForExport") {
+			try {
+				const llmResponse = await callLLMAPI(String(request.prompt || ""), null, null, null, null, null, { settings: request.settingsOverride || null });
 				sendResponse({ success: true, response: llmResponse });
 			} catch (error) {
 				let payload;
