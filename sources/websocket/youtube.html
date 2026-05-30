@@ -484,6 +484,7 @@ try {
 	var richMessageCacheOrder = [];
 	const MAX_RICH_MESSAGE_CACHE = 500;
 	const RICH_CHAT_MIN_FETCH_INTERVAL_MS = 1000;
+	const CHANNEL_EMOJI_RICH_RETRY_DELAYS_MS = [600, 1400, 3000, 5000, 8000, 12000, 20000, 30000, 45000, 60000];
 	
 	
 	// BTTV/7TV/FFZ emote support
@@ -2402,6 +2403,29 @@ function enableBackgroundKeepAlive() {
 
 		return result;
 	}
+
+	function replaceChannelEmojiShortcutsInEscapedHtml(html) {
+		if (!html || !channelShortcutMap.size) {
+			return html || '';
+		}
+		return String(html).split(/(<[^>]+>)/g).map(function(part) {
+			if (!part || part.charAt(0) === '<') {
+				return part;
+			}
+			return part.replace(/:([^:\s<>]+):/g, function(match) {
+				const emojiInfo = channelShortcutMap.get(match);
+				if (!emojiInfo || !emojiInfo.url) {
+					return match;
+				}
+				if (settings.textonlymode || false) {
+					if (emojiInfo.isCustom) return '';
+					return emojiInfo.id || '';
+				}
+				const altText = resolveEmojiAltAttribute(emojiInfo, match);
+				return `<img src="${strictEscapeHtml(emojiInfo.url)}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
+			});
+		}).join('');
+	}
 	function getStoredToken() {
 		const storedToken = localStorage.getItem('youtubeOAuthToken');
 		const tokenExpiry = localStorage.getItem('youtubeOAuthExpiry');
@@ -2692,13 +2716,59 @@ function enableBackgroundKeepAlive() {
 		if (!value || typeof value !== 'string') {
 			return [];
 		}
-		return value.match(/:[A-Za-z0-9_][A-Za-z0-9_\-]*:/g) || [];
+		return value.match(/:([^:\s<>]+):/g) || [];
 	}
 
 	function hasUnresolvedYouTubeChannelEmojiShortcut(value) {
 		return extractYouTubeShortcutTokens(value).some(function(shortcut) {
 			return shortcut.indexOf(':_') === 0 && !channelShortcutMap.has(shortcut) && !shortcutMap.has(shortcut);
 		});
+	}
+
+	function messageDataNeedsRichChannelEmojiResolution(messageData) {
+		if (!messageData) {
+			return false;
+		}
+		const richMessage = getRichMessageForMessageData(messageData);
+		if (richMessage) {
+			return hasUnresolvedYouTubeChannelEmojiShortcut(richMessage.html || '') ||
+				hasUnresolvedYouTubeChannelEmojiShortcut(richMessage.plainText || '');
+		}
+		return hasUnresolvedYouTubeChannelEmojiShortcut(messageData.message || '') ||
+			hasUnresolvedYouTubeChannelEmojiShortcut(messageData.plainTextMessage || '');
+	}
+
+	function processQueuedMessageData(messageData) {
+		processMessage(messageData);
+
+		// If page isn't visible, queue for later DOM rendering
+		if (!isPageVisible) {
+			if (messageQueue.length >= 200) {
+				messageQueue.splice(0, messageQueue.length - 199);
+			}
+			messageQueue.push(messageData);
+		}
+	}
+
+	function queueMessageAfterRichEmojiRetry(messageData, attempt = 0) {
+		const delay = CHANNEL_EMOJI_RICH_RETRY_DELAYS_MS[attempt];
+		if (typeof delay !== 'number') {
+			processQueuedMessageData(messageData);
+			return;
+		}
+		setTrackedTimeout(async function() {
+			const richChatVideoId = (currentStream && currentStream.id) || videoId;
+			if (richChatVideoId) {
+				await syncYouTubeRichChatData(richChatVideoId).catch(function(error) {
+					console.log('YouTube rich chat retry failed:', error && error.message ? error.message : error);
+				});
+			}
+			if (messageDataNeedsRichChannelEmojiResolution(messageData)) {
+				queueMessageAfterRichEmojiRetry(messageData, attempt + 1);
+				return;
+			}
+			processQueuedMessageData(messageData);
+		}, delay, !isPageVisible);
 	}
 
 	function liveChatItemNeedsRichEmojiSync(item) {
@@ -3910,15 +3980,11 @@ function enableBackgroundKeepAlive() {
 	  updatePollSpinner(5000);
 	}
 		function queueMessage(messageData) {
-			processMessage(messageData);
-
-			// If page isn't visible, queue for later DOM rendering
-			if (!isPageVisible) {
-				if (messageQueue.length >= 200) {
-					messageQueue.splice(0, messageQueue.length - 199);
-				}
-				messageQueue.push(messageData);
+			if (messageDataNeedsRichChannelEmojiResolution(messageData)) {
+				queueMessageAfterRichEmojiRetry(messageData);
+				return;
 			}
+			processQueuedMessageData(messageData);
 		}
 	
 	function processQueuedMessages() {
@@ -4794,7 +4860,7 @@ function enableBackgroundKeepAlive() {
 			}
 				const messageText = messageData.message || '';
 				const textOnlyMode = Boolean(settings.textonlymode);
-				const messageWithEmojis = (!textOnlyMode && richMessage && richMessage.html) ? richMessage.html : replaceEmojis(messageText);
+				const messageWithEmojis = (!textOnlyMode && richMessage && richMessage.html) ? replaceChannelEmojiShortcutsInEscapedHtml(richMessage.html) : replaceEmojis(messageText);
 				let basePlainText = (richMessage && richMessage.plainText)
 					? richMessage.plainText
 					: (typeof messageData.plainTextMessage === 'string' && messageData.plainTextMessage.trim())
