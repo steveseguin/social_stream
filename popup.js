@@ -3901,6 +3901,8 @@ if (sourcemode){
     } else {
         baseURL = "file:///C:/Users/steve/Code/social_stream/";
     }
+} else if (location.hostname === "cache.socialstream.ninja") {
+    baseURL = "https://socialstream.ninja/";
 } else if (location.protocol !== "chrome-extension:" && !Beta) {
     // Only set baseURL from location if we're not already in beta mode
     baseURL = `${location.protocol}//${location.host}/`;

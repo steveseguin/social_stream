@@ -113,6 +113,9 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             border: 1px solid #1f2937;
         }
+        body.hide-metrics .stats-container {
+            display: none !important;
+        }
         .stats-container h3 {
             margin: 0 0 12px 0;
             font-size: 16px;
@@ -378,6 +381,14 @@
                 </div>
             </div>
 
+            <div class="connection-status">
+                <div class="status-header">Display</div>
+                <label class="status-item" style="display:flex; gap:6px; align-items:center;">
+                    <input type="checkbox" id="hide-metrics">
+                    <span>Hide dashboard metrics</span>
+                </label>
+            </div>
+
             <div class="recent-events">
                 <h4>Recent Events</h4>
                 <div id="events-list"></div>
@@ -385,6 +396,25 @@
         </div>
     </div>
 
+    <script>
+        (function() {
+            var STORAGE_KEY = 'socialStreamChatHideMetrics';
+            var checkbox = document.getElementById('hide-metrics');
+
+            function applyMetricsVisibility() {
+                document.body.classList.toggle('hide-metrics', !!(checkbox && checkbox.checked));
+            }
+
+            if (checkbox) {
+                checkbox.checked = localStorage.getItem(STORAGE_KEY) === '1';
+                applyMetricsVisibility();
+                checkbox.addEventListener('change', function() {
+                    localStorage.setItem(STORAGE_KEY, checkbox.checked ? '1' : '0');
+                    applyMetricsVisibility();
+                });
+            }
+        })();
+    </script>
     <script src="socialstreamchat.js"></script>
 </body>
 </html>
