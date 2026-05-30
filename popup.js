@@ -6014,8 +6014,35 @@ try {
 	log(e);
 }
 
-function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia') {
+function applyHostedMediaUploadResult(inputElement, uploadData, onUploaded) {
+    const uploadedUrl = typeof uploadData === 'string' ? uploadData : uploadData && uploadData.url;
+    if (!inputElement || !uploadedUrl) {
+        return false;
+    }
+
+    inputElement.value = uploadedUrl;
+    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+    inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+    if (typeof onUploaded === 'function') {
+        onUploaded(uploadedUrl, uploadData);
+    }
+    return true;
+}
+
+async function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia', onUploaded) {
     if (!inputElement) {
+        return;
+    }
+
+    if (window.ninjafy && typeof window.ninjafy.startMediaUpload === 'function') {
+        try {
+            const result = await window.ninjafy.startMediaUpload({ popupName });
+            if (result && result.success && result.url) {
+                applyHostedMediaUploadResult(inputElement, result, onUploaded);
+            }
+        } catch (error) {
+            console.warn('Hosted media upload failed:', error && error.message ? error.message : error);
+        }
         return;
     }
 
@@ -6025,9 +6052,7 @@ function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia') 
         if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
         if (!event.data || event.data.type !== 'media-uploaded' || !event.data.url) return;
 
-        inputElement.value = event.data.url;
-        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+        applyHostedMediaUploadResult(inputElement, event.data, onUploaded);
         window.removeEventListener('message', handler);
     };
 
@@ -9117,29 +9142,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const uploadBeepBtn = document.getElementById('uploadBeepBtn');
 	if (uploadBeepBtn) {
 		uploadBeepBtn.onclick = function() {
-			// Open the media hosting service in a popup window
-			const popup = window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadBeep', 'width=640,height=640');
-			
-			// Listen for message from the popup
-			window.addEventListener('message', function handleMessage(event) {
-				// Verify the origin for security
-				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-				
-				// Check if this is our media upload message
-				if (event.data && event.data.type === 'media-uploaded') {
-					// Fill the custom beep input with the uploaded URL
-					const customBeepInput = document.getElementById('custombeep');
-					if (customBeepInput) {
-						customBeepInput.value = event.data.url;
-						// Trigger change event to save the value
-						customBeepInput.dispatchEvent(new Event('input', { bubbles: true }));
-						customBeepInput.dispatchEvent(new Event('change', { bubbles: true }));
-					}
-					
-					// Remove this specific listener
-					window.removeEventListener('message', handleMessage);
-				}
-			});
+			openHostedMediaUploadForInput(document.getElementById('custombeep'), 'uploadBeep');
 		};
 	}
 
@@ -9147,48 +9150,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const uploadBeepBtn2 = document.getElementById('uploadBeepBtn2');
 	if (uploadBeepBtn2) {
 		uploadBeepBtn2.onclick = function() {
-			// Open the media hosting service in a popup window
-			const popup = window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadBeep2', 'width=640,height=640');
-			
-			// Listen for message from the popup
-			window.addEventListener('message', function handleMessage(event) {
-				// Verify the origin for security
-				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-				
-				// Check if this is our media upload message
-				if (event.data && event.data.type === 'media-uploaded') {
-					// Fill the second custom beep input with the uploaded URL
-					const customBeepInput2 = document.getElementById('custombeep2');
-					if (customBeepInput2) {
-						customBeepInput2.value = event.data.url;
-						// Trigger change event to save the value
-						customBeepInput2.dispatchEvent(new Event('input', { bubbles: true }));
-						customBeepInput2.dispatchEvent(new Event('change', { bubbles: true }));
-					}
-					
-					// Remove this specific listener
-					window.removeEventListener('message', handleMessage);
-				}
-			});
+			openHostedMediaUploadForInput(document.getElementById('custombeep2'), 'uploadBeep2');
 		};
 	}
 
 	const uploadTimerSoundBtn = document.getElementById('uploadTimerSoundBtn');
 	if (uploadTimerSoundBtn) {
 		uploadTimerSoundBtn.onclick = function() {
-			window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadTimerSound', 'width=640,height=640');
-			window.addEventListener('message', function handleMessage(event) {
-				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-				if (event.data && event.data.type === 'media-uploaded') {
-					const timerSoundInput = document.getElementById('timerCustomSound');
-					if (timerSoundInput) {
-						timerSoundInput.value = event.data.url;
-						timerSoundInput.dispatchEvent(new Event('input', { bubbles: true }));
-						timerSoundInput.dispatchEvent(new Event('change', { bubbles: true }));
-					}
-					window.removeEventListener('message', handleMessage);
-				}
-			});
+			openHostedMediaUploadForInput(document.getElementById('timerCustomSound'), 'uploadTimerSound');
 		};
 	}
 
@@ -9205,19 +9174,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		const btn = document.getElementById(btnId);
 		if (btn) {
 			btn.onclick = function() {
-				window.open('https://fileuploads.socialstream.ninja/popup/upload', btnId, 'width=640,height=640');
-				window.addEventListener('message', function handleMessage(event) {
-					if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-					if (event.data && event.data.type === 'media-uploaded') {
-						const input = document.getElementById(inputId);
-						if (input) {
-							input.value = event.data.url;
-							input.dispatchEvent(new Event('input', { bubbles: true }));
-							input.dispatchEvent(new Event('change', { bubbles: true }));
-						}
-						window.removeEventListener('message', handleMessage);
-					}
-				});
+				openHostedMediaUploadForInput(document.getElementById(inputId), btnId);
 			};
 		}
 	});
@@ -9240,22 +9197,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const uploadFeaturedFallbackBtn = document.getElementById('uploadFeaturedFallbackBtn');
 	if (uploadFeaturedFallbackBtn) {
 		uploadFeaturedFallbackBtn.onclick = function() {
-			window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadFeaturedFallback', 'width=640,height=640');
-			window.addEventListener('message', function handleMessage(event) {
-				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-				if (event.data && event.data.type === 'media-uploaded') {
-					const fallbackInput = document.getElementById('featuredFallbackImage');
-					if (fallbackInput) {
-						fallbackInput.value = event.data.url;
-						fallbackInput.dispatchEvent(new Event('input', { bubbles: true }));
-						fallbackInput.dispatchEvent(new Event('change', { bubbles: true }));
-					}
-					const fallbackToggle = document.querySelector('input[data-param2="fallbackimg"]');
-					if (fallbackToggle && !fallbackToggle.checked) {
-						fallbackToggle.checked = true;
-						fallbackToggle.dispatchEvent(new Event('change', { bubbles: true }));
-					}
-					window.removeEventListener('message', handleMessage);
+			openHostedMediaUploadForInput(document.getElementById('featuredFallbackImage'), 'uploadFeaturedFallback', function() {
+				const fallbackToggle = document.querySelector('input[data-param2="fallbackimg"]');
+				if (fallbackToggle && !fallbackToggle.checked) {
+					fallbackToggle.checked = true;
+					fallbackToggle.dispatchEvent(new Event('change', { bubbles: true }));
 				}
 			});
 		};

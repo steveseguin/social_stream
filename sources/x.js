@@ -83,6 +83,8 @@
 	var pendingMessageNodes = new WeakSet();
 	var messageRetryCounts = new WeakMap();
 	var observedContainer = null;
+	var xNotLiveReloadTimer = null;
+	const X_NOT_LIVE_RELOAD_DELAY = 15000;
 
 	function pruneSeenMessageKeys() {
 		const cutoff = Date.now() - MESSAGE_KEY_TTL;
@@ -765,6 +767,75 @@
 			}
 		}
 	}
+
+	function isXLiveRetryUrl() {
+		try {
+			return /^\/[^\/]+\/(chat|live|livechat)\/?$/i.test(window.location.pathname || "");
+		} catch(e) {
+			return false;
+		}
+	}
+
+	function hasRetryButtonNear(ele) {
+		var current = ele;
+		var depth = 0;
+		while (current && (current.nodeType === 1) && (depth < 5)) {
+			try {
+				var buttons = current.querySelectorAll("button");
+				for (var i = 0; i < buttons.length; i++) {
+					if (normalizeMessageKey(buttons[i].textContent).toLowerCase() === "retry") {
+						return true;
+					}
+				}
+			} catch(e) {}
+			current = current.parentElement;
+			depth++;
+		}
+		return false;
+	}
+
+	function isXNotLiveScreen() {
+		if (!isXLiveRetryUrl()) {
+			return false;
+		}
+		try {
+			var nodes = document.querySelectorAll("span, div");
+			for (var i = 0; i < nodes.length; i++) {
+				var text = normalizeMessageKey(nodes[i].textContent).toLowerCase();
+				if (!text || (text.length > 120)) {
+					continue;
+				}
+				if (/\bis not live$/.test(text) && hasRetryButtonNear(nodes[i])) {
+					return true;
+				}
+			}
+		} catch(e) {}
+		return false;
+	}
+
+	function checkXNotLiveReload() {
+		if (!isExtensionOn) {
+			if (xNotLiveReloadTimer) {
+				clearTimeout(xNotLiveReloadTimer);
+				xNotLiveReloadTimer = null;
+			}
+			return;
+		}
+		if (isXNotLiveScreen()) {
+			if (!xNotLiveReloadTimer) {
+				console.log("X live page is not live yet; reloading in 15 seconds.");
+				xNotLiveReloadTimer = setTimeout(function(){
+					xNotLiveReloadTimer = null;
+					if (isXNotLiveScreen()) {
+						window.location.reload();
+					}
+				}, X_NOT_LIVE_RELOAD_DELAY);
+			}
+		} else if (xNotLiveReloadTimer) {
+			clearTimeout(xNotLiveReloadTimer);
+			xNotLiveReloadTimer = null;
+		}
+	}
 	
 	setTimeout(function(){checkViewers();},2000);
 	setInterval(function(){checkViewers()},5000);
@@ -893,6 +964,7 @@
 				} catch(e) {}
 				observedContainer = null;
 			}
+			checkXNotLiveReload();
 			var container = resolveChatContainer();
 			if (!container) {
 				container = findElementByAttributeAndChildren("[tabIndex='0']",["textarea[inputmode='text']"]);

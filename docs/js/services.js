@@ -481,7 +481,28 @@
     }
 
     // Open file upload popup and handle result
-    function openFileUpload(targetInput) {
+    async function openFileUpload(targetInput) {
+        function applyUploadedUrl(uploadData) {
+            const uploadedUrl = uploadData && uploadData.url;
+            if (!targetInput || !uploadedUrl) return false;
+            targetInput.value = uploadedUrl;
+            targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+            targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+            return true;
+        }
+
+        if (window.ninjafy && typeof window.ninjafy.startMediaUpload === 'function') {
+            try {
+                const result = await window.ninjafy.startMediaUpload({ popupName: 'uploadPortfolio' });
+                if (result && result.success) {
+                    applyUploadedUrl(result);
+                }
+            } catch (error) {
+                console.warn('Hosted media upload failed:', error && error.message ? error.message : error);
+            }
+            return;
+        }
+
         const popup = window.open(
             'https://fileuploads.socialstream.ninja/popup/upload',
             'uploadPortfolio',
@@ -494,9 +515,7 @@
 
             // Check if this is our media upload message
             if (event.data && event.data.type === 'media-uploaded') {
-                targetInput.value = event.data.url;
-                targetInput.dispatchEvent(new Event('input', { bubbles: true }));
-                targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+                applyUploadedUrl(event.data);
 
                 // Remove this specific listener
                 window.removeEventListener('message', handleMessage);

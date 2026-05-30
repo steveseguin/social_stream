@@ -5760,27 +5760,49 @@ class EventFlowEditor {
             });
         }
 
+        const openNodeMediaUpload = (popupName, inputId, configKey) => {
+            const applyUploadUrl = (uploadedUrl) => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.value = uploadedUrl;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    nodeData.config[configKey] = uploadedUrl;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                }
+            };
+
+            if (window.ninjafy && typeof window.ninjafy.startMediaUpload === 'function') {
+                window.ninjafy.startMediaUpload({ popupName })
+                    .then((result) => {
+                        if (result && result.success && result.url) {
+                            applyUploadUrl(result.url);
+                        }
+                    })
+                    .catch((error) => {
+                        console.warn('Hosted media upload failed:', error && error.message ? error.message : error);
+                    });
+                return;
+            }
+
+            window.open('https://fileuploads.socialstream.ninja/popup/upload', popupName, 'width=640,height=640');
+
+            window.addEventListener('message', function handleMessage(event) {
+                if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+
+                if (event.data && event.data.type === 'media-uploaded') {
+                    applyUploadUrl(event.data.url);
+                    window.removeEventListener('message', handleMessage);
+                }
+            });
+        };
+
         // Add upload button handlers
         const uploadMediaBtn = document.getElementById('uploadMediaBtn');
         if (uploadMediaBtn) {
             uploadMediaBtn.addEventListener('click', () => {
-                const popup = window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadMedia', 'width=640,height=640');
-                
-                window.addEventListener('message', function handleMessage(event) {
-                    if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-                    
-                    if (event.data && event.data.type === 'media-uploaded') {
-                        const mediaUrlInput = document.getElementById('prop-mediaUrl');
-                        if (mediaUrlInput) {
-                            mediaUrlInput.value = event.data.url;
-                            mediaUrlInput.dispatchEvent(new Event('input', { bubbles: true }));
-                            nodeData.config.mediaUrl = event.data.url;
-                            this.markUnsavedChanges(true);
-                            this.renderNodeOnCanvas(nodeData.id);
-                        }
-                        window.removeEventListener('message', handleMessage);
-                    }
-                }.bind(this));
+                openNodeMediaUpload('uploadMedia', 'prop-mediaUrl', 'mediaUrl');
             });
         }
 
@@ -5798,23 +5820,7 @@ class EventFlowEditor {
         const uploadAudioBtn = document.getElementById('uploadAudioBtn');
         if (uploadAudioBtn) {
             uploadAudioBtn.addEventListener('click', () => {
-                const popup = window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadAudio', 'width=640,height=640');
-                
-                window.addEventListener('message', function handleMessage(event) {
-                    if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-                    
-                    if (event.data && event.data.type === 'media-uploaded') {
-                        const audioUrlInput = document.getElementById('prop-audioUrl');
-                        if (audioUrlInput) {
-                            audioUrlInput.value = event.data.url;
-                            audioUrlInput.dispatchEvent(new Event('input', { bubbles: true }));
-                            nodeData.config.audioUrl = event.data.url;
-                            this.markUnsavedChanges(true);
-                            this.renderNodeOnCanvas(nodeData.id);
-                        }
-                        window.removeEventListener('message', handleMessage);
-                    }
-                }.bind(this));
+                openNodeMediaUpload('uploadAudio', 'prop-audioUrl', 'audioUrl');
             });
         }
     }
