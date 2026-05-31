@@ -1399,6 +1399,44 @@ input:checked + .slider:before {
     font-size: 1em;
 }
 
+.textInputWithUpload {
+    display: inline-grid;
+    align-items: center;
+}
+
+.textInputWithUpload .textInput {
+    grid-area: 1 / 1;
+    box-sizing: border-box;
+    height: auto;
+    padding-right: 78px;
+}
+
+.textInputWithUpload .textInput + label {
+    grid-area: 1 / 1;
+    max-width: calc(100% - 86px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.textInputWithUpload .textInputUploadButton {
+    grid-area: 1 / 1;
+    position: static;
+    justify-self: end;
+    align-self: center;
+    margin-right: 5px;
+    padding: 5px 10px;
+    background: var(--upload-button-bg, #667eea);
+    color: var(--upload-button-color, white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: normal;
+    transform: none;
+    z-index: 2;
+}
+
 .textInput::placeholder {
     font-size: 1em;
     opacity: 0;
@@ -1717,6 +1755,10 @@ input:checked + .slider:before {
 	body.ssapp select.textInput {
 		font-size: 1em; /* Ensure consistent font size in inputs */
 		padding: 8px; /* More padding in text inputs */
+	}
+
+	body.ssapp .textInputContainer.textInputWithUpload input[type="text"].textInput {
+		padding-right: 78px;
 	}
 
 	body.ssapp .textInput + label {
@@ -2284,10 +2326,10 @@ input:checked + .slider:before {
                                         <span class="range-value" id="dock-beep-volume-display">30%</span>
                                     </span>
                                 </div>
-                                <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom beep audio file">
+                                <div class="textInputContainer textInputWithUpload" style="width: 95%;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam1="custombeep" />
                                     <label for="custombeep"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
-                                    <button type="button" id="uploadBeepBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+                                    <button type="button" id="uploadBeepBtn" class="textInputUploadButton">Upload</button>
                                 </div>
 								<div title="Plays a near-silent ping every 25 seconds to help keep Bluetooth speakers from sleeping during quiet periods; useful on Android when using dock TTS." data-keywords="bluetooth speaker keep alive audio tts android quiet idle sleep">
                                     <label class="switch">
@@ -4503,10 +4545,10 @@ input:checked + .slider:before {
                                         <span class="range-value" id="overlay-beep-volume-display">30%</span>
                                     </span>
                                 </div>
-                                <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom beep audio file">
+                                <div class="textInputContainer textInputWithUpload" style="width: 95%;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep2" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam2="custombeep" />
                                     <label for="custombeep2"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
-                                    <button type="button" id="uploadBeepBtn2" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+                                    <button type="button" id="uploadBeepBtn2" class="textInputUploadButton">Upload</button>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5797,38 +5839,38 @@ input:checked + .slider:before {
 										<span class="range-value" id="multi-alert-beep-display">35%</span>
 									</span>
 								</div>
-								<div class="textInputContainer" style="width: 95%; position: relative;">
+								<div class="textInputContainer textInputWithUpload" style="width: 95%;">
 									<input type="text" class="textInput instant" autocomplete="off" placeholder="https://example.com/alert.wav" data-textparam25="custombeep" id="multi-alert-custombeep" />
 									<label><span>&gt; Custom sound URL (all alerts)</span></label>
-									<button type="button" id="uploadMultiAlertSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+									<button type="button" id="uploadMultiAlertSoundBtn" class="textInputUploadButton">Upload</button>
 								</div>
 								<details style="width: 95%; margin-top: 4px;">
 									<summary style="cursor: pointer; font-size: 0.95em; padding: 6px 10px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">Per-type custom sounds (override above)</summary>
 									<div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
-										<div class="textInputContainer" style="width: 100%; position: relative;">
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Follow sound URL (.ogg, .mp3, .wav)" data-textparam25="followsound" id="multi-alert-followsound" />
 											<label><span>&gt; 💖 Follow sound</span></label>
-											<button type="button" id="uploadFollowSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #ff68b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+											<button type="button" id="uploadFollowSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #ff68b3;">Upload</button>
 										</div>
-										<div class="textInputContainer" style="width: 100%; position: relative;">
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Sub sound URL (.ogg, .mp3, .wav)" data-textparam25="subsound" id="multi-alert-subsound" />
 											<label><span>&gt; 💜 Subscription sound</span></label>
-											<button type="button" id="uploadSubSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+											<button type="button" id="uploadSubSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #8b5cf6;">Upload</button>
 										</div>
-										<div class="textInputContainer" style="width: 100%; position: relative;">
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Donation sound URL (.ogg, .mp3, .wav)" data-textparam25="donosound" id="multi-alert-donosound" />
 											<label><span>&gt; 💚 Donation sound</span></label>
-											<button type="button" id="uploadDonoSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #14f195; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+											<button type="button" id="uploadDonoSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #14f195; --upload-button-color: #111;">Upload</button>
 										</div>
-										<div class="textInputContainer" style="width: 100%; position: relative;">
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Bits sound URL (.ogg, .mp3, .wav)" data-textparam25="bitssound" id="multi-alert-bitssound" />
 											<label><span>&gt; 💙 Bits/Cheer sound</span></label>
-											<button type="button" id="uploadBitsSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #38bdf8; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+											<button type="button" id="uploadBitsSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #38bdf8; --upload-button-color: #111;">Upload</button>
 										</div>
-										<div class="textInputContainer" style="width: 100%; position: relative;">
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Raid sound URL (.ogg, .mp3, .wav)" data-textparam25="raidsound" id="multi-alert-raidsound" />
 											<label><span>&gt; 🧡 Raid sound</span></label>
-											<button type="button" id="uploadRaidSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #f59e0b; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+											<button type="button" id="uploadRaidSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #f59e0b; --upload-button-color: #111;">Upload</button>
 										</div>
 									</div>
 								</details>

@@ -126,13 +126,137 @@ function createLLMError(baseDetails, extra = {}) {
     return err;
 }
 
+function stripLLMReasoningOutput(response) {
+    if (typeof response !== "string") {
+        return response;
+    }
+    let text = response
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+        .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g, "")
+        .replace(/<think\b[^>]*>[\s\S]*?<\/think>/gi, "")
+        .replace(/^[\s\S]*?<\/think>\s*/i, "")
+        .replace(/<think\b[^>]*>[\s\S]*$/i, "")
+        .trim();
+    if (shouldStripLLMReasoningPrefix(text)) {
+        const blocks = text.split(/\n\s*\n/).map(function (block) { return block.trim(); }).filter(Boolean);
+        if (blocks.length > 1) {
+            text = blocks[blocks.length - 1];
+        }
+    }
+    return text.trim();
+}
+
+function getLLMReasoningPartialTagIndex(text) {
+    const lower = String(text || "").toLowerCase();
+    const tags = ["<think", "</think>"];
+    const start = Math.max(0, lower.length - 8);
+    for (let i = start; i < lower.length; i++) {
+        const tail = lower.slice(i);
+        if (tail && tags.some(function (tag) { return tag.indexOf(tail) === 0; })) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+function isLikelyLLMReasoningPrefix(text) {
+    return /^(?:the user (?:says|asks|wants|is asking)|we need to|i need to|first,?\s+i|let'?s analyze|the request is|the prompt asks|okay,?\s*(?:the user|we need))/i.test(String(text || "").trim());
+}
+
+function shouldStripLLMReasoningPrefix(text) {
+    if (!isLikelyLLMReasoningPrefix(text)) {
+        return false;
+    }
+    const firstBlock = String(text || "").split(/\n\s*\n/)[0] || "";
+    return /\b(?:so|therefore|final answer|answer should|output|return|respond|comply|policy|request|prompt)\b/i.test(firstBlock);
+}
+
+function createLLMReasoningStreamFilter() {
+    let pending = "";
+    let inReasoning = false;
+    let emittedVisible = false;
+    const cleanChunk = function (chunk) {
+        return String(chunk || "")
+            .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+            .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g, "");
+    };
+    const filter = function (chunk, flush) {
+        pending += cleanChunk(chunk);
+        let output = "";
+        while (pending) {
+            const lower = pending.toLowerCase();
+            if (inReasoning) {
+                const closeIndex = lower.indexOf("</think>");
+                if (closeIndex === -1) {
+                    pending = flush ? "" : pending.slice(Math.max(0, pending.length - 7));
+                    return output;
+                }
+                pending = pending.slice(closeIndex + 8);
+                inReasoning = false;
+                continue;
+            }
+
+            const openIndex = lower.indexOf("<think");
+            const closeOnlyIndex = lower.indexOf("</think>");
+            if (!emittedVisible && openIndex === -1 && closeOnlyIndex === -1 && !flush && pending.trim().length < 48) {
+                return output;
+            }
+            if (!emittedVisible && openIndex === -1 && closeOnlyIndex === -1 && shouldStripLLMReasoningPrefix(pending) && !flush && pending.length < 2000) {
+                return output;
+            }
+            if (closeOnlyIndex !== -1 && (openIndex === -1 || closeOnlyIndex < openIndex)) {
+                pending = pending.slice(closeOnlyIndex + 8);
+                continue;
+            }
+            if (openIndex === -1) {
+                const partialIndex = flush ? -1 : getLLMReasoningPartialTagIndex(pending);
+                if (partialIndex === -1) {
+                    output += pending;
+                    pending = "";
+                } else {
+                    output += pending.slice(0, partialIndex);
+                    pending = pending.slice(partialIndex);
+                }
+                break;
+            }
+
+            output += pending.slice(0, openIndex);
+            const openEnd = pending.indexOf(">", openIndex);
+            if (openEnd === -1) {
+                pending = flush ? "" : pending.slice(openIndex);
+                break;
+            }
+            pending = pending.slice(openEnd + 1);
+            inReasoning = true;
+        }
+        if (output) {
+            emittedVisible = true;
+        }
+        return output;
+    };
+    return {
+        push(chunk) {
+            return filter(chunk, false);
+        },
+        flush() {
+            const output = stripLLMReasoningOutput(filter("", true));
+            pending = "";
+            inReasoning = false;
+            return output;
+        }
+    };
+}
+
 function normalizeHostedLLMEndpoint(endpoint) {
     const value = String(endpoint || "").trim();
     if (!value) {
         return HOSTED_LLM_DEFAULT_CONFIG.endpoint;
     }
-    if (value.includes("/v1") && value.includes("/completions")) {
-        return value;
+    if (/\/chat\/completions\/?$/i.test(value)) {
+        return value.replace(/\/+$/, "");
+    }
+    if (/\/v1\/?$/i.test(value)) {
+        return value.replace(/\/+$/, "") + "/chat/completions";
     }
     return value.replace(/\/+$/, "") + "/v1/chat/completions";
 }
@@ -798,10 +922,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			break;
 		}
 		case "custom":
-			endpoint = llmSettings.customAIEndpoint?.textsetting || "http://localhost:11434";
-			if (!endpoint.includes("/v1") || !endpoint.includes("/completions")){ // going to assume you already ended the completions URL
-				endpoint = endpoint.replace(/\/+$/, '') + "/v1/chat/completions"
-			}
+			endpoint = normalizeHostedLLMEndpoint(llmSettings.customAIEndpoint?.textsetting || "http://localhost:11434");
 			model = model || llmSettings.customAIModel?.textsetting || "";
 			apiKey = llmSettings.customAIApiKey?.textsetting;
 			//callback = null;
@@ -814,7 +935,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			break;
 	}
 		
-	function handleChunk(chunk, callback, appendToFull, reasoning=false) {
+	function handleChunk(chunk, emitContent) {
 		const lines = chunk.split('\n').filter(line => line.trim());
 		for (const line of lines) {
 			if (line.trim() === 'data: [DONE]') {
@@ -824,25 +945,18 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				try {
 					const jsonStr = line.startsWith('data: ') ? line.slice(6) : line;
 					const data = JSON.parse(jsonStr);
-					
+
 					if (data.response) { // Ollama format
-						appendToFull(data.response);
-						if (callback) callback(data.response);
+						emitContent(data.response);
 					} else if (data.choices?.[0]?.delta?.content) { // ChatGPT/Gemini format
 						const content = data.choices[0].delta.content;
 						if (content) {
-							appendToFull(content);
-							if (callback) callback(content);
+							emitContent(content);
 						}
-					} else if (data.choices?.[0]?.delta?.reasoning_content) { // LMStudio format
-						const content = data.choices[0].delta.reasoning_content;
-						if (content) {
-							appendToFull(content);
-							if (callback) callback(content, true);
-						}
+					} else if (data.choices?.[0]?.delta?.reasoning_content) { // LMStudio/deep reasoning stream
+						// Reasoning traces are not user-visible output.
 					} else if (data.candidates?.[0]?.content?.parts?.[0]?.text) { // Legacy Gemini format
-						appendToFull(data.candidates[0].content.parts[0].text);
-						if (callback) callback(data.candidates[0].content.parts[0].text);
+						emitContent(data.candidates[0].content.parts[0].text);
 					}
 					
 					if (data.choices?.[0]?.finish_reason === "stop" || data.done) {
@@ -853,8 +967,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					const match = line.match(/"response":"(.*?)"/);
 					if (match && match[1]) {
 						const extractedResponse = match[1];
-						appendToFull(extractedResponse);
-						if (callback) callback(extractedResponse);
+						emitContent(extractedResponse);
 					}
 				}
 			}
@@ -864,6 +977,23 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 
 	function createStreamingLineProcessor(callback, appendToFull) {
 		let pending = "";
+		const reasoningFilter = createLLMReasoningStreamFilter();
+		const emitContent = function (content) {
+			const visibleContent = reasoningFilter.push(content);
+			if (!visibleContent) {
+				return;
+			}
+			appendToFull(visibleContent);
+			if (callback) callback(visibleContent);
+		};
+		const flushReasoningFilter = function () {
+			const visibleContent = reasoningFilter.flush();
+			if (!visibleContent) {
+				return;
+			}
+			appendToFull(visibleContent);
+			if (callback) callback(visibleContent);
+		};
 		return {
 			push(chunk) {
 				pending += chunk || "";
@@ -873,16 +1003,23 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				if (!lines.length) {
 					return false;
 				}
-				return handleChunk(lines.join("\n"), callback, appendToFull);
+				const isComplete = handleChunk(lines.join("\n"), emitContent);
+				if (isComplete) {
+					flushReasoningFilter();
+				}
+				return isComplete;
 			},
 			flush() {
 				if (!pending.trim()) {
 					pending = "";
+					flushReasoningFilter();
 					return false;
 				}
 				const remaining = pending;
 				pending = "";
-				return handleChunk(remaining, callback, appendToFull);
+				const isComplete = handleChunk(remaining, emitContent);
+				flushReasoningFilter();
+				return isComplete;
 			}
 		};
 	}
@@ -945,14 +1082,15 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 remoteHost: endpoint
             });
 
-            if (typeof callback === 'function' && !localBrowserActiveRequestState.buffer && result.text) {
-                callback(result.text);
+            const responseText = stripLLMReasoningOutput(result.text || '');
+            if (typeof callback === 'function' && !localBrowserActiveRequestState.buffer && responseText) {
+                callback(responseText);
             }
 
-            return result.text || '';
+            return responseText;
         } catch (error) {
             if (error?.name === 'AbortError' || abortController?.signal?.aborted) {
-                return (localBrowserActiveRequestState?.buffer || '') + "💥";
+                return stripLLMReasoningOutput(localBrowserActiveRequestState?.buffer || '') + "💥";
             }
             throw wrapLLMError(error, {
                 message: error?.message || 'Local browser model inference failed.'
@@ -991,7 +1129,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 
         const result = await makeRequestToOllama(ollamamodel);
         if (result.aborted) {
-            return result.response + "💥";
+            return stripLLMReasoningOutput(result.response || '') + "💥";
         } else if (result.error && result.error === 404) {
             try {
                 const availableModel = await getFirstAvailableModel(ollamamodel, llmSettings);
@@ -1004,7 +1142,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                     model = availableModel;
                     const fallbackResult = await makeRequestToOllama(availableModel);
                     if (fallbackResult.aborted) {
-                        return fallbackResult.response + "💥";
+                        return stripLLMReasoningOutput(fallbackResult.response || '') + "💥";
                     } else if (fallbackResult.error) {
                         throw createLLMError(buildContext(), {
                             status: fallbackResult.status || fallbackResult.error || null,
@@ -1013,7 +1151,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                             details: fallbackResult
                         });
                     }
-                    return fallbackResult.complete ? fallbackResult.response : fallbackResult.response + "💥";
+                    return fallbackResult.complete ? stripLLMReasoningOutput(fallbackResult.response || '') : stripLLMReasoningOutput(fallbackResult.response || '') + "💥";
                 } else {
                     throw createLLMError(buildContext(), {
                         status: 404,
@@ -1034,7 +1172,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 details: result
             });
         }
-        return result.complete ? result.response : result.response + "💥";
+        return result.complete ? stripLLMReasoningOutput(result.response || '') : stripLLMReasoningOutput(result.response || '') + "💥";
 	} else if (provider === "bedrock") {
 		try {
 			const modelId = model;
@@ -1122,13 +1260,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				
 				// Extract the response based on model
 				if (modelId.includes('anthropic')) {
-					return data.content && data.content[0] && data.content[0].text ? data.content[0].text : '';
+					return stripLLMReasoningOutput(data.content && data.content[0] && data.content[0].text ? data.content[0].text : '');
 				} else if (modelId.includes('amazon')) {
-					return data.results && data.results[0] && data.results[0].outputText ? data.results[0].outputText : '';
+					return stripLLMReasoningOutput(data.results && data.results[0] && data.results[0].outputText ? data.results[0].outputText : '');
 				} else if (modelId.includes('cohere')) {
-					return data.generations && data.generations[0] && data.generations[0].text ? data.generations[0].text : '';
+					return stripLLMReasoningOutput(data.generations && data.generations[0] && data.generations[0].text ? data.generations[0].text : '');
 				} else {
-					return data.completion || '';
+					return stripLLMReasoningOutput(data.completion || '');
 				}
 			} else {
 				const response = await fetch(bedrockEndpoint, {
@@ -1159,13 +1297,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				
 				// Extract the response based on model
 				if (modelId.includes('anthropic')) {
-					return data.content && data.content[0] && data.content[0].text ? data.content[0].text : '';
+					return stripLLMReasoningOutput(data.content && data.content[0] && data.content[0].text ? data.content[0].text : '');
 				} else if (modelId.includes('amazon')) {
-					return data.results && data.results[0] && data.results[0].outputText ? data.results[0].outputText : '';
+					return stripLLMReasoningOutput(data.results && data.results[0] && data.results[0].outputText ? data.results[0].outputText : '');
 				} else if (modelId.includes('cohere')) {
-					return data.generations && data.generations[0] && data.generations[0].text ? data.generations[0].text : '';
+					return stripLLMReasoningOutput(data.generations && data.generations[0] && data.generations[0].text ? data.generations[0].text : '');
 				} else {
-					return data.completion || '';
+					return stripLLMReasoningOutput(data.completion || '');
 				}
 			}
 		} catch (error) {
@@ -1244,7 +1382,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						ipcRenderer.on(channelId, (event, chunk) => {
 							if (chunk === null) {
 								streamProcessor.flush();
-								resolve(fullResponse);
+								resolve(stripLLMReasoningOutput(fullResponse));
 							} else if (typeof chunk === 'object' && chunk.error) {
 								const err = createLLMError(buildContext(), {
 									status: chunk.status || chunk.error?.status || null,
@@ -1292,7 +1430,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					}
 
 					const data = JSON.parse(response.data);
-					return data.choices[0].message.content;
+					return stripLLMReasoningOutput(data.choices[0].message.content || '');
 				}
 			} else {
 				if (callback) {
@@ -1340,7 +1478,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						if (isComplete) break;
 					}
 
-					return fullResponse;
+					return stripLLMReasoningOutput(fullResponse);
 				} else {
 					const response = await fetch(endpoint, {
 						method: 'POST',
@@ -1367,7 +1505,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					}
 
 					const data = await response.json();
-					return data.choices[0].message.content;
+					return stripLLMReasoningOutput(data.choices[0].message.content || '');
 				}
 			}
 		} catch (error) {
@@ -1529,10 +1667,10 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 }
             }
             
-            return { success: true, response: fullResponse, complete: responseComplete };
+            return { success: true, response: stripLLMReasoningOutput(fullResponse), complete: responseComplete };
         } catch (error) {
             if (error.name === 'AbortError') {
-                return { aborted: true, response: fullResponse };
+                return { aborted: true, response: stripLLMReasoningOutput(fullResponse) };
             }
             return {
                 error: true,
