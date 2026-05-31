@@ -8257,6 +8257,57 @@ input:checked + .slider:before {
 			</div>
 			<div class="wrapper">
 				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-ai-auto-translate-options" />
+					<label class="collapsible-label" for="wrapper-ai-auto-translate-options">
+						<span data-translate="ai-auto-translate">&#127760; AI Auto Translate</span>
+					</label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<h3 style="margin-bottom: 6px;"><span data-translate="ai-auto-translate">&#127760; AI Auto Translate</span></h3>
+								<i>Uses the selected AI provider above. Text is translated while emotes, images, and HTML are preserved. Default target language is en-US.</i><br/><br/>
+								<div>
+									<div style="display: inline-block;" title="Translate incoming chat messages to the target language using the selected AI provider.">
+										<label class="switch">
+											<input type="checkbox" id="aiAutoTranslate" data-setting="aiAutoTranslate" />
+											<span class="slider round"></span>
+										</label>
+										<span>Enable AI auto translate</span>
+									</div>
+								</div>
+								<div class="textInputContainer" style="display: inline-block; width: 260px; margin-left: 50px; margin-top: 8px;" title="Target language for translated incoming chat messages.">
+									<input type="text" id="aiAutoTranslateTargetLanguage" class="textInput" autocomplete="off" placeholder="en-US" data-textsetting="aiAutoTranslateTargetLanguage" />
+									<label for="aiAutoTranslateTargetLanguage"><span>&gt; Target language (default: en-US)</span></label>
+								</div>
+								<div style="margin-top: 8px;">
+									<div style="display: inline-block;" title="When enabled, messages are dropped if the translator is busy, times out, or fails.">
+										<label class="switch">
+											<input type="checkbox" id="aiAutoTranslateBlockMode" data-setting="aiAutoTranslateBlockMode" />
+											<span class="slider round"></span>
+										</label>
+										<span>Drop messages when translation fails or cannot keep up</span>
+									</div>
+								</div>
+								<div style="margin-top: 8px;">
+									<label class="switch">
+										<input type="checkbox" id="aiAutoTranslateContext" data-setting="aiAutoTranslateContext" />
+										<span class="slider round"></span>
+									</label>
+									<span>Include last 10 messages as translation context</span>
+								</div>
+								<div style="margin-top: 8px;" title="Maximum time to wait for each translation request.">
+									<span>
+										Translation timeout
+										<input type="number" style="max-width: 8ch;" max="30000" min="1000" value="10000" size="6" data-numbersetting="aiAutoTranslateTimeout" />ms
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="wrapper">
+				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-public-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-public-options">
 						<span data-translate="public-chatbot">🤖 Chat Bot - Primary</span>
@@ -9005,7 +9056,7 @@ input:checked + .slider:before {
 									</div>
 								</div>
 							</div>
-							
+
 						</div>
 					</div>
                 </div>

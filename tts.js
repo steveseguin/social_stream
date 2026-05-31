@@ -11,6 +11,7 @@ TTS.English = true;
 TTS.voice = false;
 TTS.voices = null;
 TTS.kokoroDevice = null;
+TTS.kokoroDtype = null;
 
 // eSpeak TTS variables
 TTS.espeakLoaded = false;
@@ -172,7 +173,9 @@ TTS.kokoroTtsInstance = null;
 TTS.kokoroSettings = {
     rate: false,
     voiceName: false,
-    model: "kokoro-82M-v1.0"
+    model: "kokoro-82M-v1.0",
+    device: "auto",
+    dtype: "auto"
 };
 
 TTS.getKokoroAssets = function() {
@@ -200,6 +203,84 @@ TTS.logKokoroProgress = function(progress) {
     if (progress.status === "progress" && progress.progress !== undefined) {
         console.log("Kokoro download:", (progress.progress * 100).toFixed(1) + "%");
     }
+};
+
+TTS.normalizeKokoroDevice = function(value) {
+    var normalized = (value || "auto").toString().trim().toLowerCase();
+    if (["auto", "webgpu", "wasm"].indexOf(normalized) !== -1) {
+        return normalized;
+    }
+    console.warn("[TTS Kokoro] Ignoring unsupported device:", value);
+    return "auto";
+};
+
+TTS.normalizeKokoroDtype = function(value) {
+    var normalized = (value || "auto").toString().trim().toLowerCase();
+    if (["auto", "fp16", "q8"].indexOf(normalized) !== -1) {
+        return normalized;
+    }
+    console.warn("[TTS Kokoro] Ignoring unsupported dtype:", value);
+    return "auto";
+};
+
+TTS.isMacBrowserKokoro = function() {
+    if (window.ninjafy || window.electronApi) {
+        return false;
+    }
+    var nav = typeof navigator !== "undefined" ? navigator : {};
+    var platform = "";
+    try {
+        platform = (nav.userAgentData && nav.userAgentData.platform) || nav.platform || "";
+    } catch (_) {
+        platform = nav.platform || "";
+    }
+    var userAgent = nav.userAgent || "";
+    return /mac/i.test(platform) || /Macintosh|Mac OS X/i.test(userAgent);
+};
+
+TTS.getKokoroDefaultDevice = function(webgpuAvailable) {
+    var requestedDevice = TTS.normalizeKokoroDevice(TTS.kokoroSettings.device);
+    if (requestedDevice !== "auto") {
+        return requestedDevice;
+    }
+    if (TTS.isMacBrowserKokoro()) {
+        return "wasm";
+    }
+    return webgpuAvailable ? "webgpu" : "wasm";
+};
+
+TTS.getKokoroDtype = function(device, kokoroAssets) {
+    var requestedDtype = TTS.normalizeKokoroDtype(TTS.kokoroSettings.dtype);
+    if (requestedDtype !== "auto") {
+        return requestedDtype;
+    }
+    return kokoroAssets.getPreferredDtype(device);
+};
+
+TTS.getKokoroDeviceAttempts = function(preferredDevice, webgpuAvailable) {
+    var requestedDevice = TTS.normalizeKokoroDevice(TTS.kokoroSettings.device);
+    if (requestedDevice !== "auto") {
+        return [requestedDevice];
+    }
+    if (preferredDevice === "wasm" && TTS.isMacBrowserKokoro()) {
+        return ["wasm"];
+    }
+
+    var attempts = [];
+    var addAttempt = function(device) {
+        if (attempts.indexOf(device) === -1) {
+            attempts.push(device);
+        }
+    };
+
+    addAttempt(preferredDevice);
+    if (preferredDevice === "webgpu") {
+        addAttempt("wasm");
+    } else if (webgpuAvailable && !TTS.isMacBrowserKokoro()) {
+        addAttempt("webgpu");
+    }
+    addAttempt("auto");
+    return attempts;
 };
 
 TTS.piperLoaded = false;
@@ -282,11 +363,11 @@ TTS.checkKokoroAcceleration = function() {
         return "Kokoro TTS is not initialized yet";
     }
     if (TTS.kokoroDevice === "webgpu") {
-        return "✅ Kokoro TTS is using WebGPU acceleration (fp16 precision)";
+        return "Kokoro TTS is using WebGPU acceleration (" + (TTS.kokoroDtype || "unknown") + " precision)";
     } else if (TTS.kokoroDevice === "wasm") {
-        return "⚠️ Kokoro TTS is using WebAssembly (WASM) fallback (q8 quantized)";
+        return "Kokoro TTS is using WebAssembly (WASM) fallback (" + (TTS.kokoroDtype || "q8") + ")";
     } else {
-        return "❓ Kokoro TTS device type unknown";
+        return "Kokoro TTS device type unknown";
     }
 };
 
@@ -628,8 +709,16 @@ TTS.configure = function(urlParams) {
         ? parseFloat(urlParams.get("kokorospeed")) || 1.0
         : (urlParams.has("korospeed") ? parseFloat(urlParams.get("korospeed")) || 1.0 : TTS.rate);
     TTS.kokoroSettings.voiceName = urlParams.get("voicekokoro") || "af_aoede";
+    TTS.kokoroSettings.device = TTS.normalizeKokoroDevice(urlParams.get("kokorodevice") || urlParams.get("kokorobackend"));
+    TTS.kokoroSettings.dtype = TTS.normalizeKokoroDtype(urlParams.get("kokorodtype") || urlParams.get("kokoroprecision"));
+    if (urlParams.has("kokorowasm")) {
+        TTS.kokoroSettings.device = "wasm";
+        TTS.kokoroSettings.dtype = "q8";
+    } else if (urlParams.has("kokorowebgpu")) {
+        TTS.kokoroSettings.device = "webgpu";
+    }
 
-    // Piper TTS settings  
+    // Piper TTS settings
     TTS.piperSettings.speed = urlParams.has("piperspeed") ? parseFloat(urlParams.get("piperspeed")) || 1.0 : 1.0;
     TTS.piperSettings.voice = urlParams.get("pipervoice") || "en_US-hfc_female-medium";
     
@@ -1501,18 +1590,22 @@ TTS.initKokoro = async function() {
         TTS.KokoroTTS = module.KokoroTTS;
         TTS.TextSplitterStream = module.TextSplitterStream;
         const detectWebGPU = module.detectWebGPU;
-        const preferredDevice = (await detectWebGPU()) ? "webgpu" : "wasm";
-        const attempts = preferredDevice === "webgpu" ? ["webgpu", "wasm", "auto"] : [preferredDevice, "auto"];
+        const webgpuAvailable = await detectWebGPU();
+        const preferredDevice = TTS.getKokoroDefaultDevice(webgpuAvailable);
+        const attempts = TTS.getKokoroDeviceAttempts(preferredDevice, webgpuAvailable);
         let lastError = null;
 
         for (let i = 0; i < attempts.length; i++) {
             const device = attempts[i];
             try {
+                const dtype = TTS.getKokoroDtype(device, kokoroAssets);
                 TTS.kokoroDevice = device;
+                TTS.kokoroDtype = dtype;
+                console.log("[TTS Kokoro] Initializing with device=" + device + " dtype=" + dtype);
                 TTS.kokoroTtsInstance = await TTS.KokoroTTS.from_pretrained(
                     kokoroAssets.modelId,
                     {
-                        dtype: kokoroAssets.getPreferredDtype(device),
+                        dtype: dtype,
                         device: device,
                         progress_callback: TTS.logKokoroProgress
                     }

@@ -6484,6 +6484,20 @@ async function sendToDestinations(message) {
 				return true;
 			}
 		}
+
+		if (settings.aiAutoTranslate) {
+			try {
+				const translated = await translateMessageWithLLM(message);
+				if (!translated) {
+					return false;
+				}
+				if (message.chatmessage && !message.textonly) {
+					message.chatmessage = filterXSS(message.chatmessage);
+				}
+			} catch (e) {
+				console.log(e); // ai.js file missing?
+			}
+		}
 	}
 
 	var reactionEventName = "";

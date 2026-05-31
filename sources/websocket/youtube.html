@@ -2834,6 +2834,81 @@ function enableBackgroundKeepAlive() {
 		};
 	}
 
+	function normalizeYouTubeBanType(value) {
+		if (value === 1 || value === "1") {
+			return "permanent";
+		}
+		if (value === 2 || value === "2") {
+			return "temporary";
+		}
+		if (typeof value === "string" && value.trim()) {
+			const normalized = value.trim().toLowerCase();
+			if (normalized.indexOf("temp") !== -1 || normalized === "temporary") {
+				return "temporary";
+			}
+			if (normalized.indexOf("perm") !== -1 || normalized === "permanent") {
+				return "permanent";
+			}
+		}
+		return "";
+	}
+
+	function normalizeYouTubeBanDurationSeconds(value) {
+		if (value === undefined || value === null || value === "") {
+			return null;
+		}
+		const parsed = parseInt(String(value).replace(/[^0-9]/g, ""), 10);
+		return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+	}
+
+	function processYouTubeUserBanned(item) {
+		try {
+			const snippet = item && item.snippet ? item.snippet : {};
+			const details = snippet.userBannedDetails || snippet.user_banned_details || {};
+			const bannedUser = details.bannedUserDetails || details.banned_user_details || {};
+			const author = item && item.authorDetails ? item.authorDetails : {};
+			const durationSeconds = normalizeYouTubeBanDurationSeconds(
+				details.banDurationSeconds ?? details.ban_duration_seconds
+			);
+			const banType = normalizeYouTubeBanType(details.banType ?? details.ban_type);
+			const publishedAt = snippet.publishedAt || "";
+			let endsAt = "";
+			if (durationSeconds && publishedAt) {
+				const startMs = new Date(publishedAt).getTime();
+				if (Number.isFinite(startMs)) {
+					endsAt = new Date(startMs + durationSeconds * 1000).toISOString();
+				}
+			}
+			const displayName = (bannedUser.displayName || bannedUser.display_name || "").replace(/^@/, "");
+			const profileUrl = bannedUser.channelUrl || bannedUser.channel_url || "";
+			const meta = {
+				platform: youtubeShorts ? "youtubeshorts" : "youtube",
+				action: durationSeconds || banType === "temporary" ? "timeout" : "ban",
+				username: displayName,
+				displayName,
+				userId: bannedUser.channelId || bannedUser.channel_id || "",
+				avatarUrl: bannedUser.profileImageUrl || bannedUser.profile_image_url || "",
+				profileUrl,
+				moderator: (author.displayName || "").replace(/^@/, ""),
+				moderatorId: author.channelId || "",
+				reason: "",
+				durationSeconds,
+				permanent: banType === "permanent" || (!durationSeconds && banType !== "temporary"),
+				bannedAt: publishedAt,
+				endsAt
+			};
+
+			pushMessage(applySourceIdentity({
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "user_banned",
+				meta
+			}));
+			addEvent(`Ban: ${displayName || meta.userId || "YouTube user"}`);
+		} catch (e) {
+			console.error("Error processing YouTube ban event:", e);
+		}
+	}
+
 	async function processLiveChatResponseData(data, options = {}) {
 		data = data && typeof data === 'object' ? data : {};
 		const shouldScheduleNextPoll = options.scheduleNextPoll !== false;
@@ -2865,7 +2940,9 @@ function enableBackgroundKeepAlive() {
 			}
 
 			normalizedItems.forEach(item => {
-				if (!item || !item.snippet || !item.authorDetails) return;
+				if (!item || !item.snippet) return;
+				const hasUserBannedDetails = !!(item.snippet.userBannedDetails || item.snippet.user_banned_details);
+				if (!item.authorDetails && item.snippet.type !== 'userBannedEvent' && !hasUserBannedDetails) return;
 				const publishedAt = new Date(item.snippet.publishedAt);
 				const messageTime = publishedAt.getTime();
 				if (!Number.isFinite(messageTime)) return;
@@ -2873,12 +2950,18 @@ function enableBackgroundKeepAlive() {
 					const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
 					const giftMetadata = extractYouTubeGiftMetadata(item.snippet);
 					const isGiftEvent = item.snippet.type === 'giftEvent' || !!giftMetadata;
+					const isUserBannedEvent = item.snippet.type === 'userBannedEvent' || hasUserBannedDetails;
 					const isSpecialEvent = isGiftEvent ||
+										  isUserBannedEvent ||
 										  item.snippet.type === 'giftMembershipReceivedEvent' ||
 										  item.snippet.type === 'newSponsorEvent' ||
 										  item.snippet.type === 'membershipGiftingEvent' ||
 										  item.snippet.type === 'memberMilestoneChatEvent' ||
 										  item.snippet.type === 'superStickerEvent';
+
+					if (isUserBannedEvent && !isBacklogMessage) {
+						processYouTubeUserBanned(item);
+					}
 
 					if (!isBacklogMessage && !isSpecialEvent) {
 						const textMessageDetails = item.snippet.textMessageDetails || {};

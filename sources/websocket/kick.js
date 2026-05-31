@@ -3575,7 +3575,7 @@ function mapPusherEventToPacket(eventName, data) {
         return { type: 'channel.subscription.new', body: data, source: 'socket' };
     }
     if (eventName === 'App\\Events\\UserBannedEvent') {
-        return { type: 'chat.user.banned', body: data, source: 'socket' };
+        return { type: 'moderation.banned', body: data, source: 'socket' };
     }
     if (eventName === 'App\\Events\\StreamHostEvent') {
         return { type: 'livestream.status.updated', body: data, source: 'socket' };
@@ -5271,6 +5271,7 @@ function deriveEventSubscriptions(types) {
         'channel.subscription.gifts',
         'channel.reward.redemption.updated',
         'kicks.gifted',
+        'moderation.banned',
         'livestream.status.updated'
     ];
     const subscriptions = [];
@@ -6064,6 +6065,10 @@ function processBridgeEvent(packet, isReplay = false) {
         /chat\..*(deleted|removed|delete)/i.test(type)
     ) {
         forwardDeletedMessage(body, bridgeMeta);
+        return;
+    }
+    if (type === 'moderation.banned' || type === 'chat.user.banned' || /(^|[._:-])(?:ban|banned)(?:$|[._:-])/i.test(type)) {
+        void forwardBannedUser(body, bridgeMeta);
         return;
     }
     if (type === 'channel.followed') {
@@ -6898,6 +6903,183 @@ function forwardDeletedMessage(evt, bridgeMeta) {
 
     const prefix = bridgeMeta?.verified === false ? '[DELETE !]' : '[DELETE]';
     log(`${prefix} message removed${chatname ? ` by ${chatname}` : ''}`);
+}
+
+function normalizeKickBanDurationSeconds(value) {
+    if (value === undefined || value === null || value === '') {
+        return null;
+    }
+    const parsed = parseInt(String(value).replace(/[^0-9]/g, ''), 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getKickProfileUrl(username) {
+    const normalized = normalizeChannel(username || '');
+    return normalized ? `https://kick.com/${normalized}` : '';
+}
+
+async function forwardBannedUser(evt, bridgeMeta) {
+    const metadata = evt?.metadata || evt?.data?.metadata || {};
+    const bannedUserSources = [
+        evt?.banned_user,
+        evt?.bannedUser,
+        evt?.target_user,
+        evt?.targetUser,
+        evt?.target,
+        evt?.user,
+        evt?.profile,
+        evt?.sender,
+        evt?.message?.sender,
+        evt?.data?.banned_user,
+        evt?.data?.user,
+        evt
+    ];
+    const moderatorSources = [
+        evt?.moderator,
+        evt?.mod,
+        evt?.banned_by,
+        evt?.bannedBy,
+        evt?.actor,
+        evt?.sender,
+        evt?.data?.moderator
+    ];
+    const { profile: bannedProfile, ids } = gatherProfileState(...bannedUserSources);
+    const displayName =
+        bannedProfile.displayName ||
+        pickFirstString(
+            [
+                evt?.banned_user?.display_name,
+                evt?.banned_user?.username,
+                evt?.bannedUser?.display_name,
+                evt?.bannedUser?.username,
+                evt?.target_user?.display_name,
+                evt?.target_user?.username,
+                evt?.target?.display_name,
+                evt?.target?.username,
+                evt?.user?.display_name,
+                evt?.user?.username,
+                evt?.profile?.display_name,
+                evt?.profile?.username,
+                evt?.username,
+                evt?.user_name,
+                evt?.name,
+                ids?.username
+            ],
+            ''
+        );
+    const username = normalizeChannel(
+        pickFirstString(
+            [
+                evt?.banned_user?.username,
+                evt?.bannedUser?.username,
+                evt?.target_user?.username,
+                evt?.target?.username,
+                evt?.user?.username,
+                evt?.profile?.username,
+                evt?.username,
+                evt?.user_login,
+                ids?.username,
+                displayName
+            ],
+            ''
+        )
+    );
+    let avatarUrl =
+        bannedProfile.avatar ||
+        pickImage(
+            evt?.banned_user?.profile_picture,
+            evt?.bannedUser?.profile_picture,
+            evt?.target_user?.profile_picture,
+            evt?.target?.profile_picture,
+            evt?.user?.profile_picture,
+            evt?.profile?.profile_picture,
+            evt?.profile_picture,
+            evt?.avatar
+        );
+    if (!avatarUrl && username) {
+        const avatarPromise = queueAvatarLookup(ids, username, null);
+        if (avatarPromise) {
+            try {
+                const resolvedAvatar = await Promise.race([
+                    avatarPromise,
+                    delay(AVATAR_LOOKUP_TIMEOUT_MS)
+                ]);
+                if (typeof resolvedAvatar === 'string' && resolvedAvatar.trim()) {
+                    avatarUrl = resolvedAvatar;
+                }
+            } catch (_) {}
+        }
+    }
+
+    if (displayName || username) {
+        pushDeleteMessage({ type: 'kick', chatname: displayName || username });
+    }
+
+    const moderatorProfile = buildProfileSnapshot(...moderatorSources) || {};
+    const moderator = moderatorProfile.displayName || pickFirstString(
+        [
+            evt?.moderator?.display_name,
+            evt?.moderator?.username,
+            evt?.mod?.display_name,
+            evt?.mod?.username,
+            evt?.banned_by?.display_name,
+            evt?.banned_by?.username,
+            evt?.bannedBy?.display_name,
+            evt?.bannedBy?.username,
+            evt?.actor?.display_name,
+            evt?.actor?.username,
+            evt?.moderator_name,
+            evt?.moderator_username
+        ],
+        ''
+    );
+    let durationSeconds = normalizeKickBanDurationSeconds(
+        evt?.duration_seconds ??
+        evt?.durationSeconds ??
+        evt?.timeout_seconds ??
+        evt?.timeoutSeconds ??
+        evt?.duration ??
+        evt?.ban_duration ??
+        evt?.banDuration ??
+        metadata?.duration_seconds ??
+        metadata?.durationSeconds
+    );
+    const bannedAt = pickFirstString([evt?.banned_at, evt?.bannedAt, evt?.created_at, evt?.createdAt, metadata?.created_at, metadata?.createdAt], '');
+    const endsAt = pickFirstString([evt?.expires_at, evt?.expiresAt, evt?.ends_at, evt?.endsAt, metadata?.expires_at, metadata?.expiresAt], '');
+    if (!durationSeconds && bannedAt && endsAt) {
+        const startMs = Date.parse(bannedAt);
+        const endMs = Date.parse(endsAt);
+        if (Number.isFinite(startMs) && Number.isFinite(endMs) && endMs > startMs) {
+            durationSeconds = Math.round((endMs - startMs) / 1000);
+        }
+    }
+    const permanent = evt?.permanent === true || evt?.is_permanent === true || metadata?.permanent === true || metadata?.is_permanent === true || (!durationSeconds && !endsAt);
+    const meta = {
+        platform: 'kick',
+        action: durationSeconds || endsAt ? 'timeout' : 'ban',
+        username,
+        displayName: displayName || username,
+        userId: ids?.userId || pickFirstString([evt?.banned_user?.user_id, evt?.bannedUser?.user_id, evt?.user_id, evt?.userId, evt?.target_user_id, evt?.targetUserId], ''),
+        avatarUrl: avatarUrl || '',
+        profileUrl: getKickProfileUrl(username),
+        moderator,
+        moderatorId: pickFirstString([evt?.moderator_id, evt?.moderatorId, evt?.mod?.id, evt?.mod?.user_id, evt?.moderator?.id, evt?.moderator?.user_id], ''),
+        reason: pickFirstString([metadata?.reason, evt?.reason, evt?.ban_reason, evt?.message], ''),
+        durationSeconds,
+        permanent,
+        bannedAt,
+        endsAt,
+        verified: bridgeMeta?.verified !== false
+    };
+
+    pushMessage({
+        type: 'kick',
+        event: 'user_banned',
+        meta
+    });
+
+    const prefix = bridgeMeta?.verified === false ? '[BAN !]' : '[BAN]';
+    log(`${prefix} ${meta.displayName || meta.username || 'Kick user'}`);
 }
 
 function forwardFollower(evt, bridgeMeta) {

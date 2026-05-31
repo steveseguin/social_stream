@@ -890,6 +890,8 @@ Social Stream Ninja now includes Kokoro TTS, a high-quality browser-based text-t
 
 **Note:** Kokoro requires a powerful computer and may be slow to generate responses.
 
+For browser overlays, Kokoro's runtime can be forced with `&kokorodevice=wasm&kokorodtype=q8`. macOS browser overlays default to this Kokoro-only WASM path to avoid WebGPU audio distortion while leaving browser graphics acceleration enabled.
+
 ##### Google Cloud TTS
 For professional-quality voices, Google Cloud Text to Speech API integration is available:
 

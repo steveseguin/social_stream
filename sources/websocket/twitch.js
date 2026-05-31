@@ -320,6 +320,7 @@ try{
 		'moderator:read:followers',
 		'moderator:read:chatters',
 		'channel:read:subscriptions',
+		'channel:moderate',
 		// New scopes for moderation, ads, and redemptions
 		'moderator:manage:banned_users',
 		'moderator:manage:chat_messages',
@@ -847,6 +848,68 @@ function ensureClientFactory() {
 		return (normalized && twitchDisplayNameByLogin.get(normalized)) || login || '';
 	}
 
+	function normalizeTwitchBanDurationSeconds(value) {
+		if (value === undefined || value === null || value === '') {
+			return null;
+		}
+		const parsed = parseInt(value, 10);
+		return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+	}
+
+	function getTwitchProfileUrl(login) {
+		const normalized = normalizeTwitchLogin(login);
+		return normalized ? `https://www.twitch.tv/${normalized}` : '';
+	}
+
+	async function pushTwitchBanMetaEvent(details = {}) {
+		const login = normalizeTwitchLogin(details.username || details.login || details.userLogin || '');
+		const displayName = details.displayName || getRememberedTwitchDisplayName(login) || login;
+		let durationSeconds = normalizeTwitchBanDurationSeconds(details.durationSeconds);
+		if (!durationSeconds && details.bannedAt && details.endsAt) {
+			const startMs = new Date(details.bannedAt).getTime();
+			const endMs = new Date(details.endsAt).getTime();
+			if (Number.isFinite(startMs) && Number.isFinite(endMs) && endMs > startMs) {
+				durationSeconds = Math.round((endMs - startMs) / 1000);
+			}
+		}
+		const permanent = details.permanent === true || (!durationSeconds && !details.endsAt);
+		const meta = {
+			platform: 'twitch',
+			action: durationSeconds || details.endsAt ? 'timeout' : 'ban',
+			username: login,
+			displayName: displayName || login,
+			userId: details.userId || '',
+			avatarUrl: details.avatarUrl || '',
+			profileUrl: details.profileUrl || getTwitchProfileUrl(login),
+			moderator: details.moderator || '',
+			moderatorId: details.moderatorId || '',
+			reason: details.reason || '',
+			durationSeconds,
+			permanent,
+			bannedAt: details.bannedAt || '',
+			endsAt: details.endsAt || ''
+		};
+
+		if (login && !meta.avatarUrl) {
+			try {
+				const userInfo = await getUserInfo(login);
+				if (userInfo) {
+					meta.userId = meta.userId || userInfo.id || '';
+					meta.avatarUrl = userInfo.profile_image_url || '';
+					meta.displayName = details.displayName || userInfo.display_name || meta.displayName;
+				}
+			} catch (error) {
+				console.warn('Twitch ban profile lookup failed', error);
+			}
+		}
+
+		pushMessage({
+			type: 'twitch',
+			event: 'user_banned',
+			meta
+		});
+	}
+
 	/*
 	AI/overlay contract for Twitch moderation:
 	Twitch moderation events are controls, not chat messages. Send them as
@@ -1326,6 +1389,14 @@ async function ensureChatClientInstance() {
 			const chatname = getRememberedTwitchDisplayName(payload.user);
 			if (chatname) {
 				pushDeleteMessage({ type: 'twitch', chatname: chatname });
+			}
+			if (!activeSubscriptions.has('channel.ban')) {
+				pushTwitchBanMetaEvent({
+					username: payload.user,
+					displayName: chatname,
+					durationSeconds: payload.duration,
+					permanent: !payload.duration
+				});
 			}
 			return;
 		}
@@ -2917,6 +2988,16 @@ async function cleanupCurrentConnection() {
 				});
 			}
 
+			if (permissions.hasChannelModerateScope && !activeSubscriptions.has('channel.ban')) {
+				subscriptionTypes.push({
+					type: 'channel.ban',
+					version: '1',
+					condition: {
+						broadcaster_user_id: broadcasterId
+					}
+				});
+			}
+
 			// Channel points redemptions
 			if (!activeSubscriptions.has('channel.channel_points_custom_reward_redemption.add')) {
 				subscriptionTypes.push({
@@ -3186,6 +3267,22 @@ async function cleanupCurrentConnection() {
 					textonly: settings.textonlymode || false
 				});
 				addEvent(`Raid: ${event.from_broadcaster_user_name} with ${event.viewers} viewers`);
+				break;
+
+			case 'channel.ban':
+				pushDeleteMessage({ type: 'twitch', chatname: event.user_name || event.user_login });
+				pushTwitchBanMetaEvent({
+					username: event.user_login,
+					displayName: event.user_name,
+					userId: event.user_id,
+					moderator: event.moderator_user_name || event.moderator_user_login,
+					moderatorId: event.moderator_user_id,
+					reason: event.reason,
+					bannedAt: event.banned_at,
+					endsAt: event.ends_at,
+					permanent: event.is_permanent === true
+				});
+				addEvent(`Ban: ${event.user_name || event.user_login}`);
 				break;
 
 			case 'stream.online':
@@ -3521,6 +3618,7 @@ async function cleanupCurrentConnection() {
 			canViewSubscribers: isBroadcaster || isModerator,
 			hasSubscriptionProgram: broadcasterInfo?.partner || broadcasterInfo?.broadcaster_type === 'affiliate',
 			canModerate: isBroadcaster || isModerator,
+			hasChannelModerateScope: !!scopes['channel:moderate'],
 			canManageBroadcast: isBroadcaster && !!scopes['channel:manage:broadcast'],
 			canManageAds: !!scopes['channel:manage:ads'],
 			canReadAds: !!scopes['channel:read:ads'],

@@ -242,6 +242,7 @@
                     <li>Donation-style events include a descriptive object: for example <code>{ amount, currency, supporter }</code> for Kick, <code>{ bits }</code> for Twitch cheers, <code>{ supporter, eventType }</code> for YouTube memberships.</li>
                     <li>Raids and hosts pass <code>{ fromId, fromLogin, viewers }</code> so overlays can display both streamer name and audience size.</li>
                     <li>Reward redemptions expose <code>{ rewardId, cost, alias }</code> alongside the prepared chat message.</li>
+                    <li><code>user_banned</code> is metadata-only for moderation widgets. It intentionally omits <code>chatname</code> and <code>chatmessage</code>; use <code>meta.username</code>, <code>meta.displayName</code>, <code>meta.avatarUrl</code>, and <code>meta.profileUrl</code>.</li>
                     <li>Chat transports that support source-control delete sync should expose the platform-native chat identifier as <code>meta.messageId</code> instead of relying on the dock's internal <code>data-mid</code> value.</li>
                     <li>SSApp source identity metadata may add <code>meta.ssnAccountRole</code>, <code>meta.ssnSourceId</code>, and <code>meta.ssnSession</code> when a source is assigned a non-normal account role.</li>
                     <li>Event Flow can request a highlight by setting <code>meta.featured = true</code> on the chat payload, which auto-features the message in dock/featured overlays.</li>
@@ -406,6 +407,11 @@
                                 <td><code>meta.streamTitle</code> populated when stream metadata was cached.</td>
                             </tr>
                             <tr>
+                                <td class="status-event"><code>user_banned</code></td>
+                                <td><code>userBannedEvent</code> from the live-chat API or gRPC stream.</td>
+                                <td>Metadata-only event for moderation widgets. <code>meta</code> includes username/display name, channel ID, avatar/profile URL, moderator, ban/timeout duration, and permanence.</td>
+                            </tr>
+                            <tr>
                                 <td class="status-event"><code>new_follower</code></td>
                                 <td>New subscriber detected via <code>myRecentSubscribers</code> API (polled every 5 minutes).</td>
                                 <td><code>chatname</code> is subscriber's channel name; <code>meta</code> includes <code>channelId</code>, <code>title</code>, <code>subscribedAt</code>. Note: YouTube API has up to 4-hour delay; only shows subscribers with public subscription lists.</td>
@@ -453,6 +459,7 @@
                             <tr><td><code>membermilestone</code></td><td><code>member_milestone</code></td><td>Membership anniversary chat</td></tr>
                             <tr><td><code>donation</code></td><td>&mdash;</td><td>Super Chat</td></tr>
                             <tr><td><code>supersticker</code></td><td>&mdash;</td><td>Super Sticker</td></tr>
+                            <tr><td><code>user_banned</code></td><td>&mdash;</td><td>Metadata-only ban/timeout event</td></tr>
                             <tr><td><code>new_follower</code></td><td>&mdash;</td><td>New subscriber (up to 4hr delay)</td></tr>
                         </tbody>
                     </table>
@@ -514,7 +521,7 @@
                     <h3>Twitch – EventSub/Websocket</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/twitch.js</code> with shared core <code>providers/twitch/chatClient.js</code></p>
                     <ul class="requirements">
-                        <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>channel:read:subscriptions</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
+                        <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>channel:read:subscriptions</code>, <code>channel:moderate</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
                         <li>Events delivered by EventSub, plus Helix polling for viewer/follower/subscriber totals.</li>
                         <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, and channel point redemptions.</li>
                     </ul>
@@ -587,6 +594,11 @@
                                 <td>Ad manager API responses (<code>channel.ad_break.begin</code>, manual <code>POST channels/ads</code>, <code>GET channels/ads</code>).</td>
                                 <td><code>meta</code> details duration, requester, and schedule payload for dashboards.</td>
                             </tr>
+                            <tr>
+                                <td class="status-event"><code>user_banned</code></td>
+                                <td>EventSub <code>channel.ban</code>, or IRC <code>CLEARCHAT</code> fallback when EventSub ban events are unavailable.</td>
+                                <td>Metadata-only event for moderation widgets. <code>meta</code> includes username/display name, user ID, avatar/profile URL, moderator, reason, ban/timeout duration, and permanence.</td>
+                            </tr>
                         </tbody>
                     </table>
                     <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe logic uses message IDs; ensure downstream consumers honour <code>data.id</code>.</p>
@@ -613,6 +625,7 @@
                             <tr><td><code>stream_online</code></td><td>Stream went live</td></tr>
                             <tr><td><code>stream_offline</code></td><td>Stream ended</td></tr>
                             <tr><td><code>ad_break</code></td><td>Ad break started</td></tr>
+                            <tr><td><code>user_banned</code></td><td>User was banned or timed out</td></tr>
                         </tbody>
                     </table>
                 </article>
@@ -887,7 +900,7 @@
                     <h3>Kick – Websocket/Bridge</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/kick.js</code> with shared helpers under <code>providers/kick/core.js</code></p>
                     <ul class="requirements">
-                        <li>OAuth via the Social Stream Kick bridge. Core scopes include <code>user:read</code>, <code>channel:read</code>, <code>chat:write</code>, <code>events:subscribe</code>, <code>channel:rewards:read</code>, and <code>kicks:read</code>. Tokens are refreshed automatically.</li>
+                        <li>OAuth via the Social Stream Kick bridge. Core scopes include <code>user:read</code>, <code>channel:read</code>, <code>chat:write</code>, <code>events:subscribe</code>, <code>channel:rewards:read</code>, <code>moderation:ban</code>, and <code>kicks:read</code>. Tokens are refreshed automatically.</li>
                         <li>Kick webhook provisioning may take several minutes; the UI lists active subscriptions per channel.</li>
                     </ul>
                     <table class="event-table">
@@ -949,6 +962,11 @@
                                 <td><code>livestream.status.updated</code> when Kick includes concurrent viewer totals.</td>
                                 <td><code>meta</code> integer viewer count; emits <code>0</code> on offline status to clear stale counters.</td>
                             </tr>
+                            <tr>
+                                <td class="status-event"><code>user_banned</code></td>
+                                <td><code>moderation.banned</code> from the bridge/webhook, or Kick chat socket ban events.</td>
+                                <td>Metadata-only event for moderation widgets. <code>meta</code> includes username/display name, user ID, avatar/profile URL, moderator, reason, ban/timeout duration, and permanence.</td>
+                            </tr>
                         </tbody>
                     </table>
                     <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in KICKs, the bridge converts them into <code>hasDonation</code> plus <code>meta.amount</code> with <code>currency</code> fallback to "KICKs". Chat payloads include <code>meta.messageId</code> when the bridge exposes a native Kick message ID so delete sync can target the correct message. Reply payloads include <code>meta.reply</code> with the parent <code>messageId</code>, <code>author</code>, and <code>text</code> when known.</p>
@@ -971,6 +989,7 @@
                             <tr><td><code>follower_update</code></td><td>Total follower count</td></tr>
                             <tr><td><code>stream_online</code></td><td>Stream went live</td></tr>
                             <tr><td><code>stream_offline</code></td><td>Stream ended</td></tr>
+                            <tr><td><code>user_banned</code></td><td>User was banned or timed out</td></tr>
                         </tbody>
                     </table>
                 </article>
