@@ -3554,6 +3554,30 @@ function startPusherWatchdog(activityTimeoutSeconds) {
     }, checkIntervalMs);
 }
 
+function isKickBanEventName(eventName) {
+    const normalized = String(eventName || '').trim().toLowerCase();
+    if (!normalized || normalized.indexOf('pusher:') === 0 || normalized.indexOf('pusher_internal:') === 0) {
+        return false;
+    }
+    return /(^|[._:\\\/-])(?:user)?ban(?:ned)?(?:event)?($|[._:\\\/-])/.test(normalized);
+}
+
+function looksLikeKickBanPayload(data) {
+    if (!data || typeof data !== 'object') {
+        return false;
+    }
+    const candidates = [data, data.data, data.metadata, data.message];
+    for (const candidate of candidates) {
+        if (!candidate || typeof candidate !== 'object') {
+            continue;
+        }
+        if (candidate.banned_user || candidate.bannedUser || (candidate.user && candidate.user.banned)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function mapPusherEventToPacket(eventName, data) {
     if (eventName === 'App\\Events\\ChatMessageEvent') {
         return { type: 'chat.message.sent', body: data, source: 'socket' };
@@ -3574,7 +3598,7 @@ function mapPusherEventToPacket(eventName, data) {
     if (eventName === 'App\\Events\\SubscriptionEvent' || eventName === 'App\\Events\\ChannelSubscriptionEvent') {
         return { type: 'channel.subscription.new', body: data, source: 'socket' };
     }
-    if (eventName === 'App\\Events\\UserBannedEvent') {
+    if (isKickBanEventName(eventName) || looksLikeKickBanPayload(data)) {
         return { type: 'moderation.banned', body: data, source: 'socket' };
     }
     if (eventName === 'App\\Events\\StreamHostEvent') {
@@ -6067,7 +6091,7 @@ function processBridgeEvent(packet, isReplay = false) {
         forwardDeletedMessage(body, bridgeMeta);
         return;
     }
-    if (type === 'moderation.banned' || type === 'chat.user.banned' || /(^|[._:-])(?:ban|banned)(?:$|[._:-])/i.test(type)) {
+    if (type === 'moderation.banned' || type === 'chat.user.banned' || isKickBanEventName(type) || looksLikeKickBanPayload(body)) {
         void forwardBannedUser(body, bridgeMeta);
         return;
     }
