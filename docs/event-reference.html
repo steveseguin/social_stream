@@ -183,6 +183,13 @@
                             <td>Rants/tips (amount + currency)</td>
                             <td>Viewer totals, subscriber totals, live status, and chat feed</td>
                         </tr>
+                        <tr>
+                            <td><strong>Streamplace</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count plus chat names, colors, badges, replies, and links</td>
+                        </tr>
                     </tbody>
                 </table>
                 <p class="field-highlights">*YouTube subscriber alerts have a 4-hour API delay and only show subscribers with public subscription lists. This is a YouTube API limitation that also affects Streamlabs and other apps.</p>
@@ -1170,6 +1177,36 @@
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Polls the visible header viewer badge every 10s.</td>
                                 <td><code>meta</code> integer viewer count; only emitted when <strong>Show viewer count</strong> or hype mode is enabled, and sends <code>0</code> if the badge becomes unreadable to clear stale counters.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="streamplace">
+                    <h3>Streamplace</h3>
+                    <p class="source-note">Implementation: <code>sources/streamplace.js</code></p>
+                    <ul class="requirements">
+                        <li>Reads Streamplace's React-rendered live page and skips the visible chat backlog when attaching.</li>
+                        <li>Relay-style messages such as <code>Name (Discord): message</code> are normalized to the relayed sender name.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New Streamplace chat rows appear after attach.</td>
+                                <td>Standard chat payload with <code>nameColor</code>, <code>chatbadges</code>, HTML-preserved links, and reply fields <code>initial</code>, <code>reply</code>, and <code>meta.reply</code> when visible.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The header viewer badge changes while viewer-count capture or hype mode is enabled.</td>
+                                <td><code>meta</code> integer viewer count.</td>
                             </tr>
                         </tbody>
                     </table>
