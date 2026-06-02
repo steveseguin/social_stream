@@ -4444,7 +4444,7 @@ async function processIncomingMessage(message, sender = null) {
 			return message;
 		}
 
-		sendToDestinations(message); // send the data to the dock
+		await sendToDestinations(message); // send the data to the dock
 	}
 	return message;
 }
@@ -4604,6 +4604,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 
 			pruneSettingsObjects(settings);
+
+			if (request.setting === "beepreturning" && request.value && !getSettingFlag("disableDB") && !getSettingFlag("firsttimers")) {
+				settings.firsttimers = { setting: true };
+			}
 
 			Object.keys(patterns).forEach(pattern => {
 				settings[pattern] = findExistingEvents(pattern, { settings });
@@ -5058,15 +5062,25 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// Handle batch messages from YouTube and TikTok
 			sendResponse({ state: isExtensionOn });
 			if (Array.isArray(request.messages)) {
-				// Process messages in parallel for better performance
-				await Promise.all(
-					request.messages.map(message =>
-						processIncomingMessage(message, sender).catch(error => {
+				if (getSettingFlag("firsttimers") && !getSettingFlag("disableDB")) {
+					for (const message of request.messages) {
+						try {
+							await processIncomingMessage(message, sender);
+						} catch (error) {
 							console.error("Error processing message:", error);
-							// Continue processing other messages even if one fails
-						})
-					)
-				);
+						}
+					}
+				} else {
+					// Process messages in parallel for better performance
+					await Promise.all(
+						request.messages.map(message =>
+							processIncomingMessage(message, sender).catch(error => {
+								console.error("Error processing message:", error);
+								// Continue processing other messages even if one fails
+							})
+						)
+					);
+				}
 			}
 		} else if ("getBTTV" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
@@ -15186,14 +15200,15 @@ async function applyBotActions(data, tab = false) {
 			data.containsBadWords = containsProfanity(data.chatmessage);
 		}
 
-		if (settings.firsttimers && data.chatname && data.chatmessage && data.type) {
+		if (getSettingFlag("firsttimers") && !getSettingFlag("disableDB") && data.chatname && data.chatmessage && data.type) {
 			try {
-				const checkResult = await messageStoreDB.checkUserTypeExists(data.userid || data.chatname, data.type);
+				const checkResult = await messageStoreDB.checkUserTypeExists(data.userid || data.chatname, data.type, data.chatname);
 				const exists = typeof checkResult === "object" ? checkResult.exists : !!checkResult;
+				const unavailable = typeof checkResult === "object" && checkResult.unavailable;
 				const lastActivityRaw = typeof checkResult === "object" ? checkResult.lastActivity : null;
 				const normalizedLastActivitySeconds = normalizeTimestampToSeconds(lastActivityRaw);
 
-				if (!exists) {
+				if (!unavailable && !exists) {
 					data.firsttime = true;
 				}
 				if (normalizedLastActivitySeconds) {

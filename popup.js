@@ -3976,6 +3976,27 @@ function getTargetMap() {
 		'reactions': 27,
     };
 }
+
+function ensureFirstTimerTrackingForBeep(sync) {
+    if (!sync) return true;
+    const disableDb = document.querySelector("input[data-setting='disableDB']");
+    if (disableDb && disableDb.checked) {
+        const enableDb = confirm("First-time chatter detection requires the local message database. Enable the database now?");
+        if (!enableDb) {
+            return false;
+        }
+        disableDb.checked = false;
+        updateSettings(disableDb, sync);
+    }
+
+    const firstTimers = document.querySelector("input[data-setting='firsttimers']");
+    if (firstTimers && !firstTimers.checked) {
+        firstTimers.checked = true;
+        updateSettings(firstTimers, sync);
+    }
+    return true;
+}
+
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const targetElement = document.getElementById(targetId);
     if (!targetElement) return false;
@@ -3989,6 +4010,11 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const keyOnly = parts[0]; // e.g., 'scale' or 'darkmode'
     const valueInAttr = parts.length > 1 ? parts[1] : undefined; // e.g., '0.77' or undefined
     const effectiveKey = normalizeParamKey(keyOnly);
+
+    if (paramType === "param1" && paramValue === "beepfirsttime" && ele.checked && !ensureFirstTimerTrackingForBeep(sync)) {
+        ele.checked = false;
+        return true;
+    }
 
     if (ele.checked) {
         // Remove any existing instance of this parameter based on the key part
@@ -4542,6 +4568,11 @@ function handleSetting(ele, sync) {
 
     if (ele.dataset.setting === "videostatspoller") {
         updateVideoStatsSettingsVisibility();
+    }
+
+    if ((ele.dataset.setting === "firsttimers" || ele.dataset.setting === "beepreturning") && ele.checked && !ensureFirstTimerTrackingForBeep(sync)) {
+        ele.checked = false;
+        return true;
     }
     
     if (sync) {

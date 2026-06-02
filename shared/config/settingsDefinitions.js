@@ -701,7 +701,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "firsttimers": {
     type: "boolean",
     category: "custom_injection",
-    description: "Mark first time chatters/donators (requires the local database)"
+    description: "Mark first-time chatters and include last activity timestamps (requires the local database)"
   },
   "flipYoutube": {
     type: "boolean",

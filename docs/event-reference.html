@@ -236,6 +236,16 @@
                             <td>number | object</td>
                             <td>Structured payload for downstream automations. Use plain integers for single counters (viewer, follower, subscriber) and objects for richer context (raid viewers, reward redemption details, donation currency).</td>
                         </tr>
+                        <tr>
+                            <td><code>data.firsttime</code></td>
+                            <td>boolean</td>
+                            <td>Set to <code>true</code> when First timers is enabled, the local database is enabled, and this is the first stored chat message for that user/source. The dock uses it for first-time highlighting and first-time beep filters.</td>
+                        </tr>
+                        <tr>
+                            <td><code>data.lastactivity</code></td>
+                            <td>number</td>
+                            <td>Unix timestamp in seconds for that user's previous stored chat activity, when First timers and the local database are enabled. Omitted for brand-new users.</td>
+                        </tr>
                     </tbody>
                 </table>
             </section>
