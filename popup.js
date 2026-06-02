@@ -3155,6 +3155,7 @@ function update(response, sync = true) {
                 // MIDI was enabled in settings, initialize the dropdown
                 handleMidiToggle(true);
             }
+            updateFirstTimerUiState();
         }
 
         if (("state" in response) && streamID) {
@@ -3977,16 +3978,52 @@ function getTargetMap() {
     };
 }
 
-function ensureFirstTimerTrackingForBeep(sync) {
-    if (!sync) return true;
+function showPopupToast(level, title, message) {
+    const normalizedLevel = ['error', 'warning', 'info', 'success'].includes(level) ? level : 'info';
+    try {
+        if (typeof Toast !== 'undefined' && typeof Toast[normalizedLevel] === 'function') {
+            Toast[normalizedLevel](title, message);
+            return true;
+        }
+    } catch (_) {}
+    try {
+        if (window.parent && window.parent !== window && window.parent.Toast && typeof window.parent.Toast[normalizedLevel] === 'function') {
+            window.parent.Toast[normalizedLevel](title, message);
+            return true;
+        }
+    } catch (_) {}
+    return false;
+}
+
+function updateFirstTimerUiState() {
+    const disableDb = document.querySelector("input[data-setting='disableDB']");
+    const firstTimers = document.querySelector("input[data-setting='firsttimers']");
+    const dockBeep = document.querySelector("input[data-param1='beepfirsttime']");
+    const dockWarning = document.getElementById("firstTimerDockBeepWarning");
+
+    const databaseDisabled = !!(disableDb && disableDb.checked);
+    const trackingEnabled = !!(firstTimers && firstTimers.checked);
+    const dockBeepEnabled = !!(dockBeep && dockBeep.checked);
+
+    if (dockWarning) {
+        dockWarning.style.display = dockBeepEnabled && (!trackingEnabled || databaseDisabled) ? "inline" : "none";
+    }
+}
+
+function enableFirstTimerDatabase(sync) {
     const disableDb = document.querySelector("input[data-setting='disableDB']");
     if (disableDb && disableDb.checked) {
-        const enableDb = confirm("First-time chatter detection requires the local message database. Enable the database now?");
-        if (!enableDb) {
-            return false;
-        }
         disableDb.checked = false;
         updateSettings(disableDb, sync);
+        showPopupToast("info", "First-time chatters", "Local database enabled so first-time chatter detection can work.");
+    }
+    updateFirstTimerUiState();
+}
+
+function ensureFirstTimerTrackingForBeep(sync) {
+    if (!sync) {
+        updateFirstTimerUiState();
+        return true;
     }
 
     const firstTimers = document.querySelector("input[data-setting='firsttimers']");
@@ -3994,27 +4031,48 @@ function ensureFirstTimerTrackingForBeep(sync) {
         firstTimers.checked = true;
         updateSettings(firstTimers, sync);
     }
+
+    enableFirstTimerDatabase(sync);
+    updateFirstTimerUiState();
     return true;
 }
 
-function handleElementParam(ele, targetId, paramType, sync, value = null) {
-    const targetElement = document.getElementById(targetId);
-    if (!targetElement) return false;
+function setupFirstTimerControls() {
+    const enableRequirements = document.getElementById("enableFirstTimerDockRequirements");
+    if (enableRequirements) {
+        enableRequirements.onclick = function (event) {
+            event.preventDefault();
+            ensureFirstTimerTrackingForBeep(true);
+        };
+    }
 
+    const showDatabaseSetting = document.getElementById("showFirstTimerDockDatabaseSetting");
+    if (showDatabaseSetting) {
+        showDatabaseSetting.onclick = function (event) {
+            const databaseRow = document.getElementById("databaseSettingsRow");
+            if (databaseRow) {
+                event.preventDefault();
+                databaseRow.scrollIntoView();
+            }
+        };
+    }
+
+    updateFirstTimerUiState();
+}
+
+function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const paramAttr = `data-${paramType}`;
     const paramValue = ele.dataset[paramType]; // e.g., 'scale=0.77' or 'darkmode'
     if (!paramValue) return false;
+
+    const targetElement = document.getElementById(targetId);
+    if (!targetElement) return false;
 
     const paramNum = paramType.match(/\d+$/) ? paramType.match(/\d+$/)[0] : '';
     const parts = paramValue.split('=');
     const keyOnly = parts[0]; // e.g., 'scale' or 'darkmode'
     const valueInAttr = parts.length > 1 ? parts[1] : undefined; // e.g., '0.77' or undefined
     const effectiveKey = normalizeParamKey(keyOnly);
-
-    if (paramType === "param1" && paramValue === "beepfirsttime" && ele.checked && !ensureFirstTimerTrackingForBeep(sync)) {
-        ele.checked = false;
-        return true;
-    }
 
     if (ele.checked) {
         // Remove any existing instance of this parameter based on the key part
@@ -4205,6 +4263,10 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
                 updateSettings(ele1, sync);
             }
         });
+    }
+
+    if (paramType === "param1" && paramValue === "beepfirsttime") {
+        updateFirstTimerUiState();
     }
 
     return true;
@@ -4570,7 +4632,11 @@ function handleSetting(ele, sync) {
         updateVideoStatsSettingsVisibility();
     }
 
-    if ((ele.dataset.setting === "firsttimers" || ele.dataset.setting === "beepreturning") && ele.checked && !ensureFirstTimerTrackingForBeep(sync)) {
+    if (ele.dataset.setting === "firsttimers" && ele.checked && sync) {
+        enableFirstTimerDatabase(sync);
+    }
+
+    if (ele.dataset.setting === "beepreturning" && ele.checked && !ensureFirstTimerTrackingForBeep(sync)) {
         ele.checked = false;
         return true;
     }
@@ -4583,6 +4649,10 @@ function handleSetting(ele, sync) {
             setting: ele.dataset.setting,
             value: ele.checked
         }, function (response) {});
+    }
+
+    if (ele.dataset.setting === "disableDB" || ele.dataset.setting === "firsttimers" || ele.dataset.setting === "beepreturning") {
+        updateFirstTimerUiState();
     }
     
     return true;
@@ -8861,6 +8931,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	updateVideoStatsSettingsVisibility();
+	setupFirstTimerControls();
 
 	setupDeferredCustomCssFlush();
 	

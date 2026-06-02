@@ -2308,12 +2308,18 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message </span>
                                 </div>
-                                <div title="Beep only when a dock message has the first-time chatter flag. Requires First timers and the local database." data-keywords="beep sound first timer chatter new viewer notification">
+                                <div title="Beep only when a dock message has the first-time chatter flag. Requires First-time chatter detection and the local database." data-keywords="beep sound first timer chatter new viewer notification">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="beepfirsttime" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span>🔔🆕 Dock beep for first-time chatters</span>
+                                    <span id="firstTimerDockBeepWarning" style="display: none; margin-left: 8px; font-size: 0.9em; color: #e9c46a;">
+                                        Needs detection + database.
+                                        <a href="#" id="enableFirstTimerDockRequirements" class="lightblue">Enable both</a>
+                                        |
+                                        <a href="#databaseSettingsRow" id="showFirstTimerDockDatabaseSetting" class="lightblue">Database setting</a>
+                                    </span>
                                 </div>
                                 <div title="Lower the beep's volume" data-keywords="notification volume loudness gain attenuate quieter">
                                     <label class="switch">
@@ -6276,21 +6282,21 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="hide-stream-events"> Hide stream events (follows, likes, subs) </span>
                                 </div>
-                                <div title="By default all inbound messages are saved to a local database for later look-up reference">
+                                <div id="databaseSettingsRow" title="By default all inbound messages are saved to a local database for later look-up reference">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="disableDB" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="disable-store-messages-in-local-database"> 🚫🗄️ Disable the <a href="./chathistory.html" id="chathistory"  class="lightblue"  target="blank">local message database</a> </span>
                                 </div>
-								<div title="Adds firsttime=true to brand-new chatters so the dock can highlight them and first-time beep/flows can react. Requires the local database.">
+								<div title="Adds firsttime=true to brand-new chatters. Requires the local database." data-keywords="first time chatter database new viewer detection">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="firsttimers" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="first-time-chatters"> 🌿 Use the DB to mark new-ish chatters and to include last chat-activity. Required for some triggers.</span>
+                                    <span data-translate="first-time-chatters">🆕 First-time chatter detection</span>
                                 </div>
-                                <div title="Beep when a brand new chatter or someone inactive for 8+ hours speaks (requires first-timer tracking)">
+                                <div title="Beep when a brand new chatter or someone inactive for 8+ hours speaks. Requires first-time chatter detection and the local database.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="beepreturning" />
                                         <span class="slider round"></span>
