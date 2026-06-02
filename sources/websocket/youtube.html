@@ -403,7 +403,6 @@ try {
     var lastMessageTime = null;
     var liveChatId = null;
     var nextPageToken = null;
-    var isPolling = false;
     var userDetails = {};
 	var currentStream = null;
 	var messageQueue = [];
@@ -461,11 +460,10 @@ try {
 	var youtubeRecommendedInterval = 5000; // Default, will be updated by API
 	var isPageVisible = true;
 	var lastVisibilityChange = Date.now();
-	var backgroundPollingInterval = 10000; // 10 seconds when in background
-	var liveChatGrpcStreamId = null;
-	var liveChatGrpcUnsubscribe = null;
-	var liveChatGrpcFallbackActive = false;
-	var liveChatGrpcStopping = false;
+	var liveChatStreamAbortController = null;
+	var liveChatStreamActive = false;
+	var liveChatStreamStopping = false;
+	var liveChatStreamReadBuffer = '';
 	var tokenRefreshPromise = null;
 	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.";
 	const INNERTUBE_EMOJI_CACHE_TTL = 24 * 60 * 60 * 1000;
@@ -855,24 +853,6 @@ function enableBackgroundKeepAlive() {
 	function getElectronFetchBridge() {
 		const bridge = window.ninjafy || window.electronApi || window.__ssapp;
 		return bridge && typeof bridge.noCORSFetch === 'function' ? bridge : null;
-	}
-
-	function getYouTubeLiveChatGrpcBridge() {
-		const bridgeCandidates = [window.ninjafy, window.electronApi, window.__ssapp];
-		for (const bridge of bridgeCandidates) {
-			if (!bridge || typeof bridge.startYouTubeLiveChatGrpcStream !== 'function') {
-				continue;
-			}
-			if (typeof bridge.stopYouTubeLiveChatGrpcStream !== 'function' || typeof bridge.onYouTubeLiveChatGrpcEvent !== 'function') {
-				continue;
-			}
-			return bridge;
-		}
-		return null;
-	}
-
-	function hasYouTubeLiveChatGrpcBridge() {
-		return !!getYouTubeLiveChatGrpcBridge();
 	}
 
 	function getYouTubeInnertubeHeaders(referer) {
@@ -2606,7 +2586,7 @@ function enableBackgroundKeepAlive() {
 		lastVisibilityChange = Date.now();
 		
 		if (isPageVisible && !wasVisible) {
-			console.log('Page is now visible - checking polling state');
+			console.log('Page is now visible - checking YouTube chat stream state');
 			
 			// Process any queued messages
 			if (messageQueue.length > 0) {
@@ -2614,25 +2594,8 @@ function enableBackgroundKeepAlive() {
 				processQueuedMessages();
 			}
 			
-			// Only resume if we have an active connection and aren't already polling
-			if (liveChatId && !liveChatGrpcStreamId && !isPolling && !fetchTimeout) {
-				const timeSinceLastPoll = Date.now() - lastPollingTime;
-				const timeSinceLastSuccess = Date.now() - lastSuccessfulPollTime;
-				const requiredInterval = youtubeRecommendedInterval || 5000;
-				
-				// Additional safety check for rapid visibility changes
-				if (timeSinceLastSuccess < requiredInterval) {
-					const remainingTime = requiredInterval - timeSinceLastSuccess;
-					console.log(`Waiting ${remainingTime}ms before resuming (respecting YouTube interval)`);
-					fetchTimeout = setTrackedTimeout(fetchChatMessages, remainingTime);
-				} else if (timeSinceLastPoll < requiredInterval) {
-					const remainingTime = requiredInterval - timeSinceLastPoll;
-					console.log(`Waiting ${remainingTime}ms before resuming polling`);
-					fetchTimeout = setTrackedTimeout(fetchChatMessages, remainingTime);
-				} else {
-					console.log('Safe to resume polling');
-					fetchTimeout = setTrackedTimeout(fetchChatMessages, 1000); // Small delay to be safe
-				}
+			if (liveChatId && !liveChatStreamActive && !liveChatStreamAbortController && !fetchTimeout) {
+				scheduleLiveChatStreamReconnect(1000);
 			}
 		} else if (!isPageVisible && wasVisible) {
 			console.log('Page is now hidden - switching to background mode');
@@ -2641,21 +2604,6 @@ function enableBackgroundKeepAlive() {
 			if (messageQueue.length > 200) {
 				messageQueue = messageQueue.slice(-200);
 				console.log(`Trimmed message queue to 200 messages (was ${messageQueue.length})`);
-			}
-			
-			// Keep next poll scheduled while hidden so we don't stall
-			if (fetchTimeout && !isPolling) {
-				const elapsed = Date.now() - lastPollingTime;
-				const baseInterval = youtubeRecommendedInterval || 5000;
-				const remaining = Math.max(0, baseInterval - elapsed);
-				try {
-					if (typeof fetchTimeout.clear === 'function') {
-						fetchTimeout.clear();
-					} else {
-						clearTimeout(fetchTimeout);
-					}
-				} catch (_) {}
-				fetchTimeout = setTrackedTimeout(fetchChatMessages, remaining || baseInterval, true);
 			}
 			
 			if (queueDrainTimeout) {
@@ -2675,12 +2623,12 @@ function enableBackgroundKeepAlive() {
 			} catch (_) {}
 			fetchTimeout = null;
 		}
-		console.log(`Waiting ${resumeDelay}ms for token refresh before retrying polling`);
-		fetchTimeout = setTrackedTimeout(fetchChatMessages, resumeDelay, !isPageVisible);
+		console.log(`Waiting ${resumeDelay}ms for token refresh before retrying YouTube chat stream`);
+		fetchTimeout = setTrackedTimeout(startLiveChatStream, resumeDelay, !isPageVisible);
 		return resumeDelay;
 	}
 
-	function normalizeGrpcLiveChatType(type) {
+	function normalizeLiveChatType(type) {
 		const typeMap = {
 			TEXT_MESSAGE_EVENT: 'textMessageEvent',
 			TOMBSTONE: 'tombstone',
@@ -2708,13 +2656,336 @@ function enableBackgroundKeepAlive() {
 		if (!item.snippet || typeof item.snippet !== 'object') return item;
 		const normalized = Object.assign({}, item);
 		normalized.snippet = Object.assign({}, item.snippet);
-		normalized.snippet.type = normalizeGrpcLiveChatType(normalized.snippet.type);
+		normalized.snippet.type = normalizeLiveChatType(normalized.snippet.type);
 		return normalized;
 	}
 
-	function schedulePollingFallback(delayMs = 2000) {
-		if (!liveChatId || fetchTimeout || isPolling) return;
-		fetchTimeout = setTrackedTimeout(fetchChatMessages, delayMs, !isPageVisible);
+	function updateLiveChatStreamIndicator(text) {
+		const pollTime = document.getElementById('poll-time');
+		if (pollTime && text) {
+			pollTime.textContent = text;
+		}
+	}
+
+	function scheduleLiveChatStreamReconnect(delayMs = 2000) {
+		if (!liveChatId || fetchTimeout || liveChatStreamActive || liveChatStreamAbortController) return;
+		updateLiveChatStreamIndicator('reconnect');
+		fetchTimeout = setTrackedTimeout(startLiveChatStream, delayMs, !isPageVisible);
+	}
+
+	function stopLiveChatStream() {
+		liveChatStreamStopping = true;
+		const controller = liveChatStreamAbortController;
+		if (controller) {
+			try {
+				controller.abort();
+			} catch (_) {}
+		} else {
+			liveChatStreamStopping = false;
+		}
+		liveChatStreamAbortController = null;
+		liveChatStreamActive = false;
+		liveChatStreamReadBuffer = '';
+	}
+
+	function normalizeYouTubeApiKeys(value) {
+		if (Array.isArray(value)) {
+			return value.map(normalizeYouTubeApiKeys);
+		}
+		if (!value || typeof value !== 'object') {
+			return value;
+		}
+		const normalized = {};
+		Object.keys(value).forEach(function(key) {
+			const camelKey = key.replace(/_([a-z])/g, function(_match, letter) {
+				return letter.toUpperCase();
+			});
+			normalized[camelKey] = normalizeYouTubeApiKeys(value[key]);
+		});
+		return normalized;
+	}
+
+	function normalizeLiveChatStreamPayload(payload) {
+		const normalized = normalizeYouTubeApiKeys(payload);
+		if (normalized && Array.isArray(normalized.items)) {
+			normalized.items = normalized.items.map(normalizeLiveChatMessageItem);
+		}
+		if (normalized && normalized.activePollItem) {
+			normalized.activePollItem = normalizeLiveChatMessageItem(normalized.activePollItem);
+		}
+		return normalized;
+	}
+
+	function buildLiveChatStreamUrl() {
+		const params = new URLSearchParams({
+			liveChatId,
+			part: 'id,snippet,authorDetails',
+			maxResults: String(Math.max(200, LIVE_CHAT_MAX_RESULTS)),
+			profileImageSize: '88'
+		});
+		if (nextPageToken) {
+			params.set('pageToken', nextPageToken);
+		}
+		return applyApiKeyOverride(`https://www.googleapis.com/youtube/v3/liveChat/messages/stream?${params.toString()}`);
+	}
+
+	function extractCompleteJsonFromBuffer(final = false) {
+		const values = [];
+		let buffer = liveChatStreamReadBuffer;
+		let index = 0;
+		while (index < buffer.length) {
+			while (index < buffer.length && /[\s,\[]/.test(buffer[index])) {
+				index++;
+			}
+			if (index < buffer.length && buffer[index] === ']') {
+				index++;
+				continue;
+			}
+			if (index >= buffer.length) {
+				break;
+			}
+			const start = index;
+			const opener = buffer[index];
+			if (opener !== '{' && opener !== '[') {
+				index++;
+				continue;
+			}
+			const stack = [opener];
+			let inString = false;
+			let escaped = false;
+			index++;
+			for (; index < buffer.length; index++) {
+				const char = buffer[index];
+				if (inString) {
+					if (escaped) {
+						escaped = false;
+					} else if (char === '\\') {
+						escaped = true;
+					} else if (char === '"') {
+						inString = false;
+					}
+					continue;
+				}
+				if (char === '"') {
+					inString = true;
+					continue;
+				}
+				if (char === '{' || char === '[') {
+					stack.push(char);
+					continue;
+				}
+				if (char === '}' || char === ']') {
+					const expected = char === '}' ? '{' : '[';
+					if (stack[stack.length - 1] !== expected) {
+						break;
+					}
+					stack.pop();
+					if (stack.length === 0) {
+						const raw = buffer.slice(start, index + 1);
+						try {
+							const parsed = JSON.parse(raw);
+							if (Array.isArray(parsed)) {
+								parsed.forEach(item => values.push(item));
+							} else {
+								values.push(parsed);
+							}
+						} catch (error) {
+							if (!final) {
+								liveChatStreamReadBuffer = buffer.slice(start);
+								return values;
+							}
+							console.warn('Unable to parse YouTube live chat stream chunk:', error && error.message ? error.message : error);
+						}
+						index++;
+						break;
+					}
+				}
+			}
+			if (stack.length !== 0) {
+				liveChatStreamReadBuffer = buffer.slice(start);
+				return values;
+			}
+		}
+		liveChatStreamReadBuffer = buffer.slice(index);
+		return values;
+	}
+
+	async function handleLiveChatStreamPayload(payload) {
+		if (!payload || typeof payload !== 'object') return;
+		if (payload.error) {
+			const error = new Error(payload.error.message || 'YouTube live chat stream error');
+			error.ytStatus = payload.error.code || null;
+			error.ytReason = payload.error.errors && payload.error.errors[0] ? payload.error.errors[0].reason : '';
+			error.ytPayload = payload;
+			throw error;
+		}
+		const data = normalizeLiveChatStreamPayload(payload);
+		await processLiveChatResponseData(data, { scheduleNextPoll: false });
+		if (data.offlineAt) {
+			handleLiveChatEnded();
+		}
+	}
+
+	async function processLiveChatStreamBuffer(final = false) {
+		const payloads = extractCompleteJsonFromBuffer(final);
+		for (const payload of payloads) {
+			await handleLiveChatStreamPayload(payload);
+		}
+	}
+
+	async function buildLiveChatStreamHttpError(response) {
+		let payload = null;
+		let message = `YouTube live chat stream HTTP ${response.status}`;
+		let reason = '';
+		try {
+			payload = await response.clone().json();
+			const errorPayload = Array.isArray(payload) ? payload.find(item => item && item.error) : payload;
+			if (errorPayload && errorPayload.error) {
+				message = errorPayload.error.message || message;
+				reason = errorPayload.error.errors && errorPayload.error.errors[0] ? errorPayload.error.errors[0].reason : '';
+			}
+		} catch (_) {
+			try {
+				message = await response.text();
+			} catch (_) {}
+		}
+		const error = new Error(message);
+		error.ytStatus = response.status;
+		error.ytReason = reason;
+		error.ytMessage = message;
+		error.ytPayload = payload;
+		return error;
+	}
+
+	function isLiveChatEndedStreamError(error) {
+		const value = String(error?.ytReason || error?.ytMessage || error?.message || '').toLowerCase();
+		return value.includes('livechatended') || value.includes('live_chat_ended');
+	}
+
+	async function handleLiveChatStreamError(error) {
+		if (error && error.name === 'AbortError') {
+			return;
+		}
+		if (isLiveChatEndedStreamError(error)) {
+			console.log('YouTube reported live chat ended; stopping stream.');
+			handleLiveChatEnded();
+			return;
+		}
+		if (error && error.ytStatus === 401) {
+			await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+			scheduleAuthRetry();
+			return;
+		}
+		if (error && error.ytStatus === 403) {
+			if (isQuotaError(error)) {
+				console.error('YouTube API quota exceeded');
+				showQuotaBanner();
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					span.style.color = "red";
+					span.innerHTML = "YouTube API quota limit hit. You can switch to standard YouTube scraping mode in Social Stream Ninja as an alternative until the quota resets.";
+					textarea.appendChild(span);
+				}
+				updateHeaderInfo(username, 'Quota Exceeded');
+				scheduleLiveChatStreamReconnect(300000);
+				return;
+			}
+			console.warn('Access forbidden - chat may be disabled or restricted');
+			scheduleLiveChatStreamReconnect(30000);
+			return;
+		}
+		if (error && error.ytStatus === 429) {
+			console.warn('Rate limited by YouTube API');
+			showQuotaBanner();
+			const backoffTime = Math.min(60000 * Math.pow(2, quickPollCount), 300000);
+			quickPollCount++;
+			scheduleLiveChatStreamReconnect(backoffTime);
+			return;
+		}
+		console.error('Error streaming YouTube chat messages:', error);
+		const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000);
+		quickPollCount++;
+		scheduleLiveChatStreamReconnect(backoffTime);
+	}
+
+	async function readLiveChatStream(controller, token) {
+		try {
+			const response = await fetch(buildLiveChatStreamUrl(), {
+				signal: controller.signal,
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Accept': 'application/json'
+				}
+			});
+			if (!response.ok) {
+				throw await buildLiveChatStreamHttpError(response);
+			}
+			if (!response.body || typeof response.body.getReader !== 'function') {
+				throw new Error('YouTube live chat stream response is not readable.');
+			}
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder();
+			while (true) {
+				const result = await reader.read();
+				if (result.done) break;
+				if (!result.value) continue;
+				liveChatStreamReadBuffer += decoder.decode(result.value, { stream: true });
+				await processLiveChatStreamBuffer(false);
+			}
+			liveChatStreamReadBuffer += decoder.decode();
+			await processLiveChatStreamBuffer(true);
+		} catch (error) {
+			if (liveChatStreamAbortController === controller) {
+				liveChatStreamAbortController = null;
+			}
+			liveChatStreamActive = false;
+			if (!liveChatStreamStopping) {
+				await handleLiveChatStreamError(error);
+			}
+		} finally {
+			if (liveChatStreamAbortController === controller) {
+				liveChatStreamAbortController = null;
+			}
+			liveChatStreamActive = false;
+			liveChatStreamReadBuffer = '';
+			if (liveChatStreamStopping) {
+				liveChatStreamStopping = false;
+				return;
+			}
+			if (!liveChatStreamStopping && liveChatId && !fetchTimeout) {
+				scheduleLiveChatStreamReconnect(Math.max(1000, youtubeRecommendedInterval || 5000));
+			}
+		}
+	}
+
+	async function startLiveChatStream() {
+		if (!liveChatId || liveChatStreamActive || liveChatStreamAbortController) {
+			return false;
+		}
+		const token = getStoredToken();
+		if (!token) {
+			const refreshed = await refreshToken();
+			if (refreshed) {
+				scheduleAuthRetry();
+			}
+			return false;
+		}
+		if (fetchTimeout) {
+			try {
+				clearTimeout(fetchTimeout);
+			} catch (_) {}
+			fetchTimeout = null;
+		}
+		const controller = new AbortController();
+		liveChatStreamAbortController = controller;
+		liveChatStreamActive = true;
+		liveChatStreamStopping = false;
+		liveChatStreamReadBuffer = '';
+		lastPollingTime = Date.now();
+		updateLiveChatStreamIndicator('streaming');
+		readLiveChatStream(controller, token);
+		return true;
 	}
 
 	function extractYouTubeShortcutTokens(value) {
@@ -2911,7 +3182,7 @@ function enableBackgroundKeepAlive() {
 
 	async function processLiveChatResponseData(data, options = {}) {
 		data = data && typeof data === 'object' ? data : {};
-		const shouldScheduleNextPoll = options.scheduleNextPoll !== false;
+		const shouldScheduleNextPoll = options.scheduleNextPoll === true;
 		const awaitRichChatSync = options.awaitRichChatSync === true;
 		const recommendedInterval = data.pollingIntervalMillis || youtubeRecommendedInterval || 5000;
 		youtubeRecommendedInterval = recommendedInterval;
@@ -3210,251 +3481,13 @@ function enableBackgroundKeepAlive() {
 			nextPollInterval = Math.floor(nextPollInterval * 1.5);
 		}
 
-		if (!isPageVisible) {
-			nextPollInterval = Math.max(backgroundPollingInterval, recommendedInterval);
-		}
-
 		if (fetchTimeout) {
 			clearTimeout(fetchTimeout);
 			fetchTimeout = null;
 		}
 
 		updatePollSpinner(nextPollInterval);
-		fetchTimeout = setTrackedTimeout(fetchChatMessages, nextPollInterval, !isPageVisible);
-	}
-
-	async function fetchChatMessages() {
-		if (!liveChatId || isPolling) return;
-		
-		// Double-check we're not polling too soon
-		const timeSinceLastPoll = Date.now() - lastPollingTime;
-		if (timeSinceLastPoll < youtubeRecommendedInterval) {
-			console.warn(`Attempted to poll too soon. Waiting ${youtubeRecommendedInterval - timeSinceLastPoll}ms`);
-			fetchTimeout = setTrackedTimeout(fetchChatMessages, youtubeRecommendedInterval - timeSinceLastPoll, !isPageVisible);
-			return;
-		}
-		
-		isPolling = true;
-		lastPollingTime = Date.now();
-		const token = getStoredToken();
-		if (!token) {
-			isPolling = false;
-			const refreshed = await refreshToken();
-			if (refreshed) {
-				scheduleAuthRetry();
-			}
-			return;
-		}
-		
-		let response;
-		try {
-			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=${LIVE_CHAT_MAX_RESULTS}`;
-			if (nextPageToken) url += `&pageToken=${nextPageToken}`;
-			
-			response = await fetchWithTimeout(url, 5000, {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json'
-			});
-			
-			if (!response.ok) {
-				const status = response.status;
-				if (status === 401) {
-					isPolling = false;
-					await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
-					scheduleAuthRetry();
-					return;
-				} else if (status === 403) {
-					// Check if it's a quota error
-					try {
-						const errorData = await response.json();
-							if (errorData.error && errorData.error.errors && errorData.error.errors[0].reason === 'quotaExceeded') {
-								console.error('YouTube API quota exceeded');
-								showQuotaBanner();
-								isPolling = false;
-							// Show quota error in chat with alternative
-							const textarea = document.querySelector("#textarea");
-							if (textarea) {
-								var span = document.createElement("div");
-								span.style.color = "red";
-								span.innerHTML = "YouTube API quota limit hit. You can switch to standard YouTube scraping mode in Social Stream Ninja as an alternative until the quota resets.";
-								textarea.appendChild(span);
-							}
-							// Update header to show quota exceeded
-							updateHeaderInfo(username, 'Quota Exceeded');
-							// Try again in 5 minutes in case it's temporary
-							fetchTimeout = setTrackedTimeout(fetchChatMessages, 300000, !isPageVisible);
-							return;
-						}
-					} catch (e) {
-						// If we can't parse the error, treat as regular 403
-					}
-					console.warn('Access forbidden - chat may be disabled or restricted');
-					isPolling = false;
-					fetchTimeout = setTrackedTimeout(fetchChatMessages, 30000, !isPageVisible);
-					return;
-				} else if (status === 429) {
-					console.warn('Rate limited by YouTube API');
-					showQuotaBanner();
-					isPolling = false;
-					// Use exponential backoff for rate limits
-					const backoffTime = Math.min(60000 * Math.pow(2, quickPollCount), 300000); // Max 5 minutes
-					quickPollCount++;
-					
-					fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
-					return;
-				}
-				throw new Error(`HTTP error! status: ${status}`);
-			}
-			
-			const data = await response.json();
-			await processLiveChatResponseData(data, { scheduleNextPoll: true });
-	} catch (error) {
-		if (error && error.ytReason === 'liveChatEnded') {
-			console.log('YouTube reported live chat ended; stopping polling.');
-			handleLiveChatEnded();
-			return;
-		}
-		if (error && error.ytStatus === 401) {
-			await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
-			scheduleAuthRetry();
-			return;
-		}
-		if (error && error.ytStatus === 403) {
-			if (isQuotaError(error)) {
-				console.error('YouTube API quota exceeded');
-				showQuotaBanner();
-				const textarea = document.querySelector("#textarea");
-				if (textarea) {
-					var span = document.createElement("div");
-					span.style.color = "red";
-					span.innerHTML = "YouTube API quota limit hit. You can switch to standard YouTube scraping mode in Social Stream Ninja as an alternative until the quota resets.";
-					textarea.appendChild(span);
-				}
-				updateHeaderInfo(username, 'Quota Exceeded');
-				fetchTimeout = setTrackedTimeout(fetchChatMessages, 300000, !isPageVisible);
-				return;
-			}
-			console.warn('Access forbidden - chat may be disabled or restricted');
-			fetchTimeout = setTrackedTimeout(fetchChatMessages, 30000, !isPageVisible);
-			return;
-		}
-		if (error && error.ytStatus === 429) {
-			console.warn('Rate limited by YouTube API');
-			showQuotaBanner();
-			const backoffTime = Math.min(60000 * Math.pow(2, quickPollCount), 300000);
-			quickPollCount++;
-			fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
-			return;
-		}
-		console.error('Error fetching chat messages:', error);
-		// Use exponential backoff for errors
-		const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000); // Max 1 minute
-		quickPollCount++;
-		
-		// Clear any existing timeout before setting new one
-		if (fetchTimeout) {
-			clearTimeout(fetchTimeout);
-			fetchTimeout = null;
-		}
-		
-		fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
-		} finally {
-			isPolling = false;
-		}
-	}
-
-	function updateLiveChatGrpcIndicator(text) {
-		const pollTime = document.getElementById('poll-time');
-		if (pollTime && text) {
-			pollTime.textContent = text;
-		}
-	}
-
-	function ensureLiveChatGrpcListener(bridge) {
-		if (liveChatGrpcUnsubscribe || !bridge) {
-			return;
-		}
-		liveChatGrpcUnsubscribe = bridge.onYouTubeLiveChatGrpcEvent(function(event) {
-			if (!event || event.streamId !== liveChatGrpcStreamId) {
-				return;
-			}
-			if (event.type === 'data') {
-				processLiveChatResponseData(event.payload || {}, { scheduleNextPoll: false }).catch(function(error) {
-					console.error('Error processing YouTube gRPC chat payload:', error);
-				});
-				return;
-			}
-			if (event.type === 'error') {
-				console.warn('YouTube gRPC stream error:', event.error && event.error.message ? event.error.message : event.error);
-				liveChatGrpcStreamId = null;
-				if (!liveChatGrpcStopping) {
-					liveChatGrpcFallbackActive = true;
-					updateLiveChatGrpcIndicator('poll');
-					schedulePollingFallback(2000);
-				}
-				return;
-			}
-			if (event.type === 'end') {
-				liveChatGrpcStreamId = null;
-				if (!liveChatGrpcStopping && liveChatId && !liveChatGrpcFallbackActive) {
-					setTrackedTimeout(function() {
-						startYouTubeLiveChatGrpcStream().catch(function(error) {
-							console.warn('YouTube gRPC reconnect failed:', error && error.message ? error.message : error);
-							liveChatGrpcFallbackActive = true;
-							updateLiveChatGrpcIndicator('poll');
-							schedulePollingFallback(2000);
-						});
-					}, 1000, !isPageVisible);
-				}
-			}
-		});
-	}
-
-	async function stopYouTubeLiveChatGrpcStream() {
-		const bridge = getYouTubeLiveChatGrpcBridge();
-		const streamId = liveChatGrpcStreamId;
-		liveChatGrpcStreamId = null;
-		liveChatGrpcStopping = true;
-		try {
-			if (bridge && streamId) {
-				await bridge.stopYouTubeLiveChatGrpcStream(streamId);
-			}
-		} catch (error) {
-			console.warn('Failed to stop YouTube gRPC stream:', error && error.message ? error.message : error);
-		} finally {
-			liveChatGrpcStopping = false;
-		}
-	}
-
-	async function startYouTubeLiveChatGrpcStream() {
-		if (!liveChatId || liveChatGrpcStreamId || liveChatGrpcFallbackActive) {
-			return false;
-		}
-		const bridge = getYouTubeLiveChatGrpcBridge();
-		if (!bridge) {
-			return false;
-		}
-		const token = getStoredToken();
-		if (!token) {
-			return false;
-		}
-		ensureLiveChatGrpcListener(bridge);
-		const result = await bridge.startYouTubeLiveChatGrpcStream({
-			accessToken: token,
-			liveChatId,
-			apiKey: apiKeyOverride || '',
-			part: ['id', 'snippet', 'authorDetails'],
-			pageToken: nextPageToken || '',
-			profileImageSize: 88,
-			maxResults: LIVE_CHAT_MAX_RESULTS
-		});
-		if (!result || !result.success || !result.streamId) {
-			console.warn('YouTube gRPC stream unavailable:', result && result.error && result.error.message ? result.error.message : result);
-			return false;
-		}
-		liveChatGrpcStreamId = result.streamId;
-		updateLiveChatGrpcIndicator('live');
-		return true;
+		scheduleLiveChatStreamReconnect(nextPollInterval);
 	}
 	
 
@@ -4529,7 +4562,7 @@ function enableBackgroundKeepAlive() {
         }
     }
 	function clearPolling() {
-		stopYouTubeLiveChatGrpcStream().catch(() => {});
+		stopLiveChatStream();
 		// Clear all tracked timeouts
 		activeTimeouts.forEach(timeout => {
 			try {
@@ -4564,7 +4597,6 @@ function enableBackgroundKeepAlive() {
 		liveChatId = null;
 		nextPageToken = null;
 		lastMessageTime = null;
-		isPolling = false;
 		currentStream = null;
 		channelEmojiFetchToken++;
 		channelEmojiAssetsReady = true;
@@ -4578,7 +4610,6 @@ function enableBackgroundKeepAlive() {
 		consecutiveEmptyPolls = 0;
 		lastSuccessfulPollTime = 0;
 		youtubeRecommendedInterval = 5000; // Reset to default
-		liveChatGrpcFallbackActive = false;
 		
 		const chatHeader = document.querySelector('.chat-container h3');
 		if (chatHeader) {
@@ -4815,25 +4846,18 @@ function enableBackgroundKeepAlive() {
 				}
 				initializeSpinner();
 				// Calculate delay based on reconnection timing
-				let initialFetchDelay = 2000; // Default 2 second delay
+				let initialStreamDelay = 2000; // Default 2 second delay
 				
 				// If reconnecting to the same video within 10 seconds, use longer delay
 				if (currentStream && lastConnectedVideoId === currentStream.id) {
 					const timeSinceDisconnect = Date.now() - lastDisconnectTime;
 					if (timeSinceDisconnect < 10000) {
-						initialFetchDelay = Math.max(5000, 10000 - timeSinceDisconnect);
-						console.log(`Reconnecting to same video after ${timeSinceDisconnect}ms, using ${initialFetchDelay}ms delay`);
+						initialStreamDelay = Math.max(5000, 10000 - timeSinceDisconnect);
+						console.log(`Reconnecting to same video after ${timeSinceDisconnect}ms, using ${initialStreamDelay}ms delay`);
 					}
 				}
 				
-				if (hasYouTubeLiveChatGrpcBridge()) {
-					const streamStarted = await startYouTubeLiveChatGrpcStream();
-					if (!streamStarted) {
-						fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
-					}
-				} else {
-					fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
-				}
+				fetchTimeout = setTrackedTimeout(startLiveChatStream, initialStreamDelay, !isPageVisible);
 				if (currentStream?.id) {
 					fetchChannelEmoji(currentStream.id).catch(() => {});
 					syncYouTubeRichChatData(currentStream.id).catch(() => {});
