@@ -2674,12 +2674,20 @@ function bindEvents() {
     const isElectron = isElectronEnvironment();
     if (authMethodSelector && isElectron) {
         // Load saved preference
-        const savedMethod = localStorage.getItem('kickAuthMethod') || 'external';
+        const savedMethod = 'external';
+        localStorage.setItem('kickAuthMethod', savedMethod);
         const radios = authMethodSelector.querySelectorAll('input[name="kick-auth-method"]');
         radios.forEach(radio => {
+            if (radio.value === 'local') {
+                radio.disabled = true;
+                const option = radio.closest('.auth-method-option');
+                if (option) {
+                    option.classList.add('hidden');
+                }
+            }
             radio.checked = radio.value === savedMethod;
             radio.addEventListener('change', function() {
-                localStorage.setItem('kickAuthMethod', this.value);
+                localStorage.setItem('kickAuthMethod', this.value === 'local' ? 'external' : this.value);
             });
         });
     }
@@ -3895,12 +3903,16 @@ async function startAuthFlow() {
     const isElectron = isElectronEnvironment();
     const authMethod = localStorage.getItem('kickAuthMethod') || 'external';
 
-    // Use external browser auth if in Electron and user prefers it
+    // Electron blocks Kick's final HTTPS-to-file:// consent redirect in local mode.
+    // Always use the loopback OAuth bridge for the desktop app.
     if (isElectron) {
-        if (authMethod === 'external') {
-            return startExternalAuthFlow();
+        if (authMethod !== 'external') {
+            try {
+                localStorage.setItem('kickAuthMethod', 'external');
+            } catch (_) {}
+            logKickWs('Local Kick OAuth is unavailable in the desktop app; using external browser auth.', 'warning');
         }
-        // Fall through to local redirect auth
+        return startExternalAuthFlow();
     }
 
     if (!state.clientId) {
