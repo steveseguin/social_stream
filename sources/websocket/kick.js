@@ -144,6 +144,7 @@ const PUSHER_WS_BASE = 'wss://ws-us2.pusher.com';
 const PUSHER_RECONNECT_DELAY_MS = 5000;
 const PUSHER_CONNECT_TIMEOUT_MS = 30000;
 const PUSHER_PING_INTERVAL_MS = 45000;
+const PUSHER_RESUBSCRIBE_INTERVAL_MS = 30 * 60 * 1000;
 const PUSHER_WATCHDOG_CHECK_MS = 30000;
 const PUSHER_STALE_MIN_MS = 180000;
 
@@ -219,6 +220,7 @@ const state = {
         pusherReconnectTimer: null,
         pusherWatchdogTimer: null,
         pusherHealthTimer: null,
+        pusherResubscribeTimer: null,
         pusherLastActivityAt: 0,
         pusherActivityTimeoutMs: 0
     },
@@ -3492,6 +3494,10 @@ function disconnectPusherSocket() {
         clearInterval(state.socket.pusherHealthTimer);
         state.socket.pusherHealthTimer = null;
     }
+    if (state.socket.pusherResubscribeTimer) {
+        clearInterval(state.socket.pusherResubscribeTimer);
+        state.socket.pusherResubscribeTimer = null;
+    }
     if (state.socket.pusherReconnectTimer) {
         clearTimeout(state.socket.pusherReconnectTimer);
         state.socket.pusherReconnectTimer = null;
@@ -3560,6 +3566,46 @@ function startPusherWatchdog(activityTimeoutSeconds) {
         log('Pusher chat socket went stale. Reconnecting chat.', 'warning');
         recoverPusherSocket('watchdog_stale');
     }, checkIntervalMs);
+}
+
+function getPusherSubscriptionChannels() {
+    const channels = [];
+    if (state.socket.chatroomId) {
+        channels.push(`chatrooms.${state.socket.chatroomId}.v2`);
+    }
+    if (state.socket.channelId) {
+        channels.push(`channel.${state.socket.channelId}`);
+    }
+    return channels;
+}
+
+function subscribePusherChannels(reason = 'connect') {
+    const channels = getPusherSubscriptionChannels();
+    let sentSubscription = false;
+    for (const channel of channels) {
+        sentSubscription = sendPusherFrame('pusher:subscribe', { auth: '', channel }) || sentSubscription;
+    }
+    if (channels.length) {
+        const label = reason === 'refresh' ? 'Refreshing Pusher subscriptions' : 'Subscribing Pusher channels';
+        log(`${label}: ${channels.join(', ')}`);
+    }
+    return { channels, sentSubscription };
+}
+
+function startPusherResubscribeTimer() {
+    if (state.socket.pusherResubscribeTimer) {
+        clearInterval(state.socket.pusherResubscribeTimer);
+    }
+    state.socket.pusherResubscribeTimer = setInterval(() => {
+        if (state.socket.pusherStatus !== 'connected' || !isPusherSocketOpen()) return;
+        const result = subscribePusherChannels('refresh');
+        if (result.channels.length && !result.sentSubscription) {
+            recoverPusherSocket('resubscribe_send_failed', {
+                status: 'error',
+                error: 'Pusher resubscribe send failed'
+            });
+        }
+    }, PUSHER_RESUBSCRIBE_INTERVAL_MS);
 }
 
 function isKickBanEventName(eventName) {
@@ -3635,18 +3681,8 @@ function handlePusherMessage(event) {
         state.socket.status = 'connected';
         updateSocketState({ status: 'connected' });
         log('Pusher chat socket connected.');
-        const channels = [];
-        if (state.socket.chatroomId) {
-            channels.push(`chatrooms.${state.socket.chatroomId}.v2`);
-        }
-        if (state.socket.channelId) {
-            channels.push(`channel.${state.socket.channelId}`);
-        }
-        let sentSubscription = false;
-        for (const channel of channels) {
-            sentSubscription = sendPusherFrame('pusher:subscribe', { auth: '', channel }) || sentSubscription;
-        }
-        if (channels.length && !sentSubscription) {
+        const subscription = subscribePusherChannels('connect');
+        if (subscription.channels.length && !subscription.sentSubscription) {
             recoverPusherSocket('subscribe_send_failed', {
                 status: 'error',
                 error: 'Pusher subscribe send failed'
@@ -3664,6 +3700,7 @@ function handlePusherMessage(event) {
             }
         }, Math.min(timeout * 1000 * 0.75, PUSHER_PING_INTERVAL_MS));
         startPusherWatchdog(timeout);
+        startPusherResubscribeTimer();
         // Pusher is now handling chat — reconnect bridge with noChat if needed
         syncBridgeChatMode();
         return;
