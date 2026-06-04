@@ -146,6 +146,7 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 ## Git Push Contract
 
 - VERY IMPORTANT: When Steve says `push`, treat it as an instruction to push to `beta`.
+- VERY IMPORTANT: Always push all current changes. Do not stash, exclude, unstage, or preserve local changes outside the push unless Steve explicitly says to leave something unpushed.
 - VERY IMPORTANT: Do it serially in this exact order only: `git add -A`, `git commit` (use `--allow-empty` if needed), `git pull --rebase origin beta`, `git push origin beta`.
 - VERY IMPORTANT: Do not parallelize any git commands in that flow.
 - VERY IMPORTANT: Do not add extra git inspection commands unless Steve explicitly asks for them.

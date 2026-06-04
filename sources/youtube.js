@@ -196,11 +196,11 @@
 
 		var allText = normalizeDonationText(textParts.join(" "));
 		var jewelMatch = allText.match(/([0-9][0-9,]*)\s*Jewels?\b/i);
-		if (!jewelMatch) {
+		if (!jewelMatch && !getYouTubeJewelDonationNode(ele)) {
 			return null;
 		}
 
-		var jewelAmount = jewelMatch[1].replace(/,/g, "");
+		var jewelAmount = jewelMatch ? jewelMatch[1].replace(/,/g, "") : "";
 		var plainMessage = normalizeDonationText((giftNode && (giftNode.innerText || giftNode.textContent)) || (ele.innerText || ele.textContent) || allText);
 		var authorName = "";
 		try {
@@ -220,7 +220,8 @@
 		var giftPatterns = [
 			/\bsent\s+(?:a\s+)?gift\s*:\s*(.+?)\s*(?:\(|for\s+[0-9,]+\s+Jewels?\b|$)/i,
 			/\bsent\s+(.+?)\s+for\s+[0-9,]+\s+Jewels?\b/i,
-			/\bsent\s+(.+?)\s*\(\s*[0-9,]+\s+Jewels?\s*\)/i
+			/\bsent\s+(.+?)\s*\(\s*[0-9,]+\s+Jewels?\s*\)/i,
+			/\bsent\s+(.+?)$/i
 		];
 		for (var i = 0; i < giftPatterns.length; i++) {
 			var giftMatch = allText.match(giftPatterns[i]);
@@ -235,16 +236,18 @@
 			if (giftName) {
 				plainMessage += ": " + giftName;
 			}
-			plainMessage += " (" + jewelAmount + " Jewels)";
+			if (jewelAmount) {
+				plainMessage += " (" + jewelAmount + " Jewels)";
+			}
 		}
 
 		return {
 			chatname: authorName,
 			chatmessage: escapeHtml(plainMessage),
-			hasDonation: jewelAmount + " Jewels",
-			donoValue: parseInt(jewelAmount, 10) / 100,
+			hasDonation: jewelAmount ? jewelAmount + " Jewels" : (giftName || getTranslation("youtube-gift", "YouTube Gift")),
+			donoValue: jewelAmount ? parseInt(jewelAmount, 10) / 100 : "",
 			giftName: giftName,
-			jewelsAmount: parseInt(jewelAmount, 10)
+			jewelsAmount: jewelAmount ? parseInt(jewelAmount, 10) : ""
 		};
 	}
 
