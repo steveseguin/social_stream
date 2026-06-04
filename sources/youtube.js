@@ -148,6 +148,106 @@
 		return "";
 	}
 
+	function getYouTubeJewelDonationNode(ele) {
+		try {
+			if (!ele || !ele.tagName) {
+				return null;
+			}
+			if (ele.tagName == "YT-GIFT-MESSAGE-VIEW-MODEL") {
+				return ele;
+			}
+			if (ele.querySelector) {
+				return ele.querySelector("yt-gift-message-view-model");
+			}
+		} catch (e) {}
+		return null;
+	}
+
+	function getYouTubeJewelDonationDetails(ele) {
+		var giftNode = getYouTubeJewelDonationNode(ele) || ele;
+		var textParts = [];
+		function addText(value) {
+			value = normalizeDonationText(value);
+			if (value && textParts.indexOf(value) === -1) {
+				textParts.push(value);
+			}
+		}
+		function collectText(node) {
+			if (!node) {
+				return;
+			}
+			try {
+				addText(node.innerText || node.textContent || "");
+				addText(node.getAttribute("aria-label") || "");
+				addText(node.getAttribute("title") || "");
+			} catch (e) {}
+			try {
+				node.querySelectorAll("[aria-label], [title], img[alt]").forEach(function (labelled) {
+					addText(labelled.getAttribute("aria-label") || "");
+					addText(labelled.getAttribute("title") || "");
+					addText(labelled.getAttribute("alt") || "");
+				});
+			} catch (e) {}
+		}
+		collectText(ele);
+		if (giftNode !== ele) {
+			collectText(giftNode);
+		}
+
+		var allText = normalizeDonationText(textParts.join(" "));
+		var jewelMatch = allText.match(/([0-9][0-9,]*)\s*Jewels?\b/i);
+		if (!jewelMatch) {
+			return null;
+		}
+
+		var jewelAmount = jewelMatch[1].replace(/,/g, "");
+		var plainMessage = normalizeDonationText((giftNode && (giftNode.innerText || giftNode.textContent)) || (ele.innerText || ele.textContent) || allText);
+		var authorName = "";
+		try {
+			var authorNode = ele.querySelector("#author-name");
+			if (authorNode) {
+				authorName = normalizeDonationText(authorNode.innerText || authorNode.textContent || "");
+			}
+		} catch (e) {}
+		if (!authorName) {
+			var authorMatch = plainMessage.match(/^(.+?)\s+sent\b/i) || allText.match(/^(.+?)\s+sent\b/i);
+			if (authorMatch && authorMatch[1]) {
+				authorName = normalizeDonationText(authorMatch[1].replace(/^@/, ""));
+			}
+		}
+
+		var giftName = "";
+		var giftPatterns = [
+			/\bsent\s+(?:a\s+)?gift\s*:\s*(.+?)\s*(?:\(|for\s+[0-9,]+\s+Jewels?\b|$)/i,
+			/\bsent\s+(.+?)\s+for\s+[0-9,]+\s+Jewels?\b/i,
+			/\bsent\s+(.+?)\s*\(\s*[0-9,]+\s+Jewels?\s*\)/i
+		];
+		for (var i = 0; i < giftPatterns.length; i++) {
+			var giftMatch = allText.match(giftPatterns[i]);
+			if (giftMatch && giftMatch[1]) {
+				giftName = normalizeDonationText(giftMatch[1].replace(/^a\s+gift\s*:?\s*/i, ""));
+				break;
+			}
+		}
+
+		if (!plainMessage) {
+			plainMessage = authorName ? authorName + " sent a gift" : getTranslation("youtube-gift-sent-message", "sent a gift");
+			if (giftName) {
+				plainMessage += ": " + giftName;
+			}
+			plainMessage += " (" + jewelAmount + " Jewels)";
+		}
+
+		return {
+			chatname: authorName,
+			chatmessage: escapeHtml(plainMessage),
+			hasDonation: jewelAmount + " Jewels",
+			donoValue: parseInt(jewelAmount, 10) / 100,
+			giftName: giftName,
+			jewelsAmount: parseInt(jewelAmount, 10)
+		};
+	}
+
 	function setupDeletionObserver(target) {
 	  const deletionObserver = new MutationObserver((mutations) => {
 		mutations.forEach((mutation) => {
@@ -759,7 +859,7 @@
 			} else if (eventType == "jeweldonation"){
 				// Content-based dedup for jewel donations which may lack stable IDs.
 				// Prevents duplicates when moderation actions cause YouTube to re-render DOM elements.
-				var contentKey = "jd_" + (ele.textContent || "").trim().substring(0, 200);
+				var contentKey = "jd_" + ((ele.textContent || "") + " " + (ele.getAttribute("aria-label") || "") + " " + (ele.outerHTML || "")).trim().substring(0, 200);
 				if (messageHistory.has(contentKey)) return 5;
 				messageHistory.add(contentKey);
 		    } else {
@@ -895,6 +995,26 @@
 			}
 		}
 
+		var jewelDonation = false;
+		if (eventType === "jeweldonation") {
+			try {
+				jewelDonation = getYouTubeJewelDonationDetails(ele);
+				if (jewelDonation) {
+					if (!chatname && jewelDonation.chatname) {
+						chatname = escapeHtml(jewelDonation.chatname);
+					}
+					if (!chatmessage && jewelDonation.chatmessage) {
+						chatmessage = jewelDonation.chatmessage;
+					}
+					if (!subtitle && jewelDonation.giftName) {
+						subtitle = escapeHtml(jewelDonation.giftName);
+					}
+				}
+			} catch (e) {
+				console.error("Error processing jewel donation:", e);
+			}
+		}
+
 
 		
 		// https://yt3.ggpht.com/y0njK_GOHV6k7ZlW4qQbVxTt3z3Hs1eXBi2LeYJ-7hFT7KWXXKvcsl0FhYMWsHJh2VEoQvZrsko=w48-h48-c-k-nd
@@ -1020,6 +1140,10 @@
 		var hasDonation = "";
 		if (chatdonation) {
 			hasDonation = chatdonation;
+		}
+		if (jewelDonation && jewelDonation.hasDonation) {
+			hasDonation = jewelDonation.hasDonation;
+			donoValue = jewelDonation.donoValue;
 		}
 
 
@@ -1160,17 +1284,22 @@
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		} else if (!chatmessage && chatmembership) {
 			chatmessage = chatmembership;
-		} else if (chatmessage && eventType === "jeweldonation") {
+		} else if (eventType === "jeweldonation") {
 			try {
-				const jewelMatch = chatmessage.match(/sent\s+(.*?)\s+for\s+([0-9,]+)\s+Jewels/i);
-				if (jewelMatch) {
-				  const jewelType = jewelMatch[1];
-				  const jewelAmount = jewelMatch[2].replace(/,/g, '');
-				  
-				  hasDonation = jewelAmount + " Jewels";
-				  donoValue = parseInt(jewelAmount, 10) / 100; // Convert jewels to approximate dollar value
-				  
-				  if (!settings.textonlymode){
+				jewelDonation = jewelDonation || getYouTubeJewelDonationDetails(ele);
+				if (jewelDonation) {
+				  hasDonation = jewelDonation.hasDonation;
+				  donoValue = jewelDonation.donoValue;
+				  if (!chatmessage) {
+					chatmessage = jewelDonation.chatmessage;
+				  }
+				  if (!chatname && jewelDonation.chatname) {
+					chatname = escapeHtml(jewelDonation.chatname);
+				  }
+				  if (!subtitle && jewelDonation.giftName) {
+					subtitle = escapeHtml(jewelDonation.giftName);
+				  }
+				  if (chatmessage && !settings.textonlymode){
 					chatmessage += ' <svg xmlns="http://www.w3.org/2000/svg" style="fill: red;" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M19.28 3.61c-.96-.81-2.51-.81-3.47 0-.68.58-1.47 2.66-1.81 3.64-.34-.98-1.13-3.06-1.81-3.64-.96-.81-2.51-.81-3.47 0-.96.81-.96 2.13 0 2.94.62.53 2.7 1.12 3.94 1.45H5v13h14V8h-3.66c1.24-.32 3.32-.92 3.94-1.45.96-.81.96-2.13 0-2.94zM6 9h8v6H6V9zm0 11v-4h8v4H6zm12 0h-3v-4h3v4zm0-11v6h-3V9h3zM9.43 5.89c-.58-.43-.58-1.13 0-1.57.29-.21.67-.32 1.05-.32s.76.11 1.04.32c.39.29 1.02 1.57 1.48 2.68-1.48-.35-3.18-.82-3.57-1.11zm9.14 0c-.39.29-2.09.76-3.57 1.11.46-1.11 1.09-2.39 1.48-2.68.29-.21.67-.32 1.04-.32.38 0 .76.11 1.04.32.58.44.58 1.14.01 1.57z"></path></svg>';
 				  }
 				}
@@ -1563,6 +1692,10 @@
 	  // Handle redirect banners (YouTube Raids) specifically before skipping other banners
 	  if (ele.tagName == "yt-live-chat-banner-redirect-renderer".toUpperCase()) {
 		callback(ele, "redirect");
+		return;
+	  }
+	  if (getYouTubeJewelDonationNode(ele)) {
+		callback(ele, "jeweldonation");
 		return;
 	  }
 	  if (ele && ele.classList && ele.classList.contains("yt-live-chat-banner-renderer")) {
