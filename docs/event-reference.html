@@ -625,6 +625,43 @@
                     </table>
                     <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe logic uses message IDs; ensure downstream consumers honour <code>data.id</code>.</p>
 
+                    <h4>Twitch Hype Train Metadata</h4>
+                    <p class="field-highlights"><code>hype_train</code> is metadata-only and does not include <code>chatname</code> or <code>chatmessage</code>. Dashboards should update an existing train display by <code>meta.id</code> instead of appending each progress update as chat.</p>
+                    <table class="field-table">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Type</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>type</code></td><td>string</td><td>Always <code>twitch</code>.</td></tr>
+                            <tr><td><code>event</code></td><td>string</td><td>Always <code>hype_train</code>.</td></tr>
+                            <tr><td><code>meta.phase</code></td><td>string</td><td><code>begin</code>, <code>progress</code>, or <code>end</code>.</td></tr>
+                            <tr><td><code>meta.id</code></td><td>string</td><td>Stable train id. Use this to upsert/update one visible train widget.</td></tr>
+                            <tr><td><code>meta.broadcasterUserId</code></td><td>string</td><td>Twitch broadcaster user id.</td></tr>
+                            <tr><td><code>meta.broadcasterUserLogin</code></td><td>string</td><td>Twitch broadcaster login.</td></tr>
+                            <tr><td><code>meta.broadcasterUserName</code></td><td>string</td><td>Twitch broadcaster display name.</td></tr>
+                            <tr><td><code>meta.total</code></td><td>number | null</td><td>Total support value reported by Twitch for the train.</td></tr>
+                            <tr><td><code>meta.progress</code></td><td>number | null</td><td>Current progress toward the level goal.</td></tr>
+                            <tr><td><code>meta.goal</code></td><td>number | null</td><td>Current level goal.</td></tr>
+                            <tr><td><code>meta.level</code></td><td>number | null</td><td>Current or ending train level.</td></tr>
+                            <tr><td><code>meta.topContributions</code></td><td>array</td><td>Top contributors. Each entry includes <code>userId</code>, <code>userLogin</code>, <code>userName</code>, <code>type</code>, and numeric <code>total</code>.</td></tr>
+                            <tr><td><code>meta.lastContribution</code></td><td>object | null</td><td>Most recent contribution, using the same contribution shape as <code>topContributions</code>.</td></tr>
+                            <tr><td><code>meta.sharedTrainParticipants</code></td><td>array</td><td>Raw shared-train participant data from Twitch when provided.</td></tr>
+                            <tr><td><code>meta.startedAt</code></td><td>string</td><td>ISO timestamp for train start.</td></tr>
+                            <tr><td><code>meta.expiresAt</code></td><td>string</td><td>ISO timestamp for current train expiry.</td></tr>
+                            <tr><td><code>meta.endedAt</code></td><td>string</td><td>ISO timestamp for train end, or empty before end.</td></tr>
+                            <tr><td><code>meta.cooldownEndsAt</code></td><td>string</td><td>ISO timestamp for cooldown end, or empty before end.</td></tr>
+                            <tr><td><code>meta.isSharedTrain</code></td><td>boolean</td><td>True when Twitch marks the train as shared.</td></tr>
+                            <tr><td><code>meta.trainType</code></td><td>string</td><td>Usually <code>regular</code>; treasure trains are surfaced here when Twitch labels them.</td></tr>
+                            <tr><td><code>meta.allTimeHighLevel</code></td><td>number | null</td><td>All-time high train level when Twitch provides it.</td></tr>
+                            <tr><td><code>meta.allTimeHighTotal</code></td><td>number | null</td><td>All-time high train total when Twitch provides it.</td></tr>
+                            <tr><td><code>meta.eventSubType</code></td><td>string</td><td>Original EventSub type: <code>channel.hype_train.begin</code>, <code>channel.hype_train.progress</code>, or <code>channel.hype_train.end</code>.</td></tr>
+                        </tbody>
+                    </table>
+
                     <h4>Twitch EventSub: Event Quick Reference</h4>
                     <table class="field-table">
                         <thead>
