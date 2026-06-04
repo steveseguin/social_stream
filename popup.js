@@ -4636,7 +4636,7 @@ function handleSetting(ele, sync) {
         enableFirstTimerDatabase(sync);
     }
 
-    if (ele.dataset.setting === "beepreturning" && ele.checked && !ensureFirstTimerTrackingForBeep(sync)) {
+    if ((ele.dataset.setting === "beepreturning" || ele.dataset.setting === "firsttimerbadge") && ele.checked && !ensureFirstTimerTrackingForBeep(sync)) {
         ele.checked = false;
         return true;
     }
@@ -4651,7 +4651,7 @@ function handleSetting(ele, sync) {
         }, function (response) {});
     }
 
-    if (ele.dataset.setting === "disableDB" || ele.dataset.setting === "firsttimers" || ele.dataset.setting === "beepreturning") {
+    if (ele.dataset.setting === "disableDB" || ele.dataset.setting === "firsttimers" || ele.dataset.setting === "beepreturning" || ele.dataset.setting === "firsttimerbadge") {
         updateFirstTimerUiState();
     }
     

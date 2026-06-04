@@ -239,7 +239,7 @@
                         <tr>
                             <td><code>data.firsttime</code></td>
                             <td>boolean</td>
-                            <td>Set to <code>true</code> when First-time chatter detection is enabled, the local database is enabled, and this is the first stored chat message for that user/source. The dock uses it for first-time highlighting and first-time beep filters.</td>
+                            <td>Set to <code>true</code> when First-time chatter detection is enabled, the local database is enabled, and this is the first stored chat message for that user/source. The dock uses it for first-time highlighting and first-time beep filters; the optional first-time badge setting prepends a leaf badge to <code>chatbadges</code>.</td>
                         </tr>
                         <tr>
                             <td><code>data.lastactivity</code></td>
@@ -538,9 +538,9 @@
                     <h3>Twitch – EventSub/Websocket</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/twitch.js</code> with shared core <code>providers/twitch/chatClient.js</code></p>
                     <ul class="requirements">
-                        <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>channel:read:subscriptions</code>, <code>channel:moderate</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
+                        <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>channel:read:subscriptions</code>, <code>channel:read:hype_train</code>, <code>channel:moderate</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
                         <li>Events delivered by EventSub, plus Helix polling for viewer/follower/subscriber totals.</li>
-                        <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, and channel point redemptions.</li>
+                        <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, channel point redemptions, and hype train metadata.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -612,6 +612,11 @@
                                 <td><code>meta</code> details duration, requester, and schedule payload for dashboards.</td>
                             </tr>
                             <tr>
+                                <td class="status-event"><code>hype_train</code></td>
+                                <td>EventSub <code>channel.hype_train.begin</code>, <code>channel.hype_train.progress</code>, and <code>channel.hype_train.end</code> v2 notifications.</td>
+                                <td>Metadata-only event: no <code>chatname</code> or <code>chatmessage</code>. <code>meta.phase</code> is <code>begin</code>, <code>progress</code>, or <code>end</code>; <code>meta</code> includes train id, level, progress, goal, total, contributors, timing fields, shared-train flag, and <code>trainType</code>. Treasure trains are surfaced through <code>meta.trainType</code> when Twitch labels them.</td>
+                            </tr>
+                            <tr>
                                 <td class="status-event"><code>user_banned</code></td>
                                 <td>EventSub <code>channel.ban</code>, or IRC <code>CLEARCHAT</code> fallback when EventSub ban events are unavailable.</td>
                                 <td>Metadata-only event for moderation widgets. <code>meta</code> includes username/display name, user ID, avatar/profile URL, moderator, reason, ban/timeout duration, and permanence.</td>
@@ -642,6 +647,7 @@
                             <tr><td><code>stream_online</code></td><td>Stream went live</td></tr>
                             <tr><td><code>stream_offline</code></td><td>Stream ended</td></tr>
                             <tr><td><code>ad_break</code></td><td>Ad break started</td></tr>
+                            <tr><td><code>hype_train</code></td><td>Hype Train/Treasure Train status metadata</td></tr>
                             <tr><td><code>user_banned</code></td><td>User was banned or timed out</td></tr>
                         </tbody>
                     </table>

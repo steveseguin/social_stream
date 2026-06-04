@@ -3266,6 +3266,7 @@ async function getPronounsNames(username = "") {
 var Globalbttv = false;
 var Globalseventv = false;
 var Globalffz = false;
+const SEVENTV_CHANNEL_CACHE_MINUTES = 60;
 const youtubeSeventvChannelCache = new Map();
 const youtubeChannelByTab = new Map();
 
@@ -3619,7 +3620,7 @@ async function getSEVENTVEmotes(url = false, type = null, channel = null, userID
 					}
 
 					if (seventv) {
-						setItemWithExpiry("uid2seventv.youtube:" + userID, seventv);
+						setItemWithExpiry("uid2seventv.youtube:" + userID, seventv, SEVENTV_CHANNEL_CACHE_MINUTES);
 					}
 				}
 
@@ -3693,7 +3694,7 @@ async function getSEVENTVEmotes(url = false, type = null, channel = null, userID
 								}, {});
 							}
 
-							setItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase(), seventv);
+							setItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase(), seventv, SEVENTV_CHANNEL_CACHE_MINUTES);
 						} else {
 							seventv = {};
 						}
@@ -3751,7 +3752,7 @@ async function getSEVENTVEmotes(url = false, type = null, channel = null, userID
 								}, {});
 							}
 
-							setItemWithExpiry("uid2seventv.kick:" + kickUsername.toLowerCase(), seventv);
+							setItemWithExpiry("uid2seventv.kick:" + kickUsername.toLowerCase(), seventv, SEVENTV_CHANNEL_CACHE_MINUTES);
 						} else {
 							seventv = {};
 						}
@@ -4310,6 +4311,35 @@ function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
 
 const checkDuplicateSources = new CheckDuplicateSources();
 
+function createFirstTimerLeafBadge() {
+	return {
+		type: "svg",
+		html: '<svg viewBox="0 0 24 24" width="20" height="20" role="img" aria-label="First-time chatter" xmlns="http://www.w3.org/2000/svg"><title>First-time chatter</title><path d="M20.8 3.2C13.7 3.4 7.6 6.7 5.2 11.7c-1.3 2.7-1.1 5.2.5 6.8 1.6 1.6 4.2 1.7 6.8.5 5-2.4 8.3-8.5 8.6-15.6 0-.1-.1-.2-.3-.2Z" fill="#4caf50"/><path d="M4 20c3.3-5.5 7.4-8.8 12.8-10.8" fill="none" stroke="#e8ffe8" stroke-width="2" stroke-linecap="round"/><path d="M10.4 9.5c.3 2.3 1.3 3.9 3.5 5" fill="none" stroke="#2f7d32" stroke-width="1.5" stroke-linecap="round"/></svg>'
+	};
+}
+
+function prependFirstTimerBadge(data) {
+	if (!data || !data.firsttime || !getSettingFlag("firsttimerbadge")) return;
+	const badge = createFirstTimerLeafBadge();
+
+	if (!data.chatbadges) {
+		data.chatbadges = [badge];
+		return;
+	}
+
+	if (Array.isArray(data.chatbadges)) {
+		data.chatbadges.unshift(badge);
+		return;
+	}
+
+	if (typeof data.chatbadges === "string") {
+		data.chatbadges = '<span class="hl-badge svg">' + badge.html + "</span>" + data.chatbadges;
+		return;
+	}
+
+	data.chatbadges = [badge, data.chatbadges];
+}
+
 async function processIncomingMessage(message, sender = null) {
 	try {
 		if (sender?.tab && (message.tid === undefined || message.tid === null)) {
@@ -4605,7 +4635,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 
 			pruneSettingsObjects(settings);
 
-			if (request.setting === "beepreturning" && request.value && !getSettingFlag("disableDB") && !getSettingFlag("firsttimers")) {
+			if ((request.setting === "beepreturning" || request.setting === "firsttimerbadge") && request.value && !getSettingFlag("disableDB") && !getSettingFlag("firsttimers")) {
 				settings.firsttimers = { setting: true };
 			}
 
@@ -15220,6 +15250,8 @@ async function applyBotActions(data, tab = false) {
 				console.error("Error checking first timer:", e);
 			}
 		}
+
+		prependFirstTimerBadge(data);
 
 		const returningBeepEnabled = !!(settings.beepreturning?.setting ?? settings.beepreturning);
 		const hasChatFields = typeof data.chatname === "string" && data.chatname.trim() !== "" && typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";

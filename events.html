@@ -291,6 +291,74 @@ body.compact-height #topbar {
     color: #fff;
 }
 
+.hype-train-panel {
+    border-left-color: #9146ff;
+    background: linear-gradient(145deg, #241d38, #18273a);
+}
+
+.hype-train-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.hype-train-title {
+    font-size: 1.05em;
+    font-weight: 700;
+    color: #fff;
+}
+
+.hype-train-status {
+    font-size: 0.78em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #f5f0ff;
+    background: rgba(145, 70, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 4px;
+    padding: 3px 8px;
+    white-space: nowrap;
+}
+
+.hype-train-progress {
+    margin-top: 12px;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.hype-train-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #9146ff, #00d1ff);
+    transition: width 0.25s ease;
+}
+
+.hype-train-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    margin-top: 10px;
+    font-size: 0.88em;
+    color: #dfe8ff;
+}
+
+.hype-train-detail {
+    white-space: nowrap;
+}
+
+.hype-train-contributors {
+    margin-top: 8px;
+    font-size: 0.82em;
+    color: #bac7dc;
+}
+
+.hype-train-panel.ended {
+    opacity: 0.78;
+}
+
 /* Custom classes for different platforms */
 /* Custom classes for different platforms */
 .youtube-event { border-left-color: #ff0000; }
@@ -670,6 +738,7 @@ body.light-mode .meta-value.badge {
 		giftpurchase: 'Gift Purchase',
 		giftredemption: 'Gift Redemption',
 		reward: 'Channel Points',
+		hype_train: 'Hype Train',
 		sponsorship: 'Membership',
 		membermilestone: 'Member Milestone',
 		member_milestone: 'Member Milestone',
@@ -760,10 +829,180 @@ body.light-mode .meta-value.badge {
 		return null;
 	}
 
+	function escapeHtmlText(value) {
+		return String(value == null ? '' : value)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;');
+	}
+
+	function formatHypeTrainNumber(value) {
+		const numeric = extractNumeric(value);
+		return numeric === null ? '' : numeric.toLocaleString();
+	}
+
+	function getHypeTrainTitle(meta) {
+		const trainType = String(meta && meta.trainType ? meta.trainType : '').toLowerCase();
+		if (trainType.indexOf('treasure') !== -1) return 'Treasure Train';
+		if (meta && meta.isSharedTrain) return 'Shared Hype Train';
+		return 'Hype Train';
+	}
+
+	function getHypeTrainPhaseLabel(phase) {
+		if (phase === 'begin') return 'Started';
+		if (phase === 'end') return 'Ended';
+		return 'In Progress';
+	}
+
+	function getHypeTrainPercent(meta) {
+		if (!meta || meta.phase === 'end') return 100;
+		const progress = extractNumeric(meta.progress);
+		const goal = extractNumeric(meta.goal);
+		if (progress === null || goal === null || goal <= 0) return 0;
+		return Math.max(0, Math.min(100, (progress / goal) * 100));
+	}
+
+	function formatTimeUntil(value) {
+		if (!value) return '';
+		const target = new Date(value);
+		if (isNaN(target.getTime())) return '';
+		const seconds = Math.max(0, Math.round((target.getTime() - Date.now()) / 1000));
+		const minutes = Math.floor(seconds / 60);
+		const remainder = seconds % 60;
+		return minutes > 0 ? `${minutes}m ${remainder}s left` : `${remainder}s left`;
+	}
+
+	function formatHypeTrainContributors(contributions) {
+		if (!Array.isArray(contributions) || !contributions.length) return '';
+		return contributions.slice(0, 3).map(function(contribution) {
+			const name = contribution.userName || contribution.userLogin || 'Anonymous';
+			const total = formatHypeTrainNumber(contribution.total);
+			const type = contribution.type ? ' ' + contribution.type : '';
+			return `${name}${total ? ' ' + total : ''}${type}`;
+		}).join(', ');
+	}
+
+	function removeHypeTrainPanel(panel, key) {
+		if (!panel) return;
+		if (panel.__hypeInterval) {
+			clearInterval(panel.__hypeInterval);
+			panel.__hypeInterval = null;
+		}
+		if (panel.__hypeRemoveTimeout) {
+			clearTimeout(panel.__hypeRemoveTimeout);
+			panel.__hypeRemoveTimeout = null;
+		}
+		delete hypeTrainPanels[key];
+		panel.remove();
+	}
+
+	function renderHypeTrainPanel(panel) {
+		const data = panel.__hypeData || {};
+		const meta = data.meta || {};
+		const title = getHypeTrainTitle(meta);
+		const phase = String(meta.phase || 'progress').toLowerCase();
+		const progress = formatHypeTrainNumber(meta.progress);
+		const goal = formatHypeTrainNumber(meta.goal);
+		const total = formatHypeTrainNumber(meta.total);
+		const level = formatHypeTrainNumber(meta.level);
+		const percent = getHypeTrainPercent(meta);
+		const timeText = phase === 'end' ? '' : formatTimeUntil(meta.expiresAt);
+		const contributors = formatHypeTrainContributors(meta.topContributions);
+		const trainType = meta.trainType && meta.trainType !== 'regular' ? meta.trainType : '';
+
+		panel.classList.toggle('ended', phase === 'end');
+		panel.innerHTML = `
+			<div class="hype-train-title-row">
+				<div class="hype-train-title">${escapeHtmlText(title)}</div>
+				<div class="hype-train-status">${escapeHtmlText(getHypeTrainPhaseLabel(phase))}</div>
+			</div>
+			<div class="hype-train-progress" aria-label="Hype Train progress">
+				<div class="hype-train-progress-bar" style="width:${percent.toFixed(1)}%"></div>
+			</div>
+			<div class="hype-train-details">
+				${level ? `<span class="hype-train-detail">Level ${escapeHtmlText(level)}</span>` : ''}
+				${progress && goal ? `<span class="hype-train-detail">${escapeHtmlText(progress)} / ${escapeHtmlText(goal)}</span>` : ''}
+				${total ? `<span class="hype-train-detail">Total ${escapeHtmlText(total)}</span>` : ''}
+				${timeText ? `<span class="hype-train-detail">${escapeHtmlText(timeText)}</span>` : ''}
+				${trainType ? `<span class="hype-train-detail">${escapeHtmlText(trainType)}</span>` : ''}
+			</div>
+			${contributors ? `<div class="hype-train-contributors">Top: ${escapeHtmlText(contributors)}</div>` : ''}
+		`;
+	}
+
+	function handleHypeTrainPayload(data) {
+		if (!data || normalizeEventKey(data.event) !== 'hype_train') {
+			return false;
+		}
+		if (sources && (!data.type || !sources.includes(String(data.type).toLowerCase()))) {
+			return true;
+		}
+		if (donationsOnly || giftSubsOnly) {
+			return true;
+		}
+		if (!data.meta || typeof data.meta !== 'object') {
+			return true;
+		}
+
+		if (noEventsMessage) {
+			noEventsMessage.remove();
+			noEventsMessage = null;
+		}
+
+		const meta = data.meta;
+		const key = `${data.type || 'twitch'}:${meta.id || 'active'}`;
+		let panel = hypeTrainPanels[key];
+		if (!panel) {
+			panel = document.createElement('div');
+			panel.className = 'message twitch-event hype-train-panel';
+			panel.dataset.event = 'hype_train';
+			panel.dataset.hypeTrainId = meta.id || 'active';
+			hypeTrainPanels[key] = panel;
+			chatContainer.prepend(panel);
+		}
+
+		if (panel.__hypeRemoveTimeout) {
+			clearTimeout(panel.__hypeRemoveTimeout);
+			panel.__hypeRemoveTimeout = null;
+		}
+
+		panel.__hypeData = data;
+		renderHypeTrainPanel(panel);
+
+		if (String(meta.phase || '').toLowerCase() === 'end') {
+			if (panel.__hypeInterval) {
+				clearInterval(panel.__hypeInterval);
+				panel.__hypeInterval = null;
+			}
+			panel.__hypeRemoveTimeout = setTimeout(function() {
+				removeHypeTrainPanel(panel, key);
+			}, HYPE_TRAIN_REMOVE_DELAY_MS);
+		} else if (meta.expiresAt && !panel.__hypeInterval) {
+			panel.__hypeInterval = setInterval(function() {
+				if (!panel.isConnected) {
+					removeHypeTrainPanel(panel, key);
+					return;
+				}
+				renderHypeTrainPanel(panel);
+			}, 1000);
+		}
+
+		while (chatContainer.children.length > maxEvents) {
+			const lastChild = chatContainer.lastChild;
+			if (lastChild === panel) break;
+			chatContainer.removeChild(lastChild);
+		}
+		return true;
+	}
+
 	const DEDUPLICATED_STATUS_EVENTS = new Set(['follower_update', 'subscriber_update']);
 	const statusLastValues = Object.create(null);
 	const viewerCounts = Object.create(null);
 	const VIEWER_ICON_TTL = 130000;
+	const hypeTrainPanels = Object.create(null);
+	const HYPE_TRAIN_REMOVE_DELAY_MS = 30000;
 
 	function getStatusCacheKey(normalizedEvent, data) {
 		const type = data && typeof data.type === 'string' ? data.type.toLowerCase() : 'unknown';
@@ -1536,6 +1775,9 @@ body.light-mode .meta-value.badge {
 
     function addMessageToOverlay(data) {
 		updateViewerTopBar(data);
+		if (handleHypeTrainPayload(data)) {
+			return;
+		}
 		if (isMetaOnlyPayload(data)) {
 			return;
 		}

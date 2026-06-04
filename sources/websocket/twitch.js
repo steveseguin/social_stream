@@ -320,6 +320,7 @@ try{
 		'moderator:read:followers',
 		'moderator:read:chatters',
 		'channel:read:subscriptions',
+		'channel:read:hype_train',
 		'channel:moderate',
 		// New scopes for moderation, ads, and redemptions
 		'moderator:manage:banned_users',
@@ -3040,10 +3041,22 @@ async function cleanupCurrentConnection() {
 				});
 			}
 
+			if (permissions.canReadHypeTrain) {
+				for (const t of ['channel.hype_train.begin', 'channel.hype_train.progress', 'channel.hype_train.end']) {
+					if (!activeSubscriptions.has(t)) {
+						subscriptionTypes.push({
+							type: t,
+							version: '2',
+							condition: { broadcaster_user_id: broadcasterId }
+						});
+					}
+				}
+			}
+
 			// Create each subscription
 			for (const subscription of subscriptionTypes) {
-				if (hasPermissionError.includes(subscription)) { // previously failed permissions that got us kicked
-					console.log("Skipping "+subscription);
+				if (hasPermissionError.includes(subscription.type)) { // previously failed permissions that got us kicked
+					console.log("Skipping "+subscription.type);
 					continue;
 				}
 				try {
@@ -3073,7 +3086,7 @@ async function cleanupCurrentConnection() {
 					
 					if (!response.ok) {
 						if (response.status === 403) {
-							hasPermissionError.push(subscription);
+							hasPermissionError.push(subscription.type);
 						}
 						console.log(`Subscription failed for ${subscription.type}: ${data.message}`);
 						continue;
@@ -3088,6 +3101,60 @@ async function cleanupCurrentConnection() {
 		} catch (error) {
 			console.error('Error in createEventSubSubscriptions:', error);
 		}
+	}
+
+	function normalizeHypeTrainNumber(value) {
+		const numeric = Number(value);
+		return Number.isFinite(numeric) ? numeric : null;
+	}
+
+	function normalizeHypeTrainContribution(contribution) {
+		if (!contribution || typeof contribution !== 'object') return null;
+		return {
+			userId: contribution.user_id || '',
+			userLogin: contribution.user_login || '',
+			userName: contribution.user_name || '',
+			type: contribution.type || '',
+			total: normalizeHypeTrainNumber(contribution.total)
+		};
+	}
+
+	function normalizeHypeTrainContributions(contributions) {
+		if (!Array.isArray(contributions)) return [];
+		return contributions
+			.map(normalizeHypeTrainContribution)
+			.filter(Boolean);
+	}
+
+	function buildHypeTrainMeta(event, eventSubType) {
+		const phase = eventSubType === 'channel.hype_train.begin'
+			? 'begin'
+			: eventSubType === 'channel.hype_train.end'
+				? 'end'
+				: 'progress';
+		return {
+			phase,
+			id: event.id || '',
+			broadcasterUserId: event.broadcaster_user_id || '',
+			broadcasterUserLogin: event.broadcaster_user_login || '',
+			broadcasterUserName: event.broadcaster_user_name || '',
+			total: normalizeHypeTrainNumber(event.total),
+			progress: normalizeHypeTrainNumber(event.progress),
+			goal: normalizeHypeTrainNumber(event.goal),
+			level: normalizeHypeTrainNumber(event.level),
+			topContributions: normalizeHypeTrainContributions(event.top_contributions),
+			lastContribution: normalizeHypeTrainContribution(event.last_contribution),
+			sharedTrainParticipants: Array.isArray(event.shared_train_participants) ? event.shared_train_participants : [],
+			startedAt: event.started_at || '',
+			expiresAt: event.expires_at || '',
+			endedAt: event.ended_at || '',
+			cooldownEndsAt: event.cooldown_ends_at || '',
+			isSharedTrain: event.is_shared_train === true,
+			trainType: event.type || 'regular',
+			allTimeHighLevel: normalizeHypeTrainNumber(event.all_time_high_level),
+			allTimeHighTotal: normalizeHypeTrainNumber(event.all_time_high_total),
+			eventSubType
+		};
 	}
 
 	function handleEventSubNotification(payload) {
@@ -3306,6 +3373,20 @@ async function cleanupCurrentConnection() {
 					}
 				});
 				addEvent(`Ad Break: ${event.duration_seconds}s`);
+				break;
+
+			case 'channel.hype_train.begin':
+			case 'channel.hype_train.progress':
+			case 'channel.hype_train.end':
+				const hypeTrainMeta = buildHypeTrainMeta(event, subscription.type);
+				pushMessage({
+					type: 'twitch',
+					event: 'hype_train',
+					meta: hypeTrainMeta
+				});
+				if (hypeTrainMeta.phase !== 'progress') {
+					addEvent(`Hype Train ${hypeTrainMeta.phase}: Level ${hypeTrainMeta.level || 0}`);
+				}
 				break;
 		}
 	}
@@ -3623,6 +3704,7 @@ async function cleanupCurrentConnection() {
 			canManageAds: !!scopes['channel:manage:ads'],
 			canReadAds: !!scopes['channel:read:ads'],
 			canReadRedemptions: !!scopes['channel:read:redemptions'],
+			canReadHypeTrain: isBroadcaster && !!scopes['channel:read:hype_train'],
 			broadcasterType: broadcasterInfo?.broadcaster_type || 'none'
 		};
 	}

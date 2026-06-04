@@ -703,6 +703,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Enable first-time chatter detection and include last activity timestamps. The popup turns on the local database automatically when this is enabled."
   },
+  "firsttimerbadge": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Prepend a custom leaf badge to messages flagged as first-time chatters."
+  },
   "flipYoutube": {
     type: "boolean",
     category: "miscellaneous_options_for_sites",
