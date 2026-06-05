@@ -45,6 +45,7 @@
             commerce_update
             viewer_update
             viewer_updates
+            hype_train
         - Optional generic fallback for other meta events when enabled.
 
         Guardrails / do not do:
@@ -83,6 +84,11 @@
             --chip-bg: rgba(12, 16, 28, 0.88);
             --chip-border: rgba(171, 183, 229, 0.28);
             --title-bg: rgba(8, 12, 22, 0.76);
+            --hype-purple: #9146ff;
+            --hype-purple-dark: #451093;
+            --hype-purple-light: #bf94ff;
+            --hype-cyan: #00f5d4;
+            --hype-gold: #f6d365;
             --outline: -0.5px -0.5px 0 #000, 0.5px -0.5px 0 #000, -0.5px 0.5px 0 #000, 0.5px 0.5px 0 #000;
             --scale: 1;
             --panel-opacity: 1;
@@ -191,8 +197,171 @@
             border-color: rgba(130, 164, 255, 0.62);
         }
 
+        .stat.category-hype {
+            border-color: rgba(145, 70, 255, 0.68);
+        }
+
         .stat.category-othermeta {
             border-color: rgba(208, 157, 255, 0.55);
+        }
+
+        #hype {
+            display: none;
+            width: 100%;
+        }
+
+        .hype-topbar {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            min-height: 62px;
+            border-radius: 8px;
+            border: 1px solid rgba(191, 148, 255, 0.72);
+            background: linear-gradient(90deg, rgba(35, 7, 77, 0.94), rgba(79, 23, 149, 0.94) 42%, rgba(24, 14, 48, 0.94));
+            box-shadow: 0 8px 26px rgba(30, 0, 74, 0.42), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(2px);
+        }
+
+        .hype-topbar.is-treasure {
+            border-color: rgba(246, 211, 101, 0.78);
+            background: linear-gradient(90deg, rgba(44, 26, 4, 0.96), rgba(103, 65, 10, 0.94) 44%, rgba(35, 17, 48, 0.94));
+            box-shadow: 0 8px 26px rgba(71, 39, 0, 0.42), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .hype-topbar.is-ended {
+            opacity: 0.9;
+        }
+
+        .hype-progress-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0%;
+            min-width: 4px;
+            background: linear-gradient(90deg, rgba(145, 70, 255, 0.92), rgba(0, 245, 212, 0.74));
+            box-shadow: 0 0 24px rgba(145, 70, 255, 0.56);
+            transition: width 360ms ease;
+        }
+
+        .hype-topbar.is-treasure .hype-progress-fill {
+            background: linear-gradient(90deg, rgba(246, 211, 101, 0.94), rgba(255, 151, 79, 0.76));
+            box-shadow: 0 0 24px rgba(246, 211, 101, 0.45);
+        }
+
+        .hype-progress-sheen {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent),
+                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 12px);
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .hype-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            min-height: 62px;
+            padding: 10px 14px;
+        }
+
+        .hype-main {
+            min-width: 0;
+        }
+
+        .hype-label-row,
+        .hype-detail-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .hype-title {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 900;
+            line-height: 1;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .hype-phase {
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .hype-detail-row {
+            margin-top: 7px;
+            color: rgba(245, 241, 255, 0.92);
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .hype-detail {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .hype-side {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+            max-width: 46%;
+            min-width: 150px;
+        }
+
+        .hype-level {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 900;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .hype-contributors {
+            max-width: 100%;
+            overflow: hidden;
+            color: rgba(245, 241, 255, 0.82);
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.25;
+            text-align: right;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 680px) {
+            .hype-content {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .hype-side {
+                align-items: flex-start;
+                max-width: 100%;
+                min-width: 0;
+            }
+
+            .hype-contributors {
+                text-align: left;
+            }
         }
 
         .icon {
@@ -265,11 +434,17 @@
             padding-left: 0;
             padding-right: 0;
         }
+
+        body.no-bg .hype-topbar {
+            background: transparent;
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
     <main id="root">
         <div id="title"></div>
+        <div id="hype" aria-live="polite"></div>
         <div id="bar" aria-live="polite"></div>
     </main>
 
@@ -288,9 +463,10 @@
                 auction: urlParams.has("auction"),
                 commerce: urlParams.has("commerce"),
                 viewers: urlParams.has("viewers"),
+                hype: urlParams.has("hype"),
                 othermeta: urlParams.has("othermeta")
             };
-            var hasExplicitFilter = explicitFilter.auction || explicitFilter.commerce || explicitFilter.viewers || explicitFilter.othermeta;
+            var hasExplicitFilter = explicitFilter.auction || explicitFilter.commerce || explicitFilter.viewers || explicitFilter.hype || explicitFilter.othermeta;
             var hideAuctionExtras = urlParams.has("hideauctionextras");
             var hideCommerceExtras = urlParams.has("hidecommerceextras");
             var hideViewerPlatforms = urlParams.has("hideviewerplatforms");
@@ -301,8 +477,13 @@
                 .filter(Boolean);
 
             var titleNode = document.getElementById("title");
+            var hypeNode = document.getElementById("hype");
             var barNode = document.getElementById("bar");
             var state = new Map();
+            var hypeTrainState = null;
+            var hypeTrainTimer = null;
+            var hypeTrainRemoveTimer = null;
+            var HYPE_TRAIN_REMOVE_DELAY_MS = 30000;
             var viewerCounts = Object.create(null);
             var sequenceCounter = 0;
             var iframe = null;
@@ -373,6 +554,7 @@
                 if (normalizedEventName === "auction_update") return "auction";
                 if (normalizedEventName === "commerce_update") return "commerce";
                 if (normalizedEventName === "viewer_update" || normalizedEventName === "viewer_updates") return "viewers";
+                if (normalizedEventName === "hype_train") return "hype";
                 return "othermeta";
             }
 
@@ -520,6 +702,200 @@
                     return Number.isFinite(parsed) ? parsed : null;
                 }
                 return null;
+            }
+
+            function formatHypeTrainNumber(value) {
+                var numeric = parseNumber(value);
+                if (numeric === null) return "";
+                return numeric.toLocaleString();
+            }
+
+            function getHypeTrainTitle(meta) {
+                var trainType = String(meta && meta.trainType ? meta.trainType : "").toLowerCase();
+                if (trainType.indexOf("treasure") !== -1) return "Treasure Train";
+                if (meta && meta.isSharedTrain) return "Shared Hype Train";
+                return "Hype Train";
+            }
+
+            function getHypeTrainPhaseLabel(phase) {
+                if (phase === "begin") return "Started";
+                if (phase === "end") return "Complete";
+                return "In Progress";
+            }
+
+            function getHypeTrainPercent(meta) {
+                if (!meta) return 0;
+                if (String(meta.phase || "").toLowerCase() === "end") return 100;
+                var progress = parseNumber(meta.progress);
+                var goal = parseNumber(meta.goal);
+                if (progress === null || goal === null || goal <= 0) return 0;
+                return Math.max(0, Math.min(100, (progress / goal) * 100));
+            }
+
+            function formatTimeUntil(value) {
+                if (!value) return "";
+                var target = new Date(value);
+                if (isNaN(target.getTime())) return "";
+                var seconds = Math.max(0, Math.round((target.getTime() - Date.now()) / 1000));
+                var minutes = Math.floor(seconds / 60);
+                var remainder = seconds % 60;
+                return minutes > 0 ? minutes + "m " + remainder + "s left" : remainder + "s left";
+            }
+
+            function formatHypeTrainContributors(contributions) {
+                if (!Array.isArray(contributions) || !contributions.length) return "";
+                return contributions.slice(0, 3).map(function (contribution) {
+                    var name = contribution.userName || contribution.userLogin || "Anonymous";
+                    var total = formatHypeTrainNumber(contribution.total);
+                    var type = contribution.type ? " " + contribution.type : "";
+                    return name + (total ? " " + total : "") + type;
+                }).join(", ");
+            }
+
+            function clearHypeTrain() {
+                hypeTrainState = null;
+                if (hypeTrainTimer) {
+                    clearInterval(hypeTrainTimer);
+                    hypeTrainTimer = null;
+                }
+                if (hypeTrainRemoveTimer) {
+                    clearTimeout(hypeTrainRemoveTimer);
+                    hypeTrainRemoveTimer = null;
+                }
+                hypeNode.style.display = "none";
+                hypeNode.textContent = "";
+                render();
+            }
+
+            function renderHypeTrainTopbar() {
+                if (!hypeTrainState || !isPlainObject(hypeTrainState.meta)) {
+                    hypeNode.style.display = "none";
+                    hypeNode.textContent = "";
+                    return;
+                }
+
+                var meta = hypeTrainState.meta;
+                var phase = String(meta.phase || "progress").toLowerCase();
+                var percent = getHypeTrainPercent(meta);
+                var progress = formatHypeTrainNumber(meta.progress);
+                var goal = formatHypeTrainNumber(meta.goal);
+                var total = formatHypeTrainNumber(meta.total);
+                var level = formatHypeTrainNumber(meta.level);
+                var timeText = phase === "end" ? "" : formatTimeUntil(meta.expiresAt);
+                var contributors = formatHypeTrainContributors(meta.topContributions);
+                var trainType = String(meta.trainType || "").toLowerCase();
+                var isTreasure = trainType.indexOf("treasure") !== -1;
+
+                hypeNode.style.display = "block";
+                hypeNode.textContent = "";
+
+                var topbar = document.createElement("div");
+                topbar.className = "hype-topbar" + (isTreasure ? " is-treasure" : "") + (phase === "end" ? " is-ended" : "");
+
+                var fill = document.createElement("div");
+                fill.className = "hype-progress-fill";
+                fill.style.width = percent.toFixed(1) + "%";
+                topbar.appendChild(fill);
+
+                var sheen = document.createElement("div");
+                sheen.className = "hype-progress-sheen";
+                topbar.appendChild(sheen);
+
+                var content = document.createElement("div");
+                content.className = "hype-content";
+
+                var main = document.createElement("div");
+                main.className = "hype-main";
+
+                var labelRow = document.createElement("div");
+                labelRow.className = "hype-label-row";
+
+                var title = document.createElement("div");
+                title.className = "hype-title";
+                title.textContent = getHypeTrainTitle(meta);
+                labelRow.appendChild(title);
+
+                var phaseNode = document.createElement("div");
+                phaseNode.className = "hype-phase";
+                phaseNode.textContent = getHypeTrainPhaseLabel(phase);
+                labelRow.appendChild(phaseNode);
+
+                main.appendChild(labelRow);
+
+                var detailRow = document.createElement("div");
+                detailRow.className = "hype-detail-row";
+                if (progress && goal) {
+                    var progressDetail = document.createElement("span");
+                    progressDetail.className = "hype-detail";
+                    progressDetail.textContent = progress + " / " + goal;
+                    detailRow.appendChild(progressDetail);
+                }
+                if (total) {
+                    var totalDetail = document.createElement("span");
+                    totalDetail.className = "hype-detail";
+                    totalDetail.textContent = "Total " + total;
+                    detailRow.appendChild(totalDetail);
+                }
+                if (timeText) {
+                    var timeDetail = document.createElement("span");
+                    timeDetail.className = "hype-detail";
+                    timeDetail.textContent = timeText;
+                    detailRow.appendChild(timeDetail);
+                }
+                if (detailRow.children.length) {
+                    main.appendChild(detailRow);
+                }
+
+                content.appendChild(main);
+
+                var side = document.createElement("div");
+                side.className = "hype-side";
+                if (level) {
+                    var levelNode = document.createElement("div");
+                    levelNode.className = "hype-level";
+                    levelNode.textContent = "Level " + level;
+                    side.appendChild(levelNode);
+                }
+                if (contributors) {
+                    var contributorsNode = document.createElement("div");
+                    contributorsNode.className = "hype-contributors";
+                    contributorsNode.textContent = "Top: " + contributors;
+                    side.appendChild(contributorsNode);
+                }
+                if (side.children.length) {
+                    content.appendChild(side);
+                }
+
+                topbar.appendChild(content);
+                hypeNode.appendChild(topbar);
+            }
+
+            function updateHypeTrain(meta) {
+                if (!isPlainObject(meta)) return;
+
+                if (hypeTrainTimer) {
+                    clearInterval(hypeTrainTimer);
+                    hypeTrainTimer = null;
+                }
+                if (hypeTrainRemoveTimer) {
+                    clearTimeout(hypeTrainRemoveTimer);
+                    hypeTrainRemoveTimer = null;
+                }
+
+                hypeTrainState = {
+                    meta: meta,
+                    updatedAt: Date.now()
+                };
+                renderHypeTrainTopbar();
+
+                if (String(meta.phase || "").toLowerCase() === "end") {
+                    hypeTrainRemoveTimer = setTimeout(clearHypeTrain, HYPE_TRAIN_REMOVE_DELAY_MS);
+                    return;
+                }
+
+                if (meta.expiresAt) {
+                    hypeTrainTimer = setInterval(renderHypeTrainTopbar, 1000);
+                }
             }
 
             function updateAuctionEntries(meta) {
@@ -824,6 +1200,11 @@
 
                 barNode.textContent = "";
                 if (!entries.length) {
+                    if (hypeTrainState) {
+                        barNode.style.display = "none";
+                        return;
+                    }
+                    barNode.style.display = "flex";
                     var emptyNode = document.createElement("div");
                     emptyNode.className = "empty";
                     emptyNode.textContent = "Waiting for meta data events…";
@@ -831,6 +1212,7 @@
                     return;
                 }
 
+                barNode.style.display = "flex";
                 for (var i = 0; i < entries.length; i++) {
                     var entry = entries[i];
                     var chip = document.createElement("div");
@@ -874,7 +1256,9 @@
                 var meta = data.meta;
                 var category = getEventCategory(normalizedEventName);
 
-                if (normalizedEventName === "auction_update" && isPlainObject(meta)) {
+                if (normalizedEventName === "hype_train" && isPlainObject(meta)) {
+                    updateHypeTrain(meta);
+                } else if (normalizedEventName === "auction_update" && isPlainObject(meta)) {
                     updateAuctionEntries(meta);
                 } else if (normalizedEventName === "commerce_update" && isPlainObject(meta)) {
                     updateCommerceEntries(meta);

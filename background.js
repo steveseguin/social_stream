@@ -17104,12 +17104,61 @@ function buildFakeViewerUpdates() {
 	return meta;
 }
 
+function buildFakeHypeTrainMeta() {
+	var now = new Date();
+	var expiresAt = new Date(now.getTime() + 2 * 60 * 1000);
+	return {
+		phase: "progress",
+		id: "fake-hype-train",
+		broadcasterUserId: "123456",
+		broadcasterUserLogin: "channel_login",
+		broadcasterUserName: "Channel Name",
+		total: 360,
+		progress: 360,
+		goal: 500,
+		level: 1,
+		topContributions: [
+			{
+				userId: "101",
+				userLogin: "ava",
+				userName: "Ava",
+				type: "bits",
+				total: 250
+			},
+			{
+				userId: "102",
+				userLogin: "jess",
+				userName: "Jess",
+				type: "subscription",
+				total: 100
+			}
+		],
+		lastContribution: {
+			userId: "101",
+			userLogin: "ava",
+			userName: "Ava",
+			type: "bits",
+			total: 100
+		},
+		sharedTrainParticipants: [],
+		startedAt: now.toISOString(),
+		expiresAt: expiresAt.toISOString(),
+		endedAt: "",
+		cooldownEndsAt: "",
+		isSharedTrain: false,
+		trainType: "regular",
+		allTimeHighLevel: 2,
+		allTimeHighTotal: 1000,
+		eventSubType: "channel.hype_train.progress"
+	};
+}
+
 function triggerFakeMetaMessage(mode) {
 	var normalized = String(mode || "random")
 		.toLowerCase()
 		.trim();
 	if (!normalized || normalized === "random") {
-		normalized = fakeMetaPick(["auction", "commerce", "viewers"]) || "auction";
+		normalized = fakeMetaPick(["auction", "commerce", "viewers", "hype"]) || "auction";
 	}
 
 	var payload = null;
@@ -17129,6 +17178,12 @@ function triggerFakeMetaMessage(mode) {
 		payload = {
 			event: "viewer_updates",
 			meta: buildFakeViewerUpdates()
+		};
+	} else if (normalized === "hype" || normalized === "hype_train") {
+		payload = {
+			type: "twitch",
+			event: "hype_train",
+			meta: buildFakeHypeTrainMeta()
 		};
 	} else {
 		payload = {

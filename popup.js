@@ -3111,51 +3111,61 @@ function update(response, sync = true) {
         }
 
         if ('settings' in response && (response.streamID || ssapp)) {
-            setupTtsProviders(response); // Handle TTS provider setting initialization
-            renderSavedCustomUrlSlots(response.settings);
+            const shouldBatchLinkRefresh = sync === false;
+            if (shouldBatchLinkRefresh) {
+                beginPopupLinkRefreshBatch();
+            }
+            try {
+                setupTtsProviders(response); // Handle TTS provider setting initialization
+                renderSavedCustomUrlSlots(response.settings);
 
-            const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
-            const paramNums = Object.values(targetMap);
+                const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
+                const paramNums = Object.values(targetMap);
 
-            for (var key in response.settings) {
-                try {
-                    if (key === "midiConfig") {
-                        if (response.settings[key]) {
-                            document.getElementById("midiConfig").classList.add("pressed");
-                            document.getElementById("midiConfig").innerText = " Config Loaded";
-                        } else {
-                            document.getElementById("midiConfig").classList.remove("pressed");
-                            document.getElementById("midiConfig").innerText = " Load Config";
+                for (var key in response.settings) {
+                    try {
+                        if (key === "midiConfig") {
+                            if (response.settings[key]) {
+                                document.getElementById("midiConfig").classList.add("pressed");
+                                document.getElementById("midiConfig").innerText = " Config Loaded";
+                            } else {
+                                document.getElementById("midiConfig").classList.remove("pressed");
+                                document.getElementById("midiConfig").innerText = " Load Config";
+                            }
+                            continue; // Continue to next setting
                         }
-                        continue; // Continue to next setting
-                    }
 
-                    if (typeof response.settings[key] == "object") {
-                        // Pass 'response' to handle 'mynameext' correctly within processObjectSetting
-                        processObjectSetting(key, response.settings[key], sync, paramNums, response);
-                    } else {
-                        processLegacySetting(key, response.settings[key], sync);
+                        if (typeof response.settings[key] == "object") {
+                            // Pass 'response' to handle 'mynameext' correctly within processObjectSetting
+                            processObjectSetting(key, response.settings[key], sync, paramNums, response);
+                        } else {
+                            processLegacySetting(key, response.settings[key], sync);
+                        }
+                    } catch (e) {
+                        console.error(`Error processing setting ${key}:`, e);
                     }
-                } catch (e) {
-                    console.error(`Error processing setting ${key}:`, e);
+                }
+
+                if ("translation" in response.settings) {
+                    translation = response.settings["translation"];
+                    miniTranslate(document.body); // Assuming miniTranslate is defined
+                }
+
+                createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
+                updateAiOverlayLinksFromCurrentState();
+
+                // Check if MIDI is enabled and initialize if needed
+                const midiCheckbox = document.querySelector('input[data-setting="midi"]');
+                if (midiCheckbox && midiCheckbox.checked) {
+                    // MIDI was enabled in settings, initialize the dropdown
+                    handleMidiToggle(true);
+                }
+                updateFirstTimerUiState();
+            } finally {
+                if (shouldBatchLinkRefresh) {
+                    endPopupLinkRefreshBatch();
                 }
             }
-
-            if ("translation" in response.settings) {
-                translation = response.settings["translation"];
-                miniTranslate(document.body); // Assuming miniTranslate is defined
-            }
-
-            createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
-            updateAiOverlayLinksFromCurrentState();
-
-            // Check if MIDI is enabled and initialize if needed
-            const midiCheckbox = document.querySelector('input[data-setting="midi"]');
-            if (midiCheckbox && midiCheckbox.checked) {
-                // MIDI was enabled in settings, initialize the dropdown
-                handleMidiToggle(true);
-            }
-            updateFirstTimerUiState();
         }
 
         if (("state" in response) && streamID) {
@@ -3319,6 +3329,26 @@ function handleAIProviderVisibility(provider) {
         document.getElementById("localbrowserhelp").classList.remove("hidden");
         document.getElementById("localqwenmodel").classList.remove("hidden");
     }
+}
+
+var popupStartupSettingsHydrated = false;
+
+function hasUsablePopupSettingsResponse(response) {
+	const hasSession = !!(response && response.streamID);
+	const hasSettingsPayload = !!(response && response.settings);
+	return hasSession || (ssapp && hasSettingsPayload);
+}
+
+function hydratePopupFromStartupSettings(response) {
+	if (!hasUsablePopupSettingsResponse(response)) {
+		return false;
+	}
+	if (popupStartupSettingsHydrated) {
+		return true;
+	}
+	popupStartupSettingsHydrated = true;
+	update(response, false);
+	return true;
 }
 
 function sendRuntimeCommandMessage(message, timeout, proxyToBackground) {
@@ -5888,7 +5918,29 @@ function syncAllOverlayPreviews() {
     syncOverlayPreview('multialerts');
 }
 
+var popupLinkRefreshBatchDepth = 0;
+var popupLinkRefreshPending = false;
+
+function beginPopupLinkRefreshBatch() {
+	popupLinkRefreshBatchDepth++;
+}
+
+function endPopupLinkRefreshBatch() {
+	if (popupLinkRefreshBatchDepth > 0) {
+		popupLinkRefreshBatchDepth--;
+	}
+	if (popupLinkRefreshBatchDepth === 0 && popupLinkRefreshPending) {
+		popupLinkRefreshPending = false;
+		refreshLinks();
+	}
+}
+
 function refreshLinks(){
+  if (popupLinkRefreshBatchDepth > 0) {
+    popupLinkRefreshPending = true;
+    return;
+  }
+
   let hideLinks = false;
   document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
     if (x.checked){
@@ -6049,7 +6101,7 @@ if (!chrome.browserAction){
 
 		sendMessageToBackground({cmd: "getSettings"}, 20000).then(response => {
 			log("Received response:", response);
-			update(response, false);
+			hydratePopupFromStartupSettings(response);
 		  })
 		  .catch(error => {
 			console.error("Error:", error);
@@ -9206,14 +9258,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
 			chrome.runtime.lastError;
 			log("getSettings response",response);
-			const hasSession = !!(response && response.streamID);
-			const hasSettingsPayload = !!(response && response.settings);
-			const ready = hasSession || (ssapp && hasSettingsPayload);
-			if (!ready){
+			if (!hydratePopupFromStartupSettings(response)){
 				// keep polling
 			} else {
 				clearInterval(initialSetup);
-				update(response, false); // we dont want to sync things
 			}
 		});
 	}, 500);
@@ -9222,14 +9270,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
 		chrome.runtime.lastError;
 		log("getSettings response",response);
-		const hasSession = !!(response && response.streamID);
-		const hasSettingsPayload = !!(response && response.settings);
-		const ready = hasSession || (ssapp && hasSettingsPayload);
-		if (!ready){
+		if (!hydratePopupFromStartupSettings(response)){
 			
 		} else {
 			clearInterval(initialSetup);
-			update(response, false); // we dont want to sync things
 		}
 	});
 

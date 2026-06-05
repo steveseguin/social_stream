@@ -9947,14 +9947,15 @@ input:checked + .slider:before {
 				<input type="checkbox" id="help-meta" class="link-help-toggle">
 				<div class="link-help-content">
 					<strong>Dedicated overlay for metadata-only events.</strong>
-					<p>Shows live values such as current item, bidder, bids, timer, product availability, giveaway counts, and viewer snapshots.</p>
+					<p>Shows live values such as current item, bidder, bids, timer, product availability, giveaway counts, viewer snapshots, and Twitch Hype Train progress.</p>
 					<ul>
 						<li>Built for auction and commerce streams</li>
 						<li>Updates values in place as new meta events arrive</li>
+						<li>Renders Hype Train and Treasure Train events as a top progress bar</li>
 						<li>Toggle icon, label, and value visibility</li>
-						<li>Filter by event type (auction, commerce, viewers, other meta)</li>
+						<li>Filter by event type (auction, commerce, viewers, hype trains, other meta)</li>
 					</ul>
-					<div class="help-tip">💡 <strong>Tip:</strong> If no event filter is checked, the overlay defaults to auction + commerce + viewer meta.</div>
+					<div class="help-tip">💡 <strong>Tip:</strong> If no event filter is checked, the overlay defaults to auction + commerce + viewer + Hype Train meta.</div>
 				</div>
 					<h3>
 						<span>
@@ -9971,6 +9972,9 @@ input:checked + .slider:before {
 						</button>
 						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="viewers" title="Send a fake viewer_updates meta event">
 							<span>Fake Viewer Meta</span>
+						</button>
+						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="hype" title="Send a fake hype_train meta event">
+							<span>Fake Hype Train</span>
 						</button>
 						<button class="glowingButton showalways" style="flex: 0 0 88px; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="random" title="Send a random fake meta event">
 							<span>Random</span>
@@ -10006,6 +10010,13 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span>👁️ Show viewer updates</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="hype" />
+										<span class="slider round"></span>
+									</label>
+									<span>Show Hype Train progress bar</span>
 								</div>
 								<div>
 									<label class="switch">
