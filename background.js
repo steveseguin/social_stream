@@ -5525,6 +5525,18 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				});
 			}
 			return true;
+		} else if (request.cmd && request.cmd === "rumbleFetchHtml") {
+			try {
+				const rumbleResponse = await fetchRumbleHtmlResponse(request.url);
+				sendResponse({ ok: true, status: rumbleResponse.status, url: rumbleResponse.url, html: rumbleResponse.html });
+			} catch (error) {
+				sendResponse({
+					ok: false,
+					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+					error: error && error.message ? error.message : "Rumble HTML fetch failed"
+				});
+			}
+			return true;
 		} else if (request.cmd && request.cmd === "resolveRumblePopupUrl") {
 			try {
 				const resolved = await resolveRumblePopup(request);

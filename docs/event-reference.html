@@ -174,7 +174,7 @@
                             <td>&mdash;</td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
-                            <td>Viewer count polls only</td>
+                            <td>Chat rows plus viewer count polls</td>
                         </tr>
                         <tr>
                             <td><strong>Rumble &ndash; Websocket/API URL</strong></td>
@@ -1327,6 +1327,11 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td><code>message</code></td>
+                                <td>Visible Rumble chat rows appear in the page or popup chat.</td>
+                                <td>Standard chat payload; <code>chatmessage</code> preserves Rumble emote image HTML after the page renders it unless text-only mode is enabled.</td>
+                            </tr>
+                            <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Calls Rumble’s <code>video.watching-now</code> service every 30s.</td>
                                 <td><code>meta</code> integer viewer count; uses <code>credentials: 'include'</code> to reuse session cookies.</td>
@@ -1356,7 +1361,7 @@
                             <tr>
                                 <td><code>message</code></td>
                                 <td>New entries arrive from Rumble's SSE chat stream after the official API resolves <code>livestreams[].id</code>; falls back to <code>livestreams[].chat.recent_messages</code>.</td>
-                                <td>Standard chat payload. <code>meta.source</code> is <code>rumble_sse</code> when the SSE chat stream is available and includes avatar URLs from <code>users[].image.1</code>; otherwise it falls back to <code>live_stream_api</code> without avatars.</td>
+                                <td>Standard chat payload. <code>meta.source</code> is <code>rumble_sse</code> when the SSE chat stream is available and includes avatar URLs from <code>users[].image.1</code>; otherwise it falls back to <code>live_stream_api</code> without avatars. When the popup emote catalog is available, <code>chatmessage</code> renders Rumble shortcode emotes as image HTML and <code>meta.plainText</code> preserves the original shortcode text.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>donation</code></td>

@@ -49,6 +49,10 @@
         sseToken: 0,
         sseTimer: null,
         sseUsers: {},
+        sseEmotes: {},
+        sseEmoteCatalogStreamId: '',
+        sseEmoteCatalogPromise: null,
+        sseEmoteCatalogFailedStreamId: '',
         sseFailedStreamId: '',
         sseLoggedConnected: false,
         consecutiveErrors: 0
@@ -493,6 +497,181 @@
         return result;
     }
 
+    function decodeJsString(value) {
+        try {
+            return JSON.parse('"' + String(value || '') + '"');
+        } catch (error) {
+            return String(value || '')
+                .replace(/\\"/g, '"')
+                .replace(/\\\\/g, '\\');
+        }
+    }
+
+    function normalizeRumbleEmoteUrl(value) {
+        let parsed;
+        try {
+            parsed = new URL(String(value || ''), 'https://rumble.com');
+        } catch (error) {
+            return '';
+        }
+        if (parsed.protocol !== 'https:') {
+            return '';
+        }
+        return parsed.toString();
+    }
+
+    function parseRumbleEmoteCatalog(html) {
+        const emotes = {};
+        const pattern = /\{name:"((?:\\.|[^"\\])*)",is_subs_only:(?:true|false),position:\d+,file:"((?:\\.|[^"\\])*)"/g;
+        let match;
+        while ((match = pattern.exec(String(html || '')))) {
+            const name = decodeJsString(match[1]).trim();
+            const url = normalizeRumbleEmoteUrl(decodeJsString(match[2]));
+            if (!name || !url) {
+                continue;
+            }
+            emotes[name.toLowerCase()] = url;
+        }
+        return emotes;
+    }
+
+    function buildRumbleChatMessage(value) {
+        const plainText = String(value == null ? '' : value);
+        const emotes = state.sseEmotes || {};
+        const pattern = /:([a-z0-9_+\-]+):/ig;
+        let output = '';
+        let lastIndex = 0;
+        let rendered = false;
+        let match;
+
+        if (!plainText || (state.settings && state.settings.textonlymode)) {
+            return {
+                plainText: plainText,
+                chatmessage: plainText,
+                rendered: false
+            };
+        }
+
+        while ((match = pattern.exec(plainText))) {
+            const code = match[0];
+            const name = String(match[1] || '').toLowerCase();
+            const url = emotes[name];
+            if (!url) {
+                continue;
+            }
+            output += escapeHtml(plainText.slice(lastIndex, match.index));
+            output += '<img class="chat-history--emote rumble-chat-emote" src="' +
+                escapeHtml(url) +
+                '" alt="' +
+                escapeHtml(code) +
+                '" title="' +
+                escapeHtml(code) +
+                '" width="24" height="24">';
+            lastIndex = match.index + code.length;
+            rendered = true;
+        }
+
+        if (!rendered) {
+            return {
+                plainText: plainText,
+                chatmessage: plainText,
+                rendered: false
+            };
+        }
+
+        output += escapeHtml(plainText.slice(lastIndex));
+        return {
+            plainText: plainText,
+            chatmessage: output,
+            rendered: true
+        };
+    }
+
+    async function fetchRumbleHtml(url) {
+        if (window.ninjafy && typeof window.ninjafy.fetchRumbleHtml === 'function') {
+            const result = await window.ninjafy.fetchRumbleHtml(url);
+            if (!result || !result.ok) {
+                throw new Error((result && result.error) || 'Rumble Electron HTML fetch failed');
+            }
+            return result.html || '';
+        }
+
+        if (extAvailable() && chrome.runtime && chrome.runtime.id && !preferDirectFetch()) {
+            return new Promise(function (resolve, reject) {
+                try {
+                    chrome.runtime.sendMessage(chrome.runtime.id, { type: 'toBackground', data: { cmd: 'rumbleFetchHtml', url: url } }, function (response) {
+                        if (chrome.runtime.lastError) {
+                            reject(new Error(chrome.runtime.lastError.message || 'Rumble background HTML fetch failed'));
+                            return;
+                        }
+                        if (!response || !response.ok) {
+                            reject(new Error((response && response.error) || 'Rumble background HTML fetch failed'));
+                            return;
+                        }
+                        resolve(response.html || '');
+                    });
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
+            credentials: 'omit',
+            headers: {
+                Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            }
+        });
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.text();
+    }
+
+    function ensureRumbleEmoteCatalog(streamId) {
+        const normalized = normalizeStreamId(streamId);
+        const popupUrl = buildPopupChatUrl({ id: normalized });
+        if (!normalized || !popupUrl) {
+            return Promise.resolve(false);
+        }
+        if (state.sseEmoteCatalogStreamId === normalized) {
+            return Promise.resolve(true);
+        }
+        if (state.sseEmoteCatalogPromise) {
+            return state.sseEmoteCatalogPromise;
+        }
+        if (state.sseEmoteCatalogFailedStreamId === normalized) {
+            return Promise.resolve(false);
+        }
+
+        state.sseEmoteCatalogPromise = fetchRumbleHtml(popupUrl).then(function (html) {
+            const parsed = parseRumbleEmoteCatalog(html);
+            if (state.sseStreamId && state.sseStreamId !== normalized) {
+                return false;
+            }
+            state.sseEmotes = parsed;
+            state.sseEmoteCatalogStreamId = normalized;
+            state.sseEmoteCatalogFailedStreamId = '';
+            if (Object.keys(parsed).length) {
+                log('Loaded ' + Object.keys(parsed).length + ' Rumble emotes for chat rendering.', 'success');
+            }
+            return true;
+        }).catch(function (error) {
+            state.sseEmotes = {};
+            state.sseEmoteCatalogStreamId = '';
+            state.sseEmoteCatalogFailedStreamId = normalized;
+            log('Rumble emote catalog unavailable; chat will use text shortcodes. ' + ((error && error.message) || error), 'warn');
+            return false;
+        }).then(function (result) {
+            state.sseEmoteCatalogPromise = null;
+            return result;
+        });
+
+        return state.sseEmoteCatalogPromise;
+    }
+
     function addLine(parent, className, html) {
         let entry;
         if (!parent) {
@@ -694,21 +873,25 @@
     function buildChatPayload(item, stream, snapshot) {
         const payload = buildBasePayload();
         const username = normalizeText(item && (item.username || item.user)) || 'Rumble User';
-        const message = normalizeText(item && item.text);
-        if (!message) {
+        const message = buildRumbleChatMessage(normalizeText(item && item.text));
+        if (!message.plainText) {
             return null;
         }
         payload.chatname = username;
         payload.chatbadges = formatBadgesForDisplay(item && item.badges);
-        payload.chatmessage = message;
+        payload.chatmessage = message.chatmessage;
         payload.meta = {
             source: 'live_stream_api',
             apiType: snapshot && snapshot.type ? String(snapshot.type) : '',
             streamId: stream && stream.id ? String(stream.id) : '',
             streamTitle: stream && stream.title ? String(stream.title) : '',
             createdAt: item && item.created_on ? String(item.created_on) : '',
-            badges: Array.isArray(item && item.badges) ? item.badges.slice() : []
+            badges: Array.isArray(item && item.badges) ? item.badges.slice() : [],
+            plainText: message.plainText
         };
+        if (message.rendered) {
+            payload.meta.rumbleEmotesRendered = true;
+        }
         payload.timestamp = payload.meta.createdAt;
         return payload;
     }
@@ -844,14 +1027,14 @@
         const userId = normalizeText(item && item.user_id);
         const user = state.sseUsers[userId] || {};
         const username = normalizeText(user.username) || 'Rumble User';
-        const message = getSseMessageText(item);
+        const message = buildRumbleChatMessage(getSseMessageText(item));
         const badges = Array.isArray(user.badges) ? user.badges.slice() : [];
         const color = normalizeText(user.color);
-        if (!message) {
+        if (!message.plainText) {
             return null;
         }
         payload.chatname = username;
-        payload.chatmessage = message;
+        payload.chatmessage = message.chatmessage;
         payload.chatimg = getSseUserImage(user);
         payload.chatbadges = formatBadgesForDisplay(badges);
         if (color) {
@@ -868,8 +1051,12 @@
             isFollower: !!user.is_follower,
             messageType: normalizeText(item && item.type),
             color: color,
-            badges: badges
+            badges: badges,
+            plainText: message.plainText
         };
+        if (message.rendered) {
+            payload.meta.rumbleEmotesRendered = true;
+        }
         payload.timestamp = payload.meta.createdAt;
         return payload;
     }
@@ -941,7 +1128,9 @@
         } else if (payload.event && payload.event !== 'new_subscriber' && payload.event !== 'subscription_gift') {
             pillClass += ' bad';
         }
-        messageHtml = escapeHtml(String(payload.chatmessage || '')).replace(/\n/g, '<br>');
+        messageHtml = payload.meta && payload.meta.rumbleEmotesRendered
+            ? String(payload.chatmessage || '')
+            : escapeHtml(String(payload.chatmessage || '')).replace(/\n/g, '<br>');
         labelHtml = payload.event
             ? '<span class="' + pillClass + '">' + escapeHtml(payload.chatmessage || payload.event) + '</span>'
             : '<span class="feed-message">' + messageHtml + '</span>';
@@ -1329,6 +1518,10 @@
         state.sseActive = false;
         state.sseStreamId = '';
         state.sseUsers = {};
+        state.sseEmotes = {};
+        state.sseEmoteCatalogStreamId = '';
+        state.sseEmoteCatalogPromise = null;
+        state.sseEmoteCatalogFailedStreamId = '';
         state.sseLoggedConnected = false;
         if (state.sseTimer) {
             clearTimeout(state.sseTimer);
@@ -1351,6 +1544,10 @@
             return;
         }
         fetchSseBatch(streamId, includeInit).then(function (events) {
+            return ensureRumbleEmoteCatalog(streamId).then(function () {
+                return events;
+            });
+        }).then(function (events) {
             if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {
                 return;
             }
@@ -1391,6 +1588,7 @@
         state.sseUsers = {};
         state.sseLoggedConnected = false;
         log('Connecting to Rumble SSE chat stream.', 'info');
+        ensureRumbleEmoteCatalog(streamId);
         scheduleSseLoop(state.sseToken, streamId, true, 0);
     }
 
@@ -1422,6 +1620,9 @@
         const streamSelection = selectLivestream(snapshot);
         const stream = streamSelection.stream;
         const useSseChat = shouldUseSseForStream(stream);
+        if (stream && stream.id && !useSseChat) {
+            ensureRumbleEmoteCatalog(stream.id);
+        }
         const followerCounts = getFollowerCounts(snapshot);
         const sourceFollowers = getEffectiveFollowerCount(followerCounts);
         const sourceSubscribers = snapshot && snapshot.subscribers ? coerceInteger(snapshot.subscribers.num_subscribers) : null;
