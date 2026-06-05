@@ -8010,6 +8010,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	var popupSearchInput = document.getElementById('searchInput');
 	var popupSearchHiddenClass = 'popup-search-hidden';
 	var popupSearchOpenState = null;
+	var popupSearchLockedWidth = null;
+	var popupSearchIndex = null;
+	var popupSearchTimer = null;
 
 	function normalizePopupSearchText(value) {
 		return String(value || '').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -8027,6 +8030,46 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	}
 
+	function addPopupSearchVisibleText(parts, element) {
+		if (!element) {
+			return;
+		}
+		var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+		var node;
+		while ((node = walker.nextNode())) {
+			if (node.parentElement && !shouldSkipPopupSearchText(node.parentElement) && !isPopupSearchNormallyHidden(node.parentElement)) {
+				addPopupSearchPart(parts, node.nodeValue);
+			}
+		}
+	}
+
+	function shouldSkipPopupSearchText(element) {
+		if (!element) {
+			return true;
+		}
+		if (/^(script|style|template|option|br)$/i.test(element.tagName || '')) {
+			return true;
+		}
+		return !!(element.closest && element.closest('.link-help-content, option, script, style, template'));
+	}
+
+	function addPopupSearchSynonyms(parts) {
+		var text = parts.join(' ');
+		var synonyms = [];
+		if (/\bstroke\b|\boutline\b|\bborder\b|\bline\b/.test(text)) {
+			synonyms.push('stroke outline border line edge');
+		}
+		if (/\bshadow\b|\bglow\b|\bhalo\b|\bdepth\b/.test(text)) {
+			synonyms.push('shadow glow halo depth');
+		}
+		if (/\bcolor\b|\bcolour\b|\bhue\b|\bbackground\b|\bpagebg\b|\bchroma\b|\btextcolor\b|\bnamecolor\b|\bstroke\b|\bglow\b/.test(text)) {
+			synonyms.push('color colour hue background foreground fill text page chroma stroke glow');
+		}
+		if (synonyms.length) {
+			parts.push(synonyms.join(' '));
+		}
+	}
+
 	function addPopupSearchAttributes(parts, element) {
 		if (!element || !element.attributes) {
 			return;
@@ -8036,19 +8079,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			if (!attr || attr.name === 'style' || attr.name === 'class') {
 				continue;
 			}
-			if (
-				attr.name.indexOf('data-') === 0 ||
-				attr.name === 'title' ||
-				attr.name === 'placeholder' ||
-				attr.name === 'aria-label' ||
-				attr.name === 'id' ||
-				attr.name === 'name' ||
-				attr.name === 'for' ||
-				attr.name === 'href' ||
-				attr.name === 'value'
-			) {
-				if (attr.name.indexOf('data-') === 0) {
-					addPopupSearchPart(parts, attr.name.replace(/^data-/, ''));
+			if (attr.name === 'data-keywords' || attr.name === 'data-search') {
+				addPopupSearchPart(parts, attr.value);
+				continue;
+			}
+			if (attr.name === 'title' || attr.name === 'aria-label' || attr.name === 'alt') {
+				if (attr.name === 'title' && /(must first interact|lookup first)/i.test(attr.value || '')) {
+					continue;
 				}
 				addPopupSearchPart(parts, attr.value);
 			}
@@ -8060,29 +8097,41 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (!element) {
 			return '';
 		}
-		addPopupSearchPart(parts, element.textContent);
+		addPopupSearchVisibleText(parts, element);
 		addPopupSearchAttributes(parts, element);
 
-		var searchable = element.querySelectorAll('[title], [placeholder], [aria-label], [id], [name], [for], [href], [value], [data-keywords], [data-search], [data-translate], input, textarea, select, option, label');
+		var searchable = element.querySelectorAll('[title], [aria-label], [alt], [data-keywords], [data-search], input, textarea, select, label, img');
 		searchable.forEach(function(child) {
 			addPopupSearchAttributes(parts, child);
 		});
+		addPopupSearchSynonyms(parts);
+		return parts.join(' ');
+	}
 
-		var wrapper = element.closest ? element.closest('.wrapper') : null;
-		if (wrapper) {
-			var wrapperLabel = wrapper.querySelector('.collapsible-label');
-			if (wrapperLabel) {
-				addPopupSearchPart(parts, wrapperLabel.textContent);
-				addPopupSearchAttributes(parts, wrapperLabel);
-			}
+	function getPopupSectionSearchText(wrapper) {
+		var parts = [];
+		var label = wrapper ? wrapper.querySelector('.collapsible-label') : null;
+		if (label) {
+			addPopupSearchPart(parts, label.textContent);
+			addPopupSearchAttributes(parts, label);
 		}
 		return parts.join(' ');
 	}
 
-	function popupSearchMatches(element, terms) {
-		var searchText = getPopupSearchText(element);
+	function popupSearchEscapeRegex(value) {
+		return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	}
+
+	function popupSearchTextHasTerm(searchText, term) {
+		if (/^[a-z0-9]+$/.test(term)) {
+			return new RegExp('(^|[^a-z0-9])' + popupSearchEscapeRegex(term) + '([^a-z0-9]|$)').test(searchText);
+		}
+		return searchText.indexOf(term) !== -1;
+	}
+
+	function popupSearchTextMatches(searchText, terms) {
 		for (var i = 0; i < terms.length; i++) {
-			if (searchText.indexOf(terms[i]) === -1) {
+			if (!popupSearchTextHasTerm(searchText, terms[i])) {
 				return false;
 			}
 		}
@@ -8152,16 +8201,114 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		popupSearchOpenState = null;
 	}
 
+	function lockPopupSearchWidth() {
+		if (popupSearchLockedWidth) {
+			return;
+		}
+		popupSearchLockedWidth = Math.ceil(document.documentElement.getBoundingClientRect().width || document.body.getBoundingClientRect().width);
+		if (popupSearchLockedWidth) {
+			document.documentElement.style.minWidth = popupSearchLockedWidth + 'px';
+			document.body.style.minWidth = popupSearchLockedWidth + 'px';
+		}
+	}
+
+	function unlockPopupSearchWidth() {
+		if (!popupSearchLockedWidth) {
+			return;
+		}
+		document.documentElement.style.minWidth = '';
+		document.body.style.minWidth = '';
+		popupSearchLockedWidth = null;
+	}
+
 	function getPopupSearchRows(wrapper) {
-		var rows = wrapper.querySelectorAll('.options_group > div, .options > div:not(.options_group), .collapsible-text > div:not(.options)');
+		var rows = wrapper.querySelectorAll('.options_group > *, .options_group > span > *, .options > :not(.options_group), .options > .overlay-config-section > *, .options_group > .game-config-section > *, .collapsible-text > :not(.options)');
 		var filtered = [];
-		rows.forEach(function(row) {
-			if (!row.classList || row.classList.contains('options_group') || row.classList.contains('options')) {
+		function addRow(row) {
+			if (!row.classList || row.classList.contains('options_group') || row.classList.contains('options') || /^(script|style|template|br)$/i.test(row.tagName || '')) {
 				return;
 			}
-			filtered.push(row);
+			if (filtered.indexOf(row) === -1) {
+				filtered.push(row);
+			}
+		}
+		rows.forEach(addRow);
+		wrapper.querySelectorAll('.options_group > div').forEach(function(container) {
+			if (container.querySelector(':scope > label.switch')) {
+				return;
+			}
+			container.querySelectorAll(':scope > div, :scope > h3, :scope > p, :scope > span').forEach(addRow);
 		});
 		return filtered;
+	}
+
+	function createPopupSearchIndex() {
+		var index = {
+			links: [],
+			wrappers: [],
+			topLevel: []
+		};
+
+		document.querySelectorAll('.link').forEach(function(link) {
+			if (!isPopupSearchNormallyHidden(link)) {
+				index.links.push({
+					element: link,
+					text: getPopupSearchText(link)
+				});
+			}
+		});
+
+		document.querySelectorAll('.wrapper').forEach(function(wrapper) {
+			if (isPopupSearchNormallyHidden(wrapper)) {
+				return;
+			}
+			var rowElements = getPopupSearchRows(wrapper).filter(function(row) {
+				return !isPopupSearchNormallyHidden(row);
+			});
+			var rows = rowElements.map(function(row) {
+				return {
+					element: row,
+					text: getPopupSearchText(row),
+					containerOnly: false
+				};
+			});
+			rows.forEach(function(rowRecord) {
+				rowRecord.containerOnly = rows.some(function(otherRecord) {
+					return rowRecord.element !== otherRecord.element && rowRecord.element.contains(otherRecord.element);
+				});
+			});
+			index.wrappers.push({
+				element: wrapper,
+				sectionText: getPopupSectionSearchText(wrapper),
+				rows: rows
+			});
+		});
+
+		document.querySelectorAll('.container > *').forEach(function(element) {
+			if (element.classList && (element.classList.contains('wrapper') || element.classList.contains('link'))) {
+				return;
+			}
+			if (!isPopupSearchNormallyHidden(element)) {
+				index.topLevel.push({
+					element: element,
+					text: getPopupSearchText(element)
+				});
+			}
+		});
+
+		return index;
+	}
+
+	function preparePopupSearchIndex() {
+		if (popupSearchIndex) {
+			return;
+		}
+		clearPopupSearchHidden();
+		popupSearchIndex = createPopupSearchIndex();
+	}
+
+	function popupSearchRecordMatches(record, terms) {
+		return popupSearchTextMatches(record.text || '', terms);
 	}
 
 	function updatePopupSearchGroups(wrapper) {
@@ -8179,51 +8326,82 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
-	function applyPopupSearch(value) {
+	function updatePopupSearchTopLevel(terms) {
+		if (!popupSearchIndex) {
+			return;
+		}
+		popupSearchIndex.topLevel.forEach(function(record) {
+			setPopupSearchHidden(record.element, !popupSearchRecordMatches(record, terms));
+		});
+	}
+
+	function applyPopupSearchNow(value) {
 		var terms = getPopupSearchTerms(value);
 		clearPopupSearchHidden();
 
 		if (!terms.length) {
 			restorePopupSearchOpenState();
+			unlockPopupSearchWidth();
 			return;
 		}
 
 		savePopupSearchOpenState();
+		lockPopupSearchWidth();
 		openPopupSearchSections();
+		if (!popupSearchIndex) {
+			popupSearchIndex = createPopupSearchIndex();
+		}
 
-		document.querySelectorAll('.link').forEach(function(link) {
-			if (isPopupSearchNormallyHidden(link)) {
-				return;
-			}
-			setPopupSearchHidden(link, !popupSearchMatches(link, terms));
+		popupSearchIndex.links.forEach(function(record) {
+			setPopupSearchHidden(record.element, !popupSearchRecordMatches(record, terms));
 		});
 
-		document.querySelectorAll('.wrapper').forEach(function(wrapper) {
-			if (isPopupSearchNormallyHidden(wrapper)) {
-				return;
-			}
-			var rows = getPopupSearchRows(wrapper);
-			var matches = 0;
-			rows.forEach(function(row) {
-				if (isPopupSearchNormallyHidden(row)) {
-					return;
+		popupSearchIndex.wrappers.forEach(function(wrapperRecord) {
+			var wrapper = wrapperRecord.element;
+			var rows = wrapperRecord.rows;
+			var matchedRows = [];
+			var sectionMatches = popupSearchTextMatches(wrapperRecord.sectionText, terms);
+			rows.forEach(function(rowRecord) {
+				if (!rowRecord.containerOnly && popupSearchRecordMatches(rowRecord, terms)) {
+					matchedRows.push(rowRecord);
 				}
-				var matched = popupSearchMatches(row, terms);
-				setPopupSearchHidden(row, !matched);
-				if (matched) {
-					matches += 1;
+			});
+			rows.forEach(function(rowRecord) {
+				var keep = matchedRows.indexOf(rowRecord) !== -1;
+				for (var i = 0; !keep && i < matchedRows.length; i++) {
+					keep = rowRecord.element.contains(matchedRows[i].element);
+				}
+				setPopupSearchHidden(rowRecord.element, !keep);
+			});
+			matchedRows.forEach(function(rowRecord) {
+				var parent = rowRecord.element.parentElement;
+				while (parent && parent !== wrapper) {
+					parent.classList.remove(popupSearchHiddenClass);
+					parent = parent.parentElement;
 				}
 			});
 			updatePopupSearchGroups(wrapper);
 
-			if (!rows.length && popupSearchMatches(wrapper, terms)) {
-				matches = 1;
-			}
-			setPopupSearchHidden(wrapper, matches === 0);
+			setPopupSearchHidden(wrapper, matchedRows.length === 0 && !(rows.length === 0 && sectionMatches));
 		});
+		updatePopupSearchTopLevel(terms);
+	}
+
+	function applyPopupSearch(value) {
+		if (popupSearchTimer) {
+			clearTimeout(popupSearchTimer);
+		}
+		popupSearchTimer = setTimeout(function() {
+			popupSearchTimer = null;
+			applyPopupSearchNow(value);
+		}, 60);
 	}
 
 	function closePopupSearch() {
+		if (popupSearchTimer) {
+			clearTimeout(popupSearchTimer);
+			popupSearchTimer = null;
+		}
 		if (popupSearchInput) {
 			popupSearchInput.value = '';
 			popupSearchInput.style.display = 'none';
@@ -8231,6 +8409,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		clearPopupSearchHidden();
 		restorePopupSearchOpenState();
+		unlockPopupSearchWidth();
+		popupSearchIndex = null;
 	}
 
 	if (popupSearchInput) {
@@ -8250,6 +8430,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			searchInput.style.display = 'block';
 			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
 			searchInput.focus(); // Optional: Focus on the input field when it's shown
+			setTimeout(preparePopupSearchIndex, 0);
 		} else {
 			closePopupSearch();
 		}
