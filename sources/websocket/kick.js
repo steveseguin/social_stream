@@ -233,6 +233,7 @@ const state = {
         syncBlockUsers: false,
         hideMetrics: false
     },
+    sourceWindowConfig: {},
     streamInfoCache: null
 };
 
@@ -604,6 +605,76 @@ function applyLiteConfig(message) {
         persistConfig();
         updateInputsFromState();
         notifyLiteStatus('config');
+    }
+}
+
+function normalizeKickAuthMethod(value) {
+    return value === 'local' ? 'local' : 'external';
+}
+
+function getConfiguredKickAuthMethod() {
+    const config = state.sourceWindowConfig || {};
+    const signin = config.signin && typeof config.signin === 'object' ? config.signin : {};
+    return normalizeKickAuthMethod(signin.authMethod || config.authMethod || config.kickAuthMethod);
+}
+
+function getPreferredKickAuthMethod() {
+    try {
+        const stored = localStorage.getItem('kickAuthMethod');
+        if (stored) {
+            return normalizeKickAuthMethod(stored);
+        }
+    } catch (_) {}
+    return getConfiguredKickAuthMethod();
+}
+
+function getKickSigninConfigForOAuth() {
+    const config = state.sourceWindowConfig || {};
+    const signin = config.signin && typeof config.signin === 'object' ? config.signin : {};
+    const payload = {};
+
+    if (typeof config.userAgent === 'string' && config.userAgent.trim()) {
+        payload.userAgent = config.userAgent.trim();
+    }
+    if (typeof signin.userAgent === 'string' && signin.userAgent.trim()) {
+        payload.userAgent = signin.userAgent.trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'preload')) {
+        payload.preload = signin.preload;
+    }
+    if (signin.size && typeof signin.size === 'object') {
+        payload.size = signin.size;
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'allowPopups')) {
+        payload.allowPopups = signin.allowPopups;
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'enforceSigninCSP')) {
+        payload.enforceSigninCSP = signin.enforceSigninCSP;
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'monitorAntiBot')) {
+        payload.monitorAntiBot = signin.monitorAntiBot;
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'useSystemBrowser')) {
+        payload.useSystemBrowser = signin.useSystemBrowser;
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'useTLSProxy')) {
+        payload.useTLSProxy = signin.useTLSProxy;
+    }
+
+    return Object.keys(payload).length ? payload : null;
+}
+
+async function loadSourceWindowConfig() {
+    if (!window.ninjafy || typeof window.ninjafy.getSourceWindowConfig !== 'function') {
+        return;
+    }
+    try {
+        const result = await window.ninjafy.getSourceWindowConfig();
+        if (result && result.ok && result.config && typeof result.config === 'object') {
+            state.sourceWindowConfig = result.config;
+        }
+    } catch (error) {
+        logKickWs(`Unable to read SSApp source config: ${error?.message || error}`, 'warning');
     }
 }
 
@@ -2675,21 +2746,15 @@ function bindEvents() {
     const authMethodSelector = document.getElementById('auth-method-selector');
     const isElectron = isElectronEnvironment();
     if (authMethodSelector && isElectron) {
-        // Load saved preference
-        const savedMethod = 'external';
-        localStorage.setItem('kickAuthMethod', savedMethod);
+        const savedMethod = getPreferredKickAuthMethod();
+        try {
+            localStorage.setItem('kickAuthMethod', savedMethod);
+        } catch (_) {}
         const radios = authMethodSelector.querySelectorAll('input[name="kick-auth-method"]');
         radios.forEach(radio => {
-            if (radio.value === 'local') {
-                radio.disabled = true;
-                const option = radio.closest('.auth-method-option');
-                if (option) {
-                    option.classList.add('hidden');
-                }
-            }
             radio.checked = radio.value === savedMethod;
             radio.addEventListener('change', function() {
-                localStorage.setItem('kickAuthMethod', this.value === 'local' ? 'external' : this.value);
+                localStorage.setItem('kickAuthMethod', normalizeKickAuthMethod(this.value));
             });
         });
     }
@@ -3936,20 +4001,11 @@ function postChatroomToCache(slug, chatroomId, broadcasterUserId) {
 async function startAuthFlow() {
     logKickWs('Sign-in clicked.');
 
-    // DIAGNOSTIC LOGGING - remove after debugging
     const isElectron = isElectronEnvironment();
-    const authMethod = localStorage.getItem('kickAuthMethod') || 'external';
+    const authMethod = getPreferredKickAuthMethod();
 
-    // Electron blocks Kick's final HTTPS-to-file:// consent redirect in local mode.
-    // Always use the loopback OAuth bridge for the desktop app.
     if (isElectron) {
-        if (authMethod !== 'external') {
-            try {
-                localStorage.setItem('kickAuthMethod', 'external');
-            } catch (_) {}
-            logKickWs('Local Kick OAuth is unavailable in the desktop app; using external browser auth.', 'warning');
-        }
-        return startExternalAuthFlow();
+        return startExternalAuthFlow(authMethod);
     }
 
     if (!state.clientId) {
@@ -3981,7 +4037,7 @@ async function startAuthFlow() {
     window.location.href = authorizeUrl;
 }
 
-async function startExternalAuthFlow() {
+async function startExternalAuthFlow(authMethod = 'external') {
     if (!state.clientId) {
         log('Missing Kick client ID. Please refresh this page and try again.', 'error');
         return;
@@ -4000,11 +4056,18 @@ async function startExternalAuthFlow() {
     }
 
     try {
-        logKickWs('Starting external Kick OAuth flow.');
-        const result = await startOAuthFn({
+        const openMode = normalizeKickAuthMethod(authMethod);
+        logKickWs(`Starting ${openMode} Kick OAuth flow.`);
+        const payload = {
             clientId: state.clientId,
-            scopes: KICK_OAUTH_SCOPES.slice()
-        });
+            scopes: KICK_OAUTH_SCOPES.slice(),
+            openMode
+        };
+        const signinConfig = getKickSigninConfigForOAuth();
+        if (signinConfig) {
+            payload.signin = signinConfig;
+        }
+        const result = await startOAuthFn(payload);
 
         if (!result || !result.success || !result.code) {
             log('Kick OAuth did not return an authorization code.', 'error');
@@ -4041,9 +4104,9 @@ async function startExternalAuthFlow() {
     }
 }
 
-// Expose external auth for Electron trigger
+// Expose auth for Electron trigger
 try {
-    window.__SSAPP_START_KICK_AUTH__ = startExternalAuthFlow;
+    window.__SSAPP_START_KICK_AUTH__ = startAuthFlow;
 } catch (_) {}
 
 async function handleAuthCallback() {
@@ -8513,6 +8576,7 @@ async function bootstrap() {
         loadTokens();
         loadEventTypesCache();
         applyUrlParams();
+        await loadSourceWindowConfig();
         updateInputsFromState();
         updateAuthStatus();
         bindEvents();
