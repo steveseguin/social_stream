@@ -9936,7 +9936,117 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-			
+
+			<div class="link" title="Twitch Hype Train and Treasure Train top progress bar">
+				<h2 class="hype_mode_title">
+					<span class="title-group"><span class="emoji" aria-hidden="true">🚂</span><span>Hype Train Top Bar</span></span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#hype-train-bar" title="Jump to the Hype Train top bar options."><span data-translate="options">[options]</span></a>
+					<label for="help-hypetrain" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+				</h2>
+				<input type="checkbox" id="help-hypetrain" class="link-help-toggle">
+				<div class="link-help-content">
+					<strong>Top-bar overlay for Twitch Hype Trains.</strong>
+					<p>Shows Hype Train and Treasure Train progress as a Twitch-style bar. It only reacts to Twitch Hype Train metadata and does not show normal chat.</p>
+					<ul>
+						<li>Use this as an OBS Browser Source or dock overlay</li>
+						<li>Copy this link when you only want Hype Train progress</li>
+						<li>Twitch users may need to re-authorize for the Hype Train scope</li>
+					</ul>
+					<p><a href="./docs/hype-train-top-bar.html" target="_blank" class="lightblue">Open the Hype Train Top Bar guide</a></p>
+					<div class="help-tip">💡 <strong>Tip:</strong> Use the Fake Hype Train button below to verify the bar before going live.</div>
+				</div>
+				<h3>
+					<span>
+						Displays Twitch Hype Train and Treasure Train progress as a top bar.
+					</span>
+				</h3>
+				<div id="hypetrain" data-raw="" class="streaming_chat"><a href="" id="hypetrainlink"></a></div>
+				<div class="sticky-action-row top-67">
+					<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="hype" title="Send a fake hype_train meta event">
+						<span>Fake Hype Train</span>
+					</button>
+				</div>
+			</div>
+			<a href="" id="hype-train-bar"></a>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-hypetrain-options" />
+					<label class="collapsible-label" for="wrapper-hypetrain-options"><span>🚂 Hype Train Top Bar Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group hyper_meter">
+								<h3>Layout and Appearance</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="alignright" />
+										<span class="slider round"></span>
+									</label>
+									<span>➡️ Align overlay to the right-side</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="align=center" />
+										<span class="slider round"></span>
+									</label>
+									<span>↔️ Align overlay to the center</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="scale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔍 Scale multiplier
+										<input type="range" id="hypetrain-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting29="scale" data-range-display="hypetrain-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="hypetrain-scale-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="opacity" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										👻 Panel opacity
+										<input type="range" id="hypetrain-opacity-range" min="0" max="1" step="0.05" value="1" style="width: 150px;" data-numbersetting29="opacity" data-range-display="hypetrain-opacity-display" />
+										<span class="range-value" id="hypetrain-opacity-display">1.00</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="nobg" />
+										<span class="slider round"></span>
+									</label>
+									<span>🧼 Transparent bar background</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="nooutline" />
+										<span class="slider round"></span>
+									</label>
+									<span>🔳 Disable text outlining</span>
+								</div>
+								<div title="Set the overall page background color. Supports hex, rgba, and named colors.">
+									<label class="switch">
+										<input type="checkbox" data-param29="pagebg" />
+										<span class="slider round"></span>
+									</label>
+									<span>🎨 Custom page background color</span>
+								</div>
+								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
+										<input type="text" id="hypetrain_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam29="pagebg" data-palette="hypetrain_pagebg_palette" />
+										<label for="hypetrain_pagebg">&gt; Page background color</label>
+									</div>
+									<input type="color" data-color="hypetrain_pagebg" id="hypetrain_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<div class="link" title="Meta data bar for auction, commerce, and giveaway-style status updates">
 				<h2 class="meta_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">📦</span><span>Meta Data Bar</span></span>

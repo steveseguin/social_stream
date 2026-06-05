@@ -2400,6 +2400,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "multialerts", path: "multi-alerts.html" },
     { id: "emoteswall", path: "emotes.html" },
     { id: "hypemeter", path: "hype.html" },
+    { id: "hypetrain", path: "meta.html", defaultParams: "&hype" },
     { id: "meta", path: "meta.html" },
     { id: "waitlist", path: "waitlist.html" },
     { id: "tipjar", path: "tipjar.html" },
@@ -2446,14 +2447,16 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     }
     
     const linkPath = page.linkPath || page.path;
-    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${versionParam}`;
+    const pageDefaultParams = page.defaultParams || "";
+    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}`;
+    const displayURL = `${baseURL}${linkPath}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}`;
     const element = document.getElementById(page.id);
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
       element.innerHTML = hideLinks 
         ? "Click to open link" 
-        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${baseURL}${linkPath}?session=${streamID}${password}${customParams}${versionParam}</a>`;
+        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${displayURL}</a>`;
       element.raw = fullURL;
     }
   });
@@ -3075,7 +3078,7 @@ function update(response, sync = true) {
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aioverlaylink',
-                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'metalink', 'waitlistlink',
+                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'hypetrainlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
 					'spotifylink','maplink'
@@ -4000,11 +4003,12 @@ function getTargetMap() {
 		'flowactions': 18,
 		'scoreboard': 21,
 		'spotify': 22,
-		'map': 23,
+        'map': 23,
         'meta': 24,
         'multialerts': 25,
         'timer': 26,
 		'reactions': 27,
+        'hypetrain': 29,
     };
 }
 
@@ -5960,6 +5964,7 @@ function refreshLinks(){
       'multialertslink': 'multialerts',
       'emoteswalllink': 'emoteswall',
       'hypemeterlink': 'hypemeter',
+      'hypetrainlink': 'hypetrain',
       'metalink': 'meta',
       'waitlistlink': 'waitlist',
       'tipjarlink': 'tipjar',
