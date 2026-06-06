@@ -5,9 +5,9 @@
 const VELORA_API_BASE = 'https://api.velora.tv';
 const VELORA_WS_URL = 'wss://api.velora.tv/ws/events';
 const VELORA_EVENTS_SSE_URL = `${VELORA_API_BASE}/api/events/stream`;
-const DEFAULT_VELORA_AUTH_BASE = 'https://auth.socialstream.ninja/auth/velora';
+const DEFAULT_VELORA_AUTH_BASE = 'https://sso.socialstream.ninja/auth/velora';
 const DEFAULT_VELORA_CLIENT_ID = 'velora_9c9ae006ec8bc256';
-const DEFAULT_VELORA_REDIRECT_URI = 'https://auth.socialstream.ninja/auth/velora/callback';
+const DEFAULT_VELORA_REDIRECT_URI = 'https://sso.socialstream.ninja/auth/velora/callback';
 const DEFAULT_LOCAL_RETURN_BASE = 'http://127.0.0.1:8181/';
 const VELORA_SCOPES = 'user:read chat:read chat:write';
 const VELORA_AUTH_MESSAGE_SUCCESS = 'ssn-velora-auth-success';
