@@ -320,6 +320,8 @@ try{
 		'moderator:read:followers',
 		'moderator:read:chatters',
 		'channel:read:subscriptions',
+		'channel:read:hype_train',
+		'channel:moderate',
 		// New scopes for moderation, ads, and redemptions
 		'moderator:manage:banned_users',
 		'moderator:manage:chat_messages',
@@ -847,6 +849,68 @@ function ensureClientFactory() {
 		return (normalized && twitchDisplayNameByLogin.get(normalized)) || login || '';
 	}
 
+	function normalizeTwitchBanDurationSeconds(value) {
+		if (value === undefined || value === null || value === '') {
+			return null;
+		}
+		const parsed = parseInt(value, 10);
+		return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+	}
+
+	function getTwitchProfileUrl(login) {
+		const normalized = normalizeTwitchLogin(login);
+		return normalized ? `https://www.twitch.tv/${normalized}` : '';
+	}
+
+	async function pushTwitchBanMetaEvent(details = {}) {
+		const login = normalizeTwitchLogin(details.username || details.login || details.userLogin || '');
+		const displayName = details.displayName || getRememberedTwitchDisplayName(login) || login;
+		let durationSeconds = normalizeTwitchBanDurationSeconds(details.durationSeconds);
+		if (!durationSeconds && details.bannedAt && details.endsAt) {
+			const startMs = new Date(details.bannedAt).getTime();
+			const endMs = new Date(details.endsAt).getTime();
+			if (Number.isFinite(startMs) && Number.isFinite(endMs) && endMs > startMs) {
+				durationSeconds = Math.round((endMs - startMs) / 1000);
+			}
+		}
+		const permanent = details.permanent === true || (!durationSeconds && !details.endsAt);
+		const meta = {
+			platform: 'twitch',
+			action: durationSeconds || details.endsAt ? 'timeout' : 'ban',
+			username: login,
+			displayName: displayName || login,
+			userId: details.userId || '',
+			avatarUrl: details.avatarUrl || '',
+			profileUrl: details.profileUrl || getTwitchProfileUrl(login),
+			moderator: details.moderator || '',
+			moderatorId: details.moderatorId || '',
+			reason: details.reason || '',
+			durationSeconds,
+			permanent,
+			bannedAt: details.bannedAt || '',
+			endsAt: details.endsAt || ''
+		};
+
+		if (login && !meta.avatarUrl) {
+			try {
+				const userInfo = await getUserInfo(login);
+				if (userInfo) {
+					meta.userId = meta.userId || userInfo.id || '';
+					meta.avatarUrl = userInfo.profile_image_url || '';
+					meta.displayName = details.displayName || userInfo.display_name || meta.displayName;
+				}
+			} catch (error) {
+				console.warn('Twitch ban profile lookup failed', error);
+			}
+		}
+
+		pushMessage({
+			type: 'twitch',
+			event: 'user_banned',
+			meta
+		});
+	}
+
 	/*
 	AI/overlay contract for Twitch moderation:
 	Twitch moderation events are controls, not chat messages. Send them as
@@ -1326,6 +1390,14 @@ async function ensureChatClientInstance() {
 			const chatname = getRememberedTwitchDisplayName(payload.user);
 			if (chatname) {
 				pushDeleteMessage({ type: 'twitch', chatname: chatname });
+			}
+			if (!activeSubscriptions.has('channel.ban')) {
+				pushTwitchBanMetaEvent({
+					username: payload.user,
+					displayName: chatname,
+					durationSeconds: payload.duration,
+					permanent: !payload.duration
+				});
 			}
 			return;
 		}
@@ -2917,6 +2989,16 @@ async function cleanupCurrentConnection() {
 				});
 			}
 
+			if (permissions.hasChannelModerateScope && !activeSubscriptions.has('channel.ban')) {
+				subscriptionTypes.push({
+					type: 'channel.ban',
+					version: '1',
+					condition: {
+						broadcaster_user_id: broadcasterId
+					}
+				});
+			}
+
 			// Channel points redemptions
 			if (!activeSubscriptions.has('channel.channel_points_custom_reward_redemption.add')) {
 				subscriptionTypes.push({
@@ -2959,10 +3041,22 @@ async function cleanupCurrentConnection() {
 				});
 			}
 
+			if (permissions.canReadHypeTrain) {
+				for (const t of ['channel.hype_train.begin', 'channel.hype_train.progress', 'channel.hype_train.end']) {
+					if (!activeSubscriptions.has(t)) {
+						subscriptionTypes.push({
+							type: t,
+							version: '2',
+							condition: { broadcaster_user_id: broadcasterId }
+						});
+					}
+				}
+			}
+
 			// Create each subscription
 			for (const subscription of subscriptionTypes) {
-				if (hasPermissionError.includes(subscription)) { // previously failed permissions that got us kicked
-					console.log("Skipping "+subscription);
+				if (hasPermissionError.includes(subscription.type)) { // previously failed permissions that got us kicked
+					console.log("Skipping "+subscription.type);
 					continue;
 				}
 				try {
@@ -2992,7 +3086,7 @@ async function cleanupCurrentConnection() {
 					
 					if (!response.ok) {
 						if (response.status === 403) {
-							hasPermissionError.push(subscription);
+							hasPermissionError.push(subscription.type);
 						}
 						console.log(`Subscription failed for ${subscription.type}: ${data.message}`);
 						continue;
@@ -3007,6 +3101,60 @@ async function cleanupCurrentConnection() {
 		} catch (error) {
 			console.error('Error in createEventSubSubscriptions:', error);
 		}
+	}
+
+	function normalizeHypeTrainNumber(value) {
+		const numeric = Number(value);
+		return Number.isFinite(numeric) ? numeric : null;
+	}
+
+	function normalizeHypeTrainContribution(contribution) {
+		if (!contribution || typeof contribution !== 'object') return null;
+		return {
+			userId: contribution.user_id || '',
+			userLogin: contribution.user_login || '',
+			userName: contribution.user_name || '',
+			type: contribution.type || '',
+			total: normalizeHypeTrainNumber(contribution.total)
+		};
+	}
+
+	function normalizeHypeTrainContributions(contributions) {
+		if (!Array.isArray(contributions)) return [];
+		return contributions
+			.map(normalizeHypeTrainContribution)
+			.filter(Boolean);
+	}
+
+	function buildHypeTrainMeta(event, eventSubType) {
+		const phase = eventSubType === 'channel.hype_train.begin'
+			? 'begin'
+			: eventSubType === 'channel.hype_train.end'
+				? 'end'
+				: 'progress';
+		return {
+			phase,
+			id: event.id || '',
+			broadcasterUserId: event.broadcaster_user_id || '',
+			broadcasterUserLogin: event.broadcaster_user_login || '',
+			broadcasterUserName: event.broadcaster_user_name || '',
+			total: normalizeHypeTrainNumber(event.total),
+			progress: normalizeHypeTrainNumber(event.progress),
+			goal: normalizeHypeTrainNumber(event.goal),
+			level: normalizeHypeTrainNumber(event.level),
+			topContributions: normalizeHypeTrainContributions(event.top_contributions),
+			lastContribution: normalizeHypeTrainContribution(event.last_contribution),
+			sharedTrainParticipants: Array.isArray(event.shared_train_participants) ? event.shared_train_participants : [],
+			startedAt: event.started_at || '',
+			expiresAt: event.expires_at || '',
+			endedAt: event.ended_at || '',
+			cooldownEndsAt: event.cooldown_ends_at || '',
+			isSharedTrain: event.is_shared_train === true,
+			trainType: event.type || 'regular',
+			allTimeHighLevel: normalizeHypeTrainNumber(event.all_time_high_level),
+			allTimeHighTotal: normalizeHypeTrainNumber(event.all_time_high_total),
+			eventSubType
+		};
 	}
 
 	function handleEventSubNotification(payload) {
@@ -3188,6 +3336,22 @@ async function cleanupCurrentConnection() {
 				addEvent(`Raid: ${event.from_broadcaster_user_name} with ${event.viewers} viewers`);
 				break;
 
+			case 'channel.ban':
+				pushDeleteMessage({ type: 'twitch', chatname: event.user_name || event.user_login });
+				pushTwitchBanMetaEvent({
+					username: event.user_login,
+					displayName: event.user_name,
+					userId: event.user_id,
+					moderator: event.moderator_user_name || event.moderator_user_login,
+					moderatorId: event.moderator_user_id,
+					reason: event.reason,
+					bannedAt: event.banned_at,
+					endsAt: event.ends_at,
+					permanent: event.is_permanent === true
+				});
+				addEvent(`Ban: ${event.user_name || event.user_login}`);
+				break;
+
 			case 'stream.online':
 				pushMessage({ type: 'twitch', event: 'stream_online', meta: { startedAt: event.started_at } });
 				addEvent('Stream Online');
@@ -3209,6 +3373,20 @@ async function cleanupCurrentConnection() {
 					}
 				});
 				addEvent(`Ad Break: ${event.duration_seconds}s`);
+				break;
+
+			case 'channel.hype_train.begin':
+			case 'channel.hype_train.progress':
+			case 'channel.hype_train.end':
+				const hypeTrainMeta = buildHypeTrainMeta(event, subscription.type);
+				pushMessage({
+					type: 'twitch',
+					event: 'hype_train',
+					meta: hypeTrainMeta
+				});
+				if (hypeTrainMeta.phase !== 'progress') {
+					addEvent(`Hype Train ${hypeTrainMeta.phase}: Level ${hypeTrainMeta.level || 0}`);
+				}
 				break;
 		}
 	}
@@ -3521,10 +3699,12 @@ async function cleanupCurrentConnection() {
 			canViewSubscribers: isBroadcaster || isModerator,
 			hasSubscriptionProgram: broadcasterInfo?.partner || broadcasterInfo?.broadcaster_type === 'affiliate',
 			canModerate: isBroadcaster || isModerator,
+			hasChannelModerateScope: !!scopes['channel:moderate'],
 			canManageBroadcast: isBroadcaster && !!scopes['channel:manage:broadcast'],
 			canManageAds: !!scopes['channel:manage:ads'],
 			canReadAds: !!scopes['channel:read:ads'],
 			canReadRedemptions: !!scopes['channel:read:redemptions'],
+			canReadHypeTrain: isBroadcaster && !!scopes['channel:read:hype_train'],
 			broadcasterType: broadcasterInfo?.broadcaster_type || 'none'
 		};
 	}

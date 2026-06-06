@@ -144,6 +144,7 @@ const PUSHER_WS_BASE = 'wss://ws-us2.pusher.com';
 const PUSHER_RECONNECT_DELAY_MS = 5000;
 const PUSHER_CONNECT_TIMEOUT_MS = 30000;
 const PUSHER_PING_INTERVAL_MS = 45000;
+const PUSHER_RESUBSCRIBE_INTERVAL_MS = 30 * 60 * 1000;
 const PUSHER_WATCHDOG_CHECK_MS = 30000;
 const PUSHER_STALE_MIN_MS = 180000;
 
@@ -219,6 +220,7 @@ const state = {
         pusherReconnectTimer: null,
         pusherWatchdogTimer: null,
         pusherHealthTimer: null,
+        pusherResubscribeTimer: null,
         pusherLastActivityAt: 0,
         pusherActivityTimeoutMs: 0
     },
@@ -228,8 +230,10 @@ const state = {
     },
     advancedControls: {
         syncDeleteMessages: false,
-        syncBlockUsers: false
+        syncBlockUsers: false,
+        hideMetrics: false
     },
+    sourceWindowConfig: {},
     streamInfoCache: null
 };
 
@@ -601,6 +605,76 @@ function applyLiteConfig(message) {
         persistConfig();
         updateInputsFromState();
         notifyLiteStatus('config');
+    }
+}
+
+function normalizeKickAuthMethod(value) {
+    return value === 'local' ? 'local' : 'external';
+}
+
+function getConfiguredKickAuthMethod() {
+    const config = state.sourceWindowConfig || {};
+    const signin = config.signin && typeof config.signin === 'object' ? config.signin : {};
+    return normalizeKickAuthMethod(signin.authMethod || config.authMethod || config.kickAuthMethod);
+}
+
+function getPreferredKickAuthMethod() {
+    try {
+        const stored = localStorage.getItem('kickAuthMethod');
+        if (stored) {
+            return normalizeKickAuthMethod(stored);
+        }
+    } catch (_) {}
+    return getConfiguredKickAuthMethod();
+}
+
+function getKickSigninConfigForOAuth() {
+    const config = state.sourceWindowConfig || {};
+    const signin = config.signin && typeof config.signin === 'object' ? config.signin : {};
+    const payload = {};
+
+    if (typeof config.userAgent === 'string' && config.userAgent.trim()) {
+        payload.userAgent = config.userAgent.trim();
+    }
+    if (typeof signin.userAgent === 'string' && signin.userAgent.trim()) {
+        payload.userAgent = signin.userAgent.trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'preload')) {
+        payload.preload = signin.preload;
+    }
+    if (signin.size && typeof signin.size === 'object') {
+        payload.size = signin.size;
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'allowPopups')) {
+        payload.allowPopups = signin.allowPopups;
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'enforceSigninCSP')) {
+        payload.enforceSigninCSP = signin.enforceSigninCSP;
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'monitorAntiBot')) {
+        payload.monitorAntiBot = signin.monitorAntiBot;
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'useSystemBrowser')) {
+        payload.useSystemBrowser = signin.useSystemBrowser;
+    }
+    if (Object.prototype.hasOwnProperty.call(signin, 'useTLSProxy')) {
+        payload.useTLSProxy = signin.useTLSProxy;
+    }
+
+    return Object.keys(payload).length ? payload : null;
+}
+
+async function loadSourceWindowConfig() {
+    if (!window.ninjafy || typeof window.ninjafy.getSourceWindowConfig !== 'function') {
+        return;
+    }
+    try {
+        const result = await window.ninjafy.getSourceWindowConfig();
+        if (result && result.ok && result.config && typeof result.config === 'object') {
+            state.sourceWindowConfig = result.config;
+        }
+    } catch (error) {
+        logKickWs(`Unable to read SSApp source config: ${error?.message || error}`, 'warning');
     }
 }
 
@@ -2052,6 +2126,7 @@ function initElements() {
         chatStatus: q('chat-status'),
         syncDeleteMessages: q('sync-delete-messages'),
         syncBlockUsers: q('sync-block-users'),
+        hideMetrics: q('hide-metrics'),
         streamAdminTarget: q('stream-admin-target'),
         streamTitle: q('stream-title'),
         streamCategory: q('stream-category'),
@@ -2065,9 +2140,11 @@ function loadAdvancedControls() {
         const parsed = JSON.parse(localStorage.getItem(KICK_ADVANCED_CONTROLS_STORAGE_KEY) || '{}');
         state.advancedControls.syncDeleteMessages = !!parsed.syncDeleteMessages;
         state.advancedControls.syncBlockUsers = !!parsed.syncBlockUsers;
+        state.advancedControls.hideMetrics = !!parsed.hideMetrics;
     } catch (_) {
         state.advancedControls.syncDeleteMessages = false;
         state.advancedControls.syncBlockUsers = false;
+        state.advancedControls.hideMetrics = false;
     }
     if (els.syncDeleteMessages) {
         els.syncDeleteMessages.checked = state.advancedControls.syncDeleteMessages;
@@ -2075,14 +2152,25 @@ function loadAdvancedControls() {
     if (els.syncBlockUsers) {
         els.syncBlockUsers.checked = state.advancedControls.syncBlockUsers;
     }
+    if (els.hideMetrics) {
+        els.hideMetrics.checked = state.advancedControls.hideMetrics;
+    }
+    applyMetricsVisibility();
 }
 
 function persistAdvancedControls() {
     const payload = {
         syncDeleteMessages: !!state.advancedControls.syncDeleteMessages,
-        syncBlockUsers: !!state.advancedControls.syncBlockUsers
+        syncBlockUsers: !!state.advancedControls.syncBlockUsers,
+        hideMetrics: !!state.advancedControls.hideMetrics
     };
     localStorage.setItem(KICK_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
+}
+
+function applyMetricsVisibility() {
+    if (typeof document !== 'undefined' && document.body) {
+        document.body.classList.toggle('hide-metrics', !!state.advancedControls.hideMetrics);
+    }
 }
 
 function normalizeSourceControlPlatform(type) {
@@ -2658,13 +2746,15 @@ function bindEvents() {
     const authMethodSelector = document.getElementById('auth-method-selector');
     const isElectron = isElectronEnvironment();
     if (authMethodSelector && isElectron) {
-        // Load saved preference
-        const savedMethod = localStorage.getItem('kickAuthMethod') || 'external';
+        const savedMethod = getPreferredKickAuthMethod();
+        try {
+            localStorage.setItem('kickAuthMethod', savedMethod);
+        } catch (_) {}
         const radios = authMethodSelector.querySelectorAll('input[name="kick-auth-method"]');
         radios.forEach(radio => {
             radio.checked = radio.value === savedMethod;
             radio.addEventListener('change', function() {
-                localStorage.setItem('kickAuthMethod', this.value);
+                localStorage.setItem('kickAuthMethod', normalizeKickAuthMethod(this.value));
             });
         });
     }
@@ -2721,6 +2811,13 @@ function bindEvents() {
         els.syncBlockUsers.addEventListener('change', () => {
             state.advancedControls.syncBlockUsers = !!els.syncBlockUsers.checked;
             persistAdvancedControls();
+        });
+    }
+    if (els.hideMetrics) {
+        els.hideMetrics.addEventListener('change', () => {
+            state.advancedControls.hideMetrics = !!els.hideMetrics.checked;
+            persistAdvancedControls();
+            applyMetricsVisibility();
         });
     }
     if (els.refreshStreamInfo) {
@@ -3462,6 +3559,10 @@ function disconnectPusherSocket() {
         clearInterval(state.socket.pusherHealthTimer);
         state.socket.pusherHealthTimer = null;
     }
+    if (state.socket.pusherResubscribeTimer) {
+        clearInterval(state.socket.pusherResubscribeTimer);
+        state.socket.pusherResubscribeTimer = null;
+    }
     if (state.socket.pusherReconnectTimer) {
         clearTimeout(state.socket.pusherReconnectTimer);
         state.socket.pusherReconnectTimer = null;
@@ -3532,6 +3633,70 @@ function startPusherWatchdog(activityTimeoutSeconds) {
     }, checkIntervalMs);
 }
 
+function getPusherSubscriptionChannels() {
+    const channels = [];
+    if (state.socket.chatroomId) {
+        channels.push(`chatrooms.${state.socket.chatroomId}.v2`);
+    }
+    if (state.socket.channelId) {
+        channels.push(`channel.${state.socket.channelId}`);
+    }
+    return channels;
+}
+
+function subscribePusherChannels(reason = 'connect') {
+    const channels = getPusherSubscriptionChannels();
+    let sentSubscription = false;
+    for (const channel of channels) {
+        sentSubscription = sendPusherFrame('pusher:subscribe', { auth: '', channel }) || sentSubscription;
+    }
+    if (channels.length) {
+        const label = reason === 'refresh' ? 'Refreshing Pusher subscriptions' : 'Subscribing Pusher channels';
+        log(`${label}: ${channels.join(', ')}`);
+    }
+    return { channels, sentSubscription };
+}
+
+function startPusherResubscribeTimer() {
+    if (state.socket.pusherResubscribeTimer) {
+        clearInterval(state.socket.pusherResubscribeTimer);
+    }
+    state.socket.pusherResubscribeTimer = setInterval(() => {
+        if (state.socket.pusherStatus !== 'connected' || !isPusherSocketOpen()) return;
+        const result = subscribePusherChannels('refresh');
+        if (result.channels.length && !result.sentSubscription) {
+            recoverPusherSocket('resubscribe_send_failed', {
+                status: 'error',
+                error: 'Pusher resubscribe send failed'
+            });
+        }
+    }, PUSHER_RESUBSCRIBE_INTERVAL_MS);
+}
+
+function isKickBanEventName(eventName) {
+    const normalized = String(eventName || '').trim().toLowerCase();
+    if (!normalized || normalized.indexOf('pusher:') === 0 || normalized.indexOf('pusher_internal:') === 0) {
+        return false;
+    }
+    return /(^|[._:\\\/-])(?:user)?ban(?:ned)?(?:event)?($|[._:\\\/-])/.test(normalized);
+}
+
+function looksLikeKickBanPayload(data) {
+    if (!data || typeof data !== 'object') {
+        return false;
+    }
+    const candidates = [data, data.data, data.metadata, data.message];
+    for (const candidate of candidates) {
+        if (!candidate || typeof candidate !== 'object') {
+            continue;
+        }
+        if (candidate.banned_user || candidate.bannedUser || (candidate.user && candidate.user.banned)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function mapPusherEventToPacket(eventName, data) {
     if (eventName === 'App\\Events\\ChatMessageEvent') {
         return { type: 'chat.message.sent', body: data, source: 'socket' };
@@ -3552,8 +3717,8 @@ function mapPusherEventToPacket(eventName, data) {
     if (eventName === 'App\\Events\\SubscriptionEvent' || eventName === 'App\\Events\\ChannelSubscriptionEvent') {
         return { type: 'channel.subscription.new', body: data, source: 'socket' };
     }
-    if (eventName === 'App\\Events\\UserBannedEvent') {
-        return { type: 'chat.user.banned', body: data, source: 'socket' };
+    if (isKickBanEventName(eventName) || looksLikeKickBanPayload(data)) {
+        return { type: 'moderation.banned', body: data, source: 'socket' };
     }
     if (eventName === 'App\\Events\\StreamHostEvent') {
         return { type: 'livestream.status.updated', body: data, source: 'socket' };
@@ -3581,18 +3746,8 @@ function handlePusherMessage(event) {
         state.socket.status = 'connected';
         updateSocketState({ status: 'connected' });
         log('Pusher chat socket connected.');
-        const channels = [];
-        if (state.socket.chatroomId) {
-            channels.push(`chatrooms.${state.socket.chatroomId}.v2`);
-        }
-        if (state.socket.channelId) {
-            channels.push(`channel.${state.socket.channelId}`);
-        }
-        let sentSubscription = false;
-        for (const channel of channels) {
-            sentSubscription = sendPusherFrame('pusher:subscribe', { auth: '', channel }) || sentSubscription;
-        }
-        if (channels.length && !sentSubscription) {
+        const subscription = subscribePusherChannels('connect');
+        if (subscription.channels.length && !subscription.sentSubscription) {
             recoverPusherSocket('subscribe_send_failed', {
                 status: 'error',
                 error: 'Pusher subscribe send failed'
@@ -3610,6 +3765,7 @@ function handlePusherMessage(event) {
             }
         }, Math.min(timeout * 1000 * 0.75, PUSHER_PING_INTERVAL_MS));
         startPusherWatchdog(timeout);
+        startPusherResubscribeTimer();
         // Pusher is now handling chat — reconnect bridge with noChat if needed
         syncBridgeChatMode();
         return;
@@ -3845,16 +4001,11 @@ function postChatroomToCache(slug, chatroomId, broadcasterUserId) {
 async function startAuthFlow() {
     logKickWs('Sign-in clicked.');
 
-    // DIAGNOSTIC LOGGING - remove after debugging
     const isElectron = isElectronEnvironment();
-    const authMethod = localStorage.getItem('kickAuthMethod') || 'external';
+    const authMethod = getPreferredKickAuthMethod();
 
-    // Use external browser auth if in Electron and user prefers it
     if (isElectron) {
-        if (authMethod === 'external') {
-            return startExternalAuthFlow();
-        }
-        // Fall through to local redirect auth
+        return startExternalAuthFlow(authMethod);
     }
 
     if (!state.clientId) {
@@ -3886,7 +4037,7 @@ async function startAuthFlow() {
     window.location.href = authorizeUrl;
 }
 
-async function startExternalAuthFlow() {
+async function startExternalAuthFlow(authMethod = 'external') {
     if (!state.clientId) {
         log('Missing Kick client ID. Please refresh this page and try again.', 'error');
         return;
@@ -3905,11 +4056,18 @@ async function startExternalAuthFlow() {
     }
 
     try {
-        logKickWs('Starting external Kick OAuth flow.');
-        const result = await startOAuthFn({
+        const openMode = normalizeKickAuthMethod(authMethod);
+        logKickWs(`Starting ${openMode} Kick OAuth flow.`);
+        const payload = {
             clientId: state.clientId,
-            scopes: KICK_OAUTH_SCOPES.slice()
-        });
+            scopes: KICK_OAUTH_SCOPES.slice(),
+            openMode
+        };
+        const signinConfig = getKickSigninConfigForOAuth();
+        if (signinConfig) {
+            payload.signin = signinConfig;
+        }
+        const result = await startOAuthFn(payload);
 
         if (!result || !result.success || !result.code) {
             log('Kick OAuth did not return an authorization code.', 'error');
@@ -3946,9 +4104,9 @@ async function startExternalAuthFlow() {
     }
 }
 
-// Expose external auth for Electron trigger
+// Expose auth for Electron trigger
 try {
-    window.__SSAPP_START_KICK_AUTH__ = startExternalAuthFlow;
+    window.__SSAPP_START_KICK_AUTH__ = startAuthFlow;
 } catch (_) {}
 
 async function handleAuthCallback() {
@@ -5249,6 +5407,7 @@ function deriveEventSubscriptions(types) {
         'channel.subscription.gifts',
         'channel.reward.redemption.updated',
         'kicks.gifted',
+        'moderation.banned',
         'livestream.status.updated'
     ];
     const subscriptions = [];
@@ -6042,6 +6201,10 @@ function processBridgeEvent(packet, isReplay = false) {
         /chat\..*(deleted|removed|delete)/i.test(type)
     ) {
         forwardDeletedMessage(body, bridgeMeta);
+        return;
+    }
+    if (type === 'moderation.banned' || type === 'chat.user.banned' || isKickBanEventName(type) || looksLikeKickBanPayload(body)) {
+        void forwardBannedUser(body, bridgeMeta);
         return;
     }
     if (type === 'channel.followed') {
@@ -6876,6 +7039,183 @@ function forwardDeletedMessage(evt, bridgeMeta) {
 
     const prefix = bridgeMeta?.verified === false ? '[DELETE !]' : '[DELETE]';
     log(`${prefix} message removed${chatname ? ` by ${chatname}` : ''}`);
+}
+
+function normalizeKickBanDurationSeconds(value) {
+    if (value === undefined || value === null || value === '') {
+        return null;
+    }
+    const parsed = parseInt(String(value).replace(/[^0-9]/g, ''), 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getKickProfileUrl(username) {
+    const normalized = normalizeChannel(username || '');
+    return normalized ? `https://kick.com/${normalized}` : '';
+}
+
+async function forwardBannedUser(evt, bridgeMeta) {
+    const metadata = evt?.metadata || evt?.data?.metadata || {};
+    const bannedUserSources = [
+        evt?.banned_user,
+        evt?.bannedUser,
+        evt?.target_user,
+        evt?.targetUser,
+        evt?.target,
+        evt?.user,
+        evt?.profile,
+        evt?.sender,
+        evt?.message?.sender,
+        evt?.data?.banned_user,
+        evt?.data?.user,
+        evt
+    ];
+    const moderatorSources = [
+        evt?.moderator,
+        evt?.mod,
+        evt?.banned_by,
+        evt?.bannedBy,
+        evt?.actor,
+        evt?.sender,
+        evt?.data?.moderator
+    ];
+    const { profile: bannedProfile, ids } = gatherProfileState(...bannedUserSources);
+    const displayName =
+        bannedProfile.displayName ||
+        pickFirstString(
+            [
+                evt?.banned_user?.display_name,
+                evt?.banned_user?.username,
+                evt?.bannedUser?.display_name,
+                evt?.bannedUser?.username,
+                evt?.target_user?.display_name,
+                evt?.target_user?.username,
+                evt?.target?.display_name,
+                evt?.target?.username,
+                evt?.user?.display_name,
+                evt?.user?.username,
+                evt?.profile?.display_name,
+                evt?.profile?.username,
+                evt?.username,
+                evt?.user_name,
+                evt?.name,
+                ids?.username
+            ],
+            ''
+        );
+    const username = normalizeChannel(
+        pickFirstString(
+            [
+                evt?.banned_user?.username,
+                evt?.bannedUser?.username,
+                evt?.target_user?.username,
+                evt?.target?.username,
+                evt?.user?.username,
+                evt?.profile?.username,
+                evt?.username,
+                evt?.user_login,
+                ids?.username,
+                displayName
+            ],
+            ''
+        )
+    );
+    let avatarUrl =
+        bannedProfile.avatar ||
+        pickImage(
+            evt?.banned_user?.profile_picture,
+            evt?.bannedUser?.profile_picture,
+            evt?.target_user?.profile_picture,
+            evt?.target?.profile_picture,
+            evt?.user?.profile_picture,
+            evt?.profile?.profile_picture,
+            evt?.profile_picture,
+            evt?.avatar
+        );
+    if (!avatarUrl && username) {
+        const avatarPromise = queueAvatarLookup(ids, username, null);
+        if (avatarPromise) {
+            try {
+                const resolvedAvatar = await Promise.race([
+                    avatarPromise,
+                    delay(AVATAR_LOOKUP_TIMEOUT_MS)
+                ]);
+                if (typeof resolvedAvatar === 'string' && resolvedAvatar.trim()) {
+                    avatarUrl = resolvedAvatar;
+                }
+            } catch (_) {}
+        }
+    }
+
+    if (displayName || username) {
+        pushDeleteMessage({ type: 'kick', chatname: displayName || username });
+    }
+
+    const moderatorProfile = buildProfileSnapshot(...moderatorSources) || {};
+    const moderator = moderatorProfile.displayName || pickFirstString(
+        [
+            evt?.moderator?.display_name,
+            evt?.moderator?.username,
+            evt?.mod?.display_name,
+            evt?.mod?.username,
+            evt?.banned_by?.display_name,
+            evt?.banned_by?.username,
+            evt?.bannedBy?.display_name,
+            evt?.bannedBy?.username,
+            evt?.actor?.display_name,
+            evt?.actor?.username,
+            evt?.moderator_name,
+            evt?.moderator_username
+        ],
+        ''
+    );
+    let durationSeconds = normalizeKickBanDurationSeconds(
+        evt?.duration_seconds ??
+        evt?.durationSeconds ??
+        evt?.timeout_seconds ??
+        evt?.timeoutSeconds ??
+        evt?.duration ??
+        evt?.ban_duration ??
+        evt?.banDuration ??
+        metadata?.duration_seconds ??
+        metadata?.durationSeconds
+    );
+    const bannedAt = pickFirstString([evt?.banned_at, evt?.bannedAt, evt?.created_at, evt?.createdAt, metadata?.created_at, metadata?.createdAt], '');
+    const endsAt = pickFirstString([evt?.expires_at, evt?.expiresAt, evt?.ends_at, evt?.endsAt, metadata?.expires_at, metadata?.expiresAt], '');
+    if (!durationSeconds && bannedAt && endsAt) {
+        const startMs = Date.parse(bannedAt);
+        const endMs = Date.parse(endsAt);
+        if (Number.isFinite(startMs) && Number.isFinite(endMs) && endMs > startMs) {
+            durationSeconds = Math.round((endMs - startMs) / 1000);
+        }
+    }
+    const permanent = evt?.permanent === true || evt?.is_permanent === true || metadata?.permanent === true || metadata?.is_permanent === true || (!durationSeconds && !endsAt);
+    const meta = {
+        platform: 'kick',
+        action: durationSeconds || endsAt ? 'timeout' : 'ban',
+        username,
+        displayName: displayName || username,
+        userId: ids?.userId || pickFirstString([evt?.banned_user?.user_id, evt?.bannedUser?.user_id, evt?.user_id, evt?.userId, evt?.target_user_id, evt?.targetUserId], ''),
+        avatarUrl: avatarUrl || '',
+        profileUrl: getKickProfileUrl(username),
+        moderator,
+        moderatorId: pickFirstString([evt?.moderator_id, evt?.moderatorId, evt?.mod?.id, evt?.mod?.user_id, evt?.moderator?.id, evt?.moderator?.user_id], ''),
+        reason: pickFirstString([metadata?.reason, evt?.reason, evt?.ban_reason, evt?.message], ''),
+        durationSeconds,
+        permanent,
+        bannedAt,
+        endsAt,
+        verified: bridgeMeta?.verified !== false
+    };
+
+    pushMessage({
+        type: 'kick',
+        event: 'user_banned',
+        meta
+    });
+
+    const prefix = bridgeMeta?.verified === false ? '[BAN !]' : '[BAN]';
+    log(`${prefix} ${meta.displayName || meta.username || 'Kick user'}`);
 }
 
 function forwardFollower(evt, bridgeMeta) {
@@ -8236,6 +8576,7 @@ async function bootstrap() {
         loadTokens();
         loadEventTypesCache();
         applyUrlParams();
+        await loadSourceWindowConfig();
         updateInputsFromState();
         updateAuthStatus();
         bindEvents();

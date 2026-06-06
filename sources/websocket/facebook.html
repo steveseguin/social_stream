@@ -184,6 +184,7 @@
     }
     .stat-label { color: var(--fb-muted); font-size: 0.75rem; }
     .stat-value { font-size: 1rem; font-weight: 700; margin-top: 2px; }
+    body.hide-metrics .metric-stat { display: none !important; }
     .chat-feed {
       background: #0d1218;
       border: 1px solid var(--fb-border);
@@ -304,6 +305,7 @@
             <div class="row">
               <label><input type="checkbox" id="auto-connect" checked> Auto-connect</label>
               <label><input type="checkbox" id="live-filter" checked> Live stream filter</label>
+              <label><input type="checkbox" id="hide-metrics"> Hide dashboard metrics</label>
             </div>
             <details style="margin-top: 10px;">
               <summary>Advanced / manual setup</summary>
@@ -351,7 +353,7 @@
                 <div class="stat-label">Connection</div>
                 <div class="stat-value" id="status-text">Disconnected</div>
               </div>
-              <div class="stat">
+              <div class="stat metric-stat">
                 <div class="stat-label">Viewers</div>
                 <div class="stat-value" id="viewer-count-display">-</div>
               </div>

@@ -151,6 +151,9 @@
       gap: 8px;
       margin-top: 8px;
     }
+    body.hide-metrics #status-panel {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -189,6 +192,7 @@
         <div class="toggles">
           <label><input type="checkbox" id="auto-connect"> Auto-connect on load</label>
           <label><input type="checkbox" id="enable-webhook"> Forward events to webhook</label>
+          <label><input type="checkbox" id="hide-metrics"> Hide dashboard metrics</label>
         </div>
 
         <div id="webhook-block" class="hidden">
@@ -198,7 +202,7 @@
         </div>
       </section>
 
-      <section class="panel">
+      <section class="panel" id="status-panel">
         <h2>Status</h2>
         <div class="pill-grid">
           <div class="pill">Last event: <strong id="last-event">—</strong></div>
@@ -215,6 +219,25 @@
     </div>
   </div>
 
+  <script>
+    (function() {
+      var STORAGE_KEY = 'streamlabsHideMetrics';
+      var checkbox = document.getElementById('hide-metrics');
+
+      function applyMetricsVisibility() {
+        document.body.classList.toggle('hide-metrics', !!(checkbox && checkbox.checked));
+      }
+
+      if (checkbox) {
+        checkbox.checked = localStorage.getItem(STORAGE_KEY) === '1';
+        applyMetricsVisibility();
+        checkbox.addEventListener('change', function() {
+          localStorage.setItem(STORAGE_KEY, checkbox.checked ? '1' : '0');
+          applyMetricsVisibility();
+        });
+      }
+    })();
+  </script>
   <script src="../../shared/vendor/socket.io.min.js"></script>
   <script src="streamlabs.js"></script>
 </body>
