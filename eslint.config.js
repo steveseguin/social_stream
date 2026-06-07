@@ -1,6 +1,8 @@
 module.exports = [
     {
         ignores: [
+            ".codex-tmp/**",
+            "**/.codex-tmp/**",
             "**/node_modules/**",
             "**/thirdparty/**",
             "lite/vendor/**",
