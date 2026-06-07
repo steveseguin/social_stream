@@ -2453,16 +2453,9 @@ function moveChatOverlayThemeOptions() {
   if (templateSection && optionsWrapper && optionsWrapper.previousElementSibling !== templateSection) {
     templateSection.insertAdjacentElement("afterend", optionsWrapper);
   }
-  const beginnerPanel = document.getElementById("beginnerModePanel");
   const designNote = document.querySelector(".chat-overlay-design-note");
   if (designNote && optionsWrapper && designNote.previousElementSibling !== optionsWrapper) {
     optionsWrapper.insertAdjacentElement("afterend", designNote);
-  }
-  if (beginnerPanel) {
-    const anchor = designNote || optionsWrapper;
-    if (anchor && beginnerPanel.previousElementSibling !== anchor) {
-      anchor.insertAdjacentElement("afterend", beginnerPanel);
-    }
   }
 }
 
@@ -3663,21 +3656,313 @@ function getPopupBeginnerMode(response) {
 	return !!(response.settings && response.settings.beginnerMode && response.settings.beginnerMode.setting === true);
 }
 
+var BEGINNER_ADVANCED_OPTION_SELECTORS = {
+	"wrapper-additional-chat-services-options": [
+		'[data-setting="xcapture"]',
+		'[data-setting="openai"]',
+		'[data-textsetting="customdiscordchannel"]',
+		'[data-setting="customtwitchstate"]',
+		'[data-textsetting="customtwitchaccount"]',
+		'[data-setting="customtiktokstate"]',
+		'[data-textsetting="customtiktokaccount"]',
+		'[data-setting="collecttwitchpoints"]',
+		'[data-setting="twichadmute"]',
+		'[data-setting="twichadannounce"]',
+		'[data-setting="detweet"]',
+		'[data-setting="streamlabsExclusive"]',
+		'[data-setting="vdoninjadiscord"]',
+		'[data-setting="flipYoutube"]',
+		'[data-setting="youtubeAudioPicker"]',
+		'[data-setting="kickchatroomscout"]',
+		'[data-setting="hidePaidPromotion"]',
+		'#custominject'
+	],
+	"wrapper-chat-overlay-options": [
+		'[data-param1="opacity"]',
+		'[data-param1="chromaalpha"]',
+		'[data-param1="chroma=fff"]',
+		'[data-param1="showbitrate"]',
+		'[data-param1="viewerbarbg"]',
+		'[data-textparam1="viewerbarbg"]',
+		'[data-param1="remote"]'
+	],
+	"wrapper-chat-message-mechanics-options": [
+		'[data-param1="debug"]',
+		'[data-param1="deleteonlylast"]',
+		'[data-param1="alignbottom"]',
+		'[data-param1="dropdown"]',
+		'[data-param1="reverse"]',
+		'[data-param1="random"]',
+		'[data-param1="alignright"]',
+		'[data-param1="rtl"]',
+		'[data-param1="dissolve"]',
+		'[data-param1="beepfirsttime"]',
+		'[data-textparam1="custombeep"]',
+		'[data-param1="btkeepalive"]',
+		'[data-param1="overlapbeep"]',
+		'[data-param1="reload"]',
+		'[data-param1="altselect"]',
+		'[data-param1="stripdonations"]',
+		'[data-param1="skipdonations"]',
+		'[data-textsetting="customDonationThankYou"]',
+		'[data-param1="autoshowdonos"]',
+		'[data-param1="autoshowmembers"]',
+		'[data-param1="autoshowcontentimages"]',
+		'[data-param1="autoyoutubememberchat"]',
+		'[data-param1="autopinquestions"]',
+		'[data-param1="autoqueuequestions"]',
+		'[data-param1="autopindonations"]',
+		'[data-param1="autoqueuedonations"]',
+		'[data-param1="sync"]',
+		'[data-param1="featuredmode"]',
+		'[data-param1="pinnedonly"]',
+		'[data-param1="cycle"]',
+		'[data-param1="viewonly"]',
+		'[data-param1="chatmode"]',
+		'[data-param1="helpermode"]',
+		'[data-param1="lanonly"]',
+		'[data-textparam1="selfqueue"]'
+	],
+	"wrapper-chat-message-styling-options": [
+		'[data-param1="donationright"]',
+		'[data-param1="nooutline"]',
+		'[data-param1="bolder"]',
+		'[data-param1="thinner"]',
+		'[data-textparam1="fontweight"]',
+		'[data-textparam1="outlinecolor"]',
+		'[data-textparam1="outlinewidth"]',
+		'[data-textparam1="strokecolor"]',
+		'[data-textparam1="strokewidth"]',
+		'[data-param1="textglow"]',
+		'[data-textparam1="glowcolor"]',
+		'[data-textparam1="glowwidth"]',
+		'[data-param1="split"]',
+		'[data-param1="namebubble"]',
+		'[data-textparam1="namebubblecolor"]',
+		'[data-textparam1="namebubbletext"]',
+		'[data-textparam1="namebubbleradius"]',
+		'[data-textparam1="namebubblepadding"]',
+		'[data-param1="bubbleopacity"]',
+		'[data-param1="horizontal"]',
+		'[data-param1="horizontalreverse"]',
+		'[data-param1="trim=200"]',
+		'[data-param1="normalize"]',
+		'[data-param1="fixed"]',
+		'[data-textparam1="cssb64"]',
+		'[data-textparam1="jsb64"]',
+		'[data-textparam1="googlefont"]'
+	],
+	"wrapper-global-mechanics-options": [
+		'[data-setting="disableDB"]',
+		'[data-setting="unlimitedDB"]',
+		'[data-setting="notiktoklinks"]',
+		'[data-setting="capturejoinedevent"]',
+		'[data-setting="capturelikeevent"]',
+		'[data-setting="notiktokdonations"]',
+		'[data-setting="disabletiktokpoke"]',
+		'[data-setting="blockpremiumshorts"]',
+		'[data-setting="delayyoutube"]',
+		'[data-setting="delaykick"]',
+		'[data-setting="delaytwitch"]',
+		'[data-setting="pronounscombined"]',
+		'[data-setting="discordmemberships"]',
+		'[data-setting="limitedyoutubememberchat"]',
+		'[data-setting="limitedtwitchmemberchat"]',
+		'[data-setting="addkarma"]',
+		'[data-setting="pumpTheNumbers"]',
+		'[data-textsetting="printerName"]',
+		'[data-setting="sharestreamid"]',
+		'[data-setting="disableRelayThrottle"]',
+		'[data-setting="disablehost"]',
+		'[data-setting="socketserver"]',
+		'[data-setting="lanonly"]',
+		'[data-setting="ssc"]',
+		'[data-textsetting="sscapikey"]',
+		'[data-setting="videostatspoller"]',
+		'[data-textsetting="videostatsurl"]',
+		'[data-textsetting="videostatspublisher"]',
+		'[data-textsetting="videostatsapplication"]',
+		'[data-textsetting="videostatskey"]',
+		'[data-textsetting="videostatsapikey"]',
+		'[data-textsetting="videostatsusername"]',
+		'[data-textsetting="videostatspassword"]',
+		'[data-numbersetting="videostatsinterval"]',
+		'[data-textsetting="videostatslabel"]',
+		'[data-setting="streamerbot"]',
+		'[data-textsetting="streamerbotendpoint"]',
+		'[data-textsetting="streamerbotpassword"]',
+		'[data-textsetting="streamerbotactionid"]',
+		'[data-setting="h2r"]',
+		'[data-textsetting="h2rserver"]',
+		'[data-setting="post"]',
+		'[data-textsetting="postserver"]',
+		'[data-setting="postalldiscord"]',
+		'[data-textsetting="postallserverdiscord"]',
+		'[data-setting="postdiscord"]',
+		'[data-textsetting="postserverdiscord"]',
+		'[data-setting="webhookrelay"]',
+		'[data-setting="enablePointsSystem"]',
+		'[data-numbersetting="pointsPerEngagement"]',
+		'[data-numbersetting="engagementWindow"]',
+		'[data-setting="enablePointsCommand"]',
+		'[data-setting="enableLeaderboardCommand"]',
+		'[data-setting="enableRewardsCommand"]',
+		'[data-setting="autohi"]',
+		'[data-setting="relaydonos"]',
+		'[data-setting="relayall"]',
+		'[data-setting="blockChannelPointRelays"]',
+		'[data-textsetting="relaytargets"]',
+		'[data-textsetting="relayaccountroles"]',
+		'[data-textsetting="blockrelayaccountroles"]',
+		'[data-textsetting="botreplyaccountroles"]',
+		'[data-setting="nosaid"]',
+		'[data-setting="relayhostonly"]',
+		'[data-setting="nohostreflections"]',
+		'[data-setting="hostFirstSimilarOnly"]',
+		'[data-setting="forwardcommands2twitch"]',
+		'[data-setting="forwardcommands2kick"]',
+		'[data-setting="forwardcommands2youtube"]',
+		'[data-setting="limitcharactersstate"]',
+		'[data-numbersetting="limitcharacters"]',
+		'[data-setting="joke"]',
+		'[data-action="tellajoke"]',
+		'[data-setting="dice"]',
+		'[data-setting="questionKeywords"]',
+		'[data-textsetting="questionKeywords"]',
+		'[data-setting="customJsEnabled"]',
+		'[data-setting="giphy"]',
+		'[data-setting="tenor"]',
+		'[data-setting="giphy2"]',
+		'[data-setting="hidegiphytrigger"]',
+		'[data-setting="randomgif"]',
+		'[data-textsetting="giphyKey"]',
+		'[data-textsetting="tenorKey"]',
+		'[data-setting="chatwebhookpost"]',
+		'[data-setting="chatwebhookstrict"]',
+		'#chatCommands',
+		'#timedMessages',
+		'[data-setting="dynamictiming"]',
+		'[data-setting="botReplyMessageFull"]',
+		'#botReplyMessages',
+		'[data-setting="midi"]',
+		'#midiConfig',
+		'#midiCommands'
+	],
+	"wrapper-global-message-visibility-options": [
+		'[data-setting="hideallreplies"]',
+		'[data-setting="firstsourceonly"]',
+		'[data-setting="thissourceonly"]',
+		'[data-setting="noduplicates"]',
+		'[data-setting="ignorealternatives"]',
+		'[data-setting="goodwordslist"]',
+		'[data-setting="memberchatonly"]',
+		'[data-setting="filtercommandscustomtoggle"]',
+		'[data-textsetting="filtercommandscustomwords"]',
+		'[data-setting="textonlymode"]',
+		'[data-setting="emoteonlymode"]'
+	],
+	"wrapper-global-message-styling-options": [
+		'[data-setting="colorofsourcebg"]',
+		'[data-setting="randomcolorall"]',
+		'[data-numbersetting="totalcolors"]',
+		'[data-numbersetting="colorseed"]',
+		'[data-setting="nosubcolor"]',
+		'[data-textsetting="highlightword"]',
+		'[data-textsetting="defaultavatar"]'
+	]
+};
+
+var BEGINNER_ADVANCED_OPTION_HEADINGS = {
+	"wrapper-chat-message-styling-options": ["Text Glow"],
+	"wrapper-global-mechanics-options": ["Printer Control"]
+};
+
+var BEGINNER_ADVANCED_OPTION_HEADING_SECTIONS = {
+	"wrapper-global-message-visibility-options": ["Message doubling / echos / duplicates / relayed"],
+	"wrapper-global-mechanics-options": [
+		"Custom JavaScript",
+		"Giphy/Tenor support",
+		"Trigger webhook URL by a !command",
+		"Send fixed messages at intervals",
+		"Auto-responder",
+		"Trigger MIDI note on command"
+	]
+};
+
+function markBeginnerAdvancedOptionRow(element, scope) {
+	if (!element || !element.closest) return;
+	var row = element.closest(".colorInputRow");
+	if (!row) row = element.closest(".alphaInput");
+	if (!row) row = element.closest(".textInputContainer");
+	if (!row) row = element.closest("div");
+	if (row && row.classList.contains("textInputContainer") && row.parentElement && row.parentElement.tagName === "DIV" && !row.parentElement.classList.contains("options_group") && !row.parentElement.classList.contains("colorInputRow")) {
+		row = row.parentElement;
+	}
+	if (row && row !== scope) {
+		row.classList.add("beginner-advanced-option");
+	}
+}
+
+function markBeginnerAdvancedOptions() {
+	document.querySelectorAll(".beginner-advanced-option").forEach(function(element) {
+		element.classList.remove("beginner-advanced-option");
+	});
+
+	Object.keys(BEGINNER_ADVANCED_OPTION_SELECTORS).forEach(function(wrapperId) {
+		var wrapperInput = document.getElementById(wrapperId);
+		var scope = wrapperInput && wrapperInput.closest ? wrapperInput.closest(".wrapper") : null;
+		if (!scope) return;
+
+		BEGINNER_ADVANCED_OPTION_SELECTORS[wrapperId].forEach(function(selector) {
+			scope.querySelectorAll(selector).forEach(function(element) {
+				markBeginnerAdvancedOptionRow(element, scope);
+			});
+		});
+
+		var headingLabels = BEGINNER_ADVANCED_OPTION_HEADINGS[wrapperId] || [];
+		if (headingLabels.length) {
+			scope.querySelectorAll("h3").forEach(function(heading) {
+				var text = (heading.textContent || "").replace(/\s+/g, " ").trim();
+				if (headingLabels.indexOf(text) !== -1) {
+					heading.classList.add("beginner-advanced-option");
+				}
+			});
+		}
+
+		var sectionHeadingLabels = BEGINNER_ADVANCED_OPTION_HEADING_SECTIONS[wrapperId] || [];
+		if (sectionHeadingLabels.length) {
+			scope.querySelectorAll("h3").forEach(function(heading) {
+				var text = (heading.textContent || "").replace(/\s+/g, " ").trim();
+				if (sectionHeadingLabels.indexOf(text) === -1) return;
+				heading.classList.add("beginner-advanced-option");
+				var sibling = heading.nextElementSibling;
+				while (sibling && sibling.tagName !== "H3") {
+					sibling.classList.add("beginner-advanced-option");
+					sibling = sibling.nextElementSibling;
+				}
+			});
+		}
+	});
+}
+
 function markBeginnerAdvancedSections() {
+	document.querySelectorAll(".beginner-basic").forEach(function(section) {
+		if (section) section.classList.remove("beginner-advanced");
+	});
 	document.querySelectorAll(".wrapper:not(.beginner-basic)").forEach(function(wrapper) {
 		if (wrapper) wrapper.classList.add("beginner-advanced");
 	});
-	document.querySelectorAll(".link:not(.beginner-basic), .generic_category_title").forEach(function(section) {
+	document.querySelectorAll(".link:not(.beginner-basic), .generic_category_title:not(.beginner-basic)").forEach(function(section) {
 		section.classList.add("beginner-advanced");
 	});
+	markBeginnerAdvancedOptions();
 }
 
 function applyPopupBeginnerMode(enabled) {
 	markBeginnerAdvancedSections();
 	document.body.classList.toggle("beginner-mode", !!enabled);
-	const panel = document.getElementById("beginnerModePanel");
-	if (panel) {
-		panel.classList.toggle("hidden", !enabled);
+	if (typeof checkImportantChanges === "function" && popupImportantChangesReady === true) {
+		checkImportantChanges();
 	}
 }
 
@@ -4124,17 +4409,40 @@ function processManifestData(data, manifestData) {
 }
 
 // Important Changes Notification System
-const importantChanges = [
-    {
-        id: "events-always-on-v3.40",
-        minVersion: "3.40.0",  // Only show to users with this version or newer
-        title: "Heads up! Stream events now show by default",
-        message: "Follows, likes, and subs now appear in your overlay. Want to turn them off?",
-        actionText: "Disable stream events",
-        targetSection: "wrapper-global-mechanics-options",
-        targetSetting: "hideevents"
+var popupImportantChangesReady = false;
+const importantChanges = [];
+popupImportantChangesReady = true;
+
+function shouldShowBeginnerChromeVideoGuide() {
+    try {
+        return !ssapp && typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.getManifest === "function" && !!chrome.runtime.getManifest();
+    } catch (e) {
+        return false;
     }
-];
+}
+
+function renderBeginnerWelcomeBanner(container) {
+    container = container || document.getElementById("importantChanges");
+    if (!container) return;
+
+    const videoGuideText = shouldShowBeginnerChromeVideoGuide() ? ` If stuck getting started, check out this <a href="https://www.youtube.com/watch?v=Zql6Q5H2Eqw" target="_blank" rel="noopener noreferrer">video guide</a>.` : "";
+
+    container.classList.add('show', 'beginner-welcome');
+    container.innerHTML = `
+        <div class="beginner-welcome-card">
+            <strong>Welcome to Social Stream Ninja</strong>
+            <small>You are in beginner mode, so only the most common setup options are shown.${videoGuideText}</small>
+            <button type="button" id="beginnerWelcomeAdvanced">Switch to full mode</button>
+        </div>
+    `;
+
+    const advancedButton = document.getElementById("beginnerWelcomeAdvanced");
+    if (advancedButton) {
+        advancedButton.addEventListener('click', function() {
+            disablePopupBeginnerMode();
+        });
+    }
+}
 
 function checkImportantChanges() {
     const container = document.getElementById("importantChanges");
@@ -4171,7 +4479,11 @@ function checkImportantChanges() {
     });
 
     if (activeChanges.length === 0) {
-        container.classList.remove('show');
+        if (document.body.classList.contains("beginner-mode")) {
+            renderBeginnerWelcomeBanner(container);
+            return;
+        }
+        container.classList.remove('show', 'beginner-welcome');
         container.innerHTML = '';
         return;
     }
@@ -4190,6 +4502,7 @@ function checkImportantChanges() {
     });
 
     container.innerHTML = html;
+    container.classList.remove('beginner-welcome');
     container.classList.add('show');
 
     // Add event listeners for dismiss buttons
@@ -8147,10 +8460,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		ele.onclick = copyToClipboard;
 	});
 
-	const showAdvancedPopupOptions = document.getElementById("showAdvancedPopupOptions");
-	if (showAdvancedPopupOptions) {
-		showAdvancedPopupOptions.onclick = disablePopupBeginnerMode;
-	}
 	moveChatOverlayThemeOptions();
 	syncChatOverlayTemplateConfig(getSelectedChatOverlayTemplatePath());
 	moveHypetrainOptionsIntoMetaSection();

@@ -565,11 +565,32 @@ body.extension-enabled {
 body.beginner-mode .beginner-advanced {
     display: none !important;
 }
-body:not(.beginner-mode) #beginnerModePanel {
+
+body.beginner-mode .link.beginner-basic > h2 .options-link,
+body.beginner-mode .generic_category_title.beginner-basic > h2 .options-link {
 	display: none !important;
 }
 
-body.beginner-mode .beginner-basic .options-link {
+.beginner-section-note {
+	display: none;
+}
+
+body.beginner-mode .beginner-section-note {
+	display: block;
+	margin: -0.2rem 0 0.55rem 0;
+	color: var(--default-text-color);
+	opacity: 0.82;
+	font-size: 0.86rem;
+	line-height: 1.35;
+}
+
+body.beginner-mode .beginner-advanced-option,
+body.beginner-mode .beginner-static-advanced-option {
+	display: none !important;
+}
+
+body.beginner-mode #uploadBadwordsButton,
+body.beginner-mode #deleteBadwordsButton {
 	display: none !important;
 }
 #systemLanguageSelect, #systemLanguageSelect10 {
@@ -709,6 +730,45 @@ p a {
     opacity: 1;
 }
 
+#importantChanges.beginner-welcome {
+    padding: 0.75em 1em;
+    background: var(--color-accent-subtle);
+    color: var(--default-text-color);
+    border-bottom: 1px solid rgba(0, 166, 255, 0.45);
+}
+
+#importantChanges.beginner-welcome .beginner-welcome-card {
+    max-width: 640px;
+}
+
+#importantChanges.beginner-welcome strong {
+    display: block;
+    margin-bottom: 2px;
+}
+
+#importantChanges.beginner-welcome small {
+    display: inline;
+    color: var(--default-text-color);
+}
+
+#importantChanges.beginner-welcome button {
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #0969da;
+    background: #0969da;
+    color: #fff;
+    font-size: 0.85em;
+    font-weight: bold;
+    line-height: 1.3;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+#importantChanges.beginner-welcome button:hover {
+    background: #0759b8;
+}
+
 .container {
     padding: 0 0.5em;
 }
@@ -765,8 +825,7 @@ h2 {
 }
 
 .template-selector,
-.chat-overlay-design-note,
-.beginner-mode-panel {
+.chat-overlay-design-note {
     margin: 10px 0;
     padding: 10px;
     background: rgba(255,255,255,0.05);
@@ -808,17 +867,7 @@ h2 {
     color: var(--options-group-text-color);
 }
 
-.beginner-mode-panel {
-    border: 1px solid rgba(0, 166, 255, 0.25);
-}
-
-.beginner-mode-panel span {
-    display: block;
-    margin-bottom: 6px;
-}
-
-.link .template-selector,
-.link .beginner-mode-panel {
+.link .template-selector {
     max-height: none;
     overflow: visible;
     word-break: normal;
@@ -2082,11 +2131,12 @@ input:checked + .slider:before {
         <div class="container">
             <div class="link beginner-basic" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
                 <h2 class="streaming_chat_title">
-                    <span class="title-group"><span class="emoji" aria-hidden="true">💬</span>Streaming chat overlay & dock </span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">💬</span>Main chat overlay & control dock </span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                     <a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">[options]</span></a>
 					<label for="help-dock" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
+				<small class="beginner-section-note">Use this as your main chat view, OBS overlay, or dock for controlling featured messages and TTS.</small>
                 <div id="dock" data-raw="" class="streaming_chat"></div>
 				<input type="checkbox" id="help-dock" class="link-help-toggle">
 				<div class="link-help-content">
@@ -2107,7 +2157,7 @@ input:checked + .slider:before {
 
             <a href="" id="streaming-chat-options"></a>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-menu-options" />
                     <label class="collapsible-label" for="wrapper-chat-menu-options"><span data-translate="menu">🎚️ Bottom Dock Menu Bar</span></label>
@@ -2141,7 +2191,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-overlay-options" />
                     <label class="collapsible-label" for="wrapper-chat-overlay-options"><span data-translate="overlay">🖼️ Overlay</span></label>
@@ -2270,7 +2320,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-mechanics-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-mechanics-options"><span data-translate="message---mechanics">💬 Message - ⚙️ Mechanics</span></label>
@@ -2639,7 +2689,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 			
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chat-message-tts-options" />
 					<label class="collapsible-label" for="wrapper-chat-message-tts-options">
@@ -3726,7 +3776,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-styling-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-styling-options"><span data-translate="message---styling">💬 Message - 🎨 Styling</span></label>
@@ -3986,7 +4036,7 @@ input:checked + .slider:before {
                                     <input type="text" id="googlefont" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam1="googlefont" />
                                     <label for="googlefont"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
-								<div>
+								<div class="beginner-static-advanced-option">
 									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
                             </div>
@@ -3995,7 +4045,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-shading-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-shading-options"><span data-translate="background-shading">💬 Message - 🖌️ Background Shading</span></label>
@@ -4440,9 +4490,10 @@ input:checked + .slider:before {
 
             <div class="link beginner-basic" title="Ready-made OBS browser-source chat overlays.">
                 <h2 class="chat_overlay_template_title">
-                    <span class="title-group"><span class="emoji" aria-hidden="true">🎨</span>Simple chat overlay templates </span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🎨</span>Pre-styled chat overlays </span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                 </h2>
+				<small class="beginner-section-note">Ready-made chat looks for OBS. These are quick presets; switch to full mode for deeper styling controls.</small>
                 <div id="chatoverlaytemplate" data-raw="" class="streaming_chat"></div>
 				<div class="template-selector overlay-selector">
 					<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
@@ -4473,22 +4524,19 @@ input:checked + .slider:before {
                         <option value="themes/LuckyLootTube/luckyloottube.html">🎁 LuckyLootTube - Liquid Glass</option>
 					</select>
 				</div>
-				<div id="beginnerModePanel" class="beginner-mode-panel hidden">
-					<span>Beginner mode is hiding advanced controls.</span>
-					<button id="showAdvancedPopupOptions" class="glowingButton" type="button" style="width: 190px; margin-left: 0;"><span>Show advanced options</span></button>
-				</div>
             </div>
 
 			<div class="chat-overlay-design-note beginner-basic">
 				Want to design your own? Check out our <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">AI-friendly starter templates</a>.
 			</div>
-            <div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
+            <div class="link beginner-basic" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
                 <h2 class="featured_chat_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🌟</span><span data-translate="featured-chat-overlay">Featured chat overlay </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                     <a class="options-link rounded_area" href="#single-message-options" title="Jump to single message overlay link options."><span data-translate="options">[options]</span></a>
 					<label for="help-featured" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
+				<small class="beginner-section-note">Shows one selected message at a time. Select messages from the control dock, or use full mode for auto-feature rules.</small>
                 <div id="overlay" data-raw="" class="single_message"></div>
 				<input type="checkbox" id="help-featured" class="link-help-toggle">
 				<div class="link-help-content">
@@ -5635,18 +5683,19 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="link" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids.">
+			<div class="link beginner-basic" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids.">
 				<h2 class="multi_alert_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🚨</span><span>Multi-Stream Alert Box</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#multi-alert-options" title="Jump to multi-alert overlay options."><span data-translate="options">[options]</span></a>
 				</h2>
+				<small class="beginner-section-note">Shows follows, subs, donations, bits, and raids as alert popups. Use the sections below for common alert controls.</small>
 				<div id="multialerts" data-raw="" class="single_message"><a href="" id="multialertslink"></a></div>
 				<div class="help-tip" style="margin-top: 10px;">💡 <strong>Twitch-style setup:</strong> tune each alert type, copy the browser source URL, then test everything live in the preview panel below.</div>
 			</div>
 			<a href="" id="multi-alert-options"></a>
 
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-types-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-types-options"><span>🎯 Alert Types</span></label>
@@ -5709,7 +5758,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-variants-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-variants-options"><span>🎨 Variants / Presets</span></label>
@@ -5793,7 +5842,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-layout-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-layout-options"><span>🖼️ Layout & Visibility</span></label>
@@ -5931,7 +5980,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-sound-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-sound-options"><span>🔊 Sound & Timing</span></label>
@@ -6025,7 +6074,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-preview-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-preview-options"><span>🧪 Preview & Test</span></label>
@@ -6060,11 +6109,12 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-            <div class="generic_category_title">
+            <div class="generic_category_title beginner-basic">
                 <h2>
                     <span data-translate="global-settings-and-tools">🛠️ Global settings and tools </span>
                     <a class="options-link rounded_area" href="#global-settings-and-tools-options" title="Jump to the global settings and tools."><span data-translate="options">[options]</span></a>
                 </h2>
+				<small class="beginner-section-note">Global settings affect every overlay and source, including stream events, filters, highlights, and source behavior.</small>
                 <div id="globalsettings" class="global_settings"></div>
             </div>
             <a href="" id="global-settings-and-tools-options"></a>
@@ -6093,7 +6143,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-additional-chat-services-options" />
                     <label class="collapsible-label" for="wrapper-additional-chat-services-options">
@@ -6379,7 +6429,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-mechanics-options" />
                     <label class="collapsible-label" for="wrapper-global-mechanics-options"><span data-translate="mechanics">⚙️ Mechanics</span></label>
@@ -7235,39 +7285,41 @@ input:checked + .slider:before {
                                     </button>
                                 </div>
 								
-                                <h3><span data-translate="trigger-midi-note">Trigger MIDI note on command</span></h3>
-								Default Output MIDI Device:<select id="midiDeviceSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputDevice"></select>
-								MIDI Channel:<select id="midiOutputChannelSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputChannel">
-									<option value="1" selected>Channel 1</option>
-									<option value="2">Channel 2</option>
-									<option value="3">Channel 3</option>
-									<option value="4">Channel 4</option>
-									<option value="5">Channel 5</option>
-									<option value="6">Channel 6</option>
-									<option value="7">Channel 7</option>
-									<option value="8">Channel 8</option>
-									<option value="9">Channel 9</option>
-									<option value="10">Channel 10</option>
-									<option value="11">Channel 11</option>
-									<option value="12">Channel 12</option>
-									<option value="13">Channel 13</option>
-									<option value="14">Channel 14</option>
-									<option value="15">Channel 15</option>
-									<option value="16">Channel 16</option>
-									<option value="all">All Channels</option>
-								</select>
-								<a href="https://socialstream.ninja/midimonitor" class="lightblue"  title="Open a page to debug MIDI with" target="_blank">⚙️</a>
-								<div style="font-size: 12px; color: #888; margin-top: 5px;">
-									<span data-translate="enable-midi-to-see-devices">Enable MIDI hotkeys above to see available devices</span>
-								</div>
-                                <div id="midiCommands"></div>
+                                <div class="beginner-static-advanced-option">
+                                    <h3><span data-translate="trigger-midi-note">Trigger MIDI note on command</span></h3>
+								    Default Output MIDI Device:<select id="midiDeviceSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputDevice"></select>
+								    MIDI Channel:<select id="midiOutputChannelSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputChannel">
+									    <option value="1" selected>Channel 1</option>
+									    <option value="2">Channel 2</option>
+									    <option value="3">Channel 3</option>
+									    <option value="4">Channel 4</option>
+									    <option value="5">Channel 5</option>
+									    <option value="6">Channel 6</option>
+									    <option value="7">Channel 7</option>
+									    <option value="8">Channel 8</option>
+									    <option value="9">Channel 9</option>
+									    <option value="10">Channel 10</option>
+									    <option value="11">Channel 11</option>
+									    <option value="12">Channel 12</option>
+									    <option value="13">Channel 13</option>
+									    <option value="14">Channel 14</option>
+									    <option value="15">Channel 15</option>
+									    <option value="16">Channel 16</option>
+									    <option value="all">All Channels</option>
+								    </select>
+								    <a href="https://socialstream.ninja/midimonitor" class="lightblue"  title="Open a page to debug MIDI with" target="_blank">⚙️</a>
+								    <div style="font-size: 12px; color: #888; margin-top: 5px;">
+									    <span data-translate="enable-midi-to-see-devices">Enable MIDI hotkeys above to see available devices</span>
+								    </div>
+                                    <div id="midiCommands"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-message-visibility-options" />
                     <label class="collapsible-label" for="wrapper-global-message-visibility-options"><span data-translate="message---visibility">💬 Message - 👁️ Visibility</span></label>
@@ -7421,7 +7473,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-message-styling-options" />
                     <label class="collapsible-label" for="wrapper-global-message-styling-options"><span data-translate="message---styling">💬 Message - 🎨 Styling</span></label>
