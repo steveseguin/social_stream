@@ -35,7 +35,11 @@
     --extension-disabled-background-color: red;
     --extension-disabled-text-color: white;
     --streaming-chat-color: #00a6ff;
+    --chat-overlay-template-color: #8b5cf6;
     --single-message-color: #ff7f00;
+    --featured-chat-color: #ff7f00;
+    --multi-alert-color: #ef4444;
+    --reactions-color: #ec4899;
     --emotes-wall-color: #d7b300;
 	--tipjar-color: #35d0ff;
 	--chatbot-wall-color: #ff0000;
@@ -47,6 +51,7 @@
 	--poll-color: #61b700dd;
 	--poll-color: #D16700dd;
 	--credits-color: #02a0aa;
+	--meta-color: #475569;
 	--leaderboard-color: #9b59b6;
 	--scoreboard-color: #e74c3c;
     --download-link: blue;
@@ -84,12 +89,17 @@
         --extension-disabled-background-color: #781717;
         --extension-disabled-text-color: white;
         --streaming-chat-color: #00a6ffdd;
+        --chat-overlay-template-color: #c084fc;
         --single-message-color: #ff7f00dd;
+        --featured-chat-color: #ff9f1c;
+        --multi-alert-color: #f87171;
+        --reactions-color: #f472b6;
         --emotes-wall-color: #ffd400dd;
         --hype-meter-color: #00ff5edd;
         --waitlist-color: #ff00d2dd;
 		--ticker-color: #dd3334dd;
 		--poll-color: #a3ff3bdd;
+		--meta-color: #94a3b8;
         --download-link: lightblue;
 		--eventsdashboard-color: white;
     }
@@ -552,6 +562,16 @@ body.extension-disabled {
 body.extension-enabled {
     background-color: var(--body-background-enabled);
 }
+body.beginner-mode .beginner-advanced {
+    display: none !important;
+}
+body:not(.beginner-mode) #beginnerModePanel {
+	display: none !important;
+}
+
+body.beginner-mode .beginner-basic .options-link {
+	display: none !important;
+}
 #systemLanguageSelect, #systemLanguageSelect10 {
     max-width: calc(100vw - 106px);
 }
@@ -744,6 +764,66 @@ h2 {
     margin: 2em 0 0.5em 0;
 }
 
+.template-selector,
+.chat-overlay-design-note,
+.beginner-mode-panel {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.template-selector select {
+    max-width: 100%;
+}
+
+.template-selector-note {
+    display: block;
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+.chat-overlay-design-note,
+.overlay-config-section {
+    color: var(--options-group-text-color);
+}
+
+.chat-overlay-design-note {
+    font-style: italic;
+}
+
+.overlay-config-section h3 {
+    color: var(--section-title-color);
+}
+
+.chat-overlay-theme-options-wrapper .collapsible-input:checked ~ .collapsible-text {
+    background: var(--options-group-background-color);
+    color: var(--options-group-text-color);
+}
+
+.chat-overlay-theme-options-wrapper .options,
+.chat-overlay-theme-options-wrapper .overlay-config-section,
+.chat-overlay-theme-options-wrapper .overlay-config-section span {
+    color: var(--options-group-text-color);
+}
+
+.beginner-mode-panel {
+    border: 1px solid rgba(0, 166, 255, 0.25);
+}
+
+.beginner-mode-panel span {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.link .template-selector,
+.link .beginner-mode-panel {
+    max-height: none;
+    overflow: visible;
+    word-break: normal;
+}
+
 .link h2 {
     margin-top: 0;
     margin-bottom: 0.4rem;
@@ -910,8 +990,24 @@ h2.streaming_chat_title {
     color: var(--streaming-chat-color);
 }
 
+h2.chat_overlay_template_title {
+    color: var(--chat-overlay-template-color);
+}
+
 h2.single_message_title {
     color: var(--single-message-color);
+}
+
+h2.featured_chat_title {
+    color: var(--featured-chat-color);
+}
+
+h2.multi_alert_title {
+    color: var(--multi-alert-color);
+}
+
+h2.reactions_title {
+    color: var(--reactions-color);
 }
 
 h2.tipjar_title {
@@ -955,6 +1051,10 @@ h2.poll_mode_title {
 
 h2.credits_mode_title {
     color: var(--credits-color);
+}
+
+h2.meta_mode_title {
+    color: var(--meta-color);
 }
 
 h2.leaderboard_mode_title {
@@ -1980,9 +2080,9 @@ input:checked + .slider:before {
             </small>
         </div>
         <div class="container">
-            <div class="link" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
+            <div class="link beginner-basic" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
                 <h2 class="streaming_chat_title">
-                    <span class="title-group"><span class="emoji" aria-hidden="true">💬</span><span data-translate="streaming-chat-dockable">Streaming chat (dock & overlay) </span></span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">💬</span>Streaming chat overlay & dock </span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                     <a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">[options]</span></a>
 					<label for="help-dock" class="help-link rounded_area" title="Click for detailed help">[?]</label>
@@ -2003,39 +2103,6 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Most streamers open this as a dock to control features while using other overlays (like Featured Chat) on stream.</div>
 				</div>
-					
-					<!-- Stream Overlay Preset Selector -->
-					<div class="overlay-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;overflow:hidden;">
-						<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
-							<span data-translate="select-overlay">🎨 Select Preset Overlay Theme:</span>
-						</label>
-						<select id="overlay-preset-select" data-optionsetting="overlayPreset" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
-							<option value="">Default dock.html (Customizable)</option>
-							<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
-							<option value="themes/overlay-comic-pop.html">💥 Comic Pop Dock - Stackable pop art chat</option>
-							<option value="themes/overlay-comic-classic.html">🗯️ Comic Pop Classic - Featured style chat</option>
-							<option value="themes/horizontal.html">➡️ Horizontal Scroll - Right-to-left ticker</option>
-							<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
-							<option value="themes/overlay-particles.html">✨ Particle System - Floating message effects</option>
-							<option value="themes/overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
-							<option value="themes/overlay-bubbles.html">🫧 Bubble Chat - Floating speech bubbles</option>
-							<option value="themes/overlay-cards.html">🃏 Card Flip 3D - Interactive card animations</option>
-							<option value="themes/overlay-xacception.html">❎ Simple Alternative - Basic bubble message</option>
-							<option value="themes/pretty.html">✨ Pretty Theme - Holographic style</option>
-							<option value="themes/Neutron/chatOnly.html">⚛️ Neutron Chat - Sci-fi gaming theme</option>
-							<option value="themes/Neutron/stream.html">⚛️ Neutron Stream - Full stream layout</option>
-							<option value="themes/Windows3.1/index.html">🖥️ Windows 3.1 - Retro computing</option>
-							<option value="themes/deuks_overlay/overlay1.html">🎬 Deuks Overlay 1 - Custom streaming</option>
-							<option value="themes/deuks_overlay/overlay2.html">🎬 Deuks Overlay 2 - Alternative layout</option>
-							<option value="themes/rainbowpuke/index.html">🌈 Rainbow Puke - Colorful chaos</option>
-							<option value="themes/t3nk3y/index.html">🎮 T3nk3y Theme - Gaming style</option>
-                            <option value="themes/LuckyLootTube/luckyloottube.html">🎁 LuckyLootTube - Liquid Glass</option>
-						</select>
-						<span style="margin-left: 10px; font-size: 14px;;display: block;overflow:visible;">
-							👉ℹ️ <i data-translate="overlay-note">ONLY the default preset can be customized!</i>
-						</span>
-					</div>
-				
             </div>
 
             <a href="" id="streaming-chat-options"></a>
@@ -4370,13 +4437,53 @@ input:checked + .slider:before {
             </div>
 				
             </div>
-			<div style="color:white;font">
-				<i>
+
+            <div class="link beginner-basic" title="Ready-made OBS browser-source chat overlays.">
+                <h2 class="chat_overlay_template_title">
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🎨</span>Simple chat overlay templates </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+                </h2>
+                <div id="chatoverlaytemplate" data-raw="" class="streaming_chat"></div>
+				<div class="template-selector overlay-selector">
+					<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
+						<span>🎨 Select chat overlay template:</span>
+					</label>
+					<select id="overlay-preset-select" data-optionsetting="overlayPreset" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+						<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
+						<option value="themes/compact-classic.html">💬 Compact Classic - Dense Twitch/IRC-style chat</option>
+						<option value="themes/compact-clean.html">🧼 Compact Clean - Tidy compact cards</option>
+						<option value="themes/compact-glass.html">🪟 Compact Glass - Frosted compact rows</option>
+						<option value="themes/overlay-comic-pop.html">💥 Comic Pop Dock - Stackable pop art chat</option>
+						<option value="themes/overlay-comic-classic.html">🗯️ Comic Pop Classic - Featured style chat</option>
+						<option value="themes/horizontal.html">➡️ Horizontal Scroll - Right-to-left ticker</option>
+						<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
+						<option value="themes/overlay-particles.html">✨ Particle System - Floating message effects</option>
+						<option value="themes/overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
+						<option value="themes/overlay-bubbles.html">🫧 Bubble Chat - Floating speech bubbles</option>
+						<option value="themes/overlay-cards.html">🃏 Card Flip 3D - Interactive card animations</option>
+						<option value="themes/overlay-xacception.html">❎ Simple Alternative - Basic bubble message</option>
+						<option value="themes/pretty.html">✨ Pretty Theme - Holographic style</option>
+						<option value="themes/Neutron/chatOnly.html">⚛️ Neutron Chat - Sci-fi gaming theme</option>
+						<option value="themes/Neutron/stream.html">⚛️ Neutron Stream - Full stream layout</option>
+						<option value="themes/Windows3.1/index.html">🖥️ Windows 3.1 - Retro computing</option>
+						<option value="themes/deuks_overlay/overlay1.html">🎬 Deuks Overlay 1 - Custom streaming</option>
+						<option value="themes/deuks_overlay/overlay2.html">🎬 Deuks Overlay 2 - Alternative layout</option>
+						<option value="themes/rainbowpuke/index.html">🌈 Rainbow Puke - Colorful chaos</option>
+						<option value="themes/t3nk3y/index.html">🎮 T3nk3y Theme - Gaming style</option>
+                        <option value="themes/LuckyLootTube/luckyloottube.html">🎁 LuckyLootTube - Liquid Glass</option>
+					</select>
+				</div>
+				<div id="beginnerModePanel" class="beginner-mode-panel hidden">
+					<span>Beginner mode is hiding advanced controls.</span>
+					<button id="showAdvancedPopupOptions" class="glowingButton" type="button" style="width: 190px; margin-left: 0;"><span>Show advanced options</span></button>
+				</div>
+            </div>
+
+			<div class="chat-overlay-design-note beginner-basic">
 				Want to design your own? Check out our <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">AI-friendly starter templates</a>.
-				</i>
 			</div>
             <div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
-                <h2 class="single_message_title">
+                <h2 class="featured_chat_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🌟</span><span data-translate="featured-chat-overlay">Featured chat overlay </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                     <a class="options-link rounded_area" href="#single-message-options" title="Jump to single message overlay link options."><span data-translate="options">[options]</span></a>
@@ -5529,7 +5636,7 @@ input:checked + .slider:before {
 			</div>
 
 			<div class="link" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids.">
-				<h2 class="single_message_title">
+				<h2 class="multi_alert_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🚨</span><span>Multi-Stream Alert Box</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#multi-alert-options" title="Jump to multi-alert overlay options."><span data-translate="options">[options]</span></a>
@@ -8101,7 +8208,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 			
-            <div class="chatbot_category_title">
+            <div class="chatbot_category_title beginner-advanced">
                 <h2 class="chatbot_wall_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🤖</span><span data-translate="chatbot-settings-and-tools">Chat Bots and AI services</span></span>
                     <a class="options-link rounded_area" href="#chatbot-settings-and-tools-options" title="Jump to the chatbot settings and tools."><span data-translate="options">[options]</span></a>
@@ -8137,6 +8244,7 @@ input:checked + .slider:before {
 										<option value="bedrock">AWS Bedrock API</option>
 										<option value="openrouter">OpenRouter API</option>
 										<option value="groq">Groq API</option>
+										<option value="opencode">OpenCode Zen API</option>
 										<option value="hostedllm">SSN Hosted Trial LLM (experimental)</option>
 										<option value="custom">Custom API (OpenAI-compatible / llama.cpp)</option>
 									</select>
@@ -8147,6 +8255,9 @@ input:checked + .slider:before {
 									</div>
 									<div id="hostedLLMInfo" class="hidden" style="width: 95%; margin: 8px 0 10px 0; padding: 10px 12px; border-radius: 8px; background: var(--color-accent-subtle); font-size: 0.92em; line-height: 1.4;">
 										SSN Hosted Trial LLM should work without setup while the free trial token is available. If the free token is disabled or rate-limited later, enter your own token below or switch to Ollama / Custom API.
+									</div>
+									<div id="opencodeInfo" class="hidden" style="width: 95%; margin: 8px 0 10px 0; padding: 10px 12px; border-radius: 8px; background: var(--color-accent-subtle); font-size: 0.92em; line-height: 1.4;">
+										OpenCode Zen provides a curated model gateway. Need a key? <a href="https://opencode.ai/go?ref=8V3339P30P" class="lightblue" target="_blank">Get OpenCode Zen here</a> (Steve's referral link). Auto mode uses free models and pauses exhausted free models for one hour.
 									</div>
 									<div id="ollamaendpoint" class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
@@ -8176,6 +8287,11 @@ input:checked + .slider:before {
 									<div id="groqApiKey" class="textInputContainer hidden" style="width: 95%;">
 										<input type="password" class="textInput" autocomplete="off" placeholder="Your Groq API key" data-textsetting="groqApiKey" />
 										<label for="groqApiKey">&gt; Groq API Key</label>
+									</div>
+
+									<div id="opencodeApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password" class="textInput" autocomplete="off" placeholder="Your OpenCode Zen API key" data-textsetting="opencodeApiKey" />
+										<label for="opencodeApiKey">&gt; OpenCode Zen API Key</label>
 									</div>
 
 									<div id="customAIEndpoint" class="hidden textInputContainer" style="width: 95%;">
@@ -8301,6 +8417,19 @@ input:checked + .slider:before {
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: openai/gpt-4o" data-textsetting="openroutermodel" />
 										<label for="openroutermodel"><span data-translate="openroutermodel">&gt; OpenRouter Model to use</span></label>
+									</div>
+								</div>
+
+								<div id="opencodemodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<select id="opencodeModelSelect" class="textInput" data-optionsetting="opencodemodel">
+											<option value="auto">Auto - free models only</option>
+										</select>
+										<label for="opencodeModelSelect">&gt; OpenCode Zen Model to use</label>
+									</div>
+									<div style="width: 95%; font-size: 0.9em; opacity: 0.85; margin: 4px 0 0 0;">
+										<span id="opencodeModelStatus">Models load from OpenCode when selected.</span>
+										<button type="button" id="refreshOpenCodeModels" style="margin-left: 8px;">Refresh models</button>
 									</div>
 								</div>
 
@@ -9476,7 +9605,7 @@ input:checked + .slider:before {
 			</div>
 
 			<div class="link" title="Reaction-only overlay for floating hearts, thumbs, and similar live reactions.">
-				<h2 class="single_message_title">
+				<h2 class="reactions_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">💖</span><span>Reactions Overlay</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#reactions-options" title="Jump to the reactions overlay options."><span data-translate="options">[options]</span></a>
@@ -9940,45 +10069,24 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-			<div class="link" title="Twitch Hype Train and Treasure Train top progress bar">
-				<h2 class="hype_mode_title">
-					<span class="title-group"><span class="emoji" aria-hidden="true">🚂</span><span>Hype Train Top Bar</span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#hype-train-bar" title="Jump to the Hype Train top bar options."><span data-translate="options">[options]</span></a>
-					<label for="help-hypetrain" class="help-link rounded_area" title="Click for detailed help">[?]</label>
-				</h2>
-				<input type="checkbox" id="help-hypetrain" class="link-help-toggle">
-				<div class="link-help-content">
-					<strong>Top-bar overlay for Twitch Hype Trains.</strong>
-					<p>Shows Hype Train and Treasure Train progress as a Twitch-style bar. It only reacts to Twitch Hype Train metadata and does not show normal chat.</p>
-					<ul>
-						<li>Use this as an OBS Browser Source or dock overlay</li>
-						<li>Copy this link when you only want Hype Train progress</li>
-						<li>Twitch users may need to re-authorize for the Hype Train scope</li>
-					</ul>
-					<p><a href="./docs/hype-train-top-bar.html" target="_blank" class="lightblue">Open the Hype Train Top Bar guide</a></p>
-					<div class="help-tip">💡 <strong>Tip:</strong> Use the Fake Hype Train button below to verify the bar before going live.</div>
-				</div>
-				<h3>
-					<span>
-						Displays Twitch Hype Train and Treasure Train progress as a top bar.
-					</span>
-				</h3>
-				<div id="hypetrain" data-raw="" class="streaming_chat"><a href="" id="hypetrainlink"></a></div>
-				<div class="sticky-action-row top-67">
-					<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="hype" title="Send a fake hype_train meta event">
-						<span>Fake Hype Train</span>
-					</button>
-				</div>
-			</div>
-			<a href="" id="hype-train-bar"></a>
 			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-hypetrain-options" />
-					<label class="collapsible-label" for="wrapper-hypetrain-options"><span>🚂 Hype Train Top Bar Options</span></label>
+					<label class="collapsible-label" for="wrapper-hypetrain-options"><span>🚂 Hype Train Top Bar</span></label>
 					<div class="collapsible-text">
 						<div class="options">
-							<div class="options_group hyper_meter">
+							<div class="options_group meta ai-tool-card" data-link-container>
+								<h3 style="margin:0;">🚂 Hype Train Top Bar</h3>
+								<div class="link ai-tool-link" title="Open the dedicated Hype Train top bar overlay.">
+									<div id="hypetrain" data-raw="" class="streaming_chat"><a href="" id="hypetrainlink"></a></div>
+								</div>
+								<p class="ai-tool-copy">Shows Twitch Hype Train and Treasure Train progress as a top bar using <code>meta.html?hype</code>.</p>
+								<p class="ai-tool-copy"><a href="./docs/hype-train-top-bar.html" target="_blank">Hype Train Top Bar guide</a></p>
+								<div class="sticky-action-row top-67">
+									<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="hype" title="Send a fake hype_train meta event">
+										<span>Fake Hype Train</span>
+									</button>
+								</div>
 								<h3>Layout and Appearance</h3>
 								<div>
 									<label class="switch">
@@ -12265,7 +12373,7 @@ input:checked + .slider:before {
 			</div>
 			
 			<!-- OVERLAY THEME CONFIGURATION SECTIONS -->
-			<div class="wrapper">
+			<div class="wrapper beginner-basic chat-overlay-theme-options-wrapper" id="chatOverlayThemeOptionsWrapper" style="display: none;">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-overlay-theme-options" />
 					<label class="collapsible-label" for="wrapper-overlay-theme-options">🎨 <span data-translate="overlay-theme-options">Overlay Theme Options</span></label>
@@ -13722,7 +13830,7 @@ input:checked + .slider:before {
 			
 			
 			<br>
-			<a class="options-link rounded_area" href="#global-settings-and-tools-options" title="Jump to the global settings and tools.">
+			<a class="options-link rounded_area beginner-advanced" href="#global-settings-and-tools-options" title="Jump to the global settings and tools.">
 				👉 Looking for the Global settings? It was moved further up the page. Click here to JUMP to it.
 			</a>
 			<br><br><br>

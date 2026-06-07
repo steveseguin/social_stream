@@ -99,7 +99,7 @@
 		}
 		
 		const fadeoutTime = 300;
-		const minDisplayTime = parseInt(urlParams.get('showtime')) || (fadeoutTime + 1);
+		const minDisplayTime = parseInt(urlParams.get('showtime')) || 3000;
 		const embeddedDisplayTime = urlParams.has('showtime') ? minDisplayTime : Math.max(minDisplayTime, 5000);
 		const mediaProbeTimeout = 4000;
 
@@ -536,9 +536,10 @@
 
         const iframe = document.createElement("iframe");
         const filename = new URL(window.location.href).pathname.split('/').pop().split('.')[0] || "dock";
+        const bridgeLabel = (customGifFilterId || urlParams.get('label') || filename).trim() || filename;
         const password = urlParams.get('password') || 'false';
         const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label="+filename+"&cleanoutput&room=" + urlParams.get('session');
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=" + encodeURIComponent(bridgeLabel) + "&cleanoutput&room=" + urlParams.get('session');
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";

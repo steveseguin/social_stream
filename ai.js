@@ -31,6 +31,24 @@ let hostedLLMConfigCache = {
     fetchedAt: 0,
     config: null
 };
+const OPENCODE_ZEN_MODELS_URL = "https://opencode.ai/zen/v1/models";
+const OPENCODE_ZEN_CHAT_COMPLETIONS_ENDPOINT = "https://opencode.ai/zen/v1/chat/completions";
+const OPENCODE_ZEN_FREE_MODEL_ORDER = [
+    "big-pickle",
+    "deepseek-v4-flash-free",
+    "mimo-v2.5-free",
+    "qwen3.6-plus-free",
+    "minimax-m3-free",
+    "nemotron-3-ultra-free",
+    "nemotron-3-super-free"
+];
+const OPENCODE_ZEN_FREE_MODEL_COOLDOWN_MS = 60 * 60 * 1000;
+const OPENCODE_ZEN_MODEL_CACHE_MS = 60 * 60 * 1000;
+let openCodeZenModelCache = {
+    fetchedAt: 0,
+    models: null
+};
+let openCodeZenFreeModelCooldowns = {};
 
 class LLMServiceError extends Error {
     constructor(details = {}) {
@@ -61,6 +79,12 @@ function getLLMHint(status, code, details = {}) {
     }
     if (provider === 'hostedllm' && (status === 429 || (code && String(code).toLowerCase().includes('rate')))) {
         return 'The SSN hosted trial is rate limited. Try again later, enter your own token, or use a local/custom provider.';
+    }
+    if (provider === 'opencode' && (status === 401 || status === 403)) {
+        return 'Verify your OpenCode Zen API key, or get one from the OpenCode Zen link in the popup.';
+    }
+    if (provider === 'opencode' && (status === 429 || (code && String(code).toLowerCase().includes('rate')))) {
+        return 'OpenCode Zen rate limited or exhausted this model. Auto mode will try another model when available.';
     }
     if ((provider === 'custom' || provider === 'ollama') && (message.includes('failed to fetch') || message.includes('networkerror') || message.includes('network error'))) {
         return 'Check the endpoint URL, confirm the AI server is running, and verify Chrome or your firewall is not blocking the request.';
@@ -339,6 +363,222 @@ async function resolveHostedLLMSettings(llmSettings, modelOverride = null) {
         model,
         notice: config.notice || HOSTED_LLM_DEFAULT_CONFIG.notice
     };
+}
+
+function isOpenCodeZenFreeModel(modelId) {
+    modelId = String(modelId || "").toLowerCase();
+    return modelId === "big-pickle" || /-free$/.test(modelId);
+}
+
+function getOpenCodeZenFreeModelRank(modelId) {
+    const lower = String(modelId || "").toLowerCase();
+    const index = OPENCODE_ZEN_FREE_MODEL_ORDER.indexOf(lower);
+    return index === -1 ? OPENCODE_ZEN_FREE_MODEL_ORDER.length : index;
+}
+
+function sortOpenCodeZenModels(modelIds) {
+    return modelIds.slice().sort(function (a, b) {
+        const aFree = isOpenCodeZenFreeModel(a);
+        const bFree = isOpenCodeZenFreeModel(b);
+        if (aFree !== bFree) return aFree ? -1 : 1;
+        if (aFree && bFree) {
+            const rankDiff = getOpenCodeZenFreeModelRank(a) - getOpenCodeZenFreeModelRank(b);
+            if (rankDiff) return rankDiff;
+        }
+        return String(a).localeCompare(String(b));
+    });
+}
+
+function isOpenCodeZenAutoModel(modelId) {
+    const value = String(modelId || "").trim().toLowerCase();
+    return !value || value === "auto" || value === "free-auto";
+}
+
+function isOpenCodeZenChatCompletionsModel(modelId) {
+    const value = String(modelId || "").trim().toLowerCase();
+    return isOpenCodeZenFreeModel(value) ||
+        value === "big-pickle" ||
+        value.indexOf("deepseek-") === 0 ||
+        value.indexOf("minimax-") === 0 ||
+        value.indexOf("glm-") === 0 ||
+        value.indexOf("kimi-") === 0 ||
+        value.indexOf("mimo-") === 0 ||
+        value.indexOf("nemotron-") === 0 ||
+        value.indexOf("grok-build") === 0;
+}
+
+function getOpenCodeZenSelectedModel(llmSettings, modelOverride) {
+    const override = String(modelOverride || "").trim();
+    if (override && !isOpenCodeZenAutoModel(override)) {
+        return override;
+    }
+    const saved = String(llmSettings.opencodemodel?.optionsetting || "").trim();
+    return saved || "auto";
+}
+
+function getOpenCodeZenApiKey(llmSettings) {
+    return String(llmSettings.opencodeApiKey?.textsetting || "").trim();
+}
+
+function getOpenCodeZenCooldown(modelId) {
+    const cooldownUntil = openCodeZenFreeModelCooldowns[String(modelId || "")] || 0;
+    if (!cooldownUntil || cooldownUntil <= Date.now()) {
+        delete openCodeZenFreeModelCooldowns[String(modelId || "")];
+        return 0;
+    }
+    return cooldownUntil;
+}
+
+function markOpenCodeZenFreeModelCooldown(modelId) {
+    if (!isOpenCodeZenFreeModel(modelId)) return;
+    openCodeZenFreeModelCooldowns[String(modelId)] = Date.now() + OPENCODE_ZEN_FREE_MODEL_COOLDOWN_MS;
+}
+
+function normalizeOpenCodeZenModelsPayload(payload) {
+    const data = payload && Array.isArray(payload.data) ? payload.data : [];
+    const ids = data.map(function (entry) {
+        return entry && entry.id ? String(entry.id).trim() : "";
+    }).filter(Boolean);
+    return ids.length ? ids : OPENCODE_ZEN_FREE_MODEL_ORDER.slice();
+}
+
+function getOpenCodeZenKnownModels() {
+    return sortOpenCodeZenModels(openCodeZenModelCache.models || OPENCODE_ZEN_FREE_MODEL_ORDER);
+}
+
+async function fetchOpenCodeZenModels(apiKey = "", force = false) {
+    const now = Date.now();
+    if (!force && openCodeZenModelCache.models && now - openCodeZenModelCache.fetchedAt < OPENCODE_ZEN_MODEL_CACHE_MS) {
+        return openCodeZenModelCache.models.slice();
+    }
+
+    const headers = { "Accept": "application/json" };
+    if (apiKey) {
+        headers.Authorization = "Bearer " + apiKey;
+    }
+
+    try {
+        let payload;
+        if (typeof ipcRenderer !== "undefined" && typeof fetchNode !== "undefined" && fetchNode) {
+            const response = await fetchNode(OPENCODE_ZEN_MODELS_URL, headers, "GET", null);
+            if (!response || (response.status && response.status >= 400)) {
+                throw new Error("OpenCode model list returned " + (response && response.status ? response.status : "no response"));
+            }
+            payload = typeof response.data === "string" ? JSON.parse(response.data) : response.data;
+        } else {
+            const response = await fetch(OPENCODE_ZEN_MODELS_URL, {
+                method: "GET",
+                headers,
+                cache: "no-store"
+            });
+            if (!response.ok) {
+                throw new Error("OpenCode model list returned " + response.status);
+            }
+            payload = await response.json();
+        }
+
+        const models = normalizeOpenCodeZenModelsPayload(payload);
+        openCodeZenModelCache = {
+            fetchedAt: now,
+            models: sortOpenCodeZenModels(models)
+        };
+    } catch (error) {
+        console.warn("[OpenCode Zen] Failed to load model list; using built-in defaults.", error);
+        openCodeZenModelCache = {
+            fetchedAt: now,
+            models: OPENCODE_ZEN_FREE_MODEL_ORDER.slice()
+        };
+    }
+
+    return openCodeZenModelCache.models.slice();
+}
+
+async function getOpenCodeZenCandidateModels(llmSettings, refreshModelList) {
+    const models = refreshModelList
+        ? await fetchOpenCodeZenModels(getOpenCodeZenApiKey(llmSettings), false)
+        : getOpenCodeZenKnownModels();
+    const chatModels = sortOpenCodeZenModels(models).filter(isOpenCodeZenChatCompletionsModel);
+    const candidates = chatModels.length ? chatModels : OPENCODE_ZEN_FREE_MODEL_ORDER.slice();
+    return candidates.filter(function (modelId) {
+        return isOpenCodeZenFreeModel(modelId) && !getOpenCodeZenCooldown(modelId);
+    });
+}
+
+function shouldTryNextOpenCodeZenModel(error) {
+    const status = Number(error && error.status ? error.status : 0);
+    const code = String((error && error.code) || "").toLowerCase();
+    const message = String((error && error.message) || "").toLowerCase();
+    const retryText = code + " " + message;
+
+    if (status === 401) return false;
+    if (status === 429 || status === 404 || status === 408 || status === 500 || status === 502 || status === 503 || status === 504) return true;
+    if (status === 400 && /model|unsupported|not supported|not_found|not found|unavailable/.test(retryText)) return true;
+    if (status === 403 && /quota|rate|limit|exhaust|model|unavailable|disabled|not available/.test(retryText)) return true;
+    return /quota|rate|limit|exhaust|overload|capacity|unavailable|not available|not_found|not found|unsupported|not supported/.test(retryText);
+}
+
+function isOpenCodeZenReasoningEffortUnsupported(error) {
+    const status = Number(error && error.status ? error.status : 0);
+    const code = String((error && error.code) || "").toLowerCase();
+    const message = String((error && error.message) || "").toLowerCase();
+    if (status !== 400 && status !== 422) return false;
+    return /reasoning_effort|reasoning effort|unknown parameter|unsupported parameter|unrecognized parameter|extra field/.test(code + " " + message);
+}
+
+async function requestOpenCodeZenWithFallback(llmSettings, makeRequest) {
+    const triedModels = {};
+    let candidates = await getOpenCodeZenCandidateModels(llmSettings, false);
+    let refreshedAfterFreeFailure = false;
+    let lastError = null;
+
+    if (!candidates.length) {
+        throw createLLMError({
+            provider: "opencode",
+            endpoint: OPENCODE_ZEN_CHAT_COMPLETIONS_ENDPOINT
+        }, {
+            status: 429,
+            code: "opencode_no_models_available",
+            message: "No OpenCode Zen free models are currently available. Free models may be cooling down after quota exhaustion."
+        });
+    }
+
+    while (candidates.length) {
+        const candidate = candidates.shift();
+        if (triedModels[candidate]) {
+            continue;
+        }
+        triedModels[candidate] = true;
+        try {
+            return await makeRequest(candidate);
+        } catch (error) {
+            lastError = error;
+            if (!shouldTryNextOpenCodeZenModel(error)) {
+                throw error;
+            }
+            if (isOpenCodeZenFreeModel(candidate)) {
+                markOpenCodeZenFreeModelCooldown(candidate);
+            }
+            if (isOpenCodeZenFreeModel(candidate) && !refreshedAfterFreeFailure) {
+                refreshedAfterFreeFailure = true;
+                candidates = await getOpenCodeZenCandidateModels(llmSettings, true);
+            } else {
+                candidates = await getOpenCodeZenCandidateModels(llmSettings, false);
+            }
+            candidates = candidates.filter(function (modelId) {
+                return !triedModels[modelId];
+            });
+            console.warn("[OpenCode Zen] Model failed, trying next candidate:", candidate, error && error.message ? error.message : error);
+        }
+    }
+
+    throw lastError || createLLMError({
+        provider: "opencode",
+        endpoint: OPENCODE_ZEN_CHAT_COMPLETIONS_ENDPOINT
+    }, {
+        status: 503,
+        code: "opencode_all_models_failed",
+        message: "All OpenCode Zen free fallback models failed."
+    });
 }
 
 function noteChatBotDecision(reason, data, context = {}) {
@@ -914,6 +1154,11 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			model = model || llmSettings.groqmodel?.textsetting || "llama-3.1-8b-instant";
 			apiKey = llmSettings.groqApiKey?.textsetting;
 			break;
+		case "opencode":
+			endpoint = OPENCODE_ZEN_CHAT_COMPLETIONS_ENDPOINT;
+			model = getOpenCodeZenSelectedModel(llmSettings, model);
+			apiKey = getOpenCodeZenApiKey(llmSettings);
+			break;
 		case "hostedllm": {
 			const hostedSettings = await resolveHostedLLMSettings(llmSettings, model);
 			endpoint = hostedSettings.endpoint;
@@ -1369,6 +1614,32 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			headers['Authorization'] = `Bearer ${apiKey}`;
 		}
 
+		if (provider === "opencode" && !apiKey) {
+			throw createLLMError(buildContext(), {
+				status: 401,
+				code: "opencode_api_key_missing",
+				message: "OpenCode Zen API key is missing.",
+				hint: "Enter your OpenCode Zen API key in the popup, or use the OpenCode Zen link there to get one."
+			});
+		}
+
+		if (provider === "opencode" && !Number.isFinite(options.temperature)) {
+			message.temperature = 0.2;
+		}
+		let openCodeZenReasoningEffortEnabled = false;
+		if (provider === "opencode" && options.reasoningEffort !== false) {
+			message.reasoning_effort = typeof options.reasoningEffort === "string" && options.reasoningEffort.trim()
+				? options.reasoningEffort.trim()
+				: "low";
+			openCodeZenReasoningEffortEnabled = true;
+		}
+
+		const makeOpenAICompatibleRequest = async function (currentModel) {
+			if (typeof currentModel === "string" && currentModel.trim()) {
+				model = currentModel.trim();
+				message.model = model;
+			}
+
 		try {
 			if (typeof ipcRenderer !== 'undefined') {
 				if (callback) {
@@ -1512,8 +1783,21 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			if (error.name === 'AbortError') {
 				return { aborted: true };
 			}
-			throw wrapLLMError(error);
+			const wrappedError = wrapLLMError(error);
+			if (provider === "opencode" && openCodeZenReasoningEffortEnabled && isOpenCodeZenReasoningEffortUnsupported(wrappedError)) {
+				openCodeZenReasoningEffortEnabled = false;
+				delete message.reasoning_effort;
+				return makeOpenAICompatibleRequest(currentModel);
+			}
+			throw wrappedError;
 		}
+		};
+
+		if (provider === "opencode" && isOpenCodeZenAutoModel(message.model)) {
+			return requestOpenCodeZenWithFallback(llmSettings, makeOpenAICompatibleRequest);
+		}
+
+		return makeOpenAICompatibleRequest(message.model);
 	}
 
     async function makeRequestToOllama(currentModel) {  // ollama only api

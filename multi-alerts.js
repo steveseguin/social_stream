@@ -1486,7 +1486,7 @@ function setupBridgeIframe() {
   state.iframe = document.createElement('iframe');
   state.iframe.src =
     `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(settings.password)}` +
-    `&push&label=alerts&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(settings.roomID)}`;
+    `&push&label=alerts&view=${encodeURIComponent(settings.roomID)}&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(settings.roomID)}`;
   state.iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;border:0;';
   document.body.appendChild(state.iframe);
 }

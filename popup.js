@@ -710,8 +710,8 @@ if (typeof(chrome.runtime)=='undefined'){
 function copyToClipboard(event) {
 	
 	// if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
-	// Find the closest .link container
-	const linkContainer = event.target.closest('.link');
+	// Find the closest link container
+	const linkContainer = event.target.closest('[data-link-container], .link');
 	if (!linkContainer) {
 		console.error('Could not find .link container');
 		return;
@@ -2360,6 +2360,195 @@ function getSelectedTranslationLinkParam() {
   return lang ? `&ln=${encodeURIComponent(lang)}` : "";
 }
 
+const DEFAULT_CHAT_OVERLAY_TEMPLATE = "sampleoverlay.html";
+const CHAT_OVERLAY_TEMPLATE_CONFIGS = {
+  "sampleoverlay.html": "sampleoverlay-overlay-config",
+  "themes/overlay-neon-cyberpunk.html": "overlay-neon-cyberpunk-overlay-config",
+  "themes/overlay-particles.html": "overlay-particles-overlay-config",
+  "themes/overlay-typewriter.html": "overlay-typewriter-overlay-config",
+  "themes/overlay-bubbles.html": "overlay-bubbles-overlay-config",
+  "themes/overlay-cards.html": "overlay-cards-overlay-config",
+  "themes/pretty.html": "pretty-overlay-config",
+  "themes/Neutron/chatOnly.html": "Neutron-overlay-config",
+  "themes/Neutron/stream.html": "Neutron-overlay-config",
+  "themes/Windows3.1/index.html": "Windows3-overlay-config",
+  "themes/t3nk3y/index.html": "t3nk3y-overlay-config",
+  "themes/LuckyLootTube/luckyloottube.html": "luckyloottube-overlay-config"
+};
+
+function getSelectedChatOverlayTemplatePath() {
+  const selector = document.getElementById("overlay-preset-select");
+  if (selector && selector.value) {
+    return selector.value;
+  }
+  return DEFAULT_CHAT_OVERLAY_TEMPLATE;
+}
+
+function getKnownSessionParamValue() {
+  const sessionInput = document.getElementById("sessionid");
+  if (sessionInput && sessionInput.value) {
+    return encodeURIComponent(sessionInput.value);
+  }
+  if (lastResponse && lastResponse.streamID) {
+    return encodeURIComponent(lastResponse.streamID);
+  }
+  return "";
+}
+
+function getGeneratedLinkParams(primaryElement, fallbackElement) {
+  let raw = "";
+  if (primaryElement && primaryElement.raw && primaryElement.raw.indexOf("?") !== -1) {
+    raw = primaryElement.raw;
+  } else if (fallbackElement && fallbackElement.raw && fallbackElement.raw.indexOf("?") !== -1) {
+    raw = fallbackElement.raw;
+  }
+
+  if (raw) {
+    let params = raw.split("?")[1] || "";
+    // Some raw URLs (e.g. theme option-only states) can carry a query string without a
+    // session. Always guarantee a valid session so generated overlay links work.
+    if (!/(^|&)session=[^&]+/.test(params)) {
+      const knownSession = getKnownSessionParamValue();
+      if (knownSession) {
+        params = params
+          .split("&")
+          .filter(function (part) { return part && part.indexOf("session=") !== 0; })
+          .join("&");
+        params = "session=" + knownSession + (params ? "&" + params : "");
+      }
+    }
+    return params;
+  }
+
+  const knownSession = getKnownSessionParamValue();
+  if (knownSession) {
+    return "session=" + knownSession;
+  }
+
+  return "";
+}
+
+function setGeneratedLink(element, url) {
+  if (!element) return;
+  element.raw = cleanURL(url);
+
+  const linkId = element.id + "link";
+  let link = document.getElementById(linkId);
+  if (!link) {
+    link = element.querySelector("a");
+  }
+  if (!link) {
+    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? "Click to open link" : element.raw}</a>`;
+    return;
+  }
+
+  link.href = element.raw;
+  link.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : element.raw;
+}
+
+function moveChatOverlayThemeOptions() {
+  const templateElement = document.getElementById("chatoverlaytemplate");
+  const templateSection = templateElement ? templateElement.closest(".link") : null;
+  const optionsWrapper = document.getElementById("chatOverlayThemeOptionsWrapper");
+  if (templateSection && optionsWrapper && optionsWrapper.previousElementSibling !== templateSection) {
+    templateSection.insertAdjacentElement("afterend", optionsWrapper);
+  }
+  const beginnerPanel = document.getElementById("beginnerModePanel");
+  const designNote = document.querySelector(".chat-overlay-design-note");
+  if (designNote && optionsWrapper && designNote.previousElementSibling !== optionsWrapper) {
+    optionsWrapper.insertAdjacentElement("afterend", designNote);
+  }
+  if (beginnerPanel) {
+    const anchor = designNote || optionsWrapper;
+    if (anchor && beginnerPanel.previousElementSibling !== anchor) {
+      anchor.insertAdjacentElement("afterend", beginnerPanel);
+    }
+  }
+}
+
+function moveHypetrainOptionsIntoMetaSection() {
+  const hypetrainWrapper = document.getElementById("wrapper-hypetrain-options")?.closest(".wrapper");
+  const metaWrapper = document.getElementById("wrapper-meta-options")?.closest(".wrapper");
+  if (!hypetrainWrapper || !metaWrapper) return;
+
+  let anchor = document.getElementById("hype-train-bar");
+  if (!anchor) {
+    anchor = document.createElement("a");
+    anchor.href = "";
+    anchor.id = "hype-train-bar";
+  }
+
+  if (hypetrainWrapper.previousElementSibling !== anchor) {
+    metaWrapper.insertAdjacentElement("afterend", hypetrainWrapper);
+    metaWrapper.insertAdjacentElement("afterend", anchor);
+  }
+}
+
+function syncChatOverlayTemplateConfig(templatePath) {
+  moveChatOverlayThemeOptions();
+  const optionsWrapper = document.getElementById("chatOverlayThemeOptionsWrapper");
+  let activeSection = null;
+  const normalizedPath = (templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE).split("?")[0];
+  const configId = CHAT_OVERLAY_TEMPLATE_CONFIGS[normalizedPath] || "";
+
+  document.querySelectorAll(".overlay-config-section").forEach(function(section) {
+    section.style.display = "none";
+  });
+
+  if (configId) {
+    activeSection = document.getElementById(configId);
+    if (activeSection) {
+      activeSection.style.display = "block";
+    }
+  }
+
+  if (optionsWrapper) {
+    optionsWrapper.style.display = activeSection ? "" : "none";
+  }
+}
+
+function applyChatOverlayTemplatePreset(presetValue, options) {
+  options = options || {};
+  const templateElement = document.getElementById("chatoverlaytemplate");
+  if (!templateElement) return;
+
+  const selector = document.getElementById("overlay-preset-select");
+  let templatePath = presetValue || DEFAULT_CHAT_OVERLAY_TEMPLATE;
+  if (selector) {
+    const hasMatchingOption = Array.prototype.some.call(selector.options, function(option) {
+      return option.value === templatePath;
+    });
+    if (!hasMatchingOption) {
+      templatePath = DEFAULT_CHAT_OVERLAY_TEMPLATE;
+    }
+    if (selector.value !== templatePath) {
+      selector.value = templatePath;
+    }
+  }
+
+  const dockElement = document.getElementById("dock");
+  const params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
+  let templateUrl = baseURL + (templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE);
+  if (params) {
+    templateUrl += (templateUrl.indexOf("?") === -1 ? "?" : "&") + params;
+  }
+
+  setGeneratedLink(templateElement, templateUrl);
+  syncChatOverlayTemplateConfig(templatePath);
+  if (!options.skipRefresh) {
+    refreshLinks();
+  }
+}
+
+function syncChatOverlayTemplateLinkFromDock() {
+  const templateElement = document.getElementById("chatoverlaytemplate");
+  if (!templateElement) return;
+  applyChatOverlayTemplatePreset(getSelectedChatOverlayTemplatePath(), {
+    preferDockParams: true,
+    skipRefresh: true
+  });
+}
+
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
   // Get any custom parameters from the current URL
   let customParams = getSelectedTranslationLinkParam();
@@ -2396,6 +2585,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   // Configuration array with all page details
   const pages = [
     { id: "dock", path: "dock.html" },
+    { id: "chatoverlaytemplate", path: getSelectedChatOverlayTemplatePath() },
     { id: "overlay", path: "featured.html" },
     { id: "multialerts", path: "multi-alerts.html" },
     { id: "emoteswall", path: "emotes.html" },
@@ -2430,14 +2620,6 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   
   // Process all standard pages
   pages.forEach(page => {
-    // Skip dock update if a preset is selected
-    if (page.id === "dock") {
-      const overlaySelector = document.getElementById('overlay-preset-select');
-      if (overlaySelector && overlaySelector.value) {
-        return; // Skip updating dock when preset is active
-      }
-    }
-    
     // Skip featured overlay update if a preset is selected
     if (page.id === "overlay") {
       const featuredPresetSelector = document.getElementById('featured-preset-select');
@@ -2461,6 +2643,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     }
   });
 
+  syncChatOverlayTemplateLinkFromDock();
   updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, versionParam);
   
   // Update sample overlay and remote control URLs too
@@ -2891,7 +3074,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting='${key}']`);
         if (ele) {
-            if (key == "midiOutputDevice" || key.startsWith("mididevice")) {
+            if (key == "midiOutputDevice" || key.startsWith("mididevice") || key == "opencodemodel") {
                 if (settingObj.optionsetting && (ele.value !== settingObj.optionsetting)) {
                     // Check if option already exists
                     let optionExists = false;
@@ -2921,45 +3104,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
             } else if (key == "featuredOverlayStyle" ) {
 				applyFeaturedOverlayPreset(ele.value);
 			 } else if (key == "overlayPreset") {
-				// Update the dock URL to match the saved overlay preset
-				const dockDiv = document.getElementById('dock');
-				const dockLink = document.querySelector('#dock a, a[href*="dock.html"]');
-				
-				if (dockDiv && ele.value) {
-					// An overlay is selected, update the URL
-					const overlayUrl = baseURL + ele.value;
-					
-					// Extract existing parameters from current dock URL
-					let existingParams = '';
-					if (dockDiv.raw && dockDiv.raw.includes('?')) {
-						existingParams = dockDiv.raw.split('?')[1];
-					}
-					
-					// Build new URL with overlay
-					let newUrl = overlayUrl;
-					if (existingParams) {
-						newUrl += '?' + existingParams;
-					}
-					
-					// Update the dock URL
-					dockDiv.raw = newUrl;
-					if (dockLink) {
-						dockLink.href = newUrl;
-						dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
-					}
-					
-                    // Hide ONLY the streaming chat (dock) option wrappers
-                    document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
-                        const wrapper = inp.closest('.wrapper');
-                        if (wrapper) wrapper.style.display = 'none';
-                    });
-				} else {
-                    // Show ONLY the streaming chat (dock) option wrappers when no overlay is selected
-                    document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
-                        const wrapper = inp.closest('.wrapper');
-                        if (wrapper) wrapper.style.display = '';
-                    });
-				}
+				applyChatOverlayTemplatePreset(ele.value);
 			 }
         }
     }
@@ -3015,6 +3160,8 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
+        applyPopupBeginnerMode(getPopupBeginnerMode(response));
+
         // Load profiles if they weren't loaded during init (e.g., due to startup timing)
         if (typeof ProfileManager !== 'undefined' && ProfileManager.loadProfilesFromResponse) {
             ProfileManager.loadProfilesFromResponse(response);
@@ -3271,6 +3418,154 @@ function processLegacySetting(key, value, sync) {
     }
 }
 
+const OPENCODE_ZEN_MODELS_URL = "https://opencode.ai/zen/v1/models";
+const OPENCODE_ZEN_FREE_MODEL_ORDER = [
+    "big-pickle",
+    "deepseek-v4-flash-free",
+    "mimo-v2.5-free",
+    "qwen3.6-plus-free",
+    "minimax-m3-free",
+    "nemotron-3-ultra-free",
+    "nemotron-3-super-free"
+];
+const OPENCODE_ZEN_MODEL_CACHE_MS = 60 * 60 * 1000;
+let openCodeModelLoadInFlight = null;
+let openCodeModelCache = {
+    fetchedAt: 0,
+    models: null
+};
+
+function isOpenCodeFreeModelId(modelId) {
+    modelId = String(modelId || "").toLowerCase();
+    return modelId === "big-pickle" || /-free$/.test(modelId);
+}
+
+function getOpenCodeFreeModelRank(modelId) {
+    const lower = String(modelId || "").toLowerCase();
+    const index = OPENCODE_ZEN_FREE_MODEL_ORDER.indexOf(lower);
+    return index === -1 ? OPENCODE_ZEN_FREE_MODEL_ORDER.length : index;
+}
+
+function isOpenCodeChatCompletionsModel(modelId) {
+    const value = String(modelId || "").trim().toLowerCase();
+    return isOpenCodeFreeModelId(value) ||
+        value === "big-pickle" ||
+        value.indexOf("deepseek-") === 0 ||
+        value.indexOf("minimax-") === 0 ||
+        value.indexOf("glm-") === 0 ||
+        value.indexOf("kimi-") === 0 ||
+        value.indexOf("mimo-") === 0 ||
+        value.indexOf("nemotron-") === 0 ||
+        value.indexOf("grok-build") === 0;
+}
+
+function sortOpenCodeModelIds(modelIds) {
+    return modelIds.slice().sort(function (a, b) {
+        const aFree = isOpenCodeFreeModelId(a);
+        const bFree = isOpenCodeFreeModelId(b);
+        if (aFree !== bFree) return aFree ? -1 : 1;
+        if (aFree && bFree) {
+            const rankDiff = getOpenCodeFreeModelRank(a) - getOpenCodeFreeModelRank(b);
+            if (rankDiff) return rankDiff;
+        }
+        return String(a).localeCompare(String(b));
+    });
+}
+
+function setOpenCodeModelStatus(message, color) {
+    const status = document.getElementById("opencodeModelStatus");
+    if (!status) return;
+    status.textContent = message || "";
+    status.style.color = color || "";
+}
+
+function populateOpenCodeModelSelect(modelIds) {
+    const select = document.getElementById("opencodeModelSelect");
+    if (!select) return;
+    const currentValue = select.value || "auto";
+    select.innerHTML = "";
+
+    const autoOption = document.createElement("option");
+    autoOption.value = "auto";
+    autoOption.textContent = "Auto - free models only";
+    select.appendChild(autoOption);
+
+    sortOpenCodeModelIds((modelIds || []).filter(isOpenCodeChatCompletionsModel)).forEach(function (id) {
+        if (!id) return;
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = isOpenCodeFreeModelId(id) ? id + " (free)" : id;
+        select.appendChild(option);
+    });
+
+    const hasCurrent = Array.prototype.some.call(select.options, function (option) {
+        return option.value === currentValue;
+    });
+    select.value = hasCurrent ? currentValue : "auto";
+}
+
+function getOpenCodeApiKeyFromPopup() {
+    const input = document.querySelector("[data-textsetting='opencodeApiKey']");
+    return input && input.value ? input.value.trim() : "";
+}
+
+async function loadOpenCodeModels(force) {
+    const providerSelect = document.getElementById("aiProvider");
+    if (!force && providerSelect && providerSelect.value !== "opencode") return;
+    if (openCodeModelLoadInFlight) return openCodeModelLoadInFlight;
+
+    const now = Date.now();
+    if (!force && openCodeModelCache.models && now - openCodeModelCache.fetchedAt < OPENCODE_ZEN_MODEL_CACHE_MS) {
+        populateOpenCodeModelSelect(openCodeModelCache.models);
+        setOpenCodeModelStatus("Loaded cached OpenCode model list.", "#7ad37a");
+        return;
+    }
+
+    setOpenCodeModelStatus("Loading OpenCode models...", "#bbb");
+    openCodeModelLoadInFlight = (async function () {
+        try {
+            const headers = { "Accept": "application/json" };
+            const apiKey = getOpenCodeApiKeyFromPopup();
+            if (apiKey) headers.Authorization = "Bearer " + apiKey;
+            const response = await fetch(OPENCODE_ZEN_MODELS_URL, {
+                method: "GET",
+                headers: headers,
+                cache: "no-store"
+            });
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+            const payload = await response.json();
+            const models = Array.isArray(payload && payload.data)
+                ? payload.data.map(function (entry) { return entry && entry.id ? String(entry.id) : ""; }).filter(Boolean)
+                : [];
+            if (!models.length) {
+                throw new Error("No models returned");
+            }
+            const compatibleModels = models.filter(isOpenCodeChatCompletionsModel);
+            const modelList = compatibleModels.length ? compatibleModels : OPENCODE_ZEN_FREE_MODEL_ORDER;
+            openCodeModelCache = {
+                fetchedAt: Date.now(),
+                models: modelList
+            };
+            populateOpenCodeModelSelect(modelList);
+            const freeCount = compatibleModels.filter(isOpenCodeFreeModelId).length;
+            setOpenCodeModelStatus("Loaded " + (compatibleModels.length || OPENCODE_ZEN_FREE_MODEL_ORDER.length) + " chat-compatible models" + (freeCount ? " (" + freeCount + " free)." : "."), "#7ad37a");
+        } catch (error) {
+            openCodeModelCache = {
+                fetchedAt: Date.now(),
+                models: OPENCODE_ZEN_FREE_MODEL_ORDER.slice()
+            };
+            populateOpenCodeModelSelect(OPENCODE_ZEN_FREE_MODEL_ORDER);
+            setOpenCodeModelStatus("Could not load live model list; using built-in free defaults.", "#ffcc66");
+            console.warn("[OpenCode Zen] Model list load failed:", error);
+        } finally {
+            openCodeModelLoadInFlight = null;
+        }
+    }());
+    return openCodeModelLoadInFlight;
+}
+
 // Handle AI provider visibility
 function handleAIProviderVisibility(provider) {
     // Hide all provider-specific elements first
@@ -3280,6 +3575,7 @@ function handleAIProviderVisibility(provider) {
         "deepseekApiKey", "deepseekmodel", "customAIEndpoint", "customAIModel",
         "openrouterApiKey", "openroutermodel", "bedrockAccessKey", "bedrockSecretKey",
         "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey",
+        "opencodeInfo", "opencodeApiKey", "opencodemodel",
         "localgemmahost", "localbrowserhelp", "localgemmamodel", "localqwenmodel",
         "hostedLLMInfo", "hostedLLMToken", "hostedLLMEndpoint", "hostedLLMModel"
     ].forEach(id => {
@@ -3318,6 +3614,11 @@ function handleAIProviderVisibility(provider) {
     } else if (provider == "groq") {
         document.getElementById("groqApiKey").classList.remove("hidden");
         document.getElementById("groqmodel").classList.remove("hidden");
+    } else if (provider == "opencode") {
+        document.getElementById("opencodeInfo").classList.remove("hidden");
+        document.getElementById("opencodeApiKey").classList.remove("hidden");
+        document.getElementById("opencodemodel").classList.remove("hidden");
+        loadOpenCodeModels(false);
     } else if (provider == "hostedllm") {
         document.getElementById("hostedLLMInfo").classList.remove("hidden");
         document.getElementById("hostedLLMToken").classList.remove("hidden");
@@ -3352,6 +3653,42 @@ function hydratePopupFromStartupSettings(response) {
 	popupStartupSettingsHydrated = true;
 	update(response, false);
 	return true;
+}
+
+function getPopupBeginnerMode(response) {
+	if (!response) return false;
+	if (response.beginnerMode !== undefined) {
+		return !!response.beginnerMode;
+	}
+	return !!(response.settings && response.settings.beginnerMode && response.settings.beginnerMode.setting === true);
+}
+
+function markBeginnerAdvancedSections() {
+	document.querySelectorAll(".wrapper:not(.beginner-basic)").forEach(function(wrapper) {
+		if (wrapper) wrapper.classList.add("beginner-advanced");
+	});
+	document.querySelectorAll(".link:not(.beginner-basic), .generic_category_title").forEach(function(section) {
+		section.classList.add("beginner-advanced");
+	});
+}
+
+function applyPopupBeginnerMode(enabled) {
+	markBeginnerAdvancedSections();
+	document.body.classList.toggle("beginner-mode", !!enabled);
+	const panel = document.getElementById("beginnerModePanel");
+	if (panel) {
+		panel.classList.toggle("hidden", !enabled);
+	}
+}
+
+function disablePopupBeginnerMode() {
+	applyPopupBeginnerMode(false);
+	chrome.runtime.sendMessage({
+		cmd: "saveSetting",
+		type: "setting",
+		setting: "beginnerMode",
+		value: false
+	}, function () {});
 }
 
 function sendRuntimeCommandMessage(message, timeout, proxyToBackground) {
@@ -3405,7 +3742,7 @@ function collectLLMProviderTestSettings() {
         'ollamaendpoint', 'ollamamodel', 'chatgptApiKey', 'chatgptmodel',
         'geminiApiKey', 'geminimodel', 'xaiApiKey', 'xaimodel',
         'deepseekApiKey', 'deepseekmodel', 'groqApiKey', 'groqmodel',
-        'openrouterApiKey', 'openroutermodel', 'customAIEndpoint',
+        'openrouterApiKey', 'openroutermodel', 'opencodeApiKey', 'customAIEndpoint',
         'customAIModel', 'customAIApiKey', 'bedrockAccessKey',
         'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel',
         'localgemmahost', 'localgemmamodel', 'localqwenmodel',
@@ -3416,6 +3753,11 @@ function collectLLMProviderTestSettings() {
             override[key] = { textsetting: input.value.trim() };
         }
     });
+
+    const opencodeModelSelect = document.querySelector("[data-optionsetting='opencodemodel']");
+    if (opencodeModelSelect) {
+        override.opencodemodel = { optionsetting: opencodeModelSelect.value || "auto" };
+    }
 
     const keepAliveInput = document.querySelector("[data-numbersetting='ollamaKeepAlive']");
     if (keepAliveInput) {
@@ -4767,6 +5109,7 @@ function handleOptionSetting(ele, sync) {
 			'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
 			'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive',
 			'openrouterApiKey', 'openroutermodel', 'groqApiKey', 'groqmodel',
+			'opencodeInfo', 'opencodeApiKey', 'opencodemodel',
 			'customAIApiKey', 'localgemmahost', 'localbrowserhelp', 'localgemmamodel', 'localqwenmodel',
 			'hostedLLMInfo', 'hostedLLMToken', 'hostedLLMEndpoint', 'hostedLLMModel'
 		];
@@ -4811,6 +5154,12 @@ function handleOptionSetting(ele, sync) {
             case 'groq':
                 document.getElementById("groqApiKey").classList.remove("hidden");
                 document.getElementById("groqmodel").classList.remove("hidden");
+                break;
+            case 'opencode':
+                document.getElementById("opencodeInfo").classList.remove("hidden");
+                document.getElementById("opencodeApiKey").classList.remove("hidden");
+                document.getElementById("opencodemodel").classList.remove("hidden");
+                loadOpenCodeModels(false);
                 break;
             case 'hostedllm':
                 document.getElementById("hostedLLMInfo").classList.remove("hidden");
@@ -5957,9 +6306,11 @@ function refreshLinks(){
   } else {
     document.body.classList.remove("hidelinks");
   }
+  syncChatOverlayTemplateLinkFromDock();
   try {
     const linkIdToDivIdMap = {
       'docklink': 'dock',
+      'chatoverlaytemplatelink': 'chatoverlaytemplate',
       'overlaylink': 'overlay',
       'multialertslink': 'multialerts',
       'emoteswalllink': 'emoteswall',
@@ -7796,6 +8147,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		ele.onclick = copyToClipboard;
 	});
 
+	const showAdvancedPopupOptions = document.getElementById("showAdvancedPopupOptions");
+	if (showAdvancedPopupOptions) {
+		showAdvancedPopupOptions.onclick = disablePopupBeginnerMode;
+	}
+	moveChatOverlayThemeOptions();
+	syncChatOverlayTemplateConfig(getSelectedChatOverlayTemplatePath());
+	moveHypetrainOptionsIntoMetaSection();
+
 	attachOverlayPreviewControls('multialerts', [
 		{ id: 'multi-alert-preview-follow', descriptor: () => buildMultiAlertPreviewDescriptor('follow') },
 		{ id: 'multi-alert-preview-sub', descriptor: () => buildMultiAlertPreviewDescriptor('subscription') },
@@ -8570,6 +8929,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const testSelectedLLMProviderButton = document.getElementById('testSelectedLLMProvider');
 	if (testSelectedLLMProviderButton) {
 		testSelectedLLMProviderButton.addEventListener('click', testSelectedLLMProvider);
+	}
+	const refreshOpenCodeModelsButton = document.getElementById('refreshOpenCodeModels');
+	if (refreshOpenCodeModelsButton) {
+		refreshOpenCodeModelsButton.addEventListener('click', function() {
+			loadOpenCodeModels(true);
+		});
+	}
+	const opencodeApiKeyInput = document.querySelector("[data-textsetting='opencodeApiKey']");
+	if (opencodeApiKeyInput) {
+		opencodeApiKeyInput.addEventListener('change', function() {
+			loadOpenCodeModels(true);
+		});
 	}
 	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
@@ -9430,89 +9801,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const overlaySelector = document.getElementById('overlay-preset-select');
 	if (overlaySelector) {
 		overlaySelector.addEventListener('change', function() {
-			const dockDiv = document.getElementById('dock');
-			const dockLink = document.querySelector('#dock a, a[href*="dock.html"]');
-			
-			if (!dockDiv) return;
-			
-			// Hide all overlay config sections (if we add them later)
-			document.querySelectorAll('.overlay-config-section').forEach(section => {
-				section.style.display = 'none';
-			});
-			
-			if (this.value) {
-				// An overlay theme was selected
-				const overlayUrl = baseURL + this.value;
-				
-				// Extract existing parameters from current dock URL
-				let existingParams = '';
-				if (dockDiv.raw && dockDiv.raw.includes('?')) {
-					existingParams = dockDiv.raw.split('?')[1];
-				}
-				
-				// Preserve ALL parameters, not just session
-				let newUrl = overlayUrl;
-				if (existingParams) {
-					newUrl += '?' + existingParams;
-				}
-				
-				// Update the dock URL
-				dockDiv.raw = newUrl;
-				if (dockLink) {
-					dockLink.href = newUrl;
-					dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
-				}
-				
-				// Show overlay-specific config section (for future use)
-				let overlayType = '';
-				if (this.value.includes('themes/overlay-')) {
-					// Handle new animated overlays in themes folder
-					overlayType = this.value.replace('themes/', '').replace('.html', '');
-				} else if (this.value.match(/themes\/(\w+)\//)) {
-					// Handle theme folders like themes/Neutron/
-					overlayType = this.value.match(/themes\/(\w+)\//)[1];
-				} else {
-					// Handle other files
-					overlayType = this.value.replace('.html', '');
-				}
-				
-				const configSection = document.getElementById(overlayType + '-overlay-config');
-				if (configSection) {
-					configSection.style.display = 'block';
-				}
-				
-        // Hide ONLY the streaming chat (dock) option wrappers when an overlay theme is selected
-        document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
-            const wrapper = inp.closest('.wrapper');
-            if (wrapper) wrapper.style.display = 'none';
-        });
-			} else {
-				// Classic dock.html selected - restore all parameters
-				let existingParams = '';
-				if (dockDiv.raw && dockDiv.raw.includes('?')) {
-					existingParams = dockDiv.raw.split('?')[1];
-				}
-				
-				let newUrl = baseURL + 'dock.html';
-				if (existingParams) {
-					newUrl += '?' + existingParams;
-				}
-				
-				// Update the dock URL back to classic
-				dockDiv.raw = newUrl;
-				if (dockLink) {
-					dockLink.href = newUrl;
-					dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
-				}
-				
-        // Show ONLY the streaming chat (dock) option wrappers
-        document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
-            const wrapper = inp.closest('.wrapper');
-            if (wrapper) wrapper.style.display = '';
-        });
-			}
-
-			refreshLinks();
+			applyChatOverlayTemplatePreset(this.value);
 		});
 	}
 

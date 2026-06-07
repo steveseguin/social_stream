@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<!-- AI GUIDANCE FOR EDITING THIS OVERLAY -->
+<!--
+Social Stream Ninja - "Compact Classic" chat overlay.
+A dense, traditional Twitch/IRC-style chat: badges + colored name + inline message
+on tight wrapping rows. Bottom-anchored; new messages push older ones up and off.
+
+DATA: arrives via a hidden VDO.Ninja iframe (WebRTC) at event.data.dataReceived.overlayNinja,
+or via WebSocket when &server / &server2 is set. Payload fields: chatname, chatmessage,
+chatimg, type, nameColor, chatbadges, membership, hasDonation, contentimg, event, textonly...
+
+URL PARAMETERS:
+  session=ID        (required) your Social Stream session id
+  password=PASS     optional room password (default false)
+  showtime=MS       auto-hide messages after MS ms; 0 = never hide (default 0)
+  limit=N           max messages kept on screen (default 80)
+  chroma=HEX        solid background colour for chroma keying (e.g. chroma=00FF00)
+  font=PX           base font size in px (default 18)
+  width=PX          max width of the chat column in px (default 420)
+  align=left|right  anchor side (default left)
+  avatar            show a small inline avatar
+  nobadges          hide platform badges
+  noicon            hide the small source platform icon
+  time              show a clock timestamp per message
+  bg                add a subtle translucent background behind each row
+  reverse           newest messages at top instead of bottom
+  server / server2  connect via WebSocket instead of (or in addition to) WebRTC
+  localserver       use ws://127.0.0.1:3000
+  deleteonlylast    delete commands only remove the most recent match
+  fadezone=PX       distance from the edge where messages start fading (default 120)
+
+Keep this file Chrome-80 friendly: no <script type="module">, no top-level import/export.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compact Classic Chat Overlay</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
+<link rel="canonical" href="https://socialstream.ninja/">
+<meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0000;
+    overflow: hidden;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+}
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    box-sizing: border-box;
+}
+
+#chat-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: 420px;
+    height: 100vh;
+    overflow: hidden;
+    padding: 8px 12px;
+}
+#chat-container.align-right { left: auto; right: 0; }
+
+#message-list-wrapper {
+    width: 100%;
+    transition: transform 0.35s ease-out;
+}
+
+.message {
+    color: #fff;
+    line-height: 1.32;
+    padding: 3px 2px;
+    margin: 0 0 3px 0;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.35s ease-out, transform 0.35s ease-out,
+                max-height 0.4s ease-in-out, margin 0.4s ease-in-out,
+                padding 0.4s ease-in-out, filter 0.3s ease-out;
+    max-height: 600px;
+    overflow: hidden;
+    --scroll-opacity: 1;
+    filter: opacity(var(--scroll-opacity));
+    will-change: transform, opacity, filter;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.85), 0 0 4px rgba(0,0,0,0.65);
+}
+.with-bg .message {
+    background: rgba(15, 18, 28, 0.55);
+    border-radius: 7px;
+    padding: 5px 9px;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+.message.visible { opacity: 1; transform: translateY(0); }
+.message.fading { opacity: 0; transition: opacity 1.2s ease-out; }
+.message.hidden {
+    opacity: 0;
+    transform: translateY(-14px);
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+.message.proximity-fading { --scroll-opacity: 0; }
+
+.reverse-mode .message { transform: translateY(-14px); }
+.reverse-mode .message.visible { transform: translateY(0); }
+.reverse-mode .message.hidden { transform: translateY(14px); }
+
+.avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    display: inline-block;
+    vertical-align: -4px;
+    margin-right: 5px;
+    flex-shrink: 0;
+}
+.badge {
+    display: inline-block;
+    height: 0.95em;
+    width: auto;
+    margin-right: 3px;
+    vertical-align: -2px;
+}
+.badge.svg svg { height: 0.95em; width: auto; vertical-align: -2px; }
+.source-icon {
+    width: 0.9em;
+    height: 0.9em;
+    vertical-align: -1px;
+    margin-right: 4px;
+    opacity: 0.9;
+}
+.timestamp {
+    font-size: 0.72em;
+    opacity: 0.6;
+    margin-right: 5px;
+    font-variant-numeric: tabular-nums;
+}
+.name {
+    font-weight: 700;
+    margin-right: 2px;
+}
+.colon { opacity: 0.85; margin-right: 5px; font-weight: 700; }
+.membership {
+    color: #ffd34d;
+    font-weight: 600;
+    font-size: 0.82em;
+    margin-right: 5px;
+}
+.donation {
+    color: #6ee787;
+    font-weight: 700;
+    margin-left: 5px;
+}
+.text { }
+.text img { max-width: 110px; max-height: 1.4em; vertical-align: -0.35em; }
+.event-text { font-style: italic; opacity: 0.95; }
+.content-img {
+    display: block;
+    max-width: 100%;
+    max-height: 180px;
+    margin-top: 5px;
+    border-radius: 8px;
+}
+#spacer { width: 100%; padding: 0; margin: 0; border: none; background: transparent; }
+</style>
+</head>
+<body>
+<div id="chat-container">
+    <div id="message-list-wrapper">
+        <div id="spacer" style="height: 2200px; width: 100%;"></div>
+    </div>
+</div>
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = urlParams.has("session") ? urlParams.get("session") : "iWWnKL28tQ";
+    var password = urlParams.has("password") ? urlParams.get("password") : "false";
+    var featuredMode = false;
+    var reversed = urlParams.has("reverse");
+    var deleteOnlyLast = urlParams.has("deleteonlylast");
+    var showAvatar = urlParams.has("avatar");
+    var hideBadges = urlParams.has("nobadges");
+    var hideIcon = urlParams.has("noicon");
+    var showClock = urlParams.has("time");
+
+    if (urlParams.has("chroma")) {
+        var c = urlParams.get("chroma") || "";
+        document.body.style.backgroundColor = c.charAt(0) === "#" ? c : "#" + c;
+    }
+    if (urlParams.has("font")) {
+        var fs = parseInt(urlParams.get("font"), 10);
+        if (!isNaN(fs) && fs > 0) { document.documentElement.style.fontSize = fs + "px"; }
+    }
+
+    const chatContainer = document.getElementById('chat-container');
+    const messageListWrapper = document.getElementById('message-list-wrapper');
+    const topSpacer = document.getElementById('spacer');
+    const initialSpacerHeight = topSpacer.style.height || '2200px';
+
+    if (urlParams.has("width")) {
+        var w = parseInt(urlParams.get("width"), 10);
+        if (!isNaN(w) && w > 0) { chatContainer.style.maxWidth = w + "px"; }
+    }
+    if ((urlParams.get("align") || "").toLowerCase() === "right") {
+        chatContainer.classList.add("align-right");
+    }
+    if (urlParams.has("bg")) { chatContainer.classList.add("with-bg"); }
+
+    const MAX_MESSAGES = urlParams.has("limit") ? parseInt(urlParams.get("limit")) : 80;
+    const showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 0;
+    var overlayMessageCounter = 0;
+    var localBlockUserList = {};
+    var timedOutUsers = {};
+    const messageTimestamps = new Map();
+    const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000;
+    const PROXIMITY_FADE_DISTANCE = (function () {
+        if (urlParams.has("fadezone")) {
+            var parsed = parseInt(urlParams.get("fadezone"), 10);
+            if (!Number.isNaN(parsed) && parsed >= 0) { return parsed; }
+        }
+        return 120;
+    })();
+
+    if (reversed) {
+        topSpacer.style.display = 'none';
+        chatContainer.style.bottom = 'auto';
+        chatContainer.style.top = '0';
+        chatContainer.classList.add('reverse-mode');
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function nowClock() {
+        var d = new Date();
+        var h = d.getHours();
+        var m = d.getMinutes();
+        return (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m);
+    }
+
+    function updateProximityFade() {
+        const messages = getOverlayMessages();
+        if (messages.length === 0) { requestAnimationFrame(updateProximityFade); return; }
+        const containerRect = chatContainer.getBoundingClientRect();
+        const fadeDistance = PROXIMITY_FADE_DISTANCE;
+        messages.forEach(function (message) {
+            if (!message.isConnected) { return; }
+            if (fadeDistance <= 0) {
+                message.style.removeProperty('--scroll-opacity');
+                message.classList.remove('proximity-fading');
+                delete message.dataset.proximityFadeStarted;
+                return;
+            }
+            const rect = message.getBoundingClientRect();
+            const distanceFromEdge = reversed
+                ? (containerRect.bottom - rect.bottom)
+                : (rect.top - containerRect.top);
+            const fadeStarted = message.dataset.proximityFadeStarted === 'true';
+            if (distanceFromEdge <= fadeDistance) {
+                if (!fadeStarted) {
+                    message.dataset.proximityFadeStarted = 'true';
+                    message.classList.add('proximity-fading');
+                    message.style.setProperty('--scroll-opacity', '0');
+                }
+                return;
+            }
+            if (!fadeStarted) {
+                message.classList.remove('proximity-fading');
+                message.style.removeProperty('--scroll-opacity');
+            }
+        });
+        requestAnimationFrame(updateProximityFade);
+    }
+    requestAnimationFrame(updateProximityFade);
+
+    function adjustMessageWrapperScroll() {
+        if (reversed) return;
+        requestAnimationFrame(function () {
+            const wrapperScrollHeight = messageListWrapper.scrollHeight;
+            const containerClientHeight = chatContainer.clientHeight;
+            let translateY = 0;
+            if (wrapperScrollHeight > containerClientHeight) {
+                translateY = -(wrapperScrollHeight - containerClientHeight);
+            }
+            translateY = Math.min(0, translateY);
+            messageListWrapper.style.transform = 'translateY(' + translateY + 'px)';
+        });
+    }
+
+    function getOverlayMessages() {
+        return Array.from(messageListWrapper.children).filter(function (child) {
+            return child.id !== 'spacer' && child.classList.contains('message');
+        });
+    }
+
+    function getPayloadMessageId(data) {
+        var keys = ['mid', 'id', 'messageId', 'message_id'];
+        for (var i = 0; i < keys.length; i++) {
+            if (data[keys[i]] !== undefined && data[keys[i]] !== null && data[keys[i]] !== "") {
+                return String(data[keys[i]]);
+            }
+        }
+        if (data.meta) {
+            if (data.meta.messageId) { return String(data.meta.messageId); }
+            if (data.meta.message_id) { return String(data.meta.message_id); }
+        }
+        overlayMessageCounter += 1;
+        return 'msg-' + Date.now() + '-' + overlayMessageCounter;
+    }
+
+    function removeOverlayMessage(message) {
+        if (!message) { return; }
+        messageTimestamps.delete(message.id);
+        if (message.parentNode) { message.parentNode.removeChild(message); }
+    }
+
+    function getNewestMessage(messages) {
+        return messages.reduce(function (newest, message) {
+            return (messageTimestamps.get(newest.id) || 0) > (messageTimestamps.get(message.id) || 0) ? newest : message;
+        });
+    }
+
+    function removeMatchingMessages(matches, onlyLast) {
+        const messages = getOverlayMessages().filter(matches);
+        if (!messages.length) { return false; }
+        if (onlyLast) { removeOverlayMessage(getNewestMessage(messages)); }
+        else { messages.forEach(removeOverlayMessage); }
+        adjustMessageWrapperScroll();
+        return true;
+    }
+
+    function deleteMessageById(id) {
+        if (id === undefined || id === null || id === "") { return false; }
+        const idString = String(id);
+        return removeMatchingMessages(function (message) {
+            return message.dataset.mid === idString || message.id === idString;
+        }, true);
+    }
+
+    function deleteMessages(data, onlyLast) {
+        if (!data.delete || typeof data.delete !== "object") { return false; }
+        const d = data.delete;
+        return removeMatchingMessages(function (message) {
+            if (d.id !== undefined && d.id !== null && d.id !== "") {
+                const idString = String(d.id);
+                return message.dataset.mid === idString || message.id === idString;
+            }
+            if (d.chatname && message.dataset.chatname !== String(d.chatname)) { return false; }
+            if (d.type && message.dataset.sourceType !== String(d.type)) { return false; }
+            return !!(d.chatname || d.type);
+        }, onlyLast || d.onlyLast);
+    }
+
+    function removeUserMessages(username, type) {
+        if (!username) { return false; }
+        username = String(username);
+        type = type ? String(type) : "";
+        return removeMatchingMessages(function (message) {
+            if (message.dataset.chatname !== username) { return false; }
+            if (!type) { return true; }
+            return message.dataset.sourceType === type || (type === "youtube" && message.dataset.sourceType === "youtubeshorts");
+        }, false);
+    }
+
+    function addLocalBlock(username, type) {
+        if (!username) { return; }
+        username = String(username);
+        const types = type ? [String(type)] : ["*"];
+        if (type === "youtube") { types.push("youtubeshorts"); }
+        if (!localBlockUserList[username]) { localBlockUserList[username] = []; }
+        types.forEach(function (t) {
+            if (!localBlockUserList[username].includes(t)) { localBlockUserList[username].push(t); }
+        });
+        setTimeout(function () {
+            if (!localBlockUserList[username]) { return; }
+            types.forEach(function (t) {
+                const idx = localBlockUserList[username].indexOf(t);
+                if (idx !== -1) { localBlockUserList[username].splice(idx, 1); }
+            });
+            if (!localBlockUserList[username].length) { delete localBlockUserList[username]; }
+        }, 10000);
+    }
+
+    function isMessageBlocked(data) {
+        if (!data.chatname) { return false; }
+        const chatname = String(data.chatname);
+        const type = data.type ? String(data.type) : "";
+        if (localBlockUserList[chatname] && (localBlockUserList[chatname].includes(type) || localBlockUserList[chatname].includes("*"))) {
+            return true;
+        }
+        if (type && timedOutUsers[chatname + ":" + type]) {
+            if (timedOutUsers[chatname + ":" + type] < Date.now()) { delete timedOutUsers[chatname + ":" + type]; }
+            else { return true; }
+        }
+        return false;
+    }
+
+    function clearAllMessages() {
+        getOverlayMessages().forEach(removeOverlayMessage);
+        topSpacer.style.height = initialSpacerHeight;
+        messageListWrapper.style.transform = '';
+        adjustMessageWrapperScroll();
+    }
+
+    function handleControlPayload(data) {
+        if (!data || typeof data !== "object") { return false; }
+        if ("deleteMessage" in data) { deleteMessageById(data.deleteMessage); return true; }
+        if ("clearAll" in data || data.action === "clear" || data.action === "clearAll") { clearAllMessages(); return true; }
+        if ("delete" in data) { deleteMessages(data, deleteOnlyLast); return true; }
+        if ("timeoutUser" in data && data.timeoutUser) {
+            const name = data.timeoutUser.username || data.timeoutUser.chatname;
+            if (name && data.timeoutUser.type && data.timeoutUser.duration) {
+                timedOutUsers[String(name) + ":" + String(data.timeoutUser.type)] = Date.now() + (Number(data.timeoutUser.duration) * 1000);
+            }
+            removeUserMessages(name, data.timeoutUser.type);
+            return true;
+        }
+        if ("blockUser" in data && data.blockUser) {
+            const name = data.blockUser.chatname || data.blockUser.username;
+            addLocalBlock(name, data.blockUser.type);
+            removeUserMessages(name, data.blockUser.type);
+            return true;
+        }
+        return false;
+    }
+
+    setInterval(function () {
+        if (!(showtime > 0)) { return; }
+        const now = Date.now();
+        getOverlayMessages().forEach(function (message) {
+            const ts = messageTimestamps.get(message.id);
+            if (ts && (now - ts) > showtime && !message.classList.contains('fading')) {
+                message.classList.add('fading');
+            }
+        });
+    }, 1000);
+
+    function buildBadges(data) {
+        if (hideBadges || !data.chatbadges) { return ""; }
+        var html = "";
+        data.chatbadges.forEach(function (badge) {
+            if (typeof badge === "object") {
+                if (badge.type === "img" && badge.src) { html += "<img class='badge' src='" + badge.src + "' alt='badge'>"; }
+                else if (badge.type === "svg" && badge.html) { html += "<span class='badge svg'>" + badge.html + "</span>"; }
+            } else {
+                html += "<img class='badge' src='" + badge + "' alt='badge'>";
+            }
+        });
+        return html;
+    }
+
+    function addMessageToOverlay(data) {
+        if (handleControlPayload(data)) { return; }
+        if (!data || typeof data !== "object") { return; }
+        if (isMessageBlocked(data)) { return; }
+        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg) { return; }
+        if (!data.chatname && data.meta) { return; }
+
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        const messageId = getPayloadMessageId(data);
+        messageDiv.id = messageId;
+        messageDiv.dataset.mid = messageId;
+        if (data.chatname) { messageDiv.dataset.chatname = data.chatname; }
+        if (data.type) { messageDiv.dataset.sourceType = data.type; }
+        messageTimestamps.set(messageId, Date.now());
+
+        var nameColor = data.nameColor;
+        if (!nameColor && typeof getColorFromType === 'function' && data.type) {
+            try { nameColor = getColorFromType(data.type); } catch (e) {}
+        }
+        if (!nameColor) { nameColor = "#9fd0ff"; }
+
+        var clockHtml = showClock ? "<span class='timestamp'>" + nowClock() + "</span>" : "";
+        var avatarHtml = (showAvatar && data.chatimg)
+            ? "<span class='avatar' style=\"background-image:url('" + data.chatimg + "')\"></span>" : "";
+        var iconHtml = (!hideIcon && data.type)
+            ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + data.type + ".png' alt='" + data.type + "' onerror=\"this.style.display='none'\">" : "";
+        var badgesHtml = buildBadges(data);
+        var nameHtml = data.chatname
+            ? "<span class='name' style='color:" + nameColor + "'>" + escapeHtml(data.chatname) + "</span>" : "";
+        var colonHtml = (data.chatname && (data.chatmessage || data.hasDonation)) ? "<span class='colon'>:</span>" : "";
+        var membershipHtml = data.membership ? "<span class='membership'>" + escapeHtml(data.membership) + "</span>" : "";
+        var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage) : "";
+        var textHtml = msg ? "<span class='text" + (data.event ? " event-text" : "") + "'>" + msg + "</span>" : "";
+        var donationHtml = data.hasDonation ? "<span class='donation'>" + escapeHtml(data.hasDonation) + "</span>" : "";
+        var contentImgHtml = data.contentimg
+            ? "<img class='content-img' src='" + data.contentimg + "' alt='' onerror=\"this.style.display='none'\">" : "";
+
+        messageDiv.innerHTML = clockHtml + avatarHtml + iconHtml + badgesHtml + membershipHtml +
+            nameHtml + colonHtml + textHtml + donationHtml + contentImgHtml;
+
+        if (reversed) {
+            const firstMessage = messageListWrapper.querySelector('.message');
+            if (firstMessage) { messageListWrapper.insertBefore(messageDiv, firstMessage); }
+            else { messageListWrapper.appendChild(messageDiv); }
+        } else {
+            messageListWrapper.appendChild(messageDiv);
+        }
+        void messageDiv.offsetWidth;
+        messageDiv.classList.add('visible');
+
+        const messages = getOverlayMessages();
+        if (messages.length > MAX_MESSAGES) {
+            const oldestMessage = reversed ? messages[messages.length - 1] : messages[0];
+            if (oldestMessage) {
+                if (!reversed) {
+                    const style = getComputedStyle(oldestMessage);
+                    const marginBottom = parseFloat(style.marginBottom) || 0;
+                    const space = oldestMessage.offsetHeight + marginBottom;
+                    var newHeight = (parseFloat(topSpacer.style.height) || 0) + space;
+                    if (newHeight > MAX_SPACER_HEIGHT_BEFORE_RESET) { newHeight = 0; }
+                    topSpacer.style.height = newHeight + 'px';
+                }
+                removeOverlayMessage(oldestMessage);
+            }
+        }
+        adjustMessageWrapperScroll();
+    }
+
+    // --- WebRTC bridge (hidden VDO.Ninja iframe) ---
+    var iframe = document.createElement("iframe");
+    if (featuredMode) {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+    } else {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + "&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
+    }
+    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+    document.body.appendChild(iframe);
+    window.addEventListener("message", function (e) {
+        if (e.source != iframe.contentWindow) return;
+        if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+            addMessageToOverlay(e.data.dataReceived.overlayNinja);
+        }
+    });
+
+    // --- optional WebSocket ---
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+    function setupSocket() {
+        socketserver.onclose = function () {
+            setTimeout(function () { conCon += 1; socketserver = new WebSocket(serverURL); setupSocket(); }, 100 * conCon);
+        };
+        socketserver.onopen = function () {
+            conCon = 1;
+            socketserver.send(JSON.stringify({ "join": roomID, "out": 3, "in": 4 }));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data) {
+                try { var data = JSON.parse(event.data); if (data) { addMessageToOverlay(data); } }
+                catch (err) { console.error("Error processing WebSocket message:", err); }
+            }
+        });
+    }
+    if (urlParams.has("server") || urlParams.has("server2")) {
+        serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+</script>
+</body>
+</html>

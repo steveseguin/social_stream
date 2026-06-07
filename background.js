@@ -1404,7 +1404,8 @@ function loadSettings(item, resave = false) {
 	let reloadNeeded = false;
 	let normalizedSettings = false;
 	const { storedId, storedState } = getPersistedSession();
-	const isFirstRun = !storedId && !(item && item.streamID) && storedState === null && !(item && "state" in item);
+	const hasIncomingSettings = !!(item && item.settings && Object.keys(item.settings).length);
+	const isFirstRun = !storedId && !(item && item.streamID) && storedState === null && !(item && "state" in item) && !hasIncomingSettings;
 	const incomingStreamId = item && item.streamID ? item.streamID : storedId;
 
 	if (incomingStreamId) {
@@ -1479,6 +1480,14 @@ function loadSettings(item, resave = false) {
 		Object.keys(patterns).forEach(pattern => {
 			settings[pattern] = findExistingEvents(pattern, { settings });
 		});
+	}
+
+	if (isFirstRun && !getSettingFlag("beginnerMode")) {
+		settings.beginnerMode = { setting: true };
+		if (item) {
+			item.settings = settings;
+		}
+		normalizedSettings = true;
 	}
 
 	const incomingState = item && "state" in item ? item.state : storedState;
@@ -1710,6 +1719,10 @@ function isVideoStatsSettingKey(settingKey) {
 function getSettingFlag(settingKey) {
 	const entry = settings && settings[settingKey];
 	return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+}
+
+function getPopupBeginnerMode() {
+	return getSettingFlag("beginnerMode");
 }
 
 function getSettingField(settingKey, fieldKey, fallback) {
@@ -4534,17 +4547,17 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			persistSession({ state: isExtensionOn });
 
 			updateExtensionState();
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
 		} else if (request.cmd && request.cmd === "getOnOffState") {
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
 			let responseData;
 			try {
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG, handleStatus: getHandleStatusSnapshot() };
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), documents: documentsRAG, handleStatus: getHandleStatusSnapshot() };
 			} catch (e) {
 				console.warn("Error including documentsRAG:", e);
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, handleStatus: getHandleStatusSnapshot() };
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), handleStatus: getHandleStatusSnapshot() };
 			}
 			sendResponse(responseData);
 		} else if (request.cmd && request.cmd === "testLLMProvider") {
@@ -6639,7 +6652,11 @@ async function sendToDestinations(message) {
 						customGifCommand: getMatchedCommandAlias(values.command, firstWord),
 						customGifCommands: aliases
 					});
-					sendTargetP2P({ ...message, ...{ contentimg: values.url, meta: gifMeta } }, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
+					const gifPayload = { ...message, ...{ contentimg: values.url, meta: gifMeta } }; // overwrite any existing contentimg. leave the rest of the meta data tho
+					sendTargetP2P(gifPayload, "gif");
+					if (gifMeta.customGifCommandId) {
+						sendTargetP2P(gifPayload, gifMeta.customGifCommandId);
+					}
 				}
 			});
 		}
