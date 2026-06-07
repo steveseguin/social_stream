@@ -862,84 +862,53 @@ function isFontAvailable(fontName) {
     return widthMonospace !== widthTest;
 }
 
-async function populateFontDropdown() {
-    const fonts = [
-        // Windows core UI/text
-        'Segoe UI', 'Segoe UI Variable', 'Segoe UI Emoji', 'Segoe UI Historic', 'Segoe UI Symbol', 'Bahnschrift', 'Ebrima', 'Gadugi', 'Javanese Text', 'Leelawadee UI', 'Lucida Sans Unicode', 'Malgun Gothic', 'Meiryo', 'Microsoft Himalaya', 'Microsoft JhengHei', 'Microsoft New Tai Lue', 'Microsoft PhagsPa', 'Microsoft Sans Serif', 'Microsoft Tai Le', 'Microsoft Uighur', 'Microsoft YaHei', 'Microsoft Yi Baiti', 'MingLiU-ExtB', 'Mongolian Baiti', 'MS Gothic', 'MS PGothic', 'MS UI Gothic', 'NSimSun', 'PMingLiU-ExtB', 'SimSun', 'SimSun-ExtB', 'Yu Gothic', 'Yu Gothic UI',
-        // Windows Latin staples
-        'Arial', 'Arial Black', 'Calibri', 'Cambria', 'Candara', 'Comic Sans MS', 'Consolas', 'Constantia', 'Corbel', 'Courier New', 'Franklin Gothic Medium', 'Gabriola', 'Georgia', 'Impact', 'Palatino Linotype', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana', 'Symbol', 'Webdings', 'Wingdings', 'Wingdings 2', 'Wingdings 3', 'Sitka Banner', 'Sitka Display', 'Sitka Heading', 'Sitka Small', 'Sitka Subheading', 'Sitka Text', 'Lucida Console',
-        // Developer favorites / code
-        'Cascadia Code', 'Cascadia Mono', 'Fira Code', 'Fira Mono', 'JetBrains Mono', 'Source Code Pro', 'IBM Plex Mono', 'Ubuntu Mono', 'Inconsolata', 'Monaspace Neon', 'Monaspace Argon',
-        // Popular sans/serif families
-        'Inter', 'Roboto', 'Open Sans', 'Noto Sans', 'Noto Serif', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Serif JP', 'Noto Naskh Arabic', 'Lato', 'Montserrat', 'Poppins', 'Oswald', 'Raleway', 'Nunito', 'Merriweather', 'Playfair Display', 'PT Sans', 'PT Serif', 'Source Sans 3', 'Source Serif 4', 'Source Sans Pro', 'Source Serif Pro', 'IBM Plex Sans', 'IBM Plex Serif', 'Ubuntu', 'Work Sans', 'Sora', 'Avenir', 'Avenir Next', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'Helvetica', 'Gill Sans',
-        // Other common
-        'Book Antiqua', 'Century Gothic', 'Garamond', 'Didot', 'Bodoni MT', 'Perpetua', 'Rockwell', 'Goudy Old Style', 'Copperplate', 'Brush Script MT'
-    ];
-	
-    var select = document.querySelector("[data-optionparam1='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
+const popupFontCandidates = [
+    'Segoe UI', 'Segoe UI Variable', 'Segoe UI Emoji', 'Segoe UI Historic', 'Segoe UI Symbol', 'Bahnschrift', 'Ebrima', 'Gadugi', 'Javanese Text', 'Leelawadee UI', 'Lucida Sans Unicode', 'Malgun Gothic', 'Meiryo', 'Microsoft Himalaya', 'Microsoft JhengHei', 'Microsoft New Tai Lue', 'Microsoft PhagsPa', 'Microsoft Sans Serif', 'Microsoft Tai Le', 'Microsoft Uighur', 'Microsoft YaHei', 'Microsoft Yi Baiti', 'MingLiU-ExtB', 'Mongolian Baiti', 'MS Gothic', 'MS PGothic', 'MS UI Gothic', 'NSimSun', 'PMingLiU-ExtB', 'SimSun', 'SimSun-ExtB', 'Yu Gothic', 'Yu Gothic UI',
+    'Arial', 'Arial Black', 'Calibri', 'Cambria', 'Candara', 'Comic Sans MS', 'Consolas', 'Constantia', 'Corbel', 'Courier New', 'Franklin Gothic Medium', 'Gabriola', 'Georgia', 'Impact', 'Palatino Linotype', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana', 'Symbol', 'Webdings', 'Wingdings', 'Wingdings 2', 'Wingdings 3', 'Sitka Banner', 'Sitka Display', 'Sitka Heading', 'Sitka Small', 'Sitka Subheading', 'Sitka Text', 'Lucida Console',
+    'Cascadia Code', 'Cascadia Mono', 'Fira Code', 'Fira Mono', 'JetBrains Mono', 'Source Code Pro', 'IBM Plex Mono', 'Ubuntu Mono', 'Inconsolata', 'Monaspace Neon', 'Monaspace Argon',
+    'Inter', 'Roboto', 'Open Sans', 'Noto Sans', 'Noto Serif', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Serif JP', 'Noto Naskh Arabic', 'Lato', 'Montserrat', 'Poppins', 'Oswald', 'Raleway', 'Nunito', 'Merriweather', 'Playfair Display', 'PT Sans', 'PT Serif', 'Source Sans 3', 'Source Serif 4', 'Source Sans Pro', 'Source Serif Pro', 'IBM Plex Sans', 'IBM Plex Serif', 'Ubuntu', 'Work Sans', 'Sora', 'Avenir', 'Avenir Next', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'Helvetica', 'Gill Sans',
+    'Book Antiqua', 'Century Gothic', 'Garamond', 'Didot', 'Bodoni MT', 'Perpetua', 'Rockwell', 'Goudy Old Style', 'Copperplate', 'Brush Script MT'
+];
+var popupAvailableFontCache = null;
+
+function getPopupAvailableFonts() {
+    if (!popupAvailableFontCache) {
+        popupAvailableFontCache = popupFontCandidates.filter(isFontAvailable);
+    }
+    return popupAvailableFontCache;
+}
+
+function populateFontDropdown(select) {
+    if (!select) return;
+    if (select.dataset.fontOptionsLoaded === "true") return;
+
+    const currentValue = select.value;
+    const existingValues = new Set(Array.from(select.options).map(option => option.value));
+    getPopupAvailableFonts().forEach(font => {
+        if (existingValues.has(font)) return;
+        let option = document.createElement("option");
+        option.value = font;
+        option.style = "font-family:'" + font + "'";
+        option.innerText = font + " abc123XYZ";
+        select.appendChild(option);
     });
-	
-	select = document.querySelector("[data-optionparam2='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
-    });
-	
-	select = document.querySelector("[data-optionparam4='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
-    });
-	
-	select = document.querySelector("[data-optionparam5='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
-    });
-	
-	select = document.querySelector("[data-optionparam1='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
-    });
-	
-	select = document.querySelector("[data-optionparam17='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
+    if (currentValue) {
+        select.value = currentValue;
+    }
+    select.dataset.fontOptionsLoaded = "true";
+}
+
+function setupLazyFontDropdowns() {
+    document.querySelectorAll("select[data-optionparam1='font'], select[data-optionparam2='font'], select[data-optionparam4='font'], select[data-optionparam5='font'], select[data-optionparam6='font'], select[data-optionparam7='font'], select[data-optionparam13='font'], select[data-optionparam17='font'], select[data-optionparam21='font']").forEach(function(select) {
+        if (select.dataset.lazyFonts === "true") return;
+        select.dataset.lazyFonts = "true";
+        const load = function() {
+            populateFontDropdown(select);
+        };
+        select.addEventListener("focus", load);
+        select.addEventListener("mousedown", load);
+        select.addEventListener("touchstart", load);
+        select.addEventListener("keydown", load);
     });
 }
 
@@ -988,6 +957,88 @@ function createUniqueVoiceIdentifiers(voices) {
 
     // Flatten the grouped voices back into a single array
     return Object.values(voicesByLang).flat();
+}
+
+var popupSpeechVoiceCache = null;
+var popupSpeechVoiceDropdownsLoaded = false;
+var popupSpeechVoiceSelectIds = ['systemLanguageSelect', 'languageSelect2', 'systemLanguageSelect10', 'systemLanguageSelect18'];
+
+function getPopupSpeechVoices() {
+    if (popupSpeechVoiceCache) return popupSpeechVoiceCache;
+    if (!window.speechSynthesis) return [];
+    const voices = speechSynthesis.getVoices();
+    if (!voices || !voices.length) return [];
+
+    popupSpeechVoiceCache = createUniqueVoiceIdentifiers(voices);
+    popupSpeechVoiceCache.sort((a, b) => {
+        if (a.default) return -1;
+        if (b.default) return 1;
+        return 0;
+    });
+    return popupSpeechVoiceCache;
+}
+
+function populateSystemVoiceDropdown(dropdown, voices) {
+    if (!dropdown || !voices || !voices.length) return;
+    const currentValue = dropdown.value;
+    const existingValues = new Set(Array.from(dropdown.options).map(option => option.value));
+
+    voices.forEach(voice => {
+        const voiceText = `${voice.name} (${voice.lang})`;
+        if (!existingValues.has(voice.code)) {
+            const option = document.createElement('option');
+            option.textContent = voiceText;
+            option.value = voice.code;
+            option.code = voice.code;
+            option.setAttribute('data-lang', voice.lang);
+            option.setAttribute('data-name', voice.name);
+            dropdown.appendChild(option);
+            existingValues.add(voice.code);
+        }
+    });
+
+    if (currentValue) {
+        dropdown.value = currentValue;
+    }
+}
+
+function populateSystemVoiceDropdowns() {
+    const voices = getPopupSpeechVoices();
+    if (!voices.length) return voices;
+
+    popupSpeechVoiceSelectIds.forEach(id => {
+        populateSystemVoiceDropdown(document.getElementById(id), voices);
+    });
+
+    if (typeof TTSManager !== 'undefined') {
+        TTSManager.voices = voices;
+    }
+    popupSpeechVoiceDropdownsLoaded = true;
+    return voices;
+}
+
+function setupLazySystemVoiceDropdowns() {
+    popupSpeechVoiceSelectIds.forEach(id => {
+        const dropdown = document.getElementById(id);
+        if (!dropdown || dropdown.dataset.lazySystemVoices === "true") return;
+        dropdown.dataset.lazySystemVoices = "true";
+        const load = function() {
+            populateSystemVoiceDropdowns();
+        };
+        dropdown.addEventListener("focus", load);
+        dropdown.addEventListener("mousedown", load);
+        dropdown.addEventListener("touchstart", load);
+        dropdown.addEventListener("keydown", load);
+    });
+
+    if (window.speechSynthesis) {
+        speechSynthesis.onvoiceschanged = function() {
+            popupSpeechVoiceCache = null;
+            if (popupSpeechVoiceDropdownsLoaded) {
+                populateSystemVoiceDropdowns();
+            }
+        };
+    }
 }
 
 function addUsername(username, type='blacklistusers') {
@@ -1508,27 +1559,17 @@ function setupSourceSelection(inputId, isSettingBased = false) {
     const addContainer = document.createElement('div');
     addContainer.className = 'add-source-container';
     
-    if (sourcesList && sourcesList.size > 0) {
-        addContainer.innerHTML = `
-            <select id="new${inputId}Type">
-                <option value="" selected>Select Sources</option>
-                ${Array.from(sourcesList).sort().map(source => 
-                    `<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
-                ).join('')}
-            </select>
-            <button id="add${inputId}">Add</button>
-        `;
-    } else {
-        addContainer.innerHTML = `
-            <input type="text" id="new${inputId}Type" placeholder="Source type">
-            <button id="add${inputId}">Add</button>
-        `;
-    }
+    addContainer.innerHTML = `
+        <input type="text" id="new${inputId}Type" placeholder="Source type" list="popupSourceTypesList">
+        <button id="add${inputId}">Add</button>
+    `;
     
     container.parentNode.classList.add("isolate");
     container.parentNode.insertBefore(listContainer, container.nextSibling);
     container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
     
+    setupLazySourceInput(document.getElementById(`new${inputId}Type`));
+
     // Add event listeners
     listContainer.addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-source')) {
@@ -2005,6 +2046,131 @@ const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
+var sortedSourcesListCache = null;
+var popupSourceDatalistLoaded = false;
+
+function formatSourceLabel(source) {
+    source = String(source || "");
+    return source ? source.charAt(0).toUpperCase() + source.slice(1) : "";
+}
+
+function getSortedSourcesList() {
+    if (!sortedSourcesListCache) {
+        sortedSourcesListCache = Array.from(sourcesList).sort();
+    }
+    return sortedSourcesListCache;
+}
+
+function loadSourcesListFromRuntimeManifest() {
+    try {
+        if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
+            const manifest = chrome.runtime.getManifest();
+            return collectSourcesFromManifest(manifest) > 0;
+        }
+    } catch (error) {
+        console.warn('Unable to load sources from chrome.runtime manifest:', error);
+    }
+    return sourcesList.size > 0;
+}
+
+function appendSourceOptions(select) {
+    if (!select || select.dataset.sourceOptionsLoaded === "true") return;
+    const currentValue = select.value;
+    getSortedSourcesList().forEach(source => {
+        const option = document.createElement('option');
+        option.value = source;
+        option.textContent = formatSourceLabel(source);
+        select.appendChild(option);
+    });
+    if (currentValue) {
+        select.value = currentValue;
+    }
+    select.dataset.sourceOptionsLoaded = "true";
+}
+
+function populateSourceDatalist() {
+    const datalist = document.getElementById("popupSourceTypesList") || (function() {
+        const list = document.createElement("datalist");
+        list.id = "popupSourceTypesList";
+        document.body.appendChild(list);
+        return list;
+    })();
+
+    if (popupSourceDatalistLoaded) return datalist;
+
+    datalist.innerHTML = "";
+    getSortedSourcesList().forEach(source => {
+        const option = document.createElement("option");
+        option.value = source;
+        option.label = formatSourceLabel(source);
+        datalist.appendChild(option);
+    });
+    popupSourceDatalistLoaded = true;
+    return datalist;
+}
+
+function ensureLazySourcesLoaded(callback) {
+    if (sourcesList.size > 0 || loadSourcesListFromRuntimeManifest()) {
+        if (callback) callback();
+        return Promise.resolve(true);
+    }
+    return ensureSourcesListLoaded().then(function(loaded) {
+        if (loaded && callback) callback();
+        return loaded;
+    });
+}
+
+function setupLazySourceSelect(select) {
+    if (!select || select.dataset.lazySourceSelect === "true") return;
+    select.dataset.lazySourceSelect = "true";
+    const load = function() {
+        ensureLazySourcesLoaded(function() {
+            appendSourceOptions(select);
+        });
+    };
+    select.addEventListener("focus", load);
+    select.addEventListener("mousedown", load);
+    select.addEventListener("touchstart", load);
+    select.addEventListener("keydown", load);
+}
+
+function setupLazySourceInput(input) {
+    if (!input || input.dataset.lazySourceInput === "true") return;
+    input.dataset.lazySourceInput = "true";
+    input.setAttribute("list", "popupSourceTypesList");
+    const load = function() {
+        ensureLazySourcesLoaded(function() {
+            populateSourceDatalist();
+        });
+    };
+    input.addEventListener("focus", load);
+    input.addEventListener("mousedown", load);
+    input.addEventListener("touchstart", load);
+    input.addEventListener("keydown", load);
+}
+
+function ensureSelectValueOption(select, value, label) {
+    if (!select || value === undefined || value === null || value === "") return;
+    value = String(value);
+    for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === value) return;
+    }
+
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label || value;
+    if (value.indexOf("lang=") !== -1) {
+        try {
+            const params = new URLSearchParams(value);
+            const lang = params.get("lang");
+            const voice = params.get("voice");
+            if (lang) option.setAttribute("data-lang", lang);
+            if (voice) option.setAttribute("data-name", voice);
+        } catch (e) {}
+    }
+    option.dataset.lazyStoredValue = "true";
+    select.appendChild(option);
+}
 
 function collectSourcesFromManifest(manifestData) {
     if (!manifestData || !Array.isArray(manifestData.content_scripts)) {
@@ -2038,6 +2204,10 @@ function collectSourcesFromManifest(manifestData) {
     } catch (error) {
         console.warn('Failed to collect sources from manifest:', error);
     }
+    if (added) {
+        sortedSourcesListCache = null;
+        popupSourceDatalistLoaded = false;
+    }
     return added;
 }
 
@@ -2046,15 +2216,8 @@ async function ensureSourcesListLoaded(options = {}) {
         return true;
     }
 
-    try {
-        if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
-            const manifest = chrome.runtime.getManifest();
-            if (collectSourcesFromManifest(manifest)) {
-                return true;
-            }
-        }
-    } catch (error) {
-        console.warn('Unable to load sources from chrome.runtime manifest:', error);
+    if (loadSourcesListFromRuntimeManifest()) {
+        return true;
     }
 
     if (window.ssappFallback && typeof window.ssappFallback.readJson === 'function') {
@@ -2906,6 +3069,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 const isSelect = ele.tagName === 'SELECT';
 
                 if (isSelect) {
+                    ensureSelectValueOption(ele, storedValue);
+
                     // Backward compatibility: if stored value doesn't have 'lang=' prefix but contains '&voice=',
                     // it's likely an old format. Try to find a matching option.
                     if (storedValue && storedValue.includes('&voice=') && !storedValue.includes('lang=')) {
@@ -3105,6 +3270,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 }
             }
 
+            ensureSelectValueOption(ele, settingObj.optionsetting);
             ele.value = settingObj.optionsetting;
             updateSettings(ele, sync);
 
@@ -3123,6 +3289,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting2" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting2='${key}']`);
         if (ele) {
+            ensureSelectValueOption(ele, settingObj.optionsetting2);
             ele.value = settingObj.optionsetting2;
             updateSettings(ele, sync);
             if (key == "ttsProvider") {
@@ -3134,6 +3301,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting10" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting10='${key}']`);
         if (ele) {
+            ensureSelectValueOption(ele, settingObj.optionsetting10);
             ele.value = settingObj.optionsetting10;
             updateSettings(ele, sync);
             // Note: handleTTSProvider10Visibility is called from processObjectSetting's main loop for optionparam10
@@ -5112,6 +5280,34 @@ function handleTextParam(ele, targetId, paramType, sync) {
     return true;
 }
 
+function refreshTtsProviderParamControls(paramNum, providerValue) {
+    paramNum = paramNum || '1';
+    const suffix = paramNum === '1' ? '' : String(paramNum);
+    const providerKey = isOpenAITTSProvider(providerValue) ? 'openai' : providerValue;
+    const section = document.getElementById(`${providerKey}TTS${suffix}`);
+    if (!section) return;
+
+    if (typeof beginPopupLinkRefreshBatch === "function") {
+        beginPopupLinkRefreshBatch();
+    }
+    try {
+        section.querySelectorAll(`input[data-param${paramNum}]`).forEach(function(input) {
+            if (input.checked) {
+                updateSettings(input, false);
+            }
+        });
+        section.querySelectorAll(`input[data-textparam${paramNum}], textarea[data-textparam${paramNum}], select[data-optionparam${paramNum}]`).forEach(function(input) {
+            updateSettings(input, false);
+        });
+    } finally {
+        if (typeof endPopupLinkRefreshBatch === "function") {
+            endPopupLinkRefreshBatch();
+        } else {
+            refreshLinks();
+        }
+    }
+}
+
 function handleOptionParam(ele, targetId, paramType, sync) {
     const targetElement = document.getElementById(targetId);
     if (!targetElement) return false;
@@ -5157,6 +5353,7 @@ function handleOptionParam(ele, targetId, paramType, sync) {
             } else if (paramNum === '' || paramNum === '1') {
                 handleTTSProviderVisibility(ele.value);
             }
+            refreshTtsProviderParamControls(paramNum || '1', ele.value);
         }
         
         // Check if this is a select element with language/voice options
@@ -5413,10 +5610,11 @@ function handleSpecialSettings(ele, sync) {
 }
 
 function handleOptionSetting(ele, sync) {
-    if (!ele.dataset.optionsetting && !ele.dataset.optionsetting2 && !ele.dataset.optionsetting10) return false;
+    if (!ele.dataset.optionsetting && !ele.dataset.optionsetting2 && !ele.dataset.optionsetting10 && !ele.dataset.optionsetting18) return false;
     
     const settingType = ele.dataset.optionsetting ? 'optionsetting' : 
-                       (ele.dataset.optionsetting2 ? 'optionsetting2' : 'optionsetting10');
+                       (ele.dataset.optionsetting2 ? 'optionsetting2' :
+                       (ele.dataset.optionsetting10 ? 'optionsetting10' : 'optionsetting18'));
     const settingValue = ele.dataset[settingType];
     
     // Handle poll type
@@ -5524,7 +5722,7 @@ function handleOptionSetting(ele, sync) {
     // Handle TTS Provider settings
     if (settingValue === "ttsProvider") {
 		
-        const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : '');
+        const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : (settingType === 'optionsetting18' ? '18' : ''));
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, `geminiTTS${suffix}`,
             `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
@@ -5537,7 +5735,8 @@ function handleOptionSetting(ele, sync) {
         });
         
         // Show elements relevant to the selected TTS provider
-        const selectedProvider = `${ele.value}TTS${suffix}`;
+        const providerKey = isOpenAITTSProvider(ele.value) ? "openai" : ele.value;
+        const selectedProvider = `${providerKey}TTS${suffix}`;
         if (document.getElementById(selectedProvider)) {
             document.getElementById(selectedProvider).classList.remove("hidden");
         }
@@ -7135,6 +7334,19 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         return document.getElementById(`ttsProvider${section || ""}`);
     },
 
+    isOpenAICompatibleProvider(provider) {
+        return typeof isOpenAITTSProvider === "function" ? isOpenAITTSProvider(provider) : provider === "openai";
+    },
+
+    isOfficialOpenAIEndpoint(endpoint) {
+        const value = (endpoint || "https://api.openai.com/v1/audio/speech").trim();
+        try {
+            return new URL(value).hostname.toLowerCase() === "api.openai.com";
+        } catch (e) {
+            return value.toLowerCase().indexOf("api.openai.com") !== -1;
+        }
+    },
+
     addTestButton(section) {
         const provider = this.getProviderSelect(section);
         if (!provider) return;
@@ -7197,6 +7409,20 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         const getText = (key, fallback = "") => {
             const ele = document.querySelector(`input[data-textparam${sectionKey}="${key}"],textarea[data-textparam${sectionKey}="${key}"]`);
             return ele ? ele.value : fallback;
+        };
+        const getTextAny = (keys, fallback = "") => {
+            for (let i = 0; i < keys.length; i++) {
+                const value = getText(keys[i]);
+                if (value) return value;
+            }
+            return fallback;
+        };
+        const getOptionAny = (keys, fallback = "") => {
+            for (let i = 0; i < keys.length; i++) {
+                const value = getOption(keys[i]);
+                if (value) return value;
+            }
+            return fallback;
         };
         const systemLanguageSelect = section === "2" ? document.getElementById('languageSelect2') : getId('systemLanguageSelect');
         const systemLanguageEnabled = getParam('lang');
@@ -7273,27 +7499,27 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             
             // OpenAI settings
             openai: {
-                key: getId('openaiAPIKey')?.value || getText('openaikey'),
-                endpoint: getId('openaiEndpoint')?.value || getText('openaiendpoint', "https://api.openai.com/v1/audio/speech"),
+                key: getId('openaiAPIKey')?.value || getTextAny(['openaikey', 'customttskey', 'localttskey']),
+                endpoint: getId('openaiEndpoint')?.value || getTextAny(['openaiendpoint', 'customttsendpoint', 'localttsendpoint'], "https://api.openai.com/v1/audio/speech"),
                 voice: (() => {
                     if (openaiVoiceSelect?.value === 'custom') {
-                        const customVoice = getId('openaiCustomVoice')?.value || getText('openaicustomvoice');
+                        const customVoice = getId('openaiCustomVoice')?.value || getTextAny(['openaicustomvoice', 'customttsvoice', 'localttsvoice']);
                         return customVoice || 'alloy';
                     }
-                    return openaiVoiceSelect?.value || getOption('voiceopenai', 'alloy');
+                    return openaiVoiceSelect?.value || getOptionAny(['voiceopenai', 'customttsvoice', 'localttsvoice'], 'alloy');
                 })(),
                 model: (() => {
-                    if (getParam('openaimodel')) {
+                    if (getParam('openaimodel') || getParam('customttsmodel') || getParam('localttsmodel')) {
                         if (openaiModelSelect?.value === 'custom') {
-                            const customModel = getId('openaiCustomModel')?.value || getText('openaicustommodelx');
+                            const customModel = getId('openaiCustomModel')?.value || getTextAny(['openaicustommodelx', 'customttsmodel', 'localttsmodel']);
                             return customModel || 'tts-1';
                         }
-                        return openaiModelSelect?.value || 'tts-1';
+                        return openaiModelSelect?.value || getOptionAny(['openaimodel', 'customttsmodel', 'localttsmodel'], 'tts-1');
                     }
                     return 'tts-1';
                 })(),
                 speed: getParam('openaispeed') ? getNumber('openaispeed', 1.0) : 1.0,
-                format: getParam('openaiformat') ? getOption('openaiformat', 'mp3') : 'mp3'
+                format: getParam('openaiformat') ? getOptionAny(['openaiformat', 'customttsformat', 'localttsformat'], 'mp3') : 'mp3'
             }
         };
         
@@ -7380,7 +7606,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             if (provider === 'gemini' && !settings.gemini.key) {
                 throw new Error('Gemini API key is required');
             }
-            if (provider === 'openai' && !settings.openai.key) {
+            if (this.isOpenAICompatibleProvider(provider) && this.isOfficialOpenAIEndpoint(settings.openai.endpoint) && !settings.openai.key) {
+                if (provider !== 'openai') {
+                    throw new Error('Enter a Custom / Local TTS Endpoint URL or run the local TTS bridge first');
+                }
                 throw new Error('OpenAI API key is required');
             }
 
@@ -7411,7 +7640,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 if (!this.premiumQueueActive) {
                     await this.speechifyTTS(text, settings, section);
                 }
-            } else if ((settings.service == "openai") && settings.openai.key) {
+            } else if (this.isOpenAICompatibleProvider(settings.service) && (settings.openai.key || !this.isOfficialOpenAIEndpoint(settings.openai.endpoint))) {
                 if (!this.premiumQueueActive) {
                     await this.openaiTTS(text, settings, section);
                 }
@@ -7429,6 +7658,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 }
             } else if (!settings.service || (settings.service == "system")) {
                 this.systemTTS(text, settings);
+            } else if (allow) {
+                this.showFeedback(`${this.getServiceName(section)} is not configured for testing`, 'error', section);
+                this.finishedAudio();
             }
         } catch (error) {
             this.showFeedback(`Error: ${error.message}`, 'error');
@@ -7870,6 +8102,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     openaiTTS(text, settings) {
         this.premiumQueueActive = true;
         const url = settings.openai.endpoint || "https://api.openai.com/v1/audio/speech";
+        const headers = {
+            "Content-Type": "application/json"
+        };
         
         const data = {
             model: settings.openai.model,
@@ -7878,20 +8113,29 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             response_format: settings.openai.format,
             speed: settings.openai.speed
         };
+
+        if (settings.openai.key) {
+            headers.Authorization = `Bearer ${settings.openai.key}`;
+        }
         
         this.fetchAudioContent(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${settings.openai.key}`
-            },
+            headers,
             body: JSON.stringify(data)
         }, 'blob');
     },
     
     async fetchAudioContent(url, options, type) {
+        const fetchOptions = Object.assign({}, options || {});
+        let timeoutId = null;
+        if (typeof AbortController !== "undefined" && !fetchOptions.signal) {
+            const controller = new AbortController();
+            fetchOptions.signal = controller.signal;
+            timeoutId = setTimeout(() => controller.abort(), 8000);
+        }
+
 		try {
-			const response = await fetch(url, options);
+			const response = await fetch(url, fetchOptions);
 			
 			if (!response.ok) {
 				//console.log(response);
@@ -7918,9 +8162,14 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 				this.playAudio(blobUrl);
 			}
 		} catch (error) {
-			this.showFeedback(`Audio fetch error: ${error.message}`, 'error');
+			const message = error && error.name === "AbortError" ? "Request timed out. Check that the TTS server is running." : error.message;
+			this.showFeedback(`Audio fetch error: ${message}`, 'error');
 			console.error("Error fetching audio:", error);
 			this.finishedAudio();
+		} finally {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
 		}
 	},
     
@@ -8250,7 +8499,7 @@ function initHotkeys() {
 }
 
 document.addEventListener("DOMContentLoaded", async function(event) {
-    await ensureSourcesListLoaded();
+    loadSourcesListFromRuntimeManifest();
     setupDynamicCustomUrlControls();
 
     // Initialize hotkey system
@@ -8436,16 +8685,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (!sourceSelector) {
 		  console.error("Could not find source-selector element");
 		} else {
-			if (!sourcesList.size) {
-				await ensureSourcesListLoaded();
-			}
-			
-			Array.from(sourcesList).sort().forEach(source => {
-				const option = document.createElement('option');
-				option.value = source;
-				option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
-				sourceSelector.appendChild(option);
-			});
+			setupLazySourceSelect(sourceSelector);
 		}
 		
 		const customInject = document.getElementById("custominject");
@@ -8456,14 +8696,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (injectButton) {
 			injectButton.addEventListener('click', function() {
 			  const sourceDropdown = document.getElementById('source-selector');
-			  const source = sourceDropdown ? sourceDropdown.value : '';
-			  
-			  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-				chrome.runtime.sendMessage({
-				  type: 'injectCustomSource',
-				  source: source,
-				  tabId: tabs[0].id
-				});
+			  ensureLazySourcesLoaded(function() {
+				  appendSourceOptions(sourceDropdown);
+				  const source = sourceDropdown ? sourceDropdown.value : '';
+
+				  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+					chrome.runtime.sendMessage({
+					  type: 'injectCustomSource',
+					  source: source,
+					  tabId: tabs[0].id
+					});
+				  });
 			  });
 			});
 		}
@@ -8537,29 +8780,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			const addContainer = document.createElement('div');
 			addContainer.className = 'add-username-container';
 			
-			// Replace text input with select dropdown if sourcesList is available
-			if (sourcesList && sourcesList.size > 0) {
-			  addContainer.innerHTML = `
+			addContainer.innerHTML = `
 				<input type="text" id="new${id}" placeholder="Add username">
-				<select id="new${id}Type">
-				  <option value="" selected>Select Sources</option>
-				  ${Array.from(sourcesList).sort().map(source => 
-					`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
-				  ).join('')}
-				</select>
+				<input type="text" id="new${id}Type" placeholder="Source type (optional)" list="popupSourceTypesList">
 				<button id="add${id}">Add</button>
-			  `;
-			} else {
-			  addContainer.innerHTML = `
-				<input type="text" id="new${id}" placeholder="Add username">
-				<input type="text" id="new${id}Type" placeholder="Source type (optional)">
-				<button id="add${id}">Add</button>
-			  `;
-			}
+			`;
 			
 			container.parentNode.classList.add("isolate");
 			container.parentNode.insertBefore(listContainer, container.nextSibling);
 			container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+			setupLazySourceInput(document.getElementById(`new${id}Type`));
 		  }
 		});
 		
@@ -8614,27 +8844,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				const addContainer = document.createElement('div');
 				addContainer.className = 'add-source-container';
 				
-				// Replace text input with select dropdown if sourcesList is available
-				if (sourcesList && sourcesList.size > 0) {
-				  addContainer.innerHTML = `
-					<select id="new${id}Type">
-					  <option value="" selected>Select Sources</option>
-					  ${Array.from(sourcesList).sort().map(source => 
-						`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
-					  ).join('')}
-					</select>
+				addContainer.innerHTML = `
+					<input type="text" id="new${id}Type" placeholder="Source type" list="popupSourceTypesList">
 					<button id="add${id}">Add</button>
-				  `;
-				} else {
-				  addContainer.innerHTML = `
-					<input type="text" id="new${id}Type" placeholder="Source type">
-					<button id="add${id}">Add</button>
-				  `;
-				}
+				`;
 				
 				container.parentNode.classList.add("isolate");
 				container.parentNode.insertBefore(listContainer, container.nextSibling);
 				container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+				setupLazySourceInput(document.getElementById(`new${id}Type`));
 			}
 		});
 		
@@ -8698,63 +8916,22 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	}); */
 	
+	setupLazyFontDropdowns();
 	setTimeout(function(){
-		populateFontDropdown(); 
 		if (typeof PollManager !== 'undefined') {
 			PollManager.init();
 		}
 	},1000);
 	
-	// populate language drop down
-	if (speechSynthesis){
-		async function populateVoices() {
-			const voices = createUniqueVoiceIdentifiers(speechSynthesis.getVoices());
-
-			voices.sort((a, b) => {
-				if (a.default) {
-					return -1; // a is the default, move a to the front
-				} else if (b.default) {
-					return 1; // b is the default, move b to the front
-				} else {
-					return 0; // neither a nor b is the default, keep original order
-				}
-			});
-
-			const populateDropdown = (dropdownId) => {
-				const dropdown = document.getElementById(dropdownId);
-				if (!dropdown) return;
-
-				const existingOptions = new Set(Array.from(dropdown.options).map(option => option.textContent));
-
-				voices.forEach(voice => {
-					const voiceText = `${voice.name} (${voice.lang})`;
-					if (!existingOptions.has(voiceText)) {
-						const option = document.createElement('option');
-						option.textContent = voiceText;
-						option.value = voice.code; // This sets the value attribute
-						option.code = voice.code;   // <--- THIS IS THE CRUCIAL LINE THAT WAS MISSING
-						option.setAttribute('data-lang', voice.lang);
-						option.setAttribute('data-name', voice.name);
-						dropdown.appendChild(option);
-					}
-				});
-			};
-
-			populateDropdown('systemLanguageSelect');
-			populateDropdown('languageSelect2');
-			populateDropdown('systemLanguageSelect10');
-			populateDropdown('systemLanguageSelect18');
-
-			if (typeof TTSManager !== 'undefined') {
-				try {
-					TTSManager.init(voices)
-				} catch(e){
-					console.error(e);
-				}
-			}
+	if (typeof TTSManager !== 'undefined') {
+		try {
+			TTSManager.init([]);
+		} catch(e){
+			console.error(e);
 		}
-		speechSynthesis.onvoiceschanged = populateVoices;
 	}
+
+	setupLazySystemVoiceDropdowns();
 
 	var popupSearchInput = document.getElementById('searchInput');
 	var popupSearchHiddenClass = 'popup-search-hidden';
@@ -8832,7 +9009,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				addPopupSearchPart(parts, attr.value);
 				continue;
 			}
-			if (attr.name === 'title' || attr.name === 'aria-label' || attr.name === 'alt') {
+			if (attr.name === 'title' || attr.name === 'aria-label' || attr.name === 'alt' || attr.name === 'placeholder') {
 				if (attr.name === 'title' && /(must first interact|lookup first)/i.test(attr.value || '')) {
 					continue;
 				}
@@ -9053,7 +9230,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return;
 		}
 		clearPopupSearchHidden();
+		var openStates = [];
+		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
+			openStates.push({
+				input: input,
+				checked: input.checked
+			});
+			input.checked = true;
+		});
 		popupSearchIndex = createPopupSearchIndex();
+		openStates.forEach(function(state) {
+			state.input.checked = state.checked;
+		});
 	}
 
 	function popupSearchRecordMatches(record, terms) {

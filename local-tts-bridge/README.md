@@ -8,6 +8,24 @@ http://127.0.0.1:8124/v1/audio/speech
 
 It has no npm dependencies.
 
+## How SSN Calls It
+
+SSN sends the same OpenAI-compatible JSON body it would send to OpenAI:
+
+```json
+{
+  "model": "tts-1",
+  "input": "Chat message text",
+  "voice": "nova",
+  "response_format": "wav",
+  "speed": 1
+}
+```
+
+The bridge returns the upstream response to SSN with browser-safe CORS headers. Binary audio is preferred. SSN also supports JSON responses containing an audio URL or base64 audio, but the bridge itself does not rewrite OpenAI-compatible responses.
+
+SSN currently buffers the returned audio before playback. Upstream streaming endpoints can still be proxied through a custom bridge later, but the current SSN custom/local TTS client does not progressively play streamed chunks.
+
 ## OpenAI-Compatible Servers
 
 Use this for openedai-speech, Chatterbox-TTS-Server, chatterbox-tts-api, Kokoro-FastAPI, and any server that accepts `POST /v1/audio/speech`.
@@ -77,3 +95,7 @@ SSN_TTS_TARGET_BEARER
 SSN_TTS_FORWARD_AUTH=1
 SSN_TTS_EXTRA_JSON={}
 ```
+
+## Desktop App Notes
+
+The standalone Social Stream Ninja desktop app uses the same `dock.html` URL parameters as the Chrome extension. Local app windows may be less CORS constrained than Chrome, but this bridge is still the safest path for third-party servers that do not allow browser requests or do not expose an OpenAI-compatible endpoint.

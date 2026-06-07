@@ -1,18 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('darkMode');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
-                document.documentElement.classList.add('dark-mode');
-            }
-        })();
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Stream Ninja - Local AI TTS Guide</title>
+    <script src="js/standalone-theme.js"></script>
     <style>
         :root {
             --primary-color: #2196F3;
@@ -40,6 +32,19 @@
             --border-color: #424242;
             --code-bg: #000000;
             --code-text: #ECEFF1;
+        }
+
+        html[data-theme="dark"],
+        body[data-theme="dark"] {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .path-card,
+        [data-theme="dark"] .screen-map,
+        [data-theme="dark"] .fake-field {
+            color: var(--text-color);
         }
 
         body {
@@ -163,6 +168,8 @@
             border-radius: 3px;
             font-family: 'Consolas', 'Courier New', monospace;
             font-size: 0.9em;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         [data-theme="dark"] code {
@@ -220,6 +227,12 @@
         @media (max-width: 700px) {
             .path-grid { grid-template-columns: 1fr; }
             nav ul { columns: 1; }
+            table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
         }
 
         .path-card {
@@ -289,12 +302,70 @@
             word-break: break-all;
             white-space: pre-wrap;
         }
+
+        .link-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .link-row a {
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-weight: 600;
+        }
+
+        .screen-map {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-color);
+            margin: 18px 0;
+            overflow: hidden;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.12);
+        }
+
+        .screen-map-title {
+            background: var(--primary-color);
+            color: #fff;
+            padding: 10px 14px;
+            font-weight: 700;
+        }
+
+        .screen-map-body {
+            padding: 16px;
+        }
+
+        .fake-field {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin: 10px 0;
+            background: var(--card-bg);
+        }
+
+        .fake-field strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .fake-button {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #fff;
+            border-radius: 6px;
+            padding: 8px 14px;
+            margin-top: 8px;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
-            <button class="theme-toggle" onclick="toggleTheme()">
+            <button class="theme-toggle" data-theme-toggle type="button">
                 <span>🌓</span>
                 <span class="theme-text">Toggle Dark Mode</span>
             </button>
@@ -309,9 +380,13 @@
             <h3 style="margin-top:0">Table of Contents</h3>
             <ul>
                 <li><a href="#overview">Overview</a></li>
+                <li><a href="#where-to-click">Where to Click in SSN</a></li>
+                <li><a href="#flow">Self-Hosted Flow</a></li>
                 <li><a href="#builtin">Path 1 — Built-in TTS (Zero Setup)</a></li>
+                <li><a href="#desktop-app">Browser and Desktop App Notes</a></li>
                 <li><a href="#server">Path 2 — Self-Hosted TTS Server</a></li>
-                <li><a href="#voice-cloning">Voice Cloning Options</a></li>
+                <li><a href="#voice-cloning">How Voice Cloning Works</a></li>
+                <li><a href="#hardware">Computer Requirements</a></li>
                 <li><a href="#kokoro-fastapi">Kokoro-FastAPI Setup</a></li>
                 <li><a href="#openedai">openedai-speech Setup</a></li>
                 <li><a href="#bridge">Local TTS Bridge</a></li>
@@ -356,6 +431,97 @@
             <div class="success">
                 <strong>Start with Path 1.</strong> The built-in Kokoro TTS rivals cloud services in quality, runs entirely in your browser, and works with OBS out of the box. Only move to Path 2 if you need more control or different models.
             </div>
+        </div>
+
+        <!-- WHERE TO CLICK -->
+        <h2 id="where-to-click">Where to Click in SSN</h2>
+        <div class="card">
+            <p>In the extension popup, open the TTS provider selector and choose <strong>Custom / Local TTS Endpoint</strong>. That shows the OpenAI-compatible local endpoint fields and the link back to this guide.</p>
+
+            <div class="screen-map" role="img" aria-label="Social Stream Ninja local TTS setup fields">
+                <div class="screen-map-title">SSN Popup - TTS Provider</div>
+                <div class="screen-map-body">
+                    <div class="fake-field">
+                        <strong>TTS Provider</strong>
+                        Custom / Local TTS Endpoint
+                    </div>
+                    <div class="fake-field">
+                        <strong>API Key</strong>
+                        Optional for local endpoints. Leave blank for <code>localhost</code> / <code>127.0.0.1</code>.
+                    </div>
+                    <div class="fake-field">
+                        <strong>Custom / Local API Endpoint</strong>
+                        <code>http://127.0.0.1:8124/v1/audio/speech</code> for the SSN bridge, or the server endpoint from the setup section below.
+                    </div>
+                    <div class="fake-field">
+                        <strong>Voice / Model / Format</strong>
+                        Use the voice name from the local server. Use <code>wav</code> when a voice-cloning server returns WAV.
+                    </div>
+                    <span class="fake-button">Test</span>
+                </div>
+            </div>
+
+            <div class="info">
+                <strong>About screenshots:</strong> the SSN field map above shows the local endpoint fields. Third-party server UIs change by project version, so their current screenshots and UI details are linked from each project repo near the relevant setup step.
+            </div>
+        </div>
+
+        <!-- FLOW -->
+        <h2 id="flow">Self-Hosted Flow</h2>
+        <div class="card">
+            <p>SSN treats a local/self-hosted TTS server like an OpenAI-compatible speech endpoint. The core flow is:</p>
+            <div class="code">chat text -> SSN TTS request -> local endpoint or SSN bridge -> TTS server -> audio response -> SSN playback</div>
+
+            <h3>Request Shape</h3>
+            <p>For <code>ttsprovider=customtts</code>, <code>localtts</code>, or <code>openai</code>, SSN sends a JSON POST to the configured endpoint:</p>
+            <div class="code">POST /v1/audio/speech
+{
+  "model": "tts-1",
+  "input": "Chat message text",
+  "voice": "af_bella",
+  "response_format": "mp3",
+  "speed": 1.0
+}</div>
+
+            <h3>CORS and the Bridge</h3>
+            <p>If the request comes from Chrome or an OBS browser source, the local server must allow browser CORS requests. If it does not, run the <a href="../local-tts-bridge/README.md" target="_blank">SSN local TTS bridge</a> and point SSN at <code>http://127.0.0.1:8124/v1/audio/speech</code>. The bridge adds browser-safe CORS headers and can translate GPT-SoVITS or F5-TTS wrapper requests.</p>
+
+            <h3>Supported Audio Responses</h3>
+            <table>
+                <tr>
+                    <th>Response</th>
+                    <th>SSN support</th>
+                    <th>Notes</th>
+                </tr>
+                <tr>
+                    <td>Binary audio</td>
+                    <td class="check">Yes</td>
+                    <td>Best option. Return <code>audio/mpeg</code>, <code>audio/wav</code>, <code>audio/ogg</code>, <code>audio/aac</code>, or another browser-playable audio type.</td>
+                </tr>
+                <tr>
+                    <td>JSON with audio URL</td>
+                    <td class="check">Yes</td>
+                    <td>SSN checks <code>url</code>, <code>audio_url</code>, <code>output_url</code>, nested <code>data.url</code>, and the first <code>data[]</code> item.</td>
+                </tr>
+                <tr>
+                    <td>JSON with base64 audio</td>
+                    <td class="check">Yes</td>
+                    <td>SSN checks <code>audio</code>, <code>audio_data</code>, <code>audioContent</code>, <code>b64_json</code>, nested <code>data</code> fields, and data URLs.</td>
+                </tr>
+                <tr>
+                    <td>Raw PCM</td>
+                    <td class="partial">Only if wrapped</td>
+                    <td>Return PCM as a WAV file or base64 WAV. A browser audio element cannot reliably play raw PCM bytes directly.</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>Recommended formats:</strong> use <code>mp3</code> for small files and broad browser support, <code>wav</code> for local cloning servers and bridge testing, and <code>opus</code> only when the server and browser both support it.
+            </div>
+
+            <h3>Streaming Audio</h3>
+            <p>SSN does not currently do progressive playback for custom/local TTS endpoints. It waits for the response blob or JSON audio payload, then plays it. Some upstream servers expose streaming endpoints, but SSN's current OpenAI-compatible path buffers before playback.</p>
+            <p>Practical result: keep chat TTS snippets short. Streaming support would need a separate playback path using streamed WAV/MP3 chunks, MediaSource, WebCodecs, or a server-side mixer.</p>
         </div>
 
         <!-- PATH 1: BUILT-IN -->
@@ -432,6 +598,39 @@ British male:   bm_george, bm_lewis</div>
             </div>
         </div>
 
+        <!-- DESKTOP APP NOTES -->
+        <h2 id="desktop-app">Browser and Desktop App Notes</h2>
+        <div class="card">
+            <p>The Chrome extension, OBS browser source, and standalone Social Stream Ninja desktop app all use the same <code>dock.html</code> URL parameters for TTS.</p>
+
+            <table>
+                <tr>
+                    <th>Surface</th>
+                    <th>Local TTS behavior</th>
+                    <th>Audio capture</th>
+                </tr>
+                <tr>
+                    <td>Chrome extension / OBS browser source</td>
+                    <td>Browser fetch requires CORS from the local server, unless you use the SSN bridge.</td>
+                    <td>Use OBS Browser Source with "Control audio via OBS".</td>
+                </tr>
+                <tr>
+                    <td>Standalone desktop app</td>
+                    <td>Uses the same provider settings. The app's local file windows are less CORS constrained, but the bridge is still the safest path for servers that reject browser-style requests.</td>
+                    <td>Capture desktop/app audio, or route the app to a virtual audio cable.</td>
+                </tr>
+                <tr>
+                    <td>Built-in Kokoro in desktop app</td>
+                    <td>The app can use its local <code>ninjafy.tts</code> path for Kokoro instead of relying only on browser model loading.</td>
+                    <td>Audio plays from the app, so use desktop/app audio capture.</td>
+                </tr>
+            </table>
+
+            <div class="warning">
+                <strong>Packaging note:</strong> when shipping the standalone app, make sure the current <code>social_stream</code> files, <code>thirdparty/</code> assets, and <code>docs/</code> guide are included in the app's fallback resource bundle.
+            </div>
+        </div>
+
         <!-- PATH 2: SELF-HOSTED SERVER -->
         <h2 id="server">Path 2 — Self-Hosted TTS Server</h2>
         <div class="card">
@@ -442,6 +641,11 @@ British male:   bm_george, bm_lewis</div>
             </div>
 
             <p>Three recommended options:</p>
+            <div class="link-row">
+                <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI repo</a>
+                <a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech repo</a>
+                <a href="https://github.com/eduardolat/kokoro-web" target="_blank">kokoro-web repo</a>
+            </div>
             <table>
                 <tr>
                     <th>Server</th>
@@ -451,33 +655,107 @@ British male:   bm_george, bm_lewis</div>
                     <th>Default Port</th>
                 </tr>
                 <tr>
-                    <td><strong>Kokoro-FastAPI</strong> <span class="badge green">Recommended</span></td>
+                    <td><strong><a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">Kokoro-FastAPI</a></strong> <span class="badge green">Recommended</span></td>
                     <td>Kokoro 82M</td>
                     <td class="partial">Optional</td>
                     <td>~2 GB</td>
                     <td>8880</td>
                 </tr>
                 <tr>
-                    <td><strong>openedai-speech</strong> (Piper) <span class="badge">Lightweight</span></td>
+                    <td><strong><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a></strong> (Piper) <span class="badge">Lightweight</span></td>
                     <td>Piper TTS</td>
                     <td class="cross">CPU only</td>
                     <td>&lt;1 GB</td>
                     <td>8000</td>
                 </tr>
                 <tr>
-                    <td><strong>kokoro-web</strong></td>
+                    <td><strong><a href="https://github.com/eduardolat/kokoro-web" target="_blank">kokoro-web</a></strong></td>
                     <td>Kokoro 82M</td>
                     <td class="partial">Optional</td>
                     <td>~2 GB</td>
                     <td>3000</td>
                 </tr>
             </table>
+
+            <h3>Which Package Fits?</h3>
+            <table>
+                <tr>
+                    <th>Package</th>
+                    <th>Best benefit</th>
+                    <th>Tradeoff</th>
+                </tr>
+                <tr>
+                    <td><strong>Built-in Kokoro</strong></td>
+                    <td>Best first choice: no server, strong quality, private, works in browser and desktop app.</td>
+                    <td>No voice cloning.</td>
+                </tr>
+                <tr>
+                    <td><strong>Kokoro-FastAPI</strong></td>
+                    <td>OpenAI-compatible server, easy Docker setup, CPU or GPU, many Kokoro voices.</td>
+                    <td>No real voice cloning; voice blending and custom voice features depend on the server build.</td>
+                </tr>
+                <tr>
+                    <td><strong>openedai-speech</strong></td>
+                    <td>Light OpenAI-compatible endpoint; Piper is CPU-friendly and XTTS adds cloning around a 4 GB VRAM target.</td>
+                    <td>The repo says it is mostly obsolete, so treat it as useful but not future-proof.</td>
+                </tr>
+                <tr>
+                    <td><strong>Chatterbox servers</strong></td>
+                    <td>Voice cloning, web UI options, OpenAI-compatible APIs, long-text tooling.</td>
+                    <td>CUDA/GPU support is smoother than CPU for some builds; setup varies by server fork.</td>
+                </tr>
+                <tr>
+                    <td><strong>GPT-SoVITS</strong></td>
+                    <td>Strong cloning/control with short references and transcript support.</td>
+                    <td>Not OpenAI-compatible by default; use the SSN bridge mode.</td>
+                </tr>
+                <tr>
+                    <td><strong>F5-TTS</strong></td>
+                    <td>Natural zero-shot cloning with prompt WAV + transcript.</td>
+                    <td>Official project is not a simple OpenAI endpoint; use a wrapper or bridge mode.</td>
+                </tr>
+                <tr>
+                    <td><strong>Qwen3-TTS</strong></td>
+                    <td>Modern cloning and voice-design features, including smaller 0.6B/1.7B models.</td>
+                    <td>Library/demo first; needs a wrapper for SSN.</td>
+                </tr>
+                <tr>
+                    <td><strong>MisoTTS</strong></td>
+                    <td>High-end prompted speech generation.</td>
+                    <td>Not a 6 GB VRAM local target; use remote/custom hosting if needed.</td>
+                </tr>
+            </table>
         </div>
 
         <!-- VOICE CLONING OPTIONS -->
-        <h2 id="voice-cloning">Voice Cloning Options</h2>
+        <h2 id="voice-cloning">How Voice Cloning Works</h2>
         <div class="card">
+            <p>Voice cloning is not a separate SSN mode. It is a feature inside some local TTS servers. SSN sends the chat text to a local endpoint; the server chooses the cloned voice from a saved reference audio file, a voice profile, or bridge configuration.</p>
+
+            <h3>Typical Flow</h3>
+            <ol>
+                <li>Record a clean reference clip, usually 3 to 30 seconds of one speaker with little background noise.</li>
+                <li>Some engines also require the exact transcript of that reference clip.</li>
+                <li>The local server converts the reference into a speaker prompt, embedding, or voice profile.</li>
+                <li>SSN sends live chat text to the endpoint using <code>ttsprovider=customtts</code>.</li>
+                <li>The server returns a playable audio file, usually WAV or MP3, and SSN plays it in the dock/browser source.</li>
+            </ol>
+
+            <div class="warning">
+                <strong>Use consented voices only.</strong> Voice cloning can sound like a real person, so only use voices you own, have permission to use, or have clearly licensed for this purpose.
+            </div>
+
             <p>For 6 GB VRAM or less, target small zero-shot cloning models and OpenAI-compatible servers first. Bigger models can still work through the same SSN endpoint if the user hosts them elsewhere.</p>
+
+            <div class="link-row">
+                <a href="https://github.com/matatonic/openedai-speech" target="_blank">XTTS / openedai-speech</a>
+                <a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a>
+                <a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a>
+                <a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a>
+                <a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS</a>
+                <a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS</a>
+                <a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS</a>
+            </div>
 
             <table>
                 <tr>
@@ -487,37 +765,37 @@ British male:   bm_george, bm_lewis</div>
                     <th>API path for SSN</th>
                 </tr>
                 <tr>
-                    <td><strong>Qwen3-TTS 0.6B Base</strong></td>
+                    <td><strong><a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS 0.6B Base</a></strong></td>
                     <td>3-second reference audio</td>
                     <td class="check">Likely</td>
                     <td>Use an OpenAI-compatible wrapper, then <code>ttsprovider=customtts</code></td>
                 </tr>
                 <tr>
-                    <td><strong>XTTS-v2 / openedai-speech</strong></td>
+                    <td><strong><a href="https://github.com/matatonic/openedai-speech" target="_blank">XTTS-v2 / openedai-speech</a></strong></td>
                     <td>Short WAV reference voices</td>
                     <td class="check">Yes, about 4 GB reported by openedai-speech</td>
                     <td><code>/v1/audio/speech</code></td>
                 </tr>
                 <tr>
-                    <td><strong>Chatterbox Turbo / Server</strong></td>
+                    <td><strong><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">Chatterbox Turbo / Server</a></strong></td>
                     <td>Reference-audio cloning</td>
                     <td class="partial">Likely if using Turbo / small chunks</td>
                     <td>OpenAI-compatible server builds, or the bridge</td>
                 </tr>
                 <tr>
-                    <td><strong>GPT-SoVITS</strong></td>
+                    <td><strong><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></strong></td>
                     <td>5-second zero-shot, 1-minute few-shot</td>
                     <td class="check">Likely with fp16 / lightweight install</td>
                     <td>Use <code>scripts/local-tts-bridge.cjs --mode gptsovits</code></td>
                 </tr>
                 <tr>
-                    <td><strong>F5-TTS</strong></td>
+                    <td><strong><a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS</a></strong></td>
                     <td>Prompt WAV + transcript</td>
                     <td class="partial">Maybe; depends on build and vocoder</td>
                     <td>Use an OpenAI-compatible wrapper, or <code>--mode f5</code> for F5-TTS server wrappers</td>
                 </tr>
                 <tr>
-                    <td><strong>MisoTTS 8B</strong></td>
+                    <td><strong><a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS 8B</a></strong></td>
                     <td>Prompted audio context</td>
                     <td class="cross">No; project recommends 24 GB VRAM</td>
                     <td>Remote/custom endpoint only</td>
@@ -527,6 +805,81 @@ British male:   bm_george, bm_lewis</div>
             <div class="info">
                 <strong>Best SSN target shape:</strong> accept <code>POST /v1/audio/speech</code> with <code>{ model, input, voice, response_format, speed }</code> and return a playable audio file. That covers OpenAI, Coqui/XTTS, Kokoro wrappers, Qwen wrappers, and most proxy services.
             </div>
+        </div>
+
+        <!-- HARDWARE -->
+        <h2 id="hardware">Computer Requirements</h2>
+        <div class="card">
+            <p>These are practical starting points, not hard guarantees. Model version, quantization, text length, Docker image, and background apps can change memory use.</p>
+
+            <table>
+                <tr>
+                    <th>Option</th>
+                    <th>Minimum practical computer</th>
+                    <th>Good target</th>
+                    <th>Notes</th>
+                </tr>
+                <tr>
+                    <td>System TTS / eSpeak</td>
+                    <td>Any modern PC</td>
+                    <td>Any PC</td>
+                    <td>Fast, low quality, no cloning.</td>
+                </tr>
+                <tr>
+                    <td>Built-in Kitten</td>
+                    <td>Low-end CPU, 4 GB RAM</td>
+                    <td>Modern laptop CPU, 8 GB RAM</td>
+                    <td>Small ONNX model, fast startup.</td>
+                </tr>
+                <tr>
+                    <td>Built-in Piper</td>
+                    <td>Modern CPU, 4-8 GB RAM</td>
+                    <td>Modern CPU, 8 GB RAM</td>
+                    <td>Good low-resource neural voice option.</td>
+                </tr>
+                <tr>
+                    <td>Built-in Kokoro</td>
+                    <td>Modern CPU, 8 GB RAM</td>
+                    <td>WebGPU-capable GPU or fast CPU, 8-16 GB RAM</td>
+                    <td>Best zero-setup quality. First load downloads model assets.</td>
+                </tr>
+                <tr>
+                    <td>Kokoro-FastAPI</td>
+                    <td>CPU Docker host, 8 GB RAM</td>
+                    <td>NVIDIA GPU optional, 8-16 GB RAM</td>
+                    <td>Good local server when browser model loading is not ideal.</td>
+                </tr>
+                <tr>
+                    <td>openedai-speech Piper</td>
+                    <td>CPU, 4-8 GB RAM</td>
+                    <td>CPU, 8 GB RAM</td>
+                    <td>Light OpenAI-compatible server.</td>
+                </tr>
+                <tr>
+                    <td>openedai-speech XTTS</td>
+                    <td>NVIDIA GPU around 4 GB VRAM, 8-16 GB RAM</td>
+                    <td>6 GB+ NVIDIA GPU, 16 GB RAM</td>
+                    <td>Voice cloning path; CPU is possible but slow.</td>
+                </tr>
+                <tr>
+                    <td>Chatterbox servers</td>
+                    <td>CPU can work for some builds but is slow</td>
+                    <td>6 GB+ NVIDIA GPU, 16 GB RAM</td>
+                    <td>Use GPU when cloning or processing long text.</td>
+                </tr>
+                <tr>
+                    <td>GPT-SoVITS / F5-TTS / Qwen3-TTS</td>
+                    <td>CPU testing only, slow</td>
+                    <td>6 GB+ NVIDIA GPU for smaller/optimized models, 16 GB RAM</td>
+                    <td>Wrapper choice and model size matter. Expect more setup.</td>
+                </tr>
+                <tr>
+                    <td>MisoTTS 8B</td>
+                    <td>Not recommended locally at 6 GB VRAM</td>
+                    <td>24 GB VRAM or remote host</td>
+                    <td>The repo recommends high-VRAM GPUs for interactive use.</td>
+                </tr>
+            </table>
         </div>
 
         <!-- TESTED SERVER NOTES -->
@@ -541,42 +894,42 @@ British male:   bm_george, bm_lewis</div>
                     <th>Notes</th>
                 </tr>
                 <tr>
-                    <td><strong>openedai-speech</strong></td>
+                    <td><strong><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a></strong></td>
                     <td class="check">Direct or bridge</td>
                     <td>OpenAI-compatible <code>/v1/audio/speech</code>. Piper and XTTS voice cloning both returned playable WAV files in CPU tests.</td>
                 </tr>
                 <tr>
-                    <td><strong>chatterbox-tts-api</strong></td>
+                    <td><strong><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a></strong></td>
                     <td class="check">Direct or bridge</td>
                     <td>OpenAI-compatible <code>/v1/audio/speech</code>. Uses configured reference audio for cloning.</td>
                 </tr>
                 <tr>
-                    <td><strong>Chatterbox-TTS-Server</strong></td>
+                    <td><strong><a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a></strong></td>
                     <td class="check">Direct or bridge</td>
                     <td>OpenAI-compatible endpoint and Web UI. Tested with <code>Robert.wav</code> reference voice on CPU.</td>
                 </tr>
                 <tr>
-                    <td><strong>GPT-SoVITS</strong></td>
+                    <td><strong><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></strong></td>
                     <td class="partial">Bridge mode</td>
                     <td>Run SSN bridge with <code>--mode gptsovits</code>; target server is <code>/tts</code>, not OpenAI-compatible.</td>
                 </tr>
                 <tr>
-                    <td><strong>F5-TTS_server</strong></td>
+                    <td><strong><a href="https://github.com/ValyrianTech/F5-TTS_server" target="_blank">F5-TTS_server</a></strong></td>
                     <td class="partial">Bridge mode</td>
                     <td>Run SSN bridge with <code>--mode f5</code>; target server uses <code>GET /synthesize_speech/</code>.</td>
                 </tr>
                 <tr>
-                    <td><strong>F5-TTS official</strong></td>
+                    <td><strong><a href="https://github.com/SWivid/F5-TTS" target="_blank">F5-TTS official</a></strong></td>
                     <td class="partial">Needs wrapper</td>
                     <td>CLI, Gradio, and socket server first. Use an OpenAI-compatible wrapper or the F5 bridge mode against a wrapper.</td>
                 </tr>
                 <tr>
-                    <td><strong>Qwen3-TTS</strong></td>
+                    <td><strong><a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">Qwen3-TTS</a></strong></td>
                     <td class="partial">Needs wrapper</td>
                     <td>Library and Gradio demo first. Good candidate for a small OpenAI-compatible wrapper around <code>generate_voice_clone</code>.</td>
                 </tr>
                 <tr>
-                    <td><strong>MisoTTS</strong></td>
+                    <td><strong><a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">MisoTTS</a></strong></td>
                     <td class="cross">Remote/custom only</td>
                     <td>Voice cloning is supported, but the 8B model is not a 6 GB VRAM target and has no local REST endpoint in the repo.</td>
                 </tr>
@@ -654,7 +1007,7 @@ bm_george, bm_lewis                              (British male)</div>
         <!-- LOCAL TTS BRIDGE -->
         <h2 id="bridge">Local TTS Bridge</h2>
         <div class="card">
-            <p>If a local TTS server does not allow browser CORS requests, run SSN's Node bridge locally and point SSN at the bridge instead. The bridge returns the third-party audio response unchanged. The standalone starter folder is <code>local-tts-bridge/</code>.</p>
+            <p>If a local TTS server does not allow browser CORS requests, run SSN's Node bridge locally and point SSN at the bridge instead. The bridge returns the third-party audio response unchanged. The standalone starter folder is <code>local-tts-bridge/</code>; see the <a href="../local-tts-bridge/README.md" target="_blank">bridge README</a> for the code and launch options.</p>
 
             <h3>OpenAI-Compatible Proxy</h3>
             <div class="code">$env:SSN_TTS_TARGET="http://127.0.0.1:8000/v1/audio/speech"
@@ -727,6 +1080,10 @@ npm run local-tts-bridge -- --mode f5</div>
                 </tr>
             </table>
 
+            <div class="info">
+                <strong>Endpoint aliases:</strong> <code>customttsendpoint</code> and <code>localttsendpoint</code> also work. <code>customttsvoice</code>, <code>localttsvoice</code>, <code>customttsmodel</code>, <code>localttsmodel</code>, <code>customttsformat</code>, and <code>localttsformat</code> are accepted aliases for the OpenAI-style fields.
+            </div>
+
             <h3>Full Example URLs</h3>
             <h4>Kokoro-FastAPI:</h4>
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://localhost:8880/v1/audio/speech&voiceopenai=af_bella&openaispeed=1.1</div>
@@ -780,6 +1137,9 @@ npm run local-tts-bridge -- --mode f5</div>
             <div class="info">
                 <strong>No API key needed.</strong> When using a local server (non-openai.com URL), Social Stream Ninja sends the request without an Authorization header. You do not need to configure a key.
             </div>
+
+            <h3>Built-in Browser Options Worth Supporting</h3>
+            <p>SSN already supports OS/browser <code>speechSynthesis</code>, built-in Kokoro, Piper, Kitten, and eSpeak. The most useful future browser-side additions would be an audio output device picker where <code>setSinkId</code> is available, more Piper voice choices, and a dedicated progressive streaming playback path for servers that can stream audio chunks.</p>
         </div>
 
         <!-- OBS AUDIO CAPTURE -->
@@ -807,11 +1167,42 @@ npm run local-tts-bridge -- --mode f5</div>
             <div class="step"><span class="step-number">2</span><div class="step-content">In OBS, add an <strong>Audio Input Capture</strong> or <strong>Desktop Audio Capture</strong> source</div></div>
             <div class="step"><span class="step-number">3</span><div class="step-content">If you want TTS isolated from other desktop audio, use a virtual audio cable:<br>
                 <ul>
-                    <li><strong>Windows:</strong> VB-Audio Virtual Cable (free)</li>
-                    <li>Set the virtual cable as output for the SSN app in Windows Sound settings</li>
-                    <li>Capture the virtual cable input in OBS</li>
+                    <li><strong>Windows:</strong> <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a> (free)</li>
+                    <li>Set <strong>CABLE Input</strong> as the output for the SSN app in Windows Sound settings</li>
+                    <li>Capture <strong>CABLE Output</strong> in OBS with Audio Input Capture</li>
                 </ul>
             </div></div>
+
+            <h3>Windows Audio Routing Links</h3>
+            <div class="link-row">
+                <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a>
+                <a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a>
+                <a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router (legacy)</a>
+            </div>
+
+            <h3>Windows 10 Per-App Route</h3>
+            <div class="step"><span class="step-number">1</span><div class="step-content">Open <strong>Sound Settings &gt; App volume and device preferences</strong>.</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Find the browser or SSN app in the app list.</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">Set Output to <strong>CABLE Input (VB-Audio Virtual Cable)</strong>.</div></div>
+            <div class="step"><span class="step-number">4</span><div class="step-content">In OBS, add <strong>Audio Input Capture</strong> and choose <strong>CABLE Output</strong>.</div></div>
+
+            <h3>Windows 11 Per-App Route</h3>
+            <div class="step"><span class="step-number">1</span><div class="step-content">Open <strong>Settings &gt; System &gt; Sound &gt; Volume Mixer</strong>.</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Find the browser or SSN app.</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">Set Output device to <strong>CABLE Input (VB-Audio Virtual Cable)</strong>.</div></div>
+            <div class="step"><span class="step-number">4</span><div class="step-content">In OBS, add <strong>Audio Input Capture</strong> and choose <strong>CABLE Output</strong>.</div></div>
+
+            <h3>Audio Router Software</h3>
+            <p><a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router</a> can route one app to a virtual cable, but it is older software. Prefer the Windows per-app route when it works.</p>
+            <div class="step"><span class="step-number">1</span><div class="step-content">Install Audio Router.</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Route the browser or SSN app to <strong>CABLE Input</strong>.</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">In OBS, capture <strong>CABLE Output</strong>.</div></div>
+
+            <h3>Voicemeeter Advanced Route</h3>
+            <p><a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a> is best when you need to hear TTS locally, route it to OBS, and keep it separate from music/game audio.</p>
+            <div class="step"><span class="step-number">1</span><div class="step-content">Install Voicemeeter and set it as the Windows default output.</div></div>
+            <div class="step"><span class="step-number">2</span><div class="step-content">Set Hardware Out to your speakers/headphones.</div></div>
+            <div class="step"><span class="step-number">3</span><div class="step-content">Route the virtual output into OBS as an Audio Input Capture source.</div></div>
 
             <div class="warning">
                 <strong>System TTS (<code>?speech=en-US</code> without a provider) uses OS speech synthesis</strong>, which cannot be captured by OBS browser source. Use one of the providers above (<code>kokoro</code>, <code>piper</code>, etc.) instead.
@@ -977,32 +1368,5 @@ npm run local-tts-bridge -- --mode f5</div>
         </footer>
     </div>
 
-    <script>
-        function toggleTheme() {
-            const body = document.body;
-            const themeText = document.querySelector('.theme-text');
-            const currentTheme = body.getAttribute('data-theme');
-            if (currentTheme === 'dark') {
-                body.removeAttribute('data-theme');
-                themeText.textContent = 'Toggle Dark Mode';
-                localStorage.setItem('theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                themeText.textContent = 'Toggle Light Mode';
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
-        // Apply saved theme on load
-        (function() {
-            const saved = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const themeText = document.querySelector('.theme-text');
-            if (saved === 'dark' || (!saved && prefersDark)) {
-                document.body.setAttribute('data-theme', 'dark');
-                if (themeText) themeText.textContent = 'Toggle Light Mode';
-            }
-        })();
-    </script>
 </body>
 </html>
