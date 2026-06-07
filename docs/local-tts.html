@@ -311,8 +311,11 @@
                 <li><a href="#overview">Overview</a></li>
                 <li><a href="#builtin">Path 1 — Built-in TTS (Zero Setup)</a></li>
                 <li><a href="#server">Path 2 — Self-Hosted TTS Server</a></li>
+                <li><a href="#voice-cloning">Voice Cloning Options</a></li>
                 <li><a href="#kokoro-fastapi">Kokoro-FastAPI Setup</a></li>
                 <li><a href="#openedai">openedai-speech Setup</a></li>
+                <li><a href="#bridge">Local TTS Bridge</a></li>
+                <li><a href="#tested-servers">Tested Server Notes</a></li>
                 <li><a href="#connect">Connecting to Social Stream</a></li>
                 <li><a href="#obs">Getting Audio into OBS</a></li>
                 <li><a href="#comparison">Comparison Table</a></li>
@@ -471,6 +474,115 @@ British male:   bm_george, bm_lewis</div>
             </table>
         </div>
 
+        <!-- VOICE CLONING OPTIONS -->
+        <h2 id="voice-cloning">Voice Cloning Options</h2>
+        <div class="card">
+            <p>For 6 GB VRAM or less, target small zero-shot cloning models and OpenAI-compatible servers first. Bigger models can still work through the same SSN endpoint if the user hosts them elsewhere.</p>
+
+            <table>
+                <tr>
+                    <th>Option</th>
+                    <th>Voice cloning</th>
+                    <th>6 GB VRAM fit</th>
+                    <th>API path for SSN</th>
+                </tr>
+                <tr>
+                    <td><strong>Qwen3-TTS 0.6B Base</strong></td>
+                    <td>3-second reference audio</td>
+                    <td class="check">Likely</td>
+                    <td>Use an OpenAI-compatible wrapper, then <code>ttsprovider=customtts</code></td>
+                </tr>
+                <tr>
+                    <td><strong>XTTS-v2 / openedai-speech</strong></td>
+                    <td>Short WAV reference voices</td>
+                    <td class="check">Yes, about 4 GB reported by openedai-speech</td>
+                    <td><code>/v1/audio/speech</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Chatterbox Turbo / Server</strong></td>
+                    <td>Reference-audio cloning</td>
+                    <td class="partial">Likely if using Turbo / small chunks</td>
+                    <td>OpenAI-compatible server builds, or the bridge</td>
+                </tr>
+                <tr>
+                    <td><strong>GPT-SoVITS</strong></td>
+                    <td>5-second zero-shot, 1-minute few-shot</td>
+                    <td class="check">Likely with fp16 / lightweight install</td>
+                    <td>Use <code>scripts/local-tts-bridge.cjs --mode gptsovits</code></td>
+                </tr>
+                <tr>
+                    <td><strong>F5-TTS</strong></td>
+                    <td>Prompt WAV + transcript</td>
+                    <td class="partial">Maybe; depends on build and vocoder</td>
+                    <td>Use an OpenAI-compatible wrapper, or <code>--mode f5</code> for F5-TTS server wrappers</td>
+                </tr>
+                <tr>
+                    <td><strong>MisoTTS 8B</strong></td>
+                    <td>Prompted audio context</td>
+                    <td class="cross">No; project recommends 24 GB VRAM</td>
+                    <td>Remote/custom endpoint only</td>
+                </tr>
+            </table>
+
+            <div class="info">
+                <strong>Best SSN target shape:</strong> accept <code>POST /v1/audio/speech</code> with <code>{ model, input, voice, response_format, speed }</code> and return a playable audio file. That covers OpenAI, Coqui/XTTS, Kokoro wrappers, Qwen wrappers, and most proxy services.
+            </div>
+        </div>
+
+        <!-- TESTED SERVER NOTES -->
+        <h2 id="tested-servers">Tested Server Notes</h2>
+        <div class="card">
+            <p>These are the self-hosted voice-cloning targets checked for SSN compatibility.</p>
+
+            <table>
+                <tr>
+                    <th>Server</th>
+                    <th>SSN path</th>
+                    <th>Notes</th>
+                </tr>
+                <tr>
+                    <td><strong>openedai-speech</strong></td>
+                    <td class="check">Direct or bridge</td>
+                    <td>OpenAI-compatible <code>/v1/audio/speech</code>. Piper and XTTS voice cloning both returned playable WAV files in CPU tests.</td>
+                </tr>
+                <tr>
+                    <td><strong>chatterbox-tts-api</strong></td>
+                    <td class="check">Direct or bridge</td>
+                    <td>OpenAI-compatible <code>/v1/audio/speech</code>. Uses configured reference audio for cloning.</td>
+                </tr>
+                <tr>
+                    <td><strong>Chatterbox-TTS-Server</strong></td>
+                    <td class="check">Direct or bridge</td>
+                    <td>OpenAI-compatible endpoint and Web UI. Tested with <code>Robert.wav</code> reference voice on CPU.</td>
+                </tr>
+                <tr>
+                    <td><strong>GPT-SoVITS</strong></td>
+                    <td class="partial">Bridge mode</td>
+                    <td>Run SSN bridge with <code>--mode gptsovits</code>; target server is <code>/tts</code>, not OpenAI-compatible.</td>
+                </tr>
+                <tr>
+                    <td><strong>F5-TTS_server</strong></td>
+                    <td class="partial">Bridge mode</td>
+                    <td>Run SSN bridge with <code>--mode f5</code>; target server uses <code>GET /synthesize_speech/</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong>F5-TTS official</strong></td>
+                    <td class="partial">Needs wrapper</td>
+                    <td>CLI, Gradio, and socket server first. Use an OpenAI-compatible wrapper or the F5 bridge mode against a wrapper.</td>
+                </tr>
+                <tr>
+                    <td><strong>Qwen3-TTS</strong></td>
+                    <td class="partial">Needs wrapper</td>
+                    <td>Library and Gradio demo first. Good candidate for a small OpenAI-compatible wrapper around <code>generate_voice_clone</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong>MisoTTS</strong></td>
+                    <td class="cross">Remote/custom only</td>
+                    <td>Voice cloning is supported, but the 8B model is not a 6 GB VRAM target and has no local REST endpoint in the repo.</td>
+                </tr>
+            </table>
+        </div>
+
         <!-- KOKORO-FASTAPI -->
         <h2 id="kokoro-fastapi">Kokoro-FastAPI Setup</h2>
         <div class="card">
@@ -539,6 +651,38 @@ bm_george, bm_lewis                              (British male)</div>
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8000/v1/audio/speech&voiceopenai=nova</div>
         </div>
 
+        <!-- LOCAL TTS BRIDGE -->
+        <h2 id="bridge">Local TTS Bridge</h2>
+        <div class="card">
+            <p>If a local TTS server does not allow browser CORS requests, run SSN's Node bridge locally and point SSN at the bridge instead. The bridge returns the third-party audio response unchanged. The standalone starter folder is <code>local-tts-bridge/</code>.</p>
+
+            <h3>OpenAI-Compatible Proxy</h3>
+            <div class="code">$env:SSN_TTS_TARGET="http://127.0.0.1:8000/v1/audio/speech"
+npm run local-tts-bridge</div>
+            <p>Or run it from the bridge folder:</p>
+            <div class="code">cd local-tts-bridge
+node server.cjs</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&voiceopenai=nova</div>
+
+            <h3>GPT-SoVITS Proxy Mode</h3>
+            <p>GPT-SoVITS uses its own <code>/tts</code> JSON shape, so the bridge can translate SSN's OpenAI-compatible request into the GPT-SoVITS request body.</p>
+            <div class="code">$env:SSN_TTS_REF_AUDIO_PATH="C:\voices\speaker.wav"
+$env:SSN_TTS_REF_TEXT="Reference audio transcript here."
+$env:SSN_TTS_TARGET="http://127.0.0.1:9880/tts"
+npm run local-tts-bridge -- --mode gptsovits</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&openaiformat=wav</div>
+
+            <h3>F5-TTS Server Proxy Mode</h3>
+            <p>Some F5-TTS server wrappers expose <code>/synthesize_speech/?text=...&amp;voice=...</code> instead of an OpenAI-compatible endpoint. The bridge can translate SSN's request into that query format.</p>
+            <div class="code">$env:SSN_TTS_TARGET="http://127.0.0.1:7860/synthesize_speech/"
+npm run local-tts-bridge -- --mode f5</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&voiceopenai=default_en&openaiformat=wav</div>
+
+            <div class="info">
+                <strong>Bridge endpoint:</strong> <code>http://127.0.0.1:8124/v1/audio/speech</code>. Change the port with <code>SSN_TTS_BRIDGE_PORT=8125</code> if needed.
+            </div>
+        </div>
+
         <!-- CONNECTING TO SSN -->
         <h2 id="connect">Connecting to Social Stream Ninja</h2>
         <div class="card">
@@ -553,8 +697,8 @@ bm_george, bm_lewis                              (British male)</div>
                 </tr>
                 <tr>
                     <td><code>ttsprovider</code></td>
-                    <td><code>openai</code></td>
-                    <td>Use the OpenAI-compatible TTS path</td>
+                    <td><code>customtts</code> or <code>openai</code></td>
+                    <td>Use the OpenAI-compatible TTS path. Use <code>customtts</code> for local/self-hosted endpoints.</td>
                 </tr>
                 <tr>
                     <td><code>openaiendpoint</code></td>
@@ -585,13 +729,13 @@ bm_george, bm_lewis                              (British male)</div>
 
             <h3>Full Example URLs</h3>
             <h4>Kokoro-FastAPI:</h4>
-            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8880/v1/audio/speech&voiceopenai=af_bella&openaispeed=1.1</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://localhost:8880/v1/audio/speech&voiceopenai=af_bella&openaispeed=1.1</div>
 
             <h4>openedai-speech:</h4>
-            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8000/v1/audio/speech&voiceopenai=nova</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://localhost:8000/v1/audio/speech&voiceopenai=nova</div>
 
             <h4>kokoro-web:</h4>
-            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:3000/api/v1/audio/speech&voiceopenai=af_bella</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://localhost:3000/api/v1/audio/speech&voiceopenai=af_bella</div>
 
             <h3>Additional TTS Options</h3>
             <p>These work with any TTS provider, including local servers:</p>
@@ -788,6 +932,7 @@ bm_george, bm_lewis                              (British male)</div>
             <p>Most FastAPI-based servers (Kokoro-FastAPI, openedai-speech) allow all origins by default. If you see a CORS error:</p>
             <ul>
                 <li>Check the server's documentation for CORS configuration.</li>
+                <li>Run <code>npm run local-tts-bridge</code> and point SSN to <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
                 <li>The <strong>SSN standalone app</strong> does not have this limitation — use it instead.</li>
             </ul>
 
@@ -813,6 +958,13 @@ bm_george, bm_lewis                              (British male)</div>
             <ul>
                 <li>Kokoro-FastAPI: <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">github.com/remsky/Kokoro-FastAPI</a></li>
                 <li>openedai-speech: <a href="https://github.com/matatonic/openedai-speech" target="_blank">github.com/matatonic/openedai-speech</a></li>
+                <li>chatterbox-tts-api: <a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">github.com/travisvn/chatterbox-tts-api</a></li>
+                <li>Chatterbox-TTS-Server: <a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">github.com/devnen/Chatterbox-TTS-Server</a></li>
+                <li>GPT-SoVITS: <a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">github.com/RVC-Boss/GPT-SoVITS</a></li>
+                <li>F5-TTS: <a href="https://github.com/SWivid/F5-TTS" target="_blank">github.com/SWivid/F5-TTS</a></li>
+                <li>F5-TTS_server: <a href="https://github.com/ValyrianTech/F5-TTS_server" target="_blank">github.com/ValyrianTech/F5-TTS_server</a></li>
+                <li>Qwen3-TTS: <a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">github.com/QwenLM/Qwen3-TTS</a></li>
+                <li>MisoTTS: <a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">github.com/MisoLabsAI/MisoTTS</a></li>
             </ul>
         </div>
 

@@ -161,6 +161,30 @@ TTS.openAISettings = {
     speed: 1.0
 };
 
+TTS.customEndpointProviderAliases = {
+    "custom": true,
+    "customtts": true,
+    "local": true,
+    "localtts": true,
+    "node": true,
+    "nodejs": true,
+    "connector": true
+};
+
+TTS.isCustomEndpointProvider = function(provider) {
+    return !!TTS.customEndpointProviderAliases[(provider || "").toString().trim().toLowerCase()];
+};
+
+TTS.isOfficialOpenAIEndpoint = function(endpoint) {
+    return !endpoint || /(^|\.)api\.openai\.com$/i.test((function() {
+        try {
+            return new URL(endpoint).hostname;
+        } catch (e) {
+            return endpoint || "";
+        }
+    })());
+};
+
 TTS.geminiSettings = {
     model: "gemini-2.5-flash-preview-tts",
     voice: "Kore",
@@ -639,15 +663,20 @@ TTS.configure = function(urlParams) {
     TTS.GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;
     TTS.SpeechifyAPIKey = urlParams.get("speechifykey") || false;
-    TTS.OpenAIAPIKey = urlParams.get("openaikey") || false;
+    TTS.OpenAIAPIKey = urlParams.get("openaikey") || urlParams.get("customttskey") || urlParams.get("localttskey") || false;
     TTS.GeminiAPIKey = urlParams.get("geminikey") || urlParams.get("geminiapikey") || urlParams.get("geminiApiKey") || false;
     TTS.useKokoroTTS = urlParams.has("kokorotts") || urlParams.has("kokoro") || false;
     TTS.usePiper = urlParams.has("piper") || urlParams.has("pipertts") || false;
     TTS.useEspeak = urlParams.has("espeak") || urlParams.has("espeaktts") || false;
     TTS.useKitten = urlParams.has("kitten") || urlParams.has("kittentts") || false;
 
+    var configuredOpenAIEndpoint = urlParams.get("openaiendpoint") || urlParams.get("customttsendpoint") || urlParams.get("localttsendpoint") || "https://api.openai.com/v1/audio/speech";
+
     // Provider selection
-    TTS.TTSProvider = urlParams.get("ttsprovider") || "system";
+    TTS.TTSProvider = (urlParams.get("ttsprovider") || "system").toString().trim().toLowerCase();
+    if (TTS.isCustomEndpointProvider(TTS.TTSProvider)) {
+        TTS.TTSProvider = "openai";
+    }
 
     // Validate provider selection
     if (TTS.TTSProvider !== "system") {
@@ -671,7 +700,7 @@ TTS.configure = function(urlParams) {
         } else if (TTS.TTSProvider === "speechify" && !TTS.SpeechifyAPIKey) {
             console.warn("Speechify selected but no API key provided. Falling back to system TTS.");
             TTS.TTSProvider = "system";
-        } else if (TTS.TTSProvider === "openai" && !TTS.OpenAIAPIKey) {
+        } else if (TTS.TTSProvider === "openai" && !TTS.OpenAIAPIKey && TTS.isOfficialOpenAIEndpoint(configuredOpenAIEndpoint)) {
             console.warn("OpenAI selected but no API key provided. Falling back to system TTS.");
             TTS.TTSProvider = "system";
         }
@@ -772,11 +801,17 @@ TTS.configure = function(urlParams) {
 
     // OpenAI settings
     TTS.openAISettings.apiKey = TTS.OpenAIAPIKey;
-    TTS.openAISettings.endpoint = urlParams.get("openaiendpoint") || "https://api.openai.com/v1/audio/speech";
-    TTS.openAISettings.model = urlParams.get("openaimodel") || "tts-1";
-    TTS.openAISettings.voice = urlParams.get("voiceopenai") || "alloy";
-    TTS.openAISettings.responseFormat = urlParams.get("openaiformat") || "mp3";
-    TTS.openAISettings.speed = urlParams.has("openaispeed") ? parseFloat(urlParams.get("openaispeed")) || 1.0 : TTS.rate;
+    TTS.openAISettings.endpoint = configuredOpenAIEndpoint;
+    TTS.openAISettings.model = urlParams.get("openaimodel") || urlParams.get("customttsmodel") || urlParams.get("localttsmodel") || "tts-1";
+    if (TTS.openAISettings.model === "custom") {
+        TTS.openAISettings.model = urlParams.get("openaicustommodelx") || urlParams.get("customttsmodel") || urlParams.get("localttsmodel") || "tts-1";
+    }
+    TTS.openAISettings.voice = urlParams.get("voiceopenai") || urlParams.get("customttsvoice") || urlParams.get("localttsvoice") || "alloy";
+    if (TTS.openAISettings.voice === "custom") {
+        TTS.openAISettings.voice = urlParams.get("openaicustomvoice") || urlParams.get("customttsvoice") || urlParams.get("localttsvoice") || "alloy";
+    }
+    TTS.openAISettings.responseFormat = urlParams.get("openaiformat") || urlParams.get("customttsformat") || urlParams.get("localttsformat") || "mp3";
+    TTS.openAISettings.speed = urlParams.has("openaispeed") ? parseFloat(urlParams.get("openaispeed")) || 1.0 : (urlParams.has("customttsspeed") ? parseFloat(urlParams.get("customttsspeed")) || 1.0 : (urlParams.has("localttsspeed") ? parseFloat(urlParams.get("localttsspeed")) || 1.0 : TTS.rate));
 
     // Enable speech if specified
     if (TTS.readDonos || TTS.newmembertts || TTS.ttsclicked || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
@@ -1182,15 +1217,12 @@ TTS.speak = function(text, allow = false) {
 			}
 			return; // Change from break to return
 		case "openai":
-			if (TTS.OpenAIAPIKey) {
-				if (!TTS.premiumQueueActive) {
-					TTS.openAITTS(text);
-				} else {
-					TTS.premiumQueueTTS.push(text);
-				}
-				return;
+			if (!TTS.premiumQueueActive) {
+				TTS.openAITTS(text);
+			} else {
+				TTS.premiumQueueTTS.push(text);
 			}
-			return; // Change from break to return
+			return;
 	}
 
     if (!TTS.voices && TTS.voices === null) {
@@ -2478,15 +2510,120 @@ TTS.kittenTTS = async function(text) {
  * OpenAI TTS implementation
  * @param {string} text - Text to speak
  */
+TTS.getAudioMimeType = function(format, contentType) {
+    if (contentType && /^audio\//i.test(contentType)) {
+        return contentType.split(";")[0];
+    }
+    var normalized = (format || "mp3").toString().toLowerCase();
+    if (normalized === "mp3") {
+        return "audio/mpeg";
+    }
+    if (normalized === "wav") {
+        return "audio/wav";
+    }
+    return "audio/" + normalized;
+};
+
+TTS.getNestedValue = function(obj, path) {
+    var parts = path.split(".");
+    var current = obj;
+    for (var i = 0; i < parts.length; i++) {
+        if (!current || typeof current !== "object") {
+            return undefined;
+        }
+        current = current[parts[i]];
+    }
+    return current;
+};
+
+TTS.audioBlobFromJson = function(json, fallbackFormat) {
+    var keys = [
+        "audio",
+        "audio_data",
+        "audioContent",
+        "b64_json",
+        "data.audio",
+        "data.audio_data",
+        "data.audioContent",
+        "data.b64_json"
+    ];
+    var audioValue = null;
+    for (var i = 0; i < keys.length; i++) {
+        audioValue = TTS.getNestedValue(json, keys[i]);
+        if (typeof audioValue === "string" && audioValue) {
+            break;
+        }
+        audioValue = null;
+    }
+    if (!audioValue && json && Array.isArray(json.data) && json.data[0]) {
+        audioValue = json.data[0].b64_json || json.data[0].audio || json.data[0].audio_data || json.data[0].audioContent;
+    }
+    if (!audioValue || typeof audioValue !== "string") {
+        return null;
+    }
+
+    var mimeType = TTS.getAudioMimeType(json.format || json.response_format || fallbackFormat);
+    var base64 = audioValue;
+    var dataUrlMatch = audioValue.match(/^data:([^;]+);base64,(.*)$/);
+    if (dataUrlMatch) {
+        mimeType = dataUrlMatch[1];
+        base64 = dataUrlMatch[2];
+    }
+
+    try {
+        var byteCharacters = atob(base64);
+        var byteNumbers = new Array(byteCharacters.length);
+        for (var j = 0; j < byteCharacters.length; j++) {
+            byteNumbers[j] = byteCharacters.charCodeAt(j);
+        }
+        return new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
+    } catch (e) {
+        console.error("Could not decode JSON audio payload:", e);
+        return null;
+    }
+};
+
+TTS.playAudioBlob = async function(audioBlob) {
+    if (TTS.neuroSyncEnabled) {
+        TTS.sendToNeuroSync(audioBlob).then(function(result) {
+            if (result && result.blendshapes) {
+                //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+            }
+        }).catch(function(err) {
+            console.error("NeuroSync error:", err);
+        });
+        return;
+    }
+
+    if (!TTS.audio) {
+        TTS.audio = document.createElement("audio");
+        TTS.audio.onended = TTS.finishedAudio;
+    }
+    TTS.audio.src = window.URL.createObjectURL(audioBlob);
+    if (TTS.volume) {
+        TTS.audio.volume = TTS.volume;
+    }
+
+    try {
+        if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
+            await TTS.audioContext.resume();
+        }
+        TTS.audio.play();
+    } catch (e) {
+        TTS.finishedAudio();
+        console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+    }
+};
+
 TTS.openAITTS = function(text) {
     try {
         TTS.premiumQueueActive = true;
         const url = TTS.openAISettings.endpoint;
-        
+
         // API key is optional for custom endpoints, required for OpenAI's official API
         const apiKey = TTS.openAISettings.apiKey || TTS.OpenAIAPIKey;
-        const isOfficialEndpoint = !url || url.includes('api.openai.com');
-        
+        const isOfficialEndpoint = TTS.isOfficialOpenAIEndpoint(url);
+
         if (!apiKey && isOfficialEndpoint) {
             console.error("OpenAI API key is required for the official OpenAI API");
             TTS.finishedAudio();
@@ -2527,42 +2664,39 @@ TTS.openAITTS = function(text) {
                     }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.blob();
+                const contentType = response.headers.get("content-type") || "";
+                if (contentType.indexOf("application/json") !== -1 || contentType.indexOf("+json") !== -1) {
+                    const json = await response.json();
+                    var audioUrl = json.url || json.audio_url || json.output_url || (json.data && !Array.isArray(json.data) && (json.data.url || json.data.audio_url || json.data.output_url));
+                    if (!audioUrl && json.data && Array.isArray(json.data) && json.data[0]) {
+                        audioUrl = json.data[0].url || json.data[0].audio_url || json.data[0].output_url;
+                    }
+                    if (audioUrl) {
+                        const audioResponse = await fetch(audioUrl);
+                        if (!audioResponse.ok) {
+                            throw new Error(`TTS audio URL returned HTTP ${audioResponse.status}`);
+                        }
+                        return {
+                            blob: await audioResponse.blob(),
+                            contentType: audioResponse.headers.get("content-type") || ""
+                        };
+                    }
+                    return {
+                        blob: TTS.audioBlobFromJson(json, TTS.openAISettings.responseFormat),
+                        contentType: ""
+                    };
+                }
+                return {
+                    blob: await response.blob(),
+                    contentType: contentType
+                };
             })
             .then(async res => {
-                const newBlob = new Blob([res], { type: `audio/${TTS.openAISettings.responseFormat}` });
-                
-                // Send to NeuroSync in parallel
-                if (TTS.neuroSyncEnabled) {
-                  TTS.sendToNeuroSync(newBlob).then(result => {
-                    if (result && result.blendshapes) {
-                      //console.log(`Received ${result.blendshapes.length} blendshape frames`);
-                    }
-                  }).catch(err => {
-                    console.error("NeuroSync error:", err);
-                  });
-                  return;
+                if (!res || !res.blob) {
+                    throw new Error("TTS endpoint did not return playable audio");
                 }
-                
-                const blobUrl = window.URL.createObjectURL(newBlob);
-                if (!TTS.audio) {
-                    TTS.audio = document.createElement("audio");
-                    TTS.audio.onended = TTS.finishedAudio;
-                }
-                TTS.audio.src = blobUrl;
-                if (TTS.volume) {
-                    TTS.audio.volume = TTS.volume;
-                }
-                
-                try {
-                    if (TTS.audioContext.state === 'suspended') {
-                        await TTS.audioContext.resume();
-                    }
-                    TTS.audio.play();
-                } catch (e) {
-                    TTS.finishedAudio();
-                    console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-                }
+                const newBlob = new Blob([res.blob], { type: TTS.getAudioMimeType(TTS.openAISettings.responseFormat, res.contentType) });
+                await TTS.playAudioBlob(newBlob);
             })
             .catch(error => {
                 TTS.finishedAudio();

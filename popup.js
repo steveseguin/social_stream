@@ -2735,6 +2735,16 @@ function applyFeaturedOverlayPreset(presetValue) {
 
 function removeTTSProviderParams(url, selectedProvider=null) {
   if (!url) return url;
+
+  const providerAliases = {
+      custom: "openai",
+      customtts: "openai",
+      local: "openai",
+      localtts: "openai",
+      node: "openai",
+      nodejs: "openai",
+      connector: "openai"
+  };
   
   // Map of all provider-specific parameters
     const providerParams = {
@@ -2745,7 +2755,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
         speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
         kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
         kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
-        openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat', 'openaicustomvoice', 'openaicustommodelx']
+        openai: ['openaikey', 'customttskey', 'localttskey', 'openaiendpoint', 'customttsendpoint', 'localttsendpoint', 'voiceopenai', 'customttsvoice', 'localttsvoice', 'openaimodel', 'customttsmodel', 'localttsmodel', 'openaispeed', 'customttsspeed', 'localttsspeed', 'openaiformat', 'customttsformat', 'localttsformat', 'openaicustomvoice', 'openaicustommodelx']
     };
   
   if (selectedProvider === null) {
@@ -2758,6 +2768,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
       return url; // Invalid URL
     }
   }
+  selectedProvider = providerAliases[(selectedProvider || "").toString().toLowerCase()] || selectedProvider;
   
   // Get all parameters except those for the selected provider
   const paramsToRemove = Object.keys(providerParams)
@@ -2788,6 +2799,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.elevenlabskey?.textparam1) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam1) ttsService = "speechify";
         else if (response.settings?.openaikey?.textparam1) ttsService = "openai";
+        else if (response.settings?.openaiendpoint?.textparam1) ttsService = "customtts";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -2804,6 +2816,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.elevenlabskey?.textparam2) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam2) ttsService = "speechify";
         else if (response.settings?.openaikey?.textparam2) ttsService = "openai";
+        else if (response.settings?.openaiendpoint?.textparam2) ttsService = "customtts";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -2820,6 +2833,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.elevenlabskey?.textparam10) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam10) ttsService = "speechify";
         else if (response.settings?.openaikey?.textparam10) ttsService = "openai";
+        else if (response.settings?.openaiendpoint?.textparam10) ttsService = "customtts";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -2930,7 +2944,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                         // Show custom voice input for the appropriate section
                         const customInputId = paramNum === 1 ? 'openaiCustomVoice' : 
                                            paramNum === 2 ? 'openaiCustomVoice2' : 
-                                           paramNum === 10 ? 'openaiCustomVoice10' : null;
+                                           paramNum === 10 ? 'openaiCustomVoice10' :
+                                           paramNum === 18 ? 'openaiCustomVoice18' : null;
                         if (customInputId) {
                             const customInput = document.getElementById(customInputId);
                             if (customInput) {
@@ -2941,7 +2956,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                         // Show custom model input for the appropriate section
                         const customInputId = paramNum === 1 ? 'openaiCustomModel' : 
                                            paramNum === 2 ? 'openaiCustomModel2' : 
-                                           paramNum === 10 ? 'openaiCustomModel10' : null;
+                                           paramNum === 10 ? 'openaiCustomModel10' :
+                                           paramNum === 18 ? 'openaiCustomModel18' : null;
                         if (customInputId) {
                             const customInput = document.getElementById(customInputId);
                             if (customInput) {
@@ -2951,7 +2967,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                     } else if (key === 'voiceopenai' && storedValue !== 'custom') {
                         const customInputId = paramNum === 1 ? 'openaiCustomVoice' : 
                                            paramNum === 2 ? 'openaiCustomVoice2' : 
-                                           paramNum === 10 ? 'openaiCustomVoice10' : null;
+                                           paramNum === 10 ? 'openaiCustomVoice10' :
+                                           paramNum === 18 ? 'openaiCustomVoice18' : null;
                         if (customInputId) {
                             const customInput = document.getElementById(customInputId);
                             if (customInput) {
@@ -2961,7 +2978,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                     } else if (key === 'openaimodel' && storedValue !== 'custom') {
                         const customInputId = paramNum === 1 ? 'openaiCustomModel' : 
                                            paramNum === 2 ? 'openaiCustomModel2' : 
-                                           paramNum === 10 ? 'openaiCustomModel10' : null;
+                                           paramNum === 10 ? 'openaiCustomModel10' :
+                                           paramNum === 18 ? 'openaiCustomModel18' : null;
                         if (customInputId) {
                             const customInput = document.getElementById(customInputId);
                             if (customInput) {
@@ -4135,6 +4153,11 @@ async function testSelectedLLMProvider() {
     }
 }
 
+function isOpenAITTSProvider(provider) {
+    provider = (provider || "").toString().toLowerCase();
+    return provider === "openai" || provider === "customtts" || provider === "custom" || provider === "localtts" || provider === "local" || provider === "node" || provider === "nodejs" || provider === "connector";
+}
+
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
@@ -4157,7 +4180,7 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("kokoroTTS").classList.remove("hidden");
     } else if (provider == "kitten") {
         document.getElementById("kittenTTS").classList.remove("hidden");
-    } else if (provider == "openai") {
+    } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS").classList.remove("hidden");
     }
 }
@@ -4184,7 +4207,7 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("kokoroTTS10").classList.remove("hidden");
     } else if (provider == "kitten") {
         document.getElementById("kittenTTS10").classList.remove("hidden");
-    } else if (provider == "openai") {
+    } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS10").classList.remove("hidden");
     }
 }
@@ -4211,7 +4234,7 @@ function handleTTSProvider2Visibility(provider) {
         document.getElementById("kokoroTTS2").classList.remove("hidden");
     } else if (provider == "kitten") {
         document.getElementById("kittenTTS2").classList.remove("hidden");
-    } else if (provider == "openai") {
+    } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS2").classList.remove("hidden");
     } else if (provider == "piper") {
         document.getElementById("piperTTS2").classList.remove("hidden");
@@ -4242,7 +4265,7 @@ function handleTTSProvider18Visibility(provider) {
         document.getElementById("kokoroTTS18")?.classList.remove("hidden");
     } else if (provider == "kitten") {
         document.getElementById("kittenTTS18")?.classList.remove("hidden");
-    } else if (provider == "openai") {
+    } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS18")?.classList.remove("hidden");
     }
 }
@@ -8324,10 +8347,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	};
 	
-	// Setup for all three sections
+	// Setup for all four sections
 	setupOpenAICustomInputs('openaiVoiceSelect', 'openaiModelSelect', 'openaiCustomVoice', 'openaiCustomModel');
 	setupOpenAICustomInputs('openaiVoiceSelect2', 'openaiModelSelect2', 'openaiCustomVoice2', 'openaiCustomModel2');
 	setupOpenAICustomInputs('openaiVoiceSelect10', 'openaiModelSelect10', 'openaiCustomVoice10', 'openaiCustomModel10');
+	setupOpenAICustomInputs('openaiVoiceSelect18', 'openaiModelSelect18', 'openaiCustomVoice18', 'openaiCustomModel18');
 	
 	// Language selector handling
 	const languageIcon = document.getElementById('languageIcon');

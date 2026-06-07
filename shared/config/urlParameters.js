@@ -2045,6 +2045,106 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "string",
             "description": "Gemini TTS API key"
+          },
+          {
+            "key": "openaikey",
+            "displayName": "openaikey or customttskey or localttskey",
+            "aliases": [
+              "openaikey",
+              "customttskey",
+              "localttskey"
+            ],
+            "values": "string",
+            "description": "OpenAI or custom local TTS endpoint API key. Optional for local endpoints."
+          }
+        ]
+      },
+      {
+        "title": "OpenAI-Compatible and Custom TTS Parameters",
+        "slug": "openai-compatible-and-custom-tts-parameters",
+        "description": "",
+        "items": [
+          {
+            "key": "ttsprovider",
+            "displayName": "ttsprovider",
+            "aliases": [
+              "ttsprovider"
+            ],
+            "values": "openai, customtts, localtts",
+            "description": "Uses the OpenAI-compatible audio speech request format. customtts and localtts are aliases for local/self-hosted endpoints."
+          },
+          {
+            "key": "openaiendpoint",
+            "displayName": "openaiendpoint or customttsendpoint or localttsendpoint",
+            "aliases": [
+              "openaiendpoint",
+              "customttsendpoint",
+              "localttsendpoint"
+            ],
+            "values": "URL",
+            "description": "OpenAI-compatible TTS endpoint, such as http://127.0.0.1:8124/v1/audio/speech"
+          },
+          {
+            "key": "voiceopenai",
+            "displayName": "voiceopenai or customttsvoice or localttsvoice",
+            "aliases": [
+              "voiceopenai",
+              "customttsvoice",
+              "localttsvoice"
+            ],
+            "values": "string",
+            "description": "Voice name, speaker ID, or cloned voice name accepted by the endpoint"
+          },
+          {
+            "key": "openaicustomvoice",
+            "displayName": "openaicustomvoice",
+            "aliases": [
+              "openaicustomvoice"
+            ],
+            "values": "string",
+            "description": "Custom voice value used when the popup voice selector is set to Custom"
+          },
+          {
+            "key": "openaimodel",
+            "displayName": "openaimodel or customttsmodel or localttsmodel",
+            "aliases": [
+              "openaimodel",
+              "customttsmodel",
+              "localttsmodel"
+            ],
+            "values": "string",
+            "description": "TTS model name sent in the request body"
+          },
+          {
+            "key": "openaicustommodelx",
+            "displayName": "openaicustommodelx",
+            "aliases": [
+              "openaicustommodelx"
+            ],
+            "values": "string",
+            "description": "Custom model value used when the popup model selector is set to Custom"
+          },
+          {
+            "key": "openaispeed",
+            "displayName": "openaispeed or customttsspeed or localttsspeed",
+            "aliases": [
+              "openaispeed",
+              "customttsspeed",
+              "localttsspeed"
+            ],
+            "values": "float",
+            "description": "Speaking speed sent to compatible endpoints"
+          },
+          {
+            "key": "openaiformat",
+            "displayName": "openaiformat or customttsformat or localttsformat",
+            "aliases": [
+              "openaiformat",
+              "customttsformat",
+              "localttsformat"
+            ],
+            "values": "mp3, wav, opus, aac, flac",
+            "description": "Preferred audio response format"
           }
         ]
       },

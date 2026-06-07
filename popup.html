@@ -2913,8 +2913,9 @@ input:checked + .slider:before {
 									<option value="elevenlabs">ElevenLabs</option>
 									<option value="google">Google Cloud</option>
 									<option value="gemini">Gemini (Preview TTS)</option>
-									<option value="speechify">Speechify</option>
+								<option value="speechify">Speechify</option>
 								<option value="openai">OpenAI</option>
+								<option value="customtts">Custom / Local TTS Endpoint</option>
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
@@ -3361,19 +3362,19 @@ input:checked + .slider:before {
 						</div>
 						<!-- OpenAI TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="openaiTTS">
-							<h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+							<h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="openaiAPIKey" class="textInput instant" autocomplete="off" 
 									placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam1="openaikey" />
 								<label for="openaiAPIKey">
-									<span data-translate="openai-api-key">OpenAI API Key</span>
+									<span data-translate="openai-api-key">API Key (optional for local endpoints)</span>
 								</label>
 							</div>
 							<div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
 								<input type="text" id="openaiEndpoint" class="textInput instant" autocomplete="off" 
 									placeholder="https://api.openai.com/v1/audio/speech" data-textparam1="openaiendpoint" />
 								<label for="openaiEndpoint">
-									<span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+									<span data-translate="openai-endpoint">Custom / Local API Endpoint</span>
 								</label>
 							</div>
 							<div>
@@ -3427,6 +3428,7 @@ input:checked + .slider:before {
 										<option value="mp3" selected>MP3</option>
 										<option value="opus">Opus</option>
 										<option value="aac">AAC</option>
+										<option value="wav">WAV</option>
 										<option value="flac">FLAC</option>
 									</select>
 								</span>
@@ -4873,6 +4875,7 @@ input:checked + .slider:before {
                                 <option value="google">Google Cloud</option>
                                 <option value="speechify">Speechify</option>
                                 <option value="openai">OpenAI</option>
+                                <option value="customtts">Custom / Local TTS Endpoint</option>
                                 <option value="piper">Piper TTS</option>
                                 <option value="espeak">eSpeak TTS</option>
                             </select>
@@ -5212,19 +5215,19 @@ input:checked + .slider:before {
                         
                         <!-- OpenAI TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="openaiTTS2">
-                            <h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+                            <h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="password" id="openaiAPIKey2" class="textInput instant" autocomplete="off" 
                                     placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam2="openaikey" />
                                 <label for="openaiAPIKey2">
-                                    <span data-translate="openai-api-key">OpenAI API Key</span>
+                                    <span data-translate="openai-api-key">API Key (optional for local endpoints)</span>
                                 </label>
                             </div>
                             <div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
                                 <input type="text" id="openaiEndpoint2" class="textInput instant" autocomplete="off" 
                                     placeholder="https://api.openai.com/v1/audio/speech" data-textparam2="openaiendpoint" />
                                 <label for="openaiEndpoint2">
-                                    <span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+                                    <span data-translate="openai-endpoint">Custom / Local API Endpoint</span>
                                 </label>
                             </div>
                             <div>
@@ -5278,6 +5281,7 @@ input:checked + .slider:before {
                                         <option value="mp3" selected>MP3</option>
                                         <option value="opus">Opus</option>
                                         <option value="aac">AAC</option>
+                                        <option value="wav">WAV</option>
                                         <option value="flac">FLAC</option>
                                     </select>
                                 </span>
@@ -8840,6 +8844,7 @@ input:checked + .slider:before {
 								<option value="gemini">Gemini (Preview TTS)</option>
 								<option value="speechify">Speechify</option>
 								<option value="openai">OpenAI</option>
+								<option value="customtts">Custom / Local TTS Endpoint</option>
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
@@ -9139,19 +9144,19 @@ input:checked + .slider:before {
 						</div>
 						<!-- OpenAI TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="openaiTTS10">
-							<h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+							<h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="openaiAPIKey10" class="textInput instant" autocomplete="off" 
 									placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam10="openaikey" />
 								<label for="openaiAPIKey10">
-									<span data-translate="openai-api-key">OpenAI API Key</span>
+									<span data-translate="openai-api-key">API Key (optional for local endpoints)</span>
 								</label>
 							</div>
 							<div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
 								<input type="text" id="openaiEndpoint10" class="textInput instant" autocomplete="off" 
 									placeholder="https://api.openai.com/v1/audio/speech" data-textparam10="openaiendpoint" />
 								<label for="openaiEndpoint10">
-									<span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+									<span data-translate="openai-endpoint">Custom / Local API Endpoint</span>
 								</label>
 							</div>
 							<div>
@@ -9205,6 +9210,7 @@ input:checked + .slider:before {
 										<option value="mp3" selected>MP3</option>
 										<option value="opus">Opus</option>
 										<option value="aac">AAC</option>
+										<option value="wav">WAV</option>
 										<option value="flac">FLAC</option>
 									</select>
 								</span>
@@ -10990,6 +10996,7 @@ input:checked + .slider:before {
                                 <option value="gemini">Gemini (Preview TTS)</option>
                                 <option value="speechify">Speechify</option>
                                 <option value="openai">OpenAI</option>
+                                <option value="customtts">Custom / Local TTS Endpoint</option>
                                 <option value="piper">Piper TTS</option>
                                 <option value="espeak">eSpeak TTS</option>
                             </select>
@@ -11360,14 +11367,14 @@ input:checked + .slider:before {
 
                         <!-- OpenAI TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="openaiTTS18">
-                            <h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+                            <h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="password" id="openaiAPIKey18" class="textInput instant" autocomplete="off" placeholder="Your OpenAI API Key" data-textparam18="openaikey" />
-                                <label for="openaiAPIKey18"><span data-translate="openai-api-key">OpenAI API Key</span></label>
+                                <label for="openaiAPIKey18"><span data-translate="openai-api-key">API Key (optional for local endpoints)</span></label>
                             </div>
                             <div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
                                 <input type="text" id="openaiEndpoint18" class="textInput instant" autocomplete="off" placeholder="https://api.openai.com/v1/audio/speech" data-textparam18="openaiendpoint" />
-                                <label for="openaiEndpoint18"><span data-translate="openai-endpoint">Custom API Endpoint (optional)</span></label>
+                                <label for="openaiEndpoint18"><span data-translate="openai-endpoint">Custom / Local API Endpoint</span></label>
                             </div>
                             <div>
                                 🎭 Voice to use:
@@ -11378,7 +11385,9 @@ input:checked + .slider:before {
                                     <option value="onyx">Onyx</option>
                                     <option value="nova">Nova</option>
                                     <option value="shimmer">Shimmer</option>
+                                    <option value="custom">Custom</option>
                                 </select>
+                                <input type="text" id="openaiCustomVoice18" class="textInput" style="display:none; margin-left: 10px; width: 150px;" placeholder="Custom voice name" data-textparam18="openaicustomvoice" />
                             </div>
                             <br />
                             <div>
@@ -11391,7 +11400,9 @@ input:checked + .slider:before {
                                     <select id="openaiModelSelect18" data-optionparam18="openaimodel">
                                         <option value="tts-1" selected>tts-1 (faster)</option>
                                         <option value="tts-1-hd">tts-1-hd (higher quality)</option>
+                                        <option value="custom">Custom</option>
                                     </select>
+                                    <input type="text" id="openaiCustomModel18" class="textInput" style="display:none; margin-left: 10px; width: 150px;" placeholder="Custom model name" data-textparam18="openaicustommodelx" />
                                 </span>
                             </div>
                             <div>
@@ -11415,6 +11426,7 @@ input:checked + .slider:before {
                                         <option value="mp3" selected>MP3</option>
                                         <option value="opus">Opus</option>
                                         <option value="aac">AAC</option>
+                                        <option value="wav">WAV</option>
                                         <option value="flac">FLAC</option>
                                     </select>
                                 </span>
