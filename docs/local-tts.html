@@ -885,7 +885,8 @@ British male:   bm_george, bm_lewis</div>
         <!-- TESTED SERVER NOTES -->
         <h2 id="tested-servers">Tested Server Notes</h2>
         <div class="card">
-            <p>These are the self-hosted voice-cloning targets checked for SSN compatibility.</p>
+            <p>These are the self-hosted voice-cloning targets checked for SSN compatibility. The local endpoint path was tested against both <code>dock.html</code> and <code>featured.html</code>.</p>
+            <p>SSN accepts direct binary audio responses, JSON responses with base64 audio, and JSON responses with an audio URL. Current custom/local playback buffers the returned audio before playing it; progressive streaming playback is not supported yet.</p>
 
             <table>
                 <tr>
@@ -896,17 +897,17 @@ British male:   bm_george, bm_lewis</div>
                 <tr>
                     <td><strong><a href="https://github.com/matatonic/openedai-speech" target="_blank">openedai-speech</a></strong></td>
                     <td class="check">Direct or bridge</td>
-                    <td>OpenAI-compatible <code>/v1/audio/speech</code>. Piper and XTTS voice cloning both returned playable WAV files in CPU tests.</td>
+                    <td>OpenAI-compatible <code>/v1/audio/speech</code>. Piper mode was tested with real CPU synthesis from <code>dock.html</code> and <code>featured.html</code>, direct and through the bridge. If running from source on Windows, make sure the venv <code>Scripts</code> folder is on <code>PATH</code> so <code>piper.exe</code> and <code>ffmpeg.exe</code> can be found.</td>
                 </tr>
                 <tr>
                     <td><strong><a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">chatterbox-tts-api</a></strong></td>
                     <td class="check">Direct or bridge</td>
-                    <td>OpenAI-compatible <code>/v1/audio/speech</code>. Uses configured reference audio for cloning.</td>
+                    <td>OpenAI-compatible <code>/v1/audio/speech</code>. Uses configured reference audio for cloning. API shape was tested direct and through the bridge.</td>
                 </tr>
                 <tr>
                     <td><strong><a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">Chatterbox-TTS-Server</a></strong></td>
                     <td class="check">Direct or bridge</td>
-                    <td>OpenAI-compatible endpoint and Web UI. Tested with <code>Robert.wav</code> reference voice on CPU.</td>
+                    <td>OpenAI-compatible endpoint and Web UI. Tested with real CPU synthesis using <code>Emily.wav</code> from <code>dock.html</code> and <code>featured.html</code>, direct and through the bridge.</td>
                 </tr>
                 <tr>
                     <td><strong><a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">GPT-SoVITS</a></strong></td>
@@ -995,6 +996,12 @@ bm_george, bm_lewis                              (British male)</div>
             <div class="code">docker run -d --restart unless-stopped \
   -p 8000:8000 \
   ghcr.io/matatonic/openedai-speech-min</div>
+
+            <h3>Windows Source Install Note</h3>
+            <p>If you run openedai-speech from a local checkout instead of Docker, add its virtual environment scripts folder to <code>PATH</code> before starting the server. Without this, requests can return HTTP 500 because the server cannot find <code>piper.exe</code> or <code>ffmpeg.exe</code>.</p>
+            <div class="code">cd openedai-speech
+$env:Path = "$PWD\.venv\Scripts;$env:Path"
+.\.venv\Scripts\python.exe speech.py --xtts_device none -H 127.0.0.1 -P 8000</div>
 
             <h3>Available Voices</h3>
             <p>openedai-speech uses OpenAI-style voice names mapped to Piper voices:</p>
@@ -1316,6 +1323,7 @@ npm run local-tts-bridge -- --mode f5</div>
                 <li>Confirm Docker Desktop is running and the container is started.</li>
                 <li>Open <code>http://localhost:8880</code> (or your port) in a browser to confirm the server is up.</li>
                 <li>Check that no firewall is blocking the port.</li>
+                <li>If openedai-speech from source returns HTTP 500 on Windows, add <code>.venv\Scripts</code> to <code>PATH</code> and restart it.</li>
             </ul>
 
             <h3>CORS error in browser console (extension mode)</h3>

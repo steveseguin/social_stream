@@ -41,6 +41,21 @@ SSN URL:
 dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&voiceopenai=nova&openaiformat=wav
 ```
 
+Tested with SSN `dock.html` and `featured.html`:
+
+- openedai-speech Piper mode: direct and bridge.
+- Chatterbox-TTS-Server: direct and bridge.
+- OpenAI-compatible binary audio, JSON base64 audio, and JSON audio URL responses.
+- Kokoro-style custom endpoint paths such as `/api/v1/audio/speech`.
+
+If openedai-speech is run from a Windows source checkout instead of Docker, make sure its virtual environment `Scripts` folder is on `PATH` before starting `speech.py`; otherwise the server can return HTTP 500 because it cannot find `piper.exe` or `ffmpeg.exe`.
+
+```powershell
+cd openedai-speech
+$env:Path = "$PWD\.venv\Scripts;$env:Path"
+.\.venv\Scripts\python.exe speech.py --xtts_device none -H 127.0.0.1 -P 8000
+```
+
 ## GPT-SoVITS
 
 GPT-SoVITS uses its own `/tts` JSON shape, so use bridge mode:
