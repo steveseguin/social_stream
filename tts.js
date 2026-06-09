@@ -1613,11 +1613,11 @@ TTS.initKokoro = async function() {
     if ((window.ninjafy || window.electronApi)) {
         return true; // Electron already handles this
     }
-    if (TTS.kokoroDownloadInProgress) return false;
+    if (TTS.kokoroDownloadInProgress) return TTS.kokoroDownloadInProgress;
     if (TTS.kokoroTtsInstance) return true;
-    
-    try {
-        TTS.kokoroDownloadInProgress = true;
+
+    TTS.kokoroDownloadInProgress = (async function() {
+      try {
         const kokoroAssets = TTS.getKokoroAssets();
         window.SSN_KOKORO_REMOTE_HOST = kokoroAssets.getRemoteHost();
 
@@ -1660,13 +1660,16 @@ TTS.initKokoro = async function() {
             throw lastError || new Error("Unable to initialize Kokoro TTS");
         }
 
-        TTS.kokoroDownloadInProgress = false;
         return true;
-    } catch (error) {
+      } catch (error) {
         console.error('Failed to initialize Kokoro:', error);
-        TTS.kokoroDownloadInProgress = false;
         return false;
-    }
+      } finally {
+        TTS.kokoroDownloadInProgress = null;
+      }
+    })();
+
+    return TTS.kokoroDownloadInProgress;
 };
 
 /**

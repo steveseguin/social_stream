@@ -23,6 +23,7 @@ URL PARAMETERS:
   noicon            hide the small source platform icon
   time              show a clock timestamp per message
   bg                add a subtle translucent background behind each row
+  ultra             super dense rows, smaller icons/media, narrow default column
   reverse           newest messages at top instead of bottom
   server / server2  connect via WebSocket instead of (or in addition to) WebRTC
   localserver       use ws://127.0.0.1:3000
@@ -201,6 +202,69 @@ html, body {
     border-radius: 4px;
     object-fit: contain;
 }
+body.ultra {
+    font-size: 13px;
+}
+body.ultra #chat-container {
+    max-width: 330px;
+    padding: 2px 5px;
+}
+body.ultra .message {
+    line-height: 1.1;
+    padding: 0;
+    margin-bottom: 0;
+}
+body.ultra.with-bg .message {
+    border-radius: 3px;
+    padding: 1px 4px;
+}
+body.ultra .avatar {
+    width: 12px;
+    height: 12px;
+    margin-right: 2px;
+    vertical-align: -2px;
+}
+body.ultra .badge {
+    width: 0.75em;
+    height: 0.75em;
+    max-width: 0.75em;
+    max-height: 0.75em;
+    margin-right: 1px;
+}
+body.ultra .source-icon {
+    width: 0.72em;
+    height: 0.72em;
+    margin-right: 2px;
+}
+body.ultra .timestamp {
+    font-size: 0.62em;
+    margin-right: 3px;
+}
+body.ultra .name {
+    max-width: 10em;
+}
+body.ultra .membership {
+    font-size: 0.68em;
+    margin-right: 2px;
+}
+body.ultra .colon {
+    margin-right: 2px;
+}
+body.ultra .donation {
+    font-size: 0.75em;
+    margin-left: 2px;
+}
+body.ultra .text img,
+body.ultra .text svg {
+    max-width: 2.8em;
+    max-height: 1em;
+}
+body.ultra .content-img {
+    max-width: 86px;
+    max-height: 40px;
+    margin-top: 1px;
+    border-radius: 3px;
+}
 #spacer { width: 100%; padding: 0; margin: 0; border: none; background: transparent; }
 </style>
 </head>
@@ -221,6 +285,7 @@ html, body {
     var hideBadges = urlParams.has("nobadges");
     var hideIcon = urlParams.has("noicon");
     var showClock = urlParams.has("time");
+    if (urlParams.has("ultra")) { document.body.classList.add("ultra"); }
 
     if (urlParams.has("chroma")) {
         var c = urlParams.get("chroma") || "";

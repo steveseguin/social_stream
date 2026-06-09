@@ -24,6 +24,7 @@ URL PARAMETERS:
   noicon            hide the small source platform icon
   time              show a clock timestamp per message
   light             lighter frosted glass instead of dark
+  ultra             super dense rows, smaller icons/media, narrow default column
   reverse           newest messages at top instead of bottom
   server / server2  connect via WebSocket instead of (or in addition to) WebRTC
   localserver       use ws://127.0.0.1:3000
@@ -189,6 +190,69 @@ body.light .name-pill { background: rgba(0,0,0,0.10); }
 .text svg { max-width: 3.4em; max-height: 1.1em; vertical-align: -0.2em; }
 .donation { color: #6ee787; font-weight: 700; font-size: 0.82em; margin-left: 4px; }
 .content-img { display: block; max-width: 120px; max-height: 56px; margin-top: 3px; border-radius: 4px; object-fit: contain; }
+body.ultra {
+    font-size: 13px;
+}
+body.ultra #chat-container {
+    max-width: 330px;
+    padding: 2px 5px;
+}
+body.ultra .message {
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin-bottom: 1px;
+    line-height: 1.1;
+}
+body.ultra .name-pill {
+    gap: 2px;
+    padding-right: 3px;
+    margin-right: 2px;
+}
+body.ultra .name-pill.no-avatar {
+    padding-left: 3px;
+}
+body.ultra .avatar {
+    width: 12px;
+    height: 12px;
+}
+body.ultra .name {
+    max-width: 9em;
+}
+body.ultra .source-icon {
+    width: 0.72em;
+    height: 0.72em;
+    margin-right: 2px;
+}
+body.ultra .badge {
+    width: 0.75em;
+    height: 0.75em;
+    max-width: 0.75em;
+    max-height: 0.75em;
+    margin-right: 1px;
+}
+body.ultra .timestamp {
+    font-size: 0.62em;
+    margin-right: 3px;
+}
+body.ultra .membership {
+    font-size: 0.68em;
+    margin-right: 2px;
+}
+body.ultra .donation {
+    font-size: 0.75em;
+    margin-left: 2px;
+}
+body.ultra .text img,
+body.ultra .text svg {
+    max-width: 2.8em;
+    max-height: 1em;
+}
+body.ultra .content-img {
+    max-width: 86px;
+    max-height: 40px;
+    margin-top: 1px;
+    border-radius: 3px;
+}
 #spacer { width: 100%; padding: 0; margin: 0; border: none; background: transparent; }
 </style>
 </head>
@@ -211,6 +275,7 @@ body.light .name-pill { background: rgba(0,0,0,0.10); }
     var showClock = urlParams.has("time");
 
     if (urlParams.has("light")) { document.body.classList.add("light"); }
+    if (urlParams.has("ultra")) { document.body.classList.add("ultra"); }
     if (urlParams.has("chroma")) {
         var c = urlParams.get("chroma") || "";
         document.body.style.backgroundColor = c.charAt(0) === "#" ? c : "#" + c;

@@ -746,8 +746,13 @@
 				return audioContext && audioContext.state === "running";
 			  };
 			  
+			  var callbackFired = false;
 			  // Create a wrapper function to pass the data
 			  const wrappedCallback = function() {
+				if (callbackFired) {
+				  return;
+				}
+				callbackFired = true;
 				callback(data);
 			  };
 			  
@@ -793,6 +798,7 @@
 			  
 			  return {
 				clear: function() {
+				  callbackFired = true;
 				  // Clear the fallback timer
 				  if (fallbackTimerId) {
 					clearTimeout(fallbackTimerId);
