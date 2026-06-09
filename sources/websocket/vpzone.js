@@ -471,14 +471,20 @@
 		var raw = String(value || "").trim();
 		var match;
 		if (!raw) return "";
-		try { raw = new URL(raw).pathname || raw; } catch (e) {
+		try {
+			var parsedUrl = new URL(raw);
+			raw = parsedUrl.searchParams.get("channel") || parsedUrl.searchParams.get("username") || parsedUrl.searchParams.get("streamUsername") || parsedUrl.pathname || raw;
+		} catch (e) {
 			if (raw.indexOf("://") === -1 && /^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(raw)) {
-				try { raw = new URL("https://" + raw).pathname || raw; } catch (err) {}
+				try {
+					var inferredUrl = new URL("https://" + raw);
+					raw = inferredUrl.searchParams.get("channel") || inferredUrl.searchParams.get("username") || inferredUrl.searchParams.get("streamUsername") || inferredUrl.pathname || raw;
+				} catch (err) {}
 			}
 		}
 		match = raw.match(/(?:^|\/)(?:watch|stream|chat-dock)\/([^/?#]+)/i);
 		if (match && match[1]) raw = decodeURIComponent(match[1]);
-		return raw.replace(/^[#/]+/, "").replace(/^@+/, "").replace(/^\/+/, "").replace(/[/?#].*$/, "").trim();
+		return raw.replace(/^[#/]+/, "").replace(/^@+/, "").replace(/^\/+/, "").replace(/[/?#].*$/, "").trim().toLowerCase();
 	}
 
 	function isGenericChannel(value) {
