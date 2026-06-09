@@ -16,8 +16,8 @@ URL PARAMETERS:
   showtime=MS       auto-hide messages after MS ms; 0 = never hide (default 0)
   limit=N           max messages kept on screen (default 50)
   chroma=HEX        solid background colour for chroma keying (e.g. chroma=00FF00)
-  font=PX           base font size in px (default 17)
-  width=PX          max width of the chat column in px (default 410)
+  font=PX           base font size in px (default 14)
+  width=PX          max width of the chat column in px (default 360)
   align=left|right  anchor side (default left)
   avatar            show a small inline avatar inside the name pill
   nobadges          hide platform badges
@@ -51,7 +51,7 @@ html, body {
     overflow: hidden;
     box-sizing: border-box;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size: 17px;
+    font-size: 14px;
 }
 * {
     -webkit-font-smoothing: antialiased;
@@ -76,10 +76,10 @@ body.light {
     bottom: 0;
     left: 0;
     width: 100%;
-    max-width: 410px;
+    max-width: 360px;
     height: 100vh;
     overflow: hidden;
-    padding: 10px 14px;
+    padding: 4px 7px;
 }
 #chat-container.align-right { left: auto; right: 0; }
 
@@ -89,15 +89,15 @@ body.light {
     color: var(--glass-text);
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 13px;
-    padding: 7px 12px;
-    margin-bottom: 7px;
-    line-height: 1.34;
+    border-radius: 6px;
+    padding: 3px 6px;
+    margin-bottom: 2px;
+    line-height: 1.18;
     word-wrap: break-word;
     overflow-wrap: anywhere;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.22);
-    backdrop-filter: blur(11px) saturate(140%);
-    -webkit-backdrop-filter: blur(11px) saturate(140%);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    backdrop-filter: blur(6px) saturate(125%);
+    -webkit-backdrop-filter: blur(6px) saturate(125%);
     opacity: 0;
     transform: translateY(16px) scale(0.98);
     transition: opacity 0.4s ease-out, transform 0.4s ease-out,
@@ -129,19 +129,20 @@ body.light {
 .name-pill {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 1px 9px 1px 1px;
+    gap: 3px;
+    padding: 0 5px 0 0;
     border-radius: 999px;
     background: rgba(0,0,0,0.28);
-    margin-right: 7px;
+    margin-right: 4px;
     vertical-align: middle;
     max-width: 100%;
+    min-width: 0;
 }
 body.light .name-pill { background: rgba(0,0,0,0.10); }
-.name-pill.no-avatar { padding-left: 9px; }
+.name-pill.no-avatar { padding-left: 5px; }
 .avatar {
-    width: 21px;
-    height: 21px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background-size: cover;
     background-position: center;
@@ -150,21 +151,44 @@ body.light .name-pill { background: rgba(0,0,0,0.10); }
 }
 .name {
     font-weight: 700;
-    font-size: 0.9em;
+    font-size: 0.86em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 12em;
 }
-.source-icon { width: 0.9em; height: 0.9em; vertical-align: -1px; margin-right: 4px; opacity: 0.9; }
-.badge { height: 0.9em; width: auto; margin-right: 3px; vertical-align: -1px; }
-.badge.svg svg { height: 0.9em; width: auto; vertical-align: -1px; }
+.source-icon { width: 0.82em; height: 0.82em; vertical-align: -1px; margin-right: 3px; opacity: 0.9; object-fit: contain; }
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 0.86em;
+    height: 0.86em;
+    max-width: 0.86em;
+    max-height: 0.86em;
+    margin-right: 2px;
+    line-height: 1;
+    overflow: hidden;
+    vertical-align: -0.08em;
+    object-fit: contain;
+}
+.badge.svg svg,
+.badge svg,
+.badge img {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
 .timestamp { font-size: 0.72em; opacity: 0.55; margin-right: 6px; font-variant-numeric: tabular-nums; }
-.membership { color: #ffd34d; font-weight: 600; font-size: 0.8em; margin-right: 6px; }
-.text { font-size: 0.93em; }
+.membership { color: #ffd34d; font-weight: 600; font-size: 0.76em; margin-right: 4px; }
+.text { font-size: 0.9em; }
 .text.event-text { font-style: italic; opacity: 0.95; }
-.text img { max-width: 110px; max-height: 1.4em; vertical-align: -0.35em; }
-.donation { color: #6ee787; font-weight: 700; margin-left: 6px; }
-.content-img { display: block; max-width: 100%; max-height: 170px; margin-top: 6px; border-radius: 9px; }
+.text img,
+.text svg { max-width: 3.4em; max-height: 1.1em; vertical-align: -0.2em; }
+.donation { color: #6ee787; font-weight: 700; font-size: 0.82em; margin-left: 4px; }
+.content-img { display: block; max-width: 120px; max-height: 56px; margin-top: 3px; border-radius: 4px; object-fit: contain; }
 #spacer { width: 100%; padding: 0; margin: 0; border: none; background: transparent; }
 </style>
 </head>
@@ -487,7 +511,8 @@ body.light .name-pill { background: rgba(0,0,0,0.10); }
         var membershipHtml = data.membership ? "<span class='membership'>" + escapeHtml(data.membership) + "</span>" : "";
         var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage) : "";
         var textHtml = msg ? "<span class='text" + (data.event ? " event-text" : "") + "'>" + msg + "</span>" : "";
-        var donationHtml = data.hasDonation ? "<span class='donation'>" + escapeHtml(data.hasDonation) + "</span>" : "";
+        var donation = data.hasDonation || data.donation || "";
+        var donationHtml = donation ? "<span class='donation'>" + escapeHtml(donation) + "</span>" : "";
         var contentImgHtml = data.contentimg
             ? "<img class='content-img' src='" + data.contentimg + "' alt='' onerror=\"this.style.display='none'\">" : "";
 

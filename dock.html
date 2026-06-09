@@ -3202,6 +3202,48 @@
 				return "rgba(" + Math.round(rgb.r) + ", " + Math.round(rgb.g) + ", " + Math.round(rgb.b) + ", " + opacityValue + ")";
 			}
 
+			function hasExplicitAlpha(colorValue) {
+				if (!hasValue(colorValue)) {
+					return false;
+				}
+				var color = String(colorValue).trim();
+				return /^#(?:[0-9a-fA-F]{4}|[0-9a-fA-F]{8})$/.test(color) || /^rgba\(/i.test(color);
+			}
+
+			function getHighlightBackgroundColor(colorValue, opacityValue) {
+				var color = normalizeColor(colorValue);
+				if (!hasValue(color)) {
+					return null;
+				}
+				if (hasExplicitAlpha(color)) {
+					return color;
+				}
+				return withOpacity(color, opacityValue) || color;
+			}
+
+			function applyHighlightBackgroundColor(paramName, normalVar, oddVar, bubbleVar, bubbleOddVar) {
+				if (!urlParams.has(paramName)) {
+					return;
+				}
+				var rawColor = urlParams.get(paramName);
+				var normalColor = getHighlightBackgroundColor(rawColor, 0.55);
+				var oddColor = getHighlightBackgroundColor(rawColor, 0.65);
+				var bubbleColor = getHighlightBackgroundColor(rawColor, 0.78);
+				var bubbleOddColor = getHighlightBackgroundColor(rawColor, 0.86);
+				if (normalColor) {
+					document.documentElement.style.setProperty(normalVar, normalColor);
+				}
+				if (oddVar && oddColor) {
+					document.documentElement.style.setProperty(oddVar, oddColor);
+				}
+				if (bubbleVar && bubbleColor) {
+					document.documentElement.style.setProperty(bubbleVar, bubbleColor);
+				}
+				if (bubbleOddVar && bubbleOddColor) {
+					document.documentElement.style.setProperty(bubbleOddVar, bubbleOddColor);
+				}
+			}
+
 			function applyBubbleOpacity(opacityValue) {
 				if (!hasValue(opacityValue)) {
 					return;
@@ -3674,6 +3716,19 @@
 				document.documentElement.style.setProperty("--donation-bgcolor", "unset");
 				document.documentElement.style.setProperty("--donation-bgcolor-bubble-odd", "unset");
 				document.documentElement.style.setProperty("--donation-bgcolor-bubble", "unset");
+			}
+
+			if (highlightDonos) {
+				applyHighlightBackgroundColor("donationhighlightcolor", "--donation-bgcolor", "--donation-bgcolor-odd", "--donation-bgcolor-bubble", "--donation-bgcolor-bubble-odd");
+			}
+			if (highlightMembers) {
+				applyHighlightBackgroundColor("memberhighlightcolor", "--member-bgcolor", "--member-bgcolor-odd", "--member-bgcolor-bubble", "--member-bgcolor-bubble-odd");
+			}
+			if (highlightFirstTimers) {
+				applyHighlightBackgroundColor("firsttimehighlightcolor", "--firstime-bgcolor");
+			}
+			if (highlightSpecial) {
+				applyHighlightBackgroundColor("questionhighlightcolor", "--special-bgcolor", "--special-bgcolor-odd", "--special-bgcolor-bubble", "--special-bgcolor-bubble-odd");
 			}
 
 			if (urlParams.has("pressedcolor")) {
@@ -11343,35 +11398,37 @@
 						}
 						
 						
-						if (data.command && doNotTTSBeep){
-							// skipp TTS
-						} else if (TTS.ttscommand && data.chatmessage && (data.textContent || data.chatmessage).includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
-							if (!node.classList.contains("hide")) {
-								if (waitToReveal) {
-									setTimeout(function() {
-										// Check if node still exists and is connected to DOM
-										if (node && node.isConnected && !node.classList.contains("hide")) {
-											TTS.speechMeta(data);
-										}
-									}, waitToReveal);
-								} else {
-									TTS.speechMeta(data);
+						if (!suppressLiveSideEffects) {
+							if (data.command && doNotTTSBeep){
+								// skipp TTS
+							} else if (TTS.ttscommand && data.chatmessage && (data.textContent || data.chatmessage).includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
+								if (!node.classList.contains("hide")) {
+									if (waitToReveal) {
+										setTimeout(function() {
+											// Check if node still exists and is connected to DOM
+											if (node && node.isConnected && !node.classList.contains("hide")) {
+												TTS.speechMeta(data);
+											}
+										}, waitToReveal);
+									} else {
+										TTS.speechMeta(data);
+									}
+								}
+							} else if (TTS.speech) {
+								if (!node.classList.contains("hide")) {
+									if (waitToReveal) {
+										setTimeout(function() {
+											// Check if node still exists and is connected to DOM
+											if (node && node.isConnected && !node.classList.contains("hide")) {
+												TTS.speechMeta(data);
+											}
+										}, waitToReveal);
+									} else {
+										TTS.speechMeta(data);
+									}
 								}
 							}
-						} else if (TTS.speech) {
-							if (!node.classList.contains("hide")) {
-								if (waitToReveal) {
-									setTimeout(function() {
-										// Check if node still exists and is connected to DOM
-										if (node && node.isConnected && !node.classList.contains("hide")) {
-											TTS.speechMeta(data);
-										}
-									}, waitToReveal);
-								} else {
-									TTS.speechMeta(data);
-								}
-							}
-						} 
+						}
 					}
 					return node;
 				}

@@ -15,7 +15,7 @@ URL PARAMETERS:
   showtime=MS       auto-hide messages after MS ms; 0 = never hide (default 0)
   limit=N           max messages kept on screen (default 80)
   chroma=HEX        solid background colour for chroma keying (e.g. chroma=00FF00)
-  font=PX           base font size in px (default 18)
+  font=PX           base font size in px (default 16)
   width=PX          max width of the chat column in px (default 420)
   align=left|right  anchor side (default left)
   avatar            show a small inline avatar
@@ -50,7 +50,7 @@ html, body {
     overflow: hidden;
     box-sizing: border-box;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size: 18px;
+    font-size: 16px;
 }
 * {
     -webkit-font-smoothing: antialiased;
@@ -67,7 +67,7 @@ html, body {
     max-width: 420px;
     height: 100vh;
     overflow: hidden;
-    padding: 8px 12px;
+    padding: 4px 8px;
 }
 #chat-container.align-right { left: auto; right: 0; }
 
@@ -78,9 +78,9 @@ html, body {
 
 .message {
     color: #fff;
-    line-height: 1.32;
-    padding: 3px 2px;
-    margin: 0 0 3px 0;
+    line-height: 1.22;
+    padding: 1px 1px;
+    margin: 0 0 1px 0;
     word-wrap: break-word;
     overflow-wrap: anywhere;
     opacity: 0;
@@ -97,8 +97,8 @@ html, body {
 }
 .with-bg .message {
     background: rgba(15, 18, 28, 0.55);
-    border-radius: 7px;
-    padding: 5px 9px;
+    border-radius: 5px;
+    padding: 3px 6px;
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
 }
@@ -119,62 +119,87 @@ html, body {
 .reverse-mode .message.hidden { transform: translateY(14px); }
 
 .avatar {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background-size: cover;
     background-position: center;
     display: inline-block;
-    vertical-align: -4px;
-    margin-right: 5px;
+    vertical-align: -3px;
+    margin-right: 3px;
     flex-shrink: 0;
 }
 .badge {
-    display: inline-block;
-    height: 0.95em;
-    width: auto;
-    margin-right: 3px;
-    vertical-align: -2px;
-}
-.badge.svg svg { height: 0.95em; width: auto; vertical-align: -2px; }
-.source-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 0.9em;
     height: 0.9em;
+    max-width: 0.9em;
+    max-height: 0.9em;
+    margin-right: 2px;
+    line-height: 1;
+    overflow: hidden;
+    vertical-align: -0.1em;
+    object-fit: contain;
+}
+.badge.svg svg,
+.badge svg,
+.badge img {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+.source-icon {
+    width: 0.82em;
+    height: 0.82em;
     vertical-align: -1px;
-    margin-right: 4px;
+    margin-right: 3px;
     opacity: 0.9;
+    object-fit: contain;
 }
 .timestamp {
-    font-size: 0.72em;
+    font-size: 0.68em;
     opacity: 0.6;
-    margin-right: 5px;
+    margin-right: 4px;
     font-variant-numeric: tabular-nums;
 }
 .name {
     font-weight: 700;
     margin-right: 2px;
+    display: inline-block;
+    max-width: 12em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: -0.16em;
 }
-.colon { opacity: 0.85; margin-right: 5px; font-weight: 700; }
+.colon { opacity: 0.85; margin-right: 3px; font-weight: 700; }
 .membership {
     color: #ffd34d;
     font-weight: 600;
-    font-size: 0.82em;
-    margin-right: 5px;
+    font-size: 0.75em;
+    margin-right: 3px;
 }
 .donation {
     color: #6ee787;
     font-weight: 700;
-    margin-left: 5px;
+    font-size: 0.82em;
+    margin-left: 3px;
 }
 .text { }
-.text img { max-width: 110px; max-height: 1.4em; vertical-align: -0.35em; }
+.text img,
+.text svg { max-width: 3.4em; max-height: 1.1em; vertical-align: -0.2em; }
 .event-text { font-style: italic; opacity: 0.95; }
 .content-img {
     display: block;
-    max-width: 100%;
-    max-height: 180px;
-    margin-top: 5px;
-    border-radius: 8px;
+    max-width: 120px;
+    max-height: 56px;
+    margin-top: 3px;
+    border-radius: 4px;
+    object-fit: contain;
 }
 #spacer { width: 100%; padding: 0; margin: 0; border: none; background: transparent; }
 </style>
@@ -494,11 +519,12 @@ html, body {
         var badgesHtml = buildBadges(data);
         var nameHtml = data.chatname
             ? "<span class='name' style='color:" + nameColor + "'>" + escapeHtml(data.chatname) + "</span>" : "";
-        var colonHtml = (data.chatname && (data.chatmessage || data.hasDonation)) ? "<span class='colon'>:</span>" : "";
+        var donation = data.hasDonation || data.donation || "";
+        var colonHtml = (data.chatname && (data.chatmessage || donation)) ? "<span class='colon'>:</span>" : "";
         var membershipHtml = data.membership ? "<span class='membership'>" + escapeHtml(data.membership) + "</span>" : "";
         var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage) : "";
         var textHtml = msg ? "<span class='text" + (data.event ? " event-text" : "") + "'>" + msg + "</span>" : "";
-        var donationHtml = data.hasDonation ? "<span class='donation'>" + escapeHtml(data.hasDonation) + "</span>" : "";
+        var donationHtml = donation ? "<span class='donation'>" + escapeHtml(donation) + "</span>" : "";
         var contentImgHtml = data.contentimg
             ? "<img class='content-img' src='" + data.contentimg + "' alt='' onerror=\"this.style.display='none'\">" : "";
 

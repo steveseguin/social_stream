@@ -1487,12 +1487,11 @@ TTS.speechMeta = function(data, allow = false) {
         var isCommand = false;
         var msgPlainElement = document.getElementById("content_" + data.id);
         var msgPlain = "";
+        var sourceMessage = data.chatmessage || data.textContent || "";
 
-        if (msgPlainElement) {
-            msgPlain = msgPlainElement.textContent || msgPlainElement.innerText || "";
-        } else if (data.chatmessage) {
+        if (sourceMessage) {
             var tempContainer = document.createElement("div");
-            tempContainer.innerHTML = data.chatmessage;
+            tempContainer.innerHTML = sourceMessage;
 
             // Drop embedded media so TTS never reads their attributes or data URLs
             tempContainer.querySelectorAll("img, video, audio, source, picture, canvas, svg, iframe, object, embed, lottie-player").forEach(function(node) {
@@ -1506,6 +1505,14 @@ TTS.speechMeta = function(data, allow = false) {
             if (!msgPlain.trim()) {
                 msgPlain = "";
             }
+        } else if (msgPlainElement) {
+            var plainClone = msgPlainElement.cloneNode(true);
+            plainClone.querySelectorAll(".time-arrived, .queueid").forEach(function(node) {
+                if (node && node.parentNode) {
+                    node.parentNode.removeChild(node);
+                }
+            });
+            msgPlain = plainClone.textContent || plainClone.innerText || "";
         }
 
         msgPlain = msgPlain || "";
@@ -2071,7 +2078,7 @@ TTS.kokoroTTS = async function(text) {
         
         if (TTS.volume) TTS.audio.volume = TTS.volume;
         
-        TTS.audio.play();
+        await TTS.audio.play();
         return;
       } catch (error) {
         console.error("Error playing TTS:", error);
@@ -2608,7 +2615,7 @@ TTS.playAudioBlob = async function(audioBlob) {
         if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
             await TTS.audioContext.resume();
         }
-        TTS.audio.play();
+        await TTS.audio.play();
     } catch (e) {
         TTS.finishedAudio();
         console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");

@@ -16,8 +16,8 @@ URL PARAMETERS:
   showtime=MS       auto-hide messages after MS ms; 0 = never hide (default 0)
   limit=N           max messages kept on screen (default 40)
   chroma=HEX        solid background colour for chroma keying (e.g. chroma=00FF00)
-  font=PX           base font size in px (default 17)
-  width=PX          max width of the chat column in px (default 400)
+  font=PX           base font size in px (default 14)
+  width=PX          max width of the chat column in px (default 350)
   align=left|right  anchor side (default left)
   noavatar          hide avatars
   nobadges          hide platform badges
@@ -51,7 +51,7 @@ html, body {
     overflow: hidden;
     box-sizing: border-box;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size: 17px;
+    font-size: 14px;
 }
 * {
     -webkit-font-smoothing: antialiased;
@@ -64,13 +64,13 @@ html, body {
     --card-bg: rgba(20, 24, 34, 0.78);
     --card-text: #e7eaf0;
     --card-name: #ffffff;
-    --card-shadow: 0 3px 10px rgba(0,0,0,0.35);
+    --card-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 body.light {
     --card-bg: rgba(255, 255, 255, 0.9);
     --card-text: #1b1f27;
     --card-name: #0d1016;
-    --card-shadow: 0 3px 10px rgba(0,0,0,0.18);
+    --card-shadow: 0 2px 6px rgba(0,0,0,0.14);
 }
 
 #chat-container {
@@ -78,10 +78,10 @@ body.light {
     bottom: 0;
     left: 0;
     width: 100%;
-    max-width: 400px;
+    max-width: 350px;
     height: 100vh;
     overflow: hidden;
-    padding: 10px 14px;
+    padding: 5px 8px;
 }
 #chat-container.align-right { left: auto; right: 0; }
 
@@ -90,16 +90,16 @@ body.light {
 .message {
     display: flex;
     align-items: flex-start;
-    gap: 9px;
+    gap: 4px;
     background: var(--card-bg);
     color: var(--card-text);
-    border-radius: 10px;
-    border-left: 3px solid #4ab8f9;
-    padding: 8px 11px 8px 9px;
-    margin-bottom: 7px;
+    border-radius: 6px;
+    border-left: 2px solid #4ab8f9;
+    padding: 3px 5px 3px 4px;
+    margin-bottom: 2px;
     box-shadow: var(--card-shadow);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
     opacity: 0;
     transform: translateY(16px);
     transition: opacity 0.4s ease-out, transform 0.4s ease-out,
@@ -129,40 +129,65 @@ body.light {
 .reverse-mode .message.hidden { transform: translateY(16px); }
 
 .avatar {
-    width: 34px;
-    height: 34px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background-size: cover;
     background-position: center;
     flex-shrink: 0;
     background-color: rgba(255,255,255,0.08);
 }
-.body { flex: 1; min-width: 0; }
+.body { flex: 1; min-width: 0; line-height: 1.18; }
 .head {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 5px;
-    line-height: 1.2;
-    margin-bottom: 1px;
+    gap: 2px;
+    line-height: 1;
+    margin-bottom: 0;
+    margin-right: 4px;
+    max-width: 100%;
+    vertical-align: baseline;
 }
 .name {
     font-weight: 700;
-    font-size: 0.95em;
+    font-size: 0.9em;
     color: var(--card-name);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 10em;
 }
-.source-icon { width: 0.95em; height: 0.95em; flex-shrink: 0; opacity: 0.9; }
-.badge { height: 0.95em; width: auto; flex-shrink: 0; }
-.badge.svg svg { height: 0.95em; width: auto; }
-.timestamp { font-size: 0.72em; opacity: 0.55; margin-left: auto; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.membership { color: #ffce54; font-weight: 600; font-size: 0.78em; margin-bottom: 2px; }
-.text { font-size: 0.92em; line-height: 1.35; word-wrap: break-word; overflow-wrap: anywhere; }
+.source-icon { width: 0.82em; height: 0.82em; flex-shrink: 0; opacity: 0.9; object-fit: contain; }
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 0.86em;
+    height: 0.86em;
+    max-width: 0.86em;
+    max-height: 0.86em;
+    flex-shrink: 0;
+    line-height: 1;
+    overflow: hidden;
+    object-fit: contain;
+}
+.badge.svg svg,
+.badge svg,
+.badge img {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+.timestamp { font-size: 0.68em; opacity: 0.55; margin-left: 3px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.membership { color: #ffce54; display: inline; font-weight: 600; font-size: 0.74em; margin-right: 4px; }
+.text { display: inline; font-size: 0.9em; line-height: 1.22; word-wrap: break-word; overflow-wrap: anywhere; }
 .text.event-text { font-style: italic; opacity: 0.95; }
-.text img { max-width: 110px; max-height: 1.4em; vertical-align: -0.35em; }
-.donation { color: #4cd97b; font-weight: 700; margin-top: 3px; }
-.content-img { display: block; max-width: 100%; max-height: 170px; margin-top: 6px; border-radius: 8px; }
+.text img,
+.text svg { max-width: 3.4em; max-height: 1.1em; vertical-align: -0.2em; }
+.donation { color: #4cd97b; display: inline; font-weight: 700; font-size: 0.82em; margin-left: 4px; }
+.content-img { display: block; max-width: 120px; max-height: 56px; margin-top: 3px; border-radius: 4px; object-fit: contain; }
 #spacer { width: 100%; padding: 0; margin: 0; border: none; background: transparent; }
 </style>
 </head>
@@ -483,7 +508,8 @@ body.light {
         var membershipHtml = data.membership ? "<div class='membership'>" + escapeHtml(data.membership) + "</div>" : "";
         var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage) : "";
         var textHtml = msg ? "<div class='text" + (data.event ? " event-text" : "") + "'>" + msg + "</div>" : "";
-        var donationHtml = data.hasDonation ? "<div class='donation'>" + escapeHtml(data.hasDonation) + "</div>" : "";
+        var donation = data.hasDonation || data.donation || "";
+        var donationHtml = donation ? "<div class='donation'>" + escapeHtml(donation) + "</div>" : "";
         var contentImgHtml = data.contentimg
             ? "<img class='content-img' src='" + data.contentimg + "' alt='' onerror=\"this.style.display='none'\">" : "";
 

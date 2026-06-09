@@ -65,6 +65,10 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `strokecolor` or `strokeColor` | hex color (alpha supported) | Color applied to the text stroke effect (accepts 8-digit hex/rgba for transparency) |
 | `border` | hex color | Adds a profile image border using the provided color (without `#`) |
 | `pressedcolor` | hex color or empty | Custom highlight color for pinned/featured states |
+| `donationhighlightcolor` | hex/color | Custom donation row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `memberhighlightcolor` | hex/color | Custom member row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `firsttimehighlightcolor` | hex/color | Custom first-time chatter row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `questionhighlightcolor` | hex/color | Custom question row highlight color; 6-digit colors are shown with stronger shading automatically |
 | `hideshadow` | boolean | Removes alternating card drop shadows |
 | `largecontent` | boolean | Enlarges embedded content or image cards |
 | `donationright` | number | Sets donation amount margin-right in pixels |

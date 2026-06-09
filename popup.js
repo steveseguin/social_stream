@@ -2700,7 +2700,6 @@ function syncChatOverlayTemplateLinkFromDock() {
   const templateElement = document.getElementById("chatoverlaytemplate");
   if (!templateElement) return;
   applyChatOverlayTemplatePreset(getSelectedChatOverlayTemplatePath(), {
-    preferDockParams: true,
     skipRefresh: true
   });
 }
@@ -4827,6 +4826,7 @@ function cleanURL(url) {
 function getTargetMap() {
     return {
         'dock': 1,
+        'chatoverlaytemplate': 30,
         'overlay': 2,
         'emoteswall': 3,
         'hypemeter': 4,
@@ -5446,7 +5446,7 @@ function handleBothParam(ele, sync) {
     if (!ele.dataset.both) return false;
     
     // Use the same list of targets as defined in the targetMap
-    const elements = Object.keys(getTargetMap());
+    const elements = Object.keys(getTargetMap()).filter(id => id !== "chatoverlaytemplate");
 
     elements.forEach(id => {
         const element = document.getElementById(id);

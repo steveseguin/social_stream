@@ -364,6 +364,42 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Custom highlight color for pinned/featured states"
           },
           {
+            "key": "donationhighlightcolor",
+            "displayName": "donationhighlightcolor",
+            "aliases": [
+              "donationhighlightcolor"
+            ],
+            "values": "hex/color",
+            "description": "Custom donation row highlight color; 6-digit colors are shown with stronger shading automatically"
+          },
+          {
+            "key": "memberhighlightcolor",
+            "displayName": "memberhighlightcolor",
+            "aliases": [
+              "memberhighlightcolor"
+            ],
+            "values": "hex/color",
+            "description": "Custom member row highlight color; 6-digit colors are shown with stronger shading automatically"
+          },
+          {
+            "key": "firsttimehighlightcolor",
+            "displayName": "firsttimehighlightcolor",
+            "aliases": [
+              "firsttimehighlightcolor"
+            ],
+            "values": "hex/color",
+            "description": "Custom first-time chatter row highlight color; 6-digit colors are shown with stronger shading automatically"
+          },
+          {
+            "key": "questionhighlightcolor",
+            "displayName": "questionhighlightcolor",
+            "aliases": [
+              "questionhighlightcolor"
+            ],
+            "values": "hex/color",
+            "description": "Custom question row highlight color; 6-digit colors are shown with stronger shading automatically"
+          },
+          {
             "key": "hideshadow",
             "displayName": "hideshadow",
             "aliases": [

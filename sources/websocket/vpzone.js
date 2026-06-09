@@ -476,9 +476,14 @@
 				try { raw = new URL("https://" + raw).pathname || raw; } catch (err) {}
 			}
 		}
-		match = raw.match(/(?:^|\/)(?:stream|chat-dock)\/([^/?#]+)/i);
+		match = raw.match(/(?:^|\/)(?:watch|stream|chat-dock)\/([^/?#]+)/i);
 		if (match && match[1]) raw = decodeURIComponent(match[1]);
 		return raw.replace(/^[#/]+/, "").replace(/^@+/, "").replace(/^\/+/, "").replace(/[/?#].*$/, "").trim();
+	}
+
+	function isGenericChannel(value) {
+		var channel = String(value || "").trim().toLowerCase();
+		return channel === "vpzone" || channel === "vpzone.tv" || channel === "www.vpzone.tv";
 	}
 
 	function normalizeWs(value) {
@@ -552,7 +557,8 @@
 		state.cfg.hideMetrics = !!saved.hideMetrics;
 		query = new URLSearchParams(window.location.search);
 		hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
-		if (query.get("channel") || query.get("username") || query.get("streamUsername") || hash.get("channel") || hash.get("username")) state.cfg.channel = normalizeChannel(query.get("channel") || query.get("username") || query.get("streamUsername") || hash.get("channel") || hash.get("username"));
+		var requestedChannel = normalizeChannel(query.get("channel") || query.get("username") || query.get("streamUsername") || hash.get("channel") || hash.get("username"));
+		if (requestedChannel && !isGenericChannel(requestedChannel)) state.cfg.channel = requestedChannel;
 		if (query.get("ws") || query.get("endpoint") || hash.get("ws") || hash.get("endpoint")) state.cfg.wsUrl = normalizeWs(query.get("ws") || query.get("endpoint") || hash.get("ws") || hash.get("endpoint"));
 		if (query.get("token") || query.get("auth") || hash.get("token") || hash.get("auth")) state.cfg.token = String(query.get("token") || query.get("auth") || hash.get("token") || hash.get("auth") || "");
 		if (query.get("client_id") || hash.get("client_id")) state.cfg.clientId = String(query.get("client_id") || hash.get("client_id") || DEFAULT_CLIENT_ID);
