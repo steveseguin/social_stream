@@ -10,9 +10,9 @@
 		margin: 0;
 		padding: 0;
 		background: transparent;
-		overflow: hidden;
+		overflow: auto;
 		width: 100%;
-		height: 100%;
+		min-height: 100%;
 	}
 	body {
 		font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -25,6 +25,7 @@
 		transform: translateX(-50%);
 		display: none;
 		text-align: center;
+		pointer-events: none;
 	}
 	#overlay.visible {
 		display: block;
@@ -415,6 +416,12 @@
 		opacity: 0.45;
 		pointer-events: none;
 	}
+	.builder-button.open-action {
+		display: none;
+	}
+	body.can-open-overlay .builder-button.open-action {
+		display: inline-block;
+	}
 	.builder-note {
 		margin-top: 10px;
 		color: #91a6ba;
@@ -506,8 +513,8 @@
 		<textarea id="builderUrl" readonly></textarea>
 	</div>
 	<div class="builder-actions">
-		<a id="builderOpen" class="builder-button disabled" href="#" target="_blank" rel="noopener">Open overlay</a>
-		<a id="builderTestOpen" class="builder-button secondary disabled" href="#" target="_blank" rel="noopener">Test goal</a>
+		<a id="builderOpen" class="builder-button open-action disabled" href="#">Open overlay</a>
+		<a id="builderTestOpen" class="builder-button open-action secondary disabled" href="#">Test goal</a>
 		<button id="builderCopy" class="builder-button secondary" type="button">Copy URL</button>
 	</div>
 	<div id="builderStatus" class="builder-note">Add a seller name to generate a URL.</div>
@@ -667,6 +674,10 @@
 		builderNoIconEl.checked = hideIcon;
 		builderNoConfettiEl.checked = noConfetti;
 
+		if (window.location.protocol === "https:") {
+			document.body.className += (document.body.className ? " " : "") + "can-open-overlay";
+		}
+
 		function addParam(parts, name, value) {
 			if (value === null) {
 				parts.push(encodeURIComponent(name));
@@ -744,11 +755,11 @@
 			builderUrlEl.value = parts.length ? baseUrl + "?" + parts.join("&") : baseUrl;
 			if (valid) {
 				builderOpenEl.href = builderUrlEl.value;
-				builderOpenEl.className = "builder-button";
+				builderOpenEl.className = "builder-button open-action";
 				builderStatusEl.textContent = testValueText ? "Ready with a static test value; remove it before live use." : "Ready for OBS browser source.";
 			} else {
 				builderOpenEl.href = "#";
-				builderOpenEl.className = "builder-button disabled";
+				builderOpenEl.className = "builder-button open-action disabled";
 				if (!sellerValue) {
 					builderStatusEl.textContent = "Add a seller name to generate a URL.";
 				} else if (testValueText && isNaN(testNumber)) {
@@ -761,10 +772,10 @@
 			}
 			if (testValid) {
 				builderTestOpenEl.href = baseUrl + "?" + testParts.join("&");
-				builderTestOpenEl.className = "builder-button secondary";
+				builderTestOpenEl.className = "builder-button open-action secondary";
 			} else {
 				builderTestOpenEl.href = "#";
-				builderTestOpenEl.className = "builder-button secondary disabled";
+				builderTestOpenEl.className = "builder-button open-action secondary disabled";
 			}
 			updateGoalVisibility();
 		}
@@ -791,6 +802,17 @@
 			}
 		}
 
+		function openBuilderUrl(e, el) {
+			if (el.className.indexOf("disabled") !== -1 || !el.href || el.href === "#") {
+				if (e && e.preventDefault) { e.preventDefault(); }
+				return;
+			}
+			if (window.location.protocol === "file:") {
+				if (e && e.preventDefault) { e.preventDefault(); }
+				window.location.href = el.href;
+			}
+		}
+
 		var inputs = builderEl.getElementsByTagName("input");
 		for (var i = 0; i < inputs.length; i++) {
 			inputs[i].oninput = updateUrl;
@@ -801,6 +823,8 @@
 		builderCopyEl.onclick = copyUrl;
 		setOpenTarget(builderOpenEl);
 		setOpenTarget(builderTestOpenEl);
+		builderOpenEl.onclick = function (e) { openBuilderUrl(e, builderOpenEl); };
+		builderTestOpenEl.onclick = function (e) { openBuilderUrl(e, builderTestOpenEl); };
 
 		updateUrl();
 	}

@@ -1296,7 +1296,7 @@ if (session) {
 
     window.addEventListener("message", (event) => {
         if (event.source !== iframe.contentWindow) return;
-        if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+        if (event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
             processData(event.data.dataReceived.overlayNinja);
         }
     });

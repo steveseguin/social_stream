@@ -516,23 +516,24 @@
         }
 
         function displaySVG(url) {
-            fetch(url)
-                .then(response => response.text())
-                .then(svgContent => {
-                    mediaContainer.innerHTML = svgContent;
-                    fadeIn();
-                    setTimeout(() => {
-                        fadeOut(() => {
-                            mediaContainer.innerHTML = '';
-                            mediaContainer.appendChild(mediaContent);
-                            playNextMedia();
-                        });
-                    }, 5000);
-                })
-                .catch(error => {
-                    console.error('Failed to load SVG:', url, error);
-                    playNextMedia();
-                });
+            const img = document.createElement('img');
+            img.src = url;
+            img.onload = () => {
+                mediaContainer.innerHTML = '';
+                mediaContainer.appendChild(img);
+                fadeIn();
+                setTimeout(() => {
+                    fadeOut(() => {
+                        mediaContainer.innerHTML = '';
+                        mediaContainer.appendChild(mediaContent);
+                        playNextMedia();
+                    });
+                }, 5000);
+            };
+            img.onerror = () => {
+                console.error('Failed to load SVG:', url);
+                playNextMedia();
+            };
         }
 
         function fadeIn() {
@@ -563,10 +564,8 @@
             const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
             eventer(messageEvent, function (e) {
                 if (e.source != iframe.contentWindow) return;
-                if ("dataReceived" in e.data) {
-                    if ("overlayNinja" in e.data.dataReceived) {
-                        processData(e.data.dataReceived.overlayNinja);
-                    }
+                if (e.data && e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+                    processData(e.data.dataReceived.overlayNinja);
                 }
             });
         }
