@@ -199,7 +199,10 @@
 	var EBAY_SELLER_STATS_INTERVAL_MS = 5 * 60 * 1000;
 
 	function normalizeText(value) {
-		return (value || "").replace(/\s+/g, " ").trim();
+		if (value === null || typeof value === "undefined") {
+			return "";
+		}
+		return String(value).replace(/\s+/g, " ").trim();
 	}
 
 	function parseCompactNumber(value) {
@@ -919,8 +922,92 @@
 		});
 	}
 
+	function fetchSellerStatsDirect(seller, callback) {
+		if (typeof fetch !== "function") {
+			callback(null);
+			return;
+		}
+		fetch(EBAY_SELLER_STATS_ENDPOINT + encodeURIComponent(seller), {
+			cache: "no-store",
+			credentials: "omit"
+		}).then(function(response) {
+			if (!response || !response.ok) {
+				return null;
+			}
+			return response.json();
+		}).then(function(result) {
+			callback(result || null);
+		}).catch(function() {
+			callback(null);
+		});
+	}
+
+	function fetchSellerStatsFromBackground(seller, callback) {
+		if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.sendMessage) {
+			return false;
+		}
+
+		function handleResponse(response, tryWorkerRoute) {
+			if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) {
+				response = null;
+			}
+			if (response && response.ok && response.data) {
+				callback(response.data, false);
+				return;
+			}
+			if (response && response.ok === false) {
+				callback(null, false);
+				return;
+			}
+			if (tryWorkerRoute) {
+				try {
+					chrome.runtime.sendMessage(chrome.runtime.id, {
+						type: "toBackground",
+						data: {
+							cmd: "ebaySellerStats",
+							seller: seller
+						}
+					}, function(workerResponse) {
+						handleResponse(workerResponse, false);
+					});
+					return;
+				} catch (e) {}
+			}
+			callback(null, true);
+		}
+
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				cmd: "ebaySellerStats",
+				seller: seller
+			}, function(response) {
+				handleResponse(response, true);
+			});
+			return true;
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function fetchSellerStats(seller, callback) {
+		if (fetchSellerStatsFromBackground(seller, function(result, allowDirectFallback) {
+			if (result) {
+				callback(result);
+				return;
+			}
+			if (allowDirectFallback) {
+				fetchSellerStatsDirect(seller, callback);
+				return;
+			}
+			callback(null);
+		})) {
+			return;
+		}
+		fetchSellerStatsDirect(seller, callback);
+	}
+
 	function checkSellerStats() {
-		if (!isExtensionOn || !isTopFrame() || sellerStatsInFlight || typeof fetch !== "function") {
+		if (!isExtensionOn || !isTopFrame() || sellerStatsInFlight) {
 			return;
 		}
 		var seller = getCurrentSellerSlug();
@@ -938,26 +1025,18 @@
 		}
 		lastSellerStatsFetchAt = now;
 		sellerStatsInFlight = true;
-		fetch(EBAY_SELLER_STATS_ENDPOINT + encodeURIComponent(seller), {
-			cache: "no-store",
-			credentials: "omit"
-		}).then(function(response) {
-			if (!response || !response.ok) {
-				return null;
-			}
-			return response.json();
-		}).then(function(result) {
+		fetchSellerStats(seller, function(result) {
 			if (!result || !result.ok || !result.data) {
+				sellerStatsInFlight = false;
 				return;
 			}
 			var followers = parseIntegerValue(result.data.followers);
 			if (followers === null || followers === lastFollowerCount) {
+				sellerStatsInFlight = false;
 				return;
 			}
 			lastFollowerCount = followers;
 			sendFollowerUpdate(followers);
-		}).catch(function() {
-		}).then(function() {
 			sellerStatsInFlight = false;
 		});
 	}
@@ -1261,9 +1340,9 @@
 				}
 
 				checkViewers();
+				checkSellerStats();
 				checkAuctionUpdates();
 				checkCommerceUpdates();
-				checkSellerStats();
 				observeEbayReactions();
 			} catch(e){}
 		},2000);

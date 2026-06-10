@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Follower Overlay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+	html, body {
+		margin: 0;
+		padding: 0;
+		background: transparent;
+		overflow: hidden;
+		width: 100%;
+		height: 100%;
+	}
+	body {
+		font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+		-webkit-font-smoothing: antialiased;
+	}
+	#overlay {
+		position: absolute;
+		top: 5vh;
+		left: 50%;
+		transform: translateX(-50%);
+		display: none;
+		text-align: center;
+	}
+	#overlay.visible {
+		display: block;
+	}
+
+	/* ---- Counter mode ---- */
+	#counter {
+		display: none;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35em;
+		font-size: var(--count-size, 9vh);
+		font-weight: 800;
+		color: var(--text-color, #fff);
+		text-shadow: 0 0.04em 0.12em rgba(0,0,0,0.75);
+		background: var(--bg-color, rgba(0,0,0,0.35));
+		border-radius: 999px;
+		padding: 0.18em 0.5em;
+		line-height: 1;
+		white-space: nowrap;
+	}
+	#counter.show {
+		display: flex;
+	}
+	#counter .icon {
+		font-size: 0.85em;
+		line-height: 1;
+		display: flex;
+		align-items: center;
+	}
+	#counter .icon img {
+		height: 1em;
+		width: auto;
+		vertical-align: middle;
+		display: block;
+	}
+	#counter .value {
+		font-variant-numeric: tabular-nums;
+		line-height: 1;
+		display: block;
+		transform: translateY(0.04em); /* optical centering: digits have no descenders */
+	}
+	#counter .label {
+		font-size: 0.45em;
+		font-weight: 600;
+		opacity: 0.85;
+		align-self: flex-end;
+		padding-bottom: 0.25em;
+	}
+
+	/* ---- Progress bar mode ---- */
+	#progress {
+		display: none;
+		width: var(--bar-width, 70vw);
+		max-width: 96vw;
+	}
+	#progress.show {
+		display: block;
+	}
+	#progress .bar-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		color: var(--text-color, #fff);
+		text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+		font-weight: 700;
+		font-size: var(--header-size, 4.5vh);
+		margin-bottom: 1vh;
+		padding: 0 0.5vh;
+	}
+	#progress .bar-header .current {
+		display: flex;
+		align-items: center;
+		gap: 0.3em;
+	}
+	#progress .bar-header .icon img {
+		height: 1em;
+		width: auto;
+		display: block;
+	}
+	#progress .bar-track {
+		position: relative;
+		height: var(--bar-height, 6vh);
+		background: var(--track-color, rgba(0,0,0,0.55));
+		border: 0.4vh solid rgba(255,255,255,0.85);
+		border-radius: 999px;
+		overflow: hidden;
+		box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+	}
+	#progress .bar-fill {
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		width: 0%;
+		background: var(--bar-color, linear-gradient(90deg, #00c6ff, #7d2ae8));
+		border-radius: 999px;
+		transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	#progress .bar-fill .shine {
+		position: absolute;
+		top: 0;
+		left: -60%;
+		width: 50%;
+		height: 100%;
+		background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 100%);
+		animation: shine 3s linear infinite;
+	}
+	@keyframes shine {
+		0%   { left: -60%; }
+		100% { left: 120%; }
+	}
+	#progress .bar-pct {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #fff;
+		font-weight: 800;
+		font-size: var(--pct-size, 3.2vh);
+		text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* ---- Goal complete ---- */
+	#progress.complete .bar-fill {
+		width: 100% !important;
+		background: var(--complete-color, linear-gradient(90deg, #f7b733, #fc4a1a));
+		animation: goalflash 1s ease-in-out infinite;
+	}
+	#progress.complete .bar-fill .shine {
+		display: none;
+	}
+	#progress.complete .bar-track {
+		animation: goalglow 1s ease-in-out infinite;
+	}
+	@keyframes goalflash {
+		0%, 100% { filter: brightness(1); }
+		50%      { filter: brightness(1.6); }
+	}
+	@keyframes goalglow {
+		0%, 100% { box-shadow: 0 0 12px 2px rgba(255,200,60,0.5); }
+		50%      { box-shadow: 0 0 34px 10px rgba(255,200,60,0.95); }
+	}
+	#counter.complete {
+		animation: goalflash 1s ease-in-out infinite;
+	}
+
+	/* count bump animation when value increases */
+	.bump {
+		animation: bump 0.6s ease;
+	}
+	@keyframes bump {
+		0%   { transform: scale(1); }
+		35%  { transform: scale(1.18); }
+		100% { transform: scale(1); }
+	}
+
+	/* ---- Confetti ---- */
+	#confetti {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		overflow: hidden;
+		display: none;
+	}
+	#confetti.show {
+		display: block;
+	}
+	.confetti-piece {
+		position: absolute;
+		top: -4vh;
+		width: 1.4vh;
+		height: 2.4vh;
+		opacity: 0.95;
+		animation-name: confettifall;
+		animation-timing-function: linear;
+		animation-fill-mode: forwards;
+	}
+	@keyframes confettifall {
+		0%   { transform: translateY(0) rotate(0deg); }
+		100% { transform: translateY(110vh) rotate(720deg); opacity: 0.85; }
+	}
+
+	/* ---- URL maker, shown only when no seller is provided ---- */
+	body.config {
+		background: #111820;
+		color: #eef5ff;
+		overflow: auto;
+		height: auto;
+		min-height: 100%;
+	}
+	#builder {
+		display: none;
+		box-sizing: border-box;
+		width: min(960px, calc(100vw - 32px));
+		margin: 32px auto;
+		padding: 28px;
+		background: #172331;
+		border: 1px solid rgba(255,255,255,0.14);
+		border-radius: 18px;
+		box-shadow: 0 16px 50px rgba(0,0,0,0.35);
+	}
+	body.config #builder {
+		display: block;
+	}
+	#builder h1 {
+		margin: 0 0 8px;
+		font-size: 30px;
+		line-height: 1.15;
+	}
+	#builder p {
+		margin: 0 0 24px;
+		color: #b9c9db;
+		line-height: 1.45;
+	}
+	.builder-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 14px;
+	}
+	.builder-row {
+		display: flex;
+		flex-direction: column;
+		gap: 7px;
+		min-width: 0;
+	}
+	.builder-row.full {
+		grid-column: 1 / -1;
+	}
+	.builder-row label,
+	.builder-check {
+		font-size: 13px;
+		font-weight: 700;
+		color: #d8e5f2;
+	}
+	.builder-row input,
+	.builder-row select,
+	.builder-row textarea {
+		box-sizing: border-box;
+		width: 100%;
+		border: 1px solid rgba(255,255,255,0.18);
+		border-radius: 10px;
+		background: #0d141d;
+		color: #fff;
+		font: inherit;
+		padding: 11px 12px;
+		outline: none;
+	}
+	.builder-row input:focus,
+	.builder-row select:focus,
+	.builder-row textarea:focus {
+		border-color: #66c7ff;
+		box-shadow: 0 0 0 3px rgba(102,199,255,0.16);
+	}
+	.builder-row textarea {
+		min-height: 78px;
+		resize: vertical;
+	}
+	.builder-checks {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 10px;
+		margin: 16px 0;
+	}
+	.builder-check {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 11px 12px;
+		background: #101a25;
+		border: 1px solid rgba(255,255,255,0.12);
+		border-radius: 999px;
+	}
+	.builder-check input {
+		width: 18px;
+		height: 18px;
+		margin: 0;
+	}
+	.goal-fields {
+		display: none;
+	}
+	body.progress-config .goal-fields {
+		display: flex;
+	}
+	.builder-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px;
+		margin-top: 14px;
+	}
+	.builder-button {
+		border: 0;
+		border-radius: 999px;
+		background: #43baf5;
+		color: #061019;
+		font: inherit;
+		font-weight: 800;
+		padding: 11px 18px;
+		text-decoration: none;
+		cursor: pointer;
+	}
+	.builder-button.secondary {
+		background: #26384b;
+		color: #eef5ff;
+	}
+	.builder-button.disabled {
+		opacity: 0.45;
+		pointer-events: none;
+	}
+	.builder-note {
+		margin-top: 10px;
+		color: #91a6ba;
+		font-size: 13px;
+	}
+	@media (max-width: 720px) {
+		#builder {
+			margin: 16px auto;
+			padding: 20px;
+		}
+		.builder-grid,
+		.builder-checks {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
+</head>
+<body>
+
+<div id="builder">
+	<h1>Follower overlay URL maker</h1>
+	<p>Enter a seller name, choose count or progress bar mode, then use the generated URL as an OBS browser source.</p>
+
+	<div class="builder-grid">
+		<div class="builder-row">
+			<label for="builderSeller">Seller name</label>
+			<input id="builderSeller" type="text" placeholder="reliableaftermarketparts" autocomplete="off" />
+		</div>
+		<div class="builder-row">
+			<label for="builderStat">Value</label>
+			<select id="builderStat">
+				<option value="followers">Followers</option>
+				<option value="itemssold">Items sold</option>
+			</select>
+		</div>
+		<div class="builder-row">
+			<label for="builderIcon">Icon</label>
+			<input id="builderIcon" type="text" placeholder="heart, star, emoji, or image URL" />
+		</div>
+		<div class="builder-row">
+			<label for="builderLabel">Optional label</label>
+			<input id="builderLabel" type="text" placeholder="leave blank for no text label" />
+		</div>
+		<div class="builder-row goal-fields">
+			<label for="builderMin">Progress starts at</label>
+			<input id="builderMin" type="number" min="0" step="1" placeholder="60000" />
+		</div>
+		<div class="builder-row goal-fields">
+			<label for="builderGoal">Progress goal</label>
+			<input id="builderGoal" type="number" min="1" step="1" placeholder="70000" />
+		</div>
+		<div class="builder-row">
+			<label for="builderRefresh">Refresh seconds</label>
+			<input id="builderRefresh" type="number" min="10" step="1" value="60" />
+		</div>
+		<div class="builder-row">
+			<label for="builderServer">Endpoint override</label>
+			<input id="builderServer" type="url" placeholder="leave blank for default" />
+		</div>
+	</div>
+
+	<div class="builder-checks">
+		<label class="builder-check"><input id="builderProgress" type="checkbox" /> Progress bar</label>
+		<label class="builder-check"><input id="builderExact" type="checkbox" /> Exact number</label>
+		<label class="builder-check"><input id="builderNoIcon" type="checkbox" /> Hide icon</label>
+		<label class="builder-check"><input id="builderNoConfetti" type="checkbox" /> No confetti</label>
+	</div>
+
+	<div class="builder-row full">
+		<label for="builderUrl">Generated URL</label>
+		<textarea id="builderUrl" readonly></textarea>
+	</div>
+	<div class="builder-actions">
+		<a id="builderOpen" class="builder-button disabled" href="#" target="_blank" rel="noopener">Open overlay</a>
+		<button id="builderCopy" class="builder-button secondary" type="button">Copy URL</button>
+	</div>
+	<div id="builderStatus" class="builder-note">Add a seller name to generate a URL.</div>
+</div>
+
+<div id="overlay">
+	<div id="counter">
+		<span class="icon" id="counterIcon"></span>
+		<span class="value" id="counterValue">0</span>
+		<span class="label" id="counterLabel" style="display:none;"></span>
+	</div>
+
+	<div id="progress">
+		<div class="bar-header">
+			<span class="current">
+				<span class="icon" id="barIcon"></span>
+				<span class="value" id="barValue">0</span>
+			</span>
+			<span class="goal" id="barGoal"></span>
+		</div>
+		<div class="bar-track">
+			<div class="bar-fill" id="barFill"><div class="shine"></div></div>
+			<div class="bar-pct" id="barPct"></div>
+		</div>
+	</div>
+</div>
+
+<div id="confetti"></div>
+
+<script>
+(function () {
+	"use strict";
+
+	// ---------------- URL parameters ----------------
+	// ?seller=NAME           (required) seller username passed to the endpoint
+	// &stat=followers        which stat to show: "followers" (default) or "itemssold"
+	// &goal=70000            progress-bar mode: target value (bar end)
+	// &min=60000             progress-bar mode: starting value of the bar (default 0)
+	// &max=70000             alias for &goal
+	// &icon=⭐               custom icon: any emoji/text, or an image URL (http... / .png etc)
+	// &noicon                hide the icon entirely
+	// &label=followers       optional small text label shown beside the count (counter mode)
+	// &refresh=60            polling interval in seconds (default 60, min 10)
+	// &exact                 show the exact number instead of compact rounding (e.g. 66,000 vs 66K)
+	// &noconfetti            disable the confetti celebration on goal completion
+	// &server=https://...    override the API base URL
+	// Styling can also be overridden with &css= / &b64css= like other overlays.
+
+	function getParam(name) {
+		var match = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)").exec(window.location.href);
+		if (!match) { return null; }
+		if (!match[2]) { return ""; }
+		try {
+			return decodeURIComponent(match[2].replace(/\+/g, " "));
+		} catch (e) {
+			return match[2];
+		}
+	}
+
+	var seller = getParam("seller") || "";
+	var stat = (getParam("stat") || "followers").toLowerCase();
+	var goalParam = getParam("goal") !== null ? getParam("goal") : getParam("max");
+	var goal = goalParam !== null && goalParam !== "" ? parseFloat(goalParam) : null;
+	var minVal = getParam("min") !== null && getParam("min") !== "" ? parseFloat(getParam("min")) : 0;
+	var iconParam = getParam("icon");
+	var hideIcon = getParam("noicon") !== null;
+	var labelText = getParam("label") || "";
+	var refreshSec = parseFloat(getParam("refresh")) || 60;
+	if (!(refreshSec >= 10)) { refreshSec = 60; }
+	var exact = getParam("exact") !== null;
+	var noConfetti = getParam("noconfetti") !== null;
+	var defaultApiBase = "https://vps-1122d8c8.vps.ovh.us:1443/seller";
+	var apiBase = getParam("server") || defaultApiBase;
+
+	var isBarMode = goal !== null && !isNaN(goal) && goal > 0;
+
+	// custom CSS injection (&css= URL or &b64css= base64 blob)
+	var cssUrl = getParam("css");
+	if (cssUrl) {
+		var link = document.createElement("link");
+		link.rel = "stylesheet";
+		link.href = cssUrl;
+		document.head.appendChild(link);
+	}
+	var b64css = getParam("b64css");
+	if (b64css) {
+		try {
+			var styleEl = document.createElement("style");
+			styleEl.textContent = atob(b64css.replace(/-/g, "+").replace(/_/g, "/"));
+			document.head.appendChild(styleEl);
+		} catch (e) {}
+	}
+
+	// ---------------- elements ----------------
+	var overlay = document.getElementById("overlay");
+	var counterEl = document.getElementById("counter");
+	var counterValueEl = document.getElementById("counterValue");
+	var counterIconEl = document.getElementById("counterIcon");
+	var counterLabelEl = document.getElementById("counterLabel");
+	var progressEl = document.getElementById("progress");
+	var barValueEl = document.getElementById("barValue");
+	var barGoalEl = document.getElementById("barGoal");
+	var barIconEl = document.getElementById("barIcon");
+	var barFillEl = document.getElementById("barFill");
+	var barPctEl = document.getElementById("barPct");
+	var confettiEl = document.getElementById("confetti");
+	var builderEl = document.getElementById("builder");
+	var builderSellerEl = document.getElementById("builderSeller");
+	var builderStatEl = document.getElementById("builderStat");
+	var builderIconEl = document.getElementById("builderIcon");
+	var builderLabelEl = document.getElementById("builderLabel");
+	var builderMinEl = document.getElementById("builderMin");
+	var builderGoalEl = document.getElementById("builderGoal");
+	var builderRefreshEl = document.getElementById("builderRefresh");
+	var builderServerEl = document.getElementById("builderServer");
+	var builderProgressEl = document.getElementById("builderProgress");
+	var builderExactEl = document.getElementById("builderExact");
+	var builderNoIconEl = document.getElementById("builderNoIcon");
+	var builderNoConfettiEl = document.getElementById("builderNoConfetti");
+	var builderUrlEl = document.getElementById("builderUrl");
+	var builderOpenEl = document.getElementById("builderOpen");
+	var builderCopyEl = document.getElementById("builderCopy");
+	var builderStatusEl = document.getElementById("builderStatus");
+
+	// ---------------- no-seller URL maker ----------------
+	function trimValue(el) {
+		return (el && el.value ? el.value : "").replace(/^\s+|\s+$/g, "");
+	}
+
+	function showBuilder() {
+		document.body.className += (document.body.className ? " " : "") + "config";
+
+		builderSellerEl.value = seller;
+		builderStatEl.value = stat === "itemssold" ? "itemssold" : "followers";
+		builderIconEl.value = iconParam || "";
+		builderLabelEl.value = labelText;
+		builderMinEl.value = minVal ? String(minVal) : "";
+		builderGoalEl.value = goal !== null && !isNaN(goal) ? String(goal) : "";
+		builderRefreshEl.value = String(refreshSec || 60);
+		builderServerEl.value = getParam("server") || "";
+		builderProgressEl.checked = isBarMode;
+		builderExactEl.checked = exact;
+		builderNoIconEl.checked = hideIcon;
+		builderNoConfettiEl.checked = noConfetti;
+
+		function addParam(parts, name, value) {
+			if (value === null) {
+				parts.push(encodeURIComponent(name));
+			} else if (value !== "") {
+				parts.push(encodeURIComponent(name) + "=" + encodeURIComponent(value));
+			}
+		}
+
+		function updateGoalVisibility() {
+			if (builderProgressEl.checked) {
+				if (document.body.className.indexOf("progress-config") === -1) {
+					document.body.className += " progress-config";
+				}
+			} else {
+				document.body.className = document.body.className.replace(/\s*progress-config\b/g, "");
+			}
+		}
+
+		function updateUrl() {
+			var parts = [];
+			var sellerValue = trimValue(builderSellerEl);
+			var statValue = builderStatEl.value;
+			var iconValue = trimValue(builderIconEl);
+			var labelValue = trimValue(builderLabelEl);
+			var minValue = trimValue(builderMinEl);
+			var goalValue = trimValue(builderGoalEl);
+			var refreshValue = trimValue(builderRefreshEl);
+			var serverValue = trimValue(builderServerEl);
+			var baseUrl = window.location.href.split("#")[0].split("?")[0];
+			var valid = !!sellerValue;
+
+			addParam(parts, "seller", sellerValue);
+			if (statValue && statValue !== "followers") { addParam(parts, "stat", statValue); }
+			if (builderProgressEl.checked) {
+				if (goalValue) {
+					addParam(parts, "goal", goalValue);
+				} else {
+					valid = false;
+				}
+				if (minValue) { addParam(parts, "min", minValue); }
+			}
+			if (iconValue) { addParam(parts, "icon", iconValue); }
+			if (builderNoIconEl.checked) { addParam(parts, "noicon", null); }
+			if (labelValue) { addParam(parts, "label", labelValue); }
+			if (refreshValue && refreshValue !== "60") { addParam(parts, "refresh", refreshValue); }
+			if (builderExactEl.checked) { addParam(parts, "exact", null); }
+			if (builderNoConfettiEl.checked) { addParam(parts, "noconfetti", null); }
+			if (serverValue && serverValue !== defaultApiBase) { addParam(parts, "server", serverValue); }
+
+			builderUrlEl.value = parts.length ? baseUrl + "?" + parts.join("&") : baseUrl;
+			if (valid) {
+				builderOpenEl.href = builderUrlEl.value;
+				builderOpenEl.className = "builder-button";
+				builderStatusEl.textContent = "Ready for OBS browser source.";
+			} else {
+				builderOpenEl.href = "#";
+				builderOpenEl.className = "builder-button disabled";
+				builderStatusEl.textContent = sellerValue ? "Add a progress goal to make the bar URL." : "Add a seller name to generate a URL.";
+			}
+			updateGoalVisibility();
+		}
+
+		function copyUrl() {
+			if (!builderUrlEl.value) { return; }
+			builderUrlEl.focus();
+			builderUrlEl.select();
+			try {
+				document.execCommand("copy");
+				builderStatusEl.textContent = "Copied.";
+			} catch (e) {
+				builderStatusEl.textContent = "Select the URL and copy it.";
+			}
+		}
+
+		var inputs = builderEl.getElementsByTagName("input");
+		for (var i = 0; i < inputs.length; i++) {
+			inputs[i].oninput = updateUrl;
+			inputs[i].onchange = updateUrl;
+		}
+		builderStatEl.onchange = updateUrl;
+		builderCopyEl.onclick = copyUrl;
+
+		updateUrl();
+	}
+
+	// ---------------- icon ----------------
+	var defaultIcons = { followers: "❤️", itemssold: "📦" };
+	function applyIcon(target) {
+		if (hideIcon) {
+			target.style.display = "none";
+			return;
+		}
+		var icon = iconParam !== null && iconParam !== "" ? iconParam : (defaultIcons[stat] || "❤️");
+		if (/^(https?:\/\/|\.|\/)/i.test(icon) || /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(icon)) {
+			var img = document.createElement("img");
+			img.src = icon;
+			img.alt = "";
+			target.appendChild(img);
+		} else {
+			target.textContent = icon;
+		}
+	}
+	applyIcon(counterIconEl);
+	applyIcon(barIconEl);
+
+	if (labelText) {
+		counterLabelEl.textContent = labelText;
+		counterLabelEl.style.display = "";
+	}
+
+	// ---------------- formatting ----------------
+	function formatNumber(n) {
+		if (n === null || typeof n === "undefined" || isNaN(n)) { return "—"; }
+		if (!exact) {
+			if (n >= 1000000) {
+				var m = n / 1000000;
+				return (m >= 10 ? Math.round(m) : Math.round(m * 10) / 10) + "M";
+			}
+			if (n >= 1000) {
+				var k = n / 1000;
+				return (k >= 10 ? Math.round(k) : Math.round(k * 10) / 10) + "K";
+			}
+		}
+		// thousands separators, Chrome 80 safe
+		return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	}
+
+	function bump(el) {
+		el.classList.remove("bump");
+		// force reflow so the animation can replay
+		void el.offsetWidth;
+		el.classList.add("bump");
+	}
+
+	// ---------------- confetti ----------------
+	var confettiDone = false;
+	function celebrate() {
+		if (noConfetti || confettiDone) { return; }
+		confettiDone = true;
+		var colors = ["#fc4a1a", "#f7b733", "#00c6ff", "#7d2ae8", "#3ddc84", "#ff5da2", "#ffffff"];
+		confettiEl.classList.add("show");
+		for (var i = 0; i < 120; i++) {
+			var piece = document.createElement("div");
+			piece.className = "confetti-piece";
+			piece.style.left = (Math.random() * 100) + "vw";
+			piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+			piece.style.animationDuration = (2.5 + Math.random() * 3) + "s";
+			piece.style.animationDelay = (Math.random() * 2.5) + "s";
+			piece.style.width = (0.8 + Math.random() * 1.2) + "vh";
+			piece.style.height = (1.4 + Math.random() * 1.8) + "vh";
+			confettiEl.appendChild(piece);
+		}
+		setTimeout(function () {
+			confettiEl.classList.remove("show");
+			confettiEl.innerHTML = "";
+		}, 9000);
+	}
+
+	// ---------------- rendering ----------------
+	var lastValue = null;
+
+	function render(value) {
+		if (value === null || typeof value === "undefined") {
+			// stat doesn't exist for this seller; hide the overlay
+			overlay.classList.remove("visible");
+			return;
+		}
+		overlay.classList.add("visible");
+
+		var changed = lastValue !== null && value !== lastValue;
+		var goalHit = isBarMode && value >= goal;
+
+		if (isBarMode) {
+			progressEl.classList.add("show");
+			barValueEl.textContent = formatNumber(value);
+			barGoalEl.textContent = formatNumber(goal);
+
+			var range = goal - minVal;
+			var pct = range > 0 ? ((value - minVal) / range) * 100 : 100;
+			if (pct < 0) { pct = 0; }
+			if (pct > 100) { pct = 100; }
+			barFillEl.style.width = pct + "%";
+			barPctEl.textContent = Math.floor(pct) + "%";
+
+			if (goalHit) {
+				if (!progressEl.classList.contains("complete")) {
+					progressEl.classList.add("complete");
+					barPctEl.textContent = "100%";
+					celebrate();
+				}
+			} else {
+				progressEl.classList.remove("complete");
+				confettiDone = false;
+			}
+			if (changed) { bump(barValueEl); }
+		} else {
+			counterEl.classList.add("show");
+			counterValueEl.textContent = formatNumber(value);
+			if (changed) { bump(counterEl); }
+		}
+
+		lastValue = value;
+	}
+
+	// ---------------- polling ----------------
+	function extractStat(json) {
+		if (!json || json.ok !== true || !json.data) { return null; }
+		var v;
+		if (stat === "itemssold") {
+			v = json.data.itemsSold;
+		} else {
+			v = json.data.followers;
+		}
+		if (v === null || typeof v === "undefined" || isNaN(v)) { return null; }
+		return Number(v);
+	}
+
+	function poll() {
+		if (!seller) { return; }
+		var url = apiBase + "?seller=" + encodeURIComponent(seller);
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", url, true);
+		xhr.timeout = 20000;
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState !== 4) { return; }
+			if (xhr.status >= 200 && xhr.status < 300) {
+				var json = null;
+				try {
+					json = JSON.parse(xhr.responseText);
+				} catch (e) {}
+				var value = extractStat(json);
+				if (value !== null) {
+					render(value);
+				} else if (lastValue === null) {
+					// no data yet and nothing cached on screen; keep hidden
+					overlay.classList.remove("visible");
+				}
+			}
+			// on errors keep showing the last known value
+		};
+		try {
+			xhr.send();
+		} catch (e) {}
+	}
+
+	if (!seller) {
+		showBuilder();
+		return;
+	}
+
+	poll();
+	setInterval(poll, refreshSec * 1000);
+})();
+</script>
+</body>
+</html>

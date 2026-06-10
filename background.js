@@ -5463,6 +5463,50 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					}
 				})();
 			}
+		} else if (request.cmd && request.cmd === "ebaySellerStats") {
+			try {
+				const seller = String(request.seller || "")
+					.toLowerCase()
+					.replace(/^@+/, "")
+					.replace(/\s+/g, "")
+					.replace(/[^a-z0-9_-]/g, "");
+				if (!seller) {
+					sendResponse({ ok: false, error: "Invalid eBay seller" });
+					return response;
+				}
+				const endpoint = new URL("https://vps-1122d8c8.vps.ovh.us:1443/seller");
+				endpoint.searchParams.set("seller", seller);
+				const ebayResponse = await fetch(endpoint.toString(), {
+					cache: "no-store",
+					credentials: "omit",
+					headers: {
+						Accept: "application/json"
+					}
+				});
+				const responseText = await ebayResponse.text();
+				let responseJson = {};
+				try {
+					responseJson = responseText ? JSON.parse(responseText) : {};
+				} catch (error) {
+					responseJson = null;
+				}
+				if (!ebayResponse.ok) {
+					sendResponse({
+						ok: false,
+						status: ebayResponse.status,
+						error: (responseJson && (responseJson.message || responseJson.error)) || `HTTP ${ebayResponse.status}`
+					});
+					return response;
+				}
+				if (responseJson == null) {
+					sendResponse({ ok: false, status: ebayResponse.status, error: "Invalid JSON response" });
+					return response;
+				}
+				sendResponse({ ok: true, status: ebayResponse.status, data: responseJson });
+			} catch (error) {
+				sendResponse({ ok: false, error: error && error.message ? error.message : "eBay seller stats fetch failed" });
+			}
+			return true;
 		} else if (request.cmd && request.cmd === "vpzoneFetchJson") {
 			let parsedUrl;
 			try {
