@@ -83,7 +83,9 @@ function getCustomGifCommandEntryId(command, url, id) {
 }
 
 function getMatchedCommandAlias(commandString, messageText, mode) {
-	const normalizedText = String(messageText || "").trim().toLowerCase();
+	const normalizedText = String(messageText || "")
+		.trim()
+		.toLowerCase();
 	const aliases = getCommandAliases(commandString);
 	const matchMode = mode || "contains";
 
