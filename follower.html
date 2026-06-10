@@ -781,6 +781,16 @@
 			}
 		}
 
+		function setOpenTarget(el) {
+			if (window.location.protocol === "file:") {
+				el.target = "_self";
+				el.removeAttribute("rel");
+			} else {
+				el.target = "_blank";
+				el.rel = "noopener";
+			}
+		}
+
 		var inputs = builderEl.getElementsByTagName("input");
 		for (var i = 0; i < inputs.length; i++) {
 			inputs[i].oninput = updateUrl;
@@ -789,6 +799,8 @@
 		builderStatEl.onchange = updateUrl;
 		builderStyleEl.onchange = updateUrl;
 		builderCopyEl.onclick = copyUrl;
+		setOpenTarget(builderOpenEl);
+		setOpenTarget(builderTestOpenEl);
 
 		updateUrl();
 	}
