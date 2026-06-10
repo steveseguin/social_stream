@@ -139,7 +139,7 @@
                             <td>&mdash;</td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
-                            <td>Viewer count, live event card snapshots, auction footer metadata (when exposed), and upcoming event metadata</td>
+                            <td>Viewer count, follower count, live event card snapshots, auction footer metadata (when exposed), reaction hearts, and upcoming event metadata</td>
                         </tr>
                         <tr>
                             <td><strong>Streamlabs Alert Box</strong></td>
@@ -902,6 +902,11 @@
                                 <td><code>meta</code> is an integer viewer count.</td>
                             </tr>
                             <tr>
+                                <td class="status-event"><code>follower_update</code></td>
+                                <td>When the seller follower count changes from the seller stats endpoint.</td>
+                                <td><code>meta</code> is an integer follower count. The source polls the seller endpoint every 5 minutes because the endpoint cache only refreshes on that cadence.</td>
+                            </tr>
+                            <tr>
                                 <td class="status-event"><code>auction_update</code></td>
                                 <td>When active auction metadata changes.</td>
                                 <td>Metadata-only event. If player-card controls are present, includes bid/price/timer/winner/action fields. Fallback mode includes current live event fields such as <code>meta.title</code>, <code>meta.viewerCount</code>, <code>meta.sellerName</code>, <code>meta.tags</code>, and <code>meta.scheduleText</code>.</td>
@@ -910,6 +915,11 @@
                                 <td class="status-event"><code>commerce_update</code></td>
                                 <td>When catalog/live-event snapshot sections change.</td>
                                 <td>Metadata-only snapshot under <code>meta</code>, including available sections such as <code>meta.navigation</code>, <code>meta.playerCards</code>, <code>meta.liveEvents</code>, <code>meta.livePreview</code>, <code>meta.currentEvent</code>, and <code>meta.upcomingEvents</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>reaction</code></td>
+                                <td>When eBay Live renders a heart/reaction animation.</td>
+                                <td>Sent directly to the dedicated reactions target. <code>meta.reactionType</code> is <code>heart</code>; eBay does not expose a per-user name for these DOM animations.</td>
                             </tr>
                         </tbody>
                     </table>

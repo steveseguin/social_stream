@@ -58,19 +58,18 @@ function commandAliasMatches(commandString, messageText, mode) {
 	if (!aliases.length) {
 		return false;
 	}
-	const text = String(messageText);
-	const lowerText = text.toLowerCase();
+	const normalizedText = String(messageText).trim().toLowerCase();
 
 	if (mode === "exact") {
-		return aliases.some(alias => lowerText === alias.lower);
+		return aliases.some(alias => normalizedText === alias.lower);
 	}
 	if (mode === "startsWith") {
-		return aliases.some(alias => lowerText.startsWith(alias.lower));
+		return aliases.some(alias => normalizedText.startsWith(alias.lower));
 	}
 	if (mode === "word") {
-		return aliases.some(alias => alias.wordRegex.test(text));
+		return aliases.some(alias => alias.wordRegex.test(normalizedText));
 	}
-	return aliases.some(alias => lowerText.includes(alias.lower));
+	return aliases.some(alias => normalizedText.includes(alias.lower));
 }
 
 function getCustomGifCommandEntryId(command, url, id) {
@@ -83,16 +82,26 @@ function getCustomGifCommandEntryId(command, url, id) {
 	return "gif_" + Math.abs(hash);
 }
 
-function getMatchedCommandAlias(commandString, messageText) {
-	const text = String(messageText || "");
-	const lowerText = text.toLowerCase();
+function getMatchedCommandAlias(commandString, messageText, mode) {
+	const normalizedText = String(messageText || "").trim().toLowerCase();
 	const aliases = getCommandAliases(commandString);
+	const matchMode = mode || "contains";
+
 	for (let i = 0; i < aliases.length; i++) {
-		if (lowerText === aliases[i].lower) {
+		if (matchMode === "exact" && normalizedText === aliases[i].lower) {
+			return aliases[i].command;
+		}
+		if (matchMode === "startsWith" && normalizedText.startsWith(aliases[i].lower)) {
+			return aliases[i].command;
+		}
+		if (matchMode === "word" && aliases[i].wordRegex.test(normalizedText)) {
+			return aliases[i].command;
+		}
+		if (matchMode === "contains" && normalizedText.includes(aliases[i].lower)) {
 			return aliases[i].command;
 		}
 	}
-	return text;
+	return normalizedText;
 }
 
 // Spotify integration
@@ -6642,14 +6651,15 @@ async function sendToDestinations(message) {
 	try {
 		if (settings.enableCustomGifCommands && settings["customGifCommands"]) {
 			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
-			const firstWord = message && message.chatmessage ? message.chatmessage.split(" ")[0] : "";
+			const messageText = typeof message.chatmessage === "string" ? message.chatmessage : "";
+			const cleanMessageText = messageText.trim().replace(/^[^a-zA-Z0-9#]+/g, "");
 			settings["customGifCommands"]["object"].forEach(values => {
-				if (firstWord && values.url && values.command && commandAliasMatches(values.command, firstWord, "exact")) {
+				if (cleanMessageText && values.url && values.command && commandAliasMatches(values.command, cleanMessageText, "startsWith")) {
 					//  || "https://picsum.photos/1280/720?random="+values.command
 					const aliases = getCommandAliases(values.command).map(alias => alias.command);
 					const gifMeta = Object.assign({}, message.meta || {}, {
 						customGifCommandId: getCustomGifCommandEntryId(values.command, values.url, values.id),
-						customGifCommand: getMatchedCommandAlias(values.command, firstWord),
+						customGifCommand: getMatchedCommandAlias(values.command, cleanMessageText, "startsWith"),
 						customGifCommands: aliases
 					});
 					const gifPayload = { ...message, ...{ contentimg: values.url, meta: gifMeta } }; // overwrite any existing contentimg. leave the rest of the meta data tho
@@ -11407,7 +11417,7 @@ function loadPollPreset(pollId) {
 function updatePollSettings(newSettings) {
 	try {
 		// Update poll-related settings
-		const pollKeys = ["pollType", "pollQuestion", "multipleChoiceOptions", "pollStyle", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
+		const pollKeys = ["pollType", "pollQuestion", "multipleChoiceOptions", "pollMatchMode", "pollStyle", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
 
 		pollKeys.forEach(key => {
 			if (newSettings.hasOwnProperty(key)) {
@@ -11452,6 +11462,7 @@ function createNewPoll(pollSettings) {
 			pollType: "freeform",
 			pollQuestion: "",
 			multipleChoiceOptions: "",
+			pollMatchMode: "exact",
 			pollStyle: "default",
 			pollTimer: "60",
 			pollTimerState: false,

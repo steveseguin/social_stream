@@ -5733,7 +5733,7 @@ input:checked + .slider:before {
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#multi-alert-options" title="Jump to multi-alert overlay options."><span data-translate="options">[options]</span></a>
 				</h2>
-				<small class="beginner-section-note">Shows follows, subs, donations, bits, and raids as alert popups. Use the sections below for common alert controls.</small>
+				<small class="beginner-section-note">Shows follows, subs, donations, bits, and raids as alert popups, plus optional auction winner and hype train alerts. Use the sections below for common alert controls.</small>
 				<div id="multialerts" data-raw="" class="single_message"><a href="" id="multialertslink"></a></div>
 				<div class="help-tip" style="margin-top: 10px;">💡 <strong>Twitch-style setup:</strong> tune each alert type, copy the browser source URL, then test everything live in the preview panel below.</div>
 			</div>
@@ -5780,6 +5780,20 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span>Skip raid/host alerts</span>
+								</div>
+								<div title="Opt-in: shows an alert when a live auction ends with a winner (Whatnot, eBay Live).">
+									<label class="switch">
+										<input type="checkbox" data-param25="auctionwins" />
+										<span class="slider round"></span>
+									</label>
+									<span>Show auction winner alerts (Whatnot/eBay)</span>
+								</div>
+								<div title="Opt-in: shows an alert when a Twitch hype train starts or reaches a new level.">
+									<label class="switch">
+										<input type="checkbox" data-param25="hypetrain" />
+										<span class="slider round"></span>
+									</label>
+									<span>Show hype train level alerts (Twitch)</span>
 								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Minimum converted USD value required for donation/bits alerts. Example: 5 blocks 100 bits but allows $5+ alerts.">
 									<input type="text" id="multialertmindonation" class="textInput instant" autocomplete="off" placeholder="5" data-textparam25="mindonation" />
@@ -5844,6 +5858,22 @@ input:checked + .slider:before {
 								<div>
 									<label>Raid preset</label>
 									<select data-optionparam25="raidstyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Auction win preset</label>
+									<select data-optionparam25="auctionstyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Hype train preset</label>
+									<select data-optionparam25="hypestyle" class="textInput">
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
@@ -6082,6 +6112,16 @@ input:checked + .slider:before {
 											<label><span>&gt; 🧡 Raid sound</span></label>
 											<button type="button" id="uploadRaidSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #f59e0b; --upload-button-color: #111;">Upload</button>
 										</div>
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Auction win sound URL (.ogg, .mp3, .wav)" data-textparam25="auctionsound" id="multi-alert-auctionsound" />
+											<label><span>&gt; 💛 Auction win sound</span></label>
+											<button type="button" id="uploadAuctionSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #fbbf24; --upload-button-color: #111;">Upload</button>
+										</div>
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Hype train sound URL (.ogg, .mp3, .wav)" data-textparam25="hypesound" id="multi-alert-hypesound" />
+											<label><span>&gt; ❤️ Hype train sound</span></label>
+											<button type="button" id="uploadHypeSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #f43f5e;">Upload</button>
+										</div>
 									</div>
 								</details>
 								<div>
@@ -6134,12 +6174,14 @@ input:checked + .slider:before {
 										<option value="kick">Kick</option>
 									</select>
 								</div>
-								<div style="display: flex; flex-wrap: nowrap; gap: 6px; margin-bottom: 14px;">
+								<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
 									<button type="button" id="multi-alert-preview-follow" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Follow</button>
 									<button type="button" id="multi-alert-preview-sub" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Sub</button>
 									<button type="button" id="multi-alert-preview-dono" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Donation</button>
 									<button type="button" id="multi-alert-preview-bits" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Bits</button>
 									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Raid</button>
+									<button type="button" id="multi-alert-preview-auction" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Auction</button>
+									<button type="button" id="multi-alert-preview-hype" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Hype</button>
 									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Clear</button>
 									<button type="button" id="multi-alert-preview-mute" class="overlayButton" style="flex: 0 0 auto; min-width: 0; white-space: nowrap; opacity: 0.6;" title="Mute preview sound">🔊</button>
 								</div>
@@ -10425,19 +10467,37 @@ input:checked + .slider:before {
 									</div>
 									<br>
 									<h3>Layout and Appearance</h3>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param24="alignright" />
-										<span class="slider round"></span>
-									</label>
-									<span>➡️ Align overlay to the right-side</span>
+								<div title="Visual theme for the stat chips.">
+									<label>🎨 Style preset</label>
+									<select data-optionparam24="style" class="textInput">
+										<option value="" selected>Default (pill chips)</option>
+										<option value="glass">Glass (frosted)</option>
+										<option value="neon">Neon (glowing accents)</option>
+										<option value="minimal">Minimal (text only)</option>
+										<option value="card">Cards (label over big value)</option>
+									</select>
 								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param24="align=center" />
-										<span class="slider round"></span>
-									</label>
-									<span>↔️ Align overlay to the center</span>
+								<div title="How the stat chips flow: a wrapping row, a vertical stack, or an even grid.">
+									<label>📐 Layout</label>
+									<select data-optionparam24="layout" class="textInput">
+										<option value="" selected>Row (wrapping)</option>
+										<option value="column">Column (stacked)</option>
+										<option value="grid">Grid</option>
+									</select>
+								</div>
+								<div title="Where the overlay sits within the browser source frame.">
+									<label>📍 Placement</label>
+									<select data-optionparam24="position" class="textInput">
+										<option value="" selected>Top left</option>
+										<option value="top-center">Top center</option>
+										<option value="top-right">Top right</option>
+										<option value="middle-left">Middle left</option>
+										<option value="center">Center</option>
+										<option value="middle-right">Middle right</option>
+										<option value="bottom-left">Bottom left</option>
+										<option value="bottom-center">Bottom center</option>
+										<option value="bottom-right">Bottom right</option>
+									</select>
 								</div>
 								<div>
 									<label class="switch">
@@ -11564,6 +11624,14 @@ input:checked + .slider:before {
 										<option value="freeform">Free-form</option>
 										<option value="yesno">Yes/No</option>
 										<option value="multiple">Multiple Choice</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label><span data-translate="poll-match-mode">Vote Matching:</span></label>
+									<select data-optionsetting="pollMatchMode" data-target="poll" id="pollMatchMode">
+										<option value="exact" data-translate="poll-match-exact">Exact vote only</option>
+										<option value="hashtag-anywhere" data-translate="poll-match-hashtag-anywhere">Hashtag anywhere</option>
 									</select>
 								</div>
 								<br>

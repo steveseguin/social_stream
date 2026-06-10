@@ -534,6 +534,33 @@ try {
 		}
 	}
 
+	function notifyYouTubeWssStatus(status, message, meta = null) {
+		try {
+			const payload = { wssStatus: { platform: 'youtube', status, message } };
+			if (meta && typeof meta === 'object') {
+				Object.keys(meta).forEach(key => {
+					if (typeof meta[key] !== 'undefined') {
+						payload.wssStatus[key] = meta[key];
+					}
+				});
+			}
+			const tabId = (typeof window.__SSAPP_TAB_ID__ !== 'undefined') ? window.__SSAPP_TAB_ID__ : null;
+			if (window.chrome && window.chrome.runtime && window.chrome.runtime.id) {
+				window.chrome.runtime.sendMessage(window.chrome.runtime.id, payload, function() {});
+			} else if (window.ninjafy && window.ninjafy.sendMessage) {
+				window.ninjafy.sendMessage(null, payload, null, tabId);
+			} else {
+				const data = Object.assign({}, payload);
+				if (tabId !== null) data.__tabID__ = tabId;
+				window.postMessage(data, '*');
+			}
+		} catch (_) {}
+	}
+
+	if (typeof window.ssWssNotify !== 'function') {
+		window.ssWssNotify = notifyYouTubeWssStatus;
+	}
+
 	function reportOutboundChatFailure(message) {
 		const statusMessage = message || 'YouTube host chat was not sent.';
 		console.warn(statusMessage);
@@ -4734,7 +4761,9 @@ function enableBackgroundKeepAlive() {
 					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
 					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
 					updateHeaderInfo(username, `${channelDisplayNameToUse} (Video: ${streamTitleToUse.substring(0,20)}...)`);
-					document.getElementById('textarea').innerHTML = `<div>This video is not currently live. Showing stats for: ${streamTitleToUse}</div>`;
+					const notLiveMessage = `This video is not currently live. Showing stats for: ${streamTitleToUse}`;
+					document.getElementById('textarea').innerHTML = `<div>${notLiveMessage}</div>`;
+					notifyYouTubeWssStatus('error', notLiveMessage, { code: 'youtube_not_live' });
 					if (streamInfoToUse.statistics) {
 						document.getElementById('viewer-count').textContent = streamInfoToUse.statistics.viewCount || '-';
 						document.getElementById('likes-count').textContent = streamInfoToUse.statistics.likeCount || '-';
@@ -4760,7 +4789,9 @@ function enableBackgroundKeepAlive() {
 					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
 					updateHeaderInfo(username, `${channelDisplayNameToUse} (Upcoming: ${streamTitleToUse.substring(0,20)}...)`);
 					if (!liveChatId) {
-						document.getElementById('textarea').innerHTML = `<div>This is an upcoming stream. Chat may not be available yet.</div>`;
+						const upcomingMessage = 'This is an upcoming stream. Chat may not be available yet.';
+						document.getElementById('textarea').innerHTML = `<div>${upcomingMessage}</div>`;
+						notifyYouTubeWssStatus('error', upcomingMessage, { code: 'youtube_chat_not_ready' });
 						document.getElementById('viewer-count').textContent = 'N/A';
 						document.getElementById('likes-count').textContent = streamInfoToUse.statistics?.likeCount || '-';
 					}
@@ -4867,6 +4898,7 @@ function enableBackgroundKeepAlive() {
                  noChatMessage.style.color = "orange";
                  noChatMessage.innerText = "Live chat is not currently active for this stream.";
                  document.getElementById('textarea').appendChild(noChatMessage);
+                 notifyYouTubeWssStatus('error', noChatMessage.innerText, { code: 'youtube_chat_inactive' });
             }
             // Clear existing intervals
             stopStreamStatsPolling();
@@ -4892,6 +4924,7 @@ function enableBackgroundKeepAlive() {
             if (channelInput.value && channelToUse) channelInput.value = '';
         } catch (error) {
             console.error('Error connecting to YouTube:', error);
+			notifyYouTubeWssStatus('error', error && error.message ? error.message : 'YouTube connection failed', { code: 'youtube_connect_error' });
             updateHeaderInfo(username, 'Connection failed');
             const textarea = document.querySelector("#textarea");
             if (textarea) {

@@ -495,7 +495,7 @@ async function fetchOpenCodeZenModels(apiKey = "", force = false) {
 
 async function getOpenCodeZenCandidateModels(llmSettings, refreshModelList) {
     const models = refreshModelList
-        ? await fetchOpenCodeZenModels(getOpenCodeZenApiKey(llmSettings), false)
+        ? await fetchOpenCodeZenModels(getOpenCodeZenApiKey(llmSettings), true)
         : getOpenCodeZenKnownModels();
     const chatModels = sortOpenCodeZenModels(models).filter(isOpenCodeZenChatCompletionsModel);
     const candidates = chatModels.length ? chatModels : OPENCODE_ZEN_FREE_MODEL_ORDER.slice();

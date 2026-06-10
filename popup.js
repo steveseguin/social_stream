@@ -4781,7 +4781,7 @@ if (sourcemode){
         baseURL = "file:///C:/Users/steve/Code/social_stream/";
     }
 } else if (location.hostname === "cache.socialstream.ninja") {
-    baseURL = "https://socialstream.ninja/";
+    baseURL = Beta ? "https://beta.socialstream.ninja/" : "https://socialstream.ninja/";
 } else if (location.protocol !== "chrome-extension:" && !Beta) {
     // Only set baseURL from location if we're not already in beta mode
     baseURL = `${location.protocol}//${location.host}/`;
@@ -6705,6 +6705,24 @@ function buildMultiAlertPreviewDescriptor(category) {
                     meta: { viewers: 42 }
                 }
             };
+        case 'auction':
+            // Auction wins come from live-shopping platforms; the overlay mock fills in the meta snapshot.
+            return {
+                category,
+                overrides: {
+                    type: 'whatnot',
+                    platform: 'whatnot',
+                    chatname: profile.chatname
+                }
+            };
+        case 'hype':
+            return {
+                category,
+                overrides: {
+                    type: 'twitch',
+                    platform: 'twitch'
+                }
+            };
         default:
             return null;
     }
@@ -8327,6 +8345,7 @@ const PollManager = {
             pollType: document.querySelector('[data-optionsetting="pollType"]').value,
             pollQuestion: document.querySelector('[data-textsetting="pollQuestion"]').value,
             multipleChoiceOptions: document.querySelector('[data-textsetting="multipleChoiceOptions"]').value,
+            pollMatchMode: document.querySelector('[data-optionsetting="pollMatchMode"]')?.value || 'exact',
             pollStyle: document.querySelector('[data-optionsetting="pollStyle"]').value,
             pollTimer: document.querySelector('[data-numbersetting="pollTimer"]').value,
             pollTimerState: document.querySelector('[data-setting="pollTimerState"]').checked,
@@ -8358,6 +8377,7 @@ const PollManager = {
             pollType: 'freeform',
             pollQuestion: '',
             multipleChoiceOptions: '',
+            pollMatchMode: 'exact',
             pollStyle: 'default',
             pollTimer: 60,
             pollTimerState: false,
@@ -8370,6 +8390,7 @@ const PollManager = {
             '[data-optionsetting="pollType"]': defaultSettings.pollType,
             '[data-textsetting="pollQuestion"]': defaultSettings.pollQuestion,
             '[data-textsetting="multipleChoiceOptions"]': defaultSettings.multipleChoiceOptions,
+            '[data-optionsetting="pollMatchMode"]': defaultSettings.pollMatchMode,
             '[data-optionsetting="pollStyle"]': defaultSettings.pollStyle,
             '[data-numbersetting="pollTimer"]': defaultSettings.pollTimer,
             '[data-setting="pollTimerState"]': defaultSettings.pollTimerState,
@@ -8406,6 +8427,7 @@ const PollManager = {
             '[data-optionsetting="pollType"]': poll.settings.pollType,
             '[data-textsetting="pollQuestion"]': poll.settings.pollQuestion,
             '[data-textsetting="multipleChoiceOptions"]': poll.settings.multipleChoiceOptions,
+            '[data-optionsetting="pollMatchMode"]': poll.settings.pollMatchMode || 'exact',
             '[data-optionsetting="pollStyle"]': poll.settings.pollStyle,
             '[data-numbersetting="pollTimer"]': poll.settings.pollTimer,
             '[data-setting="pollTimerState"]': poll.settings.pollTimerState,
@@ -8745,6 +8767,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ id: 'multi-alert-preview-dono', descriptor: () => buildMultiAlertPreviewDescriptor('donation') },
 		{ id: 'multi-alert-preview-bits', descriptor: () => buildMultiAlertPreviewDescriptor('bits') },
 		{ id: 'multi-alert-preview-raid', descriptor: () => buildMultiAlertPreviewDescriptor('raid') },
+		{ id: 'multi-alert-preview-auction', descriptor: () => buildMultiAlertPreviewDescriptor('auction') },
+		{ id: 'multi-alert-preview-hype', descriptor: () => buildMultiAlertPreviewDescriptor('hype') },
 		{ id: 'multi-alert-preview-clear', descriptor: false }
 	]);
 
@@ -10481,7 +10505,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ btnId: 'uploadSubSoundBtn', inputId: 'multi-alert-subsound' },
 		{ btnId: 'uploadDonoSoundBtn', inputId: 'multi-alert-donosound' },
 		{ btnId: 'uploadBitsSoundBtn', inputId: 'multi-alert-bitssound' },
-		{ btnId: 'uploadRaidSoundBtn', inputId: 'multi-alert-raidsound' }
+		{ btnId: 'uploadRaidSoundBtn', inputId: 'multi-alert-raidsound' },
+		{ btnId: 'uploadAuctionSoundBtn', inputId: 'multi-alert-auctionsound' },
+		{ btnId: 'uploadHypeSoundBtn', inputId: 'multi-alert-hypesound' }
 	];
 	alertSoundUploads.forEach(({ btnId, inputId }) => {
 		const btn = document.getElementById(btnId);

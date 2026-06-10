@@ -3,7 +3,9 @@ const ALERT_CATEGORIES = Object.freeze({
   SUBSCRIPTION: 'subscription',
   DONATION: 'donation',
   BITS: 'bits',
-  RAID: 'raid'
+  RAID: 'raid',
+  AUCTION: 'auction',
+  HYPE: 'hype'
 });
 
 const DEFAULT_ALERT_STYLE = 'twitch';
@@ -13,7 +15,9 @@ const CATEGORY_LABELS = Object.freeze({
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'New Subscriber',
   [ALERT_CATEGORIES.DONATION]: 'New Donation',
   [ALERT_CATEGORIES.BITS]: 'New Cheer',
-  [ALERT_CATEGORIES.RAID]: 'Incoming Raid'
+  [ALERT_CATEGORIES.RAID]: 'Incoming Raid',
+  [ALERT_CATEGORIES.AUCTION]: 'Auction Won',
+  [ALERT_CATEGORIES.HYPE]: 'Hype Train'
 });
 
 const CATEGORY_LABEL_KEYS = Object.freeze({
@@ -21,7 +25,9 @@ const CATEGORY_LABEL_KEYS = Object.freeze({
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'alert-title-new-subscriber',
   [ALERT_CATEGORIES.DONATION]: 'alert-title-new-donation',
   [ALERT_CATEGORIES.BITS]: 'alert-title-new-cheer',
-  [ALERT_CATEGORIES.RAID]: 'alert-title-incoming-raid'
+  [ALERT_CATEGORIES.RAID]: 'alert-title-incoming-raid',
+  [ALERT_CATEGORIES.AUCTION]: 'alert-title-auction-won',
+  [ALERT_CATEGORIES.HYPE]: 'alert-title-hype-train'
 });
 
 const CATEGORY_ACCENTS = Object.freeze({
@@ -29,7 +35,9 @@ const CATEGORY_ACCENTS = Object.freeze({
   [ALERT_CATEGORIES.SUBSCRIPTION]: '#8b5cf6',
   [ALERT_CATEGORIES.DONATION]: '#14f195',
   [ALERT_CATEGORIES.BITS]: '#38bdf8',
-  [ALERT_CATEGORIES.RAID]: '#f59e0b'
+  [ALERT_CATEGORIES.RAID]: '#f59e0b',
+  [ALERT_CATEGORIES.AUCTION]: '#fbbf24',
+  [ALERT_CATEGORIES.HYPE]: '#f43f5e'
 });
 
 const COUNT_EVENTS = new Set([
@@ -86,6 +94,9 @@ const DONATION_EVENTS = new Set([
 ]);
 const BITS_EVENTS = new Set(['cheer', 'bits']);
 const RAID_EVENTS = new Set(['raid', 'host', 'hosting', 'redirect']);
+const AUCTION_EVENTS = new Set(['auction_update']);
+const HYPE_EVENTS = new Set(['hype_train']);
+const AUCTION_WIN_STATUSES = new Set(['won', 'sold', 'winner']);
 
 const EVENT_ALIASES = Object.freeze({
   'channel_subscription_gifts': 'subscription_gift',
@@ -171,7 +182,9 @@ const CATEGORY_STYLE_PARAMS = {
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'substyle',
   [ALERT_CATEGORIES.DONATION]: 'donostyle',
   [ALERT_CATEGORIES.BITS]: 'bitsstyle',
-  [ALERT_CATEGORIES.RAID]: 'raidstyle'
+  [ALERT_CATEGORIES.RAID]: 'raidstyle',
+  [ALERT_CATEGORIES.AUCTION]: 'auctionstyle',
+  [ALERT_CATEGORIES.HYPE]: 'hypestyle'
 };
 
 const CATEGORY_DISABLE_PARAMS = {
@@ -182,12 +195,20 @@ const CATEGORY_DISABLE_PARAMS = {
   [ALERT_CATEGORIES.RAID]: 'disableraids'
 };
 
+// Opt-in categories: hidden unless the enable param is present in the URL
+const CATEGORY_OPT_IN_PARAMS = {
+  [ALERT_CATEGORIES.AUCTION]: 'auctionwins',
+  [ALERT_CATEGORIES.HYPE]: 'hypetrain'
+};
+
 const CATEGORY_SOUND_PARAMS = {
   [ALERT_CATEGORIES.FOLLOW]: 'followsound',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'subsound',
   [ALERT_CATEGORIES.DONATION]: 'donosound',
   [ALERT_CATEGORIES.BITS]: 'bitssound',
-  [ALERT_CATEGORIES.RAID]: 'raidsound'
+  [ALERT_CATEGORIES.RAID]: 'raidsound',
+  [ALERT_CATEGORIES.AUCTION]: 'auctionsound',
+  [ALERT_CATEGORIES.HYPE]: 'hypesound'
 };
 
 const SOURCE_ICON_MAP = {
@@ -207,6 +228,8 @@ const SOURCE_ICON_MAP = {
 
 const settings = readSettings();
 const recentPayloads = [];
+const hypeTrainLevels = {};
+let lastAuctionWinSignature = '';
 
 const state = {
   iframe: null,
@@ -553,7 +576,9 @@ function buildRecentPayloadSignature(payload = {}) {
     pickDonationLabel(payload),
     normalizeText(payload.membership),
     normalizeText(payload.contentimg),
-    normalizeText(payload.id || payload.meta?.eventId || payload.meta?.id)
+    normalizeText(payload.id || payload.meta?.eventId || payload.meta?.id),
+    normalizeText(payload.meta?.status),
+    normalizeText(payload.meta?.level)
   ].join('|');
 }
 
@@ -825,6 +850,24 @@ function pickSubtitle(payload = {}) {
 }
 
 function buildAlertSubtitle(category, payload = {}, eventKey = '', actor = '') {
+  if (category === ALERT_CATEGORIES.AUCTION) {
+    return pickFirstText([
+      payload.meta?.bidsText,
+      Number(payload.meta?.bids) > 0 ? `${payload.meta.bids} bids` : ''
+    ]);
+  }
+  if (category === ALERT_CATEGORIES.HYPE) {
+    const hypeParts = [];
+    if (payload.meta?.isSharedTrain) {
+      hypeParts.push(getTranslation('alert-shared-hype-train', 'Shared Hype Train'));
+    }
+    const trainType = normalizeKey(payload.meta?.trainType);
+    if (trainType && trainType !== 'regular') {
+      hypeParts.push(formatTranslation('alert-train-type', '{type} Train', { type: humanizeKey(trainType) }));
+    }
+    return hypeParts.join(' - ');
+  }
+
   const parts = [];
   const baseSubtitle = pickSubtitle(payload);
   if (baseSubtitle) {
@@ -846,6 +889,68 @@ function buildAlertSubtitle(category, payload = {}, eventKey = '', actor = '') {
   }
 
   return parts.join(' - ');
+}
+
+function pickAuctionWinnerName(payload = {}) {
+  const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : {};
+  return pickFirstText([
+    meta.winnerName,
+    meta.winner,
+    meta.bidder,
+    payload.chatname
+  ]);
+}
+
+function pickAuctionPriceLabel(payload = {}) {
+  const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : {};
+  const priceText = pickFirstText([meta.priceText, meta.price, meta.soldPrice]);
+  return priceText;
+}
+
+function isAuctionWinPayload(payload = {}) {
+  const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : {};
+  const status = normalizeKey(meta.status);
+  const statusText = normalizeKey(meta.statusText);
+  const isWin = AUCTION_WIN_STATUSES.has(status) || /\b(won|sold)\b/.test(statusText);
+  if (!isWin) {
+    return false;
+  }
+  const signature = [
+    normalizeText(meta.id),
+    normalizeText(meta.title),
+    pickAuctionWinnerName(payload),
+    normalizeText(meta.priceText || meta.price)
+  ].join('|');
+  if (signature === lastAuctionWinSignature) {
+    return false;
+  }
+  lastAuctionWinSignature = signature;
+  return true;
+}
+
+function pickHypeLevel(payload = {}) {
+  const level = Number(payload.meta?.level);
+  return Number.isFinite(level) && level > 0 ? Math.floor(level) : 0;
+}
+
+function shouldAlertHypeTrain(payload = {}) {
+  const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : {};
+  const trainId = normalizeText(meta.id) || `${pickSourceKey(payload)}-train`;
+  const phase = normalizeKey(meta.phase);
+  if (phase === 'end') {
+    delete hypeTrainLevels[trainId];
+    return false;
+  }
+  const level = pickHypeLevel(payload);
+  if (!level) {
+    return false;
+  }
+  const lastLevel = hypeTrainLevels[trainId] || 0;
+  if (level <= lastLevel) {
+    return false;
+  }
+  hypeTrainLevels[trainId] = level;
+  return true;
 }
 
 function pickViewerCount(payload = {}) {
@@ -1004,6 +1109,13 @@ function inferCategory(payload = {}) {
     return null;
   }
 
+  if (AUCTION_EVENTS.has(eventKey)) {
+    return isAuctionWinPayload(payload) ? ALERT_CATEGORIES.AUCTION : null;
+  }
+  if (HYPE_EVENTS.has(eventKey)) {
+    return shouldAlertHypeTrain(payload) ? ALERT_CATEGORIES.HYPE : null;
+  }
+
   const donationLabel = normalizeKey(pickDonationLabel(payload));
   const genericEvent = isGenericEventKey(eventKey);
 
@@ -1042,8 +1154,24 @@ function inferCategory(payload = {}) {
   return null;
 }
 
-function buildHeadline(category, eventKey, actor, amount, viewerCount) {
+function buildHeadline(category, eventKey, actor, amount, viewerCount, payload = {}) {
   switch (category) {
+    case ALERT_CATEGORIES.AUCTION:
+      return {
+        lead: actor,
+        tail: amount
+          ? formatTranslation('alert-won-auction-for', 'won the auction for {amount}', { amount })
+          : getTranslation('alert-won-auction', 'won the auction')
+      };
+    case ALERT_CATEGORIES.HYPE: {
+      const level = pickHypeLevel(payload);
+      return {
+        lead: actor,
+        tail: level
+          ? formatTranslation('alert-hype-reached-level', 'reached Level {level}', { level })
+          : getTranslation('alert-hype-started', 'has started')
+      };
+    }
     case ALERT_CATEGORIES.FOLLOW:
       return { lead: actor, tail: getTranslation('alert-just-followed', 'just followed') };
     case ALERT_CATEGORIES.SUBSCRIPTION:
@@ -1111,6 +1239,21 @@ function buildBodyText(category, payload, viewerCount) {
   const rawMessage = normalizeText(payload.chatmessage);
   const subtitle = pickSubtitle(payload);
 
+  if (category === ALERT_CATEGORIES.AUCTION) {
+    const itemTitle = normalizeText(payload.meta?.title);
+    if (itemTitle) {
+      return itemTitle;
+    }
+    return normalizeText(payload.meta?.statusText) || getTranslation('alert-auction-closed', 'The auction just closed.');
+  }
+  if (category === ALERT_CATEGORIES.HYPE) {
+    const progress = Number(payload.meta?.progress);
+    const goal = Number(payload.meta?.goal);
+    if (Number.isFinite(progress) && Number.isFinite(goal) && goal > 0) {
+      return formatTranslation('alert-hype-progress', '{progress} / {goal} toward the next level', { progress, goal });
+    }
+    return getTranslation('alert-hype-rolling', 'The hype train is rolling!');
+  }
   if (category === ALERT_CATEGORIES.RAID && viewerCount) {
     return rawMessage || formatTranslation('alert-welcome-raid-from', 'Welcome the raid from {name}.', {
       name: pickActorName(payload)
@@ -1169,8 +1312,14 @@ function buildAlertViewModel(payload = {}) {
     return null;
   }
   const sourceLabel = SOURCE_LABELS[sourceKey] || humanizeKey(sourceKey);
-  const actor = pickActorName(payload);
-  const amount = pickDonationLabel(payload);
+  let actor = pickActorName(payload);
+  let amount = pickDonationLabel(payload);
+  if (category === ALERT_CATEGORIES.AUCTION) {
+    actor = pickAuctionWinnerName(payload) || actor;
+    amount = pickAuctionPriceLabel(payload);
+  } else if (category === ALERT_CATEGORIES.HYPE) {
+    actor = getTranslation('alert-hype-train', 'Hype Train');
+  }
   const subtitle = buildAlertSubtitle(category, payload, eventKey, actor);
   const viewerCount = pickViewerCount(payload);
   const mediaUrl = pickMediaUrl(payload);
@@ -1179,7 +1328,7 @@ function buildAlertViewModel(payload = {}) {
     log('value alert skipped below minimum', { amount, cashValue, minimum: settings.minDonationValue, payload });
     return null;
   }
-  const headline = buildHeadline(category, eventKey, actor, amount, viewerCount);
+  const headline = buildHeadline(category, eventKey, actor, amount, viewerCount, payload);
   const bodyText = buildBodyText(category, payload, viewerCount);
 
   return {
@@ -1218,7 +1367,9 @@ function pickMockUser(category) {
     [ALERT_CATEGORIES.SUBSCRIPTION]: 1,
     [ALERT_CATEGORIES.DONATION]: 2,
     [ALERT_CATEGORIES.BITS]: 4,
-    [ALERT_CATEGORIES.RAID]: 3
+    [ALERT_CATEGORIES.RAID]: 3,
+    [ALERT_CATEGORIES.AUCTION]: 2,
+    [ALERT_CATEGORIES.HYPE]: 1
   })[category] ?? 0;
   return MOCK_USERS[index];
 }
@@ -1282,6 +1433,46 @@ function createMockAlertPayload(category, overrides = {}) {
         chatmessage: 'Raiding with 42 viewers!',
         contentimg: createMediaPreviewDataUri('RAID', accent),
         meta: { viewers: 42, fromLogin: baseName.toLowerCase() }
+      };
+      break;
+    case ALERT_CATEGORIES.AUCTION:
+      payload = {
+        ...common,
+        type: 'whatnot',
+        platform: 'whatnot',
+        chatname: '',
+        chatimg: '',
+        event: 'auction_update',
+        contentimg: createMediaPreviewDataUri('SOLD', accent),
+        meta: {
+          id: `preview-auction-${Date.now()}`,
+          status: 'won',
+          statusText: `${baseName} won!`,
+          bidder: baseName,
+          title: '500 Spot Silver Slab Mega Set',
+          price: 88,
+          priceText: '$88',
+          bids: 7,
+          bidsText: '7 Bids'
+        }
+      };
+      break;
+    case ALERT_CATEGORIES.HYPE:
+      payload = {
+        ...common,
+        chatname: '',
+        chatimg: '',
+        event: 'hype_train',
+        contentimg: createMediaPreviewDataUri('HYPE', accent),
+        meta: {
+          id: `preview-hype-${Date.now()}`,
+          phase: 'progress',
+          level: 3,
+          progress: 120,
+          goal: 400,
+          total: 1320,
+          trainType: 'regular'
+        }
       };
       break;
     default:
@@ -1366,6 +1557,9 @@ function readSettings() {
   const disabledCategories = {};
   Object.entries(CATEGORY_DISABLE_PARAMS).forEach(([category, paramName]) => {
     disabledCategories[category] = urlParams.has(paramName);
+  });
+  Object.entries(CATEGORY_OPT_IN_PARAMS).forEach(([category, paramName]) => {
+    disabledCategories[category] = !urlParams.has(paramName);
   });
 
   const hasServer = urlParams.has('server');
@@ -2234,7 +2428,9 @@ async function playAlertSound(model) {
       [ALERT_CATEGORIES.SUBSCRIPTION]: 620,
       [ALERT_CATEGORIES.DONATION]: 720,
       [ALERT_CATEGORIES.BITS]: 840,
-      [ALERT_CATEGORIES.RAID]: 460
+      [ALERT_CATEGORIES.RAID]: 460,
+      [ALERT_CATEGORIES.AUCTION]: 900,
+      [ALERT_CATEGORIES.HYPE]: 760
     })[model.category] || 580;
 
     const now = ctx.currentTime;

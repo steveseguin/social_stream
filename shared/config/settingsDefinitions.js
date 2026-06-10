@@ -1198,6 +1198,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "poll_settings",
     description: "Prompt shown to viewers when the poll overlay is active."
   },
+  "pollMatchMode": {
+    type: "select",
+    category: "poll_settings",
+    description: "Controls whether poll votes must match the whole message or can use hashtags anywhere in the message."
+  },
   "pollSpam": {
     type: "boolean",
     category: "poll_settings",

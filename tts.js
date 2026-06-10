@@ -1541,22 +1541,22 @@ TTS.speechMeta = function(data, allow = false) {
 
         msgPlain = msgPlain.trim();
 
+        function sanitizeSpeechText(value) {
+            return String(value)
+                .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "")
+                .replace(/[_@!]/g, " ");
+        }
+
         var chatname = "";
         if (TTS.ttsSpeakChatname && data.chatname) {
-            chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-            chatname = chatname.replaceAll("_", " ");
-            chatname = chatname.replaceAll("@", " ");
-            chatname = chatname.replaceAll("!", " ");
+            chatname = sanitizeSpeechText(data.chatname.toLowerCase());
         }
 
         if (data.hasDonation) {
             var donoText = document.createElement("div");
             donoText.innerHTML = data.hasDonation;
             donoText = donoText.textContent || donoText.innerText || "";
-            donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
-            donoText = donoText.replaceAll("_", " ");
-            donoText = donoText.replaceAll("@", " ");
-            donoText = donoText.replaceAll("!", " ");
+            donoText = sanitizeSpeechText(donoText.toLowerCase());
 
             if (chatname) {
                 ///// NAME
@@ -2049,6 +2049,7 @@ TTS.SpeechifyTTS = function(tts) {
  * @param {string} text - Text to speak
  */
 TTS.kokoroTTS = async function(text) {
+  TTS.premiumQueueActive = true;
   try {
     if ((window.ninjafy || window.electronApi)) {
       try {

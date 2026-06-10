@@ -7372,10 +7372,10 @@
 								var normalizedMsg = (msg && msg.mid && msg.mid !== msg.id) ? Object.assign({}, msg, { id: msg.mid, dbid: msg.id }) : msg;
 								if (prependRecentHistory) {
 									prependMode = true;
-									processData({contents: normalizedMsg}, { skipHistoryDeferral: true });
+									processData({contents: normalizedMsg}, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
 									prependMode = false;
 								} else {
-									processData({contents: normalizedMsg}, { skipHistoryDeferral: true });
+									processData({contents: normalizedMsg}, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
 								}
 							}
 						});

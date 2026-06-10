@@ -516,6 +516,7 @@
         const completionsStorageKey = 'tipjar_hype_completions';
         let currentAmount = persistent ? (parseFloat(localStorage.getItem(amountStorageKey)) || 0) : 0;
         let completionCount = persistent ? (parseInt(localStorage.getItem(completionsStorageKey) || '0', 10) || 0) : 0;
+        let completionResetTimer = null;
         const recentTips = [];
         const maxRecentTips = 5;
         const donationHistory = persistent ? (JSON.parse(localStorage.getItem(historyStorageKey) || '[]')) : [];
@@ -666,6 +667,10 @@
         }
 
         function resetTipJarAmount(showNotice) {
+            if (completionResetTimer) {
+                clearTimeout(completionResetTimer);
+                completionResetTimer = null;
+            }
             currentAmount = 0;
             if (hypeMode) {
                 completionCount = 0;
@@ -730,7 +735,9 @@
         }
 
         function completeGoal() {
-            const completions = carryOverGoal ? Math.max(1, Math.floor(currentAmount / goal)) : 1;
+            const amountAtCompletion = currentAmount;
+            const completions = carryOverGoal ? Math.max(1, Math.floor(amountAtCompletion / goal)) : 1;
+            const completedAmount = goal * completions;
             completionCount += completions;
             if (persistent) {
                 localStorage.setItem(completionsStorageKey, completionCount.toString());
@@ -738,10 +745,16 @@
             updateCompletionDisplay();
             triggerMilestone(100);
 
-            setTimeout(function() {
-                currentAmount = carryOverGoal ? Math.max(0, currentAmount - (goal * completions)) : 0;
+            completionResetTimer = setTimeout(function() {
+                completionResetTimer = null;
+                const amountSinceCompletion = Math.max(0, currentAmount - amountAtCompletion);
+                const carryOverAmount = carryOverGoal ? Math.max(0, amountAtCompletion - completedAmount) : 0;
+                currentAmount = carryOverAmount + amountSinceCompletion;
                 clearJarContents();
                 renderAmount();
+                if (resetOnComplete && currentAmount >= goal) {
+                    completeGoal();
+                }
             }, completionDelayMs);
         }
 

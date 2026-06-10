@@ -63,6 +63,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const mediaContainer = document.getElementById('mediaContainer');
         const mediaContent = document.getElementById('mediaContent');
+        const bridgeSession = (urlParams.get('session') || '').split(',')[0].trim();
         const customGifFilterId = (urlParams.get('gifid') || '').trim();
         const customGifFilterCommand = (urlParams.get('gifcommand') || '').trim().toLowerCase();
         const customGifFilterCommands = customGifFilterCommand.split(',').map(function(command) {
@@ -548,25 +549,27 @@
         const bridgeLabel = ((customGifFilterId || customGifFilterCommand) ? filename : (urlParams.get('label') || filename)).trim() || filename;
         const password = urlParams.get('password') || 'false';
         const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=" + encodeURIComponent(bridgeLabel) + "&cleanoutput&room=" + urlParams.get('session');
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-        const eventer = window[eventMethod];
-        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-        eventer(messageEvent, function (e) {
-            if (e.source != iframe.contentWindow) return;
-            if ("dataReceived" in e.data) {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+        if (bridgeSession) {
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + encodeURIComponent(bridgeSession) + "&novideo&noaudio&label=" + encodeURIComponent(bridgeLabel) + "&cleanoutput&room=" + encodeURIComponent(bridgeSession);
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+            const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            const eventer = window[eventMethod];
+            const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+            eventer(messageEvent, function (e) {
+                if (e.source != iframe.contentWindow) return;
+                if ("dataReceived" in e.data) {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // Handle audio context for browsers that require user interaction
         attachAudioUnlockListeners();
