@@ -100,7 +100,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		color: var(--text-color, #fff);
+		color: var(--progress-text-color, var(--text-color, #fff));
 		text-shadow: 0 2px 6px rgba(0,0,0,0.8);
 		font-weight: 700;
 		font-size: var(--header-size, 4.5vh);
@@ -213,6 +213,7 @@
 	body.theme-clean {
 		--bg-color: rgba(255,255,255,0.9);
 		--text-color: #07111d;
+		--progress-text-color: #fff;
 		--bar-color: linear-gradient(90deg, #2dd4bf, #38bdf8);
 		--track-color: rgba(255,255,255,0.32);
 		--complete-color: linear-gradient(90deg, #22c55e, #84cc16);
@@ -506,6 +507,7 @@
 	</div>
 	<div class="builder-actions">
 		<a id="builderOpen" class="builder-button disabled" href="#" target="_blank" rel="noopener">Open overlay</a>
+		<a id="builderTestOpen" class="builder-button secondary disabled" href="#" target="_blank" rel="noopener">Test goal</a>
 		<button id="builderCopy" class="builder-button secondary" type="button">Copy URL</button>
 	</div>
 	<div id="builderStatus" class="builder-note">Add a seller name to generate a URL.</div>
@@ -634,6 +636,7 @@
 	var builderNoConfettiEl = document.getElementById("builderNoConfetti");
 	var builderUrlEl = document.getElementById("builderUrl");
 	var builderOpenEl = document.getElementById("builderOpen");
+	var builderTestOpenEl = document.getElementById("builderTestOpen");
 	var builderCopyEl = document.getElementById("builderCopy");
 	var builderStatusEl = document.getElementById("builderStatus");
 
@@ -684,6 +687,7 @@
 
 		function updateUrl() {
 			var parts = [];
+			var testParts = [];
 			var sellerValue = trimValue(builderSellerEl);
 			var statValue = builderStatEl.value;
 			var styleValue = builderStyleEl.value;
@@ -696,6 +700,10 @@
 			var serverValue = trimValue(builderServerEl);
 			var baseUrl = window.location.href.split("#")[0].split("?")[0];
 			var valid = !!sellerValue;
+			var testValid = false;
+			var minNumber = minValue ? parseFloat(minValue) : 0;
+			var goalNumber = goalValue ? parseFloat(goalValue) : NaN;
+			var testNumber = testValueText ? parseFloat(testValueText) : NaN;
 
 			addParam(parts, "seller", sellerValue);
 			if (statValue && statValue !== "followers") { addParam(parts, "stat", statValue); }
@@ -707,8 +715,19 @@
 					valid = false;
 				}
 				if (minValue) { addParam(parts, "min", minValue); }
+				if (!goalValue || isNaN(goalNumber) || isNaN(minNumber) || goalNumber <= minNumber) {
+					valid = false;
+				}
+				testValid = valid;
 			}
-			if (testValueText) { addParam(parts, "test", testValueText); }
+			if (testValueText) {
+				if (isNaN(testNumber)) {
+					valid = false;
+					testValid = false;
+				} else {
+					addParam(parts, "test", testValueText);
+				}
+			}
 			if (iconValue) { addParam(parts, "icon", iconValue); }
 			if (builderNoIconEl.checked) { addParam(parts, "noicon", null); }
 			if (labelValue) { addParam(parts, "label", labelValue); }
@@ -717,15 +736,35 @@
 			if (builderNoConfettiEl.checked) { addParam(parts, "noconfetti", null); }
 			if (serverValue && serverValue !== defaultApiBase) { addParam(parts, "server", serverValue); }
 
+			testParts = parts.slice(0);
+			if (testValid && !testValueText) {
+				addParam(testParts, "test", goalValue);
+			}
+
 			builderUrlEl.value = parts.length ? baseUrl + "?" + parts.join("&") : baseUrl;
 			if (valid) {
 				builderOpenEl.href = builderUrlEl.value;
 				builderOpenEl.className = "builder-button";
-				builderStatusEl.textContent = "Ready for OBS browser source.";
+				builderStatusEl.textContent = testValueText ? "Ready with a static test value; remove it before live use." : "Ready for OBS browser source.";
 			} else {
 				builderOpenEl.href = "#";
 				builderOpenEl.className = "builder-button disabled";
-				builderStatusEl.textContent = sellerValue ? "Add a progress goal to make the bar URL." : "Add a seller name to generate a URL.";
+				if (!sellerValue) {
+					builderStatusEl.textContent = "Add a seller name to generate a URL.";
+				} else if (testValueText && isNaN(testNumber)) {
+					builderStatusEl.textContent = "Test current value must be a number.";
+				} else if (builderProgressEl.checked && goalValue && !isNaN(goalNumber) && !isNaN(minNumber) && goalNumber <= minNumber) {
+					builderStatusEl.textContent = "Progress goal must be higher than the starting value.";
+				} else {
+					builderStatusEl.textContent = "Add a progress goal to make the bar URL.";
+				}
+			}
+			if (testValid) {
+				builderTestOpenEl.href = baseUrl + "?" + testParts.join("&");
+				builderTestOpenEl.className = "builder-button secondary";
+			} else {
+				builderTestOpenEl.href = "#";
+				builderTestOpenEl.className = "builder-button secondary disabled";
 			}
 			updateGoalVisibility();
 		}
