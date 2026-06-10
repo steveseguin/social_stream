@@ -903,8 +903,8 @@
                             </tr>
                             <tr>
                                 <td class="status-event"><code>follower_update</code></td>
-                                <td>When the seller follower count changes from the seller stats endpoint.</td>
-                                <td><code>meta</code> is an integer follower count. The source polls the seller endpoint every 5 minutes because the endpoint cache only refreshes on that cadence.</td>
+                                <td>When the seller follower count is returned from the seller stats endpoint.</td>
+                                <td><code>meta</code> is an integer follower count. The source polls the seller endpoint every 60 seconds; the endpoint may still return a cached value for up to 5 minutes.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>auction_update</code></td>

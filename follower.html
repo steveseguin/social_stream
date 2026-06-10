@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <title>Follower Overlay</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111820'/%3E%3Ccircle cx='24' cy='24' r='10' fill='%23ff4d7a'/%3E%3Crect x='12' y='36' width='40' height='10' rx='5' fill='%2343baf5'/%3E%3C/svg%3E" />
 <style>
 	html, body {
 		margin: 0;
@@ -41,18 +42,27 @@
 		text-shadow: 0 0.04em 0.12em rgba(0,0,0,0.75);
 		background: var(--bg-color, rgba(0,0,0,0.35));
 		border-radius: 999px;
-		padding: 0.18em 0.5em;
+		box-sizing: border-box;
+		min-height: 1.34em;
+		padding: 0 0.5em;
 		line-height: 1;
 		white-space: nowrap;
+		--counter-optical-y: -0.055em;
 	}
 	#counter.show {
 		display: flex;
 	}
 	#counter .icon {
-		font-size: 0.85em;
-		line-height: 1;
 		display: flex;
 		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		width: 1em;
+		height: 1em;
+		font-size: 0.85em;
+		line-height: 1;
+		text-align: center;
+		transform: translateY(var(--counter-optical-y));
 	}
 	#counter .icon img {
 		height: 1em;
@@ -63,15 +73,18 @@
 	#counter .value {
 		font-variant-numeric: tabular-nums;
 		line-height: 1;
-		display: block;
-		transform: translateY(0.04em); /* optical centering: digits have no descenders */
+		display: flex;
+		align-items: center;
+		height: 1em;
+		transform: translateY(var(--counter-optical-y));
 	}
 	#counter .label {
 		font-size: 0.45em;
 		font-weight: 600;
 		opacity: 0.85;
-		align-self: flex-end;
-		padding-bottom: 0.25em;
+		align-self: center;
+		line-height: 1;
+		transform: translateY(var(--counter-optical-y));
 	}
 
 	/* ---- Progress bar mode ---- */
@@ -85,19 +98,25 @@
 	}
 	#progress .bar-header {
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		justify-content: space-between;
 		color: var(--text-color, #fff);
 		text-shadow: 0 2px 6px rgba(0,0,0,0.8);
 		font-weight: 700;
 		font-size: var(--header-size, 4.5vh);
-		margin-bottom: 1vh;
+		line-height: 1;
+		margin-bottom: 2.4vh;
 		padding: 0 0.5vh;
 	}
 	#progress .bar-header .current {
 		display: flex;
 		align-items: center;
 		gap: 0.3em;
+		line-height: 1;
+	}
+	#progress .bar-header .goal,
+	#progress .bar-header .value {
+		line-height: 1;
 	}
 	#progress .bar-header .icon img {
 		height: 1em;
@@ -169,8 +188,8 @@
 		50%      { filter: brightness(1.6); }
 	}
 	@keyframes goalglow {
-		0%, 100% { box-shadow: 0 0 12px 2px rgba(255,200,60,0.5); }
-		50%      { box-shadow: 0 0 34px 10px rgba(255,200,60,0.95); }
+		0%, 100% { box-shadow: 0 0 10px 2px rgba(255,200,60,0.5); }
+		50%      { box-shadow: 0 0 22px 6px rgba(255,200,60,0.95); }
 	}
 	#counter.complete {
 		animation: goalflash 1s ease-in-out infinite;
@@ -648,12 +667,26 @@
 
 	// ---------------- icon ----------------
 	var defaultIcons = { followers: "❤️", itemssold: "📦" };
+	var iconAliases = {
+		heart: "\u2764\uFE0F",
+		star: "\u2B50",
+		user: "\uD83D\uDC64",
+		person: "\uD83D\uDC64",
+		people: "\uD83D\uDC65",
+		followers: "\uD83D\uDC65",
+		box: "\uD83D\uDCE6",
+		package: "\uD83D\uDCE6",
+		sold: "\uD83D\uDCE6",
+		trophy: "\uD83C\uDFC6",
+		fire: "\uD83D\uDD25"
+	};
 	function applyIcon(target) {
 		if (hideIcon) {
 			target.style.display = "none";
 			return;
 		}
-		var icon = iconParam !== null && iconParam !== "" ? iconParam : (defaultIcons[stat] || "❤️");
+		var rawIcon = iconParam !== null && iconParam !== "" ? iconParam : (defaultIcons[stat] || "❤️");
+		var icon = iconAliases[String(rawIcon).toLowerCase()] || rawIcon;
 		if (/^(https?:\/\/|\.|\/)/i.test(icon) || /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(icon)) {
 			var img = document.createElement("img");
 			img.src = icon;

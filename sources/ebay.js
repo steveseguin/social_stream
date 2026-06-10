@@ -193,10 +193,9 @@
 	var reactionObserverTarget = null;
 	var lastSellerStatsFetchAt = 0;
 	var lastSellerStatsSeller = "";
-	var lastFollowerCount = null;
 	var sellerStatsInFlight = false;
 	var EBAY_SELLER_STATS_ENDPOINT = "https://vps-1122d8c8.vps.ovh.us:1443/seller?seller=";
-	var EBAY_SELLER_STATS_INTERVAL_MS = 5 * 60 * 1000;
+	var EBAY_SELLER_STATS_INTERVAL_MS = 60 * 1000;
 
 	function normalizeText(value) {
 		if (value === null || typeof value === "undefined") {
@@ -1017,7 +1016,6 @@
 		if (seller !== lastSellerStatsSeller) {
 			lastSellerStatsSeller = seller;
 			lastSellerStatsFetchAt = 0;
-			lastFollowerCount = null;
 		}
 		var now = Date.now();
 		if (lastSellerStatsFetchAt && now - lastSellerStatsFetchAt < EBAY_SELLER_STATS_INTERVAL_MS) {
@@ -1031,11 +1029,10 @@
 				return;
 			}
 			var followers = parseIntegerValue(result.data.followers);
-			if (followers === null || followers === lastFollowerCount) {
+			if (followers === null) {
 				sellerStatsInFlight = false;
 				return;
 			}
-			lastFollowerCount = followers;
 			sendFollowerUpdate(followers);
 			sellerStatsInFlight = false;
 		});
