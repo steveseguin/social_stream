@@ -194,6 +194,50 @@
 	#counter.complete {
 		animation: goalflash 1s ease-in-out infinite;
 	}
+	body.theme-neon {
+		--bg-color: rgba(4,10,24,0.5);
+		--bar-color: linear-gradient(90deg, #12d8fa, #a100ff);
+		--track-color: rgba(5,8,18,0.68);
+		--complete-color: linear-gradient(90deg, #00f5a0, #00d9f5);
+	}
+	body.theme-neon #counter,
+	body.theme-neon #progress .bar-track {
+		box-shadow: 0 0 22px rgba(18,216,250,0.45), 0 5px 18px rgba(0,0,0,0.45);
+	}
+	body.theme-gold {
+		--bg-color: rgba(21,13,5,0.58);
+		--bar-color: linear-gradient(90deg, #ffcf33, #ff7a18);
+		--track-color: rgba(22,13,5,0.66);
+		--complete-color: linear-gradient(90deg, #ffe56b, #ff9f1c);
+	}
+	body.theme-clean {
+		--bg-color: rgba(255,255,255,0.9);
+		--text-color: #07111d;
+		--bar-color: linear-gradient(90deg, #2dd4bf, #38bdf8);
+		--track-color: rgba(255,255,255,0.32);
+		--complete-color: linear-gradient(90deg, #22c55e, #84cc16);
+	}
+	body.theme-clean #counter,
+	body.theme-clean #progress .bar-header {
+		text-shadow: 0 1px 2px rgba(255,255,255,0.45), 0 8px 18px rgba(0,0,0,0.28);
+	}
+	body.theme-fire {
+		--bg-color: rgba(24,6,2,0.58);
+		--bar-color: linear-gradient(90deg, #ff512f, #f09819);
+		--track-color: rgba(20,6,2,0.65);
+		--complete-color: linear-gradient(90deg, #f9d423, #ff4e50);
+	}
+	body.theme-glass {
+		--bg-color: rgba(255,255,255,0.18);
+		--bar-color: linear-gradient(90deg, rgba(91,220,255,0.95), rgba(255,255,255,0.88));
+		--track-color: rgba(255,255,255,0.16);
+		--complete-color: linear-gradient(90deg, rgba(255,255,255,0.94), rgba(115,255,214,0.94));
+	}
+	body.theme-glass #counter,
+	body.theme-glass #progress .bar-track {
+		backdrop-filter: blur(10px);
+		box-shadow: 0 8px 26px rgba(0,0,0,0.35);
+	}
 
 	/* count bump animation when value increases */
 	.bump {
@@ -309,6 +353,15 @@
 		min-height: 78px;
 		resize: vertical;
 	}
+	.builder-section-title {
+		grid-column: 1 / -1;
+		margin: 8px 0 -2px;
+		color: #78d2ff;
+		font-size: 13px;
+		font-weight: 800;
+		letter-spacing: 0;
+		text-transform: uppercase;
+	}
 	.builder-checks {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -387,13 +440,24 @@
 	<div class="builder-grid">
 		<div class="builder-row">
 			<label for="builderSeller">Seller name</label>
-			<input id="builderSeller" type="text" placeholder="reliableaftermarketparts" autocomplete="off" />
+			<input id="builderSeller" type="text" placeholder="seller username" autocomplete="off" />
 		</div>
 		<div class="builder-row">
 			<label for="builderStat">Value</label>
 			<select id="builderStat">
 				<option value="followers">Followers</option>
 				<option value="itemssold">Items sold</option>
+			</select>
+		</div>
+		<div class="builder-row">
+			<label for="builderStyle">Style</label>
+			<select id="builderStyle">
+				<option value="default">Default</option>
+				<option value="neon">Neon</option>
+				<option value="gold">Gold</option>
+				<option value="clean">Clean</option>
+				<option value="fire">Fire</option>
+				<option value="glass">Glass</option>
 			</select>
 		</div>
 		<div class="builder-row">
@@ -404,13 +468,21 @@
 			<label for="builderLabel">Optional label</label>
 			<input id="builderLabel" type="text" placeholder="leave blank for no text label" />
 		</div>
+		<div class="builder-section-title">Progress Bar Goal</div>
+		<div class="builder-row">
+			<label class="builder-check"><input id="builderProgress" type="checkbox" /> Use progress bar goal</label>
+		</div>
 		<div class="builder-row goal-fields">
 			<label for="builderMin">Progress starts at</label>
-			<input id="builderMin" type="number" min="0" step="1" placeholder="60000" />
+			<input id="builderMin" type="number" min="0" step="1" placeholder="0" />
 		</div>
 		<div class="builder-row goal-fields">
 			<label for="builderGoal">Progress goal</label>
 			<input id="builderGoal" type="number" min="1" step="1" placeholder="70000" />
+		</div>
+		<div class="builder-row goal-fields">
+			<label for="builderTest">Test current value</label>
+			<input id="builderTest" type="number" min="0" step="1" placeholder="set to goal to test completion" />
 		</div>
 		<div class="builder-row">
 			<label for="builderRefresh">Refresh seconds</label>
@@ -423,7 +495,6 @@
 	</div>
 
 	<div class="builder-checks">
-		<label class="builder-check"><input id="builderProgress" type="checkbox" /> Progress bar</label>
 		<label class="builder-check"><input id="builderExact" type="checkbox" /> Exact number</label>
 		<label class="builder-check"><input id="builderNoIcon" type="checkbox" /> Hide icon</label>
 		<label class="builder-check"><input id="builderNoConfetti" type="checkbox" /> No confetti</label>
@@ -480,6 +551,8 @@
 	// &refresh=60            polling interval in seconds (default 60, min 10)
 	// &exact                 show the exact number instead of compact rounding (e.g. 66,000 vs 66K)
 	// &noconfetti            disable the confetti celebration on goal completion
+	// &style=neon            preset style: default, neon, gold, clean, fire, glass
+	// &test=70000            render a test value immediately and skip polling
 	// &server=https://...    override the API base URL
 	// Styling can also be overridden with &css= / &b64css= like other overlays.
 
@@ -506,6 +579,9 @@
 	if (!(refreshSec >= 10)) { refreshSec = 60; }
 	var exact = getParam("exact") !== null;
 	var noConfetti = getParam("noconfetti") !== null;
+	var theme = (getParam("style") || "default").toLowerCase();
+	var testParam = getParam("test");
+	var testValue = testParam !== null && testParam !== "" ? parseFloat(testParam) : null;
 	var defaultApiBase = "https://vps-1122d8c8.vps.ovh.us:1443/seller";
 	var apiBase = getParam("server") || defaultApiBase;
 
@@ -544,10 +620,12 @@
 	var builderEl = document.getElementById("builder");
 	var builderSellerEl = document.getElementById("builderSeller");
 	var builderStatEl = document.getElementById("builderStat");
+	var builderStyleEl = document.getElementById("builderStyle");
 	var builderIconEl = document.getElementById("builderIcon");
 	var builderLabelEl = document.getElementById("builderLabel");
 	var builderMinEl = document.getElementById("builderMin");
 	var builderGoalEl = document.getElementById("builderGoal");
+	var builderTestEl = document.getElementById("builderTest");
 	var builderRefreshEl = document.getElementById("builderRefresh");
 	var builderServerEl = document.getElementById("builderServer");
 	var builderProgressEl = document.getElementById("builderProgress");
@@ -559,6 +637,10 @@
 	var builderCopyEl = document.getElementById("builderCopy");
 	var builderStatusEl = document.getElementById("builderStatus");
 
+	if (/^(neon|gold|clean|fire|glass)$/.test(theme)) {
+		document.body.className += (document.body.className ? " " : "") + "theme-" + theme;
+	}
+
 	// ---------------- no-seller URL maker ----------------
 	function trimValue(el) {
 		return (el && el.value ? el.value : "").replace(/^\s+|\s+$/g, "");
@@ -569,10 +651,12 @@
 
 		builderSellerEl.value = seller;
 		builderStatEl.value = stat === "itemssold" ? "itemssold" : "followers";
+		builderStyleEl.value = /^(neon|gold|clean|fire|glass)$/.test(theme) ? theme : "default";
 		builderIconEl.value = iconParam || "";
 		builderLabelEl.value = labelText;
 		builderMinEl.value = minVal ? String(minVal) : "";
 		builderGoalEl.value = goal !== null && !isNaN(goal) ? String(goal) : "";
+		builderTestEl.value = testValue !== null && !isNaN(testValue) ? String(testValue) : "";
 		builderRefreshEl.value = String(refreshSec || 60);
 		builderServerEl.value = getParam("server") || "";
 		builderProgressEl.checked = isBarMode;
@@ -602,10 +686,12 @@
 			var parts = [];
 			var sellerValue = trimValue(builderSellerEl);
 			var statValue = builderStatEl.value;
+			var styleValue = builderStyleEl.value;
 			var iconValue = trimValue(builderIconEl);
 			var labelValue = trimValue(builderLabelEl);
 			var minValue = trimValue(builderMinEl);
 			var goalValue = trimValue(builderGoalEl);
+			var testValueText = trimValue(builderTestEl);
 			var refreshValue = trimValue(builderRefreshEl);
 			var serverValue = trimValue(builderServerEl);
 			var baseUrl = window.location.href.split("#")[0].split("?")[0];
@@ -613,6 +699,7 @@
 
 			addParam(parts, "seller", sellerValue);
 			if (statValue && statValue !== "followers") { addParam(parts, "stat", statValue); }
+			if (styleValue && styleValue !== "default") { addParam(parts, "style", styleValue); }
 			if (builderProgressEl.checked) {
 				if (goalValue) {
 					addParam(parts, "goal", goalValue);
@@ -621,6 +708,7 @@
 				}
 				if (minValue) { addParam(parts, "min", minValue); }
 			}
+			if (testValueText) { addParam(parts, "test", testValueText); }
 			if (iconValue) { addParam(parts, "icon", iconValue); }
 			if (builderNoIconEl.checked) { addParam(parts, "noicon", null); }
 			if (labelValue) { addParam(parts, "label", labelValue); }
@@ -660,6 +748,7 @@
 			inputs[i].onchange = updateUrl;
 		}
 		builderStatEl.onchange = updateUrl;
+		builderStyleEl.onchange = updateUrl;
 		builderCopyEl.onclick = copyUrl;
 
 		updateUrl();
@@ -841,6 +930,11 @@
 
 	if (!seller) {
 		showBuilder();
+		return;
+	}
+
+	if (testValue !== null && !isNaN(testValue)) {
+		render(testValue);
 		return;
 	}
 
