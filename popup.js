@@ -6066,12 +6066,18 @@ function getCustomGifCommandSourceUrl(entry) {
 
     const commandInput = entry?.querySelector('.custom-command');
     const mediaUrlInput = entry?.querySelector('.custom-media-url');
-    const id = getCustomGifCommandEntryId(commandInput?.value?.trim() || '', mediaUrlInput?.value?.trim() || '', entry?.dataset.commandId);
+    const command = commandInput?.value?.trim() || '';
+    const id = getCustomGifCommandEntryId(command, mediaUrlInput?.value?.trim() || '', entry?.dataset.commandId);
     if (entry) entry.dataset.commandId = id;
 
     url = removeQueryParamWithValue(url, 'gifid');
     url = removeQueryParamWithValue(url, 'gifcommand');
-    return cleanURL(updateURL('gifid=' + encodeURIComponent(id), url));
+    url = updateURL('gifid=' + encodeURIComponent(id), url);
+    const aliases = getCustomGifCommandAliases(command);
+    if (aliases.length) {
+        url = updateURL('gifcommand=' + encodeURIComponent(aliases.join(',')), url);
+    }
+    return cleanURL(url);
 }
 
 function copyCustomGifCommandSource(entry, button) {
@@ -7117,7 +7123,7 @@ function triggerCustomGifPreview(entry) {
         return;
     }
 
-    chrome.runtime.sendMessage({
+    const payload = {
         cmd: 'previewCustomGif',
         target: 'gif',
         type: 'popup',
@@ -7129,7 +7135,9 @@ function triggerCustomGifPreview(entry) {
             customGifCommand: getCustomGifCommandAliases(command)[0] || command,
             customGifCommands: getCustomGifCommandAliases(command)
         }
-    }, function () {});
+    };
+    chrome.runtime.sendMessage(payload, function () {});
+    chrome.runtime.sendMessage(Object.assign({}, payload, { target: id }), function () {});
 }
 
 function createCommandEntry(command = '', url = '', id = '') {
