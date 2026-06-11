@@ -1013,6 +1013,11 @@
                                 <td><code>hasDonation</code> carries the formatted amount; <code>meta</code> contains { amount, currency, supporter, message, giftName }.</td>
                             </tr>
                             <tr>
+                                <td class="status-event"><code>raid</code></td>
+                                <td>Kick legacy socket host events such as <code>App\Events\StreamHostEvent</code>.</td>
+                                <td>Mapped to the canonical raid event. <code>meta</code> includes <code>{ fromId, fromLogin, viewers }</code> when Kick supplies them.</td>
+                            </tr>
+                            <tr>
                                 <td class="status-event"><code>new_follower</code></td>
                                 <td><code>channel.followed</code>.</td>
                                 <td>Follower icons derive from profile cache; <code>follower_update</code> fires when Kick provides running totals.</td>
@@ -1056,6 +1061,7 @@
                             <tr><td><code>subscription_gift</code></td><td>Gifted subs</td></tr>
                             <tr><td><code>reward</code></td><td>Channel reward redemption or reward-style chat/system message</td></tr>
                             <tr><td><code>donation</code></td><td>Tip/support/KICKs gift event</td></tr>
+                            <tr><td><code>raid</code></td><td>Incoming Kick host/raid</td></tr>
                             <tr><td><code>follower_update</code></td><td>Total follower count</td></tr>
                             <tr><td><code>stream_online</code></td><td>Stream went live</td></tr>
                             <tr><td><code>stream_offline</code></td><td>Stream ended</td></tr>
@@ -1575,7 +1581,7 @@
                         </tr>
                         <tr>
                             <td>Kick: Standard vs Websocket</td>
-                            <td>Standard emits lightweight markers (<code>gift</code>, <code>reward</code>, boolean <code>true</code>, <code>viewer_update</code>). Websocket adds full event support: <code>reward</code>, <code>new_follower</code>, <code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, <code>donation</code>, <code>stream_online</code>/<code>stream_offline</code>, <code>follower_update</code>, including API reward redemptions and KICKs gifts.</td>
+                            <td>Standard emits lightweight markers (<code>gift</code>, <code>reward</code>, boolean <code>true</code>, <code>viewer_update</code>). Websocket adds full event support: <code>reward</code>, <code>new_follower</code>, <code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, <code>donation</code>, <code>raid</code>, <code>stream_online</code>/<code>stream_offline</code>, <code>follower_update</code>, including API reward redemptions and KICKs gifts.</td>
                             <td>Websocket mode is richer; automation built around Standard-only event names should be reviewed when switching.</td>
                         </tr>
                         <tr>
