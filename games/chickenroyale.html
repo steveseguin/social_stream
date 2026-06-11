@@ -173,8 +173,10 @@
         <div style="margin-top: 4px; font-size: 13px; opacity: 0.8;">Chat while alive to boost your chicken • Stay inside the storm circle • <b>!start</b> to begin early</div>
     </div>
 
-    <script type="module">
-    import * as THREE from '../thirdparty/three.module.min.js';
+    <script src="../thirdparty/three.global.min.js"></script>
+    <script>
+    const THREE = window.THREE;
+    if (!THREE) throw new Error('Three.js failed to load');
 
     // ====================== URL parameters ======================
     const urlParams = new URLSearchParams(window.location.search);
@@ -1813,7 +1815,7 @@
 
                 const alive = aliveChickens();
                 if (alive.length <= 1) {
-                    endBattle(alive[0] || G.lastDead);
+                    endBattle(alive.length === 1 ? alive[0] : null);
                 }
             } else if (G.mode === 'lobby') {
                 aiTickLobby(TICK);

@@ -712,7 +712,7 @@ function getVoteCandidates(rawVote) {
     const exactVote = normalizeVoteText(plainText);
 
     if (exactVote) {
-        candidates.push({ vote: exactVote, matchedBy: 'whole-message' });
+        candidates.push({ vote: exactVote, rawVote: plainText, matchedBy: 'whole-message' });
     }
 
     if (settings.pollMatchMode === 'hashtag-anywhere') {
@@ -721,9 +721,10 @@ function getVoteCandidates(rawVote) {
         let match;
 
         while ((match = hashtagPattern.exec(plainText)) !== null) {
-            const hashtagVote = normalizeVoteText('#' + match[2]);
+            const rawHashtagVote = '#' + match[2];
+            const hashtagVote = normalizeVoteText(rawHashtagVote);
             if (hashtagVote && !seen.has(hashtagVote)) {
-                candidates.push({ vote: hashtagVote, matchedBy: 'inline-hashtag' });
+                candidates.push({ vote: hashtagVote, rawVote: rawHashtagVote, matchedBy: 'inline-hashtag' });
                 seen.add(hashtagVote);
             }
         }
@@ -831,6 +832,7 @@ function processVoteSingle(vote, name, source, userId, hasDonation = null) {
         if (processVoteCandidate(candidate.vote, voterKey, {
             ...voteContext,
             normalizedVote: candidate.vote,
+            rawCandidateVote: candidate.rawVote || candidate.vote,
             candidateMatchedBy: candidate.matchedBy
         }, voteWeight, donationAmount)) {
             return;
@@ -880,7 +882,7 @@ function processVoteCandidate(vote, voterKey, voteContext, voteWeight, donationA
         }
 
         // For multiple choice, avoid ambiguous punctuation-normalized matches.
-        const exactVote = exactChoiceText(vote);
+        const exactVote = exactChoiceText(voteContext.rawCandidateVote || vote);
         let cleanVote = normalizeChoiceText(vote);
         const cleanVoteCompact = compactChoiceText(vote);
         const exactMatches = [];
