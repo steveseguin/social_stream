@@ -8210,7 +8210,7 @@
 						updateOBSState(e.data);
 					}
 
-					if ("dataReceived" in e.data) {
+					if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
 						// raw data
 						if ("overlayNinja" in e.data.dataReceived) {
 							processInput(e.data.dataReceived.overlayNinja);

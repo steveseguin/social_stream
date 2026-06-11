@@ -9082,7 +9082,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	function popupSearchTextHasTerm(searchText, term) {
 		if (/^[a-z0-9]+$/.test(term)) {
-			return new RegExp('(^|[^a-z0-9])' + popupSearchEscapeRegex(term) + '([^a-z0-9]|$)').test(searchText);
+			return new RegExp('(^|[^a-z0-9])' + popupSearchEscapeRegex(term)).test(searchText);
 		}
 		return searchText.indexOf(term) !== -1;
 	}

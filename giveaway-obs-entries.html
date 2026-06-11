@@ -326,7 +326,7 @@
                     
                     console.log('✅ OBS WIDGET: MESSAGE SOURCE VERIFIED - Processing...');
                     
-                    if ("dataReceived" in e.data) {
+                    if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                         console.log('🎯 OBS WIDGET: WEBRTC DATA RECEIVED STRUCTURE DETECTED!');
                         console.log('📋 Full dataReceived:', e.data.dataReceived);
                         
@@ -338,7 +338,7 @@
                             console.log('❓ OBS WIDGET: dataReceived exists but no overlayNinja property');
                             console.log('🔍 dataReceived keys:', Object.keys(e.data.dataReceived));
                         }
-                    } else if (e.data.overlayNinja) {
+                    } else if (e.data && typeof e.data === "object" && e.data.overlayNinja) {
                         console.log('🎉 OBS WIDGET: FOUND DIRECT OVERLAY MESSAGE!');
                         console.log('💬 Overlay data:', e.data.overlayNinja);
                         self.handleWebRTCMessage(e.data.overlayNinja);

@@ -717,7 +717,7 @@ function getVoteCandidates(rawVote) {
 
     if (settings.pollMatchMode === 'hashtag-anywhere') {
         const seen = new Set(candidates.map(candidate => candidate.vote));
-        const hashtagPattern = /(^|[\s([{])#([A-Za-z0-9_][A-Za-z0-9_-]*)/g;
+        const hashtagPattern = /(^|[\s([{])#([^\s#.,!?;:)\]}]+)/g;
         let match;
 
         while ((match = hashtagPattern.exec(plainText)) !== null) {
@@ -738,6 +738,10 @@ function normalizeChoiceText(value) {
 
 function compactChoiceText(value) {
     return normalizeChoiceText(value).replace(/[^a-z0-9]/g, '');
+}
+
+function exactChoiceText(value) {
+    return getPlainVoteText(value).trim().toLowerCase().replace(/^#/, '');
 }
 
 function shouldProcessPollMessage(data) {
@@ -842,7 +846,7 @@ function processVoteSingle(vote, name, source, userId, hasDonation = null) {
 function processVoteCandidate(vote, voterKey, voteContext, voteWeight, donationAmount) {
     if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
         // Handle numeric votes first
-        const numericVote = parseInt(vote, 10);
+        const numericVote = /^\d+$/.test(vote) ? parseInt(vote, 10) : NaN;
         if (!Number.isNaN(numericVote)) {
             // For yes/no, 1 = Yes, 2 = No
             if (settings.pollType === 'yesno') {
@@ -875,23 +879,40 @@ function processVoteCandidate(vote, voterKey, voteContext, voteWeight, donationA
             }
         }
 
-        // For multiple choice, cached option lookup
+        // For multiple choice, avoid ambiguous punctuation-normalized matches.
+        const exactVote = exactChoiceText(vote);
         let cleanVote = normalizeChoiceText(vote);
         const cleanVoteCompact = compactChoiceText(vote);
+        const exactMatches = [];
+        const flexibleMatches = [];
 
         for (let i = 0; i < settings.pollOptions.length; i += 1) {
             const option = settings.pollOptions[i];
+            const exactOption = exactChoiceText(option);
             const normalizedOption = normalizeChoiceText(option);
             const normalizedOptionCompact = compactChoiceText(option);
+
+            if (exactVote && exactVote === exactOption) {
+                exactMatches.push(option);
+                continue;
+            }
 
             if (cleanVote === normalizedOption ||
                 normalizedOption === cleanVote + 's' ||
                 cleanVote === normalizedOption + 's' ||
                 (cleanVoteCompact && cleanVoteCompact === normalizedOptionCompact)) {
-
-                recordVote(option, voterKey, { ...voteContext, matchedBy: 'multiple-text' }, voteWeight, donationAmount);
-                return true;
+                flexibleMatches.push(option);
             }
+        }
+
+        if (exactMatches.length === 1) {
+            recordVote(exactMatches[0], voterKey, { ...voteContext, matchedBy: 'multiple-text' }, voteWeight, donationAmount);
+            return true;
+        }
+
+        if (exactMatches.length === 0 && flexibleMatches.length === 1) {
+            recordVote(flexibleMatches[0], voterKey, { ...voteContext, matchedBy: 'multiple-text' }, voteWeight, donationAmount);
+            return true;
         }
     } else if (settings.pollType === 'freeform') {
         // Freeform handling - optimize hashtag matching

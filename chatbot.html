@@ -565,10 +565,10 @@
 			document.body.appendChild(iframe);
 			window.addEventListener("message", function (e) {
 				if (e.source != iframe.contentWindow) return;
-				if (e.data.dataReceived && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotChunk && ("value" in e.data.dataReceived.overlayNinja.chatbotChunk)) {
+				if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotChunk && ("value" in e.data.dataReceived.overlayNinja.chatbotChunk)) {
 					const response = e.data.dataReceived.overlayNinja.chatbotChunk;
 					updateWaitingMessage(response.target, response.value || "", true);
-				} else if (e.data.dataReceived && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotResponse && ("value" in e.data.dataReceived.overlayNinja.chatbotResponse)) {
+				} else if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotResponse && ("value" in e.data.dataReceived.overlayNinja.chatbotResponse)) {
 					const response = e.data.dataReceived.overlayNinja.chatbotResponse;
 					updateWaitingMessage(response.target, response.value || "");
 				}

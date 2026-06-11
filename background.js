@@ -12893,7 +12893,7 @@ eventer(messageEvent, async function (e) {
 		return;
 	}
 	if (e.data && typeof e.data == "object") {
-		if ("dataReceived" in e.data && "overlayNinja" in e.data.dataReceived) {
+		if (e.data.dataReceived && typeof e.data.dataReceived === "object" && "overlayNinja" in e.data.dataReceived) {
 			processIncomingRequest(e.data.dataReceived.overlayNinja, e.data.UUID);
 		} else if ("action" in e.data) {
 			if (e.data.action == "view-stats-updated") {

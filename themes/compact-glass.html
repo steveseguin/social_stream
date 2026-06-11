@@ -623,7 +623,7 @@ body.ultra .content-img {
     document.body.appendChild(iframe);
     window.addEventListener("message", function (e) {
         if (e.source != iframe.contentWindow) return;
-        if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+        if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
             addMessageToOverlay(e.data.dataReceived.overlayNinja);
         }
     });

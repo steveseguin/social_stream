@@ -356,7 +356,7 @@
                 
                 console.log('✅ MESSAGE SOURCE VERIFIED - Processing...');
                 
-                if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
                     console.log('🎉 FOUND CHAT MESSAGE via WebRTC! (sampleoverlay pattern)');
                     console.log('💬 Chat data:', e.data.dataReceived.overlayNinja);
                     processGiveawayMessage(e.data.dataReceived.overlayNinja);

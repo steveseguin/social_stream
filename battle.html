@@ -223,6 +223,8 @@ if (urlParams.has("session")){
 } else {
 	window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
 }
+roomID = roomID || "";
+var socketRoomID = roomID.split(",")[0];
 
 var password = "false";
     if (urlParams.has("password")){
@@ -240,7 +242,10 @@ if (urlParams.has("nocomputers")){
 
 var lobbyTimeInit = 10;
 if (urlParams.has("lobbytime")) {
-	lobbyTimeInit = parseInt(urlParams.get("lobbytime"));
+	var lobbyTimeParam = parseInt(urlParams.get("lobbytime"), 10);
+	if (!isNaN(lobbyTimeParam)) {
+		lobbyTimeInit = lobbyTimeParam;
+	}
 }
 
 let hostControlled = urlParams.has("lobby");
@@ -440,7 +445,7 @@ var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
 
 eventer(messageEvent, function (e) {
 	if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
-	if ("dataReceived" in e.data){ // raw data
+	if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object"){ // raw data
 		if ("overlayNinja" in e.data.dataReceived){
 			processInput(e.data.dataReceived.overlayNinja);
 		}
@@ -474,7 +479,7 @@ function setupSocket() {
 	};
 	socketserver.onopen = function () {
 		conCon = 1;
-		socketserver.send(JSON.stringify({ join: urlParams.get('session').split(",")[0], out: 2, in: 1 }));
+		socketserver.send(JSON.stringify({ join: socketRoomID, out: 2, in: 1 }));
 		console.log("output channel: 2, input channel: 1");
 	};
 
@@ -540,7 +545,7 @@ function setupSocketExtension() {
 	};
 	socketserverExtension.onopen = function () {
 		conConExtension = 1;
-		socketserverExtension.send(JSON.stringify({ join: urlParams.get('session').split(",")[0], out: 3, in: 4 }));
+		socketserverExtension.send(JSON.stringify({ join: socketRoomID, out: 3, in: 4 }));
 		console.log("output channel: 3, input channel: 4");
 	};
 

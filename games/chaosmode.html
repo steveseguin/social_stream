@@ -594,10 +594,13 @@
             const feed = document.getElementById('feed-content');
             const item = document.createElement('div');
             item.className = 'message-item';
-            item.innerHTML = `<strong>${username}:</strong> ${message}`;
-            
+            const name = document.createElement('strong');
+            name.textContent = username + ':';
+            item.appendChild(name);
+            item.appendChild(document.createTextNode(' ' + message));
+
             feed.insertBefore(item, feed.firstChild);
-            
+
             // Keep feed manageable
             while (feed.children.length > 20) {
                 feed.removeChild(feed.lastChild);
@@ -685,7 +688,7 @@
         window.addEventListener("message", function(e) {
             if (e.source !== iframe.contentWindow) return;
             
-            if ("dataReceived" in e.data) {
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                 if ("overlayNinja" in e.data.dataReceived) {
                     processData(e.data.dataReceived.overlayNinja);
                 }

@@ -101,9 +101,10 @@
 				document.addEventListener(eventName, handler, { once: true });
 			});
 		}
-		
+
 		const fadeoutTime = 300;
-		const minDisplayTime = parseInt(urlParams.get('showtime')) || 3000;
+		const parsedShowtime = parseInt(urlParams.get('showtime'), 10);
+		const minDisplayTime = urlParams.has('showtime') && !Number.isNaN(parsedShowtime) ? parsedShowtime : 3000;
 		const embeddedDisplayTime = urlParams.has('showtime') ? minDisplayTime : Math.max(minDisplayTime, 5000);
 		const mediaProbeTimeout = 4000;
 
@@ -323,13 +324,24 @@
 			}
 
 			let headerType = '';
+			let controller = null;
+			let timeoutId = null;
 			try {
-				const response = await fetch(url, { method: 'HEAD' });
+				if (typeof AbortController !== 'undefined') {
+					controller = new AbortController();
+					timeoutId = setTimeout(() => controller.abort(), mediaProbeTimeout);
+				}
+				const response = await fetch(url, { method: 'HEAD', signal: controller ? controller.signal : undefined });
 				headerType = getMediaTypeFromMimeType(response.headers.get('Content-Type') || '');
 				if (!headerType) {
 					headerType = getMediaTypeFromExtension(response.url || '');
 				}
-			} catch (e) {}
+			} catch (e) {
+			} finally {
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+				}
+			}
 
 			if (headerType && headerType !== 'embed') {
 				renderDetectedMedia(url, headerType);

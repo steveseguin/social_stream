@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicken Royale - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <style>
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            background: #0a0a0a;
+        }
+
+        #game-canvas { position: fixed; inset: 0; display: block; }
+
+        .hud-panel {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            padding: 12px 18px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+
+        #status-panel { top: 20px; left: 20px; min-width: 230px; }
+        #status-line { font-size: 26px; font-weight: bold; color: #FFD700; }
+        #status-sub { font-size: 16px; margin-top: 4px; opacity: 0.9; }
+        #alive-line { font-size: 16px; margin-top: 6px; }
+        #alive-line b { color: #7CFC00; }
+
+        #killfeed {
+            top: 20px;
+            right: 20px;
+            max-width: 360px;
+            min-width: 240px;
+            padding: 10px 14px;
+            font-size: 15px;
+        }
+        .feed-entry {
+            margin: 4px 0;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .feed-entry.show { opacity: 1; }
+        .feed-entry .victim { color: #ff7a7a; font-weight: bold; }
+        .feed-entry .killer { color: #7CFC00; font-weight: bold; }
+
+        #roster {
+            bottom: 90px;
+            right: 20px;
+            max-width: 280px;
+            font-size: 14px;
+            max-height: 40vh;
+            overflow: hidden;
+        }
+        #roster h4 { margin: 0 0 6px 0; color: #FFD700; font-size: 15px; }
+        #roster-list span { display: inline-block; margin: 2px 6px 2px 0; opacity: 0.95; }
+
+        #event-banner {
+            position: absolute;
+            top: 14%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 44px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 18px rgba(255, 200, 0, 0.9), 2px 2px 6px rgba(0,0,0,0.9);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            text-align: center;
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.75);
+            padding: 12px 26px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        #instructions strong { color: #FFD700; font-size: 17px; }
+        #instructions b { color: #7CFC00; }
+
+        #winner-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.82);
+            border: 3px solid #FFD700;
+            border-radius: 24px;
+            padding: 34px 60px;
+            display: none;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.45);
+            animation: dinner-pop 0.6s cubic-bezier(0.18, 1.4, 0.4, 1);
+        }
+        @keyframes dinner-pop {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        #winner-title {
+            font-size: 44px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 0 0 24px rgba(255, 215, 0, 0.8);
+            animation: dinner-glow 1.2s ease-in-out infinite alternate;
+        }
+        @keyframes dinner-glow {
+            from { text-shadow: 0 0 14px rgba(255, 215, 0, 0.6); }
+            to { text-shadow: 0 0 34px rgba(255, 230, 80, 1); }
+        }
+        #winner-avatar {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            border: 3px solid #FFD700;
+            margin: 14px auto 4px auto;
+            display: none;
+            object-fit: cover;
+        }
+        #winner-name { font-size: 38px; font-weight: bold; margin-top: 10px; }
+        #winner-stats { font-size: 18px; margin-top: 10px; opacity: 0.95; line-height: 1.5; }
+        #winner-podium { font-size: 16px; margin-top: 12px; opacity: 0.85; }
+    </style>
+</head>
+<body>
+    <canvas id="game-canvas"></canvas>
+
+    <div id="status-panel" class="hud-panel">
+        <div id="status-line">🐔 CHICKEN ROYALE</div>
+        <div id="status-sub">Waiting for chickens...</div>
+        <div id="alive-line"></div>
+    </div>
+
+    <div id="killfeed" class="hud-panel" style="display:none;"></div>
+
+    <div id="roster" class="hud-panel">
+        <h4>🐔 Lobby <span id="roster-count">(0)</span></h4>
+        <div id="roster-list">Type <b style="color:#7CFC00">!join</b> in chat</div>
+    </div>
+
+    <div id="event-banner"></div>
+
+    <div id="winner-overlay">
+        <div id="winner-title">🏆 WINNER WINNER 🍗<br>CHICKEN DINNER</div>
+        <img id="winner-avatar" alt="" />
+        <div id="winner-name"></div>
+        <div id="winner-stats"></div>
+        <div id="winner-podium"></div>
+    </div>
+
+    <div id="instructions">
+        <div><strong>🍗 Chicken Royale - How to Play:</strong></div>
+        <div>Type <b>!join</b> to enter as a chicken. Last bird standing wins the CHICKEN DINNER!</div>
+        <div style="margin-top: 4px; font-size: 13px; opacity: 0.8;">Chat while alive to boost your chicken • Stay inside the storm circle • <b>!start</b> to begin early</div>
+    </div>
+
+    <script type="module">
+    import * as THREE from '../thirdparty/three.module.min.js';
+
+    // ====================== URL parameters ======================
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+    const password = urlParams.get('password') || 'false';
+    const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
+
+    function clampInt(v, lo, hi, dflt) {
+        const n = parseInt(v, 10);
+        if (isNaN(n)) return dflt;
+        return Math.max(lo, Math.min(hi, n));
+    }
+
+    const JOIN_SECONDS = clampInt(urlParams.get('jointime'), 10, 600, 45);
+    const MAX_PLAYERS = clampInt(urlParams.get('maxplayers'), 2, 200, 100);
+    const AUTO_JOIN = urlParams.has('autojoin'); // any chatter is auto-entered during the lobby
+    const CHROMA = urlParams.has('chroma');
+    const DARKMODE = urlParams.has('darkmode');
+
+    // ====================== Helpers ======================
+    const domParser = new DOMParser();
+    function sanitizeText(raw) {
+        if (typeof raw !== 'string') return '';
+        if (raw.indexOf('<') === -1 && raw.indexOf('&') === -1) return raw.trim();
+        try {
+            return (domParser.parseFromString(raw, 'text/html').body.textContent || '').trim();
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function hashString(str) {
+        let h = 0;
+        for (let i = 0; i < str.length; i++) {
+            h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+        }
+        return Math.abs(h);
+    }
+
+    function playerColor(name, nameColor) {
+        if (typeof nameColor === 'string') {
+            const m = nameColor.match(/^#?([0-9a-fA-F]{6})$/);
+            if (m) {
+                const c = new THREE.Color('#' + m[1]);
+                const hsl = {};
+                c.getHSL(hsl);
+                return new THREE.Color().setHSL(hsl.h, Math.min(0.75, Math.max(0.35, hsl.s)), 0.72);
+            }
+        }
+        const h = (hashString(name) % 360) / 360;
+        return new THREE.Color().setHSL(h, 0.62, 0.74);
+    }
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    // Career chicken dinners (persistent leaderboard)
+    let careerWins = {};
+    try { careerWins = JSON.parse(localStorage.getItem('chickenRoyaleDinners') || '{}') || {}; } catch (e) { careerWins = {}; }
+    function getCareerWins(name) { return careerWins[name.toLowerCase()] || 0; }
+    function addCareerWin(name) {
+        careerWins[name.toLowerCase()] = getCareerWins(name) + 1;
+        try { localStorage.setItem('chickenRoyaleDinners', JSON.stringify(careerWins)); } catch (e) {}
+        return careerWins[name.toLowerCase()];
+    }
+
+    // ====================== Theme ======================
+    const THEME = (() => {
+        if (CHROMA) return {
+            bg: new THREE.Color(0x00ff00), fog: null, water: false, clouds: false,
+            hemi: [0xbfd9ff, 0x7a9a5a, 0.95], sun: [0xfff2d9, 1.35]
+        };
+        if (DARKMODE) return {
+            bg: new THREE.Color(0x05070f), fog: [0x05070f, 70, 240], water: true, clouds: false,
+            waterColor: 0x0a1a33, hemi: [0x33415e, 0x1a2418, 0.7], sun: [0xaac4ff, 0.9]
+        };
+        return {
+            bg: 'sky', fog: [0xbfe3ff, 80, 260], water: true, clouds: true,
+            waterColor: 0x2f7fb8, hemi: [0xbfd9ff, 0x7a9a5a, 0.95], sun: [0xfff2d9, 1.35]
+        };
+    })();
+
+    // ====================== Three.js setup ======================
+    const ISLAND_R = 38;
+    const canvas = document.getElementById('game-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    if (THEME.bg === 'sky') {
+        const skyCanvas = document.createElement('canvas');
+        skyCanvas.width = 2; skyCanvas.height = 256;
+        const sctx = skyCanvas.getContext('2d');
+        const grad = sctx.createLinearGradient(0, 0, 0, 256);
+        grad.addColorStop(0, '#5da9e9');
+        grad.addColorStop(0.55, '#a8d4f2');
+        grad.addColorStop(1, '#e8f4fb');
+        sctx.fillStyle = grad;
+        sctx.fillRect(0, 0, 2, 256);
+        const skyTex = new THREE.CanvasTexture(skyCanvas);
+        skyTex.colorSpace = THREE.SRGBColorSpace;
+        scene.background = skyTex;
+    } else {
+        scene.background = THEME.bg;
+    }
+    if (THEME.fog) scene.fog = new THREE.Fog(THEME.fog[0], THEME.fog[1], THEME.fog[2]);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 24, 44);
+
+    const hemiLight = new THREE.HemisphereLight(THEME.hemi[0], THEME.hemi[1], THEME.hemi[2]);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(THEME.sun[0], THEME.sun[1]);
+    sunLight.position.set(45, 70, 28);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.left = -60;
+    sunLight.shadow.camera.right = 60;
+    sunLight.shadow.camera.top = 60;
+    sunLight.shadow.camera.bottom = -60;
+    sunLight.shadow.camera.near = 10;
+    sunLight.shadow.camera.far = 180;
+    sunLight.shadow.bias = -0.0005;
+    scene.add(sunLight);
+    scene.add(sunLight.target);
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // ====================== Island terrain ======================
+    function terrainHeight(x, z) {
+        return (Math.sin(x * 0.33) + Math.cos(z * 0.41)) * 0.32 + Math.sin((x + z) * 0.12) * 0.25;
+    }
+
+    {
+        const top = new THREE.CircleGeometry(ISLAND_R, 84);
+        top.rotateX(-Math.PI / 2);
+        const pos = top.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+            const x = pos.getX(i), z = pos.getZ(i);
+            const r = Math.sqrt(x * x + z * z);
+            let y = terrainHeight(x, z);
+            if (r > ISLAND_R - 2.5) y -= (r - (ISLAND_R - 2.5)) * 0.55; // edges droop toward water
+            pos.setY(i, y);
+        }
+        top.computeVertexNormals();
+        const ground = new THREE.Mesh(top, new THREE.MeshPhongMaterial({
+            color: DARKMODE ? 0x37563a : 0x68b95c, flatShading: true, shininess: 4
+        }));
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        const skirt = new THREE.Mesh(
+            new THREE.CylinderGeometry(ISLAND_R - 0.4, ISLAND_R * 0.72, 9, 84, 1, true),
+            new THREE.MeshPhongMaterial({ color: DARKMODE ? 0x3a2d22 : 0x8a6a45, flatShading: true })
+        );
+        skirt.position.y = -4.8;
+        scene.add(skirt);
+
+        if (THEME.water) {
+            const water = new THREE.Mesh(
+                new THREE.PlaneGeometry(800, 800),
+                new THREE.MeshPhongMaterial({ color: THEME.waterColor, transparent: true, opacity: 0.92, shininess: 80 })
+            );
+            water.rotation.x = -Math.PI / 2;
+            water.position.y = -3.2;
+            scene.add(water);
+        }
+    }
+
+    // Decorations: trees, rocks, hay bales
+    const decoGroup = new THREE.Group();
+    scene.add(decoGroup);
+    {
+        const trunkGeo = new THREE.CylinderGeometry(0.28, 0.4, 1.6, 6);
+        const trunkMat = new THREE.MeshPhongMaterial({ color: 0x7a5230, flatShading: true });
+        const leafMat = new THREE.MeshPhongMaterial({ color: DARKMODE ? 0x1f4a2a : 0x2e8b40, flatShading: true });
+        const rockGeo = new THREE.IcosahedronGeometry(1, 0);
+        const rockMat = new THREE.MeshPhongMaterial({ color: 0x9a9a9a, flatShading: true });
+        const hayGeo = new THREE.CylinderGeometry(0.9, 0.9, 1.4, 10);
+        const hayMat = new THREE.MeshPhongMaterial({ color: 0xd9b44a, flatShading: true });
+
+        for (let i = 0; i < 15; i++) {
+            const a = rand(0, Math.PI * 2), r = rand(13, ISLAND_R - 4);
+            const x = Math.cos(a) * r, z = Math.sin(a) * r;
+            const tree = new THREE.Group();
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 0.8;
+            trunk.castShadow = true;
+            tree.add(trunk);
+            const layers = 2 + Math.floor(Math.random() * 2);
+            for (let l = 0; l < layers; l++) {
+                const cone = new THREE.Mesh(new THREE.ConeGeometry(1.5 - l * 0.4, 1.6, 7), leafMat);
+                cone.position.y = 1.9 + l * 0.95;
+                cone.castShadow = true;
+                tree.add(cone);
+            }
+            const s = rand(0.8, 1.5);
+            tree.scale.set(s, s, s);
+            tree.position.set(x, terrainHeight(x, z), z);
+            tree.rotation.y = rand(0, Math.PI * 2);
+            decoGroup.add(tree);
+        }
+        for (let i = 0; i < 8; i++) {
+            const a = rand(0, Math.PI * 2), r = rand(10, ISLAND_R - 3);
+            const x = Math.cos(a) * r, z = Math.sin(a) * r;
+            const rock = new THREE.Mesh(rockGeo, rockMat);
+            rock.scale.set(rand(0.5, 1.4), rand(0.35, 0.8), rand(0.5, 1.4));
+            rock.position.set(x, terrainHeight(x, z) + 0.15, z);
+            rock.rotation.y = rand(0, Math.PI * 2);
+            rock.castShadow = true;
+            decoGroup.add(rock);
+        }
+        for (let i = 0; i < 5; i++) {
+            const a = rand(0, Math.PI * 2), r = rand(12, ISLAND_R - 5);
+            const x = Math.cos(a) * r, z = Math.sin(a) * r;
+            const hay = new THREE.Mesh(hayGeo, hayMat);
+            hay.rotation.z = Math.PI / 2;
+            hay.rotation.y = rand(0, Math.PI * 2);
+            hay.position.set(x, terrainHeight(x, z) + 0.9, z);
+            hay.castShadow = true;
+            decoGroup.add(hay);
+        }
+    }
+
+    // Clouds
+    const clouds = [];
+    if (THEME.clouds) {
+        const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.92 });
+        for (let i = 0; i < 6; i++) {
+            const cloud = new THREE.Group();
+            const puffs = 3 + Math.floor(Math.random() * 3);
+            for (let p = 0; p < puffs; p++) {
+                const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(1.6, 3), 0), cloudMat);
+                puff.position.set(rand(-3, 3), rand(-0.6, 0.6), rand(-1.5, 1.5));
+                puff.scale.y = 0.6;
+                cloud.add(puff);
+            }
+            cloud.position.set(rand(-80, 80), rand(26, 42), rand(-80, 80));
+            cloud.userData.speed = rand(0.4, 1.1);
+            clouds.push(cloud);
+            scene.add(cloud);
+        }
+    }
+
+    // ====================== Storm zone visuals ======================
+    const ZONE_WALL_H = 22;
+    const zoneWallMat = new THREE.MeshBasicMaterial({
+        color: 0x7a5cff, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false
+    });
+    const zoneWall = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, ZONE_WALL_H, 72, 1, true), zoneWallMat);
+    zoneWall.position.y = ZONE_WALL_H / 2 - 1;
+    scene.add(zoneWall);
+
+    const zoneRingMat = new THREE.MeshBasicMaterial({ color: 0xa78bfa, transparent: true, opacity: 0.85, depthWrite: false });
+    const zoneRing = new THREE.Mesh(new THREE.RingGeometry(0.985, 1, 96), zoneRingMat);
+    zoneRing.rotation.x = -Math.PI / 2;
+    zoneRing.position.y = 1.2;
+    scene.add(zoneRing);
+
+    const targetRingMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false });
+    const targetRing = new THREE.Mesh(new THREE.RingGeometry(0.985, 1, 96), targetRingMat);
+    targetRing.rotation.x = -Math.PI / 2;
+    targetRing.position.y = 1.25;
+    targetRing.visible = false;
+    scene.add(targetRing);
+
+    function setZoneVisualRadius(r) {
+        const rr = Math.max(r, 0.001);
+        zoneWall.scale.set(rr, 1, rr);
+        zoneRing.scale.set(rr, rr, 1);
+    }
+
+    // ====================== Shared assets ======================
+    const SHARED = {
+        box: new THREE.BoxGeometry(1, 1, 1),
+        matCache: new Map()
+    };
+    function cachedMat(hex) {
+        if (!SHARED.matCache.has(hex)) {
+            SHARED.matCache.set(hex, new THREE.MeshPhongMaterial({ color: hex, flatShading: true, shininess: 8 }));
+        }
+        return SHARED.matCache.get(hex);
+    }
+    function cachedMatFromColor(color) {
+        return cachedMat(color.getHex());
+    }
+
+    function emojiTexture(emoji, size) {
+        const c = document.createElement('canvas');
+        c.width = c.height = size || 128;
+        const ctx = c.getContext('2d');
+        ctx.font = Math.floor(c.width * 0.78) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(emoji, c.width / 2, c.height / 2 + c.height * 0.05);
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+    }
+
+    const TEX = {
+        feather: (() => {
+            const c = document.createElement('canvas');
+            c.width = c.height = 64;
+            const ctx = c.getContext('2d');
+            ctx.translate(32, 32);
+            ctx.rotate(0.6);
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 7, 22, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(180,180,180,0.8)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, -22);
+            ctx.lineTo(0, 24);
+            ctx.stroke();
+            const tex = new THREE.CanvasTexture(c);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        })(),
+        drumstick: emojiTexture('🍗', 128),
+        sparkle: emojiTexture('✨', 128),
+        corn: emojiTexture('🌽', 128),
+        skull: emojiTexture('💀', 128)
+    };
+
+    // ====================== Sprite pools ======================
+    class SpritePool {
+        constructor(size, makeMaterial) {
+            this.items = [];
+            for (let i = 0; i < size; i++) {
+                const sprite = new THREE.Sprite(makeMaterial());
+                sprite.visible = false;
+                scene.add(sprite);
+                this.items.push({ sprite, active: false, t: 0, dur: 1, vel: new THREE.Vector3(), spin: 0, baseScale: 1 });
+            }
+        }
+        acquire() {
+            for (const it of this.items) {
+                if (!it.active) { it.active = true; it.sprite.visible = true; it.t = 0; return it; }
+            }
+            return null;
+        }
+        update(dt) {
+            for (const it of this.items) {
+                if (!it.active) continue;
+                it.t += dt;
+                if (it.t >= it.dur) { it.active = false; it.sprite.visible = false; continue; }
+                const k = it.t / it.dur;
+                it.sprite.position.addScaledVector(it.vel, dt);
+                it.vel.y -= it.gravity ? it.gravity * dt : 0;
+                it.sprite.material.rotation += it.spin * dt;
+                it.sprite.material.opacity = it.fadeIn
+                    ? Math.min(1, k * 4) * (1 - Math.max(0, (k - 0.6) / 0.4))
+                    : 1 - k;
+            }
+        }
+    }
+
+    const featherPool = new SpritePool(140, () => new THREE.SpriteMaterial({ map: TEX.feather, transparent: true, depthWrite: false }));
+    function burstFeathers(posit, count, color) {
+        for (let i = 0; i < count; i++) {
+            const it = featherPool.acquire();
+            if (!it) return;
+            it.sprite.position.copy(posit);
+            it.sprite.position.y += rand(0.3, 1.1);
+            const s = rand(0.32, 0.6);
+            it.sprite.scale.set(s, s, 1);
+            it.vel.set(rand(-2.4, 2.4), rand(1.5, 4.2), rand(-2.4, 2.4));
+            it.gravity = 6;
+            it.spin = rand(-6, 6);
+            it.dur = rand(0.7, 1.3);
+            it.sprite.material.color.set(Math.random() < 0.5 ? 0xffffff : (color || 0xffffff));
+        }
+    }
+
+    const iconPool = new SpritePool(30, () => new THREE.SpriteMaterial({ map: TEX.drumstick, transparent: true, depthWrite: false, depthTest: false }));
+    function floatIcon(posit, tex, scale, dur) {
+        const it = iconPool.acquire();
+        if (!it) return;
+        it.sprite.material.map = tex;
+        it.sprite.material.needsUpdate = true;
+        it.sprite.position.copy(posit);
+        it.sprite.position.y += 1.6;
+        it.sprite.scale.set(scale, scale, 1);
+        it.vel.set(0, 1.6, 0);
+        it.gravity = 0;
+        it.spin = 0;
+        it.dur = dur || 1.6;
+        it.fadeIn = true;
+        it.sprite.material.color.set(0xffffff);
+    }
+
+    // Damage / heal floating numbers (each has its own canvas)
+    class NumberPool {
+        constructor(size) {
+            this.items = [];
+            for (let i = 0; i < size; i++) {
+                const c = document.createElement('canvas');
+                c.width = 160; c.height = 80;
+                const tex = new THREE.CanvasTexture(c);
+                tex.colorSpace = THREE.SRGBColorSpace;
+                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false }));
+                sprite.visible = false;
+                sprite.scale.set(2.2, 1.1, 1);
+                scene.add(sprite);
+                this.items.push({ sprite, canvas: c, tex, active: false, t: 0, dur: 0.9 });
+            }
+        }
+        show(posit, text, cssColor) {
+            let item = null;
+            for (const it of this.items) { if (!it.active) { item = it; break; } }
+            if (!item) return;
+            const ctx = item.canvas.getContext('2d');
+            ctx.clearRect(0, 0, 160, 80);
+            ctx.font = 'bold 44px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.lineWidth = 8;
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.strokeText(text, 80, 40);
+            ctx.fillStyle = cssColor;
+            ctx.fillText(text, 80, 40);
+            item.tex.needsUpdate = true;
+            item.active = true;
+            item.t = 0;
+            item.sprite.visible = true;
+            item.sprite.position.copy(posit);
+            item.sprite.position.y += 2.0;
+            item.sprite.position.x += rand(-0.4, 0.4);
+            item.sprite.material.opacity = 1;
+        }
+        update(dt) {
+            for (const it of this.items) {
+                if (!it.active) continue;
+                it.t += dt;
+                if (it.t >= it.dur) { it.active = false; it.sprite.visible = false; continue; }
+                it.sprite.position.y += dt * 2.2;
+                it.sprite.material.opacity = 1 - (it.t / it.dur);
+            }
+        }
+    }
+    const numberPool = new NumberPool(44);
+
+    // ====================== Chicken ======================
+    const CHICKEN_MAX_HP = 100;
+
+    class Chicken {
+        constructor(name, opts) {
+            opts = opts || {};
+            this.name = name;
+            this.key = name.toLowerCase();
+            this.platform = opts.platform || '';
+            this.avatar = (typeof opts.avatar === 'string' && /^https?:\/\//.test(opts.avatar)) ? opts.avatar : '';
+            this.isBot = !!opts.isBot;
+            this.color = playerColor(name, opts.nameColor);
+
+            this.hp = CHICKEN_MAX_HP;
+            this.alive = true;
+            this.kills = 0;
+            this.deathOrder = 0;
+            this.lastHitBy = null;
+
+            this.baseSpeed = rand(2.0, 2.9);
+            this.atkDamage = rand(4.5, 7);
+            this.atkCooldown = 0;
+            this.buffUntil = 0;
+            this.fleeUntil = 0;
+            this.state = 'wander';
+            this.target = null;
+            this.goal = new THREE.Vector3();
+            this.goalTimer = 0;
+            this.attackAnim = 0;
+            this.peckIdle = rand(2, 7);
+            this.deathAnim = -1;
+            this.walkPhase = rand(0, Math.PI * 2);
+            this.labelDirty = false;
+            this.dropping = false;
+            this.chute = null;
+            this.lastDamaged = -99;
+            this.lastShownHp = CHICKEN_MAX_HP;
+
+            this.buildBody();
+            this.buildLabel();
+            this.pickLobbyGoal();
+        }
+
+        buildBody() {
+            const g = new THREE.Group();
+            const bodyMat = cachedMatFromColor(this.color);
+            const darker = this.color.clone().multiplyScalar(0.82);
+            const wingMat = cachedMatFromColor(darker);
+            const orange = cachedMat(0xe8862e);
+            const red = cachedMat(0xd6453c);
+            const black = cachedMat(0x1a1a1a);
+            const white = cachedMat(0xf5f0e6);
+
+            const part = (mat, sx, sy, sz, x, y, z, parent) => {
+                const m = new THREE.Mesh(SHARED.box, mat);
+                m.scale.set(sx, sy, sz);
+                m.position.set(x, y, z);
+                m.castShadow = true;
+                (parent || g).add(m);
+                return m;
+            };
+
+            // Body & tail
+            part(bodyMat, 1.0, 0.85, 1.25, 0, 0.85, 0);
+            const tail = part(wingMat, 0.55, 0.55, 0.3, 0, 1.25, -0.72);
+            tail.rotation.x = 0.5;
+
+            // Head
+            this.headGroup = new THREE.Group();
+            this.headGroup.position.set(0, 1.35, 0.55);
+            g.add(this.headGroup);
+            part(white, 0.55, 0.6, 0.55, 0, 0.25, 0, this.headGroup);
+            part(orange, 0.18, 0.14, 0.34, 0, 0.2, 0.42, this.headGroup);   // beak
+            part(red, 0.16, 0.3, 0.4, 0, 0.62, 0, this.headGroup);          // comb
+            part(red, 0.13, 0.22, 0.13, 0, 0.0, 0.34, this.headGroup);      // wattle
+            part(black, 0.09, 0.09, 0.06, 0.29, 0.32, 0.16, this.headGroup); // eyes
+            part(black, 0.09, 0.09, 0.06, -0.29, 0.32, 0.16, this.headGroup);
+
+            // Wings (pivot at shoulder)
+            this.wingL = new THREE.Group();
+            this.wingL.position.set(0.55, 1.1, 0);
+            g.add(this.wingL);
+            part(wingMat, 0.14, 0.55, 0.85, 0.02, -0.28, 0, this.wingL);
+            this.wingR = new THREE.Group();
+            this.wingR.position.set(-0.55, 1.1, 0);
+            g.add(this.wingR);
+            part(wingMat, 0.14, 0.55, 0.85, -0.02, -0.28, 0, this.wingR);
+
+            // Legs (pivot at hip)
+            this.legL = new THREE.Group();
+            this.legL.position.set(0.22, 0.45, 0);
+            g.add(this.legL);
+            part(orange, 0.1, 0.5, 0.1, 0, -0.25, 0, this.legL);
+            part(orange, 0.22, 0.06, 0.3, 0, -0.48, 0.08, this.legL);
+            this.legR = new THREE.Group();
+            this.legR.position.set(-0.22, 0.45, 0);
+            g.add(this.legR);
+            part(orange, 0.1, 0.5, 0.1, 0, -0.25, 0, this.legR);
+            part(orange, 0.22, 0.06, 0.3, 0, -0.48, 0.08, this.legR);
+
+            // Boost sparkle indicator
+            this.boostSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX.sparkle, transparent: true, depthWrite: false }));
+            this.boostSprite.scale.set(1.1, 1.1, 1);
+            this.boostSprite.position.set(0.85, 2.2, 0);
+            this.boostSprite.visible = false;
+            g.add(this.boostSprite);
+
+            // Spawn position
+            const a = rand(0, Math.PI * 2);
+            const r = rand(5, 15);
+            g.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+            g.position.y = terrainHeight(g.position.x, g.position.z);
+            g.rotation.y = rand(0, Math.PI * 2);
+
+            this.group = g;
+            scene.add(g);
+        }
+
+        buildLabel() {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 96;
+            this.labelCanvas = c;
+            this.labelTex = new THREE.CanvasTexture(c);
+            this.labelTex.colorSpace = THREE.SRGBColorSpace;
+            this.label = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.labelTex, transparent: true, depthWrite: false, depthTest: false }));
+            this.label.scale.set(3.6, 1.35, 1);
+            this.label.position.set(0, 2.95, 0);
+            this.group.add(this.label);
+            this.redrawLabel();
+        }
+
+        redrawLabel() {
+            const ctx = this.labelCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 256, 96);
+            let display = this.name.length > 16 ? this.name.slice(0, 15) + '…' : this.name;
+            const wins = getCareerWins(this.name);
+            if (wins > 0) display = '👑' + (wins > 1 ? wins : '') + ' ' + display;
+            ctx.font = 'bold 26px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.strokeText(display, 128, 26);
+            ctx.fillStyle = '#' + this.color.getHexString();
+            ctx.fillText(display, 128, 26);
+            // HP bar
+            const w = 170, h = 12, x = (256 - w) / 2, y = 54;
+            ctx.fillStyle = 'rgba(0,0,0,0.65)';
+            ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+            const frac = Math.max(0, this.hp / CHICKEN_MAX_HP);
+            ctx.fillStyle = frac > 0.55 ? '#52d452' : frac > 0.25 ? '#e8c33a' : '#e04444';
+            ctx.fillRect(x, y, w * frac, h);
+            this.labelTex.needsUpdate = true;
+            this.labelDirty = false;
+            this.lastShownHp = this.hp;
+        }
+
+        get position() { return this.group.position; }
+        get boosted() { return G.now < this.buffUntil; }
+        get speed() {
+            let s = this.baseSpeed;
+            if (this.boosted) s *= 1.4;
+            if (this.state === 'flee') s *= 1.25;
+            if (this.state === 'panic') s *= 1.55;
+            return s;
+        }
+
+        pickLobbyGoal() {
+            const a = rand(0, Math.PI * 2), r = rand(2, 16);
+            this.goal.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+            this.goalTimer = rand(2, 6);
+        }
+
+        pickWanderGoal() {
+            // Wander locally rather than crossing the map (fewer early brawls)
+            const a = rand(0, Math.PI * 2), step = rand(3, 9);
+            this.goal.set(this.position.x + Math.cos(a) * step, 0, this.position.z + Math.sin(a) * step);
+            clampToZone(this.goal, Math.max(2, Math.min(G.zone.radius * 0.88, ISLAND_R - 2)));
+            this.goalTimer = rand(2.5, 6);
+        }
+
+        boost(amount, duration) {
+            if (!this.alive) return;
+            this.buffUntil = Math.max(this.buffUntil, G.now + (duration || 4));
+            const healed = Math.min(CHICKEN_MAX_HP - this.hp, amount);
+            if (healed > 0) {
+                this.hp += healed;
+                numberPool.show(this.position, '+' + Math.round(healed), '#6dff7c');
+                this.labelDirty = true;
+            }
+            this.boostSprite.visible = true;
+            burstFeathers(this.position, 3, 0xffe680);
+        }
+
+        hurt(amount, source, cause) {
+            if (!this.alive) return;
+            this.hp -= amount;
+            this.labelDirty = true;
+            this.lastDamaged = G.now;
+            if (source) this.lastHitBy = source;
+            numberPool.show(this.position, '-' + Math.round(amount), cause === 'storm' ? '#b18cff' : cause === 'lightning' ? '#fff174' : '#ff6e6e');
+            if (cause === 'peck' || cause === 'fox') burstFeathers(this.position, 4, this.color.getHex());
+            if (this.hp <= 0) this.die(source, cause);
+            else if (cause === 'peck' && this.hp < 45 && Math.random() < 0.65) {
+                this.state = 'flee';
+                this.fleeUntil = G.now + 5;
+                const away = this.position.clone().sub(source ? source.position : new THREE.Vector3()).setY(0).normalize();
+                this.goal.copy(this.position).addScaledVector(away, 12);
+                clampToZone(this.goal, Math.min(G.zone.radius * 0.9, ISLAND_R - 2));
+            }
+        }
+
+        die(source, cause) {
+            this.alive = false;
+            this.hp = 0;
+            this.deathAnim = 0;
+            this.deathOrder = ++G.deathCounter;
+            G.lastDead = this;
+            if (source && source !== this && source.alive) {
+                source.kills++;
+            }
+            burstFeathers(this.position, 14, this.color.getHex());
+            floatIcon(this.position, TEX.drumstick, 1.6, 1.8);
+            addKillFeed(this, source, cause);
+            updateHUD();
+        }
+
+        // Parachute into the arena at battle start
+        startDrop(x, z, height) {
+            this.dropping = true;
+            this.group.position.set(x, height, z);
+            if (!this.chute) {
+                this.chute = new THREE.Mesh(
+                    new THREE.ConeGeometry(1.3, 1.0, 8, 1, true),
+                    new THREE.MeshPhongMaterial({ color: pick([0xff5555, 0x55aaff, 0xffcc44, 0x66dd77]), side: THREE.DoubleSide, flatShading: true })
+                );
+                this.chute.position.y = 3.4;
+                this.group.add(this.chute);
+            }
+        }
+
+        // Per-frame visual + movement update
+        update(dt, t) {
+            if (!this.alive) {
+                if (this.deathAnim >= 0) {
+                    this.deathAnim += dt;
+                    const k = Math.min(1, this.deathAnim / 0.4);
+                    this.group.rotation.z = k * Math.PI / 2;
+                    this.group.scale.y = 1 - k * 0.25;
+                    this.label.material.opacity = 1 - Math.min(1, this.deathAnim / 1.2);
+                    if (this.deathAnim > 1.3) {
+                        this.dispose();
+                        this.deathAnim = -1;
+                    }
+                }
+                return;
+            }
+
+            this.boostSprite.visible = this.boosted;
+            if (this.boosted) this.boostSprite.material.rotation += dt * 4;
+
+            const p = this.group.position;
+
+            // Falling in by parachute
+            if (this.dropping) {
+                p.y -= dt * 6.5;
+                p.x += Math.sin(t * 2.1 + this.walkPhase) * dt * 0.7;
+                p.z += Math.cos(t * 1.7 + this.walkPhase) * dt * 0.7;
+                const flapHard = 0.4 + Math.abs(Math.sin(t * 18 + this.walkPhase)) * 0.9;
+                this.wingL.rotation.z = -flapHard;
+                this.wingR.rotation.z = flapHard;
+                this.legL.rotation.x = 0.5;
+                this.legR.rotation.x = 0.5;
+                const groundY = terrainHeight(p.x, p.z);
+                if (p.y <= groundY) {
+                    p.y = groundY;
+                    this.dropping = false;
+                    if (this.chute) {
+                        this.group.remove(this.chute);
+                        this.chute.geometry.dispose();
+                        this.chute.material.dispose();
+                        this.chute = null;
+                    }
+                    burstFeathers(p, 5, this.color.getHex());
+                    this.pickWanderGoal();
+                }
+                if (this.labelDirty) this.redrawLabel();
+                return;
+            }
+
+            let moving = false;
+
+            if (this.state === 'fight' && this.target && this.target.alive) {
+                // Face the opponent and shuffle around them
+                const d = this.target.position.clone().sub(p).setY(0);
+                const dist = d.length();
+                if (dist > 1.45) {
+                    p.addScaledVector(d.normalize(), Math.min(this.speed * dt, dist - 1.2));
+                    moving = true;
+                }
+                this.faceToward(this.target.position, dt);
+            } else {
+                const d = this.goal.clone().sub(p).setY(0);
+                const dist = d.length();
+                if (dist > 0.25) {
+                    p.addScaledVector(d.normalize(), Math.min(this.speed * dt, dist));
+                    this.faceToward(this.goal, dt);
+                    moving = true;
+                }
+            }
+
+            // Stay on the island
+            const pr = Math.hypot(p.x, p.z);
+            if (pr > ISLAND_R - 1.5) {
+                const s = (ISLAND_R - 1.5) / pr;
+                p.x *= s; p.z *= s;
+            }
+            p.y = terrainHeight(p.x, p.z);
+
+            // Walk + idle animation
+            this.walkPhase += dt * (moving ? 11 : 2);
+            const swing = moving ? Math.sin(this.walkPhase) * 0.7 : 0;
+            this.legL.rotation.x = swing;
+            this.legR.rotation.x = -swing;
+            if (moving) p.y += Math.abs(Math.sin(this.walkPhase)) * 0.08;
+
+            // Wing flapping when excited
+            const excited = this.boosted || this.state === 'panic' || this.state === 'flee' || this.state === 'fight';
+            const flap = excited ? 0.35 + Math.abs(Math.sin(t * 22 + this.walkPhase)) * 0.75 : 0.06;
+            this.wingL.rotation.z = -flap;
+            this.wingR.rotation.z = flap;
+
+            // Peck animation (attack or idle ground peck)
+            if (this.attackAnim > 0) {
+                this.attackAnim -= dt;
+                const k = Math.max(0, this.attackAnim / 0.22);
+                this.headGroup.rotation.x = Math.sin(k * Math.PI) * 0.9;
+            } else if (!moving) {
+                this.peckIdle -= dt;
+                if (this.peckIdle <= 0) { this.attackAnim = 0.22; this.peckIdle = rand(2.5, 8); }
+                this.headGroup.rotation.x = 0;
+            } else {
+                this.headGroup.rotation.x = 0;
+            }
+
+            // Victory dance
+            if (this === G.winner && G.mode === 'winner') {
+                p.y += Math.abs(Math.sin(t * 6)) * 0.55;
+                this.group.rotation.y += dt * 2.4;
+                this.wingL.rotation.z = -(0.5 + Math.abs(Math.sin(t * 14)) * 0.9);
+                this.wingR.rotation.z = 0.5 + Math.abs(Math.sin(t * 14)) * 0.9;
+            }
+
+            if (this.labelDirty) this.redrawLabel();
+        }
+
+        faceToward(point, dt) {
+            const want = Math.atan2(point.x - this.group.position.x, point.z - this.group.position.z);
+            let diff = want - this.group.rotation.y;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            this.group.rotation.y += diff * Math.min(1, dt * 10);
+        }
+
+        peckAt(victim) {
+            this.attackAnim = 0.22;
+            const dmg = (this.atkDamage + rand(0, 3)) * G.dmgScale + (this.boosted ? 2.5 : 0);
+            victim.hurt(dmg, this, 'peck');
+        }
+
+        dispose() {
+            scene.remove(this.group);
+            this.labelTex.dispose();
+            this.label.material.dispose();
+            this.boostSprite.material.dispose();
+            if (this.chute) {
+                this.chute.geometry.dispose();
+                this.chute.material.dispose();
+                this.chute = null;
+            }
+        }
+    }
+
+    function clampToZone(vec, maxR) {
+        const r = Math.hypot(vec.x, vec.z);
+        if (r > maxR) {
+            const s = maxR / r;
+            vec.x *= s; vec.z *= s;
+        }
+    }
+
+    // ====================== Game state ======================
+    const G = {
+        mode: 'lobby',                 // lobby | battle | winner
+        players: new Map(),            // key -> Chicken
+        now: 0,
+        battleStart: 0,
+        countdownEnd: 0,               // lobby countdown (0 = not started)
+        deathCounter: 0,
+        lastDead: null,
+        winner: null,
+        winnerEnd: 0,
+        dmgScale: 1,
+        zone: { radius: ISLAND_R - 2, target: ISLAND_R - 2, phase: -1, timer: 0, shrinking: false, shrinkFrom: 0, shrinkDur: 1, dps: 2 },
+        suddenDeath: false,
+        suddenTimer: 0,
+        eventTimer: 18,
+        activeEvents: [],
+        camAngle: 0,
+        camTarget: new THREE.Vector3(),
+        camPos: new THREE.Vector3(0, 26, 46),
+        totalJoined: 0
+    };
+
+    const ZONE_PHASES = [
+        { wait: 16, shrink: 20, frac: 0.68, dps: 2 },
+        { wait: 12, shrink: 16, frac: 0.45, dps: 3 },
+        { wait: 10, shrink: 13, frac: 0.27, dps: 4.5 },
+        { wait: 8, shrink: 10, frac: 0.14, dps: 6.5 },
+        { wait: 6, shrink: 8, frac: 0.055, dps: 9 }
+    ];
+
+    setZoneVisualRadius(G.zone.radius);
+    zoneWall.visible = false;
+    zoneRing.visible = false;
+
+    // ====================== HUD ======================
+    const el = {
+        statusLine: document.getElementById('status-line'),
+        statusSub: document.getElementById('status-sub'),
+        aliveLine: document.getElementById('alive-line'),
+        killfeed: document.getElementById('killfeed'),
+        roster: document.getElementById('roster'),
+        rosterCount: document.getElementById('roster-count'),
+        rosterList: document.getElementById('roster-list'),
+        banner: document.getElementById('event-banner'),
+        winnerOverlay: document.getElementById('winner-overlay'),
+        winnerAvatar: document.getElementById('winner-avatar'),
+        winnerName: document.getElementById('winner-name'),
+        winnerStats: document.getElementById('winner-stats'),
+        winnerPodium: document.getElementById('winner-podium'),
+        instructions: document.getElementById('instructions')
+    };
+
+    function aliveChickens() {
+        const arr = [];
+        G.players.forEach(p => { if (p.alive) arr.push(p); });
+        return arr;
+    }
+
+    function updateHUD() {
+        if (G.mode === 'lobby') {
+            el.statusLine.textContent = '🐔 CHICKEN ROYALE';
+            if (G.players.size === 0) {
+                el.statusSub.textContent = 'Waiting for chickens... type !join';
+            } else if (G.countdownEnd > 0) {
+                const left = Math.max(0, Math.ceil((G.countdownEnd - performance.now()) / 1000));
+                el.statusSub.textContent = '🛬 Battle begins in ' + left + 's';
+            } else {
+                el.statusSub.textContent = 'Type !join to enter!';
+            }
+            el.aliveLine.innerHTML = '';
+        } else if (G.mode === 'battle') {
+            const alive = aliveChickens().length;
+            if (G.suddenDeath) {
+                el.statusLine.textContent = '☠️ SUDDEN DEATH';
+                el.statusSub.textContent = 'The storm consumes everything!';
+            } else if (G.zone.shrinking) {
+                el.statusLine.textContent = '⚠️ ZONE SHRINKING';
+                el.statusSub.textContent = 'Run little chickens, run!';
+            } else {
+                el.statusLine.textContent = '🐔 BATTLE ROYALE';
+                const next = Math.max(0, Math.ceil(G.zone.timer));
+                el.statusSub.textContent = 'Zone shrinks in ' + next + 's';
+            }
+            el.aliveLine.innerHTML = '🐔 Alive: <b>' + alive + '</b> / ' + G.totalJoined;
+        } else if (G.mode === 'winner') {
+            el.statusLine.textContent = '🏆 CHICKEN DINNER';
+            el.statusSub.textContent = G.winner ? G.winner.name + ' survives!' : '';
+        }
+    }
+
+    function updateRoster() {
+        el.rosterCount.textContent = '(' + G.players.size + ')';
+        if (G.players.size === 0) {
+            el.rosterList.innerHTML = 'Type <b style="color:#7CFC00">!join</b> in chat';
+            return;
+        }
+        el.rosterList.textContent = '';
+        let shown = 0;
+        for (const p of G.players.values()) {
+            if (shown >= 24) break;
+            const span = document.createElement('span');
+            span.textContent = '🐔' + (p.name.length > 14 ? p.name.slice(0, 13) + '…' : p.name);
+            span.style.color = '#' + p.color.getHexString();
+            el.rosterList.appendChild(span);
+            shown++;
+        }
+        if (G.players.size > shown) {
+            const more = document.createElement('span');
+            more.textContent = '+' + (G.players.size - shown) + ' more';
+            more.style.opacity = '0.7';
+            el.rosterList.appendChild(more);
+        }
+    }
+
+    const feedEntries = [];
+    function addFeedLine(htmlBuilder) {
+        el.killfeed.style.display = 'block';
+        const div = document.createElement('div');
+        div.className = 'feed-entry';
+        htmlBuilder(div);
+        el.killfeed.appendChild(div);
+        requestAnimationFrame(() => div.classList.add('show'));
+        feedEntries.push(div);
+        while (feedEntries.length > 6) {
+            const old = feedEntries.shift();
+            old.remove();
+        }
+        setTimeout(() => {
+            div.classList.remove('show');
+            setTimeout(() => {
+                div.remove();
+                const i = feedEntries.indexOf(div);
+                if (i >= 0) feedEntries.splice(i, 1);
+                if (el.killfeed.children.length === 0) el.killfeed.style.display = 'none';
+            }, 500);
+        }, 9000);
+    }
+
+    function addKillFeed(victim, killer, cause) {
+        addFeedLine(div => {
+            const v = document.createElement('span');
+            v.className = 'victim';
+            v.textContent = victim.name;
+            if (cause === 'storm') {
+                div.append('⛈️ '); div.append(v); div.append(' got caught in the storm');
+            } else if (cause === 'lightning') {
+                div.append('⚡ '); div.append(v); div.append(' was struck by lightning');
+            } else if (cause === 'fox') {
+                div.append('🦊 '); div.append(v); div.append(' got snatched by the fox');
+            } else if (killer) {
+                const k = document.createElement('span');
+                k.className = 'killer';
+                k.textContent = killer.name;
+                div.append('🍗 '); div.append(v); div.append(' was pecked by '); div.append(k);
+            } else {
+                div.append('🍗 '); div.append(v); div.append(' is out');
+            }
+        });
+    }
+
+    function announce(text, dur) {
+        el.banner.textContent = text;
+        el.banner.style.opacity = '1';
+        clearTimeout(announce._t);
+        announce._t = setTimeout(() => { el.banner.style.opacity = '0'; }, dur || 2600);
+    }
+
+    // ====================== Chat responses (bot) ======================
+    const botQueue = [];
+    setInterval(() => {
+        if (botQueue.length === 0) return;
+        const message = botQueue.shift();
+        const response = {
+            chatname: 'ChickenRoyale',
+            chatmessage: message,
+            type: 'bot',
+            timestamp: Date.now()
+        };
+        if (window.parent !== window) {
+            window.parent.postMessage({ overlay: 'chickenroyale', response: response }, '*');
+        }
+        console.log('Bot response:', message);
+    }, 1300);
+
+    function sendChatResponse(message) {
+        if (botQueue.length > 4) return; // don't flood chat with a big lobby
+        botQueue.push(message);
+    }
+
+    // ====================== Game flow ======================
+    function joinPlayer(name, opts) {
+        if (G.mode === 'winner') return;
+        const key = name.toLowerCase();
+        if (G.players.has(key)) {
+            return;
+        }
+        if (G.mode === 'battle') {
+            sendChatResponse('🐔 @' + name + ' the battle already started! Wait for the next round.');
+            return;
+        }
+        if (G.players.size >= MAX_PLAYERS) {
+            sendChatResponse('🐔 @' + name + ' the island is full (' + MAX_PLAYERS + ')! Wait for the next round.');
+            return;
+        }
+
+        const chicken = new Chicken(name, opts);
+        G.players.set(key, chicken);
+        burstFeathers(chicken.position, 6, chicken.color.getHex());
+        updateRoster();
+
+        if (G.players.size === 1) {
+            G.countdownEnd = performance.now() + JOIN_SECONDS * 1000;
+            sendChatResponse('🐔 ' + name + ' starts a CHICKEN ROYALE! Type !join — battle in ' + JOIN_SECONDS + 's!');
+        }
+        updateHUD();
+    }
+
+    function tryForceStart(byName, isMod) {
+        if (G.mode !== 'lobby' || G.players.size < 2) return;
+        if (!isMod && !G.players.has(byName.toLowerCase())) return;
+        const left = G.countdownEnd - performance.now();
+        if (left > 5500) {
+            G.countdownEnd = performance.now() + 5000;
+            announce('🏁 ' + byName + ' started the battle!', 2000);
+        }
+    }
+
+    function startBattle() {
+        G.mode = 'battle';
+        G.battleStart = performance.now();
+        G.totalJoined = G.players.size;
+        G.deathCounter = 0;
+        G.lastDead = null;
+        G.suddenDeath = false;
+        G.suddenTimer = 0;
+        G.eventTimer = rand(14, 20);
+        G.zone.radius = ISLAND_R - 2;
+        G.zone.phase = -1;
+        G.zone.timer = ZONE_PHASES[0].wait;
+        G.zone.shrinking = false;
+        G.zone.dps = ZONE_PHASES[0].dps;
+        setZoneVisualRadius(G.zone.radius);
+        zoneWall.visible = true;
+        zoneRing.visible = true;
+        el.roster.style.display = 'none';
+        el.instructions.style.display = 'none';
+
+        // Air-drop the flock, spread evenly across the island
+        let i = 0;
+        const golden = Math.PI * (3 - Math.sqrt(5));
+        G.players.forEach(p => {
+            const a = i * golden + rand(-0.15, 0.15);
+            const r = Math.sqrt((i + 0.5) / G.players.size) * (ISLAND_R - 6);
+            p.startDrop(Math.cos(a) * r, Math.sin(a) * r, rand(20, 34));
+            i++;
+        });
+        announce('🐔 BATTLE BEGINS! 🐔', 3000);
+        sendChatResponse('🍗 CHICKEN ROYALE has begun with ' + G.totalJoined + ' chickens! Chat while alive to boost your bird!');
+        updateHUD();
+    }
+
+    function endBattle(winner) {
+        G.mode = 'winner';
+        G.winner = winner;
+        G.winnerEnd = performance.now() + 12000;
+        zoneWall.visible = false;
+        zoneRing.visible = false;
+        targetRing.visible = false;
+        clearEvents();
+
+        if (winner) {
+            winner.hp = Math.max(winner.hp, 30);
+            winner.state = 'wander';
+            winner.buffUntil = 0;
+            winner.boostSprite.visible = false;
+            const dinners = addCareerWin(winner.name);
+            winner.labelDirty = true;
+
+            // Confetti feathers around the champion
+            let bursts = 0;
+            const confetti = setInterval(() => {
+                if (++bursts > 14 || G.mode !== 'winner') { clearInterval(confetti); return; }
+                const offset = new THREE.Vector3(rand(-4, 4), rand(0, 3), rand(-4, 4));
+                burstFeathers(winner.position.clone().add(offset), 8, new THREE.Color().setHSL(Math.random(), 0.8, 0.6).getHex());
+            }, 380);
+
+            // Overlay
+            el.winnerName.textContent = winner.name;
+            el.winnerName.style.color = '#' + winner.color.getHexString();
+            const survived = Math.round((performance.now() - G.battleStart) / 1000);
+            el.winnerStats.textContent = '🍗 Outlived ' + (G.totalJoined - 1) + ' chickens • ⚔️ ' + winner.kills + ' pecks • ⏱️ ' + survived + 's survived';
+            if (dinners > 1) el.winnerStats.textContent += ' • 👑 ' + dinners + ' career dinners';
+
+            // Podium: runner-ups by elimination order, plus top pecker
+            const dead = [];
+            G.players.forEach(p => { if (!p.alive) dead.push(p); });
+            dead.sort((a, b) => b.deathOrder - a.deathOrder);
+            let podium = '';
+            if (dead[0]) podium += '🥈 ' + dead[0].name + '   ';
+            if (dead[1]) podium += '🥉 ' + dead[1].name + '   ';
+            let topPecker = winner;
+            G.players.forEach(p => { if (p.kills > topPecker.kills) topPecker = p; });
+            if (topPecker.kills > 0) podium += '⚔️ Top pecker: ' + topPecker.name + ' (' + topPecker.kills + ')';
+            el.winnerPodium.textContent = podium;
+
+            if (winner.avatar) {
+                el.winnerAvatar.src = winner.avatar;
+                el.winnerAvatar.style.display = 'block';
+                el.winnerAvatar.onerror = () => { el.winnerAvatar.style.display = 'none'; };
+            } else {
+                el.winnerAvatar.style.display = 'none';
+            }
+            el.winnerOverlay.style.display = 'block';
+
+            sendChatResponse('🏆 WINNER WINNER CHICKEN DINNER! 🍗 @' + winner.name + ' outlived ' + (G.totalJoined - 1) + ' chickens with ' + winner.kills + ' pecks!');
+        }
+        updateHUD();
+    }
+
+    function resetToLobby() {
+        G.players.forEach(p => p.dispose());
+        G.players.clear();
+        G.mode = 'lobby';
+        G.winner = null;
+        G.countdownEnd = 0;
+        G.totalJoined = 0;
+        G.zone.radius = ISLAND_R - 2;
+        setZoneVisualRadius(G.zone.radius);
+        zoneWall.visible = false;
+        zoneRing.visible = false;
+        targetRing.visible = false;
+        el.winnerOverlay.style.display = 'none';
+        el.roster.style.display = 'block';
+        el.instructions.style.display = 'block';
+        feedEntries.length = 0;
+        el.killfeed.textContent = '';
+        el.killfeed.style.display = 'none';
+        clearEvents();
+        updateRoster();
+        updateHUD();
+        sendChatResponse('🐔 New round of Chicken Royale! Type !join to enter the island!');
+    }
+
+    // ====================== Events: grain, lightning, fox ======================
+    function clearEvents() {
+        for (const ev of G.activeEvents) ev.cleanup();
+        G.activeEvents.length = 0;
+    }
+
+    function spawnGrainDrop() {
+        const a = rand(0, Math.PI * 2), r = rand(0, Math.max(3, G.zone.radius * 0.7));
+        const x = Math.cos(a) * r, z = Math.sin(a) * r;
+        const groundY = terrainHeight(x, z);
+
+        const group = new THREE.Group();
+        const cornMat = cachedMat(0xf2c230);
+        for (let i = 0; i < 3; i++) {
+            const cone = new THREE.Mesh(new THREE.ConeGeometry(0.32, 1.1, 6), cornMat);
+            cone.position.set(rand(-0.4, 0.4), 0.55, rand(-0.4, 0.4));
+            cone.rotation.z = rand(-0.4, 0.4);
+            cone.castShadow = true;
+            group.add(cone);
+        }
+        const chute = new THREE.Mesh(new THREE.ConeGeometry(1.6, 1.2, 8, 1, true), new THREE.MeshPhongMaterial({ color: 0xff5555, side: THREE.DoubleSide, flatShading: true }));
+        chute.position.y = 2.6;
+        group.add(chute);
+        const aura = new THREE.Mesh(new THREE.RingGeometry(2.6, 3.1, 48), new THREE.MeshBasicMaterial({ color: 0x66ff88, transparent: true, opacity: 0.5, depthWrite: false }));
+        aura.rotation.x = -Math.PI / 2;
+        aura.position.y = 0.12;
+        aura.visible = false;
+        group.add(aura);
+        group.position.set(x, groundY + 26, z);
+        scene.add(group);
+
+        announce('🌽 GRAIN DROP! 🌽', 2200);
+        addFeedLine(div => { div.textContent = '🌽 Grain drop incoming — free heals!'; });
+
+        const ev = {
+            type: 'grain', t: 0, landed: false, life: 10,
+            pos: new THREE.Vector3(x, groundY, z),
+            update(dt) {
+                this.t += dt;
+                if (!this.landed) {
+                    const k = Math.min(1, this.t / 1.4);
+                    const ease = 1 - Math.pow(1 - k, 3);
+                    group.position.y = groundY + 26 * (1 - ease);
+                    if (k >= 1) {
+                        this.landed = true;
+                        chute.visible = false;
+                        aura.visible = true;
+                        floatIcon(this.pos, TEX.corn, 1.4, 1.4);
+                    }
+                    return true;
+                }
+                this.life -= dt;
+                aura.material.opacity = 0.35 + Math.sin(this.t * 6) * 0.2;
+                return this.life > 0;
+            },
+            cleanup() {
+                scene.remove(group);
+                chute.material.dispose();
+                aura.material.dispose();
+            }
+        };
+        G.activeEvents.push(ev);
+    }
+
+    function spawnLightning() {
+        const a = rand(0, Math.PI * 2), r = rand(0, Math.max(3, G.zone.radius * 0.85));
+        const x = Math.cos(a) * r, z = Math.sin(a) * r;
+        const groundY = terrainHeight(x, z);
+        const RADIUS = 4.5;
+
+        const warn = new THREE.Mesh(new THREE.RingGeometry(RADIUS - 0.35, RADIUS, 48), new THREE.MeshBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.8, depthWrite: false }));
+        warn.rotation.x = -Math.PI / 2;
+        warn.position.set(x, groundY + 0.15, z);
+        scene.add(warn);
+
+        const bolt = new THREE.Group();
+        const boltMat = new THREE.MeshBasicMaterial({ color: 0xffffee, transparent: true, opacity: 1 });
+        let yy = 0;
+        for (let i = 0; i < 4; i++) {
+            const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.3, 7, 5), boltMat);
+            seg.position.set(rand(-1, 1), yy + 3.5, rand(-1, 1));
+            seg.rotation.z = rand(-0.25, 0.25);
+            bolt.add(seg);
+            yy += 6.4;
+        }
+        bolt.position.set(x, groundY, z);
+        bolt.visible = false;
+        scene.add(bolt);
+
+        announce('⚡ THUNDERSTORM! ⚡', 1800);
+
+        const ev = {
+            type: 'lightning', t: 0, struck: false,
+            update(dt) {
+                this.t += dt;
+                if (this.t < 1.6) {
+                    warn.material.opacity = 0.4 + Math.sin(this.t * 14) * 0.4;
+                    return true;
+                }
+                if (!this.struck) {
+                    this.struck = true;
+                    bolt.visible = true;
+                    hemiLight.intensity = THEME.hemi[2] * 2.6;
+                    for (const p of aliveChickens()) {
+                        const d = Math.hypot(p.position.x - x, p.position.z - z);
+                        if (d < RADIUS) p.hurt(34 + rand(0, 6), null, 'lightning');
+                    }
+                }
+                const k = (this.t - 1.6) / 0.45;
+                boltMat.opacity = Math.max(0, 1 - k);
+                warn.material.opacity = Math.max(0, 0.8 - k);
+                hemiLight.intensity = Math.max(THEME.hemi[2], THEME.hemi[2] * (2.6 - k * 2));
+                return k < 1;
+            },
+            cleanup() {
+                scene.remove(warn);
+                scene.remove(bolt);
+                warn.material.dispose();
+                boltMat.dispose();
+                hemiLight.intensity = THEME.hemi[2];
+            }
+        };
+        G.activeEvents.push(ev);
+    }
+
+    function spawnFox() {
+        const a = rand(0, Math.PI * 2);
+        const a2 = a + Math.PI + rand(-0.5, 0.5);
+        const from = new THREE.Vector3(Math.cos(a) * (ISLAND_R + 8), 0, Math.sin(a) * (ISLAND_R + 8));
+        const to = new THREE.Vector3(Math.cos(a2) * (ISLAND_R + 8), 0, Math.sin(a2) * (ISLAND_R + 8));
+
+        const fox = new THREE.Group();
+        const orange = cachedMat(0xc96f2f);
+        const whiteMat = cachedMat(0xf5f0e6);
+        const black = cachedMat(0x1a1a1a);
+        const mk = (mat, sx, sy, sz, x, y, z) => {
+            const m = new THREE.Mesh(SHARED.box, mat);
+            m.scale.set(sx, sy, sz); m.position.set(x, y, z); m.castShadow = true;
+            fox.add(m);
+            return m;
+        };
+        mk(orange, 0.8, 0.7, 1.9, 0, 0.75, 0);
+        mk(orange, 0.55, 0.5, 0.6, 0, 1.1, 1.1);
+        mk(whiteMat, 0.3, 0.25, 0.3, 0, 0.95, 1.42);
+        mk(black, 0.16, 0.16, 0.12, 0, 1.0, 1.6);
+        mk(orange, 0.18, 0.4, 0.18, 0.18, 1.5, 1.0);
+        mk(orange, 0.18, 0.4, 0.18, -0.18, 1.5, 1.0);
+        const tail = mk(orange, 0.35, 0.35, 1.1, 0, 0.95, -1.3);
+        tail.rotation.x = -0.35;
+        mk(whiteMat, 0.36, 0.36, 0.35, 0, 1.08, -1.75);
+        fox.position.copy(from);
+        fox.lookAt(to.x, 0, to.z);
+        scene.add(fox);
+
+        announce('🦊 FOX ATTACK! 🦊', 2200);
+        addFeedLine(div => { div.textContent = '🦊 A hungry fox is crossing the island!'; });
+
+        const hit = new Set();
+        const DUR = 3.2;
+        const ev = {
+            type: 'fox', t: 0,
+            update(dt) {
+                this.t += dt;
+                const k = Math.min(1, this.t / DUR);
+                fox.position.lerpVectors(from, to, k);
+                fox.position.y = terrainHeight(fox.position.x, fox.position.z) + Math.abs(Math.sin(this.t * 14)) * 0.45;
+                for (const p of aliveChickens()) {
+                    if (hit.has(p)) continue;
+                    const d = Math.hypot(p.position.x - fox.position.x, p.position.z - fox.position.z);
+                    if (d < 1.8) {
+                        hit.add(p);
+                        p.hurt(22 + rand(0, 6), null, 'fox');
+                    }
+                }
+                return k < 1;
+            },
+            cleanup() { scene.remove(fox); }
+        };
+        G.activeEvents.push(ev);
+    }
+
+    function maybeSpawnEvent(dt) {
+        if (aliveChickens().length < 2) return;
+        G.eventTimer -= dt;
+        if (G.eventTimer > 0) return;
+        G.eventTimer = rand(17, 27);
+        const roll = Math.random();
+        if (roll < 0.4) spawnGrainDrop();
+        else if (roll < 0.75) spawnLightning();
+        else spawnFox();
+    }
+
+    // ====================== AI tick (8 Hz) ======================
+    function aiTick(tickDt) {
+        const alive = aliveChickens();
+        // Docile at first, increasingly aggressive as the zone closes in
+        const aggro = Math.max(4, Math.min(18, 4 + ((ISLAND_R - 2) - G.zone.radius) * 0.6));
+        // Gentler pecks while the flock is big; lethal in the endgame
+        G.dmgScale = Math.max(0.55, Math.min(1.15, 14 / Math.max(1, alive.length)));
+        const grain = G.activeEvents.find(e => e.type === 'grain' && e.landed);
+
+        for (const c of alive) {
+            if (c.dropping) continue; // still parachuting in
+
+            // Out-of-combat regen rewards survivors who break away
+            if (alive.length > 4 && c.hp < CHICKEN_MAX_HP && G.now - c.lastDamaged > 6) {
+                c.hp = Math.min(CHICKEN_MAX_HP, c.hp + 1.5 * tickDt);
+                if (Math.abs(c.hp - c.lastShownHp) >= 2) c.labelDirty = true;
+            }
+
+            // Buff expiry handled via G.now getter; storm damage:
+            const distC = Math.hypot(c.position.x, c.position.z);
+            const outside = distC > G.zone.radius + 0.3;
+            if (outside) {
+                c.hurt(G.zone.dps * tickDt, null, 'storm');
+                if (!c.alive) continue;
+                c.state = 'panic';
+                const inward = Math.max(0, G.zone.radius * 0.7);
+                const a = Math.atan2(c.position.z, c.position.x) + rand(-0.4, 0.4);
+                c.goal.set(Math.cos(a) * inward, 0, Math.sin(a) * inward);
+                continue;
+            } else if (c.state === 'panic') {
+                c.state = 'wander';
+                c.pickWanderGoal();
+            }
+
+            if (c.state === 'flee') {
+                if (G.now > c.fleeUntil) { c.state = 'wander'; c.pickWanderGoal(); }
+                else continue;
+            }
+
+            // Find nearest living enemy (ignore birds still in the air)
+            let nearest = null, nearestD = Infinity;
+            for (const o of alive) {
+                if (o === c || o.dropping) continue;
+                const d = Math.hypot(o.position.x - c.position.x, o.position.z - c.position.z);
+                if (d < nearestD) { nearestD = d; nearest = o; }
+            }
+
+            // Hungry chickens detour to grain
+            if (grain && c.hp < 72 && (!nearest || nearestD > 3.5)) {
+                const dGrain = Math.hypot(grain.pos.x - c.position.x, grain.pos.z - c.position.z);
+                if (dGrain < 17 && dGrain > 2.2) {
+                    c.state = 'wander';
+                    c.goal.copy(grain.pos);
+                    c.goalTimer = 2;
+                    continue;
+                }
+                if (dGrain <= 3.1) {
+                    c.hp = Math.min(CHICKEN_MAX_HP, c.hp + 4.5 * tickDt);
+                    c.labelDirty = true;
+                }
+            } else if (grain) {
+                const dGrain = Math.hypot(grain.pos.x - c.position.x, grain.pos.z - c.position.z);
+                if (dGrain <= 3.1) {
+                    c.hp = Math.min(CHICKEN_MAX_HP, c.hp + 4.5 * tickDt);
+                    c.labelDirty = true;
+                }
+            }
+
+            if (nearest && nearestD < aggro) {
+                c.state = 'fight';
+                c.target = nearest;
+                if (nearestD < 1.6) {
+                    c.atkCooldown -= tickDt;
+                    if (c.atkCooldown <= 0) {
+                        c.atkCooldown = rand(0.95, 1.5) * (c.boosted ? 0.8 : 1);
+                        c.peckAt(nearest);
+                        // Sometimes lose interest and strut off mid-fight
+                        if (nearest.alive && alive.length > 5 && Math.random() < 0.12) {
+                            c.state = 'wander';
+                            c.target = null;
+                            c.pickWanderGoal();
+                        }
+                    }
+                }
+            } else {
+                if (c.state === 'fight') { c.state = 'wander'; c.pickWanderGoal(); }
+                c.goalTimer -= tickDt;
+                const dGoal = Math.hypot(c.goal.x - c.position.x, c.goal.z - c.position.z);
+                if (c.goalTimer <= 0 || dGoal < 0.5) {
+                    if (G.mode === 'battle') c.pickWanderGoal(); else c.pickLobbyGoal();
+                }
+            }
+        }
+    }
+
+    // Soft separation so chickens don't stack (called per frame)
+    const sepVec = new THREE.Vector3();
+    function applySeparation(dt) {
+        const alive = aliveChickens().filter(c => !c.dropping);
+        for (let i = 0; i < alive.length; i++) {
+            const a = alive[i];
+            for (let j = i + 1; j < alive.length; j++) {
+                const b = alive[j];
+                const dx = b.position.x - a.position.x;
+                const dz = b.position.z - a.position.z;
+                const d2 = dx * dx + dz * dz;
+                if (d2 < 1.0 && d2 > 0.0001) {
+                    const d = Math.sqrt(d2);
+                    const push = (1.0 - d) * 1.6 * dt;
+                    sepVec.set(dx / d * push, 0, dz / d * push);
+                    b.position.add(sepVec);
+                    a.position.sub(sepVec);
+                }
+            }
+        }
+    }
+
+    // ====================== Zone logic ======================
+    function zoneTick(dt) {
+        const z = G.zone;
+        if (G.suddenDeath) {
+            G.suddenTimer += dt;
+            if (G.suddenTimer > 2) {
+                G.suddenTimer = 0;
+                z.dps += 1.5;
+            }
+            if (z.radius > 0) {
+                z.radius = Math.max(0, z.radius - dt * 0.35);
+                setZoneVisualRadius(Math.max(z.radius, 0.05));
+            }
+            return;
+        }
+
+        if (z.shrinking) {
+            z.timer -= dt;
+            const phase = ZONE_PHASES[z.phase];
+            const k = Math.min(1, 1 - z.timer / phase.shrink);
+            z.radius = z.shrinkFrom + (z.target - z.shrinkFrom) * k;
+            setZoneVisualRadius(z.radius);
+            if (z.timer <= 0) {
+                z.radius = z.target;
+                z.shrinking = false;
+                if (z.phase >= ZONE_PHASES.length - 1) {
+                    G.suddenDeath = true;
+                    announce('☠️ SUDDEN DEATH ☠️', 3000);
+                } else {
+                    z.timer = ZONE_PHASES[z.phase + 1].wait;
+                }
+                targetRing.visible = false;
+            }
+        } else {
+            z.timer -= dt;
+            if (z.timer <= 0) {
+                z.phase++;
+                const phase = ZONE_PHASES[z.phase];
+                z.shrinkFrom = z.radius;
+                z.target = (ISLAND_R - 2) * phase.frac;
+                z.timer = phase.shrink;
+                z.shrinking = true;
+                z.dps = phase.dps;
+                targetRing.scale.set(z.target, z.target, 1);
+                targetRing.visible = true;
+                if (z.phase === 0) announce('⚠️ THE STORM APPROACHES ⚠️', 2600);
+            } else if (z.phase >= 0 && z.timer < 5 && !targetRing.visible) {
+                const nextPhase = ZONE_PHASES[z.phase + 1] || ZONE_PHASES[ZONE_PHASES.length - 1];
+                targetRing.scale.set((ISLAND_R - 2) * nextPhase.frac, (ISLAND_R - 2) * nextPhase.frac, 1);
+                targetRing.visible = true;
+            }
+        }
+    }
+
+    // ====================== Camera ======================
+    const desiredPos = new THREE.Vector3();
+    const desiredTarget = new THREE.Vector3();
+
+    function updateCamera(dt) {
+        const alive = aliveChickens();
+
+        if (G.mode === 'winner' && G.winner) {
+            G.camAngle += dt * 0.55;
+            desiredTarget.copy(G.winner.position).add(new THREE.Vector3(0, 1.2, 0));
+            desiredPos.set(
+                desiredTarget.x + Math.cos(G.camAngle) * 8,
+                desiredTarget.y + 3.4,
+                desiredTarget.z + Math.sin(G.camAngle) * 8
+            );
+        } else {
+            G.camAngle += dt * (G.mode === 'battle' ? 0.085 : 0.06);
+            // Track the centroid of living chickens (drifts toward the action)
+            desiredTarget.set(0, 0, 0);
+            if (alive.length > 0) {
+                for (const c of alive) desiredTarget.add(c.position);
+                desiredTarget.divideScalar(alive.length);
+                desiredTarget.multiplyScalar(0.55);
+                const r = Math.hypot(desiredTarget.x, desiredTarget.z);
+                if (r > 13) { desiredTarget.x *= 13 / r; desiredTarget.z *= 13 / r; }
+            }
+            desiredTarget.y = 1;
+
+            let radius;
+            if (G.mode === 'battle') {
+                radius = Math.max(11, Math.min(48, G.zone.radius * 1.55 + 8));
+                if (alive.length === 2) radius = Math.max(10, radius * 0.8);
+            } else {
+                radius = 36;
+            }
+            desiredPos.set(
+                desiredTarget.x + Math.cos(G.camAngle) * radius,
+                radius * 0.62 + 6,
+                desiredTarget.z + Math.sin(G.camAngle) * radius
+            );
+        }
+
+        const lerp = 1 - Math.pow(0.0015, dt); // exponential smoothing
+        G.camPos.lerp(desiredPos, lerp);
+        G.camTarget.lerp(desiredTarget, lerp);
+        camera.position.copy(G.camPos);
+        camera.lookAt(G.camTarget);
+    }
+
+    // ====================== Main loop ======================
+    const clock = new THREE.Clock();
+    let tickAccum = 0;
+    const TICK = 1 / 8;
+    let hudAccum = 0;
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const dt = Math.min(0.1, clock.getDelta());
+        const t = clock.elapsedTime;
+        G.now = t;
+
+        // Lobby countdown
+        if (G.mode === 'lobby' && G.countdownEnd > 0 && performance.now() >= G.countdownEnd) {
+            if (G.players.size >= 2) {
+                startBattle();
+            } else {
+                G.countdownEnd = performance.now() + 20000;
+                sendChatResponse('🐔 Need at least 2 chickens! Type !join — 20 more seconds!');
+            }
+        }
+
+        // Winner timeout
+        if (G.mode === 'winner' && performance.now() >= G.winnerEnd) {
+            resetToLobby();
+        }
+
+        // Fixed-rate AI/logic tick
+        tickAccum += dt;
+        while (tickAccum >= TICK) {
+            tickAccum -= TICK;
+            if (G.mode === 'battle') {
+                zoneTick(TICK);
+                aiTick(TICK);
+                maybeSpawnEvent(TICK);
+
+                const alive = aliveChickens();
+                if (alive.length <= 1) {
+                    endBattle(alive[0] || G.lastDead);
+                }
+            } else if (G.mode === 'lobby') {
+                aiTickLobby(TICK);
+            }
+        }
+
+        // Per-frame updates
+        G.players.forEach(p => p.update(dt, t));
+        if (G.mode === 'battle' || G.mode === 'lobby') applySeparation(dt);
+
+        for (let i = G.activeEvents.length - 1; i >= 0; i--) {
+            const ev = G.activeEvents[i];
+            if (!ev.update(dt)) {
+                ev.cleanup();
+                G.activeEvents.splice(i, 1);
+            }
+        }
+
+        featherPool.update(dt);
+        iconPool.update(dt);
+        numberPool.update(dt);
+
+        zoneWallMat.opacity = 0.13 + Math.sin(t * 2.3) * 0.05;
+        zoneRingMat.opacity = 0.7 + Math.sin(t * 3.1) * 0.25;
+        targetRingMat.opacity = 0.4 + Math.sin(t * 5) * 0.25;
+
+        for (const cloud of clouds) {
+            cloud.position.x += cloud.userData.speed * dt;
+            if (cloud.position.x > 110) cloud.position.x = -110;
+        }
+
+        updateCamera(dt);
+
+        hudAccum += dt;
+        if (hudAccum > 0.25) {
+            hudAccum = 0;
+            updateHUD();
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    function aiTickLobby(tickDt) {
+        G.players.forEach(c => {
+            c.goalTimer -= tickDt;
+            const dGoal = Math.hypot(c.goal.x - c.position.x, c.goal.z - c.position.z);
+            if (c.goalTimer <= 0 || dGoal < 0.4) c.pickLobbyGoal();
+        });
+    }
+
+    // ====================== Chat integration ======================
+    function processData(data) {
+        try {
+            if (data && data.content) data = data.content;
+            if (!data || typeof data !== 'object') return;
+
+            const name = sanitizeText(data.chatname);
+            const message = sanitizeText(data.chatmessage);
+            if (!name || name === 'ChickenRoyale') return;
+
+            const lower = message.toLowerCase();
+            const command = lower.split(' ')[0];
+
+            // Donations grant a mega boost (or auto-enter the donor in the lobby)
+            const donated = !!data.hasDonation;
+
+            if (command === '!join' || command === '!play' || command === '!chicken') {
+                joinPlayer(name, {
+                    platform: data.type || '',
+                    avatar: data.chatimg,
+                    nameColor: data.nameColor
+                });
+                return;
+            }
+
+            if (command === '!start') {
+                tryForceStart(name, !!(data.mod || data.admin || data.host));
+                return;
+            }
+
+            if (G.mode === 'lobby' && AUTO_JOIN && message) {
+                joinPlayer(name, {
+                    platform: data.type || '',
+                    avatar: data.chatimg,
+                    nameColor: data.nameColor
+                });
+                return;
+            }
+
+            // Any chat from a living chicken = CLUCK POWER boost
+            if (G.mode === 'battle' && message) {
+                const player = G.players.get(name.toLowerCase());
+                if (player && player.alive) {
+                    if (donated) {
+                        player.boost(30, 8);
+                        announce('💰 ' + name + ' donated for MEGA CLUCK! 💰', 2400);
+                    } else {
+                        player.boost(8, 4);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('processData error:', err);
+        }
+    }
+    window.processData = processData; // exposed for integrations & testing
+    window.__cr = { G, aliveChickens }; // debug handle
+
+    // Setup iframe communication (same as petrace.html / games.html)
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}${lanonly}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.position = "fixed";
+    iframe.style.left = "-100px";
+    iframe.style.top = "-100px";
+    iframe.id = "frame1";
+    document.body.appendChild(iframe);
+
+    window.addEventListener("message", function (e) {
+        if (e.source !== iframe.contentWindow) return;
+        if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+            if ("overlayNinja" in e.data.dataReceived) {
+                processData(e.data.dataReceived.overlayNinja);
+            }
+        }
+    });
+
+    // Optional direct WebSocket (?server=wss://...)
+    if (urlParams.has('server')) {
+        const socketserver = new WebSocket(urlParams.get('server'));
+        socketserver.onopen = function () {
+            socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 }));
+        };
+        socketserver.onmessage = function (event) {
+            if (!event.data) return;
+            try { processData(JSON.parse(event.data)); } catch (e) {}
+        };
+    }
+
+    // Optional extension relay (?server2 / ?server3)
+    (function setupExtensionSocket() {
+        if (!(urlParams.has('server2') || urlParams.has('server3'))) return;
+        const serverURL = urlParams.has('server2') ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension') : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+        let socket = null; let attempts = 1;
+        function connect() {
+            if (socket) { socket.onclose = null; try { socket.close(); } catch (e) {} }
+            socket = new WebSocket(serverURL);
+            socket.onopen = function () { attempts = 1; socket.send(JSON.stringify({ join: sessionId.split(',')[0], out: 3, in: 4 })); };
+            socket.onclose = function () { setTimeout(connect, 100 * attempts++); };
+            socket.onerror = function () { try { socket.close(); } catch (e) {} };
+            socket.addEventListener('message', function (event) {
+                if (!event.data) return;
+                try {
+                    const data = JSON.parse(event.data);
+                    processData(data);
+                    if (data.get) { socket.send(JSON.stringify({ callback: { get: data.get, result: true } })); }
+                } catch (e) {}
+            });
+        }
+        connect();
+    })();
+
+    // ====================== Demo mode ======================
+    if (urlParams.has('demo')) {
+        const DEMO_NAMES = [
+            'CluckNorris', 'HenSolo', 'EggsBenedict', 'AttilaTheHen', 'ColonelSanders',
+            'FeatherLocklear', 'YolkoOno', 'GregoryPeck', 'MotherClucker', 'SirCluckington',
+            'EggsTerminator', 'BokBokBoi', 'WingCommander', 'PoachedLegend', 'HennethPaltrow',
+            'CluckVader', 'ChickJagger', 'EggSheeran', 'TheNuggetKing', 'BeakyBlinder',
+            'RoosterCogburn', 'HennyDanger', 'OmeletteUFinish', 'CluckieMinaj'
+        ];
+        const demoColors = DEMO_NAMES.map(() => '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'));
+        let demoIdx = 0;
+
+        setInterval(() => {
+            if (G.mode === 'lobby') {
+                if (demoIdx >= DEMO_NAMES.length) return;
+                processData({
+                    chatname: DEMO_NAMES[demoIdx],
+                    chatmessage: '!join',
+                    nameColor: demoColors[demoIdx],
+                    type: pick(['twitch', 'youtube', 'kick']),
+                    chatimg: 'https://picsum.photos/seed/' + demoIdx + '/80/80'
+                });
+                demoIdx++;
+            } else if (G.mode === 'battle') {
+                demoIdx = 0;
+                if (Math.random() < 0.45) {
+                    const alive = aliveChickens();
+                    if (alive.length) {
+                        const c = pick(alive);
+                        processData({
+                            chatname: c.name,
+                            chatmessage: pick(['cluck cluck!', 'GO GO GO', 'bok bok', 'RUN!', 'fight!', '🐔🐔🐔']),
+                            hasDonation: Math.random() < 0.03 ? '$5' : ''
+                        });
+                    }
+                }
+            } else {
+                demoIdx = 0;
+            }
+        }, 420);
+    }
+
+    // ====================== Start ======================
+    updateHUD();
+    updateRoster();
+    animate();
+    </script>
+</body>
+</html>

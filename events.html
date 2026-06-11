@@ -2051,7 +2051,7 @@ body.light-mode .meta-value.badge {
                 }
             }
 
-			if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+			if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
 				log(e.data.dataReceived.overlayNinja);
 				addMessageToOverlay(e.data.dataReceived.overlayNinja);
 			}

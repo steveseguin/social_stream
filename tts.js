@@ -12,6 +12,7 @@ TTS.voice = false;
 TTS.voices = null;
 TTS.kokoroDevice = null;
 TTS.kokoroDtype = null;
+TTS.currentObjectUrl = null;
 
 // eSpeak TTS variables
 TTS.espeakLoaded = false;
@@ -399,10 +400,50 @@ TTS.checkKokoroAcceleration = function() {
  * Handle the end of audio playback
  */
 TTS.finishedAudio = function(e) {
+    TTS.revokeCurrentObjectUrl();
     TTS.premiumQueueActive = false;
     if (TTS.premiumQueueTTS.length) {
         TTS.speak(TTS.premiumQueueTTS.shift()); // play next
     }
+};
+
+TTS.revokeCurrentObjectUrl = function() {
+    if (TTS.currentObjectUrl) {
+        try {
+            URL.revokeObjectURL(TTS.currentObjectUrl);
+        } catch (e) {}
+        TTS.currentObjectUrl = null;
+    }
+};
+
+TTS.setAudioSource = function(src, isObjectUrl) {
+    TTS.revokeCurrentObjectUrl();
+    TTS.audio.src = src;
+    TTS.currentObjectUrl = isObjectUrl ? src : null;
+};
+
+TTS.parseFloatParam = function(urlParams, name, fallback) {
+    if (!urlParams.has(name)) {
+        return fallback;
+    }
+    var parsed = parseFloat(urlParams.get(name));
+    return isNaN(parsed) ? fallback : parsed;
+};
+
+TTS.parseMinFloatParam = function(urlParams, name, fallback, min) {
+    if (!urlParams.has(name)) {
+        return fallback;
+    }
+    var parsed = parseFloat(urlParams.get(name));
+    return isNaN(parsed) || parsed < min ? fallback : parsed;
+};
+
+TTS.parseIntParam = function(urlParams, name, fallback) {
+    if (!urlParams.has(name)) {
+        return fallback;
+    }
+    var parsed = parseInt(urlParams.get(name), 10);
+    return isNaN(parsed) ? fallback : parsed;
 };
 
 /**
@@ -614,28 +655,24 @@ TTS.configure = function(urlParams) {
 	
     // Volume
     if (urlParams.has("volume")) {
-        TTS.volume = urlParams.get("volume") || 1;
-        TTS.volume = parseFloat(TTS.volume);
+        TTS.volume = TTS.parseFloatParam(urlParams, "volume", 1);
         const volumeSlider = document.getElementById('volumeSlider');
         if (volumeSlider) volumeSlider.value = TTS.volume * 100;
     }
 
     // Pitch
     if (urlParams.has("pitch")) {
-        TTS.pitch = urlParams.get("pitch") || 1;
-        TTS.pitch = parseFloat(TTS.pitch);
+        TTS.pitch = TTS.parseFloatParam(urlParams, "pitch", 1);
     }
 
     // Rate
     if (urlParams.has("rate")) {
-        TTS.rate = urlParams.get("rate") || 1;
-        TTS.rate = parseFloat(TTS.rate);
+        TTS.rate = TTS.parseMinFloatParam(urlParams, "rate", 1, 0.01);
     }
 
     // Voice latency
     if (urlParams.has("latency")) {
-        TTS.voiceLatency = urlParams.get("latency") || 0;
-        TTS.voiceLatency = parseInt(TTS.voiceLatency) || 0;
+        TTS.voiceLatency = TTS.parseIntParam(urlParams, "latency", 0);
     }
 	
 	if (urlParams.get("ttssources")) {
@@ -643,7 +680,7 @@ TTS.configure = function(urlParams) {
 	}
 	
 	if (urlParams.has("ttsquick")) {
-		TTS.ttsQuick = parseInt(urlParams.get("ttsquick")) || 80;
+		TTS.ttsQuick = TTS.parseIntParam(urlParams, "ttsquick", 80);
 	}
 	
 	
@@ -735,8 +772,8 @@ TTS.configure = function(urlParams) {
 
     // Kokoro settings
     TTS.kokoroSettings.speed = urlParams.has("kokorospeed")
-        ? parseFloat(urlParams.get("kokorospeed")) || 1.0
-        : (urlParams.has("korospeed") ? parseFloat(urlParams.get("korospeed")) || 1.0 : TTS.rate);
+        ? TTS.parseMinFloatParam(urlParams, "kokorospeed", 1.0, 0.1)
+        : (urlParams.has("korospeed") ? TTS.parseMinFloatParam(urlParams, "korospeed", 1.0, 0.1) : TTS.rate);
     TTS.kokoroSettings.voiceName = urlParams.get("voicekokoro") || "af_aoede";
     TTS.kokoroSettings.device = TTS.normalizeKokoroDevice(urlParams.get("kokorodevice") || urlParams.get("kokorobackend"));
     TTS.kokoroSettings.dtype = TTS.normalizeKokoroDtype(urlParams.get("kokorodtype") || urlParams.get("kokoroprecision"));
@@ -748,7 +785,7 @@ TTS.configure = function(urlParams) {
     }
 
     // Piper TTS settings
-    TTS.piperSettings.speed = urlParams.has("piperspeed") ? parseFloat(urlParams.get("piperspeed")) || 1.0 : 1.0;
+    TTS.piperSettings.speed = TTS.parseMinFloatParam(urlParams, "piperspeed", 1.0, 0.1);
     TTS.piperSettings.voice = urlParams.get("pipervoice") || "en_US-hfc_female-medium";
     
     // Available Piper voices for reference:
@@ -761,18 +798,16 @@ TTS.configure = function(urlParams) {
 
     // eSpeak TTS settings
     TTS.espeakSettings.voice = urlParams.get("espeakvoice") || "en";
-    TTS.espeakSettings.speed = urlParams.has("espeakspeed") ? parseInt(urlParams.get("espeakspeed")) || 140 : 140; // Slower for clarity
-    TTS.espeakSettings.pitch = urlParams.has("espeakpitch") ? parseInt(urlParams.get("espeakpitch")) || 50 : 50;
-    TTS.espeakSettings.variant = urlParams.has("espeakvariant") ? parseInt(urlParams.get("espeakvariant")) || 0 : 0;
-
+    TTS.espeakSettings.speed = TTS.parseIntParam(urlParams, "espeakspeed", 140); // Slower for clarity
+    TTS.espeakSettings.pitch = TTS.parseIntParam(urlParams, "espeakpitch", 50);
+    TTS.espeakSettings.variant = TTS.parseIntParam(urlParams, "espeakvariant", 0);
     // Kitten TTS settings
     TTS.kittenSettings.voice = urlParams.get("kittenvoice") || "expr-voice-4-f";
-    TTS.kittenSettings.speed = urlParams.has("kittenspeed") ? parseFloat(urlParams.get("kittenspeed")) || 1.0 : 1.0;
-    TTS.kittenSettings.sampleRate = urlParams.has("kittensamplerate") ? parseInt(urlParams.get("kittensamplerate")) || 24000 : 24000;
-
+    TTS.kittenSettings.speed = TTS.parseMinFloatParam(urlParams, "kittenspeed", 1.0, 0.5);
+    TTS.kittenSettings.sampleRate = TTS.parseIntParam(urlParams, "kittensamplerate", 24000);
     // Google Cloud settings
-    TTS.googleSettings.rate = urlParams.has("googlerate") ? parseFloat(urlParams.get("googlerate")) || 1 : TTS.rate;
-    TTS.googleSettings.pitch = urlParams.has("googlepitch") ? parseFloat(urlParams.get("googlepitch")) || 0 : 0;
+    TTS.googleSettings.rate = TTS.parseMinFloatParam(urlParams, "googlerate", TTS.rate, 0.25);
+    TTS.googleSettings.pitch = TTS.parseFloatParam(urlParams, "googlepitch", 0);
     TTS.googleSettings.audioProfile = urlParams.get("googleaudioprofile") || false;
     TTS.googleSettings.voiceName = urlParams.get("voicegoogle") || false;
 	TTS.googleSettings.lang = urlParams.get("googlelang") || false;
@@ -785,17 +820,17 @@ TTS.configure = function(urlParams) {
     TTS.geminiSettings.style = urlParams.get("geministyle") || urlParams.get("geminiprompt") || false;
 
     // ElevenLabs settings
-    TTS.elevenLabsSettings.latency = urlParams.has("elevenlatency") ? parseInt(urlParams.get("elevenlatency")) || 0 : TTS.voiceLatency;
-    TTS.elevenLabsSettings.stability = urlParams.has("elevenstability") ? parseFloat(urlParams.get("elevenstability")) || 0.5 : 0.5;
-    TTS.elevenLabsSettings.similarity = urlParams.has("elevensimilarity") ? parseFloat(urlParams.get("elevensimilarity")) || 0.75 : 0.75;
-    TTS.elevenLabsSettings.style = urlParams.has("elevenstyle") ? parseFloat(urlParams.get("elevenstyle")) || 0.5 : 0.5;
-    TTS.elevenLabsSettings.speakingRate = urlParams.has("elevenrate") ? parseFloat(urlParams.get("elevenrate")) || 1.0 : 1.0;
+    TTS.elevenLabsSettings.latency = TTS.parseIntParam(urlParams, "elevenlatency", TTS.voiceLatency);
+    TTS.elevenLabsSettings.stability = TTS.parseFloatParam(urlParams, "elevenstability", 0.5);
+    TTS.elevenLabsSettings.similarity = TTS.parseFloatParam(urlParams, "elevensimilarity", 0.75);
+    TTS.elevenLabsSettings.style = TTS.parseFloatParam(urlParams, "elevenstyle", 0.5);
+    TTS.elevenLabsSettings.speakingRate = TTS.parseMinFloatParam(urlParams, "elevenrate", 1.0, 0.25);
     TTS.elevenLabsSettings.speakerBoost = urlParams.has("elevenspeakerboost");
     TTS.elevenLabsSettings.voiceName = urlParams.get("voice11") || urlParams.get("elevenlabsvoice") || false;
     TTS.elevenLabsSettings.model = urlParams.get("elevenlabsmodel") || "eleven_flash_v2_5";
 
     // Speechify settings
-    TTS.speechifySettings.speed = urlParams.has("speechifyspeed") ? parseFloat(urlParams.get("speechifyspeed")) || 1.0 : TTS.rate;
+    TTS.speechifySettings.speed = TTS.parseMinFloatParam(urlParams, "speechifyspeed", TTS.rate, 0.1);
     TTS.speechifySettings.model = urlParams.get("speechifymodel") || 'simba-english';
     TTS.speechifySettings.voiceName = urlParams.get("voicespeechify") || false;
 
@@ -811,7 +846,7 @@ TTS.configure = function(urlParams) {
         TTS.openAISettings.voice = urlParams.get("openaicustomvoice") || urlParams.get("customttsvoice") || urlParams.get("localttsvoice") || "alloy";
     }
     TTS.openAISettings.responseFormat = urlParams.get("openaiformat") || urlParams.get("customttsformat") || urlParams.get("localttsformat") || "mp3";
-    TTS.openAISettings.speed = urlParams.has("openaispeed") ? parseFloat(urlParams.get("openaispeed")) || 1.0 : (urlParams.has("customttsspeed") ? parseFloat(urlParams.get("customttsspeed")) || 1.0 : (urlParams.has("localttsspeed") ? parseFloat(urlParams.get("localttsspeed")) || 1.0 : TTS.rate));
+    TTS.openAISettings.speed = urlParams.has("openaispeed") ? TTS.parseMinFloatParam(urlParams, "openaispeed", 1.0, 0.25) : (urlParams.has("customttsspeed") ? TTS.parseMinFloatParam(urlParams, "customttsspeed", 1.0, 0.25) : (urlParams.has("localttsspeed") ? TTS.parseMinFloatParam(urlParams, "localttsspeed", 1.0, 0.25) : TTS.rate));
 
     // Enable speech if specified
     if (TTS.readDonos || TTS.newmembertts || TTS.ttsclicked || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
@@ -848,7 +883,7 @@ TTS.configure = function(urlParams) {
 
 
     if (urlParams.has("skipmessages")) {
-        TTS.skipTTSMessages = parseInt(urlParams.get("skipmessages")) || 3;
+        TTS.skipTTSMessages = TTS.parseIntParam(urlParams, "skipmessages", 3);
     }
 
     if (urlParams.has("readevents")) {
@@ -1726,7 +1761,7 @@ TTS.ElevenLabsTTS = function(tts) {
                     TTS.audio = document.createElement("audio");
                     TTS.audio.onended = TTS.finishedAudio;
                 }
-                TTS.audio.src = blobUrl;
+                TTS.setAudioSource(blobUrl, true);
                 if (TTS.volume) {
                     TTS.audio.volume = TTS.volume;
                 }
@@ -1954,7 +1989,8 @@ TTS.geminiTTS = async function(tts) {
             TTS.audio.onended = TTS.finishedAudio;
         }
 
-        TTS.audio.src = URL.createObjectURL(wavBlob);
+        const audioUrl = URL.createObjectURL(wavBlob);
+        TTS.setAudioSource(audioUrl, true);
         if (TTS.volume) {
             TTS.audio.volume = TTS.volume;
         }
@@ -2078,7 +2114,8 @@ TTS.kokoroTTS = async function(text) {
 			TTS.audio = document.createElement("audio");
 			TTS.audio.onended = TTS.finishedAudio;
 		}
-        TTS.audio.src = URL.createObjectURL(audioBlob);
+        const audioUrl = URL.createObjectURL(audioBlob);
+        TTS.setAudioSource(audioUrl, true);
         
         if (TTS.volume) TTS.audio.volume = TTS.volume;
         
@@ -2144,7 +2181,8 @@ TTS.kokoroTTS = async function(text) {
         }
         
         const audioBlob = audio.toBlob();
-        TTS.audio.src = URL.createObjectURL(audioBlob);
+        const audioUrl = URL.createObjectURL(audioBlob);
+        TTS.setAudioSource(audioUrl, true);
         if (TTS.volume) TTS.audio.volume = TTS.volume;
         
         try {
@@ -2264,7 +2302,7 @@ TTS.espeakTTS = async function(text) {
             TTS.audio.onended = TTS.finishedAudio;
         }
         
-        TTS.audio.src = audioUrl;
+        TTS.setAudioSource(audioUrl, true);
         if (TTS.volume) {
             TTS.audio.volume = TTS.volume;
         }
@@ -2492,7 +2530,7 @@ TTS.kittenTTS = async function(text) {
             TTS.audio.onended = TTS.finishedAudio;
         }
         
-        TTS.audio.src = audioUrl;
+        TTS.setAudioSource(audioUrl, true);
         if (TTS.volume) {
             TTS.audio.volume = TTS.volume;
         }
@@ -2610,7 +2648,8 @@ TTS.playAudioBlob = async function(audioBlob) {
         TTS.audio = document.createElement("audio");
         TTS.audio.onended = TTS.finishedAudio;
     }
-    TTS.audio.src = window.URL.createObjectURL(audioBlob);
+    const audioUrl = window.URL.createObjectURL(audioBlob);
+    TTS.setAudioSource(audioUrl, true);
     if (TTS.volume) {
         TTS.audio.volume = TTS.volume;
     }

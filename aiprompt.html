@@ -1026,8 +1026,10 @@ If the user asks a question that does not require a file change, answer normally
 		var roomID = params.get("session") || "";
 		var password = params.get("password") || "false";
 		var label = params.get("label") || "dock";
-		var limit = Math.max(1, parseInt(params.get("limit") || "8", 10));
-		var showtime = Math.max(0, parseInt(params.get("showtime") || "0", 10));
+		var limitRaw = parseInt(params.get("limit") || "8", 10);
+		var showtimeRaw = parseInt(params.get("showtime") || "0", 10);
+		var limit = isNaN(limitRaw) ? 8 : Math.max(1, limitRaw);
+		var showtime = isNaN(showtimeRaw) ? 0 : Math.max(0, showtimeRaw);
 		var feed = document.getElementById("feed");
 		var bridge = document.getElementById("ssn_bridge");
 		if (roomID) {
@@ -1156,7 +1158,8 @@ If the user asks a question that does not require a file change, answer normally
 		var roomID = params.get("session") || "";
 		var password = params.get("password") || "false";
 		var label = params.get("label") || "dock";
-		var duration = Math.max(2000, parseInt(params.get("duration") || "6000", 10));
+		var durationRaw = parseInt(params.get("duration") || "6000", 10);
+		var duration = isNaN(durationRaw) ? 6000 : Math.max(2000, durationRaw);
 		var stage = document.getElementById("stage");
 		var bridge = document.getElementById("ssn_bridge");
 		if (roomID) {
@@ -1318,8 +1321,10 @@ If the user asks a question that does not require a file change, answer normally
 		var roomID = params.get("session") || "";
 		var password = params.get("password") || "false";
 		var label = params.get("label") || "dock";
-		var target = Math.max(1, parseInt(params.get("target") || "50", 10));
-		var startAt = Math.max(0, parseInt(params.get("start") || "0", 10));
+		var targetRaw = parseInt(params.get("target") || "50", 10);
+		var startRaw = parseInt(params.get("start") || "0", 10);
+		var target = isNaN(targetRaw) ? 50 : Math.max(1, targetRaw);
+		var startAt = isNaN(startRaw) ? 0 : Math.max(0, startRaw);
 		var title = params.get("title") || "Sub goal";
 		var progress = startAt;
 		document.getElementById("goalTitle").textContent = title;
@@ -1392,7 +1397,8 @@ If the user asks a question that does not require a file change, answer normally
 		var roomID = params.get("session") || "";
 		var password = params.get("password") || "false";
 		var label = params.get("label") || "dock";
-		var minutes = Math.max(0, parseInt(params.get("minutes") || "5", 10));
+		var minutesRaw = parseInt(params.get("minutes") || "5", 10);
+		var minutes = isNaN(minutesRaw) ? 5 : Math.max(0, minutesRaw);
 		var title = params.get("title"); if (title) document.getElementById("headline").textContent = title;
 		var subtitle = params.get("sub"); if (subtitle) document.getElementById("sub").textContent = subtitle;
 		var bridge = document.getElementById("ssn_bridge");
