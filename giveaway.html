@@ -1354,14 +1354,43 @@
                 saveTimer = null;
             }
             try {
-                var obj = {};
-                entrants.forEach(function (value, key) {
-                    obj[key] = value;
-                });
-                localStorage.setItem('giveawayWheelState', JSON.stringify({ entrants: obj, timestamp: Date.now() }));
+                localStorage.setItem('giveawayWheelState', JSON.stringify({ entrants: buildEntrantsObject(), timestamp: Date.now() }));
             } catch (e) {
                 dbg('saveNow failed', e);
             }
+        }
+
+        function buildEntrantsObject() {
+            var obj = {};
+            entrants.forEach(function (value, key) {
+                obj[key] = value;
+            });
+            return obj;
+        }
+
+        function setEntrantsFromObject(obj) {
+            entrants = new Map();
+            if (obj) {
+                var keys = Object.keys(obj);
+                for (var i = 0; i < keys.length; i++) {
+                    if (obj[keys[i]]) {
+                        entrants.set(keys[i], obj[keys[i]]);
+                        if (entrants.size <= WHEEL_LABEL_LIMIT) {
+                            wheel.ensureIcon(obj[keys[i]].platform);
+                        }
+                    }
+                }
+            }
+        }
+
+        function broadcastFullGiveawayState() {
+            sendGiveawayMessage({
+                action: 'giveaway_update',
+                data: { entrants: buildEntrantsObject(), timestamp: Date.now() },
+                timestamp: Date.now()
+            });
+            sendGiveawayMessage({ action: 'keyword_update', keyword: currentKeyword, timestamp: Date.now() });
+            sendGiveawayMessage({ action: 'style_update', style: settings.theme, timestamp: Date.now() });
         }
 
         function flushPendingWork() {
@@ -1412,6 +1441,8 @@
                 handleWinnerUpdate(data.data);
             } else if (data.action === 'style_update') {
                 // Sent by this page; ignore on receive
+            } else if (data.action === 'giveaway_state_request') {
+                broadcastFullGiveawayState();
             } else {
                 processGiveawayMessage(data);
             }
@@ -1613,13 +1644,7 @@
 
         function handleGiveawayUpdate(data) {
             if (data && data.entrants) {
-                entrants = new Map();
-                var keys = Object.keys(data.entrants);
-                for (var i = 0; i < keys.length; i++) {
-                    if (data.entrants[keys[i]]) {
-                        entrants.set(keys[i], data.entrants[keys[i]]);
-                    }
-                }
+                setEntrantsFromObject(data.entrants);
                 pendingRows.length = 0;
                 needsListRebuild = true;
                 scheduleUiTick();
@@ -1863,15 +1888,7 @@
 
             // Give the widget a moment to attach its listeners, then sync state
             setTimeout(function () {
-                if (entrants.size) {
-                    var obj = {};
-                    entrants.forEach(function (value, key) {
-                        obj[key] = value;
-                    });
-                    sendGiveawayMessage({ action: 'giveaway_update', data: { entrants: obj, timestamp: Date.now() }, timestamp: Date.now() });
-                }
-                sendGiveawayMessage({ action: 'keyword_update', keyword: currentKeyword, timestamp: Date.now() });
-                sendGiveawayMessage({ action: 'style_update', style: settings.theme, timestamp: Date.now() });
+                broadcastFullGiveawayState();
             }, 1000);
         }
 
@@ -1953,12 +1970,7 @@
                 if (savedState) {
                     var state = JSON.parse(savedState);
                     if (state && state.entrants) {
-                        var keys = Object.keys(state.entrants);
-                        for (var i = 0; i < keys.length; i++) {
-                            if (state.entrants[keys[i]]) {
-                                entrants.set(keys[i], state.entrants[keys[i]]);
-                            }
-                        }
+                        setEntrantsFromObject(state.entrants);
                     }
                 }
             } catch (e) {}

@@ -191,9 +191,12 @@
         var urlTheme = urlParams.get("style") || urlParams.get("theme") || "";
         var themeLockedByUrl = !!urlTheme;
 
+        var MAX_OBS_WHEEL_SIZE = 1000;
         var wheelSize = parseInt(urlParams.get("size"), 10);
-        if (!wheelSize || wheelSize < 100 || wheelSize > 4000) {
+        if (!wheelSize || wheelSize < 100) {
             wheelSize = 400;
+        } else if (wheelSize > MAX_OBS_WHEEL_SIZE) {
+            wheelSize = MAX_OBS_WHEEL_SIZE;
         }
 
         if (urlParams.has("hidekeyword")) {
@@ -664,6 +667,8 @@
         var entrants = new Map();
         var currentTheme = resolveTheme(urlTheme);
         var isSpinning = false;
+        var localChannel = null;
+        var iframe = null;
 
         var canvas = document.getElementById('wheel-canvas');
         canvas.width = wheelSize;
@@ -832,11 +837,43 @@
             }
         }
 
+        function sendWidgetMessage(message) {
+            if (localChannel) {
+                localChannel.postMessage(message);
+            } else {
+                try {
+                    var key = 'giveaway_broadcast_' + roomID;
+                    localStorage.setItem(key, JSON.stringify(message));
+                    setTimeout(function () {
+                        localStorage.removeItem(key);
+                    }, 100);
+                } catch (e) {}
+            }
+            if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+                socketserver.send(JSON.stringify(message));
+            }
+            if (iframe && iframe.contentWindow) {
+                try {
+                    iframe.contentWindow.postMessage({
+                        sendData: { overlayNinja: message },
+                        type: "rpcs"
+                    }, '*');
+                } catch (e) {}
+            }
+        }
+
+        function requestFullState() {
+            sendWidgetMessage({
+                action: 'giveaway_state_request',
+                timestamp: Date.now()
+            });
+        }
+
         // Local communication (BroadcastChannel with localStorage fallback)
         function setupLocalCommunication() {
             if (typeof BroadcastChannel !== 'undefined') {
-                var channel = new BroadcastChannel('giveaway_' + roomID);
-                channel.addEventListener('message', function (event) {
+                localChannel = new BroadcastChannel('giveaway_' + roomID);
+                localChannel.addEventListener('message', function (event) {
                     handleGiveawayMessage(event.data);
                 });
             } else {
@@ -856,7 +893,7 @@
                 dbg("OBS widget: test session; local communication only");
                 return;
             }
-            var iframe = document.createElement('iframe');
+            iframe = document.createElement('iframe');
             iframe.style.width = "0px";
             iframe.style.height = "0px";
             iframe.style.position = "fixed";
@@ -943,6 +980,9 @@
             setupLocalCommunication();
             setupWebRTCConnection();
             setupWebSocketConnection();
+            requestFullState();
+            setTimeout(requestFullState, 1000);
+            setTimeout(requestFullState, 3000);
         })();
     </script>
 </body>
