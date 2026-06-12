@@ -21,6 +21,58 @@ var lastMessageCounter = 0;
 const fakeChatThrottleState = new Map();
 var sentimentAnalysisLoaded = false;
 const commandAliasCache = new Map();
+const settingCommaListCache = new Map();
+const settingRoleListCache = new Map();
+const DEFAULT_QUESTION_KEYWORDS = ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
+
+function trimSettingCache(cache) {
+	if (cache.size > 500) {
+		cache.clear();
+	}
+}
+
+function getCachedCommaList(value, lowerCase = false, keepEmpty = false) {
+	if (value === undefined || value === null) {
+		return [];
+	}
+	const raw = String(value);
+	const cacheKey = (lowerCase ? "1" : "0") + "|" + (keepEmpty ? "1" : "0") + "|" + raw;
+	const cached = settingCommaListCache.get(cacheKey);
+	if (cached) {
+		return cached;
+	}
+	let entries = raw.split(",").map(entry => {
+		entry = entry.trim();
+		return lowerCase ? entry.toLowerCase() : entry;
+	});
+	if (!keepEmpty) {
+		entries = entries.filter(Boolean);
+	}
+	trimSettingCache(settingCommaListCache);
+	settingCommaListCache.set(cacheKey, entries);
+	return entries;
+}
+
+function getCachedRoleList(value) {
+	const raw = String(value || "");
+	const cached = settingRoleListCache.get(raw);
+	if (cached) {
+		return cached;
+	}
+	const entries = raw
+		.toLowerCase()
+		.split(",")
+		.map(entry => entry.trim())
+		.filter(entry => entry)
+		.map(entry => {
+			const parts = entry.split(":").map(part => part.trim());
+			return { name: parts[0] || "", type: parts[1] || "" };
+		})
+		.filter(entry => entry.name);
+	trimSettingCache(settingRoleListCache);
+	settingRoleListCache.set(raw, entries);
+	return entries;
+}
 
 function getCommandAliases(commandString) {
 	if (!commandString) {
@@ -4381,7 +4433,7 @@ async function processIncomingMessage(message, sender = null) {
 		}
 
 		if (settings.filtercommandscustomtoggle && message.chatmessage && settings.filtercommandscustomwords && settings.filtercommandscustomwords.textsetting) {
-			if (settings.filtercommandscustomwords.textsetting.split(",").some(v => v.trim() && message.chatmessage.startsWith(v.trim()))) {
+			if (getCachedCommaList(settings.filtercommandscustomwords.textsetting).some(v => message.chatmessage.startsWith(v))) {
 				return;
 			}
 		}
@@ -6538,10 +6590,7 @@ async function sendToDestinations(message) {
 		}
 
 		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.event) {
-			const blockedEvents = settings.filterevents.textsetting
-				.split(",")
-				.map(v => v.trim().toLowerCase())
-				.filter(Boolean);
+			const blockedEvents = getCachedCommaList(settings.filterevents.textsetting, true);
 			const eventName = typeof message.event === "string" ? message.event.trim().toLowerCase() : "";
 			const messageText = (message.textContent || message.chatmessage || "").toLowerCase();
 			if (blockedEvents.some(v => (eventName && eventName === v) || (messageText && messageText.includes(v)))) {
@@ -15051,17 +15100,10 @@ async function applyBotActions(data, tab = false) {
 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
 				if (!userIdentifier) return null;
 
-				const blacklist = settings.blacklistusers.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const blacklist = getCachedRoleList(settings.blacklistusers.textsetting);
 
 				const isBlocked = blacklist.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					return type ? name === userIdentifier && type === altSourceType : name === userIdentifier;
+					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
 				});
 
 				if (isBlocked) {
@@ -15078,17 +15120,10 @@ async function applyBotActions(data, tab = false) {
 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
 				if (!userIdentifier) return null;
 
-				const whitelist = settings.whitelistusers.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const whitelist = getCachedRoleList(settings.whitelistusers.textsetting);
 
 				const isWhitelisted = whitelist.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					return type ? name === userIdentifier && type === altSourceType : name === userIdentifier;
+					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
 				});
 
 				if (!isWhitelisted) {
@@ -15110,20 +15145,13 @@ async function applyBotActions(data, tab = false) {
 			try {
 				if (!roleUserIdLower && !roleChatNameLower) return;
 
-				const bots = settings.botnamesext.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const bots = getCachedRoleList(settings.botnamesext.textsetting);
 
 				data.bot = bots.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					const typeMatches = !type || type === altSourceType;
+					const typeMatches = !entry.type || entry.type === altSourceType;
 					if (!typeMatches) return false;
 
-					return roleIdentifierMatches(name);
+					return roleIdentifierMatches(entry.name);
 				});
 			} catch (e) {
 				errorlog(e);
@@ -15143,23 +15171,16 @@ async function applyBotActions(data, tab = false) {
 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
 				if (!userIdLower && !chatNameLower) return;
 
-				const hosts = settings.hostnamesext.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const hosts = getCachedRoleList(settings.hostnamesext.textsetting);
 
 				data.host = hosts.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					const typeMatches = !type || type === altSourceType;
+					const typeMatches = !entry.type || entry.type === altSourceType;
 					if (!typeMatches) return false;
 
 					if (settings.matchRolesByDisplayName) {
-						return name === userIdLower || name === chatNameLower;
+						return entry.name === userIdLower || entry.name === chatNameLower;
 					}
-					return name === (userIdLower || chatNameLower);
+					return entry.name === (userIdLower || chatNameLower);
 				});
 			} catch (e) {
 				errorlog(e);
@@ -15203,23 +15224,16 @@ async function applyBotActions(data, tab = false) {
 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
 				if (!userIdLower && !chatNameLower) return;
 
-				const mods = settings.modnamesext.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const mods = getCachedRoleList(settings.modnamesext.textsetting);
 
 				data.mod = mods.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					const typeMatches = !type || type === altSourceType;
+					const typeMatches = !entry.type || entry.type === altSourceType;
 					if (!typeMatches) return false;
 
 					if (settings.matchRolesByDisplayName) {
-						return name === userIdLower || name === chatNameLower;
+						return entry.name === userIdLower || entry.name === chatNameLower;
 					}
-					return name === (userIdLower || chatNameLower);
+					return entry.name === (userIdLower || chatNameLower);
 				});
 			} catch (e) {
 				errorlog(e);
@@ -15240,23 +15254,16 @@ async function applyBotActions(data, tab = false) {
 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
 				if (!userIdLower && !chatNameLower) return;
 
-				const admins = settings.adminnames.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const admins = getCachedRoleList(settings.adminnames.textsetting);
 
 				data.admin = admins.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					const typeMatches = !type || type === altSourceType;
+					const typeMatches = !entry.type || entry.type === altSourceType;
 					if (!typeMatches) return false;
 
 					if (settings.matchRolesByDisplayName) {
-						return name === userIdLower || name === chatNameLower;
+						return entry.name === userIdLower || entry.name === chatNameLower;
 					}
-					return name === (userIdLower || chatNameLower);
+					return entry.name === (userIdLower || chatNameLower);
 				});
 			} catch (e) {
 				errorlog(e);
@@ -15269,23 +15276,16 @@ async function applyBotActions(data, tab = false) {
 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
 				if (!userIdLower && !chatNameLower) return;
 
-				const vips = settings.viplistusers.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const vips = getCachedRoleList(settings.viplistusers.textsetting);
 
 				data.vip = vips.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					const typeMatches = !type || type === altSourceType;
+					const typeMatches = !entry.type || entry.type === altSourceType;
 					if (!typeMatches) return false;
 
 					if (settings.matchRolesByDisplayName) {
-						return name === userIdLower || name === chatNameLower;
+						return entry.name === userIdLower || entry.name === chatNameLower;
 					}
-					return name === (userIdLower || chatNameLower);
+					return entry.name === (userIdLower || chatNameLower);
 				});
 			} catch (e) {
 				errorlog(e);
@@ -15450,7 +15450,7 @@ async function applyBotActions(data, tab = false) {
 		// Question identification logic
 		if (settings.identifyQuestions && data.chatmessage) {
 			// Default keywords to identify questions
-			const questionKeywords = settings.questionKeywords?.textsetting?.split(",").map(k => k.trim()) || ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
+			const questionKeywords = settings.questionKeywords && settings.questionKeywords.textsetting !== undefined && settings.questionKeywords.textsetting !== null ? getCachedCommaList(settings.questionKeywords.textsetting, false, true) : DEFAULT_QUESTION_KEYWORDS;
 
 			// Check if message contains any question keywords
 			const messageText = data.chatmessage.toLowerCase();
@@ -15666,7 +15666,7 @@ async function applyBotActions(data, tab = false) {
 				// Check source restrictions
 				const sources = settings[`botReplyMessageSource${id}`]?.textsetting;
 				if (sources?.trim()) {
-					const sourceList = sources.split(",").map(s => s.trim().toLowerCase());
+					const sourceList = getCachedCommaList(sources, true, true);
 					if (!sourceList.includes(data.type?.trim().toLowerCase())) {
 						continue;
 					}
@@ -15735,7 +15735,7 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (settings.highlightevent && settings.highlightevent.textsetting.trim() && data.chatmessage && data.event) {
-			const eventTexts = settings.highlightevent.textsetting.split(",").map(text => text.trim());
+			const eventTexts = getCachedCommaList(settings.highlightevent.textsetting, false, true);
 			const messageText = data.textContent || data.chatmessage;
 			if (eventTexts.some(text => messageText.includes(text))) {
 				data.highlightColor = "#fff387";
@@ -15743,7 +15743,7 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
-			const wordTexts = settings.highlightword.textsetting.split(",").map(text => text.trim());
+			const wordTexts = getCachedCommaList(settings.highlightword.textsetting, false, true);
 			const messageText = data.textContent || data.chatmessage;
 			if (wordTexts.some(text => messageText.includes(text))) {
 				data.highlightColor = "#fff387";
@@ -15751,7 +15751,7 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (settings.highlightHostMentions && settings.hostnamesext?.textsetting && data.chatmessage) {
-			const rawHosts = settings.hostnamesext.textsetting.split(",");
+			const rawHosts = getCachedCommaList(settings.hostnamesext.textsetting, false, true);
 			const messageText = (data.textContent || data.chatmessage || "").toLowerCase();
 
 			const hasMention = rawHosts.some(entry => {

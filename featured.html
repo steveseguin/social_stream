@@ -3090,15 +3090,17 @@
 					  } catch (e) {}
 					}
 
-					for (i = 0; i < document.getElementsByTagName("img").length; i++) {
+					var imageElements = document.getElementsByTagName("img");
+					for (var i = 0; i < imageElements.length; i++) {
 					  try {
-						if (data.type == "twitch" && document.getElementsByTagName("img")[i].src.includes("/light/")) {
-						  document.getElementsByTagName("img")[i].srcBackup = document.getElementsByTagName("img")[i].src;
-						  document.getElementsByTagName("img")[i].src = document.getElementsByTagName("img")[i].src.replaceAll("/light/", "/dark/");
+						var img = imageElements[i];
+						if (data.type == "twitch" && img.src.includes("/light/")) {
+						  img.srcBackup = img.src;
+						  img.src = img.src.replaceAll("/light/", "/dark/");
 						}
 
-						if (!document.getElementsByTagName("img")[i].onerror) {
-						  document.getElementsByTagName("img")[i].onerror = function () {
+						if (!img.onerror) {
+						  img.onerror = function () {
 							if (this.srcBackup) {
 							  this.src = this.srcBackup;
 							  this.srcBackup = null;
@@ -3112,8 +3114,8 @@
 							}
 						  };
 						}
-						if (!document.getElementsByTagName("img")[i].onload) {
-						  document.getElementsByTagName("img")[i].onload = realign;
+						if (!img.onload) {
+						  img.onload = realign;
 						}
 					  } catch (e) {}
 					}

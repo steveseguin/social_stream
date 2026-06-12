@@ -143,6 +143,10 @@ Sample payloads based on the fake test data in [background.js](./background.js):
 - When replying to Steve, prefer plain, everyday language over jargon.
 - Keep explanations direct and practical; explain technical terms briefly when they matter.
 
+## Git Safety
+
+- VERY IMPORTANT: Never use `git restore`, `git revert`, or any revert/restore operation unless Steve explicitly asks for that exact action.
+
 ## Git Push Contract
 
 - VERY IMPORTANT: When Steve says `push`, treat it as an instruction to push to `beta`.
