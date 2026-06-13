@@ -12791,6 +12791,7 @@ input:checked + .slider:before {
 					<select id="games-preset-select" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
 						<option value="">Choose a game...</option>
 						<option value="games.html">⚡ Spam Power - Chat activity powered</option>
+						<option value="battle.html">⚔️ Battlefield Mayhem - Automated chat combat</option>
 						<option value="games/emojirain.html">🌧️ Emoji Rain - Emoji falling effects</option>
 						<option value="games/chatwars.html">⚔️ Chat Wars - Team territory battles</option>
 						<option value="games/wordstorm.html">🌪️ Word Storm - Collective word cloud</option>
@@ -12814,7 +12815,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 			
-			<div class="wrapper">
+			<div class="wrapper" id="games-options-wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-games-general-options" />
 					<label class="collapsible-label" for="wrapper-games-general-options">🎮 <span data-translate="game-options">Game Options</span></label>
@@ -13114,43 +13115,16 @@ input:checked + .slider:before {
 				</div>
 			</div>
 			
-			<div class="link" title="Battle Royal">
-                <h2 class="battle_mode_title">
-                    <span class="title-group"><span class="emoji" aria-hidden="true">⚔️</span><span data-translate="battlemeter">Battle Royal </span></span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#battle" title="Jump to the battle royal link options."><span data-translate="options">[options]</span></a>
-					<label for="help-battle" class="help-link rounded_area" title="Click for detailed help">[?]</label>
-                </h2>
-				<input type="checkbox" id="help-battle" class="link-help-toggle">
-				<div class="link-help-content">
-					<strong>Viewer vs viewer elimination game.</strong>
-					<p>Viewers join by typing !join in chat, then battle each other in an automated elimination-style game until one winner remains.</p>
-					<ul>
-						<li>Viewers type !join to enter</li>
-						<li>Automated battle rounds</li>
-						<li>Last viewer standing wins</li>
-						<li>Fun visual battle animations</li>
-					</ul>
-					<div class="help-tip">💡 <strong>Tip:</strong> Great for giveaways or just fun viewer engagement!</div>
-				</div>
-                <h3>
-                    <span data-translate="when-enabled-a-battle">
-                       A battle royal mini game. Users can enter !join to play
-                    </span>
-                </h3>
-				<div id="battle" data-raw="" class="streaming_chat"><a href="" id="battlelink"></a></div>
-			</div>
-			
-			<div class="wrapper">
-                <div class="collapsible">
-                    <input type="checkbox" class="collapsible-input" id="wrapper-battle-general-options" />
-                    <label class="collapsible-label" for="wrapper-battle-general-options">📊 <span data-translate="options-and-actions">Options and actions</span></label>
+			<div class="wrapper" id="battle-options-wrapper" style="display: none;">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-battle-general-options" />
+                    <label class="collapsible-label" for="wrapper-battle-general-options">⚔️ <span data-translate="options-and-actions">Options and actions</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group battle">
 								<div>
 										<label class="switch">
-											<input type="checkbox" data-param8="lobby" />
+											<input type="checkbox" data-param20="lobby" />
 											<span class="slider round"></span>
 										</label>
 
@@ -13163,14 +13137,14 @@ input:checked + .slider:before {
 							
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param8="nocomputers" />
+									<input type="checkbox" data-param20="nocomputers" />
 										<span class="slider round"></span>
 									</label>
 									🚫🤖 <span data-translate="disable-computer-players">Disable computer players</span>
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param8="lobbytime=30" />
+									<input type="checkbox" data-param20="lobbytime=30" />
 										<span class="slider round"></span>
 									</label>
 									⌚ <span data-translate="auto-start-lobby">Increase lobby wait time to 30s</span>

@@ -209,15 +209,19 @@
 	var pastMessages = [];
 	var trackedKickMessageIds = new Map();
 	var maxTrackedKickMessageIds = 500;
+	var kickChatLastDomActivityAt = Date.now();
 	var kickTransportObserved = false;
 	var kickTransportOpenCount = 0;
 	var kickTransportLastActivityAt = Date.now();
+	var kickTransportLastRecoveryAt = 0;
 	var kickTransportWatchdogTimer = null;
 	var kickTransportReloadHistoryKey = "ss_kick_transport_reload_history";
 	var kickTransportStartedAt = Date.now();
-	var KICK_TRANSPORT_CLOSED_RELOAD_MS = 2 * 60 * 1000;
-	var KICK_TRANSPORT_STALE_RELOAD_MS = 4 * 60 * 1000;
+	var KICK_TRANSPORT_CLOSED_RECOVERY_MS = 2 * 60 * 1000;
+	var KICK_TRANSPORT_STALE_RECOVERY_MS = 4 * 60 * 1000;
 	var KICK_TRANSPORT_STARTUP_GRACE_MS = 5 * 60 * 1000;
+	var KICK_TRANSPORT_RECOVERY_COOLDOWN_MS = 2 * 60 * 1000;
+	var KICK_TRANSPORT_HARD_RELOAD_GRACE_MS = 15 * 60 * 1000;
 	var KICK_TRANSPORT_RELOAD_WINDOW_MS = 30 * 60 * 1000;
 	var KICK_TRANSPORT_RELOAD_LIMIT = 2;
 
@@ -262,7 +266,11 @@
 
 	function isKickChatTransportUrl(url) {
 		var value = String(url || "").toLowerCase();
-		return value.indexOf("pusher") !== -1 || value.indexOf("kick.com") !== -1 || value.indexOf("kick-bridge") !== -1;
+		if (value.indexOf("pusher") !== -1 || value.indexOf("kick-bridge") !== -1) {
+			return true;
+		}
+		return value.indexOf("kick.com") !== -1
+			&& (value.indexOf("chat") !== -1 || value.indexOf("chatroom") !== -1 || value.indexOf("ws") !== -1);
 	}
 
 	function readKickTransportReloadHistory(now) {
@@ -295,9 +303,29 @@
 		}
 	}
 
-	function requestKickTransportReload(reason) {
+	function markKickChatDomActivity() {
+		kickChatLastDomActivityAt = Date.now();
+	}
+
+	function requestKickTransportRecovery(reason) {
 		var now = Date.now();
 		if (now - kickTransportStartedAt < KICK_TRANSPORT_STARTUP_GRACE_MS) {
+			return;
+		}
+		if (now - kickTransportLastRecoveryAt < KICK_TRANSPORT_RECOVERY_COOLDOWN_MS) {
+			return;
+		}
+		kickTransportLastRecoveryAt = now;
+		var observerReady = false;
+		try {
+			observerReady = refreshKickChatObserver();
+		} catch (e) {}
+		if (observerReady) {
+			console.warn("[Social Stream] Kick chat transport looks idle; refreshed chat observer without reloading. Reason: " + reason);
+			return;
+		}
+		if (now - kickTransportStartedAt < KICK_TRANSPORT_HARD_RELOAD_GRACE_MS) {
+			console.warn("[Social Stream] Kick chat transport looks idle and chat target is missing; waiting before reload. Reason: " + reason);
 			return;
 		}
 		var history = readKickTransportReloadHistory(now);
@@ -305,7 +333,7 @@
 			return;
 		}
 		markKickTransportReload(now);
-		console.warn("[Social Stream] Kick chat transport stalled; reloading source window. Reason: " + reason);
+		console.warn("[Social Stream] Kick chat transport stalled and chat target is missing; reloading source window. Reason: " + reason);
 		try {
 			window.location.reload();
 		} catch (e) {}
@@ -336,11 +364,12 @@
 				if (!kickTransportObserved) {
 					return;
 				}
-				var idleMs = Date.now() - kickTransportLastActivityAt;
-				if (kickTransportOpenCount <= 0 && idleMs > KICK_TRANSPORT_CLOSED_RELOAD_MS) {
-					requestKickTransportReload("no open Kick websocket for " + Math.round(idleMs / 1000) + "s");
-				} else if (idleMs > KICK_TRANSPORT_STALE_RELOAD_MS) {
-					requestKickTransportReload("no Kick websocket frames for " + Math.round(idleMs / 1000) + "s");
+				var lastActivityAt = Math.max(kickTransportLastActivityAt, kickChatLastDomActivityAt);
+				var idleMs = Date.now() - lastActivityAt;
+				if (kickTransportOpenCount <= 0 && idleMs > KICK_TRANSPORT_CLOSED_RECOVERY_MS) {
+					requestKickTransportRecovery("no open Kick websocket for " + Math.round(idleMs / 1000) + "s");
+				} else if (idleMs > KICK_TRANSPORT_STALE_RECOVERY_MS) {
+					requestKickTransportRecovery("no Kick websocket frames for " + Math.round(idleMs / 1000) + "s");
 				}
 			}, 30000);
 		} catch (e) {}
@@ -782,6 +811,9 @@
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	
+	// Kick popout uses [data-index] only as a virtual-list row slot. It starts
+	// reusing those row slots around 270-299, so never use data-index as a
+	// message ID, dedupe key, or proof that a chat message was already handled.
 	const KICK_MESSAGE_CONTAINER_SELECTOR = "[data-index], [data-chat-entry]";
 	const KICK_DELETE_TEXTS = new Set(["deleted by a moderator", "(deleted)"]);
 	const KICK_BADGE_SELECTOR = ".badge-tooltip img[src], .badge-tooltip svg, .base-badge img[src], .base-badge svg, .badge img[src], .badge svg, div[data-state] img[src], div[data-state] svg";
@@ -960,6 +992,35 @@
 		return base.closest?.(KICK_MESSAGE_CONTAINER_SELECTOR) || null;
 	}
 
+	function getKickMessageSignature(ele) {
+		if (!ele || !ele.querySelectorAll) {
+			return "";
+		}
+		var usernameButton = getKickUsernameButton(ele) || null;
+		var username = usernameButton ? normalizeKickText(usernameButton.textContent) : "";
+		var messageNode = getKickInlineMessageNode(ele) || ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
+		var rowPosition = ele.style && ele.style.transform ? ele.style.transform : "";
+		var replyLabel = getKickReplyLabel(ele);
+		var messageText = messageNode ? normalizeKickText(messageNode.textContent) : normalizeKickText(ele.textContent || "");
+		if (messageText.length > 220) {
+			messageText = messageText.slice(0, 220);
+		}
+		var imgSrcs = [];
+		var imageScope = messageNode && messageNode.querySelectorAll ? messageNode : ele;
+		var images = imageScope.querySelectorAll("img");
+		for (var i = 0; i < images.length; i++) {
+			var src = images[i] && images[i].src ? images[i].src : "";
+			if (!src) {
+				continue;
+			}
+			imgSrcs.push((images[i].alt || "") + ":" + src);
+			if (imgSrcs.length >= 3) {
+				break;
+			}
+		}
+		return rowPosition + "|" + username + "|" + replyLabel + "|" + messageText + "|" + imgSrcs.join(",");
+	}
+
 	function getKickMessageKey(ele) {
 		const messageEle = getKickMessageContainer(ele) || (ele?.nodeType === 1 ? ele : null);
 		if (!messageEle?.dataset) {
@@ -969,9 +1030,21 @@
 			return `entry:${messageEle.dataset.chatEntry}`;
 		}
 		if (messageEle.dataset.index) {
-			return `index:${messageEle.dataset.index}`;
+			// data-index is recycled by Kick's virtualized chat, so only use a
+			// content/position fingerprint for dedupe and delete ID lookup.
+			return getKickMessageSignature(messageEle);
 		}
 		return "";
+	}
+
+	function clearKickMessageTrackingState(ele) {
+		if (!ele || !ele.dataset) {
+			return;
+		}
+		delete ele.dataset.matched;
+		delete ele.dataset.ssMessageKey;
+		delete ele.dataset.mid;
+		delete ele.deleted;
 	}
 
 	function rememberKickTrackedMessageId(ele, id) {
@@ -1322,19 +1395,6 @@
 	
 	  if (!ele || !ele.isConnected) return;
 	  
-	  if (deleteThis(ele)) return;
-	  
-	  if (ele.dataset.matched){return;}
-	  ele.dataset.matched = true;
-	  let sibling = ele.nextElementSibling;
-	  let nextCount = 0;
-	  while(sibling) {
-		nextCount++;
-		if (nextCount>5){return;}
-		if (sibling.dataset.matched){return;}
-		sibling = sibling.nextElementSibling;
-	  }
-	  
 	  var chatname = "";
 	  let messageId = "";
 	  var eventName = "";
@@ -1351,13 +1411,28 @@
 		  return;
 	  }
 	  
-	  
+
 	  try {
 		messageId = getKickMessageKey(ele);
 		if (!messageId){
 			const content = ele.textContent || "";
 			const imgSrcs = Array.from(ele.querySelectorAll('img')).map(img => img.src).join(' ');
 			messageId = `${chatname}|${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
+		}
+		if (deleteThis(ele)) return;
+		if (ele.dataset.matched && ele.dataset.ssMessageKey === messageId){
+			return;
+		}
+		ele.dataset.matched = true;
+		ele.dataset.ssMessageKey = messageId;
+
+		let sibling = ele.nextElementSibling;
+		let nextCount = 0;
+		while(sibling) {
+			nextCount++;
+			if (nextCount>5){return;}
+			if (sibling.dataset && sibling.dataset.matched){return;}
+			sibling = sibling.nextElementSibling;
 		}
 
 		if (processedMessages.has(messageId)) return;
@@ -1645,6 +1720,7 @@
 	function onElementInsertedOld(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				markKickChatDomActivity();
 				if (mutation.type === "attributes" || mutation.type === "characterData") {
 					deleteThis(mutation.target);
 					return;
@@ -1689,6 +1765,7 @@
 	function onElementInsertedNew(target, subtree=false) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				markKickChatDomActivity();
 				if (mutation.type === "attributes" || mutation.type === "characterData") {
 					deleteThis(mutation.target);
 					return;
@@ -1698,6 +1775,9 @@
 				}
 				if (mutation.removedNodes.length) {
 					const row = getKickMessageContainer(mutation.target);
+					if (row) {
+						clearKickMessageTrackingState(row);
+					}
 					if (row && row.dataset.index){
 						processMessage(row);
 					}
@@ -1769,7 +1849,7 @@
 			return {
 				mode: "new",
 				target: targets.length > 1 ? targets[1] : targets[0],
-				subtree: targets.length > 1
+				subtree: true
 			};
 		}
 		var oldTarget = document.getElementById("chatroom");

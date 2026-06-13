@@ -2754,7 +2754,6 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "ticker", path: "ticker.html" },
     { id: "wordcloud", path: "wordcloud.html" },
     { id: "poll", path: "poll.html" },
-    { id: "battle", path: "battle.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
 	{ id: "cohost", path: "cohost.html" },
     { id: "giveaway", path: "giveaway.html" },
@@ -3405,7 +3404,7 @@ function update(response, sync = true) {
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aioverlaylink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'hypetrainlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
-                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
+                    'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
 					'spotifylink','maplink'
                     // Add other link IDs that are generated and need cleaning
                 ];
@@ -4833,7 +4832,6 @@ function getTargetMap() {
         'waitlist': 5,
         'ticker': 6,
         'wordcloud': 7,
-        'battle': 8,
         'custom-gif-commands': 9,
         'chatbot': 10,
         'cohost': 11,
@@ -6884,7 +6882,6 @@ function refreshLinks(){
       'wordcloudlink': 'wordcloud',
       'polllink': 'poll',
       'flowactionslink': 'flowactions',
-      'battlelink': 'battle',
       'chatbotlink': 'chatbot',
       'cohostlink': 'cohost',
       'aioverlaylink': 'aioverlay',
@@ -10301,18 +10298,55 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			document.querySelectorAll('.game-config-section').forEach(section => {
 				section.style.display = 'none';
 			});
+
+			const battleOptionsWrapper = document.getElementById('battle-options-wrapper');
+			const gamesOptionsToggle = document.getElementById('wrapper-games-general-options');
+			const gamesOptionsWrapper = gamesOptionsToggle ? gamesOptionsToggle.closest('.wrapper') : null;
+			if (battleOptionsWrapper) {
+				battleOptionsWrapper.style.display = 'none';
+			}
+			if (gamesOptionsWrapper) {
+				gamesOptionsWrapper.style.display = '';
+			}
+			overlayLink.style.display = '';
+
+			const getGameBaseParams = function(rawUrl) {
+				const keepParams = ['session', 'room', 'password', 'server', 'v'];
+				const cleanParams = new URLSearchParams();
+				if (rawUrl && rawUrl.includes('?')) {
+					const params = new URLSearchParams(rawUrl.split('?')[1]);
+					keepParams.forEach(function(key) {
+						params.getAll(key).forEach(function(value) {
+							cleanParams.append(key, value);
+						});
+					});
+				}
+				return cleanParams.toString();
+			};
+
+			const updateGamesLink = function() {
+				overlayLink.href = overlayDiv.raw;
+				overlayLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : overlayDiv.raw;
+			};
+
+			const applyCheckedGameParams = function(container) {
+				if (!container) return;
+				container.querySelectorAll('input[data-param20]:checked').forEach(function(input) {
+					const paramValue = input.dataset.param20;
+					if (!paramValue) return;
+					const paramKey = normalizeParamKey(paramValue.split('=')[0]);
+					overlayDiv.raw = removeQueryParamWithValue(overlayDiv.raw, paramKey);
+					overlayDiv.raw = updateURL(paramValue, overlayDiv.raw);
+				});
+			};
 			
 			if (this.value) {
 				// A game was selected
 				const gameUrl = baseURL + this.value;
 
-				// Extract existing parameters from current URL
-				let existingParams = '';
-				if (overlayDiv.raw && overlayDiv.raw.includes('?')) {
-					existingParams = overlayDiv.raw.split('?')[1];
-				}
+				const existingParams = getGameBaseParams(overlayDiv.raw);
 
-				// Construct new URL preserving all existing parameters
+				// Construct new URL preserving only shared connection/version parameters
 				let newUrl = gameUrl;
 				if (existingParams) {
 					newUrl += '?' + existingParams;
@@ -10320,17 +10354,33 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				
 				// Update the overlay URL
 				overlayDiv.raw = newUrl;
-				overlayLink.href = newUrl;
-				overlayLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
 				
 				// Show game-specific config section
 				const gameType = this.value.match(/games\/(\w+)\.html/);
-				if (gameType && gameType[1]) {
+				let activeConfigSection = null;
+				if (this.value === 'games.html') {
+					activeConfigSection = document.getElementById('game-config');
+					if (activeConfigSection) {
+						activeConfigSection.style.display = 'block';
+					}
+				} else if (gameType && gameType[1]) {
 					const configSection = document.getElementById(gameType[1] + '-config');
 					if (configSection) {
 						configSection.style.display = 'block';
+						activeConfigSection = configSection;
 					}
 				}
+
+				if (this.value === 'battle.html' && battleOptionsWrapper) {
+					battleOptionsWrapper.style.display = 'block';
+					if (gamesOptionsWrapper) {
+						gamesOptionsWrapper.style.display = 'none';
+					}
+					activeConfigSection = battleOptionsWrapper;
+				}
+
+				applyCheckedGameParams(activeConfigSection);
+				updateGamesLink();
 				
 				// Hide general game config when a specific game is selected
 				const generalConfig = document.getElementById('general-game-config');

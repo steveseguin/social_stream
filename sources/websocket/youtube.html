@@ -51,6 +51,7 @@
                         </label>
                     </div>
                 </div>
+                <div id="external-auth-note" class="external-auth-note hidden">A YouTube sign-in window opened in your main system browser. Sign in there, then come back to this app.</div>
             </div>
                     
                     <div class="landing-description">
@@ -2539,6 +2540,18 @@ function enableBackgroundKeepAlive() {
             selector.classList.toggle('hidden', !shouldShow);
         } catch (_) {}
     }
+    function showExternalAuthBrowserNotice() {
+        try {
+            const note = document.getElementById('external-auth-note');
+            if (note) note.classList.remove('hidden');
+        } catch (_) {}
+    }
+    function hideExternalAuthBrowserNotice() {
+        try {
+            const note = document.getElementById('external-auth-note');
+            if (note) note.classList.add('hidden');
+        } catch (_) {}
+    }
     function syncSignedInCredentialsVisibility(forceVisible = false) {
         try {
             const signedInCreds = document.getElementById('credentials-container-signedin');
@@ -2586,6 +2599,7 @@ function enableBackgroundKeepAlive() {
         } catch (_) {}
     }
     function showAuthButton() {
+        hideExternalAuthBrowserNotice();
         const authElement = document.querySelector('.auth');
         if (authElement) authElement.classList.remove("hidden");
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
@@ -2599,6 +2613,7 @@ function enableBackgroundKeepAlive() {
         syncAuthMethodSelectorVisibility();
     }
     function showSocketInterface() {
+        hideExternalAuthBrowserNotice();
         const authElement = document.querySelector('.auth');
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.remove('hidden'));
         if (authElement) authElement.classList.add("hidden");
@@ -2763,6 +2778,7 @@ function enableBackgroundKeepAlive() {
 		if (nextPageToken) {
 			params.set('pageToken', nextPageToken);
 		}
+		// The API method is liveChatMessages.streamList, but the HTTP endpoint is /liveChat/messages/stream; /streamList returns 404.
 		return applyApiKeyOverride(`https://www.googleapis.com/youtube/v3/liveChat/messages/stream?${params.toString()}`);
 	}
 
@@ -3622,322 +3638,6 @@ function enableBackgroundKeepAlive() {
 		}
 
 		if (fetchTimeout) {
-			try {
-				clearTimeout(fetchTimeout);
-			} catch (_) {}
-			fetchTimeout = null;
-		}
-
-		updatePollSpinner(nextPollInterval);
-		if (liveChatPollingFallbackActive) {
-			scheduleLiveChatPolling(nextPollInterval);
-		} else {
-			scheduleLiveChatStreamReconnect(nextPollInterval);
-		}
-	}
-
-	async function processLiveChatResponseData(data, options = {}) {
-		data = data && typeof data === 'object' ? data : {};
-		const shouldScheduleNextPoll = options.scheduleNextPoll === true;
-		const awaitRichChatSync = options.awaitRichChatSync === true;
-		const recommendedInterval = data.pollingIntervalMillis || youtubeRecommendedInterval || 5000;
-		youtubeRecommendedInterval = recommendedInterval;
-		lastSuccessfulPollTime = Date.now();
-
-		const normalizedItems = Array.isArray(data.items) ? data.items.map(normalizeLiveChatMessageItem) : [];
-		const richChatVideoId = (currentStream && currentStream.id) || videoId;
-		if (normalizedItems.length > 0 && richChatVideoId) {
-			const richChatPromise = syncYouTubeRichChatData(richChatVideoId).catch(function(error) {
-				console.log('YouTube rich chat prefetch failed:', error && error.message ? error.message : error);
-			});
-			if (awaitRichChatSync || normalizedItems.some(liveChatItemNeedsRichEmojiSync)) {
-				await richChatPromise;
-			}
-		}
-
-		if (normalizedItems.length > 0) {
-			if (initialBacklogProcessing && !initialBacklogTimestamp) {
-				const timestamps = normalizedItems
-					.map(item => item && item.snippet ? new Date(item.snippet.publishedAt).getTime() : NaN)
-					.filter(Number.isFinite);
-				if (timestamps.length) {
-					initialBacklogTimestamp = Math.max(...timestamps);
-					console.log('Initial backlog cutoff timestamp set:', new Date(initialBacklogTimestamp));
-				}
-			}
-
-			normalizedItems.forEach(item => {
-				if (!item || !item.snippet) return;
-				const hasUserBannedDetails = !!(item.snippet.userBannedDetails || item.snippet.user_banned_details);
-				if (!item.authorDetails && item.snippet.type !== 'userBannedEvent' && !hasUserBannedDetails) return;
-				const publishedAt = new Date(item.snippet.publishedAt);
-				const messageTime = publishedAt.getTime();
-				if (!Number.isFinite(messageTime)) return;
-				if (!lastMessageTime || publishedAt > lastMessageTime) {
-					const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
-					const giftMetadata = extractYouTubeGiftMetadata(item.snippet);
-					const isGiftEvent = item.snippet.type === 'giftEvent' || !!giftMetadata;
-					const isUserBannedEvent = item.snippet.type === 'userBannedEvent' || hasUserBannedDetails;
-					const isSpecialEvent = isGiftEvent ||
-										  isUserBannedEvent ||
-										  item.snippet.type === 'giftMembershipReceivedEvent' ||
-										  item.snippet.type === 'newSponsorEvent' ||
-										  item.snippet.type === 'membershipGiftingEvent' ||
-										  item.snippet.type === 'memberMilestoneChatEvent' ||
-										  item.snippet.type === 'superStickerEvent';
-
-					if (isUserBannedEvent && !isBacklogMessage) {
-						processYouTubeUserBanned(item);
-					}
-
-					if (!isBacklogMessage && !isSpecialEvent) {
-						const textMessageDetails = item.snippet.textMessageDetails || {};
-						const messageReplyDetails = textMessageDetails.messageReplyDetails || null;
-						const normalizedReplyDetails = messageReplyDetails
-							? {
-								messageId: messageReplyDetails.messageId || null,
-								channelId: messageReplyDetails.channelId || null,
-								commentId: messageReplyDetails.commentId || null,
-								raw: messageReplyDetails
-							}
-							: null;
-						queueMessage({
-							messageId: item.id,
-							authorName: item.authorDetails.displayName.replace(/^@/, ''),
-							message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
-							plainTextMessage: textMessageDetails.messageText || '',
-							profileImageUrl: item.authorDetails.profileImageUrl,
-							isChatOwner: item.authorDetails.isChatOwner,
-							isChatSponsor: item.authorDetails.isChatSponsor,
-							isChatModerator: item.authorDetails.isChatModerator,
-							authorChannelId: item.authorDetails.channelId,
-							publishedAt,
-							skipEvent: isBacklogMessage,
-							isMembershipMessage: false,
-							replyDetails: normalizedReplyDetails,
-							replyMessageId: normalizedReplyDetails ? normalizedReplyDetails.messageId : null,
-							replyChannelId: normalizedReplyDetails ? normalizedReplyDetails.channelId : null
-						});
-					}
-
-					if (item.snippet.type === 'giftMembershipReceivedEvent' && item.snippet.giftMembershipReceivedDetails) {
-						const giftDetails = item.snippet.giftMembershipReceivedDetails;
-						if (!isBacklogMessage) {
-							processGiftRedemption({
-								authorName: item.authorDetails.displayName.replace(/^@/, ''),
-								gifterChannelId: giftDetails.gifterChannelId,
-								memberLevelName: giftDetails.memberLevelName,
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								authorChannelId: item.authorDetails.channelId,
-								displayMessage: item.snippet.displayMessage
-							});
-						}
-					}
-
-					if (item.snippet.type === 'newSponsorEvent' && item.snippet.newSponsorDetails) {
-						if (!isBacklogMessage) {
-							processNewSponsorship({
-								authorName: item.authorDetails.displayName.replace(/^@/, ''),
-								memberLevelName: item.snippet.newSponsorDetails.memberLevelName,
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								authorChannelId: item.authorDetails.channelId,
-								displayMessage: item.snippet.displayMessage
-							});
-						}
-					}
-
-					if (item.snippet.type === 'membershipGiftingEvent' && item.snippet.membershipGiftingDetails) {
-						const giftingDetails = item.snippet.membershipGiftingDetails;
-						if (!isBacklogMessage) {
-							processGiftPurchase({
-								authorName: item.authorDetails.displayName.replace(/^@/, ''),
-								giftCount: giftingDetails.giftMembershipsCount || 1,
-								memberLevelName: giftingDetails.giftMembershipsLevelName,
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								authorChannelId: item.authorDetails.channelId,
-								displayMessage: item.snippet.displayMessage
-							});
-						}
-					}
-
-					if (item.snippet.type === 'memberMilestoneChatEvent' && item.snippet.memberMilestoneChatDetails) {
-						const milestoneDetails = item.snippet.memberMilestoneChatDetails;
-						if (!isBacklogMessage) {
-							processMemberMilestone({
-								authorName: item.authorDetails.displayName.replace(/^@/, ''),
-								memberMonth: milestoneDetails.memberMonth,
-								memberLevelName: milestoneDetails.memberLevelName,
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								authorChannelId: item.authorDetails.channelId,
-								displayMessage: item.snippet.displayMessage,
-								isChatOwner: item.authorDetails.isChatOwner,
-								isChatModerator: item.authorDetails.isChatModerator,
-								isChatSponsor: item.authorDetails.isChatSponsor
-							});
-						}
-					}
-
-					if (item.snippet.type === 'superStickerEvent' && item.snippet.superStickerDetails) {
-						const stickerDetails = item.snippet.superStickerDetails;
-						if (!isBacklogMessage) {
-							let stickerBadges = [];
-							if (item.authorDetails.isChatOwner) stickerBadges.push({"type": "text", "text": "👑"});
-							if (item.authorDetails.isChatModerator) stickerBadges.push({"type": "text", "text": "🛡️"});
-							if (item.authorDetails.isChatSponsor) stickerBadges.push({"type": "text", "text": "⭐"});
-
-							processSuperSticker({
-								authorName: item.authorDetails.displayName.replace(/^@/, ''),
-								amount: stickerDetails.amountDisplayString,
-								stickerId: stickerDetails.superStickerMetadata?.stickerId,
-								altText: stickerDetails.superStickerMetadata?.altText,
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								authorChannelId: item.authorDetails.channelId,
-								badges: stickerBadges.length > 0 ? stickerBadges : "",
-								displayMessage: item.snippet.displayMessage
-							});
-						}
-					}
-
-					if (isGiftEvent && giftMetadata) {
-						if (!isBacklogMessage) {
-							let giftBadges = [];
-							if (item.authorDetails.isChatOwner) giftBadges.push({"type": "text", "text": "👑"});
-							if (item.authorDetails.isChatModerator) giftBadges.push({"type": "text", "text": "🛡️"});
-							if (item.authorDetails.isChatSponsor) giftBadges.push({"type": "text", "text": "⭐"});
-
-							processYouTubeGift({
-								messageId: item.id,
-								authorName: item.authorDetails.displayName.replace(/^@/, ''),
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								authorChannelId: item.authorDetails.channelId,
-								badges: giftBadges.length > 0 ? giftBadges : [{"type": "text", "text": "🎁"}],
-								displayMessage: item.snippet.displayMessage,
-								giftName: giftMetadata.giftName,
-								jewelsAmount: giftMetadata.jewelsAmount,
-								giftUrl: giftMetadata.giftUrl,
-								altText: giftMetadata.altText,
-								language: giftMetadata.language,
-								giftDuration: giftMetadata.giftDuration,
-								hasVisualEffect: giftMetadata.hasVisualEffect,
-								comboCount: giftMetadata.comboCount
-							});
-						}
-					}
-
-					if (item.snippet.superChatDetails) {
-						if (!isBacklogMessage) {
-							let superChatBadges = [];
-							if (item.authorDetails.isChatOwner) superChatBadges.push({"type": "text", "text": "👑"});
-							if (item.authorDetails.isChatModerator) superChatBadges.push({"type": "text", "text": "🛡️"});
-							if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
-
-							processSuperChat({
-								authorName: item.authorDetails.displayName.replace(/^@/, ''),
-								amount: item.snippet.superChatDetails.amountDisplayString,
-								message: item.snippet.superChatDetails.userComment,
-								tier: item.snippet.superChatDetails.tier,
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								authorChannelId: item.authorDetails.channelId,
-								badges: superChatBadges.length > 0 ? superChatBadges : ""
-							});
-						}
-					}
-					if (item.snippet.membershipDetails) {
-						const membershipEventInfo = deriveMembershipEventContext(item.snippet, item.snippet.membershipDetails);
-						if (!isBacklogMessage) {
-							const membershipMessage = item.snippet.displayMessage || '';
-							if (membershipMessage) {
-								const membershipDetailsCopy = item.snippet.membershipDetails ? { ...item.snippet.membershipDetails } : null;
-								const membershipPayload = {
-									messageId: item.id,
-									authorName: item.authorDetails.displayName.replace(/^@/, ''),
-									message: membershipMessage,
-									plainTextMessage: membershipMessage,
-									profileImageUrl: item.authorDetails.profileImageUrl,
-									isChatOwner: item.authorDetails.isChatOwner,
-									isChatSponsor: item.authorDetails.isChatSponsor,
-									isChatModerator: item.authorDetails.isChatModerator,
-									authorChannelId: item.authorDetails.channelId,
-									publishedAt,
-									skipEvent: isBacklogMessage,
-									isMembershipMessage: true
-								};
-								if (membershipDetailsCopy) {
-									membershipPayload.meta = {
-										membershipDetails: membershipDetailsCopy,
-										snippetType: item.snippet.type
-									};
-								}
-								queueMessage(membershipPayload);
-							} else {
-								let membershipBadges = [];
-								if (item.authorDetails.isChatOwner) membershipBadges.push({"type": "text", "text": "👑"});
-								if (item.authorDetails.isChatModerator) membershipBadges.push({"type": "text", "text": "🛡️"});
-								membershipBadges.push({"type": "text", "text": "⭐"});
-
-								processMembership({
-										authorName: item.authorDetails.displayName.replace(/^@/, ''),
-										level: item.snippet.membershipDetails.memberLevelName,
-										profileImageUrl: item.authorDetails.profileImageUrl,
-										authorChannelId: item.authorDetails.channelId,
-										badges: membershipBadges,
-										membershipDetails: item.snippet.membershipDetails,
-										rawSnippetType: item.snippet.type,
-										eventType: membershipEventInfo.eventType
-								});
-							}
-						}
-					}
-
-					lastMessageTime = publishedAt;
-				}
-			});
-		}
-
-		nextPageToken = data.nextPageToken || nextPageToken;
-		const itemCount = normalizedItems.length;
-
-		if (initialBacklogProcessing && itemCount < LIVE_CHAT_MAX_RESULTS) {
-			initialBacklogProcessing = false;
-			console.log('Initial backlog processing complete');
-		}
-
-		if (itemCount >= LIVE_CHAT_MAX_RESULTS) {
-			consecutiveMaxMessages++;
-			if (consecutiveMaxMessages >= 3 && slowerPollingMode) {
-				slowerPollingMode = false;
-				console.log('High chat activity detected - disabling slower polling mode');
-			}
-		} else {
-			consecutiveMaxMessages = 0;
-		}
-
-		if (itemCount === 0) {
-			consecutiveEmptyPolls++;
-		} else {
-			consecutiveEmptyPolls = 0;
-		}
-
-		quickPollCount = 0;
-
-		if (!shouldScheduleNextPoll) {
-			return;
-		}
-
-		let nextPollInterval = recommendedInterval;
-		if (consecutiveEmptyPolls >= QUIET_CHAT_IDLE_THRESHOLD) {
-			nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_IDLE_INTERVAL_MS);
-		} else if (consecutiveEmptyPolls >= QUIET_CHAT_BACKOFF_THRESHOLD) {
-			nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_BACKOFF_INTERVAL_MS);
-		} else if (consecutiveEmptyPolls > 0) {
-			nextPollInterval = Math.max(nextPollInterval, QUIET_CHAT_MIN_INTERVAL_MS);
-		}
-
-		if (slowerPollingMode) {
-			nextPollInterval = Math.floor(nextPollInterval * 1.5);
-		}
-
-		if (fetchTimeout) {
 			clearTimeout(fetchTimeout);
 			fetchTimeout = null;
 		}
@@ -4259,6 +3959,7 @@ function enableBackgroundKeepAlive() {
 			alert('This desktop app build is missing local YouTube token exchange support. Please update the desktop app.');
 			return;
 		}
+		showExternalAuthBrowserNotice();
 		const state = nonce(15);
 		setExpectedOAuthState(state);
 		try {

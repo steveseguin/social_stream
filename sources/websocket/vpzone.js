@@ -6,10 +6,14 @@
 	const TOKEN_KEY = "vpzoneWsTokens";
 	const OAUTH_KEY = "vpzoneOAuthState";
 	const DEFAULT_CLIENT_ID = "e63ceeb6-e9e6-4732-a7eb-a8f1613a2686";
-	const DEFAULT_SCOPES = "profile:read profile:write follows:read channel:read channel:write dashboard:read chat:read chat:write chat:moderate chat:announcements notifications:read notifications:write oauth:manage";
+	const DEFAULT_SCOPES = "profile:read chat:read chat:write";
 	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.nexus-7.vpzone.tv/ws", token: "", clientId: DEFAULT_CLIENT_ID, redirectUri: "", scopes: DEFAULT_SCOPES, hideMetrics: false };
 	const RECONNECT_DELAY_MS = 4000;
 	const MAX_SEEN_IDS = 1500;
+	const FETCH_BRIDGE_SOURCE = "ssn-vpzone";
+	const FETCH_BRIDGE_REQUEST = "ssn-vpzone-fetch-json";
+	const FETCH_BRIDGE_RESPONSE = "ssn-vpzone-fetch-json-response";
+	const FETCH_BRIDGE_TIMEOUT_MS = 12000;
 	const READY_STATE = { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 };
 
 	try {
@@ -133,6 +137,39 @@
 		return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 	}
 
+	function utf8Bytes(value) {
+		var text = String(value || "");
+		var encoded;
+		var out;
+		var i;
+		if (typeof TextEncoder !== "undefined") return new TextEncoder().encode(text);
+		encoded = unescape(encodeURIComponent(text));
+		out = new Uint8Array(encoded.length);
+		for (i = 0; i < encoded.length; i += 1) out[i] = encoded.charCodeAt(i);
+		return out;
+	}
+
+	function decodeBase64Url(value) {
+		var raw = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
+		var binary;
+		var encoded = "";
+		var i;
+		while (raw.length % 4) raw += "=";
+		binary = atob(raw);
+		for (i = 0; i < binary.length; i += 1) encoded += "%" + ("00" + binary.charCodeAt(i).toString(16)).slice(-2);
+		try { return decodeURIComponent(encoded); } catch (e) { return binary; }
+	}
+
+	function encodeOAuthState(saved) {
+		try { return "vpz_" + base64Url(utf8Bytes(JSON.stringify(saved || {}))); } catch (e) { return saved && saved.state ? saved.state : ""; }
+	}
+
+	function decodeOAuthState(value) {
+		var text = String(value || "");
+		if (text.indexOf("vpz_") !== 0) return null;
+		try { return JSON.parse(decodeBase64Url(text.slice(4))); } catch (e) { return null; }
+	}
+
 	function randomVerifier() {
 		var bytes = new Uint8Array(64);
 		try { crypto.getRandomValues(bytes); } catch (e) {
@@ -153,13 +190,31 @@
 	function defaultRedirectUri() {
 		var href = String(window.location.href || "").split("#")[0].split("?")[0];
 		if (!href) return "";
-		if (/^https:\/\/(?:beta\.)?socialstream\.ninja\//i.test(href)) return href.replace(/\.html$/i, "");
-		return href;
+		return normalizeHostedRedirectUri(href) || href;
+	}
+
+	function normalizeHostedRedirectUri(value) {
+		var url;
+		try {
+			url = new URL(String(value || "").trim());
+		} catch (e) {
+			return "";
+		}
+		if (!/^https:\/\/(?:beta\.)?socialstream\.ninja$/i.test(url.origin)) return "";
+		if (!/\/(?:beta\/)?sources\/websocket\/vpzone(?:\.html)?$/i.test(url.pathname)) return "";
+		if (/^https:\/\/beta\.socialstream\.ninja$/i.test(url.origin)) {
+			url = new URL(url.toString().replace(/^https:\/\/beta\.socialstream\.ninja\/sources\//i, "https://socialstream.ninja/beta/sources/"));
+		}
+		url.pathname = url.pathname.replace(/vpzone\.html$/i, "vpzone");
+		url.search = "";
+		url.hash = "";
+		return url.toString();
 	}
 
 	function normalizeRedirectUri(value) {
 		var raw = String(value || "").trim();
-		return raw || defaultRedirectUri();
+		if (!raw) return defaultRedirectUri();
+		return normalizeHostedRedirectUri(raw) || raw;
 	}
 
 	function ssappOAuthHandler() {
@@ -208,7 +263,7 @@
 		var delay = Math.max(5000, Number(state.tokens.expires_at) - Date.now() - 60000);
 		state.refreshTimer = setTimeout(function () {
 			refreshOAuthToken().catch(function (error) {
-				log("OAuth refresh failed: " + ((error && error.message) || error), "error");
+				log("Sign-in refresh failed: " + ((error && error.message) || error), "error");
 				updateAuthChip();
 			});
 		}, delay);
@@ -230,6 +285,93 @@
 		return fallback;
 	}
 
+	function jsonFetchError(message, status) {
+		var error = new Error(message);
+		if (status) error.status = status;
+		return error;
+	}
+
+	function buildFetchJsonRequest(url, options, headers) {
+		return {
+			cmd: "vpzoneFetchJson",
+			url: url,
+			method: options.method || "GET",
+			body: options.body || "",
+			contentType: headers["Content-Type"] || headers["content-type"] || "",
+			authToken: options.authToken || ""
+		};
+	}
+
+	function runtimeFetchJson(request) {
+		return new Promise(function (resolve, reject) {
+			try {
+				chrome.runtime.sendMessage(chrome.runtime.id, {
+					type: "toBackground",
+					data: request
+				}, function (response) {
+					if (chrome.runtime.lastError) {
+						reject(new Error(chrome.runtime.lastError.message || "VPZone background fetch failed"));
+						return;
+					}
+					if (!response || !response.ok) {
+						reject(jsonFetchError((response && response.error) || "VPZone background fetch failed", response && response.status));
+						return;
+					}
+					resolve(response.data || {});
+				});
+			} catch (e) {
+				reject(e);
+			}
+		});
+	}
+
+	function bridgedFetchJson(request) {
+		return new Promise(function (resolve, reject) {
+			var id = "vpzone_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+			var timer;
+			function cleanup() {
+				clearTimeout(timer);
+				window.removeEventListener("message", onMessage);
+			}
+			function onMessage(event) {
+				var response = event && event.data;
+				if (!response || response.source !== FETCH_BRIDGE_SOURCE || response.type !== FETCH_BRIDGE_RESPONSE || response.id !== id) return;
+				cleanup();
+				if (!response.ok) {
+					reject(jsonFetchError(response.error || "VPZone extension fetch failed", response.status));
+					return;
+				}
+				resolve(response.data || {});
+			}
+			timer = setTimeout(function () {
+				cleanup();
+				reject(new Error("VPZone extension fetch bridge timed out."));
+			}, FETCH_BRIDGE_TIMEOUT_MS);
+			window.addEventListener("message", onMessage);
+			window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: FETCH_BRIDGE_REQUEST, id: id, request: request }, "*");
+		});
+	}
+
+	function installFetchBridgeResponder() {
+		if (!extAvailable()) return;
+		window.addEventListener("message", function (event) {
+			var message = event && event.data;
+			if (!message || message.source !== FETCH_BRIDGE_SOURCE || message.type !== FETCH_BRIDGE_REQUEST || !message.id || !message.request) return;
+			runtimeFetchJson(message.request).then(function (data) {
+				window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: FETCH_BRIDGE_RESPONSE, id: message.id, ok: true, data: data }, "*");
+			}).catch(function (error) {
+				window.postMessage({
+					source: FETCH_BRIDGE_SOURCE,
+					type: FETCH_BRIDGE_RESPONSE,
+					id: message.id,
+					ok: false,
+					status: error && error.status,
+					error: (error && error.message) || String(error || "VPZone extension fetch failed")
+				}, "*");
+			});
+		});
+	}
+
 	function fetchJson(url, options) {
 		options = options || {};
 		var headers = options.headers || { Accept: "application/json" };
@@ -243,37 +385,15 @@
 			return response.text().then(function (text) {
 				var json = {};
 				try { json = text ? JSON.parse(text) : {}; } catch (e) { json = { error: text || "Invalid JSON response" }; }
-				if (!response.ok) throw new Error(jsonErrorMessage(json, "HTTP " + response.status));
+				if (!response.ok) throw jsonFetchError(jsonErrorMessage(json, "HTTP " + response.status), response.status);
 				return json;
 			});
 		}).catch(function (error) {
-			if (!extAvailable()) throw error;
-			return new Promise(function (resolve, reject) {
-				try {
-					chrome.runtime.sendMessage(chrome.runtime.id, {
-						type: "toBackground",
-						data: {
-							cmd: "vpzoneFetchJson",
-							url: url,
-							method: options.method || "GET",
-							body: options.body || "",
-							contentType: headers["Content-Type"] || headers["content-type"] || "",
-							authToken: options.authToken || ""
-						}
-					}, function (response) {
-						if (chrome.runtime.lastError) {
-							reject(new Error(chrome.runtime.lastError.message || "VPZone background fetch failed"));
-							return;
-						}
-						if (!response || !response.ok) {
-							reject(new Error((response && response.error) || "VPZone background fetch failed"));
-							return;
-						}
-						resolve(response.data || {});
-					});
-				} catch (e) {
-					reject(e);
-				}
+			var request = buildFetchJsonRequest(url, options, headers);
+			if (extAvailable()) return runtimeFetchJson(request);
+			return bridgedFetchJson(request).catch(function (bridgeError) {
+				if (bridgeError && bridgeError.message) throw bridgeError;
+				throw error;
 			});
 		});
 	}
@@ -291,7 +411,7 @@
 	}
 
 	function storeTokenResponse(json) {
-		if (!json || !json.access_token) throw new Error("VPZONE did not return an access token.");
+		if (!json || !json.access_token) throw new Error("VPZone did not return an access token.");
 		state.tokens = {
 			access_token: json.access_token,
 			token_type: json.token_type || "Bearer",
@@ -307,7 +427,7 @@
 	}
 
 	function exchangeOAuthCode(code, saved) {
-		if (!code) return Promise.reject(new Error("Missing OAuth code."));
+		if (!code) return Promise.reject(new Error("Missing sign-in code."));
 		saved = saved || {};
 		return tokenRequest({
 			grant_type: "authorization_code",
@@ -317,7 +437,7 @@
 			code_verifier: saved.verifier || ""
 		}).then(function (json) {
 			storeTokenResponse(json);
-			log("VPZONE OAuth token acquired.", "success");
+			log("VPZone sign-in complete.", "success");
 			return json;
 		});
 	}
@@ -330,7 +450,7 @@
 			refresh_token: state.tokens.refresh_token
 		}).then(function (json) {
 			storeTokenResponse(json);
-			log("VPZONE OAuth token refreshed.", "success");
+			log("VPZone sign-in refreshed.", "success");
 			return json;
 		});
 	}
@@ -342,6 +462,7 @@
 		var verifier = randomVerifier();
 		var stateValue = randomVerifier().slice(0, 32);
 		var redirectUri = normalizeRedirectUri(state.cfg.redirectUri);
+		var transmittedState;
 		var saved = {
 			state: stateValue,
 			verifier: verifier,
@@ -351,6 +472,7 @@
 			scopes: state.cfg.scopes || DEFAULT_SCOPES,
 			createdAt: Date.now()
 		};
+		transmittedState = encodeOAuthState(saved) || stateValue;
 		return codeChallenge(verifier).then(function (challenge) {
 			try { localStorage.setItem(OAUTH_KEY, JSON.stringify(saved)); } catch (e) {}
 			var url = new URL(HOST + "/oauth/authorize");
@@ -358,7 +480,7 @@
 			url.searchParams.set("client_id", state.cfg.clientId || DEFAULT_CLIENT_ID);
 			url.searchParams.set("redirect_uri", redirectUri);
 			url.searchParams.set("scope", state.cfg.scopes || DEFAULT_SCOPES);
-			url.searchParams.set("state", stateValue);
+			url.searchParams.set("state", transmittedState);
 			url.searchParams.set("code_challenge", challenge);
 			url.searchParams.set("code_challenge_method", "S256");
 			window.location.href = url.toString();
@@ -367,16 +489,16 @@
 
 	function startExternalOAuth(handler) {
 		handler = handler || ssappOAuthHandler();
-		if (!handler) return Promise.reject(new Error("VPZONE desktop OAuth is unavailable."));
+		if (!handler) return Promise.reject(new Error("VPZone desktop sign-in is unavailable."));
 		return handler({
 			clientId: state.cfg.clientId || DEFAULT_CLIENT_ID,
 			scopes: String(state.cfg.scopes || DEFAULT_SCOPES).split(/\s+/).filter(Boolean)
 		}).then(function (result) {
-			if (!result || !result.success) throw new Error((result && result.error) || "VPZONE OAuth did not complete.");
+			if (!result || !result.success) throw new Error((result && result.error) || "VPZone sign-in did not complete.");
 			if (result.redirectUri) state.cfg.redirectUri = result.redirectUri;
 			if (result.access_token) {
 				storeTokenResponse(result);
-				log("VPZONE OAuth token acquired.", "success");
+				log("VPZone sign-in complete.", "success");
 				return result;
 			}
 			if (result.code) {
@@ -385,7 +507,7 @@
 					redirectUri: result.redirectUri || normalizeRedirectUri(state.cfg.redirectUri)
 				});
 			}
-			throw new Error("VPZONE OAuth did not return a token.");
+			throw new Error("VPZone sign-in did not return a token.");
 		}).then(function (result) {
 			connect();
 			return result;
@@ -399,7 +521,7 @@
 		saveConfig();
 		syncStateToUi();
 		updateAuthChip();
-		log("VPZONE auth cleared.", "warn");
+		log("VPZone sign-in cleared.", "warn");
 	}
 
 	function handleOAuthCallback() {
@@ -408,14 +530,17 @@
 		var returnedState = query.get("state");
 		var error = query.get("error");
 		var saved = {};
+		var decodedState = decodeOAuthState(returnedState);
+		var returnedStateValue = decodedState && decodedState.state ? decodedState.state : returnedState;
 		if (!code && !error) {
 			scheduleRefresh();
 			return Promise.resolve(false);
 		}
 		try { saved = JSON.parse(localStorage.getItem(OAUTH_KEY) || "{}") || {}; } catch (e) {}
+		if ((!saved || !saved.state) && decodedState) saved = decodedState;
 		cleanupOAuthUrl();
 		if (error) return Promise.reject(new Error(query.get("error_description") || error));
-		if (saved.state && returnedState && saved.state !== returnedState) return Promise.reject(new Error("OAuth state mismatch."));
+		if (saved.state && returnedStateValue && saved.state !== returnedStateValue) return Promise.reject(new Error("Sign-in state mismatch."));
 		if (saved.channel) state.cfg.channel = normalizeChannel(saved.channel);
 		if (saved.wsUrl) state.cfg.wsUrl = normalizeWs(saved.wsUrl);
 		if (saved.scopes) state.cfg.scopes = saved.scopes;
@@ -454,17 +579,17 @@
 		if (state.lastStatus === status && state.lastMessage === message) return;
 		state.lastStatus = status;
 		state.lastMessage = message || "";
-		chip(els.socketChip, "Socket: " + (status || "disconnected"), status === "connected" ? "good" : (status === "connecting" ? "warn" : (status === "error" ? "bad" : "bad")));
+		chip(els.socketChip, "Connection: " + (status || "disconnected"), status === "connected" ? "good" : (status === "connecting" ? "warn" : (status === "error" ? "bad" : "bad")));
 		if (els.statusText && message) els.statusText.textContent = message;
 		pushStatus(status, message, meta || {});
 	}
 
 	function updateAuthChip() {
 		if (state.tokens && state.tokens.access_token) {
-			chip(els.authChip, "Auth: OAuth", "good");
+			chip(els.authChip, "Signed in", "good");
 			return;
 		}
-		chip(els.authChip, state.cfg.token ? "Auth: token set" : "Auth: public", state.cfg.token ? "good" : "");
+		chip(els.authChip, state.cfg.token ? "Token set" : "Not signed in", state.cfg.token ? "good" : "");
 	}
 
 	function normalizeChannel(value) {
@@ -531,18 +656,30 @@
 		return String(text || "").replace(/[\r\n]+$/g, "").trim();
 	}
 
-	function sendChatMessage(rawMessage) {
-		var message = outgoingText(rawMessage);
-		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
-		var token = String(state.cfg.token || "");
-		if (!message) return Promise.reject(new Error("Message is empty."));
-		if (!channel) return Promise.reject(new Error("Channel is required."));
-		if (!token) return Promise.reject(new Error("VPZone auth with chat:write is required."));
+	function postChatMessage(channel, message, token) {
 		return fetchJson(HOST + "/api/v1/channels/" + encodeURIComponent(channel) + "/chat", {
 			method: "POST",
 			headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + token },
 			body: JSON.stringify({ message: message }),
 			authToken: token
+		});
+	}
+
+	function sendChatMessage(rawMessage, didRefresh) {
+		var message = outgoingText(rawMessage);
+		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
+		var token = String(state.cfg.token || "");
+		if (!message) return Promise.reject(new Error("Message is empty."));
+		if (!channel) return Promise.reject(new Error("Channel is required."));
+		if (!token) return Promise.reject(new Error("Sign in to VPZone before sending chat."));
+		return postChatMessage(channel, message, token).catch(function (error) {
+			if (!didRefresh && error && error.status === 401 && state.tokens && state.tokens.refresh_token) {
+				log("VPZone sign-in expired. Refreshing.", "warn");
+				return refreshOAuthToken().then(function () {
+					return postChatMessage(channel, message, String(state.cfg.token || ""));
+				});
+			}
+			throw error;
 		}).then(function (json) {
 			log("Sent chat message to @" + channel + ".", "success");
 			return json;
@@ -559,7 +696,7 @@
 		state.cfg.token = typeof saved.token === "string" ? saved.token : "";
 		state.cfg.clientId = typeof saved.clientId === "string" && saved.clientId ? saved.clientId : DEFAULT_CLIENT_ID;
 		state.cfg.redirectUri = normalizeRedirectUri(saved.redirectUri || "");
-		state.cfg.scopes = mergeScopes(typeof saved.scopes === "string" && saved.scopes ? saved.scopes : DEFAULT_SCOPES);
+		state.cfg.scopes = DEFAULT_SCOPES;
 		state.cfg.hideMetrics = !!saved.hideMetrics;
 		query = new URLSearchParams(window.location.search);
 		hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
@@ -617,7 +754,7 @@
 			return;
 		}
 		els.channelLink.href = HOST + "/chat-dock/" + encodeURIComponent(channel);
-		els.channelLink.textContent = els.channelLink.href;
+		els.channelLink.textContent = "Open VPZone chat";
 	}
 
 	function remember(id) {
@@ -892,8 +1029,8 @@
 
 	function scheduleReconnect(reason) {
 		if (!state.active || state.manualDisconnect || state.reconnectTimer) return;
-		setStatus("connecting", "Socket closed. Reconnecting in 4s...", { channel: state.currentChannel, wsUrl: state.cfg.wsUrl });
-		log(reason || "VPZone socket closed. Reconnecting soon.", "warn");
+		setStatus("connecting", "Connection closed. Reconnecting in 4s...", { channel: state.currentChannel, wsUrl: state.cfg.wsUrl });
+		log(reason || "VPZone connection closed. Reconnecting soon.", "warn");
 		state.reconnectTimer = setTimeout(function () {
 			state.reconnectTimer = null;
 			openSocket(true);
@@ -911,12 +1048,12 @@
 		state.currentChannel = channel;
 		updateLink();
 		wsProxy.readyState = READY_STATE.CONNECTING;
-		setStatus("connecting", (isReconnect ? "Reconnecting" : "Connecting") + " to @" + channel + "...", { channel: channel, wsUrl: wsUrl });
-		log((isReconnect ? "Reconnecting" : "Connecting") + " to " + wsUrl + " for @" + channel + ".", "info");
+		setStatus("connecting", (isReconnect ? "Reconnecting" : "Connecting") + " @" + channel + "...", { channel: channel, wsUrl: wsUrl });
+		log((isReconnect ? "Reconnecting" : "Connecting") + " chat for @" + channel + ".", "info");
 		try { socket = new WebSocket(wsUrl); } catch (error) {
-			setStatus("error", "WebSocket open failed: " + ((error && error.message) || error), { channel: channel, wsUrl: wsUrl });
-			log("WebSocket open failed: " + ((error && error.message) || error), "error");
-			scheduleReconnect("WebSocket construction failed.");
+			setStatus("error", "Connection failed: " + ((error && error.message) || error), { channel: channel, wsUrl: wsUrl });
+			log("Connection failed: " + ((error && error.message) || error), "error");
+			scheduleReconnect("Connection setup failed.");
 			return;
 		}
 		state.socket = socket;
@@ -925,7 +1062,7 @@
 			if (state.cfg.token) {
 				try { socket.send(JSON.stringify({ type: "auth", token: state.cfg.token })); } catch (e) {}
 			}
-			setStatus("connected", "Connected to @" + channel + " via VPZone WebSocket.", { channel: channel, wsUrl: wsUrl });
+			setStatus("connected", "Connected to @" + channel + ".", { channel: channel, wsUrl: wsUrl });
 			log("Connected to @" + channel + ".", "success");
 			if (state.cfg.token) log("Developer auth payload sent.", "info");
 		};
@@ -934,7 +1071,7 @@
 		};
 		socket.onerror = function () { log("VPZone socket error.", "error"); };
 		socket.onclose = function (event) {
-			var reason = "VPZone socket closed";
+			var reason = "VPZone connection closed";
 			state.socket = null;
 			wsProxy.readyState = READY_STATE.CLOSED;
 			if (event && typeof event.code !== "undefined") reason += " (code " + event.code + (event.reason ? ", " + event.reason : "") + ")";
@@ -956,7 +1093,7 @@
 				return;
 			}
 			if (!state.active || state.manualDisconnect) {
-				setStatus("disconnected", "Disconnected from VPZone.", { channel: channel, wsUrl: wsUrl });
+				setStatus("disconnected", "Disconnected.", { channel: channel, wsUrl: wsUrl });
 				log(reason + ".", "warn");
 				return;
 			}
@@ -985,11 +1122,12 @@
 		state.active = false;
 		clearReconnect();
 		closeSocket();
-		setStatus("disconnected", manual ? "Disconnected from VPZone." : "VPZone socket stopped.");
+		setStatus("disconnected", manual ? "Disconnected." : "VPZone connection stopped.");
 		syncButtons();
 	}
 
 	function bridge() {
+		installFetchBridgeResponder();
 		if (extAvailable()) {
 			try {
 				chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -1037,8 +1175,8 @@
 	}
 
 	function bindUi() {
-		if (els.save) els.save.addEventListener("click", function () { syncUiToState(); syncStateToUi(); log("Configuration saved.", "success"); });
-		if (els.authorize) els.authorize.addEventListener("click", function () { startOAuth().catch(function (error) { setStatus("error", "OAuth start failed: " + ((error && error.message) || error)); log("OAuth start failed: " + ((error && error.message) || error), "error"); }); });
+		if (els.save) els.save.addEventListener("click", function () { syncUiToState(); syncStateToUi(); log("Advanced settings saved.", "success"); });
+		if (els.authorize) els.authorize.addEventListener("click", function () { startOAuth().catch(function (error) { setStatus("error", "Sign-in failed: " + ((error && error.message) || error)); log("Sign-in failed: " + ((error && error.message) || error), "error"); }); });
 		if (els.clearAuth) els.clearAuth.addEventListener("click", function () { clearOAuth(); });
 		if (els.connect) els.connect.addEventListener("click", function () { try { connect(); } catch (error) { setStatus("error", "Connect failed: " + ((error && error.message) || error)); log("Connect failed: " + ((error && error.message) || error), "error"); syncButtons(); } });
 		if (els.disconnect) els.disconnect.addEventListener("click", function () { disconnect(true); });
@@ -1077,13 +1215,13 @@
 		loadConfig();
 		loadTokens();
 		syncStateToUi();
-		chip(els.socketChip, "Socket: disconnected", "bad");
+		chip(els.socketChip, "Connection: disconnected", "bad");
 		chip(els.viewerChip, "Viewers: -", "");
 		chip(els.lastEventChip, "Last event: Waiting", "");
 		bindUi();
 		bridge();
 		syncButtons();
-		log("VPZone WebSocket source ready.", "success");
+		log("VPZone chat source ready.", "success");
 		handleOAuthCallback().then(function () {
 			if (state.cfg.channel) {
 				try { connect(); } catch (error) {
@@ -1093,8 +1231,8 @@
 				}
 			}
 		}).catch(function (error) {
-			setStatus("error", "OAuth failed: " + ((error && error.message) || error));
-			log("OAuth failed: " + ((error && error.message) || error), "error");
+			setStatus("error", "Sign-in failed: " + ((error && error.message) || error));
+			log("Sign-in failed: " + ((error && error.message) || error), "error");
 		});
 		window.addEventListener("beforeunload", function () { disconnect(false); });
 	}

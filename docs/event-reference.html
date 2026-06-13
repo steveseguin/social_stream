@@ -1074,7 +1074,7 @@
                     <h3>VPZone - WebSocket</h3>
                     <p class="source-note">Implementation: <code>sources/websocket/vpzone.js</code></p>
                     <ul class="requirements">
-                        <li>Connects to the VPZone chat websocket with <code>?channel=USERNAME</code>; OAuth or a bearer token can be supplied for developer mode and chat sending.</li>
+                        <li>Connects to the VPZone chat websocket with <code>?channel=USERNAME</code>; OAuth requests <code>profile:read</code>, <code>chat:read</code>, and <code>chat:write</code> for chat sending. A bearer token with <code>chat:write</code> can also be supplied.</li>
                         <li>Flat VPZone frames such as <code>type: "msg"</code> are normalized into standard chat payloads.</li>
                     </ul>
                     <table class="event-table">
