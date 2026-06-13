@@ -2524,20 +2524,49 @@ function getSelectedTranslationLinkParam() {
 }
 
 const DEFAULT_CHAT_OVERLAY_TEMPLATE = "sampleoverlay.html";
+// Theme-specific (flavor) option sections. Only themes with a real, theme-unique
+// toggle appear here. The shared common-params section is handled separately via
+// CHAT_OVERLAY_COMMON_SUPPORT below.
 const CHAT_OVERLAY_TEMPLATE_CONFIGS = {
   "sampleoverlay.html": "sampleoverlay-overlay-config",
+  "themes/compact-classic.html": "compact-overlay-config",
+  "themes/compact-clean.html": "compact-overlay-config",
+  "themes/compact-glass.html": "compact-overlay-config",
   "themes/overlay-neon-cyberpunk.html": "overlay-neon-cyberpunk-overlay-config",
   "themes/overlay-particles.html": "overlay-particles-overlay-config",
   "themes/overlay-typewriter.html": "overlay-typewriter-overlay-config",
   "themes/overlay-bubbles.html": "overlay-bubbles-overlay-config",
   "themes/overlay-cards.html": "overlay-cards-overlay-config",
-  "themes/pretty.html": "pretty-overlay-config",
+  "themes/horizontal.html": "horizontal-overlay-config",
   "themes/Neutron/chatOnly.html": "Neutron-overlay-config",
   "themes/Neutron/stream.html": "Neutron-overlay-config",
   "themes/Windows3.1/index.html": "Windows3-overlay-config",
-  "themes/t3nk3y/index.html": "t3nk3y-overlay-config",
-  "themes/LuckyLootTube/luckyloottube.html": "luckyloottube-overlay-config"
+  "themes/t3nk3y/index.html": "t3nk3y-overlay-config"
 };
+
+// Themes that support the shared common tweaks (hide bots, chroma key, font size,
+// font family). The compact themes carry their own richer section, so they are
+// intentionally excluded here (their section already covers these).
+const CHAT_OVERLAY_COMMON_SUPPORT = new Set([
+  "themes/overlay-neon-cyberpunk.html",
+  "themes/overlay-particles.html",
+  "themes/overlay-typewriter.html",
+  "themes/overlay-bubbles.html",
+  "themes/overlay-cards.html",
+  "themes/overlay-comic-pop.html",
+  "themes/overlay-comic-classic.html",
+  "themes/horizontal.html",
+  "themes/overlay-xacception.html",
+  "themes/pretty.html",
+  "themes/Neutron/chatOnly.html",
+  "themes/Neutron/stream.html",
+  "themes/Windows3.1/index.html",
+  "themes/deuks_overlay/overlay1.html",
+  "themes/deuks_overlay/overlay2.html",
+  "themes/rainbowpuke/index.html",
+  "themes/t3nk3y/index.html",
+  "themes/LuckyLootTube/luckyloottube.html"
+]);
 
 function getSelectedChatOverlayTemplatePath() {
   const selector = document.getElementById("overlay-preset-select");
@@ -2651,15 +2680,26 @@ function syncChatOverlayTemplateConfig(templatePath) {
     section.style.display = "none";
   });
 
+  let anyShown = false;
+
+  // Shared common-tweaks section (hide bots, chroma, font size, font family),
+  // shown for any theme that supports those params.
+  const commonSection = document.getElementById("common-overlay-config");
+  if (commonSection && CHAT_OVERLAY_COMMON_SUPPORT.has(normalizedPath)) {
+    commonSection.style.display = "block";
+    anyShown = true;
+  }
+
   if (configId) {
     activeSection = document.getElementById(configId);
     if (activeSection) {
       activeSection.style.display = "block";
+      anyShown = true;
     }
   }
 
   if (optionsWrapper) {
-    optionsWrapper.style.display = activeSection ? "" : "none";
+    optionsWrapper.style.display = anyShown ? "" : "none";
   }
 }
 
@@ -2897,6 +2937,7 @@ function applyFeaturedOverlayPreset(presetValue) {
 function removeTTSProviderParams(url, selectedProvider=null) {
   if (!url) return url;
 
+  const rawSelectedProvider = (selectedProvider || "").toString().toLowerCase();
   const providerAliases = {
       custom: "openai",
       customtts: "openai",
@@ -2929,6 +2970,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
       return url; // Invalid URL
     }
   }
+  const selectedProviderValue = (selectedProvider || "").toString().toLowerCase();
   selectedProvider = providerAliases[(selectedProvider || "").toString().toLowerCase()] || selectedProvider;
   
   // Get all parameters except those for the selected provider
@@ -2938,6 +2980,10 @@ function removeTTSProviderParams(url, selectedProvider=null) {
 	
   if (selectedProvider=="system"){
 	  paramsToRemove.push("ttsprovider");
+  }
+  const selectedProviderForCleanup = rawSelectedProvider || selectedProviderValue;
+  if (selectedProviderForCleanup !== "openai" && providerAliases[selectedProviderForCleanup] === "openai") {
+	  paramsToRemove.push("openaikey");
   }
   
   // Remove each parameter
@@ -9294,11 +9340,22 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	function updatePopupSearchTopLevel(terms) {
 		if (!popupSearchIndex) {
-			return;
+			return 0;
 		}
+		var matched = 0;
 		popupSearchIndex.topLevel.forEach(function(record) {
-			setPopupSearchHidden(record.element, !popupSearchRecordMatches(record, terms));
+			var isMatch = popupSearchRecordMatches(record, terms);
+			setPopupSearchHidden(record.element, !isMatch);
+			if (isMatch) {
+				matched += 1;
+			}
 		});
+		return matched;
+	}
+
+	function setPopupSearchActive(active, empty) {
+		document.body.classList.toggle('popup-searching', !!active);
+		document.body.classList.toggle('popup-search-empty', !!active && !!empty);
 	}
 
 	function applyPopupSearchNow(value) {
@@ -9306,11 +9363,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		clearPopupSearchHidden();
 
 		if (!terms.length) {
+			setPopupSearchActive(false, false);
 			restorePopupSearchOpenState();
 			unlockPopupSearchWidth();
 			return;
 		}
 
+		setPopupSearchActive(true, false);
 		savePopupSearchOpenState();
 		lockPopupSearchWidth();
 		openPopupSearchSections();
@@ -9318,8 +9377,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			popupSearchIndex = createPopupSearchIndex();
 		}
 
+		var totalMatches = 0;
+
 		popupSearchIndex.links.forEach(function(record) {
-			setPopupSearchHidden(record.element, !popupSearchRecordMatches(record, terms));
+			var isMatch = popupSearchRecordMatches(record, terms);
+			setPopupSearchHidden(record.element, !isMatch);
+			if (isMatch) {
+				totalMatches += 1;
+			}
 		});
 
 		popupSearchIndex.wrappers.forEach(function(wrapperRecord) {
@@ -9348,9 +9413,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 			updatePopupSearchGroups(wrapper);
 
-			setPopupSearchHidden(wrapper, matchedRows.length === 0 && !(rows.length === 0 && sectionMatches));
+			var wrapperVisible = !(matchedRows.length === 0 && !(rows.length === 0 && sectionMatches));
+			setPopupSearchHidden(wrapper, !wrapperVisible);
+			if (wrapperVisible) {
+				totalMatches += 1;
+			}
 		});
-		updatePopupSearchTopLevel(terms);
+		totalMatches += updatePopupSearchTopLevel(terms);
+
+		setPopupSearchActive(true, totalMatches === 0);
 	}
 
 	function applyPopupSearch(value) {
@@ -9374,6 +9445,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			popupSearchInput.style.width = '0';
 		}
 		clearPopupSearchHidden();
+		setPopupSearchActive(false, false);
 		restorePopupSearchOpenState();
 		unlockPopupSearchWidth();
 		popupSearchIndex = null;

@@ -257,15 +257,38 @@ body {
 	}
 	var password = "false";
 	var featuredMode = false; // featured == selected messages only.  not featured == all messages.
+
+	// --- Common overlay tweaks (shared across themes) ---
+	var hideBots = urlParams.has("hidebots");
+	if (urlParams.has("chroma")) {
+		var _c = urlParams.get("chroma") || "";
+		document.body.style.backgroundColor = _c.charAt(0) === "#" ? _c : "#" + _c;
+	}
+	if (urlParams.has("font")) {
+		var _fs = parseInt(urlParams.get("font"), 10);
+		if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+	}
+	if (urlParams.has("fontfamily")) {
+		var _ff = (urlParams.get("fontfamily") || "").trim();
+		if (_ff) {
+			var _safe = _ff.replace(/['"\\;{}<>]/g, "");
+			var _gf = document.createElement("link");
+			_gf.rel = "stylesheet";
+			_gf.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(_safe).replace(/%20/g, "+") + ":wght@400;500;600;700&display=swap";
+			document.head.appendChild(_gf);
+			document.body.style.fontFamily = "'" + _safe + "', sans-serif";
+		}
+	}
 	
 	const chatContainer = document.getElementById('chat-container');
 	
 	function addMessageToOverlay(data) {
 		
+		if (hideBots && data.bot) { return; }
 		if (!(data.chatmessage || data.donation || data.hasDonation) && !data.chatname){
 			return;
 		}
-		
+
 		const messageDiv = document.createElement('div');
 		messageDiv.classList.add('message');
 		if (data.mid){messageDiv.id = data.mid;}

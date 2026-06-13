@@ -274,6 +274,29 @@ body, html {
     var fullMessage = urlParams.has("fullmessage");
     var textWidth = urlParams.has("textwidth") ? parseInt(urlParams.get("textwidth")) : 0;
 
+    // --- Common overlay tweaks (shared across themes) ---
+    var hideBots = urlParams.has("hidebots");
+    if (urlParams.has("chroma")) {
+        var _c = urlParams.get("chroma") || "";
+        document.body.style.backgroundColor = _c.charAt(0) === "#" ? _c : "#" + _c;
+    }
+    if (urlParams.has("font")) {
+        var _fs = parseInt(urlParams.get("font"), 10);
+        if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+    }
+    if (urlParams.has("fontfamily")) {
+        var _ff = (urlParams.get("fontfamily") || "").trim();
+        if (_ff) {
+            var _safe = _ff.replace(/['"\\;{}<>]/g, "");
+            var _gf = document.createElement("link");
+            _gf.rel = "stylesheet";
+            _gf.href = "https://fonts.googleapis.com/css2?family=" +
+                encodeURIComponent(_safe).replace(/%20/g, "+") + ":wght@400;500;600;700&display=swap";
+            document.head.appendChild(_gf);
+            document.body.style.fontFamily = "'" + _safe + "', sans-serif";
+        }
+    }
+
     if (fullMessage) {
         document.querySelector('style').textContent += `
             .text { max-width: none !important; }
@@ -327,7 +350,8 @@ body, html {
     }, 1000);
     
     function addMessageToOverlay(data) {
-        
+
+        if (hideBots && data.bot) { return; }
         if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
             return;
         }

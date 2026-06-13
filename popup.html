@@ -555,6 +555,28 @@ body {
     display: none !important;
 }
 
+/* Keep room below the fixed search bar so the first matched result is visible */
+body.popup-searching .container {
+    padding-top: 44px;
+}
+
+/* Prevent the popup from collapsing below the fixed search bar while searching */
+body.popup-searching {
+    min-height: 200px;
+}
+
+#popupSearchNoResults {
+    display: none;
+    margin: 90px 12px 20px;
+    text-align: center;
+    opacity: 0.7;
+    font-style: italic;
+}
+
+body.popup-search-empty #popupSearchNoResults {
+    display: block;
+}
+
 body.extension-disabled {
     background-color: var(--body-background-disabled);
 }
@@ -2103,6 +2125,7 @@ input:checked + .slider:before {
         <div id="importantChanges"></div>
         <input type="text" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
         <div id="searchIcon" title="Search all options by keyword">🔍</div>
+        <div id="popupSearchNoResults" data-translate="search-no-results">No matching options found</div>
 		<div id="activeIcon" title="Show only enabled options">🔰</div>
         <div id="languageIcon" title="Select language">🌐</div>
         <!-- Language Selector (hidden by default) -->
@@ -3790,12 +3813,13 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
-                                <div>
+                                <div title="Puts the name and the message on the same line (dense IRC/Twitch-style), instead of the name on its own line above the message. This is for very short messages — longer messages will keep flowing on that single line. For a dedicated dense layout, use one of the 'Compact' overlay styles in the style dropdown instead. NOTE: this is the same as adding &compact to the dock URL.">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="compact" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="compact-mode-no-space-between-name-and-message">◻️ Compact mode (no space between name and message) </span>
+                                    <span data-translate="compact-mode-no-space-between-name-and-message">◻️ Compact mode (name &amp; message on one line) </span>
+                                    <small style="display:block; opacity:0.75; margin-left:3em;" data-translate="compact-mode-hint">Dense single-line layout for short messages — not just spacing. For a full dense theme, pick a "Compact" style above.</small>
                                 </div>
 								<div>
                                     <label class="switch">
@@ -12557,6 +12581,46 @@ input:checked + .slider:before {
 					<label class="collapsible-label" for="wrapper-overlay-theme-options">🎨 <span data-translate="overlay-theme-options">Overlay Theme Options</span></label>
 					<div class="collapsible-text">
 						<div class="options">
+							<!-- Common Overlay Options (shared by most fixed themes) -->
+							<div class="overlay-config-section" id="common-overlay-config" style="display: none;">
+								<h3>🎛️ <span data-translate="common-overlay-options">Common Options</span></h3>
+								<div title="Hides messages flagged as bots from this overlay only. Your dock keeps showing them.">
+									<label class="switch">
+										<input type="checkbox" data-param30="hidebots" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="common-hidebots">
+										🤖 Hide bot messages (dock still shows them)
+									</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Solid background colour for chroma keying in OBS, e.g. 00FF00 for green">
+									<input type="text" id="common-chroma" class="textInput instant" autocomplete="off" placeholder="e.g. 00FF00" data-textparam30="chroma" />
+									<label for="common-chroma"><span data-translate="common-chroma">&gt; 🟢 Chroma key background (hex)</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Base font size in pixels (e.g. 18)">
+									<input type="number" id="common-font-size" class="textInput instant" autocomplete="off" min="8" max="72" placeholder="e.g. 16" data-textparam30="font" />
+									<label for="common-font-size"><span data-translate="common-font-size">&gt; Font size (px)</span></label>
+								</div>
+								<div style="margin-top:6px;">
+									<label for="common-font-family" style="display:block; margin-bottom:4px;"><span data-translate="common-font-family">🔤 Font family</span></label>
+									<select id="common-font-family" data-optionparam30="fontfamily" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+										<option value="">Theme default</option>
+										<option value="Roboto">Roboto</option>
+										<option value="Open Sans">Open Sans</option>
+										<option value="Lato">Lato</option>
+										<option value="Montserrat">Montserrat</option>
+										<option value="Poppins">Poppins</option>
+										<option value="Nunito">Nunito</option>
+										<option value="Oswald">Oswald</option>
+										<option value="Bebas Neue">Bebas Neue</option>
+										<option value="Comic Neue">Comic Neue</option>
+										<option value="Roboto Mono">Roboto Mono</option>
+										<option value="Source Code Pro">Source Code Pro</option>
+										<option value="Press Start 2P">Press Start 2P (pixel)</option>
+									</select>
+								</div>
+							</div>
+
 							<!-- Sample Overlay Options -->
 							<div class="overlay-config-section" id="sampleoverlay-overlay-config" style="display: none;">
 								<h3>📄 <span data-translate="sample-overlay-options">Sample Overlay Options</span></h3>
@@ -12571,18 +12635,81 @@ input:checked + .slider:before {
 								</div>
 							</div>
 							
+							<!-- Compact Theme Options (Classic / Clean / Glass) -->
+							<div class="overlay-config-section" id="compact-overlay-config" style="display: none;">
+								<h3>💬 <span data-translate="compact-overlay-options">Compact Chat Options</span></h3>
+								<div title="Hides messages flagged as bots from this overlay only. Your dock keeps showing them.">
+									<label class="switch">
+										<input type="checkbox" data-param30="hidebots" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="compact-hidebots">
+										🤖 Hide bot messages (dock still shows them)
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param30="time" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="compact-time">
+										🕐 Show timestamps
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param30="noicon" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="compact-noicon">
+										🚫 Hide platform icons
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param30="nobadges" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="compact-nobadges">
+										🏷️ Hide chat badges
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param30="reverse" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="compact-reverse">
+										🔼 Newest messages on top
+									</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Base font size in pixels (e.g. 18)">
+									<input type="number" id="compact-font-size" class="textInput instant" autocomplete="off" min="8" max="72" placeholder="e.g. 16" data-textparam30="font" />
+									<label for="compact-font-size"><span data-translate="compact-font-size">&gt; Font size (px)</span></label>
+								</div>
+								<div style="margin-top:6px;">
+									<label for="compact-font-family" style="display:block; margin-bottom:4px;"><span data-translate="compact-font-family">🔤 Font family</span></label>
+									<select id="compact-font-family" data-optionparam30="fontfamily" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+										<option value="">Default (Inter)</option>
+										<option value="Roboto">Roboto</option>
+										<option value="Open Sans">Open Sans</option>
+										<option value="Lato">Lato</option>
+										<option value="Montserrat">Montserrat</option>
+										<option value="Poppins">Poppins</option>
+										<option value="Nunito">Nunito</option>
+										<option value="Oswald">Oswald</option>
+										<option value="Bebas Neue">Bebas Neue</option>
+										<option value="Comic Neue">Comic Neue</option>
+										<option value="Roboto Mono">Roboto Mono</option>
+										<option value="Source Code Pro">Source Code Pro</option>
+										<option value="Press Start 2P">Press Start 2P (pixel)</option>
+									</select>
+								</div>
+							</div>
+
 							<!-- New Animated Overlay Options -->
 							<div class="overlay-config-section" id="overlay-neon-cyberpunk-overlay-config" style="display: none;">
 								<h3>⚡ <span data-translate="neon-cyberpunk-options">Neon Cyberpunk Options</span></h3>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param30="chroma" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="cyberpunk-chroma">
-										🟢 Enable chroma key background
-									</span>
-								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param30="intensegfx" />
@@ -12603,15 +12730,6 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="particles-dense">
 										💫 Dense particle mode
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param30="chroma" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="particles-chroma">
-										🟢 Enable chroma key background
 									</span>
 								</div>
 							</div>
@@ -12649,15 +12767,6 @@ input:checked + .slider:before {
 										🎈 Extra large bubbles
 									</span>
 								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param30="chroma" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="bubbles-chroma">
-										🟢 Enable chroma key background
-									</span>
-								</div>
 							</div>
 							
 							<div class="overlay-config-section" id="overlay-cards-overlay-config" style="display: none;">
@@ -12669,15 +12778,6 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="cards-autoflip">
 										🔄 Auto-flip cards periodically
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param30="chroma" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="cards-chroma">
-										🟢 Enable chroma key background
 									</span>
 								</div>
 							</div>
@@ -12696,20 +12796,47 @@ input:checked + .slider:before {
 								</div>
 							</div>
 							
-							<!-- Pretty Theme Options -->
-							<div class="overlay-config-section" id="pretty-overlay-config" style="display: none;">
-								<h3>✨ <span data-translate="pretty-overlay-options">Pretty Theme Options</span></h3>
+							
+							<!-- Horizontal Scroll Theme Options -->
+							<div class="overlay-config-section" id="horizontal-overlay-config" style="display: none;">
+								<h3>➡️ <span data-translate="horizontal-overlay-options">Horizontal Scroll Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param30="chroma" />
+										<input type="checkbox" data-param30="hidenames" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="pretty-chroma-key">
-										🟢 Enable chroma key background
-									</span>
+									<span data-translate="horizontal-hidenames">🙈 Hide names</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param30="hideavatars" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="horizontal-hideavatars">👤 Hide avatars</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param30="hidesource" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="horizontal-hidesource">🚫 Hide platform icon</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param30="textonly" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="horizontal-textonly">📝 Text only (strip emotes/images)</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param30="fullmessage" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="horizontal-fullmessage">↔️ Don't truncate long messages</span>
 								</div>
 							</div>
-							
+
 							<!-- Windows 3.1 Theme Options -->
 							<div class="overlay-config-section" id="Windows3-overlay-config" style="display: none;">
 								<h3>🖥️ <span data-translate="windows31-overlay-options">Windows 3.1 Theme Options</span></h3>
@@ -12738,19 +12865,6 @@ input:checked + .slider:before {
 								</div>
 							</div>
 
-                            <!-- LuckyLootTube Theme Options -->
-							<div class="overlay-config-section" id="luckyloottube-overlay-config" style="display: none;">
-								<h3>🎁 <span data-translate="luckyloottube-overlay-options">LuckyLootTube Theme Options</span></h3>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param30="luckyloottube" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="luckyloottube-mode">
-										🎁 From LuckyLootTube with Love
-									</span>
-								</div>
-							</div>
 						</div>
 					</div>
 				</div>

@@ -162,6 +162,28 @@
 	// showtime: if set via URL, override default. Otherwise keep current default (0 = no auto-hiding)
 	// Use showtime=30000 to auto-hide messages after 30 seconds
 	var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 0;
+
+	// --- Common overlay tweaks (shared across themes) ---
+	var hideBots = urlParams.has("hidebots");
+	if (urlParams.has("chroma")) {
+		var _c = urlParams.get("chroma") || "";
+		document.body.style.backgroundColor = _c.charAt(0) === "#" ? _c : "#" + _c;
+	}
+	if (urlParams.has("font")) {
+		var _fs = parseInt(urlParams.get("font"), 10);
+		if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+	}
+	if (urlParams.has("fontfamily")) {
+		var _ff = (urlParams.get("fontfamily") || "").trim();
+		if (_ff) {
+			var _safe = _ff.replace(/['"\\;{}<>]/g, "");
+			var _gf = document.createElement("link");
+			_gf.rel = "stylesheet";
+			_gf.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(_safe).replace(/%20/g, "+") + ":wght@400;500;600;700&display=swap";
+			document.head.appendChild(_gf);
+			document.body.style.fontFamily = "'" + _safe + "', sans-serif";
+		}
+	}
 	const messageTimestamps = new Map();
 
 	// Function to apply overlay size based on URL parameter
@@ -244,6 +266,7 @@
 	}
 
 	function addMessageToOverlay(data) {
+		if (hideBots && data.bot) { return; }
 		if (!data || !data.chatname || !data.chatmessage) {
 			console.error("Invalid message data", data);
 			return;

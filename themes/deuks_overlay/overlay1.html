@@ -133,6 +133,28 @@
     var password = "false"; // Set password if needed
     var featuredMode = false; // Set to true if you only want to display featured messages
 
+    // --- Common overlay tweaks (shared across themes) ---
+    var hideBots = urlParams.has("hidebots");
+    if (urlParams.has("chroma")) {
+        var _c = urlParams.get("chroma") || "";
+        document.body.style.backgroundColor = _c.charAt(0) === "#" ? _c : "#" + _c;
+    }
+    if (urlParams.has("font")) {
+        var _fs = parseInt(urlParams.get("font"), 10);
+        if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+    }
+    if (urlParams.has("fontfamily")) {
+        var _ff = (urlParams.get("fontfamily") || "").trim();
+        if (_ff) {
+            var _safe = _ff.replace(/['"\\;{}<>]/g, "");
+            var _gf = document.createElement("link");
+            _gf.rel = "stylesheet";
+            _gf.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(_safe).replace(/%20/g, "+") + ":wght@400;500;600;700&display=swap";
+            document.head.appendChild(_gf);
+            document.body.style.fontFamily = "'" + _safe + "', sans-serif";
+        }
+    }
+
     const chatContainer = document.getElementById('chat-container');
 
     // Allow custom auto-remove timing via URL: &showtime=milliseconds
@@ -143,6 +165,7 @@
     })();
 
 	function addMessageToOverlay(data) {
+		if (hideBots && data.bot) { return; }
 		// Skip meta-only messages (follower/viewer data without actual content)
 		if (!data.chatname && data.meta) {
 			return;

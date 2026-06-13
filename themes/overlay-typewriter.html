@@ -464,6 +464,30 @@ body::before {
     // Use showtime=0 to disable auto-hiding
     var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 45000;
 
+    // --- Common overlay tweaks (shared across themes) ---
+    var hideBots = urlParams.has("hidebots");
+    var TYPE_SPEED = urlParams.has("fastype") ? 6 : 20;
+    if (urlParams.has("chroma")) {
+        var _c = urlParams.get("chroma") || "";
+        document.body.style.background = _c.charAt(0) === "#" ? _c : "#" + _c;
+    }
+    if (urlParams.has("font")) {
+        var _fs = parseInt(urlParams.get("font"), 10);
+        if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+    }
+    if (urlParams.has("fontfamily")) {
+        var _ff = (urlParams.get("fontfamily") || "").trim();
+        if (_ff) {
+            var _safe = _ff.replace(/['"\\;{}<>]/g, "");
+            var _gf = document.createElement("link");
+            _gf.rel = "stylesheet";
+            _gf.href = "https://fonts.googleapis.com/css2?family=" +
+                encodeURIComponent(_safe).replace(/%20/g, "+") + ":wght@400;500;600;700&display=swap";
+            document.head.appendChild(_gf);
+            document.body.style.fontFamily = "'" + _safe + "', monospace";
+        }
+    }
+
     const chatContainer = document.getElementById('chat-container');
     const messageListWrapper = document.getElementById('message-list-wrapper');
     const MAX_MESSAGES = 25; // More messages for terminal feel
@@ -473,7 +497,7 @@ body::before {
 
     // Create a single, reusable AudioContext to avoid resource exhaustion
     let audioContext = null;
-    let soundEnabled = true;
+    let soundEnabled = !urlParams.has("nosound");
     let waitingForUserGesture = false;
 
     function initAudioContext() {
@@ -598,6 +622,7 @@ body::before {
     }, 1000);
     
     function addMessageToOverlay(data) {
+        if (hideBots && data.bot) { return; }
         if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
             return;
         }
@@ -673,7 +698,7 @@ body::before {
         const textElement = messageDiv.querySelector('.text');
         if (textElement && data.chatmessage) {
             if (data.textonly) {
-                typewriterEffect(textElement, data.chatmessage, 20);
+                typewriterEffect(textElement, data.chatmessage, TYPE_SPEED);
             } else {
                 // For HTML content, set it directly without typewriter effect
                 textElement.innerHTML = data.chatmessage;

@@ -56,6 +56,20 @@
 		params += "&showtime=" + urlParams.get("showtime");
 	}
 
+	// --- Common overlay tweaks (shared across themes) ---
+	// hidebots is handled by the embedded dock.html, so pass it through
+	if (urlParams.has("hidebots")){
+		params += "&hidebots";
+	}
+	if (urlParams.has("chroma")){
+		const _c = urlParams.get("chroma") || "";
+		document.body.style.backgroundColor = _c.charAt(0) === "#" ? _c : "#" + _c;
+	}
+	if (urlParams.has("darkmode")){
+		const _bg = document.getElementById("bg");
+		if (_bg){ _bg.style.filter = "brightness(0.45) saturate(1.1)"; }
+	}
+
 	if (urlParams.has("session")){
 		getById("iframeOverlay").src = `../../dock.html?session=${urlParams.get("session")}${params}`;
 	}

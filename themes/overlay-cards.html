@@ -521,6 +521,30 @@ body {
     // showtime: if set, messages will fade out and be removed after this many milliseconds (default: 0 = no auto-removal)
     var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 0;
 
+    // --- Common overlay tweaks (shared across themes) ---
+    var hideBots = urlParams.has("hidebots");
+    var FLIP_CHANCE = urlParams.has("autoflip") ? 0.08 : 0.005;
+    if (urlParams.has("chroma")) {
+        var _c = urlParams.get("chroma") || "";
+        document.body.style.background = _c.charAt(0) === "#" ? _c : "#" + _c;
+    }
+    if (urlParams.has("font")) {
+        var _fs = parseInt(urlParams.get("font"), 10);
+        if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+    }
+    if (urlParams.has("fontfamily")) {
+        var _ff = (urlParams.get("fontfamily") || "").trim();
+        if (_ff) {
+            var _safe = _ff.replace(/['"\\;{}<>]/g, "");
+            var _gf = document.createElement("link");
+            _gf.rel = "stylesheet";
+            _gf.href = "https://fonts.googleapis.com/css2?family=" +
+                encodeURIComponent(_safe).replace(/%20/g, "+") + ":wght@400;500;600;700&display=swap";
+            document.head.appendChild(_gf);
+            document.body.style.fontFamily = "'" + _safe + "', sans-serif";
+        }
+    }
+
     const chatContainer = document.getElementById('chat-container');
     const messageListWrapper = document.getElementById('message-list-wrapper');
     const MAX_MESSAGES = 20;
@@ -608,7 +632,7 @@ body {
                 }
 
                 // Random card effects
-                if (Math.random() < 0.005 && !message.classList.contains('fading')) {
+                if (Math.random() < FLIP_CHANCE && !message.classList.contains('fading')) {
                     if (Math.random() < 0.5) {
                         message.classList.add('flipping');
                         setTimeout(() => message.classList.remove('flipping'), 1000);
@@ -622,6 +646,7 @@ body {
     }, 1000);
     
     function addMessageToOverlay(data) {
+        if (hideBots && data.bot) { return; }
         if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
             return;
         }

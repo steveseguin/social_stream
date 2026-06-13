@@ -224,6 +224,81 @@
 	var KICK_TRANSPORT_HARD_RELOAD_GRACE_MS = 15 * 60 * 1000;
 	var KICK_TRANSPORT_RELOAD_WINDOW_MS = 30 * 60 * 1000;
 	var KICK_TRANSPORT_RELOAD_LIMIT = 2;
+	var kickDebugEnabled = false;
+	var kickDebugLastLogAt = {};
+	var kickDebugTransportFrameCount = 0;
+	try {
+		var kickDebugParams = new URLSearchParams(window.location.search || "");
+		kickDebugEnabled = kickDebugParams.has("debugkick")
+			|| kickDebugParams.has("kickdebug")
+			|| kickDebugParams.get("debug") === "kick"
+			|| localStorage.getItem("ss_kick_debug") === "1"
+			|| sessionStorage.getItem("ss_kick_debug") === "1";
+	} catch (e) {}
+
+	function kickDebugLog(label, details) {
+		if (!kickDebugEnabled) {
+			return;
+		}
+		try {
+			if (typeof details !== "undefined") {
+				console.log("[Social Stream][Kick Debug] " + label, details);
+			} else {
+				console.log("[Social Stream][Kick Debug] " + label);
+			}
+		} catch (e) {}
+	}
+
+	function kickDebugLogThrottled(key, interval, label, details) {
+		if (!kickDebugEnabled) {
+			return;
+		}
+		var now = Date.now();
+		if (kickDebugLastLogAt[key] && now - kickDebugLastLogAt[key] < interval) {
+			return;
+		}
+		kickDebugLastLogAt[key] = now;
+		kickDebugLog(label, typeof details === "function" ? details() : details);
+	}
+
+	function getKickDebugRowInfo(ele) {
+		if (!kickDebugEnabled) {
+			return null;
+		}
+		try {
+			var row = getKickMessageContainer(ele) || (ele && ele.nodeType === 1 ? ele : null);
+			if (!row) {
+				return {
+					nodeName: ele && ele.nodeName ? ele.nodeName : "",
+					hasParent: Boolean(ele && ele.parentElement)
+				};
+			}
+			var dataset = {};
+			if (row.dataset) {
+				Object.keys(row.dataset).forEach(function(key) {
+					dataset[key] = row.dataset[key];
+				});
+			}
+			return {
+				nodeName: row.nodeName || "",
+				className: typeof row.className === "string" ? row.className.slice(0, 180) : "",
+				connected: row.isConnected,
+				dataset: dataset,
+				transform: row.style && row.style.transform ? row.style.transform : "",
+				text: normalizeKickText(row.textContent || "").slice(0, 180),
+				deleted: Boolean(row.deleted)
+			};
+		} catch (e) {
+			return {
+				error: e && e.message ? e.message : String(e)
+			};
+		}
+	}
+
+	kickDebugLog("debug enabled", {
+		url: window.location.href,
+		isPopoutChat: window.location.href.indexOf("/popout/") !== -1
+	});
 
 	// Persistent cache configuration
 	const CACHE_KEY = 'kick_user_profiles_cache';
@@ -310,9 +385,17 @@
 	function requestKickTransportRecovery(reason) {
 		var now = Date.now();
 		if (now - kickTransportStartedAt < KICK_TRANSPORT_STARTUP_GRACE_MS) {
+			kickDebugLogThrottled("transport-startup-grace", 30000, "transport recovery skipped during startup grace", {
+				reason: reason,
+				ageMs: now - kickTransportStartedAt
+			});
 			return;
 		}
 		if (now - kickTransportLastRecoveryAt < KICK_TRANSPORT_RECOVERY_COOLDOWN_MS) {
+			kickDebugLogThrottled("transport-recovery-cooldown", 30000, "transport recovery skipped during cooldown", {
+				reason: reason,
+				cooldownRemainingMs: KICK_TRANSPORT_RECOVERY_COOLDOWN_MS - (now - kickTransportLastRecoveryAt)
+			});
 			return;
 		}
 		kickTransportLastRecoveryAt = now;
@@ -321,18 +404,34 @@
 			observerReady = refreshKickChatObserver();
 		} catch (e) {}
 		if (observerReady) {
+			kickDebugLog("transport recovery refreshed observer", {
+				reason: reason,
+				target: getKickDebugRowInfo(kickChatObserverTarget)
+			});
 			console.warn("[Social Stream] Kick chat transport looks idle; refreshed chat observer without reloading. Reason: " + reason);
 			return;
 		}
 		if (now - kickTransportStartedAt < KICK_TRANSPORT_HARD_RELOAD_GRACE_MS) {
+			kickDebugLog("transport recovery waiting before reload", {
+				reason: reason,
+				ageMs: now - kickTransportStartedAt
+			});
 			console.warn("[Social Stream] Kick chat transport looks idle and chat target is missing; waiting before reload. Reason: " + reason);
 			return;
 		}
 		var history = readKickTransportReloadHistory(now);
 		if (history.length >= KICK_TRANSPORT_RELOAD_LIMIT) {
+			kickDebugLog("transport recovery reload limit reached", {
+				reason: reason,
+				history: history
+			});
 			return;
 		}
 		markKickTransportReload(now);
+		kickDebugLog("transport recovery reloading window", {
+			reason: reason,
+			history: history
+		});
 		console.warn("[Social Stream] Kick chat transport stalled and chat target is missing; reloading source window. Reason: " + reason);
 		try {
 			window.location.reload();
@@ -342,8 +441,14 @@
 	function startKickTransportWatchdog() {
 		try {
 			if (!window.ninjafy || typeof window.ninjafy.onWebSocketMessage !== "function" || kickTransportWatchdogTimer) {
+				kickDebugLogThrottled("transport-watchdog-not-started", 30000, "transport watchdog not started", {
+					hasNinjafy: Boolean(window.ninjafy),
+					hasWebSocketHook: Boolean(window.ninjafy && typeof window.ninjafy.onWebSocketMessage === "function"),
+					alreadyStarted: Boolean(kickTransportWatchdogTimer)
+				});
 				return;
 			}
+			kickDebugLog("transport watchdog started");
 			window.ninjafy.onWebSocketMessage(function(event) {
 				if (!event || !isKickChatTransportUrl(event.url)) {
 					return;
@@ -353,19 +458,41 @@
 				if (event.type === "open") {
 					kickTransportOpenCount++;
 					kickTransportLastActivityAt = now;
+					kickDebugLog("transport open", {
+						url: event.url,
+						openCount: kickTransportOpenCount
+					});
 				} else if (event.type === "close") {
 					kickTransportOpenCount = Math.max(0, kickTransportOpenCount - 1);
 					kickTransportLastActivityAt = now;
+					kickDebugLog("transport close", {
+						url: event.url,
+						openCount: kickTransportOpenCount
+					});
 				} else if (event.type === "message" || event.type === "send") {
+					kickDebugTransportFrameCount++;
 					kickTransportLastActivityAt = now;
+					kickDebugLogThrottled("transport-frames", 15000, "transport frames observed", {
+						type: event.type,
+						url: event.url,
+						totalFrames: kickDebugTransportFrameCount,
+						openCount: kickTransportOpenCount
+					});
 				}
 			});
 			kickTransportWatchdogTimer = setInterval(function() {
 				if (!kickTransportObserved) {
+					kickDebugLogThrottled("transport-not-observed", 60000, "transport not observed yet");
 					return;
 				}
 				var lastActivityAt = Math.max(kickTransportLastActivityAt, kickChatLastDomActivityAt);
 				var idleMs = Date.now() - lastActivityAt;
+				kickDebugLogThrottled("transport-watchdog-state", 60000, "transport watchdog state", {
+					openCount: kickTransportOpenCount,
+					idleMs: idleMs,
+					transportIdleMs: Date.now() - kickTransportLastActivityAt,
+					domIdleMs: Date.now() - kickChatLastDomActivityAt
+				});
 				if (kickTransportOpenCount <= 0 && idleMs > KICK_TRANSPORT_CLOSED_RECOVERY_MS) {
 					requestKickTransportRecovery("no open Kick websocket for " + Math.round(idleMs / 1000) + "s");
 				} else if (idleMs > KICK_TRANSPORT_STALE_RECOVERY_MS) {
@@ -1041,6 +1168,7 @@
 		if (!ele || !ele.dataset) {
 			return;
 		}
+		kickDebugLog("clearing row tracking state", getKickDebugRowInfo(ele));
 		delete ele.dataset.matched;
 		delete ele.dataset.ssMessageKey;
 		delete ele.dataset.mid;
@@ -1054,12 +1182,22 @@
 		ele.dataset.mid = id;
 		const key = getKickMessageKey(ele);
 		if (!key) {
+			kickDebugLog("message id not tracked; empty key", {
+				id: id,
+				row: getKickDebugRowInfo(ele)
+			});
 			return;
 		}
 		if (trackedKickMessageIds.has(key)) {
 			trackedKickMessageIds.delete(key);
 		}
 		trackedKickMessageIds.set(key, id);
+		kickDebugLog("message id tracked", {
+			id: id,
+			key: key,
+			trackedSize: trackedKickMessageIds.size,
+			row: getKickDebugRowInfo(ele)
+		});
 		if (trackedKickMessageIds.size > maxTrackedKickMessageIds) {
 			const oldestKey = trackedKickMessageIds.keys().next().value;
 			if (oldestKey) {
@@ -1078,6 +1216,11 @@
 		}
 		const key = getKickMessageKey(ele);
 		if (!key || !trackedKickMessageIds.has(key)) {
+			kickDebugLog("delete id lookup missed", {
+				key: key,
+				trackedSize: trackedKickMessageIds.size,
+				row: getKickDebugRowInfo(ele)
+			});
 			return null;
 		}
 		const parsedId = parseInt(trackedKickMessageIds.get(key), 10);
@@ -1121,6 +1264,7 @@
 			return false;
 		}
 		if (messageEle.deleted) {
+			kickDebugLog("delete skipped; row already marked deleted", getKickDebugRowInfo(messageEle));
 			return true;
 		}
 		messageEle.deleted = true;
@@ -1136,19 +1280,31 @@
 			}
 			data.type = "kick";
 			if (!data.id && !data.chatname) {
+				kickDebugLog("delete skipped; no id or chatname", getKickDebugRowInfo(messageEle));
 				return true;
 			}
 			if (!data.id) {
 				data.onlyLast = true;
 			}
+			kickDebugLog("delete sending", {
+				data: data,
+				row: getKickDebugRowInfo(messageEle)
+			});
 			chrome.runtime.sendMessage(
 				chrome.runtime.id,
 				{
 					delete: data
 				},
-				function (e) {}
+				function (e) {
+					if (chrome.runtime && chrome.runtime.lastError) {
+						kickDebugLog("delete send failed", chrome.runtime.lastError.message);
+						return;
+					}
+					kickDebugLog("delete send response", e);
+				}
 			);
 		} catch (e) {
+			kickDebugLog("delete exception", e && e.message ? e.message : String(e));
 		}
 		return true;
 	}
@@ -1393,7 +1549,10 @@
 	
 	async function processMessageNew(ele){	// new popout format
 	
-	  if (!ele || !ele.isConnected) return;
+	  if (!ele || !ele.isConnected) {
+		kickDebugLog("process:new skipped; missing or disconnected row", getKickDebugRowInfo(ele));
+		return;
+	  }
 	  
 	  var chatname = "";
 	  let messageId = "";
@@ -1408,6 +1567,10 @@
 		  }
 
 	  } catch(e){
+		  kickDebugLog("process:new skipped; username not found", {
+			error: e && e.message ? e.message : String(e),
+			row: getKickDebugRowInfo(ele)
+		  });
 		  return;
 	  }
 	  
@@ -1418,26 +1581,63 @@
 			const content = ele.textContent || "";
 			const imgSrcs = Array.from(ele.querySelectorAll('img')).map(img => img.src).join(' ');
 			messageId = `${chatname}|${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
+			kickDebugLog("process:new used fallback message key", {
+				messageId: messageId,
+				row: getKickDebugRowInfo(ele)
+			});
 		}
 		if (deleteThis(ele)) return;
 		if (ele.dataset.matched && ele.dataset.ssMessageKey === messageId){
+			kickDebugLog("process:new skipped; row already matched same key", {
+				messageId: messageId,
+				row: getKickDebugRowInfo(ele)
+			});
 			return;
 		}
 		ele.dataset.matched = true;
 		ele.dataset.ssMessageKey = messageId;
+		kickDebugLog("process:new row marked", {
+			messageId: messageId,
+			row: getKickDebugRowInfo(ele)
+		});
 
 		let sibling = ele.nextElementSibling;
 		let nextCount = 0;
 		while(sibling) {
 			nextCount++;
-			if (nextCount>5){return;}
-			if (sibling.dataset && sibling.dataset.matched){return;}
+			if (nextCount>5){
+				kickDebugLog("process:new skipped; no matched sibling within lookahead", {
+					messageId: messageId,
+					row: getKickDebugRowInfo(ele)
+				});
+				return;
+			}
+			if (sibling.dataset && sibling.dataset.matched){
+				kickDebugLog("process:new skipped; later sibling already matched", {
+					messageId: messageId,
+					sibling: getKickDebugRowInfo(sibling),
+					row: getKickDebugRowInfo(ele)
+				});
+				return;
+			}
 			sibling = sibling.nextElementSibling;
 		}
 
-		if (processedMessages.has(messageId)) return;
+		if (processedMessages.has(messageId)) {
+			kickDebugLog("process:new skipped; processedMessages duplicate", {
+				messageId: messageId,
+				size: processedMessages.size,
+				row: getKickDebugRowInfo(ele)
+			});
+			return;
+		}
 
 		processedMessages.add(messageId);
+		kickDebugLog("process:new accepted key", {
+			messageId: messageId,
+			size: processedMessages.size,
+			row: getKickDebugRowInfo(ele)
+		});
 
 		if (processedMessages.size > maxTrackedMessages) {
 		  const entriesToRemove = processedMessages.size - maxTrackedMessages;
@@ -1447,14 +1647,21 @@
 		  }
 		}
 	  } catch(e) {
-		  console.error(e);
+		console.error(e);
+		kickDebugLog("process:new keying exception", {
+			error: e && e.message ? e.message : String(e),
+			row: getKickDebugRowInfo(ele)
+		});
 		return;
 	  }
 		
 	  if (settings.delaykick){
 		  await sleep(3000);
 	  }
-	  if (!ele || !ele.isConnected) return;
+	  if (!ele || !ele.isConnected) {
+		kickDebugLog("process:new skipped after delay; row disconnected", getKickDebugRowInfo(ele));
+		return;
+	  }
 	  if (deleteThis(ele)) return;
 	  
 	  if (settings.customkickstate) {
@@ -1534,7 +1741,14 @@
 		  }
 	  }
 	  
-	  if (!chatmessage){return;}
+	  if (!chatmessage){
+		kickDebugLog("process:new skipped; empty message", {
+			messageId: messageId,
+			chatname: chatname,
+			row: getKickDebugRowInfo(ele)
+		});
+		return;
+	  }
 	  
 	  var originalMessage = "";
 	  var replyMessage = "";
@@ -1603,6 +1817,11 @@
 	  
 	  
 	  if (!chatmessage && !hasDonation){
+		kickDebugLog("process:new skipped; no message or donation", {
+			messageId: messageId,
+			chatname: chatname,
+			row: getKickDebugRowInfo(ele)
+		});
 		return;
 	  }
 	  if (kickUsername){
@@ -1619,13 +1838,36 @@
 	  //}
 	  
 	  try {
+		kickDebugLog("process:new sending message", {
+			messageId: messageId,
+			chatname: data.chatname,
+			event: data.event,
+			textLength: data.chatmessage ? data.chatmessage.length : 0,
+			hasDonation: data.hasDonation,
+			badgeCount: data.chatbadges ? data.chatbadges.length : 0,
+			row: getKickDebugRowInfo(ele)
+		});
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
+			if (chrome.runtime && chrome.runtime.lastError) {
+				kickDebugLog("process:new send failed", {
+					messageId: messageId,
+					error: chrome.runtime.lastError.message
+				});
+				return;
+			}
+			kickDebugLog("process:new send response", {
+				messageId: messageId,
+				response: e
+			});
 			if (e && ele){
 				rememberKickTrackedMessageId(ele, e?.id);
 			}
 		});
 	  } catch(e){
-		  //
+		kickDebugLog("process:new send exception", {
+			messageId: messageId,
+			error: e && e.message ? e.message : String(e)
+		});
 	  }
 	}
 
@@ -1656,6 +1898,15 @@
 				}
 				if ("settings" in request) {
 					settings = request.settings;
+					kickDebugLog("settings updated", {
+						textonlymode: Boolean(settings.textonlymode),
+						delaykick: Boolean(settings.delaykick),
+						customkickstate: Boolean(settings.customkickstate),
+						excludeReplyingTo: Boolean(settings.excludeReplyingTo),
+						bttv: Boolean(settings.bttv),
+						seventv: Boolean(settings.seventv),
+						ffz: Boolean(settings.ffz)
+					});
 					sendResponse(true);
 					if (settings.bttv) {
 						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
@@ -1703,6 +1954,15 @@
 			response = response || {};
 			if ("settings" in response){
 				settings = response.settings;
+				kickDebugLog("settings loaded", {
+					textonlymode: Boolean(settings.textonlymode),
+					delaykick: Boolean(settings.delaykick),
+					customkickstate: Boolean(settings.customkickstate),
+					excludeReplyingTo: Boolean(settings.excludeReplyingTo),
+					bttv: Boolean(settings.bttv),
+					seventv: Boolean(settings.seventv),
+					ffz: Boolean(settings.ffz)
+				});
 				
 				if (settings.bttv && !BTTV) {
 					chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
@@ -1719,6 +1979,10 @@
 
 	function onElementInsertedOld(target) {
 		var onMutationsObserved = function(mutations) {
+			kickDebugLogThrottled("observer-old-mutations", 5000, "observer:old mutations", {
+				count: mutations.length,
+				target: getKickDebugRowInfo(target)
+			});
 			mutations.forEach(function(mutation) {
 				markKickChatDomActivity();
 				if (mutation.type === "attributes" || mutation.type === "characterData") {
@@ -1764,6 +2028,25 @@
 	
 	function onElementInsertedNew(target, subtree=false) {
 		var onMutationsObserved = function(mutations) {
+			kickDebugLogThrottled("observer-new-mutations", 5000, "observer:new mutations", function() {
+				var added = 0;
+				var removed = 0;
+				var attributes = 0;
+				for (var x = 0; x < mutations.length; x++) {
+					added += mutations[x].addedNodes ? mutations[x].addedNodes.length : 0;
+					removed += mutations[x].removedNodes ? mutations[x].removedNodes.length : 0;
+					if (mutations[x].type === "attributes") {
+						attributes++;
+					}
+				}
+				return {
+					count: mutations.length,
+					added: added,
+					removed: removed,
+					attributes: attributes,
+					target: getKickDebugRowInfo(target)
+				};
+			});
 			mutations.forEach(function(mutation) {
 				markKickChatDomActivity();
 				if (mutation.type === "attributes" || mutation.type === "characterData") {
@@ -1779,6 +2062,7 @@
 						clearKickMessageTrackingState(row);
 					}
 					if (row && row.dataset.index){
+						kickDebugLog("observer:new processing row after removal", getKickDebugRowInfo(row));
 						processMessage(row);
 					}
 				} else if (mutation.target == target || subtree){
@@ -1789,8 +2073,10 @@
 									continue;
 								}
 								if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
+									kickDebugLog("observer:new added data-index row", getKickDebugRowInfo(mutation.addedNodes[i]));
 									if (SevenTV){
 										setTimeout(function(ele){
+											kickDebugLog("observer:new processing delayed 7tv row", getKickDebugRowInfo(ele));
 											processMessage(ele);
 										}, 300, mutation.addedNodes[i]); // give seventv time to load, before parsing the message
 									} else {
@@ -1800,6 +2086,7 @@
 								} else if (mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner")){
 									let ele = mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner");
 									
+									kickDebugLog("observer:new added banner", getKickDebugRowInfo(ele));
 									processMessage(ele);
 								}
 							} catch(e){}
@@ -1820,14 +2107,28 @@
 
 	function replaceKickChatObserver(target, mode, subtree, onMutationsObserved, config) {
 		if (!target) {
+			kickDebugLog("observer replace skipped; missing target", {
+				mode: mode,
+				subtree: subtree
+			});
 			return false;
 		}
 		subtree = Boolean(subtree);
 		if (kickChatObserver && kickChatObserverTarget === target && kickChatObserverMode === mode && kickChatObserverSubtree === subtree && target.isConnected) {
+			kickDebugLogThrottled("observer-reuse-" + mode, 10000, "observer already attached", {
+				mode: mode,
+				subtree: subtree,
+				target: getKickDebugRowInfo(target)
+			});
 			return true;
 		}
 		if (kickChatObserver) {
 			try {
+				kickDebugLog("observer disconnecting previous target", {
+					mode: kickChatObserverMode,
+					subtree: kickChatObserverSubtree,
+					target: getKickDebugRowInfo(kickChatObserverTarget)
+				});
 				kickChatObserver.disconnect();
 			} catch(e) {}
 		}
@@ -1837,6 +2138,12 @@
 		kickChatObserverTarget = target;
 		kickChatObserverMode = mode;
 		kickChatObserverSubtree = subtree;
+		kickDebugLog("observer attached", {
+			mode: mode,
+			subtree: subtree,
+			childCount: target.children ? target.children.length : null,
+			target: getKickDebugRowInfo(target)
+		});
 		return true;
 	}
 
@@ -1844,6 +2151,9 @@
 		if (isPopoutChat) {
 			var targets = document.querySelectorAll("#chatroom-messages > div");
 			if (!targets.length) {
+				kickDebugLogThrottled("observer-no-popout-target", 5000, "observer target missing for popout", {
+					chatroomMessages: Boolean(document.querySelector("#chatroom-messages"))
+				});
 				return null;
 			}
 			return {
@@ -1854,6 +2164,7 @@
 		}
 		var oldTarget = document.getElementById("chatroom");
 		if (!oldTarget) {
+			kickDebugLogThrottled("observer-no-old-target", 5000, "observer target missing for old chatroom");
 			return null;
 		}
 		return {
@@ -1866,11 +2177,22 @@
 	function refreshKickChatObserver() {
 		var current = getKickCurrentChatTarget();
 		if (!current || !current.target) {
+			kickDebugLogThrottled("observer-refresh-no-target", 5000, "observer refresh failed; no target");
 			return false;
 		}
 		if (kickChatObserver && kickChatObserverTarget === current.target && kickChatObserverMode === current.mode && kickChatObserverSubtree === Boolean(current.subtree) && current.target.isConnected) {
+			kickDebugLogThrottled("observer-refresh-current", 10000, "observer refresh found current target", {
+				mode: current.mode,
+				subtree: current.subtree,
+				target: getKickDebugRowInfo(current.target)
+			});
 			return true;
 		}
+		kickDebugLog("observer refresh attaching target", {
+			mode: current.mode,
+			subtree: current.subtree,
+			target: getKickDebugRowInfo(current.target)
+		});
 		if (current.mode === "new") {
 			onElementInsertedNew(current.target, current.subtree);
 		} else {
@@ -1881,8 +2203,10 @@
 
 	function startKickChatObserverWatchdog() {
 		if (kickChatObserverWatchdog) {
+			kickDebugLog("observer watchdog already started");
 			return;
 		}
+		kickDebugLog("observer watchdog started");
 		kickChatObserverWatchdog = setInterval(function() {
 			refreshKickChatObserver();
 		}, 1000);
@@ -1891,6 +2215,14 @@
 	var SevenTV = false;
 	
 	console.log("Social stream injected - " + (isPopoutChat ? "new popout" : "old chatroom"));
+	kickDebugLog("startup", {
+		isPopoutChat: isPopoutChat,
+		isOldChatroom: isOldChatroom,
+		kickUsername: kickUsername,
+		kickUserID: kickUserID,
+		channelImg: channelImg,
+		url: window.location.href
+	});
 	startKickTransportWatchdog();
 	
 	var xxx = setInterval(async function(){ 

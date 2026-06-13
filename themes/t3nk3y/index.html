@@ -142,6 +142,10 @@ span:empty,
 	transform: translateY(20px);
 	transition: opacity 0.5s ease, transform 0.5s ease;
 }
+
+/* Enhanced gaming mode: punchier saturation + RGB glow on messages */
+body.gaming { filter: saturate(1.35) contrast(1.08); }
+body.gaming .message-container { text-shadow: 0 0 6px rgba(0,200,255,0.55), 0 0 10px rgba(255,0,180,0.35); }
 </style>
 <script src="./chroma.min.cjs"></script>
 </head>
@@ -158,6 +162,29 @@ span:empty,
     }
     var password = "false"; // Set password if needed
     var featuredMode = false; // Set to true if you only want to display featured messages
+
+    // --- Common overlay tweaks (shared across themes) ---
+    var hideBots = urlParams.has("hidebots");
+    if (urlParams.has("gaming")) { document.body.classList.add("gaming"); }
+    if (urlParams.has("chroma")) {
+        var _c = urlParams.get("chroma") || "";
+        document.body.style.backgroundColor = _c.charAt(0) === "#" ? _c : "#" + _c;
+    }
+    if (urlParams.has("font")) {
+        var _fs = parseInt(urlParams.get("font"), 10);
+        if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+    }
+    if (urlParams.has("fontfamily")) {
+        var _ff = (urlParams.get("fontfamily") || "").trim();
+        if (_ff) {
+            var _safe = _ff.replace(/['"\\;{}<>]/g, "");
+            var _gf = document.createElement("link");
+            _gf.rel = "stylesheet";
+            _gf.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(_safe).replace(/%20/g, "+") + ":wght@400;500;600;700&display=swap";
+            document.head.appendChild(_gf);
+            document.body.style.fontFamily = "'" + _safe + "', sans-serif";
+        }
+    }
 
     const chatContainer = document.getElementById('chat-container');
 	
@@ -186,6 +213,7 @@ span:empty,
 
     // Function to add a dynamic message to the overlay
     function addMessageToOverlay(data) {
+        if (hideBots && data.bot) { return; }
         const messageContainer = document.createElement('div');
         messageContainer.classList.add('message-container');
         

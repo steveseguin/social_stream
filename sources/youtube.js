@@ -1775,6 +1775,7 @@
 	var youtubeLiveChatActivityCount = 0;
 	var youtubeRecentChatActivityTimes = [];
 	var youtubeLastResourceCount = 0;
+	var youtubeResourceActivitySampled = false;
 	var youtubeLastResourceActivityAt = Date.now();
 	var youtubeStaleReloadMinMs = 60 * 1000;
 	var youtubeStaleReloadMaxMs = 5 * 60 * 1000;
@@ -1980,6 +1981,11 @@
 				return false;
 			}
 			var resourceCount = performance.getEntriesByType("resource").length || 0;
+			if (!youtubeResourceActivitySampled) {
+				youtubeLastResourceCount = resourceCount;
+				youtubeResourceActivitySampled = true;
+				return false;
+			}
 			if (resourceCount > youtubeLastResourceCount) {
 				youtubeLastResourceCount = resourceCount;
 				youtubeLastResourceActivityAt = now;
