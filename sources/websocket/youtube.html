@@ -51,6 +51,7 @@
                         </label>
                     </div>
                 </div>
+                <div id="external-auth-note" class="external-auth-note hidden">A YouTube sign-in window opened in your main system browser. Sign in there, then come back to this app.</div>
             </div>
                     
                     <div class="landing-description">
@@ -2539,6 +2540,18 @@ function enableBackgroundKeepAlive() {
             selector.classList.toggle('hidden', !shouldShow);
         } catch (_) {}
     }
+    function showExternalAuthBrowserNotice() {
+        try {
+            const note = document.getElementById('external-auth-note');
+            if (note) note.classList.remove('hidden');
+        } catch (_) {}
+    }
+    function hideExternalAuthBrowserNotice() {
+        try {
+            const note = document.getElementById('external-auth-note');
+            if (note) note.classList.add('hidden');
+        } catch (_) {}
+    }
     function syncSignedInCredentialsVisibility(forceVisible = false) {
         try {
             const signedInCreds = document.getElementById('credentials-container-signedin');
@@ -2586,6 +2599,7 @@ function enableBackgroundKeepAlive() {
         } catch (_) {}
     }
     function showAuthButton() {
+        hideExternalAuthBrowserNotice();
         const authElement = document.querySelector('.auth');
         if (authElement) authElement.classList.remove("hidden");
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
@@ -2599,6 +2613,7 @@ function enableBackgroundKeepAlive() {
         syncAuthMethodSelectorVisibility();
     }
     function showSocketInterface() {
+        hideExternalAuthBrowserNotice();
         const authElement = document.querySelector('.auth');
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.remove('hidden'));
         if (authElement) authElement.classList.add("hidden");
@@ -3944,6 +3959,7 @@ function enableBackgroundKeepAlive() {
 			alert('This desktop app build is missing local YouTube token exchange support. Please update the desktop app.');
 			return;
 		}
+		showExternalAuthBrowserNotice();
 		const state = nonce(15);
 		setExpectedOAuthState(state);
 		try {
