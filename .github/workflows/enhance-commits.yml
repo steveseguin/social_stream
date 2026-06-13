@@ -35,6 +35,6 @@ jobs:
       - name: Enhance commit messages
         id: enhance
         env:
-          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          ZEN_API_TOKEN: ${{ secrets.ZEN_API_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.COMMIT_ENHANCER_PAT }} # This is used by the script for PR updates
         run: node .github/scripts/enhance-commits.js

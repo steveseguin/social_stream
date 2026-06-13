@@ -1,10 +1,5 @@
-name: AI Code Review
+﻿name: AI Code Review
 
-# Disabled - GLM model produces too many false positives
-# on:
-#   pull_request:
-#     branches: [main]
-#     types: [opened, synchronize]
 on:
   workflow_dispatch:  # Manual trigger only
 
@@ -71,7 +66,7 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         id: review
         env:
-          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          ZEN_API_TOKEN: ${{ secrets.ZEN_API_TOKEN }}
         run: |
           DIFF=$(cat /tmp/pr_diff.txt)
           PR_BODY=$(cat /tmp/pr_body.txt)
@@ -114,33 +109,107 @@ jobs:
 
           Remember: If there are no - lines for a section, there is NO old code to compare against. Do not hallucinate previous behavior."
 
-          # Create JSON payload
-          jq -n \
-            --arg system "$SYSTEM_PROMPT" \
-            --arg user "$USER_PROMPT" \
-            '{
-              model: "glm-4.7",
-              messages: [
-                {role: "system", content: $system},
-                {role: "user", content: $user}
-              ],
-              temperature: 0.1,
-              stream: false
-            }' > /tmp/request.json
+          ZEN_MODELS_ENDPOINT="https://opencode.ai/zen/v1/models"
+          ZEN_RESPONSE_ENDPOINT="https://opencode.ai/zen/v1/responses"
+          ZEN_CHAT_COMPLETIONS_ENDPOINT="https://opencode.ai/zen/v1/chat/completions"
+          OPENCODE_ZEN_FREE_ORDER='["big-pickle","deepseek-v4-flash-free","mimo-v2.5-free","qwen3.6-plus-free","minimax-m3-free","nemotron-3-ultra-free","nemotron-3-super-free"]'
 
-          # Call Z.AI Coding API (uses Coding Plan quota)
-          RESPONSE=$(curl -s -X POST "https://api.z.ai/api/coding/paas/v4/chat/completions" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $ZAI_API_KEY" \
-            -d @/tmp/request.json)
+          extract_zen_text() {
+            echo "$1" | jq -r '
+              (
+                .choices[0].message.content //
+                .output[0].content[0].text //
+                .output[0].text //
+                ""
+              )'
+          }
 
-          # Extract the review content
-          REVIEW=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty')
+          query_zen_model() {
+            local endpoint="$1"
+            local model="$2"
+            local mode="$3"
+            local payload=""
+            if [ "$mode" = "responses" ]; then
+              payload=$(jq -n \
+                --arg model "$model" \
+                --arg system "$SYSTEM_PROMPT" \
+                --arg user "$USER_PROMPT" \
+                '{model:$model,instructions:$system,input:[{role:"user",content:$user}],temperature:0.1}')
+            else
+              payload=$(jq -n \
+                --arg model "$model" \
+                --arg system "$SYSTEM_PROMPT" \
+                --arg user "$USER_PROMPT" \
+                '{
+                  model:$model,
+                  messages:[{role:"system",content:$system},{role:"user",content:$user}],
+                  temperature:0.1,
+                  stream:false
+                }')
+            fi
+            curl -s -X POST "$endpoint" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $ZEN_API_TOKEN" \
+              -d "$payload"
+          }
 
-          if [ -z "$REVIEW" ]; then
+          ZEN_MODEL_LIST=$(curl -s -X GET "$ZEN_MODELS_ENDPOINT" \
+            -H "Authorization: Bearer $ZEN_API_TOKEN" | jq -r --argjson freeOrder "$OPENCODE_ZEN_FREE_ORDER" '
+            ( .data // [] )
+            | map(select(.id | type == "string"))
+            | to_entries
+            | map(
+              .value as $model
+              | {
+                id: ($model.id | ascii_downcase),
+                api_index: .key,
+                free_rank: (($model.id | ascii_downcase) as $id | $freeOrder | index($id)),
+                free: (
+                  ($model.id | ascii_downcase) == "big-pickle"
+                  or ($model.id | endswith("-free"))
+                  or (($model.meta and ($model.meta.is_free | tostring == "true")) // false)
+                  or (($model.is_free | tostring == "true") // false)
+                  or (
+                    (($model.pricing.input? // $model.pricing.prompt? // $model.pricing.output? // $model.pricing.completion? // 0)
+                    | tonumber? // 0)
+                    <= 0
+                  )
+                )
+              }
+            )
+            | sort_by([if .free then 0 else 1 end, (.free_rank // 9999), .api_index, .id])
+            | map(.id)
+            | .[]')
+
+          if [ -z "$ZEN_MODEL_LIST" ]; then
+            ZEN_MODEL_LIST="big-pickle
+          deepseek-v4-flash-free
+          mimo-v2.5-free
+          qwen3.6-plus-free
+          minimax-m3-free
+          nemotron-3-ultra-free
+          nemotron-3-super-free"
+          fi
+
+          REVIEW=""
+          while IFS= read -r ZEN_MODEL; do
+            [ -z "$ZEN_MODEL" ] && continue
+            RESPONSE=$(query_zen_model "$ZEN_RESPONSE_ENDPOINT" "$ZEN_MODEL" "responses")
+            REVIEW=$(extract_zen_text "$RESPONSE")
+            if [ -n "$REVIEW" ] && [ "$REVIEW" != "null" ]; then
+              break
+            fi
+            RESPONSE=$(query_zen_model "$ZEN_CHAT_COMPLETIONS_ENDPOINT" "$ZEN_MODEL" "chat")
+            REVIEW=$(extract_zen_text "$RESPONSE")
+            if [ -n "$REVIEW" ] && [ "$REVIEW" != "null" ]; then
+              break
+            fi
+          done <<< "$ZEN_MODEL_LIST"
+
+          if [ -z "$REVIEW" ] || [ "$REVIEW" = "null" ]; then
             echo "Error: Failed to get AI review"
             echo "Response: $RESPONSE"
-            REVIEW="⚠️ AI review failed to generate. Please check the workflow logs."
+            REVIEW="Warning: AI review failed to generate. Please check the workflow logs."
           fi
 
           # Save review to file
@@ -160,12 +229,12 @@ jobs:
           fi
 
           # Create the comment with header
-          COMMENT="## 🤖 AI Bug Check
+          COMMENT="## OpenCode Zen AI Bug Check
 
           $REVIEW
 
           ---
-          <sub>Auto-check by [Z.AI GLM-4.7](https://z.ai/subscribe?ic=W4IQQ89PNZ) · Style/formatting ignored · Verify findings before acting</sub>"
+          <sub>Auto-check by OpenCode Zen (opencode.ai/zen) · Style/formatting ignored · Verify findings before acting</sub>"
 
           # Post comment to PR
           gh pr comment ${{ github.event.pull_request.number }} \

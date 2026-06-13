@@ -8,9 +8,23 @@ const MAX_DIFF_SIZE = 20000; // Characters - truncate if larger
 const MAX_FILES_TO_SAMPLE = 5; // Maximum number of files to include in the diff
 const SAMPLE_LINES_PER_FILE = 200; // Maximum lines to include per file
 
-// Z.AI GLM API Configuration
-const ZAI_API_ENDPOINT = 'https://api.z.ai/api/coding/paas/v4/chat/completions';
-const ZAI_MODEL = 'glm-5.1';
+// OpenCode Zen API Configuration
+const ZEN_RESPONSES_ENDPOINT = 'https://opencode.ai/zen/v1/responses';
+const ZEN_CHAT_COMPLETIONS_ENDPOINT = 'https://opencode.ai/zen/v1/chat/completions';
+const ZEN_MODELS_ENDPOINT = "https://opencode.ai/zen/v1/models";
+const OPENCODE_ZEN_FREE_MODEL_ORDER = [
+    "big-pickle",
+    "deepseek-v4-flash-free",
+    "mimo-v2.5-free",
+    "qwen3.6-plus-free",
+    "minimax-m3-free",
+    "nemotron-3-ultra-free",
+    "nemotron-3-super-free"
+];
+const ZEN_API_KEY = process.env.ZEN_API_TOKEN;
+
+let openCodeZenModelFreeMetadata = {};
+let openCodeZenModelApiOrder = {};
 
 // --- Error Handling ---
 class ScriptError extends Error {
@@ -28,39 +42,243 @@ function log(level, message, context = {}) {
   console.log(`[${timestamp}] [${level.toUpperCase()}] ${message}`, context);
 }
 
-// Validate Z.AI API key
-if (!process.env.ZAI_API_KEY) {
-  log('error', 'ZAI_API_KEY environment variable is not set.');
+// Validate OpenCode Zen API key
+if (!ZEN_API_KEY) {
+  log('error', 'ZEN_API_TOKEN environment variable is not set.');
   process.exit(1);
 }
-log('info', 'Z.AI API configuration loaded successfully.');
+log('info', 'OpenCode Zen API configuration loaded successfully.');
+
+function extractResponseText(responseData) {
+  if (responseData?.output?.length) {
+    for (const item of responseData.output) {
+      const content = item?.content || [];
+      for (const block of content) {
+        if (typeof block?.text === 'string' && block.text.trim()) {
+          return block.text.trim();
+        }
+      }
+      if (typeof item?.text === 'string' && item.text.trim()) {
+        return item.text.trim();
+      }
+    }
+  }
+  return responseData?.choices?.[0]?.message?.content?.trim() || null;
+}
+
+function isOpenCodeZenFreeModel(modelId) {
+  modelId = String(modelId || "").toLowerCase();
+  return modelId === "big-pickle" || /-free$/.test(modelId);
+}
+
+function inferOpenCodeZenModelFreeFlag(modelId, entry = {}) {
+  const normalized = String(modelId || "").toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  if (entry && typeof entry === "object") {
+    if (typeof entry.is_free === "boolean") return entry.is_free;
+    if (typeof entry.free === "boolean") return entry.free;
+    if (entry.meta && typeof entry.meta === "object" && typeof entry.meta.is_free === "boolean") {
+      return entry.meta.is_free;
+    }
+    const pricing = entry.pricing && typeof entry.pricing === "object" ? entry.pricing : null;
+    if (pricing) {
+      const pricingValues = [pricing.input, pricing.output, pricing.prompt, pricing.completion];
+      for (const value of pricingValues) {
+        if (value === undefined || value === null) continue;
+        const numeric = Number(String(value).trim());
+        if (!Number.isNaN(numeric) && numeric <= 0) {
+          return true;
+        }
+      }
+    }
+  }
+  return isOpenCodeZenFreeModel(normalized);
+}
+
+function getOpenCodeZenModelListRank(modelId) {
+  const lower = String(modelId || "").toLowerCase();
+  const index = OPENCODE_ZEN_FREE_MODEL_ORDER.indexOf(lower);
+  return index === -1 ? OPENCODE_ZEN_FREE_MODEL_ORDER.length : index;
+}
+
+function isOpenCodeZenFreeFromMetadata(modelId) {
+  const key = String(modelId || "").trim().toLowerCase();
+  if (Object.prototype.hasOwnProperty.call(openCodeZenModelFreeMetadata, key)) {
+    return !!openCodeZenModelFreeMetadata[key];
+  }
+  return isOpenCodeZenFreeModel(modelId);
+}
+
+function sortOpenCodeZenModels(modelIds) {
+  return modelIds.slice().sort(function (a, b) {
+    const aFree = isOpenCodeZenFreeFromMetadata(a);
+    const bFree = isOpenCodeZenFreeFromMetadata(b);
+    if (aFree !== bFree) {
+      return aFree ? -1 : 1;
+    }
+    const aOrder = Object.prototype.hasOwnProperty.call(openCodeZenModelApiOrder, String(a || "").toLowerCase())
+      ? openCodeZenModelApiOrder[String(a || "").toLowerCase()]
+      : Number.MAX_SAFE_INTEGER;
+    const bOrder = Object.prototype.hasOwnProperty.call(openCodeZenModelApiOrder, String(b || "").toLowerCase())
+      ? openCodeZenModelApiOrder[String(b || "").toLowerCase()]
+      : Number.MAX_SAFE_INTEGER;
+
+    if (aFree) {
+      const rankDiff = getOpenCodeZenModelListRank(a) - getOpenCodeZenModelListRank(b);
+      if (rankDiff) return rankDiff;
+    }
+    if (aOrder !== bOrder) {
+      return aOrder - bOrder;
+    }
+    return String(a).localeCompare(String(b));
+  });
+}
+
+async function getZenModelCandidates() {
+  const fallbackModels = OPENCODE_ZEN_FREE_MODEL_ORDER.slice();
+  try {
+    const response = await axios.get(ZEN_MODELS_ENDPOINT, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ZEN_API_KEY}`
+      },
+      timeout: 30000
+    });
+    const payload = response?.data || {};
+    const entries = Array.isArray(payload?.data) ? payload.data : [];
+    const normalized = entries
+      .map(function (entry, index) {
+        const id = entry && entry.id ? String(entry.id).trim() : "";
+        if (!id) return null;
+        return {
+          id,
+          isFree: inferOpenCodeZenModelFreeFlag(id, entry),
+          order: index
+        };
+      })
+      .filter(Boolean);
+    if (!normalized.length) {
+      return fallbackModels;
+    }
+    const ids = [];
+    openCodeZenModelFreeMetadata = {};
+    openCodeZenModelApiOrder = {};
+    normalized.forEach(function (entry) {
+      const id = String(entry.id || "").trim();
+      if (!id) return;
+      const lower = id.toLowerCase();
+      openCodeZenModelApiOrder[lower] = Number.isFinite(entry.order) ? entry.order : Number.MAX_SAFE_INTEGER;
+      openCodeZenModelFreeMetadata[lower] = !!entry.isFree;
+      ids.push(id);
+    });
+    return sortOpenCodeZenModels(ids);
+  } catch (error) {
+    log('warn', 'Failed to load Zen model list, using built-in free model order.', {
+      status: error?.response?.status,
+      message: error?.message
+    });
+    openCodeZenModelFreeMetadata = {};
+    openCodeZenModelApiOrder = {};
+    OPENCODE_ZEN_FREE_MODEL_ORDER.forEach(function (modelId) {
+      openCodeZenModelFreeMetadata[String(modelId || "").toLowerCase()] = true;
+      openCodeZenModelApiOrder[String(modelId || "").toLowerCase()] = Number.MAX_SAFE_INTEGER - 1;
+    });
+    return fallbackModels;
+  }
+}
+
+function getOpenCodeZenCandidateModels(models) {
+  const onlyChatModels = models.filter(function (modelId) {
+    const normalized = String(modelId || "").toLowerCase();
+    if (!normalized) return false;
+    if (normalized === "big-pickle" || normalized.indexOf("deepseek-") === 0 || normalized.indexOf("minimax-") === 0 || normalized.indexOf("glm-") === 0 || normalized.indexOf("kimi-") === 0 || normalized.indexOf("mimo-") === 0 || normalized.indexOf("nemotron-") === 0 || normalized.indexOf("grok-build") === 0) {
+      return true;
+    }
+    return false;
+  });
+  return sortOpenCodeZenModels(onlyChatModels.length ? onlyChatModels : OPENCODE_ZEN_FREE_MODEL_ORDER.slice());
+}
+
+async function callZenModelWithFallback(endpoint, payload) {
+  const response = await axios.post(endpoint, payload, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${ZEN_API_KEY}`
+    },
+    timeout: 60000
+  });
+  return extractResponseText(response?.data || {});
+}
 
 /**
- * Calls the Z.AI GLM API with system and user prompts.
+ * Calls the OpenCode Zen API with system and user prompts.
+ * Tries the Zen responses endpoint first, then falls back to chat/completions.
  * @param {string} systemPrompt - The system instructions.
  * @param {string} userPrompt - The user message/data.
  * @returns {Promise<string|null>} - The API response content or null if failed.
  */
 async function callZaiApi(systemPrompt, userPrompt) {
-  const requestBody = {
-    model: ZAI_MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
-    ],
-    temperature: 0.7,
-    stream: false
-  };
+  const allModels = await getZenModelCandidates();
+  const candidates = getOpenCodeZenCandidateModels(allModels);
+  const tried = {};
+  let lastError = null;
 
-  const response = await axios.post(ZAI_API_ENDPOINT, requestBody, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.ZAI_API_KEY}`
-    },
-    timeout: 60000
-  });
+  for (let i = 0; i < candidates.length; i++) {
+    const model = String(candidates[i] || "").trim();
+    if (!model || tried[model]) continue;
+    tried[model] = true;
 
-  return response.data?.choices?.[0]?.message?.content?.trim() || null;
+    const responsesPayload = {
+      model,
+      instructions: systemPrompt,
+      input: [{ role: 'user', content: userPrompt }],
+      temperature: 0.7
+    };
+
+    try {
+      const responsesText = await callZenModelWithFallback(ZEN_RESPONSES_ENDPOINT, responsesPayload);
+      if (responsesText) {
+        return responsesText;
+      }
+      log('warn', 'Zen responses request returned no text, trying chat/completions fallback on same model.', { model });
+    } catch (responseError) {
+      log('warn', 'Zen responses endpoint failed for model, trying chat/completions fallback.', {
+        model,
+        status: responseError?.response?.status,
+        statusText: responseError?.response?.statusText
+      });
+    }
+
+    const chatPayload = {
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.7,
+      stream: false
+    };
+    try {
+      const chatText = await callZenModelWithFallback(ZEN_CHAT_COMPLETIONS_ENDPOINT, chatPayload);
+      if (chatText) {
+        return chatText;
+      }
+    } catch (chatError) {
+      lastError = chatError;
+      log('warn', 'Zen chat/completions endpoint failed for model, trying next model.', {
+        model,
+        status: chatError?.response?.status,
+        statusText: chatError?.response?.statusText
+      });
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+  return null;
 }
 
 // --- Git Operations ---
@@ -427,21 +645,21 @@ ${recentCommitLines}
 **Generate the improved commit message now:**`;
 
   try {
-    log('debug', 'Sending prompt to Z.AI API.');
+    log('debug', 'Sending prompt to OpenCode Zen API.');
     const enhancedMessage = await callZaiApi(systemPrompt, userPrompt);
     if (!enhancedMessage) {
-        throw new Error('Empty response from Z.AI API.');
+        throw new Error('Empty response from OpenCode Zen API.');
     }
-    log('info', 'Successfully received enhanced commit message from Z.AI API.');
+      log('info', 'Successfully received enhanced commit message from OpenCode Zen API.');
     log('debug', 'Enhanced Message:', { message: enhancedMessage });
     if (!/^(feat|fix|chore|refactor|style|test|docs|build|ci)/.test(enhancedMessage)) {
         log('warn', 'Generated message does not strictly follow Conventional Commit format.', { message: enhancedMessage });
     }
     return enhancedMessage;
   } catch (error) {
-    log('error', 'Error calling Z.AI API', { errorMessage: error.message });
+    log('error', 'Error calling OpenCode Zen API', { errorMessage: error.message });
     if (error.response) {
-        log('error', 'Z.AI API Error Response:', { data: error.response.data });
+        log('error', 'OpenCode Zen API Error Response:', { data: error.response.data });
     }
     return null;
   }
@@ -550,7 +768,7 @@ async function updatePRDescription() {
 
     log('info', `Generating enhanced PR description (diff size: ${diffSnippet.length} chars)...`);
 
-    // Generate enhanced description using Z.AI
+    // Generate enhanced description using OpenCode Zen
     const systemPrompt = `You are an expert developer assistant helping refine a Pull Request description for the "Social Stream Ninja" project.
 
 **Project Context: Social Stream Ninja**
@@ -586,7 +804,7 @@ async function updatePRDescription() {
 
     const enhancedDescription = await callZaiApi(systemPrompt, userPrompt);
     if (!enhancedDescription) {
-        throw new Error('Empty response from Z.AI API for PR description.');
+        throw new Error('Empty response from OpenCode Zen API for PR description.');
     }
 
     // Update PR description via GitHub API
@@ -686,7 +904,7 @@ async function main() {
     // Check if enhancement was successful (API returned something)
     // REMOVED: || enhancedMessage.toLowerCase().includes("error")
     if (!enhancedMessage || enhancedMessage.trim() === '') {
-      log('error', 'Failed to generate a valid enhanced commit message from Z.AI API (empty response). Aborting update.');
+      log('error', 'Failed to generate a valid enhanced commit message from OpenCode Zen API (empty response). Aborting update.');
       process.exit(1); // Exit with error if enhancement failed critically
     }
 
