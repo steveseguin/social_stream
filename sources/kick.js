@@ -811,8 +811,9 @@
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	
-	// Kick popout reuses [data-index] values once the visible chat window is full,
-	// so do not assume index is a one-time monotonic key for this message element.
+	// Kick popout uses [data-index] only as a virtual-list row slot. It starts
+	// reusing those row slots around 270-299, so never use data-index as a
+	// message ID, dedupe key, or proof that a chat message was already handled.
 	const KICK_MESSAGE_CONTAINER_SELECTOR = "[data-index], [data-chat-entry]";
 	const KICK_DELETE_TEXTS = new Set(["deleted by a moderator", "(deleted)"]);
 	const KICK_BADGE_SELECTOR = ".badge-tooltip img[src], .badge-tooltip svg, .base-badge img[src], .base-badge svg, .badge img[src], .badge svg, div[data-state] img[src], div[data-state] svg";
@@ -998,23 +999,26 @@
 		var usernameButton = getKickUsernameButton(ele) || null;
 		var username = usernameButton ? normalizeKickText(usernameButton.textContent) : "";
 		var messageNode = getKickInlineMessageNode(ele) || ele.querySelector("span[aria-hidden] ~ span, div span[class*='font-normal']");
+		var rowPosition = ele.style && ele.style.transform ? ele.style.transform : "";
+		var replyLabel = getKickReplyLabel(ele);
 		var messageText = messageNode ? normalizeKickText(messageNode.textContent) : normalizeKickText(ele.textContent || "");
 		if (messageText.length > 220) {
 			messageText = messageText.slice(0, 220);
 		}
 		var imgSrcs = [];
-		var images = ele.querySelectorAll("img");
+		var imageScope = messageNode && messageNode.querySelectorAll ? messageNode : ele;
+		var images = imageScope.querySelectorAll("img");
 		for (var i = 0; i < images.length; i++) {
 			var src = images[i] && images[i].src ? images[i].src : "";
 			if (!src) {
 				continue;
 			}
-			imgSrcs.push(src);
+			imgSrcs.push((images[i].alt || "") + ":" + src);
 			if (imgSrcs.length >= 3) {
 				break;
 			}
 		}
-		return username + "|" + messageText + "|" + imgSrcs.join(",");
+		return rowPosition + "|" + username + "|" + replyLabel + "|" + messageText + "|" + imgSrcs.join(",");
 	}
 
 	function getKickMessageKey(ele) {
@@ -1026,11 +1030,9 @@
 			return `entry:${messageEle.dataset.chatEntry}`;
 		}
 		if (messageEle.dataset.index) {
-			const signature = getKickMessageSignature(messageEle);
-			if (signature) {
-				return `index:${messageEle.dataset.index}|sig:${signature}`;
-			}
-			return `index:${messageEle.dataset.index}`;
+			// data-index is recycled by Kick's virtualized chat, so only use a
+			// content/position fingerprint for dedupe and delete ID lookup.
+			return getKickMessageSignature(messageEle);
 		}
 		return "";
 	}
@@ -1041,6 +1043,8 @@
 		}
 		delete ele.dataset.matched;
 		delete ele.dataset.ssMessageKey;
+		delete ele.dataset.mid;
+		delete ele.deleted;
 	}
 
 	function rememberKickTrackedMessageId(ele, id) {
