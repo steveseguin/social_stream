@@ -133,6 +133,39 @@
 		return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 	}
 
+	function utf8Bytes(value) {
+		var text = String(value || "");
+		var encoded;
+		var out;
+		var i;
+		if (typeof TextEncoder !== "undefined") return new TextEncoder().encode(text);
+		encoded = unescape(encodeURIComponent(text));
+		out = new Uint8Array(encoded.length);
+		for (i = 0; i < encoded.length; i += 1) out[i] = encoded.charCodeAt(i);
+		return out;
+	}
+
+	function decodeBase64Url(value) {
+		var raw = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
+		var binary;
+		var encoded = "";
+		var i;
+		while (raw.length % 4) raw += "=";
+		binary = atob(raw);
+		for (i = 0; i < binary.length; i += 1) encoded += "%" + ("00" + binary.charCodeAt(i).toString(16)).slice(-2);
+		try { return decodeURIComponent(encoded); } catch (e) { return binary; }
+	}
+
+	function encodeOAuthState(saved) {
+		try { return "vpz_" + base64Url(utf8Bytes(JSON.stringify(saved || {}))); } catch (e) { return saved && saved.state ? saved.state : ""; }
+	}
+
+	function decodeOAuthState(value) {
+		var text = String(value || "");
+		if (text.indexOf("vpz_") !== 0) return null;
+		try { return JSON.parse(decodeBase64Url(text.slice(4))); } catch (e) { return null; }
+	}
+
 	function randomVerifier() {
 		var bytes = new Uint8Array(64);
 		try { crypto.getRandomValues(bytes); } catch (e) {
@@ -166,10 +199,9 @@
 		if (!/^https:\/\/(?:beta\.)?socialstream\.ninja$/i.test(url.origin)) return "";
 		if (!/\/(?:beta\/)?sources\/websocket\/vpzone(?:\.html)?$/i.test(url.pathname)) return "";
 		if (/^https:\/\/beta\.socialstream\.ninja$/i.test(url.origin)) {
-			url.pathname = url.pathname.replace(/vpzone(?:\.html)?$/i, "vpzone.html");
-		} else {
-			url.pathname = url.pathname.replace(/vpzone\.html$/i, "vpzone");
+			url = new URL(url.toString().replace(/^https:\/\/beta\.socialstream\.ninja\/sources\//i, "https://socialstream.ninja/beta/sources/"));
 		}
+		url.pathname = url.pathname.replace(/vpzone\.html$/i, "vpzone");
 		url.search = "";
 		url.hash = "";
 		return url.toString();
@@ -367,6 +399,7 @@
 		var verifier = randomVerifier();
 		var stateValue = randomVerifier().slice(0, 32);
 		var redirectUri = normalizeRedirectUri(state.cfg.redirectUri);
+		var transmittedState;
 		var saved = {
 			state: stateValue,
 			verifier: verifier,
@@ -376,6 +409,7 @@
 			scopes: state.cfg.scopes || DEFAULT_SCOPES,
 			createdAt: Date.now()
 		};
+		transmittedState = encodeOAuthState(saved) || stateValue;
 		return codeChallenge(verifier).then(function (challenge) {
 			try { localStorage.setItem(OAUTH_KEY, JSON.stringify(saved)); } catch (e) {}
 			var url = new URL(HOST + "/oauth/authorize");
@@ -383,7 +417,7 @@
 			url.searchParams.set("client_id", state.cfg.clientId || DEFAULT_CLIENT_ID);
 			url.searchParams.set("redirect_uri", redirectUri);
 			url.searchParams.set("scope", state.cfg.scopes || DEFAULT_SCOPES);
-			url.searchParams.set("state", stateValue);
+			url.searchParams.set("state", transmittedState);
 			url.searchParams.set("code_challenge", challenge);
 			url.searchParams.set("code_challenge_method", "S256");
 			window.location.href = url.toString();
@@ -433,14 +467,17 @@
 		var returnedState = query.get("state");
 		var error = query.get("error");
 		var saved = {};
+		var decodedState = decodeOAuthState(returnedState);
+		var returnedStateValue = decodedState && decodedState.state ? decodedState.state : returnedState;
 		if (!code && !error) {
 			scheduleRefresh();
 			return Promise.resolve(false);
 		}
 		try { saved = JSON.parse(localStorage.getItem(OAUTH_KEY) || "{}") || {}; } catch (e) {}
+		if ((!saved || !saved.state) && decodedState) saved = decodedState;
 		cleanupOAuthUrl();
 		if (error) return Promise.reject(new Error(query.get("error_description") || error));
-		if (saved.state && returnedState && saved.state !== returnedState) return Promise.reject(new Error("OAuth state mismatch."));
+		if (saved.state && returnedStateValue && saved.state !== returnedStateValue) return Promise.reject(new Error("OAuth state mismatch."));
 		if (saved.channel) state.cfg.channel = normalizeChannel(saved.channel);
 		if (saved.wsUrl) state.cfg.wsUrl = normalizeWs(saved.wsUrl);
 		if (saved.scopes) state.cfg.scopes = saved.scopes;
