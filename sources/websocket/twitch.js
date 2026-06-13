@@ -1052,6 +1052,23 @@ async function ensureChatClientInstance() {
 	return chatClient;
 }
 
+	async function validateStoredTokenWithoutSideEffects(token) {
+		if (!token) {
+			return false;
+		}
+		try {
+			const response = await fetch('https://id.twitch.tv/oauth2/validate', {
+				headers: {
+					'Authorization': `OAuth ${token}`
+				}
+			});
+			return response.ok;
+		} catch (error) {
+			console.warn('Unable to validate Twitch token after API auth error; keeping current sign-in for retry.', error);
+			return true;
+		}
+	}
+
 	async function validateToken(token) {
 		try {
 			const response = await fetch('https://id.twitch.tv/oauth2/validate', {
@@ -1478,7 +1495,7 @@ async function ensureChatClientInstance() {
 			const hasSubscriptionProgram = channelData.data[0]?.partner || channelData.data[0]?.affiliate;
 
 			return {
-				canViewSubscribers: isBroadcaster || isModerator,
+				canViewSubscribers: isBroadcaster,
 				canViewFollowers: isBroadcaster || isModerator,
 				canViewViewerCount: true, // Public information
 				canSendMessages: true, // Basic chat permission
@@ -2095,6 +2112,35 @@ async function ensureChatClientInstance() {
 		return processedBadges;
 	}
 
+	function isTwitchHelixUrl(value) {
+		try {
+			return new URL(String(value || '')).hostname === 'api.twitch.tv';
+		} catch (_) {
+			return false;
+		}
+	}
+
+	async function handleTwitchApiAuthError(response, requestUrl) {
+		if (!response || !isTwitchHelixUrl(requestUrl)) {
+			return;
+		}
+		if (response.status === 403) {
+			console.warn('Twitch API permission denied; keeping OAuth token for other Twitch features.');
+			return;
+		}
+		if (response.status !== 401) {
+			return;
+		}
+		const token = getStoredToken();
+		const stillValid = await validateStoredTokenWithoutSideEffects(token);
+		if (stillValid) {
+			console.warn('Twitch API rejected this request, but OAuth token is still valid; keeping sign-in.');
+			return;
+		}
+		console.error('Twitch OAuth token failed validation after API auth error; clearing credentials.');
+		handleTokenExpiration();
+	}
+
 	async function fetchWithTimeout(URL, timeout = 8000, headers=false) {
 		try {
 			const controller = new AbortController();
@@ -2114,11 +2160,7 @@ async function ensureChatClientInstance() {
 			}
 			clearTimeout(timeout_id);
 			
-			// Check for 401/403 errors which indicate expired token
-			if (response.status === 401 || response.status === 403) {
-				console.error('Authentication error - token may be expired');
-				handleTokenExpiration();
-			}
+			await handleTwitchApiAuthError(response, URL);
 			
 			return response;
 		} catch (e) {
@@ -3710,7 +3752,7 @@ async function cleanupCurrentConnection() {
 			canManageChat: (isBroadcaster || isModerator) && (scopes['moderator:manage:chat_messages'] || isBroadcaster),
 			canBanUsers: (isBroadcaster || isModerator) && (scopes['moderator:manage:banned_users'] || isBroadcaster),
 			canDeleteMessages: (isBroadcaster || isModerator) && (scopes['moderator:manage:chat_messages'] || isBroadcaster),
-			canViewSubscribers: isBroadcaster || isModerator,
+			canViewSubscribers: isBroadcaster && !!scopes['channel:read:subscriptions'],
 			hasSubscriptionProgram: broadcasterInfo?.partner || broadcasterInfo?.broadcaster_type === 'affiliate',
 			canModerate: isBroadcaster || isModerator,
 			hasChannelModerateScope: !!scopes['channel:moderate'],

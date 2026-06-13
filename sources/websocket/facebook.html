@@ -247,6 +247,22 @@
       font-size: 0.82rem;
       text-align: center;
     }
+    .warning-banner {
+      border-color: rgba(255, 193, 92, 0.45);
+      background: rgba(242, 184, 76, 0.12);
+      color: #ffebbf;
+    }
+    .warning-banner p {
+      margin: 0 0 8px;
+      color: #ffe9bc;
+      font-size: 0.92rem;
+    }
+    .warning-banner p:last-child {
+      margin-bottom: 0;
+    }
+    .warning-banner a {
+      color: #ffdca7;
+    }
     .layout-main {
       display: grid;
       gap: 10px;
@@ -273,6 +289,11 @@
 <body>
   <div class="page">
     <div class="content">
+      <section class="panel warning-banner">
+        <h2>Warning: Websocket mode is a work in progress</h2>
+        <p>Websocket mode is still being rolled out and is awaiting Facebook API approval before it can reliably work for everyone.</p>
+        <p>If Facebook capture in standard mode is not working, make sure you are currently on your live stream and that this app can see the live chat. If the live chat does not update, your account may be shadow-banned from live chat access. In that case, navigate to your Facebook Live Producer dashboard and test there; live chat can still work there in some cases.</p>
+      </section>
       <section class="panel hero">
         <h1>Facebook Live Page API bridge</h1>
         <p>Page-admin bridge for Facebook Live comments. Use this only for Pages you manage.</p>
