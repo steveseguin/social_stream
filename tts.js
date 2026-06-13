@@ -2095,7 +2095,7 @@ TTS.kokoroTTS = async function(text) {
         const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
         
         if (TTS.neuroSyncEnabled) {
-          TTS.sendToNeuroSync(audioBlob, { 
+          TTS.sendToNeuroSync(audioBlob, {
             isKokoroAudio: true,
             onProgress: (progress) => {
               //console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
@@ -2106,6 +2106,8 @@ TTS.kokoroTTS = async function(text) {
             }
           }).catch(err => {
             console.error("NeuroSync error:", err);
+          }).finally(() => {
+            TTS.finishedAudio();
           });
           return;
         }

@@ -2763,6 +2763,7 @@ function enableBackgroundKeepAlive() {
 		if (nextPageToken) {
 			params.set('pageToken', nextPageToken);
 		}
+		// The API method is liveChatMessages.streamList, but the HTTP endpoint is /liveChat/messages/stream; /streamList returns 404.
 		return applyApiKeyOverride(`https://www.googleapis.com/youtube/v3/liveChat/messages/stream?${params.toString()}`);
 	}
 

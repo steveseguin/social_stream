@@ -6,7 +6,7 @@
 	const TOKEN_KEY = "vpzoneWsTokens";
 	const OAUTH_KEY = "vpzoneOAuthState";
 	const DEFAULT_CLIENT_ID = "e63ceeb6-e9e6-4732-a7eb-a8f1613a2686";
-	const DEFAULT_SCOPES = "profile:read profile:write follows:read channel:read channel:write dashboard:read chat:read chat:write chat:moderate chat:announcements notifications:read notifications:write oauth:manage";
+	const DEFAULT_SCOPES = "profile:read chat:read chat:write";
 	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.nexus-7.vpzone.tv/ws", token: "", clientId: DEFAULT_CLIENT_ID, redirectUri: "", scopes: DEFAULT_SCOPES, hideMetrics: false };
 	const RECONNECT_DELAY_MS = 4000;
 	const MAX_SEEN_IDS = 1500;
@@ -153,13 +153,28 @@
 	function defaultRedirectUri() {
 		var href = String(window.location.href || "").split("#")[0].split("?")[0];
 		if (!href) return "";
-		if (/^https:\/\/(?:beta\.)?socialstream\.ninja\//i.test(href)) return href.replace(/\.html$/i, "");
-		return href;
+		return normalizeHostedRedirectUri(href) || href;
+	}
+
+	function normalizeHostedRedirectUri(value) {
+		var url;
+		try {
+			url = new URL(String(value || "").trim());
+		} catch (e) {
+			return "";
+		}
+		if (!/^https:\/\/(?:beta\.)?socialstream\.ninja$/i.test(url.origin)) return "";
+		if (!/\/(?:beta\/)?sources\/websocket\/vpzone(?:\.html)?$/i.test(url.pathname)) return "";
+		url.pathname = url.pathname.replace(/vpzone\.html$/i, "vpzone");
+		url.search = "";
+		url.hash = "";
+		return url.toString();
 	}
 
 	function normalizeRedirectUri(value) {
 		var raw = String(value || "").trim();
-		return raw || defaultRedirectUri();
+		if (!raw) return defaultRedirectUri();
+		return normalizeHostedRedirectUri(raw) || raw;
 	}
 
 	function ssappOAuthHandler() {
@@ -230,6 +245,12 @@
 		return fallback;
 	}
 
+	function jsonFetchError(message, status) {
+		var error = new Error(message);
+		if (status) error.status = status;
+		return error;
+	}
+
 	function fetchJson(url, options) {
 		options = options || {};
 		var headers = options.headers || { Accept: "application/json" };
@@ -243,7 +264,7 @@
 			return response.text().then(function (text) {
 				var json = {};
 				try { json = text ? JSON.parse(text) : {}; } catch (e) { json = { error: text || "Invalid JSON response" }; }
-				if (!response.ok) throw new Error(jsonErrorMessage(json, "HTTP " + response.status));
+				if (!response.ok) throw jsonFetchError(jsonErrorMessage(json, "HTTP " + response.status), response.status);
 				return json;
 			});
 		}).catch(function (error) {
@@ -266,7 +287,7 @@
 							return;
 						}
 						if (!response || !response.ok) {
-							reject(new Error((response && response.error) || "VPZone background fetch failed"));
+							reject(jsonFetchError((response && response.error) || "VPZone background fetch failed", response && response.status));
 							return;
 						}
 						resolve(response.data || {});
@@ -531,18 +552,30 @@
 		return String(text || "").replace(/[\r\n]+$/g, "").trim();
 	}
 
-	function sendChatMessage(rawMessage) {
+	function postChatMessage(channel, message, token) {
+		return fetchJson(HOST + "/api/v1/channels/" + encodeURIComponent(channel) + "/chat", {
+			method: "POST",
+			headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + token },
+			body: JSON.stringify({ message: message }),
+			authToken: token
+		});
+	}
+
+	function sendChatMessage(rawMessage, didRefresh) {
 		var message = outgoingText(rawMessage);
 		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
 		var token = String(state.cfg.token || "");
 		if (!message) return Promise.reject(new Error("Message is empty."));
 		if (!channel) return Promise.reject(new Error("Channel is required."));
 		if (!token) return Promise.reject(new Error("VPZone auth with chat:write is required."));
-		return fetchJson(HOST + "/api/v1/channels/" + encodeURIComponent(channel) + "/chat", {
-			method: "POST",
-			headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + token },
-			body: JSON.stringify({ message: message }),
-			authToken: token
+		return postChatMessage(channel, message, token).catch(function (error) {
+			if (!didRefresh && error && error.status === 401 && state.tokens && state.tokens.refresh_token) {
+				log("VPZone token expired. Refreshing OAuth token.", "warn");
+				return refreshOAuthToken().then(function () {
+					return postChatMessage(channel, message, String(state.cfg.token || ""));
+				});
+			}
+			throw error;
 		}).then(function (json) {
 			log("Sent chat message to @" + channel + ".", "success");
 			return json;
@@ -559,7 +592,7 @@
 		state.cfg.token = typeof saved.token === "string" ? saved.token : "";
 		state.cfg.clientId = typeof saved.clientId === "string" && saved.clientId ? saved.clientId : DEFAULT_CLIENT_ID;
 		state.cfg.redirectUri = normalizeRedirectUri(saved.redirectUri || "");
-		state.cfg.scopes = mergeScopes(typeof saved.scopes === "string" && saved.scopes ? saved.scopes : DEFAULT_SCOPES);
+		state.cfg.scopes = DEFAULT_SCOPES;
 		state.cfg.hideMetrics = !!saved.hideMetrics;
 		query = new URLSearchParams(window.location.search);
 		hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));

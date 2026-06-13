@@ -209,15 +209,19 @@
 	var pastMessages = [];
 	var trackedKickMessageIds = new Map();
 	var maxTrackedKickMessageIds = 500;
+	var kickChatLastDomActivityAt = Date.now();
 	var kickTransportObserved = false;
 	var kickTransportOpenCount = 0;
 	var kickTransportLastActivityAt = Date.now();
+	var kickTransportLastRecoveryAt = 0;
 	var kickTransportWatchdogTimer = null;
 	var kickTransportReloadHistoryKey = "ss_kick_transport_reload_history";
 	var kickTransportStartedAt = Date.now();
-	var KICK_TRANSPORT_CLOSED_RELOAD_MS = 2 * 60 * 1000;
-	var KICK_TRANSPORT_STALE_RELOAD_MS = 4 * 60 * 1000;
+	var KICK_TRANSPORT_CLOSED_RECOVERY_MS = 2 * 60 * 1000;
+	var KICK_TRANSPORT_STALE_RECOVERY_MS = 4 * 60 * 1000;
 	var KICK_TRANSPORT_STARTUP_GRACE_MS = 5 * 60 * 1000;
+	var KICK_TRANSPORT_RECOVERY_COOLDOWN_MS = 2 * 60 * 1000;
+	var KICK_TRANSPORT_HARD_RELOAD_GRACE_MS = 15 * 60 * 1000;
 	var KICK_TRANSPORT_RELOAD_WINDOW_MS = 30 * 60 * 1000;
 	var KICK_TRANSPORT_RELOAD_LIMIT = 2;
 
@@ -262,7 +266,11 @@
 
 	function isKickChatTransportUrl(url) {
 		var value = String(url || "").toLowerCase();
-		return value.indexOf("pusher") !== -1 || value.indexOf("kick.com") !== -1 || value.indexOf("kick-bridge") !== -1;
+		if (value.indexOf("pusher") !== -1 || value.indexOf("kick-bridge") !== -1) {
+			return true;
+		}
+		return value.indexOf("kick.com") !== -1
+			&& (value.indexOf("chat") !== -1 || value.indexOf("chatroom") !== -1 || value.indexOf("ws") !== -1);
 	}
 
 	function readKickTransportReloadHistory(now) {
@@ -295,9 +303,29 @@
 		}
 	}
 
-	function requestKickTransportReload(reason) {
+	function markKickChatDomActivity() {
+		kickChatLastDomActivityAt = Date.now();
+	}
+
+	function requestKickTransportRecovery(reason) {
 		var now = Date.now();
 		if (now - kickTransportStartedAt < KICK_TRANSPORT_STARTUP_GRACE_MS) {
+			return;
+		}
+		if (now - kickTransportLastRecoveryAt < KICK_TRANSPORT_RECOVERY_COOLDOWN_MS) {
+			return;
+		}
+		kickTransportLastRecoveryAt = now;
+		var observerReady = false;
+		try {
+			observerReady = refreshKickChatObserver();
+		} catch (e) {}
+		if (observerReady) {
+			console.warn("[Social Stream] Kick chat transport looks idle; refreshed chat observer without reloading. Reason: " + reason);
+			return;
+		}
+		if (now - kickTransportStartedAt < KICK_TRANSPORT_HARD_RELOAD_GRACE_MS) {
+			console.warn("[Social Stream] Kick chat transport looks idle and chat target is missing; waiting before reload. Reason: " + reason);
 			return;
 		}
 		var history = readKickTransportReloadHistory(now);
@@ -305,7 +333,7 @@
 			return;
 		}
 		markKickTransportReload(now);
-		console.warn("[Social Stream] Kick chat transport stalled; reloading source window. Reason: " + reason);
+		console.warn("[Social Stream] Kick chat transport stalled and chat target is missing; reloading source window. Reason: " + reason);
 		try {
 			window.location.reload();
 		} catch (e) {}
@@ -336,11 +364,12 @@
 				if (!kickTransportObserved) {
 					return;
 				}
-				var idleMs = Date.now() - kickTransportLastActivityAt;
-				if (kickTransportOpenCount <= 0 && idleMs > KICK_TRANSPORT_CLOSED_RELOAD_MS) {
-					requestKickTransportReload("no open Kick websocket for " + Math.round(idleMs / 1000) + "s");
-				} else if (idleMs > KICK_TRANSPORT_STALE_RELOAD_MS) {
-					requestKickTransportReload("no Kick websocket frames for " + Math.round(idleMs / 1000) + "s");
+				var lastActivityAt = Math.max(kickTransportLastActivityAt, kickChatLastDomActivityAt);
+				var idleMs = Date.now() - lastActivityAt;
+				if (kickTransportOpenCount <= 0 && idleMs > KICK_TRANSPORT_CLOSED_RECOVERY_MS) {
+					requestKickTransportRecovery("no open Kick websocket for " + Math.round(idleMs / 1000) + "s");
+				} else if (idleMs > KICK_TRANSPORT_STALE_RECOVERY_MS) {
+					requestKickTransportRecovery("no Kick websocket frames for " + Math.round(idleMs / 1000) + "s");
 				}
 			}, 30000);
 		} catch (e) {}
@@ -1645,6 +1674,7 @@
 	function onElementInsertedOld(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				markKickChatDomActivity();
 				if (mutation.type === "attributes" || mutation.type === "characterData") {
 					deleteThis(mutation.target);
 					return;
@@ -1689,6 +1719,7 @@
 	function onElementInsertedNew(target, subtree=false) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				markKickChatDomActivity();
 				if (mutation.type === "attributes" || mutation.type === "characterData") {
 					deleteThis(mutation.target);
 					return;
@@ -1769,7 +1800,7 @@
 			return {
 				mode: "new",
 				target: targets.length > 1 ? targets[1] : targets[0],
-				subtree: targets.length > 1
+				subtree: true
 			};
 		}
 		var oldTarget = document.getElementById("chatroom");
