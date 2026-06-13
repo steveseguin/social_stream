@@ -165,7 +165,11 @@
 		}
 		if (!/^https:\/\/(?:beta\.)?socialstream\.ninja$/i.test(url.origin)) return "";
 		if (!/\/(?:beta\/)?sources\/websocket\/vpzone(?:\.html)?$/i.test(url.pathname)) return "";
-		url.pathname = url.pathname.replace(/vpzone\.html$/i, "vpzone");
+		if (/^https:\/\/beta\.socialstream\.ninja$/i.test(url.origin)) {
+			url.pathname = url.pathname.replace(/vpzone(?:\.html)?$/i, "vpzone.html");
+		} else {
+			url.pathname = url.pathname.replace(/vpzone\.html$/i, "vpzone");
+		}
 		url.search = "";
 		url.hash = "";
 		return url.toString();
