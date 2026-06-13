@@ -102,6 +102,14 @@ function getCommandAliases(commandString) {
 	return aliases;
 }
 
+function commandAliasStartsWithToken(normalizedText, aliasLower) {
+	if (!normalizedText.startsWith(aliasLower)) {
+		return false;
+	}
+	const nextChar = normalizedText.charAt(aliasLower.length);
+	return !nextChar || /\s/.test(nextChar);
+}
+
 function commandAliasMatches(commandString, messageText, mode) {
 	if (typeof messageText === "undefined" || messageText === null) {
 		return false;
@@ -117,6 +125,9 @@ function commandAliasMatches(commandString, messageText, mode) {
 	}
 	if (mode === "startsWith") {
 		return aliases.some(alias => normalizedText.startsWith(alias.lower));
+	}
+	if (mode === "startsWithToken") {
+		return aliases.some(alias => commandAliasStartsWithToken(normalizedText, alias.lower));
 	}
 	if (mode === "word") {
 		return aliases.some(alias => alias.wordRegex.test(normalizedText));
@@ -146,6 +157,9 @@ function getMatchedCommandAlias(commandString, messageText, mode) {
 			return aliases[i].command;
 		}
 		if (matchMode === "startsWith" && normalizedText.startsWith(aliases[i].lower)) {
+			return aliases[i].command;
+		}
+		if (matchMode === "startsWithToken" && commandAliasStartsWithToken(normalizedText, aliases[i].lower)) {
 			return aliases[i].command;
 		}
 		if (matchMode === "word" && aliases[i].wordRegex.test(normalizedText)) {
@@ -6658,7 +6672,7 @@ async function sendToDestinations(message) {
 			}
 		}
 
-		if (settings.aiAutoTranslate) {
+		if (getSettingFlag("aiAutoTranslate")) {
 			try {
 				const translated = await translateMessageWithLLM(message);
 				if (!translated) {
@@ -6749,12 +6763,12 @@ async function sendToDestinations(message) {
 			const messageText = typeof message.chatmessage === "string" ? message.chatmessage : "";
 			const cleanMessageText = messageText.trim().replace(/^[^a-zA-Z0-9#]+/g, "");
 			settings["customGifCommands"]["object"].forEach(values => {
-				if (cleanMessageText && values.url && values.command && commandAliasMatches(values.command, cleanMessageText, "startsWith")) {
+				if (cleanMessageText && values.url && values.command && commandAliasMatches(values.command, cleanMessageText, "startsWithToken")) {
 					//  || "https://picsum.photos/1280/720?random="+values.command
 					const aliases = getCommandAliases(values.command).map(alias => alias.command);
 					const gifMeta = Object.assign({}, message.meta || {}, {
 						customGifCommandId: getCustomGifCommandEntryId(values.command, values.url, values.id),
-						customGifCommand: getMatchedCommandAlias(values.command, cleanMessageText, "startsWith"),
+						customGifCommand: getMatchedCommandAlias(values.command, cleanMessageText, "startsWithToken"),
 						customGifCommands: aliases
 					});
 					const gifPayload = { ...message, ...{ contentimg: values.url, meta: gifMeta } }; // overwrite any existing contentimg. leave the rest of the meta data tho
@@ -9114,7 +9128,7 @@ function setupSocket() {
 					resp = selectRandomWaitlist();
 				}
 			} else if (data.action && data.action === "drawmode") {
-				const currentState = !!settings.drawmode;
+				const currentState = getSettingFlag("drawmode");
 				let enable;
 
 				if (typeof data.value === "string") {
@@ -9137,12 +9151,16 @@ function setupSocket() {
 					enable = currentState;
 				}
 
-				settings.drawmode = enable;
+				if (enable) {
+					settings.drawmode = true;
+				} else {
+					delete settings.drawmode;
+				}
 				chrome.storage.local.set({ settings: settings });
 				sendWaitlistConfig(null, true);
 				resp = { drawmode: enable };
 			} else if (data.action && data.action === "emoteonly") {
-				const currentState = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));
+				const currentState = getSettingFlag("emoteonlymode");
 				let enable;
 
 				if (typeof data.value === "string") {
@@ -9165,7 +9183,11 @@ function setupSocket() {
 					enable = currentState;
 				}
 
-				settings.emoteonlymode = { setting: enable };
+				if (enable) {
+					settings.emoteonlymode = { setting: true };
+				} else {
+					delete settings.emoteonlymode;
+				}
 				chrome.storage.local.set({ settings: settings });
 				resp = { emoteonlymode: enable };
 			} else if (data.action) {
@@ -16186,7 +16208,7 @@ async function applyBotActions(data, tab = false) {
 		}
 		if (settings.ollamaCensorBot) {
 			try {
-				if (settings.ollamaCensorBotBlockMode) {
+				if (getSettingFlag("ollamaCensorBotBlockMode")) {
 					let good = false;
 					if (data.chatmessage && data.chatmessage.length <= 3) {
 						// For very short messages, use the history-aware censoring

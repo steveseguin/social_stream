@@ -682,7 +682,7 @@
         
         // Handle WebSocket connection
         if (urlParams.has('server')) {
-            const serverUrl = urlParams.get('server');
+            const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
             let socketserver = null;
             let reconnectTimeout = null;
 

@@ -495,7 +495,7 @@ async function fetchOpenCodeZenModels(apiKey = "", force = false) {
 
 async function getOpenCodeZenCandidateModels(llmSettings, refreshModelList) {
     const models = refreshModelList
-        ? await fetchOpenCodeZenModels(getOpenCodeZenApiKey(llmSettings), true)
+        ? await fetchOpenCodeZenModels(getOpenCodeZenApiKey(llmSettings), false)
         : getOpenCodeZenKnownModels();
     const chatModels = sortOpenCodeZenModels(models).filter(isOpenCodeZenChatCompletionsModel);
     const candidates = chatModels.length ? chatModels : OPENCODE_ZEN_FREE_MODEL_ORDER.slice();
@@ -2295,7 +2295,7 @@ async function censorMessageWithLLM(data) {
 
     if (compactProfanityCandidate) {
         rememberCensorContextMessage(data, cleanedText, true);
-        if (settings.ollamaCensorBotBlockMode) {
+        if (getSettingFlag("ollamaCensorBotBlockMode")) {
             return false;
         } else if (isExtensionOn) {
             sendToDestinations({ delete: data });
@@ -2340,7 +2340,7 @@ async function censorMessageWithLLM(data) {
 
         if (decision.blocked) {
             rememberCensorContextMessage(data, cleanedText, true);
-            if (settings.ollamaCensorBotBlockMode) {
+            if (getSettingFlag("ollamaCensorBotBlockMode")) {
                 return false;
             } else if (isExtensionOn) {
                 sendToDestinations({ delete: data });
@@ -2570,7 +2570,7 @@ function getAITranslateCacheKey(targetLanguage, text) {
 }
 
 function getCachedAITranslation(targetLanguage, text) {
-    if (settings?.aiAutoTranslateContext) {
+    if (getSettingFlag("aiAutoTranslateContext")) {
         return null;
     }
     const normalizedText = String(text || "").trim();
@@ -2582,7 +2582,7 @@ function getCachedAITranslation(targetLanguage, text) {
 }
 
 function setCachedAITranslation(targetLanguage, text, translatedText) {
-    if (settings?.aiAutoTranslateContext) {
+    if (getSettingFlag("aiAutoTranslateContext")) {
         return;
     }
     const normalizedText = String(text || "").trim();
@@ -2610,7 +2610,7 @@ function stripAITranslateHtmlToText(value, textonly) {
 }
 
 async function getAITranslateContextLines(limit = 10) {
-    if (!settings?.aiAutoTranslateContext || typeof messageStoreDB === "undefined" || !messageStoreDB?.getRecentMessages) {
+    if (!getSettingFlag("aiAutoTranslateContext") || typeof messageStoreDB === "undefined" || !messageStoreDB?.getRecentMessages) {
         return [];
     }
     try {
@@ -2812,7 +2812,7 @@ function ensureAITranslateMeta(data) {
 }
 
 async function translateMessageWithLLM(data) {
-    if (!settings?.aiAutoTranslate || !data || data.bot || !data.chatmessage) {
+    if (!getSettingFlag("aiAutoTranslate") || !data || data.bot || !data.chatmessage) {
         return true;
     }
 
@@ -2823,7 +2823,7 @@ async function translateMessageWithLLM(data) {
         return true;
     }
 
-    const blockOnBusy = !!settings.aiAutoTranslateBlockMode;
+    const blockOnBusy = getSettingFlag("aiAutoTranslateBlockMode");
     const availableSlot = aiTranslateProcessingSlots.findIndex(function (slot) { return !slot; });
     if (availableSlot === -1) {
         return blockOnBusy ? false : true;
@@ -3096,7 +3096,7 @@ function inferAiOverlayEmotion(text) {
 }
 
 function sendChatBotAiOverlay(text, data, botname, source = "chatbot") {
-    if (!settings?.aiOverlayFromChatBot || typeof sendAiOverlayCommand !== "function") {
+    if (!getSettingFlag("aiOverlayFromChatBot") || typeof sendAiOverlayCommand !== "function") {
         return;
     }
     const responseText = String(text || "").trim();
@@ -3111,7 +3111,7 @@ function sendChatBotAiOverlay(text, data, botname, source = "chatbot") {
             source,
             emotion: inferAiOverlayEmotion(responseText),
             talking: true,
-            tts: !!settings.aiOverlayTts
+            tts: getSettingFlag("aiOverlayTts")
         }
     }, {
         target: settings?.aiOverlayLabel?.textsetting || "",

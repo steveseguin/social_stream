@@ -1981,6 +1981,13 @@
 			return "TikTok is showing a verification challenge in standard mode.";
 		}
 
+		const hasChatMessageRows = !!document.querySelector('[data-e2e="chat-message"]');
+		const hasSignInPrompt = /\b(log in|sign in)\b/.test(bodyText) ||
+			!!document.querySelector('button[data-e2e*="login"], a[href*="/login"], [data-e2e*="login"]');
+		if (hasSignInPrompt && !hasChatMessageRows && elapsed > 12000) {
+			return "TikTok is asking you to sign in before standard mode can see live chat.";
+		}
+
 		const state = getTikTokStateObject();
 		const liveRoom = state?.LiveRoom?.liveRoomUserInfo?.liveRoom || null;
 		const currentRoom = state?.CurrentRoom || null;
@@ -1999,7 +2006,7 @@
 			return null;
 		}
 
-		const hasChatSurface = !!document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-message"]');
+		const hasChatSurface = !!document.querySelector('[data-e2e="chat-room"], [data-e2e="live-chat-container"], [data-e2e="public-screen-live-chat-slot"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list, [data-e2e="chat-message"]');
 		const hasComposer = !!findTikTokChatComposer() || !!document.querySelector(".public-DraftEditorPlaceholder-inner");
 		const hasDisabledComposer = !!document.querySelector("div[contenteditable='plaintext-only'][disabled][placeholder]");
 		if ((!hasChatSurface && !hasComposer) || hasDisabledComposer) {
@@ -2024,6 +2031,26 @@
 		}
 	}
 
+	function findTikTokChatMessageObserverTarget() {
+		var firstMessage = document.querySelector('[data-e2e="chat-message"]');
+		if (!firstMessage) {
+			return null;
+		}
+
+		var candidate = firstMessage.parentElement;
+		for (var depth = 0; candidate && candidate !== document.body && depth < 8; depth++) {
+			if (candidate.querySelectorAll && candidate.querySelectorAll('[data-e2e="chat-message"]').length) {
+				var className = typeof candidate.className === "string" ? candidate.className : "";
+				if (className.includes("absolute") || className.includes("relative") || candidate.children.length > 1) {
+					return candidate;
+				}
+			}
+			candidate = candidate.parentElement;
+		}
+
+		return firstMessage.parentElement || null;
+	}
+
 	function getTikTokMainObserverTarget() {
 		let target = null;
 		let subtree = false;
@@ -2036,6 +2063,18 @@
 			target = document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
 			if (target) {
 				subtree = true;
+			}
+			if (!target) {
+				target = findTikTokChatMessageObserverTarget();
+				if (target) {
+					subtree = true;
+				}
+			}
+			if (!target) {
+				target = document.querySelector('[data-e2e="live-chat-container"], [data-e2e="public-screen-live-chat-slot"]');
+				if (target) {
+					subtree = true;
+				}
 			}
 			if (!target) {
 				target = document.querySelector('.live-room-container div[data-index]:not([data-index="-1"])');

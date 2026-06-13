@@ -90,8 +90,6 @@
 	var channelName = "";
 	var processedMessageNodes = new WeakSet();
 	var initialBacklogSkipped = false;
-	var INITIAL_BACKLOG_SUPPRESS_MS = 7000;
-	var ignoreNewMessagesUntil = Date.now() + INITIAL_BACKLOG_SUPPRESS_MS;
 	var CHAT_TEXT_SELECTOR = ".css-1jxf684";
 	var lastViewerCount = null;
 
@@ -589,10 +587,6 @@
 
 							var messageNodes = collectMessageNodes(addedNode);
 							for (var j = 0; j < messageNodes.length; j++){
-								if (Date.now() < ignoreNewMessagesUntil){
-									markMessageProcessed(messageNodes[j]);
-									continue;
-								}
 								setTimeout(function(ele){
 										processMessage(ele);
 								},300,messageNodes[j]);
@@ -641,7 +635,6 @@
 					lastURL = window.location.href;
 					processedMessageNodes = new WeakSet();
 					initialBacklogSkipped = false;
-					ignoreNewMessagesUntil = Date.now() + INITIAL_BACKLOG_SUPPRESS_MS;
 					if (container){
 						container.marked = false;
 					}
@@ -652,7 +645,6 @@
 						markExistingMessagesProcessed(container);
 						initialBacklogSkipped = true;
 					}
-					ignoreNewMessagesUntil = Math.max(ignoreNewMessagesUntil, Date.now() + 2500);
 
 					console.log("CONNECTED");
 

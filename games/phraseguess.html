@@ -254,7 +254,7 @@ You can't handle the truth</textarea>
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session') || '';
         const password = urlParams.get('password') || 'false';
-        const serverUrl = urlParams.get('server');
+        const serverUrl = urlParams.has('server') ? (urlParams.get('server') || 'wss://io.socialstream.ninja') : '';
         const demo = urlParams.has('demo');
         
         const config = {

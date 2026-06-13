@@ -464,6 +464,7 @@ try {
 	var liveChatStreamActive = false;
 	var liveChatStreamStopping = false;
 	var liveChatStreamReadBuffer = '';
+	var liveChatPollingFallbackActive = false;
 	var tokenRefreshPromise = null;
 	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.";
 	const INNERTUBE_EMOJI_CACHE_TTL = 24 * 60 * 60 * 1000;
@@ -2622,7 +2623,11 @@ function enableBackgroundKeepAlive() {
 			}
 			
 			if (liveChatId && !liveChatStreamActive && !liveChatStreamAbortController && !fetchTimeout) {
-				scheduleLiveChatStreamReconnect(1000);
+				if (liveChatPollingFallbackActive) {
+					scheduleLiveChatPolling(1000);
+				} else {
+					scheduleLiveChatStreamReconnect(1000);
+				}
 			}
 		} else if (!isPageVisible && wasVisible) {
 			console.log('Page is now hidden - switching to background mode');
@@ -2650,8 +2655,8 @@ function enableBackgroundKeepAlive() {
 			} catch (_) {}
 			fetchTimeout = null;
 		}
-		console.log(`Waiting ${resumeDelay}ms for token refresh before retrying YouTube chat stream`);
-		fetchTimeout = setTrackedTimeout(startLiveChatStream, resumeDelay, !isPageVisible);
+		console.log(`Waiting ${resumeDelay}ms for token refresh before retrying YouTube chat`);
+		fetchTimeout = setTrackedTimeout(liveChatPollingFallbackActive ? startLiveChatPolling : startLiveChatStream, resumeDelay, !isPageVisible);
 		return resumeDelay;
 	}
 
@@ -2698,6 +2703,11 @@ function enableBackgroundKeepAlive() {
 		if (!liveChatId || fetchTimeout || liveChatStreamActive || liveChatStreamAbortController) return;
 		updateLiveChatStreamIndicator('reconnect');
 		fetchTimeout = setTrackedTimeout(startLiveChatStream, delayMs, !isPageVisible);
+	}
+
+	function scheduleLiveChatPolling(delayMs = 2000) {
+		if (!liveChatId || fetchTimeout || liveChatStreamActive || liveChatStreamAbortController) return;
+		fetchTimeout = setTrackedTimeout(startLiveChatPolling, delayMs, !isPageVisible);
 	}
 
 	function stopLiveChatStream() {
@@ -2754,6 +2764,19 @@ function enableBackgroundKeepAlive() {
 			params.set('pageToken', nextPageToken);
 		}
 		return applyApiKeyOverride(`https://www.googleapis.com/youtube/v3/liveChat/messages/stream?${params.toString()}`);
+	}
+
+	function buildLiveChatPollingUrl() {
+		const params = new URLSearchParams({
+			liveChatId,
+			part: 'id,snippet,authorDetails',
+			maxResults: String(LIVE_CHAT_MAX_RESULTS),
+			profileImageSize: '88'
+		});
+		if (nextPageToken) {
+			params.set('pageToken', nextPageToken);
+		}
+		return applyApiKeyOverride(`https://www.googleapis.com/youtube/v3/liveChat/messages?${params.toString()}`);
 	}
 
 	function extractCompleteJsonFromBuffer(final = false) {
@@ -2889,6 +2912,29 @@ function enableBackgroundKeepAlive() {
 		return value.includes('livechatended') || value.includes('live_chat_ended');
 	}
 
+	function showLiveChatQuotaExceededMessage() {
+		console.error('YouTube API quota exceeded');
+		showQuotaBanner();
+		const textarea = document.querySelector("#textarea");
+		if (textarea) {
+			var span = document.createElement("div");
+			span.style.color = "red";
+			span.innerHTML = "YouTube API quota limit hit. You can switch to standard YouTube scraping mode in Social Stream Ninja as an alternative until the quota resets.";
+			textarea.appendChild(span);
+		}
+		updateHeaderInfo(username, 'Quota Exceeded');
+	}
+
+	function switchLiveChatStreamToPollingFallback(error, delayMs) {
+		if (!liveChatId) return;
+		liveChatPollingFallbackActive = true;
+		updateLiveChatStreamIndicator('polling');
+		console.warn('YouTube live chat stream unavailable; falling back to liveChat/messages polling:', error && error.message ? error.message : error);
+		if (!fetchTimeout) {
+			scheduleLiveChatPolling(delayMs || Math.max(1000, youtubeRecommendedInterval || 5000));
+		}
+	}
+
 	async function handleLiveChatStreamError(error) {
 		if (error && error.name === 'AbortError') {
 			return;
@@ -2905,21 +2951,12 @@ function enableBackgroundKeepAlive() {
 		}
 		if (error && error.ytStatus === 403) {
 			if (isQuotaError(error)) {
-				console.error('YouTube API quota exceeded');
-				showQuotaBanner();
-				const textarea = document.querySelector("#textarea");
-				if (textarea) {
-					var span = document.createElement("div");
-					span.style.color = "red";
-					span.innerHTML = "YouTube API quota limit hit. You can switch to standard YouTube scraping mode in Social Stream Ninja as an alternative until the quota resets.";
-					textarea.appendChild(span);
-				}
-				updateHeaderInfo(username, 'Quota Exceeded');
+				showLiveChatQuotaExceededMessage();
 				scheduleLiveChatStreamReconnect(300000);
 				return;
 			}
 			console.warn('Access forbidden - chat may be disabled or restricted');
-			scheduleLiveChatStreamReconnect(30000);
+			switchLiveChatStreamToPollingFallback(error, 30000);
 			return;
 		}
 		if (error && error.ytStatus === 429) {
@@ -2933,7 +2970,42 @@ function enableBackgroundKeepAlive() {
 		console.error('Error streaming YouTube chat messages:', error);
 		const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000);
 		quickPollCount++;
-		scheduleLiveChatStreamReconnect(backoffTime);
+		switchLiveChatStreamToPollingFallback(error, backoffTime);
+	}
+
+	async function handleLiveChatPollingError(error) {
+		if (isLiveChatEndedStreamError(error)) {
+			console.log('YouTube reported live chat ended; stopping polling.');
+			handleLiveChatEnded();
+			return;
+		}
+		if (error && error.ytStatus === 401) {
+			await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+			scheduleAuthRetry();
+			return;
+		}
+		if (error && error.ytStatus === 403) {
+			if (isQuotaError(error)) {
+				showLiveChatQuotaExceededMessage();
+				scheduleLiveChatPolling(300000);
+				return;
+			}
+			console.warn('Access forbidden while polling YouTube chat');
+			scheduleLiveChatPolling(30000);
+			return;
+		}
+		if (error && error.ytStatus === 429) {
+			console.warn('Rate limited by YouTube API while polling');
+			showQuotaBanner();
+			const backoffTime = Math.min(60000 * Math.pow(2, quickPollCount), 300000);
+			quickPollCount++;
+			scheduleLiveChatPolling(backoffTime);
+			return;
+		}
+		console.error('Error polling YouTube chat messages:', error);
+		const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000);
+		quickPollCount++;
+		scheduleLiveChatPolling(backoffTime);
 	}
 
 	async function readLiveChatStream(controller, token) {
@@ -2981,12 +3053,19 @@ function enableBackgroundKeepAlive() {
 				return;
 			}
 			if (!liveChatStreamStopping && liveChatId && !fetchTimeout) {
-				scheduleLiveChatStreamReconnect(Math.max(1000, youtubeRecommendedInterval || 5000));
+				if (liveChatPollingFallbackActive) {
+					scheduleLiveChatPolling(Math.max(1000, youtubeRecommendedInterval || 5000));
+				} else {
+					scheduleLiveChatStreamReconnect(Math.max(1000, youtubeRecommendedInterval || 5000));
+				}
 			}
 		}
 	}
 
 	async function startLiveChatStream() {
+		if (liveChatPollingFallbackActive) {
+			return startLiveChatPolling();
+		}
 		if (!liveChatId || liveChatStreamActive || liveChatStreamAbortController) {
 			return false;
 		}
@@ -3013,6 +3092,40 @@ function enableBackgroundKeepAlive() {
 		updateLiveChatStreamIndicator('streaming');
 		readLiveChatStream(controller, token);
 		return true;
+	}
+
+	async function startLiveChatPolling() {
+		if (!liveChatId || liveChatStreamActive || liveChatStreamAbortController) {
+			return false;
+		}
+		const token = getStoredToken();
+		if (!token) {
+			const refreshed = await refreshToken();
+			if (refreshed) {
+				scheduleAuthRetry();
+			}
+			return false;
+		}
+		if (fetchTimeout) {
+			try {
+				clearTimeout(fetchTimeout);
+			} catch (_) {}
+			fetchTimeout = null;
+		}
+		lastPollingTime = Date.now();
+		updateLiveChatStreamIndicator('polling');
+		try {
+			const response = await fetchWithTimeout(buildLiveChatPollingUrl(), 10000, {
+				'Authorization': `Bearer ${token}`,
+				'Accept': 'application/json'
+			});
+			const data = await response.json();
+			await processLiveChatResponseData(data, { scheduleNextPoll: true });
+			return true;
+		} catch (error) {
+			await handleLiveChatPollingError(error);
+			return false;
+		}
 	}
 
 	function extractYouTubeShortcutTokens(value) {
@@ -3514,7 +3627,11 @@ function enableBackgroundKeepAlive() {
 		}
 
 		updatePollSpinner(nextPollInterval);
-		scheduleLiveChatStreamReconnect(nextPollInterval);
+		if (liveChatPollingFallbackActive) {
+			scheduleLiveChatPolling(nextPollInterval);
+		} else {
+			scheduleLiveChatStreamReconnect(nextPollInterval);
+		}
 	}
 	
 
@@ -4623,6 +4740,7 @@ function enableBackgroundKeepAlive() {
 		
 		liveChatId = null;
 		nextPageToken = null;
+		liveChatPollingFallbackActive = false;
 		lastMessageTime = null;
 		currentStream = null;
 		channelEmojiFetchToken++;
@@ -4865,10 +4983,11 @@ function enableBackgroundKeepAlive() {
             } else if (effectiveChannelIdToUse) {
                 await getSubscriberCount(effectiveChannelIdToUse);
             }
-           if (liveChatId) {
+		   if (liveChatId) {
 				const chatAvailableMessage = document.createElement("div");
 				chatAvailableMessage.innerText = "Connected to live chat.";
 				document.getElementById('textarea').appendChild(chatAvailableMessage);
+				liveChatPollingFallbackActive = false;
 				// Update connect button to show disconnect
 				const connectButton = document.getElementById('connect-button');
 				if (connectButton) {

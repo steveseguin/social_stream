@@ -82,6 +82,14 @@
 			margin-top: 6px;
 		}
 
+		.note.important {
+			background: #2c2112;
+			border: 1px solid #7c5a24;
+			border-radius: 5px;
+			color: #ffdca3;
+			padding: 10px;
+		}
+
 		.status {
 			min-height: 22px;
 			margin-top: 8px;
@@ -115,13 +123,16 @@
 				<div class="form-group">
 					<label for="delivery">Send Via</label>
 					<select id="delivery" name="delivery">
-						<option value="extension">Extension API ingest (normal)</option>
+						<option value="extension">Extension API ingest (requires extension API toggle)</option>
 						<option value="direct1">Direct to channel 1 (&amp;server dock)</option>
 						<option value="direct4">Direct to channel 4 (&amp;server2 / events)</option>
 					</select>
 				</div>
 			</div>
-			<div class="note">Use Extension API ingest for normal dock/overlay testing. Hype Train metadata renders on events.html, not as a normal chat message.</div>
+			<div class="note important">
+				Extension API ingest requires the extension popup setting <b>Enable remote API control of extension</b> to be ON, using the same Session ID. This is not the dock <b>&amp;server</b> URL mode.
+			</div>
+			<div class="note">Use Extension API ingest for normal dock/overlay testing. Direct modes only work with matching dock/server URL modes. Hype Train metadata renders on events.html, not as a normal chat message.</div>
 
 			<div class="form-group">
 				<label for="preset">Preset</label>
