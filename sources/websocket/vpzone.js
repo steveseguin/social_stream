@@ -263,7 +263,7 @@
 		var delay = Math.max(5000, Number(state.tokens.expires_at) - Date.now() - 60000);
 		state.refreshTimer = setTimeout(function () {
 			refreshOAuthToken().catch(function (error) {
-				log("OAuth refresh failed: " + ((error && error.message) || error), "error");
+				log("Sign-in refresh failed: " + ((error && error.message) || error), "error");
 				updateAuthChip();
 			});
 		}, delay);
@@ -411,7 +411,7 @@
 	}
 
 	function storeTokenResponse(json) {
-		if (!json || !json.access_token) throw new Error("VPZONE did not return an access token.");
+		if (!json || !json.access_token) throw new Error("VPZone did not return an access token.");
 		state.tokens = {
 			access_token: json.access_token,
 			token_type: json.token_type || "Bearer",
@@ -427,7 +427,7 @@
 	}
 
 	function exchangeOAuthCode(code, saved) {
-		if (!code) return Promise.reject(new Error("Missing OAuth code."));
+		if (!code) return Promise.reject(new Error("Missing sign-in code."));
 		saved = saved || {};
 		return tokenRequest({
 			grant_type: "authorization_code",
@@ -437,7 +437,7 @@
 			code_verifier: saved.verifier || ""
 		}).then(function (json) {
 			storeTokenResponse(json);
-			log("VPZONE OAuth token acquired.", "success");
+			log("VPZone sign-in complete.", "success");
 			return json;
 		});
 	}
@@ -450,7 +450,7 @@
 			refresh_token: state.tokens.refresh_token
 		}).then(function (json) {
 			storeTokenResponse(json);
-			log("VPZONE OAuth token refreshed.", "success");
+			log("VPZone sign-in refreshed.", "success");
 			return json;
 		});
 	}
@@ -489,16 +489,16 @@
 
 	function startExternalOAuth(handler) {
 		handler = handler || ssappOAuthHandler();
-		if (!handler) return Promise.reject(new Error("VPZONE desktop OAuth is unavailable."));
+		if (!handler) return Promise.reject(new Error("VPZone desktop sign-in is unavailable."));
 		return handler({
 			clientId: state.cfg.clientId || DEFAULT_CLIENT_ID,
 			scopes: String(state.cfg.scopes || DEFAULT_SCOPES).split(/\s+/).filter(Boolean)
 		}).then(function (result) {
-			if (!result || !result.success) throw new Error((result && result.error) || "VPZONE OAuth did not complete.");
+			if (!result || !result.success) throw new Error((result && result.error) || "VPZone sign-in did not complete.");
 			if (result.redirectUri) state.cfg.redirectUri = result.redirectUri;
 			if (result.access_token) {
 				storeTokenResponse(result);
-				log("VPZONE OAuth token acquired.", "success");
+				log("VPZone sign-in complete.", "success");
 				return result;
 			}
 			if (result.code) {
@@ -507,7 +507,7 @@
 					redirectUri: result.redirectUri || normalizeRedirectUri(state.cfg.redirectUri)
 				});
 			}
-			throw new Error("VPZONE OAuth did not return a token.");
+			throw new Error("VPZone sign-in did not return a token.");
 		}).then(function (result) {
 			connect();
 			return result;
@@ -521,7 +521,7 @@
 		saveConfig();
 		syncStateToUi();
 		updateAuthChip();
-		log("VPZONE auth cleared.", "warn");
+		log("VPZone sign-in cleared.", "warn");
 	}
 
 	function handleOAuthCallback() {
@@ -540,7 +540,7 @@
 		if ((!saved || !saved.state) && decodedState) saved = decodedState;
 		cleanupOAuthUrl();
 		if (error) return Promise.reject(new Error(query.get("error_description") || error));
-		if (saved.state && returnedStateValue && saved.state !== returnedStateValue) return Promise.reject(new Error("OAuth state mismatch."));
+		if (saved.state && returnedStateValue && saved.state !== returnedStateValue) return Promise.reject(new Error("Sign-in state mismatch."));
 		if (saved.channel) state.cfg.channel = normalizeChannel(saved.channel);
 		if (saved.wsUrl) state.cfg.wsUrl = normalizeWs(saved.wsUrl);
 		if (saved.scopes) state.cfg.scopes = saved.scopes;
@@ -579,17 +579,17 @@
 		if (state.lastStatus === status && state.lastMessage === message) return;
 		state.lastStatus = status;
 		state.lastMessage = message || "";
-		chip(els.socketChip, "Socket: " + (status || "disconnected"), status === "connected" ? "good" : (status === "connecting" ? "warn" : (status === "error" ? "bad" : "bad")));
+		chip(els.socketChip, "Connection: " + (status || "disconnected"), status === "connected" ? "good" : (status === "connecting" ? "warn" : (status === "error" ? "bad" : "bad")));
 		if (els.statusText && message) els.statusText.textContent = message;
 		pushStatus(status, message, meta || {});
 	}
 
 	function updateAuthChip() {
 		if (state.tokens && state.tokens.access_token) {
-			chip(els.authChip, "Auth: OAuth", "good");
+			chip(els.authChip, "Signed in", "good");
 			return;
 		}
-		chip(els.authChip, state.cfg.token ? "Auth: token set" : "Auth: public", state.cfg.token ? "good" : "");
+		chip(els.authChip, state.cfg.token ? "Token set" : "Not signed in", state.cfg.token ? "good" : "");
 	}
 
 	function normalizeChannel(value) {
@@ -671,10 +671,10 @@
 		var token = String(state.cfg.token || "");
 		if (!message) return Promise.reject(new Error("Message is empty."));
 		if (!channel) return Promise.reject(new Error("Channel is required."));
-		if (!token) return Promise.reject(new Error("VPZone auth with chat:write is required."));
+		if (!token) return Promise.reject(new Error("Sign in to VPZone before sending chat."));
 		return postChatMessage(channel, message, token).catch(function (error) {
 			if (!didRefresh && error && error.status === 401 && state.tokens && state.tokens.refresh_token) {
-				log("VPZone token expired. Refreshing OAuth token.", "warn");
+				log("VPZone sign-in expired. Refreshing.", "warn");
 				return refreshOAuthToken().then(function () {
 					return postChatMessage(channel, message, String(state.cfg.token || ""));
 				});
@@ -754,7 +754,7 @@
 			return;
 		}
 		els.channelLink.href = HOST + "/chat-dock/" + encodeURIComponent(channel);
-		els.channelLink.textContent = els.channelLink.href;
+		els.channelLink.textContent = "Open VPZone chat";
 	}
 
 	function remember(id) {
@@ -1029,8 +1029,8 @@
 
 	function scheduleReconnect(reason) {
 		if (!state.active || state.manualDisconnect || state.reconnectTimer) return;
-		setStatus("connecting", "Socket closed. Reconnecting in 4s...", { channel: state.currentChannel, wsUrl: state.cfg.wsUrl });
-		log(reason || "VPZone socket closed. Reconnecting soon.", "warn");
+		setStatus("connecting", "Connection closed. Reconnecting in 4s...", { channel: state.currentChannel, wsUrl: state.cfg.wsUrl });
+		log(reason || "VPZone connection closed. Reconnecting soon.", "warn");
 		state.reconnectTimer = setTimeout(function () {
 			state.reconnectTimer = null;
 			openSocket(true);
@@ -1048,12 +1048,12 @@
 		state.currentChannel = channel;
 		updateLink();
 		wsProxy.readyState = READY_STATE.CONNECTING;
-		setStatus("connecting", (isReconnect ? "Reconnecting" : "Connecting") + " to @" + channel + "...", { channel: channel, wsUrl: wsUrl });
-		log((isReconnect ? "Reconnecting" : "Connecting") + " to " + wsUrl + " for @" + channel + ".", "info");
+		setStatus("connecting", (isReconnect ? "Reconnecting" : "Connecting") + " @" + channel + "...", { channel: channel, wsUrl: wsUrl });
+		log((isReconnect ? "Reconnecting" : "Connecting") + " chat for @" + channel + ".", "info");
 		try { socket = new WebSocket(wsUrl); } catch (error) {
-			setStatus("error", "WebSocket open failed: " + ((error && error.message) || error), { channel: channel, wsUrl: wsUrl });
-			log("WebSocket open failed: " + ((error && error.message) || error), "error");
-			scheduleReconnect("WebSocket construction failed.");
+			setStatus("error", "Connection failed: " + ((error && error.message) || error), { channel: channel, wsUrl: wsUrl });
+			log("Connection failed: " + ((error && error.message) || error), "error");
+			scheduleReconnect("Connection setup failed.");
 			return;
 		}
 		state.socket = socket;
@@ -1062,7 +1062,7 @@
 			if (state.cfg.token) {
 				try { socket.send(JSON.stringify({ type: "auth", token: state.cfg.token })); } catch (e) {}
 			}
-			setStatus("connected", "Connected to @" + channel + " via VPZone WebSocket.", { channel: channel, wsUrl: wsUrl });
+			setStatus("connected", "Connected to @" + channel + ".", { channel: channel, wsUrl: wsUrl });
 			log("Connected to @" + channel + ".", "success");
 			if (state.cfg.token) log("Developer auth payload sent.", "info");
 		};
@@ -1071,7 +1071,7 @@
 		};
 		socket.onerror = function () { log("VPZone socket error.", "error"); };
 		socket.onclose = function (event) {
-			var reason = "VPZone socket closed";
+			var reason = "VPZone connection closed";
 			state.socket = null;
 			wsProxy.readyState = READY_STATE.CLOSED;
 			if (event && typeof event.code !== "undefined") reason += " (code " + event.code + (event.reason ? ", " + event.reason : "") + ")";
@@ -1093,7 +1093,7 @@
 				return;
 			}
 			if (!state.active || state.manualDisconnect) {
-				setStatus("disconnected", "Disconnected from VPZone.", { channel: channel, wsUrl: wsUrl });
+				setStatus("disconnected", "Disconnected.", { channel: channel, wsUrl: wsUrl });
 				log(reason + ".", "warn");
 				return;
 			}
@@ -1122,7 +1122,7 @@
 		state.active = false;
 		clearReconnect();
 		closeSocket();
-		setStatus("disconnected", manual ? "Disconnected from VPZone." : "VPZone socket stopped.");
+		setStatus("disconnected", manual ? "Disconnected." : "VPZone connection stopped.");
 		syncButtons();
 	}
 
@@ -1175,8 +1175,8 @@
 	}
 
 	function bindUi() {
-		if (els.save) els.save.addEventListener("click", function () { syncUiToState(); syncStateToUi(); log("Configuration saved.", "success"); });
-		if (els.authorize) els.authorize.addEventListener("click", function () { startOAuth().catch(function (error) { setStatus("error", "OAuth start failed: " + ((error && error.message) || error)); log("OAuth start failed: " + ((error && error.message) || error), "error"); }); });
+		if (els.save) els.save.addEventListener("click", function () { syncUiToState(); syncStateToUi(); log("Advanced settings saved.", "success"); });
+		if (els.authorize) els.authorize.addEventListener("click", function () { startOAuth().catch(function (error) { setStatus("error", "Sign-in failed: " + ((error && error.message) || error)); log("Sign-in failed: " + ((error && error.message) || error), "error"); }); });
 		if (els.clearAuth) els.clearAuth.addEventListener("click", function () { clearOAuth(); });
 		if (els.connect) els.connect.addEventListener("click", function () { try { connect(); } catch (error) { setStatus("error", "Connect failed: " + ((error && error.message) || error)); log("Connect failed: " + ((error && error.message) || error), "error"); syncButtons(); } });
 		if (els.disconnect) els.disconnect.addEventListener("click", function () { disconnect(true); });
@@ -1215,13 +1215,13 @@
 		loadConfig();
 		loadTokens();
 		syncStateToUi();
-		chip(els.socketChip, "Socket: disconnected", "bad");
+		chip(els.socketChip, "Connection: disconnected", "bad");
 		chip(els.viewerChip, "Viewers: -", "");
 		chip(els.lastEventChip, "Last event: Waiting", "");
 		bindUi();
 		bridge();
 		syncButtons();
-		log("VPZone WebSocket source ready.", "success");
+		log("VPZone chat source ready.", "success");
 		handleOAuthCallback().then(function () {
 			if (state.cfg.channel) {
 				try { connect(); } catch (error) {
@@ -1231,8 +1231,8 @@
 				}
 			}
 		}).catch(function (error) {
-			setStatus("error", "OAuth failed: " + ((error && error.message) || error));
-			log("OAuth failed: " + ((error && error.message) || error), "error");
+			setStatus("error", "Sign-in failed: " + ((error && error.message) || error));
+			log("Sign-in failed: " + ((error && error.message) || error), "error");
 		});
 		window.addEventListener("beforeunload", function () { disconnect(false); });
 	}
