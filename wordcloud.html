@@ -143,6 +143,7 @@
 
 		const activeStyle = styles[urlParams.get('style')] || styles.default;
 		const scale = parseFloat(urlParams.get('scale')) || 1;
+		const countAllWords = urlParams.has('allwords');
 
 		
 		
@@ -355,14 +356,30 @@
 			console.log("Word cloud cleared");
 		}
 
+		function addWord(word) {
+			words[word] = (words[word] || 0) + 1;
+		}
+
         function processData(data) {
             if (data.content) {
                 data = data.content;
             }
             if (data.chatmessage) {
                 const message = data.chatmessage.trim().toLowerCase();
-                if (/^\w+$/.test(message) && !message.match(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u)) {
-                    words[message] = (words[message] || 0) + 1;
+                const emojiRegex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+                if (countAllWords) {
+                    const cleanMessage = message.replace(/https?:\/\/\S+|www\.\S+/g, " ");
+                    const messageWords = cleanMessage.match(/\b\w+\b/g) || [];
+                    messageWords.forEach(word => {
+                        if (!emojiRegex.test(word)) {
+                            addWord(word);
+                        }
+                    });
+                    if (messageWords.length) {
+                        updateWordCloud();
+                    }
+                } else if (/^\w+$/.test(message) && !emojiRegex.test(message)) {
+                    addWord(message);
                     updateWordCloud();
                 }
             }
@@ -390,7 +407,7 @@
             const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
             eventer(messageEvent, function (e) {
                 if (e.source != iframe.contentWindow) return;
-                if ("dataReceived" in e.data) {
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                     if ("overlayNinja" in e.data.dataReceived) {
                         processData(e.data.dataReceived.overlayNinja);
                     }

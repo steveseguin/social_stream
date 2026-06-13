@@ -67,9 +67,9 @@
         z-index: 1; 
     }
 
-    #tip-text { 
-        position: absolute; 
-        top: 10px; 
+    #tip-text {
+        position: absolute;
+        top: 10px;
         left: 0;
         width: 100%; 
         text-align: center; 
@@ -78,6 +78,24 @@
         font-size: 24px; 
         z-index: 4;
         text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+    }
+
+    #completion-text {
+        position: absolute;
+        bottom: 92px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        color: #0A1236;
+        font-weight: bold;
+        font-size: 20px;
+        z-index: 4;
+        display: none;
+        text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+    }
+
+    body.hype-mode #completion-text {
+        display: block;
     }
 
     #cup-overlay { 
@@ -357,6 +375,7 @@
             <canvas id="canvas"></canvas>
             <img id="cup-overlay" src="./media/tipsjar.png" alt="Cup Overlay">
             <div id="tip-text">$0 / $250</div>
+            <div id="completion-text"></div>
         </div>
     </div>
 
@@ -421,15 +440,30 @@
         const urlParams = new URLSearchParams(window.location.search);
         const style = urlParams.get('style') || 'jar'; // jar, meter, minimal
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
-        const goal = parseFloat(urlParams.get('goal')) || 250;
-        const formattedGoal = goal % 1 === 0 ? goal.toFixed(0) : goal.toFixed(2);
+        const hypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype';
+        const goal = readNumberParam('goal', hypeMode ? 100 : 250, 0.01);
         const celebration = urlParams.get('celebration') || 'hearts'; // hearts, confetti, fireworks, none
         const persistent = urlParams.has('persistent'); // Keep amount between sessions
         const sound = urlParams.has('sound'); // Play sound on donation
-        const customTitle = urlParams.get('title') || 'Stream Goal';
+        const hasCustomTitle = urlParams.has('title');
+        const customTitle = urlParams.get('title') || (hypeMode ? 'Hype Goal' : 'Stream Goal');
         const showControls = urlParams.has('controls'); // Show control panel
         const customJarUrl = urlParams.get('jarimage'); // Custom jar image URL
         const alignRight = urlParams.has('alignright');
+        const unitLabel = urlParams.get('unit') || 'pts';
+        const subPoints = readNumberParam('subpoints', 2.5, 0);
+        const giftPoints = readNumberParam('giftpoints', subPoints, 0);
+        const donationPointRate = readNumberParam('donationpoints', 1, 0);
+        const countTips = !urlParams.has('notips');
+        const countSubs = !urlParams.has('nosubs');
+        const countGifts = !urlParams.has('nogifts');
+        const countResubs = !urlParams.has('noresubs');
+        const countGiftRedemptions = urlParams.has('countgiftredemptions');
+        const resetOnComplete = hypeMode ? !urlParams.has('noresetoncomplete') : urlParams.has('resetoncomplete');
+        const carryOverGoal = urlParams.has('carryover');
+        const showCompletions = hypeMode && !urlParams.has('hidecompletions');
+        const completionDelayMs = readNumberParam('completiondelay', 3000, 0);
+        const dedupeWindowMs = readNumberParam('dedupewindow', 8, 0) * 1000;
         
         // Socket server parameters
         const hasServerParam = urlParams.has('server') || urlParams.has('server2');
@@ -441,6 +475,10 @@
         // Apply theme
         if (theme !== 'default') {
             document.body.classList.add(theme);
+        }
+
+        if (hypeMode) {
+            document.body.classList.add('hype-mode');
         }
 
         if (alignRight) {
@@ -461,22 +499,28 @@
         // Update goal in UI
         if (style === 'meter') {
             document.querySelector('.goal-title').textContent = customTitle;
-            document.getElementById('milestone-100').textContent = `$${goal}`;
-            document.getElementById('milestone-75').textContent = `$${(goal * 0.75).toFixed(2)}`;
-            document.getElementById('milestone-50').textContent = `$${(goal * 0.50).toFixed(2)}`;
-            document.getElementById('milestone-25').textContent = `$${(goal * 0.25).toFixed(2)}`;
+            document.getElementById('milestone-100').textContent = formatGoalValue(goal);
+            document.getElementById('milestone-75').textContent = formatGoalValue(goal * 0.75);
+            document.getElementById('milestone-50').textContent = formatGoalValue(goal * 0.50);
+            document.getElementById('milestone-25').textContent = formatGoalValue(goal * 0.25);
         } else if (style === 'minimal') {
             const minimalGoalElement = document.getElementById('minimal-goal-value');
             if (minimalGoalElement) {
-                minimalGoalElement.textContent = `$${formattedGoal}`;
+                minimalGoalElement.textContent = formatGoalValue(goal);
             }
         }
 
         // Tracking variables
-        let currentAmount = persistent ? (parseFloat(localStorage.getItem('tipjar_amount')) || 0) : 0;
+        const amountStorageKey = hypeMode ? 'tipjar_hype_amount' : 'tipjar_amount';
+        const historyStorageKey = hypeMode ? 'tipjar_hype_history' : 'tipjar_history';
+        const completionsStorageKey = 'tipjar_hype_completions';
+        let currentAmount = persistent ? (parseFloat(localStorage.getItem(amountStorageKey)) || 0) : 0;
+        let completionCount = persistent ? (parseInt(localStorage.getItem(completionsStorageKey) || '0', 10) || 0) : 0;
+        let completionResetTimer = null;
         const recentTips = [];
         const maxRecentTips = 5;
-        const donationHistory = persistent ? (JSON.parse(localStorage.getItem('tipjar_history') || '[]')) : [];
+        const donationHistory = persistent ? (JSON.parse(localStorage.getItem(historyStorageKey) || '[]')) : [];
+        const processedContributions = {};
         
         // Socket server variables
         let socketserver = null;
@@ -623,11 +667,21 @@
         }
 
         function resetTipJarAmount(showNotice) {
+            if (completionResetTimer) {
+                clearTimeout(completionResetTimer);
+                completionResetTimer = null;
+            }
             currentAmount = 0;
-            updateAmount(0);
+            if (hypeMode) {
+                completionCount = 0;
+                if (persistent) {
+                    localStorage.setItem(completionsStorageKey, completionCount.toString());
+                }
+            }
+            renderAmount();
             clearJarContents();
             if (showNotice) {
-                showNotification('Tip jar amount reset.');
+                showNotification(hypeMode ? 'Hype goal reset.' : 'Tip jar amount reset.');
             }
         }
 
@@ -637,33 +691,81 @@
             return command === 'resettipjar' || command === 'reset_tipjar' || command === 'tipjar_reset';
         }
 
-        function updateAmount(amount) {
-            currentAmount += amount;
-            
+        function saveAmount() {
             if (persistent) {
-                localStorage.setItem('tipjar_amount', currentAmount.toString());
+                localStorage.setItem(amountStorageKey, currentAmount.toString());
             }
+        }
 
+        function renderAmount() {
+            saveAmount();
             const percentage = Math.min((currentAmount / goal) * 100, 100);
 
             // Update different styles
             if (style === 'jar') {
-                document.getElementById('tip-text').textContent = 
-                    `$${currentAmount.toFixed(2)} / $${goal}`;
+                document.getElementById('tip-text').textContent = formatProgressText();
             } else if (style === 'meter') {
                 document.getElementById('meter-fill').style.width = percentage + '%';
-                document.getElementById('meter-text').textContent = 
-                    `$${currentAmount.toFixed(2)} / $${goal}`;
+                document.getElementById('meter-text').textContent = formatProgressText();
             } else if (style === 'minimal') {
-                document.getElementById('minimal-amount').textContent = `$${currentAmount.toFixed(2)}`;
+                document.getElementById('minimal-amount').textContent = formatGoalValue(currentAmount, true);
                 document.getElementById('minimal-percentage').textContent = `${Math.round(percentage)}%`;
             }
 
-            // Milestone celebration
-            if (percentage >= 25 && percentage < 26) triggerMilestone(25);
-            if (percentage >= 50 && percentage < 51) triggerMilestone(50);
-            if (percentage >= 75 && percentage < 76) triggerMilestone(75);
-            if (percentage >= 100) triggerMilestone(100);
+            updateCompletionDisplay();
+        }
+
+        function updateAmount(amount) {
+            const previousAmount = currentAmount;
+            currentAmount += amount;
+            renderAmount();
+
+            if (amount <= 0 || goal <= 0) return;
+
+            if (previousAmount < goal * 0.25 && currentAmount >= goal * 0.25) triggerMilestone(25);
+            if (previousAmount < goal * 0.50 && currentAmount >= goal * 0.50) triggerMilestone(50);
+            if (previousAmount < goal * 0.75 && currentAmount >= goal * 0.75) triggerMilestone(75);
+            if (previousAmount < goal && currentAmount >= goal) {
+                if (resetOnComplete) {
+                    completeGoal();
+                } else {
+                    triggerMilestone(100);
+                }
+            }
+        }
+
+        function completeGoal() {
+            const amountAtCompletion = currentAmount;
+            const completions = carryOverGoal ? Math.max(1, Math.floor(amountAtCompletion / goal)) : 1;
+            const completedAmount = goal * completions;
+            completionCount += completions;
+            if (persistent) {
+                localStorage.setItem(completionsStorageKey, completionCount.toString());
+            }
+            updateCompletionDisplay();
+            triggerMilestone(100);
+
+            completionResetTimer = setTimeout(function() {
+                completionResetTimer = null;
+                const amountSinceCompletion = Math.max(0, currentAmount - amountAtCompletion);
+                const carryOverAmount = carryOverGoal ? Math.max(0, amountAtCompletion - completedAmount) : 0;
+                currentAmount = carryOverAmount + amountSinceCompletion;
+                clearJarContents();
+                renderAmount();
+                if (resetOnComplete && currentAmount >= goal) {
+                    completeGoal();
+                }
+            }, completionDelayMs);
+        }
+
+        function updateCompletionDisplay() {
+            const completionElement = document.getElementById('completion-text');
+            if (!completionElement) return;
+            if (!showCompletions) {
+                completionElement.textContent = '';
+                return;
+            }
+            completionElement.textContent = `Completions: ${completionCount}`;
         }
 
         function triggerMilestone(percent) {
@@ -672,7 +774,7 @@
             } else if (celebration === 'confetti') {
                 createConfetti();
             }
-            showNotification(`🎉 ${percent}% of goal reached!`);
+            showNotification(`${percent}% of goal reached!`);
         }
 
         function addRecentTip(name, donationLabel) {
@@ -703,11 +805,62 @@
             }, 4000);
         }
 
+        let primingDonationSound = false;
+        let donationSoundPrimed = false;
+        function primeDonationSound() {
+            if (!sound || donationSoundPrimed) return;
+            primingDonationSound = true;
+            playDonationSound();
+        }
+
         function playDonationSound() {
             if (!sound) return;
             const audio = new Audio('data:audio/wav;base64,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XrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFA==');
-            audio.volume = 0.5;
-            audio.play().catch(() => {});
+            audio.volume = primingDonationSound ? 0 : 0.5;
+            audio.play().then(function() {
+                if (primingDonationSound) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    donationSoundPrimed = true;
+                    primingDonationSound = false;
+                }
+            }).catch(function() {
+                if (primingDonationSound) {
+                    donationSoundPrimed = false;
+                    primingDonationSound = false;
+                }
+            });
+        }
+
+        ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(function(eventName) {
+            document.addEventListener(eventName, primeDonationSound);
+        });
+
+        function readNumberParam(name, fallback, minValue) {
+            const raw = urlParams.get(name);
+            if (raw === null || raw === '') return fallback;
+            const value = parseFloat(raw);
+            if (isNaN(value)) return fallback;
+            if (minValue !== undefined && value < minValue) return fallback;
+            return value;
+        }
+
+        function formatNumber(value) {
+            const num = Number(value) || 0;
+            return num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
+        }
+
+        function formatGoalValue(value, forceCents) {
+            if (hypeMode) {
+                return `${formatNumber(value)} ${unitLabel}`;
+            }
+            const num = Number(value) || 0;
+            return `$${forceCents ? num.toFixed(2) : formatNumber(num)}`;
+        }
+
+        function formatProgressText() {
+            const progress = `${formatGoalValue(currentAmount, true)} / ${formatGoalValue(goal)}`;
+            return style === 'jar' && (hypeMode || hasCustomTitle) ? `${customTitle}: ${progress}` : progress;
         }
 
         function parseDonationString(rawDonation) {
@@ -742,7 +895,263 @@
             };
         }
 
-        function processTip(rawDonation, donator, sourceType) {
+        function saveHistory() {
+            if (persistent) {
+                localStorage.setItem(historyStorageKey, JSON.stringify(donationHistory));
+            }
+        }
+
+        function getEventName(data) {
+            return data && data.event ? String(data.event).toLowerCase() : '';
+        }
+
+        function getMeta(data) {
+            return data && data.meta && typeof data.meta === 'object' ? data.meta : {};
+        }
+
+        function firstNumber(values) {
+            for (let i = 0; i < values.length; i++) {
+                const value = values[i];
+                if (value === undefined || value === null || value === '') continue;
+                const parsed = parseFloat(String(value).replace(/,/g, ''));
+                if (!isNaN(parsed) && parsed > 0) return parsed;
+            }
+            return null;
+        }
+
+        function extractContributionCount(data) {
+            const meta = getMeta(data);
+            const direct = firstNumber([
+                data.total,
+                data.count,
+                data.quantity,
+                data.giftCount,
+                data.totalGifted,
+                meta.total,
+                meta.count,
+                meta.quantity,
+                meta.giftCount,
+                meta.totalGifted
+            ]);
+            if (direct) return Math.max(1, Math.round(direct));
+
+            const text = [
+                data.hasDonation,
+                data.chatmessage,
+                data.subtitle
+            ].filter(Boolean).join(' ');
+            const match = text.match(/(?:gifted|sent|bought|purchased)\s+(\d+)/i) ||
+                text.match(/(\d+)\s*(?:x|gifted|gifts|gift|subs|memberships|members)/i);
+            if (match) {
+                const parsed = parseInt(match[1], 10);
+                if (!isNaN(parsed) && parsed > 0) return parsed;
+            }
+            return 1;
+        }
+
+        function extractGiftGiver(data) {
+            const meta = getMeta(data);
+            if (meta.gifter) return String(meta.gifter);
+            if (meta.supporter) return String(meta.supporter);
+            const subtitle = String(data.subtitle || '');
+            const match = subtitle.match(/gifted by\s+(.+)/i);
+            return match ? match[1].trim() : '';
+        }
+
+        function getDonationRaw(data) {
+            const meta = getMeta(data);
+            return data.donation || data.hasDonation || data.donationAmount || data.donoValue ||
+                meta.amountText || meta.priceText || meta.amount || '';
+        }
+
+        function isGiftEvent(eventName, membership) {
+            return eventName === 'subscription_gift' ||
+                eventName === 'giftpurchase' ||
+                eventName === 'gift_subscription' ||
+                membership === 'gift_giver';
+        }
+
+        function isGiftRedemptionEvent(eventName, membership) {
+            return eventName === 'giftredemption' || membership === 'gift_recipient';
+        }
+
+        function isSubEvent(eventName) {
+            return eventName === 'new_subscriber' ||
+                eventName === 'sponsorship' ||
+                eventName === 'subscription' ||
+                eventName === 'newmember' ||
+                eventName === 'new_member';
+        }
+
+        function isResubEvent(eventName) {
+            return eventName === 'resub' ||
+                eventName === 'renewed_member' ||
+                eventName === 'membermilestone';
+        }
+
+        function buildHypeContribution(data) {
+            const eventName = getEventName(data);
+            const membership = data.membership ? String(data.membership).toLowerCase() : '';
+            const source = data.type ? String(data.type).toLowerCase() : '';
+            const name = data.chatname || 'Anonymous';
+
+            if (isGiftRedemptionEvent(eventName, membership)) {
+                const giver = extractGiftGiver(data);
+                return {
+                    kind: 'gift_recipient',
+                    donator: giver || name,
+                    recipient: name,
+                    source,
+                    event: eventName,
+                    count: 1,
+                    points: countGiftRedemptions && countGifts ? giftPoints : 0,
+                    label: countGiftRedemptions ? `+${formatGoalValue(giftPoints)} gift recipient` : 'gift recipient',
+                    raw: data.chatmessage || data.subtitle || ''
+                };
+            }
+
+            if (isGiftEvent(eventName, membership)) {
+                const count = extractContributionCount(data);
+                return {
+                    kind: 'gift',
+                    donator: name,
+                    recipient: '',
+                    source,
+                    event: eventName,
+                    count,
+                    points: countGifts ? count * giftPoints : 0,
+                    label: `+${formatGoalValue(count * giftPoints)} (${count} gifted)`,
+                    raw: data.chatmessage || data.hasDonation || data.subtitle || ''
+                };
+            }
+
+            if (isSubEvent(eventName)) {
+                return {
+                    kind: 'sub',
+                    donator: name,
+                    recipient: '',
+                    source,
+                    event: eventName,
+                    count: 1,
+                    points: countSubs ? subPoints : 0,
+                    label: `+${formatGoalValue(subPoints)} sub/member`,
+                    raw: data.chatmessage || data.membership || ''
+                };
+            }
+
+            if (isResubEvent(eventName)) {
+                return {
+                    kind: 'resub',
+                    donator: name,
+                    recipient: '',
+                    source,
+                    event: eventName,
+                    count: 1,
+                    points: countResubs ? subPoints : 0,
+                    label: `+${formatGoalValue(subPoints)} resub`,
+                    raw: data.chatmessage || data.membership || ''
+                };
+            }
+
+            const donationRaw = getDonationRaw(data);
+            if (countTips && donationRaw) {
+                return {
+                    kind: 'donation',
+                    donator: name,
+                    recipient: '',
+                    source,
+                    event: eventName,
+                    count: 1,
+                    points: 0,
+                    label: '',
+                    rawDonation: donationRaw,
+                    raw: String(donationRaw)
+                };
+            }
+
+            return null;
+        }
+
+        function isDuplicateContribution(data, contribution) {
+            if (!dedupeWindowMs) return false;
+            const now = Date.now();
+            Object.keys(processedContributions).forEach(function(key) {
+                if (now - processedContributions[key] > dedupeWindowMs) {
+                    delete processedContributions[key];
+                }
+            });
+
+            const meta = getMeta(data);
+            const explicitId = data.id || meta.messageId || meta.id || meta.eventId || '';
+            const key = explicitId
+                ? `id:${explicitId}`
+                : [
+                    'sig',
+                    contribution.kind,
+                    contribution.source,
+                    contribution.event,
+                    contribution.donator,
+                    contribution.recipient,
+                    contribution.count,
+                    contribution.raw
+                ].join('|').toLowerCase();
+
+            if (processedContributions[key]) return true;
+            processedContributions[key] = now;
+            return false;
+        }
+
+        function recordHypeContribution(contribution) {
+            const entry = {
+                timestamp: new Date().toISOString(),
+                donator: contribution.donator,
+                recipient: contribution.recipient || '',
+                kind: contribution.kind,
+                source: contribution.source || '',
+                event: contribution.event || '',
+                count: contribution.count || 1,
+                points: contribution.points || 0,
+                raw: contribution.raw || ''
+            };
+            donationHistory.push(entry);
+            saveHistory();
+
+            if (contribution.points <= 0) return;
+
+            updateAmount(contribution.points);
+            addRecentTip(contribution.donator, contribution.label);
+            playDonationSound();
+
+            if (celebration === 'hearts' && style === 'jar') {
+                const heartCount = Math.min(Math.ceil(contribution.points / 2.5), 10);
+                for (let i = 0; i < heartCount; i++) {
+                    setTimeout(() => {
+                        addHeart(contribution.points / heartCount);
+                    }, i * 200 + Math.random() * 300);
+                }
+            } else if (celebration === 'confetti') {
+                createConfetti();
+            } else if (celebration === 'fireworks') {
+                triggerFireworks();
+            }
+
+            showNotification(`${contribution.donator} added ${formatGoalValue(contribution.points)}!`);
+        }
+
+        function processHypeContribution(data) {
+            const contribution = buildHypeContribution(data);
+            if (!contribution) return;
+            if (isDuplicateContribution(data, contribution)) return;
+
+            if (contribution.kind === 'donation') {
+                processTip(contribution.rawDonation, contribution.donator, contribution.source, contribution);
+                return;
+            }
+
+            recordHypeContribution(contribution);
+        }
+
+        function processTip(rawDonation, donator, sourceType, contribution) {
             const source = sourceType ? String(sourceType).toLowerCase() : '';
             const tipValue = convertToUSD(rawDonation, source);
 
@@ -755,30 +1164,34 @@
             const storedAmount = parsedDonation.amount !== null ? parsedDonation.amount : tipValue;
             const storedCurrency = parsedDonation.currency || 'USD';
             const displayLabel = parsedDonation.display || `$${tipValue.toFixed(2)}`;
+            const goalValue = hypeMode ? tipValue * donationPointRate : tipValue;
 
             const donation = {
                 timestamp: new Date().toISOString(),
                 donator: donator,
+                recipient: '',
+                kind: 'donation',
+                source: source,
+                event: contribution && contribution.event ? contribution.event : '',
+                count: 1,
                 amount: storedAmount,
                 currency: storedCurrency,
                 usdValue: tipValue,
+                points: hypeMode ? goalValue : undefined,
                 raw: parsedDonation.display || ''
             };
             donationHistory.push(donation);
+            saveHistory();
 
-            if (persistent) {
-                localStorage.setItem('tipjar_history', JSON.stringify(donationHistory));
-            }
-
-            updateAmount(tipValue);
-            addRecentTip(donator, displayLabel);
+            updateAmount(goalValue);
+            addRecentTip(donator, hypeMode ? `+${formatGoalValue(goalValue)} (${displayLabel})` : displayLabel);
             playDonationSound();
 
             if (celebration === 'hearts' && style === 'jar') {
-                const heartCount = Math.min(Math.ceil(tipValue / 5), 10);
+                const heartCount = Math.min(Math.ceil(goalValue / (hypeMode ? 2.5 : 5)), 10);
                 for (let i = 0; i < heartCount; i++) {
                     setTimeout(() => {
-                        addHeart(tipValue / heartCount);
+                        addHeart(goalValue / heartCount);
                     }, i * 200 + Math.random() * 300);
                 }
             } else if (celebration === 'confetti') {
@@ -787,7 +1200,7 @@
                 triggerFireworks();
             }
 
-            showNotification(`${donator} tipped ${displayLabel}!`);
+            showNotification(hypeMode ? `${donator} added ${formatGoalValue(goalValue)}!` : `${donator} tipped ${displayLabel}!`);
         }
 
         function processData(data) {
@@ -799,6 +1212,11 @@
 
             if (isTipJarResetCommand(data)) {
                 resetTipJarAmount(true);
+                return;
+            }
+
+            if (hypeMode) {
+                processHypeContribution(data);
                 return;
             }
 
@@ -860,7 +1278,7 @@
         }
 
         // Initialize display
-        updateAmount(0);
+        renderAmount();
         
         // Show controls if enabled
         if (showControls) {
@@ -873,7 +1291,7 @@
         });
         
         document.getElementById('reset-amount').addEventListener('click', () => {
-            if (confirm('Are you sure you want to reset the tip jar amount to $0?')) {
+            if (confirm(hypeMode ? 'Are you sure you want to reset the hype goal to 0?' : 'Are you sure you want to reset the tip jar amount to $0?')) {
                 resetTipJarAmount(false);
             }
         });
@@ -929,16 +1347,40 @@
             }
         }
         
+        function csvCell(value) {
+            const text = value === undefined || value === null ? '' : String(value);
+            return `"${text.replace(/"/g, '""')}"`;
+        }
+
         function exportToCSV() {
             if (donationHistory.length === 0) {
-                alert('No donations to export');
+                alert(hypeMode ? 'No hype contributions to export' : 'No donations to export');
                 return;
             }
-            
-            let csv = 'Timestamp,Donator,Amount,Currency,USD Value\n';
+
+            let csv = hypeMode
+                ? 'Timestamp,Type,Name,Recipient,Count,Points,Amount,Currency,USD Value,Source,Event,Raw\n'
+                : 'Timestamp,Donator,Amount,Currency,USD Value\n';
             donationHistory.forEach(donation => {
                 const date = new Date(donation.timestamp).toLocaleString();
-                csv += `"${date}","${donation.donator}",${donation.amount},${donation.currency},${donation.usdValue.toFixed(2)}\n`;
+                if (hypeMode) {
+                    csv += [
+                        csvCell(date),
+                        csvCell(donation.kind || 'donation'),
+                        csvCell(donation.donator),
+                        csvCell(donation.recipient || ''),
+                        donation.count || 1,
+                        formatNumber(donation.points || 0),
+                        donation.amount || '',
+                        csvCell(donation.currency || ''),
+                        donation.usdValue !== undefined ? formatNumber(donation.usdValue) : '',
+                        csvCell(donation.source || ''),
+                        csvCell(donation.event || ''),
+                        csvCell(donation.raw || '')
+                    ].join(',') + '\n';
+                } else {
+                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.amount},${donation.currency},${donation.usdValue.toFixed(2)}\n`;
+                }
             });
             
             const blob = new Blob([csv], { type: 'text/csv' });
@@ -946,7 +1388,7 @@
             const a = document.createElement('a');
             a.setAttribute('hidden', '');
             a.setAttribute('href', url);
-            a.setAttribute('download', `donations_${new Date().toISOString().split('T')[0]}.csv`);
+            a.setAttribute('download', `${hypeMode ? 'hype_contributions' : 'donations'}_${new Date().toISOString().split('T')[0]}.csv`);
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -957,26 +1399,30 @@
             historyList.innerHTML = '';
             
             if (donationHistory.length === 0) {
-                historyList.innerHTML = '<p>No donations yet</p>';
+                historyList.innerHTML = hypeMode ? '<p>No hype contributions yet</p>' : '<p>No donations yet</p>';
             } else {
                 const sortedHistory = [...donationHistory].reverse();
                 sortedHistory.forEach(donation => {
                     const date = new Date(donation.timestamp).toLocaleString();
                     const item = document.createElement('div');
+                    const kind = donation.kind || 'donation';
+                    const detail = hypeMode
+                        ? `${formatGoalValue(donation.points || 0)} - ${kind}${donation.count ? ` x${donation.count}` : ''}${donation.recipient ? ` - recipient: ${donation.recipient}` : ''}`
+                        : `${donation.amount} ${donation.currency} ($${donation.usdValue.toFixed(2)} USD)`;
                     item.style.cssText = 'margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;';
                     item.innerHTML = `
                         <div><strong>${donation.donator}</strong></div>
-                        <div>${donation.amount} ${donation.currency} ($${donation.usdValue.toFixed(2)} USD)</div>
+                        <div>${detail}</div>
                         <div style="font-size: 12px; color: #aaa;">${date}</div>
                     `;
                     historyList.appendChild(item);
                 });
-                
+
                 // Add total at the bottom
-                const total = donationHistory.reduce((sum, d) => sum + d.usdValue, 0);
+                const total = donationHistory.reduce((sum, d) => sum + (hypeMode ? (d.points || 0) : d.usdValue), 0);
                 const totalDiv = document.createElement('div');
                 totalDiv.style.cssText = 'margin-top: 20px; padding-top: 20px; border-top: 1px solid #666; font-size: 18px; font-weight: bold;';
-                totalDiv.innerHTML = `Total: $${total.toFixed(2)} USD`;
+                totalDiv.innerHTML = hypeMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
                 historyList.appendChild(totalDiv);
             }
             
@@ -1007,53 +1453,68 @@
             leaderboardList.innerHTML = '';
             
             if (donationHistory.length === 0) {
-                leaderboardList.innerHTML = '<p style="text-align: center;">No donations yet</p>';
+                leaderboardList.innerHTML = hypeMode ? '<p style="text-align: center;">No hype contributions yet</p>' : '<p style="text-align: center;">No donations yet</p>';
             } else {
-                // Aggregate donations by donator
+                // Aggregate contributions by donator
                 const donatorTotals = {};
                 donationHistory.forEach(donation => {
                     if (!donatorTotals[donation.donator]) {
                         donatorTotals[donation.donator] = {
                             totalUSD: 0,
+                            totalPoints: 0,
                             count: 0,
+                            gifts: 0,
+                            subs: 0,
                             currencies: {}
                         };
                     }
-                    donatorTotals[donation.donator].totalUSD += donation.usdValue;
+                    donatorTotals[donation.donator].totalUSD += donation.usdValue || 0;
+                    donatorTotals[donation.donator].totalPoints += donation.points || 0;
                     donatorTotals[donation.donator].count += 1;
-                    
-                    if (!donatorTotals[donation.donator].currencies[donation.currency]) {
+                    if (donation.kind === 'gift') {
+                        donatorTotals[donation.donator].gifts += donation.count || 1;
+                    } else if (donation.kind === 'sub' || donation.kind === 'resub') {
+                        donatorTotals[donation.donator].subs += donation.count || 1;
+                    }
+
+                    if (donation.currency && !donatorTotals[donation.donator].currencies[donation.currency]) {
                         donatorTotals[donation.donator].currencies[donation.currency] = 0;
                     }
-                    donatorTotals[donation.donator].currencies[donation.currency] += donation.amount;
+                    if (donation.currency) {
+                        donatorTotals[donation.donator].currencies[donation.currency] += donation.amount || 0;
+                    }
                 });
-                
-                // Sort by total USD
+
+                // Sort by points in hype mode, otherwise by total USD.
                 const sortedDonators = Object.entries(donatorTotals)
-                    .sort((a, b) => b[1].totalUSD - a[1].totalUSD)
+                    .sort((a, b) => hypeMode ? b[1].totalPoints - a[1].totalPoints : b[1].totalUSD - a[1].totalUSD)
                     .slice(0, 10); // Top 10
-                
+
                 sortedDonators.forEach(([donator, data], index) => {
                     const item = document.createElement('div');
                     item.style.cssText = 'margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: space-between;';
-                    
+
                     const medals = ['🥇', '🥈', '🥉'];
                     const medal = index < 3 ? medals[index] : `#${index + 1}`;
-                    
+
                     const currencyBreakdown = Object.entries(data.currencies)
                         .map(([currency, amount]) => `${amount.toFixed(2)} ${currency}`)
                         .join(' + ');
-                    
+                    const scoreLabel = hypeMode ? formatGoalValue(data.totalPoints) : `$${data.totalUSD.toFixed(2)}`;
+                    const subLine = hypeMode
+                        ? `${data.count} contribution${data.count > 1 ? 's' : ''}${data.subs ? ` - ${data.subs} sub/member` : ''}${data.gifts ? ` - ${data.gifts} gifted` : ''}`
+                        : `${data.count} donation${data.count > 1 ? 's' : ''}`;
+
                     item.innerHTML = `
                         <div style="display: flex; align-items: center;">
                             <span style="font-size: 24px; margin-right: 15px;">${medal}</span>
                             <div>
                                 <div style="font-size: 18px; font-weight: bold; color: #4CAF50;">${donator}</div>
-                                <div style="font-size: 14px; color: #aaa;">${data.count} donation${data.count > 1 ? 's' : ''}</div>
+                                <div style="font-size: 14px; color: #aaa;">${subLine}</div>
                             </div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 20px; font-weight: bold; color: #FFD700;">$${data.totalUSD.toFixed(2)}</div>
+                            <div style="font-size: 20px; font-weight: bold; color: #FFD700;">${scoreLabel}</div>
                             <div style="font-size: 12px; color: #ccc;">${currencyBreakdown}</div>
                         </div>
                     `;
@@ -1089,7 +1550,7 @@
         const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
         eventer(messageEvent, function (e) {
             if (e.source != iframe.contentWindow) return;
-            if ("dataReceived" in e.data) {
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                 if ("overlayNinja" in e.data.dataReceived) {
                     processData(e.data.dataReceived.overlayNinja);
                 }

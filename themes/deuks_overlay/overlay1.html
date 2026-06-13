@@ -227,7 +227,7 @@
         // Listen for incoming chat messages from Social Stream Ninja
         window.addEventListener("message", (event) => {
             if (event.source !== iframe.contentWindow) return;
-            if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+            if (event.data && typeof event.data === "object" && event.data.dataReceived && typeof event.data.dataReceived === "object" && event.data.dataReceived.overlayNinja) {
                 addMessageToOverlay(event.data.dataReceived.overlayNinja);
             }
         });

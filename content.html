@@ -224,7 +224,7 @@
 	
 	var maxShow = false;
 	if (urlParams.has("max") || urlParams.has("limit")) {
-		maxShow = parseInt(urlParams.has("limit")) || parseInt(urlParams.get("max")) || 0;
+		maxShow = parseInt(urlParams.get("limit") || urlParams.get("max"), 10) || 0;
 	}
 	
 	
@@ -439,7 +439,7 @@
 
 	eventer(messageEvent, function (e) {
 		if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
-		if ("dataReceived" in e.data){ // raw data
+		if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object"){ // raw data
 			if ("overlayNinja" in e.data.dataReceived){
 				processInput(e.data.dataReceived.overlayNinja);
 			}
@@ -516,7 +516,7 @@
 		var invisible = false;
 
 		if (!("id" in data)){
-			data.id = parseInt(Math.random*100000000);
+			data.id = parseInt(Math.random()*100000000);
 		}
 		
 		// Hide bots if doNotShowBot is enabled - check both data.bot (set by extension) and custombot list (URL param)

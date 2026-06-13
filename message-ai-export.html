@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message AI TSV Export</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+            color: #222;
+            background: #f7f7f7;
+        }
+        main {
+            max-width: 980px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 16px;
+        }
+        h1 {
+            margin: 0 0 14px;
+            font-size: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        input, select, button {
+            font: inherit;
+            padding: 7px;
+        }
+        input[type="password"] {
+            font-family: monospace;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 12px 0;
+        }
+        button {
+            cursor: pointer;
+        }
+        button:disabled {
+            cursor: default;
+            opacity: 0.65;
+        }
+        #start-button {
+            background: #1f7a36;
+            color: #fff;
+            border: 1px solid #176029;
+        }
+        #stop-button {
+            background: #9f2d22;
+            color: #fff;
+            border: 1px solid #7f2119;
+        }
+        #status {
+            font-weight: bold;
+            margin: 8px 0;
+        }
+        #log {
+            min-height: 220px;
+            max-height: 380px;
+            overflow: auto;
+            white-space: pre-wrap;
+            background: #111;
+            color: #e8e8e8;
+            padding: 10px;
+            font: 12px Consolas, Monaco, monospace;
+        }
+        #custom-range {
+            display: none;
+        }
+        .note {
+            font-size: 13px;
+            color: #555;
+            margin: 0 0 14px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Message AI TSV Export</h1>
+        <p class="note">Processes local chat history with the hosted LLM and downloads a TSV.</p>
+
+        <div class="grid">
+            <label>
+                Endpoint
+                <input id="endpoint" type="text" value="https://llm.socialstream.ninja/v1/chat/completions">
+            </label>
+            <label>
+                Model
+                <input id="model" type="text" value="default">
+            </label>
+            <label>
+                Token
+                <input id="token" type="password" autocomplete="off">
+            </label>
+            <label>
+                Time Range
+                <select id="timeframe">
+                    <option value="all">All Time</option>
+                    <option value="day">Last 24 Hours</option>
+                    <option value="week">Last Week</option>
+                    <option value="month">Last Month</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </label>
+            <label id="custom-from">
+                From
+                <input id="date-from" type="date">
+            </label>
+            <label id="custom-to">
+                To
+                <input id="date-to" type="date">
+            </label>
+            <label>
+                Max Messages
+                <input id="max-messages" type="number" min="0" step="1" value="0">
+            </label>
+            <label>
+                Concurrent Requests
+                <input id="batch-size" type="number" min="1" max="100" step="1" value="20">
+            </label>
+        </div>
+
+        <div class="actions">
+            <button id="start-button" type="button">Start Export</button>
+            <button id="stop-button" type="button" disabled>Stop</button>
+            <a id="download-link" style="display:none;">Download last TSV</a>
+        </div>
+
+        <div id="status">Idle</div>
+        <div id="log"></div>
+    </main>
+
+    <script type="text/javascript" src="./libs/objects.js"></script>
+    <script type="text/javascript" src="./message-ai-export.js?v=2"></script>
+</body>
+</html>

@@ -175,9 +175,13 @@
 		pushMessage(data);
 	}
 
-	function pushMessage(data){
+	function pushMessage(data, target){
 		try{
-			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+			var request = { "message": data };
+			if (target) {
+				request.target = target;
+			}
+			chrome.runtime.sendMessage(chrome.runtime.id, request, function(e){});
 		} catch(e){
 		}
 	}
@@ -185,9 +189,19 @@
 	var lastViewerCount = null;
 	var lastAuctionSnapshot = "";
 	var lastCommerceSnapshot = "";
+	var reactionObserver = null;
+	var reactionObserverTarget = null;
+	var lastSellerStatsFetchAt = 0;
+	var lastSellerStatsSeller = "";
+	var sellerStatsInFlight = false;
+	var EBAY_SELLER_STATS_ENDPOINT = "https://vps-1122d8c8.vps.ovh.us:1443/seller?seller=";
+	var EBAY_SELLER_STATS_INTERVAL_MS = 60 * 1000;
 
 	function normalizeText(value) {
-		return (value || "").replace(/\s+/g, " ").trim();
+		if (value === null || typeof value === "undefined") {
+			return "";
+		}
+		return String(value).replace(/\s+/g, " ").trim();
 	}
 
 	function parseCompactNumber(value) {
@@ -835,6 +849,308 @@
 		});
 	}
 
+	function isTopFrame() {
+		try {
+			return window.top === window;
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function normalizeSellerSlug(value) {
+		var raw = normalizeText(value).toLowerCase();
+		if (!raw) {
+			return "";
+		}
+		raw = raw.replace(/^@+/, "");
+		raw = raw.replace(/\s+/g, "");
+		raw = raw.replace(/[^a-z0-9_-]/g, "");
+		return raw;
+	}
+
+	function getSellerSlugFromStoreUrl(value) {
+		var raw = normalizeText(value);
+		if (!raw) {
+			return "";
+		}
+		try {
+			var parsed = new URL(raw, window.location.origin);
+			var match = parsed.pathname.match(/\/str\/([^\/?#]+)/i);
+			if (match && match[1]) {
+				return normalizeSellerSlug(decodeURIComponent(match[1]));
+			}
+		} catch (e) {}
+		return "";
+	}
+
+	function getCurrentSellerSlug() {
+		var links = [];
+		try {
+			links = Array.from(document.querySelectorAll("a[href*='/str/']"));
+		} catch (e) {}
+		for (var i = 0; i < links.length; i++) {
+			var storeSlug = getSellerSlugFromStoreUrl(links[i].getAttribute("href"));
+			if (storeSlug) {
+				return storeSlug;
+			}
+		}
+
+		var sellerText = textFrom(document, "[data-testid='a-seller-link'] [class*='_username_'], [data-testid='a-seller-link']");
+		var sellerSlug = normalizeSellerSlug(sellerText);
+		if (sellerSlug) {
+			return sellerSlug;
+		}
+
+		var previewSnapshot = parseLivePreviewSnapshot();
+		if (previewSnapshot && previewSnapshot.current && previewSnapshot.current.sellerName) {
+			var currentSellerSlug = normalizeSellerSlug(previewSnapshot.current.sellerName);
+			if (currentSellerSlug) {
+				return currentSellerSlug;
+			}
+		}
+
+		return "";
+	}
+
+	function sendFollowerUpdate(count) {
+		pushMessage({
+			type: "ebay",
+			event: "follower_update",
+			meta: count,
+			tid: false
+		});
+	}
+
+	function fetchSellerStatsDirect(seller, callback) {
+		if (typeof fetch !== "function") {
+			callback(null);
+			return;
+		}
+		fetch(EBAY_SELLER_STATS_ENDPOINT + encodeURIComponent(seller), {
+			cache: "no-store",
+			credentials: "omit"
+		}).then(function(response) {
+			if (!response || !response.ok) {
+				return null;
+			}
+			return response.json();
+		}).then(function(result) {
+			callback(result || null);
+		}).catch(function() {
+			callback(null);
+		});
+	}
+
+	function fetchSellerStatsFromBackground(seller, callback) {
+		if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.sendMessage) {
+			return false;
+		}
+
+		function handleResponse(response, tryWorkerRoute) {
+			if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) {
+				response = null;
+			}
+			if (response && response.ok && response.data) {
+				callback(response.data, false);
+				return;
+			}
+			if (response && response.ok === false) {
+				callback(null, false);
+				return;
+			}
+			if (tryWorkerRoute) {
+				try {
+					chrome.runtime.sendMessage(chrome.runtime.id, {
+						type: "toBackground",
+						data: {
+							cmd: "ebaySellerStats",
+							seller: seller
+						}
+					}, function(workerResponse) {
+						handleResponse(workerResponse, false);
+					});
+					return;
+				} catch (e) {}
+			}
+			callback(null, true);
+		}
+
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				cmd: "ebaySellerStats",
+				seller: seller
+			}, function(response) {
+				handleResponse(response, true);
+			});
+			return true;
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function fetchSellerStats(seller, callback) {
+		if (fetchSellerStatsFromBackground(seller, function(result, allowDirectFallback) {
+			if (result) {
+				callback(result);
+				return;
+			}
+			if (allowDirectFallback) {
+				fetchSellerStatsDirect(seller, callback);
+				return;
+			}
+			callback(null);
+		})) {
+			return;
+		}
+		fetchSellerStatsDirect(seller, callback);
+	}
+
+	function checkSellerStats() {
+		if (!isExtensionOn || !isTopFrame() || sellerStatsInFlight) {
+			return;
+		}
+		var seller = getCurrentSellerSlug();
+		if (!seller) {
+			return;
+		}
+		if (seller !== lastSellerStatsSeller) {
+			lastSellerStatsSeller = seller;
+			lastSellerStatsFetchAt = 0;
+		}
+		var now = Date.now();
+		if (lastSellerStatsFetchAt && now - lastSellerStatsFetchAt < EBAY_SELLER_STATS_INTERVAL_MS) {
+			return;
+		}
+		lastSellerStatsFetchAt = now;
+		sellerStatsInFlight = true;
+		fetchSellerStats(seller, function(result) {
+			if (!result || !result.ok || !result.data) {
+				sellerStatsInFlight = false;
+				return;
+			}
+			var followers = parseIntegerValue(result.data.followers);
+			if (followers === null) {
+				sellerStatsInFlight = false;
+				return;
+			}
+			sendFollowerUpdate(followers);
+			sellerStatsInFlight = false;
+		});
+	}
+
+	function getNodeClassName(node) {
+		if (!node || node.nodeType !== 1) {
+			return "";
+		}
+		try {
+			return node.getAttribute("class") || "";
+		} catch (e) {
+			return "";
+		}
+	}
+
+	function isReactionAnimationNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return false;
+		}
+		var testId = "";
+		try {
+			testId = node.getAttribute("data-testid") || "";
+		} catch (e) {}
+		if (testId === "heart-box") {
+			return true;
+		}
+		var className = getNodeClassName(node);
+		if (/floatingHeart/i.test(className)) {
+			return true;
+		}
+		if (/reactionsAnimation/i.test(className) && !/reactionsAnimationsContainer|reactionsAnimationPreload/i.test(className)) {
+			return true;
+		}
+		return false;
+	}
+
+	function hasReactionAnimationNode(node) {
+		if (!node || node.nodeType !== 1) {
+			return false;
+		}
+		if (isReactionAnimationNode(node)) {
+			return true;
+		}
+		var nodes = [];
+		try {
+			nodes = node.querySelectorAll("[data-testid='heart-box'], [class*='floatingHeart'], [class*='reactionsAnimation']");
+		} catch (e) {
+			return false;
+		}
+		for (var i = 0; i < nodes.length; i++) {
+			if (isReactionAnimationNode(nodes[i])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function sendReactionEvent() {
+		if (!isExtensionOn) {
+			return;
+		}
+		pushMessage({
+			chatname: "eBay Live",
+			chatbadges: [],
+			backgroundColor: "",
+			textColor: "",
+			nameColor: "",
+			chatmessage: "",
+			chatimg: "",
+			hasDonation: "",
+			membership: "",
+			contentimg: "",
+			textonly: settings.textonlymode || false,
+			type: "ebay",
+			event: "reaction",
+			meta: {
+				reactionType: "heart",
+				source: "dom_animation"
+			}
+		}, "reactions");
+	}
+
+	function observeEbayReactions() {
+		if (!document.body) {
+			return;
+		}
+		if (reactionObserver && reactionObserverTarget === document.body) {
+			return;
+		}
+		if (reactionObserver) {
+			try {
+				reactionObserver.disconnect();
+			} catch (e) {}
+		}
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		reactionObserver = new MutationObserver(function(mutations) {
+			var sawReaction = false;
+			for (var i = 0; i < mutations.length; i++) {
+				var addedNodes = mutations[i].addedNodes;
+				for (var j = 0; j < addedNodes.length; j++) {
+					var node = addedNodes[j];
+					if (!node || node.nodeType !== 1) {
+						continue;
+					}
+					if (hasReactionAnimationNode(node)) {
+						sawReaction = true;
+					}
+				}
+			}
+			if (sawReaction) {
+				sendReactionEvent();
+			}
+		});
+		reactionObserver.observe(document.body, { childList: true, subtree: true });
+		reactionObserverTarget = document.body;
+	}
+
 	function checkAuctionUpdates() {
 		if (!isExtensionOn) {
 			return;
@@ -1021,8 +1337,10 @@
 				}
 
 				checkViewers();
+				checkSellerStats();
 				checkAuctionUpdates();
 				checkCommerceUpdates();
+				observeEbayReactions();
 			} catch(e){}
 		},2000);
 	}

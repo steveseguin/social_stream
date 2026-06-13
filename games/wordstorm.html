@@ -320,6 +320,12 @@
             'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those'
         ]);
 
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
         // Extract meaningful words from text
         function extractWords(text) {
             return text.toLowerCase()
@@ -627,7 +633,11 @@
             
             if (!data || !data.chatmessage || !data.chatname) return;
 
-            const words = extractWords(data.chatmessage);
+            let text = data.chatmessage;
+            if (!data.textonly) {
+                text = stripHtml(text);
+            }
+            const words = extractWords(text);
             if (words.length === 0) return;
 
             words.forEach(word => {
@@ -663,7 +673,7 @@
         window.addEventListener("message", function(e) {
             if (e.source !== iframe.contentWindow) return;
             
-            if ("dataReceived" in e.data) {
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                 if ("overlayNinja" in e.data.dataReceived) {
                     processData(e.data.dataReceived.overlayNinja);
                 }
@@ -672,26 +682,43 @@
         
         // Handle WebSocket connection
         if (urlParams.has('server')) {
-            const socketserver = new WebSocket(urlParams.get('server'));
-            
-            socketserver.onopen = function() {
-                socketserver.send(JSON.stringify({ 
-                    join: sessionId.split(",")[0], 
-                    out: 2, 
-                    in: 1 
-                }));
-            };
-            
-            socketserver.onmessage = function(event) {
-                if (event.data) {
-                    try {
-                        const data = JSON.parse(event.data);
-                        processData(data);
-                    } catch (e) {
-                        console.error('WebSocket parse error:', e);
+            const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+            let socketserver = null;
+            let reconnectTimeout = null;
+
+            function connectWebSocket() {
+                socketserver = new WebSocket(serverUrl);
+
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({
+                        join: sessionId.split(",")[0],
+                        out: 2,
+                        in: 1
+                    }));
+                };
+
+                socketserver.onclose = function() {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = setTimeout(connectWebSocket, 5000);
+                };
+
+                socketserver.onerror = function() {
+                    try { socketserver.close(); } catch (e) {}
+                };
+
+                socketserver.onmessage = function(event) {
+                    if (event.data) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            processData(data);
+                        } catch (e) {
+                            console.error('WebSocket parse error:', e);
+                        }
                     }
-                }
-            };
+                };
+            }
+
+            connectWebSocket();
         }
         
         // Demo mode

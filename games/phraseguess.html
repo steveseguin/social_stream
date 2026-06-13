@@ -254,7 +254,7 @@ You can't handle the truth</textarea>
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session') || '';
         const password = urlParams.get('password') || 'false';
-        const serverUrl = urlParams.get('server');
+        const serverUrl = urlParams.has('server') ? (urlParams.get('server') || 'wss://io.socialstream.ninja') : '';
         const demo = urlParams.has('demo');
         
         const config = {
@@ -377,7 +377,7 @@ You can't handle the truth</textarea>
                 if (e.source !== iframe.contentWindow) return;
                 
                 // Handle incoming data
-                if ("dataReceived" in e.data) {
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                     if ("overlayNinja" in e.data.dataReceived) {
                         processData(e.data.dataReceived.overlayNinja);
                     }
@@ -718,20 +718,32 @@ You can't handle the truth</textarea>
         }
 
         // Process incoming message
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
         function processMessage(data) {
             if (!gameState.isActive || gameState.winner) return;
 
-            const guess = normalizeText(data.chatmessage);
+            let messageText = data.chatmessage;
+            if (!data.textonly) {
+                messageText = stripHtml(messageText);
+            }
+            const chatname = stripHtml(data.chatname);
+
+            const guess = normalizeText(messageText);
             const match = calculateMatch(guess, gameState.normalizedPhrase);
 
-            addMessage(`[${data.chatname}] ${data.chatmessage} (${match}% match)`);
+            addMessage(`[${chatname}] ${messageText} (${match}% match)`);
 
             if (match >= config.matchThreshold) {
-                gameState.winner = data.chatname;
-                endRound(data.chatname);
+                gameState.winner = chatname;
+                endRound(chatname);
             } else if (match >= 50) {
                 // Give hints for close guesses
-                sendResponse(`@${data.chatname} is getting warm! (${match}% match)`);
+                sendResponse(`@${chatname} is getting warm! (${match}% match)`);
             }
         }
 

@@ -1040,6 +1040,7 @@ export class YoutubePlugin extends BasePlugin {
 
     const rawMessage = snippet.displayMessage || '';
     const sanitizedMessage = safeHtml(rawMessage);
+    const giftInfo = this.deriveGiftMetadata(snippet, sanitizedMessage);
 
     const message = {
       platform: 'youtube',
@@ -1048,8 +1049,8 @@ export class YoutubePlugin extends BasePlugin {
       chatmessage: sanitizedMessage,
       chatimg: author.profileImageUrl || '',
       timestamp,
-      hasDonation: snippet.superChatDetails?.amountDisplayString || (snippet.superStickerDetails ? 'Super Sticker' : ''),
-      donationAmount: snippet.superChatDetails?.amountDisplayString,
+      hasDonation: snippet.superChatDetails?.amountDisplayString || (snippet.superStickerDetails ? 'Super Sticker' : giftInfo?.donationText || ''),
+      donationAmount: snippet.superChatDetails?.amountDisplayString || giftInfo?.donationText,
       donationCurrency: snippet.superChatDetails?.currency,
       isModerator: !!author.isChatModerator,
       isOwner: !!author.isChatOwner,
@@ -1071,9 +1072,25 @@ export class YoutubePlugin extends BasePlugin {
     if (snippet.superStickerDetails?.superStickerMetadata?.altText) {
       message.subtitle = snippet.superStickerDetails.superStickerMetadata.altText;
     }
+    if (giftInfo) {
+      message.event = 'jeweldonation';
+      message.hasDonation = giftInfo.donationText || message.hasDonation || '';
+      message.donationAmount = giftInfo.donationText || message.donationAmount;
+      message.subtitle = giftInfo.giftName || giftInfo.altText || message.subtitle;
+      message.previewText = rawMessage || giftInfo.previewText;
+      if (!message.chatmessage && giftInfo.previewText) {
+        message.chatmessage = safeHtml(giftInfo.previewText);
+      }
+      if (giftInfo.giftUrl) {
+        message.contentimg = giftInfo.giftUrl;
+      }
+      if (Number.isFinite(giftInfo.estimatedRevenueUsd)) {
+        message.donoValue = giftInfo.estimatedRevenueUsd;
+      }
+    }
 
     const membershipInfo = this.deriveMembershipMetadata(snippet, sanitizedMessage);
-    let note = null;
+    let note = giftInfo?.note || null;
     if (membershipInfo) {
       if (membershipInfo.membership) {
         message.membership = membershipInfo.membership;
@@ -1101,10 +1118,14 @@ export class YoutubePlugin extends BasePlugin {
     const membershipMeta = membershipInfo
       ? this.buildMembershipMeta(snippet, membershipInfo)
       : null;
+    const giftMeta = giftInfo ? this.buildGiftMeta(giftInfo) : null;
 
     const meta = {};
     if (membershipMeta) {
       meta.membership = membershipMeta;
+    }
+    if (giftMeta) {
+      meta.youtubeGift = giftMeta;
     }
     if (transport) {
       meta.transport = transport;
@@ -1122,6 +1143,108 @@ export class YoutubePlugin extends BasePlugin {
     }
 
     await this.publishWithEmotes(message, { silent: true, note });
+  }
+
+  deriveGiftMetadata(snippet, sanitizedMessage = '') {
+    if (!snippet) {
+      return null;
+    }
+    const type = typeof snippet.type === 'string' ? snippet.type.trim().toLowerCase() : '';
+    const eventDetails = snippet.giftEventDetails || snippet.gift_event_details || null;
+    const eventMetadata =
+      eventDetails && typeof eventDetails === 'object'
+        ? eventDetails.giftMetadata || eventDetails.gift_metadata || eventDetails
+        : null;
+    const directDetails = snippet.giftDetails || snippet.gift_details || null;
+    const metadata =
+      (eventMetadata && typeof eventMetadata === 'object' ? eventMetadata : null) ||
+      (directDetails && typeof directDetails === 'object' ? directDetails : null);
+
+    if (!metadata && type !== 'giftevent') {
+      return null;
+    }
+
+    const source = metadata || {};
+    const toPlainText = (value) => htmlToText(value || '').trim();
+    const parseInteger = (value) => {
+      if (value === undefined || value === null || value === '') {
+        return null;
+      }
+      if (typeof value === 'number') {
+        return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : null;
+      }
+      const parsed = parseInt(String(value).replace(/,/g, '').trim(), 10);
+      return Number.isFinite(parsed) ? Math.max(0, parsed) : null;
+    };
+
+    const jewelsAmount = parseInteger(source.jewelsAmount ?? source.jewels_amount);
+    const donationText = Number.isFinite(jewelsAmount) && jewelsAmount > 0 ? `${jewelsAmount} Jewels` : '';
+    const giftName = toPlainText(source.giftName || source.gift_name || '');
+    const altText = toPlainText(source.altText || source.alt_text || '');
+    const giftLabel = giftName || altText || 'Gift';
+    const fromSnippet = toPlainText(snippet.displayMessage || '');
+    const fromSanitized = toPlainText(sanitizedMessage);
+    const fallback = donationText ? `sent a gift: ${giftLabel} (${donationText})` : `sent a gift: ${giftLabel}`;
+    const duration = source.giftDuration || source.gift_duration || null;
+    const giftDuration = duration && typeof duration === 'object'
+      ? {
+          seconds: parseInteger(duration.seconds),
+          nanos: parseInteger(duration.nanos)
+        }
+      : null;
+
+    return {
+      giftName,
+      altText,
+      jewelsAmount,
+      donationText,
+      giftUrl: source.giftUrl || source.gift_url || '',
+      language: source.language || '',
+      giftDuration,
+      hasVisualEffect: Boolean(source.hasVisualEffect || source.has_visual_effect),
+      comboCount: parseInteger(source.comboCount ?? source.combo_count),
+      estimatedRevenueUsd: donationText ? jewelsAmount / 200 : null,
+      previewText: fromSnippet || fromSanitized || fallback,
+      note: donationText ? `${giftLabel} (${donationText})` : giftLabel
+    };
+  }
+
+  buildGiftMeta(giftInfo = {}) {
+    const meta = { eventType: 'jeweldonation' };
+    if (giftInfo.giftName) {
+      meta.giftName = giftInfo.giftName;
+    }
+    if (giftInfo.altText) {
+      meta.altText = giftInfo.altText;
+    }
+    if (Number.isFinite(giftInfo.jewelsAmount)) {
+      meta.jewelsAmount = giftInfo.jewelsAmount;
+    }
+    if (Number.isFinite(giftInfo.estimatedRevenueUsd)) {
+      meta.estimatedRubyRevenueUsd = giftInfo.estimatedRevenueUsd;
+    }
+    if (giftInfo.giftUrl) {
+      meta.giftUrl = giftInfo.giftUrl;
+    }
+    if (giftInfo.language) {
+      meta.language = giftInfo.language;
+    }
+    if (giftInfo.giftDuration && (Number.isFinite(giftInfo.giftDuration.seconds) || Number.isFinite(giftInfo.giftDuration.nanos))) {
+      meta.giftDuration = {};
+      if (Number.isFinite(giftInfo.giftDuration.seconds)) {
+        meta.giftDuration.seconds = giftInfo.giftDuration.seconds;
+      }
+      if (Number.isFinite(giftInfo.giftDuration.nanos)) {
+        meta.giftDuration.nanos = giftInfo.giftDuration.nanos;
+      }
+    }
+    if (typeof giftInfo.hasVisualEffect === 'boolean') {
+      meta.hasVisualEffect = giftInfo.hasVisualEffect;
+    }
+    if (Number.isFinite(giftInfo.comboCount)) {
+      meta.comboCount = giftInfo.comboCount;
+    }
+    return meta;
   }
 
   resolveEvent(snippet) {
@@ -1146,6 +1269,9 @@ export class YoutubePlugin extends BasePlugin {
     }
     if (type === 'giftmembershipreceivedevent' || snippet?.giftMembershipReceivedDetails) {
       return 'giftredemption';
+    }
+    if (type === 'giftevent' || snippet?.giftEventDetails || snippet?.giftDetails) {
+      return 'jeweldonation';
     }
     return type;
   }
@@ -1759,6 +1885,10 @@ export class YoutubePlugin extends BasePlugin {
       return 'giftredemption';
     }
 
+    if (normalized === 'giftevent' || snippet.giftEventDetails || snippet.giftDetails) {
+      return 'jeweldonation';
+    }
+
     return normalized;
   }
 
@@ -1792,4 +1922,3 @@ export class YoutubePlugin extends BasePlugin {
     return super.shouldAutoConnect() && this.isTokenValid();
   }
 }
-

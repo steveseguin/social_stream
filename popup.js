@@ -710,8 +710,8 @@ if (typeof(chrome.runtime)=='undefined'){
 function copyToClipboard(event) {
 	
 	// if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
-	// Find the closest .link container
-	const linkContainer = event.target.closest('.link');
+	// Find the closest link container
+	const linkContainer = event.target.closest('[data-link-container], .link');
 	if (!linkContainer) {
 		console.error('Could not find .link container');
 		return;
@@ -862,84 +862,53 @@ function isFontAvailable(fontName) {
     return widthMonospace !== widthTest;
 }
 
-async function populateFontDropdown() {
-    const fonts = [
-        // Windows core UI/text
-        'Segoe UI', 'Segoe UI Variable', 'Segoe UI Emoji', 'Segoe UI Historic', 'Segoe UI Symbol', 'Bahnschrift', 'Ebrima', 'Gadugi', 'Javanese Text', 'Leelawadee UI', 'Lucida Sans Unicode', 'Malgun Gothic', 'Meiryo', 'Microsoft Himalaya', 'Microsoft JhengHei', 'Microsoft New Tai Lue', 'Microsoft PhagsPa', 'Microsoft Sans Serif', 'Microsoft Tai Le', 'Microsoft Uighur', 'Microsoft YaHei', 'Microsoft Yi Baiti', 'MingLiU-ExtB', 'Mongolian Baiti', 'MS Gothic', 'MS PGothic', 'MS UI Gothic', 'NSimSun', 'PMingLiU-ExtB', 'SimSun', 'SimSun-ExtB', 'Yu Gothic', 'Yu Gothic UI',
-        // Windows Latin staples
-        'Arial', 'Arial Black', 'Calibri', 'Cambria', 'Candara', 'Comic Sans MS', 'Consolas', 'Constantia', 'Corbel', 'Courier New', 'Franklin Gothic Medium', 'Gabriola', 'Georgia', 'Impact', 'Palatino Linotype', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana', 'Symbol', 'Webdings', 'Wingdings', 'Wingdings 2', 'Wingdings 3', 'Sitka Banner', 'Sitka Display', 'Sitka Heading', 'Sitka Small', 'Sitka Subheading', 'Sitka Text', 'Lucida Console',
-        // Developer favorites / code
-        'Cascadia Code', 'Cascadia Mono', 'Fira Code', 'Fira Mono', 'JetBrains Mono', 'Source Code Pro', 'IBM Plex Mono', 'Ubuntu Mono', 'Inconsolata', 'Monaspace Neon', 'Monaspace Argon',
-        // Popular sans/serif families
-        'Inter', 'Roboto', 'Open Sans', 'Noto Sans', 'Noto Serif', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Serif JP', 'Noto Naskh Arabic', 'Lato', 'Montserrat', 'Poppins', 'Oswald', 'Raleway', 'Nunito', 'Merriweather', 'Playfair Display', 'PT Sans', 'PT Serif', 'Source Sans 3', 'Source Serif 4', 'Source Sans Pro', 'Source Serif Pro', 'IBM Plex Sans', 'IBM Plex Serif', 'Ubuntu', 'Work Sans', 'Sora', 'Avenir', 'Avenir Next', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'Helvetica', 'Gill Sans',
-        // Other common
-        'Book Antiqua', 'Century Gothic', 'Garamond', 'Didot', 'Bodoni MT', 'Perpetua', 'Rockwell', 'Goudy Old Style', 'Copperplate', 'Brush Script MT'
-    ];
-	
-    var select = document.querySelector("[data-optionparam1='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
+const popupFontCandidates = [
+    'Segoe UI', 'Segoe UI Variable', 'Segoe UI Emoji', 'Segoe UI Historic', 'Segoe UI Symbol', 'Bahnschrift', 'Ebrima', 'Gadugi', 'Javanese Text', 'Leelawadee UI', 'Lucida Sans Unicode', 'Malgun Gothic', 'Meiryo', 'Microsoft Himalaya', 'Microsoft JhengHei', 'Microsoft New Tai Lue', 'Microsoft PhagsPa', 'Microsoft Sans Serif', 'Microsoft Tai Le', 'Microsoft Uighur', 'Microsoft YaHei', 'Microsoft Yi Baiti', 'MingLiU-ExtB', 'Mongolian Baiti', 'MS Gothic', 'MS PGothic', 'MS UI Gothic', 'NSimSun', 'PMingLiU-ExtB', 'SimSun', 'SimSun-ExtB', 'Yu Gothic', 'Yu Gothic UI',
+    'Arial', 'Arial Black', 'Calibri', 'Cambria', 'Candara', 'Comic Sans MS', 'Consolas', 'Constantia', 'Corbel', 'Courier New', 'Franklin Gothic Medium', 'Gabriola', 'Georgia', 'Impact', 'Palatino Linotype', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana', 'Symbol', 'Webdings', 'Wingdings', 'Wingdings 2', 'Wingdings 3', 'Sitka Banner', 'Sitka Display', 'Sitka Heading', 'Sitka Small', 'Sitka Subheading', 'Sitka Text', 'Lucida Console',
+    'Cascadia Code', 'Cascadia Mono', 'Fira Code', 'Fira Mono', 'JetBrains Mono', 'Source Code Pro', 'IBM Plex Mono', 'Ubuntu Mono', 'Inconsolata', 'Monaspace Neon', 'Monaspace Argon',
+    'Inter', 'Roboto', 'Open Sans', 'Noto Sans', 'Noto Serif', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Serif JP', 'Noto Naskh Arabic', 'Lato', 'Montserrat', 'Poppins', 'Oswald', 'Raleway', 'Nunito', 'Merriweather', 'Playfair Display', 'PT Sans', 'PT Serif', 'Source Sans 3', 'Source Serif 4', 'Source Sans Pro', 'Source Serif Pro', 'IBM Plex Sans', 'IBM Plex Serif', 'Ubuntu', 'Work Sans', 'Sora', 'Avenir', 'Avenir Next', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'Helvetica', 'Gill Sans',
+    'Book Antiqua', 'Century Gothic', 'Garamond', 'Didot', 'Bodoni MT', 'Perpetua', 'Rockwell', 'Goudy Old Style', 'Copperplate', 'Brush Script MT'
+];
+var popupAvailableFontCache = null;
+
+function getPopupAvailableFonts() {
+    if (!popupAvailableFontCache) {
+        popupAvailableFontCache = popupFontCandidates.filter(isFontAvailable);
+    }
+    return popupAvailableFontCache;
+}
+
+function populateFontDropdown(select) {
+    if (!select) return;
+    if (select.dataset.fontOptionsLoaded === "true") return;
+
+    const currentValue = select.value;
+    const existingValues = new Set(Array.from(select.options).map(option => option.value));
+    getPopupAvailableFonts().forEach(font => {
+        if (existingValues.has(font)) return;
+        let option = document.createElement("option");
+        option.value = font;
+        option.style = "font-family:'" + font + "'";
+        option.innerText = font + " abc123XYZ";
+        select.appendChild(option);
     });
-	
-	select = document.querySelector("[data-optionparam2='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
-    });
-	
-	select = document.querySelector("[data-optionparam4='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
-    });
-	
-	select = document.querySelector("[data-optionparam5='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
-    });
-	
-	select = document.querySelector("[data-optionparam1='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
-    });
-	
-	select = document.querySelector("[data-optionparam17='font']");
-    fonts.forEach(font => {
-        if (isFontAvailable(font)) {
-            let option = document.createElement("option");
-            option.value = font;
-			option.style="font-family:'"+font+"'";
-            option.innerText = font + " abc123XYZ";
-            select.appendChild(option);
-        }
+    if (currentValue) {
+        select.value = currentValue;
+    }
+    select.dataset.fontOptionsLoaded = "true";
+}
+
+function setupLazyFontDropdowns() {
+    document.querySelectorAll("select[data-optionparam1='font'], select[data-optionparam2='font'], select[data-optionparam4='font'], select[data-optionparam5='font'], select[data-optionparam6='font'], select[data-optionparam7='font'], select[data-optionparam13='font'], select[data-optionparam17='font'], select[data-optionparam21='font']").forEach(function(select) {
+        if (select.dataset.lazyFonts === "true") return;
+        select.dataset.lazyFonts = "true";
+        const load = function() {
+            populateFontDropdown(select);
+        };
+        select.addEventListener("focus", load);
+        select.addEventListener("mousedown", load);
+        select.addEventListener("touchstart", load);
+        select.addEventListener("keydown", load);
     });
 }
 
@@ -988,6 +957,88 @@ function createUniqueVoiceIdentifiers(voices) {
 
     // Flatten the grouped voices back into a single array
     return Object.values(voicesByLang).flat();
+}
+
+var popupSpeechVoiceCache = null;
+var popupSpeechVoiceDropdownsLoaded = false;
+var popupSpeechVoiceSelectIds = ['systemLanguageSelect', 'languageSelect2', 'systemLanguageSelect10', 'systemLanguageSelect18'];
+
+function getPopupSpeechVoices() {
+    if (popupSpeechVoiceCache) return popupSpeechVoiceCache;
+    if (!window.speechSynthesis) return [];
+    const voices = speechSynthesis.getVoices();
+    if (!voices || !voices.length) return [];
+
+    popupSpeechVoiceCache = createUniqueVoiceIdentifiers(voices);
+    popupSpeechVoiceCache.sort((a, b) => {
+        if (a.default) return -1;
+        if (b.default) return 1;
+        return 0;
+    });
+    return popupSpeechVoiceCache;
+}
+
+function populateSystemVoiceDropdown(dropdown, voices) {
+    if (!dropdown || !voices || !voices.length) return;
+    const currentValue = dropdown.value;
+    const existingValues = new Set(Array.from(dropdown.options).map(option => option.value));
+
+    voices.forEach(voice => {
+        const voiceText = `${voice.name} (${voice.lang})`;
+        if (!existingValues.has(voice.code)) {
+            const option = document.createElement('option');
+            option.textContent = voiceText;
+            option.value = voice.code;
+            option.code = voice.code;
+            option.setAttribute('data-lang', voice.lang);
+            option.setAttribute('data-name', voice.name);
+            dropdown.appendChild(option);
+            existingValues.add(voice.code);
+        }
+    });
+
+    if (currentValue) {
+        dropdown.value = currentValue;
+    }
+}
+
+function populateSystemVoiceDropdowns() {
+    const voices = getPopupSpeechVoices();
+    if (!voices.length) return voices;
+
+    popupSpeechVoiceSelectIds.forEach(id => {
+        populateSystemVoiceDropdown(document.getElementById(id), voices);
+    });
+
+    if (typeof TTSManager !== 'undefined') {
+        TTSManager.voices = voices;
+    }
+    popupSpeechVoiceDropdownsLoaded = true;
+    return voices;
+}
+
+function setupLazySystemVoiceDropdowns() {
+    popupSpeechVoiceSelectIds.forEach(id => {
+        const dropdown = document.getElementById(id);
+        if (!dropdown || dropdown.dataset.lazySystemVoices === "true") return;
+        dropdown.dataset.lazySystemVoices = "true";
+        const load = function() {
+            populateSystemVoiceDropdowns();
+        };
+        dropdown.addEventListener("focus", load);
+        dropdown.addEventListener("mousedown", load);
+        dropdown.addEventListener("touchstart", load);
+        dropdown.addEventListener("keydown", load);
+    });
+
+    if (window.speechSynthesis) {
+        speechSynthesis.onvoiceschanged = function() {
+            popupSpeechVoiceCache = null;
+            if (popupSpeechVoiceDropdownsLoaded) {
+                populateSystemVoiceDropdowns();
+            }
+        };
+    }
 }
 
 function addUsername(username, type='blacklistusers') {
@@ -1508,27 +1559,17 @@ function setupSourceSelection(inputId, isSettingBased = false) {
     const addContainer = document.createElement('div');
     addContainer.className = 'add-source-container';
     
-    if (sourcesList && sourcesList.size > 0) {
-        addContainer.innerHTML = `
-            <select id="new${inputId}Type">
-                <option value="" selected>Select Sources</option>
-                ${Array.from(sourcesList).sort().map(source => 
-                    `<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
-                ).join('')}
-            </select>
-            <button id="add${inputId}">Add</button>
-        `;
-    } else {
-        addContainer.innerHTML = `
-            <input type="text" id="new${inputId}Type" placeholder="Source type">
-            <button id="add${inputId}">Add</button>
-        `;
-    }
+    addContainer.innerHTML = `
+        <input type="text" id="new${inputId}Type" placeholder="Source type" list="popupSourceTypesList">
+        <button id="add${inputId}">Add</button>
+    `;
     
     container.parentNode.classList.add("isolate");
     container.parentNode.insertBefore(listContainer, container.nextSibling);
     container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
     
+    setupLazySourceInput(document.getElementById(`new${inputId}Type`));
+
     // Add event listeners
     listContainer.addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-source')) {
@@ -2005,6 +2046,131 @@ const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
+var sortedSourcesListCache = null;
+var popupSourceDatalistLoaded = false;
+
+function formatSourceLabel(source) {
+    source = String(source || "");
+    return source ? source.charAt(0).toUpperCase() + source.slice(1) : "";
+}
+
+function getSortedSourcesList() {
+    if (!sortedSourcesListCache) {
+        sortedSourcesListCache = Array.from(sourcesList).sort();
+    }
+    return sortedSourcesListCache;
+}
+
+function loadSourcesListFromRuntimeManifest() {
+    try {
+        if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
+            const manifest = chrome.runtime.getManifest();
+            return collectSourcesFromManifest(manifest) > 0;
+        }
+    } catch (error) {
+        console.warn('Unable to load sources from chrome.runtime manifest:', error);
+    }
+    return sourcesList.size > 0;
+}
+
+function appendSourceOptions(select) {
+    if (!select || select.dataset.sourceOptionsLoaded === "true") return;
+    const currentValue = select.value;
+    getSortedSourcesList().forEach(source => {
+        const option = document.createElement('option');
+        option.value = source;
+        option.textContent = formatSourceLabel(source);
+        select.appendChild(option);
+    });
+    if (currentValue) {
+        select.value = currentValue;
+    }
+    select.dataset.sourceOptionsLoaded = "true";
+}
+
+function populateSourceDatalist() {
+    const datalist = document.getElementById("popupSourceTypesList") || (function() {
+        const list = document.createElement("datalist");
+        list.id = "popupSourceTypesList";
+        document.body.appendChild(list);
+        return list;
+    })();
+
+    if (popupSourceDatalistLoaded) return datalist;
+
+    datalist.innerHTML = "";
+    getSortedSourcesList().forEach(source => {
+        const option = document.createElement("option");
+        option.value = source;
+        option.label = formatSourceLabel(source);
+        datalist.appendChild(option);
+    });
+    popupSourceDatalistLoaded = true;
+    return datalist;
+}
+
+function ensureLazySourcesLoaded(callback) {
+    if (sourcesList.size > 0 || loadSourcesListFromRuntimeManifest()) {
+        if (callback) callback();
+        return Promise.resolve(true);
+    }
+    return ensureSourcesListLoaded().then(function(loaded) {
+        if (loaded && callback) callback();
+        return loaded;
+    });
+}
+
+function setupLazySourceSelect(select) {
+    if (!select || select.dataset.lazySourceSelect === "true") return;
+    select.dataset.lazySourceSelect = "true";
+    const load = function() {
+        ensureLazySourcesLoaded(function() {
+            appendSourceOptions(select);
+        });
+    };
+    select.addEventListener("focus", load);
+    select.addEventListener("mousedown", load);
+    select.addEventListener("touchstart", load);
+    select.addEventListener("keydown", load);
+}
+
+function setupLazySourceInput(input) {
+    if (!input || input.dataset.lazySourceInput === "true") return;
+    input.dataset.lazySourceInput = "true";
+    input.setAttribute("list", "popupSourceTypesList");
+    const load = function() {
+        ensureLazySourcesLoaded(function() {
+            populateSourceDatalist();
+        });
+    };
+    input.addEventListener("focus", load);
+    input.addEventListener("mousedown", load);
+    input.addEventListener("touchstart", load);
+    input.addEventListener("keydown", load);
+}
+
+function ensureSelectValueOption(select, value, label) {
+    if (!select || value === undefined || value === null || value === "") return;
+    value = String(value);
+    for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === value) return;
+    }
+
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label || value;
+    if (value.indexOf("lang=") !== -1) {
+        try {
+            const params = new URLSearchParams(value);
+            const lang = params.get("lang");
+            const voice = params.get("voice");
+            if (lang) option.setAttribute("data-lang", lang);
+            if (voice) option.setAttribute("data-name", voice);
+        } catch (e) {}
+    }
+    option.dataset.lazyStoredValue = "true";
+    select.appendChild(option);
+}
 
 function collectSourcesFromManifest(manifestData) {
     if (!manifestData || !Array.isArray(manifestData.content_scripts)) {
@@ -2038,6 +2204,10 @@ function collectSourcesFromManifest(manifestData) {
     } catch (error) {
         console.warn('Failed to collect sources from manifest:', error);
     }
+    if (added) {
+        sortedSourcesListCache = null;
+        popupSourceDatalistLoaded = false;
+    }
     return added;
 }
 
@@ -2046,15 +2216,8 @@ async function ensureSourcesListLoaded(options = {}) {
         return true;
     }
 
-    try {
-        if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
-            const manifest = chrome.runtime.getManifest();
-            if (collectSourcesFromManifest(manifest)) {
-                return true;
-            }
-        }
-    } catch (error) {
-        console.warn('Unable to load sources from chrome.runtime manifest:', error);
+    if (loadSourcesListFromRuntimeManifest()) {
+        return true;
     }
 
     if (window.ssappFallback && typeof window.ssappFallback.readJson === 'function') {
@@ -2360,6 +2523,187 @@ function getSelectedTranslationLinkParam() {
   return lang ? `&ln=${encodeURIComponent(lang)}` : "";
 }
 
+const DEFAULT_CHAT_OVERLAY_TEMPLATE = "sampleoverlay.html";
+const CHAT_OVERLAY_TEMPLATE_CONFIGS = {
+  "sampleoverlay.html": "sampleoverlay-overlay-config",
+  "themes/overlay-neon-cyberpunk.html": "overlay-neon-cyberpunk-overlay-config",
+  "themes/overlay-particles.html": "overlay-particles-overlay-config",
+  "themes/overlay-typewriter.html": "overlay-typewriter-overlay-config",
+  "themes/overlay-bubbles.html": "overlay-bubbles-overlay-config",
+  "themes/overlay-cards.html": "overlay-cards-overlay-config",
+  "themes/pretty.html": "pretty-overlay-config",
+  "themes/Neutron/chatOnly.html": "Neutron-overlay-config",
+  "themes/Neutron/stream.html": "Neutron-overlay-config",
+  "themes/Windows3.1/index.html": "Windows3-overlay-config",
+  "themes/t3nk3y/index.html": "t3nk3y-overlay-config",
+  "themes/LuckyLootTube/luckyloottube.html": "luckyloottube-overlay-config"
+};
+
+function getSelectedChatOverlayTemplatePath() {
+  const selector = document.getElementById("overlay-preset-select");
+  if (selector && selector.value) {
+    return selector.value;
+  }
+  return DEFAULT_CHAT_OVERLAY_TEMPLATE;
+}
+
+function getKnownSessionParamValue() {
+  const sessionInput = document.getElementById("sessionid");
+  if (sessionInput && sessionInput.value) {
+    return encodeURIComponent(sessionInput.value);
+  }
+  if (lastResponse && lastResponse.streamID) {
+    return encodeURIComponent(lastResponse.streamID);
+  }
+  return "";
+}
+
+function getGeneratedLinkParams(primaryElement, fallbackElement) {
+  let raw = "";
+  if (primaryElement && primaryElement.raw && primaryElement.raw.indexOf("?") !== -1) {
+    raw = primaryElement.raw;
+  } else if (fallbackElement && fallbackElement.raw && fallbackElement.raw.indexOf("?") !== -1) {
+    raw = fallbackElement.raw;
+  }
+
+  if (raw) {
+    let params = raw.split("?")[1] || "";
+    // Some raw URLs (e.g. theme option-only states) can carry a query string without a
+    // session. Always guarantee a valid session so generated overlay links work.
+    if (!/(^|&)session=[^&]+/.test(params)) {
+      const knownSession = getKnownSessionParamValue();
+      if (knownSession) {
+        params = params
+          .split("&")
+          .filter(function (part) { return part && part.indexOf("session=") !== 0; })
+          .join("&");
+        params = "session=" + knownSession + (params ? "&" + params : "");
+      }
+    }
+    return params;
+  }
+
+  const knownSession = getKnownSessionParamValue();
+  if (knownSession) {
+    return "session=" + knownSession;
+  }
+
+  return "";
+}
+
+function setGeneratedLink(element, url) {
+  if (!element) return;
+  element.raw = cleanURL(url);
+
+  const linkId = element.id + "link";
+  let link = document.getElementById(linkId);
+  if (!link) {
+    link = element.querySelector("a");
+  }
+  if (!link) {
+    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? "Click to open link" : element.raw}</a>`;
+    return;
+  }
+
+  link.href = element.raw;
+  link.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : element.raw;
+}
+
+function moveChatOverlayThemeOptions() {
+  const templateElement = document.getElementById("chatoverlaytemplate");
+  const templateSection = templateElement ? templateElement.closest(".link") : null;
+  const optionsWrapper = document.getElementById("chatOverlayThemeOptionsWrapper");
+  if (templateSection && optionsWrapper && optionsWrapper.previousElementSibling !== templateSection) {
+    templateSection.insertAdjacentElement("afterend", optionsWrapper);
+  }
+  const designNote = document.querySelector(".chat-overlay-design-note");
+  if (designNote && optionsWrapper && designNote.previousElementSibling !== optionsWrapper) {
+    optionsWrapper.insertAdjacentElement("afterend", designNote);
+  }
+}
+
+function moveHypetrainOptionsIntoMetaSection() {
+  const hypetrainWrapper = document.getElementById("wrapper-hypetrain-options")?.closest(".wrapper");
+  const metaWrapper = document.getElementById("wrapper-meta-options")?.closest(".wrapper");
+  if (!hypetrainWrapper || !metaWrapper) return;
+
+  let anchor = document.getElementById("hype-train-bar");
+  if (!anchor) {
+    anchor = document.createElement("a");
+    anchor.href = "";
+    anchor.id = "hype-train-bar";
+  }
+
+  if (hypetrainWrapper.previousElementSibling !== anchor) {
+    metaWrapper.insertAdjacentElement("afterend", hypetrainWrapper);
+    metaWrapper.insertAdjacentElement("afterend", anchor);
+  }
+}
+
+function syncChatOverlayTemplateConfig(templatePath) {
+  moveChatOverlayThemeOptions();
+  const optionsWrapper = document.getElementById("chatOverlayThemeOptionsWrapper");
+  let activeSection = null;
+  const normalizedPath = (templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE).split("?")[0];
+  const configId = CHAT_OVERLAY_TEMPLATE_CONFIGS[normalizedPath] || "";
+
+  document.querySelectorAll(".overlay-config-section").forEach(function(section) {
+    section.style.display = "none";
+  });
+
+  if (configId) {
+    activeSection = document.getElementById(configId);
+    if (activeSection) {
+      activeSection.style.display = "block";
+    }
+  }
+
+  if (optionsWrapper) {
+    optionsWrapper.style.display = activeSection ? "" : "none";
+  }
+}
+
+function applyChatOverlayTemplatePreset(presetValue, options) {
+  options = options || {};
+  const templateElement = document.getElementById("chatoverlaytemplate");
+  if (!templateElement) return;
+
+  const selector = document.getElementById("overlay-preset-select");
+  let templatePath = presetValue || DEFAULT_CHAT_OVERLAY_TEMPLATE;
+  if (selector) {
+    const hasMatchingOption = Array.prototype.some.call(selector.options, function(option) {
+      return option.value === templatePath;
+    });
+    if (!hasMatchingOption) {
+      templatePath = DEFAULT_CHAT_OVERLAY_TEMPLATE;
+    }
+    if (selector.value !== templatePath) {
+      selector.value = templatePath;
+    }
+  }
+
+  const dockElement = document.getElementById("dock");
+  const params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
+  let templateUrl = baseURL + (templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE);
+  if (params) {
+    templateUrl += (templateUrl.indexOf("?") === -1 ? "?" : "&") + params;
+  }
+
+  setGeneratedLink(templateElement, templateUrl);
+  syncChatOverlayTemplateConfig(templatePath);
+  if (!options.skipRefresh) {
+    refreshLinks();
+  }
+}
+
+function syncChatOverlayTemplateLinkFromDock() {
+  const templateElement = document.getElementById("chatoverlaytemplate");
+  if (!templateElement) return;
+  applyChatOverlayTemplatePreset(getSelectedChatOverlayTemplatePath(), {
+    skipRefresh: true
+  });
+}
+
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
   // Get any custom parameters from the current URL
   let customParams = getSelectedTranslationLinkParam();
@@ -2396,10 +2740,12 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   // Configuration array with all page details
   const pages = [
     { id: "dock", path: "dock.html" },
+    { id: "chatoverlaytemplate", path: getSelectedChatOverlayTemplatePath() },
     { id: "overlay", path: "featured.html" },
     { id: "multialerts", path: "multi-alerts.html" },
     { id: "emoteswall", path: "emotes.html" },
     { id: "hypemeter", path: "hype.html" },
+    { id: "hypetrain", path: "meta.html", defaultParams: "&hype" },
     { id: "meta", path: "meta.html" },
     { id: "waitlist", path: "waitlist.html" },
     { id: "tipjar", path: "tipjar.html" },
@@ -2429,14 +2775,6 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   
   // Process all standard pages
   pages.forEach(page => {
-    // Skip dock update if a preset is selected
-    if (page.id === "dock") {
-      const overlaySelector = document.getElementById('overlay-preset-select');
-      if (overlaySelector && overlaySelector.value) {
-        return; // Skip updating dock when preset is active
-      }
-    }
-    
     // Skip featured overlay update if a preset is selected
     if (page.id === "overlay") {
       const featuredPresetSelector = document.getElementById('featured-preset-select');
@@ -2446,18 +2784,21 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     }
     
     const linkPath = page.linkPath || page.path;
-    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${versionParam}`;
+    const pageDefaultParams = page.defaultParams || "";
+    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}`;
+    const displayURL = `${baseURL}${linkPath}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}`;
     const element = document.getElementById(page.id);
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
       element.innerHTML = hideLinks 
         ? "Click to open link" 
-        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${baseURL}${linkPath}?session=${streamID}${password}${customParams}${versionParam}</a>`;
+        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${displayURL}</a>`;
       element.raw = fullURL;
     }
   });
 
+  syncChatOverlayTemplateLinkFromDock();
   updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, versionParam);
   
   // Update sample overlay and remote control URLs too
@@ -2556,6 +2897,16 @@ function applyFeaturedOverlayPreset(presetValue) {
 
 function removeTTSProviderParams(url, selectedProvider=null) {
   if (!url) return url;
+
+  const providerAliases = {
+      custom: "openai",
+      customtts: "openai",
+      local: "openai",
+      localtts: "openai",
+      node: "openai",
+      nodejs: "openai",
+      connector: "openai"
+  };
   
   // Map of all provider-specific parameters
     const providerParams = {
@@ -2566,7 +2917,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
         speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
         kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
         kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
-        openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat', 'openaicustomvoice', 'openaicustommodelx']
+        openai: ['openaikey', 'customttskey', 'localttskey', 'openaiendpoint', 'customttsendpoint', 'localttsendpoint', 'voiceopenai', 'customttsvoice', 'localttsvoice', 'openaimodel', 'customttsmodel', 'localttsmodel', 'openaispeed', 'customttsspeed', 'localttsspeed', 'openaiformat', 'customttsformat', 'localttsformat', 'openaicustomvoice', 'openaicustommodelx']
     };
   
   if (selectedProvider === null) {
@@ -2579,6 +2930,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
       return url; // Invalid URL
     }
   }
+  selectedProvider = providerAliases[(selectedProvider || "").toString().toLowerCase()] || selectedProvider;
   
   // Get all parameters except those for the selected provider
   const paramsToRemove = Object.keys(providerParams)
@@ -2609,6 +2961,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.elevenlabskey?.textparam1) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam1) ttsService = "speechify";
         else if (response.settings?.openaikey?.textparam1) ttsService = "openai";
+        else if (response.settings?.openaiendpoint?.textparam1) ttsService = "customtts";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -2625,6 +2978,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.elevenlabskey?.textparam2) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam2) ttsService = "speechify";
         else if (response.settings?.openaikey?.textparam2) ttsService = "openai";
+        else if (response.settings?.openaiendpoint?.textparam2) ttsService = "customtts";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -2641,6 +2995,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.elevenlabskey?.textparam10) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam10) ttsService = "speechify";
         else if (response.settings?.openaikey?.textparam10) ttsService = "openai";
+        else if (response.settings?.openaiendpoint?.textparam10) ttsService = "customtts";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -2713,6 +3068,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 const isSelect = ele.tagName === 'SELECT';
 
                 if (isSelect) {
+                    ensureSelectValueOption(ele, storedValue);
+
                     // Backward compatibility: if stored value doesn't have 'lang=' prefix but contains '&voice=',
                     // it's likely an old format. Try to find a matching option.
                     if (storedValue && storedValue.includes('&voice=') && !storedValue.includes('lang=')) {
@@ -2751,7 +3108,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                         // Show custom voice input for the appropriate section
                         const customInputId = paramNum === 1 ? 'openaiCustomVoice' : 
                                            paramNum === 2 ? 'openaiCustomVoice2' : 
-                                           paramNum === 10 ? 'openaiCustomVoice10' : null;
+                                           paramNum === 10 ? 'openaiCustomVoice10' :
+                                           paramNum === 18 ? 'openaiCustomVoice18' : null;
                         if (customInputId) {
                             const customInput = document.getElementById(customInputId);
                             if (customInput) {
@@ -2762,7 +3120,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                         // Show custom model input for the appropriate section
                         const customInputId = paramNum === 1 ? 'openaiCustomModel' : 
                                            paramNum === 2 ? 'openaiCustomModel2' : 
-                                           paramNum === 10 ? 'openaiCustomModel10' : null;
+                                           paramNum === 10 ? 'openaiCustomModel10' :
+                                           paramNum === 18 ? 'openaiCustomModel18' : null;
                         if (customInputId) {
                             const customInput = document.getElementById(customInputId);
                             if (customInput) {
@@ -2772,7 +3131,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                     } else if (key === 'voiceopenai' && storedValue !== 'custom') {
                         const customInputId = paramNum === 1 ? 'openaiCustomVoice' : 
                                            paramNum === 2 ? 'openaiCustomVoice2' : 
-                                           paramNum === 10 ? 'openaiCustomVoice10' : null;
+                                           paramNum === 10 ? 'openaiCustomVoice10' :
+                                           paramNum === 18 ? 'openaiCustomVoice18' : null;
                         if (customInputId) {
                             const customInput = document.getElementById(customInputId);
                             if (customInput) {
@@ -2782,7 +3142,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                     } else if (key === 'openaimodel' && storedValue !== 'custom') {
                         const customInputId = paramNum === 1 ? 'openaiCustomModel' : 
                                            paramNum === 2 ? 'openaiCustomModel2' : 
-                                           paramNum === 10 ? 'openaiCustomModel10' : null;
+                                           paramNum === 10 ? 'openaiCustomModel10' :
+                                           paramNum === 18 ? 'openaiCustomModel18' : null;
                         if (customInputId) {
                             const customInput = document.getElementById(customInputId);
                             if (customInput) {
@@ -2888,7 +3249,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting='${key}']`);
         if (ele) {
-            if (key == "midiOutputDevice" || key.startsWith("mididevice")) {
+            if (key == "midiOutputDevice" || key.startsWith("mididevice") || key == "opencodemodel") {
                 if (settingObj.optionsetting && (ele.value !== settingObj.optionsetting)) {
                     // Check if option already exists
                     let optionExists = false;
@@ -2908,6 +3269,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 }
             }
 
+            ensureSelectValueOption(ele, settingObj.optionsetting);
             ele.value = settingObj.optionsetting;
             updateSettings(ele, sync);
 
@@ -2918,45 +3280,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
             } else if (key == "featuredOverlayStyle" ) {
 				applyFeaturedOverlayPreset(ele.value);
 			 } else if (key == "overlayPreset") {
-				// Update the dock URL to match the saved overlay preset
-				const dockDiv = document.getElementById('dock');
-				const dockLink = document.querySelector('#dock a, a[href*="dock.html"]');
-				
-				if (dockDiv && ele.value) {
-					// An overlay is selected, update the URL
-					const overlayUrl = baseURL + ele.value;
-					
-					// Extract existing parameters from current dock URL
-					let existingParams = '';
-					if (dockDiv.raw && dockDiv.raw.includes('?')) {
-						existingParams = dockDiv.raw.split('?')[1];
-					}
-					
-					// Build new URL with overlay
-					let newUrl = overlayUrl;
-					if (existingParams) {
-						newUrl += '?' + existingParams;
-					}
-					
-					// Update the dock URL
-					dockDiv.raw = newUrl;
-					if (dockLink) {
-						dockLink.href = newUrl;
-						dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
-					}
-					
-                    // Hide ONLY the streaming chat (dock) option wrappers
-                    document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
-                        const wrapper = inp.closest('.wrapper');
-                        if (wrapper) wrapper.style.display = 'none';
-                    });
-				} else {
-                    // Show ONLY the streaming chat (dock) option wrappers when no overlay is selected
-                    document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
-                        const wrapper = inp.closest('.wrapper');
-                        if (wrapper) wrapper.style.display = '';
-                    });
-				}
+				applyChatOverlayTemplatePreset(ele.value);
 			 }
         }
     }
@@ -2964,6 +3288,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting2" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting2='${key}']`);
         if (ele) {
+            ensureSelectValueOption(ele, settingObj.optionsetting2);
             ele.value = settingObj.optionsetting2;
             updateSettings(ele, sync);
             if (key == "ttsProvider") {
@@ -2975,6 +3300,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting10" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting10='${key}']`);
         if (ele) {
+            ensureSelectValueOption(ele, settingObj.optionsetting10);
             ele.value = settingObj.optionsetting10;
             updateSettings(ele, sync);
             // Note: handleTTSProvider10Visibility is called from processObjectSetting's main loop for optionparam10
@@ -3012,6 +3338,8 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
+        applyPopupBeginnerMode(getPopupBeginnerMode(response));
+
         // Load profiles if they weren't loaded during init (e.g., due to startup timing)
         if (typeof ProfileManager !== 'undefined' && ProfileManager.loadProfilesFromResponse) {
             ProfileManager.loadProfilesFromResponse(response);
@@ -3075,7 +3403,7 @@ function update(response, sync = true) {
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aioverlaylink',
-                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'metalink', 'waitlistlink',
+                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'hypetrainlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
 					'spotifylink','maplink'
@@ -3111,49 +3439,60 @@ function update(response, sync = true) {
         }
 
         if ('settings' in response && (response.streamID || ssapp)) {
-            setupTtsProviders(response); // Handle TTS provider setting initialization
-            renderSavedCustomUrlSlots(response.settings);
+            const shouldBatchLinkRefresh = sync === false;
+            if (shouldBatchLinkRefresh) {
+                beginPopupLinkRefreshBatch();
+            }
+            try {
+                setupTtsProviders(response); // Handle TTS provider setting initialization
+                renderSavedCustomUrlSlots(response.settings);
 
-            const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
-            const paramNums = Object.values(targetMap);
+                const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
+                const paramNums = Object.values(targetMap);
 
-            for (var key in response.settings) {
-                try {
-                    if (key === "midiConfig") {
-                        if (response.settings[key]) {
-                            document.getElementById("midiConfig").classList.add("pressed");
-                            document.getElementById("midiConfig").innerText = " Config Loaded";
-                        } else {
-                            document.getElementById("midiConfig").classList.remove("pressed");
-                            document.getElementById("midiConfig").innerText = " Load Config";
+                for (var key in response.settings) {
+                    try {
+                        if (key === "midiConfig") {
+                            if (response.settings[key]) {
+                                document.getElementById("midiConfig").classList.add("pressed");
+                                document.getElementById("midiConfig").innerText = " Config Loaded";
+                            } else {
+                                document.getElementById("midiConfig").classList.remove("pressed");
+                                document.getElementById("midiConfig").innerText = " Load Config";
+                            }
+                            continue; // Continue to next setting
                         }
-                        continue; // Continue to next setting
-                    }
 
-                    if (typeof response.settings[key] == "object") {
-                        // Pass 'response' to handle 'mynameext' correctly within processObjectSetting
-                        processObjectSetting(key, response.settings[key], sync, paramNums, response);
-                    } else {
-                        processLegacySetting(key, response.settings[key], sync);
+                        if (typeof response.settings[key] == "object") {
+                            // Pass 'response' to handle 'mynameext' correctly within processObjectSetting
+                            processObjectSetting(key, response.settings[key], sync, paramNums, response);
+                        } else {
+                            processLegacySetting(key, response.settings[key], sync);
+                        }
+                    } catch (e) {
+                        console.error(`Error processing setting ${key}:`, e);
                     }
-                } catch (e) {
-                    console.error(`Error processing setting ${key}:`, e);
                 }
-            }
 
-            if ("translation" in response.settings) {
-                translation = response.settings["translation"];
-                miniTranslate(document.body); // Assuming miniTranslate is defined
-            }
+                if ("translation" in response.settings) {
+                    translation = response.settings["translation"];
+                    miniTranslate(document.body); // Assuming miniTranslate is defined
+                }
 
-            createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
-            updateAiOverlayLinksFromCurrentState();
+                createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
+                updateAiOverlayLinksFromCurrentState();
 
-            // Check if MIDI is enabled and initialize if needed
-            const midiCheckbox = document.querySelector('input[data-setting="midi"]');
-            if (midiCheckbox && midiCheckbox.checked) {
-                // MIDI was enabled in settings, initialize the dropdown
-                handleMidiToggle(true);
+                // Check if MIDI is enabled and initialize if needed
+                const midiCheckbox = document.querySelector('input[data-setting="midi"]');
+                if (midiCheckbox && midiCheckbox.checked) {
+                    // MIDI was enabled in settings, initialize the dropdown
+                    handleMidiToggle(true);
+                }
+                updateFirstTimerUiState();
+            } finally {
+                if (shouldBatchLinkRefresh) {
+                    endPopupLinkRefreshBatch();
+                }
             }
         }
 
@@ -3257,6 +3596,154 @@ function processLegacySetting(key, value, sync) {
     }
 }
 
+const OPENCODE_ZEN_MODELS_URL = "https://opencode.ai/zen/v1/models";
+const OPENCODE_ZEN_FREE_MODEL_ORDER = [
+    "big-pickle",
+    "deepseek-v4-flash-free",
+    "mimo-v2.5-free",
+    "qwen3.6-plus-free",
+    "minimax-m3-free",
+    "nemotron-3-ultra-free",
+    "nemotron-3-super-free"
+];
+const OPENCODE_ZEN_MODEL_CACHE_MS = 60 * 60 * 1000;
+let openCodeModelLoadInFlight = null;
+let openCodeModelCache = {
+    fetchedAt: 0,
+    models: null
+};
+
+function isOpenCodeFreeModelId(modelId) {
+    modelId = String(modelId || "").toLowerCase();
+    return modelId === "big-pickle" || /-free$/.test(modelId);
+}
+
+function getOpenCodeFreeModelRank(modelId) {
+    const lower = String(modelId || "").toLowerCase();
+    const index = OPENCODE_ZEN_FREE_MODEL_ORDER.indexOf(lower);
+    return index === -1 ? OPENCODE_ZEN_FREE_MODEL_ORDER.length : index;
+}
+
+function isOpenCodeChatCompletionsModel(modelId) {
+    const value = String(modelId || "").trim().toLowerCase();
+    return isOpenCodeFreeModelId(value) ||
+        value === "big-pickle" ||
+        value.indexOf("deepseek-") === 0 ||
+        value.indexOf("minimax-") === 0 ||
+        value.indexOf("glm-") === 0 ||
+        value.indexOf("kimi-") === 0 ||
+        value.indexOf("mimo-") === 0 ||
+        value.indexOf("nemotron-") === 0 ||
+        value.indexOf("grok-build") === 0;
+}
+
+function sortOpenCodeModelIds(modelIds) {
+    return modelIds.slice().sort(function (a, b) {
+        const aFree = isOpenCodeFreeModelId(a);
+        const bFree = isOpenCodeFreeModelId(b);
+        if (aFree !== bFree) return aFree ? -1 : 1;
+        if (aFree && bFree) {
+            const rankDiff = getOpenCodeFreeModelRank(a) - getOpenCodeFreeModelRank(b);
+            if (rankDiff) return rankDiff;
+        }
+        return String(a).localeCompare(String(b));
+    });
+}
+
+function setOpenCodeModelStatus(message, color) {
+    const status = document.getElementById("opencodeModelStatus");
+    if (!status) return;
+    status.textContent = message || "";
+    status.style.color = color || "";
+}
+
+function populateOpenCodeModelSelect(modelIds) {
+    const select = document.getElementById("opencodeModelSelect");
+    if (!select) return;
+    const currentValue = select.value || "auto";
+    select.innerHTML = "";
+
+    const autoOption = document.createElement("option");
+    autoOption.value = "auto";
+    autoOption.textContent = "Auto - free models only";
+    select.appendChild(autoOption);
+
+    sortOpenCodeModelIds((modelIds || []).filter(isOpenCodeChatCompletionsModel)).forEach(function (id) {
+        if (!id) return;
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = isOpenCodeFreeModelId(id) ? id + " (free)" : id;
+        select.appendChild(option);
+    });
+
+    const hasCurrent = Array.prototype.some.call(select.options, function (option) {
+        return option.value === currentValue;
+    });
+    select.value = hasCurrent ? currentValue : "auto";
+}
+
+function getOpenCodeApiKeyFromPopup() {
+    const input = document.querySelector("[data-textsetting='opencodeApiKey']");
+    return input && input.value ? input.value.trim() : "";
+}
+
+async function loadOpenCodeModels(force) {
+    const providerSelect = document.getElementById("aiProvider");
+    if (!force && providerSelect && providerSelect.value !== "opencode") return;
+    if (openCodeModelLoadInFlight) return openCodeModelLoadInFlight;
+
+    const now = Date.now();
+    if (!force && openCodeModelCache.models && now - openCodeModelCache.fetchedAt < OPENCODE_ZEN_MODEL_CACHE_MS) {
+        populateOpenCodeModelSelect(openCodeModelCache.models);
+        setOpenCodeModelStatus("Loaded cached OpenCode model list.", "#7ad37a");
+        return;
+    }
+
+    setOpenCodeModelStatus("Loading OpenCode models...", "#bbb");
+    openCodeModelLoadInFlight = (async function () {
+        try {
+            const headers = { "Accept": "application/json" };
+            const apiKey = getOpenCodeApiKeyFromPopup();
+            if (apiKey) headers.Authorization = "Bearer " + apiKey;
+            const response = await fetch(OPENCODE_ZEN_MODELS_URL, {
+                method: "GET",
+                headers: headers,
+                cache: "no-store"
+            });
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+            const payload = await response.json();
+            const models = Array.isArray(payload && payload.data)
+                ? payload.data.map(function (entry) { return entry && entry.id ? String(entry.id) : ""; }).filter(Boolean)
+                : [];
+            if (!models.length) {
+                throw new Error("No models returned");
+            }
+            const compatibleModels = models.filter(isOpenCodeChatCompletionsModel);
+            const modelList = compatibleModels.length ? compatibleModels : OPENCODE_ZEN_FREE_MODEL_ORDER;
+            openCodeModelCache = {
+                fetchedAt: Date.now(),
+                models: modelList
+            };
+            populateOpenCodeModelSelect(modelList);
+            const freeCount = compatibleModels.filter(isOpenCodeFreeModelId).length;
+            setOpenCodeModelStatus("Loaded " + (compatibleModels.length || OPENCODE_ZEN_FREE_MODEL_ORDER.length) + " chat-compatible models" + (freeCount ? " (" + freeCount + " free)." : "."), "#7ad37a");
+        } catch (error) {
+            openCodeModelCache = {
+                fetchedAt: Date.now(),
+                models: OPENCODE_ZEN_FREE_MODEL_ORDER.slice()
+            };
+            populateOpenCodeModelSelect(OPENCODE_ZEN_FREE_MODEL_ORDER);
+            setOpenCodeModelStatus("Could not load live model list; using built-in free defaults.", "#ffcc66");
+            console.warn("[OpenCode Zen] Model list load failed:", error);
+        } finally {
+            openCodeModelLoadInFlight = null;
+        }
+    }());
+    return openCodeModelLoadInFlight;
+}
+
 // Handle AI provider visibility
 function handleAIProviderVisibility(provider) {
     // Hide all provider-specific elements first
@@ -3266,6 +3753,7 @@ function handleAIProviderVisibility(provider) {
         "deepseekApiKey", "deepseekmodel", "customAIEndpoint", "customAIModel",
         "openrouterApiKey", "openroutermodel", "bedrockAccessKey", "bedrockSecretKey",
         "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey",
+        "opencodeInfo", "opencodeApiKey", "opencodemodel",
         "localgemmahost", "localbrowserhelp", "localgemmamodel", "localqwenmodel",
         "hostedLLMInfo", "hostedLLMToken", "hostedLLMEndpoint", "hostedLLMModel"
     ].forEach(id => {
@@ -3304,6 +3792,11 @@ function handleAIProviderVisibility(provider) {
     } else if (provider == "groq") {
         document.getElementById("groqApiKey").classList.remove("hidden");
         document.getElementById("groqmodel").classList.remove("hidden");
+    } else if (provider == "opencode") {
+        document.getElementById("opencodeInfo").classList.remove("hidden");
+        document.getElementById("opencodeApiKey").classList.remove("hidden");
+        document.getElementById("opencodemodel").classList.remove("hidden");
+        loadOpenCodeModels(false);
     } else if (provider == "hostedllm") {
         document.getElementById("hostedLLMInfo").classList.remove("hidden");
         document.getElementById("hostedLLMToken").classList.remove("hidden");
@@ -3318,6 +3811,354 @@ function handleAIProviderVisibility(provider) {
         document.getElementById("localbrowserhelp").classList.remove("hidden");
         document.getElementById("localqwenmodel").classList.remove("hidden");
     }
+}
+
+var popupStartupSettingsHydrated = false;
+
+function hasUsablePopupSettingsResponse(response) {
+	const hasSession = !!(response && response.streamID);
+	const hasSettingsPayload = !!(response && response.settings);
+	return hasSession || (ssapp && hasSettingsPayload);
+}
+
+function hydratePopupFromStartupSettings(response) {
+	if (!hasUsablePopupSettingsResponse(response)) {
+		return false;
+	}
+	if (popupStartupSettingsHydrated) {
+		return true;
+	}
+	popupStartupSettingsHydrated = true;
+	update(response, false);
+	return true;
+}
+
+function getPopupBeginnerMode(response) {
+	if (!response) return false;
+	if (response.beginnerMode !== undefined) {
+		return !!response.beginnerMode;
+	}
+	return !!(response.settings && response.settings.beginnerMode && response.settings.beginnerMode.setting === true);
+}
+
+var BEGINNER_ADVANCED_OPTION_SELECTORS = {
+	"wrapper-additional-chat-services-options": [
+		'[data-setting="xcapture"]',
+		'[data-setting="openai"]',
+		'[data-textsetting="customdiscordchannel"]',
+		'[data-setting="customtwitchstate"]',
+		'[data-textsetting="customtwitchaccount"]',
+		'[data-setting="customtiktokstate"]',
+		'[data-textsetting="customtiktokaccount"]',
+		'[data-setting="collecttwitchpoints"]',
+		'[data-setting="twichadmute"]',
+		'[data-setting="twichadannounce"]',
+		'[data-setting="detweet"]',
+		'[data-setting="streamlabsExclusive"]',
+		'[data-setting="vdoninjadiscord"]',
+		'[data-setting="flipYoutube"]',
+		'[data-setting="youtubeAudioPicker"]',
+		'[data-setting="kickchatroomscout"]',
+		'[data-setting="hidePaidPromotion"]',
+		'#custominject'
+	],
+	"wrapper-chat-overlay-options": [
+		'[data-param1="opacity"]',
+		'[data-param1="chromaalpha"]',
+		'[data-param1="chroma=fff"]',
+		'[data-param1="showbitrate"]',
+		'[data-param1="viewerbarbg"]',
+		'[data-textparam1="viewerbarbg"]',
+		'[data-param1="remote"]'
+	],
+	"wrapper-chat-message-mechanics-options": [
+		'[data-param1="debug"]',
+		'[data-param1="deleteonlylast"]',
+		'[data-param1="alignbottom"]',
+		'[data-param1="dropdown"]',
+		'[data-param1="reverse"]',
+		'[data-param1="random"]',
+		'[data-param1="alignright"]',
+		'[data-param1="rtl"]',
+		'[data-param1="dissolve"]',
+		'[data-param1="beepfirsttime"]',
+		'[data-textparam1="custombeep"]',
+		'[data-param1="btkeepalive"]',
+		'[data-param1="overlapbeep"]',
+		'[data-param1="reload"]',
+		'[data-param1="altselect"]',
+		'[data-param1="stripdonations"]',
+		'[data-param1="skipdonations"]',
+		'[data-textsetting="customDonationThankYou"]',
+		'[data-param1="autoshowdonos"]',
+		'[data-param1="autoshowmembers"]',
+		'[data-param1="autoshowcontentimages"]',
+		'[data-param1="autoyoutubememberchat"]',
+		'[data-param1="autopinquestions"]',
+		'[data-param1="autoqueuequestions"]',
+		'[data-param1="autopindonations"]',
+		'[data-param1="autoqueuedonations"]',
+		'[data-param1="sync"]',
+		'[data-param1="featuredmode"]',
+		'[data-param1="pinnedonly"]',
+		'[data-param1="cycle"]',
+		'[data-param1="viewonly"]',
+		'[data-param1="chatmode"]',
+		'[data-param1="helpermode"]',
+		'[data-param1="lanonly"]',
+		'[data-textparam1="selfqueue"]'
+	],
+	"wrapper-chat-message-styling-options": [
+		'[data-param1="donationright"]',
+		'[data-param1="nooutline"]',
+		'[data-param1="bolder"]',
+		'[data-param1="thinner"]',
+		'[data-textparam1="fontweight"]',
+		'[data-textparam1="outlinecolor"]',
+		'[data-textparam1="outlinewidth"]',
+		'[data-textparam1="strokecolor"]',
+		'[data-textparam1="strokewidth"]',
+		'[data-param1="textglow"]',
+		'[data-textparam1="glowcolor"]',
+		'[data-textparam1="glowwidth"]',
+		'[data-param1="split"]',
+		'[data-param1="namebubble"]',
+		'[data-textparam1="namebubblecolor"]',
+		'[data-textparam1="namebubbletext"]',
+		'[data-textparam1="namebubbleradius"]',
+		'[data-textparam1="namebubblepadding"]',
+		'[data-param1="bubbleopacity"]',
+		'[data-param1="horizontal"]',
+		'[data-param1="horizontalreverse"]',
+		'[data-param1="trim=200"]',
+		'[data-param1="normalize"]',
+		'[data-param1="fixed"]',
+		'[data-textparam1="cssb64"]',
+		'[data-textparam1="jsb64"]',
+		'[data-textparam1="googlefont"]'
+	],
+	"wrapper-global-mechanics-options": [
+		'[data-setting="disableDB"]',
+		'[data-setting="unlimitedDB"]',
+		'[data-setting="notiktoklinks"]',
+		'[data-setting="capturejoinedevent"]',
+		'[data-setting="capturelikeevent"]',
+		'[data-setting="notiktokdonations"]',
+		'[data-setting="disabletiktokpoke"]',
+		'[data-setting="blockpremiumshorts"]',
+		'[data-setting="delayyoutube"]',
+		'[data-setting="delaykick"]',
+		'[data-setting="delaytwitch"]',
+		'[data-setting="pronounscombined"]',
+		'[data-setting="discordmemberships"]',
+		'[data-setting="limitedyoutubememberchat"]',
+		'[data-setting="limitedtwitchmemberchat"]',
+		'[data-setting="addkarma"]',
+		'[data-setting="pumpTheNumbers"]',
+		'[data-textsetting="printerName"]',
+		'[data-setting="sharestreamid"]',
+		'[data-setting="disableRelayThrottle"]',
+		'[data-setting="disablehost"]',
+		'[data-setting="socketserver"]',
+		'[data-setting="lanonly"]',
+		'[data-setting="ssc"]',
+		'[data-textsetting="sscapikey"]',
+		'[data-setting="videostatspoller"]',
+		'[data-textsetting="videostatsurl"]',
+		'[data-textsetting="videostatspublisher"]',
+		'[data-textsetting="videostatsapplication"]',
+		'[data-textsetting="videostatskey"]',
+		'[data-textsetting="videostatsapikey"]',
+		'[data-textsetting="videostatsusername"]',
+		'[data-textsetting="videostatspassword"]',
+		'[data-numbersetting="videostatsinterval"]',
+		'[data-textsetting="videostatslabel"]',
+		'[data-setting="streamerbot"]',
+		'[data-textsetting="streamerbotendpoint"]',
+		'[data-textsetting="streamerbotpassword"]',
+		'[data-textsetting="streamerbotactionid"]',
+		'[data-setting="h2r"]',
+		'[data-textsetting="h2rserver"]',
+		'[data-setting="post"]',
+		'[data-textsetting="postserver"]',
+		'[data-setting="postalldiscord"]',
+		'[data-textsetting="postallserverdiscord"]',
+		'[data-setting="postdiscord"]',
+		'[data-textsetting="postserverdiscord"]',
+		'[data-setting="webhookrelay"]',
+		'[data-setting="enablePointsSystem"]',
+		'[data-numbersetting="pointsPerEngagement"]',
+		'[data-numbersetting="engagementWindow"]',
+		'[data-setting="enablePointsCommand"]',
+		'[data-setting="enableLeaderboardCommand"]',
+		'[data-setting="enableRewardsCommand"]',
+		'[data-setting="autohi"]',
+		'[data-setting="relaydonos"]',
+		'[data-setting="relayall"]',
+		'[data-setting="blockChannelPointRelays"]',
+		'[data-textsetting="relaytargets"]',
+		'[data-textsetting="relayaccountroles"]',
+		'[data-textsetting="blockrelayaccountroles"]',
+		'[data-textsetting="botreplyaccountroles"]',
+		'[data-setting="nosaid"]',
+		'[data-setting="relayhostonly"]',
+		'[data-setting="nohostreflections"]',
+		'[data-setting="hostFirstSimilarOnly"]',
+		'[data-setting="forwardcommands2twitch"]',
+		'[data-setting="forwardcommands2kick"]',
+		'[data-setting="forwardcommands2youtube"]',
+		'[data-setting="limitcharactersstate"]',
+		'[data-numbersetting="limitcharacters"]',
+		'[data-setting="joke"]',
+		'[data-action="tellajoke"]',
+		'[data-setting="dice"]',
+		'[data-setting="questionKeywords"]',
+		'[data-textsetting="questionKeywords"]',
+		'[data-setting="customJsEnabled"]',
+		'[data-setting="giphy"]',
+		'[data-setting="tenor"]',
+		'[data-setting="giphy2"]',
+		'[data-setting="hidegiphytrigger"]',
+		'[data-setting="randomgif"]',
+		'[data-textsetting="giphyKey"]',
+		'[data-textsetting="tenorKey"]',
+		'[data-setting="chatwebhookpost"]',
+		'[data-setting="chatwebhookstrict"]',
+		'#chatCommands',
+		'#timedMessages',
+		'[data-setting="dynamictiming"]',
+		'[data-setting="botReplyMessageFull"]',
+		'#botReplyMessages',
+		'[data-setting="midi"]',
+		'#midiConfig',
+		'#midiCommands'
+	],
+	"wrapper-global-message-visibility-options": [
+		'[data-setting="hideallreplies"]',
+		'[data-setting="firstsourceonly"]',
+		'[data-setting="thissourceonly"]',
+		'[data-setting="noduplicates"]',
+		'[data-setting="ignorealternatives"]',
+		'[data-setting="goodwordslist"]',
+		'[data-setting="memberchatonly"]',
+		'[data-setting="filtercommandscustomtoggle"]',
+		'[data-textsetting="filtercommandscustomwords"]',
+		'[data-setting="textonlymode"]',
+		'[data-setting="emoteonlymode"]'
+	],
+	"wrapper-global-message-styling-options": [
+		'[data-setting="colorofsourcebg"]',
+		'[data-setting="randomcolorall"]',
+		'[data-numbersetting="totalcolors"]',
+		'[data-numbersetting="colorseed"]',
+		'[data-setting="nosubcolor"]',
+		'[data-textsetting="highlightword"]',
+		'[data-textsetting="defaultavatar"]'
+	]
+};
+
+var BEGINNER_ADVANCED_OPTION_HEADINGS = {
+	"wrapper-chat-message-styling-options": ["Text Glow"],
+	"wrapper-global-mechanics-options": ["Printer Control"]
+};
+
+var BEGINNER_ADVANCED_OPTION_HEADING_SECTIONS = {
+	"wrapper-global-message-visibility-options": ["Message doubling / echos / duplicates / relayed"],
+	"wrapper-global-mechanics-options": [
+		"Custom JavaScript",
+		"Giphy/Tenor support",
+		"Trigger webhook URL by a !command",
+		"Send fixed messages at intervals",
+		"Auto-responder",
+		"Trigger MIDI note on command"
+	]
+};
+
+function markBeginnerAdvancedOptionRow(element, scope) {
+	if (!element || !element.closest) return;
+	var row = element.closest(".colorInputRow");
+	if (!row) row = element.closest(".alphaInput");
+	if (!row) row = element.closest(".textInputContainer");
+	if (!row) row = element.closest("div");
+	if (row && row.classList.contains("textInputContainer") && row.parentElement && row.parentElement.tagName === "DIV" && !row.parentElement.classList.contains("options_group") && !row.parentElement.classList.contains("colorInputRow")) {
+		row = row.parentElement;
+	}
+	if (row && row !== scope) {
+		row.classList.add("beginner-advanced-option");
+	}
+}
+
+function markBeginnerAdvancedOptions() {
+	document.querySelectorAll(".beginner-advanced-option").forEach(function(element) {
+		element.classList.remove("beginner-advanced-option");
+	});
+
+	Object.keys(BEGINNER_ADVANCED_OPTION_SELECTORS).forEach(function(wrapperId) {
+		var wrapperInput = document.getElementById(wrapperId);
+		var scope = wrapperInput && wrapperInput.closest ? wrapperInput.closest(".wrapper") : null;
+		if (!scope) return;
+
+		BEGINNER_ADVANCED_OPTION_SELECTORS[wrapperId].forEach(function(selector) {
+			scope.querySelectorAll(selector).forEach(function(element) {
+				markBeginnerAdvancedOptionRow(element, scope);
+			});
+		});
+
+		var headingLabels = BEGINNER_ADVANCED_OPTION_HEADINGS[wrapperId] || [];
+		if (headingLabels.length) {
+			scope.querySelectorAll("h3").forEach(function(heading) {
+				var text = (heading.textContent || "").replace(/\s+/g, " ").trim();
+				if (headingLabels.indexOf(text) !== -1) {
+					heading.classList.add("beginner-advanced-option");
+				}
+			});
+		}
+
+		var sectionHeadingLabels = BEGINNER_ADVANCED_OPTION_HEADING_SECTIONS[wrapperId] || [];
+		if (sectionHeadingLabels.length) {
+			scope.querySelectorAll("h3").forEach(function(heading) {
+				var text = (heading.textContent || "").replace(/\s+/g, " ").trim();
+				if (sectionHeadingLabels.indexOf(text) === -1) return;
+				heading.classList.add("beginner-advanced-option");
+				var sibling = heading.nextElementSibling;
+				while (sibling && sibling.tagName !== "H3") {
+					sibling.classList.add("beginner-advanced-option");
+					sibling = sibling.nextElementSibling;
+				}
+			});
+		}
+	});
+}
+
+function markBeginnerAdvancedSections() {
+	document.querySelectorAll(".beginner-basic").forEach(function(section) {
+		if (section) section.classList.remove("beginner-advanced");
+	});
+	document.querySelectorAll(".wrapper:not(.beginner-basic)").forEach(function(wrapper) {
+		if (wrapper) wrapper.classList.add("beginner-advanced");
+	});
+	document.querySelectorAll(".link:not(.beginner-basic), .generic_category_title:not(.beginner-basic)").forEach(function(section) {
+		section.classList.add("beginner-advanced");
+	});
+	markBeginnerAdvancedOptions();
+}
+
+function applyPopupBeginnerMode(enabled) {
+	markBeginnerAdvancedSections();
+	document.body.classList.toggle("beginner-mode", !!enabled);
+	if (typeof checkImportantChanges === "function" && popupImportantChangesReady === true) {
+		checkImportantChanges();
+	}
+}
+
+function disablePopupBeginnerMode() {
+	applyPopupBeginnerMode(false);
+	chrome.runtime.sendMessage({
+		cmd: "saveSetting",
+		type: "setting",
+		setting: "beginnerMode",
+		value: false
+	}, function () {});
 }
 
 function sendRuntimeCommandMessage(message, timeout, proxyToBackground) {
@@ -3371,7 +4212,7 @@ function collectLLMProviderTestSettings() {
         'ollamaendpoint', 'ollamamodel', 'chatgptApiKey', 'chatgptmodel',
         'geminiApiKey', 'geminimodel', 'xaiApiKey', 'xaimodel',
         'deepseekApiKey', 'deepseekmodel', 'groqApiKey', 'groqmodel',
-        'openrouterApiKey', 'openroutermodel', 'customAIEndpoint',
+        'openrouterApiKey', 'openroutermodel', 'opencodeApiKey', 'customAIEndpoint',
         'customAIModel', 'customAIApiKey', 'bedrockAccessKey',
         'bedrockSecretKey', 'bedrockRegion', 'bedrockmodel',
         'localgemmahost', 'localgemmamodel', 'localqwenmodel',
@@ -3382,6 +4223,11 @@ function collectLLMProviderTestSettings() {
             override[key] = { textsetting: input.value.trim() };
         }
     });
+
+    const opencodeModelSelect = document.querySelector("[data-optionsetting='opencodemodel']");
+    if (opencodeModelSelect) {
+        override.opencodemodel = { optionsetting: opencodeModelSelect.value || "auto" };
+    }
 
     const keepAliveInput = document.querySelector("[data-numbersetting='ollamaKeepAlive']");
     if (keepAliveInput) {
@@ -3474,6 +4320,11 @@ async function testSelectedLLMProvider() {
     }
 }
 
+function isOpenAITTSProvider(provider) {
+    provider = (provider || "").toString().toLowerCase();
+    return provider === "openai" || provider === "customtts" || provider === "custom" || provider === "localtts" || provider === "local" || provider === "node" || provider === "nodejs" || provider === "connector";
+}
+
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
@@ -3496,7 +4347,7 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("kokoroTTS").classList.remove("hidden");
     } else if (provider == "kitten") {
         document.getElementById("kittenTTS").classList.remove("hidden");
-    } else if (provider == "openai") {
+    } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS").classList.remove("hidden");
     }
 }
@@ -3523,7 +4374,7 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("kokoroTTS10").classList.remove("hidden");
     } else if (provider == "kitten") {
         document.getElementById("kittenTTS10").classList.remove("hidden");
-    } else if (provider == "openai") {
+    } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS10").classList.remove("hidden");
     }
 }
@@ -3550,7 +4401,7 @@ function handleTTSProvider2Visibility(provider) {
         document.getElementById("kokoroTTS2").classList.remove("hidden");
     } else if (provider == "kitten") {
         document.getElementById("kittenTTS2").classList.remove("hidden");
-    } else if (provider == "openai") {
+    } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS2").classList.remove("hidden");
     } else if (provider == "piper") {
         document.getElementById("piperTTS2").classList.remove("hidden");
@@ -3581,7 +4432,7 @@ function handleTTSProvider18Visibility(provider) {
         document.getElementById("kokoroTTS18")?.classList.remove("hidden");
     } else if (provider == "kitten") {
         document.getElementById("kittenTTS18")?.classList.remove("hidden");
-    } else if (provider == "openai") {
+    } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS18")?.classList.remove("hidden");
     }
 }
@@ -3748,17 +4599,40 @@ function processManifestData(data, manifestData) {
 }
 
 // Important Changes Notification System
-const importantChanges = [
-    {
-        id: "events-always-on-v3.40",
-        minVersion: "3.40.0",  // Only show to users with this version or newer
-        title: "Heads up! Stream events now show by default",
-        message: "Follows, likes, and subs now appear in your overlay. Want to turn them off?",
-        actionText: "Disable stream events",
-        targetSection: "wrapper-global-mechanics-options",
-        targetSetting: "hideevents"
+var popupImportantChangesReady = false;
+const importantChanges = [];
+popupImportantChangesReady = true;
+
+function shouldShowBeginnerChromeVideoGuide() {
+    try {
+        return !ssapp && typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.getManifest === "function" && !!chrome.runtime.getManifest();
+    } catch (e) {
+        return false;
     }
-];
+}
+
+function renderBeginnerWelcomeBanner(container) {
+    container = container || document.getElementById("importantChanges");
+    if (!container) return;
+
+    const videoGuideText = shouldShowBeginnerChromeVideoGuide() ? ` If stuck getting started, check out this <a href="https://www.youtube.com/watch?v=Zql6Q5H2Eqw" target="_blank" rel="noopener noreferrer">video guide</a>.` : "";
+
+    container.classList.add('show', 'beginner-welcome');
+    container.innerHTML = `
+        <div class="beginner-welcome-card">
+            <strong>Welcome to Social Stream Ninja</strong>
+            <small>You are in beginner mode, so only the most common setup options are shown.${videoGuideText}</small>
+            <button type="button" id="beginnerWelcomeAdvanced">Switch to full mode</button>
+        </div>
+    `;
+
+    const advancedButton = document.getElementById("beginnerWelcomeAdvanced");
+    if (advancedButton) {
+        advancedButton.addEventListener('click', function() {
+            disablePopupBeginnerMode();
+        });
+    }
+}
 
 function checkImportantChanges() {
     const container = document.getElementById("importantChanges");
@@ -3795,7 +4669,11 @@ function checkImportantChanges() {
     });
 
     if (activeChanges.length === 0) {
-        container.classList.remove('show');
+        if (document.body.classList.contains("beginner-mode")) {
+            renderBeginnerWelcomeBanner(container);
+            return;
+        }
+        container.classList.remove('show', 'beginner-welcome');
         container.innerHTML = '';
         return;
     }
@@ -3814,6 +4692,7 @@ function checkImportantChanges() {
     });
 
     container.innerHTML = html;
+    container.classList.remove('beginner-welcome');
     container.classList.add('show');
 
     // Add event listeners for dismiss buttons
@@ -3901,6 +4780,8 @@ if (sourcemode){
     } else {
         baseURL = "file:///C:/Users/steve/Code/social_stream/";
     }
+} else if (location.hostname === "cache.socialstream.ninja") {
+    baseURL = Beta ? "https://beta.socialstream.ninja/" : "https://socialstream.ninja/";
 } else if (location.protocol !== "chrome-extension:" && !Beta) {
     // Only set baseURL from location if we're not already in beta mode
     baseURL = `${location.protocol}//${location.host}/`;
@@ -3945,6 +4826,7 @@ function cleanURL(url) {
 function getTargetMap() {
     return {
         'dock': 1,
+        'chatoverlaytemplate': 30,
         'overlay': 2,
         'emoteswall': 3,
         'hypemeter': 4,
@@ -3967,20 +4849,104 @@ function getTargetMap() {
 		'flowactions': 18,
 		'scoreboard': 21,
 		'spotify': 22,
-		'map': 23,
+        'map': 23,
         'meta': 24,
         'multialerts': 25,
         'timer': 26,
 		'reactions': 27,
+        'hypetrain': 29,
     };
 }
-function handleElementParam(ele, targetId, paramType, sync, value = null) {
-    const targetElement = document.getElementById(targetId);
-    if (!targetElement) return false;
 
+function showPopupToast(level, title, message) {
+    const normalizedLevel = ['error', 'warning', 'info', 'success'].includes(level) ? level : 'info';
+    try {
+        if (typeof Toast !== 'undefined' && typeof Toast[normalizedLevel] === 'function') {
+            Toast[normalizedLevel](title, message);
+            return true;
+        }
+    } catch (_) {}
+    try {
+        if (window.parent && window.parent !== window && window.parent.Toast && typeof window.parent.Toast[normalizedLevel] === 'function') {
+            window.parent.Toast[normalizedLevel](title, message);
+            return true;
+        }
+    } catch (_) {}
+    return false;
+}
+
+function updateFirstTimerUiState() {
+    const disableDb = document.querySelector("input[data-setting='disableDB']");
+    const firstTimers = document.querySelector("input[data-setting='firsttimers']");
+    const dockBeep = document.querySelector("input[data-param1='beepfirsttime']");
+    const dockWarning = document.getElementById("firstTimerDockBeepWarning");
+
+    const databaseDisabled = !!(disableDb && disableDb.checked);
+    const trackingEnabled = !!(firstTimers && firstTimers.checked);
+    const dockBeepEnabled = !!(dockBeep && dockBeep.checked);
+
+    if (dockWarning) {
+        dockWarning.style.display = dockBeepEnabled && (!trackingEnabled || databaseDisabled) ? "inline" : "none";
+    }
+}
+
+function enableFirstTimerDatabase(sync) {
+    const disableDb = document.querySelector("input[data-setting='disableDB']");
+    if (disableDb && disableDb.checked) {
+        disableDb.checked = false;
+        updateSettings(disableDb, sync);
+        showPopupToast("info", "First-time chatters", "Local database enabled so first-time chatter detection can work.");
+    }
+    updateFirstTimerUiState();
+}
+
+function ensureFirstTimerTrackingForBeep(sync) {
+    if (!sync) {
+        updateFirstTimerUiState();
+        return true;
+    }
+
+    const firstTimers = document.querySelector("input[data-setting='firsttimers']");
+    if (firstTimers && !firstTimers.checked) {
+        firstTimers.checked = true;
+        updateSettings(firstTimers, sync);
+    }
+
+    enableFirstTimerDatabase(sync);
+    updateFirstTimerUiState();
+    return true;
+}
+
+function setupFirstTimerControls() {
+    const enableRequirements = document.getElementById("enableFirstTimerDockRequirements");
+    if (enableRequirements) {
+        enableRequirements.onclick = function (event) {
+            event.preventDefault();
+            ensureFirstTimerTrackingForBeep(true);
+        };
+    }
+
+    const showDatabaseSetting = document.getElementById("showFirstTimerDockDatabaseSetting");
+    if (showDatabaseSetting) {
+        showDatabaseSetting.onclick = function (event) {
+            const databaseRow = document.getElementById("databaseSettingsRow");
+            if (databaseRow) {
+                event.preventDefault();
+                databaseRow.scrollIntoView();
+            }
+        };
+    }
+
+    updateFirstTimerUiState();
+}
+
+function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const paramAttr = `data-${paramType}`;
     const paramValue = ele.dataset[paramType]; // e.g., 'scale=0.77' or 'darkmode'
     if (!paramValue) return false;
+
+    const targetElement = document.getElementById(targetId);
+    if (!targetElement) return false;
 
     const paramNum = paramType.match(/\d+$/) ? paramType.match(/\d+$/)[0] : '';
     const parts = paramValue.split('=');
@@ -4179,6 +5145,10 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
         });
     }
 
+    if (paramType === "param1" && paramValue === "beepfirsttime") {
+        updateFirstTimerUiState();
+    }
+
     return true;
 }
 function handleExclusiveCases(ele, paramType, paramValue, sync) {
@@ -4217,8 +5187,8 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
             'alignright': 'align=center',
             'align=center': 'alignright',
             'transparent': ['pagebg', 'chroma=00ff00'],
-            'pagebg': ['transparent', 'chroma=00ff00'],
-            'chroma=00ff00': ['transparent', 'pagebg']
+            'pagebg': 'transparent',
+            'chroma=00ff00': 'transparent'
         }
     };
 
@@ -4310,6 +5280,34 @@ function handleTextParam(ele, targetId, paramType, sync) {
     return true;
 }
 
+function refreshTtsProviderParamControls(paramNum, providerValue) {
+    paramNum = paramNum || '1';
+    const suffix = paramNum === '1' ? '' : String(paramNum);
+    const providerKey = isOpenAITTSProvider(providerValue) ? 'openai' : providerValue;
+    const section = document.getElementById(`${providerKey}TTS${suffix}`);
+    if (!section) return;
+
+    if (typeof beginPopupLinkRefreshBatch === "function") {
+        beginPopupLinkRefreshBatch();
+    }
+    try {
+        section.querySelectorAll(`input[data-param${paramNum}]`).forEach(function(input) {
+            if (input.checked) {
+                updateSettings(input, false);
+            }
+        });
+        section.querySelectorAll(`input[data-textparam${paramNum}], textarea[data-textparam${paramNum}], select[data-optionparam${paramNum}]`).forEach(function(input) {
+            updateSettings(input, false);
+        });
+    } finally {
+        if (typeof endPopupLinkRefreshBatch === "function") {
+            endPopupLinkRefreshBatch();
+        } else {
+            refreshLinks();
+        }
+    }
+}
+
 function handleOptionParam(ele, targetId, paramType, sync) {
     const targetElement = document.getElementById(targetId);
     if (!targetElement) return false;
@@ -4355,6 +5353,7 @@ function handleOptionParam(ele, targetId, paramType, sync) {
             } else if (paramNum === '' || paramNum === '1') {
                 handleTTSProviderVisibility(ele.value);
             }
+            refreshTtsProviderParamControls(paramNum || '1', ele.value);
         }
         
         // Check if this is a select element with language/voice options
@@ -4447,7 +5446,7 @@ function handleBothParam(ele, sync) {
     if (!ele.dataset.both) return false;
     
     // Use the same list of targets as defined in the targetMap
-    const elements = Object.keys(getTargetMap());
+    const elements = Object.keys(getTargetMap()).filter(id => id !== "chatoverlaytemplate");
 
     elements.forEach(id => {
         const element = document.getElementById(id);
@@ -4541,6 +5540,15 @@ function handleSetting(ele, sync) {
     if (ele.dataset.setting === "videostatspoller") {
         updateVideoStatsSettingsVisibility();
     }
+
+    if (ele.dataset.setting === "firsttimers" && ele.checked && sync) {
+        enableFirstTimerDatabase(sync);
+    }
+
+    if ((ele.dataset.setting === "beepreturning" || ele.dataset.setting === "firsttimerbadge") && ele.checked && !ensureFirstTimerTrackingForBeep(sync)) {
+        ele.checked = false;
+        return true;
+    }
     
     if (sync) {
         chrome.runtime.sendMessage({
@@ -4550,6 +5558,10 @@ function handleSetting(ele, sync) {
             setting: ele.dataset.setting,
             value: ele.checked
         }, function (response) {});
+    }
+
+    if (ele.dataset.setting === "disableDB" || ele.dataset.setting === "firsttimers" || ele.dataset.setting === "beepreturning" || ele.dataset.setting === "firsttimerbadge") {
+        updateFirstTimerUiState();
     }
     
     return true;
@@ -4598,10 +5610,11 @@ function handleSpecialSettings(ele, sync) {
 }
 
 function handleOptionSetting(ele, sync) {
-    if (!ele.dataset.optionsetting && !ele.dataset.optionsetting2 && !ele.dataset.optionsetting10) return false;
+    if (!ele.dataset.optionsetting && !ele.dataset.optionsetting2 && !ele.dataset.optionsetting10 && !ele.dataset.optionsetting18) return false;
     
     const settingType = ele.dataset.optionsetting ? 'optionsetting' : 
-                       (ele.dataset.optionsetting2 ? 'optionsetting2' : 'optionsetting10');
+                       (ele.dataset.optionsetting2 ? 'optionsetting2' :
+                       (ele.dataset.optionsetting10 ? 'optionsetting10' : 'optionsetting18'));
     const settingValue = ele.dataset[settingType];
     
     // Handle poll type
@@ -4630,6 +5643,7 @@ function handleOptionSetting(ele, sync) {
 			'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
 			'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive',
 			'openrouterApiKey', 'openroutermodel', 'groqApiKey', 'groqmodel',
+			'opencodeInfo', 'opencodeApiKey', 'opencodemodel',
 			'customAIApiKey', 'localgemmahost', 'localbrowserhelp', 'localgemmamodel', 'localqwenmodel',
 			'hostedLLMInfo', 'hostedLLMToken', 'hostedLLMEndpoint', 'hostedLLMModel'
 		];
@@ -4675,6 +5689,12 @@ function handleOptionSetting(ele, sync) {
                 document.getElementById("groqApiKey").classList.remove("hidden");
                 document.getElementById("groqmodel").classList.remove("hidden");
                 break;
+            case 'opencode':
+                document.getElementById("opencodeInfo").classList.remove("hidden");
+                document.getElementById("opencodeApiKey").classList.remove("hidden");
+                document.getElementById("opencodemodel").classList.remove("hidden");
+                loadOpenCodeModels(false);
+                break;
             case 'hostedllm':
                 document.getElementById("hostedLLMInfo").classList.remove("hidden");
                 document.getElementById("hostedLLMToken").classList.remove("hidden");
@@ -4702,7 +5722,7 @@ function handleOptionSetting(ele, sync) {
     // Handle TTS Provider settings
     if (settingValue === "ttsProvider") {
 		
-        const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : '');
+        const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : (settingType === 'optionsetting18' ? '18' : ''));
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, `geminiTTS${suffix}`,
             `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
@@ -4715,7 +5735,8 @@ function handleOptionSetting(ele, sync) {
         });
         
         // Show elements relevant to the selected TTS provider
-        const selectedProvider = `${ele.value}TTS${suffix}`;
+        const providerKey = isOpenAITTSProvider(ele.value) ? "openai" : ele.value;
+        const selectedProvider = `${providerKey}TTS${suffix}`;
         if (document.getElementById(selectedProvider)) {
             document.getElementById(selectedProvider).classList.remove("hidden");
         }
@@ -5045,12 +6066,18 @@ function getCustomGifCommandSourceUrl(entry) {
 
     const commandInput = entry?.querySelector('.custom-command');
     const mediaUrlInput = entry?.querySelector('.custom-media-url');
-    const id = getCustomGifCommandEntryId(commandInput?.value?.trim() || '', mediaUrlInput?.value?.trim() || '', entry?.dataset.commandId);
+    const command = commandInput?.value?.trim() || '';
+    const id = getCustomGifCommandEntryId(command, mediaUrlInput?.value?.trim() || '', entry?.dataset.commandId);
     if (entry) entry.dataset.commandId = id;
 
     url = removeQueryParamWithValue(url, 'gifid');
     url = removeQueryParamWithValue(url, 'gifcommand');
-    return cleanURL(updateURL('gifid=' + encodeURIComponent(id), url));
+    url = updateURL('gifid=' + encodeURIComponent(id), url);
+    const aliases = getCustomGifCommandAliases(command);
+    if (aliases.length) {
+        url = updateURL('gifcommand=' + encodeURIComponent(aliases.join(',')), url);
+    }
+    return cleanURL(url);
 }
 
 function copyCustomGifCommandSource(entry, button) {
@@ -5678,6 +6705,24 @@ function buildMultiAlertPreviewDescriptor(category) {
                     meta: { viewers: 42 }
                 }
             };
+        case 'auction':
+            // Auction wins come from live-shopping platforms; the overlay mock fills in the meta snapshot.
+            return {
+                category,
+                overrides: {
+                    type: 'whatnot',
+                    platform: 'whatnot',
+                    chatname: profile.chatname
+                }
+            };
+        case 'hype':
+            return {
+                category,
+                overrides: {
+                    type: 'twitch',
+                    platform: 'twitch'
+                }
+            };
         default:
             return null;
     }
@@ -5785,7 +6830,29 @@ function syncAllOverlayPreviews() {
     syncOverlayPreview('multialerts');
 }
 
+var popupLinkRefreshBatchDepth = 0;
+var popupLinkRefreshPending = false;
+
+function beginPopupLinkRefreshBatch() {
+	popupLinkRefreshBatchDepth++;
+}
+
+function endPopupLinkRefreshBatch() {
+	if (popupLinkRefreshBatchDepth > 0) {
+		popupLinkRefreshBatchDepth--;
+	}
+	if (popupLinkRefreshBatchDepth === 0 && popupLinkRefreshPending) {
+		popupLinkRefreshPending = false;
+		refreshLinks();
+	}
+}
+
 function refreshLinks(){
+  if (popupLinkRefreshBatchDepth > 0) {
+    popupLinkRefreshPending = true;
+    return;
+  }
+
   let hideLinks = false;
   document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
     if (x.checked){
@@ -5798,13 +6865,16 @@ function refreshLinks(){
   } else {
     document.body.classList.remove("hidelinks");
   }
+  syncChatOverlayTemplateLinkFromDock();
   try {
     const linkIdToDivIdMap = {
       'docklink': 'dock',
+      'chatoverlaytemplatelink': 'chatoverlaytemplate',
       'overlaylink': 'overlay',
       'multialertslink': 'multialerts',
       'emoteswalllink': 'emoteswall',
       'hypemeterlink': 'hypemeter',
+      'hypetrainlink': 'hypetrain',
       'metalink': 'meta',
       'waitlistlink': 'waitlist',
       'tipjarlink': 'tipjar',
@@ -5946,7 +7016,7 @@ if (!chrome.browserAction){
 
 		sendMessageToBackground({cmd: "getSettings"}, 20000).then(response => {
 			log("Received response:", response);
-			update(response, false);
+			hydratePopupFromStartupSettings(response);
 		  })
 		  .catch(error => {
 			console.error("Error:", error);
@@ -6012,8 +7082,35 @@ try {
 	log(e);
 }
 
-function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia') {
+function applyHostedMediaUploadResult(inputElement, uploadData, onUploaded) {
+    const uploadedUrl = typeof uploadData === 'string' ? uploadData : uploadData && uploadData.url;
+    if (!inputElement || !uploadedUrl) {
+        return false;
+    }
+
+    inputElement.value = uploadedUrl;
+    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+    inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+    if (typeof onUploaded === 'function') {
+        onUploaded(uploadedUrl, uploadData);
+    }
+    return true;
+}
+
+async function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia', onUploaded) {
     if (!inputElement) {
+        return;
+    }
+
+    if (window.ninjafy && typeof window.ninjafy.startMediaUpload === 'function') {
+        try {
+            const result = await window.ninjafy.startMediaUpload({ popupName });
+            if (result && result.success && result.url) {
+                applyHostedMediaUploadResult(inputElement, result, onUploaded);
+            }
+        } catch (error) {
+            console.warn('Hosted media upload failed:', error && error.message ? error.message : error);
+        }
         return;
     }
 
@@ -6023,9 +7120,7 @@ function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMedia') 
         if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
         if (!event.data || event.data.type !== 'media-uploaded' || !event.data.url) return;
 
-        inputElement.value = event.data.url;
-        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+        applyHostedMediaUploadResult(inputElement, event.data, onUploaded);
         window.removeEventListener('message', handler);
     };
 
@@ -6046,7 +7141,7 @@ function triggerCustomGifPreview(entry) {
         return;
     }
 
-    chrome.runtime.sendMessage({
+    const payload = {
         cmd: 'previewCustomGif',
         target: 'gif',
         type: 'popup',
@@ -6058,7 +7153,9 @@ function triggerCustomGifPreview(entry) {
             customGifCommand: getCustomGifCommandAliases(command)[0] || command,
             customGifCommands: getCustomGifCommandAliases(command)
         }
-    }, function () {});
+    };
+    chrome.runtime.sendMessage(payload, function () {});
+    chrome.runtime.sendMessage(Object.assign({}, payload, { target: id }), function () {});
 }
 
 function createCommandEntry(command = '', url = '', id = '') {
@@ -6263,6 +7360,19 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         return document.getElementById(`ttsProvider${section || ""}`);
     },
 
+    isOpenAICompatibleProvider(provider) {
+        return typeof isOpenAITTSProvider === "function" ? isOpenAITTSProvider(provider) : provider === "openai";
+    },
+
+    isOfficialOpenAIEndpoint(endpoint) {
+        const value = (endpoint || "https://api.openai.com/v1/audio/speech").trim();
+        try {
+            return new URL(value).hostname.toLowerCase() === "api.openai.com";
+        } catch (e) {
+            return value.toLowerCase().indexOf("api.openai.com") !== -1;
+        }
+    },
+
     addTestButton(section) {
         const provider = this.getProviderSelect(section);
         if (!provider) return;
@@ -6325,6 +7435,20 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         const getText = (key, fallback = "") => {
             const ele = document.querySelector(`input[data-textparam${sectionKey}="${key}"],textarea[data-textparam${sectionKey}="${key}"]`);
             return ele ? ele.value : fallback;
+        };
+        const getTextAny = (keys, fallback = "") => {
+            for (let i = 0; i < keys.length; i++) {
+                const value = getText(keys[i]);
+                if (value) return value;
+            }
+            return fallback;
+        };
+        const getOptionAny = (keys, fallback = "") => {
+            for (let i = 0; i < keys.length; i++) {
+                const value = getOption(keys[i]);
+                if (value) return value;
+            }
+            return fallback;
         };
         const systemLanguageSelect = section === "2" ? document.getElementById('languageSelect2') : getId('systemLanguageSelect');
         const systemLanguageEnabled = getParam('lang');
@@ -6401,27 +7525,27 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             
             // OpenAI settings
             openai: {
-                key: getId('openaiAPIKey')?.value || getText('openaikey'),
-                endpoint: getId('openaiEndpoint')?.value || getText('openaiendpoint', "https://api.openai.com/v1/audio/speech"),
+                key: getId('openaiAPIKey')?.value || getTextAny(['openaikey', 'customttskey', 'localttskey']),
+                endpoint: getId('openaiEndpoint')?.value || getTextAny(['openaiendpoint', 'customttsendpoint', 'localttsendpoint'], "https://api.openai.com/v1/audio/speech"),
                 voice: (() => {
                     if (openaiVoiceSelect?.value === 'custom') {
-                        const customVoice = getId('openaiCustomVoice')?.value || getText('openaicustomvoice');
+                        const customVoice = getId('openaiCustomVoice')?.value || getTextAny(['openaicustomvoice', 'customttsvoice', 'localttsvoice']);
                         return customVoice || 'alloy';
                     }
-                    return openaiVoiceSelect?.value || getOption('voiceopenai', 'alloy');
+                    return openaiVoiceSelect?.value || getOptionAny(['voiceopenai', 'customttsvoice', 'localttsvoice'], 'alloy');
                 })(),
                 model: (() => {
-                    if (getParam('openaimodel')) {
+                    if (getParam('openaimodel') || getParam('customttsmodel') || getParam('localttsmodel')) {
                         if (openaiModelSelect?.value === 'custom') {
-                            const customModel = getId('openaiCustomModel')?.value || getText('openaicustommodelx');
+                            const customModel = getId('openaiCustomModel')?.value || getTextAny(['openaicustommodelx', 'customttsmodel', 'localttsmodel']);
                             return customModel || 'tts-1';
                         }
-                        return openaiModelSelect?.value || 'tts-1';
+                        return openaiModelSelect?.value || getOptionAny(['openaimodel', 'customttsmodel', 'localttsmodel'], 'tts-1');
                     }
                     return 'tts-1';
                 })(),
                 speed: getParam('openaispeed') ? getNumber('openaispeed', 1.0) : 1.0,
-                format: getParam('openaiformat') ? getOption('openaiformat', 'mp3') : 'mp3'
+                format: getParam('openaiformat') ? getOptionAny(['openaiformat', 'customttsformat', 'localttsformat'], 'mp3') : 'mp3'
             }
         };
         
@@ -6508,7 +7632,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             if (provider === 'gemini' && !settings.gemini.key) {
                 throw new Error('Gemini API key is required');
             }
-            if (provider === 'openai' && !settings.openai.key) {
+            if (this.isOpenAICompatibleProvider(provider) && this.isOfficialOpenAIEndpoint(settings.openai.endpoint) && !settings.openai.key) {
+                if (provider !== 'openai') {
+                    throw new Error('Enter a Custom / Local TTS Endpoint URL or run the local TTS bridge first');
+                }
                 throw new Error('OpenAI API key is required');
             }
 
@@ -6539,7 +7666,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 if (!this.premiumQueueActive) {
                     await this.speechifyTTS(text, settings, section);
                 }
-            } else if ((settings.service == "openai") && settings.openai.key) {
+            } else if (this.isOpenAICompatibleProvider(settings.service) && (settings.openai.key || !this.isOfficialOpenAIEndpoint(settings.openai.endpoint))) {
                 if (!this.premiumQueueActive) {
                     await this.openaiTTS(text, settings, section);
                 }
@@ -6557,6 +7684,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 }
             } else if (!settings.service || (settings.service == "system")) {
                 this.systemTTS(text, settings);
+            } else if (allow) {
+                this.showFeedback(`${this.getServiceName(section)} is not configured for testing`, 'error', section);
+                this.finishedAudio();
             }
         } catch (error) {
             this.showFeedback(`Error: ${error.message}`, 'error');
@@ -6998,6 +8128,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     openaiTTS(text, settings) {
         this.premiumQueueActive = true;
         const url = settings.openai.endpoint || "https://api.openai.com/v1/audio/speech";
+        const headers = {
+            "Content-Type": "application/json"
+        };
         
         const data = {
             model: settings.openai.model,
@@ -7006,20 +8139,29 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             response_format: settings.openai.format,
             speed: settings.openai.speed
         };
+
+        if (settings.openai.key) {
+            headers.Authorization = `Bearer ${settings.openai.key}`;
+        }
         
         this.fetchAudioContent(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${settings.openai.key}`
-            },
+            headers,
             body: JSON.stringify(data)
         }, 'blob');
     },
     
     async fetchAudioContent(url, options, type) {
+        const fetchOptions = Object.assign({}, options || {});
+        let timeoutId = null;
+        if (typeof AbortController !== "undefined" && !fetchOptions.signal) {
+            const controller = new AbortController();
+            fetchOptions.signal = controller.signal;
+            timeoutId = setTimeout(() => controller.abort(), 8000);
+        }
+
 		try {
-			const response = await fetch(url, options);
+			const response = await fetch(url, fetchOptions);
 			
 			if (!response.ok) {
 				//console.log(response);
@@ -7046,9 +8188,14 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 				this.playAudio(blobUrl);
 			}
 		} catch (error) {
-			this.showFeedback(`Audio fetch error: ${error.message}`, 'error');
+			const message = error && error.name === "AbortError" ? "Request timed out. Check that the TTS server is running." : error.message;
+			this.showFeedback(`Audio fetch error: ${message}`, 'error');
 			console.error("Error fetching audio:", error);
 			this.finishedAudio();
+		} finally {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
 		}
 	},
     
@@ -7198,6 +8345,7 @@ const PollManager = {
             pollType: document.querySelector('[data-optionsetting="pollType"]').value,
             pollQuestion: document.querySelector('[data-textsetting="pollQuestion"]').value,
             multipleChoiceOptions: document.querySelector('[data-textsetting="multipleChoiceOptions"]').value,
+            pollMatchMode: document.querySelector('[data-optionsetting="pollMatchMode"]')?.value || 'exact',
             pollStyle: document.querySelector('[data-optionsetting="pollStyle"]').value,
             pollTimer: document.querySelector('[data-numbersetting="pollTimer"]').value,
             pollTimerState: document.querySelector('[data-setting="pollTimerState"]').checked,
@@ -7229,6 +8377,7 @@ const PollManager = {
             pollType: 'freeform',
             pollQuestion: '',
             multipleChoiceOptions: '',
+            pollMatchMode: 'exact',
             pollStyle: 'default',
             pollTimer: 60,
             pollTimerState: false,
@@ -7241,6 +8390,7 @@ const PollManager = {
             '[data-optionsetting="pollType"]': defaultSettings.pollType,
             '[data-textsetting="pollQuestion"]': defaultSettings.pollQuestion,
             '[data-textsetting="multipleChoiceOptions"]': defaultSettings.multipleChoiceOptions,
+            '[data-optionsetting="pollMatchMode"]': defaultSettings.pollMatchMode,
             '[data-optionsetting="pollStyle"]': defaultSettings.pollStyle,
             '[data-numbersetting="pollTimer"]': defaultSettings.pollTimer,
             '[data-setting="pollTimerState"]': defaultSettings.pollTimerState,
@@ -7277,6 +8427,7 @@ const PollManager = {
             '[data-optionsetting="pollType"]': poll.settings.pollType,
             '[data-textsetting="pollQuestion"]': poll.settings.pollQuestion,
             '[data-textsetting="multipleChoiceOptions"]': poll.settings.multipleChoiceOptions,
+            '[data-optionsetting="pollMatchMode"]': poll.settings.pollMatchMode || 'exact',
             '[data-optionsetting="pollStyle"]': poll.settings.pollStyle,
             '[data-numbersetting="pollTimer"]': poll.settings.pollTimer,
             '[data-setting="pollTimerState"]': poll.settings.pollTimerState,
@@ -7378,7 +8529,7 @@ function initHotkeys() {
 }
 
 document.addEventListener("DOMContentLoaded", async function(event) {
-    await ensureSourcesListLoaded();
+    loadSourcesListFromRuntimeManifest();
     setupDynamicCustomUrlControls();
 
     // Initialize hotkey system
@@ -7475,10 +8626,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	};
 	
-	// Setup for all three sections
+	// Setup for all four sections
 	setupOpenAICustomInputs('openaiVoiceSelect', 'openaiModelSelect', 'openaiCustomVoice', 'openaiCustomModel');
 	setupOpenAICustomInputs('openaiVoiceSelect2', 'openaiModelSelect2', 'openaiCustomVoice2', 'openaiCustomModel2');
 	setupOpenAICustomInputs('openaiVoiceSelect10', 'openaiModelSelect10', 'openaiCustomVoice10', 'openaiCustomModel10');
+	setupOpenAICustomInputs('openaiVoiceSelect18', 'openaiModelSelect18', 'openaiCustomVoice18', 'openaiCustomModel18');
 	
 	// Language selector handling
 	const languageIcon = document.getElementById('languageIcon');
@@ -7563,16 +8715,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (!sourceSelector) {
 		  console.error("Could not find source-selector element");
 		} else {
-			if (!sourcesList.size) {
-				await ensureSourcesListLoaded();
-			}
-			
-			Array.from(sourcesList).sort().forEach(source => {
-				const option = document.createElement('option');
-				option.value = source;
-				option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
-				sourceSelector.appendChild(option);
-			});
+			setupLazySourceSelect(sourceSelector);
 		}
 		
 		const customInject = document.getElementById("custominject");
@@ -7583,14 +8726,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (injectButton) {
 			injectButton.addEventListener('click', function() {
 			  const sourceDropdown = document.getElementById('source-selector');
-			  const source = sourceDropdown ? sourceDropdown.value : '';
-			  
-			  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-				chrome.runtime.sendMessage({
-				  type: 'injectCustomSource',
-				  source: source,
-				  tabId: tabs[0].id
-				});
+			  ensureLazySourcesLoaded(function() {
+				  appendSourceOptions(sourceDropdown);
+				  const source = sourceDropdown ? sourceDropdown.value : '';
+
+				  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+					chrome.runtime.sendMessage({
+					  type: 'injectCustomSource',
+					  source: source,
+					  tabId: tabs[0].id
+					});
+				  });
 			  });
 			});
 		}
@@ -7611,12 +8757,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		ele.onclick = copyToClipboard;
 	});
 
+	moveChatOverlayThemeOptions();
+	syncChatOverlayTemplateConfig(getSelectedChatOverlayTemplatePath());
+	moveHypetrainOptionsIntoMetaSection();
+
 	attachOverlayPreviewControls('multialerts', [
 		{ id: 'multi-alert-preview-follow', descriptor: () => buildMultiAlertPreviewDescriptor('follow') },
 		{ id: 'multi-alert-preview-sub', descriptor: () => buildMultiAlertPreviewDescriptor('subscription') },
 		{ id: 'multi-alert-preview-dono', descriptor: () => buildMultiAlertPreviewDescriptor('donation') },
 		{ id: 'multi-alert-preview-bits', descriptor: () => buildMultiAlertPreviewDescriptor('bits') },
 		{ id: 'multi-alert-preview-raid', descriptor: () => buildMultiAlertPreviewDescriptor('raid') },
+		{ id: 'multi-alert-preview-auction', descriptor: () => buildMultiAlertPreviewDescriptor('auction') },
+		{ id: 'multi-alert-preview-hype', descriptor: () => buildMultiAlertPreviewDescriptor('hype') },
 		{ id: 'multi-alert-preview-clear', descriptor: false }
 	]);
 
@@ -7660,29 +8812,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			const addContainer = document.createElement('div');
 			addContainer.className = 'add-username-container';
 			
-			// Replace text input with select dropdown if sourcesList is available
-			if (sourcesList && sourcesList.size > 0) {
-			  addContainer.innerHTML = `
+			addContainer.innerHTML = `
 				<input type="text" id="new${id}" placeholder="Add username">
-				<select id="new${id}Type">
-				  <option value="" selected>Select Sources</option>
-				  ${Array.from(sourcesList).sort().map(source => 
-					`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
-				  ).join('')}
-				</select>
+				<input type="text" id="new${id}Type" placeholder="Source type (optional)" list="popupSourceTypesList">
 				<button id="add${id}">Add</button>
-			  `;
-			} else {
-			  addContainer.innerHTML = `
-				<input type="text" id="new${id}" placeholder="Add username">
-				<input type="text" id="new${id}Type" placeholder="Source type (optional)">
-				<button id="add${id}">Add</button>
-			  `;
-			}
+			`;
 			
 			container.parentNode.classList.add("isolate");
 			container.parentNode.insertBefore(listContainer, container.nextSibling);
 			container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+			setupLazySourceInput(document.getElementById(`new${id}Type`));
 		  }
 		});
 		
@@ -7737,27 +8876,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				const addContainer = document.createElement('div');
 				addContainer.className = 'add-source-container';
 				
-				// Replace text input with select dropdown if sourcesList is available
-				if (sourcesList && sourcesList.size > 0) {
-				  addContainer.innerHTML = `
-					<select id="new${id}Type">
-					  <option value="" selected>Select Sources</option>
-					  ${Array.from(sourcesList).sort().map(source => 
-						`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
-					  ).join('')}
-					</select>
+				addContainer.innerHTML = `
+					<input type="text" id="new${id}Type" placeholder="Source type" list="popupSourceTypesList">
 					<button id="add${id}">Add</button>
-				  `;
-				} else {
-				  addContainer.innerHTML = `
-					<input type="text" id="new${id}Type" placeholder="Source type">
-					<button id="add${id}">Add</button>
-				  `;
-				}
+				`;
 				
 				container.parentNode.classList.add("isolate");
 				container.parentNode.insertBefore(listContainer, container.nextSibling);
 				container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+				setupLazySourceInput(document.getElementById(`new${id}Type`));
 			}
 		});
 		
@@ -7821,146 +8948,460 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	}); */
 	
+	setupLazyFontDropdowns();
 	setTimeout(function(){
-		populateFontDropdown(); 
 		if (typeof PollManager !== 'undefined') {
 			PollManager.init();
 		}
 	},1000);
 	
-	// populate language drop down
-	if (speechSynthesis){
-		async function populateVoices() {
-			const voices = createUniqueVoiceIdentifiers(speechSynthesis.getVoices());
+	if (typeof TTSManager !== 'undefined') {
+		try {
+			TTSManager.init([]);
+		} catch(e){
+			console.error(e);
+		}
+	}
 
-			voices.sort((a, b) => {
-				if (a.default) {
-					return -1; // a is the default, move a to the front
-				} else if (b.default) {
-					return 1; // b is the default, move b to the front
-				} else {
-					return 0; // neither a nor b is the default, keep original order
-				}
-			});
+	setupLazySystemVoiceDropdowns();
 
-			const populateDropdown = (dropdownId) => {
-				const dropdown = document.getElementById(dropdownId);
-				if (!dropdown) return;
+	var popupSearchInput = document.getElementById('searchInput');
+	var popupSearchHiddenClass = 'popup-search-hidden';
+	var popupSearchOpenState = null;
+	var popupSearchLockedWidth = null;
+	var popupSearchIndex = null;
+	var popupSearchTimer = null;
 
-				const existingOptions = new Set(Array.from(dropdown.options).map(option => option.textContent));
+	function normalizePopupSearchText(value) {
+		return String(value || '').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
+	}
 
-				voices.forEach(voice => {
-					const voiceText = `${voice.name} (${voice.lang})`;
-					if (!existingOptions.has(voiceText)) {
-						const option = document.createElement('option');
-						option.textContent = voiceText;
-						option.value = voice.code; // This sets the value attribute
-						option.code = voice.code;   // <--- THIS IS THE CRUCIAL LINE THAT WAS MISSING
-						option.setAttribute('data-lang', voice.lang);
-						option.setAttribute('data-name', voice.name);
-						dropdown.appendChild(option);
-					}
-				});
-			};
+	function getPopupSearchTerms(value) {
+		var normalized = normalizePopupSearchText(value);
+		return normalized ? normalized.split(' ') : [];
+	}
 
-			populateDropdown('systemLanguageSelect');
-			populateDropdown('languageSelect2');
-			populateDropdown('systemLanguageSelect10');
-			populateDropdown('systemLanguageSelect18');
+	function addPopupSearchPart(parts, value) {
+		value = normalizePopupSearchText(value);
+		if (value) {
+			parts.push(value);
+		}
+	}
 
-			if (typeof TTSManager !== 'undefined') {
-				try {
-					TTSManager.init(voices)
-				} catch(e){
-					console.error(e);
-				}
+	function addPopupSearchVisibleText(parts, element) {
+		if (!element) {
+			return;
+		}
+		var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+		var node;
+		while ((node = walker.nextNode())) {
+			if (node.parentElement && !shouldSkipPopupSearchText(node.parentElement) && !isPopupSearchNormallyHidden(node.parentElement)) {
+				addPopupSearchPart(parts, node.nodeValue);
 			}
 		}
-		speechSynthesis.onvoiceschanged = populateVoices;
-		
-		document.getElementById('searchInput').addEventListener('keyup', function(e) {
-			// Handle escape key to close search
-			if (e.key === 'Escape') {
-				this.value = '';
-				this.style.display = 'none';
-				this.style.width = '0';
-				// Reset all visibility
-				document.querySelectorAll('input.collapsible-input').forEach(ele => {
-					ele.checked = null;
-				});
-				document.querySelectorAll('.wrapper').forEach(ele => {
-					ele.style.display = "";
-				});
-				document.querySelectorAll('.options_group > div').forEach(ele => {
-					ele.style.display = "";
-				});
+	}
+
+	function shouldSkipPopupSearchText(element) {
+		if (!element) {
+			return true;
+		}
+		if (/^(script|style|template|option|br)$/i.test(element.tagName || '')) {
+			return true;
+		}
+		return !!(element.closest && element.closest('.link-help-content, option, script, style, template'));
+	}
+
+	function addPopupSearchSynonyms(parts) {
+		var text = parts.join(' ');
+		var synonyms = [];
+		if (/\bstroke\b|\boutline\b|\bborder\b|\bline\b/.test(text)) {
+			synonyms.push('stroke outline border line edge');
+		}
+		if (/\bshadow\b|\bglow\b|\bhalo\b|\bdepth\b/.test(text)) {
+			synonyms.push('shadow glow halo depth');
+		}
+		if (/\bcolor\b|\bcolour\b|\bhue\b|\bbackground\b|\bpagebg\b|\bchroma\b|\btextcolor\b|\bnamecolor\b|\bstroke\b|\bglow\b/.test(text)) {
+			synonyms.push('color colour hue background foreground fill text page chroma stroke glow');
+		}
+		if (synonyms.length) {
+			parts.push(synonyms.join(' '));
+		}
+	}
+
+	function addPopupSearchAttributes(parts, element) {
+		if (!element || !element.attributes) {
+			return;
+		}
+		for (var i = 0; i < element.attributes.length; i++) {
+			var attr = element.attributes[i];
+			if (!attr || attr.name === 'style' || attr.name === 'class') {
+				continue;
+			}
+			if (attr.name === 'data-keywords' || attr.name === 'data-search') {
+				addPopupSearchPart(parts, attr.value);
+				continue;
+			}
+			if (attr.name === 'title' || attr.name === 'aria-label' || attr.name === 'alt' || attr.name === 'placeholder') {
+				if (attr.name === 'title' && /(must first interact|lookup first)/i.test(attr.value || '')) {
+					continue;
+				}
+				addPopupSearchPart(parts, attr.value);
+			}
+		}
+	}
+
+	function getPopupSearchText(element) {
+		var parts = [];
+		if (!element) {
+			return '';
+		}
+		addPopupSearchVisibleText(parts, element);
+		addPopupSearchAttributes(parts, element);
+
+		var searchable = element.querySelectorAll('[title], [aria-label], [alt], [data-keywords], [data-search], input, textarea, select, label, img');
+		searchable.forEach(function(child) {
+			addPopupSearchAttributes(parts, child);
+		});
+		addPopupSearchSynonyms(parts);
+		return parts.join(' ');
+	}
+
+	function getPopupSectionSearchText(wrapper) {
+		var parts = [];
+		var label = wrapper ? wrapper.querySelector('.collapsible-label') : null;
+		if (label) {
+			addPopupSearchPart(parts, label.textContent);
+			addPopupSearchAttributes(parts, label);
+		}
+		return parts.join(' ');
+	}
+
+	function popupSearchEscapeRegex(value) {
+		return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	}
+
+	function popupSearchTextHasTerm(searchText, term) {
+		if (/^[a-z0-9]+$/.test(term)) {
+			return new RegExp('(^|[^a-z0-9])' + popupSearchEscapeRegex(term)).test(searchText);
+		}
+		return searchText.indexOf(term) !== -1;
+	}
+
+	function popupSearchTextMatches(searchText, terms) {
+		for (var i = 0; i < terms.length; i++) {
+			if (!popupSearchTextHasTerm(searchText, terms[i])) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	function clearPopupSearchHidden() {
+		document.querySelectorAll('.' + popupSearchHiddenClass).forEach(function(element) {
+			element.classList.remove(popupSearchHiddenClass);
+		});
+	}
+
+	function setPopupSearchHidden(element, hidden) {
+		if (!element) {
+			return;
+		}
+		if (hidden) {
+			element.classList.add(popupSearchHiddenClass);
+		} else {
+			element.classList.remove(popupSearchHiddenClass);
+		}
+	}
+
+	function isPopupSearchNormallyHidden(element) {
+		var node = element;
+		while (node && node !== document.body) {
+			if (node.classList && node.classList.contains(popupSearchHiddenClass)) {
+				node = node.parentElement;
+				continue;
+			}
+			if (window.getComputedStyle(node).display === 'none') {
+				return true;
+			}
+			node = node.parentElement;
+		}
+		return false;
+	}
+
+	function savePopupSearchOpenState() {
+		if (popupSearchOpenState) {
+			return;
+		}
+		popupSearchOpenState = [];
+		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
+			popupSearchOpenState.push({
+				input: input,
+				checked: input.checked
+			});
+		});
+	}
+
+	function openPopupSearchSections() {
+		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
+			input.checked = true;
+		});
+	}
+
+	function restorePopupSearchOpenState() {
+		if (!popupSearchOpenState) {
+			return;
+		}
+		popupSearchOpenState.forEach(function(state) {
+			if (state.input) {
+				state.input.checked = state.checked;
+			}
+		});
+		popupSearchOpenState = null;
+	}
+
+	function lockPopupSearchWidth() {
+		if (popupSearchLockedWidth) {
+			return;
+		}
+		popupSearchLockedWidth = Math.ceil(document.documentElement.getBoundingClientRect().width || document.body.getBoundingClientRect().width);
+		if (popupSearchLockedWidth) {
+			document.documentElement.style.minWidth = popupSearchLockedWidth + 'px';
+			document.body.style.minWidth = popupSearchLockedWidth + 'px';
+		}
+	}
+
+	function unlockPopupSearchWidth() {
+		if (!popupSearchLockedWidth) {
+			return;
+		}
+		document.documentElement.style.minWidth = '';
+		document.body.style.minWidth = '';
+		popupSearchLockedWidth = null;
+	}
+
+	function getPopupSearchRows(wrapper) {
+		var rows = wrapper.querySelectorAll('.options_group > *, .options_group > span > *, .options > :not(.options_group), .options > .overlay-config-section > *, .options_group > .game-config-section > *, .collapsible-text > :not(.options)');
+		var filtered = [];
+		function addRow(row) {
+			if (!row.classList || row.classList.contains('options_group') || row.classList.contains('options') || /^(script|style|template|br)$/i.test(row.tagName || '')) {
 				return;
 			}
-			
-			var searchQuery = this.value.toLowerCase();
-			
-			if (searchQuery){
-				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
-					ele.checked = true
+			if (filtered.indexOf(row) === -1) {
+				filtered.push(row);
+			}
+		}
+		rows.forEach(addRow);
+		wrapper.querySelectorAll('.options_group > div').forEach(function(container) {
+			if (container.querySelector(':scope > label.switch')) {
+				return;
+			}
+			container.querySelectorAll(':scope > div, :scope > h3, :scope > p, :scope > span').forEach(addRow);
+		});
+		return filtered;
+	}
+
+	function createPopupSearchIndex() {
+		var index = {
+			links: [],
+			wrappers: [],
+			topLevel: []
+		};
+
+		document.querySelectorAll('.link').forEach(function(link) {
+			if (!isPopupSearchNormallyHidden(link)) {
+				index.links.push({
+					element: link,
+					text: getPopupSearchText(link)
 				});
-				document.querySelectorAll('.wrapper').forEach(w=>{
-					var menuItems = w.querySelectorAll('.options_group > div');
-					var matches = 0;
-					menuItems.forEach(function(item) {
-						var text = item.textContent.toLowerCase();
-						
-						if (item.querySelector("[title]")){
-							text += " " + item.querySelector("[title]").title.toLowerCase();
-						}
-						
-						// Include data-keywords for better searchability
-						if (item.dataset.keywords) {
-							text += " " + item.dataset.keywords.toLowerCase();
-						}
-						
-						if (item.querySelector("input")){
-							[...item.querySelector("input").attributes].forEach(att=>{
-								if (att.name.startsWith("data-")){
-									text += " " + att.value.toLowerCase();
-								}
-							});
-						}
-						if (text.includes(searchQuery)) {
-							item.style.display = '';
-							matches += 1;
-						} else {
-							item.style.display = 'none';
-						}
-					});
-					if (!matches){
-						w.style.display = "none";
-					} else {
-						w.style.display = "";
-					}
+			}
+		});
+
+		document.querySelectorAll('.wrapper').forEach(function(wrapper) {
+			if (isPopupSearchNormallyHidden(wrapper)) {
+				return;
+			}
+			var rowElements = getPopupSearchRows(wrapper).filter(function(row) {
+				return !isPopupSearchNormallyHidden(row);
+			});
+			var rows = rowElements.map(function(row) {
+				return {
+					element: row,
+					text: getPopupSearchText(row),
+					containerOnly: false
+				};
+			});
+			rows.forEach(function(rowRecord) {
+				rowRecord.containerOnly = rows.some(function(otherRecord) {
+					return rowRecord.element !== otherRecord.element && rowRecord.element.contains(otherRecord.element);
 				});
-			} else {
-				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
-					ele.checked = null
+			});
+			index.wrappers.push({
+				element: wrapper,
+				sectionText: getPopupSectionSearchText(wrapper),
+				rows: rows
+			});
+		});
+
+		document.querySelectorAll('.container > *').forEach(function(element) {
+			if (element.classList && (element.classList.contains('wrapper') || element.classList.contains('link'))) {
+				return;
+			}
+			if (!isPopupSearchNormallyHidden(element)) {
+				index.topLevel.push({
+					element: element,
+					text: getPopupSearchText(element)
 				});
-				document.querySelectorAll('.wrapper').forEach(ele=>{
-					ele.style.display = "";
-				});
-				document.querySelectorAll('.options_group > div').forEach(ele=>{
-					ele.style.display = "";
-				});
+			}
+		});
+
+		return index;
+	}
+
+	function preparePopupSearchIndex() {
+		if (popupSearchIndex) {
+			return;
+		}
+		clearPopupSearchHidden();
+		var openStates = [];
+		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
+			openStates.push({
+				input: input,
+				checked: input.checked
+			});
+			input.checked = true;
+		});
+		popupSearchIndex = createPopupSearchIndex();
+		openStates.forEach(function(state) {
+			state.input.checked = state.checked;
+		});
+	}
+
+	function popupSearchRecordMatches(record, terms) {
+		return popupSearchTextMatches(record.text || '', terms);
+	}
+
+	function updatePopupSearchGroups(wrapper) {
+		wrapper.querySelectorAll('.options_group').forEach(function(group) {
+			if (isPopupSearchNormallyHidden(group)) {
+				return;
+			}
+			var visibleRows = 0;
+			group.querySelectorAll(':scope > div').forEach(function(row) {
+				if (!isPopupSearchNormallyHidden(row) && !row.classList.contains(popupSearchHiddenClass)) {
+					visibleRows += 1;
+				}
+			});
+			setPopupSearchHidden(group, visibleRows === 0);
+		});
+	}
+
+	function updatePopupSearchTopLevel(terms) {
+		if (!popupSearchIndex) {
+			return;
+		}
+		popupSearchIndex.topLevel.forEach(function(record) {
+			setPopupSearchHidden(record.element, !popupSearchRecordMatches(record, terms));
+		});
+	}
+
+	function applyPopupSearchNow(value) {
+		var terms = getPopupSearchTerms(value);
+		clearPopupSearchHidden();
+
+		if (!terms.length) {
+			restorePopupSearchOpenState();
+			unlockPopupSearchWidth();
+			return;
+		}
+
+		savePopupSearchOpenState();
+		lockPopupSearchWidth();
+		openPopupSearchSections();
+		if (!popupSearchIndex) {
+			popupSearchIndex = createPopupSearchIndex();
+		}
+
+		popupSearchIndex.links.forEach(function(record) {
+			setPopupSearchHidden(record.element, !popupSearchRecordMatches(record, terms));
+		});
+
+		popupSearchIndex.wrappers.forEach(function(wrapperRecord) {
+			var wrapper = wrapperRecord.element;
+			var rows = wrapperRecord.rows;
+			var matchedRows = [];
+			var sectionMatches = popupSearchTextMatches(wrapperRecord.sectionText, terms);
+			rows.forEach(function(rowRecord) {
+				if (!rowRecord.containerOnly && popupSearchRecordMatches(rowRecord, terms)) {
+					matchedRows.push(rowRecord);
+				}
+			});
+			rows.forEach(function(rowRecord) {
+				var keep = matchedRows.indexOf(rowRecord) !== -1;
+				for (var i = 0; !keep && i < matchedRows.length; i++) {
+					keep = rowRecord.element.contains(matchedRows[i].element);
+				}
+				setPopupSearchHidden(rowRecord.element, !keep);
+			});
+			matchedRows.forEach(function(rowRecord) {
+				var parent = rowRecord.element.parentElement;
+				while (parent && parent !== wrapper) {
+					parent.classList.remove(popupSearchHiddenClass);
+					parent = parent.parentElement;
+				}
+			});
+			updatePopupSearchGroups(wrapper);
+
+			setPopupSearchHidden(wrapper, matchedRows.length === 0 && !(rows.length === 0 && sectionMatches));
+		});
+		updatePopupSearchTopLevel(terms);
+	}
+
+	function applyPopupSearch(value) {
+		if (popupSearchTimer) {
+			clearTimeout(popupSearchTimer);
+		}
+		popupSearchTimer = setTimeout(function() {
+			popupSearchTimer = null;
+			applyPopupSearchNow(value);
+		}, 60);
+	}
+
+	function closePopupSearch() {
+		if (popupSearchTimer) {
+			clearTimeout(popupSearchTimer);
+			popupSearchTimer = null;
+		}
+		if (popupSearchInput) {
+			popupSearchInput.value = '';
+			popupSearchInput.style.display = 'none';
+			popupSearchInput.style.width = '0';
+		}
+		clearPopupSearchHidden();
+		restorePopupSearchOpenState();
+		unlockPopupSearchWidth();
+		popupSearchIndex = null;
+	}
+
+	if (popupSearchInput) {
+		popupSearchInput.addEventListener('input', function() {
+			applyPopupSearch(this.value);
+		});
+		popupSearchInput.addEventListener('keyup', function(e) {
+			if (e.key === 'Escape') {
+				closePopupSearch();
 			}
 		});
 	}
 	
 	document.getElementById('searchIcon').addEventListener('click', function() {
-		var searchInput = document.getElementById('searchInput');
+		var searchInput = popupSearchInput || document.getElementById('searchInput');
 		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
 			searchInput.style.display = 'block';
 			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
 			searchInput.focus(); // Optional: Focus on the input field when it's shown
+			setTimeout(preparePopupSearchIndex, 0);
 		} else {
-			searchInput.style.display = 'none';
-			searchInput.style.width = '0';
+			closePopupSearch();
 		}
 	});
 	
@@ -8041,6 +9482,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const testSelectedLLMProviderButton = document.getElementById('testSelectedLLMProvider');
 	if (testSelectedLLMProviderButton) {
 		testSelectedLLMProviderButton.addEventListener('click', testSelectedLLMProvider);
+	}
+	const refreshOpenCodeModelsButton = document.getElementById('refreshOpenCodeModels');
+	if (refreshOpenCodeModelsButton) {
+		refreshOpenCodeModelsButton.addEventListener('click', function() {
+			loadOpenCodeModels(true);
+		});
+	}
+	const opencodeApiKeyInput = document.querySelector("[data-textsetting='opencodeApiKey']");
+	if (opencodeApiKeyInput) {
+		opencodeApiKeyInput.addEventListener('change', function() {
+			loadOpenCodeModels(true);
+		});
 	}
 	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
@@ -8734,14 +10187,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
 			chrome.runtime.lastError;
 			log("getSettings response",response);
-			const hasSession = !!(response && response.streamID);
-			const hasSettingsPayload = !!(response && response.settings);
-			const ready = hasSession || (ssapp && hasSettingsPayload);
-			if (!ready){
+			if (!hydratePopupFromStartupSettings(response)){
 				// keep polling
 			} else {
 				clearInterval(initialSetup);
-				update(response, false); // we dont want to sync things
 			}
 		});
 	}, 500);
@@ -8750,14 +10199,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
 		chrome.runtime.lastError;
 		log("getSettings response",response);
-		const hasSession = !!(response && response.streamID);
-		const hasSettingsPayload = !!(response && response.settings);
-		const ready = hasSession || (ssapp && hasSettingsPayload);
-		if (!ready){
+		if (!hydratePopupFromStartupSettings(response)){
 			
 		} else {
 			clearInterval(initialSetup);
-			update(response, false); // we dont want to sync things
 		}
 	});
 
@@ -8803,6 +10248,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	updateVideoStatsSettingsVisibility();
+	setupFirstTimerControls();
 
 	setupDeferredCustomCssFlush();
 	
@@ -8908,89 +10354,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const overlaySelector = document.getElementById('overlay-preset-select');
 	if (overlaySelector) {
 		overlaySelector.addEventListener('change', function() {
-			const dockDiv = document.getElementById('dock');
-			const dockLink = document.querySelector('#dock a, a[href*="dock.html"]');
-			
-			if (!dockDiv) return;
-			
-			// Hide all overlay config sections (if we add them later)
-			document.querySelectorAll('.overlay-config-section').forEach(section => {
-				section.style.display = 'none';
-			});
-			
-			if (this.value) {
-				// An overlay theme was selected
-				const overlayUrl = baseURL + this.value;
-				
-				// Extract existing parameters from current dock URL
-				let existingParams = '';
-				if (dockDiv.raw && dockDiv.raw.includes('?')) {
-					existingParams = dockDiv.raw.split('?')[1];
-				}
-				
-				// Preserve ALL parameters, not just session
-				let newUrl = overlayUrl;
-				if (existingParams) {
-					newUrl += '?' + existingParams;
-				}
-				
-				// Update the dock URL
-				dockDiv.raw = newUrl;
-				if (dockLink) {
-					dockLink.href = newUrl;
-					dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
-				}
-				
-				// Show overlay-specific config section (for future use)
-				let overlayType = '';
-				if (this.value.includes('themes/overlay-')) {
-					// Handle new animated overlays in themes folder
-					overlayType = this.value.replace('themes/', '').replace('.html', '');
-				} else if (this.value.match(/themes\/(\w+)\//)) {
-					// Handle theme folders like themes/Neutron/
-					overlayType = this.value.match(/themes\/(\w+)\//)[1];
-				} else {
-					// Handle other files
-					overlayType = this.value.replace('.html', '');
-				}
-				
-				const configSection = document.getElementById(overlayType + '-overlay-config');
-				if (configSection) {
-					configSection.style.display = 'block';
-				}
-				
-        // Hide ONLY the streaming chat (dock) option wrappers when an overlay theme is selected
-        document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
-            const wrapper = inp.closest('.wrapper');
-            if (wrapper) wrapper.style.display = 'none';
-        });
-			} else {
-				// Classic dock.html selected - restore all parameters
-				let existingParams = '';
-				if (dockDiv.raw && dockDiv.raw.includes('?')) {
-					existingParams = dockDiv.raw.split('?')[1];
-				}
-				
-				let newUrl = baseURL + 'dock.html';
-				if (existingParams) {
-					newUrl += '?' + existingParams;
-				}
-				
-				// Update the dock URL back to classic
-				dockDiv.raw = newUrl;
-				if (dockLink) {
-					dockLink.href = newUrl;
-					dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
-				}
-				
-        // Show ONLY the streaming chat (dock) option wrappers
-        document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
-            const wrapper = inp.closest('.wrapper');
-            if (wrapper) wrapper.style.display = '';
-        });
-			}
-
-			refreshLinks();
+			applyChatOverlayTemplatePreset(this.value);
 		});
 	}
 
@@ -9115,29 +10479,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const uploadBeepBtn = document.getElementById('uploadBeepBtn');
 	if (uploadBeepBtn) {
 		uploadBeepBtn.onclick = function() {
-			// Open the media hosting service in a popup window
-			const popup = window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadBeep', 'width=640,height=640');
-			
-			// Listen for message from the popup
-			window.addEventListener('message', function handleMessage(event) {
-				// Verify the origin for security
-				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-				
-				// Check if this is our media upload message
-				if (event.data && event.data.type === 'media-uploaded') {
-					// Fill the custom beep input with the uploaded URL
-					const customBeepInput = document.getElementById('custombeep');
-					if (customBeepInput) {
-						customBeepInput.value = event.data.url;
-						// Trigger change event to save the value
-						customBeepInput.dispatchEvent(new Event('input', { bubbles: true }));
-						customBeepInput.dispatchEvent(new Event('change', { bubbles: true }));
-					}
-					
-					// Remove this specific listener
-					window.removeEventListener('message', handleMessage);
-				}
-			});
+			openHostedMediaUploadForInput(document.getElementById('custombeep'), 'uploadBeep');
 		};
 	}
 
@@ -9145,76 +10487,48 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const uploadBeepBtn2 = document.getElementById('uploadBeepBtn2');
 	if (uploadBeepBtn2) {
 		uploadBeepBtn2.onclick = function() {
-			// Open the media hosting service in a popup window
-			const popup = window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadBeep2', 'width=640,height=640');
-			
-			// Listen for message from the popup
-			window.addEventListener('message', function handleMessage(event) {
-				// Verify the origin for security
-				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-				
-				// Check if this is our media upload message
-				if (event.data && event.data.type === 'media-uploaded') {
-					// Fill the second custom beep input with the uploaded URL
-					const customBeepInput2 = document.getElementById('custombeep2');
-					if (customBeepInput2) {
-						customBeepInput2.value = event.data.url;
-						// Trigger change event to save the value
-						customBeepInput2.dispatchEvent(new Event('input', { bubbles: true }));
-						customBeepInput2.dispatchEvent(new Event('change', { bubbles: true }));
-					}
-					
-					// Remove this specific listener
-					window.removeEventListener('message', handleMessage);
-				}
-			});
+			openHostedMediaUploadForInput(document.getElementById('custombeep2'), 'uploadBeep2');
 		};
 	}
 
 	const uploadTimerSoundBtn = document.getElementById('uploadTimerSoundBtn');
 	if (uploadTimerSoundBtn) {
 		uploadTimerSoundBtn.onclick = function() {
-			window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadTimerSound', 'width=640,height=640');
-			window.addEventListener('message', function handleMessage(event) {
-				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-				if (event.data && event.data.type === 'media-uploaded') {
-					const timerSoundInput = document.getElementById('timerCustomSound');
-					if (timerSoundInput) {
-						timerSoundInput.value = event.data.url;
-						timerSoundInput.dispatchEvent(new Event('input', { bubbles: true }));
-						timerSoundInput.dispatchEvent(new Event('change', { bubbles: true }));
-					}
-					window.removeEventListener('message', handleMessage);
-				}
-			});
+			openHostedMediaUploadForInput(document.getElementById('timerCustomSound'), 'uploadTimerSound');
 		};
 	}
 
 	// Handle per-type alert sound upload buttons
 	const alertSoundUploads = [
+		{ btnId: 'uploadMultiAlertSoundBtn', inputId: 'multi-alert-custombeep' },
 		{ btnId: 'uploadFollowSoundBtn', inputId: 'multi-alert-followsound' },
 		{ btnId: 'uploadSubSoundBtn', inputId: 'multi-alert-subsound' },
 		{ btnId: 'uploadDonoSoundBtn', inputId: 'multi-alert-donosound' },
 		{ btnId: 'uploadBitsSoundBtn', inputId: 'multi-alert-bitssound' },
-		{ btnId: 'uploadRaidSoundBtn', inputId: 'multi-alert-raidsound' }
+		{ btnId: 'uploadRaidSoundBtn', inputId: 'multi-alert-raidsound' },
+		{ btnId: 'uploadAuctionSoundBtn', inputId: 'multi-alert-auctionsound' },
+		{ btnId: 'uploadHypeSoundBtn', inputId: 'multi-alert-hypesound' }
 	];
 	alertSoundUploads.forEach(({ btnId, inputId }) => {
 		const btn = document.getElementById(btnId);
 		if (btn) {
 			btn.onclick = function() {
-				window.open('https://fileuploads.socialstream.ninja/popup/upload', btnId, 'width=640,height=640');
-				window.addEventListener('message', function handleMessage(event) {
-					if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-					if (event.data && event.data.type === 'media-uploaded') {
-						const input = document.getElementById(inputId);
-						if (input) {
-							input.value = event.data.url;
-							input.dispatchEvent(new Event('input', { bubbles: true }));
-							input.dispatchEvent(new Event('change', { bubbles: true }));
-						}
-						window.removeEventListener('message', handleMessage);
-					}
-				});
+				openHostedMediaUploadForInput(document.getElementById(inputId), btnId);
+			};
+		}
+	});
+
+	const hostedMediaUploads = [
+		{ btnId: 'uploadDefaultAvatarBtn', inputId: 'default_avatar' },
+		{ btnId: 'uploadAiOverlayAvatarBtn', inputId: 'aiOverlayAvatar' },
+		{ btnId: 'uploadStreamGoalJarImageBtn', inputId: 'streamGoalJarImage' },
+		{ btnId: 'uploadWaitlistSoundBtn', inputId: 'customsound' }
+	];
+	hostedMediaUploads.forEach(({ btnId, inputId }) => {
+		const btn = document.getElementById(btnId);
+		if (btn) {
+			btn.onclick = function() {
+				openHostedMediaUploadForInput(document.getElementById(inputId), btnId);
 			};
 		}
 	});
@@ -9222,22 +10536,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const uploadFeaturedFallbackBtn = document.getElementById('uploadFeaturedFallbackBtn');
 	if (uploadFeaturedFallbackBtn) {
 		uploadFeaturedFallbackBtn.onclick = function() {
-			window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadFeaturedFallback', 'width=640,height=640');
-			window.addEventListener('message', function handleMessage(event) {
-				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
-				if (event.data && event.data.type === 'media-uploaded') {
-					const fallbackInput = document.getElementById('featuredFallbackImage');
-					if (fallbackInput) {
-						fallbackInput.value = event.data.url;
-						fallbackInput.dispatchEvent(new Event('input', { bubbles: true }));
-						fallbackInput.dispatchEvent(new Event('change', { bubbles: true }));
-					}
-					const fallbackToggle = document.querySelector('input[data-param2="fallbackimg"]');
-					if (fallbackToggle && !fallbackToggle.checked) {
-						fallbackToggle.checked = true;
-						fallbackToggle.dispatchEvent(new Event('change', { bubbles: true }));
-					}
-					window.removeEventListener('message', handleMessage);
+			openHostedMediaUploadForInput(document.getElementById('featuredFallbackImage'), 'uploadFeaturedFallback', function() {
+				const fallbackToggle = document.querySelector('input[data-param2="fallbackimg"]');
+				if (fallbackToggle && !fallbackToggle.checked) {
+					fallbackToggle.checked = true;
+					fallbackToggle.dispatchEvent(new Event('change', { bubbles: true }));
 				}
 			});
 		};

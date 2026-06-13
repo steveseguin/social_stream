@@ -493,16 +493,27 @@
                 masterGain.gain.value = DEFAULT_VOLUME;
                 masterGain.connect(audioContext.destination);
                 
-                // Resume audio context on user interaction if needed
-                if (audioContext.state === 'suspended') {
-                    document.addEventListener('click', () => {
-                        audioContext.resume();
-                    }, { once: true });
-                }
+                attachAudioUnlockListeners();
             } catch (error) {
                 console.error('Failed to initialize Web Audio API:', error);
                 audioEnabled = false;
             }
+        }
+
+        function resumeAudio() {
+            if (!audioContext || audioContext.state !== 'suspended') {
+                return Promise.resolve(!!audioContext);
+            }
+            return audioContext.resume().then(() => true).catch(() => false);
+        }
+
+        function attachAudioUnlockListeners() {
+            const handler = () => {
+                resumeAudio();
+            };
+            ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(eventName => {
+                document.addEventListener(eventName, handler, { once: true });
+            });
         }
 
         // Sound synthesizers
@@ -631,6 +642,13 @@
 
         // Play drum sound
         function playDrumSound(soundType) {
+            if (!audioEnabled || !audioContext || !drumSounds[soundType]) return;
+            if (audioContext.state === 'suspended') {
+                resumeAudio().then(running => {
+                    if (running) drumSounds[soundType](audioContext.currentTime);
+                });
+                return;
+            }
             if (drumSounds[soundType]) {
                 drumSounds[soundType](audioContext.currentTime);
             }
@@ -897,9 +915,11 @@
             
             if (!data || !data.chatmessage || !data.chatname) return;
 
-            const username = data.chatname;
+            const tmpName = document.createElement('div');
+            tmpName.innerHTML = data.chatname;
+            const username = tmpName.textContent || tmpName.innerText || '';
             let message = data.chatmessage;
-            
+
             // If textonly is not set, extract text from HTML
             if (!data.textonly) {
                 const tmp = document.createElement('div');
@@ -976,7 +996,7 @@
         window.addEventListener("message", function(e) {
             if (e.source !== iframe.contentWindow) return;
             
-            if ("dataReceived" in e.data) {
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                 if ("overlayNinja" in e.data.dataReceived) {
                     processData(e.data.dataReceived.overlayNinja);
                 }
@@ -985,26 +1005,43 @@
         
         // Handle WebSocket connection
         if (urlParams.has('server')) {
-            const socketserver = new WebSocket(urlParams.get('server'));
-            
-            socketserver.onopen = function() {
-                socketserver.send(JSON.stringify({ 
-                    join: sessionId.split(",")[0], 
-                    out: 2, 
-                    in: 1 
-                }));
-            };
-            
-            socketserver.onmessage = function(event) {
-                if (event.data) {
-                    try {
-                        const data = JSON.parse(event.data);
-                        processData(data);
-                    } catch (e) {
-                        console.error('WebSocket parse error:', e);
+            const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+            let socketserver = null;
+            let reconnectTimeout = null;
+
+            function connectWebSocket() {
+                socketserver = new WebSocket(serverUrl);
+
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({
+                        join: sessionId.split(",")[0],
+                        out: 2,
+                        in: 1
+                    }));
+                };
+
+                socketserver.onclose = function() {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = setTimeout(connectWebSocket, 5000);
+                };
+
+                socketserver.onerror = function() {
+                    try { socketserver.close(); } catch (e) {}
+                };
+
+                socketserver.onmessage = function(event) {
+                    if (event.data) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            processData(data);
+                        } catch (e) {
+                            console.error('WebSocket parse error:', e);
+                        }
                     }
-                }
-            };
+                };
+            }
+
+            connectWebSocket();
         }
         
         // Demo mode

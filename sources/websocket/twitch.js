@@ -2163,19 +2163,37 @@ async function ensureChatClientInstance() {
 		let mod = false;
 		const badgeList = parseBadges(parsedMessage);
 		
-		if (parsedMessage.tags && parsedMessage.tags.badges && typeof parsedMessage.tags.badges === 'string') {
-			const badges = parsedMessage.tags.badges.split(',');
-			badges.forEach(badge => {
-				if (badge.startsWith('subscriber/')) {
-					subscriber = getSubscriberLabel();
-					const months = badge.split('/')[1];
-					if (months && months !== "0") {
-						subtitle = months + (months === "1" ? "-Month" : "-Months");
+		if (parsedMessage.tags) {
+			const badgeSources = [];
+			if (typeof parsedMessage.tags.badges === 'string') {
+				badgeSources.push(parsedMessage.tags.badges);
+			}
+			if (typeof parsedMessage.tags['source-badges'] === 'string') {
+				badgeSources.push(parsedMessage.tags['source-badges']);
+			}
+			badgeSources.forEach(badgeSource => {
+				badgeSource.split(',').forEach(badge => {
+					if (!subscriber && badge.startsWith('subscriber/')) {
+						subscriber = getSubscriberLabel();
+						const months = badge.split('/')[1];
+						if (months && months !== "0") {
+							subtitle = months + (months === "1" ? "-Month" : "-Months");
+						}
+					} else if (badge.startsWith('moderator/') || badge.startsWith('broadcaster/')) {
+						mod = true;
 					}
-				} else if (badge.startsWith('moderator/') || badge.startsWith('broadcaster/')) {
-					mod = true;
-				}
+				});
 			});
+
+			if (!subscriber && (parsedMessage.tags.subscriber === true || parsedMessage.tags.subscriber === '1' || parsedMessage.tags.subscriber === 'true' || normalizedPayload?.isSubscriber)) {
+				subscriber = getSubscriberLabel();
+				const badgeInfo = parsedMessage.tags['badge-info'] || parsedMessage.tags['source-badge-info'] || '';
+				const subscriberInfo = typeof badgeInfo === 'string' ? badgeInfo.match(/(?:^|,)subscriber\/([^,]+)/) : null;
+				const months = subscriberInfo && subscriberInfo[1];
+				if (months && months !== "0") {
+					subtitle = months + (months === "1" ? "-Month" : "-Months");
+				}
+			}
 		}
 		
 		const isSubscriptionNoticeContext =
@@ -2384,9 +2402,7 @@ async function ensureChatClientInstance() {
 					: formatTranslation('twitch-resubscribed-message', '{name} resubscribed', { name: displayName });
 				eventData.chatmessage = useTranslatedNoticeText ? subscriptionMessage : (systemMsg || subscriptionMessage);
 				eventData.event = msgId === 'sub' ? 'new_subscriber' : 'resub';
-				if (settings.limitedtwitchmemberchat) {
-					eventData.membership = getSubscriberLabel();
-				}
+				eventData.membership = getSubscriberLabel();
 				if (parsedMessage.trailing) {
 					eventData.chatmessage += " - " + parsedMessage.trailing;
 				}
@@ -2410,9 +2426,7 @@ async function ensureChatClientInstance() {
 					: giftMessage;
 				eventData.chatmessage = useTranslatedNoticeText ? giftMessageWithRecipient : (systemMsg || giftMessageWithRecipient);
 				eventData.event = 'subscription_gift';
-				if (settings.limitedtwitchmemberchat) {
-					eventData.membership = getSubscriberLabel();
-				}
+				eventData.membership = getSubscriberLabel();
 				addEvent(`Gift Sub: ${displayName || 'Anonymous'}`);
 				break;
 				
@@ -3202,7 +3216,7 @@ async function cleanupCurrentConnection() {
 			pushMessage({
 				type: "twitch",
 				event: 'new_subscriber',
-				membership: settings.limitedtwitchmemberchat ? getSubscriberLabel() : "",
+				membership: getSubscriberLabel(),
 				chatmessage: subscribeMessage,
 				chatname: event.user_name,
 				userid: event.user_id,
@@ -3223,7 +3237,7 @@ async function cleanupCurrentConnection() {
 				pushMessage({
 					type: 'twitch',
 					event: 'resub',
-					membership: settings.limitedtwitchmemberchat ? getSubscriberLabel() : "",
+					membership: getSubscriberLabel(),
 					chatname: event.user_name,
 					userid: event.user_id,
 					chatmessage: event.message?.text || formatTranslation('twitch-resubscribed-message', '{name} resubscribed', {
@@ -3244,7 +3258,7 @@ async function cleanupCurrentConnection() {
 				pushMessage({
 					type: "twitch",
 					event: 'subscription_gift',
-					membership: settings.limitedtwitchmemberchat ? getSubscriberLabel() : "",
+					membership: getSubscriberLabel(),
 					chatname: event.user_name,
 					chatmessage: formatTranslation('twitch-gifted-subs-message', '{name} has gifted {total} tier {tier} subs!', {
 						name: event.user_name,

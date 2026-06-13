@@ -3,7 +3,9 @@ const ALERT_CATEGORIES = Object.freeze({
   SUBSCRIPTION: 'subscription',
   DONATION: 'donation',
   BITS: 'bits',
-  RAID: 'raid'
+  RAID: 'raid',
+  AUCTION: 'auction',
+  HYPE: 'hype'
 });
 
 const DEFAULT_ALERT_STYLE = 'twitch';
@@ -13,7 +15,9 @@ const CATEGORY_LABELS = Object.freeze({
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'New Subscriber',
   [ALERT_CATEGORIES.DONATION]: 'New Donation',
   [ALERT_CATEGORIES.BITS]: 'New Cheer',
-  [ALERT_CATEGORIES.RAID]: 'Incoming Raid'
+  [ALERT_CATEGORIES.RAID]: 'Incoming Raid',
+  [ALERT_CATEGORIES.AUCTION]: 'Auction Won',
+  [ALERT_CATEGORIES.HYPE]: 'Hype Train'
 });
 
 const CATEGORY_LABEL_KEYS = Object.freeze({
@@ -21,7 +25,9 @@ const CATEGORY_LABEL_KEYS = Object.freeze({
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'alert-title-new-subscriber',
   [ALERT_CATEGORIES.DONATION]: 'alert-title-new-donation',
   [ALERT_CATEGORIES.BITS]: 'alert-title-new-cheer',
-  [ALERT_CATEGORIES.RAID]: 'alert-title-incoming-raid'
+  [ALERT_CATEGORIES.RAID]: 'alert-title-incoming-raid',
+  [ALERT_CATEGORIES.AUCTION]: 'alert-title-auction-won',
+  [ALERT_CATEGORIES.HYPE]: 'alert-title-hype-train'
 });
 
 const CATEGORY_ACCENTS = Object.freeze({
@@ -29,7 +35,9 @@ const CATEGORY_ACCENTS = Object.freeze({
   [ALERT_CATEGORIES.SUBSCRIPTION]: '#8b5cf6',
   [ALERT_CATEGORIES.DONATION]: '#14f195',
   [ALERT_CATEGORIES.BITS]: '#38bdf8',
-  [ALERT_CATEGORIES.RAID]: '#f59e0b'
+  [ALERT_CATEGORIES.RAID]: '#f59e0b',
+  [ALERT_CATEGORIES.AUCTION]: '#fbbf24',
+  [ALERT_CATEGORIES.HYPE]: '#f43f5e'
 });
 
 const COUNT_EVENTS = new Set([
@@ -72,6 +80,12 @@ const SUBSCRIPTION_EVENTS = new Set([
 const DONATION_EVENTS = new Set([
   'donation',
   'gift',              // TikTok gifts, Kick DOM gifts
+  'gift_sent',
+  'gift_message',
+  'live_gift',
+  'tiktok_gift',
+  'title_gifter',
+  'top_gifter',
   'supersticker',
   'thankyou',
   'jeweldonation',
@@ -80,6 +94,9 @@ const DONATION_EVENTS = new Set([
 ]);
 const BITS_EVENTS = new Set(['cheer', 'bits']);
 const RAID_EVENTS = new Set(['raid', 'host', 'hosting', 'redirect']);
+const AUCTION_EVENTS = new Set(['auction_update']);
+const HYPE_EVENTS = new Set(['hype_train']);
+const AUCTION_WIN_STATUSES = new Set(['won', 'sold', 'winner']);
 
 const EVENT_ALIASES = Object.freeze({
   'channel_subscription_gifts': 'subscription_gift',
@@ -96,6 +113,13 @@ const EVENT_ALIASES = Object.freeze({
   'super_chat': 'donation',
   'superchat': 'donation',
   'super_sticker': 'supersticker',
+  'gift_send': 'gift_sent',
+  'gift_sent_to_user': 'gift_sent',
+  'gift_message': 'gift',
+  'live_gift': 'gift',
+  'tiktok_gift': 'gift',
+  'title_gifter': 'gift',
+  'top_gifter': 'gift',
   'channel_cheer': 'cheer',
   'channel_raid': 'raid',
   'new-subscriber': 'new_subscriber',
@@ -158,7 +182,9 @@ const CATEGORY_STYLE_PARAMS = {
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'substyle',
   [ALERT_CATEGORIES.DONATION]: 'donostyle',
   [ALERT_CATEGORIES.BITS]: 'bitsstyle',
-  [ALERT_CATEGORIES.RAID]: 'raidstyle'
+  [ALERT_CATEGORIES.RAID]: 'raidstyle',
+  [ALERT_CATEGORIES.AUCTION]: 'auctionstyle',
+  [ALERT_CATEGORIES.HYPE]: 'hypestyle'
 };
 
 const CATEGORY_DISABLE_PARAMS = {
@@ -169,12 +195,20 @@ const CATEGORY_DISABLE_PARAMS = {
   [ALERT_CATEGORIES.RAID]: 'disableraids'
 };
 
+// Opt-in categories: hidden unless the enable param is present in the URL
+const CATEGORY_OPT_IN_PARAMS = {
+  [ALERT_CATEGORIES.AUCTION]: 'auctionwins',
+  [ALERT_CATEGORIES.HYPE]: 'hypetrain'
+};
+
 const CATEGORY_SOUND_PARAMS = {
   [ALERT_CATEGORIES.FOLLOW]: 'followsound',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'subsound',
   [ALERT_CATEGORIES.DONATION]: 'donosound',
   [ALERT_CATEGORIES.BITS]: 'bitssound',
-  [ALERT_CATEGORIES.RAID]: 'raidsound'
+  [ALERT_CATEGORIES.RAID]: 'raidsound',
+  [ALERT_CATEGORIES.AUCTION]: 'auctionsound',
+  [ALERT_CATEGORIES.HYPE]: 'hypesound'
 };
 
 const SOURCE_ICON_MAP = {
@@ -194,14 +228,19 @@ const SOURCE_ICON_MAP = {
 
 const settings = readSettings();
 const recentPayloads = [];
+const hypeTrainLevels = {};
+let lastAuctionWinSignature = '';
 
 const state = {
   iframe: null,
   socket: null,
   queue: [],
   currentAlert: null,
+  currentAlertNode: null,
+  alertSequence: 0,
   showTimer: null,
   cleanupTimer: null,
+  watchdogTimer: null,
   cooldownTimer: null,
   reconnectTimer: null,
   blockedUntil: 0,
@@ -209,7 +248,9 @@ const state = {
   activeOscillator: null,
   activeGain: null,
   lastAudioTime: 0,
-  audioKeepAlive: null
+  audioKeepAlive: null,
+  audioUnlocked: false,
+  statusTimer: null
 };
 
 const elements = {
@@ -220,6 +261,7 @@ const elements = {
 
 applyPagePresentation();
 attachWindowListeners();
+attachAudioUnlockListeners();
 if (settings.previewOnly) {
   updateStatus('Preview ready');
 }
@@ -250,6 +292,35 @@ function normalizeText(value) {
 
 function normalizeKey(value) {
   return normalizeText(value).toLowerCase();
+}
+
+function pickFirstText(candidates) {
+  for (const candidate of candidates) {
+    const normalized = normalizeText(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return '';
+}
+
+function pickNameFromValue(value) {
+  if (!value) {
+    return '';
+  }
+  if (typeof value !== 'object') {
+    return normalizeText(value);
+  }
+  return pickFirstText([
+    value.nickname,
+    value.displayName,
+    value.display_name,
+    value.uniqueId,
+    value.unique_id,
+    value.username,
+    value.userName,
+    value.name
+  ]);
 }
 
 function getTranslation(key, fallback = '') {
@@ -464,25 +535,59 @@ function pickEventKey(payload = {}) {
 }
 
 function pickDonationLabel(payload = {}) {
-  return normalizeText(
-    payload.hasDonation ||
-      payload.donation ||
-      payload.meta?.hasDonation ||
-      payload.meta?.donation
-  );
+  const directLabel = pickFirstText([
+    payload.hasDonation,
+    payload.donation,
+    payload.meta?.hasDonation,
+    payload.meta?.donation
+  ]);
+  if (directLabel) {
+    return directLabel;
+  }
+
+  const giftName = pickGiftName(payload);
+  if (!giftName) {
+    return '';
+  }
+
+  const giftCount = pickGiftCount(payload);
+  return giftCount > 1 ? `${giftName} x${giftCount}` : giftName;
 }
 
 function buildRecentPayloadSignature(payload = {}) {
+  const eventKey = pickEventKey(payload);
+  if (isGiftEventKey(eventKey)) {
+    return [
+      'gift',
+      pickSourceKey(payload),
+      pickActorName(payload),
+      pickGiftRecipient(payload),
+      pickGiftName(payload),
+      normalizeText(payload.contentimg || payload.contentImage || payload.meta?.contentimg || payload.meta?.mediaUrl),
+      normalizeGiftSignatureText(payload.chatmessage)
+    ].join('|');
+  }
+
   return [
-    pickEventKey(payload),
+    eventKey,
     pickSourceKey(payload),
     normalizeText(payload.chatname),
     normalizeText(payload.chatmessage),
     pickDonationLabel(payload),
     normalizeText(payload.membership),
     normalizeText(payload.contentimg),
-    normalizeText(payload.id || payload.meta?.eventId || payload.meta?.id)
+    normalizeText(payload.id || payload.meta?.eventId || payload.meta?.id),
+    normalizeText(payload.meta?.status),
+    normalizeText(payload.meta?.level)
   ].join('|');
+}
+
+function normalizeGiftSignatureText(value) {
+  return normalizeText(value)
+    .replace(/\s*[x\u00d7]\s*\d+\b/gi, '')
+    .replace(/\b\d+\s*(coins?|gifts?)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function isDuplicateAlertPayload(payload = {}) {
@@ -510,7 +615,212 @@ function isDuplicateAlertPayload(payload = {}) {
   return false;
 }
 
+function pickGiftActorName(payload = {}) {
+  const candidates = [
+    payload.gifter,
+    payload.gifterName,
+    payload.senderName,
+    payload.fromUser,
+    payload.from,
+    payload.meta?.gifter,
+    payload.meta?.gifterName,
+    payload.meta?.senderName,
+    payload.meta?.fromUser,
+    payload.meta?.from,
+    payload.raw?.gifter,
+    payload.raw?.sender,
+    payload.raw?.user,
+    payload.raw?.fromUser,
+    payload.raw?.from_user
+  ];
+  for (const candidate of candidates) {
+    const normalized = pickNameFromValue(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return '';
+}
+
+function pickGiftRecipient(payload = {}) {
+  const candidates = [
+    payload.recipient,
+    payload.recipientName,
+    payload.giftRecipient,
+    payload.giftRecipientName,
+    payload.receiver,
+    payload.receiverName,
+    payload.targetUser,
+    payload.targetUsername,
+    payload.toUser,
+    payload.to_user,
+    payload.meta?.recipient,
+    payload.meta?.recipientName,
+    payload.meta?.giftRecipient,
+    payload.meta?.giftRecipientName,
+    payload.meta?.receiver,
+    payload.meta?.receiverName,
+    payload.meta?.targetUser,
+    payload.meta?.targetUsername,
+    payload.meta?.toUser,
+    payload.meta?.to_user,
+    payload.raw?.recipient,
+    payload.raw?.recipientName,
+    payload.raw?.giftRecipient,
+    payload.raw?.giftRecipientName,
+    payload.raw?.receiver,
+    payload.raw?.receiverName,
+    payload.raw?.targetUser,
+    payload.raw?.targetUsername,
+    payload.raw?.toUser,
+    payload.raw?.to_user
+  ];
+  for (const candidate of candidates) {
+    const normalized = pickNameFromValue(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return '';
+}
+
+function pickGiftTitleGifter(payload = {}) {
+  const explicitLabel = pickFirstText([
+    payload.titleGifter,
+    payload.title_gifter,
+    payload.gifterTitle,
+    payload.gifter_title,
+    payload.topGifter,
+    payload.top_gifter,
+    payload.topGifterTitle,
+    payload.top_gifter_title,
+    payload.meta?.titleGifter,
+    payload.meta?.title_gifter,
+    payload.meta?.gifterTitle,
+    payload.meta?.gifter_title,
+    payload.meta?.topGifter,
+    payload.meta?.top_gifter,
+    payload.meta?.topGifterTitle,
+    payload.meta?.top_gifter_title,
+    payload.raw?.titleGifter,
+    payload.raw?.title_gifter,
+    payload.raw?.gifterTitle,
+    payload.raw?.gifter_title,
+    payload.raw?.topGifter,
+    payload.raw?.top_gifter,
+    payload.raw?.topGifterTitle,
+    payload.raw?.top_gifter_title
+  ]);
+  if (explicitLabel) {
+    return explicitLabel;
+  }
+
+  const rankCandidates = [
+    payload.topGifterRank,
+    payload.top_gifter_rank,
+    payload.meta?.topGifterRank,
+    payload.meta?.top_gifter_rank,
+    payload.raw?.topGifterRank,
+    payload.raw?.top_gifter_rank
+  ];
+  for (const candidate of rankCandidates) {
+    const rank = Number(candidate);
+    if (Number.isFinite(rank) && rank > 0) {
+      return `Top gifter #${Math.floor(rank)}`;
+    }
+  }
+  return '';
+}
+
+function pickGiftName(payload = {}) {
+  const gift = payload.gift || payload.extendedGiftInfo || payload.extended_gift_info || {};
+  const metaGift = payload.meta?.gift || payload.meta?.extendedGiftInfo || payload.meta?.extended_gift_info || {};
+  const rawGift = payload.raw?.gift || payload.raw?.extendedGiftInfo || payload.raw?.extended_gift_info || {};
+  return pickFirstText([
+    payload.giftName,
+    payload.gift_name,
+    payload.giftTitle,
+    payload.gift_title,
+    payload.title,
+    payload.meta?.giftName,
+    payload.meta?.gift_name,
+    payload.meta?.giftTitle,
+    payload.meta?.gift_title,
+    payload.meta?.title,
+    gift.giftName,
+    gift.gift_name,
+    gift.name,
+    gift.title,
+    metaGift.giftName,
+    metaGift.gift_name,
+    metaGift.name,
+    metaGift.title,
+    rawGift.giftName,
+    rawGift.gift_name,
+    rawGift.name,
+    rawGift.title
+  ]);
+}
+
+function pickGiftCount(payload = {}) {
+  const gift = payload.gift || payload.extendedGiftInfo || payload.extended_gift_info || {};
+  const metaGift = payload.meta?.gift || payload.meta?.extendedGiftInfo || payload.meta?.extended_gift_info || {};
+  const rawGift = payload.raw?.gift || payload.raw?.extendedGiftInfo || payload.raw?.extended_gift_info || {};
+  const candidates = [
+    payload.repeatCount,
+    payload.repeat_count,
+    payload.combo,
+    payload.count,
+    payload.quantity,
+    payload.meta?.repeatCount,
+    payload.meta?.repeat_count,
+    payload.meta?.comboCount,
+    payload.meta?.combo_count,
+    payload.meta?.groupCount,
+    payload.meta?.group_count,
+    payload.meta?.count,
+    payload.meta?.quantity,
+    gift.repeatCount,
+    gift.repeat_count,
+    gift.combo,
+    gift.count,
+    gift.quantity,
+    metaGift.repeatCount,
+    metaGift.repeat_count,
+    metaGift.combo,
+    metaGift.count,
+    metaGift.quantity,
+    rawGift.repeatCount,
+    rawGift.repeat_count,
+    rawGift.combo,
+    rawGift.count,
+    rawGift.quantity
+  ];
+  for (const candidate of candidates) {
+    const numberValue = Number(candidate);
+    if (Number.isFinite(numberValue) && numberValue > 1) {
+      return numberValue;
+    }
+  }
+  return 1;
+}
+
+function isGiftEventKey(eventKey) {
+  return eventKey === 'gift' ||
+    eventKey === 'gift_sent' ||
+    eventKey === 'giftpurchase' ||
+    eventKey === 'giftredemption' ||
+    eventKey === 'subscription_gift';
+}
+
 function pickActorName(payload = {}) {
+  if (isGiftEventKey(pickEventKey(payload))) {
+    const giftActor = pickGiftActorName(payload);
+    if (giftActor) {
+      return giftActor;
+    }
+  }
+
   const candidates = [
     payload.chatname,
     payload.meta?.supporter,
@@ -537,6 +847,110 @@ function pickSubtitle(payload = {}) {
       payload.meta?.plan ||
       payload.meta?.level
   );
+}
+
+function buildAlertSubtitle(category, payload = {}, eventKey = '', actor = '') {
+  if (category === ALERT_CATEGORIES.AUCTION) {
+    return pickFirstText([
+      payload.meta?.bidsText,
+      Number(payload.meta?.bids) > 0 ? `${payload.meta.bids} bids` : ''
+    ]);
+  }
+  if (category === ALERT_CATEGORIES.HYPE) {
+    const hypeParts = [];
+    if (payload.meta?.isSharedTrain) {
+      hypeParts.push(getTranslation('alert-shared-hype-train', 'Shared Hype Train'));
+    }
+    const trainType = normalizeKey(payload.meta?.trainType);
+    if (trainType && trainType !== 'regular') {
+      hypeParts.push(formatTranslation('alert-train-type', '{type} Train', { type: humanizeKey(trainType) }));
+    }
+    return hypeParts.join(' - ');
+  }
+
+  const parts = [];
+  const baseSubtitle = pickSubtitle(payload);
+  if (baseSubtitle) {
+    parts.push(baseSubtitle);
+  }
+
+  if (category === ALERT_CATEGORIES.DONATION && isGiftEventKey(eventKey)) {
+    const recipient = pickGiftRecipient(payload);
+    const recipientKey = normalizeKey(recipient);
+    const actorKey = normalizeKey(actor);
+    if (recipient && recipientKey !== actorKey && !normalizeKey(parts.join(' ')).includes(recipientKey)) {
+      parts.push(formatTranslation('alert-gift-recipient', 'To {recipient}', { recipient }));
+    }
+
+    const titleGifter = pickGiftTitleGifter(payload);
+    if (titleGifter && !normalizeKey(parts.join(' ')).includes(normalizeKey(titleGifter))) {
+      parts.push(titleGifter);
+    }
+  }
+
+  return parts.join(' - ');
+}
+
+function pickAuctionWinnerName(payload = {}) {
+  const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : {};
+  return pickFirstText([
+    meta.winnerName,
+    meta.winner,
+    meta.bidder,
+    payload.chatname
+  ]);
+}
+
+function pickAuctionPriceLabel(payload = {}) {
+  const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : {};
+  const priceText = pickFirstText([meta.priceText, meta.price, meta.soldPrice]);
+  return priceText;
+}
+
+function isAuctionWinPayload(payload = {}) {
+  const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : {};
+  const status = normalizeKey(meta.status);
+  const statusText = normalizeKey(meta.statusText);
+  const isWin = AUCTION_WIN_STATUSES.has(status) || /\b(won|sold)\b/.test(statusText);
+  if (!isWin) {
+    return false;
+  }
+  const signature = [
+    normalizeText(meta.id),
+    normalizeText(meta.title),
+    pickAuctionWinnerName(payload),
+    normalizeText(meta.priceText || meta.price)
+  ].join('|');
+  if (signature === lastAuctionWinSignature) {
+    return false;
+  }
+  lastAuctionWinSignature = signature;
+  return true;
+}
+
+function pickHypeLevel(payload = {}) {
+  const level = Number(payload.meta?.level);
+  return Number.isFinite(level) && level > 0 ? Math.floor(level) : 0;
+}
+
+function shouldAlertHypeTrain(payload = {}) {
+  const meta = payload.meta && typeof payload.meta === 'object' ? payload.meta : {};
+  const trainId = normalizeText(meta.id) || `${pickSourceKey(payload)}-train`;
+  const phase = normalizeKey(meta.phase);
+  if (phase === 'end') {
+    delete hypeTrainLevels[trainId];
+    return false;
+  }
+  const level = pickHypeLevel(payload);
+  if (!level) {
+    return false;
+  }
+  const lastLevel = hypeTrainLevels[trainId] || 0;
+  if (level <= lastLevel) {
+    return false;
+  }
+  hypeTrainLevels[trainId] = level;
+  return true;
 }
 
 function pickViewerCount(payload = {}) {
@@ -695,6 +1109,13 @@ function inferCategory(payload = {}) {
     return null;
   }
 
+  if (AUCTION_EVENTS.has(eventKey)) {
+    return isAuctionWinPayload(payload) ? ALERT_CATEGORIES.AUCTION : null;
+  }
+  if (HYPE_EVENTS.has(eventKey)) {
+    return shouldAlertHypeTrain(payload) ? ALERT_CATEGORIES.HYPE : null;
+  }
+
   const donationLabel = normalizeKey(pickDonationLabel(payload));
   const genericEvent = isGenericEventKey(eventKey);
 
@@ -733,8 +1154,24 @@ function inferCategory(payload = {}) {
   return null;
 }
 
-function buildHeadline(category, eventKey, actor, amount, viewerCount) {
+function buildHeadline(category, eventKey, actor, amount, viewerCount, payload = {}) {
   switch (category) {
+    case ALERT_CATEGORIES.AUCTION:
+      return {
+        lead: actor,
+        tail: amount
+          ? formatTranslation('alert-won-auction-for', 'won the auction for {amount}', { amount })
+          : getTranslation('alert-won-auction', 'won the auction')
+      };
+    case ALERT_CATEGORIES.HYPE: {
+      const level = pickHypeLevel(payload);
+      return {
+        lead: actor,
+        tail: level
+          ? formatTranslation('alert-hype-reached-level', 'reached Level {level}', { level })
+          : getTranslation('alert-hype-started', 'has started')
+      };
+    }
     case ALERT_CATEGORIES.FOLLOW:
       return { lead: actor, tail: getTranslation('alert-just-followed', 'just followed') };
     case ALERT_CATEGORIES.SUBSCRIPTION:
@@ -757,7 +1194,7 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount) {
       }
       return { lead: actor, tail: getTranslation('alert-just-subscribed', 'just subscribed') };
     case ALERT_CATEGORIES.DONATION:
-      if (eventKey === 'gift') {
+      if (isGiftEventKey(eventKey)) {
         return {
           lead: actor,
           tail: amount
@@ -791,7 +1228,7 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount) {
 }
 
 function buildTitle(category, eventKey) {
-  if (category === ALERT_CATEGORIES.DONATION && eventKey === 'gift') {
+  if (category === ALERT_CATEGORIES.DONATION && isGiftEventKey(eventKey)) {
     return getTranslation('alert-title-new-gift', 'New Gift');
   }
   return getCategoryLabel(category) || getTranslation('alert-title-new-alert', 'New Alert');
@@ -802,14 +1239,36 @@ function buildBodyText(category, payload, viewerCount) {
   const rawMessage = normalizeText(payload.chatmessage);
   const subtitle = pickSubtitle(payload);
 
+  if (category === ALERT_CATEGORIES.AUCTION) {
+    const itemTitle = normalizeText(payload.meta?.title);
+    if (itemTitle) {
+      return itemTitle;
+    }
+    return normalizeText(payload.meta?.statusText) || getTranslation('alert-auction-closed', 'The auction just closed.');
+  }
+  if (category === ALERT_CATEGORIES.HYPE) {
+    const progress = Number(payload.meta?.progress);
+    const goal = Number(payload.meta?.goal);
+    if (Number.isFinite(progress) && Number.isFinite(goal) && goal > 0) {
+      return formatTranslation('alert-hype-progress', '{progress} / {goal} toward the next level', { progress, goal });
+    }
+    return getTranslation('alert-hype-rolling', 'The hype train is rolling!');
+  }
   if (category === ALERT_CATEGORIES.RAID && viewerCount) {
     return rawMessage || formatTranslation('alert-welcome-raid-from', 'Welcome the raid from {name}.', {
       name: pickActorName(payload)
     });
   }
   if (category === ALERT_CATEGORIES.DONATION) {
-    if (eventKey === 'gift') {
-      return rawMessage || getTranslation('alert-gift-landed', 'A gift just landed.');
+    if (isGiftEventKey(eventKey)) {
+      if (rawMessage) {
+        return rawMessage;
+      }
+      const recipient = pickGiftRecipient(payload);
+      if (recipient) {
+        return formatTranslation('alert-gift-sent-to', 'Gift sent to {recipient}.', { recipient });
+      }
+      return getTranslation('alert-gift-landed', 'A gift just landed.');
     }
     return rawMessage || getTranslation('alert-thanks-support', 'Thank you for the support!');
   }
@@ -853,9 +1312,15 @@ function buildAlertViewModel(payload = {}) {
     return null;
   }
   const sourceLabel = SOURCE_LABELS[sourceKey] || humanizeKey(sourceKey);
-  const actor = pickActorName(payload);
-  const amount = pickDonationLabel(payload);
-  const subtitle = pickSubtitle(payload);
+  let actor = pickActorName(payload);
+  let amount = pickDonationLabel(payload);
+  if (category === ALERT_CATEGORIES.AUCTION) {
+    actor = pickAuctionWinnerName(payload) || actor;
+    amount = pickAuctionPriceLabel(payload);
+  } else if (category === ALERT_CATEGORIES.HYPE) {
+    actor = getTranslation('alert-hype-train', 'Hype Train');
+  }
+  const subtitle = buildAlertSubtitle(category, payload, eventKey, actor);
   const viewerCount = pickViewerCount(payload);
   const mediaUrl = pickMediaUrl(payload);
   const cashValue = pickCashValue(payload, amount, sourceKey);
@@ -863,7 +1328,7 @@ function buildAlertViewModel(payload = {}) {
     log('value alert skipped below minimum', { amount, cashValue, minimum: settings.minDonationValue, payload });
     return null;
   }
-  const headline = buildHeadline(category, eventKey, actor, amount, viewerCount);
+  const headline = buildHeadline(category, eventKey, actor, amount, viewerCount, payload);
   const bodyText = buildBodyText(category, payload, viewerCount);
 
   return {
@@ -902,7 +1367,9 @@ function pickMockUser(category) {
     [ALERT_CATEGORIES.SUBSCRIPTION]: 1,
     [ALERT_CATEGORIES.DONATION]: 2,
     [ALERT_CATEGORIES.BITS]: 4,
-    [ALERT_CATEGORIES.RAID]: 3
+    [ALERT_CATEGORIES.RAID]: 3,
+    [ALERT_CATEGORIES.AUCTION]: 2,
+    [ALERT_CATEGORIES.HYPE]: 1
   })[category] ?? 0;
   return MOCK_USERS[index];
 }
@@ -966,6 +1433,46 @@ function createMockAlertPayload(category, overrides = {}) {
         chatmessage: 'Raiding with 42 viewers!',
         contentimg: createMediaPreviewDataUri('RAID', accent),
         meta: { viewers: 42, fromLogin: baseName.toLowerCase() }
+      };
+      break;
+    case ALERT_CATEGORIES.AUCTION:
+      payload = {
+        ...common,
+        type: 'whatnot',
+        platform: 'whatnot',
+        chatname: '',
+        chatimg: '',
+        event: 'auction_update',
+        contentimg: createMediaPreviewDataUri('SOLD', accent),
+        meta: {
+          id: `preview-auction-${Date.now()}`,
+          status: 'won',
+          statusText: `${baseName} won!`,
+          bidder: baseName,
+          title: '500 Spot Silver Slab Mega Set',
+          price: 88,
+          priceText: '$88',
+          bids: 7,
+          bidsText: '7 Bids'
+        }
+      };
+      break;
+    case ALERT_CATEGORIES.HYPE:
+      payload = {
+        ...common,
+        chatname: '',
+        chatimg: '',
+        event: 'hype_train',
+        contentimg: createMediaPreviewDataUri('HYPE', accent),
+        meta: {
+          id: `preview-hype-${Date.now()}`,
+          phase: 'progress',
+          level: 3,
+          progress: 120,
+          goal: 400,
+          total: 1320,
+          trainType: 'regular'
+        }
       };
       break;
     default:
@@ -1050,6 +1557,9 @@ function readSettings() {
   const disabledCategories = {};
   Object.entries(CATEGORY_DISABLE_PARAMS).forEach(([category, paramName]) => {
     disabledCategories[category] = urlParams.has(paramName);
+  });
+  Object.entries(CATEGORY_OPT_IN_PARAMS).forEach(([category, paramName]) => {
+    disabledCategories[category] = !urlParams.has(paramName);
   });
 
   const hasServer = urlParams.has('server');
@@ -1170,7 +1680,7 @@ function setupBridgeIframe() {
   state.iframe = document.createElement('iframe');
   state.iframe.src =
     `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(settings.password)}` +
-    `&push&label=alerts&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(settings.roomID)}`;
+    `&push&label=alerts&view=${encodeURIComponent(settings.roomID)}&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(settings.roomID)}`;
   state.iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;border:0;';
   document.body.appendChild(state.iframe);
 }
@@ -1358,9 +1868,27 @@ function queueAlert(model) {
   displayAlert(model);
 }
 
+function clearDisplayTimers() {
+  if (state.showTimer) {
+    window.clearTimeout(state.showTimer);
+    state.showTimer = null;
+  }
+  if (state.cleanupTimer) {
+    window.clearTimeout(state.cleanupTimer);
+    state.cleanupTimer = null;
+  }
+  if (state.watchdogTimer) {
+    window.clearTimeout(state.watchdogTimer);
+    state.watchdogTimer = null;
+  }
+}
+
 function displayAlert(model, options = {}) {
+  clearDisplayTimers();
   const card = renderAlert(model);
+  const alertToken = ++state.alertSequence;
   state.currentAlert = model;
+  state.currentAlertNode = card;
   elements.stage.innerHTML = '';
   elements.stage.appendChild(card);
   elements.stage.classList.add('has-alert');
@@ -1386,19 +1914,35 @@ function displayAlert(model, options = {}) {
   const hideLead = Math.min(550, Math.max(280, Math.round(effectiveShowTime * 0.16)));
 
   state.showTimer = window.setTimeout(() => {
-    card.classList.add('is-hiding');
+    state.showTimer = null;
+    if (state.alertSequence === alertToken && card.isConnected) {
+      card.classList.add('is-hiding');
+    }
   }, Math.max(0, effectiveShowTime - hideLead));
 
   state.cleanupTimer = window.setTimeout(() => {
-    finalizeAlert(card);
+    state.cleanupTimer = null;
+    finalizeAlert(card, alertToken);
   }, effectiveShowTime);
+
+  state.watchdogTimer = window.setTimeout(() => {
+    state.watchdogTimer = null;
+    finalizeAlert(card, alertToken);
+  }, effectiveShowTime + Math.max(1500, settings.cooldown + 1000));
 }
 
-function finalizeAlert(card) {
+function finalizeAlert(card, alertToken) {
+  if (alertToken && state.alertSequence !== alertToken) {
+    return;
+  }
+  clearDisplayTimers();
   if (card?.isConnected) {
     card.remove();
+  } else if (state.currentAlertNode?.isConnected) {
+    state.currentAlertNode.remove();
   }
   state.currentAlert = null;
+  state.currentAlertNode = null;
   elements.stage.classList.remove('has-alert');
 
   const effectiveCooldown = state.queue.length > 3 ? Math.min(settings.cooldown, 200) : settings.cooldown;
@@ -1424,14 +1968,7 @@ function processQueue() {
 }
 
 function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
-  if (state.showTimer) {
-    window.clearTimeout(state.showTimer);
-    state.showTimer = null;
-  }
-  if (state.cleanupTimer) {
-    window.clearTimeout(state.cleanupTimer);
-    state.cleanupTimer = null;
-  }
+  clearDisplayTimers();
   if (state.cooldownTimer) {
     window.clearTimeout(state.cooldownTimer);
     state.cooldownTimer = null;
@@ -1444,6 +1981,8 @@ function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
     TTS.clearQueue();
   }
   state.currentAlert = null;
+  state.currentAlertNode = null;
+  state.alertSequence += 1;
   elements.stage.innerHTML = '';
   elements.stage.classList.remove('has-alert');
   if (!preserveCooldown) {
@@ -1644,9 +2183,28 @@ function shouldRenderBodyText(model) {
   return bodyText.toLowerCase() !== combinedHeadline;
 }
 
-function updateStatus(text) {
+function updateStatus(text, autoHideMs) {
   if (!elements.status) return;
+  if (state.statusTimer) {
+    clearTimeout(state.statusTimer);
+    state.statusTimer = null;
+  }
   elements.status.textContent = text;
+  if (autoHideMs) {
+    state.statusTimer = setTimeout(function () {
+      if (elements.status && elements.status.textContent === text) {
+        elements.status.textContent = '';
+      }
+      state.statusTimer = null;
+    }, autoHideMs);
+  }
+}
+
+function clearBlockedAudioStatus() {
+  if (!elements.status) return;
+  if (/^Audio blocked/.test(elements.status.textContent || '')) {
+    updateStatus('');
+  }
 }
 
 function clearActiveGeneratedSound(oscillator = null, gain = null) {
@@ -1720,16 +2278,52 @@ function ensureAudioContext() {
   if (!state.audioContext) {
     state.audioContext = new AudioContextCtor();
   }
-  if (state.audioContext.state === 'suspended') {
-    state.audioContext.resume();
-  }
   return state.audioContext;
+}
+
+async function resumeAudioContext() {
+  var ctx = ensureAudioContext();
+  if (!ctx) return null;
+  if (ctx.state === 'suspended' && ctx.resume) {
+    try {
+      await ctx.resume();
+    } catch (error) {
+      log('audio context resume failed', error);
+    }
+  }
+  if (ctx.state === 'running') {
+    state.audioUnlocked = true;
+    clearBlockedAudioStatus();
+  }
+  return ctx;
+}
+
+function attachAudioUnlockListeners() {
+  var eventNames = ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'];
+  var unlock = function () {
+    resumeAudioContext().then(function (ctx) {
+      if (ctx && ctx.state === 'running') {
+        audioKeepAliveBlip();
+        eventNames.forEach(function (eventName) {
+          window.removeEventListener(eventName, unlock);
+        });
+      }
+    });
+  };
+  eventNames.forEach(function (eventName) {
+    window.addEventListener(eventName, unlock, { passive: true });
+  });
 }
 
 function audioKeepAliveBlip() {
   try {
-    var ctx = ensureAudioContext();
+    var ctx = state.audioContext || ensureAudioContext();
     if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      resumeAudioContext();
+      return;
+    }
+    if (ctx.state !== 'running') return;
     var buf = ctx.createBuffer(1, ctx.sampleRate * 0.02, ctx.sampleRate);
     var src = ctx.createBufferSource();
     src.buffer = buf;
@@ -1752,8 +2346,8 @@ async function primeAudioPipeline() {
   var now = Date.now();
   if (state.lastAudioTime && (now - state.lastAudioTime < PRIME_STALE_MS)) return;
   try {
-    var ctx = ensureAudioContext();
-    if (!ctx) return;
+    var ctx = await resumeAudioContext();
+    if (!ctx || ctx.state !== 'running') return;
     var buf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
     var src = ctx.createBufferSource();
     src.buffer = buf;
@@ -1766,6 +2360,13 @@ async function primeAudioPipeline() {
     state.lastAudioTime = Date.now();
   } catch (e) {
     log('audio prime failed', e);
+  }
+}
+
+function noteBlockedAudio(error) {
+  var name = error && error.name ? String(error.name) : '';
+  if (name === 'NotAllowedError' || name === 'AbortError') {
+    updateStatus('Audio blocked - click the overlay once to enable sound', 5000);
   }
 }
 
@@ -1802,15 +2403,21 @@ async function playAlertSound(model) {
       state.lastAudioTime = Date.now();
       return;
     } catch (error) {
+      noteBlockedAudio(error);
       log('custom beep failed', error);
     }
   }
 
   try {
+    var ctx = await resumeAudioContext();
+    if (!ctx || ctx.state !== 'running') {
+      updateStatus('Audio blocked - click the overlay once to enable sound', 5000);
+      return;
+    }
     await primeAudioPipeline();
 
-    const oscillator = state.audioContext.createOscillator();
-    const gain = state.audioContext.createGain();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
     oscillator.connect(gain);
     gain.connect(state.audioContext.destination);
     state.activeOscillator = oscillator;
@@ -1821,10 +2428,12 @@ async function playAlertSound(model) {
       [ALERT_CATEGORIES.SUBSCRIPTION]: 620,
       [ALERT_CATEGORIES.DONATION]: 720,
       [ALERT_CATEGORIES.BITS]: 840,
-      [ALERT_CATEGORIES.RAID]: 460
+      [ALERT_CATEGORIES.RAID]: 460,
+      [ALERT_CATEGORIES.AUCTION]: 900,
+      [ALERT_CATEGORIES.HYPE]: 760
     })[model.category] || 580;
 
-    const now = state.audioContext.currentTime;
+    const now = ctx.currentTime;
     oscillator.type = model.category === ALERT_CATEGORIES.RAID ? 'triangle' : 'sine';
     oscillator.frequency.setValueAtTime(baseFrequency, now);
     oscillator.frequency.exponentialRampToValueAtTime(baseFrequency * 1.18, now + 0.08);

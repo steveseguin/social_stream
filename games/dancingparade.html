@@ -455,25 +455,36 @@
         console.log('Bot response:', message);
     }
     
+    function stripHtml(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
     function processData(data) {
         if (data.content) {
             data = data.content;
         }
-        
+
         if (!data.chatmessage || !data.chatname) return;
-        
-        const message = data.chatmessage.trim().toLowerCase();
-        
+
+        let rawMessage = data.chatmessage;
+        if (!data.textonly) {
+            rawMessage = stripHtml(rawMessage);
+        }
+        const message = rawMessage.trim().toLowerCase();
+        const username = stripHtml(data.chatname);
+
         if (message === '!join') {
-            addDancer(data.chatname);
+            addDancer(username);
         } else if (message === '!dance') {
-            makeDance(data.chatname);
+            makeDance(username);
         } else if (message === '!leave') {
-            const dancer = dancers.get(data.chatname);
+            const dancer = dancers.get(username);
             if (dancer) {
                 dancer.remove();
-                dancers.delete(data.chatname);
-                sendResponse(`${data.chatname} left the parade 👋`);
+                dancers.delete(username);
+                sendResponse(`${username} left the parade 👋`);
             }
         }
     }
@@ -512,13 +523,54 @@
     window.addEventListener("message", function(e) {
         if (e.source !== iframe.contentWindow) return;
         
-        if ("dataReceived" in e.data) {
+        if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
             if ("overlayNinja" in e.data.dataReceived) {
                 processData(e.data.dataReceived.overlayNinja);
             }
         }
     });
     
+    // Handle WebSocket if server parameter provided
+    if (urlParams.has('server')) {
+        const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+        let socketserver = null;
+        let reconnectTimeout = null;
+
+        function connectWebSocket() {
+            socketserver = new WebSocket(serverUrl);
+
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({
+                    join: sessionId.split(",")[0],
+                    out: 2,
+                    in: 1
+                }));
+            };
+
+            socketserver.onclose = function() {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = setTimeout(connectWebSocket, 5000);
+            };
+
+            socketserver.onerror = function() {
+                try { socketserver.close(); } catch (e) {}
+            };
+
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+
+        connectWebSocket();
+    }
+
     // Demo mode
     if (urlParams.has('demo')) {
         const demoUsers = ['Dancer1', 'Dancer2', 'Dancer3', 'Groover', 'PartyAnimal'];

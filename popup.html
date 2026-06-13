@@ -35,7 +35,11 @@
     --extension-disabled-background-color: red;
     --extension-disabled-text-color: white;
     --streaming-chat-color: #00a6ff;
+    --chat-overlay-template-color: #8b5cf6;
     --single-message-color: #ff7f00;
+    --featured-chat-color: #ff7f00;
+    --multi-alert-color: #ef4444;
+    --reactions-color: #ec4899;
     --emotes-wall-color: #d7b300;
 	--tipjar-color: #35d0ff;
 	--chatbot-wall-color: #ff0000;
@@ -47,6 +51,7 @@
 	--poll-color: #61b700dd;
 	--poll-color: #D16700dd;
 	--credits-color: #02a0aa;
+	--meta-color: #475569;
 	--leaderboard-color: #9b59b6;
 	--scoreboard-color: #e74c3c;
     --download-link: blue;
@@ -84,12 +89,17 @@
         --extension-disabled-background-color: #781717;
         --extension-disabled-text-color: white;
         --streaming-chat-color: #00a6ffdd;
+        --chat-overlay-template-color: #c084fc;
         --single-message-color: #ff7f00dd;
+        --featured-chat-color: #ff9f1c;
+        --multi-alert-color: #f87171;
+        --reactions-color: #f472b6;
         --emotes-wall-color: #ffd400dd;
         --hype-meter-color: #00ff5edd;
         --waitlist-color: #ff00d2dd;
 		--ticker-color: #dd3334dd;
 		--poll-color: #a3ff3bdd;
+		--meta-color: #94a3b8;
         --download-link: lightblue;
 		--eventsdashboard-color: white;
     }
@@ -541,12 +551,47 @@ body {
     opacity: 0;
 }
 
+.popup-search-hidden {
+    display: none !important;
+}
+
 body.extension-disabled {
     background-color: var(--body-background-disabled);
 }
 
 body.extension-enabled {
     background-color: var(--body-background-enabled);
+}
+body.beginner-mode .beginner-advanced {
+    display: none !important;
+}
+
+body.beginner-mode .link.beginner-basic > h2 .options-link,
+body.beginner-mode .generic_category_title.beginner-basic > h2 .options-link {
+	display: none !important;
+}
+
+.beginner-section-note {
+	display: none;
+}
+
+body.beginner-mode .beginner-section-note {
+	display: block;
+	margin: -0.2rem 0 0.55rem 0;
+	color: var(--default-text-color);
+	opacity: 0.82;
+	font-size: 0.86rem;
+	line-height: 1.35;
+}
+
+body.beginner-mode .beginner-advanced-option,
+body.beginner-mode .beginner-static-advanced-option {
+	display: none !important;
+}
+
+body.beginner-mode #uploadBadwordsButton,
+body.beginner-mode #deleteBadwordsButton {
+	display: none !important;
 }
 #systemLanguageSelect, #systemLanguageSelect10 {
     max-width: calc(100vw - 106px);
@@ -685,6 +730,45 @@ p a {
     opacity: 1;
 }
 
+#importantChanges.beginner-welcome {
+    padding: 0.75em 1em;
+    background: var(--color-accent-subtle);
+    color: var(--default-text-color);
+    border-bottom: 1px solid rgba(0, 166, 255, 0.45);
+}
+
+#importantChanges.beginner-welcome .beginner-welcome-card {
+    max-width: 640px;
+}
+
+#importantChanges.beginner-welcome strong {
+    display: block;
+    margin-bottom: 2px;
+}
+
+#importantChanges.beginner-welcome small {
+    display: inline;
+    color: var(--default-text-color);
+}
+
+#importantChanges.beginner-welcome button {
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #0969da;
+    background: #0969da;
+    color: #fff;
+    font-size: 0.85em;
+    font-weight: bold;
+    line-height: 1.3;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+#importantChanges.beginner-welcome button:hover {
+    background: #0759b8;
+}
+
 .container {
     padding: 0 0.5em;
 }
@@ -738,6 +822,55 @@ h2 {
 .link {
     margin-bottom: 1em;
     margin: 2em 0 0.5em 0;
+}
+
+.template-selector,
+.chat-overlay-design-note {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.template-selector select {
+    max-width: 100%;
+}
+
+.template-selector-note {
+    display: block;
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+.chat-overlay-design-note,
+.overlay-config-section {
+    color: var(--options-group-text-color);
+}
+
+.chat-overlay-design-note {
+    font-style: italic;
+}
+
+.overlay-config-section h3 {
+    color: var(--section-title-color);
+}
+
+.chat-overlay-theme-options-wrapper .collapsible-input:checked ~ .collapsible-text {
+    background: var(--options-group-background-color);
+    color: var(--options-group-text-color);
+}
+
+.chat-overlay-theme-options-wrapper .options,
+.chat-overlay-theme-options-wrapper .overlay-config-section,
+.chat-overlay-theme-options-wrapper .overlay-config-section span {
+    color: var(--options-group-text-color);
+}
+
+.link .template-selector {
+    max-height: none;
+    overflow: visible;
+    word-break: normal;
 }
 
 .link h2 {
@@ -906,8 +1039,24 @@ h2.streaming_chat_title {
     color: var(--streaming-chat-color);
 }
 
+h2.chat_overlay_template_title {
+    color: var(--chat-overlay-template-color);
+}
+
 h2.single_message_title {
     color: var(--single-message-color);
+}
+
+h2.featured_chat_title {
+    color: var(--featured-chat-color);
+}
+
+h2.multi_alert_title {
+    color: var(--multi-alert-color);
+}
+
+h2.reactions_title {
+    color: var(--reactions-color);
 }
 
 h2.tipjar_title {
@@ -951,6 +1100,10 @@ h2.poll_mode_title {
 
 h2.credits_mode_title {
     color: var(--credits-color);
+}
+
+h2.meta_mode_title {
+    color: var(--meta-color);
 }
 
 h2.leaderboard_mode_title {
@@ -1122,6 +1275,7 @@ input:checked + .slider:before {
 }
 
 .collapsible-text {
+    display: none;
     padding: 0;
     max-height: 1px;
     overflow: hidden;
@@ -1134,6 +1288,7 @@ input:checked + .slider:before {
 }
 
 .collapsible-input:checked ~ .collapsible-text {
+    display: block;
     max-height: none;
     /* padding-bottom: 25px; */
     margin-bottom: 16px;
@@ -1397,6 +1552,44 @@ input:checked + .slider:before {
     top: -7px;
     color: var(--color-accent);
     font-size: 1em;
+}
+
+.textInputWithUpload {
+    display: inline-grid;
+    align-items: center;
+}
+
+.textInputWithUpload .textInput {
+    grid-area: 1 / 1;
+    box-sizing: border-box;
+    height: auto;
+    padding-right: 78px;
+}
+
+.textInputWithUpload .textInput + label {
+    grid-area: 1 / 1;
+    max-width: calc(100% - 86px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.textInputWithUpload .textInputUploadButton {
+    grid-area: 1 / 1;
+    position: static;
+    justify-self: end;
+    align-self: center;
+    margin-right: 5px;
+    padding: 5px 10px;
+    background: var(--upload-button-bg, #667eea);
+    color: var(--upload-button-color, white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: normal;
+    transform: none;
+    z-index: 2;
 }
 
 .textInput::placeholder {
@@ -1719,6 +1912,10 @@ input:checked + .slider:before {
 		padding: 8px; /* More padding in text inputs */
 	}
 
+	body.ssapp .textInputContainer.textInputWithUpload input[type="text"].textInput {
+		padding-right: 78px;
+	}
+
 	body.ssapp .textInput + label {
 		font-size: 1.1em; /* Adjust label font size */
 	}
@@ -1934,13 +2131,14 @@ input:checked + .slider:before {
             </small>
         </div>
         <div class="container">
-            <div class="link" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
+            <div class="link beginner-basic" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
                 <h2 class="streaming_chat_title">
-                    <span class="title-group"><span class="emoji" aria-hidden="true">💬</span><span data-translate="streaming-chat-dockable">Streaming chat (dock & overlay) </span></span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">💬</span>Main chat overlay & control dock </span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                     <a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">[options]</span></a>
 					<label for="help-dock" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
+				<small class="beginner-section-note">Use this as your main chat view, OBS overlay, or dock for controlling featured messages and TTS.</small>
                 <div id="dock" data-raw="" class="streaming_chat"></div>
 				<input type="checkbox" id="help-dock" class="link-help-toggle">
 				<div class="link-help-content">
@@ -1957,44 +2155,11 @@ input:checked + .slider:before {
 					</ul>
 					<div class="help-tip">💡 <strong>Tip:</strong> Most streamers open this as a dock to control features while using other overlays (like Featured Chat) on stream.</div>
 				</div>
-					
-					<!-- Stream Overlay Preset Selector -->
-					<div class="overlay-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;overflow:hidden;">
-						<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
-							<span data-translate="select-overlay">🎨 Select Preset Overlay Theme:</span>
-						</label>
-						<select id="overlay-preset-select" data-optionsetting="overlayPreset" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
-							<option value="">Default dock.html (Customizable)</option>
-							<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
-							<option value="themes/overlay-comic-pop.html">💥 Comic Pop Dock - Stackable pop art chat</option>
-							<option value="themes/overlay-comic-classic.html">🗯️ Comic Pop Classic - Featured style chat</option>
-							<option value="themes/horizontal.html">➡️ Horizontal Scroll - Right-to-left ticker</option>
-							<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
-							<option value="themes/overlay-particles.html">✨ Particle System - Floating message effects</option>
-							<option value="themes/overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
-							<option value="themes/overlay-bubbles.html">🫧 Bubble Chat - Floating speech bubbles</option>
-							<option value="themes/overlay-cards.html">🃏 Card Flip 3D - Interactive card animations</option>
-							<option value="themes/overlay-xacception.html">❎ Simple Alternative - Basic bubble message</option>
-							<option value="themes/pretty.html">✨ Pretty Theme - Holographic style</option>
-							<option value="themes/Neutron/chatOnly.html">⚛️ Neutron Chat - Sci-fi gaming theme</option>
-							<option value="themes/Neutron/stream.html">⚛️ Neutron Stream - Full stream layout</option>
-							<option value="themes/Windows3.1/index.html">🖥️ Windows 3.1 - Retro computing</option>
-							<option value="themes/deuks_overlay/overlay1.html">🎬 Deuks Overlay 1 - Custom streaming</option>
-							<option value="themes/deuks_overlay/overlay2.html">🎬 Deuks Overlay 2 - Alternative layout</option>
-							<option value="themes/rainbowpuke/index.html">🌈 Rainbow Puke - Colorful chaos</option>
-							<option value="themes/t3nk3y/index.html">🎮 T3nk3y Theme - Gaming style</option>
-                            <option value="themes/LuckyLootTube/luckyloottube.html">🎁 LuckyLootTube - Liquid Glass</option>
-						</select>
-						<span style="margin-left: 10px; font-size: 14px;;display: block;overflow:visible;">
-							👉ℹ️ <i data-translate="overlay-note">ONLY the default preset can be customized!</i>
-						</span>
-					</div>
-				
             </div>
 
             <a href="" id="streaming-chat-options"></a>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-menu-options" />
                     <label class="collapsible-label" for="wrapper-chat-menu-options"><span data-translate="menu">🎚️ Bottom Dock Menu Bar</span></label>
@@ -2028,7 +2193,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-overlay-options" />
                     <label class="collapsible-label" for="wrapper-chat-overlay-options"><span data-translate="overlay">🖼️ Overlay</span></label>
@@ -2157,7 +2322,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-mechanics-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-mechanics-options"><span data-translate="message---mechanics">💬 Message - ⚙️ Mechanics</span></label>
@@ -2266,12 +2431,18 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message </span>
                                 </div>
-                                <div title="Beep only when a message is marked as a first-time chatter (enable First timers in settings)" data-keywords="beep sound first timer chatter new viewer notification">
+                                <div title="Beep only when a dock message has the first-time chatter flag. Requires First-time chatter detection and the local database." data-keywords="beep sound first timer chatter new viewer notification">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="beepfirsttime" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span>🔔🆕 Beep for first-time chatters</span>
+                                    <span>🔔🆕 Dock beep for first-time chatters</span>
+                                    <span id="firstTimerDockBeepWarning" style="display: none; margin-left: 8px; font-size: 0.9em; color: #e9c46a;">
+                                        Needs detection + database.
+                                        <a href="#" id="enableFirstTimerDockRequirements" class="lightblue">Enable both</a>
+                                        |
+                                        <a href="#databaseSettingsRow" id="showFirstTimerDockDatabaseSetting" class="lightblue">Database setting</a>
+                                    </span>
                                 </div>
                                 <div title="Lower the beep's volume" data-keywords="notification volume loudness gain attenuate quieter">
                                     <label class="switch">
@@ -2284,10 +2455,10 @@ input:checked + .slider:before {
                                         <span class="range-value" id="dock-beep-volume-display">30%</span>
                                     </span>
                                 </div>
-                                <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom beep audio file">
+                                <div class="textInputContainer textInputWithUpload" style="width: 95%;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam1="custombeep" />
                                     <label for="custombeep"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
-                                    <button type="button" id="uploadBeepBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+                                    <button type="button" id="uploadBeepBtn" class="textInputUploadButton">Upload</button>
                                 </div>
 								<div title="Plays a near-silent ping every 25 seconds to help keep Bluetooth speakers from sleeping during quiet periods; useful on Android when using dock TTS." data-keywords="bluetooth speaker keep alive audio tts android quiet idle sleep">
                                     <label class="switch">
@@ -2520,7 +2691,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 			
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chat-message-tts-options" />
 					<label class="collapsible-label" for="wrapper-chat-message-tts-options">
@@ -2744,8 +2915,9 @@ input:checked + .slider:before {
 									<option value="elevenlabs">ElevenLabs</option>
 									<option value="google">Google Cloud</option>
 									<option value="gemini">Gemini (Preview TTS)</option>
-									<option value="speechify">Speechify</option>
+								<option value="speechify">Speechify</option>
 								<option value="openai">OpenAI</option>
+								<option value="customtts">Custom / Local TTS Endpoint</option>
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
@@ -3192,19 +3364,22 @@ input:checked + .slider:before {
 						</div>
 						<!-- OpenAI TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="openaiTTS">
-							<h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+							<h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
+							<div style="margin: -4px 0 12px 0; font-size: 0.9em;">
+								<a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+							</div>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="openaiAPIKey" class="textInput instant" autocomplete="off" 
 									placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam1="openaikey" />
 								<label for="openaiAPIKey">
-									<span data-translate="openai-api-key">OpenAI API Key</span>
+									<span data-translate="openai-api-key">API Key (optional for local endpoints)</span>
 								</label>
 							</div>
 							<div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
 								<input type="text" id="openaiEndpoint" class="textInput instant" autocomplete="off" 
 									placeholder="https://api.openai.com/v1/audio/speech" data-textparam1="openaiendpoint" />
 								<label for="openaiEndpoint">
-									<span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+									<span data-translate="openai-endpoint">Custom / Local API Endpoint</span>
 								</label>
 							</div>
 							<div>
@@ -3258,6 +3433,7 @@ input:checked + .slider:before {
 										<option value="mp3" selected>MP3</option>
 										<option value="opus">Opus</option>
 										<option value="aac">AAC</option>
+										<option value="wav">WAV</option>
 										<option value="flac">FLAC</option>
 									</select>
 								</span>
@@ -3607,7 +3783,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-styling-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-styling-options"><span data-translate="message---styling">💬 Message - 🎨 Styling</span></label>
@@ -3867,7 +4043,7 @@ input:checked + .slider:before {
                                     <input type="text" id="googlefont" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam1="googlefont" />
                                     <label for="googlefont"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
-								<div>
+								<div class="beginner-static-advanced-option">
 									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
                             </div>
@@ -3876,7 +4052,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-shading-options" />
                     <label class="collapsible-label" for="wrapper-chat-message-shading-options"><span data-translate="background-shading">💬 Message - 🖌️ Background Shading</span></label>
@@ -3939,6 +4115,37 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="no-background-shading-for-donations">⭕💰 No background shading for donations </span>
                                 </div>
+								<div>
+									<h3>Highlight Colors</h3>
+									<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+										<div class="textInputContainer" style="flex:1; margin-right:5px;">
+											<input type="text" id="dock_donation_highlight_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffff00" data-textparam1="donationhighlightcolor" data-palette="dock_donation_highlight_color_palette" />
+											<label for="dock_donation_highlight_color">&gt; Donation highlight color</label>
+										</div>
+										<input type="color" data-color="dock_donation_highlight_color" id="dock_donation_highlight_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									</div>
+									<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+										<div class="textInputContainer" style="flex:1; margin-right:5px;">
+											<input type="text" id="dock_member_highlight_color" class="textInput instant" autocomplete="off" placeholder="e.g. #00d5ff" data-textparam1="memberhighlightcolor" data-palette="dock_member_highlight_color_palette" />
+											<label for="dock_member_highlight_color">&gt; Member highlight color</label>
+										</div>
+										<input type="color" data-color="dock_member_highlight_color" id="dock_member_highlight_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									</div>
+									<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+										<div class="textInputContainer" style="flex:1; margin-right:5px;">
+											<input type="text" id="dock_firsttime_highlight_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ff7777" data-textparam1="firsttimehighlightcolor" data-palette="dock_firsttime_highlight_color_palette" />
+											<label for="dock_firsttime_highlight_color">&gt; First-time chatter highlight color</label>
+										</div>
+										<input type="color" data-color="dock_firsttime_highlight_color" id="dock_firsttime_highlight_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									</div>
+									<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+										<div class="textInputContainer" style="flex:1; margin-right:5px;">
+											<input type="text" id="dock_question_highlight_color" class="textInput instant" autocomplete="off" placeholder="e.g. #3355ff" data-textparam1="questionhighlightcolor" data-palette="dock_question_highlight_color_palette" />
+											<label for="dock_question_highlight_color">&gt; Question highlight color</label>
+										</div>
+										<input type="color" data-color="dock_question_highlight_color" id="dock_question_highlight_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									</div>
+								</div>
                                 <div>
                                     <h3 data-translate="donation-colors">Customize Donation Colors by Threshold</h3>
                                     <div style="width: 100%; display:inline-block;">
@@ -4318,18 +4525,57 @@ input:checked + .slider:before {
             </div>
 				
             </div>
-			<div style="color:white;font">
-				<i>
+
+            <div class="link beginner-basic" title="Ready-made OBS browser-source chat overlays.">
+                <h2 class="chat_overlay_template_title">
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🎨</span>Pre-styled chat overlays </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+                </h2>
+				<small class="beginner-section-note">Ready-made chat looks for OBS. These are quick presets; switch to full mode for deeper styling controls.</small>
+                <div id="chatoverlaytemplate" data-raw="" class="streaming_chat"></div>
+				<div class="template-selector overlay-selector">
+					<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
+						<span>🎨 Select chat overlay template:</span>
+					</label>
+					<select id="overlay-preset-select" data-optionsetting="overlayPreset" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+						<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
+						<option value="themes/compact-classic.html">💬 Compact Classic - Dense Twitch/IRC-style chat</option>
+						<option value="themes/compact-classic.html?ultra">⚡ Compact Ultra - Super dense minimum-height chat</option>
+						<option value="themes/compact-clean.html">🧼 Compact Clean - Tidy compact cards</option>
+						<option value="themes/compact-glass.html">🪟 Compact Glass - Frosted compact rows</option>
+						<option value="themes/overlay-comic-pop.html">💥 Comic Pop Dock - Stackable pop art chat</option>
+						<option value="themes/overlay-comic-classic.html">🗯️ Comic Pop Classic - Featured style chat</option>
+						<option value="themes/horizontal.html">➡️ Horizontal Scroll - Right-to-left ticker</option>
+						<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
+						<option value="themes/overlay-particles.html">✨ Particle System - Floating message effects</option>
+						<option value="themes/overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
+						<option value="themes/overlay-bubbles.html">🫧 Bubble Chat - Floating speech bubbles</option>
+						<option value="themes/overlay-cards.html">🃏 Card Flip 3D - Interactive card animations</option>
+						<option value="themes/overlay-xacception.html">❎ Simple Alternative - Basic bubble message</option>
+						<option value="themes/pretty.html">✨ Pretty Theme - Holographic style</option>
+						<option value="themes/Neutron/chatOnly.html">⚛️ Neutron Chat - Sci-fi gaming theme</option>
+						<option value="themes/Neutron/stream.html">⚛️ Neutron Stream - Full stream layout</option>
+						<option value="themes/Windows3.1/index.html">🖥️ Windows 3.1 - Retro computing</option>
+						<option value="themes/deuks_overlay/overlay1.html">🎬 Deuks Overlay 1 - Custom streaming</option>
+						<option value="themes/deuks_overlay/overlay2.html">🎬 Deuks Overlay 2 - Alternative layout</option>
+						<option value="themes/rainbowpuke/index.html">🌈 Rainbow Puke - Colorful chaos</option>
+						<option value="themes/t3nk3y/index.html">🎮 T3nk3y Theme - Gaming style</option>
+                        <option value="themes/LuckyLootTube/luckyloottube.html">🎁 LuckyLootTube - Liquid Glass</option>
+					</select>
+				</div>
+            </div>
+
+			<div class="chat-overlay-design-note beginner-basic">
 				Want to design your own? Check out our <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">AI-friendly starter templates</a>.
-				</i>
 			</div>
-            <div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
-                <h2 class="single_message_title">
+            <div class="link beginner-basic" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
+                <h2 class="featured_chat_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🌟</span><span data-translate="featured-chat-overlay">Featured chat overlay </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                     <a class="options-link rounded_area" href="#single-message-options" title="Jump to single message overlay link options."><span data-translate="options">[options]</span></a>
 					<label for="help-featured" class="help-link rounded_area" title="Click for detailed help">[?]</label>
                 </h2>
+				<small class="beginner-section-note">Shows one selected message at a time. Select messages from the control dock, or use full mode for auto-feature rules.</small>
                 <div id="overlay" data-raw="" class="single_message"></div>
 				<input type="checkbox" id="help-featured" class="link-help-toggle">
 				<div class="link-help-content">
@@ -4503,10 +4749,10 @@ input:checked + .slider:before {
                                         <span class="range-value" id="overlay-beep-volume-display">30%</span>
                                     </span>
                                 </div>
-                                <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom beep audio file">
+                                <div class="textInputContainer textInputWithUpload" style="width: 95%;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep2" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam2="custombeep" />
                                     <label for="custombeep2"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
-                                    <button type="button" id="uploadBeepBtn2" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+                                    <button type="button" id="uploadBeepBtn2" class="textInputUploadButton">Upload</button>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -4666,6 +4912,7 @@ input:checked + .slider:before {
                                 <option value="google">Google Cloud</option>
                                 <option value="speechify">Speechify</option>
                                 <option value="openai">OpenAI</option>
+                                <option value="customtts">Custom / Local TTS Endpoint</option>
                                 <option value="piper">Piper TTS</option>
                                 <option value="espeak">eSpeak TTS</option>
                             </select>
@@ -5005,19 +5252,22 @@ input:checked + .slider:before {
                         
                         <!-- OpenAI TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="openaiTTS2">
-                            <h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+                            <h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
+                            <div style="margin: -4px 0 12px 0; font-size: 0.9em;">
+                                <a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+                            </div>
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="password" id="openaiAPIKey2" class="textInput instant" autocomplete="off" 
                                     placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam2="openaikey" />
                                 <label for="openaiAPIKey2">
-                                    <span data-translate="openai-api-key">OpenAI API Key</span>
+                                    <span data-translate="openai-api-key">API Key (optional for local endpoints)</span>
                                 </label>
                             </div>
                             <div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
                                 <input type="text" id="openaiEndpoint2" class="textInput instant" autocomplete="off" 
                                     placeholder="https://api.openai.com/v1/audio/speech" data-textparam2="openaiendpoint" />
                                 <label for="openaiEndpoint2">
-                                    <span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+                                    <span data-translate="openai-endpoint">Custom / Local API Endpoint</span>
                                 </label>
                             </div>
                             <div>
@@ -5071,6 +5321,7 @@ input:checked + .slider:before {
                                         <option value="mp3" selected>MP3</option>
                                         <option value="opus">Opus</option>
                                         <option value="aac">AAC</option>
+                                        <option value="wav">WAV</option>
                                         <option value="flac">FLAC</option>
                                     </select>
                                 </span>
@@ -5476,18 +5727,19 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="link" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids.">
-				<h2 class="single_message_title">
+			<div class="link beginner-basic" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids.">
+				<h2 class="multi_alert_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">🚨</span><span>Multi-Stream Alert Box</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#multi-alert-options" title="Jump to multi-alert overlay options."><span data-translate="options">[options]</span></a>
 				</h2>
+				<small class="beginner-section-note">Shows follows, subs, donations, bits, and raids as alert popups, plus optional auction winner and hype train alerts. Use the sections below for common alert controls.</small>
 				<div id="multialerts" data-raw="" class="single_message"><a href="" id="multialertslink"></a></div>
 				<div class="help-tip" style="margin-top: 10px;">💡 <strong>Twitch-style setup:</strong> tune each alert type, copy the browser source URL, then test everything live in the preview panel below.</div>
 			</div>
 			<a href="" id="multi-alert-options"></a>
 
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-types-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-types-options"><span>🎯 Alert Types</span></label>
@@ -5529,6 +5781,20 @@ input:checked + .slider:before {
 									</label>
 									<span>Skip raid/host alerts</span>
 								</div>
+								<div title="Opt-in: shows an alert when a live auction ends with a winner (Whatnot, eBay Live).">
+									<label class="switch">
+										<input type="checkbox" data-param25="auctionwins" />
+										<span class="slider round"></span>
+									</label>
+									<span>Show auction winner alerts (Whatnot/eBay)</span>
+								</div>
+								<div title="Opt-in: shows an alert when a Twitch hype train starts or reaches a new level.">
+									<label class="switch">
+										<input type="checkbox" data-param25="hypetrain" />
+										<span class="slider round"></span>
+									</label>
+									<span>Show hype train level alerts (Twitch)</span>
+								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Minimum converted USD value required for donation/bits alerts. Example: 5 blocks 100 bits but allows $5+ alerts.">
 									<input type="text" id="multialertmindonation" class="textInput instant" autocomplete="off" placeholder="5" data-textparam25="mindonation" />
 									<label for="multialertmindonation"><span>&gt; Minimum cash value for donation/bits alerts</span></label>
@@ -5550,7 +5816,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-variants-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-variants-options"><span>🎨 Variants / Presets</span></label>
@@ -5597,6 +5863,22 @@ input:checked + .slider:before {
 										<option value="minimal">Minimal</option>
 									</select>
 								</div>
+								<div>
+									<label>Auction win preset</label>
+									<select data-optionparam25="auctionstyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Hype train preset</label>
+									<select data-optionparam25="hypestyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
 								<small style="opacity: 0.8;">Each category maps all supported platforms into one shared alert style, while still keeping the source badge and event wording platform-aware.</small>
 							</div>
 						</div>
@@ -5634,7 +5916,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-layout-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-layout-options"><span>🖼️ Layout & Visibility</span></label>
@@ -5772,7 +6054,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-sound-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-sound-options"><span>🔊 Sound & Timing</span></label>
@@ -5797,37 +6079,48 @@ input:checked + .slider:before {
 										<span class="range-value" id="multi-alert-beep-display">35%</span>
 									</span>
 								</div>
-								<div class="textInputContainer" style="width: 95%;">
-									<input type="text" class="textInput instant" autocomplete="off" placeholder="https://example.com/alert.wav" data-textparam25="custombeep" />
+								<div class="textInputContainer textInputWithUpload" style="width: 95%;">
+									<input type="text" class="textInput instant" autocomplete="off" placeholder="https://example.com/alert.wav" data-textparam25="custombeep" id="multi-alert-custombeep" />
 									<label><span>&gt; Custom sound URL (all alerts)</span></label>
+									<button type="button" id="uploadMultiAlertSoundBtn" class="textInputUploadButton">Upload</button>
 								</div>
 								<details style="width: 95%; margin-top: 4px;">
 									<summary style="cursor: pointer; font-size: 0.95em; padding: 6px 10px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">Per-type custom sounds (override above)</summary>
 									<div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
-										<div class="textInputContainer" style="width: 100%; position: relative;">
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Follow sound URL (.ogg, .mp3, .wav)" data-textparam25="followsound" id="multi-alert-followsound" />
 											<label><span>&gt; 💖 Follow sound</span></label>
-											<button type="button" id="uploadFollowSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #ff68b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+											<button type="button" id="uploadFollowSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #ff68b3;">Upload</button>
 										</div>
-										<div class="textInputContainer" style="width: 100%; position: relative;">
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Sub sound URL (.ogg, .mp3, .wav)" data-textparam25="subsound" id="multi-alert-subsound" />
 											<label><span>&gt; 💜 Subscription sound</span></label>
-											<button type="button" id="uploadSubSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+											<button type="button" id="uploadSubSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #8b5cf6;">Upload</button>
 										</div>
-										<div class="textInputContainer" style="width: 100%; position: relative;">
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Donation sound URL (.ogg, .mp3, .wav)" data-textparam25="donosound" id="multi-alert-donosound" />
 											<label><span>&gt; 💚 Donation sound</span></label>
-											<button type="button" id="uploadDonoSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #14f195; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+											<button type="button" id="uploadDonoSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #14f195; --upload-button-color: #111;">Upload</button>
 										</div>
-										<div class="textInputContainer" style="width: 100%; position: relative;">
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Bits sound URL (.ogg, .mp3, .wav)" data-textparam25="bitssound" id="multi-alert-bitssound" />
 											<label><span>&gt; 💙 Bits/Cheer sound</span></label>
-											<button type="button" id="uploadBitsSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #38bdf8; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+											<button type="button" id="uploadBitsSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #38bdf8; --upload-button-color: #111;">Upload</button>
 										</div>
-										<div class="textInputContainer" style="width: 100%; position: relative;">
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
 											<input type="text" class="textInput instant" autocomplete="off" placeholder="Raid sound URL (.ogg, .mp3, .wav)" data-textparam25="raidsound" id="multi-alert-raidsound" />
 											<label><span>&gt; 🧡 Raid sound</span></label>
-											<button type="button" id="uploadRaidSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #f59e0b; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+											<button type="button" id="uploadRaidSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #f59e0b; --upload-button-color: #111;">Upload</button>
+										</div>
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Auction win sound URL (.ogg, .mp3, .wav)" data-textparam25="auctionsound" id="multi-alert-auctionsound" />
+											<label><span>&gt; 💛 Auction win sound</span></label>
+											<button type="button" id="uploadAuctionSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #fbbf24; --upload-button-color: #111;">Upload</button>
+										</div>
+										<div class="textInputContainer textInputWithUpload" style="width: 100%;">
+											<input type="text" class="textInput instant" autocomplete="off" placeholder="Hype train sound URL (.ogg, .mp3, .wav)" data-textparam25="hypesound" id="multi-alert-hypesound" />
+											<label><span>&gt; ❤️ Hype train sound</span></label>
+											<button type="button" id="uploadHypeSoundBtn" class="textInputUploadButton" style="--upload-button-bg: #f43f5e;">Upload</button>
 										</div>
 									</div>
 								</details>
@@ -5865,7 +6158,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-			<div class="wrapper">
+			<div class="wrapper beginner-basic">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-preview-options" />
 					<label class="collapsible-label" for="wrapper-multi-alert-preview-options"><span>🧪 Preview & Test</span></label>
@@ -5881,17 +6174,19 @@ input:checked + .slider:before {
 										<option value="kick">Kick</option>
 									</select>
 								</div>
-								<div style="display: flex; flex-wrap: nowrap; gap: 6px; margin-bottom: 14px;">
+								<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
 									<button type="button" id="multi-alert-preview-follow" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Follow</button>
 									<button type="button" id="multi-alert-preview-sub" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Sub</button>
 									<button type="button" id="multi-alert-preview-dono" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Donation</button>
 									<button type="button" id="multi-alert-preview-bits" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Bits</button>
 									<button type="button" id="multi-alert-preview-raid" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Raid</button>
+									<button type="button" id="multi-alert-preview-auction" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Auction</button>
+									<button type="button" id="multi-alert-preview-hype" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Hype</button>
 									<button type="button" id="multi-alert-preview-clear" class="overlayButton" style="flex: 1 1 0; min-width: 0; white-space: nowrap;">Clear</button>
 									<button type="button" id="multi-alert-preview-mute" class="overlayButton" style="flex: 0 0 auto; min-width: 0; white-space: nowrap; opacity: 0.6;" title="Mute preview sound">🔊</button>
 								</div>
 								<div style="width: 100%; height: 280px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(10,12,18,0.94), rgba(19,24,35,0.92));">
-									<iframe id="multi-alerts-preview-frame" title="Multi alert preview" style="width: 100%; height: 100%; border: 0; background: transparent;" loading="lazy"></iframe>
+									<iframe id="multi-alerts-preview-frame" title="Multi alert preview" style="width: 100%; height: 100%; border: 0; background: transparent;" loading="lazy" allow="autoplay"></iframe>
 								</div>
 								<small style="display: block; margin-top: 10px; opacity: 0.8;">Use the buttons above to send test alerts into the preview. This uses the real multi-alert overlay renderer in a local iframe, so theme, visibility, disabled categories, media, and timing changes match the live browser source.</small>
 							</div>
@@ -5900,11 +6195,12 @@ input:checked + .slider:before {
 				</div>
 			</div>
 
-            <div class="generic_category_title">
+            <div class="generic_category_title beginner-basic">
                 <h2>
                     <span data-translate="global-settings-and-tools">🛠️ Global settings and tools </span>
                     <a class="options-link rounded_area" href="#global-settings-and-tools-options" title="Jump to the global settings and tools."><span data-translate="options">[options]</span></a>
                 </h2>
+				<small class="beginner-section-note">Global settings affect every overlay and source, including stream events, filters, highlights, and source behavior.</small>
                 <div id="globalsettings" class="global_settings"></div>
             </div>
             <a href="" id="global-settings-and-tools-options"></a>
@@ -5933,7 +6229,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-additional-chat-services-options" />
                     <label class="collapsible-label" for="wrapper-additional-chat-services-options">
@@ -6219,7 +6515,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-mechanics-options" />
                     <label class="collapsible-label" for="wrapper-global-mechanics-options"><span data-translate="mechanics">⚙️ Mechanics</span></label>
@@ -6233,26 +6529,36 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="hide-stream-events"> Hide stream events (follows, likes, subs) </span>
                                 </div>
-                                <div title="By default all inbound messages are saved to a local database for later look-up reference">
+                                <div id="databaseSettingsRow" title="By default all inbound messages are saved to a local database for later look-up reference">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="disableDB" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="disable-store-messages-in-local-database"> 🚫🗄️ Disable the <a href="./chathistory.html" id="chathistory"  class="lightblue"  target="blank">local message database</a> </span>
                                 </div>
-								<div title="Mark first time chatters/donators (requires the local database)">
+								<div title="Adds firsttime=true to brand-new chatters. Requires the local database." data-keywords="first time chatter database new viewer detection">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="firsttimers" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="first-time-chatters"> 🌿 Use the DB to mark new-ish chatters and to include last chat-activity. Required for some triggers.</span>
+                                    <span data-translate="first-time-chatters">🆕 First-time chatter detection</span>
                                 </div>
-                                <div title="Beep when a brand new chatter or someone inactive for 8+ hours speaks (requires first-timer tracking)">
+								<div title="Prepends a leaf badge to first-time chatters. Requires first-time chatter detection and the local database." data-keywords="first time chatter badge leaf new viewer detection">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="firsttimerbadge" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>&#127807; Mark first-time chatters with a custom badge</span>
+                                </div>
+                                <div title="Beep when a brand new chatter or someone inactive for 8+ hours speaks. Requires first-time chatter detection and the local database.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="beepreturning" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span>🔔👋 Beep for new or returning chatters (8h+ quiet)</span>
+                                </div>
+                                <div title="Open the first-time chatter setup guide.">
+                                    <span><a href="./docs/first-time-chatters.html" target="_blank" class="lightblue">Open the First-Time Chatters guide</a></span>
                                 </div>
 								<div title="Override's the database 30-day storage limits">
                                     <label class="switch">
@@ -7065,39 +7371,41 @@ input:checked + .slider:before {
                                     </button>
                                 </div>
 								
-                                <h3><span data-translate="trigger-midi-note">Trigger MIDI note on command</span></h3>
-								Default Output MIDI Device:<select id="midiDeviceSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputDevice"></select>
-								MIDI Channel:<select id="midiOutputChannelSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputChannel">
-									<option value="1" selected>Channel 1</option>
-									<option value="2">Channel 2</option>
-									<option value="3">Channel 3</option>
-									<option value="4">Channel 4</option>
-									<option value="5">Channel 5</option>
-									<option value="6">Channel 6</option>
-									<option value="7">Channel 7</option>
-									<option value="8">Channel 8</option>
-									<option value="9">Channel 9</option>
-									<option value="10">Channel 10</option>
-									<option value="11">Channel 11</option>
-									<option value="12">Channel 12</option>
-									<option value="13">Channel 13</option>
-									<option value="14">Channel 14</option>
-									<option value="15">Channel 15</option>
-									<option value="16">Channel 16</option>
-									<option value="all">All Channels</option>
-								</select>
-								<a href="https://socialstream.ninja/midimonitor" class="lightblue"  title="Open a page to debug MIDI with" target="_blank">⚙️</a>
-								<div style="font-size: 12px; color: #888; margin-top: 5px;">
-									<span data-translate="enable-midi-to-see-devices">Enable MIDI hotkeys above to see available devices</span>
-								</div>
-                                <div id="midiCommands"></div>
+                                <div class="beginner-static-advanced-option">
+                                    <h3><span data-translate="trigger-midi-note">Trigger MIDI note on command</span></h3>
+								    Default Output MIDI Device:<select id="midiDeviceSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputDevice"></select>
+								    MIDI Channel:<select id="midiOutputChannelSelect" style="max-width: calc(100% - 50px);margin: 5px;" class="textInput" data-optionsetting="midiOutputChannel">
+									    <option value="1" selected>Channel 1</option>
+									    <option value="2">Channel 2</option>
+									    <option value="3">Channel 3</option>
+									    <option value="4">Channel 4</option>
+									    <option value="5">Channel 5</option>
+									    <option value="6">Channel 6</option>
+									    <option value="7">Channel 7</option>
+									    <option value="8">Channel 8</option>
+									    <option value="9">Channel 9</option>
+									    <option value="10">Channel 10</option>
+									    <option value="11">Channel 11</option>
+									    <option value="12">Channel 12</option>
+									    <option value="13">Channel 13</option>
+									    <option value="14">Channel 14</option>
+									    <option value="15">Channel 15</option>
+									    <option value="16">Channel 16</option>
+									    <option value="all">All Channels</option>
+								    </select>
+								    <a href="https://socialstream.ninja/midimonitor" class="lightblue"  title="Open a page to debug MIDI with" target="_blank">⚙️</a>
+								    <div style="font-size: 12px; color: #888; margin-top: 5px;">
+									    <span data-translate="enable-midi-to-see-devices">Enable MIDI hotkeys above to see available devices</span>
+								    </div>
+                                    <div id="midiCommands"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-message-visibility-options" />
                     <label class="collapsible-label" for="wrapper-global-message-visibility-options"><span data-translate="message---visibility">💬 Message - 👁️ Visibility</span></label>
@@ -7251,7 +7559,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <div class="wrapper">
+            <div class="wrapper beginner-basic">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-message-styling-options" />
                     <label class="collapsible-label" for="wrapper-global-message-styling-options"><span data-translate="message---styling">💬 Message - 🎨 Styling</span></label>
@@ -7334,9 +7642,10 @@ input:checked + .slider:before {
                                     <label for="highlightword"><span data-translate="highlightword">&gt; Mark as trivial event if body contains</span></label>
                                 </div>
 
-                                <div class="textInputContainer" style="width: 95%;">
+                                <div class="textInputContainer" style="width: 95%; position: relative;">
                                     <input type="text" id="default_avatar" class="textInput" autocomplete="off" placeholder="Default avatar image URL" data-textsetting="defaultavatar" />
                                     <label for="default_avatar"><span data-translate="default-avatar-image-url">&gt; Default avatar image URL</span></label>
+                                    <button type="button" id="uploadDefaultAvatarBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
                             </div>
                         </div>
@@ -8037,7 +8346,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 			
-            <div class="chatbot_category_title">
+            <div class="chatbot_category_title beginner-advanced">
                 <h2 class="chatbot_wall_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🤖</span><span data-translate="chatbot-settings-and-tools">Chat Bots and AI services</span></span>
                     <a class="options-link rounded_area" href="#chatbot-settings-and-tools-options" title="Jump to the chatbot settings and tools."><span data-translate="options">[options]</span></a>
@@ -8073,6 +8382,7 @@ input:checked + .slider:before {
 										<option value="bedrock">AWS Bedrock API</option>
 										<option value="openrouter">OpenRouter API</option>
 										<option value="groq">Groq API</option>
+										<option value="opencode">OpenCode Zen API</option>
 										<option value="hostedllm">SSN Hosted Trial LLM (experimental)</option>
 										<option value="custom">Custom API (OpenAI-compatible / llama.cpp)</option>
 									</select>
@@ -8083,6 +8393,9 @@ input:checked + .slider:before {
 									</div>
 									<div id="hostedLLMInfo" class="hidden" style="width: 95%; margin: 8px 0 10px 0; padding: 10px 12px; border-radius: 8px; background: var(--color-accent-subtle); font-size: 0.92em; line-height: 1.4;">
 										SSN Hosted Trial LLM should work without setup while the free trial token is available. If the free token is disabled or rate-limited later, enter your own token below or switch to Ollama / Custom API.
+									</div>
+									<div id="opencodeInfo" class="hidden" style="width: 95%; margin: 8px 0 10px 0; padding: 10px 12px; border-radius: 8px; background: var(--color-accent-subtle); font-size: 0.92em; line-height: 1.4;">
+										OpenCode Zen provides a curated model gateway. Need a key? <a href="https://opencode.ai/go?ref=8V3339P30P" class="lightblue" target="_blank">Get OpenCode Zen here</a> (Steve's referral link). Auto mode uses free models and pauses exhausted free models for one hour.
 									</div>
 									<div id="ollamaendpoint" class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="ollamaendpoint" />
@@ -8112,6 +8425,11 @@ input:checked + .slider:before {
 									<div id="groqApiKey" class="textInputContainer hidden" style="width: 95%;">
 										<input type="password" class="textInput" autocomplete="off" placeholder="Your Groq API key" data-textsetting="groqApiKey" />
 										<label for="groqApiKey">&gt; Groq API Key</label>
+									</div>
+
+									<div id="opencodeApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password" class="textInput" autocomplete="off" placeholder="Your OpenCode Zen API key" data-textsetting="opencodeApiKey" />
+										<label for="opencodeApiKey">&gt; OpenCode Zen API Key</label>
 									</div>
 
 									<div id="customAIEndpoint" class="hidden textInputContainer" style="width: 95%;">
@@ -8240,6 +8558,19 @@ input:checked + .slider:before {
 									</div>
 								</div>
 
+								<div id="opencodemodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<select id="opencodeModelSelect" class="textInput" data-optionsetting="opencodemodel">
+											<option value="auto">Auto - free models only</option>
+										</select>
+										<label for="opencodeModelSelect">&gt; OpenCode Zen Model to use</label>
+									</div>
+									<div style="width: 95%; font-size: 0.9em; opacity: 0.85; margin: 4px 0 0 0;">
+										<span id="opencodeModelStatus">Models load from OpenCode when selected.</span>
+										<button type="button" id="refreshOpenCodeModels" style="margin-left: 8px;">Refresh models</button>
+									</div>
+								</div>
+
 								<div style="width: 95%; margin: 12px 0 0 0;">
 									<button id="testSelectedLLMProvider" class="glowingButton" style="width: auto; min-width: 190px;" title="Sends a short test prompt using the currently selected chat bot provider and settings">
 										<span>Test selected chat bot</span>
@@ -8248,6 +8579,57 @@ input:checked + .slider:before {
 								</div>
 								<div id="testSelectedLLMProviderOutput" style="display: none; width: 95%; margin: 8px 0 0 0; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,0.06); white-space: pre-wrap; word-break: break-word; font-size: 0.92em;"></div>
 
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-ai-auto-translate-options" />
+					<label class="collapsible-label" for="wrapper-ai-auto-translate-options">
+						<span data-translate="ai-auto-translate">&#127760; AI Auto Translate</span>
+					</label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group streaming_chat">
+								<h3 style="margin-bottom: 6px;"><span data-translate="ai-auto-translate">&#127760; AI Auto Translate</span></h3>
+								<i>Uses the selected AI provider above. Text is translated while emotes, images, and HTML are preserved. Default target language is en-US.</i><br/><br/>
+								<div>
+									<div style="display: inline-block;" title="Translate incoming chat messages to the target language using the selected AI provider.">
+										<label class="switch">
+											<input type="checkbox" id="aiAutoTranslate" data-setting="aiAutoTranslate" />
+											<span class="slider round"></span>
+										</label>
+										<span>Enable AI auto translate</span>
+									</div>
+								</div>
+								<div class="textInputContainer" style="display: inline-block; width: 260px; margin-left: 50px; margin-top: 8px;" title="Target language for translated incoming chat messages.">
+									<input type="text" id="aiAutoTranslateTargetLanguage" class="textInput" autocomplete="off" placeholder="en-US" data-textsetting="aiAutoTranslateTargetLanguage" />
+									<label for="aiAutoTranslateTargetLanguage"><span>&gt; Target language (default: en-US)</span></label>
+								</div>
+								<div style="margin-top: 8px;">
+									<div style="display: inline-block;" title="When enabled, messages are dropped if the translator is busy, times out, or fails.">
+										<label class="switch">
+											<input type="checkbox" id="aiAutoTranslateBlockMode" data-setting="aiAutoTranslateBlockMode" />
+											<span class="slider round"></span>
+										</label>
+										<span>Drop messages when translation fails or cannot keep up</span>
+									</div>
+								</div>
+								<div style="margin-top: 8px;">
+									<label class="switch">
+										<input type="checkbox" id="aiAutoTranslateContext" data-setting="aiAutoTranslateContext" />
+										<span class="slider round"></span>
+									</label>
+									<span>Include last 10 messages as translation context</span>
+								</div>
+								<div style="margin-top: 8px;" title="Maximum time to wait for each translation request.">
+									<span>
+										Translation timeout
+										<input type="number" style="max-width: 8ch;" max="30000" min="1000" value="10000" size="6" data-numbersetting="aiAutoTranslateTimeout" />ms
+									</span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -8544,6 +8926,7 @@ input:checked + .slider:before {
 								<option value="gemini">Gemini (Preview TTS)</option>
 								<option value="speechify">Speechify</option>
 								<option value="openai">OpenAI</option>
+								<option value="customtts">Custom / Local TTS Endpoint</option>
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
@@ -8843,19 +9226,22 @@ input:checked + .slider:before {
 						</div>
 						<!-- OpenAI TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="openaiTTS10">
-							<h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+							<h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
+							<div style="margin: -4px 0 12px 0; font-size: 0.9em;">
+								<a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+							</div>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="openaiAPIKey10" class="textInput instant" autocomplete="off" 
 									placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam10="openaikey" />
 								<label for="openaiAPIKey10">
-									<span data-translate="openai-api-key">OpenAI API Key</span>
+									<span data-translate="openai-api-key">API Key (optional for local endpoints)</span>
 								</label>
 							</div>
 							<div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
 								<input type="text" id="openaiEndpoint10" class="textInput instant" autocomplete="off" 
 									placeholder="https://api.openai.com/v1/audio/speech" data-textparam10="openaiendpoint" />
 								<label for="openaiEndpoint10">
-									<span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+									<span data-translate="openai-endpoint">Custom / Local API Endpoint</span>
 								</label>
 							</div>
 							<div>
@@ -8909,6 +9295,7 @@ input:checked + .slider:before {
 										<option value="mp3" selected>MP3</option>
 										<option value="opus">Opus</option>
 										<option value="aac">AAC</option>
+										<option value="wav">WAV</option>
 										<option value="flac">FLAC</option>
 									</select>
 								</span>
@@ -9003,7 +9390,7 @@ input:checked + .slider:before {
 									</div>
 								</div>
 							</div>
-							
+
 						</div>
 					</div>
                 </div>
@@ -9146,9 +9533,10 @@ input:checked + .slider:before {
 									<input type="text" id="aiOverlayName" class="textInput" autocomplete="off" placeholder="NinjaBot" data-textsetting="aiOverlayName" />
 									<label for="aiOverlayName">&gt; Display name</label>
 								</div>
-								<div class="textInputContainer" style="width: 95%;">
+								<div class="textInputContainer" style="width: 95%; position: relative;">
 									<input type="text" id="aiOverlayAvatar" class="textInput" autocomplete="off" placeholder="Optional avatar image URL" data-textsetting="aiOverlayAvatar" />
 									<label for="aiOverlayAvatar">&gt; Avatar image URL</label>
+									<button type="button" id="uploadAiOverlayAvatarBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
 								</div>
 								<div style="margin: 8px 0;">
 									<span>Position</span>
@@ -9360,7 +9748,7 @@ input:checked + .slider:before {
 			</div>
 
 			<div class="link" title="Reaction-only overlay for floating hearts, thumbs, and similar live reactions.">
-				<h2 class="single_message_title">
+				<h2 class="reactions_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">💖</span><span>Reactions Overlay</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#reactions-options" title="Jump to the reactions overlay options."><span data-translate="options">[options]</span></a>
@@ -9823,7 +10211,96 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-			
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-hypetrain-options" />
+					<label class="collapsible-label" for="wrapper-hypetrain-options"><span>🚂 Hype Train Top Bar</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group meta ai-tool-card" data-link-container>
+								<h3 style="margin:0;">🚂 Hype Train Top Bar</h3>
+								<div class="link ai-tool-link" title="Open the dedicated Hype Train top bar overlay.">
+									<div id="hypetrain" data-raw="" class="streaming_chat"><a href="" id="hypetrainlink"></a></div>
+								</div>
+								<p class="ai-tool-copy">Shows Twitch Hype Train and Treasure Train progress as a top bar using <code>meta.html?hype</code>.</p>
+								<p class="ai-tool-copy"><a href="./docs/hype-train-top-bar.html" target="_blank">Hype Train Top Bar guide</a></p>
+								<div class="sticky-action-row top-67">
+									<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="hype" title="Send a fake hype_train meta event">
+										<span>Fake Hype Train</span>
+									</button>
+								</div>
+								<h3>Layout and Appearance</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="alignright" />
+										<span class="slider round"></span>
+									</label>
+									<span>➡️ Align overlay to the right-side</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="align=center" />
+										<span class="slider round"></span>
+									</label>
+									<span>↔️ Align overlay to the center</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="scale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔍 Scale multiplier
+										<input type="range" id="hypetrain-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting29="scale" data-range-display="hypetrain-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="hypetrain-scale-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="opacity" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										👻 Panel opacity
+										<input type="range" id="hypetrain-opacity-range" min="0" max="1" step="0.05" value="1" style="width: 150px;" data-numbersetting29="opacity" data-range-display="hypetrain-opacity-display" />
+										<span class="range-value" id="hypetrain-opacity-display">1.00</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="nobg" />
+										<span class="slider round"></span>
+									</label>
+									<span>🧼 Transparent bar background</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param29="nooutline" />
+										<span class="slider round"></span>
+									</label>
+									<span>🔳 Disable text outlining</span>
+								</div>
+								<div title="Set the overall page background color. Supports hex, rgba, and named colors.">
+									<label class="switch">
+										<input type="checkbox" data-param29="pagebg" />
+										<span class="slider round"></span>
+									</label>
+									<span>🎨 Custom page background color</span>
+								</div>
+								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
+										<input type="text" id="hypetrain_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam29="pagebg" data-palette="hypetrain_pagebg_palette" />
+										<label for="hypetrain_pagebg">&gt; Page background color</label>
+									</div>
+									<input type="color" data-color="hypetrain_pagebg" id="hypetrain_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<div class="link" title="Meta data bar for auction, commerce, and giveaway-style status updates">
 				<h2 class="meta_mode_title">
 					<span class="title-group"><span class="emoji" aria-hidden="true">📦</span><span>Meta Data Bar</span></span>
@@ -9834,14 +10311,15 @@ input:checked + .slider:before {
 				<input type="checkbox" id="help-meta" class="link-help-toggle">
 				<div class="link-help-content">
 					<strong>Dedicated overlay for metadata-only events.</strong>
-					<p>Shows live values such as current item, bidder, bids, timer, product availability, giveaway counts, and viewer snapshots.</p>
+					<p>Shows live values such as current item, bidder, bids, timer, product availability, giveaway counts, viewer snapshots, and Twitch Hype Train progress.</p>
 					<ul>
 						<li>Built for auction and commerce streams</li>
 						<li>Updates values in place as new meta events arrive</li>
+						<li>Renders Hype Train and Treasure Train events as a top progress bar</li>
 						<li>Toggle icon, label, and value visibility</li>
-						<li>Filter by event type (auction, commerce, viewers, other meta)</li>
+						<li>Filter by event type (auction, commerce, viewers, hype trains, other meta)</li>
 					</ul>
-					<div class="help-tip">💡 <strong>Tip:</strong> If no event filter is checked, the overlay defaults to auction + commerce + viewer meta.</div>
+					<div class="help-tip">💡 <strong>Tip:</strong> If no event filter is checked, the overlay defaults to auction + commerce + viewer + Hype Train meta.</div>
 				</div>
 					<h3>
 						<span>
@@ -9858,6 +10336,9 @@ input:checked + .slider:before {
 						</button>
 						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="viewers" title="Send a fake viewer_updates meta event">
 							<span>Fake Viewer Meta</span>
+						</button>
+						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="hype" title="Send a fake hype_train meta event">
+							<span>Fake Hype Train</span>
 						</button>
 						<button class="glowingButton showalways" style="flex: 0 0 88px; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="random" title="Send a random fake meta event">
 							<span>Random</span>
@@ -9893,6 +10374,13 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span>👁️ Show viewer updates</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="hype" />
+										<span class="slider round"></span>
+									</label>
+									<span>Show Hype Train progress bar</span>
 								</div>
 								<div>
 									<label class="switch">
@@ -9979,19 +10467,37 @@ input:checked + .slider:before {
 									</div>
 									<br>
 									<h3>Layout and Appearance</h3>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param24="alignright" />
-										<span class="slider round"></span>
-									</label>
-									<span>➡️ Align overlay to the right-side</span>
+								<div title="Visual theme for the stat chips.">
+									<label>🎨 Style preset</label>
+									<select data-optionparam24="style" class="textInput">
+										<option value="" selected>Default (pill chips)</option>
+										<option value="glass">Glass (frosted)</option>
+										<option value="neon">Neon (glowing accents)</option>
+										<option value="minimal">Minimal (text only)</option>
+										<option value="card">Cards (label over big value)</option>
+									</select>
 								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param24="align=center" />
-										<span class="slider round"></span>
-									</label>
-									<span>↔️ Align overlay to the center</span>
+								<div title="How the stat chips flow: a wrapping row, a vertical stack, or an even grid.">
+									<label>📐 Layout</label>
+									<select data-optionparam24="layout" class="textInput">
+										<option value="" selected>Row (wrapping)</option>
+										<option value="column">Column (stacked)</option>
+										<option value="grid">Grid</option>
+									</select>
+								</div>
+								<div title="Where the overlay sits within the browser source frame.">
+									<label>📍 Placement</label>
+									<select data-optionparam24="position" class="textInput">
+										<option value="" selected>Top left</option>
+										<option value="top-center">Top center</option>
+										<option value="top-right">Top right</option>
+										<option value="middle-left">Middle left</option>
+										<option value="center">Center</option>
+										<option value="middle-right">Middle right</option>
+										<option value="bottom-left">Bottom left</option>
+										<option value="bottom-center">Bottom center</option>
+										<option value="bottom-right">Bottom right</option>
+									</select>
 								</div>
 								<div>
 									<label class="switch">
@@ -10119,6 +10625,56 @@ input:checked + .slider:before {
                                     </button>
                                 </div>
 
+                                <h3>Hype Cup Options</h3>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="hype" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🏆 Enable hype cup scoring</span>
+                                </div>
+                                <div>
+                                    <label>Sub/member points:</label>
+                                    <input type="number" data-optionparam12="subpoints" class="textInput" placeholder="2.5" min="0" step="0.1" />
+                                </div>
+                                <div>
+                                    <label>Gifted sub/member points:</label>
+                                    <input type="number" data-optionparam12="giftpoints" class="textInput" placeholder="2.5" min="0" step="0.1" />
+                                </div>
+                                <div>
+                                    <label>Donation points per USD:</label>
+                                    <input type="number" data-optionparam12="donationpoints" class="textInput" placeholder="1" min="0" step="0.1" />
+                                </div>
+                                <div>
+                                    <label>Point unit label:</label>
+                                    <input type="text" data-optionparam12="unit" class="textInput" placeholder="pts" />
+                                </div>
+                                <div>
+                                    <label>Completion reset delay (ms):</label>
+                                    <input type="number" data-optionparam12="completiondelay" class="textInput" placeholder="3000" min="0" step="100" />
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="countgiftredemptions" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🎁 Count individual gift recipients too</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="carryover" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>➕ Carry extra points after completion</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="hidecompletions" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🙈 Hide completion count</span>
+                                </div>
+
                                 <h3><span data-translate="style-and-theme">Style and Theme</span></h3>
                                 <div>
                                     <label><span data-translate="display-style">Display Style</span></label>
@@ -10155,9 +10711,10 @@ input:checked + .slider:before {
                                     <label><span data-translate="custom-title">Custom Title:</span></label>
                                     <input type="text" data-optionparam12="title" class="textInput" placeholder="Stream Goal" />
                                 </div>
-                                <div>
+                                <div style="position: relative; width: 95%;">
                                     <label><span data-translate="custom-jar-image">Custom Jar Image URL:</span></label>
-                                    <input type="text" data-optionparam12="jarimage" class="textInput" placeholder="https://example.com/jar.png" />
+                                    <input type="text" id="streamGoalJarImage" data-optionparam12="jarimage" class="textInput" placeholder="https://example.com/jar.png" />
+                                    <button type="button" id="uploadStreamGoalJarImageBtn" style="position: absolute; right: 5px; bottom: 5px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
 								
                             </div>
@@ -10291,9 +10848,10 @@ input:checked + .slider:before {
                                         <span class="range-value" id="waitlist-sound-volume-display">30%</span>
                                     </span>
                                 </div>
-                                <div class="textInputContainer" style="width: 95%;" title="Specify a URL for a custom sound audio file">
+                                <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom sound audio file">
                                     <input type="text" id="customsound" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/sound.wav" data-textparam5="customsound" />
                                     <label for="customsound"><span data-translate="customsound">&gt; URL for custom sound audio file</span></label>
+                                    <button type="button" id="uploadWaitlistSoundBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -10541,6 +11099,7 @@ input:checked + .slider:before {
                                 <option value="gemini">Gemini (Preview TTS)</option>
                                 <option value="speechify">Speechify</option>
                                 <option value="openai">OpenAI</option>
+                                <option value="customtts">Custom / Local TTS Endpoint</option>
                                 <option value="piper">Piper TTS</option>
                                 <option value="espeak">eSpeak TTS</option>
                             </select>
@@ -10911,14 +11470,17 @@ input:checked + .slider:before {
 
                         <!-- OpenAI TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="openaiTTS18">
-                            <h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+                            <h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
+                            <div style="margin: -4px 0 12px 0; font-size: 0.9em;">
+                                <a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+                            </div>
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="password" id="openaiAPIKey18" class="textInput instant" autocomplete="off" placeholder="Your OpenAI API Key" data-textparam18="openaikey" />
-                                <label for="openaiAPIKey18"><span data-translate="openai-api-key">OpenAI API Key</span></label>
+                                <label for="openaiAPIKey18"><span data-translate="openai-api-key">API Key (optional for local endpoints)</span></label>
                             </div>
                             <div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
                                 <input type="text" id="openaiEndpoint18" class="textInput instant" autocomplete="off" placeholder="https://api.openai.com/v1/audio/speech" data-textparam18="openaiendpoint" />
-                                <label for="openaiEndpoint18"><span data-translate="openai-endpoint">Custom API Endpoint (optional)</span></label>
+                                <label for="openaiEndpoint18"><span data-translate="openai-endpoint">Custom / Local API Endpoint</span></label>
                             </div>
                             <div>
                                 🎭 Voice to use:
@@ -10929,7 +11491,9 @@ input:checked + .slider:before {
                                     <option value="onyx">Onyx</option>
                                     <option value="nova">Nova</option>
                                     <option value="shimmer">Shimmer</option>
+                                    <option value="custom">Custom</option>
                                 </select>
+                                <input type="text" id="openaiCustomVoice18" class="textInput" style="display:none; margin-left: 10px; width: 150px;" placeholder="Custom voice name" data-textparam18="openaicustomvoice" />
                             </div>
                             <br />
                             <div>
@@ -10942,7 +11506,9 @@ input:checked + .slider:before {
                                     <select id="openaiModelSelect18" data-optionparam18="openaimodel">
                                         <option value="tts-1" selected>tts-1 (faster)</option>
                                         <option value="tts-1-hd">tts-1-hd (higher quality)</option>
+                                        <option value="custom">Custom</option>
                                     </select>
+                                    <input type="text" id="openaiCustomModel18" class="textInput" style="display:none; margin-left: 10px; width: 150px;" placeholder="Custom model name" data-textparam18="openaicustommodelx" />
                                 </span>
                             </div>
                             <div>
@@ -10966,6 +11532,7 @@ input:checked + .slider:before {
                                         <option value="mp3" selected>MP3</option>
                                         <option value="opus">Opus</option>
                                         <option value="aac">AAC</option>
+                                        <option value="wav">WAV</option>
                                         <option value="flac">FLAC</option>
                                     </select>
                                 </span>
@@ -11057,6 +11624,14 @@ input:checked + .slider:before {
 										<option value="freeform">Free-form</option>
 										<option value="yesno">Yes/No</option>
 										<option value="multiple">Multiple Choice</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label><span data-translate="poll-match-mode">Vote Matching:</span></label>
+									<select data-optionsetting="pollMatchMode" data-target="poll" id="pollMatchMode">
+										<option value="exact" data-translate="poll-match-exact">Exact vote only</option>
+										<option value="hashtag-anywhere" data-translate="poll-match-hashtag-anywhere">Hashtag anywhere</option>
 									</select>
 								</div>
 								<br>
@@ -11976,7 +12551,7 @@ input:checked + .slider:before {
 			</div>
 			
 			<!-- OVERLAY THEME CONFIGURATION SECTIONS -->
-			<div class="wrapper">
+			<div class="wrapper beginner-basic chat-overlay-theme-options-wrapper" id="chatOverlayThemeOptionsWrapper" style="display: none;">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-overlay-theme-options" />
 					<label class="collapsible-label" for="wrapper-overlay-theme-options">🎨 <span data-translate="overlay-theme-options">Overlay Theme Options</span></label>
@@ -11987,7 +12562,7 @@ input:checked + .slider:before {
 								<h3>📄 <span data-translate="sample-overlay-options">Sample Overlay Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="demo" />
+										<input type="checkbox" data-param30="demo" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="demo-mode-overlay">
@@ -12001,7 +12576,7 @@ input:checked + .slider:before {
 								<h3>⚡ <span data-translate="neon-cyberpunk-options">Neon Cyberpunk Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="chroma" />
+										<input type="checkbox" data-param30="chroma" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="cyberpunk-chroma">
@@ -12010,7 +12585,7 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="intensegfx" />
+										<input type="checkbox" data-param30="intensegfx" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="cyberpunk-intense">
@@ -12023,7 +12598,7 @@ input:checked + .slider:before {
 								<h3>✨ <span data-translate="particles-options">Particle System Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="denseparticles" />
+										<input type="checkbox" data-param30="denseparticles" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="particles-dense">
@@ -12032,7 +12607,7 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="chroma" />
+										<input type="checkbox" data-param30="chroma" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="particles-chroma">
@@ -12045,7 +12620,7 @@ input:checked + .slider:before {
 								<h3>⌨️ <span data-translate="typewriter-options">Terminal Typewriter Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="fastype" />
+										<input type="checkbox" data-param30="fastype" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="typewriter-fast">
@@ -12054,7 +12629,7 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="nosound" />
+										<input type="checkbox" data-param30="nosound" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="typewriter-nosound">
@@ -12067,7 +12642,7 @@ input:checked + .slider:before {
 								<h3>🫧 <span data-translate="bubbles-options">Bubble Chat Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="bigbubbles" />
+										<input type="checkbox" data-param30="bigbubbles" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="bubbles-big">
@@ -12076,7 +12651,7 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="chroma" />
+										<input type="checkbox" data-param30="chroma" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="bubbles-chroma">
@@ -12089,7 +12664,7 @@ input:checked + .slider:before {
 								<h3>🃏 <span data-translate="cards-options">Card Flip 3D Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="autoflip" />
+										<input type="checkbox" data-param30="autoflip" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="cards-autoflip">
@@ -12098,7 +12673,7 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="chroma" />
+										<input type="checkbox" data-param30="chroma" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="cards-chroma">
@@ -12112,7 +12687,7 @@ input:checked + .slider:before {
 								<h3>⚛️ <span data-translate="neutron-overlay-options">Neutron Theme Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="darkmode" />
+										<input type="checkbox" data-param30="darkmode" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="neutron-dark-mode">
@@ -12126,7 +12701,7 @@ input:checked + .slider:before {
 								<h3>✨ <span data-translate="pretty-overlay-options">Pretty Theme Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="chroma" />
+										<input type="checkbox" data-param30="chroma" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="pretty-chroma-key">
@@ -12140,7 +12715,7 @@ input:checked + .slider:before {
 								<h3>🖥️ <span data-translate="windows31-overlay-options">Windows 3.1 Theme Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="retro" />
+										<input type="checkbox" data-param30="retro" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="windows31-retro-mode">
@@ -12154,7 +12729,7 @@ input:checked + .slider:before {
 								<h3>🎮 <span data-translate="t3nk3y-overlay-options">T3nk3y Theme Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="gaming" />
+										<input type="checkbox" data-param30="gaming" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="t3nk3y-gaming-mode">
@@ -12168,7 +12743,7 @@ input:checked + .slider:before {
 								<h3>🎁 <span data-translate="luckyloottube-overlay-options">LuckyLootTube Theme Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param1="luckyloottube" />
+										<input type="checkbox" data-param30="luckyloottube" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="luckyloottube-mode">
@@ -12231,6 +12806,7 @@ input:checked + .slider:before {
 						<option value="games/colorwars.html">🎨 Color Wars - Territory painting</option>
 						<option value="games/treasurehunt.html">🏴‍☠️ Treasure Hunt - Grid exploration</option>
 						<option value="games/dancingparade.html">💃 Dancing Parade - Lower third animation</option>
+						<option value="games/chickenroyale.html">🍗 Chicken Royale - 3D battle royale, last chicken standing</option>
 					</select>
 					<span style="margin-left: 10px; font-size: 12px; opacity: 0.7;display: block;">
 						<i data-translate="games-note">Note: Each game has unique commands and mechanics</i>
@@ -12477,7 +13053,39 @@ input:checked + .slider:before {
 										</span>
 									</div>
 								</div>
-								
+
+								<!-- Chicken Royale Options -->
+								<div class="game-config-section" id="chickenroyale-config" style="display: none;">
+									<h3>🍗 <span data-translate="chicken-royale-options">Chicken Royale Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-chickenroyale">
+											🤖 Enable demo mode (auto-chickens)
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="autojoin" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="autojoin-chickenroyale">
+											🐔 Auto-join: anyone who chats enters the lobby
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="darkmode" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="dark-mode-chickenroyale">
+											⚫ Dark mode (night island)
+										</span>
+									</div>
+								</div>
+
 								<!-- General Game Options -->
 								<div class="game-config-section" id="general-game-config">
 									<h3><span data-translate="general-game-settings">General Game Settings</span></h3>
@@ -12769,7 +13377,7 @@ input:checked + .slider:before {
 					<p>Displays a dynamic word cloud that grows based on what your chat is saying. Popular words appear larger.</p>
 					<ul>
 						<li>Real-time word frequency visualization</li>
-						<li>Single-word messages contribute to the cloud</li>
+						<li>Single-word messages contribute by default</li>
 						<li>Customizable appearance and filters</li>
 						<li>Great for polls or seeing chat trends</li>
 					</ul>
@@ -12777,7 +13385,7 @@ input:checked + .slider:before {
 				</div>
                 <h3>
                     <span data-translate="when-enabled-a-wordcloud">
-                       A wordcloud overlay. Chat messages that contain a single word are allowed.
+                       A wordcloud overlay. Chat messages that contain a single word are counted by default.
                     </span>
                 </h3>
 				<div id="wordcloud" data-raw="" class="streaming_chat"><a href="" id="wordcloudlink"></a></div>
@@ -12797,7 +13405,16 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="enable-the-wordcloud">🚦 Enable </span>
                                 </div>
-								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param7="allwords" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										Count words from all chat messages
+									</span>
+								</div>
+
                                 <h3><span data-translate="other-customization-options">Other customization options</span></h3>
                                 <div>
                                     <span data-translate="font-family">
@@ -13424,7 +14041,7 @@ input:checked + .slider:before {
 			
 			
 			<br>
-			<a class="options-link rounded_area" href="#global-settings-and-tools-options" title="Jump to the global settings and tools.">
+			<a class="options-link rounded_area beginner-advanced" href="#global-settings-and-tools-options" title="Jump to the global settings and tools.">
 				👉 Looking for the Global settings? It was moved further up the page. Click here to JUMP to it.
 			</a>
 			<br><br><br>

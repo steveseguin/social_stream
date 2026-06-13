@@ -3681,6 +3681,29 @@ function isKickBanEventName(eventName) {
     return /(^|[._:\\\/-])(?:user)?ban(?:ned)?(?:event)?($|[._:\\\/-])/.test(normalized);
 }
 
+function isKickHostEventName(eventName) {
+    const normalized = String(eventName || '').trim().toLowerCase();
+    if (!normalized || normalized.indexOf('pusher:') === 0 || normalized.indexOf('pusher_internal:') === 0) {
+        return false;
+    }
+    return (
+        normalized === 'app\\events\\streamhostevent' ||
+        normalized === 'stream.hosted' ||
+        normalized === 'stream.host' ||
+        normalized === 'livestream.hosted' ||
+        normalized === 'livestream.host' ||
+        normalized === 'channel.hosted' ||
+        normalized === 'channel.host' ||
+        normalized === 'channel.raid' ||
+        normalized === 'stream.raid' ||
+        normalized === 'livestream.raid' ||
+        normalized === 'raid' ||
+        /(^|[._:\\\/-])streamhostevent($|[._:\\\/-])/.test(normalized) ||
+        /(^|[._:\\\/-])raid(?:ed|event)?($|[._:\\\/-])/.test(normalized) ||
+        /(^|[._:\\\/-])host(?:ed|event)?($|[._:\\\/-])/.test(normalized)
+    );
+}
+
 function looksLikeKickBanPayload(data) {
     if (!data || typeof data !== 'object') {
         return false;
@@ -3720,8 +3743,8 @@ function mapPusherEventToPacket(eventName, data) {
     if (isKickBanEventName(eventName) || looksLikeKickBanPayload(data)) {
         return { type: 'moderation.banned', body: data, source: 'socket' };
     }
-    if (eventName === 'App\\Events\\StreamHostEvent') {
-        return { type: 'livestream.status.updated', body: data, source: 'socket' };
+    if (isKickHostEventName(eventName)) {
+        return { type: 'stream.hosted', body: data, source: 'socket' };
     }
     return { type: eventName, body: data, source: 'socket' };
 }
@@ -6223,6 +6246,10 @@ function processBridgeEvent(packet, isReplay = false) {
         forwardKicksGifted(type, body, bridgeMeta);
         return;
     }
+    if (isKickHostEventName(type)) {
+        forwardKickRaid(type, body, bridgeMeta);
+        return;
+    }
     if (/support|donat|tip|kick/i.test(type)) {
         forwardSupportEvent(type, body, bridgeMeta);
         return;
@@ -7336,6 +7363,211 @@ function takeNumber(value) {
         }
     }
     return null;
+}
+
+function extractKickRaidViewerCount(evt) {
+    let viewers = extractKickViewerCount(evt);
+    if (viewers != null) {
+        return viewers;
+    }
+    const data = evt?.data || {};
+    const viewerCandidates = [
+        evt?.numberViewers,
+        evt?.number_viewers,
+        evt?.viewerCount,
+        evt?.viewer_count,
+        evt?.viewers,
+        evt?.count,
+        evt?.host_viewer_count,
+        evt?.hostViewerCount,
+        evt?.host_viewers,
+        evt?.hostViewers,
+        evt?.raider_viewer_count,
+        evt?.raiderViewerCount,
+        evt?.raider_viewers,
+        evt?.raiderViewers,
+        data?.numberViewers,
+        data?.number_viewers,
+        data?.viewerCount,
+        data?.viewer_count,
+        data?.viewers,
+        data?.count,
+        data?.host_viewer_count,
+        data?.hostViewerCount,
+        data?.host_viewers,
+        data?.hostViewers
+    ];
+    for (const candidate of viewerCandidates) {
+        viewers = takeNumber(candidate);
+        if (viewers != null) {
+            return Math.max(0, Math.floor(viewers));
+        }
+    }
+    return null;
+}
+
+function forwardKickRaid(eventType, evt, bridgeMeta) {
+    const data = evt?.data || {};
+    const hostSources = [
+        evt?.host,
+        evt?.hoster,
+        evt?.raider,
+        evt?.sender,
+        evt?.user,
+        evt?.from,
+        data?.host,
+        data?.hoster,
+        data?.raider,
+        data?.sender,
+        data?.user,
+        data?.from,
+        evt
+    ];
+    const { profile: hostProfile } = gatherProfileState(...hostSources);
+    const raider = hostProfile.displayName || pickFirstString([
+        evt?.host?.display_name,
+        evt?.host?.username,
+        evt?.hoster?.display_name,
+        evt?.hoster?.username,
+        evt?.raider?.display_name,
+        evt?.raider?.username,
+        evt?.sender?.display_name,
+        evt?.sender?.username,
+        evt?.user?.display_name,
+        evt?.user?.username,
+        evt?.from?.display_name,
+        evt?.from?.username,
+        evt?.host_display_name,
+        evt?.hostDisplayName,
+        evt?.host_username,
+        evt?.hostUsername,
+        evt?.raider_display_name,
+        evt?.raiderDisplayName,
+        evt?.raider_username,
+        evt?.raiderUsername,
+        data?.host?.display_name,
+        data?.host?.username,
+        data?.hoster?.display_name,
+        data?.hoster?.username,
+        data?.raider?.display_name,
+        data?.raider?.username,
+        data?.host_display_name,
+        data?.hostDisplayName,
+        data?.host_username,
+        data?.hostUsername
+    ]);
+    const chatname = raider || getTranslation('kick-viewer-label', 'Kick viewer');
+    const viewers = extractKickRaidViewerCount(evt);
+    const viewerLabel = viewers === 1
+        ? getTranslation('kick-raid-one-viewer-label', '1 viewer')
+        : formatTranslation('kick-raid-viewers-label', '{count} viewers', {
+            count: viewers != null ? viewers : getTranslation('kick-raid-unknown-viewers', 'unknown')
+        });
+    const chatmessage = formatTranslation('kick-raid-alert-message', '{name} has raided you with {viewers}', {
+        name: chatname,
+        viewers: viewerLabel
+    });
+    const chatimg =
+        hostProfile.avatar ||
+        pickImage(
+            evt?.host?.profile_picture,
+            evt?.host?.profilePicture,
+            evt?.host?.avatar,
+            evt?.hoster?.profile_picture,
+            evt?.hoster?.profilePicture,
+            evt?.hoster?.avatar,
+            evt?.raider?.profile_picture,
+            evt?.raider?.profilePicture,
+            evt?.raider?.avatar,
+            evt?.sender?.profile_picture,
+            evt?.sender?.profilePicture,
+            evt?.sender?.avatar,
+            evt?.user?.profile_picture,
+            evt?.user?.profilePicture,
+            evt?.user?.avatar,
+            evt?.host_profile_picture,
+            evt?.hostProfilePicture,
+            evt?.raider_profile_picture,
+            evt?.raiderProfilePicture,
+            data?.host?.profile_picture,
+            data?.host?.profilePicture,
+            data?.host?.avatar,
+            data?.raider?.profile_picture,
+            data?.raider?.profilePicture,
+            data?.raider?.avatar
+        );
+    const fromId = pickFirstString([
+        evt?.host_user_id != null ? String(evt.host_user_id) : '',
+        evt?.hostUserId != null ? String(evt.hostUserId) : '',
+        evt?.host?.user_id != null ? String(evt.host.user_id) : '',
+        evt?.host?.id != null ? String(evt.host.id) : '',
+        evt?.hoster?.user_id != null ? String(evt.hoster.user_id) : '',
+        evt?.raider?.user_id != null ? String(evt.raider.user_id) : '',
+        evt?.sender?.user_id != null ? String(evt.sender.user_id) : '',
+        evt?.user?.user_id != null ? String(evt.user.user_id) : '',
+        data?.host_user_id != null ? String(data.host_user_id) : '',
+        data?.hostUserId != null ? String(data.hostUserId) : '',
+        data?.host?.user_id != null ? String(data.host.user_id) : '',
+        data?.raider?.user_id != null ? String(data.raider.user_id) : ''
+    ]);
+    const fromLogin = normalizeChannel(pickFirstString([
+        evt?.host_slug,
+        evt?.hostSlug,
+        evt?.host_channel_slug,
+        evt?.hostChannelSlug,
+        evt?.host?.channel_slug,
+        evt?.host?.slug,
+        evt?.host?.username,
+        evt?.hoster?.channel_slug,
+        evt?.hoster?.username,
+        evt?.raider?.channel_slug,
+        evt?.raider?.username,
+        evt?.sender?.channel_slug,
+        evt?.sender?.username,
+        evt?.user?.channel_slug,
+        evt?.user?.username,
+        evt?.host_username,
+        evt?.hostUsername,
+        data?.host_slug,
+        data?.hostSlug,
+        data?.host_channel_slug,
+        data?.hostChannelSlug,
+        data?.host?.channel_slug,
+        data?.host?.slug,
+        data?.host?.username,
+        data?.raider?.channel_slug,
+        data?.raider?.username,
+        data?.host_username,
+        data?.hostUsername
+    ]));
+    const meta = { eventType };
+    if (fromId) {
+        meta.fromId = fromId;
+    }
+    if (fromLogin) {
+        meta.fromLogin = fromLogin;
+    }
+    if (viewers != null) {
+        meta.viewers = viewers;
+    }
+
+    pushMessage({
+        type: 'kick',
+        event: 'raid',
+        chatname,
+        chatmessage: escapeHtml(chatmessage),
+        chatimg: chatimg || '',
+        meta
+    });
+    appendAlertsFeedEntry({
+        kind: 'event',
+        actor: chatname,
+        message: viewerLabel,
+        avatar: chatimg || ''
+    });
+
+    const prefix = bridgeMeta?.verified === false ? '[RAID !]' : '[RAID]';
+    log(`${prefix} ${chatname}${viewers != null ? ` - ${viewers} viewers` : ''}`);
 }
 
 function formatKickAmountLabel(amount, currency) {

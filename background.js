@@ -21,6 +21,58 @@ var lastMessageCounter = 0;
 const fakeChatThrottleState = new Map();
 var sentimentAnalysisLoaded = false;
 const commandAliasCache = new Map();
+const settingCommaListCache = new Map();
+const settingRoleListCache = new Map();
+const DEFAULT_QUESTION_KEYWORDS = ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
+
+function trimSettingCache(cache) {
+	if (cache.size > 500) {
+		cache.clear();
+	}
+}
+
+function getCachedCommaList(value, lowerCase = false, keepEmpty = false) {
+	if (value === undefined || value === null) {
+		return [];
+	}
+	const raw = String(value);
+	const cacheKey = (lowerCase ? "1" : "0") + "|" + (keepEmpty ? "1" : "0") + "|" + raw;
+	const cached = settingCommaListCache.get(cacheKey);
+	if (cached) {
+		return cached;
+	}
+	let entries = raw.split(",").map(entry => {
+		entry = entry.trim();
+		return lowerCase ? entry.toLowerCase() : entry;
+	});
+	if (!keepEmpty) {
+		entries = entries.filter(Boolean);
+	}
+	trimSettingCache(settingCommaListCache);
+	settingCommaListCache.set(cacheKey, entries);
+	return entries;
+}
+
+function getCachedRoleList(value) {
+	const raw = String(value || "");
+	const cached = settingRoleListCache.get(raw);
+	if (cached) {
+		return cached;
+	}
+	const entries = raw
+		.toLowerCase()
+		.split(",")
+		.map(entry => entry.trim())
+		.filter(entry => entry)
+		.map(entry => {
+			const parts = entry.split(":").map(part => part.trim());
+			return { name: parts[0] || "", type: parts[1] || "" };
+		})
+		.filter(entry => entry.name);
+	trimSettingCache(settingRoleListCache);
+	settingRoleListCache.set(raw, entries);
+	return entries;
+}
 
 function getCommandAliases(commandString) {
 	if (!commandString) {
@@ -50,6 +102,14 @@ function getCommandAliases(commandString) {
 	return aliases;
 }
 
+function commandAliasStartsWithToken(normalizedText, aliasLower) {
+	if (!normalizedText.startsWith(aliasLower)) {
+		return false;
+	}
+	const nextChar = normalizedText.charAt(aliasLower.length);
+	return !nextChar || /\s/.test(nextChar);
+}
+
 function commandAliasMatches(commandString, messageText, mode) {
 	if (typeof messageText === "undefined" || messageText === null) {
 		return false;
@@ -58,19 +118,21 @@ function commandAliasMatches(commandString, messageText, mode) {
 	if (!aliases.length) {
 		return false;
 	}
-	const text = String(messageText);
+	const normalizedText = String(messageText).trim().toLowerCase();
 
 	if (mode === "exact") {
-		return aliases.some(alias => text === alias.command);
+		return aliases.some(alias => normalizedText === alias.lower);
 	}
 	if (mode === "startsWith") {
-		const lowerText = text.toLowerCase();
-		return aliases.some(alias => lowerText.startsWith(alias.lower));
+		return aliases.some(alias => normalizedText.startsWith(alias.lower));
+	}
+	if (mode === "startsWithToken") {
+		return aliases.some(alias => commandAliasStartsWithToken(normalizedText, alias.lower));
 	}
 	if (mode === "word") {
-		return aliases.some(alias => alias.wordRegex.test(text));
+		return aliases.some(alias => alias.wordRegex.test(normalizedText));
 	}
-	return aliases.some(alias => text.includes(alias.command));
+	return aliases.some(alias => normalizedText.includes(alias.lower));
 }
 
 function getCustomGifCommandEntryId(command, url, id) {
@@ -83,15 +145,31 @@ function getCustomGifCommandEntryId(command, url, id) {
 	return "gif_" + Math.abs(hash);
 }
 
-function getMatchedCommandAlias(commandString, messageText) {
-	const text = String(messageText || "");
+function getMatchedCommandAlias(commandString, messageText, mode) {
+	const normalizedText = String(messageText || "")
+		.trim()
+		.toLowerCase();
 	const aliases = getCommandAliases(commandString);
+	const matchMode = mode || "contains";
+
 	for (let i = 0; i < aliases.length; i++) {
-		if (text === aliases[i].command) {
+		if (matchMode === "exact" && normalizedText === aliases[i].lower) {
+			return aliases[i].command;
+		}
+		if (matchMode === "startsWith" && normalizedText.startsWith(aliases[i].lower)) {
+			return aliases[i].command;
+		}
+		if (matchMode === "startsWithToken" && commandAliasStartsWithToken(normalizedText, aliases[i].lower)) {
+			return aliases[i].command;
+		}
+		if (matchMode === "word" && aliases[i].wordRegex.test(normalizedText)) {
+			return aliases[i].command;
+		}
+		if (matchMode === "contains" && normalizedText.includes(aliases[i].lower)) {
 			return aliases[i].command;
 		}
 	}
-	return text;
+	return normalizedText;
 }
 
 // Spotify integration
@@ -1403,7 +1481,8 @@ function loadSettings(item, resave = false) {
 	let reloadNeeded = false;
 	let normalizedSettings = false;
 	const { storedId, storedState } = getPersistedSession();
-	const isFirstRun = !storedId && !(item && item.streamID) && storedState === null && !(item && "state" in item);
+	const hasIncomingSettings = !!(item && item.settings && Object.keys(item.settings).length);
+	const isFirstRun = !storedId && !(item && item.streamID) && storedState === null && !(item && "state" in item) && !hasIncomingSettings;
 	const incomingStreamId = item && item.streamID ? item.streamID : storedId;
 
 	if (incomingStreamId) {
@@ -1478,6 +1557,14 @@ function loadSettings(item, resave = false) {
 		Object.keys(patterns).forEach(pattern => {
 			settings[pattern] = findExistingEvents(pattern, { settings });
 		});
+	}
+
+	if (isFirstRun && !getSettingFlag("beginnerMode")) {
+		settings.beginnerMode = { setting: true };
+		if (item) {
+			item.settings = settings;
+		}
+		normalizedSettings = true;
 	}
 
 	const incomingState = item && "state" in item ? item.state : storedState;
@@ -1709,6 +1796,10 @@ function isVideoStatsSettingKey(settingKey) {
 function getSettingFlag(settingKey) {
 	const entry = settings && settings[settingKey];
 	return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+}
+
+function getPopupBeginnerMode() {
+	return getSettingFlag("beginnerMode");
 }
 
 function getSettingField(settingKey, fieldKey, fallback) {
@@ -3265,6 +3356,7 @@ async function getPronounsNames(username = "") {
 var Globalbttv = false;
 var Globalseventv = false;
 var Globalffz = false;
+const SEVENTV_CHANNEL_CACHE_MINUTES = 60;
 const youtubeSeventvChannelCache = new Map();
 const youtubeChannelByTab = new Map();
 
@@ -3618,7 +3710,7 @@ async function getSEVENTVEmotes(url = false, type = null, channel = null, userID
 					}
 
 					if (seventv) {
-						setItemWithExpiry("uid2seventv.youtube:" + userID, seventv);
+						setItemWithExpiry("uid2seventv.youtube:" + userID, seventv, SEVENTV_CHANNEL_CACHE_MINUTES);
 					}
 				}
 
@@ -3692,7 +3784,7 @@ async function getSEVENTVEmotes(url = false, type = null, channel = null, userID
 								}, {});
 							}
 
-							setItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase(), seventv);
+							setItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase(), seventv, SEVENTV_CHANNEL_CACHE_MINUTES);
 						} else {
 							seventv = {};
 						}
@@ -3750,7 +3842,7 @@ async function getSEVENTVEmotes(url = false, type = null, channel = null, userID
 								}, {});
 							}
 
-							setItemWithExpiry("uid2seventv.kick:" + kickUsername.toLowerCase(), seventv);
+							setItemWithExpiry("uid2seventv.kick:" + kickUsername.toLowerCase(), seventv, SEVENTV_CHANNEL_CACHE_MINUTES);
 						} else {
 							seventv = {};
 						}
@@ -4309,6 +4401,35 @@ function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
 
 const checkDuplicateSources = new CheckDuplicateSources();
 
+function createFirstTimerLeafBadge() {
+	return {
+		type: "svg",
+		html: '<svg viewBox="0 0 24 24" width="20" height="20" role="img" aria-label="First-time chatter" xmlns="http://www.w3.org/2000/svg"><title>First-time chatter</title><path d="M20.8 3.2C13.7 3.4 7.6 6.7 5.2 11.7c-1.3 2.7-1.1 5.2.5 6.8 1.6 1.6 4.2 1.7 6.8.5 5-2.4 8.3-8.5 8.6-15.6 0-.1-.1-.2-.3-.2Z" fill="#4caf50"/><path d="M4 20c3.3-5.5 7.4-8.8 12.8-10.8" fill="none" stroke="#e8ffe8" stroke-width="2" stroke-linecap="round"/><path d="M10.4 9.5c.3 2.3 1.3 3.9 3.5 5" fill="none" stroke="#2f7d32" stroke-width="1.5" stroke-linecap="round"/></svg>'
+	};
+}
+
+function prependFirstTimerBadge(data) {
+	if (!data || !data.firsttime || !getSettingFlag("firsttimerbadge")) return;
+	const badge = createFirstTimerLeafBadge();
+
+	if (!data.chatbadges) {
+		data.chatbadges = [badge];
+		return;
+	}
+
+	if (Array.isArray(data.chatbadges)) {
+		data.chatbadges.unshift(badge);
+		return;
+	}
+
+	if (typeof data.chatbadges === "string") {
+		data.chatbadges = '<span class="hl-badge svg">' + badge.html + "</span>" + data.chatbadges;
+		return;
+	}
+
+	data.chatbadges = [badge, data.chatbadges];
+}
+
 async function processIncomingMessage(message, sender = null) {
 	try {
 		if (sender?.tab && (message.tid === undefined || message.tid === null)) {
@@ -4326,7 +4447,7 @@ async function processIncomingMessage(message, sender = null) {
 		}
 
 		if (settings.filtercommandscustomtoggle && message.chatmessage && settings.filtercommandscustomwords && settings.filtercommandscustomwords.textsetting) {
-			if (settings.filtercommandscustomwords.textsetting.split(",").some(v => v.trim() && message.chatmessage.startsWith(v.trim()))) {
+			if (getCachedCommaList(settings.filtercommandscustomwords.textsetting).some(v => message.chatmessage.startsWith(v))) {
 				return;
 			}
 		}
@@ -4443,7 +4564,7 @@ async function processIncomingMessage(message, sender = null) {
 			return message;
 		}
 
-		sendToDestinations(message); // send the data to the dock
+		await sendToDestinations(message); // send the data to the dock
 	}
 	return message;
 }
@@ -4503,22 +4624,43 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			persistSession({ state: isExtensionOn });
 
 			updateExtensionState();
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
 		} else if (request.cmd && request.cmd === "getOnOffState") {
-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
 			let responseData;
 			try {
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG, handleStatus: getHandleStatusSnapshot() };
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), documents: documentsRAG, handleStatus: getHandleStatusSnapshot() };
 			} catch (e) {
 				console.warn("Error including documentsRAG:", e);
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, handleStatus: getHandleStatusSnapshot() };
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), handleStatus: getHandleStatusSnapshot() };
 			}
 			sendResponse(responseData);
 		} else if (request.cmd && request.cmd === "testLLMProvider") {
 			try {
 				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null });
+				sendResponse({ success: true, response: llmResponse });
+			} catch (error) {
+				let payload;
+				if (typeof LLMServiceError !== "undefined" && error instanceof LLMServiceError) {
+					payload = {
+						provider: error.provider,
+						status: error.status,
+						code: error.code,
+						message: error.message,
+						hint: error.hint || null
+					};
+				} else {
+					payload = {
+						message: error?.message || "Unexpected error"
+					};
+				}
+				sendResponse({ success: false, error: payload });
+			}
+		} else if (request.cmd && request.cmd === "classifyMessageForExport") {
+			try {
+				const llmResponse = await callLLMAPI(String(request.prompt || ""), null, null, null, null, null, { settings: request.settingsOverride || null });
 				sendResponse({ success: true, response: llmResponse });
 			} catch (error) {
 				let payload;
@@ -4582,6 +4724,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 
 			pruneSettingsObjects(settings);
+
+			if ((request.setting === "beepreturning" || request.setting === "firsttimerbadge") && request.value && !getSettingFlag("disableDB") && !getSettingFlag("firsttimers")) {
+				settings.firsttimers = { setting: true };
+			}
 
 			Object.keys(patterns).forEach(pattern => {
 				settings[pattern] = findExistingEvents(pattern, { settings });
@@ -5036,15 +5182,25 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// Handle batch messages from YouTube and TikTok
 			sendResponse({ state: isExtensionOn });
 			if (Array.isArray(request.messages)) {
-				// Process messages in parallel for better performance
-				await Promise.all(
-					request.messages.map(message =>
-						processIncomingMessage(message, sender).catch(error => {
+				if (getSettingFlag("firsttimers") && !getSettingFlag("disableDB")) {
+					for (const message of request.messages) {
+						try {
+							await processIncomingMessage(message, sender);
+						} catch (error) {
 							console.error("Error processing message:", error);
-							// Continue processing other messages even if one fails
-						})
-					)
-				);
+						}
+					}
+				} else {
+					// Process messages in parallel for better performance
+					await Promise.all(
+						request.messages.map(message =>
+							processIncomingMessage(message, sender).catch(error => {
+								console.error("Error processing message:", error);
+								// Continue processing other messages even if one fails
+							})
+						)
+					);
+				}
 			}
 		} else if ("getBTTV" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
@@ -5373,6 +5529,50 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					}
 				})();
 			}
+		} else if (request.cmd && request.cmd === "ebaySellerStats") {
+			try {
+				const seller = String(request.seller || "")
+					.toLowerCase()
+					.replace(/^@+/, "")
+					.replace(/\s+/g, "")
+					.replace(/[^a-z0-9_-]/g, "");
+				if (!seller) {
+					sendResponse({ ok: false, error: "Invalid eBay seller" });
+					return response;
+				}
+				const endpoint = new URL("https://vps-1122d8c8.vps.ovh.us:1443/seller");
+				endpoint.searchParams.set("seller", seller);
+				const ebayResponse = await fetch(endpoint.toString(), {
+					cache: "no-store",
+					credentials: "omit",
+					headers: {
+						Accept: "application/json"
+					}
+				});
+				const responseText = await ebayResponse.text();
+				let responseJson = {};
+				try {
+					responseJson = responseText ? JSON.parse(responseText) : {};
+				} catch (error) {
+					responseJson = null;
+				}
+				if (!ebayResponse.ok) {
+					sendResponse({
+						ok: false,
+						status: ebayResponse.status,
+						error: (responseJson && (responseJson.message || responseJson.error)) || `HTTP ${ebayResponse.status}`
+					});
+					return response;
+				}
+				if (responseJson == null) {
+					sendResponse({ ok: false, status: ebayResponse.status, error: "Invalid JSON response" });
+					return response;
+				}
+				sendResponse({ ok: true, status: ebayResponse.status, data: responseJson });
+			} catch (error) {
+				sendResponse({ ok: false, error: error && error.message ? error.message : "eBay seller stats fetch failed" });
+			}
+			return true;
 		} else if (request.cmd && request.cmd === "vpzoneFetchJson") {
 			let parsedUrl;
 			try {
@@ -5456,6 +5656,18 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					ok: false,
 					status: error && typeof error.status !== "undefined" ? error.status : undefined,
 					error: error && error.message ? error.message : "Rumble SSE fetch failed"
+				});
+			}
+			return true;
+		} else if (request.cmd && request.cmd === "rumbleFetchHtml") {
+			try {
+				const rumbleResponse = await fetchRumbleHtmlResponse(request.url);
+				sendResponse({ ok: true, status: rumbleResponse.status, url: rumbleResponse.url, html: rumbleResponse.html });
+			} catch (error) {
+				sendResponse({
+					ok: false,
+					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+					error: error && error.message ? error.message : "Rumble HTML fetch failed"
 				});
 			}
 			return true;
@@ -6392,10 +6604,7 @@ async function sendToDestinations(message) {
 		}
 
 		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.event) {
-			const blockedEvents = settings.filterevents.textsetting
-				.split(",")
-				.map(v => v.trim().toLowerCase())
-				.filter(Boolean);
+			const blockedEvents = getCachedCommaList(settings.filterevents.textsetting, true);
 			const eventName = typeof message.event === "string" ? message.event.trim().toLowerCase() : "";
 			const messageText = (message.textContent || message.chatmessage || "").toLowerCase();
 			if (blockedEvents.some(v => (eventName && eventName === v) || (messageText && messageText.includes(v)))) {
@@ -6460,6 +6669,20 @@ async function sendToDestinations(message) {
 				}
 
 				return true;
+			}
+		}
+
+		if (getSettingFlag("aiAutoTranslate")) {
+			try {
+				const translated = await translateMessageWithLLM(message);
+				if (!translated) {
+					return false;
+				}
+				if (message.chatmessage && !message.textonly) {
+					message.chatmessage = filterXSS(message.chatmessage);
+				}
+			} catch (e) {
+				console.log(e); // ai.js file missing?
 			}
 		}
 	}
@@ -6537,17 +6760,22 @@ async function sendToDestinations(message) {
 	try {
 		if (settings.enableCustomGifCommands && settings["customGifCommands"]) {
 			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
-			const firstWord = message && message.chatmessage ? message.chatmessage.split(" ")[0] : "";
+			const messageText = typeof message.chatmessage === "string" ? message.chatmessage : "";
+			const cleanMessageText = messageText.trim().replace(/^[^a-zA-Z0-9#]+/g, "");
 			settings["customGifCommands"]["object"].forEach(values => {
-				if (firstWord && values.url && values.command && commandAliasMatches(values.command, firstWord, "exact")) {
+				if (cleanMessageText && values.url && values.command && commandAliasMatches(values.command, cleanMessageText, "startsWithToken")) {
 					//  || "https://picsum.photos/1280/720?random="+values.command
 					const aliases = getCommandAliases(values.command).map(alias => alias.command);
 					const gifMeta = Object.assign({}, message.meta || {}, {
 						customGifCommandId: getCustomGifCommandEntryId(values.command, values.url, values.id),
-						customGifCommand: getMatchedCommandAlias(values.command, firstWord),
+						customGifCommand: getMatchedCommandAlias(values.command, cleanMessageText, "startsWithToken"),
 						customGifCommands: aliases
 					});
-					sendTargetP2P({ ...message, ...{ contentimg: values.url, meta: gifMeta } }, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
+					const gifPayload = { ...message, ...{ contentimg: values.url, meta: gifMeta } }; // overwrite any existing contentimg. leave the rest of the meta data tho
+					sendTargetP2P(gifPayload, "gif");
+					if (gifMeta.customGifCommandId) {
+						sendTargetP2P(gifPayload, gifMeta.customGifCommandId);
+					}
 				}
 			});
 		}
@@ -8900,7 +9128,7 @@ function setupSocket() {
 					resp = selectRandomWaitlist();
 				}
 			} else if (data.action && data.action === "drawmode") {
-				const currentState = !!settings.drawmode;
+				const currentState = getSettingFlag("drawmode");
 				let enable;
 
 				if (typeof data.value === "string") {
@@ -8923,12 +9151,16 @@ function setupSocket() {
 					enable = currentState;
 				}
 
-				settings.drawmode = enable;
+				if (enable) {
+					settings.drawmode = true;
+				} else {
+					delete settings.drawmode;
+				}
 				chrome.storage.local.set({ settings: settings });
 				sendWaitlistConfig(null, true);
 				resp = { drawmode: enable };
 			} else if (data.action && data.action === "emoteonly") {
-				const currentState = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));
+				const currentState = getSettingFlag("emoteonlymode");
 				let enable;
 
 				if (typeof data.value === "string") {
@@ -8951,7 +9183,11 @@ function setupSocket() {
 					enable = currentState;
 				}
 
-				settings.emoteonlymode = { setting: enable };
+				if (enable) {
+					settings.emoteonlymode = { setting: true };
+				} else {
+					delete settings.emoteonlymode;
+				}
 				chrome.storage.local.set({ settings: settings });
 				resp = { emoteonlymode: enable };
 			} else if (data.action) {
@@ -11298,7 +11534,7 @@ function loadPollPreset(pollId) {
 function updatePollSettings(newSettings) {
 	try {
 		// Update poll-related settings
-		const pollKeys = ["pollType", "pollQuestion", "multipleChoiceOptions", "pollStyle", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
+		const pollKeys = ["pollType", "pollQuestion", "multipleChoiceOptions", "pollMatchMode", "pollStyle", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
 
 		pollKeys.forEach(key => {
 			if (newSettings.hasOwnProperty(key)) {
@@ -11343,6 +11579,7 @@ function createNewPoll(pollSettings) {
 			pollType: "freeform",
 			pollQuestion: "",
 			multipleChoiceOptions: "",
+			pollMatchMode: "exact",
 			pollStyle: "default",
 			pollTimer: "60",
 			pollTimerState: false,
@@ -12727,7 +12964,7 @@ eventer(messageEvent, async function (e) {
 		return;
 	}
 	if (e.data && typeof e.data == "object") {
-		if ("dataReceived" in e.data && "overlayNinja" in e.data.dataReceived) {
+		if (e.data.dataReceived && typeof e.data.dataReceived === "object" && "overlayNinja" in e.data.dataReceived) {
 			processIncomingRequest(e.data.dataReceived.overlayNinja, e.data.UUID);
 		} else if ("action" in e.data) {
 			if (e.data.action == "view-stats-updated") {
@@ -14885,17 +15122,10 @@ async function applyBotActions(data, tab = false) {
 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
 				if (!userIdentifier) return null;
 
-				const blacklist = settings.blacklistusers.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const blacklist = getCachedRoleList(settings.blacklistusers.textsetting);
 
 				const isBlocked = blacklist.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					return type ? name === userIdentifier && type === altSourceType : name === userIdentifier;
+					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
 				});
 
 				if (isBlocked) {
@@ -14912,17 +15142,10 @@ async function applyBotActions(data, tab = false) {
 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
 				if (!userIdentifier) return null;
 
-				const whitelist = settings.whitelistusers.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const whitelist = getCachedRoleList(settings.whitelistusers.textsetting);
 
 				const isWhitelisted = whitelist.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					return type ? name === userIdentifier && type === altSourceType : name === userIdentifier;
+					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
 				});
 
 				if (!isWhitelisted) {
@@ -14944,20 +15167,13 @@ async function applyBotActions(data, tab = false) {
 			try {
 				if (!roleUserIdLower && !roleChatNameLower) return;
 
-				const bots = settings.botnamesext.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const bots = getCachedRoleList(settings.botnamesext.textsetting);
 
 				data.bot = bots.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					const typeMatches = !type || type === altSourceType;
+					const typeMatches = !entry.type || entry.type === altSourceType;
 					if (!typeMatches) return false;
 
-					return roleIdentifierMatches(name);
+					return roleIdentifierMatches(entry.name);
 				});
 			} catch (e) {
 				errorlog(e);
@@ -14977,23 +15193,16 @@ async function applyBotActions(data, tab = false) {
 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
 				if (!userIdLower && !chatNameLower) return;
 
-				const hosts = settings.hostnamesext.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const hosts = getCachedRoleList(settings.hostnamesext.textsetting);
 
 				data.host = hosts.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					const typeMatches = !type || type === altSourceType;
+					const typeMatches = !entry.type || entry.type === altSourceType;
 					if (!typeMatches) return false;
 
 					if (settings.matchRolesByDisplayName) {
-						return name === userIdLower || name === chatNameLower;
+						return entry.name === userIdLower || entry.name === chatNameLower;
 					}
-					return name === (userIdLower || chatNameLower);
+					return entry.name === (userIdLower || chatNameLower);
 				});
 			} catch (e) {
 				errorlog(e);
@@ -15037,23 +15246,16 @@ async function applyBotActions(data, tab = false) {
 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
 				if (!userIdLower && !chatNameLower) return;
 
-				const mods = settings.modnamesext.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const mods = getCachedRoleList(settings.modnamesext.textsetting);
 
 				data.mod = mods.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					const typeMatches = !type || type === altSourceType;
+					const typeMatches = !entry.type || entry.type === altSourceType;
 					if (!typeMatches) return false;
 
 					if (settings.matchRolesByDisplayName) {
-						return name === userIdLower || name === chatNameLower;
+						return entry.name === userIdLower || entry.name === chatNameLower;
 					}
-					return name === (userIdLower || chatNameLower);
+					return entry.name === (userIdLower || chatNameLower);
 				});
 			} catch (e) {
 				errorlog(e);
@@ -15074,23 +15276,16 @@ async function applyBotActions(data, tab = false) {
 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
 				if (!userIdLower && !chatNameLower) return;
 
-				const admins = settings.adminnames.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const admins = getCachedRoleList(settings.adminnames.textsetting);
 
 				data.admin = admins.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					const typeMatches = !type || type === altSourceType;
+					const typeMatches = !entry.type || entry.type === altSourceType;
 					if (!typeMatches) return false;
 
 					if (settings.matchRolesByDisplayName) {
-						return name === userIdLower || name === chatNameLower;
+						return entry.name === userIdLower || entry.name === chatNameLower;
 					}
-					return name === (userIdLower || chatNameLower);
+					return entry.name === (userIdLower || chatNameLower);
 				});
 			} catch (e) {
 				errorlog(e);
@@ -15103,23 +15298,16 @@ async function applyBotActions(data, tab = false) {
 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
 				if (!userIdLower && !chatNameLower) return;
 
-				const vips = settings.viplistusers.textsetting
-					.toLowerCase()
-					.split(",")
-					.map(entry => entry.trim())
-					.filter(entry => entry);
+				const vips = getCachedRoleList(settings.viplistusers.textsetting);
 
 				data.vip = vips.some(entry => {
-					const [name, type] = entry.split(":").map(part => part.trim());
-					if (!name) return false;
-
-					const typeMatches = !type || type === altSourceType;
+					const typeMatches = !entry.type || entry.type === altSourceType;
 					if (!typeMatches) return false;
 
 					if (settings.matchRolesByDisplayName) {
-						return name === userIdLower || name === chatNameLower;
+						return entry.name === userIdLower || entry.name === chatNameLower;
 					}
-					return name === (userIdLower || chatNameLower);
+					return entry.name === (userIdLower || chatNameLower);
 				});
 			} catch (e) {
 				errorlog(e);
@@ -15150,14 +15338,15 @@ async function applyBotActions(data, tab = false) {
 			data.containsBadWords = containsProfanity(data.chatmessage);
 		}
 
-		if (settings.firsttimers && data.chatname && data.chatmessage && data.type) {
+		if (getSettingFlag("firsttimers") && !getSettingFlag("disableDB") && data.chatname && data.chatmessage && data.type) {
 			try {
-				const checkResult = await messageStoreDB.checkUserTypeExists(data.userid || data.chatname, data.type);
+				const checkResult = await messageStoreDB.checkUserTypeExists(data.userid || data.chatname, data.type, data.chatname);
 				const exists = typeof checkResult === "object" ? checkResult.exists : !!checkResult;
+				const unavailable = typeof checkResult === "object" && checkResult.unavailable;
 				const lastActivityRaw = typeof checkResult === "object" ? checkResult.lastActivity : null;
 				const normalizedLastActivitySeconds = normalizeTimestampToSeconds(lastActivityRaw);
 
-				if (!exists) {
+				if (!unavailable && !exists) {
 					data.firsttime = true;
 				}
 				if (normalizedLastActivitySeconds) {
@@ -15169,6 +15358,8 @@ async function applyBotActions(data, tab = false) {
 				console.error("Error checking first timer:", e);
 			}
 		}
+
+		prependFirstTimerBadge(data);
 
 		const returningBeepEnabled = !!(settings.beepreturning?.setting ?? settings.beepreturning);
 		const hasChatFields = typeof data.chatname === "string" && data.chatname.trim() !== "" && typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";
@@ -15281,7 +15472,7 @@ async function applyBotActions(data, tab = false) {
 		// Question identification logic
 		if (settings.identifyQuestions && data.chatmessage) {
 			// Default keywords to identify questions
-			const questionKeywords = settings.questionKeywords?.textsetting?.split(",").map(k => k.trim()) || ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
+			const questionKeywords = settings.questionKeywords && settings.questionKeywords.textsetting !== undefined && settings.questionKeywords.textsetting !== null ? getCachedCommaList(settings.questionKeywords.textsetting, false, true) : DEFAULT_QUESTION_KEYWORDS;
 
 			// Check if message contains any question keywords
 			const messageText = data.chatmessage.toLowerCase();
@@ -15497,7 +15688,7 @@ async function applyBotActions(data, tab = false) {
 				// Check source restrictions
 				const sources = settings[`botReplyMessageSource${id}`]?.textsetting;
 				if (sources?.trim()) {
-					const sourceList = sources.split(",").map(s => s.trim().toLowerCase());
+					const sourceList = getCachedCommaList(sources, true, true);
 					if (!sourceList.includes(data.type?.trim().toLowerCase())) {
 						continue;
 					}
@@ -15566,7 +15757,7 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (settings.highlightevent && settings.highlightevent.textsetting.trim() && data.chatmessage && data.event) {
-			const eventTexts = settings.highlightevent.textsetting.split(",").map(text => text.trim());
+			const eventTexts = getCachedCommaList(settings.highlightevent.textsetting, false, true);
 			const messageText = data.textContent || data.chatmessage;
 			if (eventTexts.some(text => messageText.includes(text))) {
 				data.highlightColor = "#fff387";
@@ -15574,7 +15765,7 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
-			const wordTexts = settings.highlightword.textsetting.split(",").map(text => text.trim());
+			const wordTexts = getCachedCommaList(settings.highlightword.textsetting, false, true);
 			const messageText = data.textContent || data.chatmessage;
 			if (wordTexts.some(text => messageText.includes(text))) {
 				data.highlightColor = "#fff387";
@@ -15582,7 +15773,7 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		if (settings.highlightHostMentions && settings.hostnamesext?.textsetting && data.chatmessage) {
-			const rawHosts = settings.hostnamesext.textsetting.split(",");
+			const rawHosts = getCachedCommaList(settings.hostnamesext.textsetting, false, true);
 			const messageText = (data.textContent || data.chatmessage || "").toLowerCase();
 
 			const hasMention = rawHosts.some(entry => {
@@ -16017,7 +16208,7 @@ async function applyBotActions(data, tab = false) {
 		}
 		if (settings.ollamaCensorBot) {
 			try {
-				if (settings.ollamaCensorBotBlockMode) {
+				if (getSettingFlag("ollamaCensorBotBlockMode")) {
 					let good = false;
 					if (data.chatmessage && data.chatmessage.length <= 3) {
 						// For very short messages, use the history-aware censoring
@@ -17009,12 +17200,61 @@ function buildFakeViewerUpdates() {
 	return meta;
 }
 
+function buildFakeHypeTrainMeta() {
+	var now = new Date();
+	var expiresAt = new Date(now.getTime() + 2 * 60 * 1000);
+	return {
+		phase: "progress",
+		id: "fake-hype-train",
+		broadcasterUserId: "123456",
+		broadcasterUserLogin: "channel_login",
+		broadcasterUserName: "Channel Name",
+		total: 360,
+		progress: 360,
+		goal: 500,
+		level: 1,
+		topContributions: [
+			{
+				userId: "101",
+				userLogin: "ava",
+				userName: "Ava",
+				type: "bits",
+				total: 250
+			},
+			{
+				userId: "102",
+				userLogin: "jess",
+				userName: "Jess",
+				type: "subscription",
+				total: 100
+			}
+		],
+		lastContribution: {
+			userId: "101",
+			userLogin: "ava",
+			userName: "Ava",
+			type: "bits",
+			total: 100
+		},
+		sharedTrainParticipants: [],
+		startedAt: now.toISOString(),
+		expiresAt: expiresAt.toISOString(),
+		endedAt: "",
+		cooldownEndsAt: "",
+		isSharedTrain: false,
+		trainType: "regular",
+		allTimeHighLevel: 2,
+		allTimeHighTotal: 1000,
+		eventSubType: "channel.hype_train.progress"
+	};
+}
+
 function triggerFakeMetaMessage(mode) {
 	var normalized = String(mode || "random")
 		.toLowerCase()
 		.trim();
 	if (!normalized || normalized === "random") {
-		normalized = fakeMetaPick(["auction", "commerce", "viewers"]) || "auction";
+		normalized = fakeMetaPick(["auction", "commerce", "viewers", "hype"]) || "auction";
 	}
 
 	var payload = null;
@@ -17034,6 +17274,12 @@ function triggerFakeMetaMessage(mode) {
 		payload = {
 			event: "viewer_updates",
 			meta: buildFakeViewerUpdates()
+		};
+	} else if (normalized === "hype" || normalized === "hype_train") {
+		payload = {
+			type: "twitch",
+			event: "hype_train",
+			meta: buildFakeHypeTrainMeta()
 		};
 	} else {
 		payload = {

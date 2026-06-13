@@ -344,7 +344,34 @@
             lastError: null,
             state: 'idle'
         };
-        var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        var audioContext = null;
+        function ensureAudioContext() {
+            if (!audioContext && (window.AudioContext || window.webkitAudioContext)) {
+                var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContextCtor();
+            }
+            return audioContext;
+        }
+        async function resumeAudioContext() {
+            var ctx = ensureAudioContext();
+            if (!ctx) {
+                return null;
+            }
+            if (ctx.state === 'suspended') {
+                await ctx.resume();
+            }
+            return ctx;
+        }
+        function attachAudioUnlockListeners() {
+            var handler = function() {
+                resumeAudioContext().catch(function(error) {
+                    console.error('Failed to resume AudioContext:', error);
+                });
+            };
+            ['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(function(eventName) {
+                document.addEventListener(eventName, handler, { once: true });
+            });
+        }
 
         // Multi-layer overlay system references
         var overlayLayers = {
@@ -1695,9 +1722,7 @@
         // Function to play audio
         async function playAudio(audioUrl, volume) {
             try {
-                if (audioContext.state === 'suspended') {
-                    await audioContext.resume();
-                }
+                await resumeAudioContext();
 
                 const audio = new Audio(audioUrl);
                 audio.volume = volume !== undefined ? parseFloat(volume) : globalVolume;
@@ -1732,15 +1757,7 @@
 		});
         
         // Handle audio context for browsers that require user interaction
-        document.addEventListener('click', () => {
-            if (audioContext.state === 'suspended') {
-                audioContext.resume().then(() => {
-                    console.log('AudioContext resumed successfully');
-                }).catch(error => {
-                    console.error('Failed to resume AudioContext:', error);
-                });
-            }
-        });
+        attachAudioUnlockListeners();
 		
 		function testAction(actionData) {
 			processInput(actionData);

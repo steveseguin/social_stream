@@ -875,7 +875,8 @@
         const periodParam = urlParams.get('period') || 'day'; // Default to daily instead of session
         const compact = urlParams.has('compact');
         const showGiftValue = urlParams.has('showvalue'); // Show monetary value for gifts
-        const rotateInterval = parseInt(urlParams.get('rotateinterval') || '10') * 1000; // rotation interval in ms
+        const rotateIntervalParam = parseInt(urlParams.get('rotateinterval') || '10', 10);
+        const rotateInterval = (isNaN(rotateIntervalParam) ? 10 : rotateIntervalParam) * 1000; // rotation interval in ms
         const tickerMode = urlParams.has('tickerscroll'); // Enable ticker scrolling
         
         // Rotation state
@@ -1222,7 +1223,8 @@
         const showSourceIcons = urlParams.has('showsource'); // default false - only show when checkbox is checked
         const hideEmpty = urlParams.has('hideempty');
         const autoHide = urlParams.has('autohide');
-        const autoHideDelay = parseInt(urlParams.get('hidedelay') || '10') * 1000; // seconds to ms
+        const autoHideDelayParam = parseInt(urlParams.get('hidedelay') || '10', 10);
+        const autoHideDelay = (isNaN(autoHideDelayParam) ? 10 : autoHideDelayParam) * 1000; // seconds to ms
         
         // New parameters from popup.html
         const rankingType = (urlParams.get('rankby') || 'combined').toLowerCase();
@@ -2283,7 +2285,7 @@
         const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
         eventer(messageEvent, function (e) {
             if (e.source != iframe.contentWindow) return;
-            if ("dataReceived" in e.data) {
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                 if ("overlayNinja" in e.data.dataReceived) {
                     processData(e.data.dataReceived.overlayNinja);
                 }

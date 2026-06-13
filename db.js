@@ -44,6 +44,20 @@ class MessageStoreDB {
         }
     }
 
+    getExistenceCacheKeys(userIdentifier, type, fallbackChatname = null) {
+        const keys = [];
+        [userIdentifier, fallbackChatname].forEach(value => {
+            if (value === undefined || value === null || !type) return;
+            const normalized = String(value).trim();
+            if (!normalized) return;
+            const key = `${normalized}:${type}`;
+            if (!keys.includes(key)) {
+                keys.push(key);
+            }
+        });
+        return keys;
+    }
+
     async initDatabase() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.dbName, 4);
@@ -120,16 +134,15 @@ class MessageStoreDB {
                 this.updateCache(messageData);
                 
                 // Cache that this user now exists
-                const userIdentifier = messageData.userid || messageData.chatname;
-                if (userIdentifier && messageData.type) {
-                    const cacheKey = `${userIdentifier}:${messageData.type}`;
+                const cacheKeys = this.getExistenceCacheKeys(messageData.userid || messageData.chatname, messageData.type, messageData.chatname);
+                cacheKeys.forEach(cacheKey => {
                     this.setExistenceCache(cacheKey, {
                         exists: true,
                         lastActivity: messageData.timestamp
                     });
-                }
-                
-                resolve(request.result); 
+                });
+
+                resolve(request.result);
             };
             
             request.onerror = () => reject(request.error);
@@ -203,12 +216,13 @@ class MessageStoreDB {
         });
     }
 	
-	async checkUserTypeExists(chatname, type) {
-		const cacheKey = `${chatname}:${type}`;
+	async checkUserTypeExists(userIdentifier, type, fallbackChatname = null) {
 		const now = Date.now();
-		
+		const cacheKeys = this.getExistenceCacheKeys(userIdentifier, type, fallbackChatname);
+
 		// Check cache first
-        if (this.existenceCache.entries.has(cacheKey)) {
+        for (const cacheKey of cacheKeys) {
+            if (!this.existenceCache.entries.has(cacheKey)) continue;
             const entry = this.existenceCache.entries.get(cacheKey);
             if (now - entry.timestamp < this.existenceCache.ttl) {
                 return {
@@ -219,75 +233,91 @@ class MessageStoreDB {
             // Expired entry, remove from cache
             this.existenceCache.entries.delete(cacheKey);
         }
-        
-        // If database is disabled, update cache as not existing and return false
-        if (settings?.disableDB) {
-            // Update cache to indicate this user doesn't exist (since we can't check)
-            this.setExistenceCache(cacheKey, {
-                exists: false,
-                lastActivity: null,
-                cachedAt: now
-            });
-            
-            return { exists: false, lastActivity: null };
+
+        // If database is disabled, do not mark users first-time.
+        if (settings?.disableDB?.setting === true || settings?.disableDB === true) {
+            return { exists: false, lastActivity: null, unavailable: true };
         }
-        
+
         // Not in cache and database enabled, check database
         const db = await this.ensureDB();
-        
-		return new Promise((resolve) => {
-			const tx = db.transaction(this.storeName, 'readonly');
-			const store = tx.objectStore(this.storeName);
-			
-			// Check if this looks like a userid (starts with UC for YouTube, or other patterns)
-			// This is a simple heuristic - you could make this more sophisticated
-			const looksLikeUserId = chatname && (
-				chatname.startsWith('UC') || // YouTube channel ID
-				chatname.match(/^[A-Z0-9_-]{10,}$/i) // Other platform IDs
-			);
-			
-			// Choose the appropriate index
-			let index;
-			let range;
-			
-			if (looksLikeUserId && store.indexNames.contains('user_id_type_timestamp')) {
-				// Try userid index first
-				console.log("Using userid index for:", chatname, type);
-				index = store.index('user_id_type_timestamp');
-				range = IDBKeyRange.bound([chatname, type, 0], [chatname, type, now]);
-            } else {
-                // Use chatname index
-                console.log("Using chatname index for:", chatname, type);
-                index = store.index('user_type_timestamp');
-                range = IDBKeyRange.bound([chatname, type, 0], [chatname, type, now]);
-            }
-            
-            const cursorRequest = index.openCursor(range, 'prev');
-            
-            cursorRequest.onsuccess = (event) => {
-                const cursor = event.target.result;
-                const exists = Boolean(cursor);
-                const lastActivity = cursor?.value?.timestamp ?? null;
 
-                if (exists) {
-                    this.setExistenceCache(cacheKey, {
-                        exists: true,
-                        lastActivity,
-                        cachedAt: now
-                    });
+        const normalizedUserIdentifier = userIdentifier === undefined || userIdentifier === null ? "" : String(userIdentifier).trim();
+        const normalizedFallbackChatname = fallbackChatname === undefined || fallbackChatname === null ? "" : String(fallbackChatname).trim();
+        const lookups = [];
+        if (normalizedUserIdentifier) {
+            lookups.push({
+                indexName: 'user_id_type_timestamp',
+                lower: [normalizedUserIdentifier, type, 0],
+                upper: [normalizedUserIdentifier, type, now]
+            });
+            lookups.push({
+                indexName: 'user_type_timestamp',
+                lower: [normalizedUserIdentifier, type, 0],
+                upper: [normalizedUserIdentifier, type, now]
+            });
+        }
+        if (normalizedFallbackChatname && normalizedFallbackChatname !== normalizedUserIdentifier) {
+            lookups.push({
+                indexName: 'user_type_timestamp',
+                lower: [normalizedFallbackChatname, type, 0],
+                upper: [normalizedFallbackChatname, type, now]
+            });
+        }
+
+        const queryIndex = lookup => new Promise(resolve => {
+            const tx = db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            if (!store.indexNames.contains(lookup.indexName)) {
+                resolve({ exists: false, lastActivity: null });
+                return;
+            }
+            const index = store.index(lookup.indexName);
+            const cursorRequest = index.openCursor(IDBKeyRange.bound(lookup.lower, lookup.upper), 'prev');
+
+            cursorRequest.onsuccess = event => {
+                const cursor = event.target.result;
+                if (!cursor) {
+                    resolve({ exists: false, lastActivity: null });
+                    return;
                 }
-                
+
+                const message = cursor.value;
+                if (message.expiresAt && message.expiresAt <= now) {
+                    cursor.continue();
+                    return;
+                }
+
                 resolve({
-                    exists,
-                    lastActivity
+                    exists: true,
+                    lastActivity: message.timestamp ?? null
                 });
             };
-            
+
             cursorRequest.onerror = () => {
                 console.error('Error checking user type records:', cursorRequest.error);
-                resolve({ exists: false, lastActivity: null });
+                resolve({ exists: false, lastActivity: null, unavailable: true });
             };
         });
+
+        for (const lookup of lookups) {
+            const result = await queryIndex(lookup);
+            if (result.unavailable) {
+                return result;
+            }
+            if (result.exists) {
+                cacheKeys.forEach(cacheKey => {
+                    this.setExistenceCache(cacheKey, {
+                        exists: true,
+                        lastActivity: result.lastActivity,
+                        cachedAt: now
+                    });
+                });
+                return result;
+            }
+        }
+
+        return { exists: false, lastActivity: null };
     }
     clearExistenceCache() {
         this.existenceCache.entries.clear();

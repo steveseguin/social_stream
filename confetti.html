@@ -226,7 +226,7 @@
 		eventer(messageEvent, function (e) {
 			
 			if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
-			if ("dataReceived" in e.data){ // raw data
+			if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object"){ // raw data
 				if ("overlayNinja" in e.data.dataReceived){
 					processInput(e.data.dataReceived.overlayNinja);
 				}

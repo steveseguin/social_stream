@@ -501,16 +501,25 @@
 	var rumbleChatObserverTarget = null;
 
 	function onElementInserted(target) {
+		function processInsertedNode(node){
+			try {
+				if (node.skip){return;}
+				node.skip = true;
+				if (node && node.className && node.className.includes("chat-history--rant-sticky")){return;}
+				if (node.querySelector && node.querySelector(".chat-history--message")){
+					setTimeout(function(){
+						processMessage(node);
+					}, 300);
+				} else {
+					processMessage(node);
+				}
+			} catch(e){}
+		}
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (mutation.addedNodes[i].skip){return;}
-							mutation.addedNodes[i].skip = true;
-							if (mutation.addedNodes[i] && mutation.addedNodes[i].className && mutation.addedNodes[i].className.includes("chat-history--rant-sticky")){return;}
-							processMessage(mutation.addedNodes[i]);
-						} catch(e){}
+						processInsertedNode(mutation.addedNodes[i]);
 					}
 				}
 			});

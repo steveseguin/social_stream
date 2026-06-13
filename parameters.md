@@ -65,6 +65,10 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `strokecolor` or `strokeColor` | hex color (alpha supported) | Color applied to the text stroke effect (accepts 8-digit hex/rgba for transparency) |
 | `border` | hex color | Adds a profile image border using the provided color (without `#`) |
 | `pressedcolor` | hex color or empty | Custom highlight color for pinned/featured states |
+| `donationhighlightcolor` | hex/color | Custom donation row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `memberhighlightcolor` | hex/color | Custom member row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `firsttimehighlightcolor` | hex/color | Custom first-time chatter row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `questionhighlightcolor` | hex/color | Custom question row highlight color; 6-digit colors are shown with stronger shading automatically |
 | `hideshadow` | boolean | Removes alternating card drop shadows |
 | `largecontent` | boolean | Enlarges embedded content or image cards |
 | `donationright` | number | Sets donation amount margin-right in pixels |
@@ -305,6 +309,20 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `elevenlabskey` | string | ElevenLabs TTS API key |
 | `speechifykey` | string | Speechify TTS API key |
 | `geminikey` | string | Gemini TTS API key |
+| `openaikey` or `customttskey` or `localttskey` | string | OpenAI or custom local TTS endpoint API key. Optional for local endpoints. |
+
+### OpenAI-Compatible and Custom TTS Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `ttsprovider` | `openai`, `customtts`, `localtts` | Uses the OpenAI-compatible audio speech request format. `customtts` and `localtts` are aliases for local/self-hosted endpoints. |
+| `openaiendpoint` or `customttsendpoint` or `localttsendpoint` | URL | OpenAI-compatible TTS endpoint, such as `http://127.0.0.1:8124/v1/audio/speech` |
+| `voiceopenai` or `customttsvoice` or `localttsvoice` | string | Voice name, speaker ID, or cloned voice name accepted by the endpoint |
+| `openaicustomvoice` | string | Custom voice value used when the popup voice selector is set to Custom |
+| `openaimodel` or `customttsmodel` or `localttsmodel` | string | TTS model name sent in the request body |
+| `openaicustommodelx` | string | Custom model value used when the popup model selector is set to Custom |
+| `openaispeed` or `customttsspeed` or `localttsspeed` | float | Speaking speed sent to compatible endpoints |
+| `openaiformat` or `customttsformat` or `localttsformat` | `mp3`, `wav`, `opus`, `aac`, `flac` | Preferred audio response format |
 
 ### Google Cloud TTS Parameters
 

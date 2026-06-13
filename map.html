@@ -372,6 +372,7 @@
         const locationLabelEl = document.getElementById('location-label');
         const topListEl = document.getElementById('top-list');
         const hudEl = document.getElementById('hud');
+        const statsBlock = document.querySelector('.stats');
         // Apply initial map scale after hudEl is defined
         if (settings.mapScale !== 1) {
             hudEl.style.transform = `scale(${settings.mapScale})`;
@@ -1635,7 +1636,6 @@
             } else {
                 locationLabelEl.textContent = 'countries';
             }
-            const statsBlock = document.querySelector('.stats');
             if (statsBlock) {
                 statsBlock.classList.toggle('hidden', !settings.showTotals);
             }
@@ -1654,12 +1654,7 @@
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 7);
 
-            topListEl.innerHTML = '';
-            top.forEach(entry => {
-                const li = document.createElement('li');
-                li.innerHTML = `<span>${entry.name}</span><span class="pill">${entry.count}</span>`;
-                topListEl.appendChild(li);
-            });
+            topListEl.innerHTML = top.map(entry => `<li><span>${entry.name}</span><span class="pill">${entry.count}</span></li>`).join('');
         }
 
         function updateStatusBanner() {
@@ -1757,11 +1752,11 @@
             updateTopList();
         }
 
-        function colorScaleForCount(count, maxCount) {
+        function colorScaleForCount(count, maxCount, accent, accent2) {
             if (!maxCount) return 'rgba(255,255,255,0.06)';
             const t = Math.max(0.12, Math.min(count / maxCount, 1));
-            const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#6ef7c8';
-            const accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#f4b556';
+            accent = accent || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#6ef7c8';
+            accent2 = accent2 || getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#f4b556';
             const blend = d3.interpolateRgb(accent, accent2)(Math.min(t * 1.2, 1));
             return d3.color(blend).formatRgb();
         }
@@ -1770,6 +1765,9 @@
             if (!pathGenerator) return;
             const tally = settings.mapType === 'country' ? countryTally : placeTally;
             const maxCount = Math.max(...Array.from(tally.values()).map(c => c.count), 0);
+            const rootStyle = getComputedStyle(document.documentElement);
+            const accent = rootStyle.getPropertyValue('--accent').trim() || '#6ef7c8';
+            const accent2 = rootStyle.getPropertyValue('--accent-2').trim() || '#f4b556';
             mapLayer.selectAll('path').each(function(d) {
                 const iso = d.properties.iso_a2 || normalizeForMatch(d.properties.name);
                 const normalizedName = normalizeForMatch(d.properties.name);
@@ -1779,7 +1777,7 @@
                     entry = tally.get(iso) || tally.get(normalizedName);
                 }
                 const hasData = entry && entry.count > 0;
-                const fill = hasData ? colorScaleForCount(entry.count, maxCount) : 'rgba(255,255,255,0.06)';
+                const fill = hasData ? colorScaleForCount(entry.count, maxCount, accent, accent2) : 'rgba(255,255,255,0.06)';
                 d3.select(this)
                     .classed('has-data', !!hasData)
                     .style('fill', fill)

@@ -64,7 +64,7 @@ For all modifications, ensure the critical components above remain functional.
     // Message handler for iframe data
     window.addEventListener("message", (e) => {
         if (e.source !== iframe.contentWindow) return;
-        if ("dataReceived" in e.data && "overlayNinja" in e.data.dataReceived) {
+        if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && "overlayNinja" in e.data.dataReceived) {
             processInput(e.data.dataReceived.overlayNinja);
         }
     });

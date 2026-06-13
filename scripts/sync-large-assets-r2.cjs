@@ -23,7 +23,7 @@ const shouldVerify = args.has("--verify") || shouldUpload;
 const shouldSkipExisting = !args.has("--no-skip-existing");
 const onlyPrefix = readArg("--prefix", process.env.SSN_R2_PREFIX || "");
 
-const skippedDirs = new Set([".git", ".claude", "node_modules", ".npm-cache", "tmp", "tests/artifacts", "electron_app_reference", "social_stream_v3"]);
+const skippedDirs = new Set([".git", ".claude", "node_modules", ".npm-cache", "artifacts", "tmp", "tests/artifacts", "electron_app_reference", "social_stream_v3"]);
 
 function normalizeHost(value) {
 	const host = String(value || "").trim();

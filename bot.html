@@ -746,8 +746,13 @@
 				return audioContext && audioContext.state === "running";
 			  };
 			  
+			  var callbackFired = false;
 			  // Create a wrapper function to pass the data
 			  const wrappedCallback = function() {
+				if (callbackFired) {
+				  return;
+				}
+				callbackFired = true;
 				callback(data);
 			  };
 			  
@@ -793,6 +798,7 @@
 			  
 			  return {
 				clear: function() {
+				  callbackFired = true;
 				  // Clear the fallback timer
 				  if (fallbackTimerId) {
 					clearTimeout(fallbackTimerId);
@@ -1430,7 +1436,8 @@
 
 			var borderRadius = 0;
 			if (urlParams.has("rounded")) {
-				borderRadius = parseInt(urlParams.get("rounded")) || 10;
+				borderRadius = parseInt(urlParams.get("rounded"), 10);
+				if (isNaN(borderRadius)) { borderRadius = 10; }
 				borderRadius += "px";
 				document.documentElement.style.setProperty("--rounded-border-radius", borderRadius);
 			}
@@ -1841,11 +1848,11 @@
 					if (e.source != iframe.contentWindow) {
 						return;
 					} // reject messages send from other iframes
-					if ("dataReceived" in e.data) {
+					if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
 						// raw data
-						
+
 						if ("overlayNinja" in e.data.dataReceived) {
-							
+
 							try {
 								if (applyCustomFeatureActions) {
 									applyCustomFeatureActions(e.data.dataReceived.overlayNinja); 

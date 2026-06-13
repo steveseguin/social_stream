@@ -310,6 +310,16 @@
         <div class="section">
             <h2>Advanced Message Generator - "fake an incoming message"</h2>
             <form id="testMessageForm">
+				<div class="form-group">
+					<label for="testPreset">Preset:</label>
+					<select class="form-control" id="testPreset">
+						<option value="chat">Chat Message</option>
+						<option value="hype_train_begin">Hype Train Begin</option>
+						<option value="hype_train_progress">Hype Train Progress</option>
+						<option value="hype_train_end">Hype Train End</option>
+						<option value="treasure_train_progress">Treasure Train Progress</option>
+					</select>
+				</div>
                 <div class="form-group">
                     <label for="chatname">Username:</label>
                     <input type="text" class="form-control" id="chatname" placeholder="Enter username">
@@ -364,11 +374,11 @@
 					<select class="form-control" id="messageChannel">
 						<option value="">Default (to Extension as normal)</option>
 						<option value="2">Channel 2 (direct to Featured /w &server)</option>
-						<option value="4">Channel 4 (direct to Dock /w &server2)</option>
+						<option value="4">Channel 4 (direct to Dock/events /w &server2)</option>
 					</select>
 				</div>
             </form>
-            <p class="note">Generate custom test messages to simulate different platforms and scenarios. This uses the `extContent` message type..</p>
+            <p class="note">Generate custom test messages to simulate different platforms and scenarios. Hype Train presets send raw metadata to channel 4 for events.html.</p>
         </div>
         <div class="section">
             <h2>Channel-Specific Messaging</h2>
@@ -641,13 +651,60 @@
 			}
 		}
 
-		function sendTestMessage() {
-			const currentSessionID = document.getElementById('sessionID').value;
-			if (!currentSessionID) {
-				alert('Please enter a session ID');
-				return;
+		function addMinutes(date, minutes) {
+			return new Date(date.getTime() + minutes * 60000).toISOString();
+		}
+
+		function buildHypeTrainTestPayload(phase, trainType) {
+			const now = new Date();
+			const progress = phase === 'begin' ? 120 : phase === 'end' ? 500 : 360;
+			const level = phase === 'end' ? 2 : 1;
+			return {
+				type: 'twitch',
+				event: 'hype_train',
+				meta: {
+					phase,
+					id: 'sample-api-test-train',
+					broadcasterUserId: '123456',
+					broadcasterUserLogin: 'testchannel',
+					broadcasterUserName: 'TestChannel',
+					total: progress,
+					progress,
+					goal: 500,
+					level,
+					topContributions: [
+						{ userId: '101', userLogin: 'ava', userName: 'Ava', type: 'bits', total: 250 },
+						{ userId: '102', userLogin: 'jess', userName: 'Jess', type: 'subscription', total: 100 }
+					],
+					lastContribution: { userId: '101', userLogin: 'ava', userName: 'Ava', type: 'bits', total: 100 },
+					sharedTrainParticipants: [],
+					startedAt: now.toISOString(),
+					expiresAt: addMinutes(now, 2),
+					endedAt: phase === 'end' ? now.toISOString() : '',
+					cooldownEndsAt: phase === 'end' ? addMinutes(now, 60) : '',
+					isSharedTrain: false,
+					trainType: trainType || 'regular',
+					eventSubType: 'channel.hype_train.' + (phase === 'begin' ? 'begin' : phase === 'end' ? 'end' : 'progress')
+				}
+			};
+		}
+
+		function buildTestMessagePayload() {
+			const preset = document.getElementById('testPreset').value;
+			if (preset === 'hype_train_begin') {
+				return buildHypeTrainTestPayload('begin', 'regular');
 			}
-			const testMessage = {
+			if (preset === 'hype_train_progress') {
+				return buildHypeTrainTestPayload('progress', 'regular');
+			}
+			if (preset === 'hype_train_end') {
+				return buildHypeTrainTestPayload('end', 'regular');
+			}
+			if (preset === 'treasure_train_progress') {
+				return buildHypeTrainTestPayload('progress', 'treasure');
+			}
+
+			return {
 				chatname: document.getElementById('chatname').value,
 				chatmessage: document.getElementById('chatmessage').value,
 				type: document.getElementById('type').value,
@@ -659,9 +716,78 @@
 				contentimg: document.getElementById('contentimg').value,
 				question: document.getElementById('isQuestion').checked
 			};
+		}
+
+		function isHypeTrainPayload(payload) {
+			return !!(payload && payload.event === 'hype_train' && payload.meta);
+		}
+
+		function sendRawPayloadToChannel(currentSessionID, payload, channel, container) {
+			const wsUrl = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja:443';
+			const tempSocket = new WebSocket(wsUrl);
+			let completed = false;
+			const timeout = setTimeout(function() {
+				if (completed) return;
+				completed = true;
+				try {
+					tempSocket.close();
+				} catch (e) {}
+				alert('WebSocket timed out before sending');
+			}, 5000);
+
+			logRequest(container, {
+				type: 'WebSocket raw payload',
+				url: wsUrl,
+				join: { join: currentSessionID, out: channel, in: 1 },
+				message: payload
+			});
+
+			tempSocket.onopen = function() {
+				tempSocket.send(JSON.stringify({ join: currentSessionID, out: channel, in: 1 }));
+				setTimeout(function() {
+					if (completed) return;
+					tempSocket.send(JSON.stringify(payload));
+					completed = true;
+					clearTimeout(timeout);
+					setTimeout(function() {
+						try {
+							tempSocket.close();
+						} catch (e) {}
+					}, 250);
+				}, 150);
+			};
+			tempSocket.onerror = function() {
+				if (completed) return;
+				completed = true;
+				clearTimeout(timeout);
+				alert('WebSocket failed to connect');
+			};
+		}
+
+		function syncTestPresetFields() {
+			const preset = document.getElementById('testPreset').value;
+			if (preset.indexOf('hype_train') === 0 || preset.indexOf('treasure_train') === 0) {
+				document.getElementById('type').value = 'twitch';
+				document.getElementById('messageChannel').value = '4';
+			}
+		}
+
+		function sendTestMessage() {
+			const currentSessionID = document.getElementById('sessionID').value;
+			if (!currentSessionID) {
+				alert('Please enter a session ID');
+				return;
+			}
+			const testMessage = buildTestMessagePayload();
 			
-			const selectedChannel = parseInt(document.getElementById('messageChannel').value);
-			const container = event.target.closest('.section');
+			let selectedChannel = parseInt(document.getElementById('messageChannel').value);
+			const container = document.getElementById('testMessageForm').closest('.section');
+			if (isHypeTrainPayload(testMessage)) {
+				selectedChannel = selectedChannel || 4;
+				sendRawPayloadToChannel(currentSessionID, testMessage, selectedChannel, container);
+				return;
+			}
+
 			const action = selectedChannel ? 'content' : 'extContent';
 			
 			// WebSocket request
@@ -813,6 +939,7 @@
 		// Event listeners
 		document.getElementById('connectButton').addEventListener('click', connect);
 		document.getElementById('disconnectButton').addEventListener('click', disconnect);
+		document.getElementById('testPreset').addEventListener('change', syncTestPresetFields);
 
 		// Auto-connect if session ID is provided in URL
 		window.addEventListener('load', function() {

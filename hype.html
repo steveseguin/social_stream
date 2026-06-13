@@ -1394,7 +1394,13 @@ iframe.style.height = "0px";
 iframe.style.position = "fixed";
 iframe.style.left = "-100px";
 iframe.style.top = "-100px";
+iframe.style.border = "0";
+iframe.style.opacity = "0";
+iframe.style.pointerEvents = "none";
+iframe.style.visibility = "hidden";
 iframe.id = "frame1"
+iframe.setAttribute("aria-hidden", "true");
+iframe.setAttribute("tabindex", "-1");
 document.body.appendChild(iframe);
 var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
 var eventer = window[eventMethod];
@@ -1403,7 +1409,7 @@ eventer(messageEvent, function(e) {
     if (e.source != iframe.contentWindow) {
         return;
     }
-    if ("dataReceived" in e.data) {
+    if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
         if ("overlayNinja" in e.data.dataReceived) {
             var data = e.data.dataReceived.overlayNinja;
             

@@ -209,6 +209,17 @@
 	var pastMessages = [];
 	var trackedKickMessageIds = new Map();
 	var maxTrackedKickMessageIds = 500;
+	var kickTransportObserved = false;
+	var kickTransportOpenCount = 0;
+	var kickTransportLastActivityAt = Date.now();
+	var kickTransportWatchdogTimer = null;
+	var kickTransportReloadHistoryKey = "ss_kick_transport_reload_history";
+	var kickTransportStartedAt = Date.now();
+	var KICK_TRANSPORT_CLOSED_RELOAD_MS = 2 * 60 * 1000;
+	var KICK_TRANSPORT_STALE_RELOAD_MS = 4 * 60 * 1000;
+	var KICK_TRANSPORT_STARTUP_GRACE_MS = 5 * 60 * 1000;
+	var KICK_TRANSPORT_RELOAD_WINDOW_MS = 30 * 60 * 1000;
+	var KICK_TRANSPORT_RELOAD_LIMIT = 2;
 
 	// Persistent cache configuration
 	const CACHE_KEY = 'kick_user_profiles_cache';
@@ -247,6 +258,92 @@
 			return false;
 		}
 		return (Date.now() - entry.timestamp) < CACHE_EXPIRY_MS;
+	}
+
+	function isKickChatTransportUrl(url) {
+		var value = String(url || "").toLowerCase();
+		return value.indexOf("pusher") !== -1 || value.indexOf("kick.com") !== -1 || value.indexOf("kick-bridge") !== -1;
+	}
+
+	function readKickTransportReloadHistory(now) {
+		try {
+			var raw = sessionStorage.getItem(kickTransportReloadHistoryKey) || "[]";
+			var parsed = JSON.parse(raw);
+			if (!Array.isArray(parsed)) {
+				return [];
+			}
+			return parsed
+				.map(function(value) {
+					return parseInt(value, 10) || 0;
+				})
+				.filter(function(value) {
+					return value && now - value < KICK_TRANSPORT_RELOAD_WINDOW_MS;
+				});
+		} catch (e) {
+			return [];
+		}
+	}
+
+	function markKickTransportReload(now) {
+		try {
+			var history = readKickTransportReloadHistory(now);
+			history.push(now);
+			sessionStorage.setItem(kickTransportReloadHistoryKey, JSON.stringify(history));
+			return true;
+		} catch (e) {
+			return true;
+		}
+	}
+
+	function requestKickTransportReload(reason) {
+		var now = Date.now();
+		if (now - kickTransportStartedAt < KICK_TRANSPORT_STARTUP_GRACE_MS) {
+			return;
+		}
+		var history = readKickTransportReloadHistory(now);
+		if (history.length >= KICK_TRANSPORT_RELOAD_LIMIT) {
+			return;
+		}
+		markKickTransportReload(now);
+		console.warn("[Social Stream] Kick chat transport stalled; reloading source window. Reason: " + reason);
+		try {
+			window.location.reload();
+		} catch (e) {}
+	}
+
+	function startKickTransportWatchdog() {
+		try {
+			if (!window.ninjafy || typeof window.ninjafy.onWebSocketMessage !== "function" || kickTransportWatchdogTimer) {
+				return;
+			}
+			window.ninjafy.onWebSocketMessage(function(event) {
+				if (!event || !isKickChatTransportUrl(event.url)) {
+					return;
+				}
+				var now = Date.now();
+				kickTransportObserved = true;
+				if (event.type === "open") {
+					kickTransportOpenCount++;
+					kickTransportLastActivityAt = now;
+				} else if (event.type === "close") {
+					kickTransportOpenCount = Math.max(0, kickTransportOpenCount - 1);
+					kickTransportLastActivityAt = now;
+				} else if (event.type === "message" || event.type === "send") {
+					kickTransportLastActivityAt = now;
+				}
+			});
+			kickTransportWatchdogTimer = setInterval(function() {
+				if (!kickTransportObserved) {
+					return;
+				}
+				var idleMs = Date.now() - kickTransportLastActivityAt;
+				if (kickTransportOpenCount <= 0 && idleMs > KICK_TRANSPORT_CLOSED_RELOAD_MS) {
+					requestKickTransportReload("no open Kick websocket for " + Math.round(idleMs / 1000) + "s");
+				} else if (idleMs > KICK_TRANSPORT_STALE_RELOAD_MS) {
+					requestKickTransportReload("no Kick websocket frames for " + Math.round(idleMs / 1000) + "s");
+				}
+			}, 30000);
+		} catch (e) {}
 	}
 	
 	// Load cached profiles from localStorage on startup
@@ -1714,6 +1811,7 @@
 	var SevenTV = false;
 	
 	console.log("Social stream injected - " + (isPopoutChat ? "new popout" : "old chatroom"));
+	startKickTransportWatchdog();
 	
 	var xxx = setInterval(async function(){ 
 		if (isPopoutChat) {

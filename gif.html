@@ -63,36 +63,74 @@
         const urlParams = new URLSearchParams(window.location.search);
         const mediaContainer = document.getElementById('mediaContainer');
         const mediaContent = document.getElementById('mediaContent');
+        const bridgeSession = (urlParams.get('session') || '').split(',')[0].trim();
         const customGifFilterId = (urlParams.get('gifid') || '').trim();
         const customGifFilterCommand = (urlParams.get('gifcommand') || '').trim().toLowerCase();
+        const customGifFilterCommands = customGifFilterCommand.split(',').map(function(command) {
+            return command.trim();
+        }).filter(Boolean);
         if (urlParams.has('stretch')) document.body.classList.add('stretch');
         let mediaQueue = [];
         let isPlaying = false;
         
-		var audioContext = new (window.AudioContext || window.webkitAudioContext)();
-		
+		var audioContext = null;
+		function ensureAudioContext() {
+			if (!audioContext && (window.AudioContext || window.webkitAudioContext)) {
+				var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+				audioContext = new AudioContextCtor();
+			}
+			return audioContext;
+		}
+		async function resumeAudioContext() {
+			var ctx = ensureAudioContext();
+			if (!ctx) {
+				return null;
+			}
+			if (ctx.state === 'suspended') {
+				await ctx.resume();
+			}
+			return ctx;
+		}
+		function attachAudioUnlockListeners() {
+			var handler = function() {
+				resumeAudioContext().catch(function(e) {
+					console.warn('Audio context resume failed after user interaction', e);
+				});
+			};
+			['pointerdown', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(function(eventName) {
+				document.addEventListener(eventName, handler, { once: true });
+			});
+		}
+
 		const fadeoutTime = 300;
-		const minDisplayTime = parseInt(urlParams.get('showtime')) || (fadeoutTime + 1);
+		const parsedShowtime = parseInt(urlParams.get('showtime'), 10);
+		const minDisplayTime = urlParams.has('showtime') && !Number.isNaN(parsedShowtime) ? parsedShowtime : 3000;
 		const embeddedDisplayTime = urlParams.has('showtime') ? minDisplayTime : Math.max(minDisplayTime, 5000);
 		const mediaProbeTimeout = 4000;
 
         function shouldShowCustomGifData(data) {
-            if (!customGifFilterId && !customGifFilterCommand) return true;
+            if (!customGifFilterId && !customGifFilterCommands.length) return true;
 
             const meta = data && data.meta ? data.meta : {};
             if (customGifFilterId && String(meta.customGifCommandId || '') === customGifFilterId) {
                 return true;
             }
 
-            if (customGifFilterCommand) {
+            if (customGifFilterCommands.length) {
                 const command = String(meta.customGifCommand || '').toLowerCase();
-                if (command === customGifFilterCommand) return true;
+                if (customGifFilterCommands.indexOf(command) !== -1) return true;
 
                 const commands = Array.isArray(meta.customGifCommands) ? meta.customGifCommands : [];
                 for (let i = 0; i < commands.length; i++) {
-                    if (String(commands[i] || '').toLowerCase() === customGifFilterCommand) {
+                    if (customGifFilterCommands.indexOf(String(commands[i] || '').toLowerCase()) !== -1) {
                         return true;
                     }
+                }
+
+                const chatMessage = String(data && data.chatmessage ? data.chatmessage : '').trim().toLowerCase();
+                const firstWord = chatMessage.split(/\s+/)[0] || '';
+                if (customGifFilterCommands.indexOf(firstWord) !== -1 || customGifFilterCommands.indexOf(chatMessage) !== -1) {
+                    return true;
                 }
             }
 
@@ -286,13 +324,24 @@
 			}
 
 			let headerType = '';
+			let controller = null;
+			let timeoutId = null;
 			try {
-				const response = await fetch(url, { method: 'HEAD' });
+				if (typeof AbortController !== 'undefined') {
+					controller = new AbortController();
+					timeoutId = setTimeout(() => controller.abort(), mediaProbeTimeout);
+				}
+				const response = await fetch(url, { method: 'HEAD', signal: controller ? controller.signal : undefined });
 				headerType = getMediaTypeFromMimeType(response.headers.get('Content-Type') || '');
 				if (!headerType) {
 					headerType = getMediaTypeFromExtension(response.url || '');
 				}
-			} catch (e) {}
+			} catch (e) {
+			} finally {
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+				}
+			}
 
 			if (headerType && headerType !== 'embed') {
 				renderDetectedMedia(url, headerType);
@@ -414,13 +463,17 @@
             video.muted = urlParams.has('muted');
             video.oncanplay = async () => {
                 mediaContent.replaceWith(video);
-                fadeIn();
+				fadeIn();
 				try {
-					if (audioContext.state == "suspended") {
-						await audioContext.resume();
+					if (!video.muted) {
+						await resumeAudioContext();
 					}
-					video.play();
-				} catch(e){}
+					await video.play();
+				} catch(e) {
+					console.warn('Video playback blocked:', e);
+					playNextMedia();
+					return;
+				}
                 
                 const videoDuration = video.duration * 1000; 
                 const displayTime = Math.max(videoDuration, minDisplayTime);
@@ -457,10 +510,13 @@
             audio.muted = urlParams.has('muted');
             audio.oncanplay = async () => {
                 fadeIn();
-				if (audioContext.state == "suspended") {
-					await audioContext.resume();
+				try {
+					await resumeAudioContext();
+					await audio.play();
+				} catch(e) {
+					console.warn('Audio playback blocked:', e);
+					playNextMedia();
 				}
-                audio.play();
             };
             audio.onended = () => {
                 fadeOut(() => playNextMedia());
@@ -472,23 +528,24 @@
         }
 
         function displaySVG(url) {
-            fetch(url)
-                .then(response => response.text())
-                .then(svgContent => {
-                    mediaContainer.innerHTML = svgContent;
-                    fadeIn();
-                    setTimeout(() => {
-                        fadeOut(() => {
-                            mediaContainer.innerHTML = '';
-                            mediaContainer.appendChild(mediaContent);
-                            playNextMedia();
-                        });
-                    }, 5000);
-                })
-                .catch(error => {
-                    console.error('Failed to load SVG:', url, error);
-                    playNextMedia();
-                });
+            const img = document.createElement('img');
+            img.src = url;
+            img.onload = () => {
+                mediaContainer.innerHTML = '';
+                mediaContainer.appendChild(img);
+                fadeIn();
+                setTimeout(() => {
+                    fadeOut(() => {
+                        mediaContainer.innerHTML = '';
+                        mediaContainer.appendChild(mediaContent);
+                        playNextMedia();
+                    });
+                }, 5000);
+            };
+            img.onerror = () => {
+                console.error('Failed to load SVG:', url);
+                playNextMedia();
+            };
         }
 
         function fadeIn() {
@@ -502,38 +559,31 @@
 
         const iframe = document.createElement("iframe");
         const filename = new URL(window.location.href).pathname.split('/').pop().split('.')[0] || "dock";
+        const bridgeLabel = ((customGifFilterId || customGifFilterCommand) ? filename : (urlParams.get('label') || filename)).trim() || filename;
         const password = urlParams.get('password') || 'false';
         const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label="+filename+"&cleanoutput&room=" + urlParams.get('session');
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-        const eventer = window[eventMethod];
-        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-        eventer(messageEvent, function (e) {
-            if (e.source != iframe.contentWindow) return;
-            if ("dataReceived" in e.data) {
-                if ("overlayNinja" in e.data.dataReceived) {
+        if (bridgeSession) {
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + encodeURIComponent(bridgeSession) + "&novideo&noaudio&label=" + encodeURIComponent(bridgeLabel) + "&cleanoutput&room=" + encodeURIComponent(bridgeSession);
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+            const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            const eventer = window[eventMethod];
+            const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+            eventer(messageEvent, function (e) {
+                if (e.source != iframe.contentWindow) return;
+                if (e.data && e.data.dataReceived && e.data.dataReceived.overlayNinja) {
                     processData(e.data.dataReceived.overlayNinja);
                 }
-            }
-        });
+            });
+        }
 
         // Handle audio context for browsers that require user interaction
-        document.addEventListener('click', () => {
-            if (window.AudioContext || window.webkitAudioContext) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const audioContext = new AudioContext();
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume();
-                }
-            }
-        });
+        attachAudioUnlockListeners();
 		
 		function getUint24(view, pos) {
             return (view.getUint8(pos) | (view.getUint8(pos + 1) << 8) | (view.getUint8(pos + 2) << 16));

@@ -148,6 +148,109 @@
 		return "";
 	}
 
+	function getYouTubeJewelDonationNode(ele) {
+		try {
+			if (!ele || !ele.tagName) {
+				return null;
+			}
+			if (ele.tagName == "YT-GIFT-MESSAGE-VIEW-MODEL") {
+				return ele;
+			}
+			if (ele.querySelector) {
+				return ele.querySelector("yt-gift-message-view-model");
+			}
+		} catch (e) {}
+		return null;
+	}
+
+	function getYouTubeJewelDonationDetails(ele) {
+		var giftNode = getYouTubeJewelDonationNode(ele) || ele;
+		var textParts = [];
+		function addText(value) {
+			value = normalizeDonationText(value);
+			if (value && textParts.indexOf(value) === -1) {
+				textParts.push(value);
+			}
+		}
+		function collectText(node) {
+			if (!node) {
+				return;
+			}
+			try {
+				addText(node.innerText || node.textContent || "");
+				addText(node.getAttribute("aria-label") || "");
+				addText(node.getAttribute("title") || "");
+			} catch (e) {}
+			try {
+				node.querySelectorAll("[aria-label], [title], img[alt]").forEach(function (labelled) {
+					addText(labelled.getAttribute("aria-label") || "");
+					addText(labelled.getAttribute("title") || "");
+					addText(labelled.getAttribute("alt") || "");
+				});
+			} catch (e) {}
+		}
+		collectText(ele);
+		if (giftNode !== ele) {
+			collectText(giftNode);
+		}
+
+		var allText = normalizeDonationText(textParts.join(" "));
+		var jewelMatch = allText.match(/([0-9][0-9,]*)\s*Jewels?\b/i);
+		if (!jewelMatch && !getYouTubeJewelDonationNode(ele)) {
+			return null;
+		}
+
+		var jewelAmount = jewelMatch ? jewelMatch[1].replace(/,/g, "") : "";
+		var plainMessage = normalizeDonationText((giftNode && (giftNode.innerText || giftNode.textContent)) || (ele.innerText || ele.textContent) || allText);
+		var authorName = "";
+		try {
+			var authorNode = ele.querySelector("#author-name");
+			if (authorNode) {
+				authorName = normalizeDonationText(authorNode.innerText || authorNode.textContent || "");
+			}
+		} catch (e) {}
+		if (!authorName) {
+			var authorMatch = plainMessage.match(/^(.+?)\s+sent\b/i) || allText.match(/^(.+?)\s+sent\b/i);
+			if (authorMatch && authorMatch[1]) {
+				authorName = normalizeDonationText(authorMatch[1].replace(/^@/, ""));
+			}
+		}
+
+		var giftName = "";
+		var giftPatterns = [
+			/\bsent\s+(?:a\s+)?gift\s*:\s*(.+?)\s*(?:\(|for\s+[0-9,]+\s+Jewels?\b|$)/i,
+			/\bsent\s+(.+?)\s+for\s+[0-9,]+\s+Jewels?\b/i,
+			/\bsent\s+(.+?)\s*\(\s*[0-9,]+\s+Jewels?\s*\)/i,
+			/\bsent\s+(.+?)$/i
+		];
+		for (var i = 0; i < giftPatterns.length; i++) {
+			var giftMatch = allText.match(giftPatterns[i]);
+			if (giftMatch && giftMatch[1]) {
+				giftName = normalizeDonationText(giftMatch[1].replace(/^a\s+gift\s*:?\s*/i, ""));
+				break;
+			}
+		}
+
+		if (!plainMessage) {
+			plainMessage = authorName ? authorName + " sent a gift" : getTranslation("youtube-gift-sent-message", "sent a gift");
+			if (giftName) {
+				plainMessage += ": " + giftName;
+			}
+			if (jewelAmount) {
+				plainMessage += " (" + jewelAmount + " Jewels)";
+			}
+		}
+
+		return {
+			chatname: authorName,
+			chatmessage: escapeHtml(plainMessage),
+			hasDonation: jewelAmount ? jewelAmount + " Jewels" : (giftName || getTranslation("youtube-gift", "YouTube Gift")),
+			donoValue: jewelAmount ? parseInt(jewelAmount, 10) / 100 : "",
+			giftName: giftName,
+			jewelsAmount: jewelAmount ? parseInt(jewelAmount, 10) : ""
+		};
+	}
+
 	function setupDeletionObserver(target) {
 	  const deletionObserver = new MutationObserver((mutations) => {
 		mutations.forEach((mutation) => {
@@ -759,7 +862,7 @@
 			} else if (eventType == "jeweldonation"){
 				// Content-based dedup for jewel donations which may lack stable IDs.
 				// Prevents duplicates when moderation actions cause YouTube to re-render DOM elements.
-				var contentKey = "jd_" + (ele.textContent || "").trim().substring(0, 200);
+				var contentKey = "jd_" + ((ele.textContent || "") + " " + (ele.getAttribute("aria-label") || "") + " " + (ele.outerHTML || "")).trim().substring(0, 200);
 				if (messageHistory.has(contentKey)) return 5;
 				messageHistory.add(contentKey);
 		    } else {
@@ -895,6 +998,26 @@
 			}
 		}
 
+		var jewelDonation = false;
+		if (eventType === "jeweldonation") {
+			try {
+				jewelDonation = getYouTubeJewelDonationDetails(ele);
+				if (jewelDonation) {
+					if (!chatname && jewelDonation.chatname) {
+						chatname = escapeHtml(jewelDonation.chatname);
+					}
+					if (!chatmessage && jewelDonation.chatmessage) {
+						chatmessage = jewelDonation.chatmessage;
+					}
+					if (!subtitle && jewelDonation.giftName) {
+						subtitle = escapeHtml(jewelDonation.giftName);
+					}
+				}
+			} catch (e) {
+				console.error("Error processing jewel donation:", e);
+			}
+		}
+
 
 		
 		// https://yt3.ggpht.com/y0njK_GOHV6k7ZlW4qQbVxTt3z3Hs1eXBi2LeYJ-7hFT7KWXXKvcsl0FhYMWsHJh2VEoQvZrsko=w48-h48-c-k-nd
@@ -1020,6 +1143,10 @@
 		var hasDonation = "";
 		if (chatdonation) {
 			hasDonation = chatdonation;
+		}
+		if (jewelDonation && jewelDonation.hasDonation) {
+			hasDonation = jewelDonation.hasDonation;
+			donoValue = jewelDonation.donoValue;
 		}
 
 
@@ -1160,17 +1287,22 @@
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 		} else if (!chatmessage && chatmembership) {
 			chatmessage = chatmembership;
-		} else if (chatmessage && eventType === "jeweldonation") {
+		} else if (eventType === "jeweldonation") {
 			try {
-				const jewelMatch = chatmessage.match(/sent\s+(.*?)\s+for\s+([0-9,]+)\s+Jewels/i);
-				if (jewelMatch) {
-				  const jewelType = jewelMatch[1];
-				  const jewelAmount = jewelMatch[2].replace(/,/g, '');
-				  
-				  hasDonation = jewelAmount + " Jewels";
-				  donoValue = parseInt(jewelAmount, 10) / 100; // Convert jewels to approximate dollar value
-				  
-				  if (!settings.textonlymode){
+				jewelDonation = jewelDonation || getYouTubeJewelDonationDetails(ele);
+				if (jewelDonation) {
+				  hasDonation = jewelDonation.hasDonation;
+				  donoValue = jewelDonation.donoValue;
+				  if (!chatmessage) {
+					chatmessage = jewelDonation.chatmessage;
+				  }
+				  if (!chatname && jewelDonation.chatname) {
+					chatname = escapeHtml(jewelDonation.chatname);
+				  }
+				  if (!subtitle && jewelDonation.giftName) {
+					subtitle = escapeHtml(jewelDonation.giftName);
+				  }
+				  if (chatmessage && !settings.textonlymode){
 					chatmessage += ' <svg xmlns="http://www.w3.org/2000/svg" style="fill: red;" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M19.28 3.61c-.96-.81-2.51-.81-3.47 0-.68.58-1.47 2.66-1.81 3.64-.34-.98-1.13-3.06-1.81-3.64-.96-.81-2.51-.81-3.47 0-.96.81-.96 2.13 0 2.94.62.53 2.7 1.12 3.94 1.45H5v13h14V8h-3.66c1.24-.32 3.32-.92 3.94-1.45.96-.81.96-2.13 0-2.94zM6 9h8v6H6V9zm0 11v-4h8v4H6zm12 0h-3v-4h3v4zm0-11v6h-3V9h3zM9.43 5.89c-.58-.43-.58-1.13 0-1.57.29-.21.67-.32 1.05-.32s.76.11 1.04.32c.39.29 1.02 1.57 1.48 2.68-1.48-.35-3.18-.82-3.57-1.11zm9.14 0c-.39.29-2.09.76-3.57 1.11.46-1.11 1.09-2.39 1.48-2.68.29-.21.67-.32 1.04-.32.38 0 .76.11 1.04.32.58.44.58 1.14.01 1.57z"></path></svg>';
 				  }
 				}
@@ -1565,6 +1697,10 @@
 		callback(ele, "redirect");
 		return;
 	  }
+	  if (getYouTubeJewelDonationNode(ele)) {
+		callback(ele, "jeweldonation");
+		return;
+	  }
 	  if (ele && ele.classList && ele.classList.contains("yt-live-chat-banner-renderer")) {
 		return;
 	  } else if (ele.tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
@@ -1635,6 +1771,25 @@
 	var youtubeAutoScrollDelayMs = 3000;
 	var youtubeAutoScrollTimer = null;
 	var youtubeAutoScrollOffBottomSince = 0;
+	var youtubeLastChatActivityAt = Date.now();
+	var youtubeLiveChatActivityCount = 0;
+	var youtubeRecentChatActivityTimes = [];
+	var youtubeLastResourceCount = 0;
+	var youtubeLastResourceActivityAt = Date.now();
+	var youtubeStaleReloadMinMs = 60 * 1000;
+	var youtubeStaleReloadMaxMs = 5 * 60 * 1000;
+	var youtubeStaleReloadActivityWindowMs = 5 * 60 * 1000;
+	var youtubeStaleReloadResourceGraceMs = 90 * 1000;
+	var youtubeStaleReloadMinMessages = 3;
+	var youtubeStaleReloadStorageKey = "ssn_youtube_stale_reload_times";
+	var youtubeStaleReloadWindowMs = 60 * 60 * 1000;
+	var youtubeStaleReloadMaxPerWindow = 60;
+
+	try {
+		if (performance && performance.setResourceTimingBufferSize) {
+			performance.setResourceTimingBufferSize(10000);
+		}
+	} catch (e) {}
 
 	function applyLargerFont() {
 		if (!largerFontApplied) {
@@ -1798,6 +1953,153 @@
 		}, Math.max(0, youtubeAutoScrollDelayMs - (Date.now() - youtubeAutoScrollOffBottomSince)));
 	}
 
+	function markYouTubeChatActivity() {
+		var now = Date.now();
+		youtubeLastChatActivityAt = now;
+		youtubeLiveChatActivityCount += 1;
+		youtubeRecentChatActivityTimes.push(now);
+		if (youtubeRecentChatActivityTimes.length > 30) {
+			youtubeRecentChatActivityTimes.shift();
+		}
+	}
+
+	function isYouTubeChatActivityNode(ele) {
+		try {
+			return !!(ele && ele.tagName && (
+				ele.tagName.startsWith("YT-LIVE-CHAT-") ||
+				ele.tagName.startsWith("YTD-SPONSORSHIPS-") ||
+				ele.tagName === "YT-GIFT-MESSAGE-VIEW-MODEL"
+			));
+		} catch (e) {}
+		return false;
+	}
+
+	function updateYouTubeResourceActivity(now) {
+		try {
+			if (!performance || !performance.getEntriesByType) {
+				return false;
+			}
+			var resourceCount = performance.getEntriesByType("resource").length || 0;
+			if (resourceCount > youtubeLastResourceCount) {
+				youtubeLastResourceCount = resourceCount;
+				youtubeLastResourceActivityAt = now;
+				return true;
+			}
+		} catch (e) {}
+		return false;
+	}
+
+	function getRecentYouTubeStaleReloads(now) {
+		try {
+			var raw = sessionStorage.getItem(youtubeStaleReloadStorageKey);
+			var values = raw ? JSON.parse(raw) : [];
+			if (!Array.isArray(values)) {
+				values = [];
+			}
+			values = values
+				.map(function (value) {
+					return parseInt(value, 10) || 0;
+				})
+				.filter(function (value) {
+					return value > 0 && now - value < youtubeStaleReloadWindowMs;
+				});
+			sessionStorage.setItem(youtubeStaleReloadStorageKey, JSON.stringify(values));
+			return values;
+		} catch (e) {
+			return [];
+		}
+	}
+
+	function recordYouTubeStaleReload(now) {
+		try {
+			var values = getRecentYouTubeStaleReloads(now);
+			values.push(now);
+			sessionStorage.setItem(youtubeStaleReloadStorageKey, JSON.stringify(values));
+		} catch (e) {}
+	}
+
+	function getYouTubeStaleReloadMs(now) {
+		youtubeRecentChatActivityTimes = youtubeRecentChatActivityTimes.filter(function (value) {
+			return value > 0 && now - value < youtubeStaleReloadActivityWindowMs;
+		});
+		if (youtubeRecentChatActivityTimes.length < 5) {
+			return youtubeStaleReloadMaxMs;
+		}
+		var gapTotal = 0;
+		var gapCount = 0;
+		for (var i = 1; i < youtubeRecentChatActivityTimes.length; i++) {
+			var gap = youtubeRecentChatActivityTimes[i] - youtubeRecentChatActivityTimes[i - 1];
+			if (gap > 0) {
+				gapTotal += gap;
+				gapCount += 1;
+			}
+		}
+		if (!gapCount) {
+			return youtubeStaleReloadMaxMs;
+		}
+		var averageGap = gapTotal / gapCount;
+		return Math.min(youtubeStaleReloadMaxMs, Math.max(youtubeStaleReloadMinMs, averageGap * 6));
+	}
+
+	// YouTube live chat can stall in Electron while the page is still alive:
+	// resource activity continues, but yt-live-chat-item-list-renderer stops adding chat DOM nodes.
+	// Soak tests on 2026-05-24:
+	// - Reloading the live_chat popout consistently restarted DOM/message flow.
+	// - Trusted Electron wheel input via webContents.sendInputEvent also restarted the feed repeatedly
+	//   without sending a chat message. Standalone could do this from the main process, but
+	//   youtube.js cannot create that trusted input by itself, and we are not using it yet because
+	//   it may steal focus from fullscreen apps/games.
+	// - Synthetic WheelEvent/scroll/focus/visibility/online events from page JS did not restart it.
+	// - show-more clicks, scrollTop nudges, window resize, and YouTube component requestUpdate/
+	//   notifyResize/yt-resize nudges did not reliably restart it.
+	// - Reinjecting this source script once appeared to coincide with recovery in a harness run, but
+	//   it risks duplicate observers and does not address the underlying stalled YouTube DOM feed.
+	// Keep the reload as the common extension/browser fallback until standalone has a verified
+	// no-focus-steal main-process bridge for trusted wheel input.
+	function maybeReloadStaleYouTubeChat(ele) {
+		if (!ele || !ele.isConnected || !youtubeSettingsLoaded || !isExtensionOn) {
+			return;
+		}
+		if (settings.disableYoutubeStaleReload) {
+			return;
+		}
+		if (!window.location.href.includes("youtube.com/live_chat") && !window.location.href.includes("studio.youtube.com/live_chat")) {
+			return;
+		}
+		if (youtubeLiveChatActivityCount < youtubeStaleReloadMinMessages) {
+			return;
+		}
+
+		var now = Date.now();
+		updateYouTubeResourceActivity(now);
+		var staleReloadMs = getYouTubeStaleReloadMs(now);
+
+		if (now - youtubeLastChatActivityAt < staleReloadMs) {
+			return;
+		}
+		if (now - youtubeLastResourceActivityAt > youtubeStaleReloadResourceGraceMs) {
+			return;
+		}
+
+		var reloads = getRecentYouTubeStaleReloads(now);
+		if (reloads.length >= youtubeStaleReloadMaxPerWindow) {
+			return;
+		}
+
+		console.warn("[YouTube] Live chat DOM appears stale while network activity continues; reloading chat popout.", {
+			secondsSinceChatActivity: Math.round((now - youtubeLastChatActivityAt) / 1000),
+			staleReloadSeconds: Math.round(staleReloadMs / 1000)
+		});
+		recordYouTubeStaleReload(now);
+		try {
+			window.location.reload();
+		} catch (e) {
+			try {
+				window.location.href = window.location.href;
+			} catch (e2) {}
+		}
+	}
+
 	function disconnectYouTubeChatObservers() {
 		try {
 			if (youtubeChatObserver) {
@@ -1878,6 +2180,9 @@
 		youtubeDeletionObserver = setupDeletionObserver(ele);
 		seedYouTubeChatItems(ele);
 		youtubeChatObserver = onElementInserted(ele, function (ele2, eventtype=false) {
+			if (isYouTubeChatActivityNode(ele2)) {
+				markYouTubeChatActivity();
+			}
 			scheduleYouTubeChatAutoScroll(ele);
 			setTimeout(() => processMessage(ele2, eventtype), captureDelay);
 		});
@@ -1930,6 +2235,7 @@
 	  if (ele) {
 		maybeRefreshYouTubeChatObserver(ele);
 		scheduleYouTubeChatAutoScroll(ele);
+		maybeReloadStaleYouTubeChat(ele);
 	  } else if (!ele && document.querySelector("iframe#hyperchat") && !document.querySelector("iframe#hyperchat").marked) {
 			try {
 				var ele22 = document.querySelector("iframe#hyperchat").contentWindow.document.body.querySelector(".content");

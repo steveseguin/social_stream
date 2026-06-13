@@ -1265,6 +1265,9 @@
 		if (brandedImageURL) {
 			data.sourceImg = brandedImageURL;
 		}
+		if (channelName){
+			data.sourceName = channelName;
+		}
 		if (crossChat){
 			data.sourceImg = crossChat;
 		}
@@ -1513,11 +1516,9 @@
 			data.event = "subscription_gift";
 		}
 
-		if (settings.limitedtwitchmemberchat) {
-			const isMembershipNotice = (data.event === "giftpurchase") || (data.event === "subscription_gift") || isSubscriptionNoticeText(data.chatmessage);
-			if (isMembershipNotice) {
-				data.membership = getTranslation("subscriber", "SUBSCRIBER");
-			}
+		const isMembershipNotice = (data.event === "giftpurchase") || (data.event === "subscription_gift") || isSubscriptionNoticeText(data.chatmessage);
+		if (isMembershipNotice) {
+			data.membership = getTranslation("subscriber", "SUBSCRIBER");
 		}
 		
 

@@ -701,7 +701,12 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "firsttimers": {
     type: "boolean",
     category: "custom_injection",
-    description: "Mark first time chatters/donators (requires the local database)"
+    description: "Enable first-time chatter detection and include last activity timestamps. The popup turns on the local database automatically when this is enabled."
+  },
+  "firsttimerbadge": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Prepend a custom leaf badge to messages flagged as first-time chatters."
   },
   "flipYoutube": {
     type: "boolean",
@@ -1063,6 +1068,31 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "censor_bot_options",
     description: "Only approved messages get thru, but this may slow things down and messages will get skipped."
   },
+  "aiAutoTranslate": {
+    type: "boolean",
+    category: "configure_llm_api",
+    description: "Translate incoming chat messages to the target language using the selected AI provider."
+  },
+  "aiAutoTranslateBlockMode": {
+    type: "boolean",
+    category: "configure_llm_api",
+    description: "Wait for translation before showing messages; drop messages if the translator is busy, times out, or fails."
+  },
+  "aiAutoTranslateContext": {
+    type: "boolean",
+    category: "configure_llm_api",
+    description: "Include the last 10 chat messages as context for AI translation."
+  },
+  "aiAutoTranslateTargetLanguage": {
+    type: "text",
+    category: "configure_llm_api",
+    description: "Target language for AI-translated incoming chat messages. Defaults to en-US."
+  },
+  "aiAutoTranslateTimeout": {
+    type: "number",
+    category: "configure_llm_api",
+    description: "Maximum time in milliseconds to wait for each AI translation request. Defaults to 10000."
+  },
   "ollamaKeepAlive": {
     type: "number",
     category: "configure_llm_api",
@@ -1167,6 +1197,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "text",
     category: "poll_settings",
     description: "Prompt shown to viewers when the poll overlay is active."
+  },
+  "pollMatchMode": {
+    type: "select",
+    category: "poll_settings",
+    description: "Controls whether poll votes must match the whole message or can use hashtags anywhere in the message."
   },
   "pollSpam": {
     type: "boolean",

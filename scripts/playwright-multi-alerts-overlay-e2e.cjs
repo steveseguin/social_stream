@@ -782,6 +782,55 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     const genericEventState = await overlayPage.evaluate(() => window.__multiAlertsOverlay.getState());
     assert(genericEventState.currentCategory === 'subscription', 'Generic event=true subscription text should render as a subscription alert.');
 
+    const tiktokGiftUrl = `http://${HOST}:${PORT}/multi-alerts.html?session=testsession&preview&showtime=1800&queue`;
+    await loadOverlay(overlayPage, tiktokGiftUrl);
+    await overlayPage.evaluate(() => {
+      window.__multiAlertsOverlay.clear({ clearQueue: true, preserveCooldown: false });
+      window.__multiAlertsOverlay.sendPayload({
+        event: 'gift',
+        type: 'tiktok',
+        platform: 'tiktok',
+        chatname: 'GiftSender',
+        chatmessage: 'Sent Rose x1',
+        title: 'Rose',
+        hasDonation: '5 diamonds',
+        meta: {
+          count: 1,
+          recipientName: 'OtherViewer',
+          topGifterRank: 2
+        }
+      });
+      window.__multiAlertsOverlay.sendPayload({
+        event: 'gift',
+        type: 'tiktok',
+        platform: 'tiktok',
+        chatname: 'GiftSender',
+        chatmessage: 'Sent Rose x2',
+        title: 'Rose',
+        hasDonation: '10 diamonds',
+        meta: {
+          count: 2,
+          recipientName: 'OtherViewer',
+          topGifterRank: 2
+        }
+      });
+    });
+    await overlayPage.waitForTimeout(120);
+    const tiktokGiftSnapshot = await overlayPage.evaluate(() => ({
+      titleText: document.querySelector('.alert-title') ? document.querySelector('.alert-title').textContent : '',
+      subtitleText: document.querySelector('.alert-subtitle') ? document.querySelector('.alert-subtitle').textContent : '',
+      state: window.__multiAlertsOverlay.getState()
+    }));
+    assert(tiktokGiftSnapshot.state.currentCategory === 'donation', 'TikTok gift should render as a donation alert.');
+    assert(tiktokGiftSnapshot.titleText === 'NEW GIFT', 'TikTok gift should use the gift alert title.');
+    assert(tiktokGiftSnapshot.subtitleText.includes('Rose'), 'TikTok gift subtitle should include the gift title.');
+    assert(tiktokGiftSnapshot.subtitleText.includes('OtherViewer'), 'TikTok gift subtitle should include the recipient.');
+    assert(tiktokGiftSnapshot.subtitleText.includes('Top gifter #2'), 'TikTok gift subtitle should include top gifter rank.');
+    assert(tiktokGiftSnapshot.state.queueLength === 0, 'TikTok combo updates should not queue duplicate gift alerts.');
+    await overlayPage.waitForTimeout(2100);
+    const tiktokClearedState = await overlayPage.evaluate(() => window.__multiAlertsOverlay.getState());
+    assert(tiktokClearedState.hasAlert === false, 'TikTok gift alert should auto-dismiss.');
+
     const customBeepUrl = new URL(popupUrl.toString());
     customBeepUrl.searchParams.delete('followsound');
     await loadOverlay(overlayPage, customBeepUrl.toString());

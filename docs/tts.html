@@ -1,20 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>
-        // Apply dark mode immediately to prevent flash
-        (function() {
-            const savedTheme = localStorage.getItem('darkMode');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
-                document.documentElement.classList.add('dark-mode');
-            }
-        })();
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Stream Ninja - TTS Voice Guide</title>
+    <script src="js/standalone-theme.js"></script>
     <style>
         :root {
             --primary-color: #2196F3;
@@ -41,7 +31,19 @@
             --code-bg: #000000;
             --code-text: #ECEFF1;
         }
-        
+
+        html[data-theme="dark"],
+        body[data-theme="dark"] {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .voice-card,
+        [data-theme="dark"] .tts-test {
+            color: var(--text-color);
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
@@ -144,6 +146,11 @@
             overflow-x: auto;
             margin: 15px 0;
         }
+
+        code {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
         
         table {
             width: 100%;
@@ -240,7 +247,16 @@
         [data-theme="dark"] .parameter-table td:first-child {
             background-color: #2A2A2A;
         }
-        
+
+        @media (max-width: 700px) {
+            table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
         nav {
             background-color: var(--card-bg);
             padding: 20px;
@@ -268,7 +284,7 @@
 <body>
     <header>
         <div class="container">
-            <button class="theme-toggle" onclick="toggleTheme()">
+            <button class="theme-toggle" data-theme-toggle type="button">
                 <span class="theme-icon">🌓</span>
                 <span class="theme-text">Toggle Dark Mode</span>
             </button>
@@ -464,22 +480,23 @@
                 <li>Chrome offers Google-powered options, Edge has Microsoft options</li>
                 <li>Requires complex audio routing for capture</li>
             </ul>
-            
+            <p><strong>Routing downloads:</strong> <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a> | <a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a> | <a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router (legacy)</a></p>
+
             <h4>Method 1: Default Audio Route (Most Common)</h4>
             <div class="code">
-1. Set Virtual Cable as Windows default output
-   - Sound Settings > Output > Virtual Cable
+1. Set VB-Audio Virtual Cable as Windows default output
+   - Sound Settings > Output > CABLE Input
 2. OBS:
    - Add Audio Input Capture
-   - Source: Virtual Cable
-   - Monitor: Monitor Only
+   - Source: CABLE Output
+   - Monitor: Monitor and Output, or Monitor Only if another source handles stream output
             </div>
             
             <h4>Method 2: Windows 10 App Route</h4>
             <div class="code">
 1. Sound Settings > App volume and device preferences
 2. Find browser in list
-3. Output: Virtual Cable
+3. Output: CABLE Input
 4. OBS setup same as Method 1
             </div>
             
@@ -487,14 +504,14 @@
             <div class="code">
 1. Settings > System > Sound > Volume Mixer
 2. Locate browser
-3. Output: Virtual Cable
+3. Output: CABLE Input
 4. OBS setup same as Method 1
             </div>
             
             <h4>Method 4: Audio Router Software</h4>
             <div class="code">
 1. Install Audio Router
-2. Route browser to Virtual Cable
+2. Route browser to CABLE Input
 3. OBS setup same as Method 1
             </div>
             
@@ -576,8 +593,8 @@
                 </tr>
                 <tr>
                     <td>&ttsprovider</td>
-                    <td>Select provider: kokoro, piper, kitten, espeak, openai, elevenlabs, google, speechify, gemini</td>
-                    <td>&ttsprovider=kokoro</td>
+                    <td>Select provider: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini</td>
+                    <td>&ttsprovider=customtts</td>
                 </tr>
             </table>
             
@@ -647,9 +664,13 @@
             <h3>OpenAI / Local Server TTS</h3>
             <ul>
                 <li>Enable with <code>?ttsprovider=openai</code></li>
+                <li>Use <code>?ttsprovider=customtts</code> or <code>?ttsprovider=localtts</code> for a self-hosted endpoint</li>
                 <li>Uses OpenAI's API by default, or any compatible local server</li>
                 <li>Custom endpoint: <code>&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
                 <li>No API key needed for local servers</li>
+                <li>If the local server has CORS problems, run <code>npm run local-tts-bridge</code> and point SSN at <code>http://127.0.0.1:8124/v1/audio/speech</code></li>
+                <li>SSN sends <code>{ model, input, voice, response_format, speed }</code> and supports binary audio, JSON audio URLs, and JSON base64 audio</li>
+                <li>Custom/local endpoint playback is buffered today; SSN does not progressively play streamed audio chunks yet</li>
                 <li>Voice: <code>&voiceopenai=af_bella</code>, speed: <code>&openaispeed=1.0</code></li>
                 <li>See the <a href="local-tts.html">Local AI TTS Guide</a> for self-hosted server setup</li>
             </ul>
@@ -717,33 +738,5 @@
         </footer>
     </div>
     
-    <script>
-        function toggleTheme() {
-            const body = document.body;
-            const themeText = document.querySelector('.theme-text');
-            const currentTheme = body.getAttribute('data-theme');
-            
-            if (currentTheme === 'dark') {
-                body.removeAttribute('data-theme');
-                themeText.textContent = 'Toggle Dark Mode';
-                localStorage.setItem('theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                themeText.textContent = 'Toggle Light Mode';
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-        
-        // Check for saved theme preference
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedTheme = localStorage.getItem('theme');
-            const themeText = document.querySelector('.theme-text');
-            
-            if (savedTheme === 'dark') {
-                document.body.setAttribute('data-theme', 'dark');
-                themeText.textContent = 'Toggle Light Mode';
-            }
-        });
-    </script>
 </body>
 </html>

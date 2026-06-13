@@ -1031,7 +1031,7 @@ The poll system can now be controlled through the API with the following actions
 - **Load Poll Preset**: `{"action": "loadpoll", "value": {"pollId": "poll-123456"}}` - Loads a previously saved poll preset by its ID
 - **Get Poll Presets**: `{"action": "getpollpresets"}` - Returns a list of all saved poll presets with their IDs and names
 - **Set Poll Settings**: `{"action": "setpollsettings", "value": {...}}` - Updates the current poll settings
-  - Available settings: `pollType`, `pollQuestion`, `multipleChoiceOptions`, `pollStyle`, `pollTimer`, `pollTimerState`, `pollTally`, `pollSpam`
+  - Available settings: `pollType`, `pollQuestion`, `multipleChoiceOptions`, `pollMatchMode`, `pollStyle`, `pollTimer`, `pollTimerState`, `pollTally`, `pollSpam`
 - **Create New Poll**: `{"action": "createpoll", "value": {"settings": {...}}}` - Creates a new poll with specified settings
 
 ### Example Usage

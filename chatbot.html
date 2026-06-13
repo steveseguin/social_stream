@@ -294,6 +294,9 @@
 		if (urlParams.has("password")) {
 			password = urlParams.get("password");
 		}
+		if (window.TTS && typeof TTS.configure === "function") {
+			TTS.configure(urlParams);
+		}
 		let currentID = 0
 		
 		const inputContainer = document.getElementById('input-container');
@@ -417,6 +420,28 @@
 		
 		var messageChunks = {};
 
+		function speakChatbotResponse(html) {
+			if (!window.TTS || !TTS.speech || !html) {
+				return;
+			}
+			try {
+				var tempContainer = document.createElement("div");
+				tempContainer.innerHTML = html;
+				tempContainer.querySelectorAll(".thinking, script, style").forEach(function(node) {
+					if (node && node.parentNode) {
+						node.parentNode.removeChild(node);
+					}
+				});
+				var text = tempContainer.textContent || tempContainer.innerText || "";
+				text = text.replace(/\s{2,}/g, " ").trim();
+				if (text) {
+					TTS.speak(text, true);
+				}
+			} catch (e) {
+				console.error(e);
+			}
+		}
+
 		function addWaitingMessage(id) {
 			const waitingDiv = document.createElement('div');
 			waitingDiv.classList.add('message', 'assistant', 'waiting');
@@ -512,6 +537,9 @@
 				
 				waitingMessage.innerHTML = processedContent.replaceAll("\n","<br>");
 				chatContainer.scrollTop = chatContainer.scrollHeight;
+				if (!chunk) {
+					speakChatbotResponse(processedContent);
+				}
 			}
 		}
 
@@ -537,10 +565,10 @@
 			document.body.appendChild(iframe);
 			window.addEventListener("message", function (e) {
 				if (e.source != iframe.contentWindow) return;
-				if (e.data.dataReceived && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotChunk && ("value" in e.data.dataReceived.overlayNinja.chatbotChunk)) {
+				if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotChunk && ("value" in e.data.dataReceived.overlayNinja.chatbotChunk)) {
 					const response = e.data.dataReceived.overlayNinja.chatbotChunk;
 					updateWaitingMessage(response.target, response.value || "", true);
-				} else if (e.data.dataReceived && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotResponse && ("value" in e.data.dataReceived.overlayNinja.chatbotResponse)) {
+				} else if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotResponse && ("value" in e.data.dataReceived.overlayNinja.chatbotResponse)) {
 					const response = e.data.dataReceived.overlayNinja.chatbotResponse;
 					updateWaitingMessage(response.target, response.value || "");
 				}

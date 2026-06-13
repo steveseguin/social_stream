@@ -783,7 +783,7 @@
             window.addEventListener('message', function(e) {
                 if (e.source !== iframe.contentWindow) return;
                 
-                if ('dataReceived' in e.data) {
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
                     if ('overlayNinja' in e.data.dataReceived) {
                         const data = e.data.dataReceived.overlayNinja;
                         
