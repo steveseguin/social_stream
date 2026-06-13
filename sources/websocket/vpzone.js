@@ -10,6 +10,10 @@
 	const DEFAULT_CONFIG = { channel: "", wsUrl: "wss://chat.nexus-7.vpzone.tv/ws", token: "", clientId: DEFAULT_CLIENT_ID, redirectUri: "", scopes: DEFAULT_SCOPES, hideMetrics: false };
 	const RECONNECT_DELAY_MS = 4000;
 	const MAX_SEEN_IDS = 1500;
+	const FETCH_BRIDGE_SOURCE = "ssn-vpzone";
+	const FETCH_BRIDGE_REQUEST = "ssn-vpzone-fetch-json";
+	const FETCH_BRIDGE_RESPONSE = "ssn-vpzone-fetch-json-response";
+	const FETCH_BRIDGE_TIMEOUT_MS = 12000;
 	const READY_STATE = { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 };
 
 	try {
@@ -287,6 +291,87 @@
 		return error;
 	}
 
+	function buildFetchJsonRequest(url, options, headers) {
+		return {
+			cmd: "vpzoneFetchJson",
+			url: url,
+			method: options.method || "GET",
+			body: options.body || "",
+			contentType: headers["Content-Type"] || headers["content-type"] || "",
+			authToken: options.authToken || ""
+		};
+	}
+
+	function runtimeFetchJson(request) {
+		return new Promise(function (resolve, reject) {
+			try {
+				chrome.runtime.sendMessage(chrome.runtime.id, {
+					type: "toBackground",
+					data: request
+				}, function (response) {
+					if (chrome.runtime.lastError) {
+						reject(new Error(chrome.runtime.lastError.message || "VPZone background fetch failed"));
+						return;
+					}
+					if (!response || !response.ok) {
+						reject(jsonFetchError((response && response.error) || "VPZone background fetch failed", response && response.status));
+						return;
+					}
+					resolve(response.data || {});
+				});
+			} catch (e) {
+				reject(e);
+			}
+		});
+	}
+
+	function bridgedFetchJson(request) {
+		return new Promise(function (resolve, reject) {
+			var id = "vpzone_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+			var timer;
+			function cleanup() {
+				clearTimeout(timer);
+				window.removeEventListener("message", onMessage);
+			}
+			function onMessage(event) {
+				var response = event && event.data;
+				if (!response || response.source !== FETCH_BRIDGE_SOURCE || response.type !== FETCH_BRIDGE_RESPONSE || response.id !== id) return;
+				cleanup();
+				if (!response.ok) {
+					reject(jsonFetchError(response.error || "VPZone extension fetch failed", response.status));
+					return;
+				}
+				resolve(response.data || {});
+			}
+			timer = setTimeout(function () {
+				cleanup();
+				reject(new Error("VPZone extension fetch bridge timed out."));
+			}, FETCH_BRIDGE_TIMEOUT_MS);
+			window.addEventListener("message", onMessage);
+			window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: FETCH_BRIDGE_REQUEST, id: id, request: request }, "*");
+		});
+	}
+
+	function installFetchBridgeResponder() {
+		if (!extAvailable()) return;
+		window.addEventListener("message", function (event) {
+			var message = event && event.data;
+			if (!message || message.source !== FETCH_BRIDGE_SOURCE || message.type !== FETCH_BRIDGE_REQUEST || !message.id || !message.request) return;
+			runtimeFetchJson(message.request).then(function (data) {
+				window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: FETCH_BRIDGE_RESPONSE, id: message.id, ok: true, data: data }, "*");
+			}).catch(function (error) {
+				window.postMessage({
+					source: FETCH_BRIDGE_SOURCE,
+					type: FETCH_BRIDGE_RESPONSE,
+					id: message.id,
+					ok: false,
+					status: error && error.status,
+					error: (error && error.message) || String(error || "VPZone extension fetch failed")
+				}, "*");
+			});
+		});
+	}
+
 	function fetchJson(url, options) {
 		options = options || {};
 		var headers = options.headers || { Accept: "application/json" };
@@ -304,33 +389,11 @@
 				return json;
 			});
 		}).catch(function (error) {
-			if (!extAvailable()) throw error;
-			return new Promise(function (resolve, reject) {
-				try {
-					chrome.runtime.sendMessage(chrome.runtime.id, {
-						type: "toBackground",
-						data: {
-							cmd: "vpzoneFetchJson",
-							url: url,
-							method: options.method || "GET",
-							body: options.body || "",
-							contentType: headers["Content-Type"] || headers["content-type"] || "",
-							authToken: options.authToken || ""
-						}
-					}, function (response) {
-						if (chrome.runtime.lastError) {
-							reject(new Error(chrome.runtime.lastError.message || "VPZone background fetch failed"));
-							return;
-						}
-						if (!response || !response.ok) {
-							reject(jsonFetchError((response && response.error) || "VPZone background fetch failed", response && response.status));
-							return;
-						}
-						resolve(response.data || {});
-					});
-				} catch (e) {
-					reject(e);
-				}
+			var request = buildFetchJsonRequest(url, options, headers);
+			if (extAvailable()) return runtimeFetchJson(request);
+			return bridgedFetchJson(request).catch(function (bridgeError) {
+				if (bridgeError && bridgeError.message) throw bridgeError;
+				throw error;
 			});
 		});
 	}
@@ -1064,6 +1127,7 @@
 	}
 
 	function bridge() {
+		installFetchBridgeResponder();
 		if (extAvailable()) {
 			try {
 				chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
