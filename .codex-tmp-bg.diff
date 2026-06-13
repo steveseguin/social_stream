@@ -1,0 +1,3905 @@
+﻿diff --git a/background.js b/background.js
+index 5d88a2a1..ec78c3c0 100644
+--- a/background.js
++++ b/background.js
+@@ -1,174 +1,238 @@
+ try {
+ 	if (document.title == "Keep Open - Social Stream Ninja") {
+ 		window.close();
+ 	}
+ 	if (document.title == "Close me - Social Stream Ninja") {
+ 		window.close();
+ 	}
+ } catch (e) {}
+ 
+ var isExtensionOn = false;
+ var iframe = null;
+ // Optional: Use VDONinjaSDK instead of iframe transport to reduce memory
+ var ninjaBridge = null;
+ var useNinjaSDK = false; // toggled via URL param &sdk, or can be wired to settings in future
+ 
+ var settings = {};
+ var messageTimeout = {};
+ var lastSentMessage = "";
+ var lastSentTimestamp = 0;
+ var lastMessageCounter = 0;
+ const fakeChatThrottleState = new Map();
+ var sentimentAnalysisLoaded = false;
+ const commandAliasCache = new Map();
++const settingCommaListCache = new Map();
++const settingRoleListCache = new Map();
++const DEFAULT_QUESTION_KEYWORDS = ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
++
++function trimSettingCache(cache) {
++	if (cache.size > 500) {
++		cache.clear();
++	}
++}
++
++function getCachedCommaList(value, lowerCase = false, keepEmpty = false) {
++	if (value === undefined || value === null) {
++		return [];
++	}
++	const raw = String(value);
++	const cacheKey = (lowerCase ? "1" : "0") + "|" + (keepEmpty ? "1" : "0") + "|" + raw;
++	const cached = settingCommaListCache.get(cacheKey);
++	if (cached) {
++		return cached;
++	}
++	let entries = raw.split(",").map(entry => {
++		entry = entry.trim();
++		return lowerCase ? entry.toLowerCase() : entry;
++	});
++	if (!keepEmpty) {
++		entries = entries.filter(Boolean);
++	}
++	trimSettingCache(settingCommaListCache);
++	settingCommaListCache.set(cacheKey, entries);
++	return entries;
++}
++
++function getCachedRoleList(value) {
++	const raw = String(value || "");
++	const cached = settingRoleListCache.get(raw);
++	if (cached) {
++		return cached;
++	}
++	const entries = raw
++		.toLowerCase()
++		.split(",")
++		.map(entry => entry.trim())
++		.filter(entry => entry)
++		.map(entry => {
++			const parts = entry.split(":").map(part => part.trim());
++			return { name: parts[0] || "", type: parts[1] || "" };
++		})
++		.filter(entry => entry.name);
++	trimSettingCache(settingRoleListCache);
++	settingRoleListCache.set(raw, entries);
++	return entries;
++}
+ 
+ function getCommandAliases(commandString) {
+ 	if (!commandString) {
+ 		return [];
+ 	}
+ 	const cacheKey = String(commandString);
+ 	const cached = commandAliasCache.get(cacheKey);
+ 	if (cached) {
+ 		return cached;
+ 	}
+ 	const aliases = cacheKey
+ 		.split(",")
+ 		.map(command => command.trim())
+ 		.filter(Boolean)
+ 		.map(command => {
+ 			const escapedCommand = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+ 			return {
+ 				command,
+ 				lower: command.toLowerCase(),
+ 				wordRegex: new RegExp(`^${escapedCommand}\\b|\\s${escapedCommand}\\b`, "i")
+ 			};
+ 		});
+ 	if (commandAliasCache.size > 500) {
+ 		commandAliasCache.clear();
+ 	}
+ 	commandAliasCache.set(cacheKey, aliases);
+ 	return aliases;
+ }
+ 
+ function commandAliasMatches(commandString, messageText, mode) {
+ 	if (typeof messageText === "undefined" || messageText === null) {
+ 		return false;
+ 	}
+ 	const aliases = getCommandAliases(commandString);
+ 	if (!aliases.length) {
+ 		return false;
+ 	}
+-	const text = String(messageText);
++	const normalizedText = String(messageText).trim().toLowerCase();
+ 
+ 	if (mode === "exact") {
+-		return aliases.some(alias => text === alias.command);
++		return aliases.some(alias => normalizedText === alias.lower);
+ 	}
+ 	if (mode === "startsWith") {
+-		const lowerText = text.toLowerCase();
+-		return aliases.some(alias => lowerText.startsWith(alias.lower));
++		return aliases.some(alias => normalizedText.startsWith(alias.lower));
+ 	}
+ 	if (mode === "word") {
+-		return aliases.some(alias => alias.wordRegex.test(text));
++		return aliases.some(alias => alias.wordRegex.test(normalizedText));
+ 	}
+-	return aliases.some(alias => text.includes(alias.command));
++	return aliases.some(alias => normalizedText.includes(alias.lower));
+ }
+ 
+ function getCustomGifCommandEntryId(command, url, id) {
+ 	if (id) return String(id);
+ 	const source = String(command || "") + "|" + String(url || "");
+ 	let hash = 0;
+ 	for (let i = 0; i < source.length; i++) {
+ 		hash = ((hash << 5) - hash + source.charCodeAt(i)) | 0;
+ 	}
+ 	return "gif_" + Math.abs(hash);
+ }
+ 
+-function getMatchedCommandAlias(commandString, messageText) {
+-	const text = String(messageText || "");
++function getMatchedCommandAlias(commandString, messageText, mode) {
++	const normalizedText = String(messageText || "")
++		.trim()
++		.toLowerCase();
+ 	const aliases = getCommandAliases(commandString);
++	const matchMode = mode || "contains";
++
+ 	for (let i = 0; i < aliases.length; i++) {
+-		if (text === aliases[i].command) {
++		if (matchMode === "exact" && normalizedText === aliases[i].lower) {
++			return aliases[i].command;
++		}
++		if (matchMode === "startsWith" && normalizedText.startsWith(aliases[i].lower)) {
++			return aliases[i].command;
++		}
++		if (matchMode === "word" && aliases[i].wordRegex.test(normalizedText)) {
++			return aliases[i].command;
++		}
++		if (matchMode === "contains" && normalizedText.includes(aliases[i].lower)) {
+ 			return aliases[i].command;
+ 		}
+ 	}
+-	return text;
++	return normalizedText;
+ }
+ 
+ // Spotify integration
+ var spotify = null;
+ var latestSpotifyOverlay = null;
+ console.log("Background.js: SpotifyIntegration available?", typeof SpotifyIntegration !== "undefined");
+ 
+ var messageCounterBase = Math.floor(Math.random() * 90000);
+ var messageCounter = messageCounterBase;
+ var lastAntiSpam = 0;
+ var tabMessageActivityCounter = {};
+ var lastAutoMessagePerTab = {};
+ let returningBeepAudio = null;
+ let returningBeepLastPlay = 0;
+ const RETURNING_BEEP_COOLDOWN_MS = 400;
+ let returningBeepHintShown = false;
+ 
+ var connectedPeers = {};
+ var isSSAPP = false;
+ 
+ const HANDLE_DB_NAME = "ssn-file-handles";
+ const HANDLE_STORE_NAME = "handles";
+ let fileHandleDBPromise = null;
+ const HANDLE_KEYS = {
+ 	chatLog: "chatLog",
+ 	savedNames: "savedNames",
+ 	ticker: "tickerFile"
+ };
+ 
+ const HANDLE_STATUS_KEYS = ["chatLog", "savedNames", "ticker"];
+ const HANDLE_STATUS_FIELDS = ["name", "status", "detail", "persisted"];
+ const HANDLE_STATUS_STATES = {
+ 	ACTIVE: "active",
+ 	READY: "ready",
+ 	MISSING: "missing",
+ 	NEEDS_PERMISSION: "needs-permission",
+ 	ERROR: "error"
+ };
+ 
+ function createDefaultHandleStatus() {
+ 	return {
+ 		name: null,
+ 		status: HANDLE_STATUS_STATES.MISSING,
+ 		detail: "",
+ 		persisted: false,
+ 		lastUpdated: 0
+ 	};
+ }
+ 
+ function createHandleStatusState() {
+ 	const state = {};
+ 	for (const key of HANDLE_STATUS_KEYS) {
+ 		state[key] = createDefaultHandleStatus();
+ 	}
+ 	return state;
+ }
+ 
+ const handleStatusState = createHandleStatusState();
+ 
+ function cloneHandleStatusEntry(entry) {
+ 	return { ...entry };
+ }
+ 
+ function ensureHandleStatusCache() {
+ 	return handleStatusState;
+ }
+ 
+ function getHandleStatusSnapshot() {
+ 	const snapshot = {};
+ 	for (const key of HANDLE_STATUS_KEYS) {
+ 		snapshot[key] = cloneHandleStatusEntry(handleStatusState[key]);
+ 	}
+ 	return snapshot;
+ }
+ 
+ function getFileHandleDisplayName(handle) {
+ 	if (!handle) {
+ 		return null;
+ 	}
+ 	try {
+@@ -1326,237 +1390,246 @@ function validateRoomId(roomId) {
+ }
+ var relaytargets = false;
+ var loadedFirst = false;
+ const SETTINGS_OBJECT_FIELD_PATTERN = /^(?:setting|both|param\d+|textparam\d+|numbersetting\d*|optionparam\d+|textsetting|optionsetting(?:2|10)?|json)$/;
+ const SETTINGS_OBJECT_TOGGLE_PATTERN = /^(?:setting|both|param\d+)$/;
+ const TEMP_VIEWER_COUNT_TTL = 70 * 60 * 1000;
+ var temporaryViewerCountUntil = 0;
+ var temporaryViewerCountTimer = null;
+ 
+ function isTemporaryViewerCountActive() {
+ 	return temporaryViewerCountUntil && Date.now() < temporaryViewerCountUntil;
+ }
+ 
+ function getEffectiveSettingsForSources() {
+ 	if (!isTemporaryViewerCountActive() || settings.showviewercount) {
+ 		return settings;
+ 	}
+ 	const effectiveSettings = Object.assign({}, settings);
+ 	effectiveSettings.showviewercount = true;
+ 	return effectiveSettings;
+ }
+ 
+ function refreshTemporaryViewerCount(ttl) {
+ 	const parsedTtl = parseInt(ttl, 10);
+ 	const requestedTtl = Number.isFinite(parsedTtl) && parsedTtl > 0 ? parsedTtl : TEMP_VIEWER_COUNT_TTL;
+ 	const cappedTtl = Math.min(Math.max(requestedTtl, 5 * 60 * 1000), 2 * 60 * 60 * 1000);
+ 	temporaryViewerCountUntil = Date.now() + cappedTtl;
+ 
+ 	if (temporaryViewerCountTimer) {
+ 		clearTimeout(temporaryViewerCountTimer);
+ 	}
+ 	temporaryViewerCountTimer = setTimeout(function () {
+ 		temporaryViewerCountTimer = null;
+ 		temporaryViewerCountUntil = 0;
+ 		pushSettingChange();
+ 	}, cappedTtl + 1000);
+ 
+ 	pushSettingChange();
+ }
+ 
+ function pruneSettingsObjects(settingsObject) {
+ 	if (!settingsObject || typeof settingsObject !== "object") {
+ 		return false;
+ 	}
+ 
+ 	let changed = false;
+ 
+ 	Object.keys(settingsObject).forEach(settingKey => {
+ 		const entry = settingsObject[settingKey];
+ 		if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+ 			return;
+ 		}
+ 
+ 		Object.keys(entry).forEach(fieldKey => {
+ 			if (SETTINGS_OBJECT_TOGGLE_PATTERN.test(fieldKey) && entry[fieldKey] === false) {
+ 				delete entry[fieldKey];
+ 				changed = true;
+ 			}
+ 		});
+ 
+ 		if (!("json" in entry) && "object" in entry) {
+ 			delete entry.object;
+ 			changed = true;
+ 		}
+ 
+ 		const remainingKeys = Object.keys(entry).filter(key => key !== "object");
+ 		if (!remainingKeys.length) {
+ 			delete settingsObject[settingKey];
+ 			changed = true;
+ 		}
+ 	});
+ 
+ 	return changed;
+ }
+ 
+ function loadSettings(item, resave = false) {
+ 	log("loadSettings (or saving new settings)", item);
+ 	let reloadNeeded = false;
+ 	let normalizedSettings = false;
+ 	const { storedId, storedState } = getPersistedSession();
+-	const isFirstRun = !storedId && !(item && item.streamID) && storedState === null && !(item && "state" in item);
++	const hasIncomingSettings = !!(item && item.settings && Object.keys(item.settings).length);
++	const isFirstRun = !storedId && !(item && item.streamID) && storedState === null && !(item && "state" in item) && !hasIncomingSettings;
+ 	const incomingStreamId = item && item.streamID ? item.streamID : storedId;
+ 
+ 	if (incomingStreamId) {
+ 		if (streamID != incomingStreamId) {
+ 			streamID = incomingStreamId;
+ 			streamID = validateRoomId(streamID);
+ 			if (!streamID) {
+ 				try {
+ 					chrome.notifications.create({
+ 						type: "basic",
+ 						iconUrl: "./icons/icon-128.png",
+ 						title: "Invalid session ID",
+ 						message: "Your session ID is invalid.\n\nPlease correct it to continue"
+ 					});
+ 					throw new Error("Invalid session ID");
+ 				} catch (e) {
+ 					console.error(e);
+ 					throw new Error("Invalid session ID");
+ 				}
+ 			}
+ 			reloadNeeded = true;
+ 			persistSession({ streamId: streamID });
+ 		}
+ 	} else if (!streamID) {
+ 		streamID = generateStreamID(); // not stream ID, so lets generate one; then lets save it.
+ 		streamID = validateRoomId(streamID);
+ 		if (!streamID) {
+ 			streamID = generateStreamID();
+ 		}
+ 		streamID = validateRoomId(streamID);
+ 		if (!streamID) {
+ 			try {
+ 				chrome.notifications.create({
+ 					type: "basic",
+ 					iconUrl: "./icons/icon-128.png",
+ 					title: "Invalid session ID",
+ 					message: "Your session ID is invalid.\n\nPlease correct it to continue"
+ 				});
+ 				throw new Error("Invalid session ID");
+ 			} catch (e) {
+ 				console.error(e);
+ 				throw new Error("Invalid session ID");
+ 			}
+ 		}
+ 
+ 		if (item) {
+ 			item.streamID = streamID;
+ 		} else {
+ 			item = {};
+ 			item.streamID = streamID;
+ 		}
+ 
+ 		reloadNeeded = true;
+ 		persistSession({ streamId: streamID });
+ 	}
+ 
+ 	if (item && "password" in item) {
+ 		if (password != item.password) {
+ 			password = item.password;
+ 
+ 			reloadNeeded = true;
+ 			chrome.storage.sync.set({ password });
+ 			chrome.runtime.lastError;
+ 		}
+ 	}
+ 
+ 	if (item && item.settings) {
+ 		settings = item.settings;
+ 		// Temporary migration cleanup for stale imported false toggle objects. Stop pruning on every import after May 31st 2026.
+ 		normalizedSettings = pruneSettingsObjects(settings);
+ 
+ 		Object.keys(patterns).forEach(pattern => {
+ 			settings[pattern] = findExistingEvents(pattern, { settings });
+ 		});
+ 	}
+ 
++	if (isFirstRun && !getSettingFlag("beginnerMode")) {
++		settings.beginnerMode = { setting: true };
++		if (item) {
++			item.settings = settings;
++		}
++		normalizedSettings = true;
++	}
++
+ 	const incomingState = item && "state" in item ? item.state : storedState;
+ 	if (typeof incomingState === "boolean") {
+ 		if (isExtensionOn != incomingState) {
+ 			isExtensionOn = incomingState;
+ 			reloadNeeded = true;
+ 			// we're saving below instead
+ 		}
+ 		persistSession({ state: isExtensionOn });
+ 	} else if (isFirstRun && !isExtensionOn) {
+ 		// Default to on for first-run setups with no prior state
+ 		isExtensionOn = true;
+ 		reloadNeeded = true;
+ 		persistSession({ state: isExtensionOn });
+ 	}
+ 	// Recompute effective SDK usage on settings load
+ 	try {
+ 		const settingsSDK = settings?.sdk?.setting === true || settings?.sdk === true || settings?.usesdk?.setting === true;
+ 		const effective = !!settingsSDK;
+ 		if (lastUseNinjaSDK === undefined) {
+ 			lastUseNinjaSDK = effective;
+ 		} else if (effective !== lastUseNinjaSDK) {
+ 			lastUseNinjaSDK = effective;
+ 			useNinjaSDK = effective;
+ 			reloadNeeded = true; // transport mode changed → reinit
+ 		} else {
+ 			useNinjaSDK = effective;
+ 		}
+ 	} catch (e) {}
+ 
+ 	if (reloadNeeded) {
+ 		updateExtensionState(false);
+ 	}
+ 
+ 	try {
+ 		if (isSSAPP && ipcRenderer) {
+ 			ipcRenderer.sendSync("fromBackground", { streamID, password, settings, state: isExtensionOn });
+ 			//ipcRenderer.send('backgroundLoaded');
+ 		}
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ 
+ 	if ((resave || normalizedSettings) && settings) {
+ 		chrome.storage.local.set({ settings });
+ 		chrome.runtime.lastError;
+ 	}
+ 
+ 	toggleMidi();
+ 
+ 	if (settings.addkarma) {
+ 		if (!sentimentAnalysisLoaded) {
+ 			try {
+ 				loadSentimentAnalysis();
+ 			} catch (e) {
+ 				console.error(e);
+ 			}
+ 		}
+ 	}
+ 
+ 	// Initialize Spotify if enabled
+ 	if (settings.spotifyEnabled) {
+ 		initializeSpotify();
+ 	}
+ 
+ 	const timedMessage = settings["timedMessage"] || [];
+ 	for (const i of timedMessage) {
+ 		if (settings["timemessageevent" + i]) {
+ 			if (settings["timemessagecommand" + i]) {
+ 				checkIntervalState(i);
+ 			}
+ 		}
+ 	}
+ 
+ 	if (settings.hypemode) {
+ 		// Initialize hype mode if it's enabled on startup
+ 		if (!hypeInterval) {
+ 			hypeInterval = setInterval(processHype2, 10000);
+ 		}
+ 	}
+ 
+@@ -1634,160 +1707,164 @@ async function fetchWithTimeout(url, optionsOrTimeout = {}, timeoutOrHeaders = 8
+ 	}
+ 
+ 	if (argCount >= 3) {
+ 		if (typeof optionsOrTimeout === "number") {
+ 			if (typeof timeoutOrHeaders === "number") {
+ 				timeout = Number.isFinite(timeoutOrHeaders) ? timeoutOrHeaders : timeout;
+ 			} else if (isPlainObject(timeoutOrHeaders)) {
+ 				const merged = {
+ 					...headersToObject(options.headers),
+ 					...timeoutOrHeaders
+ 				};
+ 				options = { ...options, headers: merged };
+ 			}
+ 		} else {
+ 			if (typeof timeoutOrHeaders === "number") {
+ 				timeout = Number.isFinite(timeoutOrHeaders) ? timeoutOrHeaders : timeout;
+ 			} else if (isPlainObject(timeoutOrHeaders)) {
+ 				const merged = {
+ 					...headersToObject(options.headers),
+ 					...timeoutOrHeaders
+ 				};
+ 				options = { ...options, headers: merged };
+ 			}
+ 		}
+ 	}
+ 
+ 	const controller = new AbortController();
+ 	const timeoutId = setTimeout(() => controller.abort(), timeout);
+ 
+ 	const fetchOptions = {
+ 		...options,
+ 		signal: controller.signal
+ 	};
+ 
+ 	try {
+ 		const response = await fetch(url, fetchOptions);
+ 		clearTimeout(timeoutId);
+ 		return response;
+ 	} catch (error) {
+ 		clearTimeout(timeoutId); // Ensure timeout is cleared on error too
+ 		if (error.name === "AbortError") {
+ 			console.warn(`[fetchWithTimeout] Request to ${url} timed out after ${timeout}ms.`);
+ 			throw new Error(`Timeout: Request to ${url} aborted after ${timeout}ms.`);
+ 		}
+ 		if (typeof errorlog === "function") {
+ 			errorlog(`[fetchWithTimeout] Fetch error for ${url}:`, error);
+ 		} else {
+ 			console.error(`[fetchWithTimeout] Fetch error for ${url}:`, error);
+ 		}
+ 		throw error; // Re-throw the original error for the caller to handle
+ 	}
+ }
+ // Make it globally available if needed by other parts of background.js, or export if using modules
+ window.fetchWithTimeout = fetchWithTimeout;
+ 
+ let videoStatsPollTimer = null;
+ let videoStatsPollInFlight = false;
+ let videoStatsLastOfflineKey = "";
+ 
+ const VIDEO_STATS_DEFAULTS = {
+ 	source: "srt-live-server",
+ 	url: "http://127.0.0.1:8181/stats",
+ 	publisher: "publish/live/feed1",
+ 	application: "live",
+ 	key: "feed1",
+ 	label: "SRT",
+ 	intervalSeconds: 5
+ };
+ 
+ const VIDEO_STATS_SETTING_KEYS = new Set(["videostatspoller", "videostatssource", "videostatsurl", "videostatspublisher", "videostatsapplication", "videostatskey", "videostatsapikey", "videostatsusername", "videostatspassword", "videostatsinterval", "videostatslabel"]);
+ 
+ function isVideoStatsSettingKey(settingKey) {
+ 	return VIDEO_STATS_SETTING_KEYS.has(settingKey);
+ }
+ 
+ function getSettingFlag(settingKey) {
+ 	const entry = settings && settings[settingKey];
+ 	return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+ }
+ 
++function getPopupBeginnerMode() {
++	return getSettingFlag("beginnerMode");
++}
++
+ function getSettingField(settingKey, fieldKey, fallback) {
+ 	const entry = settings && settings[settingKey];
+ 	if (entry && typeof entry === "object" && !Array.isArray(entry) && entry[fieldKey] !== undefined && entry[fieldKey] !== null && entry[fieldKey] !== "") {
+ 		return entry[fieldKey];
+ 	}
+ 	return fallback;
+ }
+ 
+ function getVideoStatsConfig() {
+ 	const source = String(getSettingField("videostatssource", "optionsetting", VIDEO_STATS_DEFAULTS.source) || VIDEO_STATS_DEFAULTS.source).trim() || VIDEO_STATS_DEFAULTS.source;
+ 	let intervalSeconds = parseInt(getSettingField("videostatsinterval", "numbersetting", VIDEO_STATS_DEFAULTS.intervalSeconds), 10);
+ 	if (!Number.isFinite(intervalSeconds)) {
+ 		intervalSeconds = VIDEO_STATS_DEFAULTS.intervalSeconds;
+ 	}
+ 	intervalSeconds = Math.max(1, Math.min(60, intervalSeconds));
+ 
+ 	return {
+ 		enabled: getSettingFlag("videostatspoller"),
+ 		source,
+ 		url: normalizeVideoStatsUrl(getSettingField("videostatsurl", "textsetting", VIDEO_STATS_DEFAULTS.url)),
+ 		publisher: String(getSettingField("videostatspublisher", "textsetting", VIDEO_STATS_DEFAULTS.publisher) || VIDEO_STATS_DEFAULTS.publisher).trim(),
+ 		application: String(getSettingField("videostatsapplication", "textsetting", VIDEO_STATS_DEFAULTS.application) || VIDEO_STATS_DEFAULTS.application).trim(),
+ 		key: String(getSettingField("videostatskey", "textsetting", VIDEO_STATS_DEFAULTS.key) || VIDEO_STATS_DEFAULTS.key).trim(),
+ 		apiKey: String(getSettingField("videostatsapikey", "textsetting", "") || "").trim(),
+ 		username: String(getSettingField("videostatsusername", "textsetting", "") || "").trim(),
+ 		password: String(getSettingField("videostatspassword", "textsetting", "") || ""),
+ 		label: String(getSettingField("videostatslabel", "textsetting", VIDEO_STATS_DEFAULTS.label) || VIDEO_STATS_DEFAULTS.label).trim(),
+ 		intervalMs: intervalSeconds * 1000
+ 	};
+ }
+ 
+ function normalizeVideoStatsUrl(url) {
+ 	url = String(url || "").trim();
+ 	if (!url) {
+ 		return VIDEO_STATS_DEFAULTS.url;
+ 	}
+ 	if (!/^https?:\/\//i.test(url)) {
+ 		url = "http://" + url;
+ 	}
+ 	return url;
+ }
+ 
+ function joinVideoStatsUrl(baseUrl, application, key) {
+ 	baseUrl = String(baseUrl || "").replace(/\/+$/, "");
+ 	application = String(application || "").replace(/^\/+|\/+$/g, "");
+ 	key = String(key || "").replace(/^\/+|\/+$/g, "");
+ 	if (!application && !key) {
+ 		return baseUrl;
+ 	}
+ 	if (!key) {
+ 		return baseUrl + "/" + application;
+ 	}
+ 	return baseUrl + "/" + application + "/" + key;
+ }
+ 
+ function parseVideoStatsNumber(value) {
+ 	if (value === null || value === undefined || value === "") {
+ 		return null;
+ 	}
+ 	const numeric = Number(value);
+ 	return Number.isFinite(numeric) ? numeric : null;
+ }
+ 
+ function roundVideoStatsNumber(value, digits = 3) {
+ 	const numeric = parseVideoStatsNumber(value);
+ 	if (numeric === null) {
+ 		return null;
+ 	}
+ 	const factor = Math.pow(10, digits);
+ 	return Math.round(numeric * factor) / factor;
+ }
+ 
+ function addVideoStatsNumber(meta, key, value, digits = 3) {
+ 	const numeric = roundVideoStatsNumber(value, digits);
+ 	if (numeric !== null) {
+ 		meta[key] = numeric;
+ 	}
+ }
+ 
+ function formatVideoStatsMs(value) {
+@@ -3188,160 +3265,161 @@ async function getPronouns() {
+ 				var mergedPronouns = {};
+ 				var maxAge = 3600;
+ 				var pronounEndpoints = settings.pronounscombined ? ["https://api.pronouns.alejo.io/v1/pronouns", "https://pronouns.alejo.io/api/pronouns"] : ["https://api.pronouns.alejo.io/v1/pronouns"];
+ 
+ 				for (var i = 0; i < pronounEndpoints.length; i++) {
+ 					var pronounResponse = await fetchPronounResponse(pronounEndpoints[i]);
+ 					if (!pronounResponse || !pronounResponse.result) {
+ 						continue;
+ 					}
+ 
+ 					var normalizedPronouns = normalizePronounList(pronounResponse.result);
+ 					if (!Object.keys(normalizedPronouns).length) {
+ 						continue;
+ 					}
+ 
+ 					maxAge = Math.min(maxAge, pronounResponse.maxAge || maxAge);
+ 					for (var key in normalizedPronouns) {
+ 						if (normalizedPronouns.hasOwnProperty(key)) {
+ 							mergedPronouns[key] = normalizedPronouns[key];
+ 						}
+ 					}
+ 				}
+ 
+ 				if (Object.keys(mergedPronouns).length) {
+ 					setItemWithExpiry("Pronouns", mergedPronouns, maxAge / 60);
+ 					Pronouns = mergedPronouns;
+ 				} else {
+ 					Pronouns = {};
+ 				}
+ 			} else {
+ 				log("Pronouns recovered from storage");
+ 			}
+ 		} catch (e) {
+ 			Pronouns = {};
+ 		}
+ 	}
+ }
+ var PronounsNames = {};
+ 
+ async function getPronounsNames(username = "") {
+ 	if (!username) {
+ 		return false;
+ 	}
+ 	try {
+ 		if (!(username in PronounsNames)) {
+ 			PronounsNames[username] = normalizePronounLookup(getItemWithExpiry("Pronouns:" + username));
+ 
+ 			if (!PronounsNames[username]) {
+ 				var pronounUserEndpoints = settings.pronounscombined ? ["https://pronouns.alejo.io/api/users/" + username, "https://api.pronouns.alejo.io/v1/users/" + username] : ["https://api.pronouns.alejo.io/v1/users/" + username];
+ 
+ 				for (var i = 0; i < pronounUserEndpoints.length; i++) {
+ 					var pronounResponse = await fetchPronounResponse(pronounUserEndpoints[i]);
+ 					if (!pronounResponse || !pronounResponse.result) {
+ 						continue;
+ 					}
+ 
+ 					var normalizedPronoun = normalizePronounLookup(pronounResponse.result);
+ 					if (!normalizedPronoun) {
+ 						continue;
+ 					}
+ 
+ 					setItemWithExpiry("Pronouns:" + username, normalizedPronoun, pronounResponse.maxAge / 60);
+ 					PronounsNames[username] = normalizedPronoun;
+ 					break;
+ 				}
+ 
+ 				if (!PronounsNames[username]) {
+ 					PronounsNames[username] = false;
+ 				}
+ 			}
+ 		}
+ 	} catch (e) {
+ 		return false;
+ 	}
+ 	return PronounsNames[username];
+ }
+ 
+ var Globalbttv = false;
+ var Globalseventv = false;
+ var Globalffz = false;
++const SEVENTV_CHANNEL_CACHE_MINUTES = 60;
+ const youtubeSeventvChannelCache = new Map();
+ const youtubeChannelByTab = new Map();
+ 
+ function normalizeYouTubeChannelId(value) {
+ 	if (value === undefined || value === null) {
+ 		return null;
+ 	}
+ 	const normalized = String(value).trim();
+ 	return normalized ? normalized : null;
+ }
+ 
+ function cacheYouTubeSeventvChannelEmotes(channelId, emotes) {
+ 	const key = normalizeYouTubeChannelId(channelId);
+ 	if (!key) {
+ 		return;
+ 	}
+ 	if (emotes && Object.keys(emotes).length) {
+ 		youtubeSeventvChannelCache.set(key, emotes);
+ 	} else {
+ 		youtubeSeventvChannelCache.set(key, null);
+ 	}
+ }
+ 
+ function getCachedYouTubeSeventvChannelEmotes(channelId) {
+ 	const key = normalizeYouTubeChannelId(channelId);
+ 	if (!key) {
+ 		return null;
+ 	}
+ 	if (!youtubeSeventvChannelCache.has(key)) {
+ 		return undefined;
+ 	}
+ 	return youtubeSeventvChannelCache.get(key);
+ }
+ 
+ function rememberYouTubeChannel(tabId, channelId) {
+ 	const key = normalizeYouTubeChannelId(channelId);
+ 	if (!tabId || !key) {
+ 		return;
+ 	}
+ 	youtubeChannelByTab.set(tabId, key);
+ }
+ 
+ function forgetYouTubeChannel(tabId) {
+ 	if (tabId === undefined || tabId === null) {
+ 		return;
+ 	}
+ 	youtubeChannelByTab.delete(tabId);
+ }
+ 
+ async function getBTTVEmotes(url = false, type = null, channel = null) {
+ 	var bttv = {};
+ 	var userID = false;
+ 	// console.log(url, type, channel);
+ 	try {
+ 		if (type) {
+ 			type = type.toLowerCase();
+ 		} else if (url && url.includes("youtube.com/")) {
+ 			type = "youtube";
+ 		} else if (url && url.includes("twitch.tv/")) {
+ 			type = "twitch";
+ 		}
+ 
+ 		if (type == "youtube") {
+ 			var vid = false;
+ 			if (url) {
+ 				vid = YouTubeGetID(url);
+ 			}
+ 
+ 			if (vid) {
+ 				console.log("YouTube video ID extracted:", vid);
+ 				userID = localStorage.getItem("vid2uid:" + vid);
+ 
+ 				if (!userID) {
+ 					console.log("Fetching user ID for video:", vid);
+ 					userID = await fetch("https://api.socialstream.ninja/youtube/user?video=" + vid)
+ 						.then(result => {
+ 							return result.text();
+ 						})
+ 						.then(result => {
+ 							console.log("User ID received:", result);
+@@ -3541,293 +3619,293 @@ async function getKickUserIdByUsername(kickUsername) {
+ 		console.error(`Error fetching Kick user ID: ${error.message}`);
+ 		return null;
+ 	}
+ }
+ 
+ async function getSEVENTVEmotes(url = false, type = null, channel = null, userID = false) {
+ 	var seventv = {};
+ 
+ 	try {
+ 		if (type) {
+ 			type = type.toLowerCase();
+ 		} else if (url && url.includes("youtube.com/")) {
+ 			type = "youtube";
+ 		} else if (url && url.includes("twitch.tv/")) {
+ 			type = "twitch";
+ 		} else if (url && url.includes("kick.com/")) {
+ 			type = "kick";
+ 		}
+ 
+ 		if (type == "youtube") {
+ 			let vid = false;
+ 			if (url) {
+ 				vid = YouTubeGetID(url);
+ 			}
+ 
+ 			let resolvedChannelId = normalizeYouTubeChannelId(channel) || normalizeYouTubeChannelId(userID);
+ 			if (vid && resolvedChannelId) {
+ 				localStorage.setItem("vid2uid:" + vid, resolvedChannelId);
+ 			}
+ 
+ 			if (!resolvedChannelId && vid) {
+ 				resolvedChannelId = localStorage.getItem("vid2uid:" + vid);
+ 			}
+ 
+ 			if (!resolvedChannelId && vid) {
+ 				resolvedChannelId = await fetch("https://api.socialstream.ninja/youtube/user?video=" + vid)
+ 					.then(result => {
+ 						return result.text();
+ 					})
+ 					.then(result => {
+ 						return result;
+ 					})
+ 					.catch(err => {
+ 						console.error(err);
+ 					});
+ 				if (resolvedChannelId) {
+ 					localStorage.setItem("vid2uid:" + vid, resolvedChannelId);
+ 				} else {
+ 					return false;
+ 				}
+ 			}
+ 
+ 			userID = resolvedChannelId;
+ 			if (userID) {
+ 				seventv = getItemWithExpiry("uid2seventv.youtube:" + userID);
+ 				if (!seventv) {
+ 					seventv = await fetch("https://7tv.io/v3/users/youtube/" + userID)
+ 						.then(result => {
+ 							return result.json();
+ 						})
+ 						.then(result => {
+ 							return result;
+ 						})
+ 						.catch(err => {
+ 							console.error(err);
+ 						});
+ 
+ 					if (seventv && seventv.emote_set && seventv.emote_set.emotes) {
+ 						seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
+ 							const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
+ 							if ((emote.data && emote.data.flags) || emote.flags) {
+ 								acc[emote.name] = { url: imageUrl, zw: true };
+ 							} else {
+ 								acc[emote.name] = imageUrl;
+ 							}
+ 							return acc;
+ 						}, {});
+ 					}
+ 
+ 					if (seventv) {
+-						setItemWithExpiry("uid2seventv.youtube:" + userID, seventv);
++						setItemWithExpiry("uid2seventv.youtube:" + userID, seventv, SEVENTV_CHANNEL_CACHE_MINUTES);
+ 					}
+ 				}
+ 
+ 				if (seventv && seventv.channelEmotes) {
+ 					cacheYouTubeSeventvChannelEmotes(userID, seventv.channelEmotes);
+ 				} else if (userID) {
+ 					cacheYouTubeSeventvChannelEmotes(userID, null);
+ 				}
+ 			}
+ 		} else if (type == "twitch") {
+ 			var username = "";
+ 			if (channel) {
+ 				username = channel;
+ 			} else if (url && url.startsWith("https://dashboard.twitch.tv/popout/u/")) {
+ 				username = url.replace("https://dashboard.twitch.tv/popout/u/", "").split("/")[0];
+ 			} else if (url) {
+ 				username = url.split("popout/");
+ 				if (username.length > 1) {
+ 					username = username[1].split("/")[0];
+ 				} else {
+ 					username = "";
+ 				}
+ 			}
+ 
+ 			log("username: " + username);
+ 			if (username) {
+ 				seventv = getItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase());
+ 				log("SEVENTV2", seventv);
+ 				if (!seventv || seventv.message) {
+ 					seventv = {};
+ 					userID = localStorage.getItem("twitch2uid." + username.toLowerCase());
+ 					if (!userID) {
+ 						const response = await fetch("https://api.socialstream.ninja/twitch/user?username=" + username);
+ 
+ 						if (!response.ok) {
+ 							return {};
+ 						}
+ 						const data = await response.json();
+ 
+ 						if (data && data.data && data.data[0] && data.data[0].id) {
+ 							userID = data.data[0].id;
+ 
+ 							if (userID) {
+ 								localStorage.setItem("twitch2uid." + username.toLowerCase(), userID);
+ 							}
+ 						} else {
+ 							userID = false;
+ 						}
+ 					}
+ 					if (userID) {
+ 						seventv = await fetch("https://7tv.io/v3/users/twitch/" + userID)
+ 							.then(result => {
+ 								return result.json();
+ 							})
+ 							.then(result => {
+ 								return result;
+ 							})
+ 							.catch(err => {
+ 								console.error(err);
+ 							});
+ 						if (seventv) {
+ 							if (seventv.emote_set && seventv.emote_set.emotes) {
+ 								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
+ 									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
+ 									if ((emote.data && emote.data.flags) || emote.flags) {
+ 										acc[emote.name] = { url: imageUrl, zw: true };
+ 									} else {
+ 										acc[emote.name] = imageUrl;
+ 									}
+ 									return acc;
+ 								}, {});
+ 							}
+ 
+-							setItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase(), seventv);
++							setItemWithExpiry("uid2seventv.twitch:" + username.toLowerCase(), seventv, SEVENTV_CHANNEL_CACHE_MINUTES);
+ 						} else {
+ 							seventv = {};
+ 						}
+ 						log("SEVENTV", seventv);
+ 					}
+ 				} else {
+ 					log("seventv recovererd from storage");
+ 				}
+ 			}
+ 		} else if (type == "kick") {
+ 			let kickUsername = "";
+ 			if (channel) {
+ 				kickUsername = channel;
+ 			} else if (url) {
+ 				kickUsername = url.replace("https://kick.com/", "").split("/")[0].split("?")[0];
+ 				if (kickUsername == "popout") {
+ 					kickUsername = url.replace("https://kick.com/popout/", "").split("/")[0].split("?")[0];
+ 				}
+ 			}
+ 
+ 			log("kick username: " + kickUsername);
+ 			if (kickUsername) {
+ 				seventv = getItemWithExpiry("uid2seventv.kick:" + kickUsername.toLowerCase());
+ 				if (!seventv || seventv.message) {
+ 					seventv = {};
+ 					userID = userID || localStorage.getItem("kick2uid." + kickUsername.toLowerCase());
+ 					if (!userID) {
+ 						userID = (await getKickUserIdByUsername(kickUsername)) || false;
+ 
+ 						if (userID) {
+ 							localStorage.setItem("kick2uid." + kickUsername.toLowerCase(), userID);
+ 						}
+ 					}
+ 					if (userID) {
+ 						seventv = await fetch("https://7tv.io/v3/users/kick/" + userID)
+ 							.then(result => {
+ 								return result.json();
+ 							})
+ 							.then(result => {
+ 								return result;
+ 							})
+ 							.catch(err => {
+ 								console.error(err);
+ 							});
+ 						if (seventv) {
+ 							if (seventv.emote_set && seventv.emote_set.emotes) {
+ 								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
+ 									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
+ 									if ((emote.data && emote.data.flags) || emote.flags) {
+ 										acc[emote.name] = { url: imageUrl, zw: true };
+ 									} else {
+ 										acc[emote.name] = imageUrl;
+ 									}
+ 									return acc;
+ 								}, {});
+ 							}
+ 
+-							setItemWithExpiry("uid2seventv.kick:" + kickUsername.toLowerCase(), seventv);
++							setItemWithExpiry("uid2seventv.kick:" + kickUsername.toLowerCase(), seventv, SEVENTV_CHANNEL_CACHE_MINUTES);
+ 						} else {
+ 							seventv = {};
+ 						}
+ 						log("KICK SEVENTV", seventv);
+ 					}
+ 				} else {
+ 					log("kick seventv recovered from storage");
+ 				}
+ 			}
+ 		}
+ 
+ 		if (!Globalseventv) {
+ 			Globalseventv = getItemWithExpiry("globalseventv");
+ 
+ 			if (!Globalseventv) {
+ 				Globalseventv = await fetch("https://7tv.io/v3/emote-sets/global")
+ 					.then(result => {
+ 						return result.json();
+ 					})
+ 					.then(result => {
+ 						return result;
+ 					})
+ 					.catch(err => {
+ 						console.error(err);
+ 					});
+ 				if (Globalseventv && Globalseventv.emotes) {
+ 					Globalseventv = Globalseventv.emotes.reduce((acc, emote) => {
+ 						const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
+ 						if (emote.flags) {
+ 							acc[emote.name] = { url: imageUrl, zw: true };
+ 						} else {
+ 							acc[emote.name] = imageUrl;
+ 						}
+ 						return acc;
+ 					}, {});
+ 					setItemWithExpiry("globalseventv", Globalseventv);
+ 				} else {
+ 					Globalseventv = [];
+ 				}
+ 			} else {
+ 				log("Globalseventv recovererd from storage");
+ 			}
+ 		}
+ 		if (Globalseventv) {
+ 			if (!seventv) {
+ 				seventv = {};
+ 			}
+ 			seventv.globalEmotes = Globalseventv;
+ 		}
+ 		seventv.url = url;
+ 		seventv.type = type;
+ 		seventv.user = userID;
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ 	return seventv;
+ }
+ 
+ async function getFFZEmotes(url = false, type = null, channel = null) {
+ 	var ffz = {};
+ 	var userID = false;
+ 
+ 	try {
+ 		if (type) {
+ 			type = type.toLowerCase();
+ 		} else if (url && url.includes("youtube.com/")) {
+ 			type = "youtube";
+ 		} else if (url && url.includes("twitch.tv/")) {
+ 			type = "twitch";
+ 		}
+ 
+ 		if (type == "youtube") {
+ 			// YouTube functionality remains largely the same
+ 			var vid = false;
+ 			if (url) {
+ 				vid = YouTubeGetID(url);
+ 			}
+ 
+ 			if (vid) {
+ 				userID = localStorage.getItem("vid2uid:" + vid);
+@@ -4232,434 +4310,488 @@ try {
+ 				}
+ 			}
+ 		});
+ 	}
+ } catch (e) {
+ 	console.warn(e);
+ }
+ 
+ function getYouTubeSourcePriority(source) {
+ 	if (!source) {
+ 		return Number.MAX_SAFE_INTEGER;
+ 	}
+ 
+ 	const normalizedUrl = (source.url || "").toLowerCase();
+ 
+ 	if (source.isPopout) {
+ 		if (normalizedUrl.includes("www.youtube.com")) {
+ 			return 0;
+ 		}
+ 		if (normalizedUrl.includes("studio.youtube.com")) {
+ 			return 1;
+ 		}
+ 		return 2;
+ 	}
+ 
+ 	if (normalizedUrl.includes("studio.youtube.com/video/")) {
+ 		return 3;
+ 	}
+ 
+ 	if (normalizedUrl.includes("studio.youtube.com")) {
+ 		return 4;
+ 	}
+ 
+ 	if (normalizedUrl.includes("www.youtube.com/live_chat")) {
+ 		return 5;
+ 	}
+ 
+ 	return 6;
+ }
+ 
+ function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
+ 	const videoId = msg.videoid || extractVideoId(tabUrl);
+ 	if (!videoId) return true;
+ 
+ 	const sourceId = `${tabId}-${frameId}`;
+ 	const safeTabUrl = tabUrl || "";
+ 	const isPopout = safeTabUrl.includes("live_chat?is_popout=1");
+ 
+ 	const existingSource = activeChatSources.get(sourceId);
+ 
+ 	activeChatSources.set(sourceId, {
+ 		url: safeTabUrl,
+ 		videoId: videoId,
+ 		isPopout: isPopout,
+ 		frameId: frameId,
+ 		firstSeen: existingSource?.firstSeen || Date.now()
+ 	});
+ 
+ 	const sourcesForThisVideo = Array.from(activeChatSources.entries()).filter(([, data]) => data.videoId === videoId);
+ 
+ 	if (sourcesForThisVideo.length === 1) {
+ 		return true;
+ 	}
+ 
+ 	let preferredSource = null;
+ 
+ 	for (const [id, data] of sourcesForThisVideo) {
+ 		const priority = getYouTubeSourcePriority(data);
+ 		const sourceFrameId = Number.isInteger(data?.frameId) ? data.frameId : parseInt(id.split("-")[1], 10) || 0;
+ 		const frameBias = !data?.isPopout && sourceFrameId === 0 ? 1 : 0;
+ 		if (!preferredSource || priority < preferredSource.priority || (priority === preferredSource.priority && frameBias < preferredSource.frameBias) || (priority === preferredSource.priority && frameBias === preferredSource.frameBias && data.firstSeen < preferredSource.data.firstSeen)) {
+ 			preferredSource = { id, data, priority, frameBias };
+ 		}
+ 	}
+ 
+ 	return sourceId === preferredSource?.id;
+ }
+ 
+ const checkDuplicateSources = new CheckDuplicateSources();
+ 
++function createFirstTimerLeafBadge() {
++	return {
++		type: "svg",
++		html: '<svg viewBox="0 0 24 24" width="20" height="20" role="img" aria-label="First-time chatter" xmlns="http://www.w3.org/2000/svg"><title>First-time chatter</title><path d="M20.8 3.2C13.7 3.4 7.6 6.7 5.2 11.7c-1.3 2.7-1.1 5.2.5 6.8 1.6 1.6 4.2 1.7 6.8.5 5-2.4 8.3-8.5 8.6-15.6 0-.1-.1-.2-.3-.2Z" fill="#4caf50"/><path d="M4 20c3.3-5.5 7.4-8.8 12.8-10.8" fill="none" stroke="#e8ffe8" stroke-width="2" stroke-linecap="round"/><path d="M10.4 9.5c.3 2.3 1.3 3.9 3.5 5" fill="none" stroke="#2f7d32" stroke-width="1.5" stroke-linecap="round"/></svg>'
++	};
++}
++
++function prependFirstTimerBadge(data) {
++	if (!data || !data.firsttime || !getSettingFlag("firsttimerbadge")) return;
++	const badge = createFirstTimerLeafBadge();
++
++	if (!data.chatbadges) {
++		data.chatbadges = [badge];
++		return;
++	}
++
++	if (Array.isArray(data.chatbadges)) {
++		data.chatbadges.unshift(badge);
++		return;
++	}
++
++	if (typeof data.chatbadges === "string") {
++		data.chatbadges = '<span class="hl-badge svg">' + badge.html + "</span>" + data.chatbadges;
++		return;
++	}
++
++	data.chatbadges = [badge, data.chatbadges];
++}
++
+ async function processIncomingMessage(message, sender = null) {
+ 	try {
+ 		if (sender?.tab && (message.tid === undefined || message.tid === null)) {
+ 			message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
+ 		}
+ 	} catch (e) {}
+ 
+ 	if (isExtensionOn && message?.type) {
+ 		if (!checkIfAllowed(message.type)) {
+ 			return;
+ 		}
+ 
+ 		if (settings.filtercommands && message.chatmessage && message.chatmessage.startsWith("!")) {
+ 			return;
+ 		}
+ 
+ 		if (settings.filtercommandscustomtoggle && message.chatmessage && settings.filtercommandscustomwords && settings.filtercommandscustomwords.textsetting) {
+-			if (settings.filtercommandscustomwords.textsetting.split(",").some(v => v.trim() && message.chatmessage.startsWith(v.trim()))) {
++			if (getCachedCommaList(settings.filtercommandscustomwords.textsetting).some(v => message.chatmessage.startsWith(v))) {
+ 				return;
+ 			}
+ 		}
+ 
+ 		let reflection = false;
+ 
+ 		// checkExactDuplicateAlreadyReceived only does work if there was a message responsein the last 10 seconds.
+ 		reflection = checkExactDuplicateAlreadyReceived(message.chatmessage, message.textonly, message.tid, message.type);
+ 		if (reflection && (settings.firstsourceonly || settings.hideallreplies || settings.thissourceonly)) {
+ 			return;
+ 		}
+ 
+ 		if (reflection === null) {
+ 			reflection = true;
+ 		}
+ 
+ 		if (reflection) {
+ 			message.reflection = true;
+ 			try {
+ 				if (message.tid && message.chatmessage) {
+ 					const normalized = sanitizeMessageForTracking(message.chatmessage, false);
+ 					const origin = getStoredMessageOrigin(message.tid, normalized);
+ 					if (origin) {
+ 						message.reflectionOrigin = origin;
+ 						if (origin === "host") {
+ 							message.hostReflection = true;
+ 						} else if (origin === "chatbot") {
+ 							message.chatbotReflection = true;
+ 						}
+ 						if (settings.allowChatBot) {
+ 							console.log(`[ChatBot] Reflection marked as ${origin} for ${message.chatname || "unknown"} on ${message.type || "unknown"}.`);
+ 						}
+ 					}
+ 				}
+ 			} catch (e) {
+ 				errorlog(e);
+ 			}
+ 		}
+ 
+ 		if (
+ 			settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE
+ 			checkDuplicateSources.isDuplicate(message.type, message.userid || message.chatname, message.chatmessage || message.hasDonation || (message.membership && message.event))
+ 		) {
+ 			return;
+ 		}
+ 
+ 		if (message.type == "youtube" || message.type == "youtubeshorts") {
+ 			if (settings.blockpremiumshorts && message.type == "youtubeshorts") {
+ 				if (message.hasDonation || (message.membership && message.event)) {
+ 					return;
+ 				}
+ 			}
+ 			try {
+ 				if (sender?.tab) {
+ 					const frameId = Number.isInteger(sender.frameId) ? sender.frameId : 0;
+ 					const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, message, frameId);
+ 					if (!shouldAllowMessage) {
+ 						return;
+ 					}
+ 				}
+ 			} catch (e) {
+ 				//console.warn("Error in shouldAllowYouTubeMessage:", e);
+ 			}
+ 
+ 			if (sender?.tab?.url) {
+ 				var brandURL = getYoutubeAvatarImage(sender.tab.url); // query my API to see if I can resolve the Channel avatar from the video ID
+ 				if (brandURL) {
+ 					message.sourceImg = brandURL;
+ 				}
+ 			}
+ 		}
+ 
+ 		if (message.type == "facebook") {
+ 			// since Facebook dupes are a common issue
+ 			if (sender?.tab?.url) {
+ 				if (message.chatname && message.chatmessage) {
+ 					clearInterval(FacebookDupesTime);
+ 					if (FacebookDupes == message.chatname + ":" + message.chatmessage) {
+ 						return;
+ 					} else {
+ 						FacebookDupes = message.chatname + ":" + message.chatmessage;
+ 						FacebookDupesTime = setTimeout(function () {
+ 							FacebookDupes = "";
+ 						}, 15000);
+ 					}
+ 				}
+ 			}
+ 		}
+ 
+ 		if (!message.id) {
+ 			messageCounter += 1;
+ 			message.id = messageCounter;
+ 		}
+ 		const tabIdForActivity = sender?.tab?.id || (Number.isInteger(message?.tid) ? message.tid : null);
+ 		if (tabIdForActivity) {
+ 			noteTabActivity(tabIdForActivity, message);
+ 		}
+ 
+ 		try {
+ 			message = await applyBotActions(message, sender?.tab); // perform any immediate actions
+ 		} catch (e) {
+ 			console.warn(e);
+ 		}
+ 		if (!message) {
+ 			return message;
+ 		}
+ 
+ 		try {
+ 			message = await window.eventFlowSystem.processMessage(message); // perform any immediate actions
+ 		} catch (e) {
+ 			console.warn(e);
+ 		}
+ 		if (!message) {
+ 			return message;
+ 		}
+ 
+-		sendToDestinations(message); // send the data to the dock
++		await sendToDestinations(message); // send the data to the dock
+ 	}
+ 	return message;
+ }
+ 
+ chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
+ 	var response = {};
+ 	var alreadySet = false;
+ 
+ 	function sendResponse(msg) {
+ 		if (alreadySet) {
+ 			console.error("Shouldn't run sendResponse twice");
+ 		} else if (sendResponseReal) {
+ 			alreadySet = true;
+ 			// Always include current state in responses
+ 			if (typeof msg == "object") {
+ 				msg.state = isExtensionOn;
+ 			}
+ 			sendResponseReal(msg);
+ 		}
+ 		response = msg;
+ 	}
+ 
+ 	if (!loadedFirst) {
+ 		for (var i = 0; i < 100; i++) {
+ 			await sleep(100);
+ 			if (loadedFirst) {
+ 				break;
+ 			}
+ 		}
+ 		// add a stall here instead if this actually happens
+ 		if (!loadedFirst) {
+ 			sendResponse({ tryAgain: true });
+ 			return response;
+ 		}
+ 	}
+ 
+ 	try {
+ 		if (typeof request !== "object") {
+ 			sendResponse({ state: isExtensionOn });
+ 			return response;
+ 		}
+ 
+ 		// Unwrap messages that come from the service worker for non-Spotify commands
+ 		// Service worker wraps messages as {type: 'toBackground', data: originalMessage}
+ 		if (request.type === "toBackground" && request.data) {
+ 			request = request.data;
+ 		}
+ 
+ 		const senderTab = sender && sender.tab ? sender.tab : null;
+ 		const hasSenderTabId = !!(senderTab && senderTab.id !== null && typeof senderTab.id !== "undefined");
+ 		const senderTabId = hasSenderTabId ? senderTab.id : null;
+ 		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
+ 
+ 		if (request.cmd && request.cmd === "setOnOffState") {
+ 			// toggle the IFRAME (stream to the remote dock) on or off
+ 			isExtensionOn = request.data.value;
+ 			persistSession({ state: isExtensionOn });
+ 
+ 			updateExtensionState();
+-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
++			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
+ 		} else if (request.cmd && request.cmd === "getOnOffState") {
+-			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
++			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
+ 		} else if (request.cmd && request.cmd === "getSettings") {
+ 			ensureHandleStatusCache();
+ 			let responseData;
+ 			try {
+-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG, handleStatus: getHandleStatusSnapshot() };
++				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), documents: documentsRAG, handleStatus: getHandleStatusSnapshot() };
+ 			} catch (e) {
+ 				console.warn("Error including documentsRAG:", e);
+-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, handleStatus: getHandleStatusSnapshot() };
++				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), handleStatus: getHandleStatusSnapshot() };
+ 			}
+ 			sendResponse(responseData);
+ 		} else if (request.cmd && request.cmd === "testLLMProvider") {
+ 			try {
+ 				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null });
+ 				sendResponse({ success: true, response: llmResponse });
+ 			} catch (error) {
+ 				let payload;
+ 				if (typeof LLMServiceError !== "undefined" && error instanceof LLMServiceError) {
+ 					payload = {
+ 						provider: error.provider,
+ 						status: error.status,
+ 						code: error.code,
+ 						message: error.message,
+ 						hint: error.hint || null
+ 					};
+ 				} else {
+ 					payload = {
+ 						message: error?.message || "Unexpected error"
+ 					};
+ 				}
+ 				sendResponse({ success: false, error: payload });
+ 			}
++		} else if (request.cmd && request.cmd === "classifyMessageForExport") {
++			try {
++				const llmResponse = await callLLMAPI(String(request.prompt || ""), null, null, null, null, null, { settings: request.settingsOverride || null });
++				sendResponse({ success: true, response: llmResponse });
++			} catch (error) {
++				let payload;
++				if (typeof LLMServiceError !== "undefined" && error instanceof LLMServiceError) {
++					payload = {
++						provider: error.provider,
++						status: error.status,
++						code: error.code,
++						message: error.message,
++						hint: error.hint || null
++					};
++				} else {
++					payload = {
++						message: error?.message || "Unexpected error"
++					};
++				}
++				sendResponse({ success: false, error: payload });
++			}
+ 		} else if (request.cmd && request.cmd === "saveSetting") {
+ 			const typedSetting = typeof request.type === "string" && request.type !== "";
+ 			const existingSetting = settings[request.setting];
+ 			const isObjectSetting = existingSetting && typeof existingSetting === "object" && !Array.isArray(existingSetting);
+ 			const valueIsEmpty = request.value === "" || request.value === null || request.value === undefined;
+ 			const isToggleField = typedSetting && SETTINGS_OBJECT_TOGGLE_PATTERN.test(request.type);
+ 			const preserveSiblingFields = typedSetting && SETTINGS_OBJECT_FIELD_PATTERN.test(request.type);
+ 			const shouldDeleteValue = valueIsEmpty || (isToggleField && request.value === false);
+ 			if (isObjectSetting) {
+ 				if (shouldDeleteValue) {
+ 					if (preserveSiblingFields) {
+ 						delete settings[request.setting][request.type];
+ 						if (request.type == "json" || !("json" in settings[request.setting])) {
+ 							delete settings[request.setting]["object"];
+ 						}
+ 						const remainingKeys = Object.keys(settings[request.setting]).filter(key => key !== "object");
+ 						if (!remainingKeys.length) {
+ 							delete settings[request.setting];
+ 						}
+ 					} else {
+ 						// pretty risky if something shares the same name.
+ 						delete settings[request.setting];
+ 					}
+ 				} else {
+ 					settings[request.setting][request.type] = request.value;
+ 					if (request.type == "json") {
+ 						settings[request.setting]["object"] = JSON.parse(request.value); // convert to object for use
+ 					}
+ 				}
+ 			} else if ("type" in request) {
+ 				if (shouldDeleteValue) {
+ 					delete settings[request.setting];
+ 				} else {
+ 					settings[request.setting] = {};
+ 					settings[request.setting][request.type] = request.value;
+ 					if (request.type == "json") {
+ 						settings[request.setting]["object"] = JSON.parse(request.value); // convert to object for use
+ 					}
+ 					//settings[request.setting].value = request.value; // I'll use request.value instead
+ 				}
+ 			} else {
+ 				settings[request.setting] = request.value;
+ 			}
+ 
+ 			pruneSettingsObjects(settings);
+ 
++			if ((request.setting === "beepreturning" || request.setting === "firsttimerbadge") && request.value && !getSettingFlag("disableDB") && !getSettingFlag("firsttimers")) {
++				settings.firsttimers = { setting: true };
++			}
++
+ 			Object.keys(patterns).forEach(pattern => {
+ 				settings[pattern] = findExistingEvents(pattern, { settings });
+ 			});
+ 
+ 			// For language changes, wait for storage AND translation file load to complete
+ 			// This prevents race conditions where popup reloads before translation is ready
+ 			if (request.setting === "translationlanguage") {
+ 				chrome.storage.local.set({ settings: settings }, async () => {
+ 					chrome.runtime.lastError;
+ 					// Wait for changeLg to complete - it fetches the translation file
+ 					// and saves settings.translation to storage
+ 					if (settings.translationlanguage && settings.translationlanguage.optionsetting) {
+ 						await changeLg(settings.translationlanguage.optionsetting);
+ 					} else {
+ 						await changeLg(request.value);
+ 					}
+ 					sendResponse({ state: isExtensionOn, saved: true });
+ 				});
+ 				return true; // Keep message channel open for async response
+ 			}
+ 
+ 			chrome.storage.local.set({
+ 				settings: settings
+ 			});
+ 			chrome.runtime.lastError;
+ 
+ 			// If SDK setting changed, reinitialize transport if extension is ON
+ 			try {
+ 				if (request.setting === "sdk" && isExtensionOn && streamID) {
+ 					initTransport(streamID, password);
+ 				}
+ 			} catch (e) {
+ 				console.warn(e);
+ 			}
+ 
+ 			sendResponse({ state: isExtensionOn });
+ 
+ 			if (request.setting === "beepreturning" && request.value && !isSSAPP && !returningBeepHintShown) {
+ 				messagePopup({
+ 					alert: "If you don't hear the notification, click the pinned Background tab once to allow audio playback."
+ 				});
+ 				returningBeepHintShown = true;
+ 				chrome.storage.local.set({ returningBeepHintShown: true });
+ 			}
+ 
+ 			if (request.target) {
+ 				sendTargetP2P(request, request.target);
+ 			}
+ 
+ 			if (request.setting == "midi") {
+ 				toggleMidi();
+ 			}
+ 
+ 			// if (request.setting == "customGifCommands") {
+ 			// if (request.setting["customGifCommands"].array){
+ 			// request.setting["customGifCommands"].array
+ 			// }
+ 			// }
+ 
+ 			if (request.setting == "socketserver") {
+ 				if (request.value) {
+ 					if (!socketserver) {
+ 						setupSocket();
+ 					}
+ 				} else {
+ 					if (socketserver) {
+ 						socketserver.close();
+ 					}
+ 				}
+ 			}
+ 
+ 			if (request.setting == "lanonly") {
+ 				if (request.value) {
+ 					if (iframe) {
+ 						if (iframe.src) {
+ 							iframe.src = null;
+ 						}
+ 
+ 						iframe.remove();
+ 						iframe = null;
+@@ -4959,169 +5091,179 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
+ 				sendWaitlistConfig(null, true); // stop hype and clear old hype
+ 			}
+ 
+ 			// Note: translationlanguage is handled earlier with storage callback to prevent race condition
+ 
+ 			if (request.setting.startsWith("timemessage")) {
+ 				if (request.setting.startsWith("timemessageevent")) {
+ 					const timeMessageIndex = parseInt(request.setting.split("timemessageevent")[1]);
+ 					if (timeMessageIndex) {
+ 						if (!request.value) {
+ 							// turn off
+ 							if (intervalMessages[timeMessageIndex]) {
+ 								clearInterval(intervalMessages[timeMessageIndex]);
+ 								delete intervalMessages[timeMessageIndex];
+ 							}
+ 						} else {
+ 							checkIntervalState(timeMessageIndex);
+ 						}
+ 					}
+ 				} else {
+ 					let timeMessageIndex = 0;
+ 					if (request.setting.startsWith("timemessageoffset")) {
+ 						timeMessageIndex = parseInt(request.setting.split("timemessageoffset")[1]);
+ 					} else if (request.setting.startsWith("timemessagecommand")) {
+ 						timeMessageIndex = parseInt(request.setting.split("timemessagecommand")[1]);
+ 					} else if (request.setting.startsWith("timemessageinterval")) {
+ 						timeMessageIndex = parseInt(request.setting.split("timemessageinterval")[1]);
+ 					}
+ 					if (timeMessageIndex) {
+ 						checkIntervalState(timeMessageIndex);
+ 					}
+ 				}
+ 			}
+ 
+ 			if (isExtensionOn) {
+ 				if (request.setting == "blacklistuserstoggle" || request.setting == "blacklistusers") {
+ 					if (settings.blacklistusers && settings.blacklistuserstoggle) {
+ 						settings.blacklistusers.textsetting.split(",").forEach(user => {
+ 							user = user.trim();
+ 							sendToDestinations({ delete: { chatname: user } });
+ 						});
+ 					}
+ 				}
+ 				// if ((request.setting == "viplistuserstoggle") || (request.setting == "viplistusers")){
+ 				// if (settings.viplistusers && settings.viplistuserstoggle){
+ 				// settings.viplistusers.textsetting.split(",").forEach(user=>{
+ 				// user = user.trim();
+ 				// sendToDestinations({"vipUser": {chatname:user}});
+ 				// });
+ 				// }
+ 				// }
+ 			}
+ 		} else if ("inject" in request) {
+ 			sendResponse({ state: isExtensionOn });
+ 		} else if ("delete" in request) {
+ 			sendResponse({ state: isExtensionOn });
+ 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
+ 				sendToDestinations({ delete: request.delete });
+ 			}
+ 		} else if ("message" in request) {
+ 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+ 
+ 			if (request?.message && !request.message.id) {
+ 				messageCounter += 1;
+ 				request.message.id = messageCounter;
+ 				sendResponse({ state: isExtensionOn, id: request.message.id });
+ 			} else {
+ 				sendResponse({ state: isExtensionOn });
+ 			}
+ 			if (request.target) {
+ 				if (isExtensionOn) {
+ 					sendTargetP2P(request.message, request.target);
+ 				}
+ 			} else {
+ 				var letsGo = await processIncomingMessage(request.message, sender);
+ 			}
+ 		} else if ("messages" in request) {
+ 			// Handle batch messages from YouTube and TikTok
+ 			sendResponse({ state: isExtensionOn });
+ 			if (Array.isArray(request.messages)) {
+-				// Process messages in parallel for better performance
+-				await Promise.all(
+-					request.messages.map(message =>
+-						processIncomingMessage(message, sender).catch(error => {
++				if (getSettingFlag("firsttimers") && !getSettingFlag("disableDB")) {
++					for (const message of request.messages) {
++						try {
++							await processIncomingMessage(message, sender);
++						} catch (error) {
+ 							console.error("Error processing message:", error);
+-							// Continue processing other messages even if one fails
+-						})
+-					)
+-				);
++						}
++					}
++				} else {
++					// Process messages in parallel for better performance
++					await Promise.all(
++						request.messages.map(message =>
++							processIncomingMessage(message, sender).catch(error => {
++								console.error("Error processing message:", error);
++								// Continue processing other messages even if one fails
++							})
++						)
++					);
++				}
+ 			}
+ 		} else if ("getBTTV" in request) {
+ 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+ 			console.log("BTTV request received:", JSON.stringify(request));
+ 			sendResponse({ state: isExtensionOn });
+ 			if (sender.tab.url || request.url) {
+ 				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
+ 				const bttvUrlToUse = request.url || sender.tab.url;
+ 				console.log("Using URL for BTTV:", bttvUrlToUse);
+ 				var BTTV2 = await getBTTVEmotes(bttvUrlToUse, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
+ 				if (BTTV2) {
+ 					console.log("BTTV emotes found, sending to tab:", sender.tab.id);
+ 					//console.log(BTTV2);
+ 					chrome.tabs.sendMessage(sender.tab.id, { BTTV: BTTV2 }, function () {
+ 						chrome.runtime.lastError;
+ 					});
+ 				} else {
+ 					console.log("No BTTV emotes found");
+ 				}
+ 			}
+ 		} else if ("getSEVENTV" in request) {
+ 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+ 			//console.log("getSEVENTV");
+ 			sendResponse({ state: isExtensionOn });
+ 			if (sender.tab.url || request.url) {
+ 				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
+ 				const seventvUrlToUse = request.url || sender.tab.url;
+ 				const channelIdentifier = request?.channel || request?.channelId;
+ 				const inferredType = request?.type || (seventvUrlToUse && seventvUrlToUse.includes("youtube.com") ? "youtube" : null);
+ 				if (inferredType === "youtube" && sender?.tab?.id && channelIdentifier) {
+ 					rememberYouTubeChannel(sender.tab.id, channelIdentifier);
+ 				}
+ 				var SEVENTV2 = await getSEVENTVEmotes(seventvUrlToUse, inferredType, channelIdentifier, request?.userid || request?.userId); // query my API to see if I can resolve the Channel avatar from the video ID
+ 				if (SEVENTV2) {
+ 					//	//console.logsender);
+ 					//	//console.logSEVENTV2);
+ 					chrome.tabs.sendMessage(sender.tab.id, { SEVENTV: SEVENTV2 }, function () {
+ 						chrome.runtime.lastError;
+ 					});
+ 				}
+ 			}
+ 		} else if ("getFFZ" in request) {
+ 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+ 			////console.log"getFFZ");
+ 			sendResponse({ state: isExtensionOn });
+ 			if (sender.tab.url || request.url) {
+ 				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
+ 				const ffzUrlToUse = request.url || sender.tab.url;
+ 				var FFZ2 = await getFFZEmotes(ffzUrlToUse, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
+ 				if (FFZ2) {
+ 					//	//console.logsender);
+ 					//	//console.logFFZ2);
+ 					chrome.tabs.sendMessage(sender.tab.id, { FFZ: FFZ2 }, function () {
+ 						chrome.runtime.lastError;
+ 					});
+ 				}
+ 			}
+ 		} else if ("getYouTubeEmoji" in request) {
+ 			sendResponse({ state: isExtensionOn });
+ 			if (request.videoId && sender.tab && sender.tab.id) {
+ 				const tabId = sender.tab.id;
+ 				const videoId = request.videoId;
+ 				const requestId = request.requestId ? String(request.requestId) : null;
+ 				const sendEmojiResult = function (entries) {
+ 					chrome.tabs.sendMessage(tabId, { youtubeEmoji: entries, requestId, videoId }, function () {
+ 						chrome.runtime.lastError;
+ 					});
+ 				};
+ 				(async () => {
+ 					let entries = [];
+ 					try {
+ 						const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${videoId}`, { credentials: "include" });
+ 						if (!resp.ok) {
+ 							sendEmojiResult(entries);
+ 							return;
+ 						}
+ 						const html = await resp.text();
+ 						const markers = ['ytInitialData"] = ', "ytInitialData'] = ", "var ytInitialData = "];
+ 						let jsonStart = -1;
+ 						for (const m of markers) {
+@@ -5296,246 +5438,302 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
+ 						Origin: "https://www.youtube.com",
+ 						Referer: referer || "https://www.youtube.com/"
+ 					};
+ 				};
+ 				const fetchWatchConfig = async function (targetVideoId) {
+ 					const resp = await fetch(`https://www.youtube.com/watch?v=${encodeURIComponent(targetVideoId)}`, {
+ 						headers: { "Accept-Language": "en-US,en;q=0.9", Referer: "https://www.youtube.com/" }
+ 					});
+ 					if (!resp.ok) return null;
+ 					const html = await resp.text();
+ 					const watchApiKey = extractApiKey(html);
+ 					if (!watchApiKey) return null;
+ 					return {
+ 						apiKey: watchApiKey,
+ 						context: buildInnertubeContext(extractClientVersion(html), extractVisitorData(html))
+ 					};
+ 				};
+ 				const fetchPublicInitialData = async function (targetVideoId) {
+ 					const config = await fetchWatchConfig(targetVideoId);
+ 					if (!config) return null;
+ 					const resp = await fetch(`https://www.youtube.com/youtubei/v1/next?key=${encodeURIComponent(config.apiKey)}`, {
+ 						method: "POST",
+ 						headers: getInnertubeHeaders(`https://www.youtube.com/watch?v=${encodeURIComponent(targetVideoId)}`),
+ 						body: JSON.stringify(Object.assign({}, config.context, { videoId: targetVideoId }))
+ 					});
+ 					if (!resp.ok) return null;
+ 					return slimWatchData(await resp.json(), config.apiKey, config.context);
+ 				};
+ 				const fetchPublicContinuationData = async function (targetVideoId, continuationToken, fallbackApiKey) {
+ 					if (!continuationToken) return null;
+ 					let config = await fetchWatchConfig(targetVideoId);
+ 					if (!config && fallbackApiKey) {
+ 						config = { apiKey: fallbackApiKey, context: buildInnertubeContext("", "") };
+ 					}
+ 					if (!config) return null;
+ 					if (fallbackApiKey) config.apiKey = fallbackApiKey;
+ 					const resp = await fetch(`https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=${encodeURIComponent(config.apiKey)}`, {
+ 						method: "POST",
+ 						headers: getInnertubeHeaders(`https://www.youtube.com/live_chat?is_popout=1&v=${encodeURIComponent(targetVideoId)}`),
+ 						body: JSON.stringify(Object.assign({}, config.context, { continuation: continuationToken }))
+ 					});
+ 					if (!resp.ok) return null;
+ 					const data = await resp.json();
+ 					data.innertubeApiKey = config.apiKey;
+ 					data.innertubeContext = config.context;
+ 					return data;
+ 				};
+ 				(async () => {
+ 					try {
+ 						if (continuation) {
+ 							const requestUrl = apiKey ? `https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=${encodeURIComponent(apiKey)}` : "https://www.youtube.com/youtubei/v1/live_chat/get_live_chat";
+ 							const resp = await fetch(requestUrl, {
+ 								method: "POST",
+ 								credentials: "include",
+ 								headers: { "Content-Type": "application/json" },
+ 								body: JSON.stringify({
+ 									context: { client: { clientName: "WEB", clientVersion: "2.20240101.00.00", hl: "en" } },
+ 									continuation
+ 								})
+ 							});
+ 							if (resp.ok) {
+ 								sendRichChatResult(await resp.json());
+ 								return;
+ 							}
+ 							sendRichChatResult(await fetchPublicContinuationData(videoId, continuation, apiKey));
+ 							return;
+ 						}
+ 						const resp = await fetch(`https://www.youtube.com/live_chat?is_popout=1&v=${encodeURIComponent(videoId)}`, { credentials: "include" });
+ 						if (!resp.ok) {
+ 							sendRichChatResult(await fetchPublicInitialData(videoId));
+ 							return;
+ 						}
+ 						const html = await resp.text();
+ 						sendRichChatResult(slimInitialData(extractInitialData(html), html) || (await fetchPublicInitialData(videoId)));
+ 					} catch (e) {
+ 						console.log("Background YouTube rich chat fetch failed:", e);
+ 						sendRichChatResult(null);
+ 					}
+ 				})();
+ 			}
++		} else if (request.cmd && request.cmd === "ebaySellerStats") {
++			try {
++				const seller = String(request.seller || "")
++					.toLowerCase()
++					.replace(/^@+/, "")
++					.replace(/\s+/g, "")
++					.replace(/[^a-z0-9_-]/g, "");
++				if (!seller) {
++					sendResponse({ ok: false, error: "Invalid eBay seller" });
++					return response;
++				}
++				const endpoint = new URL("https://vps-1122d8c8.vps.ovh.us:1443/seller");
++				endpoint.searchParams.set("seller", seller);
++				const ebayResponse = await fetch(endpoint.toString(), {
++					cache: "no-store",
++					credentials: "omit",
++					headers: {
++						Accept: "application/json"
++					}
++				});
++				const responseText = await ebayResponse.text();
++				let responseJson = {};
++				try {
++					responseJson = responseText ? JSON.parse(responseText) : {};
++				} catch (error) {
++					responseJson = null;
++				}
++				if (!ebayResponse.ok) {
++					sendResponse({
++						ok: false,
++						status: ebayResponse.status,
++						error: (responseJson && (responseJson.message || responseJson.error)) || `HTTP ${ebayResponse.status}`
++					});
++					return response;
++				}
++				if (responseJson == null) {
++					sendResponse({ ok: false, status: ebayResponse.status, error: "Invalid JSON response" });
++					return response;
++				}
++				sendResponse({ ok: true, status: ebayResponse.status, data: responseJson });
++			} catch (error) {
++				sendResponse({ ok: false, error: error && error.message ? error.message : "eBay seller stats fetch failed" });
++			}
++			return true;
+ 		} else if (request.cmd && request.cmd === "vpzoneFetchJson") {
+ 			let parsedUrl;
+ 			try {
+ 				parsedUrl = new URL(request.url);
+ 			} catch (error) {
+ 				sendResponse({ ok: false, error: "Invalid VPZone URL" });
+ 				return response;
+ 			}
+ 			if (!["vpzone.tv", "www.vpzone.tv"].includes(parsedUrl.hostname) || !parsedUrl.pathname.startsWith("/api/")) {
+ 				sendResponse({ ok: false, error: "VPZone fetch URL not allowed" });
+ 				return response;
+ 			}
+ 			try {
+ 				const method = String(request.method || "GET").toUpperCase();
+ 				const isOAuthTokenPost = method === "POST" && parsedUrl.pathname === "/api/oauth/token";
+ 				const isChatMessagePost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat$/.test(parsedUrl.pathname);
+ 				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost) {
+ 					sendResponse({ ok: false, error: "VPZone fetch method not allowed" });
+ 					return response;
+ 				}
+ 				const headers = {
+ 					Accept: "application/json"
+ 				};
+ 				if (isOAuthTokenPost) {
+ 					headers["Content-Type"] = "application/x-www-form-urlencoded";
+ 				} else if (isChatMessagePost) {
+ 					headers["Content-Type"] = "application/json";
+ 					if (request.authToken && typeof request.authToken === "string") {
+ 						headers.Authorization = "Bearer " + request.authToken.replace(/[\r\n]/g, "");
+ 					}
+ 				}
+ 				const vpzoneResponse = await fetch(parsedUrl.toString(), {
+ 					method,
+ 					cache: "no-store",
+ 					credentials: "omit",
+ 					headers,
+ 					body: method === "POST" ? String(request.body || "") : undefined
+ 				});
+ 				const responseText = await vpzoneResponse.text();
+ 				let responseJson = {};
+ 				try {
+ 					responseJson = responseText ? JSON.parse(responseText) : {};
+ 				} catch (error) {
+ 					responseJson = null;
+ 				}
+ 				if (!vpzoneResponse.ok) {
+ 					sendResponse({
+ 						ok: false,
+ 						status: vpzoneResponse.status,
+ 						error: (responseJson && (responseJson.error_description || responseJson.message || (typeof responseJson.error === "string" ? responseJson.error : responseJson.error && responseJson.error.message))) || `HTTP ${vpzoneResponse.status}`
+ 					});
+ 					return response;
+ 				}
+ 				if (responseJson == null) {
+ 					sendResponse({ ok: false, status: vpzoneResponse.status, error: "Invalid JSON response" });
+ 					return response;
+ 				}
+ 				sendResponse({ ok: true, status: vpzoneResponse.status, data: responseJson });
+ 			} catch (error) {
+ 				sendResponse({ ok: false, error: error && error.message ? error.message : "VPZone fetch failed" });
+ 			}
+ 			return true;
+ 		} else if (request.cmd && request.cmd === "rumbleFetchJson") {
+ 			try {
+ 				const rumbleResponse = await fetchRumbleJsonResponse(request.url);
+ 				sendResponse({ ok: true, status: rumbleResponse.status, data: rumbleResponse.data });
+ 			} catch (error) {
+ 				sendResponse({
+ 					ok: false,
+ 					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+ 					error: error && error.message ? error.message : "Rumble fetch failed"
+ 				});
+ 			}
+ 			return true;
+ 		} else if (request.cmd && request.cmd === "rumbleFetchSseBatch") {
+ 			try {
+ 				const rumbleResponse = await fetchRumbleSseBatch(request);
+ 				sendResponse({ ok: true, status: rumbleResponse.status, chatId: rumbleResponse.chatId, events: rumbleResponse.events });
+ 			} catch (error) {
+ 				sendResponse({
+ 					ok: false,
+ 					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+ 					error: error && error.message ? error.message : "Rumble SSE fetch failed"
+ 				});
+ 			}
+ 			return true;
++		} else if (request.cmd && request.cmd === "rumbleFetchHtml") {
++			try {
++				const rumbleResponse = await fetchRumbleHtmlResponse(request.url);
++				sendResponse({ ok: true, status: rumbleResponse.status, url: rumbleResponse.url, html: rumbleResponse.html });
++			} catch (error) {
++				sendResponse({
++					ok: false,
++					status: error && typeof error.status !== "undefined" ? error.status : undefined,
++					error: error && error.message ? error.message : "Rumble HTML fetch failed"
++				});
++			}
++			return true;
+ 		} else if (request.cmd && request.cmd === "resolveRumblePopupUrl") {
+ 			try {
+ 				const resolved = await resolveRumblePopup(request);
+ 				sendResponse({
+ 					ok: true,
+ 					status: resolved.status,
+ 					popupUrl: resolved.popupUrl,
+ 					streamId: normalizeRumbleSettingText(resolved.stream && resolved.stream.id),
+ 					streamTitle: normalizeRumbleSettingText(resolved.stream && resolved.stream.title),
+ 					isLive: !!(resolved.stream && resolved.stream.is_live),
+ 					chatId: normalizeRumbleSettingText(resolved.chatId),
+ 					videoId: normalizeRumbleSettingText(resolved.videoId),
+ 					pageUrl: normalizeRumbleSettingText(resolved.pageUrl),
+ 					username: normalizeRumbleSettingText(resolved.username)
+ 				});
+ 			} catch (error) {
+ 				sendResponse({
+ 					ok: false,
+ 					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+ 					error: error && error.message ? error.message : "Rumble popup resolution failed"
+ 				});
+ 			}
+ 			return true;
+ 		} else if ("getSettings" in request) {
+ 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+ 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: getEffectiveSettingsForSources() }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
+ 			if (hasSenderTabId) {
+ 				try {
+ 					priorityTabs.add(senderTabId);
+ 				} catch (e) {
+ 					console.error(e);
+ 				}
+ 			}
+ 		} else if ("pokeMe" in request) {
+ 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+ 			sendResponse({ state: isExtensionOn }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
+ 			if (!settings.disabletiktokpoke && hasSenderTabId && senderTabUrl) {
+ 				pokeSite(senderTabUrl, senderTabId);
+ 			}
+ 		} else if ("keepAlive" in request) {
+ 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
+ 			const keepAliveMessage = {};
+ 			if (hasSenderTabId) {
+ 				keepAliveMessage.tid = senderTabId; // including the source (tab id) of the social media site the data was pulled from
+ 			}
+ 			keepAliveMessage.response = ""; // empty response, as we just want to keep alive
+ 			//sendMessageToTabs(keepAliveMessage);
+ 			sendMessageToTabs(keepAliveMessage, false, null, false, false, false);
+ 			sendResponse({ state: isExtensionOn });
+ 		} else if (request.cmd && request.cmd === "tellajoke") {
+ 			tellAJoke();
+ 			sendResponse({ state: isExtensionOn });
+ 		} else if (request.cmd && request.cmd === "enableYouTube") {
+ 			enableYouTube();
+ 			sendResponse({ state: isExtensionOn });
+ 		} else if (request.cmd && request.cmd === "openchat") {
+ 			openchat(request.value, true);
+ 			sendResponse({ state: isExtensionOn });
+ 		} else if (request.cmd && request.cmd === "startgame") {
+ 			//startgame(request.value, true);
+ 			sendDataP2P({ startgame: true });
+ 			sendResponse({ state: isExtensionOn });
+ 		} else if (request.cmd && request.cmd === "singlesave") {
+ 			sendResponse({ state: isExtensionOn });
+ 			overwriteFile("setup");
+ 		} else if (request.cmd && request.cmd === "excelsave") {
+ 			sendResponse({ state: isExtensionOn });
+ 			overwriteFileExcel("setup");
+ 		} else if (request.cmd && request.cmd === "loadtickerfile") {
+ 			sendResponse({ state: isExtensionOn });
+ 			selectTickerFile();
+ 		} else if (request.cmd && request.cmd === "savenames") {
+ 			sendResponse({ state: isExtensionOn });
+ 			overwriteSavedNames("setup");
+ 		} else if (request.cmd && request.cmd === "savenamesStop") {
+ 			sendResponse({ state: isExtensionOn });
+ 			overwriteSavedNames("stop");
+ 		} else if (request.cmd && request.cmd === "savenamesClear") {
+ 			sendResponse({ state: isExtensionOn });
+ 			overwriteSavedNames("clear");
+@@ -6315,316 +6513,332 @@ const metaDataStore = new Map(); // Using Map instead of {} for better cleanup
+ let cleanUpLastTabs;
+ 
+ async function sendToDestinations(message) {
+ 	if (typeof message == "object") {
+ 		if (message.suppressRelay) {
+ 			return true;
+ 		}
+ 
+ 		if (message.chatname) {
+ 			message.chatname = filterXSS(message.chatname); // I do escapeHtml at the point of capture instead
+ 		}
+ 
+ 		if (message.chatmessage) {
+ 			if (!message.textonly) {
+ 				if (settings.bttv) {
+ 					if (!Globalbttv) {
+ 						await getBTTVEmotes();
+ 					}
+ 					if (Globalbttv) {
+ 						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalbttv);
+ 					}
+ 				}
+ 				if (settings.seventv) {
+ 					if (!Globalseventv) {
+ 						await getSEVENTVEmotes();
+ 					}
+ 					if (Globalseventv) {
+ 						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalseventv, true);
+ 					}
+ 				}
+ 				if (settings.ffz) {
+ 					if (!Globalffz) {
+ 						await getFFZEmotes();
+ 					}
+ 					if (Globalffz) {
+ 						message.chatmessage = replaceEmotesWithImages(message.chatmessage, Globalffz, true);
+ 					}
+ 				}
+ 				message.chatmessage = filterXSS(message.chatmessage);
+ 			} //else {
+ 			// replaceEmotesWithImagesText( ...  ); // maybe someday
+ 			//}
+ 		}
+ 
+ 		if (settings.pronouns && message.type == "twitch" && message.chatname) {
+ 			let pronoun = await getPronounsNames(message.chatname);
+ 			if (!Pronouns && pronoun) {
+ 				await getPronouns();
+ 			}
+ 			if (Pronouns && pronoun && pronoun.pronoun_id) {
+ 				if (pronoun.pronoun_id in Pronouns) {
+ 					if (!message.chatbadges) {
+ 						message.chatbadges = [];
+ 					}
+ 					var bage = {};
+ 					bage.text = Pronouns[pronoun.pronoun_id];
+ 					bage.type = "text";
+ 					bage.bgcolor = "#000";
+ 					bage.color = "#FFF";
+ 					message.chatbadges.push(bage);
+ 				}
+ 			}
+ 		}
+ 
+ 		if (settings.colorofsourcebg && message && message.chatname) {
+ 			message.backgroundColor = getColorFromType(message.type);
+ 		}
+ 
+ 		if (settings.randomcolor && message && !message.nameColor && message.chatname) {
+ 			message.nameColor = getColorFromName(message.chatname, settings);
+ 		} else if (settings.randomcolorall && message && message.chatname) {
+ 			message.nameColor = getColorFromName(message.chatname, settings);
+ 		} else if (settings.colorofsource && message && message.chatname) {
+ 			message.nameColor = getColorFromType(message.type);
+ 		}
+ 		if (message.nameColor && settings.lightencolorname) {
+ 			message.nameColor = adjustColorForOverlay(message.nameColor);
+ 		}
+ 
+ 		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.event) {
+-			const blockedEvents = settings.filterevents.textsetting
+-				.split(",")
+-				.map(v => v.trim().toLowerCase())
+-				.filter(Boolean);
++			const blockedEvents = getCachedCommaList(settings.filterevents.textsetting, true);
+ 			const eventName = typeof message.event === "string" ? message.event.trim().toLowerCase() : "";
+ 			const messageText = (message.textContent || message.chatmessage || "").toLowerCase();
+ 			if (blockedEvents.some(v => (eventName && eventName === v) || (messageText && messageText.includes(v)))) {
+ 				return false;
+ 			}
+ 		}
+ 
+ 		if (message.event && message.tid && "meta" in message) {
+ 			if (["viewer_update", "follower_update"].includes(message.event)) {
+ 				let tabData = metaDataStore.get(message.tid);
+ 				if (!tabData) {
+ 					tabData = {};
+ 					metaDataStore.set(message.tid, tabData);
+ 				}
+ 
+ 				tabData[message.event] = message;
+ 
+ 				if (!cleanUpLastTabs) {
+ 					cleanUpLastTabs = setTimeout(() => {
+ 						cleanUpLastTabs = null;
+ 						chrome.tabs.query({}, tabs => {
+ 							const activeTabIds = new Set(tabs.map(tab => tab.id).filter(Boolean));
+ 							61000;
+ 
+ 							// Cleanup closed tabs
+ 							for (const [tabId] of metaDataStore) {
+ 								if (!activeTabIds.has(tabId)) {
+ 									metaDataStore.delete(tabId);
+ 								}
+ 							}
+ 						});
+ 					}, 61000);
+ 				}
+ 
+ 				if (message.event === "viewer_update") {
+ 					var viewerCounts = {};
+ 					for (const [tid, metaEntry] of metaDataStore) {
+ 						if (metaEntry.viewer_update && metaEntry.viewer_update.type) {
+ 							// Skip viewer counts from sites that are not opted-in
+ 							if (!checkIfAllowed(metaEntry.viewer_update.type)) {
+ 								continue;
+ 							}
+ 
+ 							let count = parseInt(metaEntry.viewer_update.meta) || 0;
+ 
+ 							// Pump the numbers if enabled
+ 							if (settings.pumpTheNumbers) {
+ 								count = Math.round(count * 1.75);
+ 							}
+ 
+ 							viewerCounts[metaEntry.viewer_update.type] = (viewerCounts[metaEntry.viewer_update.type] || 0) + count;
+ 						}
+ 					}
+ 					if (settings.hypemode) {
+ 						updateViewerCount({ event: "viewer_updates", meta: viewerCounts }); // updateViewerCount already calls combineHypeData and sends
+ 					}
+ 
+ 					var viewerUpdateEvent = { event: "viewer_updates", meta: viewerCounts };
+ 					sendDataP2P(viewerUpdateEvent);
+ 					sendTargetP2P(viewerUpdateEvent, "meta");
+ 					sendTargetP2P(viewerUpdateEvent, "aioverlay");
+ 				}
+ 
+ 				return true;
+ 			}
+ 		}
++
++		if (settings.aiAutoTranslate) {
++			try {
++				const translated = await translateMessageWithLLM(message);
++				if (!translated) {
++					return false;
++				}
++				if (message.chatmessage && !message.textonly) {
++					message.chatmessage = filterXSS(message.chatmessage);
++				}
++			} catch (e) {
++				console.log(e); // ai.js file missing?
++			}
++		}
+ 	}
+ 
+ 	var reactionEventName = "";
+ 	if (message && typeof message.event === "string") {
+ 		reactionEventName = message.event
+ 			.toLowerCase()
+ 			.replace(/[^a-z0-9]+/g, "_")
+ 			.replace(/^_+|_+$/g, "");
+ 	}
+ 	var isDonationMessage = !!(message && (message.hasDonation || message.donation));
+ 	var donationAlertText = message ? String(message.hasDonation || message.donation || "").toLowerCase() : "";
+ 	var isRewardAlert = !!(reactionEventName === "channel_points" || reactionEventName === "reward" || (message && message.reward) || donationAlertText.includes("points"));
+ 	var isDonationAlert = !!(isDonationMessage && !isRewardAlert);
+ 	var isAlertMessage = !!(message && (message.event || isDonationMessage));
+ 	var excludeFromDockAsAlert = !!(settings.excludeAlertsDock && isAlertMessage && !isDonationAlert);
+ 	var isReactionMessage = reactionEventName === "reaction" || reactionEventName === "liked" || reactionEventName === "like";
+ 
+ 	try {
+ 		if (!excludeFromDockAsAlert) {
+ 			sendDataP2P(message);
+ 		}
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ 	try {
+ 		if (message && typeof message === "object" && Object.prototype.hasOwnProperty.call(message, "meta")) {
+ 			sendTargetP2P(message, "meta");
+ 			sendTargetP2P(message, "aioverlay");
+ 		}
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ 	try {
+ 		if (settings.pollEnabled) {
+ 			sendTargetP2P(message, "poll");
+ 		}
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ 
+ 	try {
+ 		if (settings.mapEnabled) {
+ 			sendTargetP2P(message, "map");
+ 		}
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ 
+ 	try {
+ 		if (settings.wordcloud) {
+ 			sendTargetP2P(message, "wordcloud");
+ 		}
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ 
+ 	try {
+ 		if (isReactionMessage) {
+ 			sendTargetP2P(message, "reactions");
+ 		}
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ 
+ 	try {
+ 		if (isAlertMessage) {
+ 			sendTargetP2P(message, "alerts");
+ 		}
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ 
+ 	try {
+ 		if (settings.enableCustomGifCommands && settings["customGifCommands"]) {
+ 			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
+-			const firstWord = message && message.chatmessage ? message.chatmessage.split(" ")[0] : "";
++			const messageText = typeof message.chatmessage === "string" ? message.chatmessage : "";
++			const cleanMessageText = messageText.trim().replace(/^[^a-zA-Z0-9#]+/g, "");
+ 			settings["customGifCommands"]["object"].forEach(values => {
+-				if (firstWord && values.url && values.command && commandAliasMatches(values.command, firstWord, "exact")) {
++				if (cleanMessageText && values.url && values.command && commandAliasMatches(values.command, cleanMessageText, "startsWith")) {
+ 					//  || "https://picsum.photos/1280/720?random="+values.command
+ 					const aliases = getCommandAliases(values.command).map(alias => alias.command);
+ 					const gifMeta = Object.assign({}, message.meta || {}, {
+ 						customGifCommandId: getCustomGifCommandEntryId(values.command, values.url, values.id),
+-						customGifCommand: getMatchedCommandAlias(values.command, firstWord),
++						customGifCommand: getMatchedCommandAlias(values.command, cleanMessageText, "startsWith"),
+ 						customGifCommands: aliases
+ 					});
+-					sendTargetP2P({ ...message, ...{ contentimg: values.url, meta: gifMeta } }, "gif"); // overwrite any existing contentimg. leave the rest of the meta data tho
++					const gifPayload = { ...message, ...{ contentimg: values.url, meta: gifMeta } }; // overwrite any existing contentimg. leave the rest of the meta data tho
++					sendTargetP2P(gifPayload, "gif");
++					if (gifMeta.customGifCommandId) {
++						sendTargetP2P(gifPayload, gifMeta.customGifCommandId);
++					}
+ 				}
+ 			});
+ 		}
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ 
+ 	sendToDisk(message);
+ 	sendToH2R(message);
+ 	sendToPost(message);
+ 	sendToDiscord(message); // donos only
+ 	sendToStreamerBot(message);
+ 	if (message.chatmessage || message.hasDonation || message.chatname) {
+ 		message.idx = await addMessageDB(message);
+ 	}
+ 	return true;
+ }
+ 
+ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, speed = 1, sessionId = null) {
+ 	const db = await messageStoreDB.ensureDB();
+ 
+ 	return new Promise((resolve, reject) => {
+ 		const transaction = db.transaction([messageStoreDB.storeName], "readonly");
+ 		const store = transaction.objectStore(messageStoreDB.storeName);
+ 		const index = store.index("timestamp");
+ 		const messages = [];
+ 
+ 		let range;
+ 		if (endTimestamp) {
+ 			range = IDBKeyRange.bound(startTimestamp, endTimestamp);
+ 		} else {
+ 			range = IDBKeyRange.lowerBound(startTimestamp);
+ 		}
+ 
+ 		const cursorRequest = index.openCursor(range);
+ 
+ 		cursorRequest.onsuccess = event => {
+ 			const cursor = event.target.result;
+ 			if (cursor) {
+ 				messages.push(cursor.value);
+ 				cursor.continue();
+ 			} else {
+ 				if (messages.length === 0) {
+ 					resolve({ messageCount: 0, messages: [] });
+ 					return;
+ 				}
+ 
+ 				messages.sort((a, b) => a.timestamp - b.timestamp);
+ 
+ 				// Calculate when replay should start relative to now
+ 				const replayStartTime = Date.now();
+ 				const originalStartTime = startTimestamp;
+ 
+ 				// Store session info for control
+ 				if (sessionId) {
+ 					replaySessions[sessionId] = {
+ 						messages: messages,
+ 						currentIndex: 0,
+ 						isPaused: false,
+ 						speed: speed,
+ 						timeouts: [],
+ 						startTime: replayStartTime,
+ 						originalStartTime: originalStartTime
+ 					};
+ 				}
+ 
+ 				// Log first and last message times for debugging
+ 				if (messages.length > 0) {
+ 					console.log("Replay timeline:", {
+ 						requestedStart: new Date(originalStartTime).toLocaleString(),
+ 						firstMessage: new Date(messages[0].timestamp).toLocaleString(),
+ 						lastMessage: new Date(messages[messages.length - 1].timestamp).toLocaleString(),
+ 						totalDuration: ((messages[messages.length - 1].timestamp - originalStartTime) / 1000 / 60).toFixed(1) + " minutes",
+ 						messageCount: messages.length
+ 					});
+ 				}
+ 
+ 				messages.forEach((message, messageIndex) => {
+ 					// Calculate delay from the requested start time, not from first message
+ 					const messageOffsetFromStart = message.timestamp - originalStartTime;
+@@ -11221,205 +11435,206 @@ function processWaitlist(data) {
+ 				waitlist.push(data);
+ 			}
+ 		} else {
+ 			var site = {};
+ 			site[data.chatname] = Date.now();
+ 			waitListUsers[data.type] = site;
+ 			waitlist.push(data);
+ 			update = true;
+ 		}
+ 		if (update) {
+ 			drawListCount += 1;
+ 
+ 			if (settings.drawmode) {
+ 				var keys = Object.keys(connectedPeers);
+ 				for (var i = 0; i < keys.length; i++) {
+ 					try {
+ 						var UUID = keys[i];
+ 						var label = connectedPeers[UUID];
+ 						if (label === "waitlist") {
+ 							iframe.contentWindow.postMessage({ sendData: { overlayNinja: { drawPoolSize: drawListCount } }, type: "pcs", UUID: UUID }, "*");
+ 						}
+ 					} catch (e) {}
+ 				}
+ 			} else {
+ 				sendWaitlistConfig(waitlist, false);
+ 			}
+ 		}
+ 	} catch (e) {
+ 		console.error(e);
+ 	}
+ }
+ 
+ function setWordcloud(state = true) {
+ 	try {
+ 		if (isExtensionOn) {
+ 			sendTargetP2P({ state: state }, "wordcloud");
+ 		}
+ 	} catch (e) {}
+ }
+ 
+ function initializePoll() {
+ 	try {
+ 		//if (!settings.pollEnabled) { // stop and clear
+ 		//	return;
+ 		//}
+ 		if (isExtensionOn) {
+ 			//console.log("initializePoll");
+ 			sendTargetP2P({ settings: settings }, "poll");
+ 		}
+ 	} catch (e) {}
+ }
+ 
+ function loadPollPreset(pollId) {
+ 	chrome.storage.local.get(["savedPolls"], function (result) {
+ 		if (result.savedPolls) {
+ 			try {
+ 				const savedPolls = JSON.parse(result.savedPolls);
+ 				const poll = savedPolls.find(p => p.id === pollId);
+ 				if (poll && poll.settings) {
+ 					// Update settings with the loaded poll
+ 					Object.keys(poll.settings).forEach(key => {
+ 						if (settings.hasOwnProperty(key)) {
+ 							settings[key] = poll.settings[key];
+ 						}
+ 					});
+ 					// Send updated settings to poll overlay
+ 					sendTargetP2P({ settings: settings }, "poll");
+ 					// Save updated settings
+ 					chrome.storage.local.set({ settings: settings });
+ 				}
+ 			} catch (e) {
+ 				log("Error loading poll preset: " + e.message);
+ 			}
+ 		}
+ 	});
+ }
+ 
+ function updatePollSettings(newSettings) {
+ 	try {
+ 		// Update poll-related settings
+-		const pollKeys = ["pollType", "pollQuestion", "multipleChoiceOptions", "pollStyle", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
++		const pollKeys = ["pollType", "pollQuestion", "multipleChoiceOptions", "pollMatchMode", "pollStyle", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
+ 
+ 		pollKeys.forEach(key => {
+ 			if (newSettings.hasOwnProperty(key)) {
+ 				settings[key] = newSettings[key];
+ 			}
+ 		});
+ 
+ 		// Send updated settings to poll overlay
+ 		sendTargetP2P({ settings: settings }, "poll");
+ 		// Save settings
+ 		chrome.storage.local.set({ settings: settings });
+ 	} catch (e) {
+ 		log("Error updating poll settings: " + e.message);
+ 	}
+ }
+ 
+ function getPollPresets(callback) {
+ 	chrome.storage.local.get(["savedPolls"], function (result) {
+ 		try {
+ 			if (result.savedPolls) {
+ 				const savedPolls = JSON.parse(result.savedPolls);
+ 				// Return simplified list with id and name
+ 				const presets = savedPolls.map(poll => ({
+ 					id: poll.id,
+ 					name: poll.name
+ 				}));
+ 				callback(presets);
+ 			} else {
+ 				callback([]);
+ 			}
+ 		} catch (e) {
+ 			log("Error getting poll presets: " + e.message);
+ 			callback([]);
+ 		}
+ 	});
+ }
+ 
+ function createNewPoll(pollSettings) {
+ 	try {
+ 		// Reset to default poll settings
+ 		const defaultSettings = {
+ 			pollType: "freeform",
+ 			pollQuestion: "",
+ 			multipleChoiceOptions: "",
++			pollMatchMode: "exact",
+ 			pollStyle: "default",
+ 			pollTimer: "60",
+ 			pollTimerState: false,
+ 			pollTally: true,
+ 			pollSpam: false,
+ 			pollDonationWeighted: false
+ 		};
+ 
+ 		// Merge with provided settings
+ 		const finalSettings = { ...defaultSettings, ...pollSettings };
+ 		updatePollSettings(finalSettings);
+ 	} catch (e) {
+ 		log("Error creating new poll: " + e.message);
+ 	}
+ }
+ 
+ function initializeWaitlist() {
+ 	try {
+ 		if (!settings.waitlistmode) {
+ 			// stop and clear
+ 			waitlist = [];
+ 			waitListUsers = {};
+ 
+ 			drawListCount = 0;
+ 
+ 			sendWaitlistConfig(false, true);
+ 			return;
+ 		}
+ 		//log("initializeWaitlist");
+ 		sendWaitlistConfig(waitlist, true);
+ 	} catch (e) {}
+ }
+ function removeWaitlist(n = 0) {
+ 	log("removeWaitlist");
+ 	try {
+ 		var cc = 1;
+ 		for (var i = 0; i < waitlist.length; i++) {
+ 			if (waitlist[i].waitStatus !== 1) {
+ 				if (n == 0) {
+ 					waitlist[i].waitStatus = 1;
+ 					if (settings.waitlistallowrejoin) {
+ 						forgetWaitlistUser(waitlist[i]);
+ 					}
+ 					sendWaitlistConfig(waitlist, true);
+ 					break;
+ 				} else if (cc == n) {
+ 					waitlist[i].waitStatus = 1;
+ 					if (settings.waitlistallowrejoin) {
+ 						forgetWaitlistUser(waitlist[i]);
+ 					}
+ 					sendWaitlistConfig(waitlist, true);
+ 					break;
+ 				} else {
+ 					cc += 1;
+ 				}
+ 			}
+ 		}
+ 	} catch (e) {}
+ }
+ function highlightWaitlist(n = 0) {
+ 	log("highlightWaitlist");
+ 	try {
+ 		var cc = 1;
+ 		for (var i = 0; i < waitlist.length; i++) {
+ 			if (waitlist[i].waitStatus !== 1) {
+ 				if (n == 0) {
+ 					if (waitlist[i].waitStatus !== 2) {
+ 						// selected
+ 						waitlist[i].waitStatus = 2;
+ 						sendWaitlistConfig(waitlist, true);
+ 						break;
+ 					}
+ 				} else if (cc == n) {
+ 					waitlist[i].waitStatus = 2;
+ 					sendWaitlistConfig(waitlist, true);
+ 					break;
+ 				} else {
+ 					cc += 1;
+ 				}
+ 			}
+@@ -12650,161 +12865,161 @@ function blockUser(data) {
+ 	// Initialize blacklist settings if not present
+ 
+ 	if (!(data && data.chatname && data.type)) {
+ 		console.warn("Block request doesn't contain chatname and type. '*' can be used for all types.");
+ 		return false;
+ 	}
+ 	try {
+ 		if (!settings.blacklistusers) {
+ 			settings.blacklistusers = { textsetting: "" };
+ 		}
+ 		let resave = false;
+ 		if (!settings.blacklistuserstoggle) {
+ 			settings.blacklistuserstoggle = {};
+ 			settings.blacklistuserstoggle.setting = true;
+ 			resave = true;
+ 		}
+ 
+ 		const blacklist = settings.blacklistusers.textsetting.split(",").map(user => {
+ 			const parts = user.split(":").map(part => part.trim());
+ 			return { username: parts[0], type: parts[1] || "*" };
+ 		});
+ 
+ 		var altSourceType = data.type || "";
+ 		if (altSourceType == "youtubeshorts") {
+ 			altSourceType = "youtube";
+ 		}
+ 
+ 		const userToBlock = { username: data.userid || data.chatname, type: altSourceType };
+ 		if (data.chatname && data.chatname !== userToBlock.username) {
+ 			userToBlock.chatname = data.chatname;
+ 		}
+ 		if (data.userid) {
+ 			userToBlock.userid = data.userid;
+ 		}
+ 		if (data.messageId) {
+ 			userToBlock.messageId = data.messageId;
+ 		}
+ 		if (data.tid !== undefined && data.tid !== null && data.tid !== "") {
+ 			userToBlock.tid = data.tid;
+ 		}
+ 
+ 		if (data.chatimg && !data.chatimg.endsWith("/unknown.png")) {
+ 			userToBlock.chatimg = data.chatimg;
+ 		}
+ 
+ 		const isAlreadyBlocked = blacklist.some(({ username, type }) => userToBlock.username === username && (userToBlock.type === type || type === "*"));
+ 
+ 		if (!isAlreadyBlocked) {
+ 			// Update blacklist settings
+ 			settings.blacklistusers.textsetting += (settings.blacklistusers.textsetting ? "," : "") + userToBlock.username + ":" + userToBlock.type;
+ 			chrome.storage.local.set({ settings: settings });
+ 			// Check for errors in chrome storage operations
+ 			if (chrome.runtime.lastError) {
+ 				console.error("Error updating settings:", chrome.runtime.lastError.message);
+ 			}
+ 		} else if (resave) {
+ 			chrome.storage.local.set({ settings: settings });
+ 		}
+ 
+ 		if (isExtensionOn) {
+ 			sendToDestinations({ blockUser: userToBlock });
+ 		}
+ 		forwardSourceControlToWebsocketPages("blockUser", userToBlock);
+ 	} catch (e) {
+ 		console.error(e);
+ 		return false;
+ 	}
+ 
+ 	return true;
+ }
+ 
+ eventer(messageEvent, async function (e) {
+ 	// iframe wno't be enabled if isExtensionOn is off, so allow this.
+ 	if (!iframe) {
+ 		return;
+ 	}
+ 	if (e.source != iframe.contentWindow) {
+ 		return;
+ 	}
+ 	if (e.data && typeof e.data == "object") {
+-		if ("dataReceived" in e.data && "overlayNinja" in e.data.dataReceived) {
++		if (e.data.dataReceived && typeof e.data.dataReceived === "object" && "overlayNinja" in e.data.dataReceived) {
+ 			processIncomingRequest(e.data.dataReceived.overlayNinja, e.data.UUID);
+ 		} else if ("action" in e.data) {
+ 			if (e.data.action == "view-stats-updated") {
+ 				return;
+ 			} else if (e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
+ 				// flip this
+ 				if ("label" in e.data.value) {
+ 					connectedPeers[e.data.UUID] = e.data.value.label;
+ 					if (connectedPeers[e.data.UUID] == "hype") {
+ 						processHype2();
+ 					} else if (connectedPeers[e.data.UUID] == "ticker") {
+ 						processTicker();
+ 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
+ 						initializeWaitlist();
+ 					} else if (connectedPeers[e.data.UUID] == "poll") {
+ 						initializePoll();
+ 					} else if (connectedPeers[e.data.UUID] == "timer") {
+ 						initializeTimer(e.data.UUID);
+ 					} else if (connectedPeers[e.data.UUID] == "spotify") {
+ 						sendSpotifyOverlay(
+ 							latestSpotifyOverlay || {
+ 								status: "idle",
+ 								isPlaying: false,
+ 								progressMs: 0,
+ 								durationMs: 0,
+ 								track: null,
+ 								receivedAt: Date.now()
+ 							},
+ 							e.data.UUID
+ 						);
+ 					}
+ 				}
+ 			} else if (e.data.UUID && e.data.value && e.data.action == "view-connection-info") {
+ 				// flip this
+ 				if ("label" in e.data.value) {
+ 					connectedPeers[e.data.UUID] = e.data.value.label;
+ 					if (connectedPeers[e.data.UUID] == "hype") {
+ 						processHype2();
+ 					} else if (connectedPeers[e.data.UUID] == "ticker") {
+ 						processTicker();
+ 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
+ 						initializeWaitlist();
+ 					} else if (connectedPeers[e.data.UUID] == "poll") {
+ 						initializePoll();
+ 					} else if (connectedPeers[e.data.UUID] == "timer") {
+ 						initializeTimer(e.data.UUID);
+ 					} else if (connectedPeers[e.data.UUID] == "spotify") {
+ 						sendSpotifyOverlay(
+ 							latestSpotifyOverlay || {
+ 								status: "idle",
+ 								isPlaying: false,
+ 								progressMs: 0,
+ 								durationMs: 0,
+ 								track: null,
+ 								receivedAt: Date.now()
+ 							},
+ 							e.data.UUID
+ 						);
+ 					}
+ 				}
+ 			} else if (e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "push-connection") {
+ 				// flip this
+ 				if (e.data.UUID in connectedPeers) {
+ 					delete connectedPeers[e.data.UUID];
+ 				}
+ 				//log(connectedPeers);
+ 			} else if (e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "view-connection") {
+ 				// flip this
+ 				if (e.data.UUID in connectedPeers) {
+ 					delete connectedPeers[e.data.UUID];
+ 				}
+ 			} else if (e.data.action === "alert") {
+ 				if (e.data.value && e.data.value == "Stream ID is already in use.") {
+ 					document.title = "Close me? - Social Stream Ninja";
+ 					isExtensionOn = false;
+ 					updateExtensionState();
+ 					try {
+ 						chrome.notifications.create({
+ 							type: "basic",
+ 							iconUrl: "./icons/icon-128.png",
+@@ -14808,557 +15023,511 @@ const patterns = {
+ 	},
+ 	timedMessage: {
+ 		prefixes: ["timemessageevent", "timemessagecommand", "timemessageinterval", "timemessageoffset"],
+ 		type: "timedMessage"
+ 	},
+ 	midiCommand: {
+ 		prefixes: ["midievent", "midicommand", "midinote", "mididevice"],
+ 		type: "midiCommand"
+ 	}
+ };
+ function findExistingEvents(eventType, response) {
+ 	const events = new Set();
+ 	const responseSettings = response?.settings || {};
+ 	const pattern = patterns[eventType];
+ 	if (!pattern) return [];
+ 
+ 	// Check all possible settings for this event type
+ 	Object.keys(responseSettings).forEach(key => {
+ 		pattern.prefixes.forEach(prefix => {
+ 			if (key.startsWith(prefix)) {
+ 				const id = key.replace(prefix, "");
+ 				if (responseSettings[key]?.setting !== undefined || responseSettings[key]?.textsetting !== undefined || responseSettings[key]?.numbersetting !== undefined) {
+ 					events.add(parseInt(id));
+ 				}
+ 			}
+ 		});
+ 	});
+ 
+ 	return Array.from(events).sort((a, b) => a - b);
+ }
+ 
+ // expects an object; not False/Null/undefined
+ async function applyBotActions(data, tab = false) {
+ 	if (!data.id) {
+ 		messageCounter += 1;
+ 		data.id = messageCounter;
+ 	}
+ 	const originalChatMessage = typeof data.chatmessage === "string" && data.chatmessage.trim() !== "" ? data.chatmessage : null;
+ 
+ 	// Normalize to seconds for last activity comparisons (accept sec/ms/micro inputs)
+ 	const normalizeTimestampToSeconds = value => {
+ 		const num = Number(value);
+ 		if (!Number.isFinite(num) || num <= 0) return null;
+ 		if (num > 1e15) return Math.round(num / 1000 / 1000); // likely microseconds
+ 		if (num > 1e12) return Math.round(num / 1000); // likely milliseconds
+ 		return Math.round(num); // assume seconds
+ 	};
+ 
+ 	try {
+ 		if (settings.memberchatonly && !(data.membership || data.hasMembership)) {
+ 			return false;
+ 		}
+ 
+ 		var altSourceType = data.type || "";
+ 		if (altSourceType == "youtubeshorts") {
+ 			altSourceType = "youtube";
+ 		}
+ 
+ 		const normalizeRoleIdentifier = value => {
+ 			if (value === undefined || value === null) return "";
+ 			return String(value).toLowerCase().trim().replace(/^@+/, "");
+ 		};
+ 		const roleUserIdLower = normalizeRoleIdentifier(data.userid);
+ 		const roleChatNameLower = normalizeRoleIdentifier(data.chatname);
+ 		const useCaptureNameForRoles = altSourceType == "youtube" || altSourceType == "kick";
+ 		const primaryRoleIdentifier = useCaptureNameForRoles ? roleChatNameLower || roleUserIdLower : roleUserIdLower || roleChatNameLower;
+ 		const roleIdentifierMatches = name => {
+ 			name = normalizeRoleIdentifier(name);
+ 			if (!name) return false;
+ 			if (settings.matchRolesByDisplayName) {
+ 				return name === roleUserIdLower || name === roleChatNameLower;
+ 			}
+ 			return name === primaryRoleIdentifier;
+ 		};
+ 
+ 		if (settings.blacklistuserstoggle && settings.blacklistusers?.textsetting && (data.chatname || data.userid)) {
+ 			try {
+ 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
+ 				if (!userIdentifier) return null;
+ 
+-				const blacklist = settings.blacklistusers.textsetting
+-					.toLowerCase()
+-					.split(",")
+-					.map(entry => entry.trim())
+-					.filter(entry => entry);
++				const blacklist = getCachedRoleList(settings.blacklistusers.textsetting);
+ 
+ 				const isBlocked = blacklist.some(entry => {
+-					const [name, type] = entry.split(":").map(part => part.trim());
+-					if (!name) return false;
+-
+-					return type ? name === userIdentifier && type === altSourceType : name === userIdentifier;
++					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
+ 				});
+ 
+ 				if (isBlocked) {
+ 					return null;
+ 				}
+ 			} catch (e) {
+ 				errorlog(e);
+ 				return null;
+ 			}
+ 		}
+ 
+ 		if (settings.whitelistuserstoggle && settings.whitelistusers?.textsetting && (data.chatname || data.userid)) {
+ 			try {
+ 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
+ 				if (!userIdentifier) return null;
+ 
+-				const whitelist = settings.whitelistusers.textsetting
+-					.toLowerCase()
+-					.split(",")
+-					.map(entry => entry.trim())
+-					.filter(entry => entry);
++				const whitelist = getCachedRoleList(settings.whitelistusers.textsetting);
+ 
+ 				const isWhitelisted = whitelist.some(entry => {
+-					const [name, type] = entry.split(":").map(part => part.trim());
+-					if (!name) return false;
+-
+-					return type ? name === userIdentifier && type === altSourceType : name === userIdentifier;
++					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
+ 				});
+ 
+ 				if (!isWhitelisted) {
+ 					return null;
+ 				}
+ 			} catch (e) {
+ 				errorlog(e);
+ 				return null;
+ 			}
+ 		}
+ 
+ 		if (settings.mynameext) {
+ 			if (!settings.botnamesext) {
+ 				settings.botnamesext = settings.mynameext;
+ 			}
+ 			delete settings.mynameext;
+ 		}
+ 		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) {
+ 			try {
+ 				if (!roleUserIdLower && !roleChatNameLower) return;
+ 
+-				const bots = settings.botnamesext.textsetting
+-					.toLowerCase()
+-					.split(",")
+-					.map(entry => entry.trim())
+-					.filter(entry => entry);
++				const bots = getCachedRoleList(settings.botnamesext.textsetting);
+ 
+ 				data.bot = bots.some(entry => {
+-					const [name, type] = entry.split(":").map(part => part.trim());
+-					if (!name) return false;
+-
+-					const typeMatches = !type || type === altSourceType;
++					const typeMatches = !entry.type || entry.type === altSourceType;
+ 					if (!typeMatches) return false;
+ 
+-					return roleIdentifierMatches(name);
++					return roleIdentifierMatches(entry.name);
+ 				});
+ 			} catch (e) {
+ 				errorlog(e);
+ 				data.bot = false;
+ 			}
+ 		}
+ 		if (data.bot && settings.hidebotsext) {
+ 			return false;
+ 		}
+ 		if (data.bot && data.chatname && settings.hidebotnamesext) {
+ 			data.chatname = "";
+ 		}
+ 
+ 		if (!data.host && settings.hostnamesext?.textsetting && (data.chatname || data.userid)) {
+ 			try {
+ 				const userIdLower = (data.userid || "").toLowerCase().trim();
+ 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+ 				if (!userIdLower && !chatNameLower) return;
+ 
+-				const hosts = settings.hostnamesext.textsetting
+-					.toLowerCase()
+-					.split(",")
+-					.map(entry => entry.trim())
+-					.filter(entry => entry);
++				const hosts = getCachedRoleList(settings.hostnamesext.textsetting);
+ 
+ 				data.host = hosts.some(entry => {
+-					const [name, type] = entry.split(":").map(part => part.trim());
+-					if (!name) return false;
+-
+-					const typeMatches = !type || type === altSourceType;
++					const typeMatches = !entry.type || entry.type === altSourceType;
+ 					if (!typeMatches) return false;
+ 
+ 					if (settings.matchRolesByDisplayName) {
+-						return name === userIdLower || name === chatNameLower;
++						return entry.name === userIdLower || entry.name === chatNameLower;
+ 					}
+-					return name === (userIdLower || chatNameLower);
++					return entry.name === (userIdLower || chatNameLower);
+ 				});
+ 			} catch (e) {
+ 				errorlog(e);
+ 				data.host = false;
+ 			}
+ 		}
+ 		if (data.host && settings.hidehostsext) {
+ 			return false;
+ 		}
+ 
+ 		if ((data.hostReflection || (data.host && data.reflection)) && settings.nohostreflections) {
+ 			if (settings.chatbotRespondToReflections && settings.allowChatBot) {
+ 				data.suppressRelay = true;
+ 				console.log(`[ChatBot] Responding to host reflection from ${data.chatname || "unknown"} on ${data.type || "unknown"}.`);
+ 			} else {
+ 				return false;
+ 			}
+ 		}
+ 
+ 		if (settings.hostFirstSimilarOnly && data.host && hostMessageFilter.isHostDuplicate(data)) {
+ 			return false;
+ 		}
+ 
+ 		if (data.host && data.chatname && settings.hidehostnamesext) {
+ 			data.chatname = "";
+ 		}
+ 
+ 		// Strip @ from display names if enabled
+ 		if (settings.stripatext && data.chatname && data.chatname.startsWith("@")) {
+ 			// Preserve original @username in userid if userid is blank
+ 			if (!data.userid) {
+ 				data.userid = data.chatname;
+ 			}
+ 			// Remove the leading @
+ 			data.chatname = data.chatname.substring(1);
+ 		}
+ 
+ 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
+ 			try {
+ 				const userIdLower = (data.userid || "").toLowerCase().trim();
+ 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+ 				if (!userIdLower && !chatNameLower) return;
+ 
+-				const mods = settings.modnamesext.textsetting
+-					.toLowerCase()
+-					.split(",")
+-					.map(entry => entry.trim())
+-					.filter(entry => entry);
++				const mods = getCachedRoleList(settings.modnamesext.textsetting);
+ 
+ 				data.mod = mods.some(entry => {
+-					const [name, type] = entry.split(":").map(part => part.trim());
+-					if (!name) return false;
+-
+-					const typeMatches = !type || type === altSourceType;
++					const typeMatches = !entry.type || entry.type === altSourceType;
+ 					if (!typeMatches) return false;
+ 
+ 					if (settings.matchRolesByDisplayName) {
+-						return name === userIdLower || name === chatNameLower;
++						return entry.name === userIdLower || entry.name === chatNameLower;
+ 					}
+-					return name === (userIdLower || chatNameLower);
++					return entry.name === (userIdLower || chatNameLower);
+ 				});
+ 			} catch (e) {
+ 				errorlog(e);
+ 				data.mod = false;
+ 			}
+ 		}
+ 
+ 		if (data.mod && settings.hidemodsext) {
+ 			return false;
+ 		}
+ 		if (data.mod && data.chatname && settings.hidemodnamesext) {
+ 			data.chatname = "";
+ 		}
+ 
+ 		if (!data.admin && settings.adminnames?.textsetting && (data.chatname || data.userid)) {
+ 			try {
+ 				const userIdLower = (data.userid || "").toLowerCase().trim();
+ 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+ 				if (!userIdLower && !chatNameLower) return;
+ 
+-				const admins = settings.adminnames.textsetting
+-					.toLowerCase()
+-					.split(",")
+-					.map(entry => entry.trim())
+-					.filter(entry => entry);
++				const admins = getCachedRoleList(settings.adminnames.textsetting);
+ 
+ 				data.admin = admins.some(entry => {
+-					const [name, type] = entry.split(":").map(part => part.trim());
+-					if (!name) return false;
+-
+-					const typeMatches = !type || type === altSourceType;
++					const typeMatches = !entry.type || entry.type === altSourceType;
+ 					if (!typeMatches) return false;
+ 
+ 					if (settings.matchRolesByDisplayName) {
+-						return name === userIdLower || name === chatNameLower;
++						return entry.name === userIdLower || entry.name === chatNameLower;
+ 					}
+-					return name === (userIdLower || chatNameLower);
++					return entry.name === (userIdLower || chatNameLower);
+ 				});
+ 			} catch (e) {
+ 				errorlog(e);
+ 			}
+ 		}
+ 
+ 		if (!data.vip && settings.viplistusers?.textsetting && (data.chatname || data.userid)) {
+ 			try {
+ 				const userIdLower = (data.userid || "").toLowerCase().trim();
+ 				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+ 				if (!userIdLower && !chatNameLower) return;
+ 
+-				const vips = settings.viplistusers.textsetting
+-					.toLowerCase()
+-					.split(",")
+-					.map(entry => entry.trim())
+-					.filter(entry => entry);
++				const vips = getCachedRoleList(settings.viplistusers.textsetting);
+ 
+ 				data.vip = vips.some(entry => {
+-					const [name, type] = entry.split(":").map(part => part.trim());
+-					if (!name) return false;
+-
+-					const typeMatches = !type || type === altSourceType;
++					const typeMatches = !entry.type || entry.type === altSourceType;
+ 					if (!typeMatches) return false;
+ 
+ 					if (settings.matchRolesByDisplayName) {
+-						return name === userIdLower || name === chatNameLower;
++						return entry.name === userIdLower || entry.name === chatNameLower;
+ 					}
+-					return name === (userIdLower || chatNameLower);
++					return entry.name === (userIdLower || chatNameLower);
+ 				});
+ 			} catch (e) {
+ 				errorlog(e);
+ 			}
+ 		}
+ 
+ 		if (settings.removeContentImage) {
+ 			data.contentimg = "";
+ 			if (!data.chatmessage && !data.hasDonation && !(data.event && "meta" in data)) {
+ 				// there's no content worth sending I'm assuming
+ 				return false;
+ 			}
+ 		}
+ 
+ 		//
+ 		var skipRelay = false;
+ 
+ 		if (!data.timestamp) {
+ 			data.timestamp = Date.now();
+ 		}
+ 
+ 		if (settings.normalizeText && data.chatmessage) {
+ 			data.chatmessage = normalizeText(data.chatmessage, data.textonly || false);
+ 		}
+ 
+ 		// Check for bad words in the message (for Event Flow filtering)
+ 		if (data.chatmessage) {
+ 			data.containsBadWords = containsProfanity(data.chatmessage);
+ 		}
+ 
+-		if (settings.firsttimers && data.chatname && data.chatmessage && data.type) {
++		if (getSettingFlag("firsttimers") && !getSettingFlag("disableDB") && data.chatname && data.chatmessage && data.type) {
+ 			try {
+-				const checkResult = await messageStoreDB.checkUserTypeExists(data.userid || data.chatname, data.type);
++				const checkResult = await messageStoreDB.checkUserTypeExists(data.userid || data.chatname, data.type, data.chatname);
+ 				const exists = typeof checkResult === "object" ? checkResult.exists : !!checkResult;
++				const unavailable = typeof checkResult === "object" && checkResult.unavailable;
+ 				const lastActivityRaw = typeof checkResult === "object" ? checkResult.lastActivity : null;
+ 				const normalizedLastActivitySeconds = normalizeTimestampToSeconds(lastActivityRaw);
+ 
+-				if (!exists) {
++				if (!unavailable && !exists) {
+ 					data.firsttime = true;
+ 				}
+ 				if (normalizedLastActivitySeconds) {
+ 					data.lastactivity = normalizedLastActivitySeconds;
+ 				} else {
+ 					delete data.lastactivity; // no prior history; keep absent/null
+ 				}
+ 			} catch (e) {
+ 				console.error("Error checking first timer:", e);
+ 			}
+ 		}
+ 
++		prependFirstTimerBadge(data);
++
+ 		const returningBeepEnabled = !!(settings.beepreturning?.setting ?? settings.beepreturning);
+ 		const hasChatFields = typeof data.chatname === "string" && data.chatname.trim() !== "" && typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";
+ 		const skipReturningBeep = data.reflection || data.replay || data.history || data.reload || data.bot || data.host;
+ 
+ 		if (returningBeepEnabled && hasChatFields && !skipReturningBeep) {
+ 			const nowSeconds = normalizeTimestampToSeconds(data.timestamp) || Math.round(Date.now() / 1000);
+ 			const lastActivitySeconds = normalizeTimestampToSeconds(data.lastactivity);
+ 			const inactiveForEightHours = Number.isFinite(lastActivitySeconds) && nowSeconds && nowSeconds - lastActivitySeconds >= 8 * 60 * 60;
+ 
+ 			if (data.firsttime || inactiveForEightHours) {
+ 				playReturningBeep();
+ 			}
+ 		}
+ 
+ 		if (settings.joke && data.chatmessage && data.chatmessage.toLowerCase() === "!joke") {
+ 			////console.log".");
+ 			//if (Date.now() - messageTimeout > 5100) {
+ 			const score = parseInt(Math.random() * 378);
+ 			const joke = jokes[score];
+ 
+ 			//messageTimeout = Date.now();
+ 			const jokeMessage = { botRoleControlled: true };
+ 
+ 			if (data.reflection) {
+ 				jokeMessage.response = joke["setup"];
+ 				sendMessageToTabs(jokeMessage, false, null, true, false, 5100);
+ 
+ 				const reflectedSetupMessage = {
+ 					chatname: data.chatname,
+ 					chatmessage: joke["setup"],
+ 					chatimg: data.chatimg,
+ 					type: data.type,
+ 					tid: data.tid
+ 				};
+ 				setTimeout(
+ 					function (delayedMessage) {
+ 						sendToDestinations(delayedMessage);
+ 					},
+ 					100,
+ 					reflectedSetupMessage
+ 				);
+ 			} else {
+ 				if (data.tid) {
+ 					jokeMessage.tid = data.tid;
+ 				}
+ 				jokeMessage.response = "@" + data.chatname + ", " + joke["setup"];
+ 				sendMessageToTabs(jokeMessage, false, null, false, false, 5100);
+ 			}
+ 
+ 			skipRelay = true; // lets not relay "!joke"
+ 
+ 			let punch = "@" + data.chatname + ".. " + joke["punchline"];
+ 
+ 			if (data.reflection) {
+ 				punch = ".. " + joke["punchline"];
+ 				const reflectedPunchlineMessage = {
+ 					chatname: data.chatname,
+ 					chatmessage: punch,
+ 					chatimg: data.chatimg,
+ 					type: data.type,
+ 					tid: data.tid
+ 				};
+ 				setTimeout(
+ 					function (delayedMessage) {
+ 						sendToDestinations(delayedMessage);
+ 					},
+ 					5000,
+ 					reflectedPunchlineMessage
+ 				);
+ 			}
+ 
+ 			setTimeout(
+ 				function (tId, punchline, reflection) {
+ 					var message = {};
+ 					if (tId && !reflection) {
+ 						message.tid = tId;
+ 					}
+ 					message.response = punchline;
+ 					sendMessageToTabs(message, false, null, reflection, false, false);
+ 				},
+ 				5000,
+ 				data.tid,
+ 				punch,
+ 				data.reflection
+ 			);
+ 			//}
+ 		}
+ 
+ 		if (settings.autohi && data.chatname && data.chatmessage && !data.reflection) {
+ 			if (["hi", "sup", "hello", "hey", "yo", "hi!", "hey!"].includes(data.chatmessage.toLowerCase())) {
+ 				const hiMessage = { botRoleControlled: true };
+ 				if (data.tid) {
+ 					hiMessage.tid = data.tid;
+ 				}
+ 				hiMessage.response = "Hi, @" + data.chatname + " !";
+ 				sendMessageToTabs(hiMessage, false, null, false, false, 60000);
+ 			}
+ 		}
+ 
+ 		if (settings.queuecommand && data.chatmessage && data.chatmessage.startsWith("!queue ")) {
+ 			try {
+ 				data.chatmessage = data.chatmessage.split("!queue ")[1].trim();
+ 				data.queueme = true;
+ 			} catch (e) {
+ 				errorlog(e);
+ 			}
+ 		}
+ 
+ 		// Question identification logic
+ 		if (settings.identifyQuestions && data.chatmessage) {
+ 			// Default keywords to identify questions
+-			const questionKeywords = settings.questionKeywords?.textsetting?.split(",").map(k => k.trim()) || ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
++			const questionKeywords = settings.questionKeywords && settings.questionKeywords.textsetting !== undefined && settings.questionKeywords.textsetting !== null ? getCachedCommaList(settings.questionKeywords.textsetting, false, true) : DEFAULT_QUESTION_KEYWORDS;
+ 
+ 			// Check if message contains any question keywords
+ 			const messageText = data.chatmessage.toLowerCase();
+ 			const isQuestion = questionKeywords.some(keyword => {
+ 				const keywordLower = keyword.toLowerCase();
+ 				if (keywordLower === "?") {
+ 					return messageText.includes(keywordLower);
+ 				}
+ 				// For word-based keywords, check word boundaries
+ 				const wordRegex = new RegExp(`\\b${keywordLower}\\b`);
+ 				return wordRegex.test(messageText);
+ 			});
+ 
+ 			if (isQuestion) {
+ 				data.question = true;
+ 			}
+ 		}
+ 
+ 		// Handle Spotify commands
+ 		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
+ 			// Pass message data for role-based permission checking
+ 			spotify
+ 				.handleCommand(originalChatMessage || data.chatmessage, data)
+ 				.then(response => {
+ 					if (response) {
+ 						const botResponse = {
+ 							chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+ 							chatbadges: "",
+ 							backgroundColor: "",
+ 							textColor: "",
+ 							chatmessage: response,
+ 							chatimg: "https://socialstream.ninja/icons/bot.png",
+ 							hasDonation: "",
+ 							membership: "",
+ 							isRelay: false,
+ 							type: "spotify",
+ 							bot: "spotify",
+ 							timestamp: Date.now()
+ 						};
+ 
+ 						sendToS10({ ...botResponse });
+ 						sendToSSC({ ...botResponse });
+ 						setTimeout(() => {
+ 							sendToDestinations({ ...botResponse });
+ 						}, 50);
+ 					}
+ 				})
+ 				.catch(err => {
+ 					console.warn("Spotify command error:", err);
+ 				});
+ 		}
+ 
+ 		if (settings.dice && data.chatname && data.chatmessage && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
+ 			//	//console.log"dice detected");
+ 			//if (Date.now() - messageTimeout > 5100) {
+ 
+ 			let maxRoll = data.chatmessage.toLowerCase().split(" ");
+ 			if (maxRoll.length == 1) {
+ 				maxRoll = 6;
+ 			} else {
+ 				maxRoll = parseInt(maxRoll[1]) || 6;
+ 			}
+ 
+ 			let roll = Math.floor(Math.random() * maxRoll) + 1;
+ 
+ 			//messageTimeout = Date.now();
+ 			const diceResultMessage = { botRoleControlled: true };
+ 
+ 			if (data.tid) {
+ 				diceResultMessage.tid = data.tid;
+ 				diceResultMessage.response = "@" + data.chatname + ", the bot rolled you a " + roll + ".";
+ 				sendMessageToTabs(diceResultMessage, false, null, true, false, 5100);
+ 			}
+ 
+ 			var msg2 = { botRoleControlled: true };
+ 			if (data.tid) {
+ 				msg2.tid = data.tid;
+ 			}
+ 			msg2.response = data.chatname + " was rolled a " + roll + " (out of " + maxRoll + ")";
+ 			sendMessageToTabs(msg2, true, null, true, false, 5100);
+@@ -15420,246 +15589,246 @@ async function applyBotActions(data, tab = false) {
+ 				sendToDestinations(data);
+ 				return null;
+ 			}
+ 		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event && !blockChannelPointRelay) {
+ 			sendToS10(data, false, true); // we'll handle the relay logic here instead
+ 		}
+ 
+ 		// Social Stream Chat relay - send all messages to chat.socialstream.ninja
+ 		if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting && !data.bot && data.chatmessage && data.chatname && !data.event && !blockChannelPointRelay) {
+ 			sendToSSC(data, false, true);
+ 		}
+ 		//console.logdata);
+ 
+ 		const forwardCommandDestinations = [];
+ 		if (settings.forwardcommands2twitch) {
+ 			forwardCommandDestinations.push("twitch");
+ 		}
+ 		if (settings.forwardcommands2kick) {
+ 			forwardCommandDestinations.push("kick");
+ 		}
+ 		if (settings.forwardcommands2youtube) {
+ 			forwardCommandDestinations.push("youtube");
+ 		}
+ 		if (forwardCommandDestinations.length && data.type && !skipRelay && data.chatmessage && data.chatname && !data.event && tab && data.tid && !data.bot && data.chatmessage.startsWith("!")) {
+ 			let sourceType = String(data.type).toLowerCase();
+ 
+ 			if (data.reflection && forwardCommandDestinations.includes(sourceType)) {
+ 				return null;
+ 			}
+ 
+ 			if (!data.reflection) {
+ 				let commandMessage = data.chatmessage;
+ 
+ 				if (!data.textonly) {
+ 					var textArea = document.createElement("textarea");
+ 					textArea.innerHTML = commandMessage;
+ 					commandMessage = textArea.value;
+ 				}
+ 				commandMessage = commandMessage.replace(/(<([^>]+)>)/gi, "");
+ 				commandMessage = commandMessage.replace(/[#@]/g, "");
+ 				commandMessage = commandMessage.replace(/\.(?=\S(?!$))/g, " ");
+ 				commandMessage = commandMessage.trim();
+ 
+ 				if (commandMessage) {
+ 					for (const destination of forwardCommandDestinations) {
+ 						if (destination === sourceType) {
+ 							continue;
+ 						}
+ 
+ 						const msg = {
+ 							tid: data.tid,
+ 							url: tab.url,
+ 							destination,
+ 							response: commandMessage
+ 						};
+ 
+ 						sendMessageToTabs(msg, true, data, true, false, 1000);
+ 					}
+ 				}
+ 			}
+ 		}
+ 
+ 		if (data.chatmessage && !data.chatbotReflection) {
+ 			const botReplyEvents = settings["botReply"] || [];
+ 			for (const id of botReplyEvents) {
+ 				const event = settings[`botReplyMessageEvent${id}`];
+ 				const command = settings[`botReplyMessageCommand${id}`]?.textsetting;
+ 				const response = settings[`botReplyMessageValue${id}`]?.textsetting;
+ 
+ 				if (!event?.setting || !command || !response) continue;
+ 
+ 				const isFullMatch = settings.botReplyMessageFull;
+ 				const messageText = data.textContent || data.chatmessage;
+ 				const messageMatches = commandAliasMatches(command, messageText, isFullMatch ? "exact" : "contains");
+ 
+ 				if (!messageMatches) continue;
+ 
+ 				// Check source restrictions
+ 				const sources = settings[`botReplyMessageSource${id}`]?.textsetting;
+ 				if (sources?.trim()) {
+-					const sourceList = sources.split(",").map(s => s.trim().toLowerCase());
++					const sourceList = getCachedCommaList(sources, true, true);
+ 					if (!sourceList.includes(data.type?.trim().toLowerCase())) {
+ 						continue;
+ 					}
+ 				}
+ 
+ 				// Send response
+ 				const timeout = settings[`botReplyMessageTimeout${id}`]?.numbersetting || 0;
+ 				const msg = {
+ 					response,
+ 					outgoingOrigin: "chatbot",
+ 					...(data.tid && !settings[`botReplyAll${id}`] && { tid: data.tid })
+ 				};
+ 
+ 				sendMessageToTabs(msg, false, null, false, false, timeout);
+ 				break; // Stop after first match
+ 			}
+ 
+ 			const midiEvents = settings["midiCommand"] || [];
+ 			for (const id of midiEvents) {
+ 				const event = settings[`midievent${id}`];
+ 				const command = settings[`midicommand${id}`]?.textsetting;
+ 				const note = settings[`midinote${id}`]?.numbersetting;
+ 				const device = settings[`mididevice${id}`]?.optionsetting || "";
+ 
+ 				if (!event?.setting || !command || !note) continue;
+ 
+ 				if (commandAliasMatches(command, data.chatmessage, "word")) {
+ 					triggerMidiNote(parseInt(note), device);
+ 					break;
+ 				}
+ 			}
+ 		}
+ 
+ 		if ((settings.blacklist || settings.blacklistblockmessages) && data.chatmessage) {
+ 			try {
+ 				const filteredMessage = filterProfanity(data.chatmessage);
+ 				const hasFilteredProfanity = filteredMessage !== data.chatmessage;
+ 
+ 				if (hasFilteredProfanity && settings.blacklistblockmessages) {
+ 					return null;
+ 				}
+ 
+ 				if (settings.blacklist) {
+ 					data.chatmessage = filteredMessage;
+ 				}
+ 			} catch (e) {
+ 				console.error(e);
+ 			}
+ 		}
+ 		if (settings.blacklistname && data.chatname) {
+ 			try {
+ 				data.chatname = filterProfanity(data.chatname);
+ 			} catch (e) {
+ 				console.error(e);
+ 			}
+ 		}
+ 
+ 		if (settings.goodwordslist) {
+ 			if (goodWordsHashTable) {
+ 				try {
+ 					data.chatmessage = passGoodWords(data.chatmessage);
+ 				} catch (e) {
+ 					console.error(e);
+ 				}
+ 			}
+ 		}
+ 
+ 		if (settings.highlightevent && settings.highlightevent.textsetting.trim() && data.chatmessage && data.event) {
+-			const eventTexts = settings.highlightevent.textsetting.split(",").map(text => text.trim());
++			const eventTexts = getCachedCommaList(settings.highlightevent.textsetting, false, true);
+ 			const messageText = data.textContent || data.chatmessage;
+ 			if (eventTexts.some(text => messageText.includes(text))) {
+ 				data.highlightColor = "#fff387";
+ 			}
+ 		}
+ 
+ 		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
+-			const wordTexts = settings.highlightword.textsetting.split(",").map(text => text.trim());
++			const wordTexts = getCachedCommaList(settings.highlightword.textsetting, false, true);
+ 			const messageText = data.textContent || data.chatmessage;
+ 			if (wordTexts.some(text => messageText.includes(text))) {
+ 				data.highlightColor = "#fff387";
+ 			}
+ 		}
+ 
+ 		if (settings.highlightHostMentions && settings.hostnamesext?.textsetting && data.chatmessage) {
+-			const rawHosts = settings.hostnamesext.textsetting.split(",");
++			const rawHosts = getCachedCommaList(settings.hostnamesext.textsetting, false, true);
+ 			const messageText = (data.textContent || data.chatmessage || "").toLowerCase();
+ 
+ 			const hasMention = rawHosts.some(entry => {
+ 				const trimmed = entry.trim();
+ 				if (!trimmed) {
+ 					return false;
+ 				}
+ 
+ 				const [name] = trimmed.toLowerCase().split(":");
+ 				if (!name) {
+ 					return false;
+ 				}
+ 
+ 				const handle = name.startsWith("@") ? name : `@${name}`;
+ 				return messageText.includes(handle);
+ 			});
+ 
+ 			if (hasMention) {
+ 				data.highlightColor = data.highlightColor || "#fff387";
+ 			}
+ 		}
+ 
+ 		if (settings.relaydonos && data.hasDonation && data.chatname && data.type) {
+ 			//if (Date.now() - messageTimeout > 100) {
+ 			// respond to "1" with a "1" automatically; at most 1 time per 100ms.
+ 
+ 			const messageText = data.textContent || data.chatmessage;
+ 			if (messageText.includes(". Thank you") && messageText.includes(" donated ")) {
+ 				return null;
+ 			} // probably a reply
+ 
+ 			//messageTimeout = Date.now();
+ 			const donationRelayMessage = {};
+ 			if (data.tid) {
+ 				donationRelayMessage.tid = data.tid;
+ 			}
+ 			if (tab) {
+ 				donationRelayMessage.url = tab.url;
+ 			}
+ 
+ 			donationRelayMessage.relayRoleControlled = true;
+ 			donationRelayMessage.response = sanitizeRelay(data.chatname, true, "Someone") + " on " + data.type + " donated " + sanitizeRelay(data.hasDonation, true) + ". Thank you";
+ 			sendMessageToTabs(donationRelayMessage, true, null, false, false, 100);
+ 			//}
+ 		}
+ 
+ 		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && data.chatmessage.indexOf("!giphy") != -1 && !data.contentimg) {
+ 			let giphySearchTerm = data.chatmessage;
+ 			giphySearchTerm = giphySearchTerm.replaceAll("!giphy", "").trim();
+ 			if (giphySearchTerm) {
+ 				let giphyOrder = 0;
+ 				if (settings.randomgif) {
+ 					giphyOrder = parseInt(Math.random() * 15);
+ 				}
+ 				const giphyUrl = await fetch("https://api.giphy.com/v1/gifs/search?q=" + encodeURIComponent(giphySearchTerm) + "&api_key=" + settings.giphyKey.textsetting + "&limit=1&offset=" + giphyOrder)
+ 					.then(response => response.json())
+ 					.then(response => {
+ 						try {
+ 							return response.data[0].images.downsized_large.url;
+ 						} catch (e) {
+ 							console.error(e);
+ 							return false;
+ 						}
+ 					});
+ 				if (giphyUrl) {
+ 					data.contentimg = giphyUrl;
+ 					if (settings.hidegiphytrigger) {
+ 						data.chatmessage = "";
+ 					}
+ 				} else if (!data.hasDonation && !data.contentimg) {
+ 					return false;
+ 				}
+ 			}
+ 		} else if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("#") != -1 && !data.contentimg) {
+ 			const messageText = data.textContent || data.chatmessage;
+ 			const xx = messageText.split(" ");
+ 			for (let tagIndex = 0; tagIndex < xx.length; tagIndex++) {
+ 				let word = xx[tagIndex];
+ 				if (!word.startsWith("#")) {
+ 					continue;
+@@ -16932,186 +17101,241 @@ function buildFakeCommerceMeta() {
+ 		{ title: "Copper/Other Numismatic Item", price: 1, quantity: 985, action: "Pre-bid" },
+ 		{ title: "SPONSOR A GIVEAWAY Supercharged", price: 85, quantity: 94, action: "Buy Now" },
+ 		{ title: "Trump Foil Note", price: 10, quantity: 10, action: "Save & Notify Me" },
+ 		{ title: "Whatnot Starter Kit Pro 5 with Whatty Plush", price: 175, quantity: 1, action: "Buy Now" },
+ 		{ title: "Guardhouse Tetra Snaplocks For SILVER EAGLES", price: 65, quantity: 5, action: "Buy Now" },
+ 		{ title: "Qty 1 Package of Qty 525 Avery 6737 Labels", price: 6, quantity: 91, action: "Buy Now" }
+ 	];
+ 	var giveawayTitles = ["Slab, Silver and/or Numismatic on Screen #10", "Slab, Silver and/or Numismatic on Screen #11", "Slab, Silver and/or Numismatic on Screen #12", "Slab, Silver and/or Numismatic on Screen #13", "Slab, Silver and/or Numismatic on Screen #14", "Slab, Silver and/or Numismatic on Screen #15"];
+ 	var shuffled = productCatalog.slice().sort(function () {
+ 		return Math.random() - 0.5;
+ 	});
+ 	var productCount = fakeMetaInt(4, Math.min(7, shuffled.length));
+ 	var selected = shuffled.slice(0, productCount).map(function (item) {
+ 		var row = {
+ 			title: item.title,
+ 			price: item.price,
+ 			priceText: "$" + item.price.toLocaleString(),
+ 			quantity: item.quantity,
+ 			quantityText: "Qty. " + item.quantity.toLocaleString(),
+ 			action: item.action
+ 		};
+ 		if (item.action === "Pre-bid") {
+ 			var bids = fakeMetaInt(0, 9);
+ 			row.bids = bids;
+ 			row.bidsText = bids + (bids === 1 ? " bid" : " bids");
+ 		}
+ 		return row;
+ 	});
+ 
+ 	var giveaways = giveawayTitles.slice(0, fakeMetaInt(3, 6)).map(function (title) {
+ 		return {
+ 			title: title,
+ 			quantity: 1,
+ 			quantityText: "Qty. 1"
+ 		};
+ 	});
+ 
+ 	var spotsTotal = fakeMetaInt(200, 900);
+ 	var spotsRemaining = fakeMetaInt(0, spotsTotal);
+ 	var surpriseTitle = fakeMetaPick(["500 Spot Silver Slab Mega Set", "Mystery Numismatic Pull Game", "Weekend Mega Breaker Lot"]);
+ 
+ 	return {
+ 		products: {
+ 			total: selected.length,
+ 			items: selected
+ 		},
+ 		surpriseSets: {
+ 			total: 1,
+ 			items: [
+ 				{
+ 					title: surpriseTitle,
+ 					progress: Math.max(0, Math.min(100, Math.round(((spotsTotal - spotsRemaining) / spotsTotal) * 100))),
+ 					remaining: spotsRemaining,
+ 					totalSpots: spotsTotal,
+ 					remainingText: spotsRemaining.toLocaleString() + " of " + spotsTotal.toLocaleString() + " left",
+ 					statusText: "Surprise Set Filling"
+ 				}
+ 			]
+ 		},
+ 		upcomingGiveaways: {
+ 			total: giveaways.length,
+ 			items: giveaways
+ 		}
+ 	};
+ }
+ 
+ function buildFakeViewerUpdates() {
+ 	var allPlatforms = ["youtube", "twitch", "kick", "tiktok", "whatnot", "facebook"];
+ 	var shuffled = allPlatforms.slice().sort(function () {
+ 		return Math.random() - 0.5;
+ 	});
+ 	var count = fakeMetaInt(2, 5);
+ 	var selected = shuffled.slice(0, count);
+ 	var meta = {};
+ 	selected.forEach(function (platform) {
+ 		meta[platform] = fakeMetaInt(9, 1500);
+ 	});
+ 	return meta;
+ }
+ 
++function buildFakeHypeTrainMeta() {
++	var now = new Date();
++	var expiresAt = new Date(now.getTime() + 2 * 60 * 1000);
++	return {
++		phase: "progress",
++		id: "fake-hype-train",
++		broadcasterUserId: "123456",
++		broadcasterUserLogin: "channel_login",
++		broadcasterUserName: "Channel Name",
++		total: 360,
++		progress: 360,
++		goal: 500,
++		level: 1,
++		topContributions: [
++			{
++				userId: "101",
++				userLogin: "ava",
++				userName: "Ava",
++				type: "bits",
++				total: 250
++			},
++			{
++				userId: "102",
++				userLogin: "jess",
++				userName: "Jess",
++				type: "subscription",
++				total: 100
++			}
++		],
++		lastContribution: {
++			userId: "101",
++			userLogin: "ava",
++			userName: "Ava",
++			type: "bits",
++			total: 100
++		},
++		sharedTrainParticipants: [],
++		startedAt: now.toISOString(),
++		expiresAt: expiresAt.toISOString(),
++		endedAt: "",
++		cooldownEndsAt: "",
++		isSharedTrain: false,
++		trainType: "regular",
++		allTimeHighLevel: 2,
++		allTimeHighTotal: 1000,
++		eventSubType: "channel.hype_train.progress"
++	};
++}
++
+ function triggerFakeMetaMessage(mode) {
+ 	var normalized = String(mode || "random")
+ 		.toLowerCase()
+ 		.trim();
+ 	if (!normalized || normalized === "random") {
+-		normalized = fakeMetaPick(["auction", "commerce", "viewers"]) || "auction";
++		normalized = fakeMetaPick(["auction", "commerce", "viewers", "hype"]) || "auction";
+ 	}
+ 
+ 	var payload = null;
+ 	if (normalized === "auction") {
+ 		payload = {
+ 			type: "whatnot",
+ 			event: "auction_update",
+ 			meta: buildFakeAuctionMeta()
+ 		};
+ 	} else if (normalized === "commerce") {
+ 		payload = {
+ 			type: "whatnot",
+ 			event: "commerce_update",
+ 			meta: buildFakeCommerceMeta()
+ 		};
+ 	} else if (normalized === "viewers" || normalized === "viewer" || normalized === "viewer_updates") {
+ 		payload = {
+ 			event: "viewer_updates",
+ 			meta: buildFakeViewerUpdates()
+ 		};
++	} else if (normalized === "hype" || normalized === "hype_train") {
++		payload = {
++			type: "twitch",
++			event: "hype_train",
++			meta: buildFakeHypeTrainMeta()
++		};
+ 	} else {
+ 		payload = {
+ 			type: "whatnot",
+ 			event: "auction_update",
+ 			meta: buildFakeAuctionMeta()
+ 		};
+ 	}
+ 
+ 	sendToDestinations(payload);
+ }
+ 
+ async function triggerFakeRandomMessage() {
+ 	var data = {};
+ 	let attempts = 0;
+ 	const maxAttempts = 5;
+ 
+ 	// Keep the popup's legacy fake chat identities stable; alert-specific test personas live elsewhere.
+ 	// Keep generating new messages until we get one that's different from the last one
+ 	// or until we've tried a reasonable number of times
+ 	do {
+ 		data = {};
+ 		data.chatname = "John Doe";
+ 		data.nameColor = "";
+ 		data.chatbadges = "";
+ 		data.backgroundColor = "";
+ 		data.textColor = "";
+ 		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
+ 		data.chatimg = "";
+ 		data.type = "youtube";
+ 
+ 		if (Math.random() > 0.9) {
+ 			data.hasDonation = "2500 gold";
+ 			data.membership = "";
+ 			data.chatname = "Bob";
+ 			data.chatbadges = [];
+ 			var html = {};
+ 			html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
+ 			html.type = "svg";
+ 			data.chatbadges.push(html);
+ 		} else if (Math.random() > 0.8) {
+ 			data.hasDonation = "3 hearts";
+ 			data.membership = "";
+ 			data.chatmessage = "";
+ 			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
+ 			data.chatname = "Lucy";
+ 			data.type = "youtubeshorts";
+ 		} else if (Math.random() > 0.7) {
+ 			data.hasDonation = "";
+ 			data.membership = "";
+ 			data.chatimg = "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
+ 			data.chatname = "vdoninja";
+ 			data.type = "twitch";
+ 			data.event = "test";
+ 			var score = parseInt(Math.random() * 378);
+ 			data.chatmessage = jokes[score]["setup"] + "..  " + jokes[score]["punchline"] + " 😊";
+ 		} else if (Math.random() > 0.6) {
+ 			data.hasDonation = "";
+ 			data.membership = "";
+ 			data.chatimg = "https://socialstream.ninja/media/sampleavatar.png";
+ 			data.chatname = "Steve";
+ 
+ 			data.vip = true;
+ 			data.chatmessage = '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦 https://vdo.ninja/';
+ 		} else if (Math.random() > 0.5) {
+ 			data.hasDonation = "";
+ 			data.nameColor = "#107516";
+ 			data.membership = "SPONSORSHIP";
+ 			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/media/sampleavatar.png";
+ 			data.chatname = "Steve_" + randomDigits();
+ 			data.type = parseInt(Math.random() * 2) ? "slack" : "facebook";
+ 			data.chatmessage = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
+ 		} else if (Math.random() > 0.4) {
+ 			data.hasDonation = "";
+ 			data.highlightColor = "pink";
+ 			data.nameColor = "lightblue";
+ 			data.chatname = "NewGuest";
+ 			data.type = "twitch";
+ 			data.chatmessage = "hi";
+ 			data.chatbadges = ["https://vdo.ninja/media/icon.png", "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj", "https://socialstream.ninja/icons/announcement.png"];
+ 		} else if (Math.random() > 0.3) {
