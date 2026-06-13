@@ -361,6 +361,16 @@
         }
     }
     
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function stripHtml(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
     function dropEmoji(username) {
         if (dropCooldown) {
             sendResponse(`@${username}, wait a moment before dropping!`);
@@ -488,7 +498,7 @@
             const div = document.createElement('div');
             div.className = 'contributor-entry';
             div.innerHTML = `
-                <span>${username}</span>
+                <span>${escapeHtml(username)}</span>
                 <span>${blocks} blocks</span>
             `;
             list.appendChild(div);
@@ -540,11 +550,15 @@
         }
         
         if (!data.chatmessage || !data.chatname) return;
-        
-        const message = data.chatmessage.trim().toLowerCase();
-        
+
+        let rawMessage = data.chatmessage;
+        if (!data.textonly) {
+            rawMessage = stripHtml(rawMessage);
+        }
+        const message = rawMessage.trim().toLowerCase();
+
         if (message === '!drop') {
-            dropEmoji(data.chatname);
+            dropEmoji(stripHtml(data.chatname));
         }
     }
     
@@ -577,26 +591,43 @@
     
     // Handle WebSocket if server parameter provided
     if (urlParams.has('server')) {
-        const socketserver = new WebSocket(urlParams.get('server'));
-        
-        socketserver.onopen = function() {
-            socketserver.send(JSON.stringify({ 
-                join: sessionId.split(",")[0], 
-                out: 2, 
-                in: 1 
-            }));
-        };
-        
-        socketserver.onmessage = function(event) {
-            if (event.data) {
-                try {
-                    const data = JSON.parse(event.data);
-                    processData(data);
-                } catch (e) {
-                    console.error('WebSocket parse error:', e);
+        const serverUrl = urlParams.get('server');
+        let socketserver = null;
+        let reconnectTimeout = null;
+
+        function connectWebSocket() {
+            socketserver = new WebSocket(serverUrl);
+
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({
+                    join: sessionId.split(",")[0],
+                    out: 2,
+                    in: 1
+                }));
+            };
+
+            socketserver.onclose = function() {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = setTimeout(connectWebSocket, 5000);
+            };
+
+            socketserver.onerror = function() {
+                try { socketserver.close(); } catch (e) {}
+            };
+
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
                 }
-            }
-        };
+            };
+        }
+
+        connectWebSocket();
     }
     
     // Demo mode

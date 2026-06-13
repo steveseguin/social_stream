@@ -337,7 +337,17 @@
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session') || 'test';
     const password = urlParams.get('password') || 'false';
-    
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function stripHtml(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
     class Racer {
         constructor(username, type, laneNumber) {
             this.username = username;
@@ -438,7 +448,7 @@
             betDiv.className = 'bet-entry';
             betDiv.innerHTML = `
                 <span>${PET_TYPES[racer.type].emoji}</span>
-                <span>${racer.username}</span>
+                <span>${escapeHtml(racer.username)}</span>
                 <span style="opacity: 0.7; font-size: 12px;">${PET_TYPES[racer.type].name}</span>
             `;
             betList.appendChild(betDiv);
@@ -457,6 +467,7 @@
             
             if (countdown <= 0) {
                 clearInterval(raceCountdown);
+                raceCountdown = null;
                 startRace();
             }
         }, 1000);
@@ -516,14 +527,14 @@
         const winnerDiv = document.getElementById('winner-announcement');
         let winnerHtml = `
             <div style="font-size: 64px;">${PET_TYPES[winner.type].emoji}</div>
-            <div>🏆 ${winner.username} WINS! 🏆</div>
+            <div>🏆 ${escapeHtml(winner.username)} WINS! 🏆</div>
         `;
-        
+
         if (second) {
-            winnerHtml += `<div style="font-size: 24px; margin-top: 10px;">🥈 ${second.username}</div>`;
+            winnerHtml += `<div style="font-size: 24px; margin-top: 10px;">🥈 ${escapeHtml(second.username)}</div>`;
         }
         if (third) {
-            winnerHtml += `<div style="font-size: 20px;">🥉 ${third.username}</div>`;
+            winnerHtml += `<div style="font-size: 20px;">🥉 ${escapeHtml(third.username)}</div>`;
         }
         
         winnerDiv.innerHTML = winnerHtml;
@@ -548,6 +559,10 @@
         racers.forEach(racer => racer.remove());
         racers.clear();
         raceInProgress = false;
+        if (raceCountdown) {
+            clearInterval(raceCountdown);
+            raceCountdown = null;
+        }
         updateBettingBoard();
         document.getElementById('race-status').textContent = '🏁 Ready for next race!';
         document.getElementById('race-timer').textContent = 'Type !join to race';
@@ -638,14 +653,18 @@
         }
         
         if (!data.chatmessage || !data.chatname) return;
-        
-        const message = data.chatmessage.trim().toLowerCase();
+
+        let rawMessage = data.chatmessage;
+        if (!data.textonly) {
+            rawMessage = stripHtml(rawMessage);
+        }
+        const message = rawMessage.trim().toLowerCase();
         const parts = message.split(' ');
         const command = parts[0];
-        
+
         if (command === '!join') {
             const petType = parts[1]; // Optional pet type
-            processJoinRace(data.chatname, petType, data.type);
+            processJoinRace(stripHtml(data.chatname), petType, data.type);
         }
     }
     
@@ -673,26 +692,43 @@
     
     // Handle WebSocket connection if server parameters are provided
     if (urlParams.has('server')) {
-        const socketserver = new WebSocket(urlParams.get('server'));
-        
-        socketserver.onopen = function() {
-            socketserver.send(JSON.stringify({ 
-                join: sessionId.split(",")[0], 
-                out: 2, 
-                in: 1 
-            }));
-        };
-        
-        socketserver.onmessage = function(event) {
-            if (event.data) {
-                try {
-                    const data = JSON.parse(event.data);
-                    processData(data);
-                } catch (e) {
-                    console.error('WebSocket parse error:', e);
+        const serverUrl = urlParams.get('server');
+        let socketserver = null;
+        let reconnectTimeout = null;
+
+        function connectWebSocket() {
+            socketserver = new WebSocket(serverUrl);
+
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({
+                    join: sessionId.split(",")[0],
+                    out: 2,
+                    in: 1
+                }));
+            };
+
+            socketserver.onclose = function() {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = setTimeout(connectWebSocket, 5000);
+            };
+
+            socketserver.onerror = function() {
+                try { socketserver.close(); } catch (e) {}
+            };
+
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
                 }
-            }
-        };
+            };
+        }
+
+        connectWebSocket();
     }
     
     // Add sample races for testing

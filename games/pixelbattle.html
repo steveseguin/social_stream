@@ -634,7 +634,7 @@
                 const entry = document.createElement('div');
                 entry.className = 'artist-entry';
                 entry.innerHTML = `
-                    <span><span class="artist-rank">#${index + 1}</span>${artist}</span>
+                    <span><span class="artist-rank">#${index + 1}</span>${escapeHtml(artist)}</span>
                     <span>${count}</span>
                 `;
                 leaderboardList.appendChild(entry);
@@ -652,6 +652,16 @@
             document.getElementById('canvas-progress').textContent = gameState.canvasProgress.toFixed(1);
             
             updateLeaderboard();
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
         }
 
         // Parse paint commands from chat
@@ -694,9 +704,12 @@
             
             if (!data || !data.chatmessage || !data.chatname) return;
 
-            const username = data.chatname;
-            const message = data.chatmessage;
-            
+            const username = stripHtml(data.chatname);
+            let message = data.chatmessage;
+            if (!data.textonly) {
+                message = stripHtml(message);
+            }
+
             // Try to parse paint command
             const paintCommand = parsePaintCommand(message);
             if (paintCommand) {
@@ -731,26 +744,43 @@
         
         // Handle WebSocket connection
         if (urlParams.has('server')) {
-            const socketserver = new WebSocket(urlParams.get('server'));
-            
-            socketserver.onopen = function() {
-                socketserver.send(JSON.stringify({ 
-                    join: sessionId.split(",")[0], 
-                    out: 2, 
-                    in: 1 
-                }));
-            };
-            
-            socketserver.onmessage = function(event) {
-                if (event.data) {
-                    try {
-                        const data = JSON.parse(event.data);
-                        processData(data);
-                    } catch (e) {
-                        console.error('WebSocket parse error:', e);
+            const serverUrl = urlParams.get('server');
+            let socketserver = null;
+            let reconnectTimeout = null;
+
+            function connectWebSocket() {
+                socketserver = new WebSocket(serverUrl);
+
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({
+                        join: sessionId.split(",")[0],
+                        out: 2,
+                        in: 1
+                    }));
+                };
+
+                socketserver.onclose = function() {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = setTimeout(connectWebSocket, 5000);
+                };
+
+                socketserver.onerror = function() {
+                    try { socketserver.close(); } catch (e) {}
+                };
+
+                socketserver.onmessage = function(event) {
+                    if (event.data) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            processData(data);
+                        } catch (e) {
+                            console.error('WebSocket parse error:', e);
+                        }
                     }
-                }
-            };
+                };
+            }
+
+            connectWebSocket();
         }
         
         // Demo mode

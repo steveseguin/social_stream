@@ -722,9 +722,11 @@
             
             if (!data || !data.chatmessage || !data.chatname) return;
 
-            const username = data.chatname;
+            const tmpName = document.createElement('div');
+            tmpName.innerHTML = data.chatname;
+            const username = tmpName.textContent || tmpName.innerText || '';
             let message = data.chatmessage;
-            
+
             // Check if textonly is set, if not we need to extract text from HTML
             if (!data.textonly) {
                 // Create a temporary element to parse HTML
@@ -806,26 +808,43 @@
         
         // Handle WebSocket connection
         if (urlParams.has('server')) {
-            const socketserver = new WebSocket(urlParams.get('server'));
-            
-            socketserver.onopen = function() {
-                socketserver.send(JSON.stringify({ 
-                    join: sessionId.split(",")[0], 
-                    out: 2, 
-                    in: 1 
-                }));
-            };
-            
-            socketserver.onmessage = function(event) {
-                if (event.data) {
-                    try {
-                        const data = JSON.parse(event.data);
-                        processData(data);
-                    } catch (e) {
-                        console.error('WebSocket parse error:', e);
+            const serverUrl = urlParams.get('server');
+            let socketserver = null;
+            let reconnectTimeout = null;
+
+            function connectWebSocket() {
+                socketserver = new WebSocket(serverUrl);
+
+                socketserver.onopen = function() {
+                    socketserver.send(JSON.stringify({
+                        join: sessionId.split(",")[0],
+                        out: 2,
+                        in: 1
+                    }));
+                };
+
+                socketserver.onclose = function() {
+                    clearTimeout(reconnectTimeout);
+                    reconnectTimeout = setTimeout(connectWebSocket, 5000);
+                };
+
+                socketserver.onerror = function() {
+                    try { socketserver.close(); } catch (e) {}
+                };
+
+                socketserver.onmessage = function(event) {
+                    if (event.data) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            processData(data);
+                        } catch (e) {
+                            console.error('WebSocket parse error:', e);
+                        }
                     }
-                }
-            };
+                };
+            }
+
+            connectWebSocket();
         }
         
         // Demo mode

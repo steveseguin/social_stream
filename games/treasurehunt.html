@@ -299,7 +299,17 @@
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session') || 'test';
     const password = urlParams.get('password') || 'false';
-    
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function stripHtml(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
     // Initialize grid
     function initGrid() {
         const mapElement = document.getElementById('map');
@@ -560,7 +570,7 @@
             const entry = document.createElement('div');
             entry.className = 'score-entry';
             entry.innerHTML = `
-                <span>${medals[index]} ${username}</span>
+                <span>${medals[index]} ${escapeHtml(username)}</span>
                 <span>${score} pts</span>
             `;
             scoreList.appendChild(entry);
@@ -605,12 +615,16 @@
         }
         
         if (!data.chatmessage || !data.chatname) return;
-        
-        const message = data.chatmessage.trim();
-        
+
+        let rawMessage = data.chatmessage;
+        if (!data.textonly) {
+            rawMessage = stripHtml(rawMessage);
+        }
+        const message = rawMessage.trim();
+
         if (message.toLowerCase().startsWith('!dig ')) {
-            const coordinate = message.substring(5).toUpperCase();
-            dig(data.chatname, coordinate);
+            const coordinate = message.substring(5).trim().toUpperCase();
+            dig(stripHtml(data.chatname), coordinate);
         }
     }
     
@@ -639,6 +653,47 @@
         }
     });
     
+    // Handle WebSocket if server parameter provided
+    if (urlParams.has('server')) {
+        const serverUrl = urlParams.get('server');
+        let socketserver = null;
+        let reconnectTimeout = null;
+
+        function connectWebSocket() {
+            socketserver = new WebSocket(serverUrl);
+
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({
+                    join: sessionId.split(",")[0],
+                    out: 2,
+                    in: 1
+                }));
+            };
+
+            socketserver.onclose = function() {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = setTimeout(connectWebSocket, 5000);
+            };
+
+            socketserver.onerror = function() {
+                try { socketserver.close(); } catch (e) {}
+            };
+
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+
+        connectWebSocket();
+    }
+
     // Demo mode
     if (urlParams.has('demo')) {
         setTimeout(() => {
