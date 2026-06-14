@@ -6,6 +6,9 @@
 let backgroundPageTabId = null;
 let backgroundPageTabIdLoaded = false;
 let messageQueue = [];
+let lastBackgroundRecoveryNotification = 0;
+
+const BACKGROUND_RECOVERY_NOTIFICATION_COOLDOWN = 60000;
 
 async function updateIconToOn() {
   if (chrome.action && chrome.action.setIcon) {
@@ -21,6 +24,207 @@ async function updateIconToOff() {
 
 function log(msg, msg2 = "") {
   //console.log(msg, msg2);
+}
+
+function getStorageValue(area, keys) {
+  return new Promise((resolve) => {
+    try {
+      area.get(keys, (result) => {
+        if (chrome.runtime.lastError) {
+          resolve({});
+          return;
+        }
+        resolve(result || {});
+      });
+    } catch (error) {
+      resolve({});
+    }
+  });
+}
+
+async function getStoredExtensionState() {
+  const syncItem = await getStorageValue(chrome.storage.sync, ["state"]);
+  if (typeof syncItem.state === "boolean") {
+    return syncItem.state;
+  }
+
+  const localItem = await getStorageValue(chrome.storage.local, ["state"]);
+  if (typeof localItem.state === "boolean") {
+    return localItem.state;
+  }
+
+  return null;
+}
+
+async function getStoredSettingsSnapshot(stateOverride = null) {
+  const syncItem = await getStorageValue(chrome.storage.sync, ["streamID", "password", "state"]);
+  const localItem = await getStorageValue(chrome.storage.local, ["settings"]);
+  const settings = localItem.settings || {};
+  const state = typeof stateOverride === "boolean"
+    ? stateOverride
+    : (typeof syncItem.state === "boolean" ? syncItem.state : false);
+
+  return {
+    state,
+    streamID: syncItem.streamID || "",
+    password: syncItem.password || "",
+    settings,
+    beginnerMode: !!(settings.beginnerMode && settings.beginnerMode.setting === true)
+  };
+}
+
+function isSettingsRequest(message) {
+  return Boolean(
+    message &&
+    typeof message === "object" &&
+    (message.getSettings || (message.cmd && message.cmd === "getSettings"))
+  );
+}
+
+function isEnableRequest(message) {
+  return Boolean(
+    message &&
+    typeof message === "object" &&
+    message.cmd === "setOnOffState" &&
+    message.data &&
+    message.data.value === true
+  );
+}
+
+function isBackgroundWriteRequest(message) {
+  if (!message || typeof message !== "object" || !message.cmd) {
+    return false;
+  }
+
+  return [
+    "setOnOffState",
+    "saveSetting",
+    "sidUpdated",
+    "uploadCustomJs",
+    "deleteCustomJs",
+    "uploadBadwords",
+    "deleteBadwords",
+    "uploadRAGfile",
+    "deleteRAGfile",
+    "clearRag",
+    "savePoll",
+    "createNewPoll",
+    "bigwipe",
+    "resettipjar",
+    "manageUserPoints",
+    "resetAllPoints",
+    "importPointsData",
+    "spotifySignOut",
+    "spotifyManualCallback",
+    "spotifyAuthCallback"
+  ].includes(message.cmd);
+}
+
+function shouldRouteWhileDisabled(message) {
+  return isEnableRequest(message) || isBackgroundWriteRequest(message);
+}
+
+function isBackgroundBoundMessage(message) {
+  if (!message || typeof message !== "object") {
+    return false;
+  }
+  if (message.type === "toBackground") {
+    return true;
+  }
+  if (message.cmd) {
+    return true;
+  }
+  if (message.type) {
+    return false;
+  }
+  return Boolean(
+    "message" in message ||
+    "messages" in message ||
+    "delete" in message ||
+    "getSettings" in message ||
+    "getBTTV" in message ||
+    "getSEVENTV" in message ||
+    "getFFZ" in message ||
+    "pokeMe" in message ||
+    "keepAlive" in message
+  );
+}
+
+function wrapBackgroundMessage(message) {
+  return message.type === "toBackground" ? message : { type: "toBackground", data: message };
+}
+
+function notifyBackgroundRecoveryFailure(error) {
+  const now = Date.now();
+  if (now - lastBackgroundRecoveryNotification < BACKGROUND_RECOVERY_NOTIFICATION_COOLDOWN) {
+    return;
+  }
+  lastBackgroundRecoveryNotification = now;
+
+  try {
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl: "icons/icon-128.png",
+      title: "Social Stream background stopped",
+      message: "Could not reopen the background page. Open the extension popup to restart capture."
+    });
+  } catch (notificationError) {
+    console.warn("Could not show background recovery notification:", notificationError);
+  }
+
+  if (error) {
+    console.error("Background recovery failed:", error);
+  }
+}
+
+function queueBackgroundMessage(message, sendResponse) {
+  messageQueue.push({ message, sendResponse });
+  scheduleQueuedMessageRetry(BACKGROUND_PAGE_COOLDOWN);
+}
+
+async function routeBackgroundBoundMessage(message, sendResponse) {
+  const backgroundMessage = wrapBackgroundMessage(message);
+  const payload = backgroundMessage.data;
+  const isOpen = await checkBackgroundPageIsOpen();
+  if (isOpen) {
+    sendMessageToBackgroundPage(backgroundMessage, sendResponse);
+    return true;
+  }
+
+  const storedState = await getStoredExtensionState();
+  if (isSettingsRequest(payload)) {
+    const snapshot = await getStoredSettingsSnapshot(storedState);
+    if (snapshot.streamID) {
+      sendResponse(snapshot);
+      if (storedState !== false) {
+        ensureBackgroundPageIsOpen().catch((error) => {
+          notifyBackgroundRecoveryFailure(error);
+        });
+      }
+      return true;
+    }
+  }
+  if (storedState === false && !shouldRouteWhileDisabled(payload)) {
+    if (isSettingsRequest(payload)) {
+      sendResponse(await getStoredSettingsSnapshot(false));
+    } else {
+      sendResponse({ state: false });
+    }
+    return true;
+  }
+
+  try {
+    await ensureBackgroundPageIsOpen(true, shouldRouteWhileDisabled(payload));
+    if (backgroundPageTabIdLoaded) {
+      sendMessageToBackgroundPage(backgroundMessage, sendResponse);
+    } else {
+      queueBackgroundMessage(backgroundMessage, sendResponse);
+    }
+  } catch (error) {
+    notifyBackgroundRecoveryFailure(error);
+    sendResponse({ error: "Failed to open background page" });
+  }
+  return true;
 }
 
 
@@ -142,7 +346,7 @@ async function waitForTabComplete(tabId, timeoutMs = BACKGROUND_PAGE_LOAD_TIMEOU
   });
 }
 
-async function ensureBackgroundPageIsOpen(load = true) {
+async function ensureBackgroundPageIsOpen(load = true, force = false) {
   log("Ensuring background page is open", backgroundPageTabId);
 
   const isOpen = await checkBackgroundPageIsOpen();
@@ -155,7 +359,7 @@ async function ensureBackgroundPageIsOpen(load = true) {
     // Check if enough time has passed since last attempt
     const now = Date.now();
     const elapsed = now - lastBackgroundPageCreated;
-    if (elapsed < BACKGROUND_PAGE_COOLDOWN) {
+    if (!force && elapsed < BACKGROUND_PAGE_COOLDOWN) {
       log("Skipping background page creation - cooldown period");
       scheduleQueuedMessageRetry(BACKGROUND_PAGE_COOLDOWN - elapsed);
       return;
@@ -272,6 +476,9 @@ function injectCustomSource(source, tabId) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (!message || typeof message !== "object") {
+    return false;
+  }
 	
   if (message.type === 'injectCustomSource') {
     injectCustomSource(message.source, message.tabId);
@@ -285,26 +492,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
     }
 
-    checkBackgroundPageIsOpen().then((isOpen) => {
-      if (!isOpen) {
-        ensureBackgroundPageIsOpen().then(() => {
-          if (backgroundPageTabIdLoaded) {
-            sendMessageToBackgroundPage(message, sendResponse);
-          } else {
-            // Queue the message if the background page is not ready
-            messageQueue.push({ message, sendResponse });
-            scheduleQueuedMessageRetry(BACKGROUND_PAGE_COOLDOWN);
-          }
-        }).catch(error => {
-          console.error("Error ensuring background page is open:", error);
-          sendResponse({ error: 'Failed to open background page' });
-        });
-      } else {
-        sendMessageToBackgroundPage(message, sendResponse);
-      }
-    });
+    if (backgroundPageTabIdLoaded) {
+      return false;
+    }
+
+    routeBackgroundBoundMessage(message, sendResponse);
 
     return true; // Indicates that the response will be sent asynchronously
+  } else if (isBackgroundBoundMessage(message)) {
+    if (backgroundPageTabIdLoaded) {
+      return false;
+    }
+
+    routeBackgroundBoundMessage(message, sendResponse);
+    return true;
   } else if (message.type === 'checkBackgroundPage') {
     // New message type to handle background page check
     checkBackgroundPageIsOpen().then((isOpen) => {
@@ -380,11 +581,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Ensure the background page is opened when the extension starts
 chrome.runtime.onInstalled.addListener(() => {
   log("Extension installed, opening background page");
-  ensureBackgroundPageIsOpen();
+  getStoredExtensionState().then((storedState) => {
+    if (storedState === false) {
+      updateIconToOff();
+      return;
+    }
+    ensureBackgroundPageIsOpen();
+  });
 });
 
 chrome.runtime.onStartup.addListener(async () => {
   log("Extension starting up, opening background page");
+  const storedState = await getStoredExtensionState();
+  if (storedState === false) {
+    await updateIconToOff();
+    return;
+  }
+
   await ensureBackgroundPageIsOpen();
   
   // Periodically check and ensure only one background page is open
@@ -397,8 +610,12 @@ chrome.runtime.onStartup.addListener(async () => {
 chrome.tabs.query({ url: chrome.runtime.getURL('background.html') }, async (tabs) => {
   if (tabs.length > 0) {
     backgroundPageTabId = tabs[0].id;
-    backgroundPageTabIdLoaded = true;
-    await updateIconToOn();
+    backgroundPageTabIdLoaded = tabs[0].status === "complete";
+    if (backgroundPageTabIdLoaded) {
+      await updateIconToOn();
+    } else {
+      await updateIconToOff();
+    }
   } else {
     await updateIconToOff();
   }

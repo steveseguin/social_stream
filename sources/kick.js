@@ -205,7 +205,7 @@
 	var cachedUserProfiles = new Map();
 	var maxCachedProfiles = 10000; // Limit to 10,000 profiles
 	var processedMessages = new Set();
-	var maxTrackedMessages = 40;
+	var maxTrackedMessages = 600;
 	var pastMessages = [];
 	var trackedKickMessageIds = new Map();
 	var maxTrackedKickMessageIds = 500;
@@ -933,6 +933,53 @@
 	function clearMessageTracking() {
 		processedMessages.clear();
 	}
+
+	function rememberKickProcessedMessage(messageId) {
+		if (!messageId || processedMessages.has(messageId)) {
+			return false;
+		}
+		processedMessages.add(messageId);
+		while (processedMessages.size > maxTrackedMessages) {
+			processedMessages.delete(processedMessages.values().next().value);
+		}
+		return true;
+	}
+
+	function markKickExistingMessagesProcessed(target) {
+		if (!target || !target.querySelectorAll) {
+			return 0;
+		}
+		var marked = 0;
+		var nodes = [];
+		try {
+			if (target.matches && target.matches(KICK_MESSAGE_CONTAINER_SELECTOR)) {
+				nodes.push(target);
+			}
+		} catch (e) {}
+		try {
+			target.querySelectorAll(KICK_MESSAGE_CONTAINER_SELECTOR).forEach(function(ele) {
+				nodes.push(ele);
+			});
+		} catch (e) {}
+		nodes.forEach(function(ele) {
+			try {
+				var text = (ele.textContent || "").replace(/\s+/g, " ").trim();
+				var hasImage = ele.querySelector && ele.querySelector("img");
+				if (!text && !hasImage) {
+					return;
+				}
+				var messageId = getKickMessageKey(ele);
+				if (rememberKickProcessedMessage(messageId)) {
+					marked++;
+				}
+			} catch (e) {}
+		});
+		kickDebugLog("marked existing Kick popout messages processed", {
+			count: marked,
+			size: processedMessages.size
+		});
+		return marked;
+	}
 	
 	function sleep(ms) {
 		return new Promise(resolve => setTimeout(resolve, ms));
@@ -1632,20 +1679,12 @@
 			return;
 		}
 
-		processedMessages.add(messageId);
+		rememberKickProcessedMessage(messageId);
 		kickDebugLog("process:new accepted key", {
 			messageId: messageId,
 			size: processedMessages.size,
 			row: getKickDebugRowInfo(ele)
 		});
-
-		if (processedMessages.size > maxTrackedMessages) {
-		  const entriesToRemove = processedMessages.size - maxTrackedMessages;
-		  const entries = Array.from(processedMessages);
-		  for (let i = 0; i < entriesToRemove; i++) {
-			processedMessages.delete(entries[i]);
-		  }
-		}
 	  } catch(e) {
 		console.error(e);
 		kickDebugLog("process:new keying exception", {
@@ -2194,6 +2233,7 @@
 			target: getKickDebugRowInfo(current.target)
 		});
 		if (current.mode === "new") {
+			markKickExistingMessagesProcessed(current.target);
 			onElementInsertedNew(current.target, current.subtree);
 		} else {
 			onElementInsertedOld(current.target);
@@ -2231,7 +2271,6 @@
 			if (document.querySelectorAll("#chatroom-messages > div").length){
 				clearInterval(xxx);
 				setTimeout(function(){
-					clearMessageTracking();
 					if (document.getElementById("seventv-extension")){
 						SevenTV = true;
 					}

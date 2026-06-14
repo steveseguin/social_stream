@@ -179,6 +179,21 @@
 			color: #e0b84a;
 		}
 
+		.session-warning {
+			display: none;
+			border: 1px solid rgba(224, 184, 74, 0.45);
+			background: rgba(224, 184, 74, 0.1);
+			color: #e0c36d;
+			border-radius: 6px;
+			padding: 8px;
+			font-size: 12px;
+			line-height: 1.4;
+		}
+
+		.session-warning.show {
+			display: block;
+		}
+
 		.info-panel {
 			border: 1px solid var(--line-soft);
 			background: #0d0f11;
@@ -207,6 +222,17 @@
 
 		.info-panel a {
 			color: var(--accent-2);
+		}
+
+		.info-panel select {
+			width: 100%;
+			border: 1px solid var(--line);
+			background: #0d0f11;
+			color: var(--text);
+			border-radius: 6px;
+			padding: 8px;
+			outline: none;
+			margin: 5px 0 8px;
 		}
 
 		.mapping-table {
@@ -318,6 +344,74 @@
 			border-bottom: 0;
 		}
 
+		.modal-backdrop {
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.62);
+			display: none;
+			align-items: center;
+			justify-content: center;
+			padding: 18px;
+			z-index: 10;
+		}
+
+		.modal-backdrop.open {
+			display: flex;
+		}
+
+		.export-modal {
+			width: min(560px, 100%);
+			border: 1px solid var(--line);
+			background: var(--panel);
+			border-radius: 8px;
+			box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+			padding: 16px;
+		}
+
+		.export-modal h2 {
+			margin: 0 0 8px;
+			font-size: 19px;
+		}
+
+		.export-modal p {
+			margin: 8px 0;
+			color: var(--muted);
+			font-size: 13px;
+			line-height: 1.45;
+		}
+
+		.export-modal .url-box {
+			margin: 10px 0;
+			padding: 10px;
+			border: 1px solid var(--line-soft);
+			background: #0d0f11;
+			border-radius: 6px;
+			color: var(--text);
+			font-size: 12px;
+			line-height: 1.45;
+			word-break: break-all;
+		}
+
+		.export-modal .modal-actions {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: flex-end;
+			gap: 8px;
+			margin-top: 12px;
+		}
+
+		.export-modal .export-summary {
+			border: 1px solid var(--line-soft);
+			background: #0d0f11;
+			border-radius: 6px;
+			padding: 9px;
+			color: var(--muted);
+			font-size: 12px;
+			line-height: 1.45;
+			white-space: pre-wrap;
+			margin-top: 10px;
+		}
+
 		@media (max-width: 900px) {
 			body {
 				overflow: auto;
@@ -359,6 +453,7 @@
 
 			<label for="sessionInput">SSN session ID to embed</label>
 			<input id="sessionInput" placeholder="Example: abc123">
+			<div class="session-warning" id="sessionWarning">No session ID is set. The exported overlay will need <code>?session=YOUR_SESSION_ID</code> added to the URL before it receives live messages.</div>
 
 			<label for="passwordInput">Password, if used</label>
 			<input id="passwordInput" placeholder="Optional">
@@ -368,11 +463,28 @@
 
 			<div class="button-row">
 				<button id="previewBtn" type="button" disabled>Preview</button>
+				<button id="livePreviewBtn" type="button" disabled>Live Preview</button>
 				<button class="primary" id="exportBtn" type="button" disabled>Export HTML</button>
 			</div>
 
 			<div class="status" id="statusBox">Waiting for overlay files.</div>
 			<div class="file-list" id="fileList"></div>
+
+			<details class="info-panel">
+				<summary>Advanced file selection</summary>
+				<div>Use this if the importer picked the wrong source files.</div>
+				<label for="htmlPartSelect">HTML</label>
+				<select id="htmlPartSelect" disabled></select>
+				<label for="cssPartSelect">CSS</label>
+				<select id="cssPartSelect" disabled></select>
+				<label for="jsPartSelect">JS</label>
+				<select id="jsPartSelect" disabled></select>
+				<label for="fieldsPartSelect">Fields</label>
+				<select id="fieldsPartSelect" disabled></select>
+				<label for="dataPartSelect">Data</label>
+				<select id="dataPartSelect" disabled></select>
+				<button id="applyFileSelectionBtn" type="button" disabled>Apply Selection</button>
+			</details>
 
 			<details class="info-panel" open>
 				<summary>What gets converted</summary>
@@ -397,6 +509,7 @@
 					<li>Widgets that require private StreamElements or Streamlabs API tokens, overlay-store state, full jQuery plugins, or platform emote APIs may need manual edits.</li>
 					<li>Local packaged images, fonts, audio, and video are embedded; remote URLs stay remote and may still fail if the source blocks OBS/browser access.</li>
 					<li>The export is a single HTML file with the session embedded, but <code>?session=...</code> and <code>&password=...</code> in the OBS URL still override it.</li>
+					<li>Common live overrides: <code>&limit=30</code>, <code>&direction=top</code>, <code>&direction=bottom</code>, and <code>&hideAfter=20</code>.</li>
 				</ul>
 			</details>
 
@@ -417,7 +530,9 @@ Map SSN fields: chatname to display name, chatmessage to message HTML/text, chat
 
 Preserve moderation controls: deleteMessage, delete.id, delete.chatname, clearAll, action: clear, timeoutUser, and blockUser. Store data-mid, data-chatname, and data-source-type on each rendered message.
 
-Add ?demo and ?testbg support for local visual testing. Test viewer, VIP/mod/subscriber, donation, badge, media, delete, and clear cases before finishing.</textarea>
+Skip metadata-only payloads that have no message text, media, membership, subtitle, or donation value. Cap rendered DOM rows with a default message limit and support ?limit=, ?direction=top|bottom, ?hideAfter=, ?demo, and ?testbg for local visual testing.
+
+Test viewer, VIP/mod/subscriber, donation, badge, media, delete, clear, empty-message, and high-volume message cases before finishing.</textarea>
 				<div class="prompt-tools">
 					<button id="copyPromptBtn" type="button">Copy Prompt</button>
 					<span class="prompt-copy-status" id="promptCopyStatus"></span>
@@ -438,6 +553,26 @@ Add ?demo and ?testbg support for local visual testing. Test viewer, VIP/mod/sub
 				<div class="empty-preview" id="emptyPreview">Import an overlay to preview it.</div>
 			</div>
 		</main>
+	</div>
+
+	<div class="modal-backdrop" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+		<div class="export-modal">
+			<h2 id="exportModalTitle">Exported HTML is ready</h2>
+			<p>Add this file as an OBS Browser Source, or open it in a browser, with your SSN session on the end of the URL.</p>
+			<p>If you did not embed a session ID before exporting, append this:</p>
+			<div class="url-box" id="exportSessionHint">?session=YOUR_SESSION_ID</div>
+			<p>Example final URL after saving:</p>
+			<div class="url-box" id="exportObsUrlHint">ssn-imported-overlay.html?session=YOUR_SESSION_ID</div>
+			<p>For a quick visual test without live chat, open the file with <code>?demo</code>.</p>
+			<p id="exportSessionMessage"></p>
+			<div class="export-summary" id="exportSummary"></div>
+			<div class="modal-actions">
+				<button id="copySessionHintBtn" type="button">Copy URL Ending</button>
+				<button id="copyObsUrlBtn" type="button">Copy Example URL</button>
+				<button id="downloadReadmeBtn" type="button">Download README</button>
+				<button id="closeExportModalBtn" type="button">Close</button>
+			</div>
+		</div>
 	</div>
 
 	<script src="./thirdparty/jszip.min.js"></script>

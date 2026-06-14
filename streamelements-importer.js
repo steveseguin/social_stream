@@ -10,7 +10,11 @@
 				sourceName: "",
 				processing: false,
 				remoteAssetsEmbedded: 0,
-				remoteAssetsFailed: 0
+				remoteAssetsFailed: 0,
+				detected: null,
+				warnings: [],
+				manualParts: {},
+				lastExportFileName: ""
 			};
 
 			var zipInput = document.getElementById("zipInput");
@@ -22,14 +26,34 @@
 			var previewFrame = document.getElementById("previewFrame");
 			var emptyPreview = document.getElementById("emptyPreview");
 			var previewBtn = document.getElementById("previewBtn");
+			var livePreviewBtn = document.getElementById("livePreviewBtn");
 			var exportBtn = document.getElementById("exportBtn");
 			var clearBtn = document.getElementById("clearBtn");
 			var sessionInput = document.getElementById("sessionInput");
+			var sessionWarning = document.getElementById("sessionWarning");
 			var passwordInput = document.getElementById("passwordInput");
 			var outputName = document.getElementById("outputName");
 			var fallbackPromptText = document.getElementById("fallbackPromptText");
 			var copyPromptBtn = document.getElementById("copyPromptBtn");
 			var promptCopyStatus = document.getElementById("promptCopyStatus");
+			var exportModal = document.getElementById("exportModal");
+			var exportSessionHint = document.getElementById("exportSessionHint");
+			var exportObsUrlHint = document.getElementById("exportObsUrlHint");
+			var exportSessionMessage = document.getElementById("exportSessionMessage");
+			var exportSummary = document.getElementById("exportSummary");
+			var copySessionHintBtn = document.getElementById("copySessionHintBtn");
+			var copyObsUrlBtn = document.getElementById("copyObsUrlBtn");
+			var downloadReadmeBtn = document.getElementById("downloadReadmeBtn");
+			var closeExportModalBtn = document.getElementById("closeExportModalBtn");
+			var htmlPartSelect = document.getElementById("htmlPartSelect");
+			var cssPartSelect = document.getElementById("cssPartSelect");
+			var jsPartSelect = document.getElementById("jsPartSelect");
+			var fieldsPartSelect = document.getElementById("fieldsPartSelect");
+			var dataPartSelect = document.getElementById("dataPartSelect");
+			var applyFileSelectionBtn = document.getElementById("applyFileSelectionBtn");
+
+			loadSavedSession();
+			updateSessionWarning();
 
 			zipInput.addEventListener("change", function () {
 				if (zipInput.files && zipInput.files[0]) {
@@ -70,6 +94,12 @@
 				renderPreview();
 			});
 
+			if (livePreviewBtn) {
+				livePreviewBtn.addEventListener("click", function () {
+					renderLivePreview();
+				});
+			}
+
 			exportBtn.addEventListener("click", function () {
 				exportOverlay();
 			});
@@ -82,7 +112,37 @@
 				copyPromptBtn.addEventListener("click", copyFallbackPrompt);
 			}
 
-			sessionInput.addEventListener("input", refreshButtons);
+			if (copySessionHintBtn) {
+				copySessionHintBtn.addEventListener("click", copySessionHint);
+			}
+
+			if (copyObsUrlBtn) {
+				copyObsUrlBtn.addEventListener("click", copyObsUrl);
+			}
+
+			if (downloadReadmeBtn) {
+				downloadReadmeBtn.addEventListener("click", downloadReadme);
+			}
+
+			if (applyFileSelectionBtn) {
+				applyFileSelectionBtn.addEventListener("click", applyFileSelection);
+			}
+
+			if (closeExportModalBtn) {
+				closeExportModalBtn.addEventListener("click", hideExportModal);
+			}
+
+			if (exportModal) {
+				exportModal.addEventListener("click", function (event) {
+					if (event.target === exportModal) hideExportModal();
+				});
+			}
+
+			sessionInput.addEventListener("input", function () {
+				saveSession();
+				updateSessionWarning();
+				refreshButtons();
+			});
 			passwordInput.addEventListener("input", refreshButtons);
 
 			function resetState() {
@@ -97,12 +157,17 @@
 					sourceName: "",
 					processing: false,
 					remoteAssetsEmbedded: 0,
-					remoteAssetsFailed: 0
+					remoteAssetsFailed: 0,
+					detected: null,
+					warnings: [],
+					manualParts: {},
+					lastExportFileName: ""
 				};
 				previewFrame.removeAttribute("srcdoc");
 				emptyPreview.style.display = "";
 				statusBox.textContent = "Waiting for overlay files.";
 				fileList.innerHTML = "";
+				populateFileSelectors(null);
 				refreshButtons();
 			}
 
@@ -115,7 +180,28 @@
 			function refreshButtons() {
 				var hasBuild = !!(state.html || state.css || state.js);
 				previewBtn.disabled = !hasBuild || state.processing;
+				if (livePreviewBtn) livePreviewBtn.disabled = !hasBuild || state.processing || !(sessionInput.value || "").trim();
 				exportBtn.disabled = !hasBuild || state.processing;
+			}
+
+			function loadSavedSession() {
+				try {
+					var saved = localStorage.getItem("ssnSeImporterSession") || "";
+					if (saved && sessionInput && !sessionInput.value) sessionInput.value = saved;
+				} catch (error) {}
+			}
+
+			function saveSession() {
+				try {
+					var session = (sessionInput.value || "").trim();
+					if (session) localStorage.setItem("ssnSeImporterSession", session);
+					else localStorage.removeItem("ssnSeImporterSession");
+				} catch (error) {}
+			}
+
+			function updateSessionWarning() {
+				if (!sessionWarning) return;
+				sessionWarning.className = "session-warning" + ((sessionInput.value || "").trim() ? "" : " show");
 			}
 
 			function copyFallbackPrompt() {
@@ -147,6 +233,155 @@
 				} catch (error) {
 					callback("Select and copy manually.");
 				}
+			}
+
+			function copyText(text, callback) {
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(text).then(function () {
+						if (callback) callback(true);
+					}).catch(function () {
+						copyTextViaTextarea(text);
+						if (callback) callback(true);
+					});
+				} else {
+					copyTextViaTextarea(text);
+					if (callback) callback(true);
+				}
+			}
+
+			function copyTextViaTextarea(text) {
+				var textarea = document.createElement("textarea");
+				textarea.value = text;
+				textarea.style.position = "fixed";
+				textarea.style.left = "-9999px";
+				document.body.appendChild(textarea);
+				textarea.focus();
+				textarea.select();
+				try {
+					document.execCommand("copy");
+				} catch (error) {}
+				if (textarea.parentNode) textarea.parentNode.removeChild(textarea);
+			}
+
+			function showExportModal(fileName) {
+				if (!exportModal || !exportSessionHint || !exportSessionMessage) return;
+				var session = (sessionInput.value || "").trim();
+				var password = (passwordInput.value || "").trim();
+				var suffix = session ? "?session=" + encodeURIComponent(session) : "?session=YOUR_SESSION_ID";
+				if (password) suffix += "&password=" + encodeURIComponent(password);
+				var exampleUrl = fileName + suffix;
+				state.lastExportFileName = fileName;
+				exportSessionHint.textContent = suffix;
+				if (exportObsUrlHint) exportObsUrlHint.textContent = exampleUrl;
+				if (session) {
+					exportSessionMessage.textContent = "This session was also embedded into " + fileName + ". The URL ending still lets you override it later.";
+				} else {
+					exportSessionMessage.textContent = "Without this URL ending, the overlay will open but will not receive live SSN messages.";
+				}
+				if (exportSummary) exportSummary.textContent = buildExportSummary(fileName);
+				exportModal.classList.add("open");
+				if (closeExportModalBtn) closeExportModalBtn.focus();
+			}
+
+			function hideExportModal() {
+				if (exportModal) exportModal.classList.remove("open");
+			}
+
+			function copySessionHint() {
+				if (!exportSessionHint) return;
+				copyText(exportSessionHint.textContent || "?session=YOUR_SESSION_ID", function () {
+					if (copySessionHintBtn) {
+						var oldText = copySessionHintBtn.textContent;
+						copySessionHintBtn.textContent = "Copied";
+						setTimeout(function () {
+							copySessionHintBtn.textContent = oldText;
+						}, 1600);
+					}
+				});
+			}
+
+			function copyObsUrl() {
+				if (!exportObsUrlHint) return;
+				copyText(exportObsUrlHint.textContent || "", function () {
+					if (copyObsUrlBtn) {
+						var oldText = copyObsUrlBtn.textContent;
+						copyObsUrlBtn.textContent = "Copied";
+						setTimeout(function () {
+							copyObsUrlBtn.textContent = oldText;
+						}, 1600);
+					}
+				});
+			}
+
+			function downloadReadme() {
+				var fileName = state.lastExportFileName || (outputName.value || "ssn-imported-overlay.html").trim();
+				if (!/\.html?$/i.test(fileName)) fileName += ".html";
+				downloadTextFile(fileName.replace(/\.html?$/i, "-README.txt"), buildReadmeText(fileName));
+			}
+
+			function downloadTextFile(fileName, text) {
+				var blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+				var a = document.createElement("a");
+				a.href = URL.createObjectURL(blob);
+				a.download = fileName;
+				document.body.appendChild(a);
+				a.click();
+				setTimeout(function () {
+					URL.revokeObjectURL(a.href);
+					if (a.parentNode) a.parentNode.removeChild(a);
+				}, 1000);
+			}
+
+			function buildExportSummary(fileName) {
+				var lines = [];
+				lines.push("Export: " + fileName);
+				lines.push("Local assets embedded: " + Object.keys(state.assetByPath).length);
+				lines.push("Remote assets embedded: " + (state.remoteAssetsEmbedded || 0));
+				lines.push("Remote assets left as URLs: " + (state.remoteAssetsFailed || 0));
+				if (state.detected && state.detected.ignoredFiles && state.detected.ignoredFiles.length) {
+					lines.push("Ignored generated/export files: " + state.detected.ignoredFiles.length);
+				}
+				if (state.detected && state.detected.unusedPartFiles && state.detected.unusedPartFiles.length) {
+					lines.push("Other source-like files not used: " + state.detected.unusedPartFiles.length);
+				}
+				if (state.warnings && state.warnings.length) {
+					lines.push("");
+					lines.push("Possible manual fixes:");
+					state.warnings.forEach(function (warning) {
+						lines.push("- " + warning);
+					});
+				}
+				return lines.join("\n");
+			}
+
+			function buildReadmeText(fileName) {
+				var suffix = exportSessionHint ? exportSessionHint.textContent : "?session=YOUR_SESSION_ID";
+				var lines = [
+					"Social Stream Ninja Imported Overlay",
+					"",
+					"HTML file:",
+					fileName,
+					"",
+					"OBS setup:",
+					"1. Add a Browser Source.",
+					"2. Select the exported HTML file or paste its file URL.",
+					"3. Add your SSN session to the end of the URL:",
+					suffix,
+					"",
+					"Example:",
+					fileName + suffix,
+					"",
+					"Optional URL overrides:",
+					"- Add &limit=30 to cap chat rows.",
+					"- Add &direction=top or &direction=bottom to change message order when the imported widget supports standard fields.",
+					"- Add &hideAfter=20 to remove rows after 20 seconds when supported by the widget.",
+					"",
+					"Quick visual test:",
+					fileName + "?demo",
+					"",
+					buildExportSummary(fileName)
+				];
+				return lines.join("\n");
 			}
 
 			function loadZip(file) {
@@ -218,7 +453,7 @@
 				});
 			}
 
-			function processImportedItems(items, sourceName) {
+			function processImportedItems(items, sourceName, manualParts) {
 				state.files = items.slice().sort(function (a, b) {
 					return a.path.localeCompare(b.path);
 				});
@@ -228,6 +463,7 @@
 				state.processing = false;
 				state.remoteAssetsEmbedded = 0;
 				state.remoteAssetsFailed = 0;
+				state.manualParts = manualParts || {};
 
 				state.files.forEach(function (item) {
 					if (item.isText) {
@@ -237,18 +473,23 @@
 					}
 				});
 
-				var detected = detectWidgetParts(state.files);
+				var detected = detectWidgetParts(state.files, state.manualParts);
+				state.detected = detected;
 				var fields = parseJSONSafe(detected.fieldsText || "{}");
 				var data = parseJSONSafe(detected.dataText || "{}");
 				state.fieldData = mergeFieldDefaults(fields, data);
 				state.html = normalizeProtocolRelative(replaceAssets(resolveTemplate(detected.htmlText || '<div class="main-container"></div>', state.fieldData)));
 				state.css = normalizeProtocolRelative(replaceAssets(resolveTemplate(detected.cssText || "", state.fieldData)));
 				state.js = normalizeProtocolRelative(resolveTemplate(detected.jsText || "", state.fieldData));
+				state.warnings = analyzeUnsupportedFeatures(state.html, state.css, state.js);
 
 				state.processing = true;
+				populateFileSelectors(detected);
 				updateFileList(detected, ["Checking remote asset URLs."]);
 				refreshButtons();
-				inlineRemoteAssets().then(function (stats) {
+				inlineRemoteCssImports().then(function () {
+					return inlineRemoteAssets();
+				}).then(function (stats) {
 					state.remoteAssetsEmbedded = stats.embedded;
 					state.remoteAssetsFailed = stats.failed;
 					state.processing = false;
@@ -264,7 +505,7 @@
 				});
 			}
 
-			function detectWidgetParts(items) {
+			function detectWidgetParts(items, manualParts) {
 				var ignoredFiles = [];
 				var textItems = items.filter(function (item) {
 					return item.isText;
@@ -288,6 +529,14 @@
 				var cssItem = chooseBestPart(usableItems.filter(isLikelyCSS), "css");
 				var jsItem = chooseBestPart(usableItems.filter(isLikelyJS), "js");
 
+				if (manualParts) {
+					htmlItem = chooseManualPart(usableItems, manualParts.html, htmlItem);
+					cssItem = chooseManualPart(usableItems, manualParts.css, cssItem);
+					jsItem = chooseManualPart(usableItems, manualParts.js, jsItem);
+					fieldsItem = chooseManualPart(usableItems, manualParts.fields, fieldsItem);
+					dataItem = chooseManualPart(usableItems, manualParts.data, dataItem);
+				}
+
 				var unusedPartFiles = collectUnusedPartFiles(usableItems, [fieldsItem, dataItem, htmlItem, cssItem, jsItem]);
 
 				return {
@@ -304,6 +553,15 @@
 					ignoredFiles: ignoredFiles,
 					unusedPartFiles: unusedPartFiles
 				};
+			}
+
+			function chooseManualPart(items, path, fallback) {
+				if (!path) return fallback;
+				if (path === "__none__") return null;
+				for (var i = 0; i < items.length; i++) {
+					if (items[i].path === path) return items[i];
+				}
+				return fallback;
 			}
 
 			function isLikelyHTML(item) {
@@ -393,6 +651,69 @@
 				});
 			}
 
+			function populateFileSelectors(detected) {
+				var selects = [htmlPartSelect, cssPartSelect, jsPartSelect, fieldsPartSelect, dataPartSelect];
+				if (!htmlPartSelect || !cssPartSelect || !jsPartSelect || !fieldsPartSelect || !dataPartSelect || !applyFileSelectionBtn) return;
+				var textItems = state.files.filter(function (item) {
+					return item.isText && !isGeneratedOutput(item);
+				});
+				fillPartSelect(htmlPartSelect, textItems, state.manualParts.html || (detected && detected.htmlFiles[0]), "Auto HTML", false);
+				fillPartSelect(cssPartSelect, textItems, state.manualParts.css || (detected && detected.cssFiles[0]), "Auto CSS", false);
+				fillPartSelect(jsPartSelect, textItems, state.manualParts.js || (detected && detected.jsFiles[0]), "Auto JS", true);
+				fillPartSelect(fieldsPartSelect, textItems, state.manualParts.fields || (detected && detected.fieldsFile), "Auto fields", true);
+				fillPartSelect(dataPartSelect, textItems, state.manualParts.data || (detected && detected.dataFile), "Auto data", true);
+				selects.forEach(function (select) {
+					select.disabled = !state.files.length;
+				});
+				applyFileSelectionBtn.disabled = !state.files.length;
+			}
+
+			function fillPartSelect(select, items, selectedPath, autoLabel, allowNone) {
+				select.innerHTML = "";
+				addSelectOption(select, "", autoLabel);
+				if (allowNone) addSelectOption(select, "__none__", "None");
+				items.forEach(function (item) {
+					addSelectOption(select, item.path, item.path);
+				});
+				if (selectedPath) select.value = selectedPath;
+			}
+
+			function addSelectOption(select, value, label) {
+				var option = document.createElement("option");
+				option.value = value;
+				option.textContent = label;
+				select.appendChild(option);
+			}
+
+			function applyFileSelection() {
+				if (!state.files.length) return;
+				var manualParts = {
+					html: htmlPartSelect ? htmlPartSelect.value : "",
+					css: cssPartSelect ? cssPartSelect.value : "",
+					js: jsPartSelect ? jsPartSelect.value : "",
+					fields: fieldsPartSelect ? fieldsPartSelect.value : "",
+					data: dataPartSelect ? dataPartSelect.value : ""
+				};
+				processImportedItems(state.files, state.sourceName, manualParts);
+			}
+
+			function analyzeUnsupportedFeatures(html, css, js) {
+				var warnings = [];
+				var combined = [html || "", css || "", js || ""].join("\n");
+				addWarningIf(warnings, /\bSE_API\b|streamelements\.com\/api|api\.streamelements\.com/i.test(combined), "StreamElements account APIs may require manual replacement.");
+				addWarningIf(warnings, /\bStreamlabs\b|streamlabs\.com\/api/i.test(combined), "Streamlabs account APIs may require manual replacement.");
+				addWarningIf(warnings, /\bTwitch\.ext\b|extension\.twitch\.tv/i.test(combined), "Twitch extension APIs are not available in standalone OBS overlays.");
+				addWarningIf(warnings, /\b(localStorage|sessionStorage)\b/i.test(combined), "Widget store state may not match StreamElements overlay-store behavior.");
+				addWarningIf(warnings, /(\$|jQuery)\.fn\.|\.slick\(|\.select2\(|\.draggable\(|\.resizable\(/i.test(combined), "Custom jQuery plugins are not bundled by the importer.");
+				addWarningIf(warnings, /\bfetch\s*\(|XMLHttpRequest/i.test(js || ""), "Network requests are left in place unless they are recognized static assets.");
+				addWarningIf(warnings, /@import\s+url\(["']?https?:\/\/(?!fonts\.googleapis\.com|cdnjs\.cloudflare\.com\/ajax\/libs\/animate\.css)/i.test(css || ""), "Some remote CSS imports may not bundle if CORS blocks them.");
+				return warnings;
+			}
+
+			function addWarningIf(warnings, condition, message) {
+				if (condition && warnings.indexOf(message) === -1) warnings.push(message);
+			}
+
 			function isLikelyFields(name, path) {
 				return name === "fields.json" || name === "fields.txt" || name === "widget.json" || /(^|[\\\/\s_-])fields?([.\s_-]|$)/i.test(path);
 			}
@@ -420,6 +741,7 @@
 				if (state.remoteAssetsFailed) lines.push("Remote assets left as URLs: " + state.remoteAssetsFailed);
 				if (detected.ignoredFiles && detected.ignoredFiles.length) lines.push("Ignored generated/export files: " + detected.ignoredFiles.length);
 				if (detected.unusedPartFiles && detected.unusedPartFiles.length) lines.push("Other source-like files not used: " + detected.unusedPartFiles.length);
+				if (state.warnings && state.warnings.length) lines.push("Possible manual fixes: " + state.warnings.length);
 				if (extraLines && extraLines.length) {
 					extraLines.forEach(function (line) {
 						lines.push(line);
@@ -528,6 +850,64 @@
 				});
 			}
 
+			function inlineRemoteCssImports() {
+				var imports = collectRemoteCssImports(state.css);
+				if (!imports.length) return Promise.resolve();
+				return imports.reduce(function (chain, item) {
+					return chain.then(function () {
+						return fetchRemoteText(item.url).then(function (cssText) {
+							if (!cssText) return;
+							cssText = rewriteCssRelativeUrls(cssText, item.url);
+							state.css = state.css.split(item.full).join(cssText);
+						}).catch(function () {});
+					});
+				}, Promise.resolve());
+			}
+
+			function collectRemoteCssImports(cssText) {
+				var imports = [];
+				String(cssText || "").replace(/@import\s+(?:url\(\s*)?["']?(https?:\/\/[^"')\s]+)["']?\s*\)?[^;]*;/gi, function (full, url) {
+					if (isEmbeddableCssUrl(url)) imports.push({ full: full, url: url });
+					return full;
+				});
+				return imports.slice(0, 12);
+			}
+
+			function isEmbeddableCssUrl(url) {
+				url = String(url || "");
+				if (!/^https?:\/\//i.test(url)) return false;
+				if (/fonts\.googleapis\.com/i.test(url)) return false;
+				return /cdnjs\.cloudflare\.com\/ajax\/libs\/animate\.css|\.css([?#].*)?$/i.test(url);
+			}
+
+			function fetchRemoteText(url) {
+				if (!window.fetch) return Promise.resolve("");
+				return fetch(url, { mode: "cors", credentials: "omit" }).then(function (response) {
+					if (!response || !response.ok) return "";
+					return response.text();
+				});
+			}
+
+			function rewriteCssRelativeUrls(cssText, sourceUrl) {
+				return String(cssText || "").replace(/url\(\s*(['"]?)(?!data:|https?:|\/\/|#)([^'")]+)\1\s*\)/gi, function (full, quote, url) {
+					var absolute = resolveCssUrl(url, sourceUrl);
+					return absolute ? "url(\"" + absolute + "\")" : full;
+				});
+			}
+
+			function resolveCssUrl(url, sourceUrl) {
+				url = String(url || "").replace(/^\s+|\s+$/g, "");
+				if (!url) return "";
+				try {
+					if (window.URL) return new URL(url, sourceUrl).href;
+				} catch (error) {}
+				if (/^\//.test(url)) {
+					var origin = String(sourceUrl || "").match(/^(https?:\/\/[^\/]+)/i);
+					return origin ? origin[1] + url : url;
+				}
+				return String(sourceUrl || "").replace(/[?#].*$/, "").replace(/\/[^\/]*$/, "/") + url.replace(/^\.\//, "");
+			}
+
 			function collectRemoteAssetUrls(text) {
 				var found = {};
 				String(text || "").replace(/url\(\s*(['"]?)(https?:\/\/[^'")]+)\1\s*\)/gi, function (full, quote, url) {
@@ -586,6 +966,18 @@
 				emptyPreview.style.display = "none";
 			}
 
+			function renderLivePreview() {
+				if (!(state.html || state.css || state.js)) return;
+				if (!(sessionInput.value || "").trim()) {
+					updateSessionWarning();
+					sessionInput.focus();
+					return;
+				}
+				previewFrame.srcdoc = buildExportHTML({ preview: false });
+				emptyPreview.style.display = "none";
+				updateFileList(state.detected, ["Live preview is listening for SSN session: " + (sessionInput.value || "").trim()]);
+			}
+
 			function exportOverlay() {
 				var html = buildExportHTML({ preview: false });
 				var fileName = (outputName.value || "ssn-imported-overlay.html").trim();
@@ -598,6 +990,7 @@
 				a.download = fileName;
 				document.body.appendChild(a);
 				a.click();
+				showExportModal(fileName);
 				setTimeout(function () {
 					URL.revokeObjectURL(a.href);
 					if (a.parentNode) a.parentNode.removeChild(a);
@@ -620,6 +1013,7 @@
 
 				return [
 					"<!DOCTYPE html>",
+					getExportInstructionsComment(config),
 					"<html lang=\"en\">",
 					"<head>",
 					"<meta charset=\"UTF-8\">",
@@ -645,6 +1039,20 @@
 					"<script>window.SSNSECompat&&window.SSNSECompat.start();<\/script>",
 					"</body>",
 					"</html>"
+				].join("\n");
+			}
+
+			function getExportInstructionsComment(config) {
+				var suffix = config.session ? "?session=" + encodeURIComponent(config.session) : "?session=YOUR_SESSION_ID";
+				if (config.password && config.password !== "false") suffix += "&password=" + encodeURIComponent(config.password);
+				return [
+					"<!--",
+					"Social Stream Ninja imported overlay",
+					"Live use: add this file as an OBS Browser Source and append " + suffix + " to the file URL if a session was not embedded.",
+					"Optional overrides: &limit=30, &direction=top, &direction=bottom, &hideAfter=20.",
+					"Demo use: open this file with ?demo to show sample messages without SSN traffic.",
+					"Generated by streamelements-importer.html",
+					"-->"
 				].join("\n");
 			}
 
@@ -690,6 +1098,7 @@
 						var config = window.SSN_SE_COMPAT_CONFIG || {};
 						var fieldData = config.fieldData || {};
 						var urlParams = new URLSearchParams(window.location.search);
+						applyRuntimeFieldOverrides(fieldData);
 						var roomID = urlParams.get("session") || config.session || "";
 						var password = urlParams.get("password") || config.password || "false";
 						var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
@@ -725,6 +1134,26 @@
 								document.addEventListener("DOMContentLoaded", callback);
 							} else {
 								callback();
+							}
+						}
+
+						function applyRuntimeFieldOverrides(data) {
+							var limit = parseInt(urlParams.get("limit") || "", 10);
+							if (limit > 0) {
+								data.messagesLimit = limit;
+								data.eventsLimit = limit;
+							}
+							var hideAfter = parseFloat(urlParams.get("hideAfter") || urlParams.get("hideafter") || "");
+							if (hideAfter >= 0 && isFinite(hideAfter)) data.hideAfter = hideAfter;
+							var direction = String(urlParams.get("direction") || "").toLowerCase();
+							if (urlParams.has("top")) direction = "top";
+							if (urlParams.has("bottom")) direction = "bottom";
+							if (direction === "top" || direction === "prepend") {
+								data.direction = "top";
+								data.alignMessages = "block";
+							} else if (direction === "bottom" || direction === "append") {
+								data.direction = "bottom";
+								data.alignMessages = "inline";
 							}
 						}
 
@@ -797,6 +1226,7 @@
 							if (!payload || typeof payload !== "object") return;
 							if (handleControlPayload(payload)) return;
 							if (!config.hasWidgetScript) {
+								if (!hasRenderableChatPayload(payload)) return;
 								renderGenericMessage(payload);
 								return;
 							}
@@ -854,6 +1284,18 @@
 							return false;
 						}
 
+						function hasRenderableChatPayload(payload) {
+							if (hasRenderableText(payload.chatmessage) || hasRenderableText(payload.message)) return true;
+							if (payload.contentimg || payload.hasDonation || payload.donation || payload.membership || payload.subtitle) return true;
+							return false;
+						}
+
+						function hasRenderableText(value) {
+							var raw = String(value || "");
+							if (/<(img|svg|video|audio|canvas)\b/i.test(raw)) return true;
+							return !!stripHTML(raw);
+						}
+
 						function renderGenericMessage(payload) {
 							var container = getGenericContainer();
 							var displayName = String(payload.chatname || payload.name || "Viewer");
@@ -889,6 +1331,7 @@
 							} else {
 								container.appendChild(row);
 							}
+							scheduleGenericRemoval(row);
 							trimGenericMessages(container);
 						}
 
@@ -907,6 +1350,14 @@
 							while (container.children.length > limit) {
 								container.removeChild(urlParams.has("top") ? container.lastElementChild : container.firstElementChild);
 							}
+						}
+
+						function scheduleGenericRemoval(row) {
+							var hideAfter = parseFloat(urlParams.get("hideAfter") || urlParams.get("hideafter") || fieldData.hideAfter || "");
+							if (!hideAfter || hideAfter < 0 || hideAfter === 999 || !isFinite(hideAfter)) return;
+							setTimeout(function () {
+								if (row && row.parentNode) row.parentNode.removeChild(row);
+							}, hideAfter * 1000);
 						}
 
 						function removeByMessageId(id) {
