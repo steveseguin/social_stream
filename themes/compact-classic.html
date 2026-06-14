@@ -18,7 +18,7 @@ URL PARAMETERS:
   font=PX           base font size in px (default 16)
   fontfamily=NAME   chat font family; loads matching Google Font (e.g. fontfamily=Roboto)
   hidebots          hide messages flagged as bots (dock still shows them)
-  width=PX          max width of the chat column in px (default 420)
+  width=PX          cap the chat column to a fixed px width (default: full window width)
   align=left|right  anchor side (default left)
   avatar            show a small inline avatar
   nobadges          hide platform badges
@@ -67,7 +67,9 @@ html, body {
     bottom: 0;
     left: 0;
     width: 100%;
-    max-width: 420px;
+    /* Default: rows span the full page width; size it via the OBS/browser window.
+       Use ?width=PX to cap the column to a fixed pixel width instead. */
+    max-width: none;
     height: 100vh;
     overflow: hidden;
     padding: 4px 8px;

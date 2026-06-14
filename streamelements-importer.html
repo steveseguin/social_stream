@@ -1,0 +1,447 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>SE Widget Importer - Social Stream Ninja</title>
+	<link rel="icon" href="./icons/favicon.ico">
+	<style>
+		:root {
+			--bg: #101214;
+			--panel: #171b1f;
+			--panel-2: #20262b;
+			--panel-3: #262d33;
+			--line: #333b42;
+			--line-soft: #262c31;
+			--text: #eef2f4;
+			--muted: #9ca9b3;
+			--muted-2: #6f7b84;
+			--accent: #30b47b;
+			--accent-2: #5aa4ff;
+			--danger: #d25a5a;
+			--focus: #58c7a3;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html,
+		body {
+			height: 100%;
+		}
+
+		body {
+			margin: 0;
+			background: var(--bg);
+			color: var(--text);
+			font-family: Arial, Helvetica, sans-serif;
+			overflow: hidden;
+		}
+
+		button,
+		input,
+		textarea {
+			font: inherit;
+		}
+
+		button,
+		.file-button {
+			border: 1px solid var(--line);
+			background: var(--panel-2);
+			color: var(--text);
+			border-radius: 6px;
+			cursor: pointer;
+			padding: 8px 11px;
+			min-height: 36px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 6px;
+		}
+
+		button:hover,
+		.file-button:hover {
+			border-color: var(--focus);
+		}
+
+		button.primary {
+			background: var(--accent);
+			border-color: var(--accent);
+			color: #07120d;
+			font-weight: 700;
+		}
+
+		button:disabled {
+			cursor: not-allowed;
+			opacity: 0.55;
+		}
+
+		label {
+			display: block;
+			color: var(--muted);
+			font-size: 13px;
+			margin: 10px 0 5px;
+		}
+
+		input,
+		textarea {
+			width: 100%;
+			border: 1px solid var(--line);
+			background: #0d0f11;
+			color: var(--text);
+			border-radius: 6px;
+			padding: 10px;
+			outline: none;
+		}
+
+		input:focus,
+		textarea:focus {
+			border-color: var(--focus);
+		}
+
+		.app {
+			display: grid;
+			grid-template-columns: 340px minmax(0, 1fr);
+			height: 100vh;
+		}
+
+		.sidebar {
+			background: var(--panel);
+			border-right: 1px solid var(--line);
+			padding: 14px;
+			overflow: auto;
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.brand {
+			font-size: 18px;
+			font-weight: 800;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.brand .dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: var(--accent);
+		}
+
+		.hint {
+			color: var(--muted);
+			font-size: 13px;
+			line-height: 1.45;
+		}
+
+		.drop-zone {
+			border: 1px dashed var(--line);
+			border-radius: 8px;
+			padding: 14px;
+			background: #0d0f11;
+		}
+
+		.drop-zone.dragover {
+			border-color: var(--focus);
+			background: #102018;
+		}
+
+		.hidden-input {
+			display: none;
+		}
+
+		.button-row {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+
+		.status {
+			border: 1px solid var(--line-soft);
+			background: #0d0f11;
+			border-radius: 8px;
+			padding: 10px;
+			color: var(--muted);
+			font-size: 13px;
+			line-height: 1.45;
+			white-space: pre-wrap;
+			min-height: 76px;
+		}
+
+		.status strong {
+			color: var(--text);
+		}
+
+		.status .warn {
+			color: #e0b84a;
+		}
+
+		.info-panel {
+			border: 1px solid var(--line-soft);
+			background: #0d0f11;
+			border-radius: 8px;
+			padding: 10px;
+			color: var(--muted);
+			font-size: 12px;
+			line-height: 1.45;
+		}
+
+		.info-panel summary {
+			color: var(--text);
+			cursor: pointer;
+			font-weight: 700;
+			margin-bottom: 8px;
+		}
+
+		.info-panel ul {
+			margin: 8px 0 0;
+			padding-left: 18px;
+		}
+
+		.info-panel li {
+			margin: 5px 0;
+		}
+
+		.info-panel a {
+			color: var(--accent-2);
+		}
+
+		.mapping-table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-top: 8px;
+		}
+
+		.mapping-table td {
+			border-top: 1px solid #181d20;
+			padding: 5px 0;
+			vertical-align: top;
+		}
+
+		.mapping-table td:first-child {
+			color: var(--text);
+			width: 42%;
+			padding-right: 8px;
+		}
+
+		.prompt-tools {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			flex-wrap: wrap;
+			margin-top: 8px;
+		}
+
+		.prompt-copy-status {
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.fallback-prompt {
+			min-height: 120px;
+			max-height: 180px;
+			resize: vertical;
+			font-size: 12px;
+			line-height: 1.4;
+			margin-top: 8px;
+		}
+
+		.main {
+			display: grid;
+			grid-template-rows: auto minmax(0, 1fr);
+			min-width: 0;
+			height: 100vh;
+		}
+
+		.toolbar {
+			border-bottom: 1px solid var(--line);
+			background: var(--panel);
+			padding: 10px 14px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+		}
+
+		.toolbar-title {
+			font-weight: 700;
+		}
+
+		.preview-wrap {
+			position: relative;
+			background:
+				linear-gradient(rgba(20, 23, 26, 0.62), rgba(20, 23, 26, 0.62)),
+				linear-gradient(135deg, #252a2f 0%, #5f6770 48%, #1b1d20 100%);
+			overflow: hidden;
+		}
+
+		iframe {
+			width: 100%;
+			height: 100%;
+			border: 0;
+			background: transparent;
+		}
+
+		.empty-preview {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--muted-2);
+			pointer-events: none;
+			text-align: center;
+			padding: 20px;
+		}
+
+		.file-list {
+			border: 1px solid var(--line-soft);
+			background: #0d0f11;
+			border-radius: 8px;
+			padding: 8px;
+			max-height: 150px;
+			overflow: auto;
+			font-size: 12px;
+			color: var(--muted);
+		}
+
+		.file-list div {
+			padding: 3px 0;
+			border-bottom: 1px solid #181d20;
+			word-break: break-all;
+		}
+
+		.file-list div:last-child {
+			border-bottom: 0;
+		}
+
+		@media (max-width: 900px) {
+			body {
+				overflow: auto;
+			}
+
+			.app {
+				display: block;
+				height: auto;
+			}
+
+			.sidebar {
+				border-right: 0;
+				border-bottom: 1px solid var(--line);
+			}
+
+			.main {
+				height: 70vh;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="app">
+		<aside class="sidebar">
+			<div class="brand"><span class="dot"></span><span>SE Widget Importer</span></div>
+			<div class="hint">Import a StreamElements or Streamlabs-style chat widget package and export one SSN-ready HTML overlay for OBS.</div>
+
+			<div class="drop-zone" id="dropZone">
+				<div class="hint">Drop a zip, folder files, or the widget's HTML/CSS/JS/data files here.</div>
+				<div class="button-row" style="margin-top: 10px;">
+					<label class="file-button" for="zipInput">Zip</label>
+					<label class="file-button" for="fileInput">Files</label>
+					<label class="file-button" for="folderInput">Folder</label>
+				</div>
+				<input class="hidden-input" id="zipInput" type="file" accept=".zip">
+				<input class="hidden-input" id="fileInput" type="file" multiple>
+				<input class="hidden-input" id="folderInput" type="file" multiple webkitdirectory>
+			</div>
+
+			<label for="sessionInput">SSN session ID to embed</label>
+			<input id="sessionInput" placeholder="Example: abc123">
+
+			<label for="passwordInput">Password, if used</label>
+			<input id="passwordInput" placeholder="Optional">
+
+			<label for="outputName">Export file name</label>
+			<input id="outputName" value="ssn-imported-overlay.html">
+
+			<div class="button-row">
+				<button id="previewBtn" type="button" disabled>Preview</button>
+				<button class="primary" id="exportBtn" type="button" disabled>Export HTML</button>
+			</div>
+
+			<div class="status" id="statusBox">Waiting for overlay files.</div>
+			<div class="file-list" id="fileList"></div>
+
+			<details class="info-panel" open>
+				<summary>What gets converted</summary>
+				<div>Best fit: StreamElements or Streamlabs chat widgets with HTML, CSS, JS, fields, data, and local assets.</div>
+				<table class="mapping-table">
+					<tbody>
+						<tr><td>SSN name</td><td><code>data.displayName</code>, <code>data.nick</code></td></tr>
+						<tr><td>SSN message</td><td><code>data.text</code>, <code>renderedText</code></td></tr>
+						<tr><td>SSN badges</td><td><code>data.badges</code> where URLs or badge labels exist</td></tr>
+						<tr><td>SSN platform</td><td><code>service</code></td></tr>
+						<tr><td>SSN message ID</td><td><code>data.msgId</code> for delete-message support</td></tr>
+						<tr><td>SSN member/mod/VIP hints</td><td>Subscriber, moderator, VIP, or broadcaster style flags when detectable</td></tr>
+						<tr><td>SSN donations/media</td><td><code>data.amount</code> and attachment image data where available</td></tr>
+					</tbody>
+				</table>
+			</details>
+
+			<details class="info-panel">
+				<summary>Known limits</summary>
+				<ul>
+					<li>Chat widgets are the main target; goals, alerts, loyalty, store, tips, and account API features are only shimmed if their code falls back cleanly.</li>
+					<li>Widgets that require private StreamElements or Streamlabs API tokens, overlay-store state, full jQuery plugins, or platform emote APIs may need manual edits.</li>
+					<li>Local packaged images, fonts, audio, and video are embedded; remote URLs stay remote and may still fail if the source blocks OBS/browser access.</li>
+					<li>The export is a single HTML file with the session embedded, but <code>?session=...</code> and <code>&password=...</code> in the OBS URL still override it.</li>
+				</ul>
+			</details>
+
+			<details class="info-panel">
+				<summary>Fallback AI conversion prompt</summary>
+				<div>If the importer fails, use this prompt with the widget files and screenshot. Full prompt file: <a href="./streamelements-importer-prompt.md" target="_blank" rel="noopener">streamelements-importer-prompt.md</a></div>
+				<textarea class="fallback-prompt" id="fallbackPromptText" readonly>You are converting a StreamElements or Streamlabs chat overlay into a standalone Social Stream Ninja overlay.
+
+Inspect the provided HTML, CSS, JS, fields/data JSON, assets, and screenshot. Also inspect this repo's sampleoverlay.html, dock.html, docs/customoverlays.md, and docs/event-reference.html.
+
+Create one standalone HTML file that preserves the original visual design but removes the StreamElements/Streamlabs runtime. Use classic browser scripts, no module imports, and keep Chrome 80 compatibility.
+
+Resolve {{fieldName}} placeholders from data JSON first, then fields defaults. Inline local packaged assets where practical. Keep the OBS background transparent.
+
+Read SSN traffic from event.data.dataReceived.overlayNinja through the hidden VDO.Ninja iframe bridge and also support &server / &server2 WebSocket mode when practical. Require ?session=YOUR_SESSION_ID for live use.
+
+Map SSN fields: chatname to display name, chatmessage to message HTML/text, chatimg to avatar, type to platform/service, chatbadges to badge images/labels, hasDonation/donation to amount/support text, membership/subtitle to subscriber/member text, contentimg to media attachment, and mid/id/messageId/message_id/meta.messageId to message IDs.
+
+Preserve moderation controls: deleteMessage, delete.id, delete.chatname, clearAll, action: clear, timeoutUser, and blockUser. Store data-mid, data-chatname, and data-source-type on each rendered message.
+
+Add ?demo and ?testbg support for local visual testing. Test viewer, VIP/mod/subscriber, donation, badge, media, delete, and clear cases before finishing.</textarea>
+				<div class="prompt-tools">
+					<button id="copyPromptBtn" type="button">Copy Prompt</button>
+					<span class="prompt-copy-status" id="promptCopyStatus"></span>
+				</div>
+			</details>
+		</aside>
+
+		<main class="main">
+			<div class="toolbar">
+				<div>
+					<div class="toolbar-title">Preview</div>
+					<div class="hint">Demo messages are used here. The exported file uses live SSN traffic.</div>
+				</div>
+				<button id="clearBtn" type="button">Clear</button>
+			</div>
+			<div class="preview-wrap">
+				<iframe id="previewFrame" title="Overlay preview" sandbox="allow-scripts allow-forms allow-popups allow-downloads"></iframe>
+				<div class="empty-preview" id="emptyPreview">Import an overlay to preview it.</div>
+			</div>
+		</main>
+	</div>
+
+	<script src="./thirdparty/jszip.min.js"></script>
+	<script src="./streamelements-importer.js"></script>
+</body>
+</html>
+

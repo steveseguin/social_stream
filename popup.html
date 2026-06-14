@@ -4570,6 +4570,8 @@ input:checked + .slider:before {
 						<option value="themes/overlay-comic-pop.html">💥 Comic Pop Dock - Stackable pop art chat</option>
 						<option value="themes/overlay-comic-classic.html">🗯️ Comic Pop Classic - Featured style chat</option>
 						<option value="themes/horizontal.html">➡️ Horizontal Scroll - Right-to-left ticker</option>
+						<option value="themes/overlay-ticker-news.html">📰 News Ticker - Breaking-news crawl bar</option>
+						<option value="themes/overlay-danmaku.html">🎯 Danmaku Bullet Chat - Messages fly across screen</option>
 						<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
 						<option value="themes/overlay-particles.html">✨ Particle System - Floating message effects</option>
 						<option value="themes/overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
@@ -4591,6 +4593,7 @@ input:checked + .slider:before {
 
 			<div class="chat-overlay-design-note beginner-basic">
 				Want to design your own? Check out our <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">AI-friendly starter templates</a>.
+				Have a StreamElements or Streamlabs chat widget? <a class="lightblue" href="./streamelements-importer.html" target="_blank">Import and export it as a standalone SSN overlay</a>.
 			</div>
             <div class="link beginner-basic" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
                 <h2 class="featured_chat_title">
@@ -12837,6 +12840,68 @@ input:checked + .slider:before {
 								</div>
 							</div>
 
+							<!-- News Ticker Options -->
+							<div class="overlay-config-section" id="ticker-news-overlay-config" style="display: none;">
+								<h3>📰 <span data-translate="ticker-news-options">News Ticker Options</span></h3>
+								<div class="textInputContainer" style="width: 95%;" title="Crawl speed in pixels per second (default 110)">
+									<input type="number" id="ticker-speed" class="textInput instant" autocomplete="off" min="20" max="600" placeholder="e.g. 110" data-textparam30="speed" />
+									<label for="ticker-speed"><span data-translate="ticker-speed">&gt; Crawl speed (px/sec)</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Text shown in the left label box">
+									<input type="text" id="ticker-label" class="textInput instant" autocomplete="off" placeholder="e.g. LIVE CHAT" data-textparam30="label" />
+									<label for="ticker-label"><span data-translate="ticker-label">&gt; Left label text</span></label>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="top" /><span class="slider round"></span></label>
+									<span data-translate="ticker-top">⬆️ Place bar at the top</span>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="nolabel" /><span class="slider round"></span></label>
+									<span data-translate="ticker-nolabel">🏷️ Hide the left label box</span>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="nobar" /><span class="slider round"></span></label>
+									<span data-translate="ticker-nobar">🫥 Transparent bar (no background strip)</span>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="noicon" /><span class="slider round"></span></label>
+									<span data-translate="ticker-noicon">🚫 Hide platform icons</span>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="nonames" /><span class="slider round"></span></label>
+									<span data-translate="ticker-nonames">🙈 Hide names</span>
+								</div>
+							</div>
+
+							<!-- Danmaku Bullet Chat Options -->
+							<div class="overlay-config-section" id="danmaku-overlay-config" style="display: none;">
+								<h3>🎯 <span data-translate="danmaku-options">Danmaku Bullet Chat Options</span></h3>
+								<div class="textInputContainer" style="width: 95%;" title="Seconds for a bullet to cross the screen (default 9; lower = faster)">
+									<input type="number" id="danmaku-speed" class="textInput instant" autocomplete="off" min="2" max="40" placeholder="e.g. 9" data-textparam30="duration" />
+									<label for="danmaku-speed"><span data-translate="danmaku-speed">&gt; Cross time (seconds)</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Number of vertical lanes bullets travel along (default 12)">
+									<input type="number" id="danmaku-lanes" class="textInput instant" autocomplete="off" min="1" max="40" placeholder="e.g. 12" data-textparam30="lanes" />
+									<label for="danmaku-lanes"><span data-translate="danmaku-lanes">&gt; Vertical lanes</span></label>
+								</div>
+								<div style="margin-top:6px;">
+									<label for="danmaku-region" style="display:block; margin-bottom:4px;"><span data-translate="danmaku-region">🖥️ Screen region</span></label>
+									<select id="danmaku-region" data-optionparam30="region" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+										<option value="">Full screen</option>
+										<option value="top">Top half</option>
+										<option value="bottom">Bottom half</option>
+									</select>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="noavatar" /><span class="slider round"></span></label>
+									<span data-translate="danmaku-noavatar">👤 Hide avatars</span>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="nonames" /><span class="slider round"></span></label>
+									<span data-translate="danmaku-nonames">🙈 Hide names</span>
+								</div>
+							</div>
+
 							<!-- Windows 3.1 Theme Options -->
 							<div class="overlay-config-section" id="Windows3-overlay-config" style="display: none;">
 								<h3>🖥️ <span data-translate="windows31-overlay-options">Windows 3.1 Theme Options</span></h3>
@@ -14155,4 +14220,3 @@ input:checked + .slider:before {
         <script type="text/javascript" src="spotify-auth-helper.js"></script>
     </body>
 </html>
-
