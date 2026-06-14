@@ -488,16 +488,16 @@
 
 			<details class="info-panel" open>
 				<summary>What gets converted</summary>
-				<div>Best fit: StreamElements or Streamlabs chat widgets with HTML, CSS, JS, fields, data, and local assets.</div>
+				<div>Best fit: StreamElements or Streamlabs chat widgets with HTML, CSS, JS, fields, data, and local assets. SSN payloads are mapped into the SE-style event fields those widgets expect.</div>
 				<table class="mapping-table">
 					<tbody>
-						<tr><td>SSN name</td><td><code>data.displayName</code>, <code>data.nick</code></td></tr>
-						<tr><td>SSN message</td><td><code>data.text</code>, <code>renderedText</code></td></tr>
-						<tr><td>SSN badges</td><td><code>data.badges</code> where URLs or badge labels exist</td></tr>
-						<tr><td>SSN platform</td><td><code>service</code></td></tr>
-						<tr><td>SSN message ID</td><td><code>data.msgId</code> for delete-message support</td></tr>
-						<tr><td>SSN member/mod/VIP hints</td><td>Subscriber, moderator, VIP, or broadcaster style flags when detectable</td></tr>
-						<tr><td>SSN donations/media</td><td><code>data.amount</code> and attachment image data where available</td></tr>
+						<tr><td>SSN <code>chatname</code></td><td>SE-style <code>data.displayName</code>, <code>data.nick</code></td></tr>
+						<tr><td>SSN <code>chatmessage</code></td><td>SE-style <code>data.text</code>, <code>renderedText</code></td></tr>
+						<tr><td>SSN <code>chatbadges</code></td><td>SE-style <code>data.badges</code> where URLs or badge labels exist</td></tr>
+						<tr><td>SSN <code>type</code></td><td>SE-style <code>service</code></td></tr>
+						<tr><td>SSN <code>mid</code>, <code>id</code>, or <code>meta.messageId</code></td><td>SE-style <code>data.msgId</code> for delete-message support</td></tr>
+						<tr><td>SSN <code>membership</code>, <code>subtitle</code>, badges, and role hints</td><td>SE-style subscriber, moderator, VIP, or broadcaster flags when detectable</td></tr>
+						<tr><td>SSN <code>hasDonation</code>, <code>donation</code>, and <code>contentimg</code></td><td>SE-style <code>data.amount</code> and attachment image data where available</td></tr>
 					</tbody>
 				</table>
 			</details>
@@ -526,7 +526,7 @@ Resolve {{fieldName}} placeholders from data JSON first, then fields defaults. I
 
 Read SSN traffic from event.data.dataReceived.overlayNinja through the hidden VDO.Ninja iframe bridge and also support &server / &server2 WebSocket mode when practical. Require ?session=YOUR_SESSION_ID for live use.
 
-Map SSN fields: chatname to display name, chatmessage to message HTML/text, chatimg to avatar, type to platform/service, chatbadges to badge images/labels, hasDonation/donation to amount/support text, membership/subtitle to subscriber/member text, contentimg to media attachment, and mid/id/messageId/message_id/meta.messageId to message IDs.
+Map incoming SSN fields: chatname to display name, chatmessage to message HTML/text, chatimg to avatar, type to platform/service, chatbadges to badge images/labels, hasDonation/donation to amount/support text, membership/subtitle to subscriber/member text, contentimg to media attachment, and mid/id/messageId/message_id/meta.messageId to message IDs.
 
 Preserve moderation controls: deleteMessage, delete.id, delete.chatname, clearAll, action: clear, timeoutUser, and blockUser. Store data-mid, data-chatname, and data-source-type on each rendered message.
 
