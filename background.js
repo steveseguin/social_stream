@@ -6761,7 +6761,7 @@ async function sendToDestinations(message) {
 		if (settings.enableCustomGifCommands && settings["customGifCommands"]) {
 			// settings.enableCustomGifCommands.object = JSON.stringify([{command,url},{command,url},{command,url})
 			const messageText = typeof message.chatmessage === "string" ? message.chatmessage : "";
-			const cleanMessageText = messageText.trim().replace(/^[^a-zA-Z0-9#]+/g, "");
+			const cleanMessageText = messageText.trim();
 			settings["customGifCommands"]["object"].forEach(values => {
 				if (cleanMessageText && values.url && values.command && commandAliasMatches(values.command, cleanMessageText, "startsWithToken")) {
 					//  || "https://picsum.photos/1280/720?random="+values.command

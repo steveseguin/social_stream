@@ -486,7 +486,7 @@
 				state.fieldData = mergeFieldDefaults(fields, data);
 				state.html = normalizeProtocolRelative(replaceAssets(resolveTemplate(detected.htmlText || '<div class="main-container"></div>', state.fieldData)));
 				state.css = normalizeProtocolRelative(replaceAssets(resolveTemplate(detected.cssText || "", state.fieldData)));
-				state.js = normalizeProtocolRelative(resolveTemplate(detected.jsText || "", state.fieldData));
+				state.js = normalizeProtocolRelative(replaceScriptAssets(resolveTemplate(detected.jsText || "", state.fieldData)));
 				state.warnings = analyzeUnsupportedFeatures(state.html, state.css, state.js);
 
 				state.processing = true;
@@ -797,7 +797,10 @@
 			}
 
 			function replaceAssets(text) {
-				var assetLookup = buildAssetLookup();
+				return replaceAssetReferences(text, buildAssetLookup());
+			}
+
+			function replaceAssetReferences(text, assetLookup) {
 				var output = String(text || "");
 				output = output.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, function (full, quote, url) {
 					var replacement = assetLookup[normalizeAssetKey(url)];
@@ -810,6 +813,44 @@
 					return attr + "=\"" + replacement + "\"";
 				});
 				return output;
+			}
+
+			function replaceScriptAssets(text) {
+				var assetLookup = buildAssetLookup();
+				return String(text || "").replace(/(["'`])((?:\\[\s\S]|(?!\1)[\s\S])*)\1/g, function (full, quote, value) {
+					var url = unescapeScriptString(value);
+					var replacement = getScriptAssetReplacement(url, assetLookup);
+					if (!replacement) return full;
+					if (quote === "`" && /\$\{/.test(value)) return full;
+					return quote + escapeScriptString(replacement, quote) + quote;
+				});
+			}
+
+			function getScriptAssetReplacement(value, assetLookup) {
+				var replacement = assetLookup[normalizeAssetKey(value)];
+				if (replacement && isLikelyLocalAssetReference(value)) return replacement;
+				if (!/\b(?:url\s*\(|src\s*=|href\s*=)/i.test(value)) return "";
+				replacement = replaceAssetReferences(value, assetLookup);
+				return replacement !== value ? replacement : "";
+			}
+
+			function isLikelyLocalAssetReference(value) {
+				value = String(value || "").trim();
+				if (!value || /^(https?:|data:|blob:|#|\/\/)/i.test(value)) return false;
+				return /\.(png|jpe?g|gif|webp|svg|avif|ico|mp3|wav|ogg|m4a|aac|mp4|webm|woff2?|ttf|otf)([?#].*)?$/i.test(value);
+			}
+
+			function unescapeScriptString(value) {
+				return String(value || "")
+					.replace(/\\\//g, "/")
+					.replace(/\\(['"`\\])/g, "$1");
+			}
+
+			function escapeScriptString(value, quote) {
+				value = String(value || "").replace(/\\/g, "\\\\");
+				if (quote === "'") return value.replace(/'/g, "\\'");
+				if (quote === '"') return value.replace(/"/g, '\\"');
+				return value.replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
 			}
 
 			function buildAssetLookup() {

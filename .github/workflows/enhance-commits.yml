@@ -14,13 +14,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
-          token: ${{ secrets.COMMIT_ENHANCER_PAT }}
+          token: ${{ github.token }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -36,5 +36,5 @@ jobs:
         id: enhance
         env:
           ZEN_API_TOKEN: ${{ secrets.ZEN_API_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.COMMIT_ENHANCER_PAT }} # This is used by the script for PR updates
+          GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/enhance-commits.js

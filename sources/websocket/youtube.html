@@ -466,6 +466,7 @@ try {
 	var liveChatStreamStopping = false;
 	var liveChatStreamReadBuffer = '';
 	var liveChatPollingFallbackActive = false;
+	var liveChatPollingActive = false;
 	var tokenRefreshPromise = null;
 	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.";
 	const INNERTUBE_EMOJI_CACHE_TTL = 24 * 60 * 60 * 1000;
@@ -2637,7 +2638,7 @@ function enableBackgroundKeepAlive() {
 				processQueuedMessages();
 			}
 			
-			if (liveChatId && !liveChatStreamActive && !liveChatStreamAbortController && !fetchTimeout) {
+			if (liveChatId && !liveChatStreamActive && !liveChatStreamAbortController && !liveChatPollingActive && !fetchTimeout) {
 				if (liveChatPollingFallbackActive) {
 					scheduleLiveChatPolling(1000);
 				} else {
@@ -2721,7 +2722,7 @@ function enableBackgroundKeepAlive() {
 	}
 
 	function scheduleLiveChatPolling(delayMs = 2000) {
-		if (!liveChatId || fetchTimeout || liveChatStreamActive || liveChatStreamAbortController) return;
+		if (!liveChatId || fetchTimeout || liveChatStreamActive || liveChatStreamAbortController || liveChatPollingActive) return;
 		fetchTimeout = setTrackedTimeout(startLiveChatPolling, delayMs, !isPageVisible);
 	}
 
@@ -3111,26 +3112,27 @@ function enableBackgroundKeepAlive() {
 	}
 
 	async function startLiveChatPolling() {
-		if (!liveChatId || liveChatStreamActive || liveChatStreamAbortController) {
+		if (!liveChatId || liveChatStreamActive || liveChatStreamAbortController || liveChatPollingActive) {
 			return false;
 		}
-		const token = getStoredToken();
-		if (!token) {
-			const refreshed = await refreshToken();
-			if (refreshed) {
-				scheduleAuthRetry();
-			}
-			return false;
-		}
-		if (fetchTimeout) {
-			try {
-				clearTimeout(fetchTimeout);
-			} catch (_) {}
-			fetchTimeout = null;
-		}
-		lastPollingTime = Date.now();
-		updateLiveChatStreamIndicator('polling');
+		liveChatPollingActive = true;
 		try {
+			const token = getStoredToken();
+			if (!token) {
+				const refreshed = await refreshToken();
+				if (refreshed) {
+					scheduleAuthRetry();
+				}
+				return false;
+			}
+			if (fetchTimeout) {
+				try {
+					clearTimeout(fetchTimeout);
+				} catch (_) {}
+				fetchTimeout = null;
+			}
+			lastPollingTime = Date.now();
+			updateLiveChatStreamIndicator('polling');
 			const response = await fetchWithTimeout(buildLiveChatPollingUrl(), 10000, {
 				'Authorization': `Bearer ${token}`,
 				'Accept': 'application/json'
@@ -3139,8 +3141,11 @@ function enableBackgroundKeepAlive() {
 			await processLiveChatResponseData(data, { scheduleNextPoll: true });
 			return true;
 		} catch (error) {
+			liveChatPollingActive = false;
 			await handleLiveChatPollingError(error);
 			return false;
+		} finally {
+			liveChatPollingActive = false;
 		}
 	}
 
@@ -4742,6 +4747,7 @@ function enableBackgroundKeepAlive() {
 		
 		channelStatsInterval = null;
 		fetchTimeout = null;
+		liveChatPollingActive = false;
 		lastKnownViewers = null;
 		resetViewerCountFallbackState(null);
 		
@@ -5832,6 +5838,7 @@ function enableBackgroundKeepAlive() {
 		if (fetchTimeout) clearTimeout(fetchTimeout);
 		activeTimeouts.forEach(timeout => clearTimeout(timeout));
 		activeTimeouts.clear();
+		liveChatPollingActive = false;
 		
 		
 		// Run all registered cleanup functions

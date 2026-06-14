@@ -475,7 +475,7 @@
 			url.searchParams.set("client_id", state.cfg.clientId || DEFAULT_CLIENT_ID);
 			url.searchParams.set("redirect_uri", redirectUri);
 			url.searchParams.set("scope", state.cfg.scopes || DEFAULT_SCOPES);
-			url.searchParams.set("state", encodeOAuthState(saved));
+			url.searchParams.set("state", stateValue);
 			url.searchParams.set("code_challenge", challenge);
 			url.searchParams.set("code_challenge_method", "S256");
 			window.location.href = url.toString();
@@ -532,9 +532,6 @@
 			return Promise.resolve(false);
 		}
 		try { saved = JSON.parse(localStorage.getItem(OAUTH_KEY) || "{}") || {}; } catch (e) {}
-		if ((!saved.state || !saved.verifier) && decodedState && decodedState.state && decodedState.verifier) {
-			saved = decodedState;
-		}
 		cleanupOAuthUrl();
 		if (error) return Promise.reject(new Error(query.get("error_description") || error));
 		if (!saved.state || !saved.verifier) return Promise.reject(new Error("Missing sign-in state. Please try again."));
