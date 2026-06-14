@@ -7,7 +7,10 @@
 				html: "",
 				css: "",
 				js: "",
-				sourceName: ""
+				sourceName: "",
+				processing: false,
+				remoteAssetsEmbedded: 0,
+				remoteAssetsFailed: 0
 			};
 
 			var zipInput = document.getElementById("zipInput");
@@ -91,7 +94,10 @@
 					html: "",
 					css: "",
 					js: "",
-					sourceName: ""
+					sourceName: "",
+					processing: false,
+					remoteAssetsEmbedded: 0,
+					remoteAssetsFailed: 0
 				};
 				previewFrame.removeAttribute("srcdoc");
 				emptyPreview.style.display = "";
@@ -108,8 +114,8 @@
 
 			function refreshButtons() {
 				var hasBuild = !!(state.html || state.css || state.js);
-				previewBtn.disabled = !hasBuild;
-				exportBtn.disabled = !hasBuild;
+				previewBtn.disabled = !hasBuild || state.processing;
+				exportBtn.disabled = !hasBuild || state.processing;
 			}
 
 			function copyFallbackPrompt() {
@@ -219,6 +225,9 @@
 				state.textByPath = {};
 				state.assetByPath = {};
 				state.sourceName = sourceName || "overlay";
+				state.processing = false;
+				state.remoteAssetsEmbedded = 0;
+				state.remoteAssetsFailed = 0;
 
 				state.files.forEach(function (item) {
 					if (item.isText) {
@@ -236,54 +245,152 @@
 				state.css = normalizeProtocolRelative(replaceAssets(resolveTemplate(detected.cssText || "", state.fieldData)));
 				state.js = normalizeProtocolRelative(resolveTemplate(detected.jsText || "", state.fieldData));
 
-				updateFileList(detected);
+				state.processing = true;
+				updateFileList(detected, ["Checking remote asset URLs."]);
 				refreshButtons();
-				renderPreview();
+				inlineRemoteAssets().then(function (stats) {
+					state.remoteAssetsEmbedded = stats.embedded;
+					state.remoteAssetsFailed = stats.failed;
+					state.processing = false;
+					updateFileList(detected);
+					refreshButtons();
+					renderPreview();
+				}).catch(function (error) {
+					state.remoteAssetsFailed += 1;
+					state.processing = false;
+					updateFileList(detected, ["Remote asset check failed: " + String(error && error.message || error)]);
+					refreshButtons();
+					renderPreview();
+				});
 			}
 
 			function detectWidgetParts(items) {
-				var htmlItems = [];
-				var cssItems = [];
-				var jsItems = [];
-				var fieldsItem = null;
-				var dataItem = null;
-
-				items.forEach(function (item) {
-					if (!item.isText) return;
-					var lowerPath = item.path.toLowerCase();
-					var lowerName = item.name.toLowerCase();
-
-					if (isLikelyFields(lowerName, lowerPath)) {
-						fieldsItem = fieldsItem || item;
-					} else if (isLikelyData(lowerName, lowerPath)) {
-						dataItem = dataItem || item;
-					} else if (/\.css$/i.test(lowerPath) || /\bcss\b/i.test(lowerName)) {
-						cssItems.push(item);
-					} else if (/\.js$/i.test(lowerPath) || /\bjs\b/i.test(lowerName)) {
-						jsItems.push(item);
-					} else if (/\.html?$/i.test(lowerPath) || /\bhtml\b/i.test(lowerName)) {
-						htmlItems.push(item);
+				var ignoredFiles = [];
+				var textItems = items.filter(function (item) {
+					return item.isText;
+				});
+				var usableItems = textItems.filter(function (item) {
+					if (isGeneratedOutput(item)) {
+						ignoredFiles.push(item.path);
+						return false;
 					}
+					return true;
 				});
 
-				if (!htmlItems.length) {
-					htmlItems = items.filter(function (item) {
-						return item.isText && /<\s*(div|html|body|head|link|script)\b/i.test(item.text || "");
-					});
+				var fieldsItem = chooseBestPart(usableItems.filter(function (item) { return isLikelyFields(item.name.toLowerCase(), item.path.toLowerCase()); }), "fields");
+				var dataItem = chooseBestPart(usableItems.filter(function (item) { return isLikelyData(item.name.toLowerCase(), item.path.toLowerCase()); }), "data");
+				var htmlItem = chooseBestPart(usableItems.filter(isLikelyHTML), "html");
+				if (!htmlItem) {
+					htmlItem = chooseBestPart(usableItems.filter(function (item) {
+						return /<\s*(div|html|body|head|link|script)\b/i.test(item.text || "");
+					}), "html");
 				}
+				var cssItem = chooseBestPart(usableItems.filter(isLikelyCSS), "css");
+				var jsItem = chooseBestPart(usableItems.filter(isLikelyJS), "js");
+
+				var unusedPartFiles = collectUnusedPartFiles(usableItems, [fieldsItem, dataItem, htmlItem, cssItem, jsItem]);
 
 				return {
-					htmlText: joinTextParts(htmlItems),
-					cssText: joinTextParts(cssItems),
-					jsText: joinTextParts(jsItems),
+					htmlText: joinTextParts(htmlItem ? [htmlItem] : []),
+					cssText: joinTextParts(cssItem ? [cssItem] : []),
+					jsText: joinTextParts(jsItem ? [jsItem] : []),
 					fieldsText: fieldsItem ? fieldsItem.text : "",
 					dataText: dataItem ? dataItem.text : "",
-					htmlFiles: htmlItems.map(function (item) { return item.path; }),
-					cssFiles: cssItems.map(function (item) { return item.path; }),
-					jsFiles: jsItems.map(function (item) { return item.path; }),
+					htmlFiles: htmlItem ? [htmlItem.path] : [],
+					cssFiles: cssItem ? [cssItem.path] : [],
+					jsFiles: jsItem ? [jsItem.path] : [],
 					fieldsFile: fieldsItem ? fieldsItem.path : "",
-					dataFile: dataItem ? dataItem.path : ""
+					dataFile: dataItem ? dataItem.path : "",
+					ignoredFiles: ignoredFiles,
+					unusedPartFiles: unusedPartFiles
 				};
+			}
+
+			function isLikelyHTML(item) {
+				var lowerPath = item.path.toLowerCase();
+				var lowerName = item.name.toLowerCase();
+				return /\.html?$/i.test(lowerPath) || /^html(\s*[-_].*)?\.txt$/i.test(lowerName) || /\bhtml\b/i.test(lowerName);
+			}
+
+			function isLikelyCSS(item) {
+				var lowerPath = item.path.toLowerCase();
+				var lowerName = item.name.toLowerCase();
+				return /\.css$/i.test(lowerPath) || /^css(\s*[-_].*)?\.txt$/i.test(lowerName) || /\bcss\b/i.test(lowerName);
+			}
+
+			function isLikelyJS(item) {
+				var lowerPath = item.path.toLowerCase();
+				var lowerName = item.name.toLowerCase();
+				return /\.js$/i.test(lowerPath) || /^js(\s*[-_].*)?\.txt$/i.test(lowerName) || /\bjs\b/i.test(lowerName);
+			}
+
+			function isGeneratedOutput(item) {
+				var lowerPath = item.path.toLowerCase();
+				var lowerName = item.name.toLowerCase();
+				if (/validation-|ssn-imported|stream-overlay-to-ssn-prompt|streamelements-importer-prompt|-ssn-overlay|converted/i.test(lowerPath)) return true;
+				if (/\.(png|jpe?g|gif|webp|svg)$/i.test(lowerName)) return false;
+				var text = item.text || "";
+				return /SSN_SE_COMPAT_CONFIG|Social Stream Ninja SE Widget Importer|window\.SSNSECompat|overlayNinja|graycodeAddMessage/i.test(text);
+			}
+
+			function chooseBestPart(items, type) {
+				if (!items.length) return null;
+				return items.slice().sort(function (a, b) {
+					return scorePart(b, type) - scorePart(a, type) || a.path.localeCompare(b.path);
+				})[0];
+			}
+
+			function scorePart(item, type) {
+				var lowerPath = item.path.toLowerCase().replace(/\\/g, "/");
+				var lowerName = item.name.toLowerCase();
+				var score = 0;
+				if (type === "html") {
+					if (/^html(\s*[-_].*)?\.txt$/.test(lowerName)) score += 170;
+					if (lowerName === "widget.html") score += 150;
+					if (lowerName === "chat.html") score += 145;
+					if (lowerName === "index.html") score += 90;
+					if (/\.html?$/.test(lowerName)) score += 60;
+					if (/\bhtml\b/.test(lowerName)) score += 50;
+				} else if (type === "css") {
+					if (/^css(\s*[-_].*)?\.txt$/.test(lowerName)) score += 170;
+					if (lowerName === "widget.css") score += 150;
+					if (lowerName === "chat.css") score += 145;
+					if (lowerName === "style.css" || lowerName === "styles.css") score += 110;
+					if (/\.css$/.test(lowerName)) score += 60;
+					if (/\bcss\b/.test(lowerName)) score += 50;
+				} else if (type === "js") {
+					if (/^js(\s*[-_].*)?\.txt$/.test(lowerName)) score += 170;
+					if (lowerName === "widget.js") score += 150;
+					if (lowerName === "chat.js") score += 145;
+					if (lowerName === "script.js" || lowerName === "main.js") score += 100;
+					if (/\.js$/.test(lowerName)) score += 60;
+					if (/\bjs\b/.test(lowerName)) score += 50;
+				} else if (type === "fields") {
+					if (/^fields?(\s*[-_].*)?\.txt$/.test(lowerName)) score += 170;
+					if (lowerName === "fields.json") score += 160;
+					if (lowerName === "widget.json") score += 140;
+					if (/\bfields?\b/.test(lowerName)) score += 80;
+				} else if (type === "data") {
+					if (/^data(\s*[-_].*)?\.txt$/.test(lowerName)) score += 170;
+					if (lowerName === "data.json") score += 160;
+					if (/\bdata\b/.test(lowerName)) score += 80;
+				}
+				if (/node_modules|__macosx|\.git|readme|docs?\//.test(lowerPath)) score -= 80;
+				score -= lowerPath.split("/").length;
+				return score;
+			}
+
+			function collectUnusedPartFiles(items, selectedItems) {
+				var selected = {};
+				selectedItems.forEach(function (item) {
+					if (item) selected[item.path] = true;
+				});
+				return items.filter(function (item) {
+					if (selected[item.path]) return false;
+					return isLikelyHTML(item) || isLikelyCSS(item) || isLikelyJS(item) || isLikelyFields(item.name.toLowerCase(), item.path.toLowerCase()) || isLikelyData(item.name.toLowerCase(), item.path.toLowerCase());
+				}).map(function (item) {
+					return item.path;
+				});
 			}
 
 			function isLikelyFields(name, path) {
@@ -300,7 +407,7 @@
 				}).join("\n\n");
 			}
 
-			function updateFileList(detected) {
+			function updateFileList(detected, extraLines) {
 				var lines = [];
 				lines.push("Detected HTML: " + (detected.htmlFiles.join(", ") || "generated fallback"));
 				lines.push("Detected CSS: " + (detected.cssFiles.join(", ") || "none"));
@@ -309,6 +416,15 @@
 				lines.push("Data: " + (detected.dataFile || "none"));
 				lines.push("Fields resolved: " + Object.keys(state.fieldData).length);
 				lines.push("Assets embedded: " + Object.keys(state.assetByPath).length);
+				if (state.remoteAssetsEmbedded) lines.push("Remote assets embedded: " + state.remoteAssetsEmbedded);
+				if (state.remoteAssetsFailed) lines.push("Remote assets left as URLs: " + state.remoteAssetsFailed);
+				if (detected.ignoredFiles && detected.ignoredFiles.length) lines.push("Ignored generated/export files: " + detected.ignoredFiles.length);
+				if (detected.unusedPartFiles && detected.unusedPartFiles.length) lines.push("Other source-like files not used: " + detected.unusedPartFiles.length);
+				if (extraLines && extraLines.length) {
+					extraLines.forEach(function (line) {
+						lines.push(line);
+					});
+				}
 				setStatus(lines);
 
 				fileList.innerHTML = "";
@@ -372,10 +488,89 @@
 				var lookup = {};
 				Object.keys(state.assetByPath).forEach(function (path) {
 					var dataUrl = state.assetByPath[path];
-					lookup[normalizeAssetKey(path)] = dataUrl;
+					var normalizedPath = normalizeAssetKey(path);
+					lookup[normalizedPath] = dataUrl;
 					lookup[normalizeAssetKey(basename(path))] = dataUrl;
+					addAssetSuffixes(lookup, normalizedPath, dataUrl);
 				});
 				return lookup;
+			}
+
+			function addAssetSuffixes(lookup, normalizedPath, dataUrl) {
+				var parts = String(normalizedPath || "").split("/");
+				for (var i = 1; i < parts.length; i++) {
+					lookup[parts.slice(i).join("/")] = dataUrl;
+				}
+			}
+
+			function inlineRemoteAssets() {
+				var urls = collectRemoteAssetUrls(state.html + "\n" + state.css);
+				var maxRemoteAssets = 40;
+				var stats = { embedded: 0, failed: 0 };
+				if (!urls.length) return Promise.resolve(stats);
+				urls = urls.slice(0, maxRemoteAssets);
+				return urls.reduce(function (chain, url) {
+					return chain.then(function () {
+						return fetchRemoteAssetAsDataUrl(url).then(function (dataUrl) {
+							if (dataUrl) {
+								state.html = replaceAllText(state.html, url, dataUrl);
+								state.css = replaceAllText(state.css, url, dataUrl);
+								stats.embedded += 1;
+							} else {
+								stats.failed += 1;
+							}
+						}).catch(function () {
+							stats.failed += 1;
+						});
+					});
+				}, Promise.resolve()).then(function () {
+					return stats;
+				});
+			}
+
+			function collectRemoteAssetUrls(text) {
+				var found = {};
+				String(text || "").replace(/url\(\s*(['"]?)(https?:\/\/[^'")]+)\1\s*\)/gi, function (full, quote, url) {
+					if (isEmbeddableRemoteUrl(url)) found[url] = true;
+					return full;
+				});
+				String(text || "").replace(/\b(src|href)=["'](https?:\/\/[^"']+)["']/gi, function (full, attr, url) {
+					if (isEmbeddableRemoteUrl(url)) found[url] = true;
+					return full;
+				});
+				return Object.keys(found);
+			}
+
+			function isEmbeddableRemoteUrl(url) {
+				url = String(url || "");
+				if (!/^https?:\/\//i.test(url)) return false;
+				if (/\.(css|js|html?|json|txt|md)([?#].*)?$/i.test(url)) return false;
+				if (/fonts\.googleapis\.com|cdnjs\.cloudflare\.com\/ajax\/libs\/animate\.css|blueimp-md5/i.test(url)) return false;
+				return /\.(png|jpe?g|gif|webp|svg|avif|woff2?|ttf|otf|mp3|wav|ogg|mp4|webm)([?#].*)?$/i.test(url) ||
+					/cdn\.streamelements\.com\/uploads\//i.test(url) ||
+					/static-cdn\.jtvnw\.net\/badges\//i.test(url);
+			}
+
+			function fetchRemoteAssetAsDataUrl(url) {
+				if (!window.fetch || !window.FileReader) return Promise.resolve("");
+				return fetch(url, { mode: "cors", credentials: "omit" }).then(function (response) {
+					if (!response || !response.ok) return "";
+					var type = response.headers && response.headers.get ? response.headers.get("content-type") : "";
+					if (type && !/^(image|font|audio|video)\//i.test(type) && !/svg/i.test(type)) return "";
+					return response.blob();
+				}).then(function (blob) {
+					if (!blob) return "";
+					return new Promise(function (resolve, reject) {
+						var reader = new FileReader();
+						reader.onerror = function () { reject(reader.error); };
+						reader.onload = function () { resolve(String(reader.result || "")); };
+						reader.readAsDataURL(blob);
+					});
+				});
+			}
+
+			function replaceAllText(text, search, replacement) {
+				return String(text || "").split(search).join(replacement);
 			}
 
 			function normalizeAssetKey(value) {
