@@ -1140,7 +1140,7 @@
 			}
 
 			function getCompatRuntimeSource() {
-				return String(function () {
+				return "(" + String(function () {
 					(function () {
 						var config = window.SSN_SE_COMPAT_CONFIG || {};
 						var fieldData = config.fieldData || {};
@@ -1394,8 +1394,9 @@
 						function trimGenericMessages(container) {
 							var limit = parseInt(urlParams.get("limit") || fieldData.messagesLimit || "50", 10);
 							if (!limit || limit < 1) return;
+							var isTopDirection = urlParams.has("top") || urlParams.get("direction") === "top";
 							while (container.children.length > limit) {
-								container.removeChild(urlParams.has("top") ? container.lastElementChild : container.firstElementChild);
+								container.removeChild(isTopDirection ? container.lastElementChild : container.firstElementChild);
 							}
 						}
 
@@ -1927,7 +1928,7 @@
 							window.jQuery = dollar;
 						}
 					})();
-				}).replace(/^function\s*\(\)\s*\{\s*|\s*\}$/g, "");
+				}) + ")();";
 			}
 
 			function parseJSONSafe(text) {

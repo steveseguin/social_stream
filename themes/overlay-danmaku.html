@@ -171,9 +171,14 @@ html, body {
     }
 
     function buildBadges(data) {
-        if (!data.chatbadges) { return ""; }
+        var badges = data.chatbadges;
+        if (!badges) { return ""; }
+        if (typeof badges === "string") {
+            return badges.indexOf("<") !== -1 ? badges : "<img class='badge' src='" + badges + "' alt='badge'>";
+        }
+        if (!Array.isArray(badges)) { badges = [badges]; }
         var html = "";
-        data.chatbadges.forEach(function (badge) {
+        badges.forEach(function (badge) {
             if (typeof badge === "object") {
                 if (badge.type === "img" && badge.src) { html += "<img class='badge' src='" + badge.src + "' alt='badge'>"; }
                 else if (badge.type === "svg" && badge.html) { html += "<span class='badge svg'>" + badge.html + "</span>"; }
