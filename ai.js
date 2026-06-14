@@ -48,6 +48,8 @@ let openCodeZenModelCache = {
     fetchedAt: 0,
     models: null
 };
+let openCodeZenModelFreeMetadata = {};
+let openCodeZenModelApiOrder = {};
 let openCodeZenFreeModelCooldowns = {};
 
 class LLMServiceError extends Error {
@@ -370,6 +372,48 @@ function isOpenCodeZenFreeModel(modelId) {
     return modelId === "big-pickle" || /-free$/.test(modelId);
 }
 
+function inferOpenCodeZenModelFreeFlag(modelId, entry = {}) {
+    const normalized = String(modelId || "").toLowerCase();
+    if (!normalized) {
+        return false;
+    }
+    if (entry && typeof entry === "object") {
+        if (typeof entry.is_free === "boolean") {
+            return entry.is_free;
+        }
+        if (typeof entry.free === "boolean") {
+            return entry.free;
+        }
+        if (entry.meta && typeof entry.meta === "object" && typeof entry.meta.is_free === "boolean") {
+            return entry.meta.is_free;
+        }
+        const pricing = entry.pricing && typeof entry.pricing === "object" ? entry.pricing : null;
+        if (pricing) {
+            const pricingValues = [pricing.input, pricing.output, pricing.prompt, pricing.completion];
+            for (let i = 0; i < pricingValues.length; i++) {
+                const raw = pricingValues[i];
+                if (raw === undefined || raw === null) {
+                    continue;
+                }
+                const normalizedValue = String(raw).trim();
+                const parsed = Number(normalizedValue);
+                if (!Number.isNaN(parsed) && parsed <= 0) {
+                    return true;
+                }
+            }
+        }
+    }
+    return isOpenCodeZenFreeModel(normalized);
+}
+
+function isOpenCodeZenFreeModelFromMetadata(modelId) {
+    const key = String(modelId || "").trim().toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(openCodeZenModelFreeMetadata, key)) {
+        return !!openCodeZenModelFreeMetadata[key];
+    }
+    return isOpenCodeZenFreeModel(modelId);
+}
+
 function getOpenCodeZenFreeModelRank(modelId) {
     const lower = String(modelId || "").toLowerCase();
     const index = OPENCODE_ZEN_FREE_MODEL_ORDER.indexOf(lower);
@@ -378,9 +422,18 @@ function getOpenCodeZenFreeModelRank(modelId) {
 
 function sortOpenCodeZenModels(modelIds) {
     return modelIds.slice().sort(function (a, b) {
-        const aFree = isOpenCodeZenFreeModel(a);
-        const bFree = isOpenCodeZenFreeModel(b);
+        const aFree = isOpenCodeZenFreeModelFromMetadata(a);
+        const bFree = isOpenCodeZenFreeModelFromMetadata(b);
         if (aFree !== bFree) return aFree ? -1 : 1;
+        const aOrder = Number.isFinite(openCodeZenModelApiOrder[String(a || "").toLowerCase()])
+            ? openCodeZenModelApiOrder[String(a || "").toLowerCase()]
+            : Number.MAX_SAFE_INTEGER;
+        const bOrder = Number.isFinite(openCodeZenModelApiOrder[String(b || "").toLowerCase()])
+            ? openCodeZenModelApiOrder[String(b || "").toLowerCase()]
+            : Number.MAX_SAFE_INTEGER;
+        if (aOrder !== bOrder) {
+            return aOrder - bOrder;
+        }
         if (aFree && bFree) {
             const rankDiff = getOpenCodeZenFreeModelRank(a) - getOpenCodeZenFreeModelRank(b);
             if (rankDiff) return rankDiff;
@@ -412,8 +465,17 @@ function getOpenCodeZenSelectedModel(llmSettings, modelOverride) {
     if (override && !isOpenCodeZenAutoModel(override)) {
         return override;
     }
-    const saved = String(llmSettings.opencodemodel?.optionsetting || "").trim();
-    return saved || "auto";
+
+    const saved = String(
+        llmSettings.opencodemodel?.optionsetting ||
+        llmSettings.opencodemodel?.textsetting ||
+        ""
+    ).trim();
+    if (saved && !isOpenCodeZenAutoModel(saved)) {
+        return saved;
+    }
+
+    return "auto";
 }
 
 function getOpenCodeZenApiKey(llmSettings) {
@@ -430,16 +492,46 @@ function getOpenCodeZenCooldown(modelId) {
 }
 
 function markOpenCodeZenFreeModelCooldown(modelId) {
-    if (!isOpenCodeZenFreeModel(modelId)) return;
+    if (!isOpenCodeZenFreeModelFromMetadata(modelId)) return;
     openCodeZenFreeModelCooldowns[String(modelId)] = Date.now() + OPENCODE_ZEN_FREE_MODEL_COOLDOWN_MS;
 }
 
 function normalizeOpenCodeZenModelsPayload(payload) {
     const data = payload && Array.isArray(payload.data) ? payload.data : [];
-    const ids = data.map(function (entry) {
-        return entry && entry.id ? String(entry.id).trim() : "";
+    const records = data.map(function (entry, index) {
+        const id = entry && entry.id ? String(entry.id).trim() : "";
+        if (!id) {
+            return null;
+        }
+        return {
+            id,
+            isFree: inferOpenCodeZenModelFreeFlag(id, entry),
+            order: index
+        };
     }).filter(Boolean);
-    return ids.length ? ids : OPENCODE_ZEN_FREE_MODEL_ORDER.slice();
+
+    openCodeZenModelFreeMetadata = {};
+    openCodeZenModelApiOrder = {};
+    if (!records.length) {
+        OPENCODE_ZEN_FREE_MODEL_ORDER.forEach(function (modelId) {
+            openCodeZenModelFreeMetadata[String(modelId || "").trim().toLowerCase()] = true;
+            openCodeZenModelApiOrder[String(modelId || "").trim().toLowerCase()] = Number.MAX_SAFE_INTEGER;
+        });
+        return OPENCODE_ZEN_FREE_MODEL_ORDER.slice();
+    }
+
+    const ids = [];
+    records.forEach(function (record) {
+        const id = String(record.id || "").trim();
+        if (!id) return;
+        const normalized = id.toLowerCase();
+        openCodeZenModelFreeMetadata[normalized] = !!record.isFree;
+        if (Number.isFinite(record.order)) {
+            openCodeZenModelApiOrder[normalized] = record.order;
+        }
+        ids.push(id);
+    });
+    return ids;
 }
 
 function getOpenCodeZenKnownModels() {
@@ -484,6 +576,12 @@ async function fetchOpenCodeZenModels(apiKey = "", force = false) {
         };
     } catch (error) {
         console.warn("[OpenCode Zen] Failed to load model list; using built-in defaults.", error);
+        openCodeZenModelFreeMetadata = {};
+        openCodeZenModelApiOrder = {};
+        OPENCODE_ZEN_FREE_MODEL_ORDER.forEach(function (modelId) {
+            openCodeZenModelFreeMetadata[String(modelId || "").toLowerCase()] = true;
+            openCodeZenModelApiOrder[String(modelId || "").toLowerCase()] = Number.MAX_SAFE_INTEGER;
+        });
         openCodeZenModelCache = {
             fetchedAt: now,
             models: OPENCODE_ZEN_FREE_MODEL_ORDER.slice()
@@ -494,13 +592,20 @@ async function fetchOpenCodeZenModels(apiKey = "", force = false) {
 }
 
 async function getOpenCodeZenCandidateModels(llmSettings, refreshModelList) {
+    return getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, refreshModelList, false);
+}
+
+async function getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, refreshModelList, allowPaidModels) {
     const models = refreshModelList
         ? await fetchOpenCodeZenModels(getOpenCodeZenApiKey(llmSettings), false)
         : getOpenCodeZenKnownModels();
     const chatModels = sortOpenCodeZenModels(models).filter(isOpenCodeZenChatCompletionsModel);
     const candidates = chatModels.length ? chatModels : OPENCODE_ZEN_FREE_MODEL_ORDER.slice();
+    if (allowPaidModels) {
+        return candidates;
+    }
     return candidates.filter(function (modelId) {
-        return isOpenCodeZenFreeModel(modelId) && !getOpenCodeZenCooldown(modelId);
+        return isOpenCodeZenFreeModelFromMetadata(modelId) && !getOpenCodeZenCooldown(modelId);
     });
 }
 
@@ -528,18 +633,20 @@ function isOpenCodeZenReasoningEffortUnsupported(error) {
 async function requestOpenCodeZenWithFallback(llmSettings, makeRequest) {
     const triedModels = {};
     let candidates = await getOpenCodeZenCandidateModels(llmSettings, false);
-    let refreshedAfterFreeFailure = false;
     let lastError = null;
 
     if (!candidates.length) {
-        throw createLLMError({
-            provider: "opencode",
-            endpoint: OPENCODE_ZEN_CHAT_COMPLETIONS_ENDPOINT
-        }, {
-            status: 429,
-            code: "opencode_no_models_available",
-            message: "No OpenCode Zen free models are currently available. Free models may be cooling down after quota exhaustion."
-        });
+        candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, false);
+        if (!candidates.length) {
+            throw createLLMError({
+                provider: "opencode",
+                endpoint: OPENCODE_ZEN_CHAT_COMPLETIONS_ENDPOINT
+            }, {
+                status: 429,
+                code: "opencode_no_models_available",
+                message: "No OpenCode Zen chat models are currently available."
+            });
+        }
     }
 
     while (candidates.length) {
@@ -558,12 +665,7 @@ async function requestOpenCodeZenWithFallback(llmSettings, makeRequest) {
             if (isOpenCodeZenFreeModel(candidate)) {
                 markOpenCodeZenFreeModelCooldown(candidate);
             }
-            if (isOpenCodeZenFreeModel(candidate) && !refreshedAfterFreeFailure) {
-                refreshedAfterFreeFailure = true;
-                candidates = await getOpenCodeZenCandidateModels(llmSettings, true);
-            } else {
-                candidates = await getOpenCodeZenCandidateModels(llmSettings, false);
-            }
+            candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, false);
             candidates = candidates.filter(function (modelId) {
                 return !triedModels[modelId];
             });

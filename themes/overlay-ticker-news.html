@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<!-- AI GUIDANCE FOR EDITING THIS OVERLAY -->
+<!--
+Social Stream Ninja - "News Ticker" chat overlay.
+A single-line breaking-news style crawl: messages enter from the right and scroll
+left across a bottom (or top) bar at a constant speed, evenly spaced. Non-vertical.
+
+DATA: arrives via a hidden VDO.Ninja iframe (WebRTC) at event.data.dataReceived.overlayNinja,
+or via WebSocket when &server / &server2 is set. Payload fields: chatname, chatmessage,
+type, nameColor, chatbadges, membership, hasDonation, event, bot...
+
+URL PARAMETERS:
+  session=ID        (required) your Social Stream session id
+  password=PASS     optional room password (default false)
+  speed=PXPERSEC    crawl speed in px/sec (default 110; higher = faster)
+  top               place the bar at the top instead of the bottom
+  label=TEXT        text shown in the left label box (default "LIVE CHAT")
+  nolabel           hide the left label box
+  nobar             transparent bar (no background strip)
+  nonames           hide names
+  noicon            hide the small source platform icon
+  hidebots          hide messages flagged as bots (dock still shows them)
+  chroma=HEX        solid background colour for chroma keying (e.g. chroma=00FF00)
+  font=PX           base font size in px (default 22)
+  fontfamily=NAME   chat font family; loads matching Google Font (e.g. fontfamily=Roboto)
+  server / server2  connect via WebSocket instead of (or in addition to) WebRTC
+  localserver       use ws://127.0.0.1:3000
+
+Keep this file Chrome-80 friendly: no <script type="module">, no top-level import/export.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>News Ticker Chat Overlay</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap">
+<script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
+<link rel="canonical" href="https://socialstream.ninja/">
+<meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0000;
+    overflow: hidden;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 22px;
+}
+* { box-sizing: border-box; }
+
+#bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: stretch;
+    height: 2.3em;
+    background: rgba(12, 15, 24, 0.82);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.4);
+}
+#bar.top { bottom: auto; top: 0; box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+#bar.nobar { background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+#label {
+    display: flex;
+    align-items: center;
+    padding: 0 0.7em;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(90deg, #e23b3b, #b51d1d);
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 0.82em;
+    box-shadow: 4px 0 8px rgba(0,0,0,0.35);
+    z-index: 2;
+}
+#label::after {
+    content: "";
+    display: inline-block;
+    width: 0.5em; height: 0.5em;
+    margin-left: 0.5em;
+    border-radius: 50%;
+    background: #fff;
+    animation: live-pulse 1.4s ease-in-out infinite;
+}
+@keyframes live-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+#viewport {
+    position: relative;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+.item {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateX(0) translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    color: #fff;
+    font-weight: 600;
+    will-change: transform;
+    line-height: 1;
+}
+.item .source-icon { width: 0.92em; height: 0.92em; object-fit: contain; vertical-align: -1px; }
+.item .badge { width: 0.92em; height: 0.92em; object-fit: contain; }
+.item .badge svg, .item .badge img { width: 100% !important; height: 100% !important; }
+.item .name { font-weight: 800; }
+.item .colon { opacity: 0.8; margin: 0 1px; }
+.item .membership { color: #ffd34d; font-weight: 700; font-size: 0.82em; }
+.item .donation { color: #6ee787; font-weight: 800; margin-left: 4px; }
+.item .text img, .item .text svg { max-width: 1.4em; max-height: 1.1em; vertical-align: -0.2em; }
+.item.event .text { font-style: italic; opacity: 0.95; }
+.item .sep { opacity: 0.35; margin: 0 0.1em; font-weight: 800; }
+</style>
+</head>
+<body>
+<div id="bar">
+    <div id="label">Live Chat</div>
+    <div id="viewport"></div>
+</div>
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = urlParams.has("session") ? urlParams.get("session") : "iWWnKL28tQ";
+    var password = urlParams.has("password") ? urlParams.get("password") : "false";
+    var featuredMode = false;
+
+    // --- Common overlay tweaks (shared across themes) ---
+    var hideBots = urlParams.has("hidebots");
+    var hideNames = urlParams.has("nonames") || urlParams.has("hidenames");
+    var hideIcon = urlParams.has("noicon") || urlParams.has("hidesource");
+    if (urlParams.has("chroma")) {
+        var _c = urlParams.get("chroma") || "";
+        document.body.style.backgroundColor = _c.charAt(0) === "#" ? _c : "#" + _c;
+    }
+    if (urlParams.has("font")) {
+        var _fs = parseInt(urlParams.get("font"), 10);
+        if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+    }
+    if (urlParams.has("fontfamily")) {
+        var _ff = (urlParams.get("fontfamily") || "").trim();
+        if (_ff) {
+            var _safe = _ff.replace(/['"\\;{}<>]/g, "");
+            var _gf = document.createElement("link");
+            _gf.rel = "stylesheet";
+            _gf.href = "https://fonts.googleapis.com/css2?family=" +
+                encodeURIComponent(_safe).replace(/%20/g, "+") + ":wght@400;500;600;700;800&display=swap";
+            document.head.appendChild(_gf);
+            document.body.style.fontFamily = "'" + _safe + "', sans-serif";
+        }
+    }
+
+    var SPEED = (function () {
+        var s = parseFloat(urlParams.get("speed"));
+        return (!isNaN(s) && s > 0) ? s : 110;
+    })();
+    var GAP = 56; // px gap between consecutive items
+
+    var bar = document.getElementById("bar");
+    var viewport = document.getElementById("viewport");
+    var labelEl = document.getElementById("label");
+    if (urlParams.has("top")) { bar.classList.add("top"); }
+    if (urlParams.has("nobar")) { bar.classList.add("nobar"); }
+    if (urlParams.has("nolabel")) { labelEl.style.display = "none"; }
+    else if (urlParams.has("label")) { labelEl.firstChild ? (labelEl.childNodes[0].nodeValue = urlParams.get("label")) : (labelEl.textContent = urlParams.get("label")); }
+
+    // Queue tail tracking so items never overlap and are evenly spaced.
+    var prevStartX = null, prevStartTime = 0, prevWidth = 0;
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function buildBadges(data) {
+        if (!data.chatbadges) { return ""; }
+        var html = "";
+        data.chatbadges.forEach(function (badge) {
+            if (typeof badge === "object") {
+                if (badge.type === "img" && badge.src) { html += "<img class='badge' src='" + badge.src + "' alt='badge'>"; }
+                else if (badge.type === "svg" && badge.html) { html += "<span class='badge svg'>" + badge.html + "</span>"; }
+            } else {
+                html += "<img class='badge' src='" + badge + "' alt='badge'>";
+            }
+        });
+        return html;
+    }
+
+    function clearAll() {
+        Array.prototype.slice.call(viewport.querySelectorAll(".item")).forEach(function (b) {
+            if (b.parentNode) { b.parentNode.removeChild(b); }
+        });
+        prevStartX = null;
+    }
+
+    function handleControlPayload(data) {
+        if (!data || typeof data !== "object") { return false; }
+        if ("clearAll" in data || data.action === "clear" || data.action === "clearAll") { clearAll(); return true; }
+        return false;
+    }
+
+    function addMessageToOverlay(data) {
+        if (handleControlPayload(data)) { return; }
+        if (!data || typeof data !== "object") { return; }
+        if (hideBots && data.bot) { return; }
+        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation) { return; }
+        if (!data.chatname && data.meta) { return; }
+
+        var nameColor = data.nameColor;
+        if (!nameColor && typeof getColorFromType === "function" && data.type) {
+            try { nameColor = getColorFromType(data.type); } catch (e) {}
+        }
+        if (!nameColor) { nameColor = "#9fd0ff"; }
+
+        var item = document.createElement("div");
+        item.className = "item";
+        if (data.event) { item.className += " event"; }
+
+        var iconHtml = (!hideIcon && data.type)
+            ? "<img class='source-icon' src='https://socialstream.ninja/sources/images/" + data.type + ".png' alt='' onerror=\"this.style.display='none'\">" : "";
+        var badgesHtml = buildBadges(data);
+        var nameHtml = (!hideNames && data.chatname)
+            ? "<span class='name' style='color:" + nameColor + "'>" + escapeHtml(data.chatname) + "</span>" : "";
+        var membershipHtml = data.membership ? "<span class='membership'>" + escapeHtml(data.membership) + "</span>" : "";
+        var msg = data.chatmessage ? (data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage) : "";
+        var colonHtml = (nameHtml && msg) ? "<span class='colon'>:</span>" : "";
+        var textHtml = msg ? "<span class='text'>" + msg + "</span>" : "";
+        var donation = data.hasDonation || data.donation || "";
+        var donationHtml = donation ? "<span class='donation'>" + escapeHtml(donation) + "</span>" : "";
+        var sepHtml = "<span class='sep'>&bull;</span>";
+
+        item.innerHTML = sepHtml + iconHtml + badgesHtml + membershipHtml + nameHtml + colonHtml + textHtml + donationHtml;
+        viewport.appendChild(item);
+
+        var vw = viewport.clientWidth;
+        var w = item.offsetWidth;
+        var now = performance.now();
+
+        // Compute spawn x so this item enters just after the previous one's tail, evenly spaced.
+        var startX = vw;
+        if (prevStartX !== null) {
+            var prevLeftNow = prevStartX - SPEED * ((now - prevStartTime) / 1000);
+            var prevRightNow = prevLeftNow + prevWidth;
+            startX = Math.max(vw, prevRightNow + GAP);
+        }
+
+        prevStartX = startX;
+        prevStartTime = now;
+        prevWidth = w;
+
+        item.style.transform = "translateX(" + startX + "px) translateY(-50%)";
+
+        var startTime = null;
+        function frame(ts) {
+            if (startTime === null) { startTime = ts; }
+            var x = startX - SPEED * ((ts - startTime) / 1000);
+            if (x + w < 0) {
+                if (item.parentNode) { item.parentNode.removeChild(item); }
+                return;
+            }
+            item.style.transform = "translateX(" + x + "px) translateY(-50%)";
+            requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    }
+
+    // --- WebRTC bridge (hidden VDO.Ninja iframe) ---
+    var iframe = document.createElement("iframe");
+    if (featuredMode) {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+    } else {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + "&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
+    }
+    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+    document.body.appendChild(iframe);
+    window.addEventListener("message", function (e) {
+        if (e.source != iframe.contentWindow) return;
+        if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object" && e.data.dataReceived.overlayNinja) {
+            addMessageToOverlay(e.data.dataReceived.overlayNinja);
+        }
+    });
+
+    // --- optional WebSocket ---
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+    function setupSocket() {
+        socketserver.onclose = function () {
+            setTimeout(function () { conCon += 1; socketserver = new WebSocket(serverURL); setupSocket(); }, 100 * conCon);
+        };
+        socketserver.onopen = function () {
+            conCon = 1;
+            socketserver.send(JSON.stringify({ "join": roomID, "out": 3, "in": 4 }));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data) {
+                try { var data = JSON.parse(event.data); if (data) { addMessageToOverlay(data); } }
+                catch (err) { console.error("Error processing WebSocket message:", err); }
+            }
+        });
+    }
+    if (urlParams.has("server") || urlParams.has("server2") || urlParams.has("localserver")) {
+        serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+</script>
+</body>
+</html>

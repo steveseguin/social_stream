@@ -82,12 +82,31 @@
 	if (urlParams.has("showtime")){
 		params += "&showtime=" + urlParams.get("showtime");
 	}
-	
-	
+
+	// --- Common overlay tweaks (shared across themes) ---
+	// hidebots is handled by the embedded dock.html, so pass it through
+	if (urlParams.has("hidebots")){
+		params += "&hidebots";
+	}
+	if (urlParams.has("chroma")){
+		var _c = urlParams.get("chroma") || "";
+		document.body.style.backgroundColor = _c.charAt(0) === "#" ? _c : "#" + _c;
+	}
+	var _fontSize = "20px";
+	if (urlParams.has("font")){
+		var _fs = parseInt(urlParams.get("font"), 10);
+		if (!isNaN(_fs) && _fs > 0){ _fontSize = _fs + "px"; }
+	}
+	var _fontFamily = '"opendyslexic", opendyslexic, serif';
+	if (urlParams.has("fontfamily")){
+		var _ff = (urlParams.get("fontfamily") || "").trim();
+		if (_ff){ _fontFamily = "'" + _ff.replace(/['"\\;{}<>]/g, "") + "', sans-serif"; }
+	}
+
 	var css = `
 		:root {
-			 --comment-font-size: 20px;
-			 --font-family:  "opendyslexic", opendyslexic, serif;
+			 --comment-font-size: ${_fontSize};
+			 --font-family: ${_fontFamily};
 		}
 		body {
 			overflow: hidden;

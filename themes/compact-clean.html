@@ -17,6 +17,8 @@ URL PARAMETERS:
   limit=N           max messages kept on screen (default 40)
   chroma=HEX        solid background colour for chroma keying (e.g. chroma=00FF00)
   font=PX           base font size in px (default 14)
+  fontfamily=NAME   chat font family; loads matching Google Font (e.g. fontfamily=Roboto)
+  hidebots          hide messages flagged as bots (dock still shows them)
   width=PX          max width of the chat column in px (default 350)
   align=left|right  anchor side (default left)
   noavatar          hide avatars
@@ -273,6 +275,7 @@ body.ultra .content-img {
     var hideBadges = urlParams.has("nobadges");
     var hideIcon = urlParams.has("noicon");
     var showClock = urlParams.has("time");
+    var hideBots = urlParams.has("hidebots");
 
     if (urlParams.has("light")) { document.body.classList.add("light"); }
     if (urlParams.has("ultra")) { document.body.classList.add("ultra"); }
@@ -283,6 +286,19 @@ body.ultra .content-img {
     if (urlParams.has("font")) {
         var fs = parseInt(urlParams.get("font"), 10);
         if (!isNaN(fs) && fs > 0) { document.documentElement.style.fontSize = fs + "px"; }
+    }
+    if (urlParams.has("fontfamily")) {
+        var ff = (urlParams.get("fontfamily") || "").trim();
+        if (ff) {
+            var safeFamily = ff.replace(/['"\\;{}<>]/g, "");
+            var gf = document.createElement("link");
+            gf.rel = "stylesheet";
+            gf.href = "https://fonts.googleapis.com/css2?family=" +
+                encodeURIComponent(safeFamily).replace(/%20/g, "+") + ":wght@400;500;600;700&display=swap";
+            document.head.appendChild(gf);
+            document.body.style.fontFamily = "'" + safeFamily +
+                "', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+        }
     }
 
     const chatContainer = document.getElementById('chat-container');
@@ -474,6 +490,7 @@ body.ultra .content-img {
     }
 
     function isMessageBlocked(data) {
+        if (hideBots && data.bot) { return true; }
         if (!data.chatname) { return false; }
         const chatname = String(data.chatname);
         const type = data.type ? String(data.type) : "";

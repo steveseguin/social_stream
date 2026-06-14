@@ -77,7 +77,7 @@
                     <strong>Important:</strong> Stream events (follows, memberships, milestones, viewer counts, etc.) are always captured and forwarded. To hide all events in dock or featured overlays, add <code>&amp;hideevents</code> (dock also accepts <code>&amp;hideallevents</code>). To hide selected events, use <code>&amp;filterevents=subscription_gift,new_follower,gifted</code>. Donation-style items always pass through the dock filter regardless of settings.
                 </div>
                 <div class="alert-note alert-info">
-                    <strong>WebSocket Mode Required:</strong> For YouTube, Twitch, and Kick, most stream events (followers, subscriptions, raids, etc.) require <strong>WebSocket mode</strong> to be enabled in the extension settings. DOM capture alone mostly provides chat, viewer counts, and a limited set of heuristically detected system events. See platform sections below for details.
+                    <strong>WebSocket Mode Required:</strong> For YouTube, Twitch, and Kick, most stream events (followers, subscriptions, raids, etc.) require <strong>WebSocket mode</strong> to be enabled in the extension settings. DOM capture alone mostly provides chat, viewer counts, and a limited set of heuristically detected system events. Gift and donation event capture (including YouTube gifts), however, is shared across Standard and WebSocket modes; WebSocket adds broader event coverage. See platform sections below for details.
                 </div>
                 <div class="alert-note alert-tip">
                     <strong>Building Automations?</strong> Check out the <a href="../actions/event-flow-guide.html">Event Flow Guide</a> to learn how to use these event payloads in custom triggers, alerts, and workflows. The guide includes a <a href="../actions/event-flow-guide.html#template-variables">Template Variables Reference</a> for text formatting.
@@ -1587,7 +1587,7 @@
                         <tr>
                             <td>YouTube: Standard vs Websocket</td>
                             <td>Shared: <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>donation</code>, <code>jeweldonation</code>, <code>viewer_update</code>. Standard-only: <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>.</td>
-                            <td>Core event names are aligned across both.</td>
+                            <td>Core event names are aligned across both; YouTube gifts/donations use shared event paths in both modes (<code>donation</code>, <code>jeweldonation</code>, <code>giftpurchase</code>, <code>giftredemption</code>), with WebSocket mode adding extras like <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>.</td>
                         </tr>
                         <tr>
                             <td>All surfaces</td>
@@ -1642,7 +1642,7 @@
                     <li>Update <code>AGENTS.md</code> and this page in the same pull request so future contributors know which surface produces the event.</li>
                     <li>When source behavior changes, regenerate/update <code>docs/event-audit.json</code> if your branch uses that optional audit artifact so mismatches and voids stay trackable.</li>
                     <li>Stream events are always captured. To hide all events in dock or featured overlays, add <code>&amp;hideevents</code> (dock also accepts <code>&amp;hideallevents</code>). To hide selected events, use <code>&amp;filterevents=subscription_gift,new_follower,gifted</code>.</li>
-                    <li>For YouTube, Twitch, and Kick, enable <strong>WebSocket mode</strong> in extension settings for full event support (followers, subscriptions, raids, etc.).</li>
+                    <li>For YouTube, Twitch, and Kick, enable <strong>WebSocket mode</strong> in extension settings for full event support (followers, subscriptions, raids, etc.). Gift/donation capture for YouTube (including gifts and super chats) is available in both Standard and WebSocket modes; websocket adds additional event types.</li>
                 </ul>
             </section>
         </div>
