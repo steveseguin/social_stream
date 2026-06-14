@@ -184,8 +184,32 @@
 				exportBtn.disabled = !hasBuild || state.processing;
 			}
 
+			function getPageParam(names) {
+				var params;
+				try {
+					params = new URLSearchParams(window.location.search || "");
+				} catch (error) {
+					return "";
+				}
+				for (var i = 0; i < names.length; i += 1) {
+					var value = params.get(names[i]);
+					if (value && String(value).trim()) return String(value).trim();
+				}
+				return "";
+			}
+
 			function loadSavedSession() {
 				try {
+					var querySession = getPageParam(["session", "streamID", "streamid", "room", "id", "s"]);
+					var queryPassword = getPageParam(["password", "pass"]);
+					if (querySession && sessionInput) {
+						sessionInput.value = querySession;
+						saveSession();
+					}
+					if (queryPassword && passwordInput && !passwordInput.value) {
+						passwordInput.value = queryPassword;
+					}
+					if (querySession) return;
 					var saved = localStorage.getItem("ssnSeImporterSession") || "";
 					if (saved && sessionInput && !sessionInput.value) sessionInput.value = saved;
 				} catch (error) {}
