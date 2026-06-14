@@ -2562,8 +2562,6 @@ const CHAT_OVERLAY_COMMON_SUPPORT = new Set([
   "themes/overlay-danmaku.html",
   "themes/overlay-xacception.html",
   "themes/pretty.html",
-  "themes/Neutron/chatOnly.html",
-  "themes/Neutron/stream.html",
   "themes/Windows3.1/index.html",
   "themes/deuks_overlay/overlay1.html",
   "themes/deuks_overlay/overlay2.html",

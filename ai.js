@@ -461,6 +461,20 @@ function isOpenCodeZenChatCompletionsModel(modelId) {
 }
 
 function getOpenCodeZenSelectedModel(llmSettings, modelOverride) {
+    const override = String(modelOverride || "").trim();
+    if (override && !isOpenCodeZenAutoModel(override)) {
+        return override;
+    }
+
+    const saved = String(
+        llmSettings.opencodemodel?.optionsetting ||
+        llmSettings.opencodemodel?.textsetting ||
+        ""
+    ).trim();
+    if (saved && !isOpenCodeZenAutoModel(saved)) {
+        return saved;
+    }
+
     return "auto";
 }
 
@@ -619,12 +633,10 @@ function isOpenCodeZenReasoningEffortUnsupported(error) {
 async function requestOpenCodeZenWithFallback(llmSettings, makeRequest) {
     const triedModels = {};
     let candidates = await getOpenCodeZenCandidateModels(llmSettings, false);
-    let allowPaidModels = false;
     let lastError = null;
 
     if (!candidates.length) {
-        allowPaidModels = true;
-        candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, true);
+        candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, false);
         if (!candidates.length) {
             throw createLLMError({
                 provider: "opencode",
@@ -637,20 +649,7 @@ async function requestOpenCodeZenWithFallback(llmSettings, makeRequest) {
         }
     }
 
-    while (candidates.length || !allowPaidModels) {
-        if (!candidates.length && !allowPaidModels) {
-            allowPaidModels = true;
-            candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, true);
-            candidates = candidates.filter(function (modelId) {
-                return !triedModels[modelId];
-            });
-            if (!candidates.length) {
-                break;
-            }
-        }
-        if (!candidates.length) {
-            break;
-        }
+    while (candidates.length) {
         const candidate = candidates.shift();
         if (triedModels[candidate]) {
             continue;
@@ -666,24 +665,10 @@ async function requestOpenCodeZenWithFallback(llmSettings, makeRequest) {
             if (isOpenCodeZenFreeModel(candidate)) {
                 markOpenCodeZenFreeModelCooldown(candidate);
             }
-            if (!allowPaidModels) {
-                candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, false);
-                candidates = candidates.filter(function (modelId) {
-                    return !triedModels[modelId];
-                });
-                if (!candidates.length) {
-                    allowPaidModels = true;
-                    candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, true);
-                    candidates = candidates.filter(function (modelId) {
-                        return !triedModels[modelId];
-                    });
-                }
-            } else {
-                candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, true);
-                candidates = candidates.filter(function (modelId) {
-                    return !triedModels[modelId];
-                });
-            }
+            candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, false);
+            candidates = candidates.filter(function (modelId) {
+                return !triedModels[modelId];
+            });
             console.warn("[OpenCode Zen] Model failed, trying next candidate:", candidate, error && error.message ? error.message : error);
         }
     }
