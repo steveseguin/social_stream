@@ -274,9 +274,9 @@
 				exportSessionHint.textContent = suffix;
 				if (exportObsUrlHint) exportObsUrlHint.textContent = exampleUrl;
 				if (session) {
-					exportSessionMessage.textContent = "This session was also embedded into " + fileName + ". The URL ending still lets you override it later.";
+					exportSessionMessage.textContent = "Your session ID was saved inside " + fileName + ". In OBS, you can use the downloaded HTML file directly. The URL ending below is only a backup or override.";
 				} else {
-					exportSessionMessage.textContent = "Without this URL ending, the overlay will open but will not receive live SSN messages.";
+					exportSessionMessage.textContent = "No session ID was saved in this file. Easiest fix: close this, paste your SSN session ID, and export again. Or append the URL ending below.";
 				}
 				if (exportSummary) exportSummary.textContent = buildExportSummary(fileName);
 				exportModal.classList.add("open");
@@ -356,19 +356,25 @@
 
 			function buildReadmeText(fileName) {
 				var suffix = exportSessionHint ? exportSessionHint.textContent : "?session=YOUR_SESSION_ID";
+				var hasSession = suffix.indexOf("YOUR_SESSION_ID") === -1;
 				var lines = [
 					"Social Stream Ninja Imported Overlay",
+					"",
+					"You do not add the original zip or code to Social Stream Ninja.",
+					"Use the exported HTML file as an OBS Browser Source.",
 					"",
 					"HTML file:",
 					fileName,
 					"",
 					"OBS setup:",
 					"1. Add a Browser Source.",
-					"2. Select the exported HTML file or paste its file URL.",
-					"3. Add your SSN session to the end of the URL:",
-					suffix,
+					"2. Choose or paste the exported HTML file.",
+					hasSession
+						? "3. Your SSN session ID is already saved inside the file."
+						: "3. Add your SSN session to the end of the file URL:",
+					hasSession ? "" : suffix,
 					"",
-					"Example:",
+					hasSession ? "Backup URL override:" : "Example URL:",
 					fileName + suffix,
 					"",
 					"Optional URL overrides:",
