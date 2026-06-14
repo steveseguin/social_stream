@@ -7234,6 +7234,14 @@ try {
 			if (request.forPopup.spotifyAuthResult) {
 				handleSpotifyAuthResultFromBackground(request.forPopup.spotifyAuthResult);
 			}
+
+			if (request.forPopup.settingsImported) {
+				sendResponse({status: "Reloading popup after settings import"});
+				setTimeout(function() {
+					window.location.reload();
+				}, 0);
+				return;
+			}
 			
 			if (request.forPopup.alert){
 				alert(request.forPopup.alert);

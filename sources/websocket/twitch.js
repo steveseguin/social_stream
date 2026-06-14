@@ -2991,7 +2991,7 @@ async function cleanupCurrentConnection() {
 			// Define subscriptions based on permissions
 			const subscriptionTypes = [];
 			
-			if (permissions.canViewFollowers && !activeSubscriptions.has('channel.follow')) {
+			if (permissions.canViewFollowers && permissions.hasFollowerReadScope && !activeSubscriptions.has('channel.follow')) {
 				subscriptionTypes.push({
 					type: 'channel.follow',
 					version: '2',
@@ -3035,7 +3035,7 @@ async function cleanupCurrentConnection() {
 			}
 
 			// Cheering
-			if ((permissions.isBroadcaster || permissions.isModerator) && !activeSubscriptions.has('channel.cheer')) {
+			if (permissions.isBroadcaster && permissions.canReadBits && !activeSubscriptions.has('channel.cheer')) {
 				subscriptionTypes.push({
 					type: 'channel.cheer',
 					version: '1',
@@ -3045,7 +3045,7 @@ async function cleanupCurrentConnection() {
 				});
 			}
 
-			if (permissions.hasChannelModerateScope && !activeSubscriptions.has('channel.ban')) {
+			if (permissions.canModerate && permissions.hasChannelModerateScope && !activeSubscriptions.has('channel.ban')) {
 				subscriptionTypes.push({
 					type: 'channel.ban',
 					version: '1',
@@ -3056,7 +3056,7 @@ async function cleanupCurrentConnection() {
 			}
 
 			// Channel points redemptions
-			if (!activeSubscriptions.has('channel.channel_points_custom_reward_redemption.add')) {
+			if (permissions.isBroadcaster && permissions.canReadRedemptions && !activeSubscriptions.has('channel.channel_points_custom_reward_redemption.add')) {
 				subscriptionTypes.push({
 					type: 'channel.channel_points_custom_reward_redemption.add',
 					version: '1',
@@ -3089,7 +3089,7 @@ async function cleanupCurrentConnection() {
 			}
 
 			// Ad break begin
-			if (!activeSubscriptions.has('channel.ad_break.begin')) {
+			if (permissions.isBroadcaster && (permissions.canReadAds || permissions.canManageAds) && !activeSubscriptions.has('channel.ad_break.begin')) {
 				subscriptionTypes.push({
 					type: 'channel.ad_break.begin',
 					version: '1',
@@ -3759,6 +3759,7 @@ async function cleanupCurrentConnection() {
 			canManageBroadcast: isBroadcaster && !!scopes['channel:manage:broadcast'],
 			canManageAds: !!scopes['channel:manage:ads'],
 			canReadAds: !!scopes['channel:read:ads'],
+			canReadBits: !!scopes['bits:read'],
 			canReadRedemptions: !!scopes['channel:read:redemptions'],
 			canReadHypeTrain: isBroadcaster && !!scopes['channel:read:hype_train'],
 			broadcasterType: broadcasterInfo?.broadcaster_type || 'none'
@@ -3933,14 +3934,18 @@ async function cleanupCurrentConnection() {
                   } catch(_){ }
                   // Classification:
                   // - OAuth (id.twitch.tv) 401 => auth expired / sign-in required
-                  // - Helix/GQL (api.twitch.tv / gql.twitch.tv) 401/403 => warn: insufficient scope/role
+                  // - Optional Helix/EventSub 401/403 => log only; chat can still be connected
+                  // - Other Helix/GQL 401/403 => non-scary optional feature warning
                   // - Otherwise, generic error
                   var isOAuth = url.indexOf('id.twitch.tv') !== -1;
                   var isHelixOrGql = url.indexOf('api.twitch.tv') !== -1 || url.indexOf('gql.twitch.tv') !== -1;
+                  var isEventSubSubscription = url.indexOf('api.twitch.tv/helix/eventsub/subscriptions') !== -1;
                   if (isOAuth && res.status === 401) {
                     emit('signin_required', 'Twitch auth expired');
+                  } else if (isEventSubSubscription && (res.status === 401 || res.status === 403)) {
+                    console.warn('Optional Twitch EventSub feature unavailable:', msg);
                   } else if (isHelixOrGql && (res.status === 401 || res.status === 403)) {
-                    emit('warn', 'insufficient_scope');
+                    emit('warn', 'Optional Twitch API feature unavailable');
                   } else {
                     emit('error', msg);
                   }
