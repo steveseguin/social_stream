@@ -520,6 +520,11 @@
                                 <td><code>meta</code> integer viewer count.</td>
                             </tr>
                             <tr>
+                                <td class="status-event"><code>hype_train</code></td>
+                                <td>Twitch sticky community highlight shows an active Hype Train in popout chat.</td>
+                                <td>Metadata-only DOM fallback with <code>meta.sourceMode</code> set to <code>dom</code>. Uses visible level, timer, and <code>meta.progressPercent</code> when Twitch does not expose EventSub point totals.</td>
+                            </tr>
+                            <tr>
                                 <td class="status-event"><code>community_highlight</code></td>
                                 <td>Elements inside Twitch’s “Community Highlight” widget.</td>
                                 <td><code>meta</code> is the extracted highlight text for automation hooks.</td>
@@ -646,6 +651,7 @@
                             <tr><td><code>meta.total</code></td><td>number | null</td><td>Total support value reported by Twitch for the train.</td></tr>
                             <tr><td><code>meta.progress</code></td><td>number | null</td><td>Current progress toward the level goal.</td></tr>
                             <tr><td><code>meta.goal</code></td><td>number | null</td><td>Current level goal.</td></tr>
+                            <tr><td><code>meta.progressPercent</code></td><td>number | null</td><td>DOM fallback percentage when Twitch only exposes the visible popout progress bar.</td></tr>
                             <tr><td><code>meta.level</code></td><td>number | null</td><td>Current or ending train level.</td></tr>
                             <tr><td><code>meta.topContributions</code></td><td>array</td><td>Top contributors. Each entry includes <code>userId</code>, <code>userLogin</code>, <code>userName</code>, <code>type</code>, and numeric <code>total</code>.</td></tr>
                             <tr><td><code>meta.lastContribution</code></td><td>object | null</td><td>Most recent contribution, using the same contribution shape as <code>topContributions</code>.</td></tr>
@@ -658,7 +664,8 @@
                             <tr><td><code>meta.trainType</code></td><td>string</td><td>Usually <code>regular</code>; treasure trains are surfaced here when Twitch labels them.</td></tr>
                             <tr><td><code>meta.allTimeHighLevel</code></td><td>number | null</td><td>All-time high train level when Twitch provides it.</td></tr>
                             <tr><td><code>meta.allTimeHighTotal</code></td><td>number | null</td><td>All-time high train total when Twitch provides it.</td></tr>
-                            <tr><td><code>meta.eventSubType</code></td><td>string</td><td>Original EventSub type: <code>channel.hype_train.begin</code>, <code>channel.hype_train.progress</code>, or <code>channel.hype_train.end</code>.</td></tr>
+                            <tr><td><code>meta.sourceMode</code></td><td>string</td><td>Optional source marker such as <code>dom</code>.</td></tr>
+                            <tr><td><code>meta.eventSubType</code></td><td>string</td><td>Original EventSub type: <code>channel.hype_train.begin</code>, <code>channel.hype_train.progress</code>, <code>channel.hype_train.end</code>, or <code>dom.community_highlight</code>.</td></tr>
                         </tbody>
                     </table>
 

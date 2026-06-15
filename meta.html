@@ -1048,6 +1048,8 @@
             function getHypeTrainPercent(meta) {
                 if (!meta) return 0;
                 if (String(meta.phase || "").toLowerCase() === "end") return 100;
+                var progressPercent = parseNumber(meta.progressPercent);
+                if (progressPercent !== null) return Math.max(0, Math.min(100, progressPercent));
                 var progress = parseNumber(meta.progress);
                 var goal = parseNumber(meta.goal);
                 if (progress === null || goal === null || goal <= 0) return 0;

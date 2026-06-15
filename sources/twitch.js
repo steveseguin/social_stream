@@ -57,6 +57,8 @@
 	}
 	var channelName = "";
 	var brandedImageURL = "";
+	var lastHypeTrainDomSignature = "";
+	var lastHypeTrainDomSentAt = 0;
 	var xx = window.location.pathname.split("/");
 	xx = xx.filter(segment => !['chat', 'u', 'moderator', 'dashboard', '', 'popout'].includes(segment));
 	if (xx[0]) {
@@ -99,6 +101,126 @@
 			}
 		});
 		return (tempDiv.textContent || tempDiv.innerText || "").trim();
+	}
+
+	function parseHypeTrainNumber(value) {
+		var numeric = parseFloat(String(value || "").replace(/[^0-9.]/g, ""));
+		return isNaN(numeric) ? null : numeric;
+	}
+
+	function parseHypeTrainSeconds(text) {
+		var timerMatch = String(text || "").match(/\b(\d{1,2}):([0-5]\d)\b/);
+		if (timerMatch) {
+			return (parseInt(timerMatch[1], 10) * 60) + parseInt(timerMatch[2], 10);
+		}
+		var minuteMatch = String(text || "").match(/\b(\d+)\s+minutes?\s+left\b/i);
+		if (minuteMatch) {
+			return parseInt(minuteMatch[1], 10) * 60;
+		}
+		var secondMatch = String(text || "").match(/\b(\d+)\s+seconds?\s+left\b/i);
+		if (secondMatch) {
+			return parseInt(secondMatch[1], 10);
+		}
+		return null;
+	}
+
+	function findHypeTrainHighlight(root) {
+		var scope = root && root.querySelectorAll ? root : document;
+		var selectors = ".sticky-community-highlight, .community-highlight, [class*='community-highlight']";
+		var nodes = [];
+		try {
+			if (scope.matches && scope.matches(selectors)) {
+				nodes.push(scope);
+			}
+		} catch (e) {}
+		try {
+			var found = scope.querySelectorAll(selectors);
+			for (var i = 0; i < found.length; i++) {
+				nodes.push(found[i]);
+			}
+		} catch (e) {}
+		for (var j = 0; j < nodes.length; j++) {
+			var text = normalizeHypeTrainText(nodes[j]);
+			if (/\bHype Train\b/i.test(text) || /\bTreasure Train\b/i.test(text) || /\bGolden Kappa\b/i.test(text)) {
+				return nodes[j];
+			}
+		}
+		return null;
+	}
+
+	function normalizeHypeTrainText(ele) {
+		var text = getTextWithSpaces(ele);
+		if (Array.isArray(text)) {
+			return text.join(" ");
+		}
+		return String(text || "");
+	}
+
+	function sendHypeTrainFromDom(root) {
+		if (!isExtensionOn || settings.hideevents) {
+			return false;
+		}
+		var ele = findHypeTrainHighlight(root);
+		if (!ele) {
+			return false;
+		}
+		var text = normalizeHypeTrainText(ele);
+		if (!text) {
+			return false;
+		}
+
+		var levelMatch = text.match(/\bLvl\s*(\d+)/i) || text.match(/\bLevel\s*(\d+)/i);
+		var percentMatch = text.match(/\b(\d+(?:\.\d+)?)\s*%/);
+		var secondsLeft = parseHypeTrainSeconds(text);
+		var level = levelMatch ? parseHypeTrainNumber(levelMatch[1]) : null;
+		var progressPercent = percentMatch ? parseHypeTrainNumber(percentMatch[1]) : null;
+		var signature = [level, progressPercent, secondsLeft].join("|");
+		var now = Date.now();
+		if (signature === lastHypeTrainDomSignature && now - lastHypeTrainDomSentAt < 10000) {
+			return true;
+		}
+		lastHypeTrainDomSignature = signature;
+		lastHypeTrainDomSentAt = now;
+
+		var expiresAt = "";
+		if (secondsLeft !== null) {
+			expiresAt = new Date(now + (secondsLeft * 1000)).toISOString();
+		}
+
+		var meta = {
+			phase: "progress",
+			id: "twitch-dom-hype-train-" + (channelName || "unknown"),
+			broadcasterUserId: "",
+			broadcasterUserLogin: channelName || "",
+			broadcasterUserName: channelName || "",
+			total: null,
+			progress: null,
+			goal: null,
+			progressPercent: progressPercent,
+			level: level,
+			topContributions: [],
+			lastContribution: null,
+			sharedTrainParticipants: [],
+			startedAt: "",
+			expiresAt: expiresAt,
+			endedAt: "",
+			cooldownEndsAt: "",
+			isSharedTrain: false,
+			trainType: /\bTreasure Train\b/i.test(text) ? "treasure" : "regular",
+			allTimeHighLevel: null,
+			allTimeHighTotal: null,
+			sourceMode: "dom",
+			eventSubType: "dom.community_highlight"
+		};
+
+		try {
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				{ message: { type: "twitch", event: "hype_train", meta: meta } },
+				function (e) {}
+			);
+		} catch (e) {}
+		return true;
 	}
 
 	function sanitizeReplyMarkup(html) {
@@ -1637,6 +1759,8 @@
 					if (!node || !node.dataset || node.nodeType === 3) continue;
 					
 					try {
+						sendHypeTrainFromDom(node);
+
 						if (isDeletedMessageNode(node)) {
 							deleteThis(node);
 							continue;
@@ -1827,6 +1951,8 @@
 	checkReady = startChatWatcher();
 	
 	function checkFollowers(){
+		sendHypeTrainFromDom(document);
+
 		if (channelName && isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			fetch('https://api.socialstream.ninja/twitch/viewers?username='+channelName)
 			  .then(response => response.text())
