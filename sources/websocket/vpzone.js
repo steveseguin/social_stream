@@ -13,12 +13,26 @@
 	const FETCH_BRIDGE_SOURCE = "ssn-vpzone";
 	const FETCH_BRIDGE_REQUEST = "ssn-vpzone-fetch-json";
 	const FETCH_BRIDGE_RESPONSE = "ssn-vpzone-fetch-json-response";
+	const EXTENSION_MESSAGE = "ssn-vpzone-extension-message";
 	const FETCH_BRIDGE_TIMEOUT_MS = 12000;
+	const FETCH_BRIDGE_RETRY_MS = 200;
+	const LOADED_ATTR = "data-ssn-vpzone-ws-loaded";
+	const BRIDGE_ATTR = "data-ssn-vpzone-ws-bridge";
 	const READY_STATE = { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 };
 
 	try {
 		if (window.__SSN_VPZONE_WS_LOADED__) return;
 		window.__SSN_VPZONE_WS_LOADED__ = true;
+	} catch (e) {}
+	try {
+		var root = typeof document !== "undefined" ? document.documentElement : null;
+		if (root) {
+			if (root.getAttribute(LOADED_ATTR) === "1") {
+				if (extAvailable()) installPageBridgeResponder();
+				return;
+			}
+			root.setAttribute(LOADED_ATTR, "1");
+		}
 	} catch (e) {}
 
 	const els = {};
@@ -326,9 +340,15 @@
 		return new Promise(function (resolve, reject) {
 			var id = "vpzone_" + Date.now() + "_" + Math.random().toString(36).slice(2);
 			var timer;
+			var retryTimer;
 			function cleanup() {
 				clearTimeout(timer);
+				clearTimeout(retryTimer);
 				window.removeEventListener("message", onMessage);
+			}
+			function sendRequest() {
+				window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: FETCH_BRIDGE_REQUEST, id: id, request: request }, "*");
+				retryTimer = setTimeout(sendRequest, FETCH_BRIDGE_RETRY_MS);
 			}
 			function onMessage(event) {
 				var response = event && event.data;
@@ -345,18 +365,26 @@
 				reject(new Error("VPZone extension fetch bridge timed out."));
 			}, FETCH_BRIDGE_TIMEOUT_MS);
 			window.addEventListener("message", onMessage);
-			window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: FETCH_BRIDGE_REQUEST, id: id, request: request }, "*");
+			sendRequest();
 		});
 	}
 
 	function installFetchBridgeResponder() {
 		if (!extAvailable()) return;
+		var pendingRequests = {};
+		try {
+			if (typeof document !== "undefined" && document.documentElement) document.documentElement.setAttribute(BRIDGE_ATTR, "1");
+		} catch (e) {}
 		window.addEventListener("message", function (event) {
 			var message = event && event.data;
 			if (!message || message.source !== FETCH_BRIDGE_SOURCE || message.type !== FETCH_BRIDGE_REQUEST || !message.id || !message.request) return;
+			if (pendingRequests[message.id]) return;
+			pendingRequests[message.id] = true;
 			runtimeFetchJson(message.request).then(function (data) {
+				delete pendingRequests[message.id];
 				window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: FETCH_BRIDGE_RESPONSE, id: message.id, ok: true, data: data }, "*");
 			}).catch(function (error) {
+				delete pendingRequests[message.id];
 				window.postMessage({
 					source: FETCH_BRIDGE_SOURCE,
 					type: FETCH_BRIDGE_RESPONSE,
@@ -369,9 +397,42 @@
 		});
 	}
 
-	function fetchJson(url, options) {
-		options = options || {};
-		var headers = options.headers || { Accept: "application/json" };
+	function installPageBridgeResponder() {
+		if (!extAvailable()) return;
+		installFetchBridgeResponder();
+		try {
+			chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+				try {
+					if (request === "getSource") { sendResponse("vpzone"); return; }
+					if (request === "focusChat") { sendResponse(false); return; }
+					if (request && typeof request === "object") {
+						if ("settings" in request || "state" in request || request.type === "SEND_MESSAGE") {
+							window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: EXTENSION_MESSAGE, request: request }, "*");
+							sendResponse(true);
+							return;
+						}
+					}
+				} catch (e) {}
+				sendResponse(false);
+			});
+		} catch (e) {}
+		window.addEventListener("message", function (event) {
+			var message = event && event.data;
+			if (!message || typeof message !== "object" || message.source === FETCH_BRIDGE_SOURCE) return;
+			if (!("message" in message) && !("wssStatus" in message)) return;
+			try {
+				chrome.runtime.sendMessage(chrome.runtime.id, message, function () {});
+			} catch (e) {}
+		});
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
+				if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) return;
+				window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: EXTENSION_MESSAGE, request: response || {} }, "*");
+			});
+		} catch (e) {}
+	}
+
+	function browserFetchJson(url, options, headers) {
 		return fetch(url, {
 			method: options.method || "GET",
 			cache: "no-store",
@@ -385,11 +446,23 @@
 				if (!response.ok) throw jsonFetchError(jsonErrorMessage(json, "HTTP " + response.status), response.status);
 				return json;
 			});
-		}).catch(function (error) {
-			var request = buildFetchJsonRequest(url, options, headers);
-			if (extAvailable()) return runtimeFetchJson(request);
-			throw error;
 		});
+	}
+
+	function fetchJson(url, options) {
+		options = options || {};
+		var headers = options.headers || { Accept: "application/json" };
+		var request = buildFetchJsonRequest(url, options, headers);
+		if (extAvailable()) return runtimeFetchJson(request);
+		if (typeof window !== "undefined" && typeof window.postMessage === "function") {
+			return bridgedFetchJson(request).catch(function (error) {
+				if (error && error.status) throw error;
+				return browserFetchJson(url, options, headers).catch(function () {
+					throw error;
+				});
+			});
+		}
+		return browserFetchJson(url, options, headers);
 	}
 
 	function tokenRequest(params) {
@@ -1157,7 +1230,10 @@
 		window.addEventListener("message", function (event) {
 			var request = event && event.data;
 			if (!request || typeof request !== "object") return;
+			if (request.source === FETCH_BRIDGE_SOURCE && request.type === EXTENSION_MESSAGE && request.request) request = request.request;
 			if (request.__ssappSendToTab) request = request.__ssappSendToTab;
+			if ("settings" in request) { state.settings = request.settings || {}; return; }
+			if ("state" in request) { state.isExtensionOn = !!request.state; return; }
 			if (request.type === "SEND_MESSAGE") {
 				sendChatMessage(request.message).catch(function (error) {
 					log("VPZone postMessage SEND_MESSAGE failed: " + ((error && error.message) || error), "error");
