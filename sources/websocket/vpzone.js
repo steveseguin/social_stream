@@ -272,12 +272,30 @@
 		}
 		if (!state.tokens || !state.tokens.refresh_token || !state.tokens.expires_at) return;
 		var delay = Math.max(5000, Number(state.tokens.expires_at) - Date.now() - 60000);
+		if (!isFinite(delay)) return;
 		state.refreshTimer = setTimeout(function () {
 			refreshOAuthToken().catch(function (error) {
 				log("Sign-in refresh failed: " + ((error && error.message) || error), "error");
 				updateAuthChip();
 			});
 		}, delay);
+	}
+
+	function tokenExpiresAt(json) {
+		var expiresIn = json && json.expires_in;
+		var expiresAt = json && (json.expires_at || json.expiresAt);
+		var seconds = null;
+		var parsed;
+		if (typeof expiresIn === "number" && isFinite(expiresIn) && expiresIn > 0) seconds = expiresIn;
+		else if (typeof expiresIn === "string" && /^\d+(?:\.\d+)?$/.test(expiresIn)) seconds = Number(expiresIn);
+		if (seconds) return Date.now() + (seconds * 1000);
+		if (typeof expiresAt === "number" && isFinite(expiresAt) && expiresAt > 0) return expiresAt < 10000000000 ? expiresAt * 1000 : expiresAt;
+		if (typeof expiresAt === "string" && /^\d+(?:\.\d+)?$/.test(expiresAt)) {
+			parsed = Number(expiresAt);
+			return parsed < 10000000000 ? parsed * 1000 : parsed;
+		}
+		parsed = Date.parse(String(expiresAt || ""));
+		return isFinite(parsed) ? parsed : null;
 	}
 
 	function cleanupOAuthUrl() {
@@ -483,7 +501,7 @@
 			access_token: json.access_token,
 			token_type: json.token_type || "Bearer",
 			refresh_token: json.refresh_token || (state.tokens && state.tokens.refresh_token) || "",
-			expires_at: json.expires_in ? Date.now() + (Number(json.expires_in) * 1000) : null
+			expires_at: tokenExpiresAt(json)
 		};
 		state.cfg.token = state.tokens.access_token;
 		saveTokens();
