@@ -13,12 +13,26 @@
 	const FETCH_BRIDGE_SOURCE = "ssn-vpzone";
 	const FETCH_BRIDGE_REQUEST = "ssn-vpzone-fetch-json";
 	const FETCH_BRIDGE_RESPONSE = "ssn-vpzone-fetch-json-response";
+	const EXTENSION_MESSAGE = "ssn-vpzone-extension-message";
 	const FETCH_BRIDGE_TIMEOUT_MS = 12000;
+	const FETCH_BRIDGE_RETRY_MS = 200;
+	const LOADED_ATTR = "data-ssn-vpzone-ws-loaded";
+	const BRIDGE_ATTR = "data-ssn-vpzone-ws-bridge";
 	const READY_STATE = { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 };
 
 	try {
 		if (window.__SSN_VPZONE_WS_LOADED__) return;
 		window.__SSN_VPZONE_WS_LOADED__ = true;
+	} catch (e) {}
+	try {
+		var root = typeof document !== "undefined" ? document.documentElement : null;
+		if (root) {
+			if (root.getAttribute(LOADED_ATTR) === "1") {
+				if (extAvailable()) installPageBridgeResponder();
+				return;
+			}
+			root.setAttribute(LOADED_ATTR, "1");
+		}
 	} catch (e) {}
 
 	const els = {};
@@ -28,6 +42,7 @@
 		isExtensionOn: true,
 		active: false,
 		manualDisconnect: false,
+		sending: false,
 		socket: null,
 		reconnectTimer: null,
 		refreshTimer: null,
@@ -226,6 +241,7 @@
 
 	function shouldUseSsappOAuth() {
 		try {
+			if (ssappOAuthHandler()) return true;
 			var query = new URLSearchParams(window.location.search || "");
 			var hash = new URLSearchParams(String(window.location.hash || "").replace(/^#/, ""));
 			return query.has("ssapp") || hash.has("ssapp") || window.location.protocol === "file:";
@@ -256,14 +272,23 @@
 			clearTimeout(state.refreshTimer);
 			state.refreshTimer = null;
 		}
-		if (!state.tokens || !state.tokens.refresh_token || !state.tokens.expires_at) return;
-		var delay = Math.max(5000, Number(state.tokens.expires_at) - Date.now() - 60000);
-		state.refreshTimer = setTimeout(function () {
-			refreshOAuthToken().catch(function (error) {
-				log("Sign-in refresh failed: " + ((error && error.message) || error), "error");
-				updateAuthChip();
-			});
-		}, delay);
+	}
+
+	function tokenExpiresAt(json) {
+		var expiresIn = json && json.expires_in;
+		var expiresAt = json && (json.expires_at || json.expiresAt);
+		var seconds = null;
+		var parsed;
+		if (typeof expiresIn === "number" && isFinite(expiresIn) && expiresIn > 0) seconds = expiresIn;
+		else if (typeof expiresIn === "string" && /^\d+(?:\.\d+)?$/.test(expiresIn)) seconds = Number(expiresIn);
+		if (seconds) return Date.now() + (seconds * 1000);
+		if (typeof expiresAt === "number" && isFinite(expiresAt) && expiresAt > 0) return expiresAt < 10000000000 ? expiresAt * 1000 : expiresAt;
+		if (typeof expiresAt === "string" && /^\d+(?:\.\d+)?$/.test(expiresAt)) {
+			parsed = Number(expiresAt);
+			return parsed < 10000000000 ? parsed * 1000 : parsed;
+		}
+		parsed = Date.parse(String(expiresAt || ""));
+		return isFinite(parsed) ? parsed : null;
 	}
 
 	function cleanupOAuthUrl() {
@@ -288,6 +313,11 @@
 		return error;
 	}
 
+	function isInvalidGrant(error) {
+		var message = String((error && error.message) || error || "");
+		return /invalid_grant/i.test(message);
+	}
+
 	function buildFetchJsonRequest(url, options, headers) {
 		return {
 			cmd: "vpzoneFetchJson",
@@ -297,6 +327,30 @@
 			contentType: headers["Content-Type"] || headers["content-type"] || "",
 			authToken: options.authToken || ""
 		};
+	}
+
+	function isTrustedFetchRequired(request) {
+		var parsedUrl;
+		var method = String((request && request.method) || "GET").toUpperCase();
+		if (method === "GET") return false;
+		try {
+			parsedUrl = new URL(request.url);
+		} catch (e) {
+			return true;
+		}
+		return ["vpzone.tv", "www.vpzone.tv"].indexOf(parsedUrl.hostname) !== -1 && parsedUrl.pathname.indexOf("/api/") === 0;
+	}
+
+	function bridgeReady() {
+		try {
+			return !!(document.documentElement && document.documentElement.getAttribute(BRIDGE_ATTR) === "1");
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function trustedFetchUnavailableError() {
+		return new Error("VPZone API request requires the Social Stream extension bridge or desktop app.");
 	}
 
 	function runtimeFetchJson(request) {
@@ -326,9 +380,30 @@
 		return new Promise(function (resolve, reject) {
 			var id = "vpzone_" + Date.now() + "_" + Math.random().toString(36).slice(2);
 			var timer;
+			var waitTimer;
+			var startedAt = Date.now();
+			var sent = false;
 			function cleanup() {
 				clearTimeout(timer);
+				clearTimeout(waitTimer);
 				window.removeEventListener("message", onMessage);
+			}
+			function sendRequest() {
+				if (sent) return;
+				sent = true;
+				window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: FETCH_BRIDGE_REQUEST, id: id, request: request }, "*");
+			}
+			function waitForBridge() {
+				if (bridgeReady()) {
+					sendRequest();
+					return;
+				}
+				if (Date.now() - startedAt >= FETCH_BRIDGE_TIMEOUT_MS) {
+					cleanup();
+					reject(trustedFetchUnavailableError());
+					return;
+				}
+				waitTimer = setTimeout(waitForBridge, FETCH_BRIDGE_RETRY_MS);
 			}
 			function onMessage(event) {
 				var response = event && event.data;
@@ -345,18 +420,29 @@
 				reject(new Error("VPZone extension fetch bridge timed out."));
 			}, FETCH_BRIDGE_TIMEOUT_MS);
 			window.addEventListener("message", onMessage);
-			window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: FETCH_BRIDGE_REQUEST, id: id, request: request }, "*");
+			waitForBridge();
 		});
 	}
 
 	function installFetchBridgeResponder() {
 		if (!extAvailable()) return;
+		var pendingRequests = {};
+		try {
+			if (typeof document !== "undefined" && document.documentElement) {
+				if (document.documentElement.getAttribute(BRIDGE_ATTR) === "1") return;
+				document.documentElement.setAttribute(BRIDGE_ATTR, "1");
+			}
+		} catch (e) {}
 		window.addEventListener("message", function (event) {
 			var message = event && event.data;
 			if (!message || message.source !== FETCH_BRIDGE_SOURCE || message.type !== FETCH_BRIDGE_REQUEST || !message.id || !message.request) return;
+			if (pendingRequests[message.id]) return;
+			pendingRequests[message.id] = true;
 			runtimeFetchJson(message.request).then(function (data) {
+				delete pendingRequests[message.id];
 				window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: FETCH_BRIDGE_RESPONSE, id: message.id, ok: true, data: data }, "*");
 			}).catch(function (error) {
+				delete pendingRequests[message.id];
 				window.postMessage({
 					source: FETCH_BRIDGE_SOURCE,
 					type: FETCH_BRIDGE_RESPONSE,
@@ -369,9 +455,42 @@
 		});
 	}
 
-	function fetchJson(url, options) {
-		options = options || {};
-		var headers = options.headers || { Accept: "application/json" };
+	function installPageBridgeResponder() {
+		if (!extAvailable()) return;
+		installFetchBridgeResponder();
+		try {
+			chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+				try {
+					if (request === "getSource") { sendResponse("vpzone"); return; }
+					if (request === "focusChat") { sendResponse(false); return; }
+					if (request && typeof request === "object") {
+						if ("settings" in request || "state" in request || request.type === "SEND_MESSAGE") {
+							window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: EXTENSION_MESSAGE, request: request }, "*");
+							sendResponse(true);
+							return;
+						}
+					}
+				} catch (e) {}
+				sendResponse(false);
+			});
+		} catch (e) {}
+		window.addEventListener("message", function (event) {
+			var message = event && event.data;
+			if (!message || typeof message !== "object" || message.source === FETCH_BRIDGE_SOURCE) return;
+			if (!("message" in message) && !("wssStatus" in message)) return;
+			try {
+				chrome.runtime.sendMessage(chrome.runtime.id, message, function () {});
+			} catch (e) {}
+		});
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
+				if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) return;
+				window.postMessage({ source: FETCH_BRIDGE_SOURCE, type: EXTENSION_MESSAGE, request: response || {} }, "*");
+			});
+		} catch (e) {}
+	}
+
+	function browserFetchJson(url, options, headers) {
 		return fetch(url, {
 			method: options.method || "GET",
 			cache: "no-store",
@@ -385,11 +504,26 @@
 				if (!response.ok) throw jsonFetchError(jsonErrorMessage(json, "HTTP " + response.status), response.status);
 				return json;
 			});
-		}).catch(function (error) {
-			var request = buildFetchJsonRequest(url, options, headers);
-			if (extAvailable()) return runtimeFetchJson(request);
-			throw error;
 		});
+	}
+
+	function fetchJson(url, options) {
+		options = options || {};
+		var headers = options.headers || { Accept: "application/json" };
+		var request = buildFetchJsonRequest(url, options, headers);
+		var needsTrustedFetch = isTrustedFetchRequired(request);
+		if (extAvailable()) return runtimeFetchJson(request);
+		if (typeof window !== "undefined" && typeof window.postMessage === "function") {
+			return bridgedFetchJson(request).catch(function (error) {
+				if (needsTrustedFetch) throw error || trustedFetchUnavailableError();
+				if (error && error.status) throw error;
+				return browserFetchJson(url, options, headers).catch(function () {
+					throw error;
+				});
+			});
+		}
+		if (needsTrustedFetch) return Promise.reject(trustedFetchUnavailableError());
+		return browserFetchJson(url, options, headers);
 	}
 
 	function tokenRequest(params) {
@@ -410,7 +544,7 @@
 			access_token: json.access_token,
 			token_type: json.token_type || "Bearer",
 			refresh_token: json.refresh_token || (state.tokens && state.tokens.refresh_token) || "",
-			expires_at: json.expires_in ? Date.now() + (Number(json.expires_in) * 1000) : null
+			expires_at: tokenExpiresAt(json)
 		};
 		state.cfg.token = state.tokens.access_token;
 		saveTokens();
@@ -516,6 +650,16 @@
 		log("VPZone sign-in cleared.", "warn");
 	}
 
+	function clearStaleOAuth() {
+		state.tokens = null;
+		state.cfg.token = "";
+		saveTokens();
+		saveConfig();
+		syncStateToUi();
+		updateAuthChip();
+		log("VPZone sign-in expired. Sign in again.", "warn");
+	}
+
 	function handleOAuthCallback() {
 		var query = new URLSearchParams(window.location.search);
 		var code = query.get("code");
@@ -529,16 +673,21 @@
 			return Promise.resolve(false);
 		}
 		try { saved = JSON.parse(localStorage.getItem(OAUTH_KEY) || "{}") || {}; } catch (e) {}
-		cleanupOAuthUrl();
-		if (error) return Promise.reject(new Error(query.get("error_description") || error));
+		if (error) {
+			cleanupOAuthUrl();
+			return Promise.reject(new Error(query.get("error_description") || error));
+		}
 		if (!saved.state || !saved.verifier) return Promise.reject(new Error("Missing sign-in state. Please try again."));
 		if (saved.state && returnedStateValue && saved.state !== returnedStateValue) return Promise.reject(new Error("Sign-in state mismatch."));
 		if (saved.channel) state.cfg.channel = normalizeChannel(saved.channel);
 		if (saved.wsUrl) state.cfg.wsUrl = normalizeWs(saved.wsUrl);
 		if (saved.scopes) state.cfg.scopes = saved.scopes;
 		state.cfg.redirectUri = saved.redirectUri || normalizeRedirectUri(state.cfg.redirectUri);
-		try { localStorage.removeItem(OAUTH_KEY); } catch (e) {}
-		return exchangeOAuthCode(code, saved).then(function () { return true; });
+		return exchangeOAuthCode(code, saved).then(function () {
+			try { localStorage.removeItem(OAUTH_KEY); } catch (e) {}
+			cleanupOAuthUrl();
+			return true;
+		});
 	}
 
 	function addLine(parent, className, html) {
@@ -678,6 +827,27 @@
 		});
 	}
 
+	function finishManualSend() {
+		state.sending = false;
+		syncButtons();
+		try { if (els.chatMessage) els.chatMessage.focus(); } catch (e) {}
+	}
+
+	function sendManualChat() {
+		var text = String(els.chatMessage ? els.chatMessage.value : "");
+		if (!text.trim() || state.sending) return;
+		syncUiToState();
+		state.sending = true;
+		syncButtons();
+		sendChatMessage(text).then(function () {
+			if (els.chatMessage) els.chatMessage.value = "";
+			finishManualSend();
+		}).catch(function (error) {
+			log("VPZone manual send failed: " + ((error && error.message) || error), "error");
+			finishManualSend();
+		});
+	}
+
 	function loadConfig() {
 		var query;
 		var hash;
@@ -735,6 +905,7 @@
 	function syncButtons() {
 		if (els.connect) els.connect.disabled = !!state.active;
 		if (els.disconnect) els.disconnect.disabled = !state.active;
+		if (els.sendMessage) els.sendMessage.disabled = !!state.sending;
 	}
 
 	function updateLink() {
@@ -1157,7 +1328,10 @@
 		window.addEventListener("message", function (event) {
 			var request = event && event.data;
 			if (!request || typeof request !== "object") return;
+			if (request.source === FETCH_BRIDGE_SOURCE && request.type === EXTENSION_MESSAGE && request.request) request = request.request;
 			if (request.__ssappSendToTab) request = request.__ssappSendToTab;
+			if ("settings" in request) { state.settings = request.settings || {}; return; }
+			if ("state" in request) { state.isExtensionOn = !!request.state; return; }
 			if (request.type === "SEND_MESSAGE") {
 				sendChatMessage(request.message).catch(function (error) {
 					log("VPZone postMessage SEND_MESSAGE failed: " + ((error && error.message) || error), "error");
@@ -1172,6 +1346,7 @@
 		if (els.clearAuth) els.clearAuth.addEventListener("click", function () { clearOAuth(); });
 		if (els.connect) els.connect.addEventListener("click", function () { try { connect(); } catch (error) { setStatus("error", "Connect failed: " + ((error && error.message) || error)); log("Connect failed: " + ((error && error.message) || error), "error"); syncButtons(); } });
 		if (els.disconnect) els.disconnect.addEventListener("click", function () { disconnect(true); });
+		if (els.chatForm) els.chatForm.addEventListener("submit", function (event) { event.preventDefault(); sendManualChat(); });
 		if (els.channel) {
 			els.channel.addEventListener("change", function () { state.cfg.channel = normalizeChannel(els.channel.value); updateLink(); });
 			els.channel.addEventListener("keydown", function (event) { if (event.key === "Enter" && !state.active && els.connect) { event.preventDefault(); els.connect.click(); } });
@@ -1191,6 +1366,9 @@
 		els.clearAuth = document.getElementById("clear-auth-btn");
 		els.connect = document.getElementById("connect-btn");
 		els.disconnect = document.getElementById("disconnect-btn");
+		els.chatForm = document.getElementById("chat-compose");
+		els.chatMessage = document.getElementById("chat-message");
+		els.sendMessage = document.getElementById("send-message-btn");
 		els.hideMetrics = document.getElementById("hide-metrics");
 		els.socketChip = document.getElementById("socket-chip");
 		els.viewerChip = document.getElementById("viewer-chip");

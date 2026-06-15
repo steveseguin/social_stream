@@ -4,7 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Social Stream - VPZone Chat Source</title>
-    <link rel="icon" href="https://vpzone.tv/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48cGF0aCBkPSJNMTQgMThoMTBsOCAyNCA4LTI0aDEwTDM3IDUwSDI3TDE0IDE4eiIgZmlsbD0iIzEyYzdjMiIvPjxjaXJjbGUgY3g9IjQ4IiBjeT0iMTYiIHI9IjYiIGZpbGw9IiM3YzVjZmYiLz48L3N2Zz4=" type="image/svg+xml" />
+    <link rel="shortcut icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48cGF0aCBkPSJNMTQgMThoMTBsOCAyNCA4LTI0aDEwTDM3IDUwSDI3TDE0IDE4eiIgZmlsbD0iIzEyYzdjMiIvPjxjaXJjbGUgY3g9IjQ4IiBjeT0iMTYiIHI9IjYiIGZpbGw9IiM3YzVjZmYiLz48L3N2Zz4=" type="image/svg+xml" />
     <style>
         :root {
             --bg: #0d1118;
@@ -105,6 +106,16 @@
 
         .setup-actions {
             margin-top: 12px;
+        }
+
+        .chat-compose {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: minmax(220px, 1fr) auto;
+            align-items: end;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
         }
 
         .primary-action {
@@ -365,12 +376,17 @@
                 grid-template-columns: 1fr;
             }
 
+            .chat-compose {
+                grid-template-columns: 1fr;
+            }
+
             .header-row .chips {
                 justify-content: flex-start;
                 min-width: 0;
             }
         }
     </style>
+    <link rel="stylesheet" href="websocket-responsive.css">
 </head>
 <body>
     <div class="wrap">
@@ -408,6 +424,13 @@
                 <button id="connect-btn" class="primary-action">Connect Chat</button>
                 <button id="disconnect-btn" class="ghost">Disconnect</button>
             </div>
+            <form id="chat-compose" class="chat-compose">
+                <div>
+                    <label for="chat-message">Message</label>
+                    <input id="chat-message" type="text" autocomplete="off" placeholder="Send a message to chat" />
+                </div>
+                <button id="send-message-btn" type="submit" class="alt">Send</button>
+            </form>
             <p class="hint">VPZone page: <a id="channel-link" class="link" href="https://vpzone.tv" target="_blank" rel="noopener">vpzone.tv</a></p>
 
             <details class="advanced-options">
@@ -446,6 +469,6 @@
             </section>
         </section>
     </div>
-    <script src="vpzone.js?v=20260613b"></script>
+    <script src="vpzone.js?v=20260615g"></script>
 </body>
 </html>
