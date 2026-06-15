@@ -275,6 +275,10 @@
 		if (!isFinite(delay)) return;
 		state.refreshTimer = setTimeout(function () {
 			refreshOAuthToken().catch(function (error) {
+				if (isInvalidGrant(error)) {
+					clearStaleOAuth();
+					return;
+				}
 				log("Sign-in refresh failed: " + ((error && error.message) || error), "error");
 				updateAuthChip();
 			});
@@ -318,6 +322,11 @@
 		var error = new Error(message);
 		if (status) error.status = status;
 		return error;
+	}
+
+	function isInvalidGrant(error) {
+		var message = String((error && error.message) || error || "");
+		return /invalid_grant/i.test(message);
 	}
 
 	function buildFetchJsonRequest(url, options, headers) {
@@ -605,6 +614,16 @@
 		syncStateToUi();
 		updateAuthChip();
 		log("VPZone sign-in cleared.", "warn");
+	}
+
+	function clearStaleOAuth() {
+		state.tokens = null;
+		state.cfg.token = "";
+		saveTokens();
+		saveConfig();
+		syncStateToUi();
+		updateAuthChip();
+		log("VPZone sign-in expired. Sign in again.", "warn");
 	}
 
 	function handleOAuthCallback() {
