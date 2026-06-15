@@ -42,6 +42,7 @@
 		isExtensionOn: true,
 		active: false,
 		manualDisconnect: false,
+		sending: false,
 		socket: null,
 		reconnectTimer: null,
 		refreshTimer: null,
@@ -826,6 +827,27 @@
 		});
 	}
 
+	function finishManualSend() {
+		state.sending = false;
+		syncButtons();
+		try { if (els.chatMessage) els.chatMessage.focus(); } catch (e) {}
+	}
+
+	function sendManualChat() {
+		var text = String(els.chatMessage ? els.chatMessage.value : "");
+		if (!text.trim() || state.sending) return;
+		syncUiToState();
+		state.sending = true;
+		syncButtons();
+		sendChatMessage(text).then(function () {
+			if (els.chatMessage) els.chatMessage.value = "";
+			finishManualSend();
+		}).catch(function (error) {
+			log("VPZone manual send failed: " + ((error && error.message) || error), "error");
+			finishManualSend();
+		});
+	}
+
 	function loadConfig() {
 		var query;
 		var hash;
@@ -883,6 +905,7 @@
 	function syncButtons() {
 		if (els.connect) els.connect.disabled = !!state.active;
 		if (els.disconnect) els.disconnect.disabled = !state.active;
+		if (els.sendMessage) els.sendMessage.disabled = !!state.sending;
 	}
 
 	function updateLink() {
@@ -1323,6 +1346,7 @@
 		if (els.clearAuth) els.clearAuth.addEventListener("click", function () { clearOAuth(); });
 		if (els.connect) els.connect.addEventListener("click", function () { try { connect(); } catch (error) { setStatus("error", "Connect failed: " + ((error && error.message) || error)); log("Connect failed: " + ((error && error.message) || error), "error"); syncButtons(); } });
 		if (els.disconnect) els.disconnect.addEventListener("click", function () { disconnect(true); });
+		if (els.chatForm) els.chatForm.addEventListener("submit", function (event) { event.preventDefault(); sendManualChat(); });
 		if (els.channel) {
 			els.channel.addEventListener("change", function () { state.cfg.channel = normalizeChannel(els.channel.value); updateLink(); });
 			els.channel.addEventListener("keydown", function (event) { if (event.key === "Enter" && !state.active && els.connect) { event.preventDefault(); els.connect.click(); } });
@@ -1342,6 +1366,9 @@
 		els.clearAuth = document.getElementById("clear-auth-btn");
 		els.connect = document.getElementById("connect-btn");
 		els.disconnect = document.getElementById("disconnect-btn");
+		els.chatForm = document.getElementById("chat-compose");
+		els.chatMessage = document.getElementById("chat-message");
+		els.sendMessage = document.getElementById("send-message-btn");
 		els.hideMetrics = document.getElementById("hide-metrics");
 		els.socketChip = document.getElementById("socket-chip");
 		els.viewerChip = document.getElementById("viewer-chip");
