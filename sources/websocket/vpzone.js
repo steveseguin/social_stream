@@ -388,10 +388,7 @@
 		}).catch(function (error) {
 			var request = buildFetchJsonRequest(url, options, headers);
 			if (extAvailable()) return runtimeFetchJson(request);
-			return bridgedFetchJson(request).catch(function (bridgeError) {
-				if (bridgeError && bridgeError.message) throw bridgeError;
-				throw error;
-			});
+			throw error;
 		});
 	}
 

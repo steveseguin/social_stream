@@ -1,26 +1,134 @@
 // popup.js
 
+function normalizePopupTranslationLanguage(lang) {
+	if (!lang || typeof lang !== "string") return "";
+	const trimmed = lang.trim();
+	if (!trimmed) return "";
+	const lower = trimmed.toLowerCase();
+	if (lower === "test") return "test";
+	if (lower === "zh" || lower === "zh-cn" || lower === "zh-hans") return "zh-CN";
+	if (lower === "zh-tw" || lower === "zh-hk" || lower === "zh-hant") return "zh-TW";
+	if (lower === "en-gb" || lower === "en-uk") return "en-uk";
+	if (lower === "en" || lower.startsWith("en-")) return "en-us";
+	if (lower === "pt-br" || lower.startsWith("pt")) return "pt-br";
+	if (lower.startsWith("es")) return "es";
+	if (lower.startsWith("de")) return "de";
+	if (lower.startsWith("cs")) return "cs";
+	if (lower.startsWith("th")) return "th";
+	if (lower.startsWith("tr")) return "tr";
+	if (lower.startsWith("uk")) return "uk";
+	return "";
+}
+
+let pendingExternalTranslationLanguage = "";
+let latestExternalTranslationApply = "";
+let requestedImmediateTranslationLanguage = "";
+let appliedImmediateTranslationLanguage = "";
+
+function refreshPopupSettingsAfterLanguageSave() {
+	if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
+		return false;
+	}
+	chrome.runtime.sendMessage({ cmd: "getSettings" }, function(response) {
+		if (response && response.settings) {
+			update(response, false);
+		}
+	});
+	return true;
+}
+
+function applyPopupTranslationLanguageImmediately(lang) {
+	const normalized = normalizePopupTranslationLanguage(lang);
+	if (!normalized || typeof fetch !== "function") return false;
+	if (requestedImmediateTranslationLanguage === normalized || appliedImmediateTranslationLanguage === normalized) return true;
+	requestedImmediateTranslationLanguage = normalized;
+	const applyToken = `${normalized}:${Date.now()}:${Math.random()}`;
+	latestExternalTranslationApply = applyToken;
+	fetch(`./translations/${encodeURIComponent(normalized)}.json`, { cache: "no-store" })
+		.then(function(response) {
+			if (!response || response.status !== 200) return null;
+			return response.json();
+		})
+		.then(function(data) {
+			if (!data || latestExternalTranslationApply !== applyToken) return;
+			translation = data;
+			appliedImmediateTranslationLanguage = normalized;
+			requestedImmediateTranslationLanguage = "";
+			if (lastResponse && lastResponse.settings) {
+				lastResponse.settings.translation = data;
+			}
+			miniTranslate(document.body);
+		})
+		.catch(function(error) {
+			if (requestedImmediateTranslationLanguage === normalized) {
+				requestedImmediateTranslationLanguage = "";
+			}
+			console.warn("Failed to apply popup translation immediately:", error && error.message ? error.message : error);
+		});
+	return true;
+}
+
+function savePopupTranslationLanguage(lang, options = {}) {
+	const normalized = normalizePopupTranslationLanguage(lang);
+	if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
+		return false;
+	}
+	chrome.runtime.sendMessage({
+		cmd: "saveSetting",
+		type: "optionsetting",
+		setting: "translationlanguage",
+		value: normalized
+	}, function() {
+		console.log("Language setting saved", normalized || "default");
+		if (typeof options.onSaved === "function") {
+			options.onSaved(normalized);
+		}
+		if (options.reload !== false) {
+			window.location.reload();
+		} else if (options.refreshSettings !== false) {
+			refreshPopupSettingsAfterLanguageSave();
+		}
+	});
+	return true;
+}
+
+function applyExternalTranslationLanguage(lang, options = {}) {
+	const normalized = normalizePopupTranslationLanguage(lang);
+	const languageSelect = document.querySelector('select[data-optionsetting="translationlanguage"]');
+	if (!languageSelect) return false;
+	const current = normalizePopupTranslationLanguage(languageSelect.value);
+	if (current === normalized) {
+		if (options.reload !== true) {
+			applyPopupTranslationLanguageImmediately(normalized);
+		}
+		return false;
+	}
+	languageSelect.value = normalized;
+	if (options.reload !== true && pendingExternalTranslationLanguage === normalized) return false;
+	if (options.reload !== true) {
+		pendingExternalTranslationLanguage = normalized;
+		applyPopupTranslationLanguageImmediately(normalized);
+	}
+	const saveStarted = savePopupTranslationLanguage(normalized, {
+		reload: options.reload === true,
+		refreshSettings: true,
+		onSaved: function(savedLanguage) {
+			if (pendingExternalTranslationLanguage === savedLanguage) {
+				pendingExternalTranslationLanguage = "";
+			}
+		}
+	});
+	if (!saveStarted && pendingExternalTranslationLanguage === normalized) {
+		pendingExternalTranslationLanguage = "";
+	}
+	return saveStarted;
+}
+
 // Listen for language change messages from parent window
 window.addEventListener('message', function(event) {
-	// Check if this is a language change message
 	if (event.data && event.data.type === 'changeLanguage') {
 		console.log('Received language change message:', event.data.language);
-		
-		// Update the language selector if it exists
-		const languageSelect = document.querySelector('select[data-optionsetting="translationlanguage"]');
-		if (languageSelect && languageSelect.value !== event.data.language) {
-			// Save the new language setting
-			chrome.runtime.sendMessage({
-				cmd: "saveSetting",
-				type: "optionsetting",
-				setting: "translationlanguage",
-				value: event.data.language
-			}, function(response) {
-				console.log("Language setting saved, reloading page");
-				// Reload the page to apply the new language
-				window.location.reload();
-			});
-		}
+		applyExternalTranslationLanguage(event.data.language, { reload: false });
 	}
 });
 
@@ -846,6 +954,15 @@ function miniTranslate(ele, ident = false, direct=false) {
 			"obs-browser-source-is-already-transparent-by-default",
 			" (OBS Browser Source is already transparent by default)"
 		);
+	}
+}
+
+if (urlParams.has("ln")) {
+	const initialExternalLanguage = normalizePopupTranslationLanguage(urlParams.get("ln"));
+	const initialLanguageSelect = document.querySelector('select[data-optionsetting="translationlanguage"]');
+	if (initialExternalLanguage && initialLanguageSelect) {
+		initialLanguageSelect.value = initialExternalLanguage;
+		applyPopupTranslationLanguageImmediately(initialExternalLanguage);
 	}
 }
 
@@ -3528,6 +3645,9 @@ function update(response, sync = true) {
 
                 createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
                 updateAiOverlayLinksFromCurrentState();
+                if (urlParams.has("ln")) {
+                    applyExternalTranslationLanguage(urlParams.get("ln"), { reload: false });
+                }
 
                 // Check if MIDI is enabled and initialize if needed
                 const midiCheckbox = document.querySelector('input[data-setting="midi"]');
@@ -7114,6 +7234,14 @@ try {
 			if (request.forPopup.spotifyAuthResult) {
 				handleSpotifyAuthResultFromBackground(request.forPopup.spotifyAuthResult);
 			}
+
+			if (request.forPopup.settingsImported) {
+				sendResponse({status: "Reloading popup after settings import"});
+				setTimeout(function() {
+					window.location.reload();
+				}, 0);
+				return;
+			}
 			
 			if (request.forPopup.alert){
 				alert(request.forPopup.alert);
@@ -8681,8 +8809,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const languageIcon = document.getElementById('languageIcon');
 	const languageSelector = document.getElementById('language-selector-container');
 	
-	// Hide language icon if &ln parameter is present
-	if (urlParams.has("ln")) {
+	// The standalone app owns language selection; the extension popup keeps this control.
+	if (ssapp || urlParams.has("ln")) {
 		if (languageIcon) {
 			languageIcon.style.display = 'none';
 		}
@@ -8708,6 +8836,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				languageSelector.style.display = 'none';
 			}
 		});
+	}
+	if (urlParams.has("ln")) {
+		applyExternalTranslationLanguage(urlParams.get("ln"), { reload: false });
 	}
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
@@ -10335,17 +10466,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				small.style.color = '#ff0';
 				small.style.fontWeight = 'bold';
 			}
-			// Save the setting directly
-			chrome.runtime.sendMessage({
-				cmd: "saveSetting",
-				type: "optionsetting",
-				setting: "translationlanguage",
-				value: this.value
-			}, function(response) {
-				console.log("Setting saved, reloading page");
-				// Reload after the setting is saved
-				window.location.reload();
-			});
+			savePopupTranslationLanguage(this.value);
 		};
 	} else {
 		console.log("Language selector NOT found!");

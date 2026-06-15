@@ -2941,6 +2941,7 @@ async function importSettings(item = false) {
 
 	try {
 		loadSettings(JSON.parse(importFile), true);
+		messagePopup({ settingsImported: true });
 	} catch (e) {
 		console.error("[Settings] Invalid JSON in import file:", e.message);
 		messagePopup({ alert: "File does not contain a valid JSON structure" });

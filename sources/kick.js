@@ -1641,12 +1641,6 @@
 			});
 			return;
 		}
-		ele.dataset.matched = true;
-		ele.dataset.ssMessageKey = messageId;
-		kickDebugLog("process:new row marked", {
-			messageId: messageId,
-			row: getKickDebugRowInfo(ele)
-		});
 
 		let sibling = ele.nextElementSibling;
 		let nextCount = 0;
@@ -1678,6 +1672,13 @@
 			});
 			return;
 		}
+
+		ele.dataset.matched = true;
+		ele.dataset.ssMessageKey = messageId;
+		kickDebugLog("process:new row marked", {
+			messageId: messageId,
+			row: getKickDebugRowInfo(ele)
+		});
 
 		rememberKickProcessedMessage(messageId);
 		kickDebugLog("process:new accepted key", {

@@ -194,6 +194,31 @@
 			display: block;
 		}
 
+		.session-help {
+			border: 1px solid var(--line-soft);
+			background: #0d0f11;
+			color: var(--muted);
+			border-radius: 6px;
+			padding: 8px;
+			font-size: 12px;
+			line-height: 1.4;
+		}
+
+		.session-help summary {
+			color: var(--text);
+			cursor: pointer;
+			font-weight: 700;
+		}
+
+		.session-help ol {
+			margin: 8px 0 0;
+			padding-left: 18px;
+		}
+
+		.session-help li {
+			margin: 4px 0;
+		}
+
 		.info-panel {
 			border: 1px solid var(--line-soft);
 			background: #0d0f11;
@@ -473,7 +498,7 @@
 				<summary>Simple Setup</summary>
 				<ol>
 					<li>Choose the overlay <strong>zip</strong> or folder here.</li>
-					<li>Paste your <strong>SSN session ID</strong> below.</li>
+					<li>Paste your <strong>SSN Session ID / Stream ID</strong> below.</li>
 					<li>Click <strong>Preview</strong>, then <strong>Download OBS HTML</strong>.</li>
 					<li>Add the downloaded HTML file to OBS as a <strong>Browser Source</strong>.</li>
 				</ol>
@@ -492,9 +517,19 @@
 				<input class="hidden-input" id="folderInput" type="file" multiple webkitdirectory>
 			</div>
 
-			<label for="sessionInput">Your SSN session ID</label>
+			<label for="sessionInput">Your SSN Session ID / Stream ID</label>
 			<input id="sessionInput" placeholder="Example: DMFJUmUXEv">
 			<div class="session-warning" id="sessionWarning">Recommended: paste your session ID before exporting. Then the downloaded HTML file can receive live messages without editing the URL.</div>
+			<details class="session-help">
+				<summary>Where do I find this?</summary>
+				<ol>
+					<li>Open the Social Stream Ninja extension popup.</li>
+					<li>Open <strong>Session Options</strong>.</li>
+					<li>Copy the value under <strong>Your unique session ID is below</strong>.</li>
+					<li>Paste it here. It is the same value used in overlay URLs after <code>?session=</code>.</li>
+				</ol>
+				<div style="margin-top: 8px;">This is not your Twitch, YouTube, or Kick username.</div>
+			</details>
 
 			<label for="passwordInput">Password, if used</label>
 			<input id="passwordInput" placeholder="Optional">

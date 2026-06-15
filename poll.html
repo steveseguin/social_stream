@@ -376,7 +376,7 @@
 const urlParams = new URLSearchParams(window.location.search);
 const TRUE_STRINGS = new Set(['1', 'true', 'yes', 'on', 'enabled']);
 const FALSE_STRINGS = new Set(['0', 'false', 'no', 'off', 'disabled']);
-const pollCoreResetKeys = new Set(['pollType', 'pollMatchMode', 'pollQuestion', 'multipleChoiceOptions']);
+const pollCoreResetKeys = new Set(['pollType', 'pollMatchMode', 'pollQuestion', 'multipleChoiceOptions', 'pollOptions']);
 
 function getSessionId() {
     const rawSession = (urlParams.get('session') || '').trim();
@@ -847,8 +847,9 @@ function processVoteSingle(vote, name, source, userId, hasDonation = null) {
 
 function processVoteCandidate(vote, voterKey, voteContext, voteWeight, donationAmount) {
     if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+        const cleanVote = normalizeChoiceText(vote);
         // Handle numeric votes first
-        const numericVote = /^\d+$/.test(vote) ? parseInt(vote, 10) : NaN;
+        const numericVote = /^\d+$/.test(cleanVote) ? parseInt(cleanVote, 10) : NaN;
         if (!Number.isNaN(numericVote)) {
             // For yes/no, 1 = Yes, 2 = No
             if (settings.pollType === 'yesno') {
@@ -871,11 +872,11 @@ function processVoteCandidate(vote, voterKey, voteContext, voteWeight, donationA
 
         // Special handling for yes/no polls
         if (settings.pollType === 'yesno') {
-            if (yesMatches.has(vote)) {
+            if (yesMatches.has(cleanVote)) {
                 recordVote('Yes', voterKey, { ...voteContext, matchedBy: 'yesno-text' }, voteWeight, donationAmount);
                 return true;
             }
-            if (noMatches.has(vote)) {
+            if (noMatches.has(cleanVote)) {
                 recordVote('No', voterKey, { ...voteContext, matchedBy: 'yesno-text' }, voteWeight, donationAmount);
                 return true;
             }
@@ -883,7 +884,6 @@ function processVoteCandidate(vote, voterKey, voteContext, voteWeight, donationA
 
         // For multiple choice, avoid ambiguous punctuation-normalized matches.
         const exactVote = exactChoiceText(voteContext.rawCandidateVote || vote);
-        let cleanVote = normalizeChoiceText(vote);
         const cleanVoteCompact = compactChoiceText(vote);
         const exactMatches = [];
         const flexibleMatches = [];
