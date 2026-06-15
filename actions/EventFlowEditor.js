@@ -1777,6 +1777,10 @@ class EventFlowEditor {
 	}
 
     getNodeTitle(node) {
+        if (node && typeof node.label === 'string' && node.label.trim()) {
+            return node.label.trim();
+        }
+
         let typesArray;
         let subtypeField;
 
@@ -2779,7 +2783,11 @@ class EventFlowEditor {
 		const eventReferenceUrl = this.escapeHtml(this.resolveGuideTarget('event-reference') || '#');
 		const eventReferenceCrossPlatformUrl = this.escapeHtml(this.resolveGuideTarget('event-reference-cross-platform') || '#');
 		let html = `<h4>${this.escapeHtml(this.getNodeTitle(node))} Properties</h4>
-					<input type="hidden" id="node-id-prop" value="${this.escapeHtml(node.id)}">`;
+					<input type="hidden" id="node-id-prop" value="${this.escapeHtml(node.id)}">
+					<div class="property-group">
+						<label class="property-label">Display Name</label>
+						<input type="text" class="property-input" id="node-label-prop" data-node-meta="true" value="${this.escapeHtml(node.label || '')}" placeholder="Optional custom name">
+					</div>`;
 
 		let typeArray, subtypeField; // Use subtypeField to get the specific type (triggerType, actionType, logicType)
 		
@@ -5194,7 +5202,19 @@ class EventFlowEditor {
                 this.renderNodeOnCanvas(nodeData.id); // Rerender the node itself on canvas
             });
         }
-        document.querySelectorAll('#node-properties-content .property-input').forEach(input => {
+
+        const labelInput = document.getElementById('node-label-prop');
+        if (labelInput) {
+            labelInput.addEventListener('input', (e) => {
+                const label = e.target.value.trim();
+                if (label) nodeData.label = label;
+                else delete nodeData.label;
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        document.querySelectorAll('#node-properties-content .property-input:not([data-node-meta="true"])').forEach(input => {
             const propId = input.id.replace('prop-', '');
             input.addEventListener('input', (e) => { // 'change' for select/checkbox, 'input' for text/textarea
                 if (e.target.type === 'checkbox') {
