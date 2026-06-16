@@ -202,6 +202,7 @@ TTS.kokoroSettings = {
     device: "auto",
     dtype: "auto"
 };
+TTS.KOKORO_GENERATE_TIMEOUT_MS = 90000;
 
 TTS.getKokoroAssets = function() {
     if (window.SSNKokoroAssets) {
@@ -306,6 +307,146 @@ TTS.getKokoroDeviceAttempts = function(preferredDevice, webgpuAvailable) {
     }
     addAttempt("auto");
     return attempts;
+};
+
+TTS.withTimeout = function(promise, timeoutMs, label) {
+    var timeoutId = null;
+    return new Promise(function(resolve, reject) {
+        timeoutId = setTimeout(function() {
+            reject(new Error((label || "Operation") + " timed out after " + timeoutMs + "ms"));
+        }, timeoutMs);
+
+        Promise.resolve(promise).then(function(value) {
+            clearTimeout(timeoutId);
+            resolve(value);
+        }).catch(function(error) {
+            clearTimeout(timeoutId);
+            reject(error);
+        });
+    });
+};
+
+TTS.resumeAudioContextForPlayback = function() {
+    try {
+        if (TTS.audioContext && TTS.audioContext.state === "suspended") {
+            TTS.audioContext.resume().catch(function(error) {
+                console.warn("Could not resume audio context before playback:", error);
+            });
+        }
+    } catch (error) {
+        console.warn("Could not resume audio context before playback:", error);
+    }
+};
+
+TTS.validateKokoroAudioBlob = async function(audioBlob) {
+    if (!audioBlob || !Number.isFinite(audioBlob.size) || audioBlob.size <= 44) {
+        throw new Error("Kokoro generated empty audio");
+    }
+
+    var buffer = await audioBlob.arrayBuffer();
+    if (!buffer || buffer.byteLength <= 44) {
+        throw new Error("Kokoro generated empty audio data");
+    }
+
+    var header = "";
+    try {
+        header = String.fromCharCode.apply(null, new Uint8Array(buffer.slice(0, 12)));
+    } catch (_) {}
+    if (header.slice(0, 4) !== "RIFF" || header.slice(8, 12) !== "WAVE") {
+        throw new Error("Kokoro generated invalid WAV audio");
+    }
+
+    try {
+        var ctx = TTS.audioContext || TTS.initAudioContext();
+        if (!ctx || typeof ctx.decodeAudioData !== "function") {
+            return audioBlob;
+        }
+        var decoded = await ctx.decodeAudioData(buffer.slice(0));
+        if (!decoded || !decoded.length || decoded.duration <= 0) {
+            throw new Error("Kokoro generated undecodable audio");
+        }
+
+        var samples = decoded.getChannelData(0);
+        var stride = Math.max(1, Math.floor(samples.length / 2000));
+        var peak = 0;
+        for (var i = 0; i < samples.length; i += stride) {
+            var sample = Math.abs(samples[i] || 0);
+            if (sample > peak) {
+                peak = sample;
+            }
+        }
+        if (peak < 0.0001) {
+            throw new Error("Kokoro generated silent audio");
+        }
+    } catch (error) {
+        if (error && /Kokoro generated/.test(error.message || "")) {
+            throw error;
+        }
+        throw new Error("Kokoro generated undecodable audio: " + (error && error.message ? error.message : String(error)));
+    }
+
+    return audioBlob;
+};
+
+TTS.shouldRetryKokoroWithWasm = function(error) {
+    var requestedDevice = TTS.normalizeKokoroDevice(TTS.kokoroSettings.device);
+    if (requestedDevice !== "auto") {
+        return false;
+    }
+    if (TTS.kokoroDevice !== "webgpu") {
+        return false;
+    }
+    console.warn("[TTS Kokoro] WebGPU output failed; retrying with WASM", error);
+    return true;
+};
+
+TTS.reinitializeKokoro = async function(device) {
+    if (!TTS.KokoroTTS) {
+        throw new Error("Kokoro module is not loaded");
+    }
+
+    var kokoroAssets = TTS.getKokoroAssets();
+    var dtype = TTS.getKokoroDtype(device, kokoroAssets);
+    TTS.kokoroTtsInstance = null;
+    TTS.kokoroDevice = device;
+    TTS.kokoroDtype = dtype;
+    console.log("[TTS Kokoro] Reinitializing with device=" + device + " dtype=" + dtype);
+    TTS.kokoroTtsInstance = await TTS.KokoroTTS.from_pretrained(
+        kokoroAssets.modelId,
+        {
+            dtype: dtype,
+            device: device,
+            progress_callback: TTS.logKokoroProgress
+        }
+    );
+    return true;
+};
+
+TTS.generateKokoroAudioBlob = async function(text, selectedVoice, speed) {
+    var streamer = new TTS.TextSplitterStream();
+    streamer.push(text);
+    streamer.close();
+
+    var stream = TTS.kokoroTtsInstance.stream(streamer, {
+        voice: selectedVoice,
+        speed: speed,
+        streamAudio: false
+    });
+    var sawAudio = false;
+
+    for await (var chunk of stream) {
+        var audio = chunk && chunk.audio;
+        if (!audio) {
+            continue;
+        }
+        sawAudio = true;
+        if (!audio.toBlob || typeof audio.toBlob !== "function") {
+            throw new Error("Kokoro returned audio in an unsupported format");
+        }
+        return await TTS.validateKokoroAudioBlob(audio.toBlob());
+    }
+
+    throw new Error(sawAudio ? "Kokoro generated no playable audio" : "Kokoro generated no audio");
 };
 
 TTS.piperLoaded = false;
@@ -2089,10 +2230,10 @@ TTS.kokoroTTS = async function(text) {
   try {
     if ((window.ninjafy || window.electronApi)) {
       try {
-        // Electron implementation remains the same
+        // Electron/native implementation uses the app worker and then plays the returned WAV.
 		let ninjafy = window.ninjafy || window.electronApi;
         const wavBuffer = await ninjafy.tts(text, TTS.kokoroSettings);
-        const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+        const audioBlob = await TTS.validateKokoroAudioBlob(new Blob([wavBuffer], { type: 'audio/wav' }));
         
         if (TTS.neuroSyncEnabled) {
           TTS.sendToNeuroSync(audioBlob, {
@@ -2115,12 +2256,15 @@ TTS.kokoroTTS = async function(text) {
         if (!TTS.audio) {
 			TTS.audio = document.createElement("audio");
 			TTS.audio.onended = TTS.finishedAudio;
-		}
+        }
         const audioUrl = URL.createObjectURL(audioBlob);
         TTS.setAudioSource(audioUrl, true);
-        
-        if (TTS.volume) TTS.audio.volume = TTS.volume;
-        
+
+        if (TTS.volume !== undefined && TTS.volume !== null) {
+          TTS.audio.volume = Math.max(0, Math.min(1, parseFloat(TTS.volume) || 0));
+        }
+
+        TTS.resumeAudioContextForPlayback();
         await TTS.audio.play();
         return;
       } catch (error) {
@@ -2139,63 +2283,65 @@ TTS.kokoroTTS = async function(text) {
       }
     }
     
-    TTS.premiumQueueActive = true;
-    
-    // Create a new streamer for each text processing
-    const streamer = new TTS.TextSplitterStream();
-    streamer.push(text);
-    streamer.close();
-    
     if (!TTS.audio) {
 		TTS.audio = document.createElement("audio");
 		TTS.audio.onended = TTS.finishedAudio;
 	}
-    
+
     // Use the same stream options as the working version
     const speed = TTS.kokoroSettings.speed || 1.0;
     const selectedVoice = TTS.kokoroSettings.voiceName || "af_aoede"; // Use a specific default
-    
+
     try {
-      const stream = TTS.kokoroTtsInstance.stream(streamer, { 
-        voice: selectedVoice,
-        speed: speed,
-        streamAudio: false
-      });
-      
-      for await (const { audio } of stream) {
-        if (!audio) continue;
-        
-        if (TTS.neuroSyncEnabled) {
-          TTS.sendToNeuroSync(audio, { 
-            isKokoroAudio: true,
-            onProgress: (progress) => {
-              //console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
-            }
-          }).then(result => {
-            if (result && result.blendshapes) {
-              //console.log(`Received ${result.blendshapes.length} blendshape frames`);
-            }
-          }).catch(err => {
-            console.error("NeuroSync error:", err);
-          });
-          TTS.finishedAudio();
-          return;
+      let audioBlob;
+      try {
+        audioBlob = await TTS.withTimeout(
+          TTS.generateKokoroAudioBlob(text, selectedVoice, speed),
+          TTS.KOKORO_GENERATE_TIMEOUT_MS,
+          "Kokoro TTS generation"
+        );
+      } catch (error) {
+        if (!TTS.shouldRetryKokoroWithWasm(error)) {
+          throw error;
         }
-        
-        const audioBlob = audio.toBlob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        TTS.setAudioSource(audioUrl, true);
-        if (TTS.volume) TTS.audio.volume = TTS.volume;
-        
-        try {
-          if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
-            await TTS.audioContext.resume();
+        await TTS.reinitializeKokoro("wasm");
+        audioBlob = await TTS.withTimeout(
+          TTS.generateKokoroAudioBlob(text, selectedVoice, speed),
+          TTS.KOKORO_GENERATE_TIMEOUT_MS,
+          "Kokoro TTS WASM generation"
+        );
+      }
+
+      if (TTS.neuroSyncEnabled) {
+        TTS.sendToNeuroSync(audioBlob, {
+          isKokoroAudio: true,
+          onProgress: (progress) => {
+            //console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
           }
-          await TTS.audio.play();
-        } catch (e) {
-          console.error("Audio playback failed:", e);
+        }).then(result => {
+          if (result && result.blendshapes) {
+            //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+          }
+        }).catch(err => {
+          console.error("NeuroSync error:", err);
+        }).finally(() => {
           TTS.finishedAudio();
-        }
+        });
+        return;
+      }
+
+      const audioUrl = URL.createObjectURL(audioBlob);
+      TTS.setAudioSource(audioUrl, true);
+      if (TTS.volume !== undefined && TTS.volume !== null) {
+        TTS.audio.volume = Math.max(0, Math.min(1, parseFloat(TTS.volume) || 0));
+      }
+
+      try {
+        TTS.resumeAudioContextForPlayback();
+        await TTS.audio.play();
+      } catch (e) {
+        console.error("Audio playback failed:", e);
+        TTS.finishedAudio();
       }
     } catch (err) {
       console.error("Stream processing error:", err);
