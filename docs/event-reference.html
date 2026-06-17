@@ -1096,7 +1096,7 @@
                             <tr>
                                 <td><code>message</code></td>
                                 <td>VPZone <code>msg</code>, <code>message</code>, <code>new_message</code>, or <code>chat_message</code> websocket frame.</td>
-                                <td><code>chatname</code> comes from <code>username</code>; <code>chatmessage</code> comes from <code>body</code>; subscriber/owner flags are copied into <code>chatbadges</code> and <code>meta</code>.</td>
+                                <td><code>chatname</code> comes from <code>username</code>; <code>chatmessage</code> comes from <code>body</code>; subscriber/owner/mod/VIP flags are copied into <code>chatbadges</code>, top-level role flags, and <code>meta</code>. Native IDs populate <code>data.id</code> and <code>meta.messageId</code>.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
@@ -1107,6 +1107,11 @@
                                 <td class="membership-event"><code>new_subscriber</code></td>
                                 <td>VPZone <code>subscribe</code> / <code>subscription</code> frame.</td>
                                 <td><code>membership</code> is set to Subscriber when subscription flags are present.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>subscription_gift</code></td>
+                                <td>VPZone <code>gift</code> / <code>gift_subscription</code> frame.</td>
+                                <td>Uses the same gifted-sub event name as Twitch, Kick, Rumble, and Velora.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>new_follower</code></td>
