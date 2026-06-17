@@ -1,7 +1,7 @@
 (function () {
 	const HOST = "https://vpzone.tv";
 	const SOURCE_NAME = "VPZone";
-	const SOURCE_IMG = HOST + "/favicon.ico";
+	const SOURCE_IMG = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48cGF0aCBkPSJNMTQgMThoMTBsOCAyNCA4LTI0aDEwTDM3IDUwSDI3TDE0IDE4eiIgZmlsbD0iIzEyYzdjMiIvPjxjaXJjbGUgY3g9IjQ4IiBjeT0iMTYiIHI9IjYiIGZpbGw9IiM3YzVjZmYiLz48L3N2Zz4=";
 	const CONFIG_KEY = "vpzoneWsConfig";
 	const TOKEN_KEY = "vpzoneWsTokens";
 	const OAUTH_KEY = "vpzoneOAuthState";
@@ -975,6 +975,50 @@
 		return ev && (ev.createdAt || ev.timestamp || ev.sentAt || ev.ts) ? (ev.createdAt || ev.timestamp || ev.sentAt || ev.ts) : "";
 	}
 
+	function flagValue(value) {
+		var text;
+		if (value === true || value === 1) return true;
+		if (value === false || value === 0 || value == null) return false;
+		text = String(value).toLowerCase();
+		return text === "true" || text === "1" || text === "yes";
+	}
+
+	function eventValue(ev, keys) {
+		var meta = ev && ev.metadata && typeof ev.metadata === "object" ? ev.metadata : {};
+		var i;
+		if (!ev) return "";
+		for (i = 0; i < keys.length; i += 1) {
+			if (ev[keys[i]] != null && ev[keys[i]] !== "") return ev[keys[i]];
+			if (meta[keys[i]] != null && meta[keys[i]] !== "") return meta[keys[i]];
+		}
+		return "";
+	}
+
+	function eventFlag(ev, keys) {
+		var meta = ev && ev.metadata && typeof ev.metadata === "object" ? ev.metadata : {};
+		var roles = [];
+		var i;
+		var j;
+		for (i = 0; i < keys.length; i += 1) {
+			if (flagValue(ev && ev[keys[i]])) return true;
+			if (flagValue(meta && meta[keys[i]])) return true;
+		}
+		if (Array.isArray(ev && ev.roles)) roles = roles.concat(ev.roles);
+		if (Array.isArray(meta.roles)) roles = roles.concat(meta.roles);
+		for (j = 0; j < roles.length; j += 1) {
+			var role = String(roles[j] || "").toLowerCase();
+			for (i = 0; i < keys.length; i += 1) {
+				if (role === String(keys[i]).toLowerCase().replace(/^is_?/, "")) return true;
+			}
+		}
+		return false;
+	}
+
+	function eventMessageId(ev) {
+		var value = eventValue(ev, ["messageId", "message_id", "chatMessageId", "chat_message_id", "id"]);
+		return value != null && value !== "" ? String(value) : "";
+	}
+
 	function mapEventName(value) {
 		value = String(value || "").toLowerCase();
 		if (value === "msg" || value === "message" || value === "new_message" || value === "chat") return "chat_message";
@@ -982,7 +1026,7 @@
 		if (value === "viewer_quit") return "left";
 		if (value === "follow") return "new_follower";
 		if (value === "subscribe" || value === "subscription") return "new_subscriber";
-		if (value === "gift") return "gift_subscription";
+		if (value === "gift" || value === "gift_subscription" || value === "gifted_subscription" || value === "subscription_gift" || value === "subgift") return "subscription_gift";
 		if (value === "raid") return "raid";
 		if (value === "clip") return "clip";
 		if (value === "level_up") return "level_up";
@@ -1001,47 +1045,71 @@
 		if (Array.isArray(ev.chatbadges)) badges = badges.concat(ev.chatbadges);
 		if (Array.isArray(ev.badges)) badges = badges.concat(ev.badges);
 		if (ev.is_owner || ev.isOwner) badges.push(svgBadge("OP", "#c071f5", 20));
-		if (ev.is_subscriber || ev.isSubscriber) badges.push(svgBadge(subLabel, ev.tier === "tier3" ? "#00E9E2" : (ev.tier === "tier2" ? "#FF6DE4" : "#f9376b")));
+		if (eventFlag(ev, ["is_moderator", "isModerator", "moderator", "mod"])) badges.push(svgBadge("MOD", "#00a7ff", 28));
+		if (eventFlag(ev, ["is_vip", "isVip", "vip"])) badges.push(svgBadge("VIP", "#ff68b3", 24));
+		if (eventFlag(ev, ["is_subscriber", "isSubscriber", "subscriber", "member"])) badges.push(svgBadge(subLabel, ev.tier === "tier3" ? "#00E9E2" : (ev.tier === "tier2" ? "#FF6DE4" : "#f9376b")));
 		if (ev.metadata && ev.metadata.source === "twitch") badges.push(svgBadge("TW", "#9146FF", 20));
 		return badges;
 	}
 
 	function buildChat(ev) {
 		var rawName = ev.actorDisplayName || ev.displayName || ev.actorUsername || ev.username || "";
+		var messageId = eventMessageId(ev);
+		var isSubscriber = eventFlag(ev, ["is_subscriber", "isSubscriber", "subscriber", "member"]);
+		var isModerator = eventFlag(ev, ["is_moderator", "isModerator", "moderator", "mod"]);
+		var isVip = eventFlag(ev, ["is_vip", "isVip", "vip"]);
+		var isOwner = eventFlag(ev, ["is_owner", "isOwner", "owner", "broadcaster"]);
 		if (!rawName || String(rawName).toLowerCase() === "system") return null;
 		var data = basePayload();
+		if (messageId) data.id = messageId;
 		data.chatname = esc(rawName);
+		data.username = ev.actorUsername || ev.username || "";
 		data.chatmessage = renderMessage(ev.message || ev.text || ev.body || ev.content || "");
 		data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage || "");
 		data.contentimg = absUrl(ev.contentimg || ev.contentImage || ev.imageUrl || "");
 		data.chatbadges = buildBadges(ev);
-		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : ((ev.is_subscriber || ev.isSubscriber) ? "Subscriber" : "");
+		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : (isSubscriber ? "Subscriber" : "");
 		data.nameColor = ev.actorNameColor || ev.nameColor || ev.color || "#c084fc";
 		data.userid = ev.actorUserId != null ? String(ev.actorUserId) : (ev.userId != null ? String(ev.userId) : (ev.actorUsername || ev.username || ""));
+		if (isModerator) data.mod = true;
+		if (isVip) data.vip = true;
+		if (isSubscriber) data.member = true;
 		data.timestamp = eventTime(ev);
-		data.meta = { id: ev.id != null ? ev.id : null, streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "chat_message", transport: "websocket", isSubscriber: !!(ev.is_subscriber || ev.isSubscriber), subMonths: Number(ev.sub_months || ev.subMonths || 0), isOwner: !!(ev.is_owner || ev.isOwner) };
+		data.meta = { streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "chat_message", transport: "websocket", isSubscriber: isSubscriber, subMonths: Number(ev.sub_months || ev.subMonths || 0), isOwner: isOwner, isModerator: isModerator, isVip: isVip };
+		if (messageId) data.meta.messageId = messageId;
 		return data.chatname && data.chatmessage ? data : null;
 	}
 
 	function buildEvent(ev) {
 		var mapped = mapEventName(ev.eventType || ev.type || "");
 		var data;
+		var messageId = eventMessageId(ev);
+		var isSubscriber = eventFlag(ev, ["is_subscriber", "isSubscriber", "subscriber", "member"]);
+		var isModerator = eventFlag(ev, ["is_moderator", "isModerator", "moderator", "mod"]);
+		var isVip = eventFlag(ev, ["is_vip", "isVip", "vip"]);
+		var isOwner = eventFlag(ev, ["is_owner", "isOwner", "owner", "broadcaster"]);
 		if (!mapped || mapped === "presence" || mapped === "chat_message") return null;
 		if (state.settings.hideevents) return null;
 		if (mapped === "joined" && state.settings.capturejoinedevent === false) return null;
 		var rawName = ev.actorDisplayName || ev.displayName || ev.actorUsername || ev.username || "";
 		if (!rawName || String(rawName).toLowerCase() === "system") return null;
 		data = basePayload();
+		if (messageId) data.id = messageId;
 		data.event = mapped;
 		data.chatname = esc(rawName);
+		data.username = ev.actorUsername || ev.username || "";
 		data.chatmessage = renderMessage(ev.body || ev.message || ev.text || mapped);
 		data.chatimg = absUrl(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage || "");
 		data.chatbadges = buildBadges(ev);
-		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : ((ev.is_subscriber || ev.isSubscriber) ? "Subscriber" : "");
+		data.membership = ev.metadata && ev.metadata.actorRank ? nice(ev.metadata.actorRank) : (isSubscriber ? "Subscriber" : "");
 		data.nameColor = ev.actorNameColor || ev.nameColor || ev.color || "#c084fc";
 		data.userid = ev.actorUserId != null ? String(ev.actorUserId) : (ev.userId != null ? String(ev.userId) : (ev.actorUsername || ev.username || ""));
+		if (isModerator) data.mod = true;
+		if (isVip) data.vip = true;
+		if (isSubscriber) data.member = true;
 		data.timestamp = eventTime(ev);
-		data.meta = { id: ev.id != null ? ev.id : null, streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "", transport: "websocket" };
+		data.meta = { streamUsername: ev.streamUsername || state.currentChannel || state.cfg.channel, createdAt: eventTime(ev), actorUsername: ev.actorUsername || ev.username || "", actorRank: ev.metadata && ev.metadata.actorRank ? ev.metadata.actorRank : "", rawEventType: ev.eventType || ev.type || "", transport: "websocket", isSubscriber: isSubscriber, isOwner: isOwner, isModerator: isModerator, isVip: isVip };
+		if (messageId) data.meta.messageId = messageId;
 		if (mapped === "new_follower") data.meta.followedOn = eventTime(ev);
 		if (mapped === "new_subscriber") data.meta.subscribedOn = eventTime(ev);
 		return data.chatname ? data : null;
