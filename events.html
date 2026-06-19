@@ -1758,6 +1758,12 @@ body.light-mode .meta-value.badge {
 			forceShow = true;
 		}
 
+		if (!message && normalizedEvent === 'new_follower') {
+			const followVerb = data.type === 'youtube' || data.type === 'youtubeshorts' ? 'subscribed' : 'followed';
+			message = `${name} ${followVerb}`;
+			forceShow = true;
+		}
+
 		if (!eventSpecificText && normalizedEvent) {
 			eventSpecificText = humanizeEventKey(normalizedEvent);
 		}
