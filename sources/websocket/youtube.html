@@ -57,7 +57,7 @@
                     
                     <div class="landing-description">
                         <p>This tool requires OAuth sign-in to access YouTube's data APIs.</p>
-                        <p><strong>Note:</strong> The YouTube Data API only provides aggregate subscriber totals (polled roughly every 30 minutes). It does not emit real-time “new follower” events, so you will not see Twitch-style follow pings here.</p>
+                        <p><strong>Note:</strong> YouTube subscriber alerts are polled from recent public subscribers, so they can be delayed and will not include private subscriptions. Aggregate subscriber totals are still polled roughly every 30 minutes.</p>
                         <p>Membership-related events and subscriber counts remain limited to channels you own; chat functionality will work across most public channels.</p>
                     </div>
 
@@ -390,6 +390,8 @@ try {
     var quotaWarningActive = false;
     let streamStatsInterval;
     let channelStatsInterval; // Separate interval for channel stats
+	let recentSubscriberInterval;
+	let recentSubscriberLockInterval;
     let fetchTimeout; // Track fetch timeout to clear on disconnect
     let lastKnownViewers = null;
 	var viewerCountFallbackVideoId = '';
@@ -407,11 +409,16 @@ try {
     var nextPageToken = null;
     var userDetails = {};
 	var currentStream = null;
+	var authenticatedChannelId = "";
 	var messageQueue = [];
 	var queueDrainTimeout = null;
 	const YT_ADVANCED_CONTROLS_STORAGE_KEY = 'youtubeAdvancedControls';
 	const YT_CHANNEL_LOOKUP_CACHE_KEY = 'youtubeChannelLookupCache';
 	const YT_CHANNEL_LOOKUP_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+	const YT_RECENT_SUBSCRIBER_POLL_MS = 5 * 60 * 1000;
+	const YT_RECENT_SUBSCRIBER_LOCK_MS = 90 * 1000;
+	const YT_RECENT_SUBSCRIBER_MAX_SEEN = 500;
+	const YT_RECENT_SUBSCRIBER_TRACKER_ID = "yt-sub-tracker-" + Date.now() + "-" + Math.random().toString(36).slice(2);
     var pendingRelayMessages = [];
     const MAX_CACHED_CHAT_MESSAGES = 500;
     const LIVE_CHAT_MAX_RESULTS = 500;
@@ -1759,6 +1766,224 @@ function enableBackgroundKeepAlive() {
 		return payload;
 	}
 
+	function normalizeYouTubeChannelId(value) {
+		return String(value || '').trim();
+	}
+
+	function getRecentSubscriberSeenKey(channelId) {
+		return "youtubeRecentSubscribersSeen:" + normalizeYouTubeChannelId(channelId);
+	}
+
+	function getRecentSubscriberInitializedKey(channelId) {
+		return "youtubeRecentSubscribersInitialized:" + normalizeYouTubeChannelId(channelId);
+	}
+
+	function getRecentSubscriberLockKey(channelId) {
+		return "youtubeRecentSubscribersLock:" + normalizeYouTubeChannelId(channelId);
+	}
+
+	function hasRecentSubscriberTrackerInitialized(channelId) {
+		try {
+			return localStorage.getItem(getRecentSubscriberInitializedKey(channelId)) === "true";
+		} catch (_) {
+			return false;
+		}
+	}
+
+	function markRecentSubscriberTrackerInitialized(channelId) {
+		try {
+			localStorage.setItem(getRecentSubscriberInitializedKey(channelId), "true");
+		} catch (_) {}
+	}
+
+	function readRecentSubscriberSeen(channelId) {
+		try {
+			const raw = localStorage.getItem(getRecentSubscriberSeenKey(channelId));
+			const parsed = raw ? JSON.parse(raw) : [];
+			return Array.isArray(parsed) ? parsed.filter(Boolean).map(String) : [];
+		} catch (_) {
+			return [];
+		}
+	}
+
+	function writeRecentSubscriberSeen(channelId, ids) {
+		try {
+			const unique = [];
+			const seen = new Set();
+			(ids || []).forEach(function(id) {
+				const value = String(id || '').trim();
+				if (!value || seen.has(value)) return;
+				seen.add(value);
+				unique.push(value);
+			});
+			localStorage.setItem(getRecentSubscriberSeenKey(channelId), JSON.stringify(unique.slice(0, YT_RECENT_SUBSCRIBER_MAX_SEEN)));
+		} catch (_) {}
+	}
+
+	function acquireRecentSubscriberLock(channelId) {
+		const key = getRecentSubscriberLockKey(channelId);
+		const now = Date.now();
+		try {
+			const raw = localStorage.getItem(key);
+			const lock = raw ? JSON.parse(raw) : null;
+			if (lock && lock.owner && lock.owner !== YT_RECENT_SUBSCRIBER_TRACKER_ID && Number(lock.expiresAt) > now) {
+				return false;
+			}
+			localStorage.setItem(key, JSON.stringify({
+				owner: YT_RECENT_SUBSCRIBER_TRACKER_ID,
+				expiresAt: now + YT_RECENT_SUBSCRIBER_LOCK_MS
+			}));
+			const currentRaw = localStorage.getItem(key);
+			const currentLock = currentRaw ? JSON.parse(currentRaw) : null;
+			return !!(currentLock && currentLock.owner === YT_RECENT_SUBSCRIBER_TRACKER_ID);
+		} catch (_) {
+			return false;
+		}
+	}
+
+	function releaseRecentSubscriberLock(channelId) {
+		try {
+			const key = getRecentSubscriberLockKey(channelId);
+			const raw = localStorage.getItem(key);
+			const lock = raw ? JSON.parse(raw) : null;
+			if (!lock || lock.owner === YT_RECENT_SUBSCRIBER_TRACKER_ID) {
+				localStorage.removeItem(key);
+			}
+		} catch (_) {}
+	}
+
+	function extractRecentSubscriberId(item) {
+		const subscriber = item && item.subscriberSnippet ? item.subscriberSnippet : null;
+		const snippet = item && item.snippet ? item.snippet : null;
+		return normalizeYouTubeChannelId(
+			(subscriber && subscriber.channelId) ||
+			(snippet && snippet.resourceId && snippet.resourceId.channelId) ||
+			(snippet && snippet.channelId) ||
+			(item && item.id)
+		);
+	}
+
+	function buildRecentSubscriberPayload(item, ownerChannelId) {
+		const subscriber = item && item.subscriberSnippet ? item.subscriberSnippet : {};
+		const snippet = item && item.snippet ? item.snippet : {};
+		const subscriberId = extractRecentSubscriberId(item);
+		const title = subscriber.title || snippet.title || snippet.channelTitle || "New subscriber";
+		const thumbnails = subscriber.thumbnails || snippet.thumbnails || null;
+		const subscribedAt = snippet.publishedAt || "";
+		return applySourceIdentity({
+			chatname: escapeHtml(title),
+			chatbadges: "",
+			userid: subscriberId,
+			nameColor: "",
+			backgroundColor: "",
+			textColor: "",
+			chatmessage: "",
+			chatimg: resolveThumbnailUrl(thumbnails),
+			hasDonation: "",
+			membership: "",
+			type: "youtube",
+			event: "new_follower",
+			textonly: settings.textonlymode || false,
+			meta: {
+				source: "youtube.myRecentSubscribers",
+				channelId: subscriberId,
+				ownerChannelId: ownerChannelId,
+				title: title,
+				subscribedAt: subscribedAt
+			}
+		});
+	}
+
+	async function fetchRecentSubscribers() {
+		const token = getStoredToken();
+		if (!token) return [];
+		const response = await fetchWithTimeout(
+			'https://www.googleapis.com/youtube/v3/subscriptions?part=snippet,subscriberSnippet&myRecentSubscribers=true&maxResults=50',
+			5000,
+			{ 'Authorization': `Bearer ${token}` }
+		);
+		if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+		const data = await response.json();
+		return data && Array.isArray(data.items) ? data.items : [];
+	}
+
+	async function pollRecentSubscribers(ownerChannelId) {
+		const normalizedOwnerChannelId = normalizeYouTubeChannelId(ownerChannelId);
+		if (!normalizedOwnerChannelId) return;
+		if (!acquireRecentSubscriberLock(normalizedOwnerChannelId)) return;
+		try {
+			const items = await fetchRecentSubscribers();
+			const currentIds = items.map(extractRecentSubscriberId).filter(Boolean);
+			const initialized = hasRecentSubscriberTrackerInitialized(normalizedOwnerChannelId);
+			if (!currentIds.length) {
+				if (!initialized) {
+					markRecentSubscriberTrackerInitialized(normalizedOwnerChannelId);
+				}
+				return;
+			}
+			const previousIds = readRecentSubscriberSeen(normalizedOwnerChannelId);
+			const previousSet = new Set(previousIds);
+			if (!initialized) {
+				writeRecentSubscriberSeen(normalizedOwnerChannelId, currentIds);
+				markRecentSubscriberTrackerInitialized(normalizedOwnerChannelId);
+				return;
+			}
+			const newItems = items.filter(function(item) {
+				const id = extractRecentSubscriberId(item);
+				return id && !previousSet.has(id);
+			});
+			writeRecentSubscriberSeen(normalizedOwnerChannelId, currentIds.concat(previousIds));
+			markRecentSubscriberTrackerInitialized(normalizedOwnerChannelId);
+			newItems.reverse().forEach(function(item) {
+				const payload = buildRecentSubscriberPayload(item, normalizedOwnerChannelId);
+				addEvent(`New subscriber: ${payload.meta.title}`);
+				pushMessage(payload);
+			});
+		} catch (error) {
+			console.warn('Error polling YouTube recent subscribers:', error);
+		}
+	}
+
+	function beginRecentSubscriberPoller(ownerChannelId) {
+		pollRecentSubscribers(ownerChannelId);
+		recentSubscriberInterval = setInterval(function() {
+			pollRecentSubscribers(ownerChannelId);
+		}, YT_RECENT_SUBSCRIBER_POLL_MS);
+	}
+
+	function stopRecentSubscriberPolling() {
+		if (recentSubscriberInterval) {
+			clearInterval(recentSubscriberInterval);
+			recentSubscriberInterval = null;
+		}
+		if (recentSubscriberLockInterval) {
+			clearInterval(recentSubscriberLockInterval);
+			recentSubscriberLockInterval = null;
+		}
+		if (authenticatedChannelId) {
+			releaseRecentSubscriberLock(authenticatedChannelId);
+		}
+	}
+
+	function startRecentSubscriberPolling(targetChannelId) {
+		const ownerChannelId = normalizeYouTubeChannelId(authenticatedChannelId);
+		const normalizedTargetChannelId = normalizeYouTubeChannelId(targetChannelId);
+		stopRecentSubscriberPolling();
+		if (!ownerChannelId || !normalizedTargetChannelId || ownerChannelId !== normalizedTargetChannelId) {
+			return;
+		}
+		if (acquireRecentSubscriberLock(ownerChannelId)) {
+			beginRecentSubscriberPoller(ownerChannelId);
+		}
+		recentSubscriberLockInterval = setInterval(function() {
+			if (!recentSubscriberInterval && acquireRecentSubscriberLock(ownerChannelId)) {
+				beginRecentSubscriberPoller(ownerChannelId);
+			} else if (recentSubscriberInterval) {
+				acquireRecentSubscriberLock(ownerChannelId);
+			}
+		}, Math.floor(YT_RECENT_SUBSCRIBER_LOCK_MS / 2));
+	}
+
 	function rememberChannelName(channelId, displayName) {
 		if (!channelId || !displayName) {
 			return;
@@ -2472,6 +2697,7 @@ function enableBackgroundKeepAlive() {
 		localStorage.removeItem(YT_AUTH_SOURCE_KEY);
 		localStorage.removeItem('youtubeChannel');
         localStorage.removeItem('youtubeVideoId');
+		authenticatedChannelId = "";
 	}
     function isSocketInterfaceVisible() {
         return Array.from(document.querySelectorAll('.socket')).some(ele => !ele.classList.contains('hidden'));
@@ -3658,6 +3884,7 @@ function enableBackgroundKeepAlive() {
 			getUserInfo(token).then(async userInfo => {
 				if (userInfo && userInfo.items && userInfo.items.length > 0) {
 					const userItem = userInfo.items[0];
+					authenticatedChannelId = userItem.id || "";
 					username = userItem.snippet.title;
 					if (userItem.snippet.thumbnails && userItem.snippet.thumbnails.default) {
 						const avatarContainer = document.getElementById('user-avatar');
@@ -4726,6 +4953,7 @@ function enableBackgroundKeepAlive() {
     }
 	function clearPolling() {
 		stopLiveChatStream();
+		stopRecentSubscriberPolling();
 		// Clear all tracked timeouts
 		activeTimeouts.forEach(timeout => {
 			try {
@@ -5055,6 +5283,7 @@ function enableBackgroundKeepAlive() {
                     getChannelStats(effectiveChannelIdToUse);
                 }, 30 * 60 * 1000); // 30 minutes
             }
+			startRecentSubscriberPolling(effectiveChannelIdToUse);
             refreshCurrentVideoMetadata().catch(error => {
                 console.warn('Failed to refresh current YouTube metadata fields:', error);
             });
@@ -5833,6 +6062,8 @@ function enableBackgroundKeepAlive() {
 		// Clear all intervals
 		if (streamStatsInterval) clearInterval(streamStatsInterval);
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
+		if (recentSubscriberInterval) clearInterval(recentSubscriberInterval);
+		if (recentSubscriberLockInterval) clearInterval(recentSubscriberLockInterval);
 		if (displayInterval) clearInterval(displayInterval);
 		
 		// Clear all timeouts
