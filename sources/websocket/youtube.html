@@ -418,6 +418,7 @@ try {
 	const YT_RECENT_SUBSCRIBER_POLL_MS = 5 * 60 * 1000;
 	const YT_RECENT_SUBSCRIBER_CACHE_MAX_AGE_MS = YT_RECENT_SUBSCRIBER_POLL_MS;
 	const YT_RECENT_SUBSCRIBER_ALERT_LOOKBACK_MS = 60 * 60 * 1000;
+	const YT_RECENT_SUBSCRIBER_HISTORY_MS = 100 * 60 * 60 * 1000;
 	const YT_RECENT_SUBSCRIBER_LOCK_MS = 90 * 1000;
 	const YT_RECENT_SUBSCRIBER_MAX_SEEN = 500;
 	const YT_RECENT_SUBSCRIBER_TRACKER_ID = "yt-sub-tracker-" + Date.now() + "-" + Math.random().toString(36).slice(2);
@@ -1788,6 +1789,10 @@ function enableBackgroundKeepAlive() {
 		return "youtubeRecentSubscribersQuery:" + normalizeYouTubeChannelId(channelId);
 	}
 
+	function getRecentSubscriberHistoryKey(channelId) {
+		return "youtubeRecentSubscribersHistory:" + normalizeYouTubeChannelId(channelId);
+	}
+
 	function getRecentSubscriberLockKey(channelId) {
 		return "youtubeRecentSubscribersLock:" + normalizeYouTubeChannelId(channelId);
 	}
@@ -1839,6 +1844,42 @@ function enableBackgroundKeepAlive() {
 		} catch (_) {
 			return false;
 		}
+	}
+
+	function readRecentSubscriberHistory(channelId) {
+		const history = {};
+		const now = Date.now();
+		try {
+			const raw = localStorage.getItem(getRecentSubscriberHistoryKey(channelId));
+			const parsed = raw ? JSON.parse(raw) : {};
+			if (!parsed || typeof parsed !== 'object') return history;
+			Object.keys(parsed).forEach(function(id) {
+				const cleanId = normalizeYouTubeChannelId(id);
+				const seenAt = Number(parsed[id]);
+				if (!cleanId || !Number.isFinite(seenAt)) return;
+				if (now - seenAt < YT_RECENT_SUBSCRIBER_HISTORY_MS) {
+					history[cleanId] = seenAt;
+				}
+			});
+		} catch (_) {}
+		return history;
+	}
+
+	function writeRecentSubscriberHistory(channelId, history) {
+		try {
+			localStorage.setItem(getRecentSubscriberHistoryKey(channelId), JSON.stringify(history || {}));
+		} catch (_) {}
+	}
+
+	function updateRecentSubscriberHistory(channelId, ids) {
+		const history = readRecentSubscriberHistory(channelId);
+		const now = Date.now();
+		(ids || []).forEach(function(id) {
+			const cleanId = normalizeYouTubeChannelId(id);
+			if (cleanId) history[cleanId] = now;
+		});
+		writeRecentSubscriberHistory(channelId, history);
+		return history;
 	}
 
 	function normalizeRecentSubscriberItem(item) {
@@ -1941,6 +1982,12 @@ function enableBackgroundKeepAlive() {
 		);
 	}
 
+	function isRecentSubscriberItemWithinLookback(item) {
+		const snippet = item && item.snippet ? item.snippet : null;
+		const publishedAt = snippet && snippet.publishedAt ? Date.parse(snippet.publishedAt) : NaN;
+		return Number.isFinite(publishedAt) && Date.now() - publishedAt <= YT_RECENT_SUBSCRIBER_ALERT_LOOKBACK_MS;
+	}
+
 	function buildRecentSubscriberPayload(item, ownerChannelId) {
 		const subscriber = item && item.subscriberSnippet ? item.subscriberSnippet : {};
 		const snippet = item && item.snippet ? item.snippet : {};
@@ -2007,19 +2054,21 @@ function enableBackgroundKeepAlive() {
 			}
 			const previousIds = readRecentSubscriberSeen(normalizedOwnerChannelId);
 			const previousSet = new Set(previousIds);
-			if (!initialized || !isRecentSubscriberSeenStateFresh(normalizedOwnerChannelId)) {
-				writeRecentSubscriberSeen(normalizedOwnerChannelId, currentIds);
-				markRecentSubscriberTrackerInitialized(normalizedOwnerChannelId);
-				return;
-			}
-			const newItems = items.filter(function(item) {
+			const subscriberHistory = readRecentSubscriberHistory(normalizedOwnerChannelId);
+			const seenStateFresh = isRecentSubscriberSeenStateFresh(normalizedOwnerChannelId);
+			let newItems = items.filter(function(item) {
 				const id = extractRecentSubscriberId(item);
-				return id && !previousSet.has(id);
+				if (!id || previousSet.has(id)) return false;
+				if (subscriberHistory[id]) return false;
+				if (initialized && seenStateFresh) return true;
+				return isRecentSubscriberItemWithinLookback(item);
 			});
-			writeRecentSubscriberSeen(normalizedOwnerChannelId, currentIds.concat(previousIds));
+			writeRecentSubscriberSeen(normalizedOwnerChannelId, currentIds);
+			updateRecentSubscriberHistory(normalizedOwnerChannelId, currentIds);
 			markRecentSubscriberTrackerInitialized(normalizedOwnerChannelId);
 			newItems.reverse().forEach(function(item) {
 				const payload = buildRecentSubscriberPayload(item, normalizedOwnerChannelId);
+				console.log("YouTube new follower event:", payload);
 				addEvent(`New subscriber: ${payload.meta.title}`);
 				pushMessage(payload);
 			});
