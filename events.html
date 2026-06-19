@@ -636,6 +636,60 @@ body.light-mode .meta-value.badge {
 		}
 	}
 
+	var translation = {};
+
+	function getTranslation(key, fallback) {
+		try {
+			if (translation && translation.innerHTML && Object.prototype.hasOwnProperty.call(translation.innerHTML, key)) {
+				return translation.innerHTML[key];
+			}
+			if (translation && translation.miscellaneous && Object.prototype.hasOwnProperty.call(translation.miscellaneous, key)) {
+				return translation.miscellaneous[key];
+			}
+		} catch (e) {}
+		return typeof fallback === 'undefined' ? key.replace(/-/g, ' ') : fallback;
+	}
+
+	function formatTranslation(key, fallback, values) {
+		let template = getTranslation(key, fallback);
+		values = values || {};
+		Object.keys(values).forEach(function(valueKey) {
+			const replacement = values[valueKey] == null ? '' : String(values[valueKey]);
+			template = template.replace(new RegExp('\\{' + valueKey + '\\}', 'g'), replacement);
+		});
+		return template;
+	}
+
+	function applyStaticTranslations() {
+		document.title = getTranslation('events-dashboard-title', document.title || 'Events Dashboard');
+		if (noEventsMessage) {
+			noEventsMessage.textContent = getTranslation('events-waiting-message', 'Waiting for stream events and donations...');
+		}
+	}
+
+	function loadTranslationFromUrl() {
+		const lang = String(urlParams.get('ln') || urlParams.get('lang') || urlParams.get('language') || '').trim().replace(/_/g, '-');
+		if (!lang) {
+			return Promise.resolve();
+		}
+		return fetch('./translations/' + encodeURIComponent(lang) + '.json', { cache: 'no-store' })
+			.then(function(response) {
+				if (response.ok) {
+					return response.json();
+				}
+			})
+			.then(function(data) {
+				if (data) {
+					translation = data;
+					applyStaticTranslations();
+				}
+			})
+			.catch(function(error) {
+				log('translation load failed');
+				log(error);
+			});
+	}
+
 	function normalizeColorParam(value) {
 		if (typeof value !== "string") return null;
 		const trimmed = value.trim();
@@ -652,6 +706,7 @@ body.light-mode .meta-value.badge {
     const chatContainer = document.getElementById('chat-container');
     let noEventsMessage = document.querySelector('.no-events');
     const topBarElement = document.getElementById('topbar');
+	loadTranslationFromUrl();
 
 	var sources = false; // Default sources
 	if (urlParams.get("sources")) {
@@ -730,23 +785,23 @@ body.light-mode .meta-value.badge {
 	window.addEventListener("resize", updateCompactHeightMode);
     
 	const FRIENDLY_EVENT_LABELS = {
-		new_follower: 'New Follower',
-		new_subscriber: 'New Subscriber',
-		resub: 'Resub',
-		subscription_gift: 'Gifted Subs',
-		gift: 'Gift',
-		giftpurchase: 'Gift Purchase',
-		giftredemption: 'Gift Redemption',
-		reward: 'Channel Points',
-		hype_train: 'Hype Train',
-		sponsorship: 'Membership',
-		membermilestone: 'Member Milestone',
-		member_milestone: 'Member Milestone',
-		channel_points: 'Channel Points',
-		cheer: 'Cheer',
-		donation: 'Donation',
-		supersticker: 'Super Sticker',
-		thankyou: 'Thank You',
+		new_follower: ['alert-title-new-follower', 'New Follower'],
+		new_subscriber: ['alert-title-new-subscriber', 'New Subscriber'],
+		resub: ['events-resub', 'Resub'],
+		subscription_gift: ['events-gifted-subs', 'Gifted Subs'],
+		gift: ['alert-title-new-gift', 'Gift'],
+		giftpurchase: ['membership-gift-purchase-event', 'Gift Purchase'],
+		giftredemption: ['membership-gift-redeemed-event', 'Gift Redemption'],
+		reward: ['events-channel-points', 'Channel Points'],
+		hype_train: ['events-hype-train', 'Hype Train'],
+		sponsorship: ['membership-generic', 'Membership'],
+		membermilestone: ['membership-milestone-event', 'Member Milestone'],
+		member_milestone: ['membership-milestone-event', 'Member Milestone'],
+		channel_points: ['events-channel-points', 'Channel Points'],
+		cheer: ['alert-title-new-cheer', 'Cheer'],
+		donation: ['alert-title-new-donation', 'Donation'],
+		supersticker: ['super-sticker-label', 'Super Sticker'],
+		thankyou: ['events-thank-you', 'Thank You'],
 		// Deprecated — kept for backward compat with older extension versions
 		subscription: 'New Subscriber',       // → new_subscriber
 		subgift: 'Gifted Subs',               // → subscription_gift
@@ -757,6 +812,14 @@ body.light-mode .meta-value.badge {
 		upgraded_membership: 'Resub',         // → resub
 		membership_upgrade: 'Resub',          // → resub
 		membership_milestone: 'Member Milestone' // → membermilestone
+	};
+
+	const STATUS_EVENT_LABELS = {
+		viewer_update: ['events-viewers', 'Viewers'],
+		follower_update: ['events-followers', 'Followers'],
+		subscriber_update: ['events-subscribers', 'Subscribers'],
+		view_update: ['events-views', 'Views'],
+		likes_update: ['events-likes', 'Likes']
 	};
 
 	const STATUS_EVENT_TYPES = new Set(['viewer_update', 'follower_update', 'subscriber_update', 'view_update', 'likes_update']);
@@ -808,6 +871,32 @@ body.light-mode .meta-value.badge {
 
 	function humanizeEventKey(event) {
 		return event.replace(/[_-]+/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+	}
+
+	function resolveTranslationEntry(entry, fallback) {
+		if (Array.isArray(entry)) {
+			return getTranslation(entry[0], entry[1]);
+		}
+		return entry || fallback || '';
+	}
+
+	function getFriendlyEventLabel(event) {
+		return resolveTranslationEntry(FRIENDLY_EVENT_LABELS[event], humanizeEventKey(event));
+	}
+
+	function getStatusEventLabel(event) {
+		return resolveTranslationEntry(STATUS_EVENT_LABELS[event], getFriendlyEventLabel(event));
+	}
+
+	function getEventTypeText(type) {
+		const labels = {
+			donation: ['donation', 'DONATION'],
+			event: ['kick-alert-tag-event', 'EVENT'],
+			status: ['events-tag-status', 'STATUS'],
+			stream: ['events-tag-stream', 'STREAM'],
+			advertisement: ['events-tag-advertisement', 'ADVERTISEMENT']
+		};
+		return resolveTranslationEntry(labels[type], type ? type.toUpperCase() : '');
 	}
 
 	function capitalizeSource(value) {
@@ -1684,25 +1773,19 @@ body.light-mode .meta-value.badge {
 		let forceShow = false;
 
 		if (data.hasDonation) {
-			eventTypeText = 'DONATION';
+			eventTypeText = getEventTypeText('donation');
 		} else if (normalizedEvent) {
-			eventTypeText = 'EVENT';
+			eventTypeText = getEventTypeText('event');
 		}
 
 		if (normalizedEvent) {
-			eventSpecificText = FRIENDLY_EVENT_LABELS[normalizedEvent] || humanizeEventKey(normalizedEvent);
+			eventSpecificText = getFriendlyEventLabel(normalizedEvent);
 		}
 
 		if (STATUS_EVENT_TYPES.has(normalizedEvent)) {
-			eventTypeText = 'STATUS';
+			eventTypeText = getEventTypeText('status');
 			eventTypeClass = 'event-status';
-			eventSpecificText = {
-				viewer_update: 'Viewers',
-				follower_update: 'Followers',
-				subscriber_update: 'Subscribers',
-				view_update: 'Views',
-				likes_update: 'Likes'
-			}[normalizedEvent] || eventSpecificText;
+			eventSpecificText = getStatusEventLabel(normalizedEvent);
 			const metricNumber = resolveMetricNumber(data);
 			if (DEDUPLICATED_STATUS_EVENTS.has(normalizedEvent) && metricNumber !== null) {
 				const statusKey = getStatusCacheKey(normalizedEvent, data);
@@ -1712,46 +1795,51 @@ body.light-mode .meta-value.badge {
 				}
 				statusLastValues[statusKey] = metricNumber;
 			}
-			const label = eventSpecificText ? eventSpecificText.toLowerCase() : 'status';
+			const label = eventSpecificText || getTranslation('events-status', 'status');
 			const formattedMetric = formatMetricValue(data, 0);
-			message = `Current ${label}: ${formattedMetric}`;
+			message = formatTranslation('events-current-metric', 'Current {label}: {value}', {
+				label,
+				value: formattedMetric
+			});
 			name = data.sourceName || `${capitalizeSource(data.type)} Stats`;
 			forceShow = true;
 		} else if (STREAM_EVENT_TYPES.has(normalizedEvent)) {
-			eventTypeText = 'STREAM';
+			eventTypeText = getEventTypeText('stream');
 			if (normalizedEvent === 'stream_online') {
-				eventSpecificText = 'Online';
+				eventSpecificText = getTranslation('events-online', 'Online');
 				const startedAt = data.meta && (data.meta.startedAt || data.meta.started_at);
 				if (startedAt) {
 					const startDate = new Date(startedAt);
-					message = isNaN(startDate.getTime()) ? 'Stream is now live!' : `Stream is live (since ${startDate.toLocaleTimeString()})`;
+					message = isNaN(startDate.getTime())
+						? getTranslation('stream-is-now-live', 'Stream is now live!')
+						: formatTranslation('events-stream-live-since', 'Stream is live (since {time})', { time: startDate.toLocaleTimeString() });
 				} else {
-					message = 'Stream is now live!';
+					message = getTranslation('stream-is-now-live', 'Stream is now live!');
 				}
 			} else {
-				eventSpecificText = 'Offline';
-				message = 'Stream has ended.';
+				eventSpecificText = getTranslation('events-offline', 'Offline');
+				message = getTranslation('stream-is-now-offline', 'Stream has ended.');
 			}
 			name = data.sourceName || `${capitalizeSource(data.type)} Status`;
 			forceShow = true;
 		} else if (AD_EVENT_TYPES.has(normalizedEvent)) {
-			eventTypeText = 'ADVERTISEMENT';
+			eventTypeText = getEventTypeText('advertisement');
 			if (normalizedEvent === 'ad_break') {
-				eventSpecificText = 'Ad Break';
+				eventSpecificText = getTranslation('events-ad-break', 'Ad Break');
 				if (!message) {
 					const duration = data.meta && (data.meta.duration || data.meta.length || data.meta.duration_seconds);
-					message = `Ad break started${duration ? ` (${duration}s)` : ''}`;
+					message = getTranslation('events-ad-break-started', 'Ad break started') + (duration ? ` (${duration}s)` : '');
 				}
 			} else if (normalizedEvent === 'ad_request') {
-				eventSpecificText = 'Ad Request';
+				eventSpecificText = getTranslation('events-ad-request', 'Ad Request');
 				if (!message) {
 					const length = data.meta && (data.meta.length || data.meta.duration);
-					message = `Ad request queued${length ? ` (${length}s)` : ''}`;
+					message = getTranslation('events-ad-request-queued', 'Ad request queued') + (length ? ` (${length}s)` : '');
 				}
 			} else {
-				eventSpecificText = 'Ad Schedule';
+				eventSpecificText = getTranslation('events-ad-schedule', 'Ad Schedule');
 				if (!message) {
-					message = 'Ad schedule updated.';
+					message = getTranslation('events-ad-schedule-updated', 'Ad schedule updated.');
 				}
 			}
 			name = data.meta && data.meta.requester ? data.meta.requester : (data.sourceName || `${capitalizeSource(data.type)} Ads`);
@@ -1759,7 +1847,9 @@ body.light-mode .meta-value.badge {
 		}
 
 		if (!message && normalizedEvent === 'new_follower') {
-			const followVerb = data.type === 'youtube' || data.type === 'youtubeshorts' ? 'subscribed' : 'followed';
+			const followVerb = data.type === 'youtube' || data.type === 'youtubeshorts'
+				? getTranslation('alert-just-subscribed', 'just subscribed')
+				: getTranslation('alert-just-followed', 'just followed');
 			message = `${name} ${followVerb}`;
 			forceShow = true;
 		}
