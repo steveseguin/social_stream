@@ -12624,20 +12624,28 @@ async function processIncomingRequest(request, UUID = false) {
 				if (!eventPayload.type) {
 					eventPayload.type = "event";
 				}
-				if ((eventPayload.type || "").toLowerCase() === "obs" && eventPayload.event !== "scene_changed") {
+				if ((eventPayload.type || "").toLowerCase() === "obs") {
 					const meta = eventPayload.meta && typeof eventPayload.meta === "object" ? eventPayload.meta : {};
-					const dedupeKey = [eventPayload.type || "", eventPayload.event || "", meta.sceneName || "", meta.savedReplayPath || ""].join("|");
 					const now = Date.now();
-					window.__ssnEventFlowDedupe = window.__ssnEventFlowDedupe || {};
-					Object.keys(window.__ssnEventFlowDedupe).forEach(function (key) {
-						if (now - window.__ssnEventFlowDedupe[key] > 10000) {
-							delete window.__ssnEventFlowDedupe[key];
+					const dedupeKey = [eventPayload.type || "", eventPayload.event || "", meta.sceneName || "", meta.savedReplayPath || ""].join("|");
+					if (eventPayload.event === "scene_changed") {
+						if (window.__ssnEventFlowLastObsSceneKey === dedupeKey && window.__ssnEventFlowLastObsSceneAt && now - window.__ssnEventFlowLastObsSceneAt < 2000) {
+							return;
 						}
-					});
-					if (window.__ssnEventFlowDedupe[dedupeKey] && now - window.__ssnEventFlowDedupe[dedupeKey] < 2000) {
-						return;
+						window.__ssnEventFlowLastObsSceneKey = dedupeKey;
+						window.__ssnEventFlowLastObsSceneAt = now;
+					} else {
+						window.__ssnEventFlowDedupe = window.__ssnEventFlowDedupe || {};
+						Object.keys(window.__ssnEventFlowDedupe).forEach(function (key) {
+							if (now - window.__ssnEventFlowDedupe[key] > 10000) {
+								delete window.__ssnEventFlowDedupe[key];
+							}
+						});
+						if (window.__ssnEventFlowDedupe[dedupeKey] && now - window.__ssnEventFlowDedupe[dedupeKey] < 2000) {
+							return;
+						}
+						window.__ssnEventFlowDedupe[dedupeKey] = now;
 					}
-					window.__ssnEventFlowDedupe[dedupeKey] = now;
 				}
 				try {
 					await window.eventFlowSystem.processMessage(eventPayload);
@@ -13855,7 +13863,9 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		return false;
 	}
 
-	if (getSettingFlag("aiAutoTranslateOutgoing")) {
+	const messageOrigin = data.outgoingOrigin || (data.bot ? "chatbot" : data.host ? "host" : "relay");
+
+	if (messageOrigin === "host" && getSettingFlag("aiAutoTranslateOutgoing")) {
 		try {
 			if (typeof translateOutgoingMessageWithLLM !== "function") {
 				console.warn("Outgoing AI translation is enabled, but the translator is unavailable.");
@@ -13889,7 +13899,6 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 	const now = Date.now();
 	const RUMBLE_COOLDOWN_MS = 1000;
 
-	const messageOrigin = data.outgoingOrigin || (data.bot ? "chatbot" : data.host ? "host" : "relay");
 	const shouldCheckDynamicPerTab = antispam && settings["dynamictiming"];
 
 	if (!reverse && !overrideTimeout && data.tid) {
