@@ -12626,15 +12626,10 @@ async function processIncomingRequest(request, UUID = false) {
 				}
 				if ((eventPayload.type || "").toLowerCase() === "obs") {
 					const meta = eventPayload.meta && typeof eventPayload.meta === "object" ? eventPayload.meta : {};
-					const dedupeKey = [
-						eventPayload.type || "",
-						eventPayload.event || "",
-						meta.sceneName || "",
-						meta.savedReplayPath || ""
-					].join("|");
+					const dedupeKey = [eventPayload.type || "", eventPayload.event || "", meta.sceneName || "", meta.savedReplayPath || ""].join("|");
 					const now = Date.now();
 					window.__ssnEventFlowDedupe = window.__ssnEventFlowDedupe || {};
-					Object.keys(window.__ssnEventFlowDedupe).forEach(function(key) {
+					Object.keys(window.__ssnEventFlowDedupe).forEach(function (key) {
 						if (now - window.__ssnEventFlowDedupe[key] > 10000) {
 							delete window.__ssnEventFlowDedupe[key];
 						}
