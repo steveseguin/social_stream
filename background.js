@@ -8982,6 +8982,7 @@ function setupSocket() {
 				if (data.target) {
 					outgoingMessage.destination = decodeURIComponent(data.target);
 				}
+				outgoingMessage.outgoingOrigin = "host";
 				resp = sendMessageToTabs(outgoingMessage, false, null, false, false, false);
 			} else if (data.action && data.action === "blockUser" && data.value) {
 				let source = data.target.trim().toLowerCase() || "*";
@@ -12617,6 +12618,18 @@ async function processIncomingRequest(request, UUID = false) {
 			if (isExtensionOn) {
 				fowardOBSCommand(request);
 			}
+		} else if (request.action === "eventFlowEvent" && request.value) {
+			if (isExtensionOn && window.eventFlowSystem) {
+				const eventPayload = Object.assign({}, request.value);
+				if (!eventPayload.type) {
+					eventPayload.type = "event";
+				}
+				try {
+					await window.eventFlowSystem.processMessage(eventPayload);
+				} catch (e) {
+					console.warn("Failed to process Event Flow bridge event:", e);
+				}
+			}
 		} else if (request.action === "registerTimer") {
 			if (!timerStateInitialized && request.value && request.value.timer) {
 				applyExportedTimerState(request.value.timer);
@@ -13825,6 +13838,23 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 	if (!data.response) {
 		return false;
+	}
+
+	if (getSettingFlag("aiAutoTranslateOutgoing")) {
+		try {
+			if (typeof translateOutgoingMessageWithLLM !== "function") {
+				console.warn("Outgoing AI translation is enabled, but the translator is unavailable.");
+				return false;
+			}
+			const translated = await translateOutgoingMessageWithLLM(data);
+			if (!translated) {
+				console.warn("Outgoing AI translation failed; message not sent.");
+				return false;
+			}
+		} catch (e) {
+			console.warn("Outgoing AI translation failed; message not sent.", e);
+			return false;
+		}
 	}
 
 	// Block events if global hideevents setting is enabled

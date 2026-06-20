@@ -1006,6 +1006,7 @@ class EventFlowSystem {
 	
 	isMetaOnlyPayload(message) {
 		if (!message || typeof message !== 'object') return false;
+		if (message.meta && typeof message.meta === 'object' && message.meta.eventOnly === true) return false;
 		if (!("meta" in message)) return false;
 		const hasChatFields = !!(message.chatname || message.chatmessage || message.hasDonation || message.contentimg);
 		return !hasChatFields;
@@ -1408,6 +1409,9 @@ class EventFlowSystem {
             case 'anyMessage':
                 // Trigger on any message regardless of content
                 // Ensure we return a strict boolean so downstream checks using === true work
+                if (message && message.meta && typeof message.meta === 'object' && message.meta.eventOnly === true) {
+                    return false;
+                }
                 return !!message;
                 
             case 'messageContains':
@@ -1635,6 +1639,18 @@ class EventFlowSystem {
                 }
 
                 return eventMatch;
+            }
+
+            case 'obsStreamStarted': {
+                if ((message.type || '').toLowerCase() !== 'obs') return false;
+                const event = (message.event || '').toLowerCase();
+                return event === 'obs_stream_started' || event === 'stream_started' || event === 'stream_online';
+            }
+
+            case 'obsStreamStopped': {
+                if ((message.type || '').toLowerCase() !== 'obs') return false;
+                const event = (message.event || '').toLowerCase();
+                return event === 'obs_stream_stopped' || event === 'stream_stopped' || event === 'stream_offline';
             }
 
             case 'compareProperty': {

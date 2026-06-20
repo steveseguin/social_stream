@@ -2479,8 +2479,10 @@ function getActiveAITranslateProviderKey() {
     return settings?.aiProvider?.optionsetting || "ollama";
 }
 
-function getAITranslateTargetLanguage() {
-    return String(settings?.aiAutoTranslateTargetLanguage?.textsetting || AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE).trim() || AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE;
+function getAITranslateTargetLanguage(settingKey = "aiAutoTranslateTargetLanguage", fallbackSettingKey = null) {
+    const primary = settings?.[settingKey]?.textsetting;
+    const fallback = fallbackSettingKey ? settings?.[fallbackSettingKey]?.textsetting : "";
+    return String(primary || fallback || AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE).trim() || AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE;
 }
 
 function getAITranslateTimeoutMs() {
@@ -2913,19 +2915,20 @@ function ensureAITranslateMeta(data) {
     return data.meta;
 }
 
-async function translateMessageWithLLM(data) {
-    if (!getSettingFlag("aiAutoTranslate") || !data || data.bot || !data.chatmessage) {
+async function translateMessageWithLLM(data, options = {}) {
+    const enabledSetting = options.enabledSetting || "aiAutoTranslate";
+    if (!getSettingFlag(enabledSetting) || !data || data.bot || !data.chatmessage) {
         return true;
     }
 
     const hadTextContent = Object.prototype.hasOwnProperty.call(data, "textContent");
-    const targetLanguage = getAITranslateTargetLanguage();
+    const targetLanguage = options.targetLanguage || getAITranslateTargetLanguage(options.targetLanguageSetting || "aiAutoTranslateTargetLanguage", options.fallbackTargetLanguageSetting || null);
     const prepared = prepareMessageForAITranslation(data);
     if (!prepared.parts.length) {
         return true;
     }
 
-    const blockOnBusy = getSettingFlag("aiAutoTranslateBlockMode");
+    const blockOnBusy = options.blockOnFailure === true || getSettingFlag("aiAutoTranslateBlockMode");
     const availableSlot = aiTranslateProcessingSlots.findIndex(function (slot) { return !slot; });
     if (availableSlot === -1) {
         return blockOnBusy ? false : true;
@@ -3012,6 +3015,9 @@ async function translateMessageWithLLM(data) {
                 provider: getActiveAITranslateProviderKey(),
                 targetLanguage
             };
+            if (options.direction) {
+                meta.aiTranslation.direction = options.direction;
+            }
         }
         return true;
     } catch (error) {
@@ -3020,6 +3026,33 @@ async function translateMessageWithLLM(data) {
     } finally {
         aiTranslateProcessingSlots[availableSlot] = false;
     }
+}
+
+async function translateOutgoingMessageWithLLM(data) {
+    if (!getSettingFlag("aiAutoTranslateOutgoing") || !data || typeof data.response !== "string" || !data.response.trim()) {
+        return true;
+    }
+
+    const outgoingData = {
+        chatmessage: data.response,
+        textonly: true,
+        meta: {}
+    };
+
+    const translated = await translateMessageWithLLM(outgoingData, {
+        enabledSetting: "aiAutoTranslateOutgoing",
+        targetLanguageSetting: "aiAutoTranslateOutgoingTargetLanguage",
+        fallbackTargetLanguageSetting: "aiAutoTranslateTargetLanguage",
+        blockOnFailure: true,
+        direction: "outgoing"
+    });
+
+    if (!translated) {
+        return false;
+    }
+
+    data.response = outgoingData.chatmessage;
+    return true;
 }
 
 

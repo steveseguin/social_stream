@@ -127,6 +127,54 @@ async function runTests() {
         );
     }
 
+    console.log('\n[4] OBS stream triggers match event-only OBS payloads');
+    {
+        const EFS = loadEventFlowSystem({ ssapp: true });
+        const sys = new EFS();
+
+        const obsStartedNode = {
+            id: 'obs1',
+            triggerType: 'obsStreamStarted',
+            config: {}
+        };
+        const obsStoppedNode = {
+            id: 'obs2',
+            triggerType: 'obsStreamStopped',
+            config: {}
+        };
+        const anyMessageNode = {
+            id: 'obs3',
+            triggerType: 'anyMessage',
+            config: {}
+        };
+        const startedPayload = {
+            type: 'obs',
+            event: 'obs_stream_started',
+            meta: { eventOnly: true, outputState: 'OBS_WEBSOCKET_OUTPUT_STARTED' }
+        };
+
+        assert(
+            sys.isMetaOnlyPayload(startedPayload) === false,
+            'eventOnly OBS payloads are allowed through Event Flow'
+        );
+        assert(
+            await sys.evaluateTrigger(obsStartedNode, startedPayload) === true,
+            'OBS stream started trigger matches obs_stream_started'
+        );
+        assert(
+            await sys.evaluateTrigger(obsStoppedNode, { type: 'obs', event: 'obs_stream_stopped', meta: { eventOnly: true } }) === true,
+            'OBS stream stopped trigger matches obs_stream_stopped'
+        );
+        assert(
+            await sys.evaluateTrigger(obsStartedNode, { type: 'twitch', event: 'stream_online' }) === false,
+            'OBS trigger does not match platform stream_online events'
+        );
+        assert(
+            await sys.evaluateTrigger(anyMessageNode, startedPayload) === false,
+            'eventOnly OBS payloads do not trigger Any Message'
+        );
+    }
+
     console.log(`\n${'-'.repeat(50)}`);
     console.log(`Results: ${passed} passed, ${failed} failed`);
     if (failed > 0) {

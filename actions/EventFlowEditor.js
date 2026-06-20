@@ -256,6 +256,15 @@ class EventFlowEditor {
                 ]
             },
             {
+                id: 'obs-events',
+                name: 'OBS Studio',
+                expanded: false,
+                triggers: [
+                    { id: 'obsStreamStarted', name: 'OBS Stream Started' },
+                    { id: 'obsStreamStopped', name: 'OBS Stream Stopped' }
+                ]
+            },
+            {
                 id: 'chat-messages',
                 name: '💬 Chat Messages',
                 expanded: true,
@@ -1942,6 +1951,8 @@ class EventFlowEditor {
                     const eventType = node.config.eventType || 'Custom';
                     return `Custom: ${eventType}`;
                 }
+                case 'obsStreamStarted': return 'OBS stream started';
+                case 'obsStreamStopped': return 'OBS stream stopped';
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'action') {
@@ -2453,6 +2464,8 @@ class EventFlowEditor {
                 case 'eventCheer': node.config = { sources: [], minBits: 0 }; break;
                 case 'eventOther': node.config = { eventType: '' }; break;
                 case 'eventCustom': node.config = { eventType: '', customCondition: '' }; break;
+                case 'obsStreamStarted': node.config = {}; break;
+                case 'obsStreamStopped': node.config = {}; break;
                 case 'compareProperty': node.config = { property: 'donationAmount', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
@@ -3145,6 +3158,22 @@ class EventFlowEditor {
 						</div>
 								<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #0288d1;">📖 Event Reference Documentation</a>
 					</div>`;
+				break;
+
+			case 'obsStreamStarted':
+				html += `<div class="property-group" style="background: #e8f5e9; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Stream Started</strong><br>
+					Triggers when OBS WebSocket reports the stream output has started.<br><br>
+					Requires the Flow Actions overlay to be open and connected to OBS WebSocket v5.
+				</div>`;
+				break;
+
+			case 'obsStreamStopped':
+				html += `<div class="property-group" style="background: #ffebee; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Stream Stopped</strong><br>
+					Triggers when OBS WebSocket reports the stream output has stopped.<br><br>
+					Requires the Flow Actions overlay to be open and connected to OBS WebSocket v5.
+				</div>`;
 				break;
 
 			case 'eventOther':

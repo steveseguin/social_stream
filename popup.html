@@ -8657,6 +8657,19 @@ input:checked + .slider:before {
 									<label for="aiAutoTranslateTargetLanguage"><span>&gt; Target language (default: en-US)</span></label>
 								</div>
 								<div style="margin-top: 8px;">
+									<div style="display: inline-block;" title="Translate outgoing host messages before sending them to chat sources.">
+										<label class="switch">
+											<input type="checkbox" id="aiAutoTranslateOutgoing" data-setting="aiAutoTranslateOutgoing" />
+											<span class="slider round"></span>
+										</label>
+										<span>Translate outgoing messages before sending</span>
+									</div>
+								</div>
+								<div class="textInputContainer" style="display: inline-block; width: 260px; margin-left: 50px; margin-top: 8px;" title="Target language for translated outgoing host messages. Leave blank to use the target language above.">
+									<input type="text" id="aiAutoTranslateOutgoingTargetLanguage" class="textInput" autocomplete="off" placeholder="blank = target above" data-textsetting="aiAutoTranslateOutgoingTargetLanguage" />
+									<label for="aiAutoTranslateOutgoingTargetLanguage"><span>&gt; Outgoing target language</span></label>
+								</div>
+								<div style="margin-top: 8px;">
 									<div style="display: inline-block;" title="When enabled, messages are dropped if the translator is busy, times out, or fails.">
 										<label class="switch">
 											<input type="checkbox" id="aiAutoTranslateBlockMode" data-setting="aiAutoTranslateBlockMode" />

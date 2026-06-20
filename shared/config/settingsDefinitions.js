@@ -1073,6 +1073,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "configure_llm_api",
     description: "Translate incoming chat messages to the target language using the selected AI provider."
   },
+  "aiAutoTranslateOutgoing": {
+    type: "boolean",
+    category: "configure_llm_api",
+    description: "Translate outgoing host messages before sending them to chat sources."
+  },
   "aiAutoTranslateBlockMode": {
     type: "boolean",
     category: "configure_llm_api",
@@ -1087,6 +1092,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "text",
     category: "configure_llm_api",
     description: "Target language for AI-translated incoming chat messages. Defaults to en-US."
+  },
+  "aiAutoTranslateOutgoingTargetLanguage": {
+    type: "text",
+    category: "configure_llm_api",
+    description: "Target language for AI-translated outgoing host messages. Defaults to the incoming translation target."
   },
   "aiAutoTranslateTimeout": {
     type: "number",

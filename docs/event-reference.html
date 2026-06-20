@@ -149,6 +149,13 @@
                             <td>While an alert box is open; also available via <code>sources/websocket/streamlabs.html</code> socket token</td>
                         </tr>
                         <tr>
+                            <td><strong>OBS Flow Actions</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>OBS stream started/stopped events for Event Flow when <code>actions.html</code> is connected to OBS WebSocket</td>
+                        </tr>
+                        <tr>
                             <td><strong>Kick &ndash; DOM</strong></td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
@@ -693,6 +700,37 @@
                             <tr><td><code>ad_break</code></td><td>Ad break started</td></tr>
                             <tr><td><code>hype_train</code></td><td>Hype Train/Treasure Train status metadata</td></tr>
                             <tr><td><code>user_banned</code></td><td>User was banned or timed out</td></tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="obs-flow-actions">
+                    <h3>OBS Flow Actions</h3>
+                    <p class="source-note">Implementation: <code>actions.html</code> through OBS WebSocket v5 <code>StreamStateChanged</code> events</p>
+                    <ul class="requirements">
+                        <li>Keep the Flow Actions overlay open with the same Social Stream session as the Event Flow editor/background.</li>
+                        <li>Configure OBS WebSocket v5 on OBS 28+; the default URL is <code>ws://127.0.0.1:4455</code>.</li>
+                        <li>These events are injected into Event Flow only; they are not shown as normal chat messages in the dock.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-event"><code>obs_stream_started</code></td>
+                                <td>OBS reports the stream output reached the started state.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>chatname</code> is <code>OBS</code>; <code>chatmessage</code> is empty; <code>meta.eventOnly</code> is <code>true</code>; <code>meta.description</code> is <code>OBS stream started</code>; <code>meta.outputState</code> carries the raw OBS output state.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>obs_stream_stopped</code></td>
+                                <td>OBS reports the stream output reached the stopped state.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>chatname</code> is <code>OBS</code>; <code>chatmessage</code> is empty; <code>meta.eventOnly</code> is <code>true</code>; <code>meta.description</code> is <code>OBS stream stopped</code>; <code>meta.outputActive</code> is <code>false</code>.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </article>
