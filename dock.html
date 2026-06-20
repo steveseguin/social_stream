@@ -3346,14 +3346,37 @@
 				}
 				lastObsBrowserSourceEventKey = eventKey;
 
-				send2Extension({
+				sendObsEventFlowToExtension({
 					action: "eventFlowEvent",
 					value: {
 						type: "obs",
 						event: eventName,
 						meta: meta
 					}
-				}, null, true);
+				});
+			}
+
+			function sendObsEventFlowToExtension(data) {
+				var sent = false;
+				try {
+					iframes.forEach(function(iframe) {
+						var peers = iframe.connectedPeers || {};
+						var keys = Object.keys(peers);
+						for (var i = 0; i < keys.length; i++) {
+							var UUID = keys[i];
+							if (peers[UUID] === "SocialStream") {
+								iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: UUID }, "*");
+								sent = true;
+							}
+						}
+					});
+				} catch (e) {
+					console.error(e);
+				}
+				if (!sent) {
+					send2Extension(data, null, true);
+				}
+				return sent;
 			}
 
 			function bindObsBrowserSourceEvents() {

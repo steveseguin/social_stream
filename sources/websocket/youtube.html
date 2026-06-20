@@ -392,6 +392,8 @@ try {
     let channelStatsInterval; // Separate interval for channel stats
 	let recentSubscriberTimeout;
 	let recentSubscriberLockInterval;
+	let recentSubscriberPollingOwner = "";
+	let recentSubscriberPollingGeneration = 0;
     let fetchTimeout; // Track fetch timeout to clear on disconnect
     let lastKnownViewers = null;
 	var viewerCountFallbackVideoId = '';
@@ -2038,12 +2040,19 @@ function enableBackgroundKeepAlive() {
 		return items;
 	}
 
-	async function pollRecentSubscribers(ownerChannelId) {
+	function isRecentSubscriberPollingActive(ownerChannelId, generation) {
+		const normalizedOwnerChannelId = normalizeYouTubeChannelId(ownerChannelId);
+		return !!normalizedOwnerChannelId && recentSubscriberPollingOwner === normalizedOwnerChannelId && recentSubscriberPollingGeneration === generation;
+	}
+
+	async function pollRecentSubscribers(ownerChannelId, generation) {
 		const normalizedOwnerChannelId = normalizeYouTubeChannelId(ownerChannelId);
 		if (!normalizedOwnerChannelId) return;
+		if (!isRecentSubscriberPollingActive(normalizedOwnerChannelId, generation)) return;
 		if (!acquireRecentSubscriberLock(normalizedOwnerChannelId)) return;
 		try {
 			const items = await fetchRecentSubscribers(normalizedOwnerChannelId);
+			if (!isRecentSubscriberPollingActive(normalizedOwnerChannelId, generation)) return;
 			const currentIds = items.map(extractRecentSubscriberId).filter(Boolean);
 			const initialized = hasRecentSubscriberTrackerInitialized(normalizedOwnerChannelId);
 			if (!currentIds.length) {
@@ -2067,6 +2076,7 @@ function enableBackgroundKeepAlive() {
 			updateRecentSubscriberHistory(normalizedOwnerChannelId, currentIds);
 			markRecentSubscriberTrackerInitialized(normalizedOwnerChannelId);
 			newItems.reverse().forEach(function(item) {
+				if (!isRecentSubscriberPollingActive(normalizedOwnerChannelId, generation)) return;
 				const payload = buildRecentSubscriberPayload(item, normalizedOwnerChannelId);
 				console.log("YouTube new follower event:", payload);
 				addEvent(`New subscriber: ${payload.meta.title}`);
@@ -2077,24 +2087,31 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 
-	function scheduleRecentSubscriberPoll(ownerChannelId, delayMs) {
+	function scheduleRecentSubscriberPoll(ownerChannelId, delayMs, generation) {
+		if (!isRecentSubscriberPollingActive(ownerChannelId, generation)) return;
 		if (recentSubscriberTimeout) {
 			clearTimeout(recentSubscriberTimeout);
 			recentSubscriberTimeout = null;
 		}
 		recentSubscriberTimeout = setTimeout(function() {
 			recentSubscriberTimeout = null;
-			pollRecentSubscribers(ownerChannelId).finally(function() {
-				scheduleRecentSubscriberPoll(ownerChannelId, YT_RECENT_SUBSCRIBER_POLL_MS);
+			if (!isRecentSubscriberPollingActive(ownerChannelId, generation)) return;
+			pollRecentSubscribers(ownerChannelId, generation).finally(function() {
+				if (isRecentSubscriberPollingActive(ownerChannelId, generation)) {
+					scheduleRecentSubscriberPoll(ownerChannelId, YT_RECENT_SUBSCRIBER_POLL_MS, generation);
+				}
 			});
 		}, Math.max(0, delayMs || 0));
 	}
 
-	function beginRecentSubscriberPoller(ownerChannelId) {
-		scheduleRecentSubscriberPoll(ownerChannelId, getRecentSubscriberNextFetchDelay(ownerChannelId));
+	function beginRecentSubscriberPoller(ownerChannelId, generation) {
+		scheduleRecentSubscriberPoll(ownerChannelId, getRecentSubscriberNextFetchDelay(ownerChannelId), generation);
 	}
 
 	function stopRecentSubscriberPolling() {
+		const ownerToRelease = recentSubscriberPollingOwner || authenticatedChannelId;
+		recentSubscriberPollingGeneration += 1;
+		recentSubscriberPollingOwner = "";
 		if (recentSubscriberTimeout) {
 			clearTimeout(recentSubscriberTimeout);
 			recentSubscriberTimeout = null;
@@ -2103,8 +2120,8 @@ function enableBackgroundKeepAlive() {
 			clearInterval(recentSubscriberLockInterval);
 			recentSubscriberLockInterval = null;
 		}
-		if (authenticatedChannelId) {
-			releaseRecentSubscriberLock(authenticatedChannelId);
+		if (ownerToRelease) {
+			releaseRecentSubscriberLock(ownerToRelease);
 		}
 	}
 
@@ -2115,12 +2132,16 @@ function enableBackgroundKeepAlive() {
 		if (!ownerChannelId || !normalizedTargetChannelId || ownerChannelId !== normalizedTargetChannelId) {
 			return;
 		}
+		recentSubscriberPollingOwner = ownerChannelId;
+		const generation = recentSubscriberPollingGeneration + 1;
+		recentSubscriberPollingGeneration = generation;
 		if (acquireRecentSubscriberLock(ownerChannelId)) {
-			beginRecentSubscriberPoller(ownerChannelId);
+			beginRecentSubscriberPoller(ownerChannelId, generation);
 		}
 		recentSubscriberLockInterval = setInterval(function() {
+			if (!isRecentSubscriberPollingActive(ownerChannelId, generation)) return;
 			if (!recentSubscriberTimeout && acquireRecentSubscriberLock(ownerChannelId)) {
-				beginRecentSubscriberPoller(ownerChannelId);
+				beginRecentSubscriberPoller(ownerChannelId, generation);
 			} else if (recentSubscriberTimeout) {
 				acquireRecentSubscriberLock(ownerChannelId);
 			}
