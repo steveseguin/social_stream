@@ -3377,9 +3377,15 @@
 					var detail = event && event.detail ? event.detail : {};
 					emitObsBrowserSourceEvent("scene_changed", "obsSceneChanged", { sceneName: detail.name || "" });
 				});
-				window.addEventListener("obsReplaybufferSaved", function(event) {
+				function handleObsBrowserReplayBufferSaved(event, obsEventName) {
 					var detail = event && event.detail ? event.detail : {};
-					emitObsBrowserSourceEvent("replay_buffer_saved", "obsReplaybufferSaved", { savedReplayPath: detail.savedReplayPath || "" });
+					emitObsBrowserSourceEvent("replay_buffer_saved", obsEventName, { savedReplayPath: detail.savedReplayPath || "" });
+				}
+				window.addEventListener("obsReplayBufferSaved", function(event) {
+					handleObsBrowserReplayBufferSaved(event, "obsReplayBufferSaved");
+				});
+				window.addEventListener("obsReplaybufferSaved", function(event) {
+					handleObsBrowserReplayBufferSaved(event, "obsReplaybufferSaved");
 				});
 			}
 			var showbadges = true;

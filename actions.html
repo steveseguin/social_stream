@@ -756,9 +756,15 @@
                 var detail = event && event.detail ? event.detail : {};
                 emitObsEvent('scene_changed', 'obsSceneChanged', {}, { source: 'obs-browser-source', sceneName: detail.name || '' });
             });
-            window.addEventListener('obsReplaybufferSaved', function(event) {
+            function handleObsBrowserReplayBufferSaved(event, obsEventName) {
                 var detail = event && event.detail ? event.detail : {};
-                emitObsEvent('replay_buffer_saved', 'obsReplaybufferSaved', {}, { source: 'obs-browser-source', savedReplayPath: detail.savedReplayPath || '' });
+                emitObsEvent('replay_buffer_saved', obsEventName, {}, { source: 'obs-browser-source', savedReplayPath: detail.savedReplayPath || '' });
+            }
+            window.addEventListener('obsReplayBufferSaved', function(event) {
+                handleObsBrowserReplayBufferSaved(event, 'obsReplayBufferSaved');
+            });
+            window.addEventListener('obsReplaybufferSaved', function(event) {
+                handleObsBrowserReplayBufferSaved(event, 'obsReplaybufferSaved');
             });
         }
 
