@@ -12624,7 +12624,7 @@ async function processIncomingRequest(request, UUID = false) {
 				if (!eventPayload.type) {
 					eventPayload.type = "event";
 				}
-				if ((eventPayload.type || "").toLowerCase() === "obs") {
+				if ((eventPayload.type || "").toLowerCase() === "obs" && eventPayload.event !== "scene_changed") {
 					const meta = eventPayload.meta && typeof eventPayload.meta === "object" ? eventPayload.meta : {};
 					const dedupeKey = [eventPayload.type || "", eventPayload.event || "", meta.sceneName || "", meta.savedReplayPath || ""].join("|");
 					const now = Date.now();
