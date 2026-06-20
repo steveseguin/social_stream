@@ -3295,6 +3295,8 @@
 			var pauseState = false;
 			var timeoutTimer = null;
 			var isOBSBrowserSource = false;
+			var obsBrowserSourceEventsBound = false;
+			var lastObsBrowserSourceEventKey = "";
 			var customNodeLimit = false;
 			var historyMode = urlParams.has("history");
 			var historyInitialLoadLimit = parseInt(urlParams.get("loadlast"), 10) || 30;
@@ -3318,6 +3320,68 @@
 			var newFileHandle = false; // single message writer
 			var singlewriter = false;
 			var odd = false;
+
+			function emitObsBrowserSourceEvent(eventName, obsEventName, metaDetails) {
+				var meta = {
+					source: "obs-browser-source",
+					obsEvent: obsEventName,
+					receivedAt: Date.now()
+				};
+				metaDetails = metaDetails || {};
+				Object.keys(metaDetails).forEach(function(key) {
+					if (metaDetails[key] !== undefined) {
+						meta[key] = metaDetails[key];
+					}
+				});
+
+				var eventKey = [
+					eventName,
+					meta.outputActive === undefined ? "" : String(meta.outputActive),
+					meta.recording === undefined ? "" : String(meta.recording),
+					meta.sceneName || "",
+					meta.savedReplayPath || ""
+				].join("|");
+				if (eventKey === lastObsBrowserSourceEventKey) {
+					return;
+				}
+				lastObsBrowserSourceEventKey = eventKey;
+
+				send2Extension({
+					action: "eventFlowEvent",
+					value: {
+						type: "obs",
+						event: eventName,
+						meta: meta
+					}
+				}, null, true);
+			}
+
+			function bindObsBrowserSourceEvents() {
+				if (obsBrowserSourceEventsBound || !window.obsstudio) {
+					return;
+				}
+				obsBrowserSourceEventsBound = true;
+				window.addEventListener("obsStreamingStarted", function() {
+					emitObsBrowserSourceEvent("stream_started", "obsStreamingStarted", { outputActive: true });
+				});
+				window.addEventListener("obsStreamingStopped", function() {
+					emitObsBrowserSourceEvent("stream_stopped", "obsStreamingStopped", { outputActive: false });
+				});
+				window.addEventListener("obsRecordingStarted", function() {
+					emitObsBrowserSourceEvent("recording_started", "obsRecordingStarted", { recording: true });
+				});
+				window.addEventListener("obsRecordingStopped", function() {
+					emitObsBrowserSourceEvent("recording_stopped", "obsRecordingStopped", { recording: false });
+				});
+				window.addEventListener("obsSceneChanged", function(event) {
+					var detail = event && event.detail ? event.detail : {};
+					emitObsBrowserSourceEvent("scene_changed", "obsSceneChanged", { sceneName: detail.name || "" });
+				});
+				window.addEventListener("obsReplaybufferSaved", function(event) {
+					var detail = event && event.detail ? event.detail : {};
+					emitObsBrowserSourceEvent("replay_buffer_saved", "obsReplaybufferSaved", { savedReplayPath: detail.savedReplayPath || "" });
+				});
+			}
 			var showbadges = true;
 			var colorized = false;
 			var horizontal = false;
@@ -5253,6 +5317,7 @@
 			} else {
 				try {
 					if (window.obsstudio) {
+						bindObsBrowserSourceEvents();
 						if (!reversed && !random) {
 							setInterval(function () {
 								if (forceAutoscroll && !isOBSBrowserSource) {
@@ -5356,6 +5421,7 @@
 			}
 
 			if (window.obsstudio) {
+				bindObsBrowserSourceEvents();
 				document.documentElement.style.setProperty("--background-color", "#2B2E38");
 				document.documentElement.style.setProperty("--menu-background-color", "#191B26");
 			} else if (isMELD){

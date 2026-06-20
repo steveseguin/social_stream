@@ -12624,6 +12624,26 @@ async function processIncomingRequest(request, UUID = false) {
 				if (!eventPayload.type) {
 					eventPayload.type = "event";
 				}
+				if ((eventPayload.type || "").toLowerCase() === "obs") {
+					const meta = eventPayload.meta && typeof eventPayload.meta === "object" ? eventPayload.meta : {};
+					const dedupeKey = [
+						eventPayload.type || "",
+						eventPayload.event || "",
+						meta.sceneName || "",
+						meta.savedReplayPath || ""
+					].join("|");
+					const now = Date.now();
+					window.__ssnEventFlowDedupe = window.__ssnEventFlowDedupe || {};
+					Object.keys(window.__ssnEventFlowDedupe).forEach(function(key) {
+						if (now - window.__ssnEventFlowDedupe[key] > 10000) {
+							delete window.__ssnEventFlowDedupe[key];
+						}
+					});
+					if (window.__ssnEventFlowDedupe[dedupeKey] && now - window.__ssnEventFlowDedupe[dedupeKey] < 2000) {
+						return;
+					}
+					window.__ssnEventFlowDedupe[dedupeKey] = now;
+				}
 				try {
 					await window.eventFlowSystem.processMessage(eventPayload);
 				} catch (e) {

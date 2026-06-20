@@ -261,7 +261,11 @@ class EventFlowEditor {
                 expanded: false,
                 triggers: [
                     { id: 'obsStreamStarted', name: 'OBS Stream Started' },
-                    { id: 'obsStreamStopped', name: 'OBS Stream Stopped' }
+                    { id: 'obsStreamStopped', name: 'OBS Stream Stopped' },
+                    { id: 'obsRecordingStarted', name: 'OBS Recording Started' },
+                    { id: 'obsRecordingStopped', name: 'OBS Recording Stopped' },
+                    { id: 'obsSceneChanged', name: 'OBS Scene Changed' },
+                    { id: 'obsReplayBufferSaved', name: 'OBS Replay Buffer Saved' }
                 ]
             },
             {
@@ -1953,6 +1957,10 @@ class EventFlowEditor {
                 }
                 case 'obsStreamStarted': return 'OBS stream started';
                 case 'obsStreamStopped': return 'OBS stream stopped';
+                case 'obsRecordingStarted': return 'OBS recording started';
+                case 'obsRecordingStopped': return 'OBS recording stopped';
+                case 'obsSceneChanged': return 'OBS scene changed';
+                case 'obsReplayBufferSaved': return 'OBS replay buffer saved';
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'action') {
@@ -2466,6 +2474,10 @@ class EventFlowEditor {
                 case 'eventCustom': node.config = { eventType: '', customCondition: '' }; break;
                 case 'obsStreamStarted': node.config = {}; break;
                 case 'obsStreamStopped': node.config = {}; break;
+                case 'obsRecordingStarted': node.config = {}; break;
+                case 'obsRecordingStopped': node.config = {}; break;
+                case 'obsSceneChanged': node.config = {}; break;
+                case 'obsReplayBufferSaved': node.config = {}; break;
                 case 'compareProperty': node.config = { property: 'donationAmount', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
@@ -3163,16 +3175,48 @@ class EventFlowEditor {
 			case 'obsStreamStarted':
 				html += `<div class="property-group" style="background: #e8f5e9; color: #333; padding: 10px; border-radius: 4px;">
 					<strong>OBS Stream Started</strong><br>
-					Triggers when OBS WebSocket reports the stream output has started.<br><br>
-					Requires the Flow Actions overlay to be open and connected to OBS WebSocket v5.
+					Triggers when OBS reports the stream output has started.<br><br>
+					Requires Flow Actions with OBS WebSocket v5, or a dock/browser source running inside OBS.
 				</div>`;
 				break;
 
 			case 'obsStreamStopped':
 				html += `<div class="property-group" style="background: #ffebee; color: #333; padding: 10px; border-radius: 4px;">
 					<strong>OBS Stream Stopped</strong><br>
-					Triggers when OBS WebSocket reports the stream output has stopped.<br><br>
-					Requires the Flow Actions overlay to be open and connected to OBS WebSocket v5.
+					Triggers when OBS reports the stream output has stopped.<br><br>
+					Requires Flow Actions with OBS WebSocket v5, or a dock/browser source running inside OBS.
+				</div>`;
+				break;
+
+			case 'obsRecordingStarted':
+				html += `<div class="property-group" style="background: #e8f5e9; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Recording Started</strong><br>
+					Triggers when OBS starts recording.<br><br>
+					Requires Flow Actions with OBS WebSocket v5, or a dock/browser source running inside OBS.
+				</div>`;
+				break;
+
+			case 'obsRecordingStopped':
+				html += `<div class="property-group" style="background: #ffebee; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Recording Stopped</strong><br>
+					Triggers when OBS stops recording.<br><br>
+					Requires Flow Actions with OBS WebSocket v5, or a dock/browser source running inside OBS.
+				</div>`;
+				break;
+
+			case 'obsSceneChanged':
+				html += `<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Scene Changed</strong><br>
+					Triggers when OBS changes the active program scene.<br><br>
+					The scene name is available as <code>meta.sceneName</code>.
+				</div>`;
+				break;
+
+			case 'obsReplayBufferSaved':
+				html += `<div class="property-group" style="background: #fff3e0; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Replay Buffer Saved</strong><br>
+					Triggers when OBS saves the replay buffer.<br><br>
+					Replay buffer must be enabled in OBS.
 				</div>`;
 				break;
 

@@ -334,7 +334,8 @@
         var obsStudio = null;
         var obsWebSocket = null;
         var obsWebSocketConnecting = null;
-        var lastObsStreamEventKey = '';
+        var lastObsEventKey = '';
+        var obsBrowserSourceEventsBound = false;
         var obsStatusEnabled = urlParams.get('obsstatus') === '1' || urlParams.get('obsdebug') === '1';
         var obsStatusBadge = document.getElementById('obs-status-badge');
         var obsWebSocketState = {
@@ -537,6 +538,7 @@
         if (window.obsstudio) {
             obsStudio = window.obsstudio;
             console.log('OBS Studio API found.');
+            bindObsBrowserSourceEvents();
         }
 
         // Helper to get OBS API - checks lazily since OBS may inject it after page load
@@ -544,6 +546,7 @@
             if (!obsStudio && window.obsstudio) {
                 obsStudio = window.obsstudio;
                 console.log('OBS Studio API found (late binding).');
+                bindObsBrowserSourceEvents();
                 if (obsStatusEnabled) {
                     updateObsStatusBadge();
                 }
@@ -644,51 +647,118 @@
             }
         }
 
-        function emitObsStreamEvent(eventName, obsPayload) {
+        function emitObsEvent(eventName, obsEventName, obsPayload, extraMeta) {
             var eventPayload = obsPayload || {};
-            var state = eventPayload.outputState || '';
-            var eventKey = eventName + '|' + state + '|' + Boolean(eventPayload.outputActive);
-            if (eventKey === lastObsStreamEventKey) {
+            var meta = {
+                source: 'obs-websocket',
+                obsEvent: obsEventName,
+                receivedAt: Date.now()
+            };
+
+            if (eventPayload.outputActive !== undefined) {
+                meta.outputActive = !!eventPayload.outputActive;
+            }
+            if (eventPayload.outputState !== undefined) {
+                meta.outputState = eventPayload.outputState;
+            }
+            if (eventPayload.sceneName !== undefined) {
+                meta.sceneName = eventPayload.sceneName;
+            }
+            if (eventPayload.savedReplayPath !== undefined) {
+                meta.savedReplayPath = eventPayload.savedReplayPath;
+            }
+            if (extraMeta) {
+                Object.keys(extraMeta).forEach(function(key) {
+                    if (extraMeta[key] !== undefined) {
+                        meta[key] = extraMeta[key];
+                    }
+                });
+            }
+
+            var eventKey = [
+                eventName,
+                meta.obsEvent || '',
+                meta.outputState || '',
+                meta.outputActive === undefined ? '' : String(meta.outputActive),
+                meta.sceneName || '',
+                meta.savedReplayPath || ''
+            ].join('|');
+            if (eventKey === lastObsEventKey) {
                 return;
             }
-            lastObsStreamEventKey = eventKey;
+            lastObsEventKey = eventKey;
 
             sendBridgePayload({
                 action: 'eventFlowEvent',
                 value: {
                     type: 'obs',
                     event: eventName,
-                    chatname: 'OBS',
-                    chatmessage: '',
-                    meta: {
-                        source: 'obs-websocket',
-                        eventOnly: true,
-                        description: eventName === 'obs_stream_started' ? 'OBS stream started' : 'OBS stream stopped',
-                        outputActive: !!eventPayload.outputActive,
-                        outputState: state,
-                        rawEvent: 'StreamStateChanged',
-                        receivedAt: Date.now()
-                    }
+                    meta: meta
                 }
             });
         }
 
         function bindObsWebSocketEvents(client) {
-            if (!client || client.__ssnStreamEventsBound) {
+            if (!client || client.__ssnObsEventsBound) {
                 return;
             }
-            client.__ssnStreamEventsBound = true;
+            client.__ssnObsEventsBound = true;
             client.on('StreamStateChanged', function(eventPayload) {
                 var state = String((eventPayload && eventPayload.outputState) || '').toLowerCase();
                 if (state.indexOf('started') !== -1) {
-                    emitObsStreamEvent('obs_stream_started', eventPayload);
+                    emitObsEvent('stream_started', 'StreamStateChanged', eventPayload);
                 } else if (state.indexOf('stopped') !== -1) {
-                    emitObsStreamEvent('obs_stream_stopped', eventPayload);
+                    emitObsEvent('stream_stopped', 'StreamStateChanged', eventPayload);
                 } else if (!state && eventPayload && eventPayload.outputActive === true) {
-                    emitObsStreamEvent('obs_stream_started', eventPayload);
+                    emitObsEvent('stream_started', 'StreamStateChanged', eventPayload);
                 } else if (!state && eventPayload && eventPayload.outputActive === false) {
-                    emitObsStreamEvent('obs_stream_stopped', eventPayload);
+                    emitObsEvent('stream_stopped', 'StreamStateChanged', eventPayload);
                 }
+            });
+            client.on('RecordStateChanged', function(eventPayload) {
+                var state = String((eventPayload && eventPayload.outputState) || '').toLowerCase();
+                if (state.indexOf('started') !== -1) {
+                    emitObsEvent('recording_started', 'RecordStateChanged', eventPayload);
+                } else if (state.indexOf('stopped') !== -1) {
+                    emitObsEvent('recording_stopped', 'RecordStateChanged', eventPayload);
+                } else if (!state && eventPayload && eventPayload.outputActive === true) {
+                    emitObsEvent('recording_started', 'RecordStateChanged', eventPayload);
+                } else if (!state && eventPayload && eventPayload.outputActive === false) {
+                    emitObsEvent('recording_stopped', 'RecordStateChanged', eventPayload);
+                }
+            });
+            client.on('CurrentProgramSceneChanged', function(eventPayload) {
+                emitObsEvent('scene_changed', 'CurrentProgramSceneChanged', eventPayload);
+            });
+            client.on('ReplayBufferSaved', function(eventPayload) {
+                emitObsEvent('replay_buffer_saved', 'ReplayBufferSaved', eventPayload);
+            });
+        }
+
+        function bindObsBrowserSourceEvents() {
+            if (obsBrowserSourceEventsBound || !window.obsstudio) {
+                return;
+            }
+            obsBrowserSourceEventsBound = true;
+            window.addEventListener('obsStreamingStarted', function() {
+                emitObsEvent('stream_started', 'obsStreamingStarted', {}, { source: 'obs-browser-source', outputActive: true });
+            });
+            window.addEventListener('obsStreamingStopped', function() {
+                emitObsEvent('stream_stopped', 'obsStreamingStopped', {}, { source: 'obs-browser-source', outputActive: false });
+            });
+            window.addEventListener('obsRecordingStarted', function() {
+                emitObsEvent('recording_started', 'obsRecordingStarted', {}, { source: 'obs-browser-source', recording: true });
+            });
+            window.addEventListener('obsRecordingStopped', function() {
+                emitObsEvent('recording_stopped', 'obsRecordingStopped', {}, { source: 'obs-browser-source', recording: false });
+            });
+            window.addEventListener('obsSceneChanged', function(event) {
+                var detail = event && event.detail ? event.detail : {};
+                emitObsEvent('scene_changed', 'obsSceneChanged', {}, { source: 'obs-browser-source', sceneName: detail.name || '' });
+            });
+            window.addEventListener('obsReplaybufferSaved', function(event) {
+                var detail = event && event.detail ? event.detail : {};
+                emitObsEvent('replay_buffer_saved', 'obsReplaybufferSaved', {}, { source: 'obs-browser-source', savedReplayPath: detail.savedReplayPath || '' });
             });
         }
 
@@ -1004,7 +1074,8 @@
         }
         
         // Try to connect to OBS WebSocket on page load
-        setTimeout(initOBSWebSocket, 1000); 
+        setTimeout(initOBSWebSocket, 1000);
+        setTimeout(getObsStudio, 1000);
         updateObsStatusBadge();
 
         // Function to show session ID modal

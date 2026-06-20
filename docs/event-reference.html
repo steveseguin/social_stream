@@ -706,11 +706,11 @@
 
                 <article class="platform-card" id="obs-flow-actions">
                     <h3>OBS Flow Actions</h3>
-                    <p class="source-note">Implementation: <code>actions.html</code> through OBS WebSocket v5 <code>StreamStateChanged</code> events</p>
+                    <p class="source-note">Implementation: <code>actions.html</code> through OBS WebSocket v5 events, with <code>dock.html</code> OBS Browser Source events as a fallback</p>
                     <ul class="requirements">
-                        <li>Keep the Flow Actions overlay open with the same Social Stream session as the Event Flow editor/background.</li>
+                        <li>Keep the Flow Actions overlay open with the same Social Stream session as the Event Flow editor/background, or keep the dock loaded inside OBS.</li>
                         <li>Configure OBS WebSocket v5 on OBS 28+; the default URL is <code>ws://127.0.0.1:4455</code>.</li>
-                        <li>These events are injected into Event Flow only; they are not shown as normal chat messages in the dock.</li>
+                        <li>These are Event Flow system events. They do not include <code>chatname</code> or <code>chatmessage</code>, and extra OBS details stay inside <code>meta</code>.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -722,14 +722,34 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="status-event"><code>obs_stream_started</code></td>
+                                <td class="status-event"><code>stream_started</code></td>
                                 <td>OBS reports the stream output reached the started state.</td>
-                                <td><code>type</code> is <code>obs</code>; <code>chatname</code> is <code>OBS</code>; <code>chatmessage</code> is empty; <code>meta.eventOnly</code> is <code>true</code>; <code>meta.description</code> is <code>OBS stream started</code>; <code>meta.outputState</code> carries the raw OBS output state.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>event</code> is <code>stream_started</code>; <code>meta.source</code> is <code>obs-websocket</code> or <code>obs-browser-source</code>; <code>meta.outputState</code> may carry the raw OBS output state.</td>
                             </tr>
                             <tr>
-                                <td class="status-event"><code>obs_stream_stopped</code></td>
+                                <td class="status-event"><code>stream_stopped</code></td>
                                 <td>OBS reports the stream output reached the stopped state.</td>
-                                <td><code>type</code> is <code>obs</code>; <code>chatname</code> is <code>OBS</code>; <code>chatmessage</code> is empty; <code>meta.eventOnly</code> is <code>true</code>; <code>meta.description</code> is <code>OBS stream stopped</code>; <code>meta.outputActive</code> is <code>false</code>.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>event</code> is <code>stream_stopped</code>; <code>meta.outputActive</code> may be <code>false</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>recording_started</code></td>
+                                <td>OBS reports recording started.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>meta.obsEvent</code> identifies the OBS event source.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>recording_stopped</code></td>
+                                <td>OBS reports recording stopped.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>meta.outputState</code> may carry the raw WebSocket state.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>scene_changed</code></td>
+                                <td>OBS changes the active program scene.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>meta.sceneName</code> contains the scene name when OBS provides it.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>replay_buffer_saved</code></td>
+                                <td>OBS saves the replay buffer.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>meta.savedReplayPath</code> may contain the saved replay path.</td>
                             </tr>
                         </tbody>
                     </table>

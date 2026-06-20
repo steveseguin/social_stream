@@ -1006,10 +1006,18 @@ class EventFlowSystem {
 	
 	isMetaOnlyPayload(message) {
 		if (!message || typeof message !== 'object') return false;
-		if (message.meta && typeof message.meta === 'object' && message.meta.eventOnly === true) return false;
+		if (this.isObsEventPayload(message)) return false;
 		if (!("meta" in message)) return false;
-		const hasChatFields = !!(message.chatname || message.chatmessage || message.hasDonation || message.contentimg);
+		const hasChatFields = this.hasChatLikeFields(message);
 		return !hasChatFields;
+	}
+
+	isObsEventPayload(message) {
+		return !!(message && typeof message === 'object' && (message.type || '').toLowerCase() === 'obs' && message.event);
+	}
+
+	hasChatLikeFields(message) {
+		return !!(message && (message.chatname || message.chatmessage || message.hasDonation || message.contentimg));
 	}
     
     async processMessage(message) {
@@ -1409,10 +1417,7 @@ class EventFlowSystem {
             case 'anyMessage':
                 // Trigger on any message regardless of content
                 // Ensure we return a strict boolean so downstream checks using === true work
-                if (message && message.meta && typeof message.meta === 'object' && message.meta.eventOnly === true) {
-                    return false;
-                }
-                return !!message;
+                return this.hasChatLikeFields(message);
                 
             case 'messageContains':
                 // Ensure properties exist before trying to access them
@@ -1644,13 +1649,37 @@ class EventFlowSystem {
             case 'obsStreamStarted': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
                 const event = (message.event || '').toLowerCase();
-                return event === 'obs_stream_started' || event === 'stream_started' || event === 'stream_online';
+                return event === 'stream_started';
             }
 
             case 'obsStreamStopped': {
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
                 const event = (message.event || '').toLowerCase();
-                return event === 'obs_stream_stopped' || event === 'stream_stopped' || event === 'stream_offline';
+                return event === 'stream_stopped';
+            }
+
+            case 'obsRecordingStarted': {
+                if ((message.type || '').toLowerCase() !== 'obs') return false;
+                const event = (message.event || '').toLowerCase();
+                return event === 'recording_started' || event === 'obs_recording_started';
+            }
+
+            case 'obsRecordingStopped': {
+                if ((message.type || '').toLowerCase() !== 'obs') return false;
+                const event = (message.event || '').toLowerCase();
+                return event === 'recording_stopped' || event === 'obs_recording_stopped';
+            }
+
+            case 'obsSceneChanged': {
+                if ((message.type || '').toLowerCase() !== 'obs') return false;
+                const event = (message.event || '').toLowerCase();
+                return event === 'scene_changed' || event === 'obs_scene_changed';
+            }
+
+            case 'obsReplayBufferSaved': {
+                if ((message.type || '').toLowerCase() !== 'obs') return false;
+                const event = (message.event || '').toLowerCase();
+                return event === 'replay_buffer_saved' || event === 'obs_replay_buffer_saved';
             }
 
             case 'compareProperty': {

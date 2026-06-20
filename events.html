@@ -1870,6 +1870,9 @@ body.light-mode .meta-value.badge {
 	}
 
     function addMessageToOverlay(data) {
+		if (data && String(data.type || '').toLowerCase() === 'obs') {
+			return;
+		}
 		updateViewerTopBar(data);
 		if (handleHypeTrainPayload(data)) {
 			return;
