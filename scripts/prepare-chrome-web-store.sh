@@ -1,92 +1,88 @@
 #!/bin/bash
-# Prepare Chrome Web Store release by filtering out restricted content
-# This script removes:
-#   - Adult site content scripts and related files
-#   - The docs/ folder
-#   - Development/localhost references
-#   - External CDN resource references where needed
+# Prepare a Chrome Web Store release by staging a policy-reduced extension build.
+#
+# This script intentionally trims features that are risky or not needed for the
+# Chrome Web Store package. It also writes a policy audit report so the generated
+# branch/zip can be reviewed before upload.
 
 set -euo pipefail
 
-BUILD_DIR="cws-build"
+BUILD_DIR="${CWS_BUILD_DIR:-cws-build}"
+REPORT_FILE="${CWS_REPORT_FILE:-cws-policy-report.txt}"
+STRICT="${CWS_STRICT:-1}"
 
-# Adult site patterns to filter
-ADULT_DOMAINS=(
-    "chaturbate.com"
-    "cherry.tv"
-    "myfreecams.com"
-    "www.myfreecams.com"
-    "camsoda.com"
-    "www.camsoda.com"
-    "fansly.com"
-    "simps.com"
-)
+BLOCKERS=0
+WARNINGS=0
 
-ADULT_SOURCE_FILES=(
-    "sources/chaturbate.js"
-    "sources/cherrytv.js"
-    "sources/myfreecams.js"
-    "sources/camsoda.js"
-    "sources/fansly.js"
-    "sources/simps.js"
-)
+: > "$REPORT_FILE"
 
-# Website-hosted files (accessed via https://socialstream.ninja, not chrome-extension://)
-# These are overlay/widget pages intended for OBS browser sources, not extension UI
-# Also includes files that load external CDN scripts (CWS rejection risk)
-WEBSITE_HOSTED_FILES=(
-    "dock.html"
-    "featured.html"
-    "events.html"
-    "actions.html"
-    "poll.html"
-    "hype.html"
-    "wordcloud.html"
-    "waitlist.html"
-    "tipjar.html"
-    "ticker.html"
-    "timer.html"
-    "sampleoverlay.html"
-    "samplefeatured.html"
-    "sampleemote.html"
-    "giveaway.html"
-    "affiliate.html"
-    "vdo.html"
-    "sampleapi.html"
-    "sources/websocket/bilibili.html"
-)
+report() {
+    printf '%s\n' "$*" | tee -a "$REPORT_FILE"
+}
 
-# Adult site names to filter from JS files (dropdowns, color mappings, etc.)
-ADULT_SITE_NAMES=(
-    "chaturbate"
-    "cherrytv"
-    "myfreecams"
-    "camsoda"
-    "fansly"
-    "simps"
-)
+section() {
+    report ""
+    report "=== $* ==="
+}
 
-# Misc files not needed for extension
-MISC_FILES_TO_REMOVE=(
-    "badwords_sample.txt"
-    "sample_midi_messages.txt"
-    "robots.txt"
-)
+warn() {
+    WARNINGS=$((WARNINGS + 1))
+    report "WARNING: $*"
+}
 
-echo "=== Preparing Chrome Web Store Build ==="
+blocker() {
+    BLOCKERS=$((BLOCKERS + 1))
+    report "BLOCKER: $*"
+}
 
-# Clean and create build directory
+remove_path() {
+    local path="$1"
+    if [[ -e "$BUILD_DIR/$path" ]]; then
+        rm -rv "$BUILD_DIR/$path" | tee -a "$REPORT_FILE"
+    fi
+}
+
+scan_blocker() {
+    local title="$1"
+    local pattern="$2"
+    shift 2
+
+    local tmp
+    tmp="$(mktemp)"
+    if grep -RInE "$pattern" "$@" > "$tmp"; then
+        blocker "$title"
+        cat "$tmp" | tee -a "$REPORT_FILE"
+    fi
+    rm -f "$tmp"
+}
+
+scan_warning() {
+    local title="$1"
+    local pattern="$2"
+    shift 2
+
+    local tmp
+    tmp="$(mktemp)"
+    if grep -RInE "$pattern" "$@" > "$tmp"; then
+        warn "$title"
+        cat "$tmp" | tee -a "$REPORT_FILE"
+    fi
+    rm -f "$tmp"
+}
+
+section "Preparing Chrome Web Store build"
+
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-echo "Copying files to build directory..."
-# Copy everything except excluded folders and files
-rsync -av \
+report "Copying files to $BUILD_DIR..."
+rsync -a \
     --exclude='.git/' \
     --exclude='.github/' \
     --exclude='.gitignore' \
     --exclude='.gitattributes' \
     --exclude='.githooks/' \
+    --exclude='.codex/' \
     --exclude='docs/' \
     --exclude='games/' \
     --exclude='lite/' \
@@ -97,103 +93,270 @@ rsync -av \
     --exclude='cws-build/' \
     --exclude='web-ext-artifacts/' \
     --exclude='node_modules/' \
+    --exclude='tmp/' \
+    --exclude='local-tts-bridge/' \
     --exclude='*.md' \
+    --exclude='package.json' \
+    --exclude='package-lock.json' \
+    --exclude='eslint.config.js' \
+    --exclude='.prettierrc' \
+    --exclude='.htmlhintrc' \
     ./ "$BUILD_DIR/"
 
-echo "Removing adult site source files..."
+# Domains/files that have triggered or are likely to trigger mature-content
+# policy review. This branch should not include adult streaming integrations.
+ADULT_DOMAIN_PATTERNS=(
+    "chaturbate\\.com"
+    "cherry\\.tv"
+    "myfreecams\\.com"
+    "camsoda\\.com"
+    "fansly\\.com"
+    "simps\\.com"
+    "stripchat\\.com"
+    "bongacams\\.com"
+    "cam4\\.com"
+    "onlyfans\\.com"
+)
+
+ADULT_SOURCE_FILES=(
+    "sources/chaturbate.js"
+    "sources/cherrytv.js"
+    "sources/myfreecams.js"
+    "sources/camsoda.js"
+    "sources/fansly.js"
+    "sources/simps.js"
+    "sources/stripchat.js"
+    "sources/bongacams.js"
+    "sources/cam4.js"
+)
+
+ADULT_SITE_NAMES=(
+    "chaturbate"
+    "cherrytv"
+    "myfreecams"
+    "camsoda"
+    "fansly"
+    "simps"
+    "stripchat"
+    "bongacams"
+    "cam4"
+    "onlyfans"
+)
+
+# Files with exact or near-exact remotely hosted script issues from prior
+# Chrome Web Store feedback. Do not remove broad overlay surfaces here unless
+# their in-package links are also hidden; missing advertised pages can trigger a
+# separate non-functional rejection.
+KNOWN_REMOTE_CODE_FILES=(
+    "sources/websocket/bilibil.html"
+    "streamelements-importer.html"
+    "streamelements-importer.js"
+)
+
+# Extension pages/features that are policy-sensitive in the Web Store build
+# unless they are audited and explicitly re-enabled.
+POLICY_SENSITIVE_FILES=(
+    "aiprompt.html"
+    "aioverlay.html"
+    "cohost-overlay.html"
+    "message-ai-export.html"
+    "message-ai-export.js"
+    "local-browser-model-worker.js"
+    "cohost-local-qwen-worker.js"
+    "shared/ai"
+    "shared/aiPrompt"
+    "thirdparty/transformersjs"
+    "thirdparty/kokoro-bundle.es.ext.js"
+    "thirdparty/kokoro-bundle.es.js"
+    "thirdparty/kokoro-ort-wasm-simd-threaded.jsep.wasm"
+    "thirdparty/kokoro-ort-wasm-simd.wasm"
+    "thirdparty/kokoro-ort-wasm.wasm"
+)
+
+MISC_FILES_TO_REMOVE=(
+    "badwords_sample.txt"
+    "sample_midi_messages.txt"
+    "robots.txt"
+    "CNAME"
+)
+
+section "Removing excluded files"
+
 for file in "${ADULT_SOURCE_FILES[@]}"; do
-    if [[ -f "$BUILD_DIR/$file" ]]; then
-        rm -v "$BUILD_DIR/$file"
-    fi
+    remove_path "$file"
 done
 
-echo "Removing website-hosted files (OBS overlay pages)..."
-for file in "${WEBSITE_HOSTED_FILES[@]}"; do
-    if [[ -f "$BUILD_DIR/$file" ]]; then
-        rm -v "$BUILD_DIR/$file"
-    fi
+for file in "${KNOWN_REMOTE_CODE_FILES[@]}"; do
+    remove_path "$file"
 done
 
-echo "Removing misc unnecessary files..."
+for file in "${POLICY_SENSITIVE_FILES[@]}"; do
+    remove_path "$file"
+done
+
 for file in "${MISC_FILES_TO_REMOVE[@]}"; do
-    if [[ -f "$BUILD_DIR/$file" ]]; then
-        rm -v "$BUILD_DIR/$file"
-    fi
+    remove_path "$file"
 done
 
-echo "Cleaning adult site references from JS files..."
-# Build regex pattern for adult site names
+section "Cleaning policy-sensitive string references"
+
 ADULT_NAMES_PATTERN=$(printf '%s\n' "${ADULT_SITE_NAMES[@]}" | paste -sd'|' -)
 
-# Clean EventFlowEditor.js - remove adult sites from dropdown objects only
-# Delete entire lines containing dropdown entries like { value: 'chaturbate', label: 'Chaturbate' },
 if [[ -f "$BUILD_DIR/actions/EventFlowEditor.js" ]]; then
     sed -i -E "/\{[[:space:]]*value:[[:space:]]*'($ADULT_NAMES_PATTERN)'/d" "$BUILD_DIR/actions/EventFlowEditor.js"
-    echo "  Cleaned: actions/EventFlowEditor.js (dropdown entries)"
+    report "Cleaned actions/EventFlowEditor.js adult dropdown entries."
 fi
 
-# Clean colours.js - remove adult site color cases
 if [[ -f "$BUILD_DIR/libs/colours.js" ]]; then
     sed -i -E "/case ['\"]($ADULT_NAMES_PATTERN)['\"]:/d" "$BUILD_DIR/libs/colours.js"
-    echo "  Cleaned: libs/colours.js"
+    report "Cleaned libs/colours.js adult colour cases."
 fi
 
-# Note: Platform array entries like 'chaturbate' in arrays are left as-is
-# since they're just string identifiers and don't affect CWS compliance
+section "Repairing kept Web Store pages"
 
-echo "Filtering manifest.json..."
+if [[ -f "$BUILD_DIR/giveaway.html" ]]; then
+    sed -i -E '/cdn\.tailwindcss\.com/d' "$BUILD_DIR/giveaway.html"
+    sed -i -E '/tailwind\.config[[:space:]]*=/,/<\/script>/d' "$BUILD_DIR/giveaway.html"
+    report "Removed remote Tailwind runtime from kept giveaway.html."
+fi
 
-# Build jq filter for adult domains
-# Filter content_scripts entries that match adult sites
-# Filter host_permissions that match adult sites or dev patterns
+if [[ -f "$BUILD_DIR/sampleoverlay.html" ]]; then
+    sed -i -E 's#https://socialstream\.ninja/libs/colours\.js#./libs/colours.js#g' "$BUILD_DIR/sampleoverlay.html"
+    report "Repointed sampleoverlay.html colours script to bundled libs/colours.js."
+fi
 
-ADULT_DOMAIN_PATTERN=$(printf '%s\n' "${ADULT_DOMAINS[@]}" | paste -sd'|' -)
+if [[ -f "$BUILD_DIR/sampleapi.html" ]]; then
+    sed -i -E '/https:\/\/(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com)\//d' "$BUILD_DIR/sampleapi.html"
+    report "Removed remote CSS links from kept sampleapi.html."
+fi
+
+if [[ -f "$BUILD_DIR/popup.html" ]]; then
+    sed -i -E '/streamelements-importer\.html/d' "$BUILD_DIR/popup.html"
+    sed -i -E 's#</head>#<style id="cws-stripped-features">.wrapper:has(#wrapper-chatbot-ai-prompt-options),.wrapper:has(#wrapper-chatbot-ai-overlay-options){display:none!important;}</style></head>#' "$BUILD_DIR/popup.html"
+    report "Hid stripped AI prompt/overlay links and removed StreamElements importer link from popup.html."
+fi
+
+if [[ -f "$BUILD_DIR/popup.js" ]]; then
+    sed -i -E '/id:[[:space:]]*"aiprompt"/d; /id:[[:space:]]*"aioverlay"/d' "$BUILD_DIR/popup.js"
+    report "Removed stripped AI prompt/overlay page mappings from popup.js."
+fi
+
+section "Filtering manifest.json"
+
+ADULT_DOMAIN_PATTERN=$(printf '%s\n' "${ADULT_DOMAIN_PATTERNS[@]}" | paste -sd'|' -)
 
 jq --arg adult_pattern "$ADULT_DOMAIN_PATTERN" '
-# Filter content_scripts - remove entries matching adult sites
-.content_scripts = [
-    .content_scripts[] |
-    select(
-        (.matches | all(test($adult_pattern) | not))
-    )
-] |
-
-# Filter host_permissions - remove adult sites and dev patterns
-.host_permissions = [
-    .host_permissions[] |
-    select(
-        (test($adult_pattern) | not) and
-        (test("localhost") | not) and
-        (test("127\\.0\\.0\\.1") | not) and
-        (test("^file:") | not)
-    )
-]
+    .homepage_url = "https://socialstream.ninja/" |
+    .permissions = ((.permissions // []) - ["activeTab"]) |
+    .content_scripts = [
+        (.content_scripts // [])[] |
+        select((.matches // []) | all(test($adult_pattern; "i") | not))
+    ] |
+    .host_permissions = [
+        (.host_permissions // [])[] |
+        select(
+            (test($adult_pattern; "i") | not) and
+            (test("localhost"; "i") | not) and
+            (test("127\\.0\\.0\\.1"; "i") | not) and
+            (test("^file:"; "i") | not)
+        )
+    ] |
+    .web_accessible_resources = [
+        (.web_accessible_resources // [])[] |
+        .resources = [
+            (.resources // [])[] |
+            select(
+                test("^(shared/ai|shared/aiPrompt|local-browser-model-worker\\.js|cohost-local-qwen-worker\\.js)"; "i") | not
+            )
+        ] |
+        select((.resources // []) | length > 0)
+    ]
 ' "$BUILD_DIR/manifest.json" > "$BUILD_DIR/manifest.json.tmp"
 
 mv "$BUILD_DIR/manifest.json.tmp" "$BUILD_DIR/manifest.json"
 
-echo "Validating filtered manifest.json..."
 if ! jq empty "$BUILD_DIR/manifest.json" 2>/dev/null; then
-    echo "ERROR: Generated manifest.json is invalid!" >&2
-    exit 1
+    blocker "Generated manifest.json is invalid."
 fi
 
-# Count what was filtered
+section "Manifest summary"
+
 ORIGINAL_CONTENT_SCRIPTS=$(jq '.content_scripts | length' manifest.json)
 FILTERED_CONTENT_SCRIPTS=$(jq '.content_scripts | length' "$BUILD_DIR/manifest.json")
 ORIGINAL_HOST_PERMS=$(jq '.host_permissions | length' manifest.json)
 FILTERED_HOST_PERMS=$(jq '.host_permissions | length' "$BUILD_DIR/manifest.json")
+FILTERED_PERMISSIONS=$(jq -r '.permissions | join(", ")' "$BUILD_DIR/manifest.json")
+FILTERED_DESCRIPTION=$(jq -r '.description // ""' "$BUILD_DIR/manifest.json")
 
-echo ""
-echo "=== Build Summary ==="
-echo "Content scripts: $ORIGINAL_CONTENT_SCRIPTS -> $FILTERED_CONTENT_SCRIPTS (removed $((ORIGINAL_CONTENT_SCRIPTS - FILTERED_CONTENT_SCRIPTS)))"
-echo "Host permissions: $ORIGINAL_HOST_PERMS -> $FILTERED_HOST_PERMS (removed $((ORIGINAL_HOST_PERMS - FILTERED_HOST_PERMS)))"
-echo ""
-echo "Excluded folders: docs/, games/, lite/, tests/, scripts/, themes/, sources/graveyard/, .github/, .githooks/"
-echo "Excluded patterns: *.md (markdown files)"
-echo "Removed adult site files: ${#ADULT_SOURCE_FILES[@]} source files"
-echo "Removed website-hosted files: ${#WEBSITE_HOSTED_FILES[@]} overlay/CDN pages"
-echo "Removed misc files: ${#MISC_FILES_TO_REMOVE[@]} files"
-echo "Cleaned JS files: EventFlowEditor.js, colours.js (adult site references)"
-echo ""
-echo "Chrome Web Store build ready in: $BUILD_DIR/"
+report "Content scripts: $ORIGINAL_CONTENT_SCRIPTS -> $FILTERED_CONTENT_SCRIPTS (removed $((ORIGINAL_CONTENT_SCRIPTS - FILTERED_CONTENT_SCRIPTS)))"
+report "Host permissions: $ORIGINAL_HOST_PERMS -> $FILTERED_HOST_PERMS (removed $((ORIGINAL_HOST_PERMS - FILTERED_HOST_PERMS)))"
+report "Permissions: $FILTERED_PERMISSIONS"
+report "Description: $FILTERED_DESCRIPTION"
+
+section "Hard policy scans"
+
+scan_blocker \
+    "Remote executable script tag remains in staged package." \
+    '<script[^>]+src=["'\'']https?://' \
+    "$BUILD_DIR"
+
+scan_blocker \
+    "Known CDN JavaScript URL remains in staged package." \
+    'https://(cdnjs\.cloudflare\.com|ajax\.googleapis\.com|cdn\.jsdelivr\.net|unpkg\.com)/[^"'\'' )<>]+\.js' \
+    "$BUILD_DIR"
+
+scan_blocker \
+    "Adult provider reference remains in manifest." \
+    'stripchat|bongacams|cam4|chaturbate|cherry\.tv|myfreecams|camsoda|fansly|simps|onlyfans' \
+    "$BUILD_DIR/manifest.json"
+
+scan_blocker \
+    "Adult provider reference remains in staged package." \
+    'stripchat|bongacams|cam4|chaturbate|cherrytv|cherry\.tv|myfreecams|camsoda|fansly|simps|onlyfans' \
+    "$BUILD_DIR"
+
+scan_blocker \
+    "Manifest still requests activeTab, which was previously rejected as unused." \
+    '"activeTab"' \
+    "$BUILD_DIR/manifest.json"
+
+section "Review warnings"
+
+scan_warning \
+    "Dynamic JavaScript or obfuscation-sensitive strings remain; inspect each match before release." \
+    'base64js|jsbase64|jsb64|new Function|eval\(|atob\(|customJS|uploadCustomJs' \
+    "$BUILD_DIR"
+
+scan_warning \
+    "Broad or sensitive permissions remain; ensure dashboard privacy-field justifications match." \
+    '"(debugger|tabs|tabCapture|identity)"|http://\*/\*|https://\*/\*|<all_urls>' \
+    "$BUILD_DIR/manifest.json"
+
+scan_warning \
+    "Remote CDN/resource URL remains; inspect whether it is executable code, CSS, or data and bundle/remove if practical." \
+    'https?://[^"'\'' <>]*(cdnjs\.cloudflare\.com|ajax\.googleapis\.com|cdn\.jsdelivr\.net|cdn\.tailwindcss\.com|unpkg\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)|<script[^>]+src=["'\'']https?://' \
+    "$BUILD_DIR"
+
+scan_warning \
+    "Listing-sensitive claims remain; verify or remove from Web Store metadata/screenshots." \
+    'Capture live chat|100\+ supported|disable chat services|Sound volume' \
+    "$BUILD_DIR"
+
+scan_warning \
+    "References to stripped Web Store pages/features remain; remove UI links or restore audited files." \
+    'aiprompt\.html|aioverlay\.html|cohost-overlay\.html|streamelements-importer|message-ai-export|local-browser-model-worker|cohost-local-qwen-worker|shared/ai|shared/aiPrompt|thirdparty/transformersjs' \
+    "$BUILD_DIR"
+
+section "Final result"
+
+report "Blockers: $BLOCKERS"
+report "Warnings: $WARNINGS"
+report "Build directory: $BUILD_DIR"
+report "Audit report: $REPORT_FILE"
+
+if [[ "$STRICT" == "1" && "$BLOCKERS" -gt 0 ]]; then
+    report "Strict mode is enabled; refusing to publish a Web Store build with blockers."
+    exit 1
+fi
+
+report "Chrome Web Store build ready."
