@@ -121,7 +121,14 @@
 		
 		var namett="";
 		try {
-			namett = escapeHtml(ele.querySelector(".q-item__label .text-caption.text-weight-bold").innerText.split(":")[0].trim());
+			var nameEle = ele.querySelector(".q-item__label .text-caption.text-weight-bold");
+			if (!nameEle){
+				nameEle = ele.querySelector(".q-item__label .text-body2.text-weight-bold");
+			}
+			if (!nameEle){
+				nameEle = ele.querySelector(".q-item__label span.text-weight-bold");
+			}
+			namett = escapeHtml(nameEle.innerText.split(":")[0].trim());
 		} catch(e){
 			return;
 		}
@@ -138,7 +145,7 @@
 		
 		var contentImg = "";
 		try{
-			contentImg = ele.querySelector(".img.q-mb-none .q-img__container img.q-img__image[src]").src; // too annoying to support
+			contentImg = ele.querySelector(".img.q-mb-none .q-img__container img.q-img__image[src], .img.q-mb-none img[src]").src; // too annoying to support
 		} catch(e){
 		}
 		
@@ -151,12 +158,18 @@
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".q-item__label .text-caption.text-weight-regular")).trim();
-			
+			var msgEle = ele.querySelector(".q-item__label .text-caption.text-weight-regular");
+			if (!msgEle){
+				msgEle = ele.querySelector(".q-item__label .text-body2.text-weight-light");
+			}
+			if (!msgEle){
+				msgEle = ele.querySelector(".q-item__section.text-body2.text-weight-light");
+			}
+			if (!msgEle){
+				msgEle = ele.querySelector(".text-body2.text-weight-light");
+			}
+			msg = getAllContentNodes(msgEle).trim();
 		} catch(e){
-		}
-		if (!msg){
-			msg = getAllContentNodes(ele.querySelector(".text-body2.text-weight-light")).trim();
 		}
 		
 		var chatbadges = [];
@@ -217,8 +230,13 @@
 			try{
 				if ("getSource" == request){sendResponse("bitchute");	return;	}
 				if ("focusChat" == request){
-					document.querySelector('textarea[tabindex="0"], textarea').focus();
-					sendResponse(true);
+					var chatInput = document.querySelector('textarea[tabindex="0"], textarea, input[placeholder*="message"]');
+					if (chatInput){
+						chatInput.focus();
+						sendResponse(true);
+					} else {
+						sendResponse(false);
+					}
 					return;
 				}
 				if (typeof request === "object"){
@@ -236,11 +254,14 @@
 		}
 	);
 
-	var observer = null;
+	var observers = [];
+	var observedTargets = new WeakSet();
 	
 	
 	function onElementInserted(target) {
 		if (!target){return;}
+		if (observedTargets.has(target)){return;}
+		observedTargets.add(target);
 	
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
@@ -259,42 +280,67 @@
 		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
-		observer = new MutationObserver(onMutationsObserved);
+		var observer = new MutationObserver(onMutationsObserved);
+		observers.push(observer);
 		observer.observe(target, config);
+	}
+
+	function getChatTargets(){
+		var selectors = [];
+		if (window.location.pathname.includes("popChat")){
+			selectors = [
+				'.q-list.q-px-sm[role="list"]',
+				'.q-list[role="list"]'
+			];
+		} else {
+			selectors = [
+				'#right_column .q-list.q-px-sm[role="list"]',
+				'.q-list.q-px-sm[role="list"]',
+				'#right_column .q-list'
+			];
+		}
+		var targets = [];
+		selectors.forEach(function(selector){
+			try {
+				[...document.querySelectorAll(selector)].forEach(function(target){
+					if (!targets.includes(target)){
+						targets.push(target);
+					}
+				});
+			} catch(e){}
+		});
+		return targets;
 	}
 	
 	IframeManager.init();
 	
 	setInterval(function(){
-		let target = '.q-list[role="list"]';
-		if (window.location.pathname.includes("popChat")){
-			target = '.q-list[role="list"]';
-		} else {
-			target = "#right_column .q-list"
-		}
 		try {
-			if (document.querySelector(target)){
-				if (!document.querySelector(target).marked){
-					document.querySelector(target).marked=true;
+			var targets = getChatTargets();
+			if (targets.length){
+				targets.forEach(function(target){
+					if (!target.marked){
+						target.marked=true;
 					
-					console.log("CONNECTED chat detected");
+						console.log("CONNECTED chat detected");
 
-					setTimeout(function(target){
+						setTimeout(function(target){
 						
-						[...document.querySelector(target).childNodes].forEach(ele=>{
-							try {
-								if (ele.skip){return;}
-								ele.skip = true;
+							[...target.childNodes].forEach(ele=>{
+								try {
+									if (ele.skip){return;}
+									ele.skip = true;
 								
-								//processMessage(ele);
-							} catch(e){}
-						});
-						onElementInserted(document.querySelector(target));
+									//processMessage(ele);
+								} catch(e){}
+							});
+							onElementInserted(target);
 
-					},2000,target);
+						},2000,target);
 
 
-				}
+					}
+				});
 			}
 		} catch(e){
 			//console.error(e);

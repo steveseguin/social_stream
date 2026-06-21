@@ -438,7 +438,7 @@
                             <tr>
                                 <td class="status-event"><code>new_follower</code></td>
                                 <td>New subscriber detected via <code>myRecentSubscribers</code> API (polled every 5 minutes).</td>
-                                <td><code>chatname</code> is subscriber's channel name; <code>meta</code> includes <code>channelId</code>, <code>title</code>, <code>subscribedAt</code>. Note: YouTube API has up to 4-hour delay; only shows subscribers with public subscription lists.</td>
+                                <td><code>chatname</code> is subscriber's channel name; <code>chatmessage</code> is empty unless subscriber alert messages are enabled in the YouTube source page. <code>meta</code> includes <code>channelId</code>, <code>title</code>, <code>subscribedAt</code>, and grouped bursts add <code>grouped</code>, <code>count</code>, <code>others</code>, and <code>subscribers</code>. Note: YouTube API has up to 4-hour delay; only shows subscribers with public subscription lists.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -452,6 +452,8 @@
                             <li>Polls the YouTube API every 5 minutes for recent subscribers</li>
                             <li>Tracks seen subscribers in localStorage to detect new ones</li>
                             <li>Emits <code>new_follower</code> events with the subscriber's name, avatar, and channel ID</li>
+                            <li>Keeps subscriber alert messages disabled by default; enabling them uses the current translation string for <code>alert-just-subscribed</code></li>
+                            <li>Groups bursts larger than three new subscribers by default so reconnects do not flood overlays or Event Flow</li>
                             <li>Requires WebSocket mode to be enabled in extension settings</li>
                         </ul>
                         <p><strong>Limitations (these are YouTube API restrictions, not Social Stream limitations):</strong></p>

@@ -181,6 +181,14 @@
                         <input type="checkbox" id="hide-metrics">
                         <span>Hide dashboard metrics</span>
                     </label>
+                    <label class="auth-method-option" style="display:flex;">
+                        <input type="checkbox" id="subscriber-alert-messages">
+                        <span>Show YouTube subscriber alert messages</span>
+                    </label>
+                    <label class="auth-method-option" style="display:flex;">
+                        <input type="checkbox" id="group-subscriber-alerts">
+                        <span>Group subscriber alert bursts</span>
+                    </label>
                 </div>
             </div>
             <div class="recent-events">
@@ -419,10 +427,11 @@ try {
 	const YT_CHANNEL_LOOKUP_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 	const YT_RECENT_SUBSCRIBER_POLL_MS = 5 * 60 * 1000;
 	const YT_RECENT_SUBSCRIBER_CACHE_MAX_AGE_MS = YT_RECENT_SUBSCRIBER_POLL_MS;
-	const YT_RECENT_SUBSCRIBER_ALERT_LOOKBACK_MS = 60 * 60 * 1000;
+	const YT_RECENT_SUBSCRIBER_ALERT_LOOKBACK_MS = 6 * 60 * 60 * 1000;
 	const YT_RECENT_SUBSCRIBER_HISTORY_MS = 100 * 60 * 60 * 1000;
 	const YT_RECENT_SUBSCRIBER_LOCK_MS = 90 * 1000;
 	const YT_RECENT_SUBSCRIBER_MAX_SEEN = 500;
+	const YT_RECENT_SUBSCRIBER_GROUP_THRESHOLD = 3;
 	const YT_RECENT_SUBSCRIBER_TRACKER_ID = "yt-sub-tracker-" + Date.now() + "-" + Math.random().toString(36).slice(2);
     var pendingRelayMessages = [];
     const MAX_CACHED_CHAT_MESSAGES = 500;
@@ -1990,22 +1999,39 @@ function enableBackgroundKeepAlive() {
 		return Number.isFinite(publishedAt) && Date.now() - publishedAt <= YT_RECENT_SUBSCRIBER_ALERT_LOOKBACK_MS;
 	}
 
-	function buildRecentSubscriberPayload(item, ownerChannelId) {
+	function getRecentSubscriberAlertMessage(controls) {
+		if (!controls || !controls.subscriberAlertMessages) {
+			return "";
+		}
+		return getTranslation("alert-just-subscribed", "just subscribed");
+	}
+
+	function getRecentSubscriberSummary(item) {
 		const subscriber = item && item.subscriberSnippet ? item.subscriberSnippet : {};
 		const snippet = item && item.snippet ? item.snippet : {};
 		const subscriberId = extractRecentSubscriberId(item);
 		const title = subscriber.title || snippet.title || snippet.channelTitle || "New subscriber";
 		const thumbnails = subscriber.thumbnails || snippet.thumbnails || null;
 		const subscribedAt = snippet.publishedAt || "";
+		return {
+			channelId: subscriberId,
+			title: title,
+			subscribedAt: subscribedAt,
+			thumbnail: resolveThumbnailUrl(thumbnails)
+		};
+	}
+
+	function buildRecentSubscriberPayload(item, ownerChannelId, controls) {
+		const summary = getRecentSubscriberSummary(item);
 		return applySourceIdentity({
-			chatname: escapeHtml(title),
+			chatname: escapeHtml(summary.title),
 			chatbadges: "",
-			userid: subscriberId,
+			userid: summary.channelId,
 			nameColor: "",
 			backgroundColor: "",
 			textColor: "",
-			chatmessage: "",
-			chatimg: resolveThumbnailUrl(thumbnails),
+			chatmessage: getRecentSubscriberAlertMessage(controls),
+			chatimg: summary.thumbnail,
 			hasDonation: "",
 			membership: "",
 			type: "youtube",
@@ -2013,11 +2039,79 @@ function enableBackgroundKeepAlive() {
 			textonly: settings.textonlymode || false,
 			meta: {
 				source: "youtube.myRecentSubscribers",
-				channelId: subscriberId,
+				channelId: summary.channelId,
 				ownerChannelId: ownerChannelId,
-				title: title,
-				subscribedAt: subscribedAt
+				title: summary.title,
+				subscribedAt: summary.subscribedAt
 			}
+		});
+	}
+
+	function buildGroupedRecentSubscriberPayload(items, ownerChannelId, controls) {
+		const summaries = items.map(getRecentSubscriberSummary).filter(function(summary) {
+			return summary && summary.channelId;
+		});
+		const first = summaries[0] || {
+			channelId: "",
+			title: "New subscriber",
+			subscribedAt: "",
+			thumbnail: ""
+		};
+		const count = Math.max(1, summaries.length);
+		const others = Math.max(0, count - 1);
+		const displayName = others ? first.title + " +" + others : first.title;
+		return applySourceIdentity({
+			chatname: escapeHtml(displayName),
+			chatbadges: "",
+			userid: first.channelId,
+			nameColor: "",
+			backgroundColor: "",
+			textColor: "",
+			chatmessage: getRecentSubscriberAlertMessage(controls),
+			chatimg: first.thumbnail,
+			hasDonation: "",
+			membership: "",
+			type: "youtube",
+			event: "new_follower",
+			textonly: settings.textonlymode || false,
+			meta: {
+				source: "youtube.myRecentSubscribers",
+				channelId: first.channelId,
+				ownerChannelId: ownerChannelId,
+				title: first.title,
+				subscribedAt: first.subscribedAt,
+				grouped: true,
+				count: count,
+				others: others,
+				subscribers: summaries.map(function(summary) {
+					return {
+						channelId: summary.channelId,
+						title: summary.title,
+						subscribedAt: summary.subscribedAt
+					};
+				})
+			}
+		});
+	}
+
+	function emitRecentSubscriberAlerts(items, ownerChannelId, generation) {
+		if (!items || !items.length) return;
+		const controls = loadAdvancedControlSettings();
+		const shouldGroup = controls.groupSubscriberAlerts && items.length > YT_RECENT_SUBSCRIBER_GROUP_THRESHOLD;
+		if (shouldGroup) {
+			if (!isRecentSubscriberPollingActive(ownerChannelId, generation)) return;
+			const payload = buildGroupedRecentSubscriberPayload(items, ownerChannelId, controls);
+			console.log("YouTube new follower group event:", payload);
+			addEvent(`New subscribers: ${payload.meta.title} +${payload.meta.others}`);
+			pushMessage(payload);
+			return;
+		}
+		items.forEach(function(item) {
+			if (!isRecentSubscriberPollingActive(ownerChannelId, generation)) return;
+			const payload = buildRecentSubscriberPayload(item, ownerChannelId, controls);
+			console.log("YouTube new follower event:", payload);
+			addEvent(`New subscriber: ${payload.meta.title}`);
+			pushMessage(payload);
 		});
 	}
 
@@ -2075,13 +2169,7 @@ function enableBackgroundKeepAlive() {
 			writeRecentSubscriberSeen(normalizedOwnerChannelId, currentIds);
 			updateRecentSubscriberHistory(normalizedOwnerChannelId, currentIds);
 			markRecentSubscriberTrackerInitialized(normalizedOwnerChannelId);
-			newItems.reverse().forEach(function(item) {
-				if (!isRecentSubscriberPollingActive(normalizedOwnerChannelId, generation)) return;
-				const payload = buildRecentSubscriberPayload(item, normalizedOwnerChannelId);
-				console.log("YouTube new follower event:", payload);
-				addEvent(`New subscriber: ${payload.meta.title}`);
-				pushMessage(payload);
-			});
+			emitRecentSubscriberAlerts(newItems.reverse(), normalizedOwnerChannelId, generation);
 		} catch (error) {
 			console.warn('Error polling YouTube recent subscribers:', error);
 		}
@@ -2216,13 +2304,17 @@ function enableBackgroundKeepAlive() {
 			return {
 				syncDeleteMessages: !!parsed.syncDeleteMessages,
 				syncBlockUsers: !!parsed.syncBlockUsers,
-				hideMetrics: !!parsed.hideMetrics
+				hideMetrics: !!parsed.hideMetrics,
+				subscriberAlertMessages: !!parsed.subscriberAlertMessages,
+				groupSubscriberAlerts: parsed.groupSubscriberAlerts !== false
 			};
 		} catch (_) {
 			return {
 				syncDeleteMessages: false,
 				syncBlockUsers: false,
-				hideMetrics: false
+				hideMetrics: false,
+				subscriberAlertMessages: false,
+				groupSubscriberAlerts: true
 			};
 		}
 	}
@@ -2231,7 +2323,9 @@ function enableBackgroundKeepAlive() {
 		const payload = {
 			syncDeleteMessages: !!document.getElementById('sync-delete-messages')?.checked,
 			syncBlockUsers: !!document.getElementById('sync-block-users')?.checked,
-			hideMetrics: !!document.getElementById('hide-metrics')?.checked
+			hideMetrics: !!document.getElementById('hide-metrics')?.checked,
+			subscriberAlertMessages: !!document.getElementById('subscriber-alert-messages')?.checked,
+			groupSubscriberAlerts: !!document.getElementById('group-subscriber-alerts')?.checked
 		};
 		localStorage.setItem(YT_ADVANCED_CONTROLS_STORAGE_KEY, JSON.stringify(payload));
 	}
@@ -6309,6 +6403,8 @@ function enableBackgroundKeepAlive() {
 		const syncDeleteMessages = document.getElementById('sync-delete-messages');
 		const syncBlockUsers = document.getElementById('sync-block-users');
 		const hideMetrics = document.getElementById('hide-metrics');
+		const subscriberAlertMessages = document.getElementById('subscriber-alert-messages');
+		const groupSubscriberAlerts = document.getElementById('group-subscriber-alerts');
 		if (syncDeleteMessages) {
 			syncDeleteMessages.checked = advancedControlSettings.syncDeleteMessages;
 			syncDeleteMessages.addEventListener('change', saveAdvancedControlSettings);
@@ -6328,6 +6424,16 @@ function enableBackgroundKeepAlive() {
 			};
 			hideMetrics.addEventListener('change', hideMetricsHandler);
 			registerCleanup(() => hideMetrics.removeEventListener('change', hideMetricsHandler));
+		}
+		if (subscriberAlertMessages) {
+			subscriberAlertMessages.checked = advancedControlSettings.subscriberAlertMessages;
+			subscriberAlertMessages.addEventListener('change', saveAdvancedControlSettings);
+			registerCleanup(() => subscriberAlertMessages.removeEventListener('change', saveAdvancedControlSettings));
+		}
+		if (groupSubscriberAlerts) {
+			groupSubscriberAlerts.checked = advancedControlSettings.groupSubscriberAlerts;
+			groupSubscriberAlerts.addEventListener('change', saveAdvancedControlSettings);
+			registerCleanup(() => groupSubscriberAlerts.removeEventListener('change', saveAdvancedControlSettings));
 		}
 		const refreshStreamInfoButton = document.getElementById('refresh-stream-info');
 		if (refreshStreamInfoButton) {

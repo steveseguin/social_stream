@@ -8,8 +8,6 @@
     <script src="./thirdparty/d3.min.js"></script>
     <script src="./thirdparty/topojson-client.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap');
-
         :root {
             --bg: rgba(6, 10, 16, 0.35);
             --grid: rgba(255, 255, 255, 0.08);
@@ -51,7 +49,7 @@
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            font-family: 'Space Grotesk', 'Sora', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             color: var(--text);
             perspective: var(--map-perspective, none);
             background:
@@ -2201,41 +2199,20 @@
             updateMapFill();
         }
 
-        function loadJsonWithFallback(primary, fallback) {
+        function loadJsonWithFallback(primary) {
             return fetch(primary).then(resp => {
-                if (!resp.ok) throw new Error(`primary fetch failed ${resp.status}`);
+                if (!resp.ok) throw new Error(`local fetch failed ${resp.status}`);
                 return resp.json();
-            }).catch(() => {
-                if (!fallback) throw new Error('no fallback provided');
-                return fetch(fallback).then(r => {
-                    if (!r.ok) throw new Error(`fallback fetch failed ${r.status}`);
-                    return r.json();
-                });
             });
         }
 
         function loadData() {
             return Promise.all([
-                loadJsonWithFallback(
-                    './thirdparty/iso-3166.json',
-                    'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.json'
-                ),
-                loadJsonWithFallback(
-                    './thirdparty/world-110m.json',
-                    'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
-                ),
-                loadJsonWithFallback(
-                    './thirdparty/map/us-states.json',
-                    'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json'
-                ),
-                loadJsonWithFallback(
-                    './thirdparty/map/canada-provinces.geojson',
-                    'https://raw.githubusercontent.com/codeforgermany/click_that_hood/master/public/data/canada.geojson'
-                ),
-                loadJsonWithFallback(
-                    './thirdparty/map/mexico-states.geojson',
-                    'https://raw.githubusercontent.com/codeforgermany/click_that_hood/master/public/data/mexico.geojson'
-                ),
+                loadJsonWithFallback('./thirdparty/iso-3166.json'),
+                loadJsonWithFallback('./thirdparty/world-110m.json'),
+                loadJsonWithFallback('./thirdparty/map/us-states.json'),
+                loadJsonWithFallback('./thirdparty/map/canada-provinces.geojson'),
+                loadJsonWithFallback('./thirdparty/map/mexico-states.geojson'),
                 fetch('./thirdparty/map/major-cities.json').then(resp => (resp.ok ? resp.json() : [])).catch(() => []),
                 fetch('./thirdparty/map/regional-cities.json').then(resp => (resp.ok ? resp.json() : [])).catch(() => [])
             ]);

@@ -2472,8 +2472,12 @@ const AI_TRANSLATE_SHORT_TEXT_LIMIT = 10;
 const AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE = "en-US";
 const AI_TRANSLATE_MIN_OUTPUT_CHARS = 255;
 const AI_TRANSLATE_OUTPUT_MULTIPLIER = 3;
+const AI_OUTGOING_TRANSLATE_RETRY_MS = 250;
+const AI_OUTGOING_TRANSLATE_MAX_WAIT_MS = 5000;
 let aiTranslateProcessingSlots = [false];
 let aiTranslateCache = new Map();
+let aiOutgoingTranslateQueue = [];
+let aiOutgoingTranslateQueueActive = false;
 
 function getActiveAITranslateProviderKey() {
     return settings?.aiProvider?.optionsetting || "ollama";
@@ -2491,6 +2495,14 @@ function getAITranslateTimeoutMs() {
         return 10000;
     }
     return Math.max(1000, Math.min(timeout, 30000));
+}
+
+function getAITranslateRequestTimeoutMs(options = {}) {
+    const timeout = Number(options.timeoutMs);
+    if (Number.isFinite(timeout) && timeout > 0) {
+        return Math.max(100, Math.min(timeout, getAITranslateTimeoutMs()));
+    }
+    return getAITranslateTimeoutMs();
 }
 
 function escapeAITranslatedHtml(value) {
@@ -2953,7 +2965,7 @@ async function translateMessageWithLLM(data, options = {}) {
             const controller = new AbortController();
             const timeoutId = setTimeout(function () {
                 controller.abort();
-            }, getAITranslateTimeoutMs());
+            }, getAITranslateRequestTimeoutMs(options));
             let response;
             try {
                 const contextLines = await getAITranslateContextLines(10);
@@ -3028,30 +3040,135 @@ async function translateMessageWithLLM(data, options = {}) {
     }
 }
 
+function waitForAIOutgoingTranslate(ms) {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, Math.max(0, ms || 0));
+    });
+}
+
+function isAITranslateSlotBusy() {
+    return aiTranslateProcessingSlots.findIndex(function (slot) { return !slot; }) === -1;
+}
+
+async function runOutgoingTranslationAttempt(item) {
+    while (!item.resolved && Date.now() < item.deadline) {
+        if (isAITranslateSlotBusy()) {
+            const busyWaitMs = Math.min(AI_OUTGOING_TRANSLATE_RETRY_MS, Math.max(0, item.deadline - Date.now()));
+            if (!busyWaitMs) {
+                break;
+            }
+            await waitForAIOutgoingTranslate(busyWaitMs);
+            continue;
+        }
+
+        const outgoingData = {
+            chatmessage: item.originalResponse,
+            textonly: true,
+            meta: {}
+        };
+        let translated = false;
+        try {
+            const timeLeft = Math.max(0, item.deadline - Date.now());
+            if (!timeLeft) {
+                break;
+            }
+            translated = await translateMessageWithLLM(outgoingData, {
+                enabledSetting: "aiAutoTranslateOutgoing",
+                targetLanguageSetting: "aiAutoTranslateOutgoingTargetLanguage",
+                fallbackTargetLanguageSetting: "aiAutoTranslateTargetLanguage",
+                blockOnFailure: true,
+                direction: "outgoing",
+                timeoutMs: timeLeft
+            });
+        } catch (e) {
+            console.warn("Outgoing AI translation attempt failed:", e);
+            translated = false;
+        }
+
+        if (item.resolved) {
+            return false;
+        }
+        if (translated) {
+            item.data.response = outgoingData.chatmessage || item.originalResponse;
+            return true;
+        }
+
+        item.data.response = item.originalResponse;
+        return false;
+    }
+
+    item.data.response = item.originalResponse;
+    return false;
+}
+
+async function drainAIOutgoingTranslateQueue() {
+    if (aiOutgoingTranslateQueueActive) {
+        return;
+    }
+    aiOutgoingTranslateQueueActive = true;
+    try {
+        while (aiOutgoingTranslateQueue.length) {
+            const item = aiOutgoingTranslateQueue.shift();
+            if (!item || item.resolved) {
+                continue;
+            }
+            if (Date.now() >= item.deadline) {
+                item.data.response = item.originalResponse;
+                item.resolve(false);
+                continue;
+            }
+            const translated = await runOutgoingTranslationAttempt(item);
+            item.resolve(translated);
+        }
+    } finally {
+        aiOutgoingTranslateQueueActive = false;
+        if (aiOutgoingTranslateQueue.length) {
+            drainAIOutgoingTranslateQueue();
+        }
+    }
+}
+
+function queueOutgoingTranslation(data, originalResponse) {
+    return new Promise(function (resolve) {
+        const item = {
+            data,
+            originalResponse,
+            deadline: Date.now() + AI_OUTGOING_TRANSLATE_MAX_WAIT_MS,
+            resolved: false,
+            timeoutId: null,
+            resolve: null
+        };
+        item.resolve = function (translated) {
+            if (item.resolved) {
+                return;
+            }
+            item.resolved = true;
+            if (item.timeoutId) {
+                clearTimeout(item.timeoutId);
+            }
+            resolve(!!translated);
+        };
+        item.timeoutId = setTimeout(function () {
+            item.data.response = item.originalResponse;
+            item.resolve(false);
+        }, AI_OUTGOING_TRANSLATE_MAX_WAIT_MS);
+        aiOutgoingTranslateQueue.push(item);
+        drainAIOutgoingTranslateQueue();
+    });
+}
+
 async function translateOutgoingMessageWithLLM(data) {
     if (!getSettingFlag("aiAutoTranslateOutgoing") || !data || typeof data.response !== "string" || !data.response.trim()) {
         return true;
     }
 
-    const outgoingData = {
-        chatmessage: data.response,
-        textonly: true,
-        meta: {}
-    };
-
-    const translated = await translateMessageWithLLM(outgoingData, {
-        enabledSetting: "aiAutoTranslateOutgoing",
-        targetLanguageSetting: "aiAutoTranslateOutgoingTargetLanguage",
-        fallbackTargetLanguageSetting: "aiAutoTranslateTargetLanguage",
-        blockOnFailure: true,
-        direction: "outgoing"
-    });
-
+    const originalResponse = data.response;
+    const translated = await queueOutgoingTranslation(data, originalResponse);
     if (!translated) {
-        return false;
+        data.response = originalResponse;
+        console.warn("Outgoing AI translation skipped; sending original message.");
     }
 
-    data.response = outgoingData.chatmessage;
     return true;
 }
 

@@ -335,6 +335,7 @@
         var obsWebSocket = null;
         var obsWebSocketConnecting = null;
         var lastObsEventKey = '';
+        var lastObsEventAt = 0;
         var obsBrowserSourceEventsBound = false;
         var obsStatusEnabled = urlParams.get('obsstatus') === '1' || urlParams.get('obsdebug') === '1';
         var obsStatusBadge = document.getElementById('obs-status-badge');
@@ -623,36 +624,43 @@
         }
 
         function sendBridgePayload(payload) {
-            if (!iframe || !iframe.contentWindow) {
-                return false;
-            }
-            var peers = iframe.connectedPeers || connectedPeers || {};
-            var keys = Object.keys(peers);
             var sent = false;
             try {
-                keys.forEach(function(UUID) {
-                    if (peers[UUID] === 'SocialStream') {
-                        iframe.contentWindow.postMessage({
-                            sendData: { overlayNinja: payload },
-                            type: 'rpcs',
-                            UUID: UUID
-                        }, '*');
-                        sent = true;
-                    }
-                });
-                return sent;
+                if (iframe && iframe.contentWindow) {
+                    var peers = iframe.connectedPeers || connectedPeers || {};
+                    var keys = Object.keys(peers);
+                    keys.forEach(function(UUID) {
+                        if (peers[UUID] === 'SocialStream') {
+                            iframe.contentWindow.postMessage({
+                                sendData: { overlayNinja: payload },
+                                type: 'rpcs',
+                                UUID: UUID
+                            }, '*');
+                            sent = true;
+                        }
+                    });
+                }
             } catch (error) {
                 console.warn('[Actions Bridge] Failed to send payload:', error.message || error);
-                return false;
             }
+            if (!sent && socketserver && socketserver.readyState === 1) {
+                try {
+                    socketserver.send(JSON.stringify(Object.assign({}, payload, { out: 1 })));
+                    sent = true;
+                } catch (error) {
+                    console.warn('[Actions Bridge] Failed to send socket payload:', error.message || error);
+                }
+            }
+            return sent;
         }
 
         function emitObsEvent(eventName, obsEventName, obsPayload, extraMeta) {
             var eventPayload = obsPayload || {};
+            var now = Date.now();
             var meta = {
                 source: 'obs-websocket',
                 obsEvent: obsEventName,
-                receivedAt: Date.now()
+                receivedAt: now
             };
 
             if (eventPayload.outputActive !== undefined) {
@@ -683,10 +691,11 @@
                 meta.sceneName || '',
                 meta.savedReplayPath || ''
             ].join('|');
-            if (eventKey === lastObsEventKey) {
+            if (eventKey === lastObsEventKey && now - lastObsEventAt < 2000) {
                 return;
             }
             lastObsEventKey = eventKey;
+            lastObsEventAt = now;
 
             sendBridgePayload({
                 action: 'eventFlowEvent',
@@ -740,6 +749,8 @@
                 return;
             }
             obsBrowserSourceEventsBound = true;
+            // These exact window CustomEvent names are documented OBS obs-browser JS bindings.
+            // They are emitted by OBS, not made-up browser DOM events.
             window.addEventListener('obsStreamingStarted', function() {
                 emitObsEvent('stream_started', 'obsStreamingStarted', {}, { source: 'obs-browser-source', outputActive: true });
             });
@@ -760,9 +771,7 @@
                 var detail = event && event.detail ? event.detail : {};
                 emitObsEvent('replay_buffer_saved', obsEventName, {}, { source: 'obs-browser-source', savedReplayPath: detail.savedReplayPath || '' });
             }
-            window.addEventListener('obsReplayBufferSaved', function(event) {
-                handleObsBrowserReplayBufferSaved(event, 'obsReplayBufferSaved');
-            });
+            // OBS's official obs-browser event uses lowercase "buffer" here.
             window.addEventListener('obsReplaybufferSaved', function(event) {
                 handleObsBrowserReplayBufferSaved(event, 'obsReplaybufferSaved');
             });
