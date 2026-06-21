@@ -948,7 +948,19 @@
 				}
 				return el;
 			}
-			
+
+			function escapeHtml(unsafe) {
+				if (unsafe == null) {
+					return "";
+				}
+				return String(unsafe)
+					.replace(/&/g, "&amp;")
+					.replace(/</g, "&lt;")
+					.replace(/>/g, "&gt;")
+					.replace(/"/g, "&quot;")
+					.replace(/'/g, "&#039;");
+			}
+
 			async function fetchWithTimeout(URL, timeout = 8000) {
 				// ref: https://dmitripavlutin.com/timeout-fetch-request/
 				try {
@@ -986,7 +998,129 @@
 					timestamp: Date.now()
 				});
 			}
-			
+
+			var youtubeChannelTitleCache = new Map();
+			var youtubeChannelTitlePending = {};
+			var YOUTUBE_CHANNEL_TITLE_CACHE_TIME = 30 * 24 * 60 * 60 * 1000;
+			var YOUTUBE_CHANNEL_TITLE_STORAGE_PREFIX = "featuredYoutubeChannelTitle:";
+
+			function isFeaturedYouTubeSource(data) {
+				if (!data || !data.type) {
+					return false;
+				}
+				var type = String(data.type).toLowerCase();
+				return type === "youtube" || type === "youtubeshorts";
+			}
+
+			function getFeaturedYouTubeChannelId(data) {
+				if (!data) {
+					return "";
+				}
+				var meta = data.meta && typeof data.meta === "object" ? data.meta : {};
+				var channelId = data.userid || data.userId || data.channelId || meta.authorChannelId || meta.channelId || "";
+				channelId = String(channelId || "").trim();
+				return /^UC[a-zA-Z0-9_-]{22}$/.test(channelId) ? channelId : "";
+			}
+
+			function getCachedYouTubeChannelTitle(channelId) {
+				var cached = youtubeChannelTitleCache.get(channelId);
+				if (!cached) {
+					try {
+						var stored = localStorage.getItem(YOUTUBE_CHANNEL_TITLE_STORAGE_PREFIX + channelId);
+						if (stored) {
+							cached = JSON.parse(stored);
+							if (cached && cached.title && cached.timestamp) {
+								youtubeChannelTitleCache.set(channelId, cached);
+							}
+						}
+					} catch (e) {}
+				}
+				if (cached && Date.now() - cached.timestamp < YOUTUBE_CHANNEL_TITLE_CACHE_TIME) {
+					return cached.title;
+				}
+				youtubeChannelTitleCache.delete(channelId);
+				try {
+					localStorage.removeItem(YOUTUBE_CHANNEL_TITLE_STORAGE_PREFIX + channelId);
+				} catch (e) {}
+				return "";
+			}
+
+			function setCachedYouTubeChannelTitle(channelId, title) {
+				if (!channelId || !title) {
+					return;
+				}
+				var cacheEntry = {
+					title: title,
+					timestamp: Date.now()
+				};
+				youtubeChannelTitleCache.set(channelId, cacheEntry);
+				try {
+					localStorage.setItem(YOUTUBE_CHANNEL_TITLE_STORAGE_PREFIX + channelId, JSON.stringify(cacheEntry));
+				} catch (e) {}
+			}
+
+			async function lookupYouTubeChannelTitle(channelId) {
+				var cachedTitle = getCachedYouTubeChannelTitle(channelId);
+				if (cachedTitle) {
+					return cachedTitle;
+				}
+				if (youtubeChannelTitlePending[channelId]) {
+					return youtubeChannelTitlePending[channelId];
+				}
+
+				youtubeChannelTitlePending[channelId] = (async function () {
+					try {
+						var endpoint = "https://api.socialstream.ninja/youtube/channel_title?id=" + encodeURIComponent(channelId);
+						var response = null;
+						var titleLookupTimer = null;
+						if (typeof AbortController !== "undefined") {
+							var controller = new AbortController();
+							titleLookupTimer = setTimeout(function () {
+								controller.abort();
+							}, 5000);
+							try {
+								response = await fetch(endpoint, { signal: controller.signal });
+							} finally {
+								clearTimeout(titleLookupTimer);
+							}
+						} else {
+							response = await fetch(endpoint);
+						}
+						if (!response || !response.ok) {
+							return "";
+						}
+						var result = await response.json();
+						if (!result || !result.success || !result.title) {
+							return "";
+						}
+						var safeTitle = escapeHtml(result.title);
+						setCachedYouTubeChannelTitle(channelId, safeTitle);
+						return safeTitle;
+					} catch (e) {
+						warnlog(e);
+						return "";
+					} finally {
+						delete youtubeChannelTitlePending[channelId];
+					}
+				})();
+
+				return youtubeChannelTitlePending[channelId];
+			}
+
+			async function resolveFeaturedYouTubeChannelTitle(data) {
+				if (!useYouTubeChannelNames || !isFeaturedYouTubeSource(data)) {
+					return;
+				}
+				var channelId = getFeaturedYouTubeChannelId(data);
+				if (!channelId) {
+					return;
+				}
+				var title = await lookupYouTubeChannelTitle(channelId);
+				if (title) {
+					data.chatname = title;
+				}
+			}
+
 			var translation = {};
 			async function changeLg(lang="en", retry=false) {
 				log("changeLg: " + lang);
@@ -1401,6 +1535,11 @@
 			var hideNames = false;
 			if (urlParams.has("hidenames")) {
 				hideNames = true;
+			}
+
+			var useYouTubeChannelNames = false;
+			if (urlParams.has("youtubechannelname") || urlParams.has("youtubechanneltitle")) {
+				useYouTubeChannelNames = true;
 			}
 
 			var hideDonations = false;
@@ -2412,6 +2551,7 @@
 
 			var iframeTimeout = null;
 			var lastMessageId = null
+			var featuredRenderToken = 0;
 
 			function processData(data) {
 			
@@ -2537,6 +2677,7 @@
 					return true;
 				} else if (data && ("contents" in data)) { // clear
 					lastMessageId = null;
+					featuredRenderToken++;
 					clearTimeout(timeoutTimer);
 					document.getElementById("output").classList.add(transitionType);
 					clearTimeout(nextComment);
@@ -2643,9 +2784,15 @@
 				if (queuetime) {
 				  queueTimer = setTimeout(checkqueue, queuetime);
 				}
-			  
+
+				var renderToken = ++featuredRenderToken;
+
 				nextComment = setTimeout(
-				  function (data) {
+				  async function (data, activeRenderToken) {
+					await resolveFeaturedYouTubeChannelTitle(data);
+					if (activeRenderToken !== featuredRenderToken) {
+						return;
+					}
 					var addImage = "";
 					var largeImage = false;
 					
@@ -3217,7 +3364,8 @@
 					}
 				  },
 				  500,
-				  contents
+				  contents,
+				  renderToken
 				);
 
 				sendToDisk(contents);
