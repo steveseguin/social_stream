@@ -155,6 +155,19 @@
 		return (value || "").replace(/\s+/g, " ").trim();
 	}
 
+	function urlParamEnabled(name) {
+		try {
+			var params = new URLSearchParams(window.location.search || "");
+			if (!params.has(name)) {
+				return false;
+			}
+			var value = (params.get(name) || "").toLowerCase();
+			return value !== "0" && value !== "false" && value !== "off";
+		} catch (e) {
+			return false;
+		}
+	}
+
 	function parseFacebookStars(ele) {
 		var rawText = "";
 		try {
@@ -519,6 +532,7 @@
 	
 	var lastURL = "";
 	var processed = 0;
+	var replayExistingMessages = urlParamEnabled("ssnreplay");
 	
 	console.log("LOADED SocialStream EXTENSION");
 	
@@ -541,6 +555,7 @@
 		if (lastURL !== window.location.href){
 			lastURL = window.location.href;
 			processed = 0;
+			replayExistingMessages = urlParamEnabled("ssnreplay");
 		}  else {
 			processed += 1;
 		}
@@ -559,7 +574,7 @@
 									continue;
 								}
 								dupCheck.push(main[j].id);
-								if (processed>3){
+								if (processed>3 || replayExistingMessages){
 									processMessage(main[j]);
 								}
 							} else if (main[j].parentNode && main[j].parentNode.id) {
@@ -570,14 +585,14 @@
 									continue;
 								}
 								dupCheck.push(main[j].parentNode.id);
-								if (processed>3){
+								if (processed>3 || replayExistingMessages){
 									processMessage(main[j]);
 								}
 							} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id) {
 								var id = main[j].querySelector("[id]"); // an archived video
 								if (id && !(dupCheck.includes(id))) {
 									dupCheck.push(id);
-									if (processed>3){
+									if (processed>3 || replayExistingMessages){
 										processMessage(main[j]);
 									}
 								}
