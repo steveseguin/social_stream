@@ -155,6 +155,19 @@
 		return (value || "").replace(/\s+/g, " ").trim();
 	}
 
+	function urlParamEnabled(name) {
+		try {
+			var params = new URLSearchParams(window.location.search || "");
+			if (!params.has(name)) {
+				return false;
+			}
+			var value = (params.get(name) || "").toLowerCase();
+			return value !== "0" && value !== "false" && value !== "off";
+		} catch (e) {
+			return false;
+		}
+	}
+
 	function parseFacebookStars(ele) {
 		var rawText = "";
 		try {
@@ -177,10 +190,27 @@
 		};
 	}
 
+	function isFacebookHighlightedMessage(ele) {
+		var nodes = [];
+		try {
+			nodes = ele.querySelectorAll("span, div");
+		} catch (e) {}
+		for (var i = 0; i < nodes.length; i++) {
+			var text = "";
+			try {
+				text = normalizeFacebookText(nodes[i].innerText || nodes[i].textContent || "");
+			} catch (e) {}
+			if (text.toUpperCase() === "HIGHLIGHTED") {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	function extractFacebookStarsMessage(ele, name, currentMsg) {
 		var currentText = normalizeFacebookText(currentMsg ? currentMsg.replace(/<[^>]*>/g, " ") : "");
 		var nameText = normalizeFacebookText(name);
-		var noisePattern = /(\d[\d,.]*\s+sent)|(^\d+\s+(seconds?|minutes?|hours?|days?|weeks?|months?|years?)$)|(^\d+[smhd]$)|^(Like|React|Reply|See Thread|Hide or report this)$|^Replying to |^Send \d[\d,.]* Stars /i;
+		var noisePattern = /(\d[\d,.]*\s+sent)|(^\d+\s+(seconds?|minutes?|hours?|days?|weeks?|months?|years?)$)|(^\d+[smhd]$)|^(Like|React|Reply|See Thread|Hide or report this|HIGHLIGHTED)$|^Replying to |^Send \d[\d,.]* Stars?$/i;
 		if (currentText && currentText !== nameText && !noisePattern.test(currentText)) {
 			return currentMsg;
 		}
@@ -282,6 +312,7 @@
 		}
 
 		var starsInfo = parseFacebookStars(ele);
+		var highlightedMessage = isFacebookHighlightedMessage(ele);
 
 		var msg = "";
 		
@@ -321,6 +352,9 @@
 				msg = msg.trim();
 			}
 		}
+		if (highlightedMessage && normalizeFacebookText(msg ? msg.replace(/<[^>]*>/g, " ") : "").toUpperCase() === "HIGHLIGHTED") {
+			msg = "";
+		}
 		
 		var dupMessage = msg; // I dont want to include original replies in the dup check; just the message.
 		var originalMessage = "";
@@ -341,7 +375,7 @@
 		} catch (e) {}
 		
 		var contentimg = "";
-		if (!msg && !starsInfo){
+		if (!msg && !starsInfo && !highlightedMessage){
 			try {
 				contentimg = ele.querySelector('div>div>div>div>div>div>div>img[draggable="false"][width][height][class][src]').src;
 				//msg = "<img src='"+msg+"' />";
@@ -351,7 +385,7 @@
 			}
 		}
 		
-		if (!msg && !contentimg && !starsInfo){return;}
+		if (!msg && !contentimg && !starsInfo && !highlightedMessage){return;}
 
 		var badges = [];	// we do badges last, as we have already marked images as used in the msg step, so less likely of confusing baddges with images
 		try {
@@ -377,14 +411,8 @@
 		data.membership = "";;
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
-		if (starsInfo) {
-			data.event = "donation";
-			data.title = "DONATION";
-			data.meta = {
-				amount: starsInfo.amount,
-				currency: "Stars",
-				source: "dom"
-			};
+		if (highlightedMessage) {
+			data.highlightColor = "#fff387";
 		}
 		
 		if (replyMessage){
@@ -400,7 +428,13 @@
 		}
 		
 		
-		var entry = data.chatname + "+" + data.hasDonation + "+" + dupMessage;
+		var facebookRowId = "";
+		if (starsInfo) {
+			try {
+				facebookRowId = ele.id || (ele.parentNode && ele.parentNode.id) || "";
+			} catch (e) {}
+		}
+		var entry = starsInfo && facebookRowId ? data.type + "+stars+" + facebookRowId : data.chatname + "+" + data.hasDonation + "+" + dupMessage;
 		var entryString = JSON.stringify(entry);
 
 		if (!dupCheck2.includes(entryString)) {
@@ -497,6 +531,7 @@
 	
 	var lastURL = "";
 	var processed = 0;
+	var replayExistingMessages = urlParamEnabled("ssnreplay");
 	
 	console.log("LOADED SocialStream EXTENSION");
 	
@@ -519,6 +554,7 @@
 		if (lastURL !== window.location.href){
 			lastURL = window.location.href;
 			processed = 0;
+			replayExistingMessages = urlParamEnabled("ssnreplay");
 		}  else {
 			processed += 1;
 		}
@@ -537,7 +573,7 @@
 									continue;
 								}
 								dupCheck.push(main[j].id);
-								if (processed>3){
+								if (processed>3 || replayExistingMessages){
 									processMessage(main[j]);
 								}
 							} else if (main[j].parentNode && main[j].parentNode.id) {
@@ -548,14 +584,14 @@
 									continue;
 								}
 								dupCheck.push(main[j].parentNode.id);
-								if (processed>3){
+								if (processed>3 || replayExistingMessages){
 									processMessage(main[j]);
 								}
 							} else if (main[j].parentNode && !main[j].id && !main[j].parentNode.id) {
 								var id = main[j].querySelector("[id]"); // an archived video
 								if (id && !(dupCheck.includes(id))) {
 									dupCheck.push(id);
-									if (processed>3){
+									if (processed>3 || replayExistingMessages){
 										processMessage(main[j]);
 									}
 								}

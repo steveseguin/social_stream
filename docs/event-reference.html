@@ -1233,7 +1233,8 @@
                     <p class="source-note">Implementation: <code>sources/facebook.js</code> (DOM scraping) and optional Graph API bridge at <code>sources/websocket/facebook.html</code></p>
                     <ul class="requirements">
                         <li>Relies on DOM scraping; viewer counts only refresh when <strong>Show viewer count</strong> or hype mode is enabled.</li>
-                        <li>Stars are captured from the rendered Live Chat DOM when Facebook shows the visible <code>N sent</code> marker; the Graph API bridge only exposes regular comments and viewer counts.</li>
+                        <li>Stars are captured from the rendered Live Chat DOM when Facebook shows the visible <code>N sent</code> marker; they populate <code>hasDonation</code> without setting <code>data.event</code>.</li>
+                        <li>For testing, add <code>ssnreplay=1</code> to the Facebook Live URL to process chat rows already visible after refresh.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -1250,9 +1251,14 @@
                                 <td><code>meta</code> integer viewer count; sends 0 when parsing fails to clear stale entries.</td>
                             </tr>
                             <tr>
-                                <td class="donation-event"><code>donation</code></td>
+                                <td class="donation-event"><code>hasDonation</code></td>
                                 <td>Facebook Stars rendered in the Live Chat DOM.</td>
-                                <td><code>hasDonation</code> carries the visible Stars amount, such as <code>100 Stars</code>; <code>meta</code> contains <code>{ amount, currency: "Stars", source: "dom" }</code>.</td>
+                                <td>Standard chat payload; <code>hasDonation</code> carries the visible Stars amount, such as <code>100 Stars</code>. Stars do not set <code>data.event</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><code>highlightColor</code></td>
+                                <td>Facebook renders a visible <code>HIGHLIGHTED</code> label.</td>
+                                <td>Uses the normal chat fields and <code>highlightColor</code>; no <code>data.event</code> is set. Stars still use <code>hasDonation</code>.</td>
                             </tr>
                         </tbody>
                     </table>
