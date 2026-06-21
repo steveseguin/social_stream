@@ -68,6 +68,7 @@ jobs:
       - name: Create ZIP artifact
         run: |
           cd cws-build
+          rm -rf .git
           zip -r ../social-stream-ninja-cws-${{ steps.manifest.outputs.version }}.zip .
 
       - name: Upload Chrome Web Store ZIP

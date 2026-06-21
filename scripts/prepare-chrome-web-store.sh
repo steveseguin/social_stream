@@ -83,6 +83,7 @@ rsync -a \
     --exclude='.gitattributes' \
     --exclude='.githooks/' \
     --exclude='.codex/' \
+    --exclude='.codex-tmp/' \
     --exclude='docs/' \
     --exclude='games/' \
     --exclude='lite/' \
@@ -96,6 +97,7 @@ rsync -a \
     --exclude='tmp/' \
     --exclude='local-tts-bridge/' \
     --exclude='*.md' \
+    --exclude="$REPORT_FILE" \
     --exclude='package.json' \
     --exclude='package-lock.json' \
     --exclude='eslint.config.js' \
@@ -165,12 +167,24 @@ POLICY_SENSITIVE_FILES=(
     "cohost-local-qwen-worker.js"
     "shared/ai"
     "shared/aiPrompt"
+    "thirdparty/models"
     "thirdparty/transformersjs"
+    "thirdparty/kitten-tts"
+    "thirdparty/kitten_tts_nano_v0_1.onnx"
     "thirdparty/kokoro-bundle.es.ext.js"
     "thirdparty/kokoro-bundle.es.js"
     "thirdparty/kokoro-ort-wasm-simd-threaded.jsep.wasm"
     "thirdparty/kokoro-ort-wasm-simd.wasm"
     "thirdparty/kokoro-ort-wasm.wasm"
+    "thirdparty/tf.min.js"
+    "thirdparty/model.json"
+    "thirdparty/metadata.json"
+    "thirdparty/group1-shard1of1"
+    "thirdparty/group2-shard1of1"
+    "thirdparty/group3-shard1of1"
+    "thirdparty/group4-shard1of3"
+    "thirdparty/group4-shard2of3"
+    "thirdparty/group4-shard3of3"
 )
 
 MISC_FILES_TO_REMOVE=(
@@ -204,12 +218,42 @@ ADULT_NAMES_PATTERN=$(printf '%s\n' "${ADULT_SITE_NAMES[@]}" | paste -sd'|' -)
 
 if [[ -f "$BUILD_DIR/actions/EventFlowEditor.js" ]]; then
     sed -i -E "/\{[[:space:]]*value:[[:space:]]*'($ADULT_NAMES_PATTERN)'/d" "$BUILD_DIR/actions/EventFlowEditor.js"
+    for site in "${ADULT_SITE_NAMES[@]}"; do
+        sed -i -E "s/'$site',[[:space:]]*//g; s/,[[:space:]]*'$site'//g" "$BUILD_DIR/actions/EventFlowEditor.js"
+    done
     report "Cleaned actions/EventFlowEditor.js adult dropdown entries."
 fi
 
 if [[ -f "$BUILD_DIR/libs/colours.js" ]]; then
     sed -i -E "/case ['\"]($ADULT_NAMES_PATTERN)['\"]:/d" "$BUILD_DIR/libs/colours.js"
     report "Cleaned libs/colours.js adult colour cases."
+fi
+
+if [[ -f "$BUILD_DIR/events.html" ]]; then
+    sed -i -E "/\\.($ADULT_NAMES_PATTERN)-event/d" "$BUILD_DIR/events.html"
+    report "Cleaned events.html adult event styles."
+fi
+
+if [[ -f "$BUILD_DIR/thirdparty/lunr.js" ]]; then
+    sed -i -E '/pulled from:[[:space:]]*https:\/\/unpkg\.com\/lunr\/lunr\.js/d' "$BUILD_DIR/thirdparty/lunr.js"
+    report "Removed remote-source comment from thirdparty/lunr.js."
+fi
+
+if [[ -f "$BUILD_DIR/thirdparty/sentiment.js" ]]; then
+    cat > "$BUILD_DIR/thirdparty/sentiment.js" <<'EOF'
+/* Chrome Web Store build: local sentiment model assets are stripped. */
+async function loadSentimentAnalysis() {
+    if (typeof sentimentAnalysisLoaded !== "undefined") {
+        sentimentAnalysisLoaded = false;
+    }
+    return false;
+}
+
+function inferSentiment() {
+    return undefined;
+}
+EOF
+    report "Replaced thirdparty/sentiment.js with Web Store no-op shim."
 fi
 
 section "Repairing kept Web Store pages"
@@ -232,13 +276,23 @@ fi
 
 if [[ -f "$BUILD_DIR/popup.html" ]]; then
     sed -i -E '/streamelements-importer\.html/d' "$BUILD_DIR/popup.html"
-    sed -i -E 's|</head>|<style id="cws-stripped-features">.wrapper:has(#wrapper-chatbot-ai-prompt-options),.wrapper:has(#wrapper-chatbot-ai-overlay-options){display:none!important;}</style></head>|' "$BUILD_DIR/popup.html"
-    report "Hid stripped AI prompt/overlay links and removed StreamElements importer link from popup.html."
+    sed -i -E '/<option value="local(gemma|qwen)"/d' "$BUILD_DIR/popup.html"
+    sed -i -E 's/qwen3\.5-0\.8b-onnx/Web Store local model stripped/g; s/gemma4-e2b-it-onnx/Web Store local model stripped/g' "$BUILD_DIR/popup.html"
+    sed -i -E 's/Local Qwen[^"<]*/Web Store local model stripped/g; s/Local Gemma[^"<]*/Web Store local model stripped/g' "$BUILD_DIR/popup.html"
+    sed -i -E 's|</head>|<style id="cws-stripped-features">.wrapper:has(#wrapper-chatbot-ai-prompt-options),.wrapper:has(#wrapper-chatbot-ai-overlay-options),div:has(>label.switch>input[data-param1="badkarma"]),div:has(>label.switch>input[data-setting="addkarma"]),#localgemmahost,#localbrowserhelp,#localgemmamodel,#localqwenmodel{display:none!important;}</style></head>|' "$BUILD_DIR/popup.html"
+    report "Hid stripped AI prompt/overlay, local browser model, and sentiment controls and removed StreamElements importer link from popup.html."
 fi
 
 if [[ -f "$BUILD_DIR/popup.js" ]]; then
     sed -i -E '/id:[[:space:]]*"aiprompt"/d; /id:[[:space:]]*"aioverlay"/d' "$BUILD_DIR/popup.js"
     report "Removed stripped AI prompt/overlay page mappings from popup.js."
+fi
+
+if [[ -f "$BUILD_DIR/cohost.html" ]]; then
+    sed -i -E '/<option value="local(gemma|qwen)"/d' "$BUILD_DIR/cohost.html"
+    sed -i -E 's#thirdparty/models/(gemma4-e2b-it-onnx|qwen3\.5-0\.8b-onnx)#web-store-local-model-stripped#g; s/qwen3\.5-0\.8b-onnx/web-store-local-model-stripped/g; s/gemma4-e2b-it-onnx/web-store-local-model-stripped/g' "$BUILD_DIR/cohost.html"
+    sed -i -E 's/Local Qwen[^"<]*/Web Store local model stripped/g; s/Local Gemma[^"<]*/Web Store local model stripped/g' "$BUILD_DIR/cohost.html"
+    report "Removed selectable local browser model providers from cohost.html."
 fi
 
 section "Filtering manifest.json"
