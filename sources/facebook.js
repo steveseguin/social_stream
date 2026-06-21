@@ -150,6 +150,65 @@
 		});
 		return resp;
 	}
+
+	function normalizeFacebookText(value) {
+		return (value || "").replace(/\s+/g, " ").trim();
+	}
+
+	function parseFacebookStars(ele) {
+		var rawText = "";
+		try {
+			rawText = normalizeFacebookText(ele.innerText || ele.textContent || "");
+		} catch (e) {}
+		if (!rawText) {
+			return null;
+		}
+		var match = rawText.match(/(?:^|\s)(\d[\d,.]*)\s+sent(?:\s|$)/i);
+		if (!match) {
+			return null;
+		}
+		var amount = parseInt(match[1].replace(/[^\d]/g, ""), 10);
+		if (!amount) {
+			return null;
+		}
+		return {
+			amount: amount,
+			text: amount + " Stars"
+		};
+	}
+
+	function extractFacebookStarsMessage(ele, name, currentMsg) {
+		var currentText = normalizeFacebookText(currentMsg ? currentMsg.replace(/<[^>]*>/g, " ") : "");
+		var nameText = normalizeFacebookText(name);
+		var noisePattern = /(\d[\d,.]*\s+sent)|(^\d+\s+(seconds?|minutes?|hours?|days?|weeks?|months?|years?)$)|(^\d+[smhd]$)|^(Like|React|Reply|See Thread|Hide or report this)$|^Replying to |^Send \d[\d,.]* Stars /i;
+		if (currentText && currentText !== nameText && !noisePattern.test(currentText)) {
+			return currentMsg;
+		}
+		var nodes = [];
+		try {
+			nodes = ele.querySelectorAll('span[dir="auto"], div[dir="auto"]');
+		} catch (e) {}
+		var bestNode = null;
+		var bestText = "";
+		for (var i = 0; i < nodes.length; i++) {
+			var text = "";
+			try {
+				text = normalizeFacebookText(nodes[i].innerText || nodes[i].textContent || "");
+			} catch (e) {}
+			if (!text || text === nameText || noisePattern.test(text)) {
+				continue;
+			}
+			if (text.length > bestText.length) {
+				bestText = text;
+				bestNode = nodes[i];
+			}
+		}
+		if (!bestNode) {
+			return currentMsg || "";
+		}
+		var message = getAllContentNodes(bestNode);
+		return message || escapeHtml(bestText);
+	}
 	
 	var dupCheck2 = [];
 	var isExtensionOn = true;
@@ -222,6 +281,7 @@
 			}
 		}
 
+		var starsInfo = parseFacebookStars(ele);
 
 		var msg = "";
 		
@@ -254,6 +314,13 @@
 				}
 			}
 		}
+
+		if (starsInfo) {
+			msg = extractFacebookStarsMessage(ele, name, msg);
+			if (msg) {
+				msg = msg.trim();
+			}
+		}
 		
 		var dupMessage = msg; // I dont want to include original replies in the dup check; just the message.
 		var originalMessage = "";
@@ -274,7 +341,7 @@
 		} catch (e) {}
 		
 		var contentimg = "";
-		if (!msg){
+		if (!msg && !starsInfo){
 			try {
 				contentimg = ele.querySelector('div>div>div>div>div>div>div>img[draggable="false"][width][height][class][src]').src;
 				//msg = "<img src='"+msg+"' />";
@@ -284,7 +351,7 @@
 			}
 		}
 		
-		if (!msg && !contentimg){return;}
+		if (!msg && !contentimg && !starsInfo){return;}
 
 		var badges = [];	// we do badges last, as we have already marked images as used in the msg step, so less likely of confusing baddges with images
 		try {
@@ -306,10 +373,19 @@
 		data.textColor = "";
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = starsInfo ? starsInfo.text : "";
 		data.membership = "";;
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
+		if (starsInfo) {
+			data.event = "donation";
+			data.title = "DONATION";
+			data.meta = {
+				amount: starsInfo.amount,
+				currency: "Stars",
+				source: "dom"
+			};
+		}
 		
 		if (replyMessage){
 			data.initial = replyMessage;
