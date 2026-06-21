@@ -173,8 +173,8 @@
                             <td><strong>Facebook Live</strong></td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
-                            <td>&mdash;</td>
-                            <td>Viewer count polls only</td>
+                            <td>Stars when visible in DOM</td>
+                            <td>Chat rows, Stars, and viewer count polls</td>
                         </tr>
                         <tr>
                             <td><strong>Rumble &ndash; DOM capture</strong></td>
@@ -1233,7 +1233,7 @@
                     <p class="source-note">Implementation: <code>sources/facebook.js</code> (DOM scraping) and optional Graph API bridge at <code>sources/websocket/facebook.html</code></p>
                     <ul class="requirements">
                         <li>Relies on DOM scraping; viewer counts only refresh when <strong>Show viewer count</strong> or hype mode is enabled.</li>
-                        <li>No membership or donation metadata is surfaced via the public chat DOM.</li>
+                        <li>Stars are captured from the rendered Live Chat DOM when Facebook shows the visible <code>N sent</code> marker; the Graph API bridge only exposes regular comments and viewer counts.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -1248,6 +1248,11 @@
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Polls the live viewer badge (every ~8s when enabled).</td>
                                 <td><code>meta</code> integer viewer count; sends 0 when parsing fails to clear stale entries.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>donation</code></td>
+                                <td>Facebook Stars rendered in the Live Chat DOM.</td>
+                                <td><code>hasDonation</code> carries the visible Stars amount, such as <code>100 Stars</code>; <code>meta</code> contains <code>{ amount, currency: "Stars", source: "dom" }</code>.</td>
                             </tr>
                         </tbody>
                     </table>
