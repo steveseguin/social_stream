@@ -12,6 +12,12 @@ Key architectural notes:
 - Prefer old-school browser scripts for pages/overlays and keep browser-facing code Chrome 80 friendly. Avoid `<script type="module">`, top-level `import`/`export`, and newer syntax or APIs unless there is already a compatibility path or Steve explicitly asks to raise the baseline.
 - Provider cores (`providers/twitch/chatClient.js`, `providers/kick/core.js`, `providers/youtube/liveChat.js`) must stay environment agnostic: no direct DOM or Chrome APIs, all logging should be optional, and transports (RTC vs extension messaging) sit in their respective adapters.
 - When adding new shared utilities, place them under `shared/` and update both the manifest (for extension access) and any standalone deployment scripts to include the folder.
+- Keep extension executable code self-contained in the package.
+  - Do not add static CDN script tags, such as `<script src="https://...">`.
+  - Do not add remote JS/WASM imports, such as `import("https://...")` or `from "https://..."`.
+  - Vendor approved third-party libraries under existing local vendor paths like `thirdparty/`, `shared/vendor/`, or `lite/vendor/`.
+  - Reference packaged dependencies with relative paths or `chrome.runtime.getURL(...)`.
+  - Remote fetches may load data/resources like JSON, API responses, images, and static assets, but not executable logic.
 
 If you need more context on how Electron wiring differs from the extension bootstrap, inspect the existing calls around `chrome.runtime.sendMessage` in `sources/websocket/*` and the IPC hooks in the Electron app before making changes.
 
