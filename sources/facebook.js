@@ -312,7 +312,7 @@
 		}
 
 		var starsInfo = parseFacebookStars(ele);
-		var highlightedMessage = !starsInfo && isFacebookHighlightedMessage(ele);
+		var highlightedMessage = isFacebookHighlightedMessage(ele);
 
 		var msg = "";
 		
@@ -412,7 +412,6 @@
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		if (highlightedMessage) {
-			data.event = "community_highlight";
 			data.highlightColor = "#fff387";
 		}
 		
