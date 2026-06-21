@@ -19,6 +19,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq rsync zip
+
       - name: Read manifest version
         id: manifest
         run: |
@@ -31,6 +36,14 @@ jobs:
           set -euo pipefail
           chmod +x scripts/prepare-chrome-web-store.sh
           ./scripts/prepare-chrome-web-store.sh
+
+      - name: Upload Chrome Web Store policy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-web-store-policy-report-${{ steps.manifest.outputs.version }}
+          path: cws-policy-report.txt
+          if-no-files-found: ignore
 
       - name: Push to chrome-web-store branch
         env:
