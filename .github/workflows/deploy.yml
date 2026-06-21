@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: deploy-gh-pages
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
     if: "!contains(github.event.head_commit.message, '[skip pages]') && !contains(github.event.head_commit.message, '[auto-enhanced]') && github.actor != 'github-pages[bot]'"
@@ -49,4 +53,11 @@ jobs:
           git commit -m "Deploy main and beta to GitHub Pages [skip pages]"
           git branch -M gh-pages
           git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          for attempt in 1 2 3; do
+            if git push -f origin gh-pages; then
+              exit 0
+            fi
+            echo "gh-pages push failed on attempt ${attempt}; retrying after ref-lock backoff..."
+            sleep $((attempt * 10))
+          done
           git push -f origin gh-pages
