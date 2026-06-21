@@ -232,7 +232,7 @@ fi
 
 if [[ -f "$BUILD_DIR/popup.html" ]]; then
     sed -i -E '/streamelements-importer\.html/d' "$BUILD_DIR/popup.html"
-    sed -i -E 's#</head>#<style id="cws-stripped-features">.wrapper:has(#wrapper-chatbot-ai-prompt-options),.wrapper:has(#wrapper-chatbot-ai-overlay-options){display:none!important;}</style></head>#' "$BUILD_DIR/popup.html"
+    sed -i -E 's|</head>|<style id="cws-stripped-features">.wrapper:has(#wrapper-chatbot-ai-prompt-options),.wrapper:has(#wrapper-chatbot-ai-overlay-options){display:none!important;}</style></head>|' "$BUILD_DIR/popup.html"
     report "Hid stripped AI prompt/overlay links and removed StreamElements importer link from popup.html."
 fi
 
