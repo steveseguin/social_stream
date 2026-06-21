@@ -127,6 +127,98 @@ async function runTests() {
         );
     }
 
+    console.log('\n[4] OBS system triggers match non-chat OBS payloads');
+    {
+        const EFS = loadEventFlowSystem({ ssapp: true });
+        const sys = new EFS();
+
+        const obsStartedNode = {
+            id: 'obs1',
+            triggerType: 'obsStreamStarted',
+            config: {}
+        };
+        const obsStoppedNode = {
+            id: 'obs2',
+            triggerType: 'obsStreamStopped',
+            config: {}
+        };
+        const anyMessageNode = {
+            id: 'obs3',
+            triggerType: 'anyMessage',
+            config: {}
+        };
+        const obsRecordingStartedNode = {
+            id: 'obs4',
+            triggerType: 'obsRecordingStarted',
+            config: {}
+        };
+        const obsRecordingStoppedNode = {
+            id: 'obs5',
+            triggerType: 'obsRecordingStopped',
+            config: {}
+        };
+        const obsSceneChangedNode = {
+            id: 'obs6',
+            triggerType: 'obsSceneChanged',
+            config: {}
+        };
+        const obsReplaybufferSavedNode = {
+            id: 'obs7',
+            triggerType: 'obsReplaybufferSaved',
+            config: {}
+        };
+        const startedPayload = {
+            type: 'obs',
+            event: 'stream_started',
+            meta: { source: 'obs-websocket', obsEvent: 'StreamStateChanged', outputState: 'OBS_WEBSOCKET_OUTPUT_STARTED' }
+        };
+
+        assert(
+            sys.isMetaOnlyPayload(startedPayload) === false,
+            'OBS system payloads are allowed through Event Flow'
+        );
+        assert(
+            !('chatname' in startedPayload) && !('chatmessage' in startedPayload) && Object.keys(startedPayload.meta).join('|') === 'source|obsEvent|outputState',
+            'OBS payloads do not use chat fields or extra marker fields'
+        );
+        assert(
+            await sys.evaluateTrigger(obsStartedNode, startedPayload) === true,
+            'OBS stream started trigger matches stream_started'
+        );
+        assert(
+            await sys.evaluateTrigger(obsStoppedNode, { type: 'obs', event: 'stream_stopped', meta: { source: 'obs-browser-source', obsEvent: 'obsStreamingStopped' } }) === true,
+            'OBS stream stopped trigger matches stream_stopped'
+        );
+        assert(
+            await sys.evaluateTrigger(obsRecordingStartedNode, { type: 'obs', event: 'recording_started', meta: { obsEvent: 'RecordStateChanged' } }) === true,
+            'OBS recording started trigger matches recording_started'
+        );
+        assert(
+            await sys.evaluateTrigger(obsRecordingStoppedNode, { type: 'obs', event: 'recording_stopped', meta: { obsEvent: 'obsRecordingStopped' } }) === true,
+            'OBS recording stopped trigger matches recording_stopped'
+        );
+        assert(
+            await sys.evaluateTrigger(obsSceneChangedNode, { type: 'obs', event: 'scene_changed', meta: { sceneName: 'Main' } }) === true,
+            'OBS scene changed trigger matches scene_changed'
+        );
+        assert(
+            await sys.evaluateTrigger(obsReplaybufferSavedNode, { type: 'obs', event: 'replay_buffer_saved', meta: { savedReplayPath: 'clip.mkv' } }) === true,
+            'OBS replay buffer saved trigger matches replay_buffer_saved'
+        );
+        assert(
+            await sys.evaluateTrigger(obsStartedNode, { type: 'twitch', event: 'stream_online' }) === false,
+            'OBS trigger does not match platform stream_online events'
+        );
+        assert(
+            await sys.evaluateTrigger(anyMessageNode, startedPayload) === false,
+            'OBS system payloads do not trigger Any Message'
+        );
+        assert(
+            sys.isMetaOnlyPayload({ event: 'viewer_updates', meta: { youtube: 10 } }) === true,
+            'ordinary meta-only payloads are still ignored'
+        );
+    }
+
     console.log(`\n${'-'.repeat(50)}`);
     console.log(`Results: ${passed} passed, ${failed} failed`);
     if (failed > 0) {

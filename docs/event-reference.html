@@ -149,6 +149,13 @@
                             <td>While an alert box is open; also available via <code>sources/websocket/streamlabs.html</code> socket token</td>
                         </tr>
                         <tr>
+                            <td><strong>OBS Flow Actions</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>OBS stream started/stopped events for Event Flow when <code>actions.html</code> is connected to OBS WebSocket</td>
+                        </tr>
+                        <tr>
                             <td><strong>Kick &ndash; DOM</strong></td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
@@ -431,7 +438,7 @@
                             <tr>
                                 <td class="status-event"><code>new_follower</code></td>
                                 <td>New subscriber detected via <code>myRecentSubscribers</code> API (polled every 5 minutes).</td>
-                                <td><code>chatname</code> is subscriber's channel name; <code>meta</code> includes <code>channelId</code>, <code>title</code>, <code>subscribedAt</code>. Note: YouTube API has up to 4-hour delay; only shows subscribers with public subscription lists.</td>
+                                <td><code>chatname</code> is subscriber's channel name; <code>chatmessage</code> is empty unless subscriber alert messages are enabled in the YouTube source page. <code>meta</code> includes <code>channelId</code>, <code>title</code>, <code>subscribedAt</code>, and grouped bursts add <code>grouped</code>, <code>count</code>, <code>others</code>, and <code>subscribers</code>. Note: YouTube API has up to 4-hour delay; only shows subscribers with public subscription lists.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -445,6 +452,8 @@
                             <li>Polls the YouTube API every 5 minutes for recent subscribers</li>
                             <li>Tracks seen subscribers in localStorage to detect new ones</li>
                             <li>Emits <code>new_follower</code> events with the subscriber's name, avatar, and channel ID</li>
+                            <li>Keeps subscriber alert messages disabled by default; enabling them uses the current translation string for <code>alert-just-subscribed</code></li>
+                            <li>Groups bursts larger than three new subscribers by default so reconnects do not flood overlays or Event Flow</li>
                             <li>Requires WebSocket mode to be enabled in extension settings</li>
                         </ul>
                         <p><strong>Limitations (these are YouTube API restrictions, not Social Stream limitations):</strong></p>
@@ -693,6 +702,57 @@
                             <tr><td><code>ad_break</code></td><td>Ad break started</td></tr>
                             <tr><td><code>hype_train</code></td><td>Hype Train/Treasure Train status metadata</td></tr>
                             <tr><td><code>user_banned</code></td><td>User was banned or timed out</td></tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="obs-flow-actions">
+                    <h3>OBS Flow Actions</h3>
+                    <p class="source-note">Implementation: <code>actions.html</code> through OBS WebSocket v5 events, with <code>dock.html</code> OBS Browser Source events as a fallback</p>
+                    <ul class="requirements">
+                        <li>Keep the Flow Actions overlay open with the same Social Stream session as the Event Flow editor/background, or keep the dock loaded inside OBS.</li>
+                        <li>Configure OBS WebSocket v5 on OBS 28+; the default URL is <code>ws://127.0.0.1:4455</code>.</li>
+                        <li>These are Event Flow system events. They do not include <code>chatname</code> or <code>chatmessage</code>, and extra OBS details stay inside <code>meta</code>.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-event"><code>stream_started</code></td>
+                                <td>OBS reports the stream output reached the started state.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>event</code> is <code>stream_started</code>; <code>meta.source</code> is <code>obs-websocket</code> or <code>obs-browser-source</code>; <code>meta.outputState</code> may carry the raw OBS output state.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>stream_stopped</code></td>
+                                <td>OBS reports the stream output reached the stopped state.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>event</code> is <code>stream_stopped</code>; <code>meta.outputActive</code> may be <code>false</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>recording_started</code></td>
+                                <td>OBS reports recording started.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>meta.obsEvent</code> identifies the OBS event source.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>recording_stopped</code></td>
+                                <td>OBS reports recording stopped.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>meta.outputState</code> may carry the raw WebSocket state.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>scene_changed</code></td>
+                                <td>OBS changes the active program scene.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>meta.sceneName</code> contains the scene name when OBS provides it.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>replay_buffer_saved</code></td>
+                                <td>OBS saves the replay buffer.</td>
+                                <td><code>type</code> is <code>obs</code>; <code>meta.savedReplayPath</code> may contain the saved replay path.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </article>

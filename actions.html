@@ -322,6 +322,7 @@
 
         var urlParams = new URLSearchParams(window.location.search);
         var iframe = null;
+        var connectedPeers = {};
         var roomID = "test";
         var password = "false";
         var globalVolume = urlParams.has("volume") ? Math.max(0, Math.min(1, parseFloat(urlParams.get("volume")))) : 1.0;
@@ -333,6 +334,9 @@
         var obsStudio = null;
         var obsWebSocket = null;
         var obsWebSocketConnecting = null;
+        var lastObsEventKey = '';
+        var lastObsEventAt = 0;
+        var obsBrowserSourceEventsBound = false;
         var obsStatusEnabled = urlParams.get('obsstatus') === '1' || urlParams.get('obsdebug') === '1';
         var obsStatusBadge = document.getElementById('obs-status-badge');
         var obsWebSocketState = {
@@ -535,6 +539,7 @@
         if (window.obsstudio) {
             obsStudio = window.obsstudio;
             console.log('OBS Studio API found.');
+            bindObsBrowserSourceEvents();
         }
 
         // Helper to get OBS API - checks lazily since OBS may inject it after page load
@@ -542,6 +547,7 @@
             if (!obsStudio && window.obsstudio) {
                 obsStudio = window.obsstudio;
                 console.log('OBS Studio API found (late binding).');
+                bindObsBrowserSourceEvents();
                 if (obsStatusEnabled) {
                     updateObsStatusBadge();
                 }
@@ -615,6 +621,160 @@
             obsStatusBadge.style.display = 'block';
             obsStatusBadge.dataset.state = state;
             obsStatusBadge.textContent = lines.join('\n');
+        }
+
+        function sendBridgePayload(payload) {
+            var sent = false;
+            try {
+                if (iframe && iframe.contentWindow) {
+                    var peers = iframe.connectedPeers || connectedPeers || {};
+                    var keys = Object.keys(peers);
+                    keys.forEach(function(UUID) {
+                        if (peers[UUID] === 'SocialStream') {
+                            iframe.contentWindow.postMessage({
+                                sendData: { overlayNinja: payload },
+                                type: 'rpcs',
+                                UUID: UUID
+                            }, '*');
+                            sent = true;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.warn('[Actions Bridge] Failed to send payload:', error.message || error);
+            }
+            if (!sent && socketserver && socketserver.readyState === 1) {
+                try {
+                    socketserver.send(JSON.stringify(Object.assign({}, payload, { out: 1 })));
+                    sent = true;
+                } catch (error) {
+                    console.warn('[Actions Bridge] Failed to send socket payload:', error.message || error);
+                }
+            }
+            return sent;
+        }
+
+        function emitObsEvent(eventName, obsEventName, obsPayload, extraMeta) {
+            var eventPayload = obsPayload || {};
+            var now = Date.now();
+            var meta = {
+                source: 'obs-websocket',
+                obsEvent: obsEventName,
+                receivedAt: now
+            };
+
+            if (eventPayload.outputActive !== undefined) {
+                meta.outputActive = !!eventPayload.outputActive;
+            }
+            if (eventPayload.outputState !== undefined) {
+                meta.outputState = eventPayload.outputState;
+            }
+            if (eventPayload.sceneName !== undefined) {
+                meta.sceneName = eventPayload.sceneName;
+            }
+            if (eventPayload.savedReplayPath !== undefined) {
+                meta.savedReplayPath = eventPayload.savedReplayPath;
+            }
+            if (extraMeta) {
+                Object.keys(extraMeta).forEach(function(key) {
+                    if (extraMeta[key] !== undefined) {
+                        meta[key] = extraMeta[key];
+                    }
+                });
+            }
+
+            var eventKey = [
+                eventName,
+                meta.obsEvent || '',
+                meta.outputState || '',
+                meta.outputActive === undefined ? '' : String(meta.outputActive),
+                meta.sceneName || '',
+                meta.savedReplayPath || ''
+            ].join('|');
+            if (eventKey === lastObsEventKey && now - lastObsEventAt < 2000) {
+                return;
+            }
+            lastObsEventKey = eventKey;
+            lastObsEventAt = now;
+
+            sendBridgePayload({
+                action: 'eventFlowEvent',
+                value: {
+                    type: 'obs',
+                    event: eventName,
+                    meta: meta
+                }
+            });
+        }
+
+        function bindObsWebSocketEvents(client) {
+            if (!client || client.__ssnObsEventsBound) {
+                return;
+            }
+            client.__ssnObsEventsBound = true;
+            client.on('StreamStateChanged', function(eventPayload) {
+                var state = String((eventPayload && eventPayload.outputState) || '').toLowerCase();
+                if (state.indexOf('started') !== -1) {
+                    emitObsEvent('stream_started', 'StreamStateChanged', eventPayload);
+                } else if (state.indexOf('stopped') !== -1) {
+                    emitObsEvent('stream_stopped', 'StreamStateChanged', eventPayload);
+                } else if (!state && eventPayload && eventPayload.outputActive === true) {
+                    emitObsEvent('stream_started', 'StreamStateChanged', eventPayload);
+                } else if (!state && eventPayload && eventPayload.outputActive === false) {
+                    emitObsEvent('stream_stopped', 'StreamStateChanged', eventPayload);
+                }
+            });
+            client.on('RecordStateChanged', function(eventPayload) {
+                var state = String((eventPayload && eventPayload.outputState) || '').toLowerCase();
+                if (state.indexOf('started') !== -1) {
+                    emitObsEvent('recording_started', 'RecordStateChanged', eventPayload);
+                } else if (state.indexOf('stopped') !== -1) {
+                    emitObsEvent('recording_stopped', 'RecordStateChanged', eventPayload);
+                } else if (!state && eventPayload && eventPayload.outputActive === true) {
+                    emitObsEvent('recording_started', 'RecordStateChanged', eventPayload);
+                } else if (!state && eventPayload && eventPayload.outputActive === false) {
+                    emitObsEvent('recording_stopped', 'RecordStateChanged', eventPayload);
+                }
+            });
+            client.on('CurrentProgramSceneChanged', function(eventPayload) {
+                emitObsEvent('scene_changed', 'CurrentProgramSceneChanged', eventPayload);
+            });
+            client.on('ReplayBufferSaved', function(eventPayload) {
+                emitObsEvent('replay_buffer_saved', 'ReplayBufferSaved', eventPayload);
+            });
+        }
+
+        function bindObsBrowserSourceEvents() {
+            if (obsBrowserSourceEventsBound || !window.obsstudio) {
+                return;
+            }
+            obsBrowserSourceEventsBound = true;
+            // These exact window CustomEvent names are documented OBS obs-browser JS bindings.
+            // They are emitted by OBS, not made-up browser DOM events.
+            window.addEventListener('obsStreamingStarted', function() {
+                emitObsEvent('stream_started', 'obsStreamingStarted', {}, { source: 'obs-browser-source', outputActive: true });
+            });
+            window.addEventListener('obsStreamingStopped', function() {
+                emitObsEvent('stream_stopped', 'obsStreamingStopped', {}, { source: 'obs-browser-source', outputActive: false });
+            });
+            window.addEventListener('obsRecordingStarted', function() {
+                emitObsEvent('recording_started', 'obsRecordingStarted', {}, { source: 'obs-browser-source', recording: true });
+            });
+            window.addEventListener('obsRecordingStopped', function() {
+                emitObsEvent('recording_stopped', 'obsRecordingStopped', {}, { source: 'obs-browser-source', recording: false });
+            });
+            window.addEventListener('obsSceneChanged', function(event) {
+                var detail = event && event.detail ? event.detail : {};
+                emitObsEvent('scene_changed', 'obsSceneChanged', {}, { source: 'obs-browser-source', sceneName: detail.name || '' });
+            });
+            function handleObsBrowserReplayBufferSaved(event, obsEventName) {
+                var detail = event && event.detail ? event.detail : {};
+                emitObsEvent('replay_buffer_saved', obsEventName, {}, { source: 'obs-browser-source', savedReplayPath: detail.savedReplayPath || '' });
+            }
+            // OBS's official obs-browser event uses lowercase "buffer" here.
+            window.addEventListener('obsReplaybufferSaved', function(event) {
+                handleObsBrowserReplayBufferSaved(event, 'obsReplaybufferSaved');
+            });
         }
 
         async function invokeObsStudioMethod(methodName, args = [], successMessage = '', errorLabel = methodName) {
@@ -828,6 +988,7 @@
                 }
 
                 const client = new OBSWebSocket();
+                bindObsWebSocketEvents(client);
 
                 client.on('ConnectionClosed', (error) => {
                     if (obsWebSocket === client) {
@@ -928,7 +1089,8 @@
         }
         
         // Try to connect to OBS WebSocket on page load
-        setTimeout(initOBSWebSocket, 1000); 
+        setTimeout(initOBSWebSocket, 1000);
+        setTimeout(getObsStudio, 1000);
         updateObsStatusBadge();
 
         // Function to show session ID modal
@@ -1082,7 +1244,8 @@
             
             // Create iframe for receiving WebRTC data channel messages
             iframe = document.createElement("iframe");
-            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + 
+            iframe.connectedPeers = connectedPeers;
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password +
                 "&solo&view=" + roomID + "&novideo&noaudio&label=actions&cleanoutput&room=" + roomID;
             iframe.style.width = "0px";
             iframe.style.height = "0px";
@@ -1741,6 +1904,16 @@
 		eventer(messageEvent, function(e) {
 			// Check if the message is from our iframe
 			if (iframe && e.source == iframe.contentWindow) {
+				if (e.data && e.data.action && e.data.UUID && e.data.value && (e.data.action === 'push-connection-info' || e.data.action === 'view-connection-info')) {
+					if (e.data.value.label) {
+						connectedPeers[e.data.UUID] = e.data.value.label;
+						iframe.connectedPeers = connectedPeers;
+					}
+				} else if (e.data && e.data.action && e.data.UUID && "value" in e.data && !e.data.value && (e.data.action === 'push-connection' || e.data.action === 'view-connection')) {
+					delete connectedPeers[e.data.UUID];
+					iframe.connectedPeers = connectedPeers;
+				}
+
 				// Process data from the WebRTC data channel
 				if (e.data && e.data.dataReceived) {
 					if (e.data.dataReceived.overlayNinja) {

@@ -905,6 +905,23 @@ h2 {
     justify-content: space-between;
 }
 
+.streaming_chat_title {
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.streaming_chat_title .title-group {
+    white-space: nowrap;
+}
+
+.streaming_chat_title .heading-actions {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-left: auto;
+}
+
 .generic_category_title {
     margin-top: 1.5em;
 }
@@ -2157,9 +2174,11 @@ input:checked + .slider:before {
             <div class="link beginner-basic" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
                 <h2 class="streaming_chat_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">💬</span>Main chat overlay & control dock </span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-                    <a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">[options]</span></a>
-					<label for="help-dock" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					<span class="heading-actions">
+						<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+						<a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">[options]</span></a>
+						<label for="help-dock" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+					</span>
                 </h2>
 				<small class="beginner-section-note">Use this as your main chat view, OBS overlay, or dock for controlling featured messages and TTS.</small>
                 <div id="dock" data-raw="" class="streaming_chat"></div>
@@ -2474,7 +2493,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span>
                                         🔔🔉 Beep volume
-                                        <input type="range" id="dock-beep-volume-range" min="0" max="100" step="5" value="30" style="width: 120px;" data-numbersetting="beepvolume" data-range-display="dock-beep-volume-display" data-range-suffix="%" />
+                                        <input type="range" id="dock-beep-volume-range" min="0" max="100" step="1" value="30" style="width: 120px;" data-numbersetting="beepvolume" data-range-display="dock-beep-volume-display" data-range-suffix="%" />
                                         <span class="range-value" id="dock-beep-volume-display">30%</span>
                                     </span>
                                 </div>
@@ -4059,6 +4078,7 @@ input:checked + .slider:before {
                                         Font Family
                                     </span>
                                     <select data-optionparam1="font">
+                                        <option value="">Default / no font override</option>
                                         <option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
                                         <option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
                                     </select>
@@ -5614,6 +5634,7 @@ input:checked + .slider:before {
                                         Font Family
                                     </span>
                                     <select data-optionparam2="font">
+                                        <option value="">Default / no font override</option>
                                         <option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
                                         <option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
                                     </select>
@@ -8636,6 +8657,19 @@ input:checked + .slider:before {
 									<label for="aiAutoTranslateTargetLanguage"><span>&gt; Target language (default: en-US)</span></label>
 								</div>
 								<div style="margin-top: 8px;">
+									<div style="display: inline-block;" title="Translate outgoing host messages before sending them to chat sources.">
+										<label class="switch">
+											<input type="checkbox" id="aiAutoTranslateOutgoing" data-setting="aiAutoTranslateOutgoing" />
+											<span class="slider round"></span>
+										</label>
+										<span>Translate outgoing messages before sending</span>
+									</div>
+								</div>
+								<div class="textInputContainer" style="display: inline-block; width: 260px; margin-left: 50px; margin-top: 8px;" title="Target language for translated outgoing host messages. Leave blank to use the target language above.">
+									<input type="text" id="aiAutoTranslateOutgoingTargetLanguage" class="textInput" autocomplete="off" placeholder="blank = target above" data-textsetting="aiAutoTranslateOutgoingTargetLanguage" />
+									<label for="aiAutoTranslateOutgoingTargetLanguage"><span>&gt; Outgoing target language</span></label>
+								</div>
+								<div style="margin-top: 8px;">
 									<div style="display: inline-block;" title="When enabled, messages are dropped if the translator is busy, times out, or fails.">
 										<label class="switch">
 											<input type="checkbox" id="aiAutoTranslateBlockMode" data-setting="aiAutoTranslateBlockMode" />
@@ -9751,6 +9785,7 @@ input:checked + .slider:before {
 								<div>
 									<span data-translate="font-family">Font Family</span>
 									<select data-optionparam17="font">
+										<option value="">Default / no font override</option>
 										<option value="Roboto" style="font-family: 'Roboto';">Roboto - abc123XYZ</option>
 										<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
 										<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
@@ -10203,6 +10238,7 @@ input:checked + .slider:before {
                                         Font Family
                                     </span>
                                     <select data-optionparam4="font">
+                                        <option value="">Default / no font override</option>
                                         <option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
                                         <option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
                                     </select>
@@ -10981,6 +11017,7 @@ input:checked + .slider:before {
                                         Font Family
                                     </span>
                                     <select data-optionparam5="font">
+                                        <option value="">Default / no font override</option>
                                         <option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
                                         <option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
                                     </select>
@@ -12054,6 +12091,7 @@ input:checked + .slider:before {
 										Font Family
 									</span>
 									<select data-optionparam13="font">
+										<option value="">Default / no font override</option>
 										<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
 										<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
 									</select>
@@ -12490,6 +12528,7 @@ input:checked + .slider:before {
 									Font Family
 								</span>
                                     <select data-optionparam21="font">
+									<option value="">Default / no font override</option>
 									<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
 									<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
 								</select>
@@ -13430,6 +13469,7 @@ input:checked + .slider:before {
                                         Font Family
                                     </span>
                                     <select data-optionparam6="font">
+                                        <option value="">Default / no font override</option>
                                         <option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
                                         <option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
                                     </select>
@@ -13574,6 +13614,7 @@ input:checked + .slider:before {
                                         Font Family
                                     </span>
                                     <select data-optionparam7="font">
+                                        <option value="">Default / no font override</option>
                                         <option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
                                         <option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
                                     </select>

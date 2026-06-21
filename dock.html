@@ -3295,6 +3295,9 @@
 			var pauseState = false;
 			var timeoutTimer = null;
 			var isOBSBrowserSource = false;
+			var obsBrowserSourceEventsBound = false;
+			var lastObsBrowserSourceEventKey = "";
+			var lastObsBrowserSourceEventAt = 0;
 			var customNodeLimit = false;
 			var historyMode = urlParams.has("history");
 			var historyInitialLoadLimit = parseInt(urlParams.get("loadlast"), 10) || 30;
@@ -3318,6 +3321,99 @@
 			var newFileHandle = false; // single message writer
 			var singlewriter = false;
 			var odd = false;
+
+			function emitObsBrowserSourceEvent(eventName, obsEventName, metaDetails) {
+				var now = Date.now();
+				var meta = {
+					source: "obs-browser-source",
+					obsEvent: obsEventName,
+					receivedAt: now
+				};
+				metaDetails = metaDetails || {};
+				Object.keys(metaDetails).forEach(function(key) {
+					if (metaDetails[key] !== undefined) {
+						meta[key] = metaDetails[key];
+					}
+				});
+
+				var eventKey = [
+					eventName,
+					meta.outputActive === undefined ? "" : String(meta.outputActive),
+					meta.recording === undefined ? "" : String(meta.recording),
+					meta.sceneName || "",
+					meta.savedReplayPath || ""
+				].join("|");
+				if (eventKey === lastObsBrowserSourceEventKey && now - lastObsBrowserSourceEventAt < 2000) {
+					return;
+				}
+				lastObsBrowserSourceEventKey = eventKey;
+				lastObsBrowserSourceEventAt = now;
+
+				sendObsEventFlowToExtension({
+					action: "eventFlowEvent",
+					value: {
+						type: "obs",
+						event: eventName,
+						meta: meta
+					}
+				});
+			}
+
+			function sendObsEventFlowToExtension(data) {
+				var sent = false;
+				try {
+					iframes.forEach(function(iframe) {
+						var peers = iframe.connectedPeers || {};
+						var keys = Object.keys(peers);
+						for (var i = 0; i < keys.length; i++) {
+							var UUID = keys[i];
+							if (peers[UUID] === "SocialStream") {
+								iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: UUID }, "*");
+								sent = true;
+							}
+						}
+					});
+				} catch (e) {
+					console.error(e);
+				}
+				if (!sent) {
+					send2Extension(data, null, true);
+				}
+				return sent;
+			}
+
+			function bindObsBrowserSourceEvents() {
+				if (obsBrowserSourceEventsBound || !window.obsstudio) {
+					return;
+				}
+				obsBrowserSourceEventsBound = true;
+				// These exact window CustomEvent names are documented OBS obs-browser JS bindings.
+				// They are emitted by OBS, not made-up browser DOM events.
+				window.addEventListener("obsStreamingStarted", function() {
+					emitObsBrowserSourceEvent("stream_started", "obsStreamingStarted", { outputActive: true });
+				});
+				window.addEventListener("obsStreamingStopped", function() {
+					emitObsBrowserSourceEvent("stream_stopped", "obsStreamingStopped", { outputActive: false });
+				});
+				window.addEventListener("obsRecordingStarted", function() {
+					emitObsBrowserSourceEvent("recording_started", "obsRecordingStarted", { recording: true });
+				});
+				window.addEventListener("obsRecordingStopped", function() {
+					emitObsBrowserSourceEvent("recording_stopped", "obsRecordingStopped", { recording: false });
+				});
+				window.addEventListener("obsSceneChanged", function(event) {
+					var detail = event && event.detail ? event.detail : {};
+					emitObsBrowserSourceEvent("scene_changed", "obsSceneChanged", { sceneName: detail.name || "" });
+				});
+				function handleObsBrowserReplayBufferSaved(event, obsEventName) {
+					var detail = event && event.detail ? event.detail : {};
+					emitObsBrowserSourceEvent("replay_buffer_saved", obsEventName, { savedReplayPath: detail.savedReplayPath || "" });
+				}
+				// OBS's official obs-browser event uses lowercase "buffer" here.
+				window.addEventListener("obsReplaybufferSaved", function(event) {
+					handleObsBrowserReplayBufferSaved(event, "obsReplaybufferSaved");
+				});
+			}
 			var showbadges = true;
 			var colorized = false;
 			var horizontal = false;
@@ -5253,6 +5349,7 @@
 			} else {
 				try {
 					if (window.obsstudio) {
+						bindObsBrowserSourceEvents();
 						if (!reversed && !random) {
 							setInterval(function () {
 								if (forceAutoscroll && !isOBSBrowserSource) {
@@ -5356,6 +5453,7 @@
 			}
 
 			if (window.obsstudio) {
+				bindObsBrowserSourceEvents();
 				document.documentElement.style.setProperty("--background-color", "#2B2E38");
 				document.documentElement.style.setProperty("--menu-background-color", "#191B26");
 			} else if (isMELD){

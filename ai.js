@@ -2472,15 +2472,21 @@ const AI_TRANSLATE_SHORT_TEXT_LIMIT = 10;
 const AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE = "en-US";
 const AI_TRANSLATE_MIN_OUTPUT_CHARS = 255;
 const AI_TRANSLATE_OUTPUT_MULTIPLIER = 3;
+const AI_OUTGOING_TRANSLATE_RETRY_MS = 250;
+const AI_OUTGOING_TRANSLATE_MAX_WAIT_MS = 5000;
 let aiTranslateProcessingSlots = [false];
 let aiTranslateCache = new Map();
+let aiOutgoingTranslateQueue = [];
+let aiOutgoingTranslateQueueActive = false;
 
 function getActiveAITranslateProviderKey() {
     return settings?.aiProvider?.optionsetting || "ollama";
 }
 
-function getAITranslateTargetLanguage() {
-    return String(settings?.aiAutoTranslateTargetLanguage?.textsetting || AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE).trim() || AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE;
+function getAITranslateTargetLanguage(settingKey = "aiAutoTranslateTargetLanguage", fallbackSettingKey = null) {
+    const primary = settings?.[settingKey]?.textsetting;
+    const fallback = fallbackSettingKey ? settings?.[fallbackSettingKey]?.textsetting : "";
+    return String(primary || fallback || AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE).trim() || AI_TRANSLATE_DEFAULT_TARGET_LANGUAGE;
 }
 
 function getAITranslateTimeoutMs() {
@@ -2489,6 +2495,14 @@ function getAITranslateTimeoutMs() {
         return 10000;
     }
     return Math.max(1000, Math.min(timeout, 30000));
+}
+
+function getAITranslateRequestTimeoutMs(options = {}) {
+    const timeout = Number(options.timeoutMs);
+    if (Number.isFinite(timeout) && timeout > 0) {
+        return Math.max(100, Math.min(timeout, getAITranslateTimeoutMs()));
+    }
+    return getAITranslateTimeoutMs();
 }
 
 function escapeAITranslatedHtml(value) {
@@ -2913,19 +2927,20 @@ function ensureAITranslateMeta(data) {
     return data.meta;
 }
 
-async function translateMessageWithLLM(data) {
-    if (!getSettingFlag("aiAutoTranslate") || !data || data.bot || !data.chatmessage) {
+async function translateMessageWithLLM(data, options = {}) {
+    const enabledSetting = options.enabledSetting || "aiAutoTranslate";
+    if (!getSettingFlag(enabledSetting) || !data || data.bot || !data.chatmessage) {
         return true;
     }
 
     const hadTextContent = Object.prototype.hasOwnProperty.call(data, "textContent");
-    const targetLanguage = getAITranslateTargetLanguage();
+    const targetLanguage = options.targetLanguage || getAITranslateTargetLanguage(options.targetLanguageSetting || "aiAutoTranslateTargetLanguage", options.fallbackTargetLanguageSetting || null);
     const prepared = prepareMessageForAITranslation(data);
     if (!prepared.parts.length) {
         return true;
     }
 
-    const blockOnBusy = getSettingFlag("aiAutoTranslateBlockMode");
+    const blockOnBusy = options.blockOnFailure === true || getSettingFlag("aiAutoTranslateBlockMode");
     const availableSlot = aiTranslateProcessingSlots.findIndex(function (slot) { return !slot; });
     if (availableSlot === -1) {
         return blockOnBusy ? false : true;
@@ -2950,7 +2965,7 @@ async function translateMessageWithLLM(data) {
             const controller = new AbortController();
             const timeoutId = setTimeout(function () {
                 controller.abort();
-            }, getAITranslateTimeoutMs());
+            }, getAITranslateRequestTimeoutMs(options));
             let response;
             try {
                 const contextLines = await getAITranslateContextLines(10);
@@ -3012,6 +3027,9 @@ async function translateMessageWithLLM(data) {
                 provider: getActiveAITranslateProviderKey(),
                 targetLanguage
             };
+            if (options.direction) {
+                meta.aiTranslation.direction = options.direction;
+            }
         }
         return true;
     } catch (error) {
@@ -3020,6 +3038,138 @@ async function translateMessageWithLLM(data) {
     } finally {
         aiTranslateProcessingSlots[availableSlot] = false;
     }
+}
+
+function waitForAIOutgoingTranslate(ms) {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, Math.max(0, ms || 0));
+    });
+}
+
+function isAITranslateSlotBusy() {
+    return aiTranslateProcessingSlots.findIndex(function (slot) { return !slot; }) === -1;
+}
+
+async function runOutgoingTranslationAttempt(item) {
+    while (!item.resolved && Date.now() < item.deadline) {
+        if (isAITranslateSlotBusy()) {
+            const busyWaitMs = Math.min(AI_OUTGOING_TRANSLATE_RETRY_MS, Math.max(0, item.deadline - Date.now()));
+            if (!busyWaitMs) {
+                break;
+            }
+            await waitForAIOutgoingTranslate(busyWaitMs);
+            continue;
+        }
+
+        const outgoingData = {
+            chatmessage: item.originalResponse,
+            textonly: true,
+            meta: {}
+        };
+        let translated = false;
+        try {
+            const timeLeft = Math.max(0, item.deadline - Date.now());
+            if (!timeLeft) {
+                break;
+            }
+            translated = await translateMessageWithLLM(outgoingData, {
+                enabledSetting: "aiAutoTranslateOutgoing",
+                targetLanguageSetting: "aiAutoTranslateOutgoingTargetLanguage",
+                fallbackTargetLanguageSetting: "aiAutoTranslateTargetLanguage",
+                blockOnFailure: true,
+                direction: "outgoing",
+                timeoutMs: timeLeft
+            });
+        } catch (e) {
+            console.warn("Outgoing AI translation attempt failed:", e);
+            translated = false;
+        }
+
+        if (item.resolved) {
+            return false;
+        }
+        if (translated) {
+            item.data.response = outgoingData.chatmessage || item.originalResponse;
+            return true;
+        }
+
+        item.data.response = item.originalResponse;
+        return false;
+    }
+
+    item.data.response = item.originalResponse;
+    return false;
+}
+
+async function drainAIOutgoingTranslateQueue() {
+    if (aiOutgoingTranslateQueueActive) {
+        return;
+    }
+    aiOutgoingTranslateQueueActive = true;
+    try {
+        while (aiOutgoingTranslateQueue.length) {
+            const item = aiOutgoingTranslateQueue.shift();
+            if (!item || item.resolved) {
+                continue;
+            }
+            if (Date.now() >= item.deadline) {
+                item.data.response = item.originalResponse;
+                item.resolve(false);
+                continue;
+            }
+            const translated = await runOutgoingTranslationAttempt(item);
+            item.resolve(translated);
+        }
+    } finally {
+        aiOutgoingTranslateQueueActive = false;
+        if (aiOutgoingTranslateQueue.length) {
+            drainAIOutgoingTranslateQueue();
+        }
+    }
+}
+
+function queueOutgoingTranslation(data, originalResponse) {
+    return new Promise(function (resolve) {
+        const item = {
+            data,
+            originalResponse,
+            deadline: Date.now() + AI_OUTGOING_TRANSLATE_MAX_WAIT_MS,
+            resolved: false,
+            timeoutId: null,
+            resolve: null
+        };
+        item.resolve = function (translated) {
+            if (item.resolved) {
+                return;
+            }
+            item.resolved = true;
+            if (item.timeoutId) {
+                clearTimeout(item.timeoutId);
+            }
+            resolve(!!translated);
+        };
+        item.timeoutId = setTimeout(function () {
+            item.data.response = item.originalResponse;
+            item.resolve(false);
+        }, AI_OUTGOING_TRANSLATE_MAX_WAIT_MS);
+        aiOutgoingTranslateQueue.push(item);
+        drainAIOutgoingTranslateQueue();
+    });
+}
+
+async function translateOutgoingMessageWithLLM(data) {
+    if (!getSettingFlag("aiAutoTranslateOutgoing") || !data || typeof data.response !== "string" || !data.response.trim()) {
+        return true;
+    }
+
+    const originalResponse = data.response;
+    const translated = await queueOutgoingTranslation(data, originalResponse);
+    if (!translated) {
+        data.response = originalResponse;
+        console.warn("Outgoing AI translation skipped; sending original message.");
+    }
+
+    return true;
 }
 
 

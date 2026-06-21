@@ -256,6 +256,20 @@ class EventFlowEditor {
                 ]
             },
             {
+                id: 'obs-events',
+                name: 'OBS Studio',
+                expanded: false,
+                triggers: [
+                    { id: 'obsStreamStarted', name: 'OBS Stream Started' },
+                    { id: 'obsStreamStopped', name: 'OBS Stream Stopped' },
+                    { id: 'obsRecordingStarted', name: 'OBS Recording Started' },
+                    { id: 'obsRecordingStopped', name: 'OBS Recording Stopped' },
+                    { id: 'obsSceneChanged', name: 'OBS Scene Changed' },
+                    // Matches OBS obs-browser's official replay-buffer event casing.
+                    { id: 'obsReplaybufferSaved', name: 'OBS Replay Buffer Saved' }
+                ]
+            },
+            {
                 id: 'chat-messages',
                 name: '💬 Chat Messages',
                 expanded: true,
@@ -1942,6 +1956,12 @@ class EventFlowEditor {
                     const eventType = node.config.eventType || 'Custom';
                     return `Custom: ${eventType}`;
                 }
+                case 'obsStreamStarted': return 'OBS stream started';
+                case 'obsStreamStopped': return 'OBS stream stopped';
+                case 'obsRecordingStarted': return 'OBS recording started';
+                case 'obsRecordingStopped': return 'OBS recording stopped';
+                case 'obsSceneChanged': return 'OBS scene changed';
+                case 'obsReplaybufferSaved': return 'OBS replay buffer saved';
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'action') {
@@ -2453,6 +2473,12 @@ class EventFlowEditor {
                 case 'eventCheer': node.config = { sources: [], minBits: 0 }; break;
                 case 'eventOther': node.config = { eventType: '' }; break;
                 case 'eventCustom': node.config = { eventType: '', customCondition: '' }; break;
+                case 'obsStreamStarted': node.config = {}; break;
+                case 'obsStreamStopped': node.config = {}; break;
+                case 'obsRecordingStarted': node.config = {}; break;
+                case 'obsRecordingStopped': node.config = {}; break;
+                case 'obsSceneChanged': node.config = {}; break;
+                case 'obsReplaybufferSaved': node.config = {}; break;
                 case 'compareProperty': node.config = { property: 'donationAmount', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
@@ -3145,6 +3171,54 @@ class EventFlowEditor {
 						</div>
 								<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #0288d1;">📖 Event Reference Documentation</a>
 					</div>`;
+				break;
+
+			case 'obsStreamStarted':
+				html += `<div class="property-group" style="background: #e8f5e9; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Stream Started</strong><br>
+					Triggers when OBS reports the stream output has started.<br><br>
+					Requires Flow Actions with OBS WebSocket v5, or a dock/browser source running inside OBS.
+				</div>`;
+				break;
+
+			case 'obsStreamStopped':
+				html += `<div class="property-group" style="background: #ffebee; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Stream Stopped</strong><br>
+					Triggers when OBS reports the stream output has stopped.<br><br>
+					Requires Flow Actions with OBS WebSocket v5, or a dock/browser source running inside OBS.
+				</div>`;
+				break;
+
+			case 'obsRecordingStarted':
+				html += `<div class="property-group" style="background: #e8f5e9; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Recording Started</strong><br>
+					Triggers when OBS starts recording.<br><br>
+					Requires Flow Actions with OBS WebSocket v5, or a dock/browser source running inside OBS.
+				</div>`;
+				break;
+
+			case 'obsRecordingStopped':
+				html += `<div class="property-group" style="background: #ffebee; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Recording Stopped</strong><br>
+					Triggers when OBS stops recording.<br><br>
+					Requires Flow Actions with OBS WebSocket v5, or a dock/browser source running inside OBS.
+				</div>`;
+				break;
+
+			case 'obsSceneChanged':
+				html += `<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Scene Changed</strong><br>
+					Triggers when OBS changes the active program scene.<br><br>
+					The scene name is available as <code>meta.sceneName</code>.
+				</div>`;
+				break;
+
+			case 'obsReplaybufferSaved':
+				html += `<div class="property-group" style="background: #fff3e0; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>OBS Replay Buffer Saved</strong><br>
+					Triggers when OBS saves the replay buffer.<br><br>
+					Replay buffer must be enabled in OBS.
+				</div>`;
 				break;
 
 			case 'eventOther':
