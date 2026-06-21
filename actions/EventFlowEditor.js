@@ -265,7 +265,8 @@ class EventFlowEditor {
                     { id: 'obsRecordingStarted', name: 'OBS Recording Started' },
                     { id: 'obsRecordingStopped', name: 'OBS Recording Stopped' },
                     { id: 'obsSceneChanged', name: 'OBS Scene Changed' },
-                    { id: 'obsReplayBufferSaved', name: 'OBS Replay Buffer Saved' }
+                    // Matches OBS obs-browser's official replay-buffer event casing.
+                    { id: 'obsReplaybufferSaved', name: 'OBS Replay Buffer Saved' }
                 ]
             },
             {
@@ -1960,7 +1961,7 @@ class EventFlowEditor {
                 case 'obsRecordingStarted': return 'OBS recording started';
                 case 'obsRecordingStopped': return 'OBS recording stopped';
                 case 'obsSceneChanged': return 'OBS scene changed';
-                case 'obsReplayBufferSaved': return 'OBS replay buffer saved';
+                case 'obsReplaybufferSaved': return 'OBS replay buffer saved';
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'action') {
@@ -2477,7 +2478,7 @@ class EventFlowEditor {
                 case 'obsRecordingStarted': node.config = {}; break;
                 case 'obsRecordingStopped': node.config = {}; break;
                 case 'obsSceneChanged': node.config = {}; break;
-                case 'obsReplayBufferSaved': node.config = {}; break;
+                case 'obsReplaybufferSaved': node.config = {}; break;
                 case 'compareProperty': node.config = { property: 'donationAmount', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
@@ -3212,7 +3213,7 @@ class EventFlowEditor {
 				</div>`;
 				break;
 
-			case 'obsReplayBufferSaved':
+			case 'obsReplaybufferSaved':
 				html += `<div class="property-group" style="background: #fff3e0; color: #333; padding: 10px; border-radius: 4px;">
 					<strong>OBS Replay Buffer Saved</strong><br>
 					Triggers when OBS saves the replay buffer.<br><br>

@@ -162,9 +162,9 @@ async function runTests() {
             triggerType: 'obsSceneChanged',
             config: {}
         };
-        const obsReplayBufferSavedNode = {
+        const obsReplaybufferSavedNode = {
             id: 'obs7',
-            triggerType: 'obsReplayBufferSaved',
+            triggerType: 'obsReplaybufferSaved',
             config: {}
         };
         const startedPayload = {
@@ -202,7 +202,7 @@ async function runTests() {
             'OBS scene changed trigger matches scene_changed'
         );
         assert(
-            await sys.evaluateTrigger(obsReplayBufferSavedNode, { type: 'obs', event: 'replay_buffer_saved', meta: { savedReplayPath: 'clip.mkv' } }) === true,
+            await sys.evaluateTrigger(obsReplaybufferSavedNode, { type: 'obs', event: 'replay_buffer_saved', meta: { savedReplayPath: 'clip.mkv' } }) === true,
             'OBS replay buffer saved trigger matches replay_buffer_saved'
         );
         assert(

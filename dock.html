@@ -3297,6 +3297,7 @@
 			var isOBSBrowserSource = false;
 			var obsBrowserSourceEventsBound = false;
 			var lastObsBrowserSourceEventKey = "";
+			var lastObsBrowserSourceEventAt = 0;
 			var customNodeLimit = false;
 			var historyMode = urlParams.has("history");
 			var historyInitialLoadLimit = parseInt(urlParams.get("loadlast"), 10) || 30;
@@ -3322,10 +3323,11 @@
 			var odd = false;
 
 			function emitObsBrowserSourceEvent(eventName, obsEventName, metaDetails) {
+				var now = Date.now();
 				var meta = {
 					source: "obs-browser-source",
 					obsEvent: obsEventName,
-					receivedAt: Date.now()
+					receivedAt: now
 				};
 				metaDetails = metaDetails || {};
 				Object.keys(metaDetails).forEach(function(key) {
@@ -3341,10 +3343,11 @@
 					meta.sceneName || "",
 					meta.savedReplayPath || ""
 				].join("|");
-				if (eventKey === lastObsBrowserSourceEventKey) {
+				if (eventKey === lastObsBrowserSourceEventKey && now - lastObsBrowserSourceEventAt < 2000) {
 					return;
 				}
 				lastObsBrowserSourceEventKey = eventKey;
+				lastObsBrowserSourceEventAt = now;
 
 				sendObsEventFlowToExtension({
 					action: "eventFlowEvent",
@@ -3384,6 +3387,8 @@
 					return;
 				}
 				obsBrowserSourceEventsBound = true;
+				// These exact window CustomEvent names are documented OBS obs-browser JS bindings.
+				// They are emitted by OBS, not made-up browser DOM events.
 				window.addEventListener("obsStreamingStarted", function() {
 					emitObsBrowserSourceEvent("stream_started", "obsStreamingStarted", { outputActive: true });
 				});
@@ -3404,9 +3409,7 @@
 					var detail = event && event.detail ? event.detail : {};
 					emitObsBrowserSourceEvent("replay_buffer_saved", obsEventName, { savedReplayPath: detail.savedReplayPath || "" });
 				}
-				window.addEventListener("obsReplayBufferSaved", function(event) {
-					handleObsBrowserReplayBufferSaved(event, "obsReplayBufferSaved");
-				});
+				// OBS's official obs-browser event uses lowercase "buffer" here.
 				window.addEventListener("obsReplaybufferSaved", function(event) {
 					handleObsBrowserReplayBufferSaved(event, "obsReplaybufferSaved");
 				});

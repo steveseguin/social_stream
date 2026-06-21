@@ -1700,6 +1700,33 @@ function pickKickEmoteUrl(fragment) {
     return '';
 }
 
+function pickKickEmoteId(fragment) {
+    const candidates = [
+        fragment?.id,
+        fragment?.emote_id,
+        fragment?.emoteId,
+        fragment?.emoteID,
+        fragment?.kickEmoteId,
+        fragment?.asset?.id,
+        fragment?.emote?.id,
+        fragment?.emote?.emote_id,
+        fragment?.emote?.emoteId,
+        fragment?.data?.id,
+        fragment?.data?.emote_id,
+        fragment?.data?.emoteId
+    ];
+    for (const value of candidates) {
+        if (value === undefined || value === null) {
+            continue;
+        }
+        const safeId = String(value).replace(/[^0-9]/g, '');
+        if (safeId) {
+            return safeId;
+        }
+    }
+    return '';
+}
+
 function renderKickEmoteFragment(fragment) {
     const rawName = pickFirstString(
         [
@@ -1715,7 +1742,8 @@ function renderKickEmoteFragment(fragment) {
         ''
     );
     const cleanName = rawName.replace(/^:+|:+$/g, '');
-    const alt = escapeHtml(cleanName || rawName || '');
+    const emoteId = pickKickEmoteId(fragment);
+    const alt = escapeHtml(cleanName || rawName || (emoteId ? `kick-${emoteId}` : ''));
     const zeroWidth = Boolean(
         fragment?.zero_width ||
         fragment?.zeroWidth ||
@@ -1723,7 +1751,10 @@ function renderKickEmoteFragment(fragment) {
         fragment?.metadata?.zero_width ||
         fragment?.emote?.zero_width
     );
-    const url = pickKickEmoteUrl(fragment);
+    let url = pickKickEmoteUrl(fragment);
+    if (!url && emoteId) {
+        url = `https://files.kick.com/emotes/${emoteId}/fullsize`;
+    }
     if (url && !isTextOnlyMode()) {
         const safeUrl = escapeAttribute(url);
         const className = zeroWidth ? 'zero-width-emote-centered' : 'regular-emote';

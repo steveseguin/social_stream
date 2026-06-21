@@ -994,6 +994,8 @@
 	const KICK_MESSAGE_CONTENT_SELECTOR = ".chat-entry-content, .chat-emote-container, .break-all, seventv-container, .seventv-painted-content, span[class*='font-normal'], div[class*='font-normal']";
 	const KICK_MOD_ACTIONS_SELECTOR = "[style*='chatroom-mod-actions-display'], button[aria-label='Delete'], button[aria-label='Pin'], button[aria-label='Reply'], button[aria-label='Ban'], button[aria-label='Timeout'], button[aria-label='Block']";
 	const KICK_MOD_ACTIONS_CLOSEST_SELECTOR = "button[aria-label='Delete'], button[aria-label='Pin'], button[aria-label='Reply'], button[aria-label='Ban'], button[aria-label='Timeout'], button[aria-label='Block']";
+	const KICK_EMPTY_MESSAGE_RETRY_LIMIT = 2;
+	const KICK_EMPTY_MESSAGE_RETRY_DELAY_MS = 300;
 
 	function getKickUsernameButton(ele) {
 		return ele.querySelector("button.inline.font-bold[data-prevent-expand]")
@@ -1218,8 +1220,51 @@
 		kickDebugLog("clearing row tracking state", getKickDebugRowInfo(ele));
 		delete ele.dataset.matched;
 		delete ele.dataset.ssMessageKey;
+		delete ele.dataset.ssProcessingKey;
+		delete ele.dataset.ssEmptyRetryCount;
+		delete ele.dataset.ssEmptyRetryPending;
 		delete ele.dataset.mid;
 		delete ele.deleted;
+	}
+
+	function scheduleKickEmptyMessageRetry(ele, messageId, chatname) {
+		if (!ele || !ele.dataset) {
+			return false;
+		}
+		var retryCount = parseInt(ele.dataset.ssEmptyRetryCount || "0", 10) || 0;
+		if (retryCount >= KICK_EMPTY_MESSAGE_RETRY_LIMIT) {
+			return false;
+		}
+		if (ele.dataset.ssEmptyRetryPending === "1") {
+			return true;
+		}
+		ele.dataset.ssEmptyRetryCount = String(retryCount + 1);
+		ele.dataset.ssEmptyRetryPending = "1";
+		kickDebugLog("process:new retrying empty message row", {
+			messageId: messageId,
+			chatname: chatname,
+			retry: retryCount + 1,
+			row: getKickDebugRowInfo(ele)
+		});
+		setTimeout(function() {
+			if (!ele || !ele.dataset) {
+				return;
+			}
+			delete ele.dataset.ssProcessingKey;
+			delete ele.dataset.ssEmptyRetryPending;
+			if (ele.isConnected) {
+				processMessageNew(ele);
+			}
+		}, KICK_EMPTY_MESSAGE_RETRY_DELAY_MS);
+		return true;
+	}
+
+	function clearKickProcessingState(ele) {
+		if (!ele || !ele.dataset) {
+			return;
+		}
+		delete ele.dataset.ssProcessingKey;
+		delete ele.dataset.ssEmptyRetryPending;
 	}
 
 	function rememberKickTrackedMessageId(ele, id) {
@@ -1641,7 +1686,16 @@
 			});
 			return;
 		}
+		if (ele.dataset.ssProcessingKey) {
+			kickDebugLog("process:new skipped; row already processing", {
+				messageId: messageId,
+				processingKey: ele.dataset.ssProcessingKey,
+				row: getKickDebugRowInfo(ele)
+			});
+			return;
+		}
 
+		var retryingEmptyMessage = parseInt(ele.dataset.ssEmptyRetryCount || "0", 10) > 0;
 		let sibling = ele.nextElementSibling;
 		let nextCount = 0;
 		while(sibling) {
@@ -1653,7 +1707,7 @@
 				});
 				return;
 			}
-			if (sibling.dataset && sibling.dataset.matched){
+			if (!retryingEmptyMessage && sibling.dataset && sibling.dataset.matched){
 				kickDebugLog("process:new skipped; later sibling already matched", {
 					messageId: messageId,
 					sibling: getKickDebugRowInfo(sibling),
@@ -1673,19 +1727,8 @@
 			return;
 		}
 
-		ele.dataset.matched = true;
-		ele.dataset.ssMessageKey = messageId;
-		kickDebugLog("process:new row marked", {
-			messageId: messageId,
-			row: getKickDebugRowInfo(ele)
-		});
+		ele.dataset.ssProcessingKey = messageId || "pending";
 
-		rememberKickProcessedMessage(messageId);
-		kickDebugLog("process:new accepted key", {
-			messageId: messageId,
-			size: processedMessages.size,
-			row: getKickDebugRowInfo(ele)
-		});
 	  } catch(e) {
 		console.error(e);
 		kickDebugLog("process:new keying exception", {
@@ -1700,11 +1743,16 @@
 	  }
 	  if (!ele || !ele.isConnected) {
 		kickDebugLog("process:new skipped after delay; row disconnected", getKickDebugRowInfo(ele));
+		clearKickProcessingState(ele);
 		return;
 	  }
-	  if (deleteThis(ele)) return;
+	  if (deleteThis(ele)) {
+		clearKickProcessingState(ele);
+		return;
+	  }
 	  
 	  if (settings.customkickstate) {
+		clearKickProcessingState(ele);
 		return;
 	  }
 		
@@ -1782,13 +1830,39 @@
 	  }
 	  
 	  if (!chatmessage){
+		if (scheduleKickEmptyMessageRetry(ele, messageId, chatname)) {
+			return;
+		}
 		kickDebugLog("process:new skipped; empty message", {
 			messageId: messageId,
 			chatname: chatname,
 			row: getKickDebugRowInfo(ele)
 		});
+		if (ele && ele.dataset) {
+			delete ele.dataset.ssProcessingKey;
+		}
 		return;
 	  }
+
+	  try {
+		messageId = getKickMessageKey(ele) || messageId;
+		ele.dataset.matched = true;
+		ele.dataset.ssMessageKey = messageId;
+		delete ele.dataset.ssProcessingKey;
+		delete ele.dataset.ssEmptyRetryPending;
+		delete ele.dataset.ssEmptyRetryCount;
+		kickDebugLog("process:new row marked", {
+			messageId: messageId,
+			row: getKickDebugRowInfo(ele)
+		});
+
+		rememberKickProcessedMessage(messageId);
+		kickDebugLog("process:new accepted key", {
+			messageId: messageId,
+			size: processedMessages.size,
+			row: getKickDebugRowInfo(ele)
+		});
+	  } catch(e) {}
 	  
 	  var originalMessage = "";
 	  var replyMessage = "";

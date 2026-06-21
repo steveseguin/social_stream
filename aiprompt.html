@@ -1468,7 +1468,7 @@ If the user asks a question that does not require a file change, answer normally
 		var autoFixAttempts = 0;
 		var MAX_AUTO_FIX = 2;
 		var html2canvasPromise = null;
-		var HTML2CANVAS_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+		var HTML2CANVAS_URL = "./thirdparty/html2canvas.min.js";
 		var overlayPackageRequestTarget = null;
 		var overlayPackageLoaded = false;
 		var overlayPackageSyncPending = false;
@@ -2018,7 +2018,7 @@ If the user asks a question that does not require a file change, answer normally
 					if (window.html2canvas) resolve(window.html2canvas);
 					else reject(new Error("html2canvas loaded but global not found"));
 				};
-				script.onerror = function () { reject(new Error("Failed to load html2canvas from CDN")); };
+				script.onerror = function () { reject(new Error("Failed to load local html2canvas")); };
 				document.head.appendChild(script);
 			});
 			return html2canvasPromise;

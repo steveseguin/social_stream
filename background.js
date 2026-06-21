@@ -8968,7 +8968,9 @@ function setupSocket() {
 				data.target = "";
 			}
 
-			if (data.action && data.action === "sendChat" && data.value) {
+			if (data.action && data.action === "eventFlowEvent" && data.value) {
+				resp = await processEventFlowBridgeEvent(data.value);
+			} else if (data.action && data.action === "sendChat" && data.value) {
 				const outgoingMessage = {};
 				outgoingMessage.response = data.value;
 				if (data.target) {
@@ -12415,10 +12417,53 @@ async function handleBridgeChunkRequest(request, UUID) {
 	return true;
 }
 
+async function processEventFlowBridgeEvent(value) {
+	if (!isExtensionOn || !window.eventFlowSystem || !value) {
+		return false;
+	}
+	const eventPayload = Object.assign({}, value);
+	if (!eventPayload.type) {
+		eventPayload.type = "event";
+	}
+	if ((eventPayload.type || "").toLowerCase() === "obs") {
+		const meta = eventPayload.meta && typeof eventPayload.meta === "object" ? eventPayload.meta : {};
+		const now = Date.now();
+		const dedupeKey = [eventPayload.type || "", eventPayload.event || "", meta.sceneName || "", meta.savedReplayPath || ""].join("|");
+		if (eventPayload.event === "scene_changed") {
+			if (window.__ssnEventFlowLastObsSceneKey === dedupeKey && window.__ssnEventFlowLastObsSceneAt && now - window.__ssnEventFlowLastObsSceneAt < 2000) {
+				return true;
+			}
+			window.__ssnEventFlowLastObsSceneKey = dedupeKey;
+			window.__ssnEventFlowLastObsSceneAt = now;
+		} else {
+			window.__ssnEventFlowDedupe = window.__ssnEventFlowDedupe || {};
+			Object.keys(window.__ssnEventFlowDedupe).forEach(function (key) {
+				if (now - window.__ssnEventFlowDedupe[key] > 10000) {
+					delete window.__ssnEventFlowDedupe[key];
+				}
+			});
+			if (window.__ssnEventFlowDedupe[dedupeKey] && now - window.__ssnEventFlowDedupe[dedupeKey] < 2000) {
+				return true;
+			}
+			window.__ssnEventFlowDedupe[dedupeKey] = now;
+		}
+	}
+	try {
+		await window.eventFlowSystem.processMessage(eventPayload);
+	} catch (e) {
+		console.warn("Failed to process Event Flow bridge event:", e);
+	}
+	return true;
+}
+
 async function processIncomingRequest(request, UUID = false) {
 	// from the dock or chat bot, etc.
 	if (request && request.action === "requestViewerCount") {
 		refreshTemporaryViewerCount(request.value && request.value.ttl);
+		return;
+	}
+	if (request && request.action === "eventFlowEvent" && request.value) {
+		await processEventFlowBridgeEvent(request.value);
 		return;
 	}
 	if (settings.disablehost) {
@@ -12430,6 +12475,9 @@ async function processIncomingRequest(request, UUID = false) {
 
 	if ("response" in request) {
 		// we receieved a response from the dock
+		if (!request.outgoingOrigin && !request.bot) {
+			request.outgoingOrigin = "host";
+		}
 		sendMessageToTabs(request, false, null, false, false, false);
 	} else if ("action" in request) {
 		if (request.action === "openChat") {
@@ -12617,41 +12665,6 @@ async function processIncomingRequest(request, UUID = false) {
 		} else if (request.action === "obsCommand") {
 			if (isExtensionOn) {
 				fowardOBSCommand(request);
-			}
-		} else if (request.action === "eventFlowEvent" && request.value) {
-			if (isExtensionOn && window.eventFlowSystem) {
-				const eventPayload = Object.assign({}, request.value);
-				if (!eventPayload.type) {
-					eventPayload.type = "event";
-				}
-				if ((eventPayload.type || "").toLowerCase() === "obs") {
-					const meta = eventPayload.meta && typeof eventPayload.meta === "object" ? eventPayload.meta : {};
-					const now = Date.now();
-					const dedupeKey = [eventPayload.type || "", eventPayload.event || "", meta.sceneName || "", meta.savedReplayPath || ""].join("|");
-					if (eventPayload.event === "scene_changed") {
-						if (window.__ssnEventFlowLastObsSceneKey === dedupeKey && window.__ssnEventFlowLastObsSceneAt && now - window.__ssnEventFlowLastObsSceneAt < 2000) {
-							return;
-						}
-						window.__ssnEventFlowLastObsSceneKey = dedupeKey;
-						window.__ssnEventFlowLastObsSceneAt = now;
-					} else {
-						window.__ssnEventFlowDedupe = window.__ssnEventFlowDedupe || {};
-						Object.keys(window.__ssnEventFlowDedupe).forEach(function (key) {
-							if (now - window.__ssnEventFlowDedupe[key] > 10000) {
-								delete window.__ssnEventFlowDedupe[key];
-							}
-						});
-						if (window.__ssnEventFlowDedupe[dedupeKey] && now - window.__ssnEventFlowDedupe[dedupeKey] < 2000) {
-							return;
-						}
-						window.__ssnEventFlowDedupe[dedupeKey] = now;
-					}
-				}
-				try {
-					await window.eventFlowSystem.processMessage(eventPayload);
-				} catch (e) {
-					console.warn("Failed to process Event Flow bridge event:", e);
-				}
 			}
 		} else if (request.action === "registerTimer") {
 			if (!timerStateInitialized && request.value && request.value.timer) {
@@ -13869,16 +13882,14 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		try {
 			if (typeof translateOutgoingMessageWithLLM !== "function") {
 				console.warn("Outgoing AI translation is enabled, but the translator is unavailable.");
-				return false;
-			}
-			const translated = await translateOutgoingMessageWithLLM(data);
-			if (!translated) {
-				console.warn("Outgoing AI translation failed; message not sent.");
-				return false;
+			} else {
+				const translated = await translateOutgoingMessageWithLLM(data);
+				if (!translated) {
+					console.warn("Outgoing AI translation skipped; sending original message.");
+				}
 			}
 		} catch (e) {
-			console.warn("Outgoing AI translation failed; message not sent.", e);
-			return false;
+			console.warn("Outgoing AI translation skipped; sending original message.", e);
 		}
 	}
 

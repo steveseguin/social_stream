@@ -1676,7 +1676,8 @@ class EventFlowSystem {
                 return event === 'scene_changed' || event === 'obs_scene_changed';
             }
 
-            case 'obsReplayBufferSaved': {
+            case 'obsReplaybufferSaved': {
+                // Matches OBS obs-browser's official replay-buffer event casing.
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
                 const event = (message.event || '').toLowerCase();
                 return event === 'replay_buffer_saved' || event === 'obs_replay_buffer_saved';
