@@ -10781,10 +10781,41 @@ input:checked + .slider:before {
                                     <label><span data-translate="custom-title">Custom Title:</span></label>
                                     <input type="text" data-optionparam12="title" class="textInput" placeholder="Stream Goal" />
                                 </div>
-                                <div style="position: relative; width: 95%;">
+                                <div>
+                                    <label>Donation type filter:</label>
+                                    <select data-optionparam12="tipjartype" class="textInput">
+                                        <option value="" selected>All donations (USD converted)</option>
+                                        <option value="usd">USD / cash only</option>
+                                        <option value="stars">Stars</option>
+                                        <option value="bits">Bits / Cheers</option>
+                                        <option value="coins">Coins</option>
+                                        <option value="diamonds">Diamonds</option>
+                                        <option value="kicks">KICKs</option>
+                                        <option value="jewels">Jewels</option>
+                                        <option value="tokens">Tokens</option>
+                                        <option value="hearts">Hearts</option>
+                                        <option value="gold">Gold</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Source filter:</label>
+                                    <select data-optionparam12="tipjarsource" class="textInput">
+                                        <option value="" selected>All sources</option>
+                                        <option value="facebook">Facebook</option>
+                                        <option value="youtube">YouTube</option>
+                                        <option value="twitch">Twitch</option>
+                                        <option value="kick">Kick</option>
+                                        <option value="tiktok">TikTok</option>
+                                        <option value="stripe">Stripe</option>
+                                        <option value="kofi">Ko-Fi</option>
+                                        <option value="bmac">Buy Me A Coffee</option>
+                                        <option value="fourthwall">Fourthwall</option>
+                                    </select>
+                                </div>
+                                <div class="textInputContainer textInputWithUpload" style="width: 95%;">
                                     <label><span data-translate="custom-jar-image">Custom Jar Image URL:</span></label>
                                     <input type="text" id="streamGoalJarImage" data-optionparam12="jarimage" class="textInput" placeholder="https://example.com/jar.png" />
-                                    <button type="button" id="uploadStreamGoalJarImageBtn" style="position: absolute; right: 5px; bottom: 5px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
+                                    <button type="button" id="uploadStreamGoalJarImageBtn" class="textInputUploadButton">Upload</button>
                                 </div>
 								
                             </div>

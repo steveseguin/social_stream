@@ -464,6 +464,10 @@
         const showCompletions = hypeMode && !urlParams.has('hidecompletions');
         const completionDelayMs = readNumberParam('completiondelay', 3000, 0);
         const dedupeWindowMs = readNumberParam('dedupewindow', 8, 0) * 1000;
+        const donationTypeFilter = normalizeFilterValue(urlParams.get('tipjartype') || urlParams.get('tipjarunit') || urlParams.get('donationtype') || '');
+        const sourceTypeFilter = normalizeFilterList(urlParams.get('tipjarsource') || urlParams.get('donationsource') || '');
+        const nativeUnitMode = !!donationTypeFilter;
+        const nativeUnitLabel = urlParams.get('tipjarunitlabel') || getDonationTypeLabel(donationTypeFilter);
         
         // Socket server parameters
         const hasServerParam = urlParams.has('server') || urlParams.has('server2');
@@ -511,9 +515,10 @@
         }
 
         // Tracking variables
-        const amountStorageKey = hypeMode ? 'tipjar_hype_amount' : 'tipjar_amount';
-        const historyStorageKey = hypeMode ? 'tipjar_hype_history' : 'tipjar_history';
-        const completionsStorageKey = 'tipjar_hype_completions';
+        const storageSuffix = buildTipJarStorageSuffix();
+        const amountStorageKey = (hypeMode ? 'tipjar_hype_amount' : 'tipjar_amount') + storageSuffix;
+        const historyStorageKey = (hypeMode ? 'tipjar_hype_history' : 'tipjar_history') + storageSuffix;
+        const completionsStorageKey = 'tipjar_hype_completions' + storageSuffix;
         let currentAmount = persistent ? (parseFloat(localStorage.getItem(amountStorageKey)) || 0) : 0;
         let completionCount = persistent ? (parseInt(localStorage.getItem(completionsStorageKey) || '0', 10) || 0) : 0;
         let completionResetTimer = null;
@@ -836,6 +841,137 @@
             document.addEventListener(eventName, primeDonationSound);
         });
 
+        function normalizeFilterValue(value) {
+            return String(value || '').trim().toLowerCase();
+        }
+
+        function normalizeFilterList(value) {
+            return String(value || '').split(',').map(function(item) {
+                return normalizeFilterValue(item);
+            }).filter(function(item) {
+                return item && item !== 'all' && item !== 'any';
+            });
+        }
+
+        function buildTipJarStorageSuffix() {
+            const parts = [];
+            if (donationTypeFilter) {
+                parts.push('type_' + donationTypeFilter.replace(/[^a-z0-9_-]/g, ''));
+            }
+            if (sourceTypeFilter.length) {
+                parts.push('source_' + sourceTypeFilter.join('_').replace(/[^a-z0-9_-]/g, ''));
+            }
+            return parts.length ? '_' + parts.join('_') : '';
+        }
+
+        function getDonationTypeLabel(type) {
+            const labels = {
+                usd: 'USD',
+                cash: 'USD',
+                stars: 'Stars',
+                star: 'Stars',
+                bits: 'bits',
+                bit: 'bits',
+                cheer: 'bits',
+                cheers: 'bits',
+                coins: 'coins',
+                coin: 'coins',
+                diamonds: 'Diamonds',
+                diamond: 'Diamonds',
+                kicks: 'KICKs',
+                kick: 'KICKs',
+                jewels: 'Jewels',
+                jewel: 'Jewels',
+                tokens: 'tokens',
+                token: 'tokens',
+                hearts: 'hearts',
+                heart: 'hearts',
+                gold: 'gold'
+            };
+            return labels[type] || type || 'units';
+        }
+
+        function parseDonationAmount(rawDonation) {
+            const match = String(rawDonation || '').match(/-?\d[\d.,]*(?:\s\d{3})*/);
+            if (!match) return null;
+
+            let numericText = match[0].replace(/\s/g, '');
+            const lastComma = numericText.lastIndexOf(',');
+            const lastDot = numericText.lastIndexOf('.');
+            let decimalSeparator = '';
+
+            if (lastComma !== -1 && lastDot !== -1) {
+                decimalSeparator = lastComma > lastDot ? ',' : '.';
+            } else if (lastComma !== -1 || lastDot !== -1) {
+                const separator = lastComma !== -1 ? ',' : '.';
+                const lastSeparator = lastComma !== -1 ? lastComma : lastDot;
+                const decimals = numericText.length - lastSeparator - 1;
+                const count = (numericText.match(new RegExp('\\' + separator, 'g')) || []).length;
+                const integerPart = numericText.slice(0, lastSeparator).replace('-', '');
+                if (decimals > 0 && (decimals !== 3 || integerPart === '0') && count === 1) {
+                    decimalSeparator = separator;
+                }
+            }
+
+            if (decimalSeparator) {
+                const thousandsSeparator = decimalSeparator === ',' ? '.' : ',';
+                numericText = numericText.split(thousandsSeparator).join('');
+                numericText = numericText.replace(decimalSeparator, '.');
+            } else {
+                numericText = numericText.replace(/[.,]/g, '');
+            }
+
+            const amount = parseFloat(numericText);
+            return isNaN(amount) ? null : amount;
+        }
+
+        function getDonationUnitInfo(rawDonation, source) {
+            const raw = String(rawDonation || '');
+            const amount = parseDonationAmount(raw);
+            if (amount === null || amount <= 0) return null;
+
+            const text = raw.toLowerCase();
+            const sourceKey = normalizeFilterValue(source);
+
+            if (/\bstars?\b/.test(text)) return { type: 'stars', amount, label: 'Stars' };
+            if (/\b(bits?|cheers?)\b/.test(text)) return { type: 'bits', amount, label: 'bits' };
+            if (/\bcoins?\b/.test(text)) return { type: 'coins', amount, label: 'coins' };
+            if (/\bdiamonds?\b/.test(text)) return { type: 'diamonds', amount, label: 'Diamonds' };
+            if (/\bkicks?\b/.test(text)) return { type: 'kicks', amount, label: 'KICKs' };
+            if (/\bjewels?\b/.test(text)) return { type: 'jewels', amount, label: 'Jewels' };
+            if (/\btokens?\b/.test(text)) return { type: 'tokens', amount, label: 'tokens' };
+            if (/\bhearts?\b/.test(text)) return { type: 'hearts', amount, label: 'hearts' };
+            if (/\bgold\b/.test(text)) return { type: 'gold', amount, label: 'gold' };
+
+            const hasCashMarker = /[$]|\b(?:usd|cad|aud|nzd|eur|gbp|jpy|cny|hkd|twd|krw|inr|brl|mxn|ars|clp|cop|pen|php|sgd|myr|thb|idr|vnd|ils|try|zar|sek|nok|dkk|chf|pln|czk|huf|ron|rub|uah)\b/i.test(raw) ||
+                /[\u20ac\u00a3\u00a5\u20b9\u20a9\u20aa\u20b1\u0e3f\u20ab\u20b4\u20a6\u20a1\u20b2\u20b5\u20ad\u20ae\u20b8\u20ba\u20bd\u20bc\u20be\u20bf]/.test(raw);
+            if (hasCashMarker || sourceKey === 'stripe' || sourceKey === 'kofi' || sourceKey === 'bmac' || sourceKey === 'fourthwall') {
+                return { type: 'usd', amount, label: 'USD' };
+            }
+
+            return { type: '', amount, label: nativeUnitLabel || 'units' };
+        }
+
+        function donationMatchesTypeFilter(unitInfo, rawDonation) {
+            if (!donationTypeFilter) return true;
+            if (!unitInfo || !unitInfo.type) return false;
+
+            const filter = donationTypeFilter === 'cash' ? 'usd' : donationTypeFilter;
+            const unitType = unitInfo.type === 'cash' ? 'usd' : unitInfo.type;
+            if (filter === unitType) return true;
+
+            const raw = String(rawDonation || '').toLowerCase();
+            const escapedFilter = filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp('(^|\\s)' + escapedFilter + 's?(?=\\s|$)').test(raw);
+        }
+
+        function passesTipJarSourceFilter(data) {
+            if (!sourceTypeFilter.length) return true;
+            const meta = getMeta(data);
+            const source = normalizeFilterValue(data.type || data.platform || meta.source || '');
+            return sourceTypeFilter.indexOf(source) !== -1;
+        }
+
         function readNumberParam(name, fallback, minValue) {
             const raw = urlParams.get(name);
             if (raw === null || raw === '') return fallback;
@@ -853,6 +989,9 @@
         function formatGoalValue(value, forceCents) {
             if (hypeMode) {
                 return `${formatNumber(value)} ${unitLabel}`;
+            }
+            if (nativeUnitMode) {
+                return `${formatNumber(value)} ${nativeUnitLabel}`;
             }
             const num = Number(value) || 0;
             return `$${forceCents ? num.toFixed(2) : formatNumber(num)}`;
@@ -873,12 +1012,12 @@
                 return { amount: null, currency: '', display: '' };
             }
 
-            const numericMatch = raw.match(/-?\d+(?:[.,]\d+)?/);
+            const numericMatch = raw.match(/-?\d[\d.,]*(?:\s\d{3})*/);
             let amount = null;
             let currency = '';
 
             if (numericMatch) {
-                amount = parseFloat(numericMatch[0].replace(',', '.'));
+                amount = parseDonationAmount(raw);
                 const before = raw.slice(0, numericMatch.index).trim();
                 const after = raw.slice(numericMatch.index + numericMatch[0].length).trim();
                 currency = `${before} ${after}`.trim();
@@ -1141,6 +1280,7 @@
         function processHypeContribution(data) {
             const contribution = buildHypeContribution(data);
             if (!contribution) return;
+            if (donationTypeFilter && contribution.kind !== 'donation') return;
             if (isDuplicateContribution(data, contribution)) return;
 
             if (contribution.kind === 'donation') {
@@ -1153,7 +1293,12 @@
 
         function processTip(rawDonation, donator, sourceType, contribution) {
             const source = sourceType ? String(sourceType).toLowerCase() : '';
-            const tipValue = convertToUSD(rawDonation, source);
+            const unitInfo = getDonationUnitInfo(rawDonation, source);
+            if (donationTypeFilter && !donationMatchesTypeFilter(unitInfo, rawDonation)) {
+                return;
+            }
+
+            const tipValue = nativeUnitMode && unitInfo ? unitInfo.amount : convertToUSD(rawDonation, source);
 
             if (isNaN(tipValue) || tipValue <= 0) {
                 console.warn('Ignoring invalid donation value:', rawDonation);
@@ -1162,8 +1307,8 @@
 
             const parsedDonation = parseDonationString(rawDonation);
             const storedAmount = parsedDonation.amount !== null ? parsedDonation.amount : tipValue;
-            const storedCurrency = parsedDonation.currency || 'USD';
-            const displayLabel = parsedDonation.display || `$${tipValue.toFixed(2)}`;
+            const storedCurrency = nativeUnitMode ? (unitInfo && unitInfo.label ? unitInfo.label : nativeUnitLabel) : (parsedDonation.currency || 'USD');
+            const displayLabel = nativeUnitMode ? `${formatNumber(tipValue)} ${storedCurrency}` : (parsedDonation.display || `$${tipValue.toFixed(2)}`);
             const goalValue = hypeMode ? tipValue * donationPointRate : tipValue;
 
             const donation = {
@@ -1176,7 +1321,8 @@
                 count: 1,
                 amount: storedAmount,
                 currency: storedCurrency,
-                usdValue: tipValue,
+                usdValue: nativeUnitMode ? undefined : tipValue,
+                unitValue: nativeUnitMode ? tipValue : undefined,
                 points: hypeMode ? goalValue : undefined,
                 raw: parsedDonation.display || ''
             };
@@ -1212,6 +1358,10 @@
 
             if (isTipJarResetCommand(data)) {
                 resetTipJarAmount(true);
+                return;
+            }
+
+            if (!passesTipJarSourceFilter(data)) {
                 return;
             }
 
@@ -1360,7 +1510,7 @@
 
             let csv = hypeMode
                 ? 'Timestamp,Type,Name,Recipient,Count,Points,Amount,Currency,USD Value,Source,Event,Raw\n'
-                : 'Timestamp,Donator,Amount,Currency,USD Value\n';
+                : 'Timestamp,Donator,Amount,Currency,USD Value,Unit Value,Source,Raw\n';
             donationHistory.forEach(donation => {
                 const date = new Date(donation.timestamp).toLocaleString();
                 if (hypeMode) {
@@ -1379,7 +1529,9 @@
                         csvCell(donation.raw || '')
                     ].join(',') + '\n';
                 } else {
-                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.amount},${donation.currency},${donation.usdValue.toFixed(2)}\n`;
+                    const usdValue = donation.usdValue !== undefined ? Number(donation.usdValue).toFixed(2) : '';
+                    const unitValue = donation.unitValue !== undefined ? formatNumber(donation.unitValue) : '';
+                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.amount},${csvCell(donation.currency)},${usdValue},${unitValue},${csvCell(donation.source || '')},${csvCell(donation.raw || '')}\n`;
                 }
             });
             
@@ -1408,7 +1560,9 @@
                     const kind = donation.kind || 'donation';
                     const detail = hypeMode
                         ? `${formatGoalValue(donation.points || 0)} - ${kind}${donation.count ? ` x${donation.count}` : ''}${donation.recipient ? ` - recipient: ${donation.recipient}` : ''}`
-                        : `${donation.amount} ${donation.currency} ($${donation.usdValue.toFixed(2)} USD)`;
+                        : (donation.usdValue !== undefined
+                            ? `${donation.amount} ${donation.currency} ($${Number(donation.usdValue).toFixed(2)} USD)`
+                            : `${formatNumber(donation.unitValue || donation.amount || 0)} ${donation.currency}`);
                     item.style.cssText = 'margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;';
                     item.innerHTML = `
                         <div><strong>${donation.donator}</strong></div>
@@ -1419,10 +1573,10 @@
                 });
 
                 // Add total at the bottom
-                const total = donationHistory.reduce((sum, d) => sum + (hypeMode ? (d.points || 0) : d.usdValue), 0);
+                const total = donationHistory.reduce((sum, d) => sum + (hypeMode ? (d.points || 0) : (d.unitValue !== undefined ? d.unitValue : d.usdValue || 0)), 0);
                 const totalDiv = document.createElement('div');
                 totalDiv.style.cssText = 'margin-top: 20px; padding-top: 20px; border-top: 1px solid #666; font-size: 18px; font-weight: bold;';
-                totalDiv.innerHTML = hypeMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
+                totalDiv.innerHTML = hypeMode || nativeUnitMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
                 historyList.appendChild(totalDiv);
             }
             
@@ -1461,6 +1615,7 @@
                     if (!donatorTotals[donation.donator]) {
                         donatorTotals[donation.donator] = {
                             totalUSD: 0,
+                            totalUnits: 0,
                             totalPoints: 0,
                             count: 0,
                             gifts: 0,
@@ -1469,6 +1624,7 @@
                         };
                     }
                     donatorTotals[donation.donator].totalUSD += donation.usdValue || 0;
+                    donatorTotals[donation.donator].totalUnits += donation.unitValue !== undefined ? donation.unitValue : 0;
                     donatorTotals[donation.donator].totalPoints += donation.points || 0;
                     donatorTotals[donation.donator].count += 1;
                     if (donation.kind === 'gift') {
@@ -1487,7 +1643,7 @@
 
                 // Sort by points in hype mode, otherwise by total USD.
                 const sortedDonators = Object.entries(donatorTotals)
-                    .sort((a, b) => hypeMode ? b[1].totalPoints - a[1].totalPoints : b[1].totalUSD - a[1].totalUSD)
+                    .sort((a, b) => hypeMode ? b[1].totalPoints - a[1].totalPoints : (nativeUnitMode ? b[1].totalUnits - a[1].totalUnits : b[1].totalUSD - a[1].totalUSD))
                     .slice(0, 10); // Top 10
 
                 sortedDonators.forEach(([donator, data], index) => {
@@ -1500,7 +1656,7 @@
                     const currencyBreakdown = Object.entries(data.currencies)
                         .map(([currency, amount]) => `${amount.toFixed(2)} ${currency}`)
                         .join(' + ');
-                    const scoreLabel = hypeMode ? formatGoalValue(data.totalPoints) : `$${data.totalUSD.toFixed(2)}`;
+                    const scoreLabel = hypeMode ? formatGoalValue(data.totalPoints) : (nativeUnitMode ? formatGoalValue(data.totalUnits) : `$${data.totalUSD.toFixed(2)}`);
                     const subLine = hypeMode
                         ? `${data.count} contribution${data.count > 1 ? 's' : ''}${data.subs ? ` - ${data.subs} sub/member` : ''}${data.gifts ? ` - ${data.gifts} gifted` : ''}`
                         : `${data.count} donation${data.count > 1 ? 's' : ''}`;

@@ -391,6 +391,23 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `filtertid` | comma-separated numbers | Filter by thread IDs |
 | `branded` | boolean | Shows channel icon |
 
+## Tip Jar & Goal Meter Parameters (`tipjar.html`)
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `style` | `jar`, `meter`, `minimal` | Selects the tip jar display style |
+| `goal` | number | Sets the target amount for the bar or jar |
+| `title` | string | Sets the visible goal title |
+| `tipjartype` | `usd`, `stars`, `bits`, `coins`, `diamonds`, `kicks`, `jewels`, `tokens`, `hearts`, `gold` | Counts only that donation unit/type. When set, the jar uses the raw unit count instead of converting to USD |
+| `tipjarunit` or `donationtype` | same as `tipjartype` | Alias for `tipjartype` |
+| `tipjarunitlabel` | string | Overrides the displayed unit label for a filtered unit bar |
+| `tipjarsource` | source type such as `facebook`, `youtube`, `twitch`, `kick`, `tiktok`, `stripe`, `kofi`, `bmac`, `fourthwall` | Counts only donations from that source while preserving the normal USD conversion unless `tipjartype` is also set |
+| `donationsource` | same as `tipjarsource` | Alias for `tipjarsource` |
+| `persistent` | boolean | Keeps the current amount between sessions. Filtered bars use separate saved totals |
+| `controls` | boolean | Shows reset/history/export controls |
+| `sound` | boolean | Plays a sound on accepted donations |
+| `hype` | boolean | Enables hype cup scoring mode |
+
 ## Other options for other overlays.
 
 WIP.
