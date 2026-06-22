@@ -480,6 +480,118 @@
         border-color: var(--primary-color);
         box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.7), 0 0 26px var(--primary-color);
     }
+
+    /* Compact Bar Style (square edges, corner-friendly) */
+    #compact-style {
+        width: 100%;
+        max-width: 460px;
+        padding: 12px;
+    }
+
+    .compact-container { width: 100%; }
+
+    .compact-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+    }
+
+    .compact-header .compact-amount { font-variant-numeric: tabular-nums; }
+
+    .compact-track {
+        position: relative;
+        width: 100%;
+        height: 22px;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .compact-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 0%;
+        background-color: #2196F3;
+        transition: width 0.6s ease, background-color 0.6s ease;
+    }
+
+    /* Vertical Bar Style (thermometer, square edges) */
+    #vertical-style {
+        width: 100%;
+        height: 100%;
+        padding: 20px;
+    }
+
+    .vertical-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .vertical-title {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        text-align: center;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+    }
+
+    .vertical-track {
+        position: relative;
+        width: 70px;
+        height: 320px;
+        max-height: 70vh;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .vertical-fill {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 0%;
+        background-color: #2196F3;
+        transition: height 0.8s ease, background-color 0.8s ease;
+    }
+
+    .vertical-text {
+        margin-top: 10px;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Text Only Style (minimal one-liner) */
+    #text-style {
+        width: 100%;
+        padding: 14px;
+    }
+
+    .text-line {
+        color: #fff;
+        font-size: 26px;
+        font-weight: 800;
+        white-space: nowrap;
+        text-align: center;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    }
     </style>
 </head>
 <body>
@@ -534,6 +646,35 @@
                 <span id="bar-percent">0%</span>
             </div>
         </div>
+    </div>
+
+    <!-- Compact Bar Style -->
+    <div id="compact-style" class="style-container">
+        <div class="compact-container">
+            <div class="compact-header">
+                <span id="compact-title">Stream Goal</span>
+                <span class="compact-amount" id="compact-amount">$0 / $250</span>
+            </div>
+            <div class="compact-track">
+                <div class="compact-fill" id="compact-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vertical Bar Style -->
+    <div id="vertical-style" class="style-container">
+        <div class="vertical-container">
+            <div class="vertical-title" id="vertical-title">Stream Goal</div>
+            <div class="vertical-track">
+                <div class="vertical-fill" id="vertical-fill"></div>
+            </div>
+            <div class="vertical-text" id="vertical-text">$0 / $250</div>
+        </div>
+    </div>
+
+    <!-- Text Only Style -->
+    <div id="text-style" class="style-container">
+        <div class="text-line" id="text-line">Stream Goal: $0 / $250</div>
     </div>
 
     <!-- Shared Elements -->
@@ -605,6 +746,7 @@
         const hasCustomFill = urlParams.has('fillstart') || urlParams.has('fillend') || urlParams.has('barcolorstart') || urlParams.has('barcolorend');
         const barLiquid = !urlParams.has('noliquid');
         const barHeight = readNumberParam('barheight', 0, 1);
+        const barRadius = urlParams.get('barradius'); // "0" for square edges, "12" for rounded, etc.
         const levelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
         const fillStartRgb = parseColorToRgb(fillStartColor, [33, 150, 243]);
         const fillEndRgb = parseColorToRgb(fillEndColor, [244, 67, 54]);
@@ -634,7 +776,15 @@
             container.classList.remove('active');
         });
         document.getElementById(`${style}-style`)?.classList.add('active');
-        
+
+        // Optional corner-friendly square (or custom) edges for any bar-based style.
+        if (barRadius !== null && barRadius !== '') {
+            const radiusValue = /^\d+(\.\d+)?$/.test(barRadius) ? barRadius + 'px' : barRadius;
+            document.querySelectorAll('.fluid-bar-track, .compact-track, .vertical-track').forEach(function(el) {
+                el.style.borderRadius = radiusValue;
+            });
+        }
+
         // Apply custom jar image if provided
         if (customJarUrl && style === 'jar') {
             document.getElementById('cup-overlay').src = customJarUrl;
@@ -663,6 +813,16 @@
             }
             if (!barLiquid) {
                 document.body.classList.add('bar-static');
+            }
+        } else if (style === 'compact') {
+            if (barHeight > 0) {
+                const track = document.querySelector('.compact-track');
+                if (track) track.style.height = barHeight + 'px';
+            }
+        } else if (style === 'vertical') {
+            if (barHeight > 0) {
+                const track = document.querySelector('.vertical-track');
+                if (track) track.style.height = barHeight + 'px';
             }
         }
 
@@ -903,9 +1063,35 @@
                 if (minimalGoalElement) minimalGoalElement.textContent = formatGoalValue(state.goal);
             } else if (style === 'bar') {
                 renderBar(state);
+            } else if (style === 'compact') {
+                const t = Math.max(0, Math.min(1, percentage / 100));
+                const fill = document.getElementById('compact-fill');
+                if (fill) {
+                    fill.style.width = percentage + '%';
+                    applyFillColor(fill, t);
+                }
+                setElText('compact-title', state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle);
+                setElText('compact-amount', `${formatProgressPair(state)} · ${Math.round(percentage)}%`);
+            } else if (style === 'vertical') {
+                const t = Math.max(0, Math.min(1, percentage / 100));
+                const fill = document.getElementById('vertical-fill');
+                if (fill) {
+                    fill.style.height = percentage + '%';
+                    applyFillColor(fill, t);
+                }
+                setElText('vertical-title', state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle);
+                setElText('vertical-text', `${formatProgressPair(state)} · ${Math.round(percentage)}%`);
+            } else if (style === 'text') {
+                const title = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
+                setElText('text-line', `${title}: ${formatProgressPair(state)} (${Math.round(percentage)}%)`);
             }
 
             updateCompletionDisplay();
+        }
+
+        function applyFillColor(fillEl, t) {
+            if (!fillEl) return;
+            fillEl.style.backgroundColor = (fillMode === 'solid') ? fillStartColor : lerpColor(fillStartRgb, fillEndRgb, t);
         }
 
         function updateAmount(amount) {
@@ -1063,9 +1249,17 @@
             return String(value || '').trim().toLowerCase();
         }
 
+        function normalizeTipJarSourceValue(value) {
+            const source = normalizeFilterValue(value).replace(/[\s_-]+/g, '');
+            if (source === 'youtubeshort' || source === 'youtubeshorts') {
+                return 'youtube';
+            }
+            return normalizeFilterValue(value);
+        }
+
         function normalizeFilterList(value) {
             return String(value || '').split(',').map(function(item) {
-                return normalizeFilterValue(item);
+                return normalizeTipJarSourceValue(item);
             }).filter(function(item) {
                 return item && item !== 'all' && item !== 'any';
             });
@@ -1189,7 +1383,7 @@
         function passesTipJarSourceFilter(data) {
             if (!sourceTypeFilter.length) return true;
             const meta = getMeta(data);
-            const source = normalizeFilterValue(data.type || data.platform || meta.source || '');
+            const source = normalizeTipJarSourceValue(data.type || data.platform || meta.source || '');
             return sourceTypeFilter.indexOf(source) !== -1;
         }
 

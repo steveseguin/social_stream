@@ -6953,6 +6953,77 @@ function buildTestAlertPayload(category, overrides = {}) {
     };
 }
 
+function buildTipJarTestDonationPayload(kind) {
+    const payloads = {
+        'facebook-stars': {
+            type: 'facebook',
+            platform: 'facebook',
+            chatname: 'Star Supporter',
+            chatmessage: 'Testing Facebook Stars',
+            hasDonation: '500 Stars',
+            donoValue: 5,
+            chatimg: createPreviewAvatarDataUri('FB', '#1877f2')
+        },
+        'youtube-superchat': {
+            type: 'youtube',
+            platform: 'youtube',
+            event: 'donation',
+            chatname: 'SuperChat Fan',
+            chatmessage: 'Testing a Super Chat donation',
+            hasDonation: '$10.00',
+            donoValue: 10,
+            chatimg: createPreviewAvatarDataUri('YT', '#ff0033')
+        },
+        'twitch-bits': {
+            type: 'twitch',
+            platform: 'twitch',
+            event: 'cheer',
+            chatname: 'Bits Tester',
+            chatmessage: 'Testing Twitch bits',
+            hasDonation: '500 bits',
+            donoValue: 5,
+            chatimg: createPreviewAvatarDataUri('TW', '#9146ff'),
+            meta: { bits: 500 }
+        },
+        'tiktok-hearts': {
+            type: 'tiktok',
+            platform: 'tiktok',
+            event: 'gift',
+            chatname: 'Heart Sender',
+            chatmessage: 'Testing TikTok hearts',
+            hasDonation: '100 hearts',
+            donoValue: 1,
+            chatimg: createPreviewAvatarDataUri('TT', '#fe2c55'),
+            meta: { giftName: 'Hearts', giftCount: 100 }
+        }
+    };
+
+    const payload = payloads[kind];
+    if (!payload) {
+        return null;
+    }
+
+    return {
+        ...payload,
+        id: nextOverlayPreviewId('tipjar_test'),
+        timestamp: Date.now()
+    };
+}
+
+function attachTipJarTestDonationButtons() {
+    document.querySelectorAll('[data-tipjar-test]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const payload = buildTipJarTestDonationPayload(button.getAttribute('data-tipjar-test'));
+            if (!payload) {
+                return;
+            }
+            chrome.runtime.sendMessage({ cmd: 'testAlert', payload }, function() {
+                log('ignore callback for this action');
+            });
+        });
+    });
+}
+
 function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
     const config = overlayPreviewConfigs[previewKey];
     if (!config) {
@@ -8947,6 +9018,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ id: 'multi-alert-preview-hype', descriptor: () => buildMultiAlertPreviewDescriptor('hype') },
 		{ id: 'multi-alert-preview-clear', descriptor: false }
 	]);
+	attachTipJarTestDonationButtons();
 
 	var previewPlatformSelect = document.getElementById('multi-alert-preview-platform');
 	if (previewPlatformSelect) {

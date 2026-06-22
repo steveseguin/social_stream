@@ -10656,11 +10656,11 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-general-options" />
-                    <label class="collapsible-label" for="wrapper-tipjar-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
+                    <label class="collapsible-label" for="wrapper-tipjar-general-options"><span>General Controls</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group tipjar">
-                                <h3><span data-translate="general-options">General Options</span></h3>
+                                <h3>🔧 <span data-translate="general-options">General Options</span></h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param12="alignright" />
@@ -10695,7 +10695,19 @@ input:checked + .slider:before {
                                     </button>
                                 </div>
 
-                                <h3>Hype Cup Options</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-hype-options" />
+                    <label class="collapsible-label" for="wrapper-tipjar-hype-options"><span>Hype Cup Scoring</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group tipjar">
+                                <h3>🏆 <span data-translate="hype-cup-options">Hype Cup Options</span></h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param12="hype" />
@@ -10745,14 +10757,29 @@ input:checked + .slider:before {
                                     <span>🙈 Hide completion count</span>
                                 </div>
 
-                                <h3><span data-translate="style-and-theme">Style and Theme</span></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-style-options" />
+                    <label class="collapsible-label" for="wrapper-tipjar-style-options"><span>Style, Goal, and Filters</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group tipjar">
+                                <h3>🎨 <span data-translate="style-and-theme">Style and Theme</span></h3>
                                 <div>
                                     <label><span data-translate="display-style">Display Style</span></label>
                                     <select data-optionparam12="style" class="textInput">
                                         <option value="jar" selected><span data-translate="jar-style">Jar (Default)</span></option>
                                         <option value="meter"><span data-translate="meter-style">Goal Meter</span></option>
                                         <option value="bar"><span data-translate="bar-style">Fluid Goal Bar</span></option>
+                                        <option value="compact"><span data-translate="compact-style">Compact Bar (corner)</span></option>
+                                        <option value="vertical"><span data-translate="vertical-style">Vertical Bar</span></option>
                                         <option value="minimal"><span data-translate="minimal-style">Minimal</span></option>
+                                        <option value="text"><span data-translate="text-style">Text Only</span></option>
                                     </select>
                                 </div>
                                 <div>
@@ -10773,7 +10800,7 @@ input:checked + .slider:before {
                                     </select>
                                 </div>
                                 
-                                <h3><span data-translate="goal-settings">Goal Settings</span></h3>
+                                <h3>🎯 <span data-translate="goal-settings">Goal Settings</span></h3>
                                 <div>
                                     <label><span data-translate="goal-amount">Goal Amount ($):</span></label>
                                     <input type="number" data-optionparam12="goal" class="textInput" placeholder="250" value="250" min="1" step="1" />
@@ -10814,7 +10841,7 @@ input:checked + .slider:before {
                                     </select>
                                 </div>
 
-                                <h3>Goal Bar Style</h3>
+                                <h3>📊 <span data-translate="goal-bar-style">Goal Bar Style</span></h3>
                                 <div>
                                     <label>Fill start color (empty/low):</label>
                                     <input type="text" data-optionparam12="fillstart" class="textInput" placeholder="#2196F3 (blue)" />
@@ -10840,6 +10867,27 @@ input:checked + .slider:before {
                                     <input type="text" id="streamGoalJarImage" data-optionparam12="jarimage" class="textInput" placeholder="https://example.com/jar.png" />
                                     <button type="button" id="uploadStreamGoalJarImageBtn" class="textInputUploadButton">Upload</button>
                                 </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-test-options" />
+                    <label class="collapsible-label" for="wrapper-tipjar-test-options"><span>Test Donations</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group tipjar">
+                                <h3>Test Donations</h3>
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+                                    <button type="button" class="overlayButton" data-tipjar-test="facebook-stars" style="flex: 1 1 120px; min-width: 0; white-space: nowrap;" title="Send a fake Facebook Stars donation">Facebook Stars</button>
+                                    <button type="button" class="overlayButton" data-tipjar-test="youtube-superchat" style="flex: 1 1 120px; min-width: 0; white-space: nowrap;" title="Send a fake YouTube Super Chat donation">YouTube SuperChat</button>
+                                    <button type="button" class="overlayButton" data-tipjar-test="twitch-bits" style="flex: 1 1 120px; min-width: 0; white-space: nowrap;" title="Send a fake Twitch bits donation">Twitch Bits</button>
+                                    <button type="button" class="overlayButton" data-tipjar-test="tiktok-hearts" style="flex: 1 1 120px; min-width: 0; white-space: nowrap;" title="Send a fake TikTok hearts donation">TikTok Hearts</button>
+                                </div>
+                                <small style="display: block; opacity: 0.8;">Sends a fake donation to connected overlays.</small>
 								
                             </div>
                         </div>
