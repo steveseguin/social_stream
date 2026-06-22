@@ -10751,6 +10751,7 @@ input:checked + .slider:before {
                                     <select data-optionparam12="style" class="textInput">
                                         <option value="jar" selected><span data-translate="jar-style">Jar (Default)</span></option>
                                         <option value="meter"><span data-translate="meter-style">Goal Meter</span></option>
+                                        <option value="bar"><span data-translate="bar-style">Fluid Goal Bar</span></option>
                                         <option value="minimal"><span data-translate="minimal-style">Minimal</span></option>
                                     </select>
                                 </div>
@@ -10811,6 +10812,28 @@ input:checked + .slider:before {
                                         <option value="bmac">Buy Me A Coffee</option>
                                         <option value="fourthwall">Fourthwall</option>
                                     </select>
+                                </div>
+
+                                <h3>Goal Bar Style</h3>
+                                <div>
+                                    <label>Fill start color (empty/low):</label>
+                                    <input type="text" data-optionparam12="fillstart" class="textInput" placeholder="#2196F3 (blue)" />
+                                </div>
+                                <div>
+                                    <label>Fill end color (full):</label>
+                                    <input type="text" data-optionparam12="fillend" class="textInput" placeholder="#f44336 (red)" />
+                                </div>
+                                <div>
+                                    <label>Fill behavior:</label>
+                                    <select data-optionparam12="fillmode" class="textInput">
+                                        <option value="progress" selected>Shift color as it fills (blue → red)</option>
+                                        <option value="gradient">Fixed gradient (start → end)</option>
+                                        <option value="solid">Solid (start color only)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Recurring goal increment:</label>
+                                    <input type="number" data-optionparam12="levelsize" class="textInput" placeholder="0 = single goal (e.g. 1000 stars, 50 $)" min="0" step="1" />
                                 </div>
                                 <div class="textInputContainer textInputWithUpload" style="width: 95%;">
                                     <label><span data-translate="custom-jar-image">Custom Jar Image URL:</span></label>

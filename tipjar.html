@@ -366,6 +366,120 @@
         -webkit-text-fill-color: transparent;
         margin: 20px 0;
     }
+
+    /* Fluid Goal Bar Style */
+    #bar-style {
+        width: 100%;
+        max-width: 900px;
+        padding: 24px;
+    }
+
+    .fluid-bar-container {
+        width: 100%;
+    }
+
+    .fluid-bar-title {
+        color: #fff;
+        font-size: 30px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 14px;
+        letter-spacing: 0.5px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+    }
+
+    .fluid-bar-track {
+        position: relative;
+        width: 100%;
+        height: 64px;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 999px;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        box-shadow: inset 0 3px 12px rgba(0, 0, 0, 0.6), 0 6px 22px rgba(0, 0, 0, 0.35);
+    }
+
+    .fluid-bar-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 0%;
+        background-color: #2196F3;
+        background-repeat: no-repeat;
+        border-radius: inherit;
+        transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1), background-color 1.1s ease, box-shadow 1.1s ease;
+        box-shadow: 0 0 20px rgba(33, 150, 243, 0.55);
+        overflow: hidden;
+    }
+
+    /* Top sheen, gives the liquid a glossy surface */
+    .fluid-bar-fill::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 48%;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+        border-radius: inherit;
+        pointer-events: none;
+    }
+
+    /* Flowing diagonal stripes, gives the "fluid" motion */
+    .fluid-bar-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 250%;
+        height: 100%;
+        background-image: repeating-linear-gradient(
+            -45deg,
+            rgba(255, 255, 255, 0.16) 0px,
+            rgba(255, 255, 255, 0.16) 16px,
+            rgba(255, 255, 255, 0) 16px,
+            rgba(255, 255, 255, 0) 38px
+        );
+        animation: fluidFlow 2.6s linear infinite;
+        pointer-events: none;
+    }
+
+    body.bar-static .fluid-bar-fill::after { animation: none; }
+
+    @keyframes fluidFlow {
+        0% { transform: translateX(-38px); }
+        100% { transform: translateX(0); }
+    }
+
+    .fluid-bar-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 26px;
+        font-weight: 800;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+        z-index: 5;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    .fluid-bar-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+        color: #ddd;
+        font-size: 16px;
+        font-weight: 600;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    }
+
+    body.neon .fluid-bar-track {
+        border-color: var(--primary-color);
+        box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.7), 0 0 26px var(--primary-color);
+    }
     </style>
 </head>
 <body>
@@ -404,6 +518,21 @@
             <div class="minimal-amount" id="minimal-amount">$0.00</div>
             <div class="minimal-goal">of <span id="minimal-goal-value">$250</span> goal</div>
             <div class="minimal-percentage" id="minimal-percentage">0%</div>
+        </div>
+    </div>
+
+    <!-- Fluid Goal Bar Style -->
+    <div id="bar-style" class="style-container">
+        <div class="fluid-bar-container">
+            <h2 class="fluid-bar-title" id="bar-title">Stream Goal</h2>
+            <div class="fluid-bar-track">
+                <div class="fluid-bar-fill" id="bar-fill"></div>
+                <div class="fluid-bar-text" id="bar-text">$0 / $250</div>
+            </div>
+            <div class="fluid-bar-meta">
+                <span id="bar-level"></span>
+                <span id="bar-percent">0%</span>
+            </div>
         </div>
     </div>
 
@@ -468,7 +597,18 @@
         const sourceTypeFilter = normalizeFilterList(urlParams.get('tipjarsource') || urlParams.get('donationsource') || '');
         const nativeUnitMode = !!donationTypeFilter;
         const nativeUnitLabel = urlParams.get('tipjarunitlabel') || getDonationTypeLabel(donationTypeFilter);
-        
+
+        // Fluid goal bar styling + recurring goal levels
+        const fillStartColor = urlParams.get('fillstart') || urlParams.get('barcolorstart') || '#2196F3';
+        const fillEndColor = urlParams.get('fillend') || urlParams.get('barcolorend') || '#f44336';
+        const fillMode = (urlParams.get('fillmode') || 'progress').toLowerCase(); // progress | gradient | solid
+        const hasCustomFill = urlParams.has('fillstart') || urlParams.has('fillend') || urlParams.has('barcolorstart') || urlParams.has('barcolorend');
+        const barLiquid = !urlParams.has('noliquid');
+        const barHeight = readNumberParam('barheight', 0, 1);
+        const levelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
+        const fillStartRgb = parseColorToRgb(fillStartColor, [33, 150, 243]);
+        const fillEndRgb = parseColorToRgb(fillEndColor, [244, 67, 54]);
+
         // Socket server parameters
         const hasServerParam = urlParams.has('server') || urlParams.has('server2');
         const serverURL = urlParams.get('server') || urlParams.get('server2') || (hasServerParam ? "wss://io.socialstream.ninja" : null);
@@ -507,10 +647,22 @@
             document.getElementById('milestone-75').textContent = formatGoalValue(goal * 0.75);
             document.getElementById('milestone-50').textContent = formatGoalValue(goal * 0.50);
             document.getElementById('milestone-25').textContent = formatGoalValue(goal * 0.25);
+            if (hasCustomFill) {
+                document.getElementById('meter-fill').style.background = `linear-gradient(90deg, ${fillStartColor} 0%, ${fillEndColor} 100%)`;
+            }
         } else if (style === 'minimal') {
             const minimalGoalElement = document.getElementById('minimal-goal-value');
             if (minimalGoalElement) {
                 minimalGoalElement.textContent = formatGoalValue(goal);
+            }
+        } else if (style === 'bar') {
+            document.getElementById('bar-title').textContent = customTitle;
+            if (barHeight > 0) {
+                const track = document.querySelector('.fluid-bar-track');
+                if (track) track.style.height = barHeight + 'px';
+            }
+            if (!barLiquid) {
+                document.body.classList.add('bar-static');
             }
         }
 
@@ -704,7 +856,8 @@
 
         function renderAmount() {
             saveAmount();
-            const percentage = Math.min((currentAmount / goal) * 100, 100);
+            const state = getProgressState();
+            const percentage = state.percentage;
 
             // Update different styles
             if (style === 'jar') {
@@ -712,9 +865,14 @@
             } else if (style === 'meter') {
                 document.getElementById('meter-fill').style.width = percentage + '%';
                 document.getElementById('meter-text').textContent = formatProgressText();
+                if (state.isLevel) updateMeterChrome(state);
             } else if (style === 'minimal') {
-                document.getElementById('minimal-amount').textContent = formatGoalValue(currentAmount, true);
+                document.getElementById('minimal-amount').textContent = formatGoalValue(state.current, true);
                 document.getElementById('minimal-percentage').textContent = `${Math.round(percentage)}%`;
+                const minimalGoalElement = document.getElementById('minimal-goal-value');
+                if (minimalGoalElement) minimalGoalElement.textContent = formatGoalValue(state.goal);
+            } else if (style === 'bar') {
+                renderBar(state);
             }
 
             updateCompletionDisplay();
@@ -725,7 +883,19 @@
             currentAmount += amount;
             renderAmount();
 
-            if (amount <= 0 || goal <= 0) return;
+            if (amount <= 0) return;
+
+            // Recurring level mode: celebrate whenever a new increment band is filled.
+            if (levelSize > 0) {
+                const previousLevel = Math.floor(previousAmount / levelSize);
+                const newLevel = Math.floor(currentAmount / levelSize);
+                if (newLevel > previousLevel) {
+                    triggerLevelUp(newLevel);
+                }
+                return;
+            }
+
+            if (goal <= 0) return;
 
             if (previousAmount < goal * 0.25 && currentAmount >= goal * 0.25) triggerMilestone(25);
             if (previousAmount < goal * 0.50 && currentAmount >= goal * 0.50) triggerMilestone(50);
@@ -780,6 +950,15 @@
                 createConfetti();
             }
             showNotification(`${percent}% of goal reached!`);
+        }
+
+        function triggerLevelUp(completedLevel) {
+            if (celebration === 'fireworks') {
+                triggerFireworks();
+            } else if (celebration === 'confetti') {
+                createConfetti();
+            }
+            showNotification(`${customTitle}: Level ${completedLevel} complete! 🎉`);
         }
 
         function addRecentTip(name, donationLabel) {
@@ -954,12 +1133,15 @@
 
         function donationMatchesTypeFilter(unitInfo, rawDonation) {
             if (!donationTypeFilter) return true;
-            if (!unitInfo || !unitInfo.type) return false;
 
             const filter = donationTypeFilter === 'cash' ? 'usd' : donationTypeFilter;
-            const unitType = unitInfo.type === 'cash' ? 'usd' : unitInfo.type;
-            if (filter === unitType) return true;
+            if (unitInfo && unitInfo.type) {
+                const unitType = unitInfo.type === 'cash' ? 'usd' : unitInfo.type;
+                if (filter === unitType) return true;
+            }
 
+            // Fall back to a raw-text match so labels we don't explicitly classify
+            // (e.g. "100 Stars") still count when the unit word is present.
             const raw = String(rawDonation || '').toLowerCase();
             const escapedFilter = filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             return new RegExp('(^|\\s)' + escapedFilter + 's?(?=\\s|$)').test(raw);
@@ -997,9 +1179,121 @@
             return `$${forceCents ? num.toFixed(2) : formatNumber(num)}`;
         }
 
+        function getProgressState() {
+            if (levelSize > 0) {
+                const completed = Math.floor(currentAmount / levelSize);
+                const within = currentAmount - (completed * levelSize);
+                return {
+                    isLevel: true,
+                    level: completed + 1,
+                    completed: completed,
+                    current: within,
+                    goal: levelSize,
+                    total: currentAmount,
+                    percentage: Math.min((within / levelSize) * 100, 100)
+                };
+            }
+            return {
+                isLevel: false,
+                level: 0,
+                completed: 0,
+                current: currentAmount,
+                goal: goal,
+                total: currentAmount,
+                percentage: goal > 0 ? Math.min((currentAmount / goal) * 100, 100) : 0
+            };
+        }
+
+        function formatProgressPair(state) {
+            return `${formatGoalValue(state.current, true)} / ${formatGoalValue(state.goal)}`;
+        }
+
         function formatProgressText() {
-            const progress = `${formatGoalValue(currentAmount, true)} / ${formatGoalValue(goal)}`;
-            return style === 'jar' && (hypeMode || hasCustomTitle) ? `${customTitle}: ${progress}` : progress;
+            const state = getProgressState();
+            const progress = formatProgressPair(state);
+            if (style === 'jar' && (hypeMode || hasCustomTitle || state.isLevel)) {
+                const titleText = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
+                return `${titleText}: ${progress}`;
+            }
+            return progress;
+        }
+
+        function setElText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+
+        function updateMeterChrome(state) {
+            const titleEl = document.querySelector('.goal-title');
+            if (titleEl) titleEl.textContent = state.isLevel ? `${customTitle} — Level ${state.level}` : customTitle;
+            const g = state.goal;
+            setElText('milestone-100', formatGoalValue(g));
+            setElText('milestone-75', formatGoalValue(g * 0.75));
+            setElText('milestone-50', formatGoalValue(g * 0.50));
+            setElText('milestone-25', formatGoalValue(g * 0.25));
+        }
+
+        function parseColorToRgb(color, fallback) {
+            if (!color) return fallback;
+            try {
+                const ctx = parseColorToRgb._ctx || (parseColorToRgb._ctx = document.createElement('canvas').getContext('2d'));
+                ctx.fillStyle = '#000000';
+                ctx.fillStyle = color;
+                const normalized = ctx.fillStyle;
+                let match = /^#([0-9a-f]{6})$/i.exec(normalized);
+                if (match) {
+                    return [
+                        parseInt(match[1].slice(0, 2), 16),
+                        parseInt(match[1].slice(2, 4), 16),
+                        parseInt(match[1].slice(4, 6), 16)
+                    ];
+                }
+                match = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i.exec(normalized);
+                if (match) {
+                    return [parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10)];
+                }
+            } catch (e) {}
+            return fallback;
+        }
+
+        function lerpColor(a, b, t) {
+            t = Math.max(0, Math.min(1, t));
+            const r = Math.round(a[0] + (b[0] - a[0]) * t);
+            const g = Math.round(a[1] + (b[1] - a[1]) * t);
+            const bl = Math.round(a[2] + (b[2] - a[2]) * t);
+            return `rgb(${r}, ${g}, ${bl})`;
+        }
+
+        function renderBar(state) {
+            const fill = document.getElementById('bar-fill');
+            if (!fill) return;
+
+            const pct = state.percentage;
+            const t = Math.max(0, Math.min(1, pct / 100));
+            fill.style.width = pct + '%';
+
+            if (fillMode === 'gradient') {
+                fill.style.backgroundImage = `linear-gradient(90deg, ${fillStartColor} 0%, ${fillEndColor} 100%)`;
+                const track = fill.parentElement;
+                if (track && track.clientWidth) {
+                    fill.style.backgroundSize = track.clientWidth + 'px 100%';
+                }
+                fill.style.backgroundColor = fillStartColor;
+            } else if (fillMode === 'solid') {
+                fill.style.backgroundImage = 'none';
+                fill.style.backgroundColor = fillStartColor;
+            } else { // progress: the whole bar shifts colour as it fills
+                fill.style.backgroundImage = 'none';
+                fill.style.backgroundColor = lerpColor(fillStartRgb, fillEndRgb, t);
+            }
+
+            const glow = lerpColor(fillStartRgb, fillEndRgb, t);
+            fill.style.boxShadow = `0 0 ${Math.round(14 + 18 * t)}px ${glow}`;
+
+            setElText('bar-text', formatProgressPair(state));
+            setElText('bar-title', state.isLevel ? `${customTitle} — Level ${state.level}` : customTitle);
+            setElText('bar-level', state.isLevel ? `Level ${state.level} · ${formatGoalValue(state.total, true)} total` : '');
+            setElText('bar-percent', `${Math.round(pct)}%`);
         }
 
         function parseDonationString(rawDonation) {
@@ -1429,7 +1723,12 @@
 
         // Initialize display
         renderAmount();
-        
+
+        // Gradient fill + meter widths depend on track size, so recompute on resize.
+        if (style === 'bar' || style === 'meter') {
+            window.addEventListener('resize', renderAmount);
+        }
+
         // Show controls if enabled
         if (showControls) {
             document.getElementById('controls-panel').style.display = 'block';

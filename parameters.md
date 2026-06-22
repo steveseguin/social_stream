@@ -395,9 +395,9 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 
 | Parameter | Values | Description |
 |-----------|--------|-------------|
-| `style` | `jar`, `meter`, `minimal` | Selects the tip jar display style |
+| `style` | `jar`, `meter`, `bar`, `minimal` | Selects the tip jar display style. `bar` is the fluid goal bar |
 | `goal` | number | Sets the target amount for the bar or jar |
-| `title` | string | Sets the visible goal title |
+| `title` | string | Sets the visible goal title (e.g. `Star Goal`, `SuperChat Goal`) |
 | `tipjartype` | `usd`, `stars`, `bits`, `coins`, `diamonds`, `kicks`, `jewels`, `tokens`, `hearts`, `gold` | Counts only that donation unit/type. When set, the jar uses the raw unit count instead of converting to USD |
 | `tipjarunit` or `donationtype` | same as `tipjartype` | Alias for `tipjartype` |
 | `tipjarunitlabel` | string | Overrides the displayed unit label for a filtered unit bar |
@@ -407,6 +407,14 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `controls` | boolean | Shows reset/history/export controls |
 | `sound` | boolean | Plays a sound on accepted donations |
 | `hype` | boolean | Enables hype cup scoring mode |
+| `levelsize` or `increment` | number | Turns the goal into repeating bands/levels of this size (e.g. `1000` stars or `50` dollars). The bar fills, celebrates, and rolls into the next level instead of stopping |
+| `fillstart` or `barcolorstart` | CSS color | Fill color for the `bar` style when empty/low (default `#2196F3` blue). Also recolors the `meter` fill |
+| `fillend` or `barcolorend` | CSS color | Fill color for the `bar` style when full (default `#f44336` red). Also recolors the `meter` fill |
+| `fillmode` | `progress`, `gradient`, `solid` | `bar` fill behavior. `progress` (default) shifts the whole bar from start→end color as it fills; `gradient` reveals a fixed start→end gradient; `solid` uses only the start color |
+| `barheight` | number | Height of the fluid goal bar in pixels (default `64`) |
+| `noliquid` | boolean | Disables the flowing-liquid animation on the `bar` style |
+| `theme` | `default`, `neon`, `gold` | Visual theme for the meter/bar |
+| `celebration` | `hearts`, `confetti`, `fireworks`, `none` | Effect played on milestones/level-ups |
 
 ## Other options for other overlays.
 
