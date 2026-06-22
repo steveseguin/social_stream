@@ -674,6 +674,8 @@
         let currentAmount = persistent ? (parseFloat(localStorage.getItem(amountStorageKey)) || 0) : 0;
         let completionCount = persistent ? (parseInt(localStorage.getItem(completionsStorageKey) || '0', 10) || 0) : 0;
         let completionResetTimer = null;
+        let levelRolloverTimer = null;
+        let levelCompletionState = null;
         const recentTips = [];
         const maxRecentTips = 5;
         const donationHistory = persistent ? (JSON.parse(localStorage.getItem(historyStorageKey) || '[]')) : [];
@@ -828,6 +830,7 @@
                 clearTimeout(completionResetTimer);
                 completionResetTimer = null;
             }
+            clearLevelCompletionState();
             currentAmount = 0;
             if (hypeMode) {
                 completionCount = 0;
@@ -852,6 +855,33 @@
             if (persistent) {
                 localStorage.setItem(amountStorageKey, currentAmount.toString());
             }
+        }
+
+        function clearLevelCompletionState() {
+            if (levelRolloverTimer) {
+                clearTimeout(levelRolloverTimer);
+                levelRolloverTimer = null;
+            }
+            levelCompletionState = null;
+        }
+
+        function showCompletedLevel(completedLevel) {
+            clearLevelCompletionState();
+            levelCompletionState = {
+                isLevel: true,
+                level: completedLevel,
+                completed: completedLevel,
+                current: levelSize,
+                goal: levelSize,
+                total: currentAmount,
+                percentage: 100
+            };
+            renderAmount();
+            levelRolloverTimer = setTimeout(function() {
+                levelRolloverTimer = null;
+                levelCompletionState = null;
+                renderAmount();
+            }, completionDelayMs);
         }
 
         function renderAmount() {
@@ -881,19 +911,28 @@
         function updateAmount(amount) {
             const previousAmount = currentAmount;
             currentAmount += amount;
-            renderAmount();
 
-            if (amount <= 0) return;
+            if (amount <= 0) {
+                clearLevelCompletionState();
+                renderAmount();
+                return;
+            }
 
             // Recurring level mode: celebrate whenever a new increment band is filled.
             if (levelSize > 0) {
                 const previousLevel = Math.floor(previousAmount / levelSize);
                 const newLevel = Math.floor(currentAmount / levelSize);
                 if (newLevel > previousLevel) {
+                    showCompletedLevel(newLevel);
                     triggerLevelUp(newLevel);
+                } else {
+                    clearLevelCompletionState();
+                    renderAmount();
                 }
                 return;
             }
+
+            renderAmount();
 
             if (goal <= 0) return;
 
@@ -1181,6 +1220,7 @@
 
         function getProgressState() {
             if (levelSize > 0) {
+                if (levelCompletionState) return levelCompletionState;
                 const completed = Math.floor(currentAmount / levelSize);
                 const within = currentAmount - (completed * levelSize);
                 return {
