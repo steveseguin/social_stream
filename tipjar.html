@@ -447,6 +447,15 @@
 
     body.bar-static .fluid-bar-fill::after { animation: none; }
 
+    body.bar-only #bar-style {
+        padding: 0;
+    }
+
+    body.bar-only .fluid-bar-title,
+    body.bar-only .fluid-bar-meta {
+        display: none;
+    }
+
     @keyframes fluidFlow {
         0% { transform: translateX(-38px); }
         100% { transform: translateX(0); }
@@ -747,6 +756,7 @@
         const barLiquid = !urlParams.has('noliquid');
         const barHeight = readNumberParam('barheight', 0, 1);
         const barRadius = urlParams.get('barradius'); // "0" for square edges, "12" for rounded, etc.
+        const barOnly = urlParams.has('baronly');
         const levelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
         const fillStartRgb = parseColorToRgb(fillStartColor, [33, 150, 243]);
         const fillEndRgb = parseColorToRgb(fillEndColor, [244, 67, 54]);
@@ -769,6 +779,10 @@
 
         if (alignRight) {
             document.body.classList.add('align-right');
+        }
+
+        if (barOnly) {
+            document.body.classList.add('bar-only');
         }
 
         // Initialize style
@@ -1524,7 +1538,8 @@
             const glow = lerpColor(fillStartRgb, fillEndRgb, t);
             fill.style.boxShadow = `0 0 ${Math.round(14 + 18 * t)}px ${glow}`;
 
-            setElText('bar-text', formatProgressPair(state));
+            const barText = barOnly ? `${customTitle}: ${formatProgressPair(state)}` : formatProgressPair(state);
+            setElText('bar-text', barText);
             setElText('bar-title', state.isLevel ? `${customTitle} — Level ${state.level}` : customTitle);
             setElText('bar-level', state.isLevel ? `Level ${state.level} · ${formatGoalValue(state.total, true)} total` : '');
             setElText('bar-percent', `${Math.round(pct)}%`);
