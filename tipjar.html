@@ -743,9 +743,9 @@
         const showCompletions = hypeMode && !urlParams.has('hidecompletions');
         const completionDelayMs = readNumberParam('completiondelay', 3000, 0);
         const dedupeWindowMs = readNumberParam('dedupewindow', 8, 0) * 1000;
-        const donationTypeFilter = normalizeFilterValue(urlParams.get('tipjartype') || urlParams.get('tipjarunit') || urlParams.get('donationtype') || '');
+        const donationTypeFilter = normalizeDonationTypeFilter(urlParams.get('tipjartype') || urlParams.get('tipjarunit') || urlParams.get('donationtype') || '');
         const sourceTypeFilter = normalizeFilterList(urlParams.get('tipjarsource') || urlParams.get('donationsource') || '');
-        const nativeUnitMode = !!donationTypeFilter;
+        const nativeUnitMode = !!donationTypeFilter && donationTypeFilter !== 'usd';
         const nativeUnitLabel = urlParams.get('tipjarunitlabel') || getDonationTypeLabel(donationTypeFilter);
 
         // Fluid goal bar styling + recurring goal levels
@@ -1263,6 +1263,11 @@
             return String(value || '').trim().toLowerCase();
         }
 
+        function normalizeDonationTypeFilter(value) {
+            const filter = normalizeFilterValue(value);
+            return filter === 'cash' ? 'usd' : filter;
+        }
+
         function normalizeTipJarSourceValue(value) {
             const source = normalizeFilterValue(value).replace(/[\s_-]+/g, '');
             if (source === 'youtubeshort' || source === 'youtubeshorts') {
@@ -1381,7 +1386,7 @@
         function donationMatchesTypeFilter(unitInfo, rawDonation) {
             if (!donationTypeFilter) return true;
 
-            const filter = donationTypeFilter === 'cash' ? 'usd' : donationTypeFilter;
+            const filter = normalizeDonationTypeFilter(donationTypeFilter);
             if (unitInfo && unitInfo.type) {
                 const unitType = unitInfo.type === 'cash' ? 'usd' : unitInfo.type;
                 if (filter === unitType) return true;
