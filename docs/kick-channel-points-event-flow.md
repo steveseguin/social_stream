@@ -20,6 +20,8 @@ This is not configured in the Points System page unless you want SSN's own loyal
    - Enter or confirm the channel slug, then click `Connect channel`.
    - Keep this page open while streaming.
 
+   ![Kick bridge source with channel value and sign-in controls](images/kick-channel-points-event-flow/kick-bridge-source.png)
+
    The normal popup `Open chat` button for Kick opens `https://kick.com/YOUR_CHANNEL/chatroom`. That can catch visible "redeemed" chat/system messages, but the Kick bridge page is the reliable path for structured reward events.
 
 3. Open the Flow Actions overlay.
@@ -27,6 +29,8 @@ This is not configured in the Points System page unless you want SSN's own loyal
    - Click the `Flow Actions` link or copy it.
    - Put that URL in OBS as a Browser Source, or keep it open in a browser.
    - The URL looks like `https://socialstream.ninja/actions.html?session=YOUR_SESSION`.
+
+   ![Flow Actions card showing the overlay URL and Event Flow Editor link](images/kick-channel-points-event-flow/flow-actions-popup-card.png)
 
    Audio clips, media overlays, text overlays, and OBS actions need this page open.
 
@@ -43,6 +47,10 @@ This is not configured in the Points System page unless you want SSN's own loyal
    - Add action: `Overlays & Media` -> `Display Media Overlay`, then paste the image/GIF/video URL.
    - Connect the trigger, or the `AND` node, to the action nodes.
    - Save the flow and make sure it is active.
+
+   ![Event Flow canvas with Kick source, Channel Point Redemption trigger, and reward name](images/kick-channel-points-event-flow/event-flow-reward-trigger.png)
+
+   ![Display Media Overlay action properties with media URL, duration, size, and position values](images/kick-channel-points-event-flow/event-flow-media-action-values.png)
 
 6. Use the importable example if preferred.
    - Import `actions/examples/kick-channel-points-action-flow.json`.
@@ -87,6 +95,8 @@ In the Event Flow Editor test panel:
 2. Set `Username` to anything.
 3. Set `Message` to `redeemed Sound Alert`.
 4. Run the test.
+
+![Event Flow test panel with Kick source and redeemed Sound Alert test message](images/kick-channel-points-event-flow/event-flow-test-panel.png)
 
 If the flow has a reward name filter, the test message must include that reward name.
 
