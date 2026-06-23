@@ -1439,14 +1439,15 @@ TTS.speechMeta = function(data, allow = false) {
 		return;
 	}
 
-    const tiktokMeta = data.meta && typeof data.meta === "object" && data.meta.tiktok && typeof data.meta.tiktok === "object"
-        ? data.meta.tiktok
-        : null;
-    if (data.type === "tiktok" && TTS.tiktokFollowerTTS && (!tiktokMeta || tiktokMeta.follower !== true)) {
-        return;
+    const meta = data.meta && typeof data.meta === "object" ? data.meta : {};
+    if (data.type === "tiktok" && TTS.tiktokFollowerTTS) {
+        const eventName = String(data.event || "").toLowerCase();
+        if (!(meta.follower === true || eventName === "followed" || eventName === "follow" || eventName === "new_follower")) {
+            return;
+        }
     }
     if (data.type === "tiktok" && TTS.tiktokMemberLevelTTS) {
-        const memberLevel = Number(tiktokMeta && tiktokMeta.memberLevel);
+        const memberLevel = Number(meta.memberLevel);
         if (!Number.isFinite(memberLevel) || memberLevel < TTS.tiktokMemberLevelTTS) {
             return;
         }
