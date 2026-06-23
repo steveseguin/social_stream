@@ -5,7 +5,7 @@
 		_cache: {},
 		MAX_SIZE: 501,
 		CLEANUP_COUNT: 50,
-		add(chatname, chatimg, badges = null, membership = null, nameColor = null) {
+		add(chatname, chatimg, badges = null, membership = null, nameColor = null, memberLevel = null) {
 			if (!chatname) return;
 			if (!this._cache[chatname]) {
 				this._cache[chatname] = {
@@ -18,6 +18,7 @@
 			if (badges) this._cache[chatname].badges = badges;
 			if (membership) this._cache[chatname].membership = membership;
 			if (nameColor) this._cache[chatname].nameColor = nameColor;
+			if (memberLevel) this._cache[chatname].memberLevel = memberLevel;
 			this.cleanup();
 		},
 		get(chatname) {
@@ -1099,6 +1100,7 @@
 		var membership = "";
 		var chatbadges = "";
 		var rank = 0;
+		var memberLevel = 0;
 		var nameColor = "";
 		var chatname = "";
 		try {
@@ -1173,6 +1175,7 @@
 							} else if (!rank && !nameColor && cbimg.src.includes("/grade_")) {
 								try {
 									rank = parseInt(cbimg.nextElementSibling.innerText) || 1;
+									memberLevel = rank;
 									if (!settings.nosubcolor) {
 										if (rank > 40) {
 											rank = 40;
@@ -1351,7 +1354,7 @@
 			return;
 		}
 		if (chatname && (chatimg || chatbadges || membership)) {
-			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
+			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor, memberLevel);
 		}
 		const compactMessage = normalizedMessage.replace(/[^a-z]/g, "");
 		const combinedJoinText = [chatmessage, normalizedMessage, ele?.textContent]
@@ -1471,6 +1474,7 @@
 			////console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
+		addTikTokEventMeta(data, memberLevel);
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
 		pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
@@ -1648,12 +1652,14 @@
 		let cachedBadges = "";
 		let cachedMembership = "";
 		let cachedNameColor = "";
+		let cachedMemberLevel = 0;
 		if (chatname) {
 			const cached = avatarCache.get(chatname);
 			chatimg = cached.url || "";
 			cachedBadges = cached.badges || "";
 			cachedMembership = cached.membership || "";
 			cachedNameColor = cached.nameColor || "";
+			cachedMemberLevel = cached.memberLevel || 0;
 		}
 		var data = {};
 		data.chatname = chatname;
@@ -1686,6 +1692,7 @@
 			////console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
+		addTikTokEventMeta(data, cachedMemberLevel);
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
 		pushMessage(data, reactionsOnlyLikeEvent ? "reactions" : "");
@@ -1904,6 +1911,23 @@
 		for (var key in topViewerMeta) {
 			if (Object.prototype.hasOwnProperty.call(topViewerMeta, key)) {
 				data.meta[key] = topViewerMeta[key];
+			}
+		}
+	}
+
+	function addTikTokEventMeta(data, memberLevel) {
+		if (!data) {
+			return;
+		}
+		if (data.event === "followed" || memberLevel) {
+			if (!data.meta) {
+				data.meta = {};
+			}
+			if (data.event === "followed") {
+				data.meta.follower = true;
+			}
+			if (memberLevel) {
+				data.meta.memberLevel = memberLevel;
 			}
 		}
 	}

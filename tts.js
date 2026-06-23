@@ -367,6 +367,8 @@ TTS.ttsSources = false;
 TTS.ttsQuick = false;
 TTS.newmembertts = false;
 TTS.ttsclicked = false;
+TTS.tiktokFollowerTTS = false;
+TTS.tiktokMemberLevelTTS = false;
 
 /**
  * Check if the browser is Safari
@@ -695,7 +697,15 @@ TTS.configure = function(urlParams) {
 	if (urlParams.has("ttsclicked")) {
 		TTS.ttsclicked = urlParams.get("ttsclicked") || "en-US";
 	}
-	
+
+	if (urlParams.has("tiktokfollowertts")) {
+		TTS.tiktokFollowerTTS = true;
+	}
+
+	if (urlParams.has("tiktokmemberleveltts")) {
+		TTS.tiktokMemberLevelTTS = TTS.parseIntParam(urlParams, "tiktokmemberleveltts", 1);
+	}
+
     // API Keys
     TTS.GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;
@@ -1428,7 +1438,21 @@ TTS.speechMeta = function(data, allow = false) {
 		//console.log("TTS is disabled globally, aborting");
 		return;
 	}
-	
+
+    const meta = data.meta && typeof data.meta === "object" ? data.meta : {};
+    if (data.type === "tiktok" && TTS.tiktokFollowerTTS) {
+        const eventName = String(data.event || "").toLowerCase();
+        if (!(meta.follower === true || eventName === "followed" || eventName === "follow" || eventName === "new_follower")) {
+            return;
+        }
+    }
+    if (data.type === "tiktok" && TTS.tiktokMemberLevelTTS) {
+        const memberLevel = Number(meta.memberLevel);
+        if (!Number.isFinite(memberLevel) || memberLevel < TTS.tiktokMemberLevelTTS) {
+            return;
+        }
+    }
+
     if (!data.bot && TTS.bottts) {
         //console.log("Filter: Only bot messages allowed and this is not a bot message");
         return;
