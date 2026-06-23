@@ -1,8 +1,8 @@
 # Kick Channel Points / Rewards to Event Flow Actions
 
-Short answer: do this in the Event Flow Editor, and keep the Flow Actions overlay open for the sound or media output.
+Use the Event Flow Editor to listen for Kick reward redemptions, and keep the Flow Actions overlay open for sound or media output.
 
-## What Steve should tell the user
+## Overview
 
 Kick calls these channel rewards/redemptions. In Social Stream Ninja they come through as a reward event, so the Event Flow trigger to use is Channel Point Redemption.
 
