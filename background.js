@@ -9005,7 +9005,8 @@ function getDockTransportHealth() {
 		recentP2PDisconnect: isRecentP2PTime(p2pTransportState.lastDisconnectAt, 5 * 60 * 1000),
 		recentP2PFailure: isRecentP2PTime(p2pTransportState.lastFailureAt, 5 * 60 * 1000),
 		serverFallbackEnabled: !!(settings.server2 && settings.server3),
-		serverFallbackDockSocketOpen: !!(socketserverDock && socketserverDock.readyState === WebSocket.OPEN)
+		serverFallbackDockSocketOpen: !!(socketserverDock && socketserverDock.readyState === WebSocket.OPEN),
+		fakeMessageTransportReady: !!(Object.keys(peers).length || (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN))
 	};
 }
 

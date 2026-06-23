@@ -10753,13 +10753,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			showServerFallbackBanner(health, "The extension is currently disabled. Enable it first, then press the fake test message button again.", false, true);
 			return;
 		}
-		if (health.serverFallbackEnabled) {
-			if (!health.serverFallbackDockSocketOpen && (!health.webRTCSupported || health.p2pPeerCount === 0)) {
-				showServerFallbackBanner(health, "Server Fallback is enabled, but the fallback connection is not ready yet. Wait a moment, then reload your dock/overlays and test again.", false, true);
-			}
+		if (health.fakeMessageTransportReady) {
 			return;
 		}
-		if (health.webRTCSupported && health.p2pPeerCount > 0) {
+		if (health.serverFallbackEnabled) {
+			showServerFallbackBanner(health, "Server Fallback is enabled, but the fallback connection is not ready yet. Wait a moment, then reload your dock/overlays and test again.", false, true);
 			return;
 		}
 
