@@ -10684,13 +10684,15 @@ function sendDataP2P(data, UUID = false) {
 		function trackSdkSendResult(result) {
 			try {
 				if (result && typeof result.then === "function") {
-					result.then(function (ok) {
-						if (ok === false) {
+					result
+						.then(function (ok) {
+							if (ok === false) {
+								markP2PFailure("sdkSend");
+							}
+						})
+						.catch(function () {
 							markP2PFailure("sdkSend");
-						}
-					}).catch(function () {
-						markP2PFailure("sdkSend");
-					});
+						});
 				} else if (result === false) {
 					markP2PFailure("sdkSend");
 				}
