@@ -5912,6 +5912,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "resettipjar") {
 			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "settipjaramount") {
+			sendTargetP2P({
+				cmd: "settipjaramount",
+				value: request.value,
+				tipjarsource: request.tipjarsource || "",
+				tipjartype: request.tipjartype || ""
+			}, "tipjar");
+			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
 			sendResponse({ state: isExtensionOn });
@@ -9037,6 +9045,14 @@ function setupSocket() {
 				resp = true;
 			} else if (data.action && data.action === "resettipjar") {
 				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
+				resp = true;
+			} else if (data.action && data.action === "settipjaramount") {
+				sendTargetP2P({
+					cmd: "settipjaramount",
+					value: data.value,
+					tipjarsource: data.tipjarsource || "",
+					tipjartype: data.tipjartype || ""
+				}, "tipjar");
 				resp = true;
 			} else if (data.action && data.action === "resetpoll") {
 				sendTargetP2P({ cmd: "resetpoll" }, "poll");

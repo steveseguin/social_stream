@@ -10687,6 +10687,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 			
 			msg.value = this.dataset.value || null;
+			if (this.dataset.valueSource){
+				var valueSource = document.getElementById(this.dataset.valueSource);
+				msg.value = valueSource ? valueSource.value : null;
+			}
 			if (msg.cmd == "fakemsg" || msg.cmd == "fakemeta"){
 				chrome.runtime.sendMessage(msg, function (response) {
 					// actions have callbacks? maybe
@@ -10716,6 +10720,23 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						log("ignore callback for this action");
 					});
 				}
+			} else if (msg.cmd == "settipjaramount"){
+				var tipjarAmount = parseFloat(msg.value);
+				if (isNaN(tipjarAmount) || tipjarAmount < 0){
+					alert("Enter a current amount first.");
+					return;
+				}
+				var tipjarSourceSelect = document.querySelector('[data-optionparam12="tipjarsource"]');
+				var tipjarTypeSelect = document.querySelector('[data-optionparam12="tipjartype"]');
+				if (tipjarSourceSelect && tipjarSourceSelect.value) {
+					msg.tipjarsource = tipjarSourceSelect.value;
+				}
+				if (tipjarTypeSelect && tipjarTypeSelect.value) {
+					msg.tipjartype = tipjarTypeSelect.value;
+				}
+				chrome.runtime.sendMessage(msg, function (response) {
+					log("ignore callback for this action");
+				});
 			} else {
 				//console.log(msg);
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe

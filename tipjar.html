@@ -758,6 +758,8 @@
         const barRadius = urlParams.get('barradius'); // "0" for square edges, "12" for rounded, etc.
         const barOnly = urlParams.has('baronly');
         const levelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
+        const startAmount = readOptionalNumberParam(['startamount', 'initialamount', 'currentamount'], 0);
+        const barTrackColor = urlParams.get('trackcolor') || urlParams.get('bartrackcolor') || urlParams.get('barbackground') || '';
         const fillStartRgb = parseColorToRgb(fillStartColor, [33, 150, 243]);
         const fillEndRgb = parseColorToRgb(fillEndColor, [244, 67, 54]);
 
@@ -825,6 +827,8 @@
                 const track = document.querySelector('.fluid-bar-track');
                 if (track) track.style.height = barHeight + 'px';
             }
+            const track = document.querySelector('.fluid-bar-track');
+            if (track && barTrackColor) track.style.background = barTrackColor;
             if (!barLiquid) {
                 document.body.classList.add('bar-static');
             }
@@ -845,7 +849,7 @@
         const amountStorageKey = (hypeMode ? 'tipjar_hype_amount' : 'tipjar_amount') + storageSuffix;
         const historyStorageKey = (hypeMode ? 'tipjar_hype_history' : 'tipjar_history') + storageSuffix;
         const completionsStorageKey = 'tipjar_hype_completions' + storageSuffix;
-        let currentAmount = persistent ? (parseFloat(localStorage.getItem(amountStorageKey)) || 0) : 0;
+        let currentAmount = getInitialAmount();
         let completionCount = persistent ? (parseInt(localStorage.getItem(completionsStorageKey) || '0', 10) || 0) : 0;
         let completionResetTimer = null;
         let levelRolloverTimer = null;
@@ -1019,10 +1023,71 @@
             }
         }
 
+        function getInitialAmount() {
+            if (persistent) {
+                const saved = localStorage.getItem(amountStorageKey);
+                if (saved !== null && saved !== '') {
+                    const savedAmount = parseFloat(saved);
+                    if (!isNaN(savedAmount)) return savedAmount;
+                }
+            }
+            return startAmount !== null ? startAmount : 0;
+        }
+
         function isTipJarResetCommand(data) {
             if (!data || typeof data !== 'object') return false;
             const command = String(data.cmd || data.action || data.tipjarCommand || '').toLowerCase();
             return command === 'resettipjar' || command === 'reset_tipjar' || command === 'tipjar_reset';
+        }
+
+        function isTipJarSetAmountCommand(data) {
+            if (!data || typeof data !== 'object') return false;
+            const command = String(data.cmd || data.action || data.tipjarCommand || '').toLowerCase();
+            return command === 'settipjaramount' || command === 'set_tipjar_amount' || command === 'tipjar_set_amount';
+        }
+
+        function getTipJarCommandAmount(data) {
+            const raw = data.value !== undefined ? data.value :
+                data.amount !== undefined ? data.amount :
+                data.currentAmount !== undefined ? data.currentAmount :
+                data.tipjarAmount !== undefined ? data.tipjarAmount : '';
+            const amount = parseDonationAmount(raw);
+            return amount !== null && amount >= 0 ? amount : null;
+        }
+
+        function commandMatchesTipJarFilters(data) {
+            const commandType = normalizeDonationTypeFilter(data.tipjartype || data.tipjarunit || data.donationtype || '');
+            if (commandType) {
+                if (!donationTypeFilter || commandType !== donationTypeFilter) return false;
+            }
+
+            const commandSources = normalizeFilterList(data.tipjarsource || data.donationsource || data.source || '');
+            if (commandSources.length) {
+                if (!sourceTypeFilter.length) return false;
+                for (let i = 0; i < commandSources.length; i++) {
+                    if (sourceTypeFilter.indexOf(commandSources[i]) !== -1) return true;
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        function setTipJarAmount(amount, showNotice) {
+            if (completionResetTimer) {
+                clearTimeout(completionResetTimer);
+                completionResetTimer = null;
+            }
+            const previousAmount = currentAmount;
+            clearLevelCompletionState();
+            currentAmount = Math.max(0, amount);
+            if (currentAmount < previousAmount) {
+                clearJarContents();
+            }
+            renderAmount();
+            if (showNotice) {
+                showNotification(`${customTitle} set to ${formatGoalValue(currentAmount, true)}.`);
+            }
         }
 
         function saveAmount() {
@@ -1415,6 +1480,18 @@
             return value;
         }
 
+        function readOptionalNumberParam(names, minValue) {
+            for (let i = 0; i < names.length; i++) {
+                const raw = urlParams.get(names[i]);
+                if (raw === null || raw === '') continue;
+                const value = parseFloat(raw);
+                if (isNaN(value)) continue;
+                if (minValue !== undefined && value < minValue) continue;
+                return value;
+            }
+            return null;
+        }
+
         function formatNumber(value) {
             const num = Number(value) || 0;
             return num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
@@ -1651,6 +1728,35 @@
                 meta.amountText || meta.priceText || meta.amount || '';
         }
 
+        function shouldCountTipJarDonation(data, rawDonation, unitInfo) {
+            const meta = getMeta(data);
+            const source = normalizeTipJarSourceValue(data.type || data.platform || data.source || meta.source || '');
+            if (source !== 'youtube') return true;
+
+            const filter = normalizeDonationTypeFilter(donationTypeFilter);
+            if (filter && filter !== 'usd') return true;
+
+            const eventName = getEventName(data);
+            const membership = data.membership ? String(data.membership).toLowerCase() : '';
+            if (eventName === 'jeweldonation' ||
+                eventName === 'giftpurchase' ||
+                eventName === 'giftredemption' ||
+                eventName === 'gift_subscription' ||
+                eventName === 'subscription_gift' ||
+                membership === 'gift_giver' ||
+                membership === 'gift_recipient' ||
+                meta.youtubeGift) {
+                return false;
+            }
+
+            if (unitInfo && unitInfo.type && unitInfo.type !== 'usd') {
+                return false;
+            }
+
+            const raw = String(rawDonation || '').toLowerCase();
+            return !(/\bjewels?\b|\bgift(?:ed|s)?\b/.test(raw));
+        }
+
         function isGiftEvent(eventName, membership) {
             return eventName === 'subscription_gift' ||
                 eventName === 'giftpurchase' ||
@@ -1842,6 +1948,9 @@
         function processTip(rawDonation, donator, sourceType, contribution) {
             const source = sourceType ? String(sourceType).toLowerCase() : '';
             const unitInfo = getDonationUnitInfo(rawDonation, source);
+            if (!shouldCountTipJarDonation(contribution || {}, rawDonation, unitInfo)) {
+                return;
+            }
             if (donationTypeFilter && !donationMatchesTypeFilter(unitInfo, rawDonation)) {
                 return;
             }
@@ -1909,6 +2018,17 @@
                 return;
             }
 
+            if (isTipJarSetAmountCommand(data)) {
+                if (!commandMatchesTipJarFilters(data)) {
+                    return;
+                }
+                const amount = getTipJarCommandAmount(data);
+                if (amount !== null) {
+                    setTipJarAmount(amount, true);
+                }
+                return;
+            }
+
             if (!passesTipJarSourceFilter(data)) {
                 return;
             }
@@ -1921,7 +2041,7 @@
             if (data.donation || data.hasDonation) {
                 const donationString = data.donation || data.hasDonation;
                 const sourceType = data.type ? String(data.type).toLowerCase() : '';
-                processTip(donationString, data.chatname || 'Anonymous', sourceType);
+                processTip(donationString, data.chatname || 'Anonymous', sourceType, data);
             }
         }
         

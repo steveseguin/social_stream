@@ -10694,6 +10694,13 @@ input:checked + .slider:before {
                                         <span style="font-size: 0.8em;">Reset saved amount</span>
                                     </button>
                                 </div>
+                                <div>
+                                    <label>Set current amount:</label>
+                                    <input type="number" id="tipjar-set-amount" class="textInput" placeholder="5" min="0" step="0.01" />
+                                    <button class="glowingButton" style="width: 220px; border: 1px solid #000; padding: 2px;" data-action="settipjaramount" data-target="tipjar" data-value-source="tipjar-set-amount">
+                                        <span style="font-size: 0.8em;">Set connected amount</span>
+                                    </button>
+                                </div>
 
                             </div>
                         </div>
@@ -10810,6 +10817,10 @@ input:checked + .slider:before {
                                     <input type="text" data-optionparam12="title" class="textInput" placeholder="Stream Goal" />
                                 </div>
                                 <div>
+                                    <label>Starting amount:</label>
+                                    <input type="number" data-optionparam12="startamount" class="textInput" placeholder="0" min="0" step="0.01" />
+                                </div>
+                                <div>
                                     <label>Donation type filter:</label>
                                     <select data-optionparam12="tipjartype" class="textInput">
                                         <option value="" selected>All donations (USD converted)</option>
@@ -10849,6 +10860,10 @@ input:checked + .slider:before {
                                 <div>
                                     <label>Fill end color (full):</label>
                                     <input type="text" data-optionparam12="fillend" class="textInput" placeholder="#f44336 (red)" />
+                                </div>
+                                <div>
+                                    <label>Track color (unfilled bar):</label>
+                                    <input type="text" data-optionparam12="trackcolor" class="textInput" placeholder="Leave blank for default" />
                                 </div>
                                 <div>
                                     <label>Fill behavior:</label>
