@@ -710,6 +710,39 @@ p a {
     display: block;
 }
 
+#serverFallbackTestNotice {
+    padding: 1em;
+    background: var(--important-changes-background);
+    color: var(--important-changes-text);
+    border-bottom: var(--important-changes-border);
+    text-align: center;
+    font-weight: bold;
+    display: none;
+}
+
+#serverFallbackTestNotice.show {
+    display: block;
+}
+
+#serverFallbackTestNotice.success {
+    background: var(--new-version-banner-background);
+    color: var(--new-version-banner-text);
+    border-bottom: var(--new-version-banner-border);
+}
+
+#serverFallbackTestNotice .server-fallback-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+#serverFallbackTestNotice .glowingButton {
+    width: auto;
+    min-width: 120px;
+}
+
 #importantChanges {
     padding: 1em;
     background: var(--important-changes-background);
@@ -2137,6 +2170,13 @@ input:checked + .slider:before {
             >
                 <span data-translate="clear-all-messages">Clear All</span>
             </button>
+        </div>
+        <div id="serverFallbackTestNotice">
+            <div data-role="message"></div>
+            <div class="server-fallback-actions">
+                <button type="button" data-role="enable" class="glowingButton"><span>Enable Server Fallback</span></button>
+                <button type="button" data-role="dismiss" class="glowingButton"><span>Not now</span></button>
+            </div>
         </div>
         <div id="newVersion"></div>
         <div id="importantChanges"></div>
@@ -7739,7 +7779,7 @@ input:checked + .slider:before {
                                     </label>
                                     <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; only values that match a username will be allowed.">
                                         <input type="text" id="blacklistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="blacklistusers" />
-										🔮 <span data-translate="">Blocked users</span>
+										🔮 <span data-translate="blocked-users">Blocked users</span>
                                     </div>
                                 </div>
 							
@@ -12191,9 +12231,19 @@ input:checked + .slider:before {
 										</label>
 										<span>🔁 Loop credits continuously</span>
 									</div>
+									<div title="Save the collected credits list inside this overlay so it survives refreshes and source toggles">
+										<label class="switch">
+											<input type="checkbox" data-param13="persistcredits" />
+											<span class="slider round"></span>
+										</label>
+										<span>Save credits list in this overlay</span>
+									</div>
 									<div class="credits-actions" style="margin-top: 10px; display: flex; gap: 10px;">
 										<button id="creditsStartBtn" class="overlayButton" style="flex: 1;">Start Credits</button>
 										<button id="creditsPreviewBtn" class="overlayButton" style="flex: 1;">Preview</button>
+									</div>
+									<div style="margin-top: 10px; display: flex; gap: 10px;">
+										<button id="creditsResetBtn" class="overlayButton" style="flex: 1;">Reset saved credits</button>
 									</div>
 									<br>
 										<div title="Hides page backgrounds; keeps star field on Star Wars style">

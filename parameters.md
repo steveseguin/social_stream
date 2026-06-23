@@ -417,6 +417,13 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `theme` | `default`, `neon`, `gold` | Visual theme for the meter/bar |
 | `celebration` | `hearts`, `confetti`, `fireworks`, `none` | Effect played on milestones/level-ups |
 
+## Credits Roll Parameters (`credits.html`)
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `loop` | boolean | Restarts the credits animation when it reaches the end |
+| `persistcredits` | boolean | Saves the collected credits list in the overlay's local storage so refreshes/source toggles keep the current stream's supporters until reset |
+
 ## Other options for other overlays.
 
 WIP.

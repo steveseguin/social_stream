@@ -589,6 +589,9 @@
 	    // Session security and network options
 	    const password = urlParams.get('password') || 'false';
 	    const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
+	    const persistCredits = urlParams.has('persistcredits');
+	    const creditsStorageSession = (urlParams.get('session') || 'local').split(',')[0] || 'local';
+	    const creditsStorageKey = 'ssn-credits-users-v1:' + creditsStorageSession;
 	    function normalizeColorParam(value) {
 	        if (typeof value !== "string") return null;
 	        const trimmed = value.trim();
@@ -696,6 +699,8 @@
 			} else if (data.creditsCommand === "preview") {
 				previewMode = true;
 				startCredits();
+			} else if (data.creditsCommand === "reset") {
+				resetCredits();
 			}
 			return;
 		}
@@ -734,10 +739,18 @@
 				console.error(`Error processing donation for ${data.chatname}:`, error, data.hasDonation);
 			}
 		}
+
+		savePersistedCredits();
 	}
 
 	function generateCreditsContent() {
-		const sortedUsers = Array.from(users.values());
+		let sortedUsers = Array.from(users.values());
+		const onlydonors = urlParams.has('onlydonors');
+		if (onlydonors) {
+			sortedUsers = sortedUsers.filter(function(user) {
+				return user.donations > 0;
+			});
+		}
 		
 		if (donationPriority) {
 			// Separate users into donors and non-donors
@@ -809,6 +822,67 @@
 			return content;
 		}
 	}
+
+	function savePersistedCredits() {
+		if (!persistCredits) return;
+		try {
+			const savedUsers = [];
+			users.forEach(function(user) {
+				savedUsers.push({
+					name: user.name,
+					type: user.type,
+					messageCount: user.messageCount,
+					donations: user.donations,
+					isMember: !!user.isMember,
+					avatarUrl: user.avatarUrl || null
+				});
+			});
+			localStorage.setItem(creditsStorageKey, JSON.stringify({
+				version: 1,
+				updated: Date.now(),
+				users: savedUsers
+			}));
+		} catch (e) {
+			console.warn('Could not save persisted credits:', e);
+		}
+	}
+
+	function loadPersistedCredits() {
+		if (!persistCredits) return;
+		try {
+			const saved = JSON.parse(localStorage.getItem(creditsStorageKey) || 'null');
+			const savedUsers = saved && Array.isArray(saved.users) ? saved.users : [];
+			savedUsers.forEach(function(item) {
+				if (!item || !item.name || !item.type) return;
+				const user = getOrCreateUser(item.name, item.type);
+				user.messageCount = Math.max(0, Number(item.messageCount) || 0);
+				user.donations = Math.max(0, Number(item.donations) || 0);
+				user.isMember = !!item.isMember;
+				user.avatarUrl = item.avatarUrl || null;
+			});
+		} catch (e) {
+			console.warn('Could not load persisted credits:', e);
+		}
+	}
+
+	function clearPersistedCredits() {
+		try {
+			localStorage.removeItem(creditsStorageKey);
+		} catch (e) {
+			console.warn('Could not clear persisted credits:', e);
+		}
+	}
+
+	function resetCredits() {
+		users.clear();
+		clearPersistedCredits();
+		const content = document.getElementById('credits-content');
+		if (content) {
+			content.innerHTML = generateCreditsContent();
+		}
+	}
+
+	loadPersistedCredits();
 
 	// IFRAME setup for Social Stream Ninja
     const iframe = document.createElement("iframe");
@@ -1104,18 +1178,21 @@
 		}
 
 		// Mode instructions
+		const refreshNote = persistCredits
+			? '<li>Saved credits survive refresh/source toggles until reset</li>'
+			: '<li><span class="warning">Do not refresh</span> - this resets all data</li>';
 		if (mode === 'auto') {
 			html += `<p><strong>How Auto Mode Works:</strong></p><ul>
 				<li><span class="highlight">Keep this page running but hidden</span></li>
 				<li>Chat messages will be collected in the background</li>
 				<li>When you <span class="highlight">make the page visible</span>, credits auto-start</li>
-				<li><span class="warning">Do not refresh</span> - this resets all data</li></ul>`;
+				${refreshNote}</ul>`;
 		} else {
 			html += `<p><strong>How Manual Mode Works:</strong></p><ul>
 				<li>Keep this page <span class="highlight">running in the background</span></li>
 				<li>Chat messages will be collected automatically</li>
 				<li>Use the <span class="highlight">extension menu</span> to click "Start Credits"</li>
-				<li><span class="warning">Do not refresh</span> - this resets all data</li></ul>`;
+				${refreshNote}</ul>`;
 		}
 		return html;
 	}
@@ -1207,7 +1284,7 @@
 		}
 
 		// Clear collected names when animation completes (unless in preview mode)
-		if (!previewMode) {
+		if (!previewMode && !persistCredits) {
 			users.clear();
 		}
 

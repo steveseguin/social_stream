@@ -8808,6 +8808,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Add event listeners for credits roll buttons and trigger mode
 	const creditsStartBtn = document.getElementById('creditsStartBtn');
 	const creditsPreviewBtn = document.getElementById('creditsPreviewBtn');
+	const creditsResetBtn = document.getElementById('creditsResetBtn');
 	const creditsTriggerMode = document.querySelector('select[data-optionparam13="triggermode"]');
 	const creditsActionsDiv = document.querySelector('.credits-actions');
 
@@ -8820,6 +8821,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	if (creditsPreviewBtn) {
 		creditsPreviewBtn.addEventListener('click', function() {
 			chrome.runtime.sendMessage({ cmd: "creditsPreview" });
+		});
+	}
+
+	if (creditsResetBtn) {
+		creditsResetBtn.addEventListener('click', function() {
+			chrome.runtime.sendMessage({ cmd: "creditsReset" });
 		});
 	}
 
@@ -10675,6 +10682,103 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	function enableServerFallbackForDockLinks() {
+		["server2", "server3"].forEach(function (id) {
+			var input = document.getElementById(id);
+			if (input && !input.checked) {
+				input.checked = true;
+				updateSettings(input, true);
+			}
+		});
+		refreshLinks();
+		showServerFallbackBanner(null, "Server Fallback is enabled. Re-open or reload your dock and overlays using the updated links.", true);
+	}
+
+	function getServerFallbackBanner() {
+		var banner = document.getElementById("serverFallbackTestNotice");
+		if (!banner) {
+			return null;
+		}
+		return banner;
+	}
+
+	function showServerFallbackBanner(health, customMessage, success, hideEnableButton) {
+		var banner = getServerFallbackBanner();
+		if (!banner) {
+			return;
+		}
+		var messageNode = banner.querySelector('[data-role="message"]');
+		var enableButton = banner.querySelector('[data-role="enable"]');
+		var dismissButton = banner.querySelector('[data-role="dismiss"]');
+		var message = customMessage || (health && !health.webRTCSupported
+			? "This browser does not appear to support WebRTC. If the fake test message did not appear, Server Fallback may help."
+			: "No active WebRTC dock or overlay connection was found. If the fake test message did not appear, Server Fallback may help.");
+
+		if (messageNode) {
+			messageNode.textContent = message;
+		}
+		if (enableButton) {
+			enableButton.style.display = success || hideEnableButton ? "none" : "";
+			if (!enableButton.dataset.boundServerFallback) {
+				enableButton.dataset.boundServerFallback = "1";
+				enableButton.onclick = function () {
+					enableServerFallbackForDockLinks();
+				};
+			}
+		}
+		if (dismissButton) {
+			var dismissLabel = dismissButton.querySelector("span") || dismissButton;
+			dismissLabel.textContent = success ? "OK" : "Not now";
+			if (!dismissButton.dataset.boundServerFallback) {
+				dismissButton.dataset.boundServerFallback = "1";
+				dismissButton.onclick = function () {
+					banner.classList.remove("show");
+				};
+			}
+		}
+		if (success) {
+			banner.classList.add("success");
+		} else {
+			banner.classList.remove("success");
+		}
+		banner.classList.add("show");
+	}
+
+	function maybePromptServerFallbackAfterFakeMessage(response) {
+		var health = response && response.dockTransportHealth;
+		if (!health) {
+			return;
+		}
+		if (!health.extensionOn) {
+			showServerFallbackBanner(health, "The extension is currently disabled. Enable it first, then press the fake test message button again.", false, true);
+			return;
+		}
+		if (health.serverFallbackEnabled) {
+			if (!health.serverFallbackDockSocketOpen && (!health.webRTCSupported || health.p2pPeerCount === 0)) {
+				showServerFallbackBanner(health, "Server Fallback is enabled, but the fallback connection is not ready yet. Wait a moment, then reload your dock/overlays and test again.", false, true);
+			}
+			return;
+		}
+		if (health.webRTCSupported && health.p2pPeerCount > 0) {
+			return;
+		}
+
+		if (!health.webRTCSupported) {
+			showServerFallbackBanner(health, "This browser does not appear to support WebRTC. If the fake test message did not appear, Server Fallback may help.");
+			return;
+		}
+		if (health.recentP2PFailure) {
+			showServerFallbackBanner(health, "A WebRTC connection appears to have failed recently. If the fake test message did not appear, Server Fallback may help.");
+			return;
+		}
+		if (health.everHadP2PPeer) {
+			showServerFallbackBanner(health, "A dock or overlay was connected before, but none are connected now. Reload your dock or overlay, or try Server Fallback if it still does not work.");
+			return;
+		}
+
+		showServerFallbackBanner(health, "No dock or overlay connection was found. Open or reload your dock/overlay link, then press the fake test message button again.", false, true);
+	}
+
 	var iii = document.querySelectorAll("button[data-action]");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onclick = function(e){
@@ -10691,7 +10795,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				var valueSource = document.getElementById(this.dataset.valueSource);
 				msg.value = valueSource ? valueSource.value : null;
 			}
-			if (msg.cmd == "fakemsg" || msg.cmd == "fakemeta"){
+			if (msg.cmd == "fakemsg"){
+				chrome.runtime.sendMessage(msg, function (response) {
+					maybePromptServerFallbackAfterFakeMessage(response);
+				});
+			} else if (msg.cmd == "fakemeta"){
 				chrome.runtime.sendMessage(msg, function (response) {
 					// actions have callbacks? maybe
 				});
