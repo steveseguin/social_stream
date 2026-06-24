@@ -16,6 +16,11 @@ function filterXSS(unsafe) {
 	// this is not foolproof, but it might catch some basic probe attacks that sneak in
 	try {
 		return unsafe
+			.replace(/[\s\/]on[a-z0-9_-]+\s*=/gi, " data-blocked-event=")
+			.replace(/javascript\s*:/gi, "**")
+			.replace(/srcdoc\s*=/gi, "**")
+			.replace(/src\s*=\s*["']?\s*data\s*:[^"'\s>]*/gi, 'src=""')
+			.replace(/data\s*:\s*text\/html/gi, "**")
 			.replaceAll("prompt(", "**")
 			.replaceAll("eval(", "**")
 			.replaceAll("onclick(", "**")

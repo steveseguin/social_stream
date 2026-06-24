@@ -366,6 +366,241 @@
         -webkit-text-fill-color: transparent;
         margin: 20px 0;
     }
+
+    /* Fluid Goal Bar Style */
+    #bar-style {
+        width: 100%;
+        max-width: 900px;
+        padding: 24px;
+    }
+
+    .fluid-bar-container {
+        width: 100%;
+    }
+
+    .fluid-bar-title {
+        color: #fff;
+        font-size: 30px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 14px;
+        letter-spacing: 0.5px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+    }
+
+    .fluid-bar-track {
+        position: relative;
+        width: 100%;
+        height: 64px;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 999px;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        box-shadow: inset 0 3px 12px rgba(0, 0, 0, 0.6), 0 6px 22px rgba(0, 0, 0, 0.35);
+    }
+
+    .fluid-bar-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 0%;
+        background-color: #2196F3;
+        background-repeat: no-repeat;
+        border-radius: inherit;
+        transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1), background-color 1.1s ease, box-shadow 1.1s ease;
+        box-shadow: 0 0 20px rgba(33, 150, 243, 0.55);
+        overflow: hidden;
+    }
+
+    /* Top sheen, gives the liquid a glossy surface */
+    .fluid-bar-fill::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 48%;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+        border-radius: inherit;
+        pointer-events: none;
+    }
+
+    /* Flowing diagonal stripes, gives the "fluid" motion */
+    .fluid-bar-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 250%;
+        height: 100%;
+        background-image: repeating-linear-gradient(
+            -45deg,
+            rgba(255, 255, 255, 0.16) 0px,
+            rgba(255, 255, 255, 0.16) 16px,
+            rgba(255, 255, 255, 0) 16px,
+            rgba(255, 255, 255, 0) 38px
+        );
+        animation: fluidFlow 2.6s linear infinite;
+        pointer-events: none;
+    }
+
+    body.bar-static .fluid-bar-fill::after { animation: none; }
+
+    body.bar-only #bar-style {
+        padding: 0;
+    }
+
+    body.bar-only .fluid-bar-title,
+    body.bar-only .fluid-bar-meta {
+        display: none;
+    }
+
+    @keyframes fluidFlow {
+        0% { transform: translateX(-38px); }
+        100% { transform: translateX(0); }
+    }
+
+    .fluid-bar-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 26px;
+        font-weight: 800;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+        z-index: 5;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    .fluid-bar-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+        color: #ddd;
+        font-size: 16px;
+        font-weight: 600;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    }
+
+    body.neon .fluid-bar-track {
+        border-color: var(--primary-color);
+        box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.7), 0 0 26px var(--primary-color);
+    }
+
+    /* Compact Bar Style (square edges, corner-friendly) */
+    #compact-style {
+        width: 100%;
+        max-width: 460px;
+        padding: 12px;
+    }
+
+    .compact-container { width: 100%; }
+
+    .compact-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+    }
+
+    .compact-header .compact-amount { font-variant-numeric: tabular-nums; }
+
+    .compact-track {
+        position: relative;
+        width: 100%;
+        height: 22px;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .compact-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 0%;
+        background-color: #2196F3;
+        transition: width 0.6s ease, background-color 0.6s ease;
+    }
+
+    /* Vertical Bar Style (thermometer, square edges) */
+    #vertical-style {
+        width: 100%;
+        height: 100%;
+        padding: 20px;
+    }
+
+    .vertical-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .vertical-title {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        text-align: center;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+    }
+
+    .vertical-track {
+        position: relative;
+        width: 70px;
+        height: 320px;
+        max-height: 70vh;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .vertical-fill {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 0%;
+        background-color: #2196F3;
+        transition: height 0.8s ease, background-color 0.8s ease;
+    }
+
+    .vertical-text {
+        margin-top: 10px;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Text Only Style (minimal one-liner) */
+    #text-style {
+        width: 100%;
+        padding: 14px;
+    }
+
+    .text-line {
+        color: #fff;
+        font-size: 26px;
+        font-weight: 800;
+        white-space: nowrap;
+        text-align: center;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    }
     </style>
 </head>
 <body>
@@ -405,6 +640,50 @@
             <div class="minimal-goal">of <span id="minimal-goal-value">$250</span> goal</div>
             <div class="minimal-percentage" id="minimal-percentage">0%</div>
         </div>
+    </div>
+
+    <!-- Fluid Goal Bar Style -->
+    <div id="bar-style" class="style-container">
+        <div class="fluid-bar-container">
+            <h2 class="fluid-bar-title" id="bar-title">Stream Goal</h2>
+            <div class="fluid-bar-track">
+                <div class="fluid-bar-fill" id="bar-fill"></div>
+                <div class="fluid-bar-text" id="bar-text">$0 / $250</div>
+            </div>
+            <div class="fluid-bar-meta">
+                <span id="bar-level"></span>
+                <span id="bar-percent">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compact Bar Style -->
+    <div id="compact-style" class="style-container">
+        <div class="compact-container">
+            <div class="compact-header">
+                <span id="compact-title">Stream Goal</span>
+                <span class="compact-amount" id="compact-amount">$0 / $250</span>
+            </div>
+            <div class="compact-track">
+                <div class="compact-fill" id="compact-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vertical Bar Style -->
+    <div id="vertical-style" class="style-container">
+        <div class="vertical-container">
+            <div class="vertical-title" id="vertical-title">Stream Goal</div>
+            <div class="vertical-track">
+                <div class="vertical-fill" id="vertical-fill"></div>
+            </div>
+            <div class="vertical-text" id="vertical-text">$0 / $250</div>
+        </div>
+    </div>
+
+    <!-- Text Only Style -->
+    <div id="text-style" class="style-container">
+        <div class="text-line" id="text-line">Stream Goal: $0 / $250</div>
     </div>
 
     <!-- Shared Elements -->
@@ -464,7 +743,26 @@
         const showCompletions = hypeMode && !urlParams.has('hidecompletions');
         const completionDelayMs = readNumberParam('completiondelay', 3000, 0);
         const dedupeWindowMs = readNumberParam('dedupewindow', 8, 0) * 1000;
-        
+        const donationTypeFilter = normalizeDonationTypeFilter(urlParams.get('tipjartype') || urlParams.get('tipjarunit') || urlParams.get('donationtype') || '');
+        const sourceTypeFilter = normalizeFilterList(urlParams.get('tipjarsource') || urlParams.get('donationsource') || '');
+        const nativeUnitMode = !!donationTypeFilter && donationTypeFilter !== 'usd';
+        const nativeUnitLabel = urlParams.get('tipjarunitlabel') || getDonationTypeLabel(donationTypeFilter);
+
+        // Fluid goal bar styling + recurring goal levels
+        const fillStartColor = urlParams.get('fillstart') || urlParams.get('barcolorstart') || '#2196F3';
+        const fillEndColor = urlParams.get('fillend') || urlParams.get('barcolorend') || '#f44336';
+        const fillMode = (urlParams.get('fillmode') || 'progress').toLowerCase(); // progress | gradient | solid
+        const hasCustomFill = urlParams.has('fillstart') || urlParams.has('fillend') || urlParams.has('barcolorstart') || urlParams.has('barcolorend');
+        const barLiquid = !urlParams.has('noliquid');
+        const barHeight = readNumberParam('barheight', 0, 1);
+        const barRadius = urlParams.get('barradius'); // "0" for square edges, "12" for rounded, etc.
+        const barOnly = urlParams.has('baronly');
+        const levelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
+        const startAmount = readOptionalNumberParam(['startamount', 'initialamount', 'currentamount'], 0);
+        const barTrackColor = urlParams.get('trackcolor') || urlParams.get('bartrackcolor') || urlParams.get('barbackground') || '';
+        const fillStartRgb = parseColorToRgb(fillStartColor, [33, 150, 243]);
+        const fillEndRgb = parseColorToRgb(fillEndColor, [244, 67, 54]);
+
         // Socket server parameters
         const hasServerParam = urlParams.has('server') || urlParams.has('server2');
         const serverURL = urlParams.get('server') || urlParams.get('server2') || (hasServerParam ? "wss://io.socialstream.ninja" : null);
@@ -485,12 +783,24 @@
             document.body.classList.add('align-right');
         }
 
+        if (barOnly) {
+            document.body.classList.add('bar-only');
+        }
+
         // Initialize style
         document.querySelectorAll('.style-container').forEach(container => {
             container.classList.remove('active');
         });
         document.getElementById(`${style}-style`)?.classList.add('active');
-        
+
+        // Optional corner-friendly square (or custom) edges for any bar-based style.
+        if (barRadius !== null && barRadius !== '') {
+            const radiusValue = /^\d+(\.\d+)?$/.test(barRadius) ? barRadius + 'px' : barRadius;
+            document.querySelectorAll('.fluid-bar-track, .compact-track, .vertical-track').forEach(function(el) {
+                el.style.borderRadius = radiusValue;
+            });
+        }
+
         // Apply custom jar image if provided
         if (customJarUrl && style === 'jar') {
             document.getElementById('cup-overlay').src = customJarUrl;
@@ -503,20 +813,47 @@
             document.getElementById('milestone-75').textContent = formatGoalValue(goal * 0.75);
             document.getElementById('milestone-50').textContent = formatGoalValue(goal * 0.50);
             document.getElementById('milestone-25').textContent = formatGoalValue(goal * 0.25);
+            if (hasCustomFill) {
+                document.getElementById('meter-fill').style.background = `linear-gradient(90deg, ${fillStartColor} 0%, ${fillEndColor} 100%)`;
+            }
         } else if (style === 'minimal') {
             const minimalGoalElement = document.getElementById('minimal-goal-value');
             if (minimalGoalElement) {
                 minimalGoalElement.textContent = formatGoalValue(goal);
             }
+        } else if (style === 'bar') {
+            document.getElementById('bar-title').textContent = customTitle;
+            if (barHeight > 0) {
+                const track = document.querySelector('.fluid-bar-track');
+                if (track) track.style.height = barHeight + 'px';
+            }
+            const track = document.querySelector('.fluid-bar-track');
+            if (track && barTrackColor) track.style.background = barTrackColor;
+            if (!barLiquid) {
+                document.body.classList.add('bar-static');
+            }
+        } else if (style === 'compact') {
+            if (barHeight > 0) {
+                const track = document.querySelector('.compact-track');
+                if (track) track.style.height = barHeight + 'px';
+            }
+        } else if (style === 'vertical') {
+            if (barHeight > 0) {
+                const track = document.querySelector('.vertical-track');
+                if (track) track.style.height = barHeight + 'px';
+            }
         }
 
         // Tracking variables
-        const amountStorageKey = hypeMode ? 'tipjar_hype_amount' : 'tipjar_amount';
-        const historyStorageKey = hypeMode ? 'tipjar_hype_history' : 'tipjar_history';
-        const completionsStorageKey = 'tipjar_hype_completions';
-        let currentAmount = persistent ? (parseFloat(localStorage.getItem(amountStorageKey)) || 0) : 0;
+        const storageSuffix = buildTipJarStorageSuffix();
+        const amountStorageKey = (hypeMode ? 'tipjar_hype_amount' : 'tipjar_amount') + storageSuffix;
+        const historyStorageKey = (hypeMode ? 'tipjar_hype_history' : 'tipjar_history') + storageSuffix;
+        const completionsStorageKey = 'tipjar_hype_completions' + storageSuffix;
+        let currentAmount = getInitialAmount();
         let completionCount = persistent ? (parseInt(localStorage.getItem(completionsStorageKey) || '0', 10) || 0) : 0;
         let completionResetTimer = null;
+        let levelRolloverTimer = null;
+        let levelCompletionState = null;
         const recentTips = [];
         const maxRecentTips = 5;
         const donationHistory = persistent ? (JSON.parse(localStorage.getItem(historyStorageKey) || '[]')) : [];
@@ -671,6 +1008,7 @@
                 clearTimeout(completionResetTimer);
                 completionResetTimer = null;
             }
+            clearLevelCompletionState();
             currentAmount = 0;
             if (hypeMode) {
                 completionCount = 0;
@@ -685,10 +1023,71 @@
             }
         }
 
+        function getInitialAmount() {
+            if (persistent) {
+                const saved = localStorage.getItem(amountStorageKey);
+                if (saved !== null && saved !== '') {
+                    const savedAmount = parseFloat(saved);
+                    if (!isNaN(savedAmount)) return savedAmount;
+                }
+            }
+            return startAmount !== null ? startAmount : 0;
+        }
+
         function isTipJarResetCommand(data) {
             if (!data || typeof data !== 'object') return false;
             const command = String(data.cmd || data.action || data.tipjarCommand || '').toLowerCase();
             return command === 'resettipjar' || command === 'reset_tipjar' || command === 'tipjar_reset';
+        }
+
+        function isTipJarSetAmountCommand(data) {
+            if (!data || typeof data !== 'object') return false;
+            const command = String(data.cmd || data.action || data.tipjarCommand || '').toLowerCase();
+            return command === 'settipjaramount' || command === 'set_tipjar_amount' || command === 'tipjar_set_amount';
+        }
+
+        function getTipJarCommandAmount(data) {
+            const raw = data.value !== undefined ? data.value :
+                data.amount !== undefined ? data.amount :
+                data.currentAmount !== undefined ? data.currentAmount :
+                data.tipjarAmount !== undefined ? data.tipjarAmount : '';
+            const amount = parseDonationAmount(raw);
+            return amount !== null && amount >= 0 ? amount : null;
+        }
+
+        function commandMatchesTipJarFilters(data) {
+            const commandType = normalizeDonationTypeFilter(data.tipjartype || data.tipjarunit || data.donationtype || '');
+            if (commandType) {
+                if (!donationTypeFilter || commandType !== donationTypeFilter) return false;
+            }
+
+            const commandSources = normalizeFilterList(data.tipjarsource || data.donationsource || data.source || '');
+            if (commandSources.length) {
+                if (!sourceTypeFilter.length) return false;
+                for (let i = 0; i < commandSources.length; i++) {
+                    if (sourceTypeFilter.indexOf(commandSources[i]) !== -1) return true;
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        function setTipJarAmount(amount, showNotice) {
+            if (completionResetTimer) {
+                clearTimeout(completionResetTimer);
+                completionResetTimer = null;
+            }
+            const previousAmount = currentAmount;
+            clearLevelCompletionState();
+            currentAmount = Math.max(0, amount);
+            if (currentAmount < previousAmount) {
+                clearJarContents();
+            }
+            renderAmount();
+            if (showNotice) {
+                showNotification(`${customTitle} set to ${formatGoalValue(currentAmount, true)}.`);
+            }
         }
 
         function saveAmount() {
@@ -697,9 +1096,37 @@
             }
         }
 
+        function clearLevelCompletionState() {
+            if (levelRolloverTimer) {
+                clearTimeout(levelRolloverTimer);
+                levelRolloverTimer = null;
+            }
+            levelCompletionState = null;
+        }
+
+        function showCompletedLevel(completedLevel) {
+            clearLevelCompletionState();
+            levelCompletionState = {
+                isLevel: true,
+                level: completedLevel,
+                completed: completedLevel,
+                current: levelSize,
+                goal: levelSize,
+                total: currentAmount,
+                percentage: 100
+            };
+            renderAmount();
+            levelRolloverTimer = setTimeout(function() {
+                levelRolloverTimer = null;
+                levelCompletionState = null;
+                renderAmount();
+            }, completionDelayMs);
+        }
+
         function renderAmount() {
             saveAmount();
-            const percentage = Math.min((currentAmount / goal) * 100, 100);
+            const state = getProgressState();
+            const percentage = state.percentage;
 
             // Update different styles
             if (style === 'jar') {
@@ -707,20 +1134,72 @@
             } else if (style === 'meter') {
                 document.getElementById('meter-fill').style.width = percentage + '%';
                 document.getElementById('meter-text').textContent = formatProgressText();
+                if (state.isLevel) updateMeterChrome(state);
             } else if (style === 'minimal') {
-                document.getElementById('minimal-amount').textContent = formatGoalValue(currentAmount, true);
+                document.getElementById('minimal-amount').textContent = formatGoalValue(state.current, true);
                 document.getElementById('minimal-percentage').textContent = `${Math.round(percentage)}%`;
+                const minimalGoalElement = document.getElementById('minimal-goal-value');
+                if (minimalGoalElement) minimalGoalElement.textContent = formatGoalValue(state.goal);
+            } else if (style === 'bar') {
+                renderBar(state);
+            } else if (style === 'compact') {
+                const t = Math.max(0, Math.min(1, percentage / 100));
+                const fill = document.getElementById('compact-fill');
+                if (fill) {
+                    fill.style.width = percentage + '%';
+                    applyFillColor(fill, t);
+                }
+                setElText('compact-title', state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle);
+                setElText('compact-amount', `${formatProgressPair(state)} · ${Math.round(percentage)}%`);
+            } else if (style === 'vertical') {
+                const t = Math.max(0, Math.min(1, percentage / 100));
+                const fill = document.getElementById('vertical-fill');
+                if (fill) {
+                    fill.style.height = percentage + '%';
+                    applyFillColor(fill, t);
+                }
+                setElText('vertical-title', state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle);
+                setElText('vertical-text', `${formatProgressPair(state)} · ${Math.round(percentage)}%`);
+            } else if (style === 'text') {
+                const title = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
+                setElText('text-line', `${title}: ${formatProgressPair(state)} (${Math.round(percentage)}%)`);
             }
 
             updateCompletionDisplay();
         }
 
+        function applyFillColor(fillEl, t) {
+            if (!fillEl) return;
+            fillEl.style.backgroundColor = (fillMode === 'solid') ? fillStartColor : lerpColor(fillStartRgb, fillEndRgb, t);
+        }
+
         function updateAmount(amount) {
             const previousAmount = currentAmount;
             currentAmount += amount;
+
+            if (amount <= 0) {
+                clearLevelCompletionState();
+                renderAmount();
+                return;
+            }
+
+            // Recurring level mode: celebrate whenever a new increment band is filled.
+            if (levelSize > 0) {
+                const previousLevel = Math.floor(previousAmount / levelSize);
+                const newLevel = Math.floor(currentAmount / levelSize);
+                if (newLevel > previousLevel) {
+                    showCompletedLevel(newLevel);
+                    triggerLevelUp(newLevel);
+                } else {
+                    clearLevelCompletionState();
+                    renderAmount();
+                }
+                return;
+            }
+
             renderAmount();
 
-            if (amount <= 0 || goal <= 0) return;
+            if (goal <= 0) return;
 
             if (previousAmount < goal * 0.25 && currentAmount >= goal * 0.25) triggerMilestone(25);
             if (previousAmount < goal * 0.50 && currentAmount >= goal * 0.50) triggerMilestone(50);
@@ -775,6 +1254,15 @@
                 createConfetti();
             }
             showNotification(`${percent}% of goal reached!`);
+        }
+
+        function triggerLevelUp(completedLevel) {
+            if (celebration === 'fireworks') {
+                triggerFireworks();
+            } else if (celebration === 'confetti') {
+                createConfetti();
+            }
+            showNotification(`${customTitle}: Level ${completedLevel} complete! 🎉`);
         }
 
         function addRecentTip(name, donationLabel) {
@@ -836,6 +1324,153 @@
             document.addEventListener(eventName, primeDonationSound);
         });
 
+        function normalizeFilterValue(value) {
+            return String(value || '').trim().toLowerCase();
+        }
+
+        function normalizeDonationTypeFilter(value) {
+            const filter = normalizeFilterValue(value);
+            return filter === 'cash' ? 'usd' : filter;
+        }
+
+        function normalizeTipJarSourceValue(value) {
+            const source = normalizeFilterValue(value).replace(/[\s_-]+/g, '');
+            if (source === 'youtubeshort' || source === 'youtubeshorts') {
+                return 'youtube';
+            }
+            return normalizeFilterValue(value);
+        }
+
+        function normalizeFilterList(value) {
+            return String(value || '').split(',').map(function(item) {
+                return normalizeTipJarSourceValue(item);
+            }).filter(function(item) {
+                return item && item !== 'all' && item !== 'any';
+            });
+        }
+
+        function buildTipJarStorageSuffix() {
+            const parts = [];
+            if (donationTypeFilter) {
+                parts.push('type_' + donationTypeFilter.replace(/[^a-z0-9_-]/g, ''));
+            }
+            if (sourceTypeFilter.length) {
+                parts.push('source_' + sourceTypeFilter.join('_').replace(/[^a-z0-9_-]/g, ''));
+            }
+            return parts.length ? '_' + parts.join('_') : '';
+        }
+
+        function getDonationTypeLabel(type) {
+            const labels = {
+                usd: 'USD',
+                cash: 'USD',
+                stars: 'Stars',
+                star: 'Stars',
+                bits: 'bits',
+                bit: 'bits',
+                cheer: 'bits',
+                cheers: 'bits',
+                coins: 'coins',
+                coin: 'coins',
+                diamonds: 'Diamonds',
+                diamond: 'Diamonds',
+                kicks: 'KICKs',
+                kick: 'KICKs',
+                jewels: 'Jewels',
+                jewel: 'Jewels',
+                tokens: 'tokens',
+                token: 'tokens',
+                hearts: 'hearts',
+                heart: 'hearts',
+                gold: 'gold'
+            };
+            return labels[type] || type || 'units';
+        }
+
+        function parseDonationAmount(rawDonation) {
+            const match = String(rawDonation || '').match(/-?\d[\d.,]*(?:\s\d{3})*/);
+            if (!match) return null;
+
+            let numericText = match[0].replace(/\s/g, '');
+            const lastComma = numericText.lastIndexOf(',');
+            const lastDot = numericText.lastIndexOf('.');
+            let decimalSeparator = '';
+
+            if (lastComma !== -1 && lastDot !== -1) {
+                decimalSeparator = lastComma > lastDot ? ',' : '.';
+            } else if (lastComma !== -1 || lastDot !== -1) {
+                const separator = lastComma !== -1 ? ',' : '.';
+                const lastSeparator = lastComma !== -1 ? lastComma : lastDot;
+                const decimals = numericText.length - lastSeparator - 1;
+                const count = (numericText.match(new RegExp('\\' + separator, 'g')) || []).length;
+                const integerPart = numericText.slice(0, lastSeparator).replace('-', '');
+                if (decimals > 0 && (decimals !== 3 || integerPart === '0') && count === 1) {
+                    decimalSeparator = separator;
+                }
+            }
+
+            if (decimalSeparator) {
+                const thousandsSeparator = decimalSeparator === ',' ? '.' : ',';
+                numericText = numericText.split(thousandsSeparator).join('');
+                numericText = numericText.replace(decimalSeparator, '.');
+            } else {
+                numericText = numericText.replace(/[.,]/g, '');
+            }
+
+            const amount = parseFloat(numericText);
+            return isNaN(amount) ? null : amount;
+        }
+
+        function getDonationUnitInfo(rawDonation, source) {
+            const raw = String(rawDonation || '');
+            const amount = parseDonationAmount(raw);
+            if (amount === null || amount <= 0) return null;
+
+            const text = raw.toLowerCase();
+            const sourceKey = normalizeFilterValue(source);
+
+            if (/\bstars?\b/.test(text)) return { type: 'stars', amount, label: 'Stars' };
+            if (/\b(bits?|cheers?)\b/.test(text)) return { type: 'bits', amount, label: 'bits' };
+            if (/\bcoins?\b/.test(text)) return { type: 'coins', amount, label: 'coins' };
+            if (/\bdiamonds?\b/.test(text)) return { type: 'diamonds', amount, label: 'Diamonds' };
+            if (/\bkicks?\b/.test(text)) return { type: 'kicks', amount, label: 'KICKs' };
+            if (/\bjewels?\b/.test(text)) return { type: 'jewels', amount, label: 'Jewels' };
+            if (/\btokens?\b/.test(text)) return { type: 'tokens', amount, label: 'tokens' };
+            if (/\bhearts?\b/.test(text)) return { type: 'hearts', amount, label: 'hearts' };
+            if (/\bgold\b/.test(text)) return { type: 'gold', amount, label: 'gold' };
+
+            const hasCashMarker = /[$]|\b(?:usd|cad|aud|nzd|eur|gbp|jpy|cny|hkd|twd|krw|inr|brl|mxn|ars|clp|cop|pen|php|sgd|myr|thb|idr|vnd|ils|try|zar|sek|nok|dkk|chf|pln|czk|huf|ron|rub|uah)\b/i.test(raw) ||
+                /[\u20ac\u00a3\u00a5\u20b9\u20a9\u20aa\u20b1\u0e3f\u20ab\u20b4\u20a6\u20a1\u20b2\u20b5\u20ad\u20ae\u20b8\u20ba\u20bd\u20bc\u20be\u20bf]/.test(raw);
+            if (hasCashMarker || sourceKey === 'stripe' || sourceKey === 'kofi' || sourceKey === 'bmac' || sourceKey === 'fourthwall') {
+                return { type: 'usd', amount, label: 'USD' };
+            }
+
+            return { type: '', amount, label: nativeUnitLabel || 'units' };
+        }
+
+        function donationMatchesTypeFilter(unitInfo, rawDonation) {
+            if (!donationTypeFilter) return true;
+
+            const filter = normalizeDonationTypeFilter(donationTypeFilter);
+            if (unitInfo && unitInfo.type) {
+                const unitType = unitInfo.type === 'cash' ? 'usd' : unitInfo.type;
+                if (filter === unitType) return true;
+            }
+
+            // Fall back to a raw-text match so labels we don't explicitly classify
+            // (e.g. "100 Stars") still count when the unit word is present.
+            const raw = String(rawDonation || '').toLowerCase();
+            const escapedFilter = filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp('(^|\\s)' + escapedFilter + 's?(?=\\s|$)').test(raw);
+        }
+
+        function passesTipJarSourceFilter(data) {
+            if (!sourceTypeFilter.length) return true;
+            const meta = getMeta(data);
+            const source = normalizeTipJarSourceValue(data.type || data.platform || meta.source || '');
+            return sourceTypeFilter.indexOf(source) !== -1;
+        }
+
         function readNumberParam(name, fallback, minValue) {
             const raw = urlParams.get(name);
             if (raw === null || raw === '') return fallback;
@@ -843,6 +1478,18 @@
             if (isNaN(value)) return fallback;
             if (minValue !== undefined && value < minValue) return fallback;
             return value;
+        }
+
+        function readOptionalNumberParam(names, minValue) {
+            for (let i = 0; i < names.length; i++) {
+                const raw = urlParams.get(names[i]);
+                if (raw === null || raw === '') continue;
+                const value = parseFloat(raw);
+                if (isNaN(value)) continue;
+                if (minValue !== undefined && value < minValue) continue;
+                return value;
+            }
+            return null;
         }
 
         function formatNumber(value) {
@@ -854,13 +1501,130 @@
             if (hypeMode) {
                 return `${formatNumber(value)} ${unitLabel}`;
             }
+            if (nativeUnitMode) {
+                return `${formatNumber(value)} ${nativeUnitLabel}`;
+            }
             const num = Number(value) || 0;
             return `$${forceCents ? num.toFixed(2) : formatNumber(num)}`;
         }
 
+        function getProgressState() {
+            if (levelSize > 0) {
+                if (levelCompletionState) return levelCompletionState;
+                const completed = Math.floor(currentAmount / levelSize);
+                const within = currentAmount - (completed * levelSize);
+                return {
+                    isLevel: true,
+                    level: completed + 1,
+                    completed: completed,
+                    current: within,
+                    goal: levelSize,
+                    total: currentAmount,
+                    percentage: Math.min((within / levelSize) * 100, 100)
+                };
+            }
+            return {
+                isLevel: false,
+                level: 0,
+                completed: 0,
+                current: currentAmount,
+                goal: goal,
+                total: currentAmount,
+                percentage: goal > 0 ? Math.min((currentAmount / goal) * 100, 100) : 0
+            };
+        }
+
+        function formatProgressPair(state) {
+            return `${formatGoalValue(state.current, true)} / ${formatGoalValue(state.goal)}`;
+        }
+
         function formatProgressText() {
-            const progress = `${formatGoalValue(currentAmount, true)} / ${formatGoalValue(goal)}`;
-            return style === 'jar' && (hypeMode || hasCustomTitle) ? `${customTitle}: ${progress}` : progress;
+            const state = getProgressState();
+            const progress = formatProgressPair(state);
+            if (style === 'jar' && (hypeMode || hasCustomTitle || state.isLevel)) {
+                const titleText = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
+                return `${titleText}: ${progress}`;
+            }
+            return progress;
+        }
+
+        function setElText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+
+        function updateMeterChrome(state) {
+            const titleEl = document.querySelector('.goal-title');
+            if (titleEl) titleEl.textContent = state.isLevel ? `${customTitle} — Level ${state.level}` : customTitle;
+            const g = state.goal;
+            setElText('milestone-100', formatGoalValue(g));
+            setElText('milestone-75', formatGoalValue(g * 0.75));
+            setElText('milestone-50', formatGoalValue(g * 0.50));
+            setElText('milestone-25', formatGoalValue(g * 0.25));
+        }
+
+        function parseColorToRgb(color, fallback) {
+            if (!color) return fallback;
+            try {
+                const ctx = parseColorToRgb._ctx || (parseColorToRgb._ctx = document.createElement('canvas').getContext('2d'));
+                ctx.fillStyle = '#000000';
+                ctx.fillStyle = color;
+                const normalized = ctx.fillStyle;
+                let match = /^#([0-9a-f]{6})$/i.exec(normalized);
+                if (match) {
+                    return [
+                        parseInt(match[1].slice(0, 2), 16),
+                        parseInt(match[1].slice(2, 4), 16),
+                        parseInt(match[1].slice(4, 6), 16)
+                    ];
+                }
+                match = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i.exec(normalized);
+                if (match) {
+                    return [parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10)];
+                }
+            } catch (e) {}
+            return fallback;
+        }
+
+        function lerpColor(a, b, t) {
+            t = Math.max(0, Math.min(1, t));
+            const r = Math.round(a[0] + (b[0] - a[0]) * t);
+            const g = Math.round(a[1] + (b[1] - a[1]) * t);
+            const bl = Math.round(a[2] + (b[2] - a[2]) * t);
+            return `rgb(${r}, ${g}, ${bl})`;
+        }
+
+        function renderBar(state) {
+            const fill = document.getElementById('bar-fill');
+            if (!fill) return;
+
+            const pct = state.percentage;
+            const t = Math.max(0, Math.min(1, pct / 100));
+            fill.style.width = pct + '%';
+
+            if (fillMode === 'gradient') {
+                fill.style.backgroundImage = `linear-gradient(90deg, ${fillStartColor} 0%, ${fillEndColor} 100%)`;
+                const track = fill.parentElement;
+                if (track && track.clientWidth) {
+                    fill.style.backgroundSize = track.clientWidth + 'px 100%';
+                }
+                fill.style.backgroundColor = fillStartColor;
+            } else if (fillMode === 'solid') {
+                fill.style.backgroundImage = 'none';
+                fill.style.backgroundColor = fillStartColor;
+            } else { // progress: the whole bar shifts colour as it fills
+                fill.style.backgroundImage = 'none';
+                fill.style.backgroundColor = lerpColor(fillStartRgb, fillEndRgb, t);
+            }
+
+            const glow = lerpColor(fillStartRgb, fillEndRgb, t);
+            fill.style.boxShadow = `0 0 ${Math.round(14 + 18 * t)}px ${glow}`;
+
+            const barText = barOnly ? `${customTitle}: ${formatProgressPair(state)}` : formatProgressPair(state);
+            setElText('bar-text', barText);
+            setElText('bar-title', state.isLevel ? `${customTitle} — Level ${state.level}` : customTitle);
+            setElText('bar-level', state.isLevel ? `Level ${state.level} · ${formatGoalValue(state.total, true)} total` : '');
+            setElText('bar-percent', `${Math.round(pct)}%`);
         }
 
         function parseDonationString(rawDonation) {
@@ -873,12 +1637,12 @@
                 return { amount: null, currency: '', display: '' };
             }
 
-            const numericMatch = raw.match(/-?\d+(?:[.,]\d+)?/);
+            const numericMatch = raw.match(/-?\d[\d.,]*(?:\s\d{3})*/);
             let amount = null;
             let currency = '';
 
             if (numericMatch) {
-                amount = parseFloat(numericMatch[0].replace(',', '.'));
+                amount = parseDonationAmount(raw);
                 const before = raw.slice(0, numericMatch.index).trim();
                 const after = raw.slice(numericMatch.index + numericMatch[0].length).trim();
                 currency = `${before} ${after}`.trim();
@@ -962,6 +1726,35 @@
             const meta = getMeta(data);
             return data.donation || data.hasDonation || data.donationAmount || data.donoValue ||
                 meta.amountText || meta.priceText || meta.amount || '';
+        }
+
+        function shouldCountTipJarDonation(data, rawDonation, unitInfo) {
+            const meta = getMeta(data);
+            const source = normalizeTipJarSourceValue(data.type || data.platform || data.source || meta.source || '');
+            if (source !== 'youtube') return true;
+
+            const filter = normalizeDonationTypeFilter(donationTypeFilter);
+            if (filter && filter !== 'usd') return true;
+
+            const eventName = getEventName(data);
+            const membership = data.membership ? String(data.membership).toLowerCase() : '';
+            if (eventName === 'jeweldonation' ||
+                eventName === 'giftpurchase' ||
+                eventName === 'giftredemption' ||
+                eventName === 'gift_subscription' ||
+                eventName === 'subscription_gift' ||
+                membership === 'gift_giver' ||
+                membership === 'gift_recipient' ||
+                meta.youtubeGift) {
+                return false;
+            }
+
+            if (unitInfo && unitInfo.type && unitInfo.type !== 'usd') {
+                return false;
+            }
+
+            const raw = String(rawDonation || '').toLowerCase();
+            return !(/\bjewels?\b|\bgift(?:ed|s)?\b/.test(raw));
         }
 
         function isGiftEvent(eventName, membership) {
@@ -1141,6 +1934,7 @@
         function processHypeContribution(data) {
             const contribution = buildHypeContribution(data);
             if (!contribution) return;
+            if (donationTypeFilter && contribution.kind !== 'donation') return;
             if (isDuplicateContribution(data, contribution)) return;
 
             if (contribution.kind === 'donation') {
@@ -1153,7 +1947,15 @@
 
         function processTip(rawDonation, donator, sourceType, contribution) {
             const source = sourceType ? String(sourceType).toLowerCase() : '';
-            const tipValue = convertToUSD(rawDonation, source);
+            const unitInfo = getDonationUnitInfo(rawDonation, source);
+            if (!shouldCountTipJarDonation(contribution || {}, rawDonation, unitInfo)) {
+                return;
+            }
+            if (donationTypeFilter && !donationMatchesTypeFilter(unitInfo, rawDonation)) {
+                return;
+            }
+
+            const tipValue = nativeUnitMode && unitInfo ? unitInfo.amount : convertToUSD(rawDonation, source);
 
             if (isNaN(tipValue) || tipValue <= 0) {
                 console.warn('Ignoring invalid donation value:', rawDonation);
@@ -1162,8 +1964,8 @@
 
             const parsedDonation = parseDonationString(rawDonation);
             const storedAmount = parsedDonation.amount !== null ? parsedDonation.amount : tipValue;
-            const storedCurrency = parsedDonation.currency || 'USD';
-            const displayLabel = parsedDonation.display || `$${tipValue.toFixed(2)}`;
+            const storedCurrency = nativeUnitMode ? (unitInfo && unitInfo.label ? unitInfo.label : nativeUnitLabel) : (parsedDonation.currency || 'USD');
+            const displayLabel = nativeUnitMode ? `${formatNumber(tipValue)} ${storedCurrency}` : (parsedDonation.display || `$${tipValue.toFixed(2)}`);
             const goalValue = hypeMode ? tipValue * donationPointRate : tipValue;
 
             const donation = {
@@ -1176,7 +1978,8 @@
                 count: 1,
                 amount: storedAmount,
                 currency: storedCurrency,
-                usdValue: tipValue,
+                usdValue: nativeUnitMode ? undefined : tipValue,
+                unitValue: nativeUnitMode ? tipValue : undefined,
                 points: hypeMode ? goalValue : undefined,
                 raw: parsedDonation.display || ''
             };
@@ -1215,6 +2018,21 @@
                 return;
             }
 
+            if (isTipJarSetAmountCommand(data)) {
+                if (!commandMatchesTipJarFilters(data)) {
+                    return;
+                }
+                const amount = getTipJarCommandAmount(data);
+                if (amount !== null) {
+                    setTipJarAmount(amount, true);
+                }
+                return;
+            }
+
+            if (!passesTipJarSourceFilter(data)) {
+                return;
+            }
+
             if (hypeMode) {
                 processHypeContribution(data);
                 return;
@@ -1223,7 +2041,7 @@
             if (data.donation || data.hasDonation) {
                 const donationString = data.donation || data.hasDonation;
                 const sourceType = data.type ? String(data.type).toLowerCase() : '';
-                processTip(donationString, data.chatname || 'Anonymous', sourceType);
+                processTip(donationString, data.chatname || 'Anonymous', sourceType, data);
             }
         }
         
@@ -1279,7 +2097,12 @@
 
         // Initialize display
         renderAmount();
-        
+
+        // Gradient fill + meter widths depend on track size, so recompute on resize.
+        if (style === 'bar' || style === 'meter') {
+            window.addEventListener('resize', renderAmount);
+        }
+
         // Show controls if enabled
         if (showControls) {
             document.getElementById('controls-panel').style.display = 'block';
@@ -1360,7 +2183,7 @@
 
             let csv = hypeMode
                 ? 'Timestamp,Type,Name,Recipient,Count,Points,Amount,Currency,USD Value,Source,Event,Raw\n'
-                : 'Timestamp,Donator,Amount,Currency,USD Value\n';
+                : 'Timestamp,Donator,Amount,Currency,USD Value,Unit Value,Source,Raw\n';
             donationHistory.forEach(donation => {
                 const date = new Date(donation.timestamp).toLocaleString();
                 if (hypeMode) {
@@ -1379,7 +2202,9 @@
                         csvCell(donation.raw || '')
                     ].join(',') + '\n';
                 } else {
-                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.amount},${donation.currency},${donation.usdValue.toFixed(2)}\n`;
+                    const usdValue = donation.usdValue !== undefined ? Number(donation.usdValue).toFixed(2) : '';
+                    const unitValue = donation.unitValue !== undefined ? formatNumber(donation.unitValue) : '';
+                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.amount},${csvCell(donation.currency)},${usdValue},${unitValue},${csvCell(donation.source || '')},${csvCell(donation.raw || '')}\n`;
                 }
             });
             
@@ -1408,7 +2233,9 @@
                     const kind = donation.kind || 'donation';
                     const detail = hypeMode
                         ? `${formatGoalValue(donation.points || 0)} - ${kind}${donation.count ? ` x${donation.count}` : ''}${donation.recipient ? ` - recipient: ${donation.recipient}` : ''}`
-                        : `${donation.amount} ${donation.currency} ($${donation.usdValue.toFixed(2)} USD)`;
+                        : (donation.usdValue !== undefined
+                            ? `${donation.amount} ${donation.currency} ($${Number(donation.usdValue).toFixed(2)} USD)`
+                            : `${formatNumber(donation.unitValue || donation.amount || 0)} ${donation.currency}`);
                     item.style.cssText = 'margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;';
                     item.innerHTML = `
                         <div><strong>${donation.donator}</strong></div>
@@ -1419,10 +2246,10 @@
                 });
 
                 // Add total at the bottom
-                const total = donationHistory.reduce((sum, d) => sum + (hypeMode ? (d.points || 0) : d.usdValue), 0);
+                const total = donationHistory.reduce((sum, d) => sum + (hypeMode ? (d.points || 0) : (d.unitValue !== undefined ? d.unitValue : d.usdValue || 0)), 0);
                 const totalDiv = document.createElement('div');
                 totalDiv.style.cssText = 'margin-top: 20px; padding-top: 20px; border-top: 1px solid #666; font-size: 18px; font-weight: bold;';
-                totalDiv.innerHTML = hypeMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
+                totalDiv.innerHTML = hypeMode || nativeUnitMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
                 historyList.appendChild(totalDiv);
             }
             
@@ -1461,6 +2288,7 @@
                     if (!donatorTotals[donation.donator]) {
                         donatorTotals[donation.donator] = {
                             totalUSD: 0,
+                            totalUnits: 0,
                             totalPoints: 0,
                             count: 0,
                             gifts: 0,
@@ -1469,6 +2297,7 @@
                         };
                     }
                     donatorTotals[donation.donator].totalUSD += donation.usdValue || 0;
+                    donatorTotals[donation.donator].totalUnits += donation.unitValue !== undefined ? donation.unitValue : 0;
                     donatorTotals[donation.donator].totalPoints += donation.points || 0;
                     donatorTotals[donation.donator].count += 1;
                     if (donation.kind === 'gift') {
@@ -1487,7 +2316,7 @@
 
                 // Sort by points in hype mode, otherwise by total USD.
                 const sortedDonators = Object.entries(donatorTotals)
-                    .sort((a, b) => hypeMode ? b[1].totalPoints - a[1].totalPoints : b[1].totalUSD - a[1].totalUSD)
+                    .sort((a, b) => hypeMode ? b[1].totalPoints - a[1].totalPoints : (nativeUnitMode ? b[1].totalUnits - a[1].totalUnits : b[1].totalUSD - a[1].totalUSD))
                     .slice(0, 10); // Top 10
 
                 sortedDonators.forEach(([donator, data], index) => {
@@ -1500,7 +2329,7 @@
                     const currencyBreakdown = Object.entries(data.currencies)
                         .map(([currency, amount]) => `${amount.toFixed(2)} ${currency}`)
                         .join(' + ');
-                    const scoreLabel = hypeMode ? formatGoalValue(data.totalPoints) : `$${data.totalUSD.toFixed(2)}`;
+                    const scoreLabel = hypeMode ? formatGoalValue(data.totalPoints) : (nativeUnitMode ? formatGoalValue(data.totalUnits) : `$${data.totalUSD.toFixed(2)}`);
                     const subLine = hypeMode
                         ? `${data.count} contribution${data.count > 1 ? 's' : ''}${data.subs ? ` - ${data.subs} sub/member` : ''}${data.gifts ? ` - ${data.gifts} gifted` : ''}`
                         : `${data.count} donation${data.count > 1 ? 's' : ''}`;

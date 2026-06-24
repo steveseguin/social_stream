@@ -6953,6 +6953,77 @@ function buildTestAlertPayload(category, overrides = {}) {
     };
 }
 
+function buildTipJarTestDonationPayload(kind) {
+    const payloads = {
+        'facebook-stars': {
+            type: 'facebook',
+            platform: 'facebook',
+            chatname: 'Star Supporter',
+            chatmessage: 'Testing Facebook Stars',
+            hasDonation: '500 Stars',
+            donoValue: 5,
+            chatimg: createPreviewAvatarDataUri('FB', '#1877f2')
+        },
+        'youtube-superchat': {
+            type: 'youtube',
+            platform: 'youtube',
+            event: 'donation',
+            chatname: 'SuperChat Fan',
+            chatmessage: 'Testing a Super Chat donation',
+            hasDonation: '$10.00',
+            donoValue: 10,
+            chatimg: createPreviewAvatarDataUri('YT', '#ff0033')
+        },
+        'twitch-bits': {
+            type: 'twitch',
+            platform: 'twitch',
+            event: 'cheer',
+            chatname: 'Bits Tester',
+            chatmessage: 'Testing Twitch bits',
+            hasDonation: '500 bits',
+            donoValue: 5,
+            chatimg: createPreviewAvatarDataUri('TW', '#9146ff'),
+            meta: { bits: 500 }
+        },
+        'tiktok-hearts': {
+            type: 'tiktok',
+            platform: 'tiktok',
+            event: 'gift',
+            chatname: 'Heart Sender',
+            chatmessage: 'Testing TikTok hearts',
+            hasDonation: '100 hearts',
+            donoValue: 1,
+            chatimg: createPreviewAvatarDataUri('TT', '#fe2c55'),
+            meta: { giftName: 'Hearts', giftCount: 100 }
+        }
+    };
+
+    const payload = payloads[kind];
+    if (!payload) {
+        return null;
+    }
+
+    return {
+        ...payload,
+        id: nextOverlayPreviewId('tipjar_test'),
+        timestamp: Date.now()
+    };
+}
+
+function attachTipJarTestDonationButtons() {
+    document.querySelectorAll('[data-tipjar-test]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const payload = buildTipJarTestDonationPayload(button.getAttribute('data-tipjar-test'));
+            if (!payload) {
+                return;
+            }
+            chrome.runtime.sendMessage({ cmd: 'testAlert', payload }, function() {
+                log('ignore callback for this action');
+            });
+        });
+    });
+}
+
 function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
     const config = overlayPreviewConfigs[previewKey];
     if (!config) {
@@ -8737,6 +8808,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Add event listeners for credits roll buttons and trigger mode
 	const creditsStartBtn = document.getElementById('creditsStartBtn');
 	const creditsPreviewBtn = document.getElementById('creditsPreviewBtn');
+	const creditsResetBtn = document.getElementById('creditsResetBtn');
 	const creditsTriggerMode = document.querySelector('select[data-optionparam13="triggermode"]');
 	const creditsActionsDiv = document.querySelector('.credits-actions');
 
@@ -8749,6 +8821,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	if (creditsPreviewBtn) {
 		creditsPreviewBtn.addEventListener('click', function() {
 			chrome.runtime.sendMessage({ cmd: "creditsPreview" });
+		});
+	}
+
+	if (creditsResetBtn) {
+		creditsResetBtn.addEventListener('click', function() {
+			chrome.runtime.sendMessage({ cmd: "creditsReset" });
 		});
 	}
 
@@ -8947,6 +9025,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ id: 'multi-alert-preview-hype', descriptor: () => buildMultiAlertPreviewDescriptor('hype') },
 		{ id: 'multi-alert-preview-clear', descriptor: false }
 	]);
+	attachTipJarTestDonationButtons();
 
 	var previewPlatformSelect = document.getElementById('multi-alert-preview-platform');
 	if (previewPlatformSelect) {
@@ -10603,6 +10682,101 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	function enableServerFallbackForDockLinks() {
+		["server2", "server3"].forEach(function (id) {
+			var input = document.getElementById(id);
+			if (input && !input.checked) {
+				input.checked = true;
+				updateSettings(input, true);
+			}
+		});
+		refreshLinks();
+		showServerFallbackBanner(null, "Server Fallback is enabled. Re-open or reload your dock and overlays using the updated links.", true);
+	}
+
+	function getServerFallbackBanner() {
+		var banner = document.getElementById("serverFallbackTestNotice");
+		if (!banner) {
+			return null;
+		}
+		return banner;
+	}
+
+	function showServerFallbackBanner(health, customMessage, success, hideEnableButton) {
+		var banner = getServerFallbackBanner();
+		if (!banner) {
+			return;
+		}
+		var messageNode = banner.querySelector('[data-role="message"]');
+		var enableButton = banner.querySelector('[data-role="enable"]');
+		var dismissButton = banner.querySelector('[data-role="dismiss"]');
+		var message = customMessage || (health && !health.webRTCSupported
+			? "This browser does not appear to support WebRTC. If the fake test message did not appear, Server Fallback may help."
+			: "No active WebRTC dock or overlay connection was found. If the fake test message did not appear, Server Fallback may help.");
+
+		if (messageNode) {
+			messageNode.textContent = message;
+		}
+		if (enableButton) {
+			enableButton.style.display = success || hideEnableButton ? "none" : "";
+			if (!enableButton.dataset.boundServerFallback) {
+				enableButton.dataset.boundServerFallback = "1";
+				enableButton.onclick = function () {
+					enableServerFallbackForDockLinks();
+				};
+			}
+		}
+		if (dismissButton) {
+			var dismissLabel = dismissButton.querySelector("span") || dismissButton;
+			dismissLabel.textContent = success ? "OK" : "Not now";
+			if (!dismissButton.dataset.boundServerFallback) {
+				dismissButton.dataset.boundServerFallback = "1";
+				dismissButton.onclick = function () {
+					banner.classList.remove("show");
+				};
+			}
+		}
+		if (success) {
+			banner.classList.add("success");
+		} else {
+			banner.classList.remove("success");
+		}
+		banner.classList.add("show");
+	}
+
+	function maybePromptServerFallbackAfterFakeMessage(response) {
+		var health = response && response.dockTransportHealth;
+		if (!health) {
+			return;
+		}
+		if (!health.extensionOn) {
+			showServerFallbackBanner(health, "The extension is currently disabled. Enable it first, then press the fake test message button again.", false, true);
+			return;
+		}
+		if (health.fakeMessageTransportReady) {
+			return;
+		}
+		if (health.serverFallbackEnabled) {
+			showServerFallbackBanner(health, "Server Fallback is enabled, but the fallback connection is not ready yet. Wait a moment, then reload your dock/overlays and test again.", false, true);
+			return;
+		}
+
+		if (!health.webRTCSupported) {
+			showServerFallbackBanner(health, "This browser does not appear to support WebRTC. If the fake test message did not appear, Server Fallback may help.");
+			return;
+		}
+		if (health.recentP2PFailure) {
+			showServerFallbackBanner(health, "A WebRTC connection appears to have failed recently. If the fake test message did not appear, Server Fallback may help.");
+			return;
+		}
+		if (health.everHadP2PPeer) {
+			showServerFallbackBanner(health, "A dock or overlay was connected before, but none are connected now. Reload your dock or overlay, or try Server Fallback if it still does not work.");
+			return;
+		}
+
+		showServerFallbackBanner(health, "No dock or overlay connection was found. Open or reload your dock/overlay link, then press the fake test message button again.", false, true);
+	}
+
 	var iii = document.querySelectorAll("button[data-action]");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onclick = function(e){
@@ -10615,7 +10789,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 			
 			msg.value = this.dataset.value || null;
-			if (msg.cmd == "fakemsg" || msg.cmd == "fakemeta"){
+			if (this.dataset.valueSource){
+				var valueSource = document.getElementById(this.dataset.valueSource);
+				msg.value = valueSource ? valueSource.value : null;
+			}
+			if (msg.cmd == "fakemsg"){
+				chrome.runtime.sendMessage(msg, function (response) {
+					maybePromptServerFallbackAfterFakeMessage(response);
+				});
+			} else if (msg.cmd == "fakemeta"){
 				chrome.runtime.sendMessage(msg, function (response) {
 					// actions have callbacks? maybe
 				});
@@ -10644,6 +10826,23 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						log("ignore callback for this action");
 					});
 				}
+			} else if (msg.cmd == "settipjaramount"){
+				var tipjarAmount = parseFloat(msg.value);
+				if (isNaN(tipjarAmount) || tipjarAmount < 0){
+					alert("Enter a current amount first.");
+					return;
+				}
+				var tipjarSourceSelect = document.querySelector('[data-optionparam12="tipjarsource"]');
+				var tipjarTypeSelect = document.querySelector('[data-optionparam12="tipjartype"]');
+				if (tipjarSourceSelect && tipjarSourceSelect.value) {
+					msg.tipjarsource = tipjarSourceSelect.value;
+				}
+				if (tipjarTypeSelect && tipjarTypeSelect.value) {
+					msg.tipjartype = tipjarTypeSelect.value;
+				}
+				chrome.runtime.sendMessage(msg, function (response) {
+					log("ignore callback for this action");
+				});
 			} else {
 				//console.log(msg);
 				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe

@@ -391,6 +391,39 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `filtertid` | comma-separated numbers | Filter by thread IDs |
 | `branded` | boolean | Shows channel icon |
 
+## Tip Jar & Goal Meter Parameters (`tipjar.html`)
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text` | Selects the tip jar display style. `bar` is the fluid goal bar; `compact`/`vertical` are simple square-edged bars for corners; `text` is a one-line readout |
+| `goal` | number | Sets the target amount for the bar or jar |
+| `title` | string | Sets the visible goal title (e.g. `Star Goal`, `SuperChat Goal`) |
+| `tipjartype` | `usd`, `stars`, `bits`, `coins`, `diamonds`, `kicks`, `jewels`, `tokens`, `hearts`, `gold` | Counts only that donation unit/type. When set, the jar uses the raw unit count instead of converting to USD |
+| `tipjarunit` or `donationtype` | same as `tipjartype` | Alias for `tipjartype` |
+| `tipjarunitlabel` | string | Overrides the displayed unit label for a filtered unit bar |
+| `tipjarsource` | source type such as `facebook`, `youtube`, `twitch`, `kick`, `tiktok`, `stripe`, `kofi`, `bmac`, `fourthwall` | Counts only donations from that source while preserving the normal USD conversion unless `tipjartype` is also set |
+| `donationsource` | same as `tipjarsource` | Alias for `tipjarsource` |
+| `persistent` | boolean | Keeps the current amount between sessions. Filtered bars use separate saved totals |
+| `controls` | boolean | Shows reset/history/export controls |
+| `sound` | boolean | Plays a sound on accepted donations |
+| `hype` | boolean | Enables hype cup scoring mode |
+| `levelsize` or `increment` | number | Turns the goal into repeating bands/levels of this size (e.g. `1000` stars or `50` dollars). The bar fills, celebrates, and rolls into the next level instead of stopping |
+| `fillstart` or `barcolorstart` | CSS color | Fill color when empty/low (default `#2196F3` blue). Applies to `bar`/`compact`/`vertical`, and recolors the `meter` fill |
+| `fillend` or `barcolorend` | CSS color | Fill color when full (default `#f44336` red). Applies to `bar`/`compact`/`vertical`, and recolors the `meter` fill |
+| `fillmode` | `progress`, `gradient`, `solid` | `bar` fill behavior. `progress` (default) shifts the whole bar from start→end color as it fills; `gradient` reveals a fixed start→end gradient; `solid` uses only the start color |
+| `barheight` | number | Track height (px) for `bar`/`compact`/`vertical` styles |
+| `barradius` | number or CSS length | Corner radius for bar tracks. Use `0` for square corner-overlay edges |
+| `noliquid` | boolean | Disables the flowing-liquid animation on the `bar` style |
+| `theme` | `default`, `neon`, `gold` | Visual theme for the meter/bar |
+| `celebration` | `hearts`, `confetti`, `fireworks`, `none` | Effect played on milestones/level-ups |
+
+## Credits Roll Parameters (`credits.html`)
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `loop` | boolean | Restarts the credits animation when it reaches the end |
+| `persistcredits` | boolean | Saves the collected credits list in the overlay's local storage so refreshes/source toggles keep the current stream's supporters until reset |
+
 ## Other options for other overlays.
 
 WIP.

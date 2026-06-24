@@ -705,7 +705,7 @@ TTS.configure = function(urlParams) {
 	if (urlParams.has("tiktokmemberleveltts")) {
 		TTS.tiktokMemberLevelTTS = TTS.parseIntParam(urlParams, "tiktokmemberleveltts", 1);
 	}
-
+	
     // API Keys
     TTS.GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;
@@ -1452,7 +1452,7 @@ TTS.speechMeta = function(data, allow = false) {
             return;
         }
     }
-
+	
     if (!data.bot && TTS.bottts) {
         //console.log("Filter: Only bot messages allowed and this is not a bot message");
         return;

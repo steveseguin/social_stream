@@ -1,114 +1,673 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>
-        // Apply dark mode immediately to prevent flash
-        (function() {
-            const savedTheme = localStorage.getItem('darkMode');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
-                document.documentElement.classList.add('dark-mode');
-            }
-        })();
-    </script>
-    <script>
-        window.location.href = '../index.html' + window.location.search;
-    </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Stream Ninja | Live Social Messaging for Content Creators</title>
-    <meta name="description" content="Social Stream Ninja consolidates live social messaging from YouTube, Twitch, Facebook, TikTok and more into a customizable dashboard. Enhance your live streaming with chat overlays, bot actions, and text-to-speech. Free and easy to use.">
-    <meta name="keywords" content="social stream, live chat, OBS overlay, chat relay, multi-platform chat, content creators, live streaming tools, youtube chat, twitch chat, facebook live">
-    <meta name="author" content="Social Stream Ninja">
-    <link rel="canonical" href="https://socialstream.ninja" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://socialstream.ninja">
-    <meta property="og:title" content="Social Stream Ninja | Enhance Your Live Streaming">
-    <meta property="og:description" content="Easily integrate chat messages from various platforms like YouTube, Twitch, and Facebook into your live streams with Social Stream Ninja.">
-    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://socialstream.ninja">
-    <meta property="twitter:title" content="Social Stream Ninja | Live Chat Integration for Streamers">
-    <meta property="twitter:description" content="Social Stream Ninja, a free tool for streamers, integrates live chat from multiple platforms directly into OBS.">
-    <meta property="twitter:image" content="https://socialstream.ninja/media/logo.png">
-    
-    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="../docs/css/styles.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>																								  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Stream Ninja Docs</title>
+  <meta name="description" content="Client-side Markdown documentation viewer for Social Stream Ninja.">
+  <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/lib/marked.umd.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #eef3f8;
+      --text: #18212f;
+      --muted: #59687c;
+      --line: #d8e0ea;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --code-bg: #eef2f7;
+      --shadow: 0 12px 30px rgba(22, 34, 51, 0.12);
+      --sidebar-width: 330px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #10141b;
+        --panel: #171d26;
+        --panel-soft: #202938;
+        --text: #edf2f7;
+        --muted: #a8b4c4;
+        --line: #2d3748;
+        --accent: #2dd4bf;
+        --accent-strong: #5eead4;
+        --code-bg: #0f172a;
+        --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--accent-strong);
+      text-decoration: underline;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 18px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 16px;
+    }
+
+    .brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .brand span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .search {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font: inherit;
+      margin-bottom: 14px;
+    }
+
+    .nav-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    button,
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 8px 10px;
+      font: inherit;
+      text-decoration: none;
+    }
+
+    button:hover,
+    .button:hover {
+      border-color: var(--accent);
+      color: var(--accent-strong);
+      text-decoration: none;
+    }
+
+    .sidebar-content {
+      font-size: 14px;
+    }
+
+    .sidebar-content h1,
+    .sidebar-content h2,
+    .sidebar-content h3 {
+      margin: 18px 0 8px;
+      font-size: 14px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .sidebar-content ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .sidebar-content li {
+      margin: 2px 0;
+    }
+
+    .sidebar-content li ul {
+      margin-left: 12px;
+      padding-left: 10px;
+      border-left: 1px solid var(--line);
+    }
+
+    .sidebar-content a {
+      display: block;
+      border-radius: 8px;
+      color: var(--text);
+      padding: 6px 8px;
+      text-decoration: none;
+    }
+
+    .sidebar-content a:hover,
+    .sidebar-content a.active {
+      background: var(--panel-soft);
+      color: var(--accent-strong);
+    }
+
+    .sidebar-content .hidden {
+      display: none;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 28px;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    .toolbar-path {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+    }
+
+    .toolbar-buttons {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .content {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 34px;
+    }
+
+    .content.loading,
+    .content.error {
+      color: var(--muted);
+    }
+
+    .content h1,
+    .content h2,
+    .content h3,
+    .content h4 {
+      line-height: 1.25;
+      margin: 28px 0 10px;
+    }
+
+    .content h1:first-child {
+      margin-top: 0;
+    }
+
+    .content h1 {
+      font-size: 32px;
+    }
+
+    .content h2 {
+      border-top: 1px solid var(--line);
+      padding-top: 24px;
+      font-size: 24px;
+    }
+
+    .content h3 {
+      font-size: 19px;
+    }
+
+    .content p,
+    .content li {
+      color: var(--text);
+    }
+
+    .content table {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      border-collapse: collapse;
+      margin: 18px 0;
+    }
+
+    .content th,
+    .content td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .content th {
+      background: var(--panel-soft);
+    }
+
+    .content code {
+      background: var(--code-bg);
+      border-radius: 6px;
+      padding: 2px 5px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+    }
+
+    .content pre {
+      background: var(--code-bg);
+      border-radius: 8px;
+      overflow-x: auto;
+      padding: 16px;
+    }
+
+    .content pre code {
+      background: transparent;
+      padding: 0;
+    }
+
+    .content blockquote {
+      border-left: 4px solid var(--accent);
+      margin: 18px 0;
+      padding: 8px 16px;
+      background: var(--panel-soft);
+      color: var(--muted);
+    }
+
+    .content img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    .mobile-toggle {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+        position: fixed;
+        z-index: 10;
+        width: min(92vw, 360px);
+        box-shadow: var(--shadow);
+      }
+
+      body.nav-open .sidebar {
+        display: block;
+      }
+
+      .mobile-toggle {
+        display: inline-flex;
+      }
+
+      .main {
+        padding: 14px;
+      }
+
+      .toolbar {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .content {
+        padding: 22px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="logo">
-                <a href="../index.html">
-					<img src="data:image/svg+xml;base64,PHN2ZyBpZD0iQ2FwYV8xIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA1MTIgNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGc+PGc+PHBhdGggZD0ibTI4NS41NzcgMTQyLjc2OGgtMjI2LjgyM2MtMjguMzExIDAtNTEuMjYyIDIyLjk1MS01MS4yNjIgNTEuMjYydjE5My44NDVjMCAyOC4zMTEgMjIuOTUxIDUxLjI2MyA1MS4yNjMgNTEuMjYzaDEzLjQ0NGM0LjY5NSAwIDguODIyIDMuMjA0IDkuODk0IDcuNzc1IDQuMTE3IDE3LjU0Ny0xMC43NDYgMzQuMTEzLTIwLjE4OCA0Mi41ODItMi4yNjYgMi4wMzItLjY2MSA1Ljc2MSAyLjM3NSA1LjU2NCA1Mi41NTMtMy40MSA2OC40MTktMzQuNjMgNzIuOTQ2LTQ4Ljg4MyAxLjMzNi00LjIwNSA1LjI2Ni03LjAzOCA5LjY3OC03LjAzOGgxMzguNjc0YzI4LjMxMSAwIDUxLjI2Mi0yMi45NTEgNTEuMjYyLTUxLjI2MnYtMTkzLjg0NmMtLjAwMS0yOC4zMTEtMjIuOTUyLTUxLjI2Mi01MS4yNjMtNTEuMjYyeiIgZmlsbD0iI2ZlN2FiNiIvPjwvZz48Zz48cGF0aCBkPSJtMTI1LjkzMiA0MzkuMTMzaDIwLjk3NGMtNC40MTUgMC04LjM1IDIuODM3LTkuNjc4IDcuMDQxLTQuNTM0IDE0LjI1Mi0yMC4zOTUgNDUuNDc0LTcyLjk0OSA0OC44NzktMS43MTguMTEtMi45NzYtMS4wMjktMy4zMzYtMi40MDcgMzguNjIyLTguMzU5IDUxLjMyNi0zMy45NTggNTUuMzExLTQ2LjQ3MiAxLjMyOC00LjIwNSA1LjI2My03LjA0MSA5LjY3OC03LjA0MXoiIGZpbGw9IiNmZTVjYTciLz48L2c+PGc+PHBhdGggZD0ibTMzNi44NCAxOTQuMDI3djE5My44NDljMCAyOC4zMDUtMjIuOTUxIDUxLjI1Ni01MS4yNjYgNTEuMjU2aC0yMC45NzRjMjguMzE1IDAgNTEuMjY2LTIyLjk1MSA1MS4yNjYtNTEuMjU2di0xOTMuODQ5YzAtMjguMzA1LTIyLjk1MS01MS4yNTYtNTEuMjY2LTUxLjI1NmgyMC45NzRjMjguMzE0IDAgNTEuMjY2IDIyLjk1MSA1MS4yNjYgNTEuMjU2eiIgZmlsbD0iI2ZlNWNhNyIvPjwvZz48Zz48cGF0aCBkPSJtNDUzLjI0NyAxNi45MzVoLTIyNi44MjNjLTI4LjMxMSAwLTUxLjI2MiAyMi45NTEtNTEuMjYyIDUxLjI2MnYxOTMuODQ1YzAgMjguMzExIDIyLjk1MSA1MS4yNjMgNTEuMjYzIDUxLjI2M2gxMzguNjczYzQuNDEyIDAgOC4zNDMgMi44MzMgOS42NzggNy4wMzggNC41MjcgMTQuMjUzIDIwLjM5MyA0NS40NzMgNzIuOTQ2IDQ4Ljg4MyAzLjAzNy4xOTcgNC42NDEtMy41MzMgMi4zNzUtNS41NjQtOS40NDItOC40NjgtMjQuMzA2LTI1LjAzNC0yMC4xODgtNDIuNTgyIDEuMDcyLTQuNTcxIDUuMTk5LTcuNzc1IDkuODk0LTcuNzc1aDEzLjQ0NGMyOC4zMTEgMCA1MS4yNjItMjIuOTUxIDUxLjI2Mi01MS4yNjJ2LTE5My44NDZjMC0yOC4zMTEtMjIuOTUtNTEuMjYyLTUxLjI2Mi01MS4yNjJ6IiBmaWxsPSIjNmVkNWExIi8+PC9nPjxnPjxwYXRoIGQ9Im01MDQuNTEyIDY4LjE5M3YxOTMuODQ5YzAgMjguMzE1LTIyLjk1MSA1MS4yNjYtNTEuMjY2IDUxLjI2NmgtMTMuNDQzYy00LjY5NCAwLTguODE5IDMuMTk2LTkuODk4IDcuNzctNC4xMTUgMTcuNTQ4IDEwLjc0NyAzNC4xMTggMjAuMTk1IDQyLjU3NyAyLjI2NyAyLjAzOC42NTkgNS43NjMtMi4zNzcgNS41NzMtNi4wNDMtLjM5LTExLjU5Ni0xLjE0OS0xNi42OTktMi4yMTcuMzctMS4xMDguMTUtMi40MTctLjg5OS0zLjM1Ni05LjQ0OC04LjQ1OS0yNC4zMS0yNS4wMjktMjAuMTk1LTQyLjU3NyAxLjA3OS00LjU3NCA1LjIwNC03Ljc3IDkuODk4LTcuNzdoMTMuNDQzYzI4LjMxNSAwIDUxLjI2Ni0yMi45NTEgNTEuMjY2LTUxLjI2NnYtMTkzLjg0OWMwLTI4LjMwNS0yMi45NTEtNTEuMjU2LTUxLjI2Ni01MS4yNTZoMTkuOTc1YzI4LjMxNCAwIDUxLjI2NiAyMi45NTIgNTEuMjY2IDUxLjI1NnoiIGZpbGw9IiM0NmNjOGQiLz48L2c+PGc+PHBhdGggZD0ibTM1MC41ODkgODkuNzE3IDE3LjE5MSAzNC44MzJjMS43NDcgMy41MzkgNS4xMjMgNS45OTMgOS4wMjkgNi41NmwzOC40NCA1LjU4NmM5LjgzNiAxLjQyOSAxMy43NjQgMTMuNTE3IDYuNjQ2IDIwLjQ1NWwtMjcuODE1IDI3LjExM2MtMi44MjYgMi43NTUtNC4xMTYgNi43MjQtMy40NDkgMTAuNjE1bDYuNTY2IDM4LjI4NGMxLjY4IDkuNzk2LTguNjAyIDE3LjI2Ny0xNy40IDEyLjY0MmwtMzQuMzgxLTE4LjA3NWMtMy40OTQtMS44MzctNy42NjctMS44MzctMTEuMTYxIDBsLTM0LjM4MSAxOC4wNzVjLTguNzk4IDQuNjI1LTE5LjA4LTIuODQ1LTE3LjQtMTIuNjQybDYuNTY2LTM4LjI4NGMuNjY3LTMuODktLjYyMy03Ljg2LTMuNDQ5LTEwLjYxNWwtMjcuODE1LTI3LjExM2MtNy4xMTgtNi45MzgtMy4xOS0xOS4wMjYgNi42NDYtMjAuNDU1bDM4LjQ0LTUuNTg2YzMuOTA2LS41NjggNy4yODMtMy4wMjEgOS4wMjktNi41NmwxNy4xOTEtMzQuODMyYzQuMzk5LTguOTEzIDE3LjEwOC04LjkxMyAyMS41MDcgMHoiIGZpbGw9IiNmZWRmMzAiLz48L2c+PGc+PHBhdGggZD0ibTM5NC4wNzkgMTg0LjI1OWMtMi44MjcgMi43NTctNC4xMTUgNi43MzItMy40NDYgMTAuNjE3bDYuNTYyIDM4LjI4MmMxLjY3OCA5Ljc5OC04LjU5OSAxNy4yNjktMTcuMzk4IDEyLjY0NGwtMTMuNjMzLTcuMTcxYzMuNjg1LTIuNDU3IDYuMDIzLTYuOTExIDUuMTU0LTExLjk4NWwtNi41NzItMzguMjkyYy0uNjU5LTMuODg1LjYyOS03Ljg1IDMuNDU2LTEwLjYwN2wyNy44MTUtMjcuMTE2YzQuOTU0LTQuODM0IDQuNTU0LTEyLjE1NS41MzktMTYuNjQ5bDE4LjY5NyAyLjcxN2M5LjgyOCAxLjQyOCAxMy43NjMgMTMuNTEzIDYuNjQyIDIwLjQ1NXoiIGZpbGw9IiNmYWM2MDAiLz48L2c+PGc+PHBhdGggZD0ibTg0LjE5NCAyNTEuMDIxaDU0LjQ1MmM0LjEzNyAwIDcuNDkxLTMuMzU0IDcuNDkxLTcuNDkxcy0zLjM1My03LjQ5MS03LjQ5MS03LjQ5MWgtNTQuNDUyYy00LjEzNyAwLTcuNDkxIDMuMzU0LTcuNDkxIDcuNDkxLjAwMSA0LjEzNyAzLjM1NCA3LjQ5MSA3LjQ5MSA3LjQ5MXoiLz48cGF0aCBkPSJtODQuMTk0IDI4Mi42MzZoNTQuNDUyYzQuMTM3IDAgNy40OTEtMy4zNTQgNy40OTEtNy40OTFzLTMuMzUzLTcuNDkxLTcuNDkxLTcuNDkxaC01NC40NTJjLTQuMTM3IDAtNy40OTEgMy4zNTQtNy40OTEgNy40OTEuMDAxIDQuMTM3IDMuMzU0IDcuNDkxIDcuNDkxIDcuNDkxeiIvPjxwYXRoIGQ9Im04NC4xOTQgMzE0LjI1aDU0LjQ1MmM0LjEzNyAwIDcuNDkxLTMuMzU0IDcuNDkxLTcuNDkxcy0zLjM1My03LjQ5MS03LjQ5MS03LjQ5MWgtNTQuNDUyYy00LjEzNyAwLTcuNDkxIDMuMzU0LTcuNDkxIDcuNDkxczMuMzU0IDcuNDkxIDcuNDkxIDcuNDkxeiIvPjxwYXRoIGQ9Im04NC4xOTQgMzQ1Ljg2NWg5OC42NzNjNC4xMzcgMCA3LjQ5MS0zLjM1NCA3LjQ5MS03LjQ5MXMtMy4zNTMtNy40OTEtNy40OTEtNy40OTFoLTk4LjY3M2MtNC4xMzcgMC03LjQ5MSAzLjM1NC03LjQ5MSA3LjQ5MXMzLjM1NCA3LjQ5MSA3LjQ5MSA3LjQ5MXoiLz48cGF0aCBkPSJtNDUzLjI0NyA5LjQ0NWgtMjI2LjgyM2MtMzIuMzk2IDAtNTguNzUzIDI2LjM1Ni01OC43NTMgNTguNzUzdjY3LjA4aC0xMDguOTE4Yy0zMi4zOTYtLjAwMS01OC43NTMgMjYuMzU2LTU4Ljc1MyA1OC43NTJ2MTA5LjkwNGMwIDQuMTM3IDMuMzUzIDcuNDkxIDcuNDkxIDcuNDkxczcuNDkxLTMuMzU0IDcuNDkxLTcuNDkxdi0xMDkuOTA0YzAtMjQuMTM1IDE5LjYzNi00My43NzEgNDMuNzcyLTQzLjc3MWgxMDguOTE3djExMS43ODNjMCAzMi4zOTcgMjYuMzU3IDU4Ljc1MyA1OC43NTMgNTguNzUzaDEwMi45MjV2NjcuMDhjMCAyNC4xMzYtMTkuNjM2IDQzLjc3MS00My43NzIgNDMuNzcxaC0xMzguNjczYy03LjczMSAwLTE0LjQ4OSA0LjkyNy0xNi44MTggMTIuMjYtNC4zNCAxMy42NjQtMTcuMTEyIDM2LjEyNy01NC40NzIgNDIuMzM1IDguOTY1LTEwLjM0OCAxNy41MjQtMjUuMDQ5IDEzLjc3MS00MS4wNC0xLjg3Mi03Ljk4MS04LjkzOS0xMy41NTUtMTcuMTg3LTEzLjU1NWgtMTMuNDQ1Yy0yNC4xMzYgMC00My43NzItMTkuNjM2LTQzLjc3Mi00My43NzJ2LTQ5LjVjMC00LjEzNy0zLjM1My03LjQ5MS03LjQ5MS03LjQ5MXMtNy40OSAzLjM1NS03LjQ5IDcuNDkydjQ5LjVjMCAzMi4zOTcgMjYuMzU3IDU4Ljc1MyA1OC43NTMgNTguNzUzaDEzLjQ0NGMxLjIzNiAwIDIuMzMuODM5IDIuNjAxIDEuOTk1IDEuMzk0IDUuOTM4LjkyMiAxOC40MTgtMTcuODk3IDM1LjI5NC0zLjQzNiAzLjA4My00LjUwMSA3LjgyMy0yLjcxMyAxMi4wNzggMS42NzkgMy45OTIgNS41OSA2LjU2MSA5Ljg3OCA2LjU2MS4yMzEgMCAuNDYzLS4wMDcuNjk2LS4wMjIgNTcuNTIyLTMuNzMyIDc0LjgzLTM5LjA3IDc5LjYwMS01NC4wOTEuMzQ0LTEuMDg1IDEuMzY1LTEuODE0IDIuNTM5LTEuODE0aDEzOC42NzRjMzIuMzk2IDAgNTguNzUzLTI2LjM1NiA1OC43NTMtNTguNzUzdi02Ny4wOGgyMC43NjdjMS4xNzQgMCAyLjE5NS43MjkgMi41MzkgMS44MTQgNC43NzEgMTUuMDIxIDIyLjA3NiA1MC4zNTggNzkuNjAxIDU0LjA5MSA0LjM5Mi4yODUgOC44MTMtMi4zNDkgMTAuNTc1LTYuNTM5IDEuNzg5LTQuMjU0LjcyNC04Ljk5NC0yLjcxMi0xMi4wNzctMTguODE5LTE2Ljg3Ny0xOS4yOTEtMjkuMzU3LTE3Ljg5OC0zNS4yOTQuMjcxLTEuMTU2IDEuMzY2LTEuOTk1IDIuNjAxLTEuOTk1aDEzLjQ0NGMzMi4zOTYgMCA1OC43NTMtMjYuMzU2IDU4Ljc1My01OC43NTN2LTE5My44NDZjLjAwMS0zMi4zOTYtMjYuMzU2LTU4Ljc1Mi01OC43NTItNTguNzUyem00My43NzIgMjUyLjU5N2MwIDI0LjEzNi0xOS42MzYgNDMuNzcyLTQzLjc3MiA0My43NzJoLTEzLjQ0NGMtOC4yNDYgMC0xNS4zMTMgNS41NzMtMTcuMTg3IDEzLjU1NC0xLjg1NiA3LjkxMi0yLjA2NSAyMi45MDYgMTMuNzE4IDQxLjAzMi0zNy4zMTUtNi4yMjMtNTAuMDgxLTI4LjY2OS01NC40MTktNDIuMzI3LTIuMzMtNy4zMzMtOS4wODgtMTIuMjYtMTYuODE3LTEyLjI2aC0xMzguNjc0Yy0yNC4xMzYgMC00My43NzItMTkuNjM2LTQzLjc3Mi00My43NzJ2LTE5My44NDRjMC0yNC4xMzUgMTkuNjM2LTQzLjc3MSA0My43NzItNDMuNzcxaDIyNi44MjNjMjQuMTM2IDAgNDMuNzcyIDE5LjYzNiA0My43NzIgNDMuNzcxeiIvPjxwYXRoIGQ9Im00MTYuMzI2IDEyOS4yODItMzguNDM5LTUuNTg1Yy0xLjg4OS0uMjc1LTIuOTg4LTEuNjQ3LTMuNzQ4LTMuMTg4LTEuODI5LTMuNzEtNi4zMTktNS4yMzUtMTAuMDMtMy40MDYtMy43MSAxLjgyOS01LjIzNiA2LjMyLTMuNDA2IDEwLjAzMSAyLjkyNyA1LjkzNiA4LjI1IDEwLjQwNCAxNS4wMyAxMS4zODkgMCAwIDM4LjM5MyA1LjU3OSAzOC40NCA1LjU4NSAzLjQ0Ni41MDEgNS4yMjkgNS4wMTIgMi40OTQgNy42NzhsLTI3LjgxNSAyNy4xMTNjLTQuNTkyIDQuNDc3LTYuNjg3IDEwLjkyNC01LjYwMiAxNy4yNDUgMCAwIDYuNTY2IDM4LjI4NSA2LjU2NiAzOC4yODUuNjMxIDMuNjg4LTMuMjQ2IDYuNDczLTYuNTMyIDQuNzQ0bC0zNC4zODEtMTguMDc1Yy01LjY4LTIuOTg1LTEyLjQ1Ny0yLjk4My0xOC4xMzMgMGwtMzQuMzgxIDE4LjA3NWMtMy4zMjMgMS43NS03LjEwNS0xLjQtNi41MzItNC43NDUuMDEyLS4wNyA2LjU2Ny0zOC4yODQgNi41NjctMzguMjg0IDEuMDg0LTYuMzIxLTEuMDExLTEyLjc2OC01LjYwMy0xNy4yNDVsLTI3LjgxNS0yNy4xMTNjLTIuNjc0LTIuNjA3LTEuMjE5LTcuMTM4IDIuNDk0LTcuNjc4bDM4LjQzOS01LjU4NWM2LjM0OC0uOTIyIDExLjgzMS00LjkwNiAxNC42Ny0xMC42NTdsMTcuMTktMzQuODMyYzEuNjU3LTMuMzU4IDYuNDM1LTMuMzIgOC4wNzMgMGwxLjYgMy4yNDFjMS44MzEgMy43MDkgNi4zMiA1LjIzNSAxMC4wMzIgMy40MDMgMy43MDktMS44MzEgNS4yMzMtNi4zMjIgMy40MDItMTAuMDMybC0xLjYtMy4yNDJjLTMuMzA2LTYuNjk5LTEwLTEwLjg2MS0xNy40Ny0xMC44NjEtNy40NzEgMC0xNC4xNjUgNC4xNjItMTcuNDcyIDEwLjg2MWwtMTcuMTkgMzQuODMyYy0uNjU2IDEuMzI5LTEuOTIzIDIuMjUtMy4zODkgMi40NjNsLTM4LjQ0IDUuNTg1Yy03LjM5MiAxLjA3NC0xMy40MTggNi4xNTUtMTUuNzI3IDEzLjI1OXMtLjQxOSAxNC43NTggNC45MjkgMTkuOTcybDI3LjgxNSAyNy4xMTNjMS4wNjEgMS4wMzQgMS41NDUgMi41MjQgMS4yOTUgMy45ODVsLTYuNTY2IDM4LjI4NGMtMS4yNjMgNy4zNjIgMS43MDYgMTQuNjY0IDcuNzUgMTkuMDU1IDYuMDQ0IDQuMzkzIDEzLjkwNiA0Ljk1OSAyMC41MTggMS40ODNsMzQuMzgxLTE4LjA3NWMxLjMxLS42ODkgMi44NzctLjY5IDQuMTg5IDAgMCAwIDM0LjM2NSAxOC4wNjcgMzQuMzgxIDE4LjA3NSAxMy44OSA3LjMwMiAzMC45NjEtNC44NDEgMjguMjY5LTIwLjUzOC0uMDAzLS4wMTktNi41NjYtMzguMjg1LTYuNTY2LTM4LjI4NS0uMjUtMS40Ni4yMzQtMi45NSAxLjI5NS0zLjk4NWwyNy44MTUtMjcuMTEzYzUuMzQ5LTUuMjE1IDcuMjM4LTEyLjg2OCA0LjkyOS0xOS45NzMtMi4zMDctNy4xMDQtOC4zMzMtMTIuMTg1LTE1LjcyNi0xMy4yNTl6Ii8+PC9nPjwvZz48L3N2Zz4=" alt="Social Stream Ninja Logo">
-                    <span>Social Stream Ninja</span>
-                </a>
-            </div>
-			<nav>
-				<ul>
-					<li><a href="../index.html" class="active">Home</a></li>
-					<li><a href="../docs/features.html">Features</a></li>
-					<li><a href="../docs/download.html">Download</a></li>
-					<li><a href="../docs/guides.html">Guides</a></li>
-					<li><a href="../docs/commands.html">Commands & API</a></li>
-					<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
-					<li><a href="../docs/templates.html">Templates</a></li>
-					<li><a href="../docs/services.html">Hire</a></li>
-					<li><a href="../docs/support.html">Support</a></li>
-				</ul>
-			</nav>
-			<div class="header-controls">
-				<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
-					<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-						<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-					</svg>
-					<svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-						<circle cx="12" cy="12" r="5"></circle>
-						<line x1="12" y1="1" x2="12" y2="3"></line>
-						<line x1="12" y1="21" x2="12" y2="23"></line>
-						<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-						<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-						<line x1="1" y1="12" x2="3" y2="12"></line>
-						<line x1="21" y1="12" x2="23" y2="12"></line>
-						<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-						<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-					</svg>
-				</button>
-				<a href="https://github.com/steveseguin/social_stream" class="github-link hide-mobile" aria-label="GitHub Repository">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-						<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-					</svg>
-				</a>
-				<div class="mobile-nav-toggle">
-					<span></span>
-					<span></span>
-					<span></span>
-				</div>
-			</div>
-		</div>
-	</header>
-
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Consolidate Your Live Social Messaging Streams</h1>
-                <p>Connect with your audience across Facebook, Youtube, Twitch, Zoom, and dozens more platforms - all in one place.</p>
-                <div class="hero-buttons">
-                    <a href="../docs/download.html" class="btn btn-primary">Download Now</a>
-                    <a href="../docs/guides.html" class="btn btn-secondary">View Guides</a>
-                </div>
-            </div>
-            <div class="hero-image">
-                <img src="../media/logo.png" alt="Social Stream Ninja Dashboard">
-            </div>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <img src="../media/logo.png" alt="Social Stream Ninja logo">
+        <div>
+          <strong>Social Stream Ninja</strong>
+          <span>Markdown docs viewer</span>
         </div>
-    </section>
+      </div>
+      <input class="search" id="search" type="search" placeholder="Filter docs" autocomplete="off">
+      <div class="nav-actions">
+        <a class="button" href="../index.html">Home</a>
+        <a class="button" href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <nav class="sidebar-content" id="sidebarContent" aria-label="Documentation navigation">Loading sitemap...</nav>
+    </aside>
 
+    <main class="main">
+      <div class="toolbar">
+        <button class="mobile-toggle" id="toggleNav" type="button">Menu</button>
+        <div class="toolbar-path" id="currentPath">Loading...</div>
+        <div class="toolbar-buttons">
+          <button id="copyLink" type="button">Copy Link</button>
+          <a class="button" id="rawLink" href="#" target="_blank" rel="noopener">Raw</a>
+        </div>
+      </div>
+      <article class="content loading" id="content">Loading documentation...</article>
+    </main>
+  </div>
+
+  <script>
+    const DEFAULT_FILE = "agents/99-agent-index.md";
+    const SITEMAP_FILE = "agents/SITEMAP.md";
+    const state = { currentFile: DEFAULT_FILE };
+
+    const elements = {
+      content: document.getElementById("content"),
+      sidebarContent: document.getElementById("sidebarContent"),
+      currentPath: document.getElementById("currentPath"),
+      rawLink: document.getElementById("rawLink"),
+      copyLink: document.getElementById("copyLink"),
+      search: document.getElementById("search"),
+      toggleNav: document.getElementById("toggleNav")
+    };
+
+    function stripHash(path) {
+      return String(path || "").split("#")[0];
+    }
+
+    function getHash(path) {
+      const value = String(path || "");
+      const index = value.indexOf("#");
+      return index === -1 ? "" : value.slice(index);
+    }
+
+    function normalizeDocPath(path, baseFile) {
+      if (!path) return DEFAULT_FILE;
+      if (/^(https?:|mailto:|tel:)/i.test(path)) return path;
+      const cleaned = String(path).replace(/\\/g, "/");
+      const baseDir = baseFile && baseFile.includes("/") ? baseFile.split("/").slice(0, -1).join("/") + "/" : "";
+      const url = new URL(cleaned, "https://docs.local/" + baseDir);
+      const normalized = decodeURIComponent(url.pathname).replace(/^\/+/, "");
+      if (!normalized || normalized.split("/").includes("..")) return DEFAULT_FILE;
+      if (normalized.endsWith("/")) return normalized + "index.md";
+      return normalized;
+    }
+
+    function fileFromLocation() {
+      const params = new URLSearchParams(window.location.search);
+      return normalizeDocPath(params.get("file") || DEFAULT_FILE);
+    }
+
+    function updateUrl(path) {
+      const cleanPath = stripHash(path);
+      const hash = getHash(path);
+      const url = new URL(window.location.href);
+      url.searchParams.set("file", cleanPath);
+      url.hash = hash.replace(/^#/, "");
+      history.pushState({ file: cleanPath }, "", url);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function fallbackMarkdown(markdown) {
+      const lines = markdown.split(/\r?\n/);
+      let inCode = false;
+      let html = "";
+      let inList = false;
+      for (const line of lines) {
+        if (line.startsWith("```")) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          html += inCode ? "</code></pre>" : "<pre><code>";
+          inCode = !inCode;
+          continue;
+        }
+        if (inCode) {
+          html += escapeHtml(line) + "\n";
+          continue;
+        }
+        const heading = line.match(/^(#{1,4})\s+(.*)$/);
+        if (heading) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          const level = heading[1].length;
+          html += `<h${level}>${inlineMarkdown(heading[2])}</h${level}>`;
+          continue;
+        }
+        const bullet = line.match(/^\s*[-*]\s+(.*)$/);
+        if (bullet) {
+          if (!inList) {
+            html += "<ul>";
+            inList = true;
+          }
+          html += `<li>${inlineMarkdown(bullet[1])}</li>`;
+          continue;
+        }
+        if (!line.trim()) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          continue;
+        }
+        html += `<p>${inlineMarkdown(line)}</p>`;
+      }
+      if (inList) html += "</ul>";
+      if (inCode) html += "</code></pre>";
+      return html;
+    }
+
+    function inlineMarkdown(value) {
+      return escapeHtml(value)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    }
+
+    function renderMarkdown(markdown) {
+      if (window.marked && window.marked.parse) {
+        return window.marked.parse(markdown, { gfm: true, breaks: false });
+      }
+      return fallbackMarkdown(markdown);
+    }
+
+    function slugify(text) {
+      return String(text)
+        .toLowerCase()
+        .replace(/<[^>]+>/g, "")
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
+    }
+
+    function addHeadingLinks() {
+      const used = new Set();
+      elements.content.querySelectorAll("h1, h2, h3, h4").forEach(heading => {
+        let id = heading.id || slugify(heading.textContent);
+        if (!id) return;
+        let unique = id;
+        let count = 2;
+        while (used.has(unique)) {
+          unique = `${id}-${count}`;
+          count += 1;
+        }
+        used.add(unique);
+        heading.id = unique;
+        if (!heading.querySelector(".header-link")) {
+          const text = heading.innerHTML;
+          heading.innerHTML = `<a class="header-link" href="#${unique}">${text}</a>`;
+        }
+      });
+    }
+
+    function rewriteContentLinks() {
+      elements.content.querySelectorAll("a[href]").forEach(link => {
+        const href = link.getAttribute("href");
+        if (!href || href.startsWith("#")) return;
+        if (/^(https?:|mailto:|tel:)/i.test(href)) {
+          link.target = "_blank";
+          link.rel = "noopener";
+          return;
+        }
+        const target = normalizeDocPath(href, state.currentFile);
+        if (target.endsWith(".md")) {
+          link.href = `?file=${encodeURIComponent(stripHash(target))}${getHash(href)}`;
+          link.addEventListener("click", event => {
+            event.preventDefault();
+            loadDoc(target + getHash(href), true);
+          });
+        }
+      });
+    }
+
+    function setActiveLink(path) {
+      const cleanPath = stripHash(path);
+      elements.sidebarContent.querySelectorAll("a").forEach(link => {
+        const target = normalizeDocPath(link.getAttribute("href"), SITEMAP_FILE);
+        link.classList.toggle("active", stripHash(target) === cleanPath);
+      });
+    }
+
+    async function loadDoc(path, push) {
+      const normalized = normalizeDocPath(path || DEFAULT_FILE);
+      if (/^https?:/i.test(normalized)) {
+        window.open(normalized, "_blank", "noopener");
+        return;
+      }
+      const cleanPath = stripHash(normalized);
+      const hash = getHash(normalized);
+      state.currentFile = cleanPath;
+      elements.content.className = "content loading";
+      elements.content.textContent = "Loading documentation...";
+      elements.currentPath.textContent = cleanPath;
+      elements.rawLink.href = cleanPath;
+      setActiveLink(cleanPath);
+      if (push) updateUrl(cleanPath + hash);
+      try {
+        const response = await fetch(cleanPath, { cache: "no-cache" });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const markdown = await response.text();
+        elements.content.innerHTML = renderMarkdown(markdown);
+        elements.content.className = "content";
+        addHeadingLinks();
+        rewriteContentLinks();
+        if (hash) {
+          requestAnimationFrame(() => {
+            const target = document.getElementById(hash.slice(1));
+            if (target) target.scrollIntoView();
+          });
+        } else {
+          window.scrollTo({ top: 0 });
+        }
+      } catch (error) {
+        elements.content.className = "content error";
+        elements.content.innerHTML = `<h1>Unable to load document</h1><p>${escapeHtml(cleanPath)}</p><p>${escapeHtml(error.message)}</p>`;
+      }
+    }
+
+    async function loadSitemap() {
+      try {
+        const response = await fetch(SITEMAP_FILE, { cache: "no-cache" });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const markdown = await response.text();
+        elements.sidebarContent.innerHTML = renderMarkdown(markdown);
+        elements.sidebarContent.querySelectorAll("a[href]").forEach(link => {
+          const href = link.getAttribute("href");
+          const target = normalizeDocPath(href, SITEMAP_FILE);
+          if (target.endsWith(".md")) {
+            link.href = `?file=${encodeURIComponent(stripHash(target))}${getHash(href)}`;
+            link.addEventListener("click", event => {
+              event.preventDefault();
+              document.body.classList.remove("nav-open");
+              loadDoc(target + getHash(href), true);
+            });
+          }
+        });
+      } catch (error) {
+        elements.sidebarContent.innerHTML = `<p>Unable to load sitemap.</p><p><a href="?file=${encodeURIComponent(DEFAULT_FILE)}">${DEFAULT_FILE}</a></p>`;
+      }
+    }
+
+    function filterSidebar(query) {
+      const term = query.trim().toLowerCase();
+      elements.sidebarContent.querySelectorAll("li").forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.classList.toggle("hidden", Boolean(term) && !text.includes(term));
+      });
+    }
+
+    elements.search.addEventListener("input", event => filterSidebar(event.target.value));
+    elements.toggleNav.addEventListener("click", () => document.body.classList.toggle("nav-open"));
+    elements.copyLink.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        elements.copyLink.textContent = "Copied";
+        setTimeout(() => { elements.copyLink.textContent = "Copy Link"; }, 1200);
+      } catch (_) {
+        elements.copyLink.textContent = "Copy Failed";
+        setTimeout(() => { elements.copyLink.textContent = "Copy Link"; }, 1200);
+      }
+    });
+
+    window.addEventListener("popstate", () => loadDoc(fileFromLocation(), false));
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadSitemap();
+      loadDoc(fileFromLocation() + window.location.hash, false);
+    });
+  </script>
 </body>
 </html>
