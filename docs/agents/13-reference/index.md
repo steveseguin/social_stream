@@ -199,7 +199,7 @@ Prefer current code and source docs in this order:
 - Page-by-page URL/support matrix generated from actual root HTML files, building on `surface-url-cheatsheet.md`.
 - Page-by-page capability, dependency, state, and OBS/API/Event Flow matrix generated from root HTML files, building on `07-overlays-and-pages/page-capability-matrix.md`.
 - Runtime health validation for `08-platform-sources/public-site-implementation-map.md`, building on `08-platform-sources/public-site-support-status.md`.
-- Runtime/source promotion of broad public claims in `public-claims-boundary-matrix.md`, especially site counts, two-way chat, no API keys, AI/TTS, app, plugin, services, and free/support wording.
+- Runtime/source promotion of broad public claims in `public-claims-boundary-matrix.md` and `feature-cost-claims-proof-ledger.md`, especially site counts, two-way chat, no API keys, AI/TTS, app, plugin, services, and free/support wording.
 - Intense validation of `08-platform-sources/platform-capability-matrix.md` by browser/app/OS/platform.
 - Runtime validation of `customization-path-decision-matrix.md`, `customization-source-trace.md`, and `customization-validation-ledger.md`, especially local `custom.js`, uploaded custom user functions, custom overlay payloads, and hosted/local/app differences.
 - Live/browser validation of `08-platform-sources/manual-static-and-helper-sources.md` helper behavior.
