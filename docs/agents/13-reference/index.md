@@ -58,6 +58,7 @@ Use these pages when the user asks "how do I do X?" and the answer may involve m
 - `08-platform-sources/special-case-platform-and-helper-sources.md`: routing for Joystick/Velora/VPZone rendered-site versus source-page modes, X live versus static capture, Vertical Pixel Zone identity caveats, Vercel helper behavior, and top-level YouTube helper copies.
 - `free-paid-and-support-boundaries.md`: what is free, what can cost money, support expectations, donations, Terms/Privacy, and third-party limits.
 - `public-claims-boundary-matrix.md`: safe boundaries for broad public claims such as 100+/120+ supported sites, two-way chat, no API keys, free/open-source, AI/TTS, app, plugin, services, and support promises.
+- `feature-cost-claims-proof-ledger.md`: evidence labels, claim status, minimum proof packs, and do-not-promise boundaries for feature, cost, provider, support, service, app-vs-extension, and public-claim answers.
 - `privacy-security-and-secrets.md`: what to redact, session/webhook/key safety, private source handling, support-log rules, and secret leak response.
 - `customization-plugin-recipes.md`: recipe-style routing for URL/CSS, themes, custom overlays, `custom.js`, custom actions, API apps, Event Flow, new sources, and sharing custom work.
 - `customization-source-trace.md`: source-checked local `custom.js`, uploaded custom JavaScript, custom overlay, API/WebSocket source, Event Flow, and first-class source hook boundaries.
@@ -116,6 +117,7 @@ Prefer current code and source docs in this order:
 | "What exact URL parameter or alias exists?" | `url-parameter-index.md` |
 | "Why does this URL option work on one page but not another?" | `url-parameter-source-trace.md` |
 | "What proof exists for this option or setting claim?" | `options-settings-proof-ledger.md` |
+| "What proof exists for this feature, cost, or public claim?" | `feature-cost-claims-proof-ledger.md` |
 | "Which root page appears to parse this URL parameter?" | `root-page-url-parameter-matrix.md` |
 | "Which theme, game, or WebSocket source page parses this URL parameter?" | `subpage-url-parameter-matrix.md` |
 | "Which SSN page or URL should I open?" | `surface-url-cheatsheet.md` |
@@ -162,6 +164,7 @@ Prefer current code and source docs in this order:
 | "Can I safely repeat this broad public claim?" | `public-claims-boundary-matrix.md` |
 | "What does 100+/120+ supported sites mean?" | `public-claims-boundary-matrix.md` |
 | "Is this free? Does support cost money?" | `free-paid-and-support-boundaries.md` |
+| "Can I say this feature, provider, app, service, or cost claim works?" | `feature-cost-claims-proof-ledger.md` |
 | "Can I share this URL, log, screenshot, key, or settings file?" | `privacy-security-and-secrets.md` |
 | "Which customization/plugin/source path should I use?" | `customization-path-decision-matrix.md` |
 | "Can I make my own plugin/source/overlay?" | `customization-plugin-recipes.md` |

@@ -2,7 +2,7 @@
 
 Status: heavy reference pass plus focused local TTS/AI asset-test, local model registry, OpenCode Zen fallback, and RAG fixture evidence on 2026-06-24.
 
-For a feature-level support/cost decision table, use `feature-support-decision-matrix.md`. For broad public claims that mix cost, support, site counts, no-API-key wording, two-way chat, AI/TTS, or service promises, use `public-claims-boundary-matrix.md`.
+For a feature-level support/cost decision table, use `feature-support-decision-matrix.md`. For broad public claims that mix cost, support, site counts, no-API-key wording, two-way chat, AI/TTS, or service promises, use `public-claims-boundary-matrix.md`. For proof labels and do-not-promise boundaries before making stronger feature, provider, cost, support, service, app-vs-extension, or public claims, use `feature-cost-claims-proof-ledger.md`.
 
 ## Source Anchors
 
@@ -18,6 +18,7 @@ For a feature-level support/cost decision table, use `feature-support-decision-m
 - `docs/agents/11-support-kb/common-questions.md`
 - `docs/agents/13-reference/feature-support-decision-matrix.md`
 - `docs/agents/13-reference/public-claims-boundary-matrix.md`
+- `docs/agents/13-reference/feature-cost-claims-proof-ledger.md`
 
 ## Short Answer
 

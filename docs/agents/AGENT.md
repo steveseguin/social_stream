@@ -89,6 +89,7 @@ For support-style answers:
 - `docs/agents/08-platform-sources/priority-platform-answer-matrix.md`: safe phrasing and first checks for high-volume platform capability, rich-event, send-back, and app/extension platform questions.
 - `docs/agents/08-platform-sources/priority-platform-validation-ledger.md`: proof status, evidence labels, and validation targets for high-risk YouTube, TikTok, Twitch, Kick, Rumble, Facebook, Instagram, and Discord claims.
 - `docs/agents/13-reference/public-claims-boundary-matrix.md`: boundaries for broad public claims such as 100+/120+ sites, two-way chat, no API keys, free/open-source, AI/TTS, app behavior, plugins/customization, services, and support promises.
+- `docs/agents/13-reference/feature-cost-claims-proof-ledger.md`: proof labels, minimum evidence packs, and do-not-promise boundaries for feature, cost, provider, support, service, app-vs-extension, and broad public claims.
 - `docs/agents/13-reference/customization-validation-ledger.md`: proof status, evidence labels, and minimum proof packs for plugin/customization paths.
 - `docs/agents/11-support-kb/support-response-playbook.md`: ready-to-send response templates and follow-up prompts.
 - `docs/agents/11-support-kb/support-evidence-ledger.md`: support claim families, evidence status, and next validation targets.
@@ -134,7 +135,7 @@ For feature-specific answers:
 1. Identify the user's intent: setup, troubleshooting, capability check, platform-specific behavior, commands/API, customization, app behavior, or development.
 2. Start from the matching router: support KB index, workflow setup decision tree, diagnostic decision tree, platform index, overlay index, API/integration index, or development index.
 3. Read the exact topic page before answering. Do not answer from the index alone for fragile claims.
-4. Check `common-misconceptions-and-boundaries.md`, `public-claims-boundary-matrix.md`, `support-evidence-ledger.md`, `common-question-evidence-status.md`, and `common-question-proof-pack.md` before making broad or stronger claims about supported sites, app parity, send-back, costs, privacy, support, services, or testing.
+4. Check `common-misconceptions-and-boundaries.md`, `public-claims-boundary-matrix.md`, `feature-cost-claims-proof-ledger.md`, `support-evidence-ledger.md`, `common-question-evidence-status.md`, and `common-question-proof-pack.md` before making broad or stronger claims about supported sites, app parity, send-back, costs, privacy, support, services, or testing.
 5. Use `support-macro-routing.md` for short support-thread macros and `support-response-playbook.md` for fuller user-facing phrasing when the answer resembles a support reply.
 6. Inspect current source code before presenting high-risk or final-grade claims about selectors, auth flows, command payloads, send-back, settings persistence, source windows, app parity, or rendered overlay behavior.
 

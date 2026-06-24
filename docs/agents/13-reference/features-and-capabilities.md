@@ -8,7 +8,7 @@ Use this page when a user asks what Social Stream Ninja can do, whether a featur
 
 This page describes capability families and support boundaries. For exact setup steps, follow the linked topic pages.
 
-For an answer-ready yes/depends/external/dev matrix, use `feature-support-decision-matrix.md`. For "which page does this use?" questions, use `../07-overlays-and-pages/page-capability-matrix.md`. For broad public wording such as "100+ sites", "most platforms", "two-way chat", "no API keys", or "free", use `public-claims-boundary-matrix.md` before answering.
+For an answer-ready yes/depends/external/dev matrix, use `feature-support-decision-matrix.md`. For "which page does this use?" questions, use `../07-overlays-and-pages/page-capability-matrix.md`. For broad public wording such as "100+ sites", "most platforms", "two-way chat", "no API keys", or "free", use `public-claims-boundary-matrix.md` before answering. For proof labels and do-not-promise boundaries around feature, cost, provider, support, service, app-vs-extension, or public claims, use `feature-cost-claims-proof-ledger.md`.
 
 ## Source Anchors
 
@@ -49,6 +49,7 @@ For an answer-ready yes/depends/external/dev matrix, use `feature-support-decisi
 - `docs/agents/13-reference/settings-and-toggles.md`
 - `docs/agents/13-reference/feature-support-decision-matrix.md`
 - `docs/agents/13-reference/public-claims-boundary-matrix.md`
+- `docs/agents/13-reference/feature-cost-claims-proof-ledger.md`
 
 ## Published Feature Families
 

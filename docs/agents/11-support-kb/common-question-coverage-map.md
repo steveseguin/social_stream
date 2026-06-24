@@ -10,7 +10,7 @@ This is a coverage map, not a final answer page. Route to the listed docs, then 
 
 For support-history frequency and priority signals, use `support-topic-frequency-index.md`.
 
-For plain-language user wording and first-route selection, use `question-intent-router.md` before choosing a narrow topic page. For a compact answer-shape matrix, use `common-question-fast-path.md`. For evidence strength and runtime-proof status by common answer type, use `common-question-evidence-status.md`. For the evidence artifacts needed before stronger answers, use `common-question-proof-pack.md`. For a benchmark-style prompt set that tests whether agents route and answer common questions without overclaiming, use `common-question-test-set.md`. For paraphrased real-world wording patterns from support history, use `support-question-phrasebook.md`. For short macro-style support replies from curated playbooks, use `support-macro-routing.md`.
+For plain-language user wording and first-route selection, use `question-intent-router.md` before choosing a narrow topic page. For a compact answer-shape matrix, use `common-question-fast-path.md`. For evidence strength and runtime-proof status by common answer type, use `common-question-evidence-status.md`. For the evidence artifacts needed before stronger answers, use `common-question-proof-pack.md`. For feature, cost, provider, support, service, app-vs-extension, and public-claim proof labels, use `13-reference/feature-cost-claims-proof-ledger.md`. For a benchmark-style prompt set that tests whether agents route and answer common questions without overclaiming, use `common-question-test-set.md`. For paraphrased real-world wording patterns from support history, use `support-question-phrasebook.md`. For short macro-style support replies from curated playbooks, use `support-macro-routing.md`.
 
 ## Coverage Labels
 
@@ -30,9 +30,9 @@ For plain-language user wording and first-route selection, use `question-intent-
 | Can an agent test common SSN prompt routing and safe-answer behavior? | covered-heavy | `11-support-kb/common-question-test-set.md` | routed topic docs, common overclaim docs, and runtime evidence where required |
 | How strong is the evidence for a common answer? | covered-heavy | `11-support-kb/common-question-evidence-status.md` | routed topic docs, `support-evidence-ledger.md`, runtime evidence if any |
 | What proof is needed before giving a stronger answer? | covered-heavy | `11-support-kb/common-question-proof-pack.md` | routed topic docs, source/config, focused evidence, and runtime evidence where required |
-| Is SSN free? | covered-heavy | `13-reference/free-paid-and-support-boundaries.md` | `11-support-kb/support-evidence-ledger.md` |
-| What can cost money? | covered-heavy | `13-reference/free-paid-and-support-boundaries.md` | `09-api-and-integrations/tts.md`, `ai-features.md` |
-| Can I repeat broad public claims like 100+/120+ sites, most platforms, two-way chat, no API keys, or free? | covered-heavy | `13-reference/public-claims-boundary-matrix.md` | routed topic docs and current source/runtime evidence |
+| Is SSN free? | covered-heavy | `13-reference/free-paid-and-support-boundaries.md` | `13-reference/feature-cost-claims-proof-ledger.md`, `11-support-kb/support-evidence-ledger.md` |
+| What can cost money? | covered-heavy | `13-reference/free-paid-and-support-boundaries.md` | `13-reference/feature-cost-claims-proof-ledger.md`, `09-api-and-integrations/tts.md`, `ai-features.md` |
+| Can I repeat broad public claims like 100+/120+ sites, most platforms, two-way chat, no API keys, or free? | covered-heavy | `13-reference/public-claims-boundary-matrix.md` | `13-reference/feature-cost-claims-proof-ledger.md`, routed topic docs, and current source/runtime evidence |
 | Is support paid or guaranteed? | covered-heavy | `13-reference/support-resources-and-escalation.md` | `11-support-kb/support-answer-bank.md` |
 | What are the common overclaims or misconceptions? | covered-heavy | `11-support-kb/common-misconceptions-and-boundaries.md` | routed topic docs and current source |
 | What is the difference between extension, standalone app, hosted pages, Lite, local pages, and Firefox? | covered-heavy | `13-reference/modes-and-capability-matrix.md` | `02-installation-and-surfaces.md`, `04-standalone-app-source-windows.md` |
@@ -109,9 +109,9 @@ For plain-language user wording and first-route selection, use `question-intent-
 | Question Family | Coverage | Start With | Check Next |
 | --- | --- | --- | --- |
 | How does TTS work? | covered-heavy | `09-api-and-integrations/tts.md` | provider-specific current source |
-| Is TTS free? | mixed | `13-reference/free-paid-and-support-boundaries.md` | provider docs/source before exact price claims |
+| Is TTS free? | mixed | `13-reference/free-paid-and-support-boundaries.md` | `13-reference/feature-cost-claims-proof-ledger.md`, provider docs/source before exact price claims |
 | How do AI features work? | covered-heavy | `09-api-and-integrations/ai-features.md` | `07-overlays-and-pages/ai-cohost-pages.md` |
-| Is AI free? | mixed | `13-reference/free-paid-and-support-boundaries.md` | provider account/quota docs |
+| Is AI free? | mixed | `13-reference/free-paid-and-support-boundaries.md` | `13-reference/feature-cost-claims-proof-ledger.md`, provider account/quota docs |
 | How do AI cohost and generated overlays work? | covered-heavy | `07-overlays-and-pages/ai-cohost-pages.md` | runtime/browser/OBS validation |
 | How does OBS remote control work? | covered-heavy | `09-api-and-integrations/obs.md` | OBS WebSocket/browser-source validation |
 | How do donation/payment webhooks work? | mixed | `07-overlays-and-pages/tipjar-credits.md` | external provider docs and webhook privacy |

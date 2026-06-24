@@ -6,7 +6,7 @@ Status: heavy source-check pass on 2026-06-24. This is a public-claim reconcilia
 
 Use this page when an agent is tempted to repeat broad public wording such as "120+ sites", "two-way chat", "no API keys", "free", "AI support", "premium TTS", "scriptable plugins", or "the standalone app fixes throttling".
 
-Public docs are useful for product positioning, but support answers need narrower wording. This page maps broad public claims to safer agent phrasing, the first verification doc, and the remaining validation risk.
+Public docs are useful for product positioning, but support answers need narrower wording. This page maps broad public claims to safer agent phrasing, the first verification doc, and the remaining validation risk. For evidence labels, minimum proof packs, and do-not-promise boundaries before stronger feature, cost, provider, service, support, app-vs-extension, or public claims, use `feature-cost-claims-proof-ledger.md`.
 
 ## Source Anchors
 
@@ -25,6 +25,7 @@ Public docs are useful for product positioning, but support answers need narrowe
 - `docs/agents/13-reference/features-and-capabilities.md`
 - `docs/agents/13-reference/feature-support-decision-matrix.md`
 - `docs/agents/13-reference/free-paid-and-support-boundaries.md`
+- `docs/agents/13-reference/feature-cost-claims-proof-ledger.md`
 - `docs/agents/08-platform-sources/supported-sites-lookup.md`
 - `docs/agents/08-platform-sources/public-site-support-status.md`
 - `docs/agents/08-platform-sources/public-site-implementation-map.md`
