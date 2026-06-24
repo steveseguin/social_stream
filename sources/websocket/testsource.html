@@ -197,6 +197,46 @@
 					title: "same raw payload with textonly",
 					message: "<img src=\"qsdf\" onerror=\"alert('hi')\">",
 					textonly: true
+				},
+				{
+					title: "false positive: alert function discussion",
+					message: "Can someone explain why alert('hi') freezes the overlay?",
+					textonly: false
+				},
+				{
+					title: "false positive: javascript label",
+					message: "The docs say JavaScript: the language has weird edge cases.",
+					textonly: false
+				},
+				{
+					title: "false positive: innerHTML discussion",
+					message: "I think innerHTML is the risky part here.",
+					textonly: false
+				},
+				{
+					title: "false positive: event attribute docs",
+					message: "The article mentioned onerror= and onload= attributes.",
+					textonly: false
+				},
+				{
+					title: "false positive: srcdoc docs",
+					message: "iframe srcdoc= is useful in examples but should be handled carefully.",
+					textonly: false
+				},
+				{
+					title: "false positive: data html mime type",
+					message: "data:text/html is a MIME type people mention in CSP discussions.",
+					textonly: false
+				},
+				{
+					title: "false positive: write function text",
+					message: "Old tutorials used document.write('hello') and write('hello').",
+					textonly: false
+				},
+				{
+					title: "false positive: script tag discussion",
+					message: "If you type <script in chat, it should appear as text.",
+					textonly: false
 				}
 			];
 
