@@ -10679,13 +10679,14 @@
 					}
 					
 					var chatmessage = data.chatmessage || "";
+					var isTextOnlyMessage = !!data.textonly;
 
 					if (chatmessage) {
 						if (stylizeEmoji && !reloaded) {
 							//chatmessage = chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "<span class='emoji'>$1</span>");
 							chatmessage = wrapEmojis(chatmessage);
 						}
-						if (!stripHTML) {
+						if (!stripHTML && !isTextOnlyMessage) {
 							// we want to reuse this, but only if HTML is allowed
 							data.chatmessage = chatmessage;
 							data.textonly = false; // we know that it contains html now
@@ -10711,9 +10712,11 @@
 						}
 					}
 					
-					if (data.textonly) {
+					if (isTextOnlyMessage) {
 						// should be legacy compatible, since textonly is new.
 						chatmessage = escapeHtml(chatmessage); // lets escape any < > ' " or other special characeters, since it would be dangerous as HTML.
+						data.chatmessage = chatmessage;
+						data.textonly = true;
 					}
 
 					if (largeavatar && data.chatname && data.type && avatars) {
