@@ -89,6 +89,7 @@ For support-style answers:
 - `docs/agents/08-platform-sources/priority-platform-answer-matrix.md`: safe phrasing and first checks for high-volume platform capability, rich-event, send-back, and app/extension platform questions.
 - `docs/agents/08-platform-sources/priority-platform-validation-ledger.md`: proof status, evidence labels, and validation targets for high-risk YouTube, TikTok, Twitch, Kick, Rumble, Facebook, Instagram, and Discord claims.
 - `docs/agents/13-reference/public-claims-boundary-matrix.md`: boundaries for broad public claims such as 100+/120+ sites, two-way chat, no API keys, free/open-source, AI/TTS, app behavior, plugins/customization, services, and support promises.
+- `docs/agents/13-reference/customization-validation-ledger.md`: proof status, evidence labels, and minimum proof packs for plugin/customization paths.
 - `docs/agents/11-support-kb/support-response-playbook.md`: ready-to-send response templates and follow-up prompts.
 - `docs/agents/11-support-kb/support-evidence-ledger.md`: support claim families, evidence status, and next validation targets.
 - `docs/agents/11-support-kb/support-history-refresh-playbook.md`: safe support-history refresh workflow, aggregate query pack, redaction gate, and required downstream updates.
@@ -100,6 +101,7 @@ For setup and troubleshooting:
 - `docs/agents/13-reference/app-extension-mode-crosswalk.md`: first-stop comparison for Chrome extension, standalone app, hosted pages, local pages, Lite, Firefox, WebSocket/API source pages, and custom sources.
 - `docs/agents/13-reference/customization-path-decision-matrix.md`: first-stop routing for ambiguous customization, plugin, custom overlay, custom JS, API app, Event Flow, or source-file requests.
 - `docs/agents/13-reference/customization-source-trace.md`: source-checked local `custom.js`, uploaded custom JavaScript, custom overlay, API/WebSocket source, Event Flow, and first-class source hook boundaries.
+- `docs/agents/13-reference/customization-validation-ledger.md`: evidence labels and stronger-claim boundaries for customization/plugin questions.
 - `docs/agents/13-reference/api-command-validation-matrix.md`: source-checked API command routing, accepted-vs-acted-on caveats, callbacks, and runtime proof boundaries.
 - `docs/agents/13-reference/workflow-setup-decision-tree.md`: choose source side, receiving page, transport, and options from the user goal.
 - `docs/agents/13-reference/url-parameter-source-trace.md`: source-checked page-specific URL parameter parsing, socket/channel differences, and unsafe URL overclaims.

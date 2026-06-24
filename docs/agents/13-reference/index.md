@@ -60,6 +60,7 @@ Use these pages when the user asks "how do I do X?" and the answer may involve m
 - `privacy-security-and-secrets.md`: what to redact, session/webhook/key safety, private source handling, support-log rules, and secret leak response.
 - `customization-plugin-recipes.md`: recipe-style routing for URL/CSS, themes, custom overlays, `custom.js`, custom actions, API apps, Event Flow, new sources, and sharing custom work.
 - `customization-source-trace.md`: source-checked local `custom.js`, uploaded custom JavaScript, custom overlay, API/WebSocket source, Event Flow, and first-class source hook boundaries.
+- `customization-validation-ledger.md`: evidence labels, claim status, minimum proof packs, and update rules for plugin/customization paths.
 - `custom-plugins-and-extensions.md`: exact meaning of plugin-like support in SSN and how to build custom behavior safely.
 - `11-support-kb/index.md`: first-answer routing by support question type, evidence checklist, and support-history safety rules.
 - `11-support-kb/question-intent-router.md`: plain-language user wording to canonical doc route, first disambiguation question, and wrong-route warnings.
@@ -161,6 +162,7 @@ Prefer current code and source docs in this order:
 | "Which customization/plugin/source path should I use?" | `customization-path-decision-matrix.md` |
 | "Can I make my own plugin/source/overlay?" | `customization-plugin-recipes.md` |
 | "How does custom.js or uploaded custom JavaScript actually hook into source?" | `customization-source-trace.md` |
+| "What proof exists for this customization or plugin claim?" | `customization-validation-ledger.md` |
 | "What answer page should I start with?" | `11-support-kb/index.md` |
 | "Do the AI docs cover this question family?" | `11-support-kb/common-question-coverage-map.md` |
 | "What should I avoid overpromising?" | `11-support-kb/common-misconceptions-and-boundaries.md` |
@@ -192,7 +194,7 @@ Prefer current code and source docs in this order:
 - Runtime health validation for `08-platform-sources/public-site-implementation-map.md`, building on `08-platform-sources/public-site-support-status.md`.
 - Runtime/source promotion of broad public claims in `public-claims-boundary-matrix.md`, especially site counts, two-way chat, no API keys, AI/TTS, app, plugin, services, and free/support wording.
 - Intense validation of `08-platform-sources/platform-capability-matrix.md` by browser/app/OS/platform.
-- Runtime validation of `customization-path-decision-matrix.md` and `customization-source-trace.md`, especially local `custom.js`, uploaded custom user functions, custom overlay payloads, and hosted/local/app differences.
+- Runtime validation of `customization-path-decision-matrix.md`, `customization-source-trace.md`, and `customization-validation-ledger.md`, especially local `custom.js`, uploaded custom user functions, custom overlay payloads, and hosted/local/app differences.
 - Live/browser validation of `08-platform-sources/manual-static-and-helper-sources.md` helper behavior.
 - Line-level/live validation of `08-platform-sources/websocket-source-pages.md` send-back, auth, reconnect, and app parity behavior.
 - Live/browser validation of `08-platform-sources/communication-and-sensitive-sources.md` opt-in toggles, current DOM selectors, meeting/chat panels, and send-back boundaries.

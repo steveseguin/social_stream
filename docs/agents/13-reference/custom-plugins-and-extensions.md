@@ -6,6 +6,7 @@ Status: heavy reference pass started. This page explains what "plugin" means in 
 
 - `customization-path-decision-matrix.md`
 - `customization-source-trace.md`
+- `customization-validation-ledger.md`
 - `README.md`
 - `docs/commands.html`
 - `docs/customoverlays.md`
@@ -25,7 +26,7 @@ Status: heavy reference pass started. This page explains what "plugin" means in 
 
 SSN supports many plugin-like customization paths, but normal users should not be told there is one official plugin marketplace or installable plugin package flow.
 
-For path selection, start with `customization-path-decision-matrix.md`. For recipe-style setup guidance, use `customization-plugin-recipes.md`. For exact source-level hook behavior, use `customization-source-trace.md`, then use this page to confirm terminology and boundaries.
+For path selection, start with `customization-path-decision-matrix.md`. For recipe-style setup guidance, use `customization-plugin-recipes.md`. For exact source-level hook behavior, use `customization-source-trace.md`. For proof status and stronger-claim boundaries, use `customization-validation-ledger.md`, then use this page to confirm terminology and boundaries.
 
 ## Choose The Right Customization Path
 

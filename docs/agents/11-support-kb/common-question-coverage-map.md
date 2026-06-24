@@ -121,10 +121,10 @@ For plain-language user wording and first-route selection, use `question-intent-
 
 | Question Family | Coverage | Start With | Check Next |
 | --- | --- | --- | --- |
-| Which customization path should I use? | covered-heavy | `13-reference/customization-path-decision-matrix.md` | `13-reference/customization-plugin-recipes.md`, exact source/runtime path |
-| Can I make my own plugin? | covered-heavy | `13-reference/customization-path-decision-matrix.md` | `13-reference/custom-plugins-and-extensions.md`, decide custom overlay/API/Event Flow/source path |
+| Which customization path should I use? | covered-heavy | `13-reference/customization-path-decision-matrix.md` | `13-reference/customization-plugin-recipes.md`, `13-reference/customization-validation-ledger.md`, exact source/runtime path |
+| Can I make my own plugin? | covered-heavy | `13-reference/customization-path-decision-matrix.md` | `13-reference/custom-plugins-and-extensions.md`, `13-reference/customization-validation-ledger.md`, decide custom overlay/API/Event Flow/source path |
 | How do custom overlays work? | covered-heavy | `07-overlays-and-pages/custom-overlays.md` | `docs/customoverlays.md`, sample overlay |
-| How do custom JavaScript hooks work? | mixed | `13-reference/customization-path-decision-matrix.md` | `13-reference/custom-plugins-and-extensions.md`, exact current hook/source path |
+| How do custom JavaScript hooks work? | mixed | `13-reference/customization-path-decision-matrix.md` | `13-reference/custom-plugins-and-extensions.md`, `13-reference/customization-validation-ledger.md`, exact current hook/source path |
 | How do generic/custom sources work? | covered-heavy | `08-platform-sources/generic-and-custom-sources.md` | `12-development/adding-a-source.md` |
 | How do I add a new platform source? | covered-heavy | `12-development/adding-a-source.md` | manifest/source/event-contract source |
 | Where is code organized? | covered-heavy | `12-development/repo-map.md` | `12-development/shared-code-rules.md` |
