@@ -30,7 +30,7 @@ Not audited as broken links:
 Read-only inline Node audit result:
 
 ```text
-totalMarkdown: 166
+totalMarkdown: 167
 orphanishCount: 0
 localBrokenCount: 0
 ambiguousBareSectionIndexCount: 0

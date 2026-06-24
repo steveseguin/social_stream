@@ -106,6 +106,7 @@ For setup and troubleshooting:
 - `docs/agents/13-reference/api-command-proof-ledger.md`: evidence labels and stronger-claim boundaries for command/API behavior.
 - `docs/agents/13-reference/workflow-setup-decision-tree.md`: choose source side, receiving page, transport, and options from the user goal.
 - `docs/agents/13-reference/url-parameter-source-trace.md`: source-checked page-specific URL parameter parsing, socket/channel differences, and unsafe URL overclaims.
+- `docs/agents/13-reference/options-settings-proof-ledger.md`: evidence labels and stronger-claim boundaries for URL options, popup settings, generated links, sessions/passwords, app state, and provider settings.
 - `docs/agents/13-reference/settings-session-storage-source-trace.md`: source-checked extension/app settings storage split, session/password save flow, generated links, app backup layers, and reset guardrails.
 - `docs/agents/13-reference/settings-change-impact-matrix.md`: source-checked reload/reconnect triage for popup settings, URL options, generated links, app source state, cached settings, provider/auth values, and page-local state.
 - `docs/agents/10-troubleshooting/diagnostic-decision-tree.md`: classify vague or mixed "SSN is not working" reports.

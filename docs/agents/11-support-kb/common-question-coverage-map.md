@@ -98,11 +98,11 @@ For plain-language user wording and first-route selection, use `question-intent-
 | How do I send commands from StreamDeck or Companion? | covered-heavy | `09-api-and-integrations/streamdeck-companion.md` | exact action index |
 | How does Streamer.bot work? | covered-heavy | `09-api-and-integrations/streamerbot.md` | current Streamer.bot page/source |
 | How does Event Flow work? | covered-heavy, needs-intense | `09-api-and-integrations/event-flow-editor.md` | action source and tests |
-| What URL parameter controls this? | covered-heavy | `13-reference/url-parameters.md` | `13-reference/url-parameter-index.md` |
-| What exact URL parameter or alias exists? | covered-heavy | `13-reference/url-parameter-index.md` | page-specific parser source |
-| What setting/toggle controls this? | covered-heavy | `13-reference/settings-and-toggles.md` | `13-reference/settings-key-index.md` |
+| What URL parameter controls this? | covered-heavy | `13-reference/url-parameters.md` | `13-reference/url-parameter-index.md`, `13-reference/options-settings-proof-ledger.md` |
+| What exact URL parameter or alias exists? | covered-heavy | `13-reference/url-parameter-index.md` | page-specific parser source, `13-reference/options-settings-proof-ledger.md` |
+| What setting/toggle controls this? | covered-heavy | `13-reference/settings-and-toggles.md` | `13-reference/settings-key-index.md`, `13-reference/options-settings-proof-ledger.md` |
 | What exact popup setting key exists? | covered-heavy | `13-reference/settings-key-index.md` | current UI and storage source |
-| Does a setting, generated link, URL option, or app source change update live or require reload? | mixed, source-checked | `13-reference/settings-change-impact-matrix.md` | `13-reference/settings-session-storage-source-trace.md`, exact page/source/app behavior, then runtime validation |
+| Does a setting, generated link, URL option, or app source change update live or require reload? | mixed, source-checked | `13-reference/settings-change-impact-matrix.md` | `13-reference/settings-session-storage-source-trace.md`, `13-reference/options-settings-proof-ledger.md`, exact page/source/app behavior, then runtime validation |
 
 ## AI, TTS, Automation, And Integrations
 

@@ -80,6 +80,7 @@ Use these pages when the user asks "how do I do X?" and the answer may involve m
 - `11-support-kb/support-intake-templates.md`: copyable intake/repro templates for collecting useful support details without secrets.
 - `support-resources-and-escalation.md`: where to send users, what to collect, and when to escalate a support issue.
 - `settings-and-toggles.md`: popup settings, URL parameters, storage layers, generated setting categories, and common setting support patterns.
+- `options-settings-proof-ledger.md`: evidence labels, claim status, minimum proof packs, and update rules for URL option, popup setting, generated link, session/password, app state, and provider-setting claims.
 - `settings-session-storage-source-trace.md`: source-checked extension/app storage split, session/password save flow, popup-generated links, app cached-state backups, and settings-loss guardrails.
 - `settings-change-impact-matrix.md`: practical "why did this setting/option/link/app change not take effect?" routing, reload/reconnect rules, and false-positive checks.
 - `settings-key-index.md`: exact generated popup setting-key, category, type, and short-description lookup from `shared/config/settingsDefinitions.js`.
@@ -114,6 +115,7 @@ Prefer current code and source docs in this order:
 | "Can you give me a safe overlay URL example?" | `url-option-examples.md` |
 | "What exact URL parameter or alias exists?" | `url-parameter-index.md` |
 | "Why does this URL option work on one page but not another?" | `url-parameter-source-trace.md` |
+| "What proof exists for this option or setting claim?" | `options-settings-proof-ledger.md` |
 | "Which root page appears to parse this URL parameter?" | `root-page-url-parameter-matrix.md` |
 | "Which theme, game, or WebSocket source page parses this URL parameter?" | `subpage-url-parameter-matrix.md` |
 | "Which SSN page or URL should I open?" | `surface-url-cheatsheet.md` |

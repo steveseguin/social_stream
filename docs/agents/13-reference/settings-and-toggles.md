@@ -10,6 +10,8 @@ This is a map of the settings system, not a field-by-field replacement for the g
 
 For the practical question "I changed this and nothing happened," use `settings-change-impact-matrix.md` after identifying whether the user changed a popup setting, URL parameter, generated link, app source state, app cached setting, provider/auth value, or page-local state.
 
+For evidence labels and proof requirements before stronger option/setting claims, use `options-settings-proof-ledger.md`.
+
 ## Source Anchors
 
 - `popup.html`

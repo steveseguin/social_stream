@@ -18,6 +18,8 @@ If a parameter is in the generated index, that proves the name exists in the gen
 
 For quick page inventory, use `root-page-url-parameter-matrix.md` for root pages and `subpage-url-parameter-matrix.md` for theme, game, and WebSocket source pages.
 
+For evidence labels and minimum proof packs before stronger URL option or setting claims, use `options-settings-proof-ledger.md`.
+
 ## Source Anchors
 
 Source files checked during this pass:

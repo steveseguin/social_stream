@@ -10,6 +10,8 @@ For choosing the correct SSN page or endpoint before adding parameters, use `sur
 
 For safe copy/paste page URL examples, use `url-option-examples.md`.
 
+For evidence labels and proof requirements before stronger option/setting claims, use `options-settings-proof-ledger.md`.
+
 ## Source Anchors
 
 - `parameters.md`
