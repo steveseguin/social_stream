@@ -8,6 +8,8 @@ Document common standalone app support issues and the operational differences be
 
 The app is a host for Social Stream source files. For Social Stream feature behavior, use `C:\Users\steve\Code\social_stream` as the source of truth. For desktop shell behavior, use `C:\Users\steve\Code\ssapp`.
 
+For source-window lifecycle, custom session, injection, and app-parity routing, use `../04-standalone-app-source-windows.md`. For app-specific TikTok modes, signing providers, fallbacks, replies, and test assets, use `../08-platform-sources/tiktok-standalone-app.md`.
+
 ## Source Anchors
 
 - `ssapp/main.js`
@@ -19,6 +21,7 @@ The app is a host for Social Stream source files. For Social Stream feature beha
 - `ssapp/tests/electron/settings-transfer-e2e.js`
 - `ssapp/tests/electron/settings-loss-diagnostics.js`
 - `ssapp/tests/electron/settings-rootcause-diagnostics.js`
+- `docs/agents/08-platform-sources/tiktok-standalone-app.md`
 - `stevesbot/resources/instructions/social-stream-support.md`
 - `stevesbot/resources/learnings/social-stream-ninja-top-issues.md`
 
@@ -141,6 +144,21 @@ Check:
 
 If local source is invalid, the app clears/ignores the saved path and falls back to online/packaged assets.
 
+### TikTok App Mode Or Signing Fails
+
+The app has TikTok behavior that is not the same as the browser extension's DOM source.
+
+First checks:
+
+- Is the user in Standard/classic, WebSocket, legacy/polling, local signer, Euler, custom, or auto mode?
+- Is the creator currently live?
+- Is the app signed into the TikTok account that should read or send replies?
+- Is the user trying to read chat, capture gifts/social events, or send replies?
+- Did the app auto-fallback to compatibility mode?
+- Is a custom signing service/API key configured?
+
+Use `../08-platform-sources/tiktok-standalone-app.md` before giving detailed mode, fallback, local signer, or reply/send-back advice.
+
 ## Reporting Checklist
 
 Ask for:
@@ -158,6 +176,7 @@ Ask for:
 ## Open Verification Tasks
 
 - Source-check every startup flag and document its CLI/env/store equivalent.
-- Source-check app source-window lifecycle, hidden/visible state, auto-activate, and reconnect behavior.
+- Intense-check app source-window lifecycle, hidden/visible state, auto-activate, reconnect behavior, and app-parity claims from `../04-standalone-app-source-windows.md`.
 - Source-check platform-specific source windows with current source files.
+- Runtime-check TikTok app connector paths from `../08-platform-sources/tiktok-standalone-app.md`.
 - Convert settings-loss diagnostics into a user-safe troubleshooting flow after current in-app verification.

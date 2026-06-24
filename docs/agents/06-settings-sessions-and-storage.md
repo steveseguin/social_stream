@@ -6,6 +6,8 @@ Status: backbone extraction pass. Usable for orientation, not final-grade.
 
 This page documents session IDs, passwords, storage, settings import/export, URL parameters, and how settings differ between extension and standalone app.
 
+For the source-checked storage/session trace, including exact extension sync/local storage split, popup-generated links, standalone app cached-state backups, and settings-loss guardrails, use `13-reference/settings-session-storage-source-trace.md`.
+
 ## Source Anchors
 
 - `social_stream/popup.html`
@@ -16,6 +18,7 @@ This page documents session IDs, passwords, storage, settings import/export, URL
 - `social_stream/parameters.md`
 - `social_stream/background.js`
 - `social_stream/service_worker.js`
+- `social_stream/docs/agents/13-reference/settings-session-storage-source-trace.md`
 - `ssapp/state.js`
 - `ssapp/main.js`
 - `ssapp/tests/electron/settings-*.js`

@@ -6,6 +6,8 @@ Status: heavy extraction pass. Usable for support and architecture orientation, 
 
 Document TikTok standard mode, WebSocket/app mode, signing, app-specific connection management, event handling, and common support problems.
 
+For standalone app connector internals, signing providers, fallback states, reply/send-back behavior, and app TikTok tests, use `tiktok-standalone-app.md`.
+
 ## Source Anchors
 
 - `social_stream/manifest.json`
@@ -149,3 +151,5 @@ Needs intense pass:
 - Local signer request lifecycle and all fallback states.
 - Current app UI mode names from `ssapp/renderer.js`/source setup UI.
 - Regression test expectations converted into user-facing troubleshooting.
+
+The app-specific heavy pass now lives in `tiktok-standalone-app.md`; keep this page focused on the cross-surface TikTok overview unless a claim applies to both extension DOM capture and the app connector.

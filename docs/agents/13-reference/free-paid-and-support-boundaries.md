@@ -1,6 +1,8 @@
 # Free, Paid, And Support Boundaries
 
-Status: heavy reference pass started from README, download/support docs, AI/TTS docs, and support-mining notes.
+Status: heavy reference pass plus focused local TTS/AI asset-test, local model registry, OpenCode Zen fallback, and RAG fixture evidence on 2026-06-24.
+
+For a feature-level support/cost decision table, use `feature-support-decision-matrix.md`. For broad public claims that mix cost, support, site counts, no-API-key wording, two-way chat, AI/TTS, or service promises, use `public-claims-boundary-matrix.md`.
 
 ## Source Anchors
 
@@ -14,6 +16,8 @@ Status: heavy reference pass started from README, download/support docs, AI/TTS 
 - `docs/agents/09-api-and-integrations/ai-features.md`
 - `docs/agents/09-api-and-integrations/tts.md`
 - `docs/agents/11-support-kb/common-questions.md`
+- `docs/agents/13-reference/feature-support-decision-matrix.md`
+- `docs/agents/13-reference/public-claims-boundary-matrix.md`
 
 ## Short Answer
 
@@ -32,6 +36,8 @@ Social Stream Ninja itself is free and open-source. Costs can appear when the us
 | Basic system/browser TTS | Free Web Speech API/system voices, with capture limitations. |
 | Ollama/local AI paths | Free software/self-hosted path, but user hardware and setup are required. |
 | Custom overlays/API integrations | Free if the user builds/runs them. |
+
+Focused validation note: on 2026-06-24, focused static asset tests passed for Kokoro, Kitten TTS, and Transformers local defaults. These support selected asset-wiring claims only. They do not prove model download, browser playback, OBS audio capture, WebGPU/WASM runtime behavior, or app behavior. The Piper local asset test failed on an expected fallback remote-base constant, so do not use it as passed focused evidence until reconciled.
 
 ## Can Cost Money Or Require Accounts
 
@@ -54,8 +60,8 @@ Do not describe third-party providers as included with SSN. Say "SSN supports th
 | Provider Type | Cost/Runtime Boundary | Support Notes |
 | --- | --- | --- |
 | System/browser TTS | Free, uses OS/browser voices | Can be hard to capture in OBS because audio may route through system output. |
-| Kokoro/local browser TTS | Free/local runtime path | Needs browser/runtime support and capable hardware; may be slow. |
-| Kitten/local browser TTS | Free/local lightweight model path where supported | Downloads model assets; runtime support matters. |
+| Kokoro/local browser TTS | Free/local runtime path | Needs browser/runtime support and capable hardware; may be slow. Focused asset wiring test passed, but runtime audio still needs validation. |
+| Kitten/local browser TTS | Free/local lightweight model path where supported | Downloads model assets; runtime support matters. Focused asset wiring test passed, but runtime audio still needs validation. |
 | Google Cloud TTS | Paid/provider API key | Easier OBS capture than system TTS. |
 | ElevenLabs | Provider account/key; may have test/free tiers | Provider controls voice/model limits. |
 | Speechify | Provider account/key | Provider controls pricing and limits. |
@@ -66,11 +72,13 @@ Do not describe third-party providers as included with SSN. Say "SSN supports th
 | Provider Family | Boundary |
 | --- | --- |
 | Ollama | Local/self-hosted; no cloud bill from SSN, but setup/hardware required. |
-| Local browser models | Local/browser runtime; model assets and hardware matter. |
+| Local browser models | Local/browser runtime; model assets and hardware matter. Focused Transformers remote-host default test passed, but runtime model loading still needs validation. |
+| RAG/document-backed answers | SSN can use uploaded documents for answers, but the selected AI provider/model may still be local, self-hosted, or paid cloud. Focused RAG fixture tests passed for deterministic local data, but real document/provider workflows still need validation. |
+| OpenCode Zen fallback | Focused fallback test stayed within free-model candidates in a stubbed retry sequence. Live provider availability, model list, and pricing still need current checks. |
 | OpenAI, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock | Cloud provider account/key/billing/quota. |
 | Custom API | User controls endpoint; may be local, self-hosted, private, or paid. |
 
-AI outputs can be wrong or unsafe. Do not promise correctness, moderation reliability, or platform compliance.
+AI outputs can be wrong or unsafe. A focused moderation regression test passed for selected source snippets, but do not promise correctness, moderation reliability, or platform compliance.
 
 ## Support Boundaries
 

@@ -1,12 +1,14 @@
 # Settings And Toggles
 
-Status: heavy reference pass started from generated settings definitions, generated URL parameter definitions, public settings docs, and existing agent storage docs.
+Status: heavy reference pass started from generated settings definitions, generated URL parameter definitions, public settings docs, and existing agent storage docs, plus focused settings config JSON and generated metadata validation.
 
 ## Purpose
 
 Use this page when a user asks where a setting lives, whether a toggle applies to the extension or desktop app, why a setting did not take effect, or whether a URL option is the same thing as a popup option.
 
 This is a map of the settings system, not a field-by-field replacement for the generated public reference.
+
+For the practical question "I changed this and nothing happened," use `settings-change-impact-matrix.md` after identifying whether the user changed a popup setting, URL parameter, generated link, app source state, app cached setting, provider/auth value, or page-local state.
 
 ## Source Anchors
 
@@ -21,6 +23,39 @@ This is a map of the settings system, not a field-by-field replacement for the g
 - `parameters.md`
 - `docs/agents/06-settings-sessions-and-storage.md`
 - `docs/agents/13-reference/url-parameters.md`
+- `docs/agents/13-reference/settings-key-index.md`
+- `docs/agents/13-reference/url-parameter-index.md`
+- `docs/agents/13-reference/settings-session-storage-source-trace.md`
+- `docs/agents/13-reference/settings-change-impact-matrix.md`
+- `docs/agents/18-focused-validation-evidence-log.md`
+
+## Focused Validation Evidence
+
+On 2026-06-24, focused config validation passed:
+
+```powershell
+bash scripts/validate-configs.sh
+```
+
+Result: `settings/config_0.json`, `settings/config_linux_0.json`, and `settings/config_mac_0.json` parsed as valid JSON and the script reported `All config JSON files are valid.`
+
+Evidence label: `focused-config-validation`; not runtime-tested.
+
+What this supports: the three current `settings/config*.json` files are syntactically valid JSON and did not contain duplicate keys according to the script.
+
+What it does not support: generated settings definitions, URL parameter definitions, popup UI labels, app parity, Chrome/app storage, migration, generated links, or live reload behavior.
+
+On 2026-06-24, focused generated metadata validation also inspected `shared/config/settingsDefinitions.js`, `shared/config/urlParameters.js`, and `docs/js/sites.js` with a read-only inline Node checker.
+
+Evidence label: `focused-metadata-validation`; not runtime-tested.
+
+What this supports for settings: `shared/config/settingsDefinitions.js` currently exposes 327 settings across 54 categories with no duplicate object-key tokens, missing generated category references, or missing required `type`/`category`/`description` fields.
+
+What this supports for URL parameters: `shared/config/urlParameters.js` currently exposes 255 generated URL parameter items across 23 sections and 2 groups with no missing required `key`/`displayName`/`aliases`/`description` fields.
+
+Known metadata findings: generated URL parameter aliases currently include a `password` alias collision across two `password` entries and a normalized `strokecolor` collision from `strokecolor`/`strokeColor` on the same key. Treat these as metadata findings until the source definitions are reconciled.
+
+What it does not support: popup UI behavior, generated link behavior, page-specific URL parser behavior, Chrome/app storage, migration, app parity, OBS refresh behavior, or live setting changes.
 
 ## Current Generated Counts
 
@@ -28,9 +63,11 @@ As of the 2026-06-24 extraction pass:
 
 - `shared/config/settingsDefinitions.js` exposes 327 popup setting definitions.
 - Setting types: 170 boolean toggles, 98 text fields, 49 number fields, and 10 select fields.
-- `shared/config/urlParameters.js` exposes 255 generated URL parameter items, all currently under the dock/streaming-overlay group, plus an empty placeholder group for other overlays.
+- `shared/config/urlParameters.js` exposes 255 generated URL parameter items across 23 sections and 2 groups, all current items under the dock/streaming-overlay group plus an empty placeholder group for other overlays.
 
 Do not hard-code these counts in user support answers without checking the generated files again; they are useful for agent orientation and extraction tracking.
+
+Some popup controls can appear in `popup.html` before or without a matching generated definition in `shared/config/settingsDefinitions.js`. During the helper-source pass, `youtubeAudioPicker` was found in `popup.html`, `popup.js`, and `sources/static/youtube_static.js`, but not in the generated definitions. If a setting is missing from `settings-key-index.md`, search `popup.html` and the relevant source before saying it does not exist.
 
 ## Setting Families
 
@@ -57,6 +94,8 @@ SSN uses several related, but different, configuration layers.
 - Live data sourced through `docs/js/settings.js`, `shared/config/settingsDefinitions.js`, and `shared/config/urlParameters.js`.
 
 When a user asks "where is this option?", start with `docs/settings.html` before manually searching `popup.html`.
+
+For local agent lookup, use `settings-key-index.md` for exact popup setting keys and `url-parameter-index.md` for exact URL parameter aliases. For storage, session, password, generated-link, and desktop-app backup behavior, use `settings-session-storage-source-trace.md`. For reload/reconnect/live-update triage, use `settings-change-impact-matrix.md`.
 
 ## Generated Popup Categories
 
@@ -142,6 +181,9 @@ Use this order:
 3. Search `popup.html` for the control if the generated definition is unclear.
 4. Search `popup.js` for save/load/runtime behavior.
 5. If it is a URL behavior, search `parameters.md`, `shared/config/urlParameters.js`, and the target overlay page.
+6. If it is a static/manual helper behavior, check `manual-static-and-helper-sources.md` and the exact helper source.
+7. If it is a WebSocket/API source page behavior, check `websocket-source-pages.md` and the exact source-page script because some auth/token/source-page fields live outside generated popup settings.
+8. If it is a communication/private source, check `communication-and-sensitive-sources.md` because public setup wording, generated opt-in keys, and source behavior do not always line up cleanly.
 
 ### I enabled it, but nothing changed.
 
@@ -149,10 +191,15 @@ Check:
 
 - Whether the affected source page or overlay needs a refresh.
 - Whether the user changed a popup setting but the visible page is controlled by a URL parameter.
+- Whether the popup generated a new link but the already-open OBS/browser source still uses the old URL.
+- Whether the standalone app source window or custom session needs reopening/reconnecting.
 - Whether the setting applies only to a specific source mode, such as WebSocket/API mode instead of DOM capture.
 - Whether the source toggle requires enabling first, then reloading the platform page.
+- Whether the source is a communication/private page where the web version, visible chat panel, and privacy redaction matter as much as the toggle itself.
 - Whether the user has both extension and desktop app active on the same session.
 - Whether another filter, allowlist, blocklist, duplicate/relay setting, or opt-out setting suppresses the expected behavior.
+
+Route these cases to `settings-change-impact-matrix.md` before making a live-update claim.
 
 ### Is this extension-only or app-only?
 

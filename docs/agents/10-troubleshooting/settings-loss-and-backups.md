@@ -6,7 +6,11 @@ Status: heavy extraction pass started.
 
 Document settings loss, export/import, backup/restore, and app/extension storage differences.
 
-This page is source-backed for the desktop app storage and backup paths. Extension settings still need a deeper current-source pass beyond the public docs and storage scans.
+This page is source-backed for the desktop app storage and backup paths. Extension storage split and app cached-state guardrails now have a source-check trace in `../13-reference/settings-session-storage-source-trace.md`, but runtime app/extension testing is still needed before final user-facing claims.
+
+For safe update/reinstall/version-choice guidance before settings are lost, use `../13-reference/install-update-version-guide.md`.
+
+If the user's settings still exist but a change did not affect an open page, OBS browser source, app source window, or generated link, start with `../13-reference/settings-change-impact-matrix.md` before treating it as settings loss.
 
 ## Source Anchors
 
@@ -21,6 +25,7 @@ This page is source-backed for the desktop app storage and backup paths. Extensi
 - `social_stream/README.md`
 - `social_stream/popup.js`
 - `social_stream/service_worker.js`
+- `social_stream/docs/agents/13-reference/settings-session-storage-source-trace.md`
 - `stevesbot/resources/instructions/social-stream-support.md`
 
 ## Storage Model
@@ -61,7 +66,7 @@ Confirmed from public docs/support and initial source scans:
 - Manual extension update should replace files and reload the extension/browser instead.
 - If uninstall is required, export settings first where possible.
 
-Needs deeper source verification:
+Source-checked in `../13-reference/settings-session-storage-source-trace.md`, still needing runtime validation:
 
 - Exact split between `chrome.storage.sync`, `chrome.storage.local`, popup state, and generated export files.
 - Exact export/import UI labels and whether browser File System Access API restrictions affect the current export flow.
@@ -154,6 +159,7 @@ First classify the symptom:
 | --- | --- | --- |
 | Source list disappeared, but session ID/settings remain. | `socialStreamState` / state manager localStorage. | Check Settings Backup export and app user-data `savedSync.json`. |
 | Global settings disappeared, but sources remain. | cached state/settings hydration or partial persistence. | Check whether `savedSync.json` still has settings; avoid full reset until backed up. |
+| Setting is visible/saved but did not change behavior. | stale page/source/link or reload boundary, not necessarily loss. | Use `../13-reference/settings-change-impact-matrix.md` before reset/recovery advice. |
 | Everything reset after reinstall/update. | user-data or extension storage removed. | Ask whether app profile was deleted or extension was uninstalled. |
 | Event Flow survived but other settings vanished. | storage split or stale support claim. | Source-check current Event Flow storage before stating cause. |
 | Settings appear briefly then disappear. | hydration/race/partial-state issue. | Use diagnostics; collect logs and whether `savedSync.json` has settings. |

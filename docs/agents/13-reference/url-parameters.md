@@ -2,14 +2,27 @@
 
 Status: heavy reference pass started from `parameters.md`, README, and overlay docs. This is a practical map, not a full replacement for `parameters.md`.
 
+For exact generated parameter names, aliases, value hints, and short descriptions from `shared/config/urlParameters.js`, use `url-parameter-index.md`.
+
+For source-checked page-specific parser behavior, especially when a parameter works on one page but not another, use `url-parameter-source-trace.md`.
+
+For choosing the correct SSN page or endpoint before adding parameters, use `surface-url-cheatsheet.md`.
+
+For safe copy/paste page URL examples, use `url-option-examples.md`.
+
 ## Source Anchors
 
 - `parameters.md`
+- `shared/config/urlParameters.js`
+- `docs/agents/13-reference/url-parameter-index.md`
+- `docs/agents/13-reference/url-parameter-source-trace.md`
 - `README.md`
 - `api.md`
 - `dock.html`
 - `featured.html`
 - `multi-alerts.html`
+- `themes/**/*.html`
+- `docs/agents/07-overlays-and-pages/theme-pages.md`
 - `waitlist.html`
 - `poll.html`
 - `timer.html`
@@ -69,6 +82,32 @@ Support rule: most overlay "not updating" issues start with `session`, `server`,
 | `largeavatar` / `largecontent` | Larger avatars or content attachments. |
 
 For deeper styling, prefer OBS custom CSS or `&css=` / `&b64css=` before editing core files.
+
+## Theme Page Parameters
+
+Theme pages have local parameter behavior in addition to the shared parameters above. Do not assume every theme supports every dock or overlay option.
+
+Common theme parameters:
+
+| Parameter | Use |
+| --- | --- |
+| `session` | Required for most themes to receive SSN payloads. |
+| `showtime` | Auto-hide rendered messages where supported. |
+| `limit` | Cap displayed messages where supported. |
+| `hidebots` | Hide bot/system-like senders where supported. |
+| `chroma` | Set solid background color where supported. |
+| `font` / `fontfamily` | Override font where supported. |
+| `server`, `server2`, `localserver` | WebSocket routing modes where the theme implements them. |
+
+Theme-specific examples include `reverse`, `deleteonlylast`, `avatar`, `noavatar`, `nobadges`, `noicon`, `time`, `light`, `ultra`, `width`, `align`, `fadezone`, `bigbubbles`, `denseparticles`, `fastype`, `gaming`, `retro`, `darkmode`, `size`, `style`, and `timer`.
+
+Routing rule:
+
+- Normal chat themes such as `themes/compact-clean.html` render ordinary chat messages.
+- Featured-style themes such as `themes/featured-styles/featured-modern.html?style=glass` wait for selected/featured messages.
+- Wrapper themes such as `themes/pretty.html` and `themes/Neutron/chatOnly.html` embed `dock.html`.
+
+Use `../07-overlays-and-pages/theme-pages.md` for per-theme routing and support checks.
 
 ## Message Display And Filtering
 
@@ -159,7 +198,7 @@ Do not put provider keys in shared screenshots.
 | `trivialevents` | Allow minor event shading. |
 | `dissolve` | Fade event cards quickly. |
 
-For tip goal display, use `tipjar.html` parameters such as `goal`, `style`, `tipjartype`, `tipjarsource`, `persistent`, `controls`, `sound`, `hype`, `levelsize`, and color/fill options.
+For tip goal display, use `tipjar.html` parameters such as `goal`, `style`, `tipjartype`, `tipjarsource`, `persistent`, `controls`, `sound`, `hype`, `levelsize`, and color/fill options. For page behavior, commands, persistence, and first checks, use `07-overlays-and-pages/tipjar-credits.md`.
 
 ## Automation And External Integration Parameters
 
@@ -212,6 +251,7 @@ Safety:
 - Putting a parameter on the wrong page.
 - Expecting a URL parameter to change an already-open page without refresh.
 - Confusing API actions with URL parameters.
+- Assuming every theme page supports every dock/featured parameter.
 - Forgetting to URL-encode CSS, JS, messages, or endpoint URLs.
 - Sharing API keys, passwords, or session IDs in screenshots.
 - Using local files in OBS on macOS/Linux when hosted pages or OBS custom CSS would be more reliable.
@@ -220,7 +260,7 @@ Safety:
 
 When asked for a URL option:
 
-1. Identify the page: dock, featured, multi-alerts, waitlist, poll, timer, tipjar, credits, bot, or custom overlay.
+1. Identify the page: dock, featured, theme, multi-alerts, waitlist, poll, timer, tipjar, credits, bot, or custom overlay.
 2. Confirm the page has `session=...`.
 3. Choose the smallest parameter set.
 4. Warn about secrets if keys/passwords/session IDs are in the URL.

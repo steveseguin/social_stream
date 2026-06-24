@@ -1,6 +1,6 @@
 # Text To Speech
 
-Status: heavy extraction pass started from README, command docs, parameter docs, `tts.js`, and local TTS bridge docs.
+Status: heavy extraction pass plus focused local TTS asset-test evidence on 2026-06-24.
 
 ## Source Anchors
 
@@ -16,6 +16,30 @@ Status: heavy extraction pass started from README, command docs, parameter docs,
 - `local-tts-bridge/README.md`
 - `local-tts-bridge/server.cjs`
 
+## Focused Validation Evidence
+
+On 2026-06-24, these focused Node tests were run:
+
+```powershell
+node tests/kokoro-local-assets.test.js
+node tests/piper-local-assets.test.js
+node tests/kitten-tts-assets.test.js
+```
+
+Results:
+
+- Kokoro: passed with `PASS kokoro local asset wiring`
+- Piper: failed on an expected `FALLBACK_REMOTE_PIPER_BASE` string in `thirdparty/piper/piper-tts-proper.js`
+- Kitten TTS: passed with `PASS kitten TTS asset wiring`
+
+Evidence label: `focused-node-test`; not runtime-tested.
+
+What this supports: static/source wiring for Kokoro local asset host/model/voice paths and Kitten TTS WASM path setup. It also identifies that the Piper asset wiring test currently fails on a fallback remote-base expectation.
+
+What it does not support: actual model download, audio generation, browser playback, OBS Browser Source audio capture, WebGPU/WASM/CPU runtime behavior, standalone app TTS behavior, or cloud provider behavior.
+
+Full evidence entry: `../18-focused-validation-evidence-log.md`.
+
 ## What TTS Does
 
 SSN can read chat, featured messages, bot replies, and some events aloud. It can use browser/system voices, local/browser model providers, cloud providers, or OpenAI-compatible custom/local endpoints.
@@ -27,8 +51,8 @@ The page that should produce audio must be open. For many workflows that means `
 | Provider/Mode | Cost Boundary | Notes |
 | --- | --- | --- |
 | System/Web Speech API | Free | Uses browser/OS voices; language/voice availability varies heavily. |
-| Kokoro | Free/local in current docs | Runs in browser with WebGPU/CPU/WASM options; can require a powerful computer. |
-| Kitten TTS | Free/local in current docs | Lightweight browser model download for local voice generation. |
+| Kokoro | Free/local in current docs | Runs in browser with WebGPU/CPU/WASM options; can require a powerful computer. Focused asset wiring test passed on 2026-06-24, but runtime audio was not tested. |
+| Kitten TTS | Free/local in current docs | Lightweight browser model download for local voice generation. Focused asset wiring test passed on 2026-06-24, but runtime audio was not tested. |
 | Local/custom OpenAI-compatible endpoint | Depends on self-hosted server | SSN can call local bridges/endpoints; user supplies compute/server. |
 | Google Cloud TTS | Paid/Google account | Requires user's API key and provider billing/quotas. |
 | ElevenLabs | Account/provider pricing | Free tier may exist for testing; account/API key required. |
@@ -126,6 +150,12 @@ Limits:
 ```
 
 Command docs also list Kitten TTS as a lightweight browser-based local model. Verify current model/download behavior before giving detailed support.
+
+Focused evidence note:
+
+- Kokoro and Kitten static asset wiring tests passed on 2026-06-24.
+- Piper static asset wiring test failed on 2026-06-24 because `thirdparty/piper/piper-tts-proper.js` did not contain the expected fallback remote-base constant.
+- Do not describe Piper focused evidence as passing until that test is investigated or rerun successfully.
 
 ## Cloud Provider TTS
 
@@ -225,6 +255,7 @@ Verify current accepted HTTP path behavior against `api.md`/code before document
 | Local TTS blocked by CORS | Local server not browser-safe | Use `local-tts-bridge` endpoint. |
 | Audio starts only after click | Browser autoplay gate | Click page or use OBS Browser Source/app context. |
 | Kokoro slow or broken | Device/runtime/model issue | Try WASM/q8 parameters or a lighter provider. |
+| Piper local asset check fails | Current source does not match the focused test's expected fallback remote-base constant | Treat Piper as needing source/test reconciliation before using that focused test as proof. |
 | Firefox missing features | Firefox limitation | Test Chromium/app and check provider support. |
 | TTS reads unsafe chat | User-generated content risk | Use filters, moderation, member-only command, or provider limits. |
 
@@ -241,3 +272,4 @@ Verify current accepted HTTP path behavior against `api.md`/code before document
 - Current exact popup setting names for every provider.
 - App-specific TTS worker behavior from `ssapp`.
 - E2E validation notes from `scripts/playwright-tts-provider-check.cjs`.
+- Reconcile the failing Piper focused asset test before promoting Piper wiring claims.

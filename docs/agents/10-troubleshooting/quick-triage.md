@@ -6,6 +6,8 @@ Status: backbone extraction pass. Usable for first-pass support, not final-grade
 
 Give agents a short first-pass troubleshooting checklist for common SSN support questions.
 
+For branch routing from vague symptoms, use `diagnostic-decision-tree.md`.
+
 ## Source Anchors
 
 - `stevesbot/resources/instructions/social-stream-support.md`

@@ -6,13 +6,17 @@ Status: heavy extraction pass started on 2026-06-24.
 
 Document how to build custom SSN overlay pages that receive normalized SSN messages without modifying the extension background/runtime code.
 
+If the request is only styling, filtering, automation, or a new input source, first route through `../13-reference/customization-path-decision-matrix.md` to avoid overbuilding a custom overlay.
+
 ## Source Anchors
 
+- `docs/agents/13-reference/customization-path-decision-matrix.md`
 - `social_stream/docs/customoverlays.md`
 - `social_stream/docs/event-reference.html`
 - `social_stream/sampleoverlay.html`
 - `social_stream/themes/sampleoverlay_reverse.html`
 - `social_stream/themes/**`
+- `docs/agents/07-overlays-and-pages/theme-pages.md`
 
 ## Recommended Pattern
 
@@ -40,6 +44,13 @@ Built-in overlays often also use:
 - `solo`
 
 Use the existing page closest to the desired behavior as the source example.
+
+For prebuilt theme selection, use `theme-pages.md` first:
+
+- Normal chat themes render ordinary incoming chat.
+- Featured-style themes under `themes/featured-styles/` wait for selected/featured message payloads.
+- Wrapper themes such as `pretty.html` and Neutron embed `dock.html` with preset URL parameters.
+- Package themes may depend on local assets, bundled CSS, or image files.
 
 ## Message Listener Pattern
 
@@ -198,6 +209,8 @@ Common parameters to support or copy from existing overlays:
 
 Not all built-in overlays support all of these. They are common conventions, not a guaranteed global standard.
 
+Theme pages add their own local options such as `reverse`, `fadezone`, `bigbubbles`, `autoflip`, `denseparticles`, `fastype`, `gaming`, `retro`, `darkmode`, `style`, and `timer`. Use `theme-pages.md` or the exact theme source before promising a parameter.
+
 ## Security And Safety
 
 Use `textContent` for untrusted user text unless the overlay intentionally supports SSN's already-normalized HTML/emote markup.
@@ -259,6 +272,6 @@ WebSocket overlay receives commands but not chat:
 
 ## Remaining Extraction Targets
 
-- Extract common URL/filter parameters from `dock.html`, `featured.html`, and theme overlays into a custom overlay compatibility table.
-- Review `samplefeatured.html` and other sample/theme pages if present in future passes.
+- Render and validate representative theme pages from `theme-pages.md`, including local-file OBS behavior.
+- Review `samplefeatured.html` and any new sample/theme pages if present in future passes.
 - Add a minimal safe overlay template that uses `textContent` by default.

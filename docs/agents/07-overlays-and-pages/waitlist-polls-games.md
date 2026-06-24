@@ -304,6 +304,8 @@ Game files also exist under:
 games/
 ```
 
+Individual `games/*.html` pages are documented in `game-pages.md`; this section keeps the root `games.html` Spam Power behavior and shared tool context.
+
 The inspected `games.html` implements a chat activity game called Spam Power.
 
 Connection:
@@ -364,7 +366,7 @@ Audio does not play:
 
 ## Remaining Extraction Targets
 
-- Extract each `games/*.html` file into a per-game matrix.
+- Validate `game-pages.md` with controlled browser/OBS runs and exact parameter generation.
 - Source-check `battle.html` and any score/battle pages not present in this pass.
 - Trace popup-generated URLs for waitlist, poll, timer, and giveaway.
 - Cross-check `api.md` command descriptions against current background command handlers.

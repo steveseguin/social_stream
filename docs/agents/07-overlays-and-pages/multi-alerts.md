@@ -14,6 +14,22 @@ Status: heavy extraction pass started on 2026-06-24.
 - `social_stream/docs/event-reference.html`
 - `social_stream/scripts/playwright-multi-alerts-overlay-e2e.cjs`
 
+## Runtime Validation Status
+
+Current status: not browser-validated from the latest run.
+
+On 2026-06-24, `node scripts/playwright-multi-alerts-overlay-e2e.cjs` was run from `social_stream`. It failed with:
+
+```text
+frame.waitForFunction: Timeout 30000ms exceeded.
+    at waitForPreviewFrame (C:\Users\steve\Code\social_stream\scripts\playwright-multi-alerts-overlay-e2e.cjs:212:15)
+    at async C:\Users\steve\Code\social_stream\scripts\playwright-multi-alerts-overlay-e2e.cjs:439:24
+```
+
+The failure happened while waiting for the popup preview iframe to expose `window.__multiAlertsOverlay.getSettings`. Do not use that run as evidence that multi-alert rendering, queueing, audio, filters, or server modes are validated.
+
+Evidence log: `17-runtime-validation-evidence-log.md`.
+
 ## Connection Model
 
 The page can receive payloads in two ways:
@@ -237,6 +253,6 @@ Repeated alerts:
 
 ## Remaining Extraction Targets
 
-- Trace popup-generated multi-alert URLs and settings labels.
-- Run/inspect the Playwright multi-alerts E2E script for expected render behavior.
+- Investigate why the Playwright multi-alerts E2E script times out while waiting for the preview iframe overlay API, then rerun it before promoting any runtime claim.
+- Trace popup-generated multi-alert URLs and settings labels outside the failed runtime attempt if a source-level update is needed.
 - Map each platform's current event names into the category classifier.

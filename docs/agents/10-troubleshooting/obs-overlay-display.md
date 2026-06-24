@@ -1,6 +1,6 @@
 # OBS Overlay Display Issues
 
-Status: heavy extraction pass started from README, `dock.html`, `featured.html`, `parameters.md`, Event Flow docs, and OBS integration notes.
+Status: heavy extraction pass started from README, `dock.html`, `featured.html`, `parameters.md`, theme pages, Event Flow docs, and OBS integration notes.
 
 ## Source Anchors
 
@@ -9,7 +9,9 @@ Status: heavy extraction pass started from README, `dock.html`, `featured.html`,
 - `featured.html`
 - `parameters.md`
 - `docs/customoverlays.md`
+- `themes/**/*.html`
 - `themes/featured-styles/README.md`
+- `docs/agents/07-overlays-and-pages/theme-pages.md`
 - `actions/event-flow-guide.html`
 - `obs-websocket-test.html`
 - `docs/agents/09-api-and-integrations/obs.md`
@@ -24,6 +26,7 @@ Determine which page the user loaded:
 | `featured.html` | Selected-message overlay. Can be blank/transparent until a message is featured. |
 | `actions.html` | Event Flow output/actions overlay. Must stay open for media/audio/OBS actions. |
 | `sampleoverlay` / custom overlay | Minimal/custom renderer; may not support all dock/featured parameters. |
+| `themes/*.html` or `themes/*/index.html` | Prebuilt visual chat themes; most render ordinary chat messages. |
 | `themes/featured-styles/*` | Styled featured-message overlay variants. |
 
 Many "blank overlay" reports are actually correct empty/transparent featured overlays with no selected message yet.
@@ -34,7 +37,7 @@ Many "blank overlay" reports are actually correct empty/transparent featured ove
 2. Does that session match the extension/app/dock?
 3. Is there an active source sending messages?
 4. Can the dock see messages?
-5. If using featured overlay, did the user click a dock message or send API `content`?
+5. If using featured overlay or a featured-style theme, did the user click a dock message or send API `content`?
 6. Is the OBS Browser Source visible on the active scene?
 7. Has the source been refreshed after URL/CSS/settings changes?
 8. Is custom CSS hiding text or making text/background the same color?
@@ -60,6 +63,14 @@ https://socialstream.ninja/dock.html?session=SESSION_ID
 ```
 
 If the browser appears white before a message is featured, do not treat that alone as failure.
+
+## Theme Page Caveats
+
+Normal chat themes under `themes/` usually render ordinary incoming chat after `session=...` is set. Featured-style themes under `themes/featured-styles/` are different: they wait for a selected/featured message payload and can look blank until one is sent.
+
+Wrapper themes such as `themes/pretty.html` and `themes/Neutron/*.html` embed `dock.html`, so dock parameters and dock-side state can matter. Package themes such as `themes/t3nk3y/`, `themes/rainbowpuke/`, and `themes/Windows3.1/` may depend on their local CSS/image/audio files, which makes hosted URLs safer than local file URLs in OBS.
+
+For per-theme parameters and first checks, use `../07-overlays-and-pages/theme-pages.md`.
 
 ## Wrong Page Or Wrong Session
 
@@ -150,11 +161,13 @@ Scene/source/filter controls need one of:
 | Symptom | Likely Fix |
 | --- | --- |
 | Blank featured page | Feature a message; check `showtime`; verify session. |
+| Blank featured-style theme | Feature a message; verify it is not a normal chat theme. |
+| Blank normal chat theme | Verify `session`, active chat source, dock message flow, and whether the theme supports `server`/`localserver`. |
 | White page in browser | Test in OBS or add temporary background; this can be transparent empty state. |
 | Dock works, OBS does not | Refresh/recreate OBS Browser Source; check active scene/source visibility. |
 | Overlay text cropped | Increase Browser Source height or reduce scale/CSS font size. |
 | Styling ignored | Use OBS CSS field and `!important`; verify CSS target selectors. |
-| Local file works in browser but not OBS | Use hosted page or OBS CSS, especially macOS/Linux. |
+| Local file works in browser but not OBS | Use hosted page or OBS CSS, especially macOS/Linux and OBS v31 local-file iframe cases. |
 | Audio missing | Use provider/browser TTS or route system TTS audio. |
 | Event Flow media missing | Open `actions.html?session=...` and keep it running. |
 | OBS scene control missing | Use Advanced Access Browser Source or OBS WebSocket v5. |
@@ -163,7 +176,7 @@ Scene/source/filter controls need one of:
 
 - OBS version.
 - Browser Source URL with session/key values redacted.
-- Which page is loaded: dock, featured, actions, custom, theme.
+- Which page is loaded: dock, featured, actions, custom, theme, or featured-style theme.
 - Browser Source dimensions.
 - Custom CSS used.
 - Screenshot of dock and OBS output.

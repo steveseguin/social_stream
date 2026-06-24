@@ -4,6 +4,8 @@ Status: heavy reference pass started. This page explains what "plugin" means in 
 
 ## Source Anchors
 
+- `customization-path-decision-matrix.md`
+- `customization-source-trace.md`
 - `README.md`
 - `docs/commands.html`
 - `docs/customoverlays.md`
@@ -15,6 +17,7 @@ Status: heavy reference pass started. This page explains what "plugin" means in 
 - `sources/generic.js`
 - `sources/README.md`
 - `manifest.json`
+- `docs/agents/07-overlays-and-pages/theme-pages.md`
 - `docs/agents/08-platform-sources/generic-and-custom-sources.md`
 - `docs/agents/12-development/adding-a-source.md`
 
@@ -22,12 +25,14 @@ Status: heavy reference pass started. This page explains what "plugin" means in 
 
 SSN supports many plugin-like customization paths, but normal users should not be told there is one official plugin marketplace or installable plugin package flow.
 
+For path selection, start with `customization-path-decision-matrix.md`. For recipe-style setup guidance, use `customization-plugin-recipes.md`. For exact source-level hook behavior, use `customization-source-trace.md`, then use this page to confirm terminology and boundaries.
+
 ## Choose The Right Customization Path
 
 | Goal | Best Path | Skill Level |
 | --- | --- | --- |
 | Change colors/fonts/layout slightly | URL parameters or OBS custom CSS | Beginner |
-| Use a prebuilt look | Themes/templates | Beginner |
+| Use a prebuilt look | Theme pages/templates | Beginner |
 | Build a fully custom visual overlay | Custom overlay HTML from sample overlay | Intermediate |
 | Add local dock/featured behavior | Local `custom.js` from `custom_sample.js` | Intermediate |
 | Modify/filter/reply to every message | Uploaded/enabled `window.customUserFunction` pattern from `custom_actions.js` | Advanced |
@@ -62,6 +67,7 @@ Use a custom overlay when the user wants a completely different visual output.
 Starting points:
 
 - `sampleoverlay`
+- `themes/**/*.html` for prebuilt looks; use `07-overlays-and-pages/theme-pages.md` to choose a theme family
 - `docs/customoverlays.md`
 - `docs/agents/07-overlays-and-pages/custom-overlays.md`
 
@@ -93,6 +99,7 @@ Best for:
 Limit:
 
 - No built-in dock features unless the user implements them.
+- Not every theme receives the same payloads; featured-style themes need selected-message payloads and wrapper themes embed `dock.html`.
 
 ## Path 3: Local `custom.js`
 
@@ -145,6 +152,10 @@ Confirmed behavior:
 - Returning modified `data` continues processing.
 - Returning `false` can block/drop a message in the template pattern.
 - Helper examples include `sendCustomReply(data, message)`.
+
+Current source caveat:
+
+- `customization-source-trace.md` records that the current loader path is constrained and should not be described as a general arbitrary-JS plugin runtime without testing the exact uploaded script.
 
 Best for:
 

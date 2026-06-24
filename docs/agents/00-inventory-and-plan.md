@@ -71,6 +71,20 @@ Existing docs worth mining first:
 - `docs/kick-channel-points-event-flow.md`: recent Event Flow guide for Kick rewards.
 - `actions/event-flow-guide.html` and `actions/STATE_NODES_EXPLANATION.md`: action-flow behavior.
 
+AI docs created so far include a platform capability routing page at `docs/agents/08-platform-sources/platform-capability-matrix.md` for per-platform event, send-back, app-difference, and support-triage questions.
+
+AI docs created so far also include `docs/agents/04-standalone-app-source-windows.md` for desktop app source-window lifecycle, Electron session partitions, source injection/fallback behavior, `window.ninjafy`, and app-vs-extension parity questions.
+
+AI docs created so far also include `docs/agents/08-platform-sources/public-site-support-status.md` for support-strength rules around public supported-site listings, setup types, browser/app boundaries, and safe claims.
+
+AI docs created so far also include `docs/agents/13-reference/glossary.md` for common SSN terminology and ambiguous support wording.
+
+AI docs created so far also include `docs/agents/13-reference/surface-url-cheatsheet.md` for choosing the right SSN page, hosted URL, API endpoint, or WebSocket source page.
+
+AI docs created so far also include `docs/agents/13-reference/settings-change-impact-matrix.md` for deciding whether a settings, URL option, generated-link, app source-state, cached-state, provider/auth, or page-local-state change needs a page refresh, OBS URL replacement, source reconnect, or app source-window reopen.
+
+AI docs created so far also include `docs/agents/13-reference/public-claims-boundary-matrix.md` for safely narrowing broad public claims around site counts, free/open-source status, two-way chat, no API keys, AI/TTS, app behavior, plugins/customization, services, and support promises.
+
 Important repo instruction already present:
 
 - `sources/` and `sources/websocket/` scripts are shared by the Chrome extension and Electron app.
@@ -163,6 +177,7 @@ The documentation set should be split by job-to-be-done, not only by code folder
 docs/agents/
   AGENT.md
   00-inventory-and-plan.md
+  02-resource-processing-ledger.md
   01-product-map.md
   02-installation-and-surfaces.md
   03-extension-architecture.md
@@ -187,7 +202,10 @@ docs/agents/
     discord.md
     generic-and-custom-sources.md
     source-inventory.md
+    source-file-processing-matrix.md
+    supported-sites-lookup.md
     manifest-content-scripts.md
+    manifest-row-matrix.md
   09-api-and-integrations/
     websocket-http-api.md
     obs.md
@@ -208,8 +226,10 @@ docs/agents/
     mining-method.md
     support-source-map.md
     common-questions.md
+    support-answer-bank.md
     historical-issues.md
     unresolved-or-stale-claims.md
+    public-docs-coverage.md
   12-development/
     repo-map.md
     adding-a-source.md
@@ -220,13 +240,21 @@ docs/agents/
   13-reference/
     index.md
     commands-and-actions.md
+    action-command-index.md
+    api-command-validation-matrix.md
     url-parameters.md
+    url-parameter-index.md
     modes-and-capability-matrix.md
     free-paid-and-support-boundaries.md
+    public-claims-boundary-matrix.md
+    customization-path-decision-matrix.md
     custom-plugins-and-extensions.md
     support-resources-and-escalation.md
     settings-and-toggles.md
+    settings-key-index.md
     features-and-capabilities.md
+    feature-support-decision-matrix.md
+    how-to-recipes.md
   99-agent-index.md
 ```
 
@@ -235,6 +263,10 @@ docs/agents/
 ### `01-product-map.md`
 
 Explain what SSN is, what the extension does, what the standalone app does, which pages are overlays/tools, and how users typically combine SSN with OBS.
+
+### `02-resource-processing-ledger.md`
+
+Track which resource groups have quick, heavy, or intense coverage, and which still only have inventory coverage.
 
 ### `02-installation-and-surfaces.md`
 
@@ -274,7 +306,7 @@ Convert support knowledge into practical triage pages. Each page should include 
 
 ### `11-support-kb/*`
 
-Document how the support data was mined, which sources are trusted, how claims are validated against code, which support answers are historical, and which questions still need source verification.
+Document how the support data was mined, which sources are trusted, concise support answer patterns, how claims are validated against code, which support answers are historical, and which questions still need source verification.
 
 ### `12-development/*`
 
@@ -282,7 +314,7 @@ Document how to safely change SSN: repo map, adding new platform sources, shared
 
 ### `13-reference/*`
 
-Provide fast cross-cutting lookup pages for commands, URL parameters, product/capture modes, free-vs-paid boundaries, plugin/customization paths, support-resource routing, settings/toggle lookup, and broad feature/capability routing.
+Provide fast cross-cutting lookup pages for commands, exact action names, API command validation, URL/page routing, page capability routing, URL parameters, exact generated setting/parameter keys, product/capture modes, free-vs-paid boundaries, broad public-claim boundaries, plugin/customization paths, support-resource routing, settings/toggle lookup, broad feature/capability routing, and answer-ready feature support decisions.
 
 ### `99-agent-index.md`
 

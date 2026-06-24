@@ -2,6 +2,8 @@
 
 Status: heavy extraction pass started from `api.md`, command docs, and public API examples. Verify command behavior against code before changing production automation.
 
+For exact action names and target/page routing, use `../13-reference/action-command-index.md`. For source-checked handler caveats, use `../13-reference/command-action-source-trace.md`. For accepted-by-relay versus acted-on-by-target validation, use `../13-reference/api-command-validation-matrix.md`. For safe copy/paste examples, use `../13-reference/api-command-examples.md`.
+
 ## Source Anchors
 
 - `api.md`
@@ -13,6 +15,8 @@ Status: heavy extraction pass started from `api.md`, command docs, and public AP
 - `background.js`
 - `dock.html`
 - `featured.html`
+- `docs/agents/13-reference/action-command-index.md`
+- `docs/agents/13-reference/api-command-validation-matrix.md`
 
 ## What The API Does
 

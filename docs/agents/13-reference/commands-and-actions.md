@@ -2,6 +2,8 @@
 
 Status: heavy reference pass started from public command/API docs and command handlers. Use this for support orientation; verify rare actions against code before publishing final automation recipes.
 
+For exact action-name lookup, use `action-command-index.md`. For source-checked handler caveats, use `command-action-source-trace.md`. For accepted-by-relay versus acted-on-by-target validation, use `api-command-validation-matrix.md`. For safe copy/paste API examples, use `api-command-examples.md`.
+
 ## Source Anchors
 
 - `docs/commands.html`
@@ -17,6 +19,8 @@ Status: heavy reference pass started from public command/API docs and command ha
 - `actions/EventFlowSystem.js`
 - `docs/agents/09-api-and-integrations/websocket-http-api.md`
 - `docs/agents/09-api-and-integrations/event-flow-editor.md`
+- `docs/agents/13-reference/action-command-index.md`
+- `docs/agents/13-reference/api-command-validation-matrix.md`
 
 ## Do Not Mix These Up
 
@@ -44,8 +48,9 @@ Public docs currently name these built-in or page-specific viewer commands:
 | `!cycle` | Lets viewers change OBS scenes. | OBS remote/cycle support must be enabled and permitted. |
 | `!say` | Default command trigger for TTS when `ttscommand` is used. | TTS page/provider and command settings must be enabled. |
 | `!pass` | Forwards TTS to remote automation when `passtts` is enabled. | `passtts`; optionally `passttsmod` for moderator-only use. |
-| `!join` | Battle/game join command in older battle docs. | Game page/workflow active. |
-| `!say` in battle/game context | Sends an in-game chat message in battle docs. | Battle/game page active. |
+| `!join` | Battle/game join command in older battle docs and some current mini-games. | Exact game page/workflow active; use `07-overlays-and-pages/game-pages.md` for current game commands. |
+| Game-specific commands/input | Mini-game commands such as `!drop`, `!dig B5`, color/team commands, phrase guesses, beat words, emoji, or paint commands. | Exact `games.html` or `games/*.html` page active on the same session. |
+| `!say` in battle/game context | Sends an in-game chat message in older battle docs. | Battle/game page active; source-check `battle.html` before using as a current mini-game pattern. |
 | Values in `selfqueue` | Viewer commands that add the viewer/message to a queue. | `&selfqueue=...` on the dock page. |
 
 Common support checks:

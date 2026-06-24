@@ -6,7 +6,7 @@ Status: heavy inventory pass started from `manifest.json`. This page summarizes 
 
 Use this page when a user asks which file handles a platform URL, why a source script loads in an iframe, why a source must run at `document_start`, or whether a public site card has an actual extension content-script match.
 
-For exact URL pattern answers, inspect `manifest.json` directly.
+For exact URL pattern answers, inspect `manifest.json` directly. For a generated row-level lookup, start with `manifest-row-matrix.md`.
 
 ## Source Anchors
 
@@ -17,6 +17,7 @@ For exact URL pattern answers, inspect `manifest.json` directly.
 - `sources/websocket/*`
 - `shared/vendor/socket.io.min.js`
 - `docs/agents/08-platform-sources/source-inventory.md`
+- `docs/agents/08-platform-sources/manifest-row-matrix.md`
 - `docs/agents/12-development/adding-a-source.md`
 
 ## Current Manifest Counts
@@ -165,7 +166,7 @@ The extension match for that URL is in `manifest.json` and loads `[script]`. Tha
 
 Needed intense passes:
 
-- Generate a full 155-entry manifest table and map each row to a public site card, when one exists.
+- Curate the generated full 155-entry manifest table into an exact public-site map where one exists.
 - Reconcile manifest-only helper/source entries that do not have public `docs/js/sites.js` cards.
 - Mark send-chat, event richness, auth, popout, and source-toggle requirements per manifest row.
 - Verify whether `document_start` and `all_frames` entries still need those flags.

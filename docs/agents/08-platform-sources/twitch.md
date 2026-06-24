@@ -17,6 +17,24 @@ Document Twitch capture, WebSocket/EventSub behavior, OAuth, chat sending, badge
 - `social_stream/tests/twitch-chatClient-subgift.test.js`
 - `ssapp/resources/electron-twitch-handler.js`
 
+## Focused Validation Evidence
+
+On 2026-06-24, this focused Node test passed:
+
+```powershell
+node tests/twitch-chatClient-subgift.test.js
+```
+
+Result: `twitch-chatClient-subgift.test.js passed`.
+
+Evidence label: `focused-node-test`; not runtime-tested.
+
+What this supports: provider-core normalization for synthetic direct and anonymous Twitch gifted subscription events in `providers/twitch/chatClient.js`.
+
+What it does not support: live Twitch IRC/EventSub behavior, OAuth/scopes, DOM capture, OBS overlays, Event Flow runtime, standalone app bridge behavior, or downstream alert rendering.
+
+Full evidence entry: `../18-focused-validation-evidence-log.md`.
+
 ## Runtime Surfaces
 
 Twitch has two main capture paths:

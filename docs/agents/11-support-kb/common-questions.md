@@ -2,6 +2,8 @@
 
 Status: heavy extraction pass started. This page is source-backed from current repo docs and should be expanded with mined Discord/KB history in later passes.
 
+For first-stop routing, use `docs/agents/11-support-kb/index.md`. For objective coverage by question family, use `common-question-coverage-map.md`. For concise support-response patterns, use `support-answer-bank.md`.
+
 ## Source Anchors
 
 - `README.md`
@@ -28,6 +30,18 @@ Use these cross-topic pages before repeating long answers:
 - `docs/agents/13-reference/support-resources-and-escalation.md`
 - `docs/agents/13-reference/settings-and-toggles.md`
 - `docs/agents/13-reference/features-and-capabilities.md`
+- `docs/agents/13-reference/how-to-recipes.md`
+- `docs/agents/08-platform-sources/supported-sites-lookup.md`
+- `docs/agents/08-platform-sources/manual-static-and-helper-sources.md`
+- `docs/agents/08-platform-sources/websocket-source-pages.md`
+- `docs/agents/08-platform-sources/communication-and-sensitive-sources.md`
+- `docs/agents/08-platform-sources/embedded-chat-widget-sources.md`
+- `docs/agents/08-platform-sources/live-commerce-sources.md`
+- `docs/agents/08-platform-sources/webinar-and-event-sources.md`
+- `docs/agents/08-platform-sources/creator-live-cam-sources.md`
+- `docs/agents/08-platform-sources/popout-chat-only-sources.md`
+- `docs/agents/08-platform-sources/event-and-community-sources.md`
+- `docs/agents/11-support-kb/support-answer-bank.md`
 
 ## Product And Cost
 
@@ -74,7 +88,9 @@ Use the same first-pass checks before platform-specific debugging:
 5. Keep the source chat visible and not minimized. Browsers can throttle hidden or minimized pages.
 6. Disable conflicting extensions or test in an isolated browser/incognito profile.
 7. Confirm WebRTC/VDO.Ninja connectivity works in the browser/network.
-8. For Discord, Slack, Telegram, WhatsApp, Google Meet, ChatGPT/static comments, and similar sensitive pages, confirm the required capture toggle is enabled.
+8. For Discord, Slack, Telegram, WhatsApp, Google Meet, ChatGPT/OpenAI, and similar sensitive pages, confirm the required capture toggle is enabled.
+9. If the file is a static/helper source, confirm it is not only a manual capture, page helper, scout, or injected WebSocket helper before treating it as broken chat capture.
+10. If it is a WebSocket/API source page, confirm the source page itself is connected and has valid room/channel/token/OAuth setup before debugging overlays.
 
 For platform-specific checks, start with:
 
@@ -83,6 +99,7 @@ For platform-specific checks, start with:
 - `docs/agents/08-platform-sources/twitch.md`
 - `docs/agents/08-platform-sources/kick.md`
 - `docs/agents/08-platform-sources/discord.md`
+- `docs/agents/08-platform-sources/communication-and-sensitive-sources.md`
 
 ### Overlay or dock is open but not updating. What usually causes it?
 
@@ -94,6 +111,60 @@ Most common causes:
 - The wrong target label is being used. Pages can be labeled with `&label=NAME`, and API commands can target that label.
 - The user opened a local page but expected hosted-page behavior, or opened the hosted page but expected a local `custom.js` file to load.
 - API server toggles are not enabled for WebSocket/HTTP workflows.
+
+### Which page should be used for event logs, hype counts, word clouds, leaderboards, or confetti?
+
+Use the page that matches the payload:
+
+- `events.html?session=...` for an event dashboard/log with metadata and filters.
+- `hype.html?session=...` for viewer/chatter counts from hype or viewer-update payloads.
+- `wordcloud.html?session=...` for chat word aggregation. Its default mode counts one-word messages; add `&allwords` for sentences.
+- `leaderboard.html?session=...` for accumulated chatters, donors, gifters, contributors, or loyalty snapshots.
+- `confetti.html?session=...` for waitlist draw winner celebration.
+
+If the page is blank, do not assume capture is broken until the matching payload family has been tested on the same session.
+
+See `docs/agents/07-overlays-and-pages/event-effect-overlays.md`.
+
+### Which page should be used for emotes, reactions, scoreboards, ticker text, or maps?
+
+Use the page that matches the intended payload:
+
+- `emotes.html?session=...` for floating emoji, image emotes, and SVGs from chat content.
+- `reactions.html?session=...` for like/reaction event bursts.
+- `scoreboard.html?session=...` for points snapshots or local score counters.
+- `ticker.html?session=...` for explicit `ticker` payloads.
+- `map.html?session=...` for viewer-location voting from chat text.
+
+If the page is blank, first send the matching payload. These pages are not all-purpose chat overlays.
+
+See `docs/agents/07-overlays-and-pages/live-display-utilities.md`.
+
+### What are `chat-overlay.html`, `minecraft.html`, `septapus.html`, and `shop_the_stream.html`?
+
+These are specialized pages, not ordinary platform sources:
+
+- `chat-overlay.html` redirects into `aioverlay.html` with `overlay=chat-overlay`.
+- `minecraft.html` is a Minecraft-styled alert overlay using `multi-alerts.js`.
+- `septapus.html` renders chat with YouTube-like DOM structure for CSS experiments.
+- `shop_the_stream.html` is a product-list display surface using direct SSN WebSocket/API messages and `sessionId` or `streamid`.
+
+Do not treat any of them as all-purpose chat capture pages. See `docs/agents/07-overlays-and-pages/specialized-legacy-pages.md`.
+
+### Which helper pages are for testing, recovery, imports, replay, or Spotify?
+
+Use the page that matches the support task:
+
+- `createtestmessage.html?session=...` creates synthetic SSN chat/event payloads.
+- `simple_api_client.html` is a minimal raw WebSocket/API smoke client.
+- `replaymessages.html` replays locally stored chat history by time range.
+- `recover.html` converts a `dock.html` URL into importable settings JSON.
+- `urleditor.html` edits and saves overlay URLs in a browser UI.
+- `streamelements-importer.html` exports a standalone OBS HTML file from StreamElements/Streamlabs widget files.
+- `spotify-overlay.html?session=...&label=spotify` displays Spotify now-playing payloads.
+- `test-giveaway-webrtc.html?session=...` tests local giveaway page communication.
+
+Most of these are diagnostic or helper pages, not OBS outputs. The main exceptions are `spotify-overlay.html` and the HTML file exported by `streamelements-importer.html`. See `docs/agents/07-overlays-and-pages/diagnostic-helper-pages.md`.
 
 ### Why does chat stop after a while or when hidden?
 
@@ -135,7 +206,7 @@ The README says the Manifest V2 warning can be ignored for current function. Man
 
 ### Which sites are supported?
 
-The README states 120+ sites, and `docs/js/sites.js` currently contains 139 named site entries. The repo source files and manifest are the more complete implementation inventory.
+The README states 120+ sites, and `docs/js/sites.js` currently contains 139 public site cards. Focused metadata validation found duplicate `On24`/`ON24` cards, so treat 139 as a public-card count rather than a unique-live-platform count. The repo source files and manifest are the more complete implementation inventory.
 
 The site metadata breaks down roughly as:
 
@@ -147,6 +218,71 @@ The site metadata breaks down roughly as:
 
 Always verify a specific site against the source file and manifest entry before promising exact support.
 
+For a public setup lookup, use `docs/agents/08-platform-sources/supported-sites-lookup.md`. For what the listing proves and how strong a support claim can be, use `docs/agents/08-platform-sources/public-site-support-status.md`.
+
+### Is this source file a normal chat parser or a helper?
+
+Check `docs/agents/08-platform-sources/manual-static-and-helper-sources.md` before answering detailed questions about `sources/static/*`, `sources/inject/*`, `sources/autoreload.js`, `sources/capturevideo.js`, or `sources/grabvideo.js`.
+
+Common examples:
+
+- `sources/static/youtube_static.js` is a YouTube watch-page/static comment helper, not the main live chat parser.
+- `sources/static/kick_chatroom_scout.js` scouts or seeds Kick chatroom IDs; it does not capture chat.
+- `sources/static/twitch_points.js` can handle Twitch points/ad helper behavior; Twitch chat capture is separate.
+- `sources/inject/*` files must be paired with their consumer content scripts before they produce SSN payloads.
+
+### Is this WebSocket/API source page a capture source or an overlay?
+
+It is a capture source. Pages under `sources/websocket/*.html` are setup/control pages that connect to a platform socket, API, or source service and then forward normalized SSN messages. They are not normal OBS overlays.
+
+Use `docs/agents/08-platform-sources/websocket-source-pages.md` for Bilibili, IRC, Joystick, Nostr, Social Stream Chat, StageTEN, Streamlabs, Velora, VPZone, and shared WebSocket assets. YouTube, Twitch, Kick, Rumble, and Facebook WebSocket/API source pages route to their dedicated platform docs.
+
+For send-back questions, do not assume support just because a source page exists. Bilibili, IRC, Joystick, Velora, and VPZone have inspected send paths; Nostr is read-only; Streamlabs is event ingestion; Social Stream Chat and StageTEN need source-checking before promising extension/API send-back.
+
+### Is this embedded chat widget supported?
+
+For CBOX, Chatroll, KiwiIRC, QuakeNet, Minnit Chat, and Online Church, use `docs/agents/08-platform-sources/embedded-chat-widget-sources.md`.
+
+Common checks:
+
+- Exact widget/page URL matches the public setup and manifest.
+- The widget has loaded and new messages are rendering.
+- Chat is inside an iframe only when the manifest/source supports that path.
+- The page was reloaded after SSN install/reload.
+- The user is not expecting rich platform events or send-back.
+
+Online Church can emit viewer updates when viewer-count or hype settings apply; KiwiIRC can mark traffic/system rows as events. Do not generalize that to all embedded widgets.
+
+### How do Amazon Live, eBay Live, and Whatnot work?
+
+Use `docs/agents/08-platform-sources/live-commerce-sources.md`.
+
+Short version:
+
+- Amazon Live is mostly rendered chat capture in the inspected source.
+- eBay Live can emit rendered chat plus viewer, reaction, auction, commerce, and seller follower metadata where page data is available.
+- Whatnot can capture rendered chat and also parse selected WebSocket frames through its injected interceptor.
+- `shop_the_stream.html` is a display/control page, not the same thing as an Amazon/eBay/Whatnot source.
+- Do not promise send-back from these source scripts.
+
+When a user asks about products or auctions, ask whether they mean source capture, product-list display, API actions, or OBS overlay output.
+
+### How do webinar and event sources work?
+
+Use `docs/agents/08-platform-sources/webinar-and-event-sources.md` for Crowdcast, Livestorm, Livestream.com, ON24, Riverside, Sessions.us, Wave Video, and WebinarGeek.
+
+Common checks:
+
+- Exact webinar/event URL matches the manifest.
+- Chat, Q&A, or sidebar panel is open and visible.
+- The page was reloaded after SSN install/reload.
+- The user tests with a new message or question.
+- For ON24, Q&A rows are marked with `question: true`.
+- For Wave Video, messages may emit as the upstream platform type such as YouTube, Twitch, Facebook, Instagram, LinkedIn, or Amazon.
+- For Riverside, check whether Riverside capture was disabled in settings.
+
+Do not promise attendee lists, registrations, poll analytics, webinar analytics, or send-back from these source scripts.
+
 ### Can Social Stream Ninja do a specific feature?
 
 Usually the answer depends on mode, source, and setup. Start with `docs/agents/13-reference/features-and-capabilities.md`, then route to the exact feature page.
@@ -156,6 +292,10 @@ High-level rules:
 - Core chat capture, dock, featured overlay, URL/CSS customization, API control, Event Flow, polls/waitlist/giveaway/games, and custom overlays are part of SSN.
 - AI, cloud TTS, payment/donation services, and some platform API modes can require third-party accounts, keys, quotas, or costs.
 - Two-way chat, moderation, richer events, and reward/gift coverage are platform/mode-specific. Check the platform doc before promising support.
+
+For games, route to `docs/agents/07-overlays-and-pages/game-pages.md`. Use `games.html?session=...` for Spam Power or `games/FILE.html?session=...` for individual mini-games. They still need a source on the same session, and each game has its own command or input rule. Most reset on reload, but Spam Power, Chicken Royale, and Phrase Guess have localStorage-backed state.
+
+For prebuilt visual themes, route to `docs/agents/07-overlays-and-pages/theme-pages.md`. Normal chat themes render incoming chat, `themes/featured-styles/*` pages wait for selected/featured messages, and wrapper themes such as Pretty or Neutron embed `dock.html`.
 
 ### Where is a setting or toggle?
 
@@ -180,6 +320,8 @@ Ask which YouTube mode:
 
 Also check that the user reloaded the YouTube chat after extension reload and that permissions/auth are valid for sending chat or moderation actions.
 
+For `youtube_static.js` helper behavior, use `docs/agents/08-platform-sources/manual-static-and-helper-sources.md`.
+
 ### TikTok is not working. What should I ask?
 
 Ask whether they are using extension capture or standalone/TikTok connector mode.
@@ -203,6 +345,8 @@ Also determine whether they are using:
 
 For richer event coverage, WebSocket mode may be required.
 
+For `sources/static/twitch_points.js`, use `docs/agents/08-platform-sources/manual-static-and-helper-sources.md`; it is not the main Twitch chat parser.
+
 ### Kick is not working. What should I ask?
 
 Ask which Kick URL and mode:
@@ -214,9 +358,139 @@ Ask which Kick URL and mode:
 
 Kick event coverage can depend on WebSocket mode. Check the Kick-specific agent doc before answering details.
 
-### Discord, Slack, Telegram, WhatsApp, Google Meet, or ChatGPT capture is not working. What is the common fix?
+For `sources/static/kick_chatroom_scout.js`, use `docs/agents/08-platform-sources/manual-static-and-helper-sources.md`; it scouts/cache-seeds chatroom IDs and does not capture chat.
 
-Many sensitive/private-message surfaces require an explicit settings toggle before SSN injects or captures from them. Tell the user to enable the relevant source toggle, then reload the site.
+### Discord, Slack, Telegram, WhatsApp, Google Meet, Teams, Zoom, Webex, Chime, or ChatGPT capture is not working. What is the common fix?
+
+Many sensitive/private-message surfaces require an explicit settings toggle before SSN injects or captures from them. Tell the user to enable the relevant source toggle where one exists, then reload the site.
+
+Also check:
+
+- The user is using the web version of the service.
+- The chat or meeting side panel is open and visible.
+- They test with a new message, not only old history.
+- Screenshots, URLs, channel names, workspace names, meeting IDs, DMs, and AI conversation content are redacted before support sharing.
+
+For ChatGPT/OpenAI, Slack, Telegram, WhatsApp, Google Meet, Teams, Zoom, Webex, and Chime, use `docs/agents/08-platform-sources/communication-and-sensitive-sources.md`. Do not promise send-back from these inspected source scripts; they expose `focusChat`, but no source-level `SEND_MESSAGE` handler was found in this pass.
+
+### Bongacams, CAM4, Camsoda, Chaturbate, Fansly, MyFreeCams, or Stripchat capture is not working. What should I ask?
+
+Start by confirming the exact live room/chat URL and that a visible chat panel is open. These source scripts capture rendered chat rows from the page, not a platform API.
+
+Also check:
+
+- The URL matches the manifest pattern for that site.
+- The user reloaded the page after installing, updating, or reloading the extension.
+- They tested with a new message, because several scripts skip preloaded history.
+- They clarify whether they expect plain chat, token/tip rows, private messages, notices, viewer counts, or send-back.
+- Screenshots and logs are redacted because room URLs, private-message text, usernames, and paid-room context can be sensitive.
+
+For Bongacams, CAM4, Camsoda, Chaturbate, Fansly, MyFreeCams, and Stripchat, use `docs/agents/08-platform-sources/creator-live-cam-sources.md`. Do not promise send-back from these inspected source scripts; they expose `focusChat`, but no source-level `SEND_MESSAGE` handler was found in this pass.
+
+### A smaller popout/chat-only platform is not working. What should I ask?
+
+For Beamstream, BoltPlus, Chzzk, FloatPlane, GoodGame, Mixcloud, Nimo, Odysee, Parti, Picarto, Piczel, RokFin, Rutube, SoopLive, or VK chat-only paths, start with the exact URL. These sources usually need a chat-only URL, not the normal stream/video page.
+
+Also check:
+
+- The URL matches the public setup and manifest pattern.
+- The chat list has actually loaded, and a new message was sent after SSN connected.
+- The user is not expecting a platform API, full event coverage, or send-back from a DOM popout parser.
+- Donation/tip and viewer-count support is source-specific. Chzzk, Parti, RokFin, Mixcloud, and VK Video have extra paths worth checking, but they still need live validation before exact field claims.
+- For standalone app users, verify the app source window opens the chat-only URL and not the normal video page.
+
+Use `docs/agents/08-platform-sources/popout-chat-only-sources.md` for the grouped source behavior.
+
+### Arena Social, CI.ME, LinkedIn Events, Slido, or other event/community capture is not working. What should I ask?
+
+Start with the exact URL and visible panel. These sources capture rendered event/community chat or question rows, not a full event API.
+
+Also check:
+
+- The source URL matches the public setup route and the manifest row.
+- The chat, comments, UGC, or Q&A panel is visible.
+- The user tested with a new rendered message or question after SSN connected.
+- The user clarifies whether they expect plain chat, Q&A question flags, viewer counts, donations, upstream source type, or send-back.
+- For LinkedIn, confirm the path is a live/event path, not an ordinary LinkedIn page.
+- For LivePush, remember the payload type can be `twitch`, `youtube`, `facebook`, or `livepush` depending on the source icon.
+
+Use `docs/agents/08-platform-sources/event-and-community-sources.md` for the grouped behavior and caveats.
+
+### BandLab, Blaze, Locals, LFG, Loco, or another independent live platform is not working. What should I ask?
+
+Start with the exact page URL and whether the chat panel is visibly rendering new rows. These sources are rendered-page DOM captures, not full platform APIs.
+
+Also check:
+
+- The URL matches the public setup and manifest row; Castr uses a chat-room URL, Locals and BandLab use broad domain/subdomain matches, and Loco has several domain forms.
+- A new message appeared after SSN connected. Old history is not a reliable test.
+- The user clarifies whether they expect plain chat, tips/donations, replies, viewer counts, joins, stickers/content images, or send-back.
+- Blaze, LFG, and Locals have source-backed `viewer_update` paths, but only when the viewer-count/hype setting is enabled and the page exposes a parsable count.
+- Cherry TV joined rows are forwarded, but gift/Lovense/VIP rows were only detected/logged in this pass, not confirmed as forwarded SSN events.
+- DLive has a source file in this pass, but public/manifest routing still needs reconciliation before making a public support promise.
+
+Use `docs/agents/08-platform-sources/independent-live-platform-sources.md` for the grouped behavior and caveats.
+
+### Vimeo, Restream, PeerTube, Steam, Trovo, Truffle, or another video/broadcast source is not working. What should I ask?
+
+Start with the exact supported URL and whether the chat panel is visibly rendering new rows. These sources are mostly rendered chat parsers, not full platform APIs.
+
+Also check:
+
+- The URL shape is correct: Steam uses chat-only broadcast URLs, PeerTube uses livechat plugin room URLs, Restream uses the Restream chat page, and OpenStreamingPlatform is documented here only for the manifest demo `chatOnly=True` URL.
+- The user tested with a new message after SSN connected; old history may be skipped.
+- Vimeo users clarify whether they expect normal chat or Q&A rows; Q&A can set `question: true`, but that is not full event analytics.
+- Truffle and Restream users clarify whether they care about upstream platform identity; Truffle may emit `type: "twitch"` or `type: "youtube"`, while Restream may include `sourceImg`.
+- PeerTube and Mixlr users confirm login/access/paywall state.
+- Trovo and OpenStreamingPlatform are source/manifest-backed in this pass, but public-card routing still needs reconciliation.
+
+Use `docs/agents/08-platform-sources/video-broadcast-platform-sources.md` for the grouped behavior and caveats.
+
+### Patreon, Circle, Whop, Wix, Roll20, or another community/member web-app source is not working. What should I ask?
+
+Start with the exact URL, the user access state, and whether a new message row appears after SSN connects. These sources capture rendered web-app pages; they are not official bot/API integrations.
+
+Also check:
+
+- Patreon requires the Patreon source toggle, then a page reload.
+- NextCloud support is domain-specific in the current manifest; do not assume every NextCloud instance is supported.
+- Wix normal live pages and embedded Wix/Annoto widgets use different source files but both emit `type: "wix"`.
+- Current Workplace URL handling should start with the Facebook/Workplace DOM source; `sources/workplace.js` is legacy/unreferenced in this pass.
+- Patreon, Simps, and Whop can emit viewer counts only when viewer-count/hype settings are enabled and the page exposes a parseable count.
+- Tellonym may only provide message text, with no name/avatar.
+- Community/member/game/workspace evidence should be redacted before sharing.
+
+Use `docs/agents/08-platform-sources/community-membership-webapp-sources.md` for the grouped behavior and caveats.
+
+### Bilibili, Favorited, Kwai, Pump.fun, SharePlay, Substack, Tikfinity, or another regional/emerging source is not working. What should I ask?
+
+Start with the exact URL form and whether the chat/activity panel is visibly rendering new rows after SSN connects. These sources are mostly rendered-page captures or activity-feed ingests, not official platform APIs.
+
+Also check:
+
+- Bilibili.tv and live.bilibili.com use different source files and slightly different source identities.
+- Pilled currently needs the `/comment/` URL path before its observer processes rows.
+- Substack must be a live-stream URL, either with `liveStream=` or `/live-stream/`.
+- Tikfinity is a read-only activity-feed ingest and emits TikTok-style SSN payloads; it is not a send-back target.
+- SharePlay has extra shoutout and Blitz/raid behavior that should be tested separately from normal chat.
+- Portal, Pump.fun, Retake, and Xeenon have viewer helper code, but viewer-count emission is not proven in the active inspected path.
+- Crypto/trading, paid/community, app account, avatar, and tip evidence should be redacted before sharing.
+
+Use `docs/agents/08-platform-sources/regional-and-emerging-platform-sources.md` for the grouped behavior and caveats.
+
+### Joystick, Velora, VPZone, X, Vertical Pixel Zone, or a top-level YouTube helper is confusing. What should I ask?
+
+First separate the mode:
+
+- Joystick, Velora, and VPZone rendered website scripts are not the same as their WebSocket/API source pages.
+- Joystick/Velora/VPZone send-back belongs to the source-page/API path, not the rendered website DOM scripts.
+- VPZone site capture can use both a WebSocket interceptor and DOM fallback; duplicates suggest checking whether WebSocket capture suppressed DOM rows.
+- X live chat uses `sources/x.js`; static/manual X post grabbing uses `sources/static/x.js`.
+- The `detweet` setting changes X payload/source identity to `twitter`.
+- `sources/youtube_comments.js` and top-level `sources/youtube_static.js` are not manifest-loaded in the current matrix; normal YouTube live chat starts with `sources/youtube.js`.
+- Vertical Pixel Zone has a source identity caveat: `getSource` returns `verticalpixelzone`, while inspected payloads use `type: "arena"`.
+
+Use `docs/agents/08-platform-sources/special-case-platform-and-helper-sources.md` for the grouped behavior and caveats.
 
 ## Customization
 

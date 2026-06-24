@@ -34,6 +34,7 @@ Status: heavy reference pass started from public support/download/guides docs an
 
 | Problem | Internal Starting Page |
 | --- | --- |
+| Concise answer pattern | `11-support-kb/support-answer-bank.md` |
 | First-pass troubleshooting | `10-troubleshooting/quick-triage.md` |
 | Extension capture failure | `10-troubleshooting/extension-not-capturing.md` |
 | OBS overlay/display issue | `10-troubleshooting/obs-overlay-display.md` |
@@ -44,6 +45,7 @@ Status: heavy reference pass started from public support/download/guides docs an
 | API/control issue | `09-api-and-integrations/websocket-http-api.md` |
 | Custom/plugin issue | `13-reference/custom-plugins-and-extensions.md` |
 | Cost/support boundary | `13-reference/free-paid-and-support-boundaries.md` |
+| Privacy/secrets/redaction issue | `13-reference/privacy-security-and-secrets.md` |
 
 ## What To Collect Before Escalating
 

@@ -6,6 +6,8 @@ Status: backbone extraction pass. Usable for orientation, not final-grade.
 
 This page documents how the Electron standalone app works, how it loads Social Stream source files, and where it differs from the Chrome extension.
 
+For the focused source-window lifecycle and app-vs-extension parity matrix, use `04-standalone-app-source-windows.md`.
+
 ## Source Anchors
 
 - `ssapp/main.js`

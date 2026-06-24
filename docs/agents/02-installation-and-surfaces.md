@@ -2,6 +2,8 @@
 
 Status: heavy extraction pass started from README/download/app docs.
 
+For a support-oriented decision guide covering install path choice, safe update flow, version mismatch symptoms, and reinstall/settings warnings, use `13-reference/install-update-version-guide.md`.
+
 ## Source Anchors
 
 - `README.md`

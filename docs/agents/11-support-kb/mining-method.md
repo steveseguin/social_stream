@@ -8,6 +8,8 @@ This file explains how future agents should mine `C:\Users\steve\Code\stevesbot`
 
 The support archive is evidence of real user problems. Current `social_stream` and `ssapp` source files remain the source of truth for how SSN works today.
 
+For the latest SSN-filtered topic-count pass from curated QA exports, use `support-topic-frequency-index.md`. For the repeatable refresh workflow, aggregate SQLite query pack, redaction rules, and required downstream doc updates, use `support-history-refresh-playbook.md`.
+
 ## Safety Boundary
 
 Write only inside `C:\Users\steve\Code\social_stream\docs\agents`.
@@ -19,7 +21,7 @@ Read support data in this order:
 3. Curated SQLite summary tables.
 4. Raw archive/message tables only when a summarized source is insufficient.
 
-Do not broad-search `stevesbot/resources` without excluding `resources/secrets`. Prefer known safe paths listed below. Do not copy raw user conversations into docs. Summarize symptoms, advice, and verification targets instead.
+Do not broad-search `stevesbot/resources` without excluding `resources/secrets`. Prefer known safe paths listed below and check `stevesbot-resource-inventory.md` before opening raw support data. Do not copy raw user conversations into docs. Summarize symptoms, advice, and verification targets instead.
 
 ## Safe Source Set
 
@@ -40,7 +42,10 @@ Curated learning files:
 | `resources/learnings/cross-product-integration-guide.md` | OBS, VDO.Ninja, Electron Capture, and SSN boundary confusion. | heavy-started |
 | `resources/learnings/playbooks/playbook-obs-overlay-issues.md` | OBS/browser-source and overlay triage. | heavy-started |
 | `resources/learnings/playbooks/playbook-tiktok-connection.md` | TikTok mode and breakage triage. | heavy-started |
-| `resources/learnings/playbooks/triage-macros.md` | Reusable triage branches for SSN/OBS/TikTok. | quick-started |
+| `resources/learnings/playbooks/triage-macros.md` | Reusable triage branches for SSN/OBS/TikTok. | quick/heavy-started in `support-macro-routing.md` |
+| `resources/learnings/playbooks/rapid-response-decision-tree.md` | Rapid support triage, safety gates, and escalation routing. | quick/heavy-started in `support-macro-routing.md` |
+| `resources/learnings/playbooks/rapid-macros-wave3.md` | Copy/paste macro candidates, filtered to SSN-relevant support rows. | quick/heavy-started in `support-macro-routing.md` |
+| `resources/learnings/playbooks/escalation-prompts-wave3.md` | Safe refusal and redacted escalation packet wording. | quick/heavy-started in `support-macro-routing.md` |
 | `resources/learnings/support-qa/social-stream-configuration.md` | Setup and configuration Q&A. | heavy-started |
 | `resources/learnings/support-qa/social-stream-qa.md` | Broad SSN Q&A. | heavy-started |
 | `resources/learnings/support-qa/social-stream-qa-expanded.md` | Expanded SSN Q&A. | heavy-started |
@@ -52,7 +57,17 @@ SQLite databases:
 | `data/sqlite/knowledge.sqlite` | `mined_threads`, FTS tables | Thread-level summaries, categories, products, platforms, issue frequency. | heavy-started |
 | `data/sqlite/stevesbot.sqlite` | `support_records`, `qa_entries` | Curated support records and generated Q&A entries. | heavy-started |
 | `data/sqlite/archive.sqlite` | `archived_messages`, FTS tables | Raw archived messages for final confirmation only. | quick-started |
-| `resources/knowledge.sqlite` | not yet schema-checked in this pass | Older/alternate knowledge DB if needed. | not-started |
+| `resources/knowledge.sqlite` | `mined_threads`, FTS tables | Older/alternate knowledge DB copy; 2,254 rows in quick check. | quick-started |
+
+Derivative/raw resource groups:
+
+| Source | Use | Extraction status |
+| --- | --- | --- |
+| `data/exports/qa/qa-export-*.json` | Generated Q&A snapshots; latest export has approved runs, support records, and mined-thread counts. | quick-started |
+| `data/mined-threads/threads-*.jsonl` | Date-bucketed mined summaries. Prefer SQLite first. | inventory-only |
+| `data/transcripts/**/*.jsonl` | Raw Discord exports. Use only for anonymized confirmation. | raw-private |
+| `data/replays/**` | Replay captures and replay DBs. Use only for narrow validation. | raw-private |
+| `data/attachments/**` | Screenshots/uploads. Avoid broad inspection. | skip by default |
 
 Avoid backups unless a current DB is missing or corrupted.
 

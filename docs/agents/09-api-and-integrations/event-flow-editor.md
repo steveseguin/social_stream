@@ -1,6 +1,6 @@
 # Event Flow Editor
 
-Status: heavy extraction pass started on 2026-06-24.
+Status: heavy extraction pass plus focused Node-test evidence on 2026-06-24.
 
 ## Purpose
 
@@ -19,6 +19,32 @@ Event Flow is SSN's visual automation layer. It lets users connect source trigge
 - `social_stream/tests/eventflow-compare-property.test.js`
 - `social_stream/tests/eventflow-template-vars.test.js`
 - `social_stream/tests/eventflow-play-media-duration.test.js`
+
+## Focused Validation Evidence
+
+On 2026-06-24, these focused Node tests passed:
+
+```powershell
+node tests/eventflow-customjs.test.js
+node tests/eventflow-compare-property.test.js
+node tests/eventflow-template-vars.test.js
+node tests/eventflow-play-media-duration.test.js
+```
+
+Results:
+
+- `eventflow-customjs.test.js`: `23 passed, 0 failed`
+- `eventflow-compare-property.test.js`: `18 passed, 0 failed`
+- `eventflow-template-vars.test.js`: `6 passed, 0 failed`
+- `eventflow-play-media-duration.test.js`: `2 passed, 0 failed`
+
+Evidence label: `focused-node-test`; not runtime-tested.
+
+What this supports: custom JS allow/block detection, custom JS trigger/action behavior, syntax-error handling, compare-property behavior, OBS system trigger matching, dynamic template variables, counter-derived `counterRemaining`, and `playTenorGiphy` duration payload behavior.
+
+What it does not support: Event Flow editor UI behavior, flow save/import/export, Flow Actions overlay rendering, OBS Browser Source output, OBS WebSocket control, Chrome extension runtime behavior, standalone app runtime behavior, live source payloads, webhook/relay/TTS/Spotify/MIDI/points/send-message actions, or long-running state.
+
+Full evidence entry: `../18-focused-validation-evidence-log.md`.
 
 ## Mental Model
 

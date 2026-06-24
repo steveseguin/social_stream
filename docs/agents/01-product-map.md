@@ -78,7 +78,7 @@ Most support issues reduce to a mismatch in one of those steps: wrong surface, w
 
 ## Supported Sites
 
-The README states 120+ supported sites. `docs/js/sites.js` currently lists 139 named entries and classifies them into standard, popout, toggle-required, WebSocket-source, and manual-pick setup types.
+The README states 120+ supported sites. `docs/js/sites.js` currently lists 139 public site cards and classifies them into standard, popout, toggle-required, WebSocket-source, and manual-pick setup types. Focused metadata validation found duplicate `On24`/`ON24` cards, so treat 139 as a public-card count, not a unique-live-platform count.
 
 The implementation source of truth is:
 

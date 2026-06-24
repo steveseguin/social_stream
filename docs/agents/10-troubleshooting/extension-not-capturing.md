@@ -45,9 +45,9 @@ Common setup types:
 | --- | --- | --- |
 | Popout chat | Twitch, YouTube live, Kick, Rumble variants | User opened exact popout/chat URL. |
 | Standard page | Facebook Live, TikTok live, some meeting/chat sites | Chat panel is visible on the page. |
-| Toggle-required | Discord, Slack, Telegram, WhatsApp, Google Meet, ChatGPT/static comments | Relevant extension setting is enabled, then page reloaded. |
+| Toggle-required/private | Discord, Slack, Telegram, WhatsApp, Google Meet, ChatGPT/OpenAI, and similar private sources | Relevant extension setting is enabled where required, then page reloaded. Use `08-platform-sources/communication-and-sensitive-sources.md` for private chat/meeting source boundaries. |
 | Manual picker | YouTube comments, X posts, Threads | User clicks SS/manual selection control. |
-| WebSocket source | YouTube/Twitch/Kick/API/IRC style source pages | Source page is configured and connected. |
+| WebSocket source | YouTube/Twitch/Kick/API/IRC/Bilibili/Joystick/Velora/VPZone style source pages | Source page is configured and connected; use `08-platform-sources/websocket-source-pages.md` for grouped source-page checks. |
 | App source | Standalone app managed source | Check app-specific source window and auth. |
 
 Use `docs/js/sites.js`, README, manifest entries, and platform agent docs to identify the correct mode.
@@ -86,8 +86,7 @@ If the user opened a new dock/overlay link from the popup, the session may have 
 | TikTok | Keep live chat open/visible when using extension capture. |
 | Kick | Confirm chatroom/popout/source mode and current Kick source doc. |
 | Facebook Live | Check viewer/publisher/producer chat mode and network/auth. |
-| Discord/Slack/Telegram/WhatsApp/Meet | Enable required capture toggle and reload page. |
-| ChatGPT/OpenAI page | Requires opt-in toggle. |
+| Discord/private communication sources | Enable required capture toggle where present, reload page, keep the chat panel open, redact private details, and route ChatGPT/OpenAI, Slack, Telegram, WhatsApp, Meet, Teams, Zoom, Webex, and Chime to `08-platform-sources/communication-and-sensitive-sources.md`. |
 
 ## Conflicts And Browser State
 

@@ -16,9 +16,12 @@ Status: heavy extraction pass started from manifest/source patterns. This is a d
 - `README.md`
 - `custom_sample.js`
 - `sample_wss_source.html`
+- `docs/agents/13-reference/customization-path-decision-matrix.md`
 - `C:\Users\steve\Code\ssapp\AGENTS.md`
 
 ## Before Adding A Source
+
+Start with `../13-reference/customization-path-decision-matrix.md` when the user says "plugin", "custom source", or "integration" without a clear maintainer-level platform request. Many requests fit URL/CSS, a custom overlay, API/WebSocket input, Event Flow, or a local custom hook better than a first-class source file.
 
 Confirm the intended integration type:
 
