@@ -16,6 +16,7 @@ This page is intentionally compact. It points to the deeper docs rather than res
 - `docs/agents/11-support-kb/common-misconceptions-and-boundaries.md`
 - `docs/agents/11-support-kb/support-evidence-ledger.md`
 - `docs/agents/11-support-kb/common-question-evidence-status.md`
+- `docs/agents/11-support-kb/common-question-proof-pack.md`
 - `docs/agents/13-reference/index.md`
 - `docs/agents/13-reference/public-claims-boundary-matrix.md`
 - `docs/agents/15-objective-coverage-and-readiness-audit.md`
@@ -27,6 +28,7 @@ This page is intentionally compact. It points to the deeper docs rather than res
 3. Apply the "Must Check" column before making exact claims.
 4. Avoid the "Do Not Say" wording unless the linked proof docs and runtime evidence support it.
 5. Use `common-question-evidence-status.md` when deciding whether the answer is only orientation, source-backed, generated inventory, source-traced, support-derived, or runtime-tested.
+6. Use `common-question-proof-pack.md` before upgrading a cautious answer into a stronger claim.
 
 ## Fast Path Matrix
 

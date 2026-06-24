@@ -11,6 +11,7 @@ This page complements:
 - `docs/agents/11-support-kb/index.md` for the support KB section map.
 - `common-question-fast-path.md` for compact answer selection before opening deeper docs.
 - `common-question-evidence-status.md` for evidence-strength and runtime-proof status by common answer type.
+- `common-question-proof-pack.md` for evidence requirements before stronger common-question answers.
 - `support-answer-bank.md` for short answer patterns.
 - `support-question-phrasebook.md` for paraphrased real support wording patterns.
 - `support-macro-routing.md` for short macro-style replies from curated support playbooks.
@@ -82,6 +83,7 @@ Rule: do not stop at this page for fragile claims. If the answer depends on sele
 | "Is this a bug?" | Escalation/support | `../13-reference/support-resources-and-escalation.md` | Repro details, versions, exact mode, current source, safe evidence. |
 | "What should I ask the user for?" | Intake template | `support-intake-templates.md` | Only collect relevant details and redact secrets. |
 | "How strong is the evidence for this answer?" | Evidence status | `common-question-evidence-status.md` | Do not say runtime-tested unless exact runtime evidence exists. |
+| "What proof do I need before I say this works?" | Strong answer evidence | `common-question-proof-pack.md` | Match proof to the exact surface, mode, command, option, page, platform, or provider. |
 | "Is there a short macro for this?" | Support macro | `support-macro-routing.md` | Confirm routed docs and avoid overclaims. |
 | "Can you write the support reply?" | Response template | `support-response-playbook.md` | Confirm routed docs and avoid overclaims. |
 

@@ -10,7 +10,7 @@ This is a coverage map, not a final answer page. Route to the listed docs, then 
 
 For support-history frequency and priority signals, use `support-topic-frequency-index.md`.
 
-For plain-language user wording and first-route selection, use `question-intent-router.md` before choosing a narrow topic page. For a compact answer-shape matrix, use `common-question-fast-path.md`. For evidence strength and runtime-proof status by common answer type, use `common-question-evidence-status.md`. For a benchmark-style prompt set that tests whether agents route and answer common questions without overclaiming, use `common-question-test-set.md`. For paraphrased real-world wording patterns from support history, use `support-question-phrasebook.md`. For short macro-style support replies from curated playbooks, use `support-macro-routing.md`.
+For plain-language user wording and first-route selection, use `question-intent-router.md` before choosing a narrow topic page. For a compact answer-shape matrix, use `common-question-fast-path.md`. For evidence strength and runtime-proof status by common answer type, use `common-question-evidence-status.md`. For the evidence artifacts needed before stronger answers, use `common-question-proof-pack.md`. For a benchmark-style prompt set that tests whether agents route and answer common questions without overclaiming, use `common-question-test-set.md`. For paraphrased real-world wording patterns from support history, use `support-question-phrasebook.md`. For short macro-style support replies from curated playbooks, use `support-macro-routing.md`.
 
 ## Coverage Labels
 
@@ -29,6 +29,7 @@ For plain-language user wording and first-route selection, use `question-intent-
 | What is the fastest safe answer path for a common question? | covered-heavy | `11-support-kb/common-question-fast-path.md` | routed topic docs and current source/runtime evidence |
 | Can an agent test common SSN prompt routing and safe-answer behavior? | covered-heavy | `11-support-kb/common-question-test-set.md` | routed topic docs, common overclaim docs, and runtime evidence where required |
 | How strong is the evidence for a common answer? | covered-heavy | `11-support-kb/common-question-evidence-status.md` | routed topic docs, `support-evidence-ledger.md`, runtime evidence if any |
+| What proof is needed before giving a stronger answer? | covered-heavy | `11-support-kb/common-question-proof-pack.md` | routed topic docs, source/config, focused evidence, and runtime evidence where required |
 | Is SSN free? | covered-heavy | `13-reference/free-paid-and-support-boundaries.md` | `11-support-kb/support-evidence-ledger.md` |
 | What can cost money? | covered-heavy | `13-reference/free-paid-and-support-boundaries.md` | `09-api-and-integrations/tts.md`, `ai-features.md` |
 | Can I repeat broad public claims like 100+/120+ sites, most platforms, two-way chat, no API keys, or free? | covered-heavy | `13-reference/public-claims-boundary-matrix.md` | routed topic docs and current source/runtime evidence |

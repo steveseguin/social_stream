@@ -67,6 +67,7 @@ Use these pages when the user asks "how do I do X?" and the answer may involve m
 - `11-support-kb/support-question-phrasebook.md`: paraphrased support-history wording patterns tied to canonical docs and safe answer boundaries.
 - `11-support-kb/common-question-coverage-map.md`: objective-level map of common question families to current docs and validation gaps.
 - `11-support-kb/common-question-evidence-status.md`: evidence-strength and runtime-proof status for common SSN answer families.
+- `11-support-kb/common-question-proof-pack.md`: evidence artifacts required before stronger answers about commands, options, supported sites, modes, customization, costs, privacy, testing, and platform behavior.
 - `15-objective-coverage-and-readiness-audit.md`: objective requirement coverage, answer-readiness labels, completion evidence, and remaining proof gaps.
 - `16-runtime-validation-playbooks.md`: runtime validation recipes and evidence templates for final-grade command, option, source, app, OBS, integration, AI/TTS, and support-claim evidence.
 - `18-focused-validation-evidence-log.md`: focused non-runtime validation evidence, currently including settings config JSON, generated settings/URL/public-site metadata checks, Event Flow, Twitch provider, AI prompt builder, AI moderation, local model registry, provider fallback, local TTS, local AI asset, and RAG fixture tests.

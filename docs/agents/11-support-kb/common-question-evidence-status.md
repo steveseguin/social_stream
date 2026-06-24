@@ -11,6 +11,7 @@ This complements:
 - `common-question-fast-path.md` for fast answer shape.
 - `question-intent-router.md` for first-route selection.
 - `common-question-coverage-map.md` for objective coverage.
+- `common-question-proof-pack.md` for the evidence artifacts required before stronger common-question answers.
 - `support-evidence-ledger.md` for support-history claim families.
 - `13-reference/public-claims-boundary-matrix.md` for broad public claims.
 - `15-objective-coverage-and-readiness-audit.md` for the whole docs objective.

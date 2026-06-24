@@ -80,6 +80,7 @@ For support-style answers:
 - `docs/agents/11-support-kb/question-intent-router.md`: plain-language user wording to canonical doc route, first disambiguation question, and wrong-route warnings.
 - `docs/agents/11-support-kb/common-question-fast-path.md`: compact answer-shape matrix for common questions, with required checks and overclaims to avoid.
 - `docs/agents/11-support-kb/common-question-evidence-status.md`: evidence-strength and runtime-proof status for common answer families.
+- `docs/agents/11-support-kb/common-question-proof-pack.md`: proof artifacts required before stronger answers about commands, options, supported sites, modes, customization, costs, privacy, testing, and platform behavior.
 - `docs/agents/11-support-kb/common-question-test-set.md`: benchmark-style prompt set for testing common-question routing and safe-answer behavior.
 - `docs/agents/11-support-kb/support-question-phrasebook.md`: paraphrased support-history wording patterns tied to canonical docs and safe answer boundaries.
 - `docs/agents/11-support-kb/support-macro-routing.md`: SSN-filtered support macros from curated support playbooks for safe intake, common short replies, and escalation routing.
@@ -129,7 +130,7 @@ For feature-specific answers:
 1. Identify the user's intent: setup, troubleshooting, capability check, platform-specific behavior, commands/API, customization, app behavior, or development.
 2. Start from the matching router: support KB index, workflow setup decision tree, diagnostic decision tree, platform index, overlay index, API/integration index, or development index.
 3. Read the exact topic page before answering. Do not answer from the index alone for fragile claims.
-4. Check `common-misconceptions-and-boundaries.md`, `public-claims-boundary-matrix.md`, `support-evidence-ledger.md`, and `common-question-evidence-status.md` before making broad claims about supported sites, app parity, send-back, costs, privacy, support, services, or testing.
+4. Check `common-misconceptions-and-boundaries.md`, `public-claims-boundary-matrix.md`, `support-evidence-ledger.md`, `common-question-evidence-status.md`, and `common-question-proof-pack.md` before making broad or stronger claims about supported sites, app parity, send-back, costs, privacy, support, services, or testing.
 5. Use `support-macro-routing.md` for short support-thread macros and `support-response-playbook.md` for fuller user-facing phrasing when the answer resembles a support reply.
 6. Inspect current source code before presenting high-risk or final-grade claims about selectors, auth flows, command payloads, send-back, settings persistence, source windows, app parity, or rendered overlay behavior.
 

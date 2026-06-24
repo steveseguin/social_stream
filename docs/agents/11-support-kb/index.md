@@ -16,6 +16,7 @@ Start here when the user asks a practical question in plain language, then route
 - `support-question-phrasebook.md`: paraphrased support-history wording patterns tied to canonical docs and safe answer boundaries.
 - `common-question-coverage-map.md`: objective-level coverage map for common question families and remaining validation gaps.
 - `common-question-evidence-status.md`: evidence-strength and runtime-proof status for common SSN answer families.
+- `common-question-proof-pack.md`: evidence requirements before stronger answers about commands, options, supported sites, modes, customization, costs, privacy, testing, and platform behavior.
 - `common-question-test-set.md`: benchmark-style prompt set for checking whether agents can route and answer common SSN questions without guessing or overclaiming.
 - `../15-objective-coverage-and-readiness-audit.md`: objective requirement coverage, answer-readiness labels, completion evidence, and remaining proof gaps.
 - `../16-runtime-validation-playbooks.md`: runtime validation recipes and evidence templates for promoting support claims from source-backed to tested.
@@ -43,6 +44,7 @@ Start here when the user asks a practical question in plain language, then route
 | "What is SSN?" | `question-intent-router.md` | `support-answer-bank.md` product basics, `01-product-map.md` |
 | "What is the fastest safe answer path for this common question?" | `common-question-fast-path.md` | Routed topic docs and current source |
 | "Can I test whether an agent answers common SSN questions correctly?" | `common-question-test-set.md` | Routed topic docs, common overclaim docs, and runtime evidence where required |
+| "What proof do I need before making a stronger answer?" | `common-question-proof-pack.md` | Routed topic docs, source/config, and runtime evidence where required |
 | "Is it free?" | `question-intent-router.md` | `support-answer-bank.md` product basics, `13-reference/free-paid-and-support-boundaries.md`, `13-reference/public-claims-boundary-matrix.md` |
 | "What should I not overpromise?" | `common-misconceptions-and-boundaries.md` | Routed topic docs and current source |
 | "Can I repeat a public claim like 120+ sites, free, two-way, or no API keys?" | `../13-reference/public-claims-boundary-matrix.md` | Routed topic docs and current source |
@@ -73,7 +75,7 @@ Start here when the user asks a practical question in plain language, then route
 | "What information should I ask the user for?" | `support-intake-templates.md` | Routed topic docs and current source |
 | "Do these AI docs already cover this kind of question?" | `common-question-coverage-map.md` | The routed topic docs and current source |
 | "How close are these AI docs to done?" | `../15-objective-coverage-and-readiness-audit.md` | `../14-validation-and-refresh-roadmap.md`, checklist, ledger |
-| "How strong is the evidence for this common answer?" | `common-question-evidence-status.md` | Routed topic docs, `support-evidence-ledger.md`, runtime evidence if any |
+| "How strong is the evidence for this common answer?" | `common-question-evidence-status.md` | `common-question-proof-pack.md`, routed topic docs, `support-evidence-ledger.md`, runtime evidence if any |
 | "How do I safely refresh support-history counts and prompt patterns?" | `support-history-refresh-playbook.md` | `stevesbot-resource-inventory.md`, `mining-method.md`, `support-source-map.md` |
 | "Can I say this was tested?" | `../16-runtime-validation-playbooks.md` | `support-evidence-ledger.md`, routed topic docs, current source |
 | "How do users usually phrase this problem?" | `support-question-phrasebook.md` | `question-intent-router.md`, routed topic docs, current source |
