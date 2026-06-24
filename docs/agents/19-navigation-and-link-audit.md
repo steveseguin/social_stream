@@ -34,7 +34,7 @@ totalMarkdown: 161
 orphanishCount: 0
 localBrokenCount: 0
 ambiguousBareSectionIndexCount: 0
-wildcardAgentRefCount: 41
+wildcardAgentRefCount: 49
 ```
 
 Interpretation:
@@ -82,6 +82,7 @@ The audit reports wildcard references separately. Current wildcard references in
 - `docs/agents/11-support-kb/*.md`
 - `docs/agents/12-development/*.md`
 - `docs/agents/13-reference/*.md`
+- `docs/agents/*/SITEMAP.md`
 - Support-refresh globs such as `qa-export-*.json` and `social-stream-*.md`.
 
 These should not be treated as broken file references unless a future rule requires replacing all wildcard section shorthand with concrete section indexes.
