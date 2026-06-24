@@ -6,6 +6,8 @@ Status: framework plus heavy passes for source inventory, supported-site lookup,
 
 This section tracks platform-specific source capture behavior.
 
+For support-facing high-volume platform questions, start with `priority-platform-answer-matrix.md` before making exact claims about rich events, send-back, app parity, or mode-specific behavior.
+
 ## High-Priority Pages
 
 - `source-inventory.md`: heavy inventory pass started.
@@ -17,6 +19,7 @@ This section tracks platform-specific source capture behavior.
 - `manifest-content-scripts.md`: manifest source-load matrix and special content-script flags.
 - `manifest-row-matrix.md`: full 155-row content-script matrix with script, bucket, match count, flags, sample pattern, and public routing hints.
 - `platform-capability-matrix.md`: high-value platform and setup-type capability routing for chat capture, rich events, send-back, app differences, and support triage.
+- `priority-platform-answer-matrix.md`: safe support phrasing, first checks, and no-overclaim routing for YouTube, TikTok, Twitch, Kick, Rumble, Facebook, Instagram, and Discord.
 - `youtube.md`: heavy extraction pass complete.
 - `tiktok.md`: heavy extraction pass complete.
 - `tiktok-standalone-app.md`: app-specific TikTok connector, signing, fallbacks, replies, event families, tests, and support triage.

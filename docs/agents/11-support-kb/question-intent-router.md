@@ -19,6 +19,7 @@ This page complements:
 - `../13-reference/public-claims-boundary-matrix.md` for broad public wording such as 100+/120+ sites, two-way chat, no API keys, free/open-source, AI/TTS, app, plugin, services, and support promises.
 - `../13-reference/control-surface-crosswalk.md` for command/setting/URL/mode/plugin disambiguation.
 - `../13-reference/customization-path-decision-matrix.md` for ambiguous plugin/customization/source requests.
+- `../08-platform-sources/priority-platform-answer-matrix.md` for safe high-volume platform phrasing before exact source validation.
 - `../13-reference/index.md` for broad reference routing.
 
 Rule: do not stop at this page for fragile claims. If the answer depends on selectors, exact platform support, send-back, auth, settings persistence, app parity, command payloads, or runtime behavior, open the routed topic doc and current source before giving a final-grade answer.
@@ -41,8 +42,8 @@ Rule: do not stop at this page for fragile claims. If the answer depends on sele
 | "Is this site supported?" | Public site lookup | `../08-platform-sources/supported-sites-lookup.md` | Setup type and support-strength notes, not just the public card name. |
 | "Which source file handles this site?" | Implementation lookup | `../08-platform-sources/public-site-implementation-map.md` | Manifest row/source-page/stale-risk notes. |
 | "Why is a listed site broken?" | Supported-site caveat | `../08-platform-sources/public-site-support-status.md` | Exact URL, mode, current source, platform layout changes. |
-| "Does this platform support raids/rewards/gifts/follows?" | Rich event support | `../08-platform-sources/platform-capability-matrix.md` | Exact platform doc and mode-specific source before promising. |
-| "Can SSN send chat back?" | Send-back support | `../08-platform-sources/platform-capability-matrix.md` | Source mode, login/auth, permissions, send path, platform policy. |
+| "Does this platform support raids/rewards/gifts/follows?" | Rich event support | `../08-platform-sources/priority-platform-answer-matrix.md` | Exact platform doc, capability matrix, and mode-specific source before promising. |
+| "Can SSN send chat back?" | Send-back support | `../08-platform-sources/priority-platform-answer-matrix.md` | Source mode, login/auth, permissions, send path, platform policy. |
 | "This is a private chat/meeting/work app" | Sensitive source | `../08-platform-sources/communication-and-sensitive-sources.md` | Opt-in toggle, visible web panel, privacy redaction, no assumed send-back. |
 | "What source mode is this?" | Capture mode classification | `../13-reference/modes-and-capability-matrix.md` | DOM, popout, static/manual, injected helper, WebSocket/API source page, app window. |
 | "Which page should I open?" | Surface URL routing | `../13-reference/surface-url-cheatsheet.md` | Source page vs overlay page vs API test page vs diagnostic helper. |

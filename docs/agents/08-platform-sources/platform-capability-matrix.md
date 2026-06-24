@@ -4,6 +4,8 @@ Status: heavy synthesis pass from current agent platform docs, source inventory,
 
 Use this page when an agent needs to answer "does SSN support this platform feature?" quickly. This is a routing matrix, not the final line-level source of truth. Before making a public or support-critical promise, check the linked platform doc and the current source.
 
+For support-facing short answers about YouTube, TikTok, Twitch, Kick, Rumble, Facebook, Instagram, and Discord, start with `priority-platform-answer-matrix.md` before using the broader matrix below.
+
 ## Source Anchors
 
 - `docs/agents/08-platform-sources/youtube.md`
@@ -34,6 +36,7 @@ Use this page when an agent needs to answer "does SSN support this platform feat
 - `docs/agents/08-platform-sources/supported-sites-lookup.md`
 - `docs/agents/08-platform-sources/manifest-content-scripts.md`
 - `docs/agents/08-platform-sources/manifest-row-matrix.md`
+- `docs/agents/08-platform-sources/priority-platform-answer-matrix.md`
 - `docs/agents/13-reference/feature-support-decision-matrix.md`
 - `docs/agents/13-reference/modes-and-capability-matrix.md`
 - `docs/event-reference.html`
