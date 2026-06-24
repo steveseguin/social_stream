@@ -408,6 +408,9 @@
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = starsInfo ? starsInfo.text : "";
+		if (starsInfo) {
+			data.donoValue = starsInfo.amount / 100;
+		}
 		data.membership = "";;
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;

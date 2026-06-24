@@ -163,6 +163,27 @@
 		return null;
 	}
 
+	function normalizeYouTubeGiftImageUrl(url) {
+		url = normalizeDonationText(url);
+		if (!url) {
+			return "";
+		}
+		if (url.indexOf("//") === 0) {
+			return "https:" + url;
+		}
+		return url;
+	}
+
+	function getYouTubeGiftElementText(ele, selector) {
+		try {
+			var node = ele.querySelector(selector);
+			if (node) {
+				return normalizeDonationText(node.innerText || node.textContent || node.getAttribute("aria-label") || node.getAttribute("title") || "");
+			}
+		} catch (e) {}
+		return "";
+	}
+
 	function getYouTubeJewelDonationDetails(ele) {
 		var giftNode = getYouTubeJewelDonationNode(ele) || ele;
 		var textParts = [];
@@ -201,12 +222,14 @@
 		}
 
 		var jewelAmount = jewelMatch ? jewelMatch[1].replace(/,/g, "") : "";
-		var plainMessage = normalizeDonationText((giftNode && (giftNode.innerText || giftNode.textContent)) || (ele.innerText || ele.textContent) || allText);
+		var messageText = getYouTubeGiftElementText(giftNode, "#message-v2, #message, yt-attributed-string[id*='message']");
+		var plainMessage = messageText || normalizeDonationText((giftNode && (giftNode.innerText || giftNode.textContent)) || (ele.innerText || ele.textContent) || allText);
 		var authorName = "";
 		try {
-			var authorNode = ele.querySelector("#author-name");
+			var authorNode = giftNode.querySelector("#author-name-v2, #author-name, yt-attributed-string[id*='author-name']");
 			if (authorNode) {
 				authorName = normalizeDonationText(authorNode.innerText || authorNode.textContent || "");
+				authorName = normalizeDonationText(authorName.replace(/^@/, ""));
 			}
 		} catch (e) {}
 		if (!authorName) {
@@ -217,19 +240,35 @@
 		}
 
 		var giftName = "";
+		if (messageText) {
+			var messageGiftMatch = messageText.match(/\bsent\s+(.+?)$/i);
+			if (messageGiftMatch && messageGiftMatch[1]) {
+				giftName = normalizeDonationText(messageGiftMatch[1].replace(/^a\s+gift\s*:?\s*/i, ""));
+			}
+		}
 		var giftPatterns = [
 			/\bsent\s+(?:a\s+)?gift\s*:\s*(.+?)\s*(?:\(|for\s+[0-9,]+\s+Jewels?\b|$)/i,
 			/\bsent\s+(.+?)\s+for\s+[0-9,]+\s+Jewels?\b/i,
 			/\bsent\s+(.+?)\s*\(\s*[0-9,]+\s+Jewels?\s*\)/i,
 			/\bsent\s+(.+?)$/i
 		];
-		for (var i = 0; i < giftPatterns.length; i++) {
-			var giftMatch = allText.match(giftPatterns[i]);
-			if (giftMatch && giftMatch[1]) {
-				giftName = normalizeDonationText(giftMatch[1].replace(/^a\s+gift\s*:?\s*/i, ""));
-				break;
+		if (!giftName) {
+			for (var i = 0; i < giftPatterns.length; i++) {
+				var giftMatch = allText.match(giftPatterns[i]);
+				if (giftMatch && giftMatch[1]) {
+					giftName = normalizeDonationText(giftMatch[1].replace(/^a\s+gift\s*:?\s*/i, ""));
+					break;
+				}
 			}
 		}
+
+		var giftUrl = "";
+		try {
+			var giftImage = giftNode.querySelector("#gift-image img[src], yt-image#gift-image img[src], img[src*='/pdg/gift/assets/']");
+			if (giftImage) {
+				giftUrl = normalizeYouTubeGiftImageUrl(giftImage.getAttribute("src") || giftImage.src || "");
+			}
+		} catch (e) {}
 
 		if (!plainMessage) {
 			plainMessage = authorName ? authorName + " sent a gift" : getTranslation("youtube-gift-sent-message", "sent a gift");
@@ -241,13 +280,30 @@
 			}
 		}
 
+		var metaGift = {
+			eventType: "jeweldonation"
+		};
+		if (giftName) {
+			metaGift.giftName = giftName;
+		}
+		if (jewelAmount) {
+			metaGift.jewelsAmount = parseInt(jewelAmount, 10);
+		}
+		if (giftUrl) {
+			metaGift.giftUrl = giftUrl;
+		}
+
 		return {
 			chatname: authorName,
 			chatmessage: escapeHtml(plainMessage),
 			hasDonation: jewelAmount ? jewelAmount + " Jewels" : (giftName || getTranslation("youtube-gift", "YouTube Gift")),
 			donoValue: jewelAmount ? parseInt(jewelAmount, 10) / 100 : "",
 			giftName: giftName,
-			jewelsAmount: jewelAmount ? parseInt(jewelAmount, 10) : ""
+			jewelsAmount: jewelAmount ? parseInt(jewelAmount, 10) : "",
+			giftUrl: giftUrl,
+			meta: {
+				youtubeGift: metaGift
+			}
 		};
 	}
 
@@ -1457,6 +1513,12 @@
 		}
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube"; 
+		if (jewelDonation && jewelDonation.giftUrl) {
+			data.contentimg = jewelDonation.giftUrl;
+		}
+		if (jewelDonation && jewelDonation.meta) {
+			data.meta = Object.assign({}, data.meta, jewelDonation.meta);
+		}
 		if (ele.id) {
 			data.meta = Object.assign({}, data.meta, { messageId: ele.id });
 		}

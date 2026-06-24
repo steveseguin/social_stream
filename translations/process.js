@@ -20,6 +20,15 @@ async function updateTranslation(filename) {
     }
 }
 
+function getTranslationAttributeKey(value) {
+    return String(value || "")
+        .toLowerCase()
+        .replace(/[^a-zA-Z0-9\s\-]/g, "")
+        .replace(/[\n\t\r]/g, "")
+        .trim()
+        .replaceAll(" ", "-");
+}
+
 const updateList = [
     "blank", // must be first
     "en-us",
@@ -32,7 +41,8 @@ const updateList = [
     "uk",
     "th",
     "zh-CN",
-    "zh-TW"
+    "zh-TW",
+    "test"
 ];
 
 // Initialize DOM selectors and defaults
@@ -49,7 +59,7 @@ allItems.forEach((ele) => {
 
 const defaultTransTitles = {};
 allTitles.forEach((ele) => {
-    const key = ele.title.replace(/[\W]+/g, "-").toLowerCase();
+    const key = getTranslationAttributeKey(ele.title);
     ele.dataset.key = key;
     defaultTransTitles[key] = ele.title;
 });
@@ -57,11 +67,11 @@ allTitles.forEach((ele) => {
 const defaultTransPlaceholders = {};
 allPlaceholders.forEach((ele) => {
 	try {
-		const key = ele.placeholder.replace(/[\W]+/g, "-").toLowerCase();
+		const key = getTranslationAttributeKey(ele.placeholder);
 		ele.dataset.key = key;
 		defaultTransPlaceholders[key] = ele.placeholder;
 	} catch(e){
-		const key = ele.getAttribute("placeholder").replace(/[\W]+/g, "-").toLowerCase();
+		const key = getTranslationAttributeKey(ele.getAttribute("placeholder"));
 		ele.dataset.key = key;
 		defaultTransPlaceholders[key] = ele.getAttribute("placeholder");
 	}

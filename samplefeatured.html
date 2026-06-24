@@ -279,7 +279,7 @@ Development Notes:
             const iframe = document.createElement('iframe');
             iframe.src = `https://vdo.socialstream.ninja/?ln&password=${this.state.password}&notmobile&salt=vdo.ninja&label=overlay&exclude=${this.state.roomID}&scene&novideo&noaudio&cleanoutput&room=${this.state.roomID}`;
             iframe.id = 'frame1';
-            iframe.allow = 'midi;geolocation;microphone;';
+            iframe.allow = 'midi;microphone;';
             document.body.appendChild(iframe);
 
             window.addEventListener('message', (e) => {

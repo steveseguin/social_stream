@@ -1988,7 +1988,7 @@ async function ensureChatClientInstance() {
 					textOnly: textOnlyMode,
 					escapeHtml,
 					imageClassName: 'regular-emote',
-					textIsSafe: true
+					textIsSafe: false
 				});
 			} catch (error) {
 				console.warn('Falling back to legacy Twitch emote renderer', error);

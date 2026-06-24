@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Test Source - Social Stream Ninja</title>
+	<link rel="stylesheet" href="websocket-responsive.css">
+	<style>
+		body {
+			background: #171717;
+			color: #e8e8e8;
+			font-family: Arial, sans-serif;
+			margin: 0 auto;
+			max-width: 980px;
+			padding: 20px;
+		}
+		h1 {
+			font-size: 22px;
+			margin: 0 0 14px;
+		}
+		label {
+			display: block;
+			font-size: 13px;
+			margin: 10px 0 4px;
+		}
+		input,
+		textarea,
+		select {
+			background: #252525;
+			border: 1px solid #444;
+			box-sizing: border-box;
+			color: #f4f4f4;
+			font: inherit;
+			padding: 8px;
+			width: 100%;
+		}
+		textarea {
+			min-height: 90px;
+			resize: vertical;
+		}
+		button {
+			background: #2d6cdf;
+			border: 0;
+			border-radius: 3px;
+			color: white;
+			cursor: pointer;
+			font: inherit;
+			margin: 6px 6px 0 0;
+			padding: 8px 12px;
+		}
+		button.secondary {
+			background: #444;
+		}
+		.grid {
+			display: grid;
+			gap: 16px;
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		}
+		.panel {
+			background: #202020;
+			border: 1px solid #333;
+			padding: 14px;
+		}
+		.case {
+			border-top: 1px solid #333;
+			margin-top: 10px;
+			padding-top: 10px;
+		}
+		.case-title {
+			color: #9ec1ff;
+			font-weight: bold;
+		}
+		.case-code,
+		#lastPayload {
+			background: #111;
+			border: 1px solid #333;
+			color: #dcdcdc;
+			font-family: Consolas, monospace;
+			font-size: 12px;
+			margin-top: 6px;
+			overflow: auto;
+			padding: 8px;
+			white-space: pre-wrap;
+			word-break: break-word;
+		}
+		.inline {
+			align-items: center;
+			display: flex;
+			gap: 8px;
+			margin-top: 10px;
+		}
+		.inline input {
+			width: auto;
+		}
+		.status {
+			color: #89e089;
+			margin-top: 10px;
+			min-height: 20px;
+		}
+		@media (max-width: 760px) {
+			.grid {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
+</head>
+<body>
+	<h1>Social Stream Test Source</h1>
+	<div class="grid">
+		<div class="panel">
+			<label for="chatname">Name</label>
+			<input id="chatname" value="Test User">
+
+			<label for="messageInput">Message</label>
+			<textarea id="messageInput">&lt;img src="bad-src" onerror="alert('hi')"&gt;</textarea>
+
+			<label for="eventType">Event</label>
+			<select id="eventType">
+				<option value="">Chat message</option>
+				<option value="donation">Donation event</option>
+				<option value="membership">Membership event</option>
+				<option value="reward">Reward event</option>
+			</select>
+
+			<label for="donation">Donation label</label>
+			<input id="donation" value="">
+
+			<div class="inline">
+				<input id="textonly" type="checkbox">
+				<label for="textonly">Send as textonly</label>
+			</div>
+
+			<button id="sendCustom">Send Custom</button>
+			<button id="sendBurst" class="secondary">Send All Cases</button>
+			<div id="status" class="status"></div>
+		</div>
+
+		<div class="panel">
+			<div class="case-title">Last payload sent</div>
+			<div id="lastPayload"></div>
+		</div>
+	</div>
+
+	<div class="panel" style="margin-top:16px;">
+		<div class="case-title">Fixed downstream test cases</div>
+		<div id="cases"></div>
+	</div>
+
+	<script>
+		(function () {
+			var cases = [
+				{
+					title: "plain text",
+					message: "normal plain chat message",
+					textonly: false
+				},
+				{
+					title: "reported raw img/onerror payload",
+					message: "<img src=\"qsdf\" onerror=\"alert('hi')\">",
+					textonly: false
+				},
+				{
+					title: "encoded img/onerror payload",
+					message: "&lt;img src=\"qsdf\" onerror=\"alert('hi')\"&gt;",
+					textonly: false
+				},
+				{
+					title: "allowed emote-like image",
+					message: '<img class="regular-emote" src="https://socialstream.ninja/icons/twitch.png" alt="Kappa" title="Kappa">',
+					textonly: false
+				},
+				{
+					title: "nested emote span",
+					message: '<span class="zero-width-span"><img class="zero-width-emote" src="https://socialstream.ninja/icons/twitch.png" alt="ZW"></span> hello',
+					textonly: false
+				},
+				{
+					title: "script tag",
+					message: 'before <script>alert("script")<\\/script> after',
+					textonly: false
+				},
+				{
+					title: "javascript href",
+					message: '<a href="javascript:alert(1)">click me</a>',
+					textonly: false
+				},
+				{
+					title: "data html image",
+					message: '<img src="data:text/html,<script>alert(1)<\\/script>" alt="data">',
+					textonly: false
+				},
+				{
+					title: "event attributes on wrapper",
+					message: '<span class="note" onclick="alert(1)" onmouseover="alert(2)">hover me</span>',
+					textonly: false
+				},
+				{
+					title: "same raw payload with textonly",
+					message: "<img src=\"qsdf\" onerror=\"alert('hi')\">",
+					textonly: true
+				},
+				{
+					title: "false positive: alert function discussion",
+					message: "Can someone explain why alert('hi') freezes the overlay?",
+					textonly: false
+				},
+				{
+					title: "false positive: javascript label",
+					message: "The docs say JavaScript: the language has weird edge cases.",
+					textonly: false
+				},
+				{
+					title: "false positive: innerHTML discussion",
+					message: "I think innerHTML is the risky part here.",
+					textonly: false
+				},
+				{
+					title: "false positive: event attribute docs",
+					message: "The article mentioned onerror= and onload= attributes.",
+					textonly: false
+				},
+				{
+					title: "false positive: srcdoc docs",
+					message: "iframe srcdoc= is useful in examples but should be handled carefully.",
+					textonly: false
+				},
+				{
+					title: "false positive: data html mime type",
+					message: "data:text/html is a MIME type people mention in CSP discussions.",
+					textonly: false
+				},
+				{
+					title: "false positive: write function text",
+					message: "Old tutorials used document.write('hello') and write('hello').",
+					textonly: false
+				},
+				{
+					title: "false positive: script tag discussion",
+					message: "If you type <script in chat, it should appear as text.",
+					textonly: false
+				}
+			];
+
+			function getById(id) {
+				return document.getElementById(id);
+			}
+
+			function buildPayload(message, textonly, title) {
+				var eventType = getById("eventType").value;
+				var donation = getById("donation").value;
+				var payload = {
+					type: "testsource",
+					platform: "testsource",
+					chatname: getById("chatname").value || "Test User",
+					chatmessage: message,
+					chatimg: "",
+					chatbadges: "",
+					backgroundColor: "",
+					textColor: "",
+					hasDonation: donation,
+					membership: eventType === "membership" ? "Test Member" : "",
+					textonly: !!textonly,
+					meta: {
+						testsource: true,
+						caseTitle: title || "custom",
+						sentAt: new Date().toISOString()
+					}
+				};
+				if (eventType) {
+					payload.event = eventType;
+				}
+				return payload;
+			}
+
+			function dispatchPayload(payload) {
+				var event = new CustomEvent("TestSourceMessage", {
+					detail: payload,
+					bubbles: true
+				});
+				window.dispatchEvent(event);
+				getById("lastPayload").textContent = JSON.stringify(payload, null, 2);
+				getById("status").textContent = "Sent " + (payload.meta && payload.meta.caseTitle ? payload.meta.caseTitle : "custom");
+			}
+
+			function sendCase(testCase) {
+				dispatchPayload(buildPayload(testCase.message, testCase.textonly, testCase.title));
+			}
+
+			function renderCases() {
+				var container = getById("cases");
+				cases.forEach(function (testCase, index) {
+					var row = document.createElement("div");
+					row.className = "case";
+					var title = document.createElement("div");
+					title.className = "case-title";
+					title.textContent = (index + 1) + ". " + testCase.title + (testCase.textonly ? " (textonly)" : "");
+					var code = document.createElement("div");
+					code.className = "case-code";
+					code.textContent = testCase.message;
+					var button = document.createElement("button");
+					button.textContent = "Send";
+					button.onclick = function () {
+						sendCase(testCase);
+					};
+					row.appendChild(title);
+					row.appendChild(code);
+					row.appendChild(button);
+					container.appendChild(row);
+				});
+			}
+
+			getById("sendCustom").onclick = function () {
+				dispatchPayload(buildPayload(getById("messageInput").value, getById("textonly").checked, "custom"));
+			};
+
+			getById("sendBurst").onclick = function () {
+				cases.forEach(function (testCase, index) {
+					setTimeout(function () {
+						sendCase(testCase);
+					}, index * 250);
+				});
+			};
+
+			renderCases();
+		})();
+	</script>
+</body>
+</html>

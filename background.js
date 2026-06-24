@@ -188,6 +188,14 @@ const RETURNING_BEEP_COOLDOWN_MS = 400;
 let returningBeepHintShown = false;
 
 var connectedPeers = {};
+var p2pTransportState = {
+	streamID: null,
+	everHadPeer: false,
+	lastPeerAt: 0,
+	lastDisconnectAt: 0,
+	lastFailureAt: 0,
+	lastFailureReason: ""
+};
 var isSSAPP = false;
 
 const HANDLE_DB_NAME = "ssn-file-handles";
@@ -5912,6 +5920,17 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "resettipjar") {
 			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "settipjaramount") {
+			sendTargetP2P(
+				{
+					cmd: "settipjaramount",
+					value: request.value,
+					tipjarsource: request.tipjarsource || "",
+					tipjartype: request.tipjartype || ""
+				},
+				"tipjar"
+			);
+			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
 			sendResponse({ state: isExtensionOn });
@@ -5990,7 +6009,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				messagePopup({ documents: documentsRAG });
 			} catch (e) {}
 		} else if (request.cmd && request.cmd === "fakemsg") {
-			sendResponse({ state: isExtensionOn });
+			sendResponse({ state: isExtensionOn, dockTransportHealth: getDockTransportHealth() });
 
 			triggerFakeRandomMessage();
 		} else if (request.cmd && request.cmd === "testAlert") {
@@ -6011,6 +6030,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 			sendTargetP2P({ creditsCommand: "preview" }, "credits");
 			sendTargetP2P({ creditsCommand: "preview" }, "dock");
+		} else if (request.cmd && request.cmd === "creditsReset") {
+			sendResponse({ state: isExtensionOn });
+			sendTargetP2P({ creditsCommand: "reset" }, "credits");
+			sendTargetP2P({ creditsCommand: "reset" }, "dock");
 		} else if (request.action === "startReplay") {
 			// Handle replay messages from timestamp
 			console.log("Received startReplay request:", request);
@@ -8875,6 +8898,118 @@ var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io
 var conCon = 0;
 var reconnectionTimeout = null;
 
+function resetP2PTransportStateForStream(roomStreamID) {
+	if (p2pTransportState.streamID === roomStreamID) {
+		return;
+	}
+	p2pTransportState.streamID = roomStreamID || null;
+	p2pTransportState.everHadPeer = false;
+	p2pTransportState.lastPeerAt = 0;
+	p2pTransportState.lastDisconnectAt = 0;
+	p2pTransportState.lastFailureAt = 0;
+	p2pTransportState.lastFailureReason = "";
+	connectedPeers = {};
+}
+
+function markP2PPeerConnected(uuid, label) {
+	p2pTransportState.everHadPeer = true;
+	p2pTransportState.lastPeerAt = Date.now();
+	if (uuid && label) {
+		connectedPeers[uuid] = label;
+	}
+}
+
+function markP2PPeerDisconnected(uuid) {
+	p2pTransportState.lastDisconnectAt = Date.now();
+	if (uuid) {
+		delete connectedPeers[uuid];
+	}
+}
+
+function markP2PFailure(reason) {
+	p2pTransportState.lastFailureAt = Date.now();
+	p2pTransportState.lastFailureReason = reason || "unknown";
+}
+
+function isRecentP2PTime(timestamp, windowMs) {
+	return !!(timestamp && Date.now() - timestamp < windowMs);
+}
+
+function bindNinjaBridgeTransportTracking(bridge) {
+	if (!bridge) {
+		return;
+	}
+	if (!bridge._ssnPeerTrackingBound) {
+		bridge._ssnPeerTrackingBound = true;
+		bridge.addEventListener("peerLabel", function (ev) {
+			try {
+				var detail = ev.detail || {};
+				if (detail.uuid && detail.label) {
+					markP2PPeerConnected(detail.uuid, detail.label);
+				}
+			} catch (e) {}
+		});
+		bridge.addEventListener("peerRemoved", function (ev) {
+			try {
+				var detail = ev.detail || {};
+				if (detail.uuid) {
+					markP2PPeerDisconnected(detail.uuid);
+				}
+			} catch (e) {}
+		});
+	}
+	if (bridge.vdo && !bridge._ssnVdoFailureTrackingBound) {
+		bridge._ssnVdoFailureTrackingBound = true;
+		bridge.vdo.addEventListener("connectionFailed", function () {
+			markP2PFailure("connectionFailed");
+		});
+	}
+}
+
+function getDockTransportHealth() {
+	var peers = {};
+	try {
+		if (connectedPeers && typeof connectedPeers === "object") {
+			Object.keys(connectedPeers).forEach(function (uuid) {
+				peers[uuid] = connectedPeers[uuid];
+			});
+		}
+	} catch (e) {}
+	try {
+		if (typeof ninjaBridge !== "undefined" && ninjaBridge && typeof ninjaBridge.getPeers === "function") {
+			var sdkPeers = ninjaBridge.getPeers();
+			Object.keys(sdkPeers || {}).forEach(function (uuid) {
+				peers[uuid] = sdkPeers[uuid];
+			});
+		}
+	} catch (e) {}
+
+	var labels = [];
+	Object.keys(peers).forEach(function (uuid) {
+		var label = peers[uuid] || "";
+		if (label && labels.indexOf(label) === -1) {
+			labels.push(label);
+		}
+	});
+
+	return {
+		extensionOn: !!isExtensionOn,
+		webRTCSupported: typeof RTCPeerConnection !== "undefined",
+		p2pPeerCount: Object.keys(peers).length,
+		p2pPeerLabels: labels,
+		everHadP2PPeer: !!p2pTransportState.everHadPeer,
+		lastP2PPeerAt: p2pTransportState.lastPeerAt || 0,
+		lastP2PDisconnectAt: p2pTransportState.lastDisconnectAt || 0,
+		lastP2PFailureAt: p2pTransportState.lastFailureAt || 0,
+		lastP2PFailureReason: p2pTransportState.lastFailureReason || "",
+		recentP2PDisconnect: isRecentP2PTime(p2pTransportState.lastDisconnectAt, 5 * 60 * 1000),
+		recentP2PFailure: isRecentP2PTime(p2pTransportState.lastFailureAt, 5 * 60 * 1000),
+		serverFallbackEnabled: !!(settings.server2 && settings.server3),
+		serverFallbackDockSocketOpen: !!(socketserverDock && socketserverDock.readyState === WebSocket.OPEN),
+		fakeMessageTransportReady: !!(Object.keys(peers).length || (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN))
+	};
+}
+
 function setupSocket() {
 	if (!settings.socketserver) {
 		return;
@@ -9037,6 +9172,17 @@ function setupSocket() {
 				resp = true;
 			} else if (data.action && data.action === "resettipjar") {
 				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
+				resp = true;
+			} else if (data.action && data.action === "settipjaramount") {
+				sendTargetP2P(
+					{
+						cmd: "settipjaramount",
+						value: data.value,
+						tipjarsource: data.tipjarsource || "",
+						tipjartype: data.tipjartype || ""
+					},
+					"tipjar"
+				);
 				resp = true;
 			} else if (data.action && data.action === "resetpoll") {
 				sendTargetP2P({ cmd: "resetpoll" }, "poll");
@@ -10536,9 +10682,26 @@ function sendDataP2P(data, UUID = false) {
 
 	// Prefer SDK transport if active
 	if (ninjaBridge && ninjaBridge.isReady()) {
+		function trackSdkSendResult(result) {
+			try {
+				if (result && typeof result.then === "function") {
+					result
+						.then(function (ok) {
+							if (ok === false) {
+								markP2PFailure("sdkSend");
+							}
+						})
+						.catch(function () {
+							markP2PFailure("sdkSend");
+						});
+				} else if (result === false) {
+					markP2PFailure("sdkSend");
+				}
+			} catch (e) {}
+		}
 		try {
 			if (UUID) {
-				ninjaBridge.send(data, UUID);
+				trackSdkSendResult(ninjaBridge.send(data, UUID));
 				return;
 			}
 			// Prefer sending to known overlay receivers; if none known yet, broadcast.
@@ -10552,15 +10715,16 @@ function sendDataP2P(data, UUID = false) {
 				}
 			} catch (e) {}
 			if (hasOverlayReceiver) {
-				ninjaBridge.sendToLabel(data, "dock");
-				ninjaBridge.sendToLabel(data, "aioverlay");
-				ninjaBridge.sendToLabel(data, "cohost");
-				ninjaBridge.sendToLabel(data, "tipjar");
+				trackSdkSendResult(ninjaBridge.sendToLabel(data, "dock"));
+				trackSdkSendResult(ninjaBridge.sendToLabel(data, "aioverlay"));
+				trackSdkSendResult(ninjaBridge.sendToLabel(data, "cohost"));
+				trackSdkSendResult(ninjaBridge.sendToLabel(data, "tipjar"));
 			} else {
-				ninjaBridge.send(data); // broadcast
+				trackSdkSendResult(ninjaBridge.send(data)); // broadcast
 			}
 			return;
 		} catch (e) {
+			markP2PFailure("sdkSend");
 			console.warn("SDK sendDataP2P failed; falling back to iframe", e);
 		}
 	}
@@ -11961,6 +12125,7 @@ function sendToDisk(data) {
 
 async function initTransport(roomStreamID, pass = false) {
 	// this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
+	resetP2PTransportStateForStream(roomStreamID);
 
 	// Re-evaluate effective SDK flag each init, based on flexible truthy parsing
 	try {
@@ -12019,6 +12184,7 @@ async function initTransport(roomStreamID, pass = false) {
 			try {
 				window.ninjaBridge = ninjaBridge;
 			} catch (e) {}
+			bindNinjaBridgeTransportTracking(ninjaBridge);
 			ninjaBridge.addEventListener("peerLabel", ev => {
 				try {
 					const { uuid, label } = ev.detail || {};
@@ -12052,6 +12218,7 @@ async function initTransport(roomStreamID, pass = false) {
 			// Try initializing SDK; if it fails (eg, streamID still in use), retry once
 			try {
 				await ninjaBridge.init({ room: roomStreamID, password: pass, streamID: roomStreamID });
+				bindNinjaBridgeTransportTracking(ninjaBridge);
 			} catch (e1) {
 				console.warn("SDK init failed; retrying after short delay…", e1?.message || e1);
 				try {
@@ -12064,6 +12231,7 @@ async function initTransport(roomStreamID, pass = false) {
 				try {
 					window.ninjaBridge = ninjaBridge;
 				} catch (e) {}
+				bindNinjaBridgeTransportTracking(ninjaBridge);
 				ninjaBridge.addEventListener("peerLabel", ev => {
 					try {
 						const { uuid, label } = ev.detail || {};
@@ -12094,6 +12262,7 @@ async function initTransport(roomStreamID, pass = false) {
 					}
 				});
 				await ninjaBridge.init({ room: roomStreamID, password: pass, streamID: roomStreamID });
+				bindNinjaBridgeTransportTracking(ninjaBridge);
 			}
 			try {
 				// Receive overlay messages via SDK (support both event names and wrapper passthrough)
@@ -12133,6 +12302,7 @@ async function initTransport(roomStreamID, pass = false) {
 			}
 			return; // success
 		} catch (e) {
+			markP2PFailure("sdkInit");
 			console.warn("Falling back to iframe transport:", e);
 			// If SDK fails, fall through to iframe
 		}
@@ -13023,6 +13193,7 @@ eventer(messageEvent, async function (e) {
 				// flip this
 				if ("label" in e.data.value) {
 					connectedPeers[e.data.UUID] = e.data.value.label;
+					markP2PPeerConnected(e.data.UUID, connectedPeers[e.data.UUID]);
 					if (connectedPeers[e.data.UUID] == "hype") {
 						processHype2();
 					} else if (connectedPeers[e.data.UUID] == "ticker") {
@@ -13051,6 +13222,7 @@ eventer(messageEvent, async function (e) {
 				// flip this
 				if ("label" in e.data.value) {
 					connectedPeers[e.data.UUID] = e.data.value.label;
+					markP2PPeerConnected(e.data.UUID, connectedPeers[e.data.UUID]);
 					if (connectedPeers[e.data.UUID] == "hype") {
 						processHype2();
 					} else if (connectedPeers[e.data.UUID] == "ticker") {
@@ -13078,13 +13250,13 @@ eventer(messageEvent, async function (e) {
 			} else if (e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "push-connection") {
 				// flip this
 				if (e.data.UUID in connectedPeers) {
-					delete connectedPeers[e.data.UUID];
+					markP2PPeerDisconnected(e.data.UUID);
 				}
 				//log(connectedPeers);
 			} else if (e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "view-connection") {
 				// flip this
 				if (e.data.UUID in connectedPeers) {
-					delete connectedPeers[e.data.UUID];
+					markP2PPeerDisconnected(e.data.UUID);
 				}
 			} else if (e.data.action === "alert") {
 				if (e.data.value && e.data.value == "Stream ID is already in use.") {
