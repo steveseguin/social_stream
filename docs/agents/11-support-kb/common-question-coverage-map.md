@@ -92,8 +92,8 @@ For plain-language user wording and first-route selection, use `question-intent-
 
 | Question Family | Coverage | Start With | Check Next |
 | --- | --- | --- | --- |
-| What command system is this? | covered-heavy | `13-reference/commands-and-actions.md` | `13-reference/action-command-index.md`, `13-reference/api-command-validation-matrix.md` |
-| What exact API action exists? | covered-heavy | `13-reference/action-command-index.md` | `13-reference/api-command-validation-matrix.md`, `09-api-and-integrations/websocket-http-api.md` |
+| What command system is this? | covered-heavy | `13-reference/commands-and-actions.md` | `13-reference/action-command-index.md`, `13-reference/api-command-validation-matrix.md`, `13-reference/api-command-proof-ledger.md` |
+| What exact API action exists? | covered-heavy | `13-reference/action-command-index.md` | `13-reference/api-command-validation-matrix.md`, `13-reference/api-command-proof-ledger.md`, `09-api-and-integrations/websocket-http-api.md` |
 | How do I receive chat in another app? | covered-heavy | `09-api-and-integrations/websocket-http-api.md` | sample client/source docs |
 | How do I send commands from StreamDeck or Companion? | covered-heavy | `09-api-and-integrations/streamdeck-companion.md` | exact action index |
 | How does Streamer.bot work? | covered-heavy | `09-api-and-integrations/streamerbot.md` | current Streamer.bot page/source |

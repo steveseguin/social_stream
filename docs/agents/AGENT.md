@@ -103,6 +103,7 @@ For setup and troubleshooting:
 - `docs/agents/13-reference/customization-source-trace.md`: source-checked local `custom.js`, uploaded custom JavaScript, custom overlay, API/WebSocket source, Event Flow, and first-class source hook boundaries.
 - `docs/agents/13-reference/customization-validation-ledger.md`: evidence labels and stronger-claim boundaries for customization/plugin questions.
 - `docs/agents/13-reference/api-command-validation-matrix.md`: source-checked API command routing, accepted-vs-acted-on caveats, callbacks, and runtime proof boundaries.
+- `docs/agents/13-reference/api-command-proof-ledger.md`: evidence labels and stronger-claim boundaries for command/API behavior.
 - `docs/agents/13-reference/workflow-setup-decision-tree.md`: choose source side, receiving page, transport, and options from the user goal.
 - `docs/agents/13-reference/url-parameter-source-trace.md`: source-checked page-specific URL parameter parsing, socket/channel differences, and unsafe URL overclaims.
 - `docs/agents/13-reference/settings-session-storage-source-trace.md`: source-checked extension/app settings storage split, session/password save flow, generated links, app backup layers, and reset guardrails.

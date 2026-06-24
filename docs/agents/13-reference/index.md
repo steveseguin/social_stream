@@ -16,6 +16,7 @@ Use these pages when the user asks "how do I do X?" and the answer may involve m
 - `command-action-source-trace.md`: source-checked command/action routing notes, handler boundaries, target/page caveats, and high-risk public examples.
 - `api-command-validation-matrix.md`: command/API acceptance versus target page/source action, runtime proof boundaries, callbacks, and false-positive matrix.
 - `api-command-examples.md`: safe copy/paste HTTP, WebSocket, JSON, page-label, waitlist, poll, timer, and troubleshooting examples.
+- `api-command-proof-ledger.md`: evidence labels, claim status, minimum proof packs, and update rules for command/API behavior claims.
 - `url-parameters.md`: high-value URL parameter families for dock, featured, TTS, filters, automation, tip jar, credits, and security.
 - `url-option-examples.md`: safe copy/paste page URL and parameter examples for OBS, dock, featured, filters, themes, TTS, labels, server modes, and failures.
 - `url-parameter-index.md`: exact generated URL parameter, alias, value-hint, and short-description lookup from `shared/config/urlParameters.js`.
@@ -108,6 +109,7 @@ Prefer current code and source docs in this order:
 | "How is this command actually handled in source?" | `command-action-source-trace.md` |
 | "Why did the API command say success but nothing changed?" | `api-command-validation-matrix.md` |
 | "Can you give me a safe API command example?" | `api-command-examples.md` |
+| "What proof exists for this command/API claim?" | `api-command-proof-ledger.md` |
 | "What URL option changes this overlay?" | `url-parameters.md` |
 | "Can you give me a safe overlay URL example?" | `url-option-examples.md` |
 | "What exact URL parameter or alias exists?" | `url-parameter-index.md` |

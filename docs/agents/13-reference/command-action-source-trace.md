@@ -6,7 +6,7 @@ Status: source-check pass started on 2026-06-24. No runtime API server, OBS, or 
 
 Use this page when a user asks for a command/action and the broad lookup pages are not enough. It traces the main command paths through current source so agents know which actions are handled directly, which are forwarded, which need a target page, and which public-doc examples need caution.
 
-This is not a full command test report. Treat it as source evidence to pair with `action-command-index.md`, `commands-and-actions.md`, `api-command-examples.md`, and `api-command-validation-matrix.md`.
+This is not a full command test report. Treat it as source evidence to pair with `action-command-index.md`, `commands-and-actions.md`, `api-command-examples.md`, `api-command-validation-matrix.md`, and `api-command-proof-ledger.md`.
 
 ## Source Anchors
 

@@ -12,6 +12,7 @@ This page complements:
 - `action-command-index.md` for action-name lookup.
 - `command-action-source-trace.md` for broader handler notes.
 - `api-command-examples.md` for safe examples.
+- `api-command-proof-ledger.md` for evidence labels and proof requirements before stronger command claims.
 - `../09-api-and-integrations/websocket-http-api.md` for API setup.
 
 The central rule is:

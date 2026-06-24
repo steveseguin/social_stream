@@ -6,7 +6,7 @@ Status: examples pass and focused documentation consistency check on 2026-06-24 
 
 Use this page when an AI agent needs a safe copy/paste example for common SSN API and command workflows.
 
-This page is an example cookbook, not the final source of truth for every action. For exact action names and target rules, check `action-command-index.md`. For transport and channel details, check `09-api-and-integrations/websocket-http-api.md`. For "the request succeeded but nothing happened" cases, check `api-command-validation-matrix.md`.
+This page is an example cookbook, not the final source of truth for every action. For exact action names and target rules, check `action-command-index.md`. For transport and channel details, check `09-api-and-integrations/websocket-http-api.md`. For "the request succeeded but nothing happened" cases, check `api-command-validation-matrix.md`. For evidence labels and proof requirements before stronger command claims, check `api-command-proof-ledger.md`.
 
 ## Focused Consistency Note
 
