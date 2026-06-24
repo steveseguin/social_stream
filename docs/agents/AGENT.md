@@ -86,6 +86,7 @@ For support-style answers:
 - `docs/agents/11-support-kb/common-question-coverage-map.md`: objective-level map of common question families to current docs.
 - `docs/agents/11-support-kb/common-misconceptions-and-boundaries.md`: common overclaims, stale-claim risks, and safer support wording.
 - `docs/agents/08-platform-sources/priority-platform-answer-matrix.md`: safe phrasing and first checks for high-volume platform capability, rich-event, send-back, and app/extension platform questions.
+- `docs/agents/08-platform-sources/priority-platform-validation-ledger.md`: proof status, evidence labels, and validation targets for high-risk YouTube, TikTok, Twitch, Kick, Rumble, Facebook, Instagram, and Discord claims.
 - `docs/agents/13-reference/public-claims-boundary-matrix.md`: boundaries for broad public claims such as 100+/120+ sites, two-way chat, no API keys, free/open-source, AI/TTS, app behavior, plugins/customization, services, and support promises.
 - `docs/agents/11-support-kb/support-response-playbook.md`: ready-to-send response templates and follow-up prompts.
 - `docs/agents/11-support-kb/support-evidence-ledger.md`: support claim families, evidence status, and next validation targets.

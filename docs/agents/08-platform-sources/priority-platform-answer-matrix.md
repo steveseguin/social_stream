@@ -21,6 +21,8 @@ This page sits between:
 - `../13-reference/app-extension-mode-crosswalk.md` for app-vs-extension caveats.
 - `../13-reference/public-claims-boundary-matrix.md` for broad public wording boundaries.
 
+For proof status behind these short answers, use `priority-platform-validation-ledger.md`.
+
 ## Source Scan Anchors
 
 This pass checked the current docs plus source terms in:
