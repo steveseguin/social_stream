@@ -1,6 +1,6 @@
 # Overlays And Pages Index
 
-Status: framework only. Detailed extraction not started.
+Status: framework plus heavy passes for dock, featured, multi-alerts, waitlist/polls/games, and custom overlays.
 
 ## Purpose
 
@@ -8,11 +8,11 @@ This section covers SSN pages users open in browsers, OBS, the extension, or the
 
 ## Pages
 
-- `dock.md`
-- `featured.md`
-- `multi-alerts.md`
-- `waitlist-polls-games.md`
-- `custom-overlays.md`
+- `dock.md`: heavy extraction pass started.
+- `featured.md`: heavy extraction pass started.
+- `multi-alerts.md`: heavy extraction pass started.
+- `waitlist-polls-games.md`: heavy extraction pass started.
+- `custom-overlays.md`: heavy extraction pass started.
 
 ## Source Anchors
 
@@ -22,3 +22,10 @@ This section covers SSN pages users open in browsers, OBS, the extension, or the
 - `social_stream/api.md`
 - `social_stream/parameters.md`
 - `social_stream/themes/**`
+
+## Suggested Next Pass
+
+- Intense pass for `dock.md` and `featured.md` by tracing exact API actions and URL parameters in code.
+- Intense pass for `multi-alerts.md` using the Playwright E2E script and per-platform event payload examples.
+- Intense pass for `waitlist-polls-games.md` by extracting each `games/*.html`, `battle.html`, and current background command handlers.
+- Intense pass for `custom-overlays.md` by producing a safe minimal overlay template and compatibility table.

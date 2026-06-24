@@ -186,6 +186,8 @@ docs/agents/
     rumble.md
     discord.md
     generic-and-custom-sources.md
+    source-inventory.md
+    manifest-content-scripts.md
   09-api-and-integrations/
     websocket-http-api.md
     obs.md
@@ -212,8 +214,19 @@ docs/agents/
     repo-map.md
     adding-a-source.md
     shared-code-rules.md
+    provider-cores-and-shared-utils.md
     testing-and-validation.md
     build-and-release-boundaries.md
+  13-reference/
+    index.md
+    commands-and-actions.md
+    url-parameters.md
+    modes-and-capability-matrix.md
+    free-paid-and-support-boundaries.md
+    custom-plugins-and-extensions.md
+    support-resources-and-escalation.md
+    settings-and-toggles.md
+    features-and-capabilities.md
   99-agent-index.md
 ```
 
@@ -267,6 +280,10 @@ Document how the support data was mined, which sources are trusted, how claims a
 
 Document how to safely change SSN: repo map, adding new platform sources, shared-code compatibility rules, tests that matter, Electron differences, build commands, release boundaries, and event-reference update rules.
 
+### `13-reference/*`
+
+Provide fast cross-cutting lookup pages for commands, URL parameters, product/capture modes, free-vs-paid boundaries, plugin/customization paths, support-resource routing, settings/toggle lookup, and broad feature/capability routing.
+
 ### `99-agent-index.md`
 
 Final navigation index for AI agents. This should be generated last, after the detailed pages exist.
@@ -297,6 +314,6 @@ For each page:
 ## First-Pass Open Questions
 
 - Which support categories in `stevesbot` should be considered in scope beyond SSN Desktop App, Electron Capture, Caption.Ninja, and OBS overlays?
-- Should this documentation include exact UI labels from `popup.html`, or summarize behavior and reference source locations?
+- Which exact UI labels from `popup.html` need line-level docs beyond the generated public settings reference?
 - Should raw support examples be anonymized into scenario pages, or only used to rank common problems?
 - Should generated agent docs eventually be moved into public docs, or remain temporary/private under `docs/agents`?
