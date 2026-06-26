@@ -194,7 +194,10 @@ var p2pTransportState = {
 	lastPeerAt: 0,
 	lastDisconnectAt: 0,
 	lastFailureAt: 0,
-	lastFailureReason: ""
+	lastFailureReason: "",
+	signalingPeers: {},
+	lastSignalingPeerAt: 0,
+	lastSignalingPeerSource: ""
 };
 var isSSAPP = false;
 
@@ -8908,6 +8911,9 @@ function resetP2PTransportStateForStream(roomStreamID) {
 	p2pTransportState.lastDisconnectAt = 0;
 	p2pTransportState.lastFailureAt = 0;
 	p2pTransportState.lastFailureReason = "";
+	p2pTransportState.signalingPeers = {};
+	p2pTransportState.lastSignalingPeerAt = 0;
+	p2pTransportState.lastSignalingPeerSource = "";
 	connectedPeers = {};
 }
 
@@ -8923,6 +8929,9 @@ function markP2PPeerDisconnected(uuid) {
 	p2pTransportState.lastDisconnectAt = Date.now();
 	if (uuid) {
 		delete connectedPeers[uuid];
+		if (p2pTransportState.signalingPeers) {
+			delete p2pTransportState.signalingPeers[uuid];
+		}
 	}
 }
 
@@ -8933,6 +8942,74 @@ function markP2PFailure(reason) {
 
 function isRecentP2PTime(timestamp, windowMs) {
 	return !!(timestamp && Date.now() - timestamp < windowMs);
+}
+
+function getSignalingPeerLabel(peer) {
+	if (!peer || typeof peer !== "object") {
+		return "";
+	}
+	if (typeof peer.label === "string") {
+		return peer.label;
+	}
+	if (peer.value && typeof peer.value.label === "string") {
+		return peer.value.label;
+	}
+	return "";
+}
+
+function markSignalingPeerDiscovered(peer, source) {
+	if (typeof peer === "string") {
+		peer = { UUID: peer };
+	}
+	if (!peer || typeof peer !== "object") {
+		return;
+	}
+	var uuid = peer.UUID || peer.uuid || "";
+	if (!uuid) {
+		return;
+	}
+	uuid = String(uuid);
+	var label = getSignalingPeerLabel(peer);
+	if (label === "SocialStream") {
+		return;
+	}
+	if (!p2pTransportState.signalingPeers || typeof p2pTransportState.signalingPeers !== "object") {
+		p2pTransportState.signalingPeers = {};
+	}
+	p2pTransportState.signalingPeers[uuid] = {
+		label: label || "",
+		streamID: peer.streamID || peer.streamId || false,
+		director: !!peer.director,
+		source: source || peer.source || "",
+		lastSeenAt: Date.now()
+	};
+	p2pTransportState.lastSignalingPeerAt = Date.now();
+	p2pTransportState.lastSignalingPeerSource = source || peer.source || "";
+}
+
+function markSignalingPeerListing(list, source) {
+	if (!list) {
+		return;
+	}
+	if (Array.isArray(list)) {
+		for (var i = 0; i < list.length; i++) {
+			markSignalingPeerDiscovered(list[i], source || "listing");
+		}
+		return;
+	}
+	if (typeof list === "object") {
+		Object.keys(list).forEach(function (uuid) {
+			var peer = list[uuid];
+			if (peer && typeof peer === "object") {
+				if (!peer.UUID && !peer.uuid) {
+					peer.UUID = uuid;
+				}
+				markSignalingPeerDiscovered(peer, source || "listing");
+			} else {
+				markSignalingPeerDiscovered(uuid, source || "listing");
+			}
+		});
+	}
 }
 
 function bindNinjaBridgeTransportTracking(bridge) {
@@ -8968,6 +9045,7 @@ function bindNinjaBridgeTransportTracking(bridge) {
 
 function getDockTransportHealth() {
 	var peers = {};
+	var signalingPeers = {};
 	try {
 		if (connectedPeers && typeof connectedPeers === "object") {
 			Object.keys(connectedPeers).forEach(function (uuid) {
@@ -8983,6 +9061,16 @@ function getDockTransportHealth() {
 			});
 		}
 	} catch (e) {}
+	try {
+		if (p2pTransportState.signalingPeers && typeof p2pTransportState.signalingPeers === "object") {
+			Object.keys(p2pTransportState.signalingPeers).forEach(function (uuid) {
+				if (peers[uuid]) {
+					return;
+				}
+				signalingPeers[uuid] = p2pTransportState.signalingPeers[uuid];
+			});
+		}
+	} catch (e) {}
 
 	var labels = [];
 	Object.keys(peers).forEach(function (uuid) {
@@ -8991,22 +9079,41 @@ function getDockTransportHealth() {
 			labels.push(label);
 		}
 	});
+	var signalingLabels = [];
+	Object.keys(signalingPeers).forEach(function (uuid) {
+		var peer = signalingPeers[uuid] || {};
+		var label = peer.label || "";
+		if (label && signalingLabels.indexOf(label) === -1) {
+			signalingLabels.push(label);
+		}
+	});
+	var webRTCSupported = typeof RTCPeerConnection !== "undefined";
+	var p2pPeerCount = Object.keys(peers).length;
+	var signalingPeerCount = Object.keys(signalingPeers).length;
+	var recentP2PFailure = isRecentP2PTime(p2pTransportState.lastFailureAt, 5 * 60 * 1000);
+	var serverFallbackEnabled = !!(settings.server2 && settings.server3);
 
 	return {
 		extensionOn: !!isExtensionOn,
-		webRTCSupported: typeof RTCPeerConnection !== "undefined",
-		p2pPeerCount: Object.keys(peers).length,
+		webRTCSupported: webRTCSupported,
+		p2pPeerCount: p2pPeerCount,
 		p2pPeerLabels: labels,
+		signalingPeerCount: signalingPeerCount,
+		signalingPeerLabels: signalingLabels,
+		hasSignalingPeer: !!signalingPeerCount,
+		lastSignalingPeerAt: p2pTransportState.lastSignalingPeerAt || 0,
+		lastSignalingPeerSource: p2pTransportState.lastSignalingPeerSource || "",
 		everHadP2PPeer: !!p2pTransportState.everHadPeer,
 		lastP2PPeerAt: p2pTransportState.lastPeerAt || 0,
 		lastP2PDisconnectAt: p2pTransportState.lastDisconnectAt || 0,
 		lastP2PFailureAt: p2pTransportState.lastFailureAt || 0,
 		lastP2PFailureReason: p2pTransportState.lastFailureReason || "",
 		recentP2PDisconnect: isRecentP2PTime(p2pTransportState.lastDisconnectAt, 5 * 60 * 1000),
-		recentP2PFailure: isRecentP2PTime(p2pTransportState.lastFailureAt, 5 * 60 * 1000),
-		serverFallbackEnabled: !!(settings.server2 && settings.server3),
+		recentP2PFailure: recentP2PFailure,
+		serverFallbackEnabled: serverFallbackEnabled,
 		serverFallbackDockSocketOpen: !!(socketserverDock && socketserverDock.readyState === WebSocket.OPEN),
-		fakeMessageTransportReady: !!(Object.keys(peers).length || (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN))
+		canOfferServerFallback: !!(signalingPeerCount && !p2pPeerCount && !serverFallbackEnabled),
+		fakeMessageTransportReady: !!(p2pPeerCount || (serverFallbackEnabled && socketserverDock && socketserverDock.readyState === WebSocket.OPEN))
 	};
 }
 
@@ -13189,6 +13296,10 @@ eventer(messageEvent, async function (e) {
 		} else if ("action" in e.data) {
 			if (e.data.action == "view-stats-updated") {
 				return;
+			} else if (e.data.action == "room-peer-listing" && e.data.value && e.data.value.list) {
+				markSignalingPeerListing(e.data.value.list, e.data.value.source || "listing");
+			} else if (e.data.action == "room-peer-discovered" && e.data.value) {
+				markSignalingPeerDiscovered(e.data.value, e.data.value.source || "someonejoined");
 			} else if (e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
 				// flip this
 				if ("label" in e.data.value) {

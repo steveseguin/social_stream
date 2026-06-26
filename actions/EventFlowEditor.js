@@ -2336,6 +2336,9 @@ class EventFlowEditor {
 			testOverlay.style.display = 'block';
 			testPanel.style.display = 'flex';
 		});
+		openTestBtn.addEventListener('click', () => {
+			this.prefillTestEventFromCurrentFlow();
+		});
 
 		// Close test panel
 		closeTestBtn.addEventListener('click', function() {
@@ -2369,6 +2372,11 @@ class EventFlowEditor {
 				timestamp: Date.now(),
 			};
 
+			const eventType = document.getElementById('test-event')?.value || document.getElementById('test-event-custom')?.value?.trim() || '';
+			if (eventType) {
+				testMessage.event = eventType;
+			}
+
 			// Apply first-time chatter flag
 			if (firstTimeCheckbox?.checked) {
 				testMessage.firsttime = true;
@@ -2393,6 +2401,47 @@ class EventFlowEditor {
 			// Run the test
 			this.runTestFlow(testMessage);
 		});
+	}
+
+	prefillTestEventFromCurrentFlow() {
+		const eventSelect = document.getElementById('test-event');
+		const customEventInput = document.getElementById('test-event-custom');
+		if (!eventSelect || eventSelect.value || customEventInput?.value || !this.currentFlow?.nodes) return;
+
+		const eventTrigger = this.currentFlow.nodes.find(node => node.type === 'trigger' && [
+			'eventNewFollower',
+			'eventNewSubscriber',
+			'eventResub',
+			'eventGiftSub',
+			'eventDonation',
+			'eventRaid',
+			'eventCheer',
+			'eventType',
+			'eventOther',
+			'eventCustom'
+		].includes(node.triggerType));
+
+		if (!eventTrigger) return;
+
+		const triggerToEvent = {
+			eventNewFollower: 'new_follower',
+			eventNewSubscriber: 'new_subscriber',
+			eventResub: 'resub',
+			eventGiftSub: 'subscription_gift',
+			eventDonation: 'donation',
+			eventRaid: 'raid',
+			eventCheer: 'cheer'
+		};
+
+		const eventValue = triggerToEvent[eventTrigger.triggerType] || eventTrigger.config?.eventType || '';
+		if (!eventValue) return;
+
+		const knownOption = Array.from(eventSelect.options).some(option => option.value === eventValue);
+		if (knownOption) {
+			eventSelect.value = eventValue;
+		} else if (customEventInput) {
+			customEventInput.value = eventValue;
+		}
 	}
 
 	displayTestResults(testResult, originalMessage = {}) {
@@ -5243,7 +5292,7 @@ class EventFlowEditor {
 						 </div>
 						 <div class="property-group">
 							<label class="property-label">Volume (0.0 to 1.0)</label>
-							<input type="number" class="property-input" id="prop-volume" value="${node.config.volume || 1.0}" min="0" max="1" step="0.1">
+							<input type="number" class="property-input" id="prop-volume" value="${node.config.volume ?? 1.0}" min="0" max="1" step="0.1">
 						</div>`;
 				break;
 

@@ -10761,16 +10761,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return;
 		}
 
+		if (health.canOfferServerFallback) {
+			showServerFallbackBanner(health, "A dock or overlay was detected on signaling, but WebRTC is not connected. If the fake test message did not appear, Server Fallback may help.");
+			return;
+		}
 		if (!health.webRTCSupported) {
-			showServerFallbackBanner(health, "This browser does not appear to support WebRTC. If the fake test message did not appear, Server Fallback may help.");
+			showServerFallbackBanner(health, "This browser does not appear to support WebRTC. Open or reload your dock/overlay link first; Server Fallback is only offered after SSN detects an overlay.", false, true);
 			return;
 		}
 		if (health.recentP2PFailure) {
-			showServerFallbackBanner(health, "A WebRTC connection appears to have failed recently. If the fake test message did not appear, Server Fallback may help.");
+			showServerFallbackBanner(health, "A WebRTC failure was detected, but no dock or overlay is currently visible on signaling. Reload your dock/overlay link, then test again.", false, true);
 			return;
 		}
 		if (health.everHadP2PPeer) {
-			showServerFallbackBanner(health, "A dock or overlay was connected before, but none are connected now. Reload your dock or overlay, or try Server Fallback if it still does not work.");
+			showServerFallbackBanner(health, "A dock or overlay was connected before, but none are connected now. Reload your dock or overlay, then test again.", false, true);
 			return;
 		}
 
