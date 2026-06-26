@@ -10682,7 +10682,40 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	var serverFallbackUndoState = null;
+
+	function getServerFallbackInputState() {
+		return {
+			server2: !!(document.getElementById("server2") && document.getElementById("server2").checked),
+			server3: !!(document.getElementById("server3") && document.getElementById("server3").checked)
+		};
+	}
+
+	function setServerFallbackInputState(state) {
+		["server2", "server3"].forEach(function (id) {
+			var input = document.getElementById(id);
+			if (input && input.checked !== !!state[id]) {
+				input.checked = !!state[id];
+				updateSettings(input, true);
+			}
+		});
+		refreshLinks();
+	}
+
+	function undoServerFallbackForDockLinks() {
+		if (!serverFallbackUndoState) {
+			return;
+		}
+		setServerFallbackInputState(serverFallbackUndoState);
+		serverFallbackUndoState = null;
+		showServerFallbackBanner(null, "Server Fallback was undone. Your previous dock/overlay link settings are restored.", true);
+	}
+
 	function enableServerFallbackForDockLinks() {
+		if (!confirm("Server Fallback changes your dock and overlay links. After enabling, copy the updated links into OBS or reload/re-add those sources. Continue?")) {
+			return;
+		}
+		serverFallbackUndoState = getServerFallbackInputState();
 		["server2", "server3"].forEach(function (id) {
 			var input = document.getElementById(id);
 			if (input && !input.checked) {
@@ -10691,7 +10724,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 		refreshLinks();
-		showServerFallbackBanner(null, "Server Fallback is enabled. Re-open or reload your dock and overlays using the updated links.", true);
+		showServerFallbackBanner(null, "Server Fallback is enabled. Copy the updated dock/overlay links into OBS, then reload those sources.", true, false, true);
 	}
 
 	function getServerFallbackBanner() {
@@ -10702,13 +10735,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return banner;
 	}
 
-	function showServerFallbackBanner(health, customMessage, success, hideEnableButton) {
+	function showServerFallbackBanner(health, customMessage, success, hideEnableButton, showUndoButton) {
 		var banner = getServerFallbackBanner();
 		if (!banner) {
 			return;
 		}
 		var messageNode = banner.querySelector('[data-role="message"]');
 		var enableButton = banner.querySelector('[data-role="enable"]');
+		var undoButton = banner.querySelector('[data-role="undo"]');
 		var dismissButton = banner.querySelector('[data-role="dismiss"]');
 		var message = customMessage || (health && !health.webRTCSupported
 			? "This browser does not appear to support WebRTC. If the fake test message did not appear, Server Fallback may help."
@@ -10723,6 +10757,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				enableButton.dataset.boundServerFallback = "1";
 				enableButton.onclick = function () {
 					enableServerFallbackForDockLinks();
+				};
+			}
+		}
+		if (undoButton) {
+			undoButton.style.display = showUndoButton && serverFallbackUndoState ? "" : "none";
+			if (!undoButton.dataset.boundServerFallback) {
+				undoButton.dataset.boundServerFallback = "1";
+				undoButton.onclick = function () {
+					undoServerFallbackForDockLinks();
 				};
 			}
 		}
