@@ -642,12 +642,12 @@ try{
 		if (parsed === true) {
 			localStorage.setItem(TWITCH_HOSTED_AUTH_STORAGE_KEY, 'true');
 		} else if (parsed === false) {
-			localStorage.removeItem(TWITCH_HOSTED_AUTH_STORAGE_KEY);
+			localStorage.setItem(TWITCH_HOSTED_AUTH_STORAGE_KEY, 'false');
 		}
 	}
 	function isHostedTwitchAuthEnabled() {
 		updateHostedAuthPreferenceFromUrl();
-		return localStorage.getItem(TWITCH_HOSTED_AUTH_STORAGE_KEY) === 'true';
+		return localStorage.getItem(TWITCH_HOSTED_AUTH_STORAGE_KEY) !== 'false';
 	}
 	async function canStartHostedTwitchAuth() {
 		try {
