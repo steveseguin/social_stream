@@ -827,20 +827,26 @@ try{
 		if (authLink) {
 			authLink.addEventListener('click', async function(e) {
 				e.preventDefault();
-				if (isHostedTwitchAuthEnabled()) {
-					const startedHostedAuth = await startHostedTwitchAuthFlow();
-					if (startedHostedAuth) {
-						return;
-					}
-				}
 				if (isElectron) {
 					const authMethod = localStorage.getItem('twitchAuthMethod') || 'external';
 					if (authMethod === 'external') {
-						startExternalTwitchAuthFlow();
-					} else {
-						window.location.href = authUrl();
+						await startExternalTwitchAuthFlow();
+						return;
 					}
+					if (isHostedTwitchAuthEnabled()) {
+						const startedHostedAuth = await startHostedTwitchAuthFlow();
+						if (startedHostedAuth) {
+							return;
+						}
+					}
+					window.location.href = authUrl();
 				} else {
+					if (isHostedTwitchAuthEnabled()) {
+						const startedHostedAuth = await startHostedTwitchAuthFlow();
+						if (startedHostedAuth) {
+							return;
+						}
+					}
 					window.location.href = authUrl();
 				}
 			});
@@ -2089,7 +2095,9 @@ async function ensureChatClientInstance() {
 			const result = await startOAuthFn({
 				clientId,
 				scopes: scope.split('+'),
-				state
+				state,
+				authBase: TWITCH_HOSTED_AUTH_BASE_URL,
+				authMode: isHostedTwitchAuthEnabled() ? 'hosted' : 'legacy'
 			});
 			if (!result || !result.access_token) {
 				console.error('Twitch OAuth did not return an access_token.');
@@ -2097,7 +2105,13 @@ async function ensureChatClientInstance() {
 				return;
 			}
 			// Process the token as if it came from the hash fragment
-			setStoredToken(result.access_token, result.expires_in, result.refresh_token, result.scope);
+			setStoredToken(
+				result.access_token,
+				result.expires_in,
+				result.refresh_token,
+				result.scope,
+				result.client_id || result.clientId
+			);
 			verifyAndUseToken(result.access_token);
 		} catch (error) {
 			console.error('External Twitch OAuth failed:', error);
