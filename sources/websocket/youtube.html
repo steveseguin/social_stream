@@ -4321,7 +4321,7 @@ function enableBackgroundKeepAlive() {
 	}
 	function shouldFallbackToLegacyYouTubeAuth(error) {
 		const status = Number(error && error.status);
-		return !status || status === 405 || status >= 500;
+		return !status || status === 401 || status === 403 || status === 405 || status >= 500;
 	}
 	async function postHostedYouTubeAuthJson(path, payload) {
 		async function postToBase(baseUrl) {
