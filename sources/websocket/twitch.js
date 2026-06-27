@@ -312,6 +312,7 @@ try{
 	window.websocket = websocketProxy;
 	var isExtensionOn = true;
 	var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
+	var hostedClientId = 'ysbszgkt7uh5kn7qjed822dd89722n';
 	var redirectURI = window.location.href.split("/twitch")[0]+"/twitch.html"; //  'https://socialstream.ninja/sources/websocket/twitch.html';
 	var scope = [
 		'chat:read',
@@ -337,6 +338,17 @@ try{
 	var FFZ = false;
 	var EMOTELIST = false;
 	var settings = {};
+	var TWITCH_HOSTED_AUTH_BASE_URL = 'https://sso.socialstream.ninja/auth/twitch';
+	var TWITCH_SSO_HEALTH_URL = 'https://sso.socialstream.ninja/health';
+	var TWITCH_AUTH_RESULT_KEY = 'twitch_auth_result';
+	var TWITCH_AUTH_ERROR_KEY = 'twitch_auth_error';
+	var TWITCH_REFRESH_TOKEN_KEY = 'twitchOAuthRefreshToken';
+	var TWITCH_TOKEN_EXPIRY_KEY = 'twitchOAuthExpiry';
+	var TWITCH_TOKEN_SCOPE_KEY = 'twitchOAuthScope';
+	var TWITCH_TOKEN_CLIENT_ID_KEY = 'twitchOAuthClientId';
+	var TWITCH_HOSTED_AUTH_STORAGE_KEY = 'twitchUseHostedOAuth';
+	var tokenRefreshTimer = null;
+	var tokenRefreshPromise = null;
 
 	function syncThirdPartyEmotesForChannel(force = false) {
 		const activeChannel = (channel || "").replace(/^#/, "").trim();
@@ -474,12 +486,259 @@ try{
 	function getStoredToken() {
 		return localStorage.getItem('twitchOAuthToken');
 	}
-	function setStoredToken(token) {
-		localStorage.setItem('twitchOAuthToken', token);
+	function getStoredRefreshToken() {
+		return localStorage.getItem(TWITCH_REFRESH_TOKEN_KEY);
+	}
+	function getStoredTokenExpiry() {
+		const value = parseInt(localStorage.getItem(TWITCH_TOKEN_EXPIRY_KEY) || '', 10);
+		return Number.isFinite(value) ? value : 0;
+	}
+	function getStoredTokenClientId() {
+		return localStorage.getItem(TWITCH_TOKEN_CLIENT_ID_KEY) || clientId;
+	}
+	function getTwitchApiClientId() {
+		return getStoredTokenClientId();
+	}
+	function setStoredToken(token, expiresIn, refreshToken, tokenScope, tokenClientId) {
+		if (token) {
+			localStorage.setItem('twitchOAuthToken', token);
+			sessionStorage.setItem('twitchOAuthToken', token);
+		}
+		const expiresInSeconds = Number(expiresIn);
+		if (Number.isFinite(expiresInSeconds) && expiresInSeconds > 0) {
+			localStorage.setItem(TWITCH_TOKEN_EXPIRY_KEY, String(Date.now() + expiresInSeconds * 1000));
+		}
+		if (refreshToken) {
+			localStorage.setItem(TWITCH_REFRESH_TOKEN_KEY, refreshToken);
+		}
+		if (Array.isArray(tokenScope)) {
+			localStorage.setItem(TWITCH_TOKEN_SCOPE_KEY, tokenScope.join(' '));
+		} else if (tokenScope) {
+			localStorage.setItem(TWITCH_TOKEN_SCOPE_KEY, String(tokenScope));
+		}
+		if (tokenClientId) {
+			localStorage.setItem(TWITCH_TOKEN_CLIENT_ID_KEY, String(tokenClientId));
+		}
+		scheduleStoredTokenRefresh();
 	}
 	function clearStoredToken() {
+		if (tokenRefreshTimer) {
+			clearTimeout(tokenRefreshTimer);
+			tokenRefreshTimer = null;
+		}
 		localStorage.removeItem('twitchOAuthToken');
+		localStorage.removeItem(TWITCH_REFRESH_TOKEN_KEY);
+		localStorage.removeItem(TWITCH_TOKEN_EXPIRY_KEY);
+		localStorage.removeItem(TWITCH_TOKEN_SCOPE_KEY);
+		localStorage.removeItem(TWITCH_TOKEN_CLIENT_ID_KEY);
 		localStorage.removeItem('twitchChannel');
+	}
+	function updateStoredTokenExpiry(expiresIn) {
+		const expiresInSeconds = Number(expiresIn);
+		if (!Number.isFinite(expiresInSeconds) || expiresInSeconds <= 0) {
+			return;
+		}
+		localStorage.setItem(TWITCH_TOKEN_EXPIRY_KEY, String(Date.now() + expiresInSeconds * 1000));
+		scheduleStoredTokenRefresh();
+	}
+	function scheduleStoredTokenRefresh() {
+		if (tokenRefreshTimer) {
+			clearTimeout(tokenRefreshTimer);
+			tokenRefreshTimer = null;
+		}
+		if (!getStoredRefreshToken()) {
+			return;
+		}
+		const expiresAt = getStoredTokenExpiry();
+		if (!expiresAt) {
+			return;
+		}
+		const delay = Math.max(0, expiresAt - Date.now() - 60000);
+		tokenRefreshTimer = setTimeout(function() {
+			refreshAccessToken({ reason: 'scheduled' }).catch(function(error) {
+				console.warn('Scheduled Twitch token refresh failed:', error);
+			});
+		}, delay);
+	}
+	function base64UrlToJson(value) {
+		try {
+			const normalized = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
+			const padded = normalized + '==='.slice((normalized.length + 3) % 4);
+			const binary = atob(padded);
+			const bytes = new Uint8Array(binary.length);
+			for (let i = 0; i < binary.length; i++) {
+				bytes[i] = binary.charCodeAt(i);
+			}
+			let text = '';
+			try {
+				text = new TextDecoder().decode(bytes);
+			} catch (_) {
+				text = decodeURIComponent(escape(binary));
+			}
+			return JSON.parse(text);
+		} catch (error) {
+			console.error('Failed to parse Twitch hosted OAuth payload:', error);
+			return null;
+		}
+	}
+	function cleanHostedAuthHash() {
+		try {
+			const url = new URL(window.location.href);
+			const hash = new URLSearchParams(url.hash.slice(1));
+			[
+				TWITCH_AUTH_RESULT_KEY,
+				TWITCH_AUTH_ERROR_KEY,
+				'access_token',
+				'token_type',
+				'expires_in',
+				'scope',
+				'state',
+				'error',
+				'error_description'
+			].forEach(function(key) {
+				hash.delete(key);
+			});
+			const nextHash = hash.toString();
+			url.hash = nextHash ? nextHash : '';
+			window.history.replaceState({}, document.title, url.toString());
+		} catch (error) {
+			console.warn('Unable to clean Twitch auth data from URL:', error);
+		}
+	}
+	function buildHostedReturnToUrl() {
+		const url = new URL(window.location.href);
+		const hash = new URLSearchParams(url.hash.slice(1));
+		[
+			TWITCH_AUTH_RESULT_KEY,
+			TWITCH_AUTH_ERROR_KEY,
+			'access_token',
+			'token_type',
+			'expires_in',
+			'scope',
+			'state',
+			'error',
+			'error_description'
+		].forEach(function(key) {
+			hash.delete(key);
+		});
+		url.hash = hash.toString();
+		return url.toString();
+	}
+	function buildHostedAuthUrl() {
+		const url = new URL(TWITCH_HOSTED_AUTH_BASE_URL + '/start');
+		url.searchParams.set('return_to', buildHostedReturnToUrl());
+		return url.toString();
+	}
+	function parseHostedAuthFlag(value) {
+		value = String(value || '').trim().toLowerCase();
+		if (['1', 'true', 'yes', 'hosted', 'worker'].includes(value)) return true;
+		if (['0', 'false', 'no', 'legacy', 'off'].includes(value)) return false;
+		return null;
+	}
+	function updateHostedAuthPreferenceFromUrl() {
+		const queryValue = urlParams.get('twitchHostedOAuth');
+		const hashValue = hashParams.get('twitchHostedOAuth');
+		const parsed = parseHostedAuthFlag(queryValue != null ? queryValue : hashValue);
+		if (parsed === true) {
+			localStorage.setItem(TWITCH_HOSTED_AUTH_STORAGE_KEY, 'true');
+		} else if (parsed === false) {
+			localStorage.removeItem(TWITCH_HOSTED_AUTH_STORAGE_KEY);
+		}
+	}
+	function isHostedTwitchAuthEnabled() {
+		updateHostedAuthPreferenceFromUrl();
+		return localStorage.getItem(TWITCH_HOSTED_AUTH_STORAGE_KEY) === 'true';
+	}
+	async function canStartHostedTwitchAuth() {
+		try {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(function() {
+				controller.abort();
+			}, 5000);
+			const response = await fetch(TWITCH_SSO_HEALTH_URL, {
+				cache: 'no-store',
+				signal: controller.signal
+			});
+			clearTimeout(timeoutId);
+			const data = await response.json().catch(function() { return {}; });
+			return !!(response.ok && Array.isArray(data.providers) && data.providers.includes('twitch'));
+		} catch (error) {
+			console.warn('Twitch hosted OAuth is unavailable; falling back to legacy auth.', error);
+			return false;
+		}
+	}
+	async function startHostedTwitchAuthFlow() {
+		if (!(await canStartHostedTwitchAuth())) {
+			return false;
+		}
+		window.location.href = buildHostedAuthUrl();
+		return true;
+	}
+	function handleHostedAuthCallback() {
+		const resultPayload = hashParams.get(TWITCH_AUTH_RESULT_KEY);
+		const errorPayload = hashParams.get(TWITCH_AUTH_ERROR_KEY);
+		if (errorPayload) {
+			const errorData = base64UrlToJson(errorPayload) || {};
+			console.error('Twitch hosted OAuth failed:', errorData.message || errorData.error || errorData);
+			cleanHostedAuthHash();
+			showAuthButton();
+			return true;
+		}
+		if (!resultPayload) {
+			return false;
+		}
+		const result = base64UrlToJson(resultPayload);
+		const tokens = result && (result.tokens || result);
+		if (!tokens || !tokens.access_token) {
+			console.error('Twitch hosted OAuth did not return an access token.');
+			cleanHostedAuthHash();
+			showAuthButton();
+			return true;
+		}
+		setStoredToken(tokens.access_token, tokens.expires_in, tokens.refresh_token, tokens.scope, tokens.client_id || hostedClientId);
+		cleanHostedAuthHash();
+		verifyAndUseToken(tokens.access_token);
+		return true;
+	}
+	async function refreshAccessToken(options = {}) {
+		if (tokenRefreshPromise) {
+			return tokenRefreshPromise;
+		}
+		const refreshToken = getStoredRefreshToken();
+		if (!refreshToken) {
+			return null;
+		}
+		tokenRefreshPromise = (async function() {
+			try {
+				const response = await fetch(TWITCH_HOSTED_AUTH_BASE_URL + '/refresh', {
+					method: 'POST',
+					headers: {
+						'Accept': 'application/json',
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ refresh_token: refreshToken })
+				});
+				const data = await response.json().catch(function() { return {}; });
+				if (!response.ok) {
+					const message = data.error_description || data.error || data.message || `HTTP ${response.status}`;
+					const error = new Error(message);
+					error.status = response.status;
+					throw error;
+				}
+				if (!data.access_token) {
+					throw new Error('Twitch refresh response did not include an access token.');
+				}
+				setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshToken, data.scope, data.client_id || hostedClientId);
+				console.log('Twitch access token refreshed' + (options.reason ? ` (${options.reason})` : ''));
+				return data.access_token;
+			} catch (error) {
+				console.warn('Unable to refresh Twitch access token:', error);
+				return null;
+			}
+		})().finally(function() {
+			tokenRefreshPromise = null;
+		});
+		return tokenRefreshPromise;
 	}
 	
 	let tokenExpirationHandled = false;
@@ -538,6 +797,7 @@ try{
 	function initializePage() {
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
+		updateHostedAuthPreferenceFromUrl();
 		channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || channel;
 		syncThirdPartyEmotesForChannel(true);
 		
@@ -565,8 +825,14 @@ try{
 
 		const authLink = document.getElementById('auth-link');
 		if (authLink) {
-			authLink.addEventListener('click', function(e) {
+			authLink.addEventListener('click', async function(e) {
 				e.preventDefault();
+				if (isHostedTwitchAuthEnabled()) {
+					const startedHostedAuth = await startHostedTwitchAuthFlow();
+					if (startedHostedAuth) {
+						return;
+					}
+				}
 				if (isElectron) {
 					const authMethod = localStorage.getItem('twitchAuthMethod') || 'external';
 					if (authMethod === 'external') {
@@ -605,6 +871,10 @@ try{
 		}
 
 		// Check authentication state
+		scheduleStoredTokenRefresh();
+		if (handleHostedAuthCallback()) {
+			return;
+		}
 		const storedToken = getStoredToken();
 		if (storedToken) {
 			verifyAndUseToken(storedToken);
@@ -616,16 +886,11 @@ try{
 	}
 
 	async function verifyAndUseToken(token) {
-		fetch('https://id.twitch.tv/oauth2/validate', {
-			headers: {
-				'Authorization': `OAuth ${token}`
-			}
-		})
-		.then(response => response.json())
-		.then(async data => {
+		try {
+			const data = await validateToken(token);
 			console.log("Token validation data:", data);
 			if (data.login) {
-				setStoredToken(token);
+				setStoredToken(getStoredToken() || token);
 				username = data.login;
 				localStorage.setItem("twitchChannel", channel);
 				
@@ -650,12 +915,11 @@ try{
 				clearStoredToken();
 				showAuthButton();
 			}
-		})
-		.catch(error => {
+		} catch (error) {
 			console.error('Error validating token:', error);
 			clearStoredToken();
 			showAuthButton();
-		});
+		}
 	}
 
 	// Add new function to fetch user's specific badges
@@ -663,7 +927,7 @@ try{
 		try {
 			const response = await fetch(`https://api.twitch.tv/helix/chat/badges/user?user_id=${userId}`, {
 				headers: {
-					'Client-ID': clientId,
+					'Client-ID': getTwitchApiClientId(),
 					'Authorization': `Bearer ${token}`
 				}
 			});
@@ -725,7 +989,7 @@ try{
 		}
 
 		try {
-			const response = await fetchWithTimeout(`https://api.twitch.tv/helix/users?login=${username}`, 5000, {'Client-ID': clientId, 'Authorization': `Bearer ${token}`});
+			const response = await fetchWithTimeout(`https://api.twitch.tv/helix/users?login=${username}`, 5000, {'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`});
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
@@ -747,8 +1011,8 @@ try{
 		}
 
 		try {
-			const globalResponse = await fetchWithTimeout('https://api.twitch.tv/helix/chat/badges/global', 5000, {'Client-ID': clientId, 'Authorization': `Bearer ${token}`});
-			const channelResponse = await fetchWithTimeout(`https://api.twitch.tv/helix/chat/badges?broadcaster_id=${channelId}`, 5000, {'Client-ID': clientId, 'Authorization': `Bearer ${token}`});
+			const globalResponse = await fetchWithTimeout('https://api.twitch.tv/helix/chat/badges/global', 5000, {'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`});
+			const channelResponse = await fetchWithTimeout(`https://api.twitch.tv/helix/chat/badges?broadcaster_id=${channelId}`, 5000, {'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`});
 
 			if (!globalResponse.ok || !channelResponse.ok) {
 				throw new Error(`HTTP error! status: ${globalResponse.status} ${channelResponse.status}`);
@@ -1069,7 +1333,7 @@ async function ensureChatClientInstance() {
 		}
 	}
 
-	async function validateToken(token) {
+	async function validateToken(token, options = {}) {
 		try {
 			const response = await fetch('https://id.twitch.tv/oauth2/validate', {
 				headers: {
@@ -1078,11 +1342,29 @@ async function ensureChatClientInstance() {
 			});
 			if (!response.ok) {
 				if (response.status === 401 || response.status === 403) {
+					if (options.allowRefresh !== false) {
+						const refreshedToken = await refreshAccessToken({ reason: 'validation' });
+						if (refreshedToken) {
+							return validateToken(refreshedToken, { allowRefresh: false });
+						}
+					}
 					handleTokenExpiration();
 				}
 				return null;
 			}
 			const data = await response.json();
+			if (data.client_id) {
+				localStorage.setItem(TWITCH_TOKEN_CLIENT_ID_KEY, data.client_id);
+			}
+			if (data.expires_in) {
+				updateStoredTokenExpiry(data.expires_in);
+				if (data.expires_in < 300 && options.allowRefresh !== false && getStoredRefreshToken()) {
+					const refreshedToken = await refreshAccessToken({ reason: 'near-expiry' });
+					if (refreshedToken && refreshedToken !== token) {
+						return validateToken(refreshedToken, { allowRefresh: false });
+					}
+				}
+			}
 			
 			// Update auth status indicator
 			const authStatus = document.getElementById('auth-status');
@@ -1119,7 +1401,7 @@ async function ensureChatClientInstance() {
 		}
 	}
 	async function connect() {
-		const token = getStoredToken();
+		let token = getStoredToken();
 		if (!token) {
 			console.error('No token available');
 			showAuthButton();
@@ -1131,16 +1413,17 @@ async function ensureChatClientInstance() {
 
 		channel = channel.replace(/^#/, '');
 
-		const channelInfo = await getUserInfo(channel);
-		if (!channelInfo) {
-			console.log('Failed to get channel info');
-			return;
-		}
-
 		const authUser = await validateToken(token);
 		if (!authUser) {
 			clearStoredToken();
 			showAuthButton();
+			return;
+		}
+		token = getStoredToken() || token;
+
+		const channelInfo = await getUserInfo(channel);
+		if (!channelInfo) {
+			console.log('Failed to get channel info');
 			return;
 		}
 
@@ -1474,7 +1757,7 @@ async function ensureChatClientInstance() {
 				{
 					headers: {
 						'Authorization': `Bearer ${token}`,
-						'Client-ID': clientId
+						'Client-ID': getTwitchApiClientId()
 					}
 				}
 			);
@@ -1487,7 +1770,7 @@ async function ensureChatClientInstance() {
 				{
 					headers: {
 						'Authorization': `Bearer ${token}`,
-						'Client-ID': clientId
+						'Client-ID': getTwitchApiClientId()
 					}
 				}
 			);
@@ -1525,8 +1808,7 @@ async function ensureChatClientInstance() {
 
 
 	function signOut() {
-		localStorage.removeItem('twitchOAuthToken');
-		localStorage.removeItem('twitchChannel');
+		clearStoredToken();
 		localStorage.removeItem('twitchUserAlias');
 		sessionStorage.removeItem('twitchOAuthState');
 		sessionStorage.removeItem('twitchOAuthToken');
@@ -1812,8 +2094,7 @@ async function ensureChatClientInstance() {
 				return;
 			}
 			// Process the token as if it came from the hash fragment
-			localStorage.setItem('twitchOAuthToken', result.access_token);
-			sessionStorage.setItem('twitchOAuthToken', result.access_token);
+			setStoredToken(result.access_token, result.expires_in, result.refresh_token, result.scope);
 			verifyAndUseToken(result.access_token);
 		} catch (error) {
 			console.error('External Twitch OAuth failed:', error);
@@ -2036,7 +2317,7 @@ async function ensureChatClientInstance() {
 				'https://api.twitch.tv/helix/chat/badges/global',
 				5000,
 				{
-					'Client-ID': clientId,
+					'Client-ID': getTwitchApiClientId(),
 					'Authorization': `Bearer ${token}`
 				}
 			);
@@ -2046,7 +2327,7 @@ async function ensureChatClientInstance() {
 				`https://api.twitch.tv/helix/chat/badges?broadcaster_id=${channelId}`,
 				5000,
 				{
-					'Client-ID': clientId,
+					'Client-ID': getTwitchApiClientId(),
 					'Authorization': `Bearer ${token}`
 				}
 			);
@@ -2135,6 +2416,11 @@ async function ensureChatClientInstance() {
 		const stillValid = await validateStoredTokenWithoutSideEffects(token);
 		if (stillValid) {
 			console.warn('Twitch API rejected this request, but OAuth token is still valid; keeping sign-in.');
+			return;
+		}
+		const refreshedToken = await refreshAccessToken({ reason: 'api-401' });
+		if (refreshedToken) {
+			console.warn('Twitch API rejected the previous token; refreshed OAuth token and kept sign-in.');
 			return;
 		}
 		console.error('Twitch OAuth token failed validation after API auth error; clearing credentials.');
@@ -2699,7 +2985,7 @@ async function ensureChatClientInstance() {
 				`https://api.twitch.tv/helix/streams?user_login=${channelName}`,
 				5000,
 				{
-					'Client-ID': clientId,
+					'Client-ID': getTwitchApiClientId(),
 					'Authorization': `Bearer ${token}`
 				}
 			);
@@ -2734,7 +3020,7 @@ async function ensureChatClientInstance() {
 				`https://api.twitch.tv/helix/channels/followers?broadcaster_id=${broadcasterId}`,
 				5000,
 				{
-					'Client-ID': clientId,
+					'Client-ID': getTwitchApiClientId(),
 					'Authorization': `Bearer ${token}`
 				}
 			);
@@ -2765,7 +3051,7 @@ async function ensureChatClientInstance() {
 				`https://api.twitch.tv/helix/subscriptions?broadcaster_id=${broadcasterId}&first=1`,
 				5000,
 				{
-					'Client-ID': clientId,
+					'Client-ID': getTwitchApiClientId(),
 					'Authorization': `Bearer ${token}`
 				}
 			);
@@ -3119,7 +3405,7 @@ async function cleanupCurrentConnection() {
 					const response = await fetch('https://api.twitch.tv/helix/eventsub/subscriptions', {
 						method: 'POST',
 						headers: {
-							'Client-ID': clientId,
+							'Client-ID': getTwitchApiClientId(),
 							'Authorization': `Bearer ${token}`,
 							'Content-Type': 'application/json'
 						},
@@ -3469,7 +3755,7 @@ async function cleanupCurrentConnection() {
 		try {
 			const response = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${currentChannelId}`, {
 				headers: {
-					'Client-ID': clientId,
+					'Client-ID': getTwitchApiClientId(),
 					'Authorization': `Bearer ${token}`
 				}
 			});
@@ -3500,7 +3786,7 @@ async function cleanupCurrentConnection() {
 		try {
 			const response = await fetch(`https://api.twitch.tv/helix/search/categories?query=${encodeURIComponent(query)}`, {
 				headers: {
-					'Client-ID': clientId,
+					'Client-ID': getTwitchApiClientId(),
 					'Authorization': `Bearer ${token}`
 				}
 			});
@@ -3556,7 +3842,7 @@ async function cleanupCurrentConnection() {
 			const response = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${currentChannelId}`, {
 				method: 'PATCH',
 				headers: {
-					'Client-ID': clientId,
+					'Client-ID': getTwitchApiClientId(),
 					'Authorization': `Bearer ${token}`,
 					'Content-Type': 'application/json'
 				},
@@ -3589,7 +3875,7 @@ async function cleanupCurrentConnection() {
 			const response = await fetch(`https://api.twitch.tv/helix/moderation/chat?broadcaster_id=${currentChannelId}&moderator_id=${moderator.user_id}&message_id=${encodeURIComponent(messageId)}`, {
 				method: 'DELETE',
 				headers: {
-					'Client-ID': clientId,
+					'Client-ID': getTwitchApiClientId(),
 					'Authorization': `Bearer ${token}`
 				}
 			});
@@ -3616,7 +3902,7 @@ async function cleanupCurrentConnection() {
 			const res = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${currentChannelId}&moderator_id=${moderator.user_id}`,
 				{
 					method: 'POST',
-					headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+					headers: { 'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
 					body: JSON.stringify({ data: { user_id: String(userId), duration: duration || undefined, reason: reason || undefined } })
 				}
 			);
@@ -3644,7 +3930,7 @@ async function cleanupCurrentConnection() {
 			const userId = await getUserIdByLogin(login);
 			if (!userId) return false;
 			const res = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${currentChannelId}&moderator_id=${moderator.user_id}&user_id=${userId}`,
-				{ method: 'DELETE', headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}` } }
+				{ method: 'DELETE', headers: { 'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}` } }
 			);
 			return res.ok;
 		} catch(e) { console.error('unbanUser error', e); return false; }
@@ -3656,7 +3942,7 @@ async function cleanupCurrentConnection() {
 			if (!token || !currentChannelId) return false;
 			const res = await fetch('https://api.twitch.tv/helix/channels/ads', {
 				method: 'POST',
-				headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+				headers: { 'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
 				body: JSON.stringify({ broadcaster_id: currentChannelId, length: duration })
 			});
 			const data = await res.json().catch(()=>({}));
@@ -3675,7 +3961,7 @@ async function cleanupCurrentConnection() {
 			const token = getStoredToken();
 			if (!token || !currentChannelId) return null;
 			const res = await fetch(`https://api.twitch.tv/helix/channels/ads?broadcaster_id=${currentChannelId}`, {
-				headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}` }
+				headers: { 'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}` }
 			});
 			const data = await res.json();
 			if (res.ok) {
@@ -3698,7 +3984,7 @@ async function cleanupCurrentConnection() {
 				`https://api.twitch.tv/helix/moderation/moderators?broadcaster_id=${broadcasterId}&user_id=${userId}`,
 				{
 					headers: {
-						'Client-ID': clientId,
+						'Client-ID': getTwitchApiClientId(),
 						'Authorization': `Bearer ${token}`
 					}
 				}
@@ -3722,7 +4008,7 @@ async function cleanupCurrentConnection() {
 				`https://api.twitch.tv/helix/channels?broadcaster_id=${broadcasterId}`,
 				{
 					headers: {
-						'Client-ID': clientId,
+						'Client-ID': getTwitchApiClientId(),
 						'Authorization': `Bearer ${token}`
 					}
 				}
