@@ -5457,6 +5457,8 @@
 					this.lastHeartbeatResponse = Date.now();
 					this.conversationHistory = [];
 					this.responseActive = false;
+					this.pendingAudioResponse = false;
+					this.pendingModelTextResponse = "";
 					this.maxTokens = 20000; // Set below the 32K limit
 					this.loadConversationHistory();
 					updateDiagnostics({
@@ -5665,15 +5667,14 @@
 							this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.");
 						}
 
-						// Handle model content
-						if (response.serverContent?.modelTurn?.parts) {
-							const parts = response.serverContent.modelTurn.parts;
-							let hasAudioParts = false;
-							let modelTextResponse = ""; // Accumulate text response
+						const serverContent = response.serverContent;
 
+						// Handle model content
+						if (serverContent?.modelTurn?.parts) {
+							const parts = serverContent.modelTurn.parts;
 							parts.forEach(part => {
 								if (part.text) {
-									modelTextResponse += part.text;
+									this.pendingModelTextResponse += part.text;
 
 									window.dispatchEvent(
 										new CustomEvent("modelResponse", {
@@ -5682,7 +5683,7 @@
 									);
 								}
 								if (part.inlineData && part.inlineData.mimeType.startsWith("audio/")) {
-									hasAudioParts = true;
+									this.pendingAudioResponse = true;
 									try {
 										const rateMatch = part.inlineData.mimeType.match(/rate=(\d+)/);
 										const sampleRate = rateMatch ? parseInt(rateMatch[1]) : 24000;
@@ -5694,27 +5695,27 @@
 									}
 								}
 							});
+						}
 
-							if (response.serverContent.turnComplete && hasAudioParts) {
+						if (serverContent?.turnComplete) {
+							if (this.pendingAudioResponse) {
 								console.log("Turn complete, finalizing audio");
 								this.audioPlayer.complete();
+								this.pendingAudioResponse = false;
 							}
-
-							// After processing all parts, add to history if response is complete
-							if (response.serverContent.turnComplete) {
-								if (modelTextResponse) {
-									this.addAssistantMessage(modelTextResponse);
-								}
-								this.responseActive = false;
-								if (messageFormatter && !messageFormatter.messageComplete) {
-									messageFormatter.finalizeMessage();
-								}
-								updateDiagnostics({
-									state: "connected",
-									connected: "yes",
-									lastEvent: "response.turn.complete"
-								});
+							if (this.pendingModelTextResponse) {
+								this.addAssistantMessage(this.pendingModelTextResponse);
+								this.pendingModelTextResponse = "";
 							}
+							this.responseActive = false;
+							if (messageFormatter && !messageFormatter.messageComplete) {
+								messageFormatter.finalizeMessage();
+							}
+							updateDiagnostics({
+								state: "connected",
+								connected: "yes",
+								lastEvent: "response.turn.complete"
+							});
 						}
 
 						// Handle ANY response from server as a valid heartbeat response
@@ -5773,6 +5774,8 @@
 				_sendPromptInternal(text) {
 					if (this.isConnected()) {
 						this.responseActive = true;
+						this.pendingAudioResponse = false;
+						this.pendingModelTextResponse = "";
 						const message = {
 							clientContent: {
 								turns: [

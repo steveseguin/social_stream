@@ -3080,6 +3080,9 @@
 					  chatbadges = '<div class="hl-badges" >' + chatbadges + "</div>";
 					}
 
+					var renderChatMessageAsText = !!(data.textonly && !largeImage);
+					var renderedChatMessage = renderChatMessageAsText ? "" : (data.chatmessage || "");
+
 					// ADD NO-AVATAR CLASS TO CONTAINER
 					var noAvatarClass = avatarForMessage ? "" : " no-avatar";
 
@@ -3115,7 +3118,11 @@
 						messageDiv.setAttribute('style', styleOverride.replace(/style="/i, '').replace(/"$/,''));
 					  }
 					  messageDiv.setAttribute('dir', textDirection);
-					  messageDiv.innerHTML = data.chatmessage;
+					  if (renderChatMessageAsText) {
+						messageDiv.textContent = data.chatmessage || "";
+					  } else {
+						messageDiv.innerHTML = data.chatmessage;
+					  }
 					  messageContainer.appendChild(messageDiv);
 
 					  // Add the avatar and source type elements first
@@ -3170,8 +3177,11 @@
 					  // Original non-stacking behavior with no-avatar class added
 					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + data.type + '">' +
 						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" +
-						'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + data.chatmessage + "</div>" +
+						'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" +
 						avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
+					  if (renderChatMessageAsText && document.getElementById("message")) {
+						document.getElementById("message").textContent = data.chatmessage || "";
+					  }
 
 					  if (data.hasDonation || memebershipHTML) {
 						document.getElementById("newmessage").classList.add("dono");

@@ -5695,8 +5695,14 @@ function enableBackgroundKeepAlive() {
 						var span = document.createElement("div");
 						const badgeHtml = renderChatBadgesForPage(chatbadges);
 						
-						const renderedMessage = textOnlyMode ? strictEscapeHtml(finalChatMessage) : finalChatMessage;
-						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: ${renderedMessage}`;
+						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: `;
+						if (textOnlyMode) {
+							span.appendChild(document.createTextNode(finalChatMessage));
+						} else {
+							var messagePreview = document.createElement("span");
+							messagePreview.innerHTML = finalChatMessage;
+							span.appendChild(messagePreview);
+						}
 						textarea.appendChild(span);
 						// More aggressive cleanup to prevent memory buildup
 						const maxMessages = 50;
@@ -5875,7 +5881,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: giftLabel,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "jeweldonation",
-				textonly: settings.textonlymode || false,
+				textonly: false,
 				meta: { youtubeGift: metaGift }
 			};
 			if (giftData.giftUrl) {
@@ -6059,7 +6065,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: giftData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftredemption",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing gift redemption:', e);
@@ -6114,7 +6120,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftpurchase",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing gift purchase:', e);
@@ -6163,7 +6169,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: sponsorData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "sponsorship",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing new sponsorship:', e);
@@ -6230,7 +6236,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "membermilestone",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing member milestone:', e);
@@ -6291,7 +6297,7 @@ function enableBackgroundKeepAlive() {
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "supersticker",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing super sticker:', e);

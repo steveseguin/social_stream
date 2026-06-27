@@ -6714,6 +6714,10 @@ async function sendToDestinations(message) {
 		}
 	}
 
+	if (message && typeof message === "object" && typeof sanitizeRelayPayloadFields === "function") {
+		message = sanitizeRelayPayloadFields(message) || message;
+	}
+
 	var reactionEventName = "";
 	if (message && typeof message.event === "string") {
 		reactionEventName = message.event
@@ -6798,7 +6802,7 @@ async function sendToDestinations(message) {
 						customGifCommand: getMatchedCommandAlias(values.command, cleanMessageText, "startsWithToken"),
 						customGifCommands: aliases
 					});
-					const gifPayload = { ...message, ...{ contentimg: values.url, meta: gifMeta } }; // overwrite any existing contentimg. leave the rest of the meta data tho
+					const gifPayload = typeof sanitizeRelayPayloadFields === "function" ? sanitizeRelayPayloadFields({ ...message, ...{ contentimg: values.url, meta: gifMeta } }) : { ...message, ...{ contentimg: values.url, meta: gifMeta } }; // overwrite any existing contentimg. leave the rest of the meta data tho
 					sendTargetP2P(gifPayload, "gif");
 					if (gifMeta.customGifCommandId) {
 						sendTargetP2P(gifPayload, gifMeta.customGifCommandId);

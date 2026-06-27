@@ -347,8 +347,29 @@ try{
 	var TWITCH_TOKEN_SCOPE_KEY = 'twitchOAuthScope';
 	var TWITCH_TOKEN_CLIENT_ID_KEY = 'twitchOAuthClientId';
 	var TWITCH_HOSTED_AUTH_STORAGE_KEY = 'twitchUseHostedOAuth';
+	var TWITCH_TOKEN_VALIDATION_TRANSIENT_ERROR = 'transient_validation_error';
 	var tokenRefreshTimer = null;
 	var tokenRefreshPromise = null;
+
+	function createTransientTokenValidationError(status, message) {
+		return {
+			type: TWITCH_TOKEN_VALIDATION_TRANSIENT_ERROR,
+			status: status || null,
+			message: message || 'Twitch token validation is temporarily unavailable'
+		};
+	}
+
+	function isTransientTokenValidationError(value) {
+		return !!(value && value.type === TWITCH_TOKEN_VALIDATION_TRANSIENT_ERROR);
+	}
+
+	function keepStoredTokenAfterTransientValidationFailure(context, details) {
+		console.warn(
+			`Twitch token validation temporarily failed${context ? ` during ${context}` : ''}; keeping stored credentials for retry.`,
+			details && (details.message || details.status) ? (details.message || details.status) : details
+		);
+		showAuthButton();
+	}
 
 	function syncThirdPartyEmotesForChannel(force = false) {
 		const activeChannel = (channel || "").replace(/^#/, "").trim();
@@ -894,8 +915,12 @@ try{
 	async function verifyAndUseToken(token) {
 		try {
 			const data = await validateToken(token);
+			if (isTransientTokenValidationError(data)) {
+				keepStoredTokenAfterTransientValidationFailure('startup', data);
+				return;
+			}
 			console.log("Token validation data:", data);
-			if (data.login) {
+			if (data && data.login) {
 				setStoredToken(getStoredToken() || token);
 				username = data.login;
 				localStorage.setItem("twitchChannel", channel);
@@ -1335,7 +1360,14 @@ async function ensureChatClientInstance() {
 					'Authorization': `OAuth ${token}`
 				}
 			});
-			return response.ok;
+			if (!response.ok) {
+				if (response.status === 401 || response.status === 403) {
+					return false;
+				}
+				console.warn('Unable to confirm Twitch token after API auth error; keeping current sign-in for retry.', response.status);
+				return true;
+			}
+			return true;
 		} catch (error) {
 			console.warn('Unable to validate Twitch token after API auth error; keeping current sign-in for retry.', error);
 			return true;
@@ -1358,8 +1390,9 @@ async function ensureChatClientInstance() {
 						}
 					}
 					handleTokenExpiration();
+					return null;
 				}
-				return null;
+				return createTransientTokenValidationError(response.status, `HTTP ${response.status}`);
 			}
 			const data = await response.json();
 			if (data.client_id) {
@@ -1406,7 +1439,7 @@ async function ensureChatClientInstance() {
 			return data;
 		} catch (error) {
 			console.error('Token validation error:', error);
-			return null;
+			return createTransientTokenValidationError(null, error && error.message ? error.message : String(error));
 		}
 	}
 	async function connect() {
@@ -1423,6 +1456,10 @@ async function ensureChatClientInstance() {
 		channel = channel.replace(/^#/, '');
 
 		const authUser = await validateToken(token);
+		if (isTransientTokenValidationError(authUser)) {
+			keepStoredTokenAfterTransientValidationFailure('connect', authUser);
+			return;
+		}
 		if (!authUser) {
 			clearStoredToken();
 			showAuthButton();
@@ -1499,7 +1536,9 @@ async function ensureChatClientInstance() {
 				const refreshedToken = getStoredToken();
 				if (refreshedToken) {
 					const validationResult = await validateToken(refreshedToken);
-					if (!validationResult) {
+					if (isTransientTokenValidationError(validationResult)) {
+						console.log('Token validation temporarily failed during periodic check; keeping stored credentials');
+					} else if (!validationResult) {
 						console.log('Token validation failed during periodic check');
 					}
 				}
@@ -3287,6 +3326,7 @@ async function cleanupCurrentConnection() {
 		try {
 			// Get user permissions for the channel
 			const authUser = await validateToken(token);
+			if (isTransientTokenValidationError(authUser)) return;
 			if (!authUser) return;
 
 			const permissions = await checkUserPermissions(broadcasterId, authUser.user_id);
@@ -3761,7 +3801,8 @@ async function cleanupCurrentConnection() {
 		if (!token || !currentChannelId) {
 			return null;
 		}
-		return validateToken(token);
+		const moderator = await validateToken(token);
+		return isTransientTokenValidationError(moderator) ? null : moderator;
 	}
 
 	async function getCurrentChannelInformation() {
@@ -3944,6 +3985,7 @@ async function cleanupCurrentConnection() {
 			const token = getStoredToken();
 			if (!token || !currentChannelId) return false;
 			const moderator = await validateToken(token);
+			if (!moderator || isTransientTokenValidationError(moderator)) return false;
 			const userId = await getUserIdByLogin(login);
 			if (!userId) return false;
 			const res = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${currentChannelId}&moderator_id=${moderator.user_id}&user_id=${userId}`,
