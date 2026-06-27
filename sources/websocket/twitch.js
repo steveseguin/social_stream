@@ -962,6 +962,9 @@ try{
 		}
 		syncThirdPartyEmotesForChannel(true);
 		token = hashMatch(/access_token=(\w+)/);
+		if (token) {
+			cleanHostedAuthHash();
+		}
 		if (sessionStorage.twitchOAuthState == state) {
 			verifyAndUseToken(token);
 		} else {
