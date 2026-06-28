@@ -30,7 +30,7 @@ Not audited as broken links:
 Read-only inline Node audit result:
 
 ```text
-totalMarkdown: 167
+totalMarkdown: 168
 orphanishCount: 0
 localBrokenCount: 0
 ambiguousBareSectionIndexCount: 0
@@ -69,7 +69,7 @@ The audit found six ambiguous bare section-index filename references before clea
 - `docs/agents/11-support-kb/support-intake-templates.md`: changed first-answer routing to `docs/agents/11-support-kb/index.md`.
 - `docs/agents/11-support-kb/support-source-map.md`: changed current baseline output from a bare section-index filename to `docs/agents/11-support-kb/index.md`.
 
-The static docs viewer pass also added `docs/agents/SITEMAP.md` plus one `docs/agents/*/SITEMAP.md` in every immediate `docs/agents` subfolder. Section sitemap file links were rewritten with explicit folder paths such as `../13-reference/index.md` so agents and audits do not confuse repeated local section-index filenames.
+The static docs viewer pass also added `docs/agents/SITEMAP.md` plus one `docs/agents/*/SITEMAP.md` in every immediate `docs/agents` subfolder. Section sitemap file links were rewritten with explicit folder paths such as `docs/agents/13-reference/index.md` so agents and audits do not confuse repeated local section-index filenames.
 
 ## Known Non-Failures
 

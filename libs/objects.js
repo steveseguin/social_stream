@@ -12,113 +12,352 @@ String.prototype.replaceAllCase = function (strReplace, strWith) {
 	return this.replace(reg, strWith);
 };
 
-function filterXSS(unsafe) {
-	// this is not foolproof, but it might catch some basic probe attacks that sneak in
-	try {
-		return unsafe
-			.replace(/[\s\/]on[a-z0-9_-]+\s*=/gi, " data-blocked-event=")
-			.replace(/javascript\s*:/gi, "**")
-			.replace(/srcdoc\s*=/gi, "**")
-			.replace(/src\s*=\s*["']?\s*data\s*:[^"'\s>]*/gi, 'src=""')
-			.replace(/data\s*:\s*text\/html/gi, "**")
-			.replaceAll("prompt(", "**")
-			.replaceAll("eval(", "**")
-			.replaceAll("onclick(", "**")
-			.replaceAll("alert(", "**")
-			.replaceAll("onload=", "**")
-			.replaceAll("onerror=", "**")
-			.replaceAll(" onmouse", "**") // onmousedown, onmouseup, etc
-			.replaceAll("onfocusin=", "**")
-			.replaceAll("onfocusout=", "**")
-			.replaceAll("onfocus=", "**")
-			.replaceAll("onblur=", "**")
-			.replaceAll("oninput=", "**")
-			.replaceAll("onkeydown=", "**")
-			.replaceAll("onkeyup=", "**")
-			.replaceAll("onkeypress=", "**")
-			.replaceAll("onkeyup", "**")
-			.replaceAll("=alert", "**")
-			.replaceAll("=prompt", "**")
-			.replaceAll("=confirm", "**")
-			.replaceAll("confirm(", "**")
-			.replaceAll("=eval", "**")
-			.replaceAll("ondblclick=", "**")
-			.replaceAll("javascript:", "**")
-			.replaceAll("srcdoc=", "**")
-			.replaceAll("xlink:href=", "**")
-			.replaceAll("xmlns:xlink=", "**")
-			.replaceAll("ontouchstart=", "**")
-			.replaceAll("ontouchend=", "**")
-			.replaceAll("ontouchmove=", "**")
-			.replaceAll("ontouchcancel=", "**")
-			.replaceAll("onchange=", "**")
-			.replaceAll("src=data:", "*,*")
-			.replaceAll("data:text/html", "*,*")
-			.replaceAll("onpageshow=", "**")
-			.replaceAll("href=//0", "**")
-			.replaceAll("onhashchange=", "**")
-			.replaceAll("onscroll=", "**")
-			.replaceAll("onresize=", "**")
-			.replaceAll("onhelp=", "**")
-			.replaceAll("onstart=", "**")
-			.replaceAll("onfinish=", "**")
-			.replaceAll("onloadstart=", "**")
-			.replaceAll("onend=", "**")
-			.replaceAll("onsubmit=", "**")
-			.replaceAll("onshow=", "**")
-			.replaceAll("alert`", "**")
-			.replaceAll("alert&", "**")
-			.replaceAll("(alert)(", "**")
-			.replaceAll("innerHTML", "**")
-			.replaceAll(" ondrag", "**")
-			.replaceAll("activate=", "**")
-			.replaceAll(" onbefore", "**")
-			.replaceAll("oncopy=", "**")
-			.replaceAll("oncut=", "**")
-			.replaceAll("onpaste=", "**")
-			.replaceAll("onpopstate=", "**")
-			.replaceAll("onunhandledrejection=", "**")
-			.replaceAll("onwheel=", "**")
-			.replaceAll("oncontextmenu=", "**")
-			.replaceAll("XMLHttpRequest(", "**")
-			.replaceAll("Object.defineProperty", "**")
-			.replaceAll("document.createElement(", "**")
-			.replaceAll("MouseEvent(", "**")
-			.replaceAll("unescape(", "**")
-			.replaceAll("onreadystatechange", "**")
-			.replaceAll("document.write(", "**")
-			.replaceAll("write(", "**")
-			.replaceAllCase("<textarea", "**")
-			.replaceAllCase("<embed", "**")
-			.replaceAllCase("<iframe", "**")
-			.replaceAllCase("<input", "**")
-			.replaceAllCase("<link", "**")
-			.replaceAllCase("<meta", "**")
-			.replaceAllCase("<style", "**")
-			.replaceAllCase("<table", "**")
-			.replaceAllCase("<layer", "**")
-			.replaceAllCase("<body", "**")
-			.replaceAllCase("<object", "**")
-			.replaceAllCase("<html", "**")
-			.replaceAllCase("<animation", "**")
-			.replaceAllCase("<listener", "**")
-			.replaceAllCase("<handler", "**")
-			.replaceAllCase("<form", "**")
-			.replaceAllCase("<?xml", "**")
-			.replaceAllCase("<stylesheet", "**")
-			.replaceAllCase("<eval", "**")
-			.replaceAll("=javascript", "**")
-			.replaceAll(" formaction=", "**")
-			.replaceAll("'';!--", "**")
-			.replaceAllCase("<script", "**")
-			.replaceAllCase("<audio", "**")
-			.replaceAllCase("<bgsound", "**")
-			.replaceAllCase("<blink", "**")
-			.replaceAllCase("<br><br><br>", "")
-			.replaceAllCase("<video", "**");
-	} catch (e) {
-		return unsafe;
+var ssnXSSLibrary = typeof window !== "undefined" && window.filterXSS && window.filterXSS.FilterXSS ? window.filterXSS : null;
+var ssnXSSFilter = null;
+
+function fallbackEscapeHtml(value) {
+	return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
+		return {
+			"&": "&amp;",
+			"<": "&lt;",
+			">": "&gt;",
+			'"': "&quot;",
+			"'": "&#039;"
+		}[char];
+	});
+}
+
+function hasUnsafeUrlCharacters(value) {
+	return /[\u0000-\u001f\u007f<>"'`\s]/.test(String(value || ""));
+}
+
+function sanitizeXSSUrl(value, allowDataImage) {
+	var raw = String(value || "").trim();
+	if (!raw) return "";
+	if (allowDataImage && /^data:image\/(?:png|jpe?g|gif|webp|avif);base64,[a-z0-9+/=\s]+$/i.test(raw)) {
+		return raw.replace(/\s+/g, "");
 	}
+	if (/^(?:\/|\.\/|\.\.\/)/.test(raw)) return hasUnsafeUrlCharacters(raw) ? "" : raw;
+	if (hasUnsafeUrlCharacters(raw)) return "";
+	try {
+		var URLCtor = typeof URL !== "undefined" ? URL : null;
+		if (!URLCtor) return "";
+		var base = typeof location !== "undefined" && location.href ? location.href : "https://socialstream.ninja/";
+		var parsed = new URLCtor(raw, base);
+		var protocol = (parsed.protocol || "").toLowerCase();
+		if (protocol === "http:" || protocol === "https:") return parsed.href;
+	} catch (e) {}
+	return "";
+}
+
+function sanitizeXSSSrcset(value) {
+	var raw = String(value || "").trim();
+	if (!raw || raw.length > 4000) return "";
+	var candidates = raw.split(",");
+	var safeCandidates = [];
+	for (var i = 0; i < candidates.length && i < 8; i++) {
+		var candidate = candidates[i].trim();
+		if (!candidate) continue;
+		var parts = candidate.split(/\s+/).filter(Boolean);
+		if (!parts.length || parts.length > 2) continue;
+		var safeUrl = sanitizeXSSUrl(parts[0], false);
+		if (!safeUrl) continue;
+		var descriptor = parts[1] || "";
+		if (descriptor && !/^(?:\d+(?:\.\d+)?x|\d+w)$/.test(descriptor)) continue;
+		safeCandidates.push(safeUrl + (descriptor ? " " + descriptor : ""));
+	}
+	return safeCandidates.join(", ");
+}
+
+function sanitizeXSSClass(value) {
+	return String(value || "")
+		.split(/\s+/)
+		.filter(function (token) {
+			return /^[a-z0-9_-]+$/i.test(token);
+		})
+		.join(" ");
+}
+
+function sanitizeXSSId(value) {
+	var raw = String(value || "").trim();
+	return /^[a-z][a-z0-9_-]*$/i.test(raw) ? raw : "";
+}
+
+function sanitizeXSSNumber(value) {
+	var raw = String(value || "").trim();
+	return /^-?(?:\d+|\d*\.\d+)(?:e[-+]?\d+)?(?:px|em|rem|%)?$/i.test(raw) ? raw : "";
+}
+
+function sanitizeXSSNumberList(value, minCount, maxCount) {
+	var raw = String(value || "").trim();
+	if (!raw || /[^0-9eE+\-.,\s%]/.test(raw)) return "";
+	var parts = raw.split(/[\s,]+/).filter(Boolean);
+	if (parts.length < minCount || parts.length > maxCount) return "";
+	for (var i = 0; i < parts.length; i++) {
+		if (!sanitizeXSSNumber(parts[i])) return "";
+	}
+	return raw;
+}
+
+function sanitizeXSSColor(value) {
+	var raw = String(value || "").trim();
+	if (/^(?:none|currentColor|transparent)$/i.test(raw)) return raw;
+	if (/^#[0-9a-f]{3,8}$/i.test(raw)) return raw;
+	if (/^rgba?\(\s*(?:\d{1,3}\s*,\s*){2}\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(raw)) return raw;
+	if (/^hsla?\(\s*-?\d+(?:deg)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(raw)) return raw;
+	if (/^[a-z]+$/i.test(raw)) return raw;
+	if (/^url\(\s*#[a-z][a-z0-9_-]*\s*\)$/i.test(raw)) return raw;
+	return "";
+}
+
+function sanitizeXSSPath(value) {
+	var raw = String(value || "").trim();
+	if (!raw || raw.length > 12000) return "";
+	return /^[a-z0-9eE+\-.,\s]+$/i.test(raw) ? raw : "";
+}
+
+function sanitizeXSSPoints(value) {
+	var raw = String(value || "").trim();
+	if (!raw || raw.length > 8000 || /[^0-9eE+\-.,\s%]/.test(raw)) return "";
+	return raw;
+}
+
+function sanitizeXSSTransform(value) {
+	var raw = String(value || "").trim();
+	if (!raw || raw.length > 2000) return "";
+	if (/[^a-z0-9eE+\-.,()\s%]/i.test(raw)) return "";
+	return /^(?:\s*(?:matrix|translate|scale|rotate|skewX|skewY)\s*\(\s*[-+0-9eE.,\s%]+\s*\)\s*)+$/i.test(raw) ? raw : "";
+}
+
+function sanitizeXSSSvgAttr(tag, name, value) {
+	var normalizedName = String(name || "").toLowerCase();
+	var raw = String(value || "").trim();
+	var outputName = name;
+	var safeValue = "";
+
+	if (normalizedName === "viewbox") {
+		outputName = "viewBox";
+		safeValue = sanitizeXSSNumberList(raw, 4, 4);
+	} else if (normalizedName === "preserveaspectratio") {
+		outputName = "preserveAspectRatio";
+		safeValue = /^[a-z0-9\s]+$/i.test(raw) ? raw : "";
+	} else if (normalizedName === "gradientunits") {
+		outputName = "gradientUnits";
+		safeValue = /^(?:userSpaceOnUse|objectBoundingBox)$/i.test(raw) ? raw : "";
+	} else if (normalizedName === "gradienttransform") {
+		outputName = "gradientTransform";
+		safeValue = sanitizeXSSTransform(raw);
+	} else if (normalizedName === "class") {
+		safeValue = sanitizeXSSClass(raw);
+	} else if (normalizedName === "id") {
+		safeValue = sanitizeXSSId(raw);
+	} else if (normalizedName === "xmlns") {
+		safeValue = raw === "http://www.w3.org/2000/svg" ? raw : "";
+	} else if (normalizedName === "role") {
+		safeValue = /^[a-z0-9_-]+$/i.test(raw) ? raw : "";
+	} else if (normalizedName === "aria-label") {
+		safeValue = raw.slice(0, 200);
+	} else if (normalizedName === "focusable") {
+		safeValue = /^(?:true|false)$/i.test(raw) ? raw.toLowerCase() : "";
+	} else if (normalizedName === "fill" || normalizedName === "stroke" || normalizedName === "stop-color") {
+		safeValue = sanitizeXSSColor(raw);
+	} else if (normalizedName === "d") {
+		safeValue = sanitizeXSSPath(raw);
+	} else if (normalizedName === "points") {
+		safeValue = sanitizeXSSPoints(raw);
+	} else if (normalizedName === "transform") {
+		safeValue = sanitizeXSSTransform(raw);
+	} else if (/^(?:x|y|x1|y1|x2|y2|cx|cy|r|rx|ry|fx|fy|fr|width|height|stroke-width|stroke-miterlimit|stroke-opacity|fill-opacity|stop-opacity|opacity|offset|font-size|dx|dy)$/.test(normalizedName)) {
+		safeValue = sanitizeXSSNumber(raw);
+	} else if (/^(?:stroke-linecap|stroke-linejoin|fill-rule|clip-rule|text-anchor|dominant-baseline)$/.test(normalizedName)) {
+		safeValue = /^[a-z-]+$/i.test(raw) ? raw : "";
+	} else if (normalizedName === "font-family") {
+		safeValue = /^[a-z0-9\s,'"-]+$/i.test(raw) ? raw : "";
+	}
+
+	return safeValue ? outputName + '="' + (ssnXSSLibrary.escapeAttrValue || fallbackEscapeHtml)(safeValue) + '"' : "";
+}
+
+function getSSNXSSFilter() {
+	if (ssnXSSFilter) return ssnXSSFilter;
+	if (!ssnXSSLibrary) return null;
+
+	var xss = ssnXSSLibrary;
+	var escapeAttrValue = xss.escapeAttrValue || fallbackEscapeHtml;
+	var svgGlobalAttributes = ["class", "id", "role", "aria-label", "focusable", "transform", "fill", "stroke", "opacity"];
+	var svgShapeAttributes = svgGlobalAttributes.concat(["d", "x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry", "width", "height", "points", "stroke-width", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "fill-opacity", "fill-rule", "clip-rule"]);
+	ssnXSSFilter = new xss.FilterXSS({
+		whiteList: {
+			a: ["href", "target", "title"],
+			img: ["src", "srcset", "alt", "title", "class", "loading", "decoding"],
+			span: ["class"],
+			b: ["class"],
+			strong: ["class"],
+			i: ["class"],
+			em: ["class"],
+			u: ["class"],
+			s: ["class"],
+			small: ["class"],
+			code: ["class"],
+			br: [],
+			svg: ["class", "id", "viewBox", "width", "height", "role", "aria-label", "focusable", "xmlns", "fill", "stroke", "preserveAspectRatio"],
+			g: svgGlobalAttributes,
+			path: svgShapeAttributes,
+			circle: svgShapeAttributes,
+			rect: svgShapeAttributes,
+			ellipse: svgShapeAttributes,
+			line: svgShapeAttributes,
+			polyline: svgShapeAttributes,
+			polygon: svgShapeAttributes,
+			title: [],
+			desc: [],
+			defs: [],
+			lineargradient: ["id", "x1", "y1", "x2", "y2", "gradientUnits", "gradientTransform"],
+			radialgradient: ["id", "cx", "cy", "r", "fx", "fy", "fr", "gradientUnits", "gradientTransform"],
+			stop: ["offset", "stop-color", "stop-opacity"],
+			text: svgGlobalAttributes.concat(["x", "y", "dx", "dy", "font-size", "font-family", "text-anchor", "dominant-baseline"])
+		},
+		stripIgnoreTag: true,
+		stripIgnoreTagBody: ["script", "style"],
+		onTagAttr: function (tag, name, value) {
+			var normalizedName = String(name || "").toLowerCase();
+			if (/^(?:svg|g|path|circle|rect|ellipse|line|polyline|polygon|defs|lineargradient|radialgradient|stop|title|desc|text)$/.test(String(tag || "").toLowerCase())) {
+				return sanitizeXSSSvgAttr(tag, name, value);
+			}
+			if (normalizedName === "href") {
+				var safeHref = sanitizeXSSUrl(value, false);
+				return safeHref ? 'href="' + escapeAttrValue(safeHref) + '"' : "";
+			}
+			if (normalizedName === "src") {
+				var safeSrc = sanitizeXSSUrl(value, true);
+				return safeSrc ? 'src="' + escapeAttrValue(safeSrc) + '"' : "";
+			}
+			if (normalizedName === "srcset") {
+				var safeSrcset = sanitizeXSSSrcset(value);
+				return safeSrcset ? 'srcset="' + escapeAttrValue(safeSrcset) + '"' : "";
+			}
+			if (normalizedName === "target") {
+				return String(value).toLowerCase() === "_blank" ? 'target="_blank"' : "";
+			}
+			if (normalizedName === "class") {
+				var safeClass = sanitizeXSSClass(value);
+				return safeClass ? 'class="' + escapeAttrValue(safeClass) + '"' : "";
+			}
+		}
+	});
+	return ssnXSSFilter;
+}
+
+var filterXSS = function (unsafe) {
+	try {
+		if (unsafe === null || typeof unsafe === "undefined") return "";
+		var filter = getSSNXSSFilter();
+		if (!filter) return fallbackEscapeHtml(unsafe);
+		return filter.process(String(unsafe));
+	} catch (e) {
+		return fallbackEscapeHtml(unsafe);
+	}
+};
+
+function sanitizeRelayUrl(value, allowDataImage) {
+	return sanitizeXSSUrl(value, !!allowDataImage);
+}
+
+function sanitizeRelayCssColor(value) {
+	var raw = String(value || "").trim();
+	if (!raw) return "";
+	if (/^(?:color|background-color)\s*:/i.test(raw)) {
+		raw = raw.replace(/^(?:color|background-color)\s*:/i, "").replace(/;\s*$/, "").trim();
+	}
+	if (!raw || /[<>"'{};]/.test(raw) || /(?:url|expression)\s*\(/i.test(raw)) return "";
+	if (/^(?:currentColor|transparent)$/i.test(raw)) return raw;
+	if (/^#[0-9a-f]{3,8}$/i.test(raw)) return raw;
+	if (/^rgba?\(\s*(?:\d{1,3}\s*,\s*){2}\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(raw)) return raw;
+	if (/^hsla?\(\s*-?\d+(?:deg)?\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(raw)) return raw;
+	if (/^[a-z]+$/i.test(raw)) return raw;
+	return "";
+}
+
+function sanitizeRelayCssDeclaration(value, property) {
+	var color = sanitizeRelayCssColor(value);
+	return color ? property + ":" + color + ";" : "";
+}
+
+function sanitizeRelayBadge(badge) {
+	if (badge == null) return "";
+	if (typeof badge === "string") {
+		var rawBadge = badge.trim();
+		if (!rawBadge) return "";
+		if (rawBadge.indexOf("<") !== -1 || rawBadge.indexOf(">") !== -1) return filterXSS(rawBadge);
+		return sanitizeRelayUrl(rawBadge, true);
+	}
+	if (typeof badge !== "object") return "";
+
+	var output = {};
+	var type = String(badge.type || "").toLowerCase();
+	if (type === "img" || badge.src) {
+		var safeSrc = sanitizeRelayUrl(badge.src, true);
+		if (!safeSrc) return "";
+		output.type = "img";
+		output.src = safeSrc;
+		if (badge.bgcolor) {
+			var safeBg = sanitizeRelayCssColor(badge.bgcolor);
+			if (safeBg) output.bgcolor = safeBg;
+		}
+		return output;
+	}
+	if (type === "svg" && badge.html) {
+		var safeHtml = filterXSS(badge.html);
+		return safeHtml ? { type: "svg", html: safeHtml } : "";
+	}
+	if (type === "text" && badge.text) {
+		output.type = "text";
+		output.text = fallbackEscapeHtml(badge.text);
+		if (badge.bgcolor) {
+			var textBg = sanitizeRelayCssColor(badge.bgcolor);
+			if (textBg) output.bgcolor = textBg;
+		}
+		if (badge.color) {
+			var textColor = sanitizeRelayCssColor(badge.color);
+			if (textColor) output.color = textColor;
+		}
+		return output;
+	}
+	return "";
+}
+
+function sanitizeRelayBadges(value) {
+	if (!value) return value;
+	if (typeof value === "string") return filterXSS(value);
+	if (!Array.isArray(value)) {
+		var singleBadge = sanitizeRelayBadge(value);
+		return singleBadge ? [singleBadge] : "";
+	}
+	var output = [];
+	for (var i = 0; i < value.length; i++) {
+		var safeBadge = sanitizeRelayBadge(value[i]);
+		if (safeBadge) output.push(safeBadge);
+	}
+	return output.length ? output : "";
+}
+
+function sanitizeRelayPayloadFields(message) {
+	if (!message || typeof message !== "object") return message;
+
+	if (message.chatimg) message.chatimg = sanitizeRelayUrl(message.chatimg, true);
+	if (message.backupChatimg) message.backupChatimg = sanitizeRelayUrl(message.backupChatimg, true);
+	if (message.sourceImg) message.sourceImg = sanitizeRelayUrl(message.sourceImg, true);
+	if (message.contentimg) message.contentimg = sanitizeRelayUrl(message.contentimg, true);
+
+	if (message.nameColor) message.nameColor = sanitizeRelayCssColor(message.nameColor);
+	if (message.textColor) message.textColor = sanitizeRelayCssColor(message.textColor);
+	if (message.backgroundColor) message.backgroundColor = sanitizeRelayCssColor(message.backgroundColor);
+	if (message.highlightColor) message.highlightColor = sanitizeRelayCssColor(message.highlightColor);
+	if (message.backgroundNameColor) message.backgroundNameColor = sanitizeRelayCssDeclaration(message.backgroundNameColor, "background-color");
+	if (message.textNameColor) message.textNameColor = sanitizeRelayCssDeclaration(message.textNameColor, "color");
+	if (message.chatbadges) message.chatbadges = sanitizeRelayBadges(message.chatbadges);
+
+	return message;
 }
 
 // Compare version numbers (returns -1 if v1 < v2, 0 if equal, 1 if v1 > v2)

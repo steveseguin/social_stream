@@ -22,6 +22,7 @@ async function loadScriptsInOrder() {
         './actions/EventFlowEditor.js?v=1',
 		'./actions/interface.js',
 		'./dashboard.js',
+		'./thirdparty/xss.min.js?v=1',
         './libs/objects.js?v=1',
         './libs/colours.js?v=1',
         './spotify.js?v=1',

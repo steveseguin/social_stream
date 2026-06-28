@@ -17,12 +17,47 @@ const SUBSCRIBER_CACHE_KEY = 'youtube.subscriberCache';
 const SUBSCRIBER_CACHE_LIMIT = 200;
 const SUBSCRIBER_POLL_INTERVAL = 120000;
 
-const AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
+const AUTH_BASE_URL = 'https://sso.socialstream.ninja/youtube';
+const LEGACY_AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
 
 const YT_SCOPES = [
   'https://www.googleapis.com/auth/youtube.readonly',
   'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
 ];
+
+function shouldFallbackToLegacyYouTubeAuth(error) {
+  const status = Number(error && error.status);
+  return !status || status === 401 || status === 403 || status === 405 || status >= 500;
+}
+
+async function postHostedYouTubeAuthJson(path, payload) {
+  async function postToBase(baseUrl) {
+    const res = await fetch(`${baseUrl}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const message = data?.error_description || data?.error || 'YouTube token exchange failed.';
+      const error = new Error(message);
+      error.status = res.status;
+      error.payload = data;
+      throw error;
+    }
+    return data;
+  }
+
+  try {
+    return await postToBase(AUTH_BASE_URL);
+  } catch (error) {
+    if (AUTH_BASE_URL !== LEGACY_AUTH_BASE_URL && shouldFallbackToLegacyYouTubeAuth(error)) {
+      console.warn('YouTube SSO bridge failed; falling back to legacy ytauth bridge.', error);
+      return postToBase(LEGACY_AUTH_BASE_URL);
+    }
+    throw error;
+  }
+}
 
 function buildCanonicalRedirectUri() {
   try {
@@ -601,19 +636,10 @@ export class YoutubePlugin extends BasePlugin {
 
     let tokenResponse;
     try {
-      const res = await fetch(`${AUTH_BASE_URL}/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code,
-          redirect_uri: redirectUrl
-        })
+      tokenResponse = await postHostedYouTubeAuthJson('/token', {
+        code,
+        redirect_uri: redirectUrl
       });
-      tokenResponse = await res.json();
-      if (!res.ok) {
-        const message = tokenResponse?.error_description || tokenResponse?.error || 'YouTube token exchange failed.';
-        throw new Error(message);
-      }
     } catch (err) {
       throw new Error(err?.message || 'Failed to exchange YouTube authorization code.');
     }

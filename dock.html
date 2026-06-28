@@ -9,6 +9,7 @@
 		<link href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
 		<meta name="robots" content="noindex">
 		<script type="text/javascript" src="currency.js"></script>
+		<script type="text/javascript" src="./thirdparty/xss.min.js"></script>
 		<script type="text/javascript" src="./libs/objects.js"></script>
 
 		<style>
@@ -10681,11 +10682,11 @@
 					var chatmessage = data.chatmessage || "";
 
 					if (chatmessage) {
-						if (stylizeEmoji && !reloaded) {
+						if (stylizeEmoji && !reloaded && !data.textonly) {
 							//chatmessage = chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "<span class='emoji'>$1</span>");
 							chatmessage = wrapEmojis(chatmessage);
 						}
-						if (!stripHTML) {
+						if (!stripHTML && !data.textonly) {
 							// we want to reuse this, but only if HTML is allowed
 							data.chatmessage = chatmessage;
 							data.textonly = false; // we know that it contains html now

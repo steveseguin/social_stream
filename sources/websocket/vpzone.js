@@ -1,7 +1,7 @@
 (function () {
 	const HOST = "https://vpzone.tv";
 	const SOURCE_NAME = "VPZone";
-	const SOURCE_IMG = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48cGF0aCBkPSJNMTQgMThoMTBsOCAyNCA4LTI0aDEwTDM3IDUwSDI3TDE0IDE4eiIgZmlsbD0iIzEyYzdjMiIvPjxjaXJjbGUgY3g9IjQ4IiBjeT0iMTYiIHI9IjYiIGZpbGw9IiM3YzVjZmYiLz48L3N2Zz4=";
+	const SOURCE_IMG = "./sources/images/vpzone.png";
 	const CONFIG_KEY = "vpzoneWsConfig";
 	const TOKEN_KEY = "vpzoneWsTokens";
 	const OAUTH_KEY = "vpzoneOAuthState";

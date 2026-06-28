@@ -270,7 +270,8 @@ try {
     var YT_ADMIN_SCOPES = YT_READONLY_SCOPES.concat([
         'https://www.googleapis.com/auth/youtube.force-ssl'
     ]);
-    var AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
+    var AUTH_BASE_URL = 'https://sso.socialstream.ninja/youtube';
+    var LEGACY_AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
     var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
     var YT_ACCESS_LEVEL_KEY = 'youtubeOAuthAccessLevel';
     var YT_AUTH_SOURCE_KEY = 'youtubeOAuthSource';
@@ -4318,6 +4319,37 @@ function enableBackgroundKeepAlive() {
 			? bridge
 			: null;
 	}
+	function shouldFallbackToLegacyYouTubeAuth(error) {
+		const status = Number(error && error.status);
+		return !status || status === 401 || status === 403 || status === 405 || status >= 500;
+	}
+	async function postHostedYouTubeAuthJson(path, payload) {
+		async function postToBase(baseUrl) {
+			const response = await fetch(baseUrl + path, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
+				const error = new Error(msg);
+				error.status = response.status;
+				error.payload = data;
+				throw error;
+			}
+			return data;
+		}
+		try {
+			return await postToBase(AUTH_BASE_URL);
+		} catch (error) {
+			if (AUTH_BASE_URL !== LEGACY_AUTH_BASE_URL && shouldFallbackToLegacyYouTubeAuth(error)) {
+				console.warn('YouTube SSO bridge failed; falling back to legacy ytauth bridge.', error);
+				return postToBase(LEGACY_AUTH_BASE_URL);
+			}
+			throw error;
+		}
+	}
 	async function refreshAccessToken(refreshTokenValue) {
 		if (!refreshTokenValue) {
             console.log('No refresh token available for refreshAccessToken.');
@@ -4344,16 +4376,10 @@ function enableBackgroundKeepAlive() {
 					clientSecret: credentials.clientSecret
 				});
 			} else {
-				const response = await fetch(AUTH_BASE_URL + '/refresh', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ refresh_token: refreshTokenValue, client_id: DEFAULT_YT_CLIENT_ID })
+				data = await postHostedYouTubeAuthJson('/refresh', {
+					refresh_token: refreshTokenValue,
+					client_id: DEFAULT_YT_CLIENT_ID
 				});
-				data = await response.json().catch(() => ({}));
-				if (!response.ok) {
-					const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
-					throw new Error(msg);
-				}
 			}
 			if (!data || !data.access_token) {
 				throw new Error('Token refresh response did not include access_token.');
@@ -4401,16 +4427,11 @@ function enableBackgroundKeepAlive() {
 					clientSecret: credentials.clientSecret
 				});
 			} else {
-				const response = await fetch(AUTH_BASE_URL + '/token', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ code: code, redirect_uri: redirectTarget, client_id: DEFAULT_YT_CLIENT_ID })
+				data = await postHostedYouTubeAuthJson('/token', {
+					code: code,
+					redirect_uri: redirectTarget,
+					client_id: DEFAULT_YT_CLIENT_ID
 				});
-				data = await response.json().catch(() => ({}));
-				if (!response.ok) {
-					const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
-					throw new Error(msg);
-				}
 			}
 			if (!data.access_token) {
 				throw new Error('Token exchange response did not include access_token.');
@@ -5674,8 +5695,14 @@ function enableBackgroundKeepAlive() {
 						var span = document.createElement("div");
 						const badgeHtml = renderChatBadgesForPage(chatbadges);
 						
-						const renderedMessage = textOnlyMode ? strictEscapeHtml(finalChatMessage) : finalChatMessage;
-						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: ${renderedMessage}`;
+						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: `;
+						if (textOnlyMode) {
+							span.appendChild(document.createTextNode(finalChatMessage));
+						} else {
+							var messagePreview = document.createElement("span");
+							messagePreview.innerHTML = finalChatMessage;
+							span.appendChild(messagePreview);
+						}
 						textarea.appendChild(span);
 						// More aggressive cleanup to prevent memory buildup
 						const maxMessages = 50;
@@ -5854,7 +5881,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: giftLabel,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "jeweldonation",
-				textonly: settings.textonlymode || false,
+				textonly: false,
 				meta: { youtubeGift: metaGift }
 			};
 			if (giftData.giftUrl) {
@@ -6038,7 +6065,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: giftData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftredemption",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing gift redemption:', e);
@@ -6093,7 +6120,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftpurchase",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing gift purchase:', e);
@@ -6142,7 +6169,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: sponsorData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "sponsorship",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing new sponsorship:', e);
@@ -6209,7 +6236,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "membermilestone",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing member milestone:', e);
@@ -6270,7 +6297,7 @@ function enableBackgroundKeepAlive() {
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "supersticker",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing super sticker:', e);
