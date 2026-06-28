@@ -836,8 +836,8 @@
                     <p class="source-note">Implementation: <code>sources/tiktok.js</code> for native TikTok pages and <code>sources/tikfinity.js</code> for TikFinity's activity-feed widget/iframe. SSApp still has a native TikTok integration with the widest event coverage (see SSApp docs).</p>
                     <ul class="requirements">
                         <li>Works on the broadcaster's live page. Gift/like/follow banners only populate when the session is authenticated.</li>
-                        <li>TikTok provides many events via DOM detection <strong>without requiring WebSocket mode</strong> &ndash; gifts, follows, joins, and likes are captured automatically.</li>
-                        <li>TikFinity widget pages at <code>tikfinity.zerody.one/widget/activity-feed*</code> also work. The embedded activity-feed iframe emits the same canonical TikTok payload fields for chat, follows, shares, gifts, subscriptions, joins, and treasure chests.</li>
+                        <li>TikTok provides many events via DOM detection <strong>without requiring WebSocket mode</strong> &ndash; gifts, follows, likes, and opt-in joins are captured from rendered rows.</li>
+                        <li>TikFinity widget pages at <code>tikfinity.zerody.one/widget/activity-feed*</code> also work. The embedded activity-feed iframe emits the same canonical TikTok payload fields for chat, follows, shares, gifts, subscriptions, opt-in joins, and treasure chests.</li>
                         <li>No additional API authentication required.</li>
                         <li><strong>SSApp native mode</strong> still adds events beyond the page/widget capture paths: <code>question_new</code>, <code>emote</code>, and <code>viewer_update</code>.</li>
                     </ul>
@@ -857,7 +857,7 @@
                             </tr>
                             <tr>
                                 <td><code>joined</code></td>
-                                <td>Join notifications (requires <em>Capture Stream Events</em> and optional join toggle).</td>
+                                <td>Join notifications when the global <em>Capture "joined" stream events</em> setting is enabled.</td>
                                 <td>Skips share notifications; <code>chatname</code> might be empty for some system strings.</td>
                             </tr>
                             <tr>
@@ -900,7 +900,7 @@
                     <p class="source-note">Implementation: <code>sources/whatnot.js</code></p>
                     <ul class="requirements">
                         <li>Open the live Whatnot show page with chat visible; websocket transport now assists chat, raids, donations, and fast viewer updates, while product/giveaway snapshots still rely on DOM sections rendered in the show view.</li>
-                        <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; viewer counts still follow the viewer/hype toggles.</li>
+                        <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; joined rows also require <em>Capture "joined" stream events</em>; viewer counts still follow the viewer/hype toggles.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -928,7 +928,7 @@
                             </tr>
                             <tr>
                                 <td><code>joined</code></td>
-                                <td>Chat rows whose normalized body starts with <code>joined</code>.</td>
+                                <td>Chat rows whose normalized body starts with <code>joined</code>, when <em>Capture "joined" stream events</em> is enabled.</td>
                                 <td>Uses string event labels for join notices (not boolean <code>true</code>).</td>
                             </tr>
                             <tr>
@@ -1178,6 +1178,11 @@
                                 <td>VPZone <code>follow</code> frame.</td>
                                 <td>Mapped into the standard follower event shape.</td>
                             </tr>
+                            <tr>
+                                <td class="status-event"><code>joined</code></td>
+                                <td>VPZone join/presence-style websocket events, when <em>Capture "joined" stream events</em> is enabled.</td>
+                                <td>Mapped into a chat-style system event with VPZone actor metadata under <code>meta</code>.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </article>
@@ -1370,7 +1375,7 @@
                     <ul class="requirements">
                         <li>Reads MeetMe's rendered live chat DOM on <code>app.meetme.com/live/view/...</code> pages and inside the <code>api.gateway.meetme-live.com/web-live/...</code> iframe.</li>
                         <li>When the iframe websocket is available, <code>wss://video-live.meetme.com/</code> frames are parsed before the DOM fallback to capture richer live events.</li>
-                        <li><code>hideevents</code> suppresses non-donation events; MeetMe gifts and diamond donations still populate donation fields. <code>capturejoinedevent</code> disables join/rejoin notices, and <code>capturelikeevent</code> controls whether likes appear in the main feed or only the reactions target.</li>
+                        <li><code>hideevents</code> suppresses non-donation events; MeetMe gifts and diamond donations still populate donation fields. <code>capturejoinedevent</code> enables join/rejoin notices, and <code>capturelikeevent</code> controls whether likes appear in the main feed or only the reactions target.</li>
                         <li>Viewer counts prefer the visible MeetMe header count, falling back to websocket totals only when the DOM count is unavailable. Counts emit on change and repeat the latest count about every 30 seconds while <code>showviewercount</code>/<code>hypemode</code> is enabled; follower totals are changed-only and rate-limited to roughly 60 seconds.</li>
                     </ul>
                     <table class="event-table">
@@ -1389,7 +1394,7 @@
                             </tr>
                             <tr>
                                 <td class="status-event"><code>joined</code> / <code>rejoined</code> / <code>left</code></td>
-                                <td><code>SNSChatParticipant</code> websocket create, update, or delete frames arrive, or MeetMe renders a DOM <code>join-cell</code> row.</td>
+                                <td><code>SNSChatParticipant</code> websocket create, update, or delete frames arrive, or MeetMe renders a DOM <code>join-cell</code> row. Joined/rejoined notices require <em>Capture "joined" stream events</em>.</td>
                                 <td>Emits chat-style system notices with actor name/avatar when MeetMe exposes them. <code>meta.isNewViewer</code>, <code>meta.viewerLevelId</code>, <code>meta.isBouncer</code>, and <code>meta.isSubscriber</code> preserve participant state.</td>
                             </tr>
                             <tr>

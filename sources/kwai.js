@@ -89,6 +89,7 @@
 		
 		if (event && msg){
 			if (msg.includes("just joined")){
+				if (!settings.capturejoinedevent){return;}
 				eventType = "joined";
 			} else if (ele.querySelector(".gift-img")){
 				hasDonation = msg.split("x");

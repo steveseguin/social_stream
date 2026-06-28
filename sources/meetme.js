@@ -565,7 +565,7 @@ function toDataURL(url, callback) {
 		if (settings.hideevents && !isDonationEvent) {
 			return false;
 		}
-		if ((eventName === "joined" || eventName === "rejoined") && settings.capturejoinedevent === false) {
+		if ((eventName === "joined" || eventName === "rejoined") && !settings.capturejoinedevent) {
 			return false;
 		}
 		return true;

@@ -402,7 +402,7 @@ Category key: `custom_injection`. Settings: 25.
 | `allmemberchat` | boolean | Mark a message as a memberchat only when its a highlighted membership message |
 | `blockpremiumshorts` | boolean | Block donations/memberships from Youtube Shorts. Requires &shorts added to the Youtube chat pop out also. |
 | `bttv` | boolean | Enable BTTV emotes - YT/TW channels + globals |
-| `capturejoinedevent` | boolean | Don't block 'joined' stream events in TikTok |
+| `capturejoinedevent` | boolean | Capture 'joined' stream events from supported sources |
 | `capturelikeevent` | boolean | Allow 'liked' stream events in TikTok (high volume) |
 | `delaykick` | boolean | Delay capturing messages from Kick to give time for messages to be deleted if needed; 3 extra seconds of delay |
 | `delaytwitch` | boolean | Delay capturing messages from Twitch to give time for messages to be deleted if needed; 3 extra seconds of delay |
