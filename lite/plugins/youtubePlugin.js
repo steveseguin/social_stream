@@ -18,6 +18,7 @@ const SUBSCRIBER_CACHE_LIMIT = 200;
 const SUBSCRIBER_POLL_INTERVAL = 120000;
 
 const AUTH_BASE_URL = 'https://sso.socialstream.ninja/youtube';
+// Legacy auth is the old Cloudflare Worker/domain using the same client ID and behavior; keep only as a temporary migration fallback.
 const LEGACY_AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
 
 const YT_SCOPES = [
