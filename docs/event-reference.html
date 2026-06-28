@@ -1371,7 +1371,7 @@
                         <li>Reads MeetMe's rendered live chat DOM on <code>app.meetme.com/live/view/...</code> pages and inside the <code>api.gateway.meetme-live.com/web-live/...</code> iframe.</li>
                         <li>When the iframe websocket is available, <code>wss://video-live.meetme.com/</code> frames are parsed before the DOM fallback to capture richer live events.</li>
                         <li><code>hideevents</code> suppresses non-donation events; MeetMe gifts and diamond donations still populate donation fields. <code>capturejoinedevent</code> disables join/rejoin notices, and <code>capturelikeevent</code> controls whether likes appear in the main feed or only the reactions target.</li>
-                        <li>Viewer counts emit immediately when websocket totals change and repeat the latest count about every 30 seconds while <code>showviewercount</code>/<code>hypemode</code> is enabled; follower totals are changed-only and rate-limited to roughly 60 seconds.</li>
+                        <li>Viewer counts prefer the visible MeetMe header count, falling back to websocket totals only when the DOM count is unavailable. Counts emit on change and repeat the latest count about every 30 seconds while <code>showviewercount</code>/<code>hypemode</code> is enabled; follower totals are changed-only and rate-limited to roughly 60 seconds.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -1424,7 +1424,7 @@
                             </tr>
                             <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
-                                <td><code>SNSVideo</code> websocket metadata updates expose viewer totals; unchanged totals repeat about every 30 seconds while enabled.</td>
+                                <td>The visible header viewer badge changes, or <code>SNSVideo</code> websocket metadata exposes viewer totals when the badge is unavailable; unchanged totals repeat about every 30 seconds while enabled.</td>
                                 <td><code>meta</code> integer viewer count; only emitted when viewer-count capture or hype mode is enabled.</td>
                             </tr>
                         </tbody>

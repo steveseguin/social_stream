@@ -190,6 +190,7 @@ function toDataURL(url, callback) {
 	var wsCaptureActive = false;
 	var meetMeWsStartedAt = Date.now();
 	var meetmeProfileImages = {};
+	var lastSeenDomViewerCount = null;
 	var lastSeenWsViewerCount = null;
 	var lastWsViewerCount = null;
 	var lastWsFollowerCount = null;
@@ -198,8 +199,11 @@ function toDataURL(url, callback) {
 	var MEETME_VIEWER_HEARTBEAT_INTERVAL_MS = 30000;
 	var MEETME_FOLLOWER_UPDATE_MIN_INTERVAL_MS = 60000;
 
-	function emitViewerUpdate(count, force) {
+	function emitViewerUpdate(count, force, source) {
 		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode) || !Number.isFinite(count)) {
+			return;
+		}
+		if (source === "websocket" && Number.isFinite(lastSeenDomViewerCount)) {
 			return;
 		}
 		var now = Date.now();
@@ -216,6 +220,10 @@ function toDataURL(url, callback) {
 			event: "viewer_update",
 			meta: count
 		});
+	}
+
+	function getPreferredViewerCount() {
+		return Number.isFinite(lastSeenDomViewerCount) ? lastSeenDomViewerCount : lastSeenWsViewerCount;
 	}
 
 	function normalizeWsData(rawData) {
@@ -334,6 +342,52 @@ function toDataURL(url, callback) {
 	function parseFirstNumber(value) {
 		var match = String(value || "").replace(/,/g, "").match(/(\d+(?:\.\d+)?)/);
 		return match ? parseFloat(match[1]) : 0;
+	}
+
+	function parseMeetMeCount(value) {
+		var text = getPlainText(value).replace(/,/g, "").trim();
+		var match = text.match(/(\d+(?:\.\d+)?)\s*([kKmMbB])?/);
+		if (!match) {
+			return NaN;
+		}
+		var count = parseFloat(match[1]);
+		var suffix = (match[2] || "").toLowerCase();
+		if (suffix === "k") {
+			count *= 1000;
+		} else if (suffix === "m") {
+			count *= 1000000;
+		} else if (suffix === "b") {
+			count *= 1000000000;
+		}
+		return Math.round(count);
+	}
+
+	function getDomViewerCount() {
+		var selectors = [
+			"[class*='viewers-count'] span",
+			".viewers-count___KREgV span",
+			"[class*='viewers-count']"
+		];
+		for (var i = 0; i < selectors.length; i++) {
+			try {
+				var nodes = document.querySelectorAll(selectors[i]);
+				for (var j = 0; j < nodes.length; j++) {
+					var count = parseMeetMeCount(nodes[j].textContent);
+					if (Number.isFinite(count)) {
+						return count;
+					}
+				}
+			} catch(e){}
+		}
+		return NaN;
+	}
+
+	function pollDomViewerCount() {
+		var count = getDomViewerCount();
+		if (Number.isFinite(count)) {
+			lastSeenDomViewerCount = count;
+			emitViewerUpdate(count, false, "dom");
+		}
 	}
 
 	function getPointerId(pointer) {
@@ -741,9 +795,14 @@ function toDataURL(url, callback) {
 		}
 		var now = Date.now();
 		var count = parseInt(getFirstValue(obj, ["currentViewers", "totalViewers", "viewerCount", "viewers"]), 10);
+		var domCount = getDomViewerCount();
+		if (Number.isFinite(domCount)) {
+			lastSeenDomViewerCount = domCount;
+			emitViewerUpdate(domCount, false, "dom");
+		}
 		if (Number.isFinite(count)) {
 			lastSeenWsViewerCount = count;
-			emitViewerUpdate(count, false);
+			emitViewerUpdate(count, false, "websocket");
 		}
 		var followerCount = parseInt(getFirstValue(obj, ["lifetimeFollowers", "totalFollowers", "followers"]), 10);
 		if (
@@ -787,6 +846,22 @@ function toDataURL(url, callback) {
 			event: "guest_update",
 			meta: cleanMeta(meta)
 		});
+	}
+
+	function isEmbeddedFrame() {
+		try {
+			return window.top && window.top !== window;
+		} catch(e) {
+			return true;
+		}
+	}
+
+	function isMeetMeTopPage() {
+		try {
+			return window.location && window.location.hostname === "app.meetme.com";
+		} catch(e) {
+			return false;
+		}
 	}
 
 	function handleMeetMeWsSent(rawData) {
@@ -835,7 +910,16 @@ function toDataURL(url, callback) {
 	}
 
 	function handleMeetMeWindowMessage(event) {
-		if (!event || event.source !== window || !event.data || event.data.source !== "meetme-ws-interceptor") {
+		if (!event || !event.data || event.data.source !== "meetme-ws-interceptor") {
+			return;
+		}
+		if (event.source === window && isEmbeddedFrame()) {
+			try {
+				window.top.postMessage(event.data, "*");
+			} catch(e){}
+			return;
+		}
+		if (event.source !== window && !isMeetMeTopPage()) {
 			return;
 		}
 		if (event.data.type === "send") {
@@ -1097,6 +1181,7 @@ function toDataURL(url, callback) {
 
 	setInterval(function(){
 		try {
+		pollDomViewerCount();
 		if (document.querySelector("[id*=ChatHistoryContainer_]")){
 			if (!document.querySelector("[id*=ChatHistoryContainer_]").marked){
 				document.querySelector("[id*=ChatHistoryContainer_]").marked=true;
@@ -1116,7 +1201,8 @@ function toDataURL(url, callback) {
 
 	setInterval(function(){
 		try {
-			emitViewerUpdate(lastSeenWsViewerCount, true);
+			pollDomViewerCount();
+			emitViewerUpdate(getPreferredViewerCount(), true, Number.isFinite(lastSeenDomViewerCount) ? "dom" : "websocket");
 		} catch(e){}
 	}, MEETME_VIEWER_HEARTBEAT_INTERVAL_MS);
 
