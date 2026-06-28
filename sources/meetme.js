@@ -133,7 +133,10 @@ function toDataURL(url, callback) {
 		if (!img){return "";}
 		var src = "";
 		try {
-			src = img.getAttribute("src") || img.src || "";
+			if (!img.hasAttribute || !img.hasAttribute("src")){
+				return "";
+			}
+			src = img.getAttribute("src") || "";
 		} catch(e){}
 		if (!src || src.indexOf("no_photo.svg") !== -1){
 			return "";
@@ -142,7 +145,8 @@ function toDataURL(url, callback) {
 			return src;
 		}
 		try {
-			return new URL(src, window.location.href).href;
+			var resolved = new URL(src, window.location.href).href;
+			return resolved === window.location.href ? "" : resolved;
 		} catch(e){
 			return src;
 		}
@@ -364,6 +368,8 @@ function toDataURL(url, callback) {
 
 	function getDomViewerCount() {
 		var selectors = [
+			".swiper-slide-active [class*='viewers-count'] span",
+			".swiper-slide-active [class*='viewers-count']",
 			"[class*='viewers-count'] span",
 			".viewers-count___KREgV span",
 			"[class*='viewers-count']"
@@ -848,22 +854,6 @@ function toDataURL(url, callback) {
 		});
 	}
 
-	function isEmbeddedFrame() {
-		try {
-			return window.top && window.top !== window;
-		} catch(e) {
-			return true;
-		}
-	}
-
-	function isMeetMeTopPage() {
-		try {
-			return window.location && window.location.hostname === "app.meetme.com";
-		} catch(e) {
-			return false;
-		}
-	}
-
 	function handleMeetMeWsSent(rawData) {
 		var frame = parseWsJson(rawData);
 		if (!frame || frame.op !== "subscribe" || !frame.query || frame.requestId === undefined || frame.requestId === null) {
@@ -910,16 +900,7 @@ function toDataURL(url, callback) {
 	}
 
 	function handleMeetMeWindowMessage(event) {
-		if (!event || !event.data || event.data.source !== "meetme-ws-interceptor") {
-			return;
-		}
-		if (event.source === window && isEmbeddedFrame()) {
-			try {
-				window.top.postMessage(event.data, "*");
-			} catch(e){}
-			return;
-		}
-		if (event.source !== window && !isMeetMeTopPage()) {
+		if (!event || event.source !== window || !event.data || event.data.source !== "meetme-ws-interceptor") {
 			return;
 		}
 		if (event.data.type === "send") {
@@ -946,6 +927,9 @@ function toDataURL(url, callback) {
 			if (avatar){
 				chatimg = getImageSrc(avatar);
 				avatarAlt = avatar.alt || "";
+				if (/^(user avatar|stream avatar|avatar)$/i.test(avatarAlt.trim())){
+					avatarAlt = "";
+				}
 			}
 		} catch(e){
 		}
