@@ -129,6 +129,25 @@ function toDataURL(url, callback) {
 		}
 	}
 
+	function getImageSrc(img){
+		if (!img){return "";}
+		var src = "";
+		try {
+			src = img.getAttribute("src") || img.src || "";
+		} catch(e){}
+		if (!src || src.indexOf("no_photo.svg") !== -1){
+			return "";
+		}
+		if (/^(https?:|data:|blob:)/i.test(src)){
+			return src;
+		}
+		try {
+			return new URL(src, window.location.href).href;
+		} catch(e){
+			return src;
+		}
+	}
+
 	function getBadges(row){
 		var badges = [];
 		var textBadges = [];
@@ -167,8 +186,10 @@ function toDataURL(url, callback) {
 	var wsParticipants = {};
 	var wsSeenEvents = {};
 	var wsSeenEventOrder = [];
+	var wsMessageObjectIds = {};
 	var wsCaptureActive = false;
 	var meetMeWsStartedAt = Date.now();
+	var meetmeProfileImages = {};
 	var lastSeenWsViewerCount = null;
 	var lastWsViewerCount = null;
 	var lastWsFollowerCount = null;
@@ -208,6 +229,29 @@ function toDataURL(url, callback) {
 			return typeof rawData === "object" ? JSON.stringify(rawData) : String(rawData);
 		} catch (e) {
 			return "";
+		}
+	}
+
+	function normalizeProfileName(name){
+		return getPlainText(name).toLowerCase();
+	}
+
+	function rememberProfileImage(name, src){
+		var key = normalizeProfileName(name);
+		if (key && src) {
+			meetmeProfileImages[key] = src;
+		}
+	}
+
+	function getRememberedProfileImage(name){
+		return meetmeProfileImages[normalizeProfileName(name)] || "";
+	}
+
+	function hasDomChatHistory(){
+		try {
+			return !!document.querySelector("[id*=ChatHistoryContainer_]");
+		} catch(e){
+			return false;
 		}
 	}
 
@@ -339,11 +383,12 @@ function toDataURL(url, callback) {
 		}
 		var nested = getNestedUserObject(obj);
 		var profilePic = obj.profilePic || obj.profilePicture || nested.profilePic || nested.profilePicture || {};
-		return getPlainText(
+		var image = getPlainText(
 			getFirstValue(profilePic, ["square", "thumb", "large", "url", "src"]) ||
 			getFirstValue(obj, ["chatimg", "avatar", "avatarUrl", "profileImage", "profileImageUrl"]) ||
 			getFirstValue(nested, ["chatimg", "avatar", "avatarUrl", "profileImage", "profileImageUrl"])
 		);
+		return image || getRememberedProfileImage(getWsName(obj));
 	}
 
 	function getWsMessageText(obj) {
@@ -485,6 +530,9 @@ function toDataURL(url, callback) {
 		if (!obj || isInitialWsBacklog(obj, frame.op)) {
 			return;
 		}
+		if (hasDomChatHistory()) {
+			return;
+		}
 		var objectId = getWsObjectId(obj);
 		if (rememberWsEvent(className + "|" + (frame.op || "") + "|" + objectId + "|" + getWsDateMs(obj.createdAt))) {
 			return;
@@ -495,6 +543,9 @@ function toDataURL(url, callback) {
 			return;
 		}
 		wsCaptureActive = true;
+		if (objectId) {
+			wsMessageObjectIds[objectId] = Date.now();
+		}
 		var data = {
 			chatname: formatOutputText(name),
 			chatmessage: formatOutputText(msg),
@@ -798,32 +849,35 @@ function toDataURL(url, callback) {
 
 
 	function processMessage(ele){
-		if (wsCaptureActive) {
-			return;
-		}
 		var row = getMessageRow(ele);
 		if (!row || row.ssnProcessed){return;}
 		if (!row.id || row.id.indexOf("ChatMessage_") !== 0){return;}
 
+		var messageId = row.id.replace("ChatMessage_", "");
+		var rowClassName = getClassName(row).replace(/\s+/g, " ").trim();
 		var chatimg = "";
 		var avatarAlt = "";
 		try {
 			var avatar = row.querySelector(".chat-avatar-img-holder img[src], .tmg-live-video-react-chat-message-image[src], .tmg-live-video-chat-message-image[src]");
 			if (avatar){
-				chatimg = avatar.getAttribute("src") ? (avatar.src || "") : "";
+				chatimg = getImageSrc(avatar);
 				avatarAlt = avatar.alt || "";
 			}
 		} catch(e){
 		}
 
 		var name="";
+		var rawName = "";
 		var displayTitle = "";
 		try {
 			var nameNode = row.querySelector(".title-cell-name-holder");
 			var titleNode = row.querySelector(".tmg-live-video-react-user-name, .tmg-live-video-user-name");
+			var favoriteNodeForName = row.querySelector(".tmg-live-video-favorite-message");
+			var favoriteActorNode = favoriteNodeForName ? favoriteNodeForName.querySelector(".title-cell-name-holder, [role='button'], .tmg-live-video-react-clickable") : null;
 			displayTitle = titleNode ? (titleNode.getAttribute("title") || "") : "";
-			name = getText(nameNode) || displayTitle || avatarAlt;
-			name = formatOutputText(name);
+			rawName = getText(nameNode) || displayTitle || getText(favoriteActorNode) || avatarAlt;
+			name = formatOutputText(rawName);
+			rememberProfileImage(rawName, chatimg);
 		} catch(e){
 		}
 
@@ -835,7 +889,50 @@ function toDataURL(url, callback) {
 		} catch(e){
 		}
 
+		var contentimg = "";
+		var hasDonation = "";
+		var eventName = "";
+		var giftText = "";
+		var favoriteText = "";
+		var favoriteTarget = "";
+		try {
+			var joinNode = row.querySelector(".tmg-live-video-user-joined, .join-cell .tmg-live-video-user-joined");
+			if (joinNode || rowClassName.split(" ").indexOf("join-cell") !== -1) {
+				eventName = "joined";
+				msg = formatOutputText(getTranslation("meetme-joined-live-message", "joined the stream"));
+			}
+		} catch(e){}
+		try {
+			var favoriteNode = row.querySelector(".tmg-live-video-favorite-message");
+			if (favoriteNode) {
+				eventName = "new_follower";
+				favoriteText = getText(favoriteNode).replace(/\s+/g, " ").trim();
+				var afterName = favoriteText;
+				if (rawName && afterName.indexOf(rawName) === 0) {
+					afterName = afterName.slice(rawName.length).trim();
+				}
+				favoriteTarget = afterName.replace(/^Favorited\s+/i, "").trim();
+				msg = formatOutputText(getTranslation("alert-just-followed", "just followed"));
+			}
+		} catch(e){}
+		try {
+			var giftImg = row.querySelector(".tmg-live-video-gift-thumb-img[src], img[src*='/gifts/']");
+			if (giftImg && giftImg.getAttribute("src")) {
+				contentimg = getImageSrc(giftImg);
+				giftText = getText(msgNode).replace(/\s+/g, " ").trim();
+				hasDonation = formatOutputText(giftText || "Gift");
+				eventName = "gift";
+			}
+		} catch(e){}
+
+		if (eventName && !shouldEmitEvent(eventName, !!hasDonation)) {
+			return;
+		}
 		if (!msg || !name)	{
+			return;
+		}
+		if (!eventName && messageId && wsMessageObjectIds[messageId]) {
+			row.ssnProcessed = true;
 			return;
 		}
 		row.ssnProcessed = true;
@@ -855,8 +952,6 @@ function toDataURL(url, callback) {
 		} catch(e){}
 
 		var badgeData = getBadges(row);
-		var messageId = row.id.replace("ChatMessage_", "");
-		var rowClassName = getClassName(row).replace(/\s+/g, " ").trim();
 		var rank = getRank(row);
 		var isBouncer = false;
 		var isTopStreamer = false;
@@ -866,24 +961,6 @@ function toDataURL(url, callback) {
 			isTopStreamer = !!row.querySelector(".top-streamer");
 			isBestOfTheWeek = rowClassName.split(" ").indexOf("botw") !== -1;
 		} catch(e){}
-
-		var contentimg = "";
-		var hasDonation = "";
-		var eventName = "";
-		var giftText = "";
-		try {
-			var giftImg = row.querySelector(".tmg-live-video-gift-thumb-img[src], img[src*='/gifts/']");
-			if (giftImg && giftImg.getAttribute("src")) {
-				contentimg = giftImg.src || "";
-				giftText = getText(msgNode).replace(/\s+/g, " ").trim();
-				hasDonation = formatOutputText(giftText || "Gift");
-				eventName = "gift";
-			}
-		} catch(e){}
-
-		if (eventName && !shouldEmitEvent(eventName, !!hasDonation)) {
-			return;
-		}
 
 		var data = {};
 		data.chatname = name;
@@ -918,6 +995,8 @@ function toDataURL(url, callback) {
 			isBestOfTheWeek: isBestOfTheWeek,
 			rank: rank,
 			rowClassName: rowClassName,
+			favoriteText: favoriteText,
+			targetName: favoriteTarget,
 			giftText: giftText,
 			amount: giftAmount || "",
 			currency: giftAmount ? "credits" : ""
@@ -996,6 +1075,11 @@ function toDataURL(url, callback) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							processMessage(mutation.addedNodes[i]);
+							if (mutation.addedNodes[i].querySelectorAll) {
+								mutation.addedNodes[i].querySelectorAll("[id^='ChatMessage_']").forEach(function(row){
+									processMessage(row);
+								});
+							}
 						} catch(e){}
 					}
 				}

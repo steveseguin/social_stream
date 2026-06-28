@@ -1389,8 +1389,13 @@
                             </tr>
                             <tr>
                                 <td class="status-event"><code>joined</code> / <code>rejoined</code> / <code>left</code></td>
-                                <td><code>SNSChatParticipant</code> websocket create, update, or delete frames arrive.</td>
+                                <td><code>SNSChatParticipant</code> websocket create, update, or delete frames arrive, or MeetMe renders a DOM <code>join-cell</code> row.</td>
                                 <td>Emits chat-style system notices with actor name/avatar when MeetMe exposes them. <code>meta.isNewViewer</code>, <code>meta.viewerLevelId</code>, <code>meta.isBouncer</code>, and <code>meta.isSubscriber</code> preserve participant state.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td>MeetMe renders a DOM favorite/follow row such as <code>Favorited</code>.</td>
+                                <td>Uses the shared follower event vocabulary. <code>chatname</code> is the actor, <code>chatimg</code> is the detected profile photo when available, and flat <code>meta.favoriteText</code>/<code>meta.targetName</code> preserve the original row details.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>gift</code></td>
