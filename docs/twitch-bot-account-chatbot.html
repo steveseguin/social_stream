@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Bot Account for AI Chatbot Replies - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Route Social Stream Ninja AI chatbot replies through a secondary Twitch bot account instead of the broadcaster account.">
+    <style>
+        .bot-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .bot-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .bot-guide-card h3 {
+            margin-top: 0;
+        }
+        .bot-guide-shot {
+            display: block;
+            width: 100%;
+            border: 1px solid rgba(127, 127, 127, 0.28);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            margin: 16px 0 8px;
+        }
+        .bot-guide-caption {
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            margin-bottom: 22px;
+        }
+        .bot-guide-flow {
+            margin: 18px 0;
+            padding: 18px;
+            border-left: 4px solid #00c853;
+            background: rgba(0, 200, 83, 0.08);
+        }
+        .dark-mode .bot-guide-card {
+            background: #161b22;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../media/logo.png" alt="Social Stream Ninja logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="download.html">Download</a></li>
+                    <li><a href="guides.html" class="active">Guides</a></li>
+                    <li><a href="commands.html">Commands &amp; API</a></li>
+                    <li><a href="supported-sites.html">Supported Sites</a></li>
+                    <li><a href="templates.html">Templates</a></li>
+                    <li><a href="services.html">Hire</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Twitch Bot Account for AI Chatbot Replies</h1>
+            <p>Send LLM chatbot replies from a secondary Twitch account instead of the broadcaster account.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>What This Solves</h2>
+                <p>By default, AI chatbot replies go back through the Twitch source that received the message. If that source is signed in as the broadcaster, the reply appears from the broadcaster account.</p>
+                <p>This setup routes bot and auto-reply output through a separate Twitch source that is signed in as the bot account.</p>
+                <div class="guide-note">
+                    <p><strong>Important:</strong> This workflow uses the standalone app source account roles. The browser extension does not have the same per-source account role controls.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Quick Setup</h2>
+                <ol class="guide-steps">
+                    <li>Open the Social Stream Ninja standalone app.</li>
+                    <li>Add your normal Twitch source for the channel. This source can capture chat as usual.</li>
+                    <li>Add the same Twitch source a second time. If the app asks whether to add it as a reply-only bot source, choose yes.</li>
+                    <li>Sign into that second source as the secondary Twitch bot account.</li>
+                    <li>In the source settings menu, confirm it says <strong>Account role: Bot</strong>.</li>
+                    <li>In the SSN popup settings, set <strong>Send bot replies through these SSApp account roles</strong> to <code>bot</code>.</li>
+                    <li>Enable and configure the LLM AI chat bot as usual.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>How It Works</h2>
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>Main Twitch Source</h3>
+                        <p>Captures the channel chat and feeds messages into SSN.</p>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>Bot Twitch Source</h3>
+                        <p>Uses its own browser session, is signed in as the bot account, and is marked with the <code>bot</code> account role.</p>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>Bot Reply Routing</h3>
+                        <p>The <code>botreplyaccountroles</code> setting tells SSN to send chatbot output through sources with the matching account role.</p>
+                    </div>
+                </div>
+                <div class="bot-guide-flow">
+                    <p><strong>Viewer asks in Twitch:</strong> normal Twitch source captures the message.</p>
+                    <p><strong>LLM creates a reply:</strong> SSN marks the outgoing message as a chatbot reply.</p>
+                    <p><strong>SSN routes the reply:</strong> only the Twitch source with account role <code>bot</code> sends it.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Set The Source Role</h2>
+                <p>Open the source settings menu for the secondary Twitch source. Cycle <strong>Account role</strong> until it says <strong>Bot</strong>.</p>
+                <img class="bot-guide-shot" src="images/twitch-bot-account-chatbot/ssapp-source-account-role-bot.png" alt="Standalone app Twitch source menu showing Account role set to Bot">
+                <p class="bot-guide-caption">The bot source should use its own browser session and show <strong>Role: Bot</strong>. The duplicate-source shortcut can also set <strong>Bot reply-only</strong> and <strong>Session: bot-account</strong> for you.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Route Bot Replies</h2>
+                <p>In the SSN popup, open the management/relay settings and set <strong>Send bot replies through these SSApp account roles</strong> to <code>bot</code>.</p>
+                <img class="bot-guide-shot" src="images/twitch-bot-account-chatbot/popup-bot-reply-routing.png" alt="SSN popup management setting with Send bot replies through these SSApp account roles set to bot">
+                <p class="bot-guide-caption">Leave this field blank only if you want replies to use the original source tab behavior.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Manual Setup If The Prompt Does Not Appear</h2>
+                <ol class="guide-steps">
+                    <li>Add the second Twitch source manually.</li>
+                    <li>Open its settings menu and choose <strong>Browser Session Settings</strong>.</li>
+                    <li>Create or select a separate session, such as <code>bot-account</code>.</li>
+                    <li>Use the source sign-in button and log into Twitch as the bot account.</li>
+                    <li>Set <strong>Account role</strong> to <strong>Bot</strong>.</li>
+                    <li>Optionally enable <strong>Bot reply-only (no capture)</strong> so the bot source only sends replies.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>Checklist</h2>
+                <ul class="guide-list">
+                    <li>The bot account is signed into the bot source, not the broadcaster source.</li>
+                    <li>The bot source says <strong>Role: Bot</strong>.</li>
+                    <li>The bot source uses a separate browser session from the broadcaster source.</li>
+                    <li><code>botreplyaccountroles</code> is set to <code>bot</code>.</li>
+                    <li>The bot account is allowed to chat in the channel.</li>
+                    <li>The LLM chat bot is enabled and not set to overlay-only mode if you want messages sent to Twitch chat.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Troubleshooting</h2>
+                <ul class="guide-list">
+                    <li><strong>Replies still come from the broadcaster:</strong> confirm the second source is signed in as the bot account and its account role is <code>bot</code>.</li>
+                    <li><strong>No reply is sent:</strong> confirm the bot source is active, the bot account can chat, and <code>botreplyaccountroles</code> is exactly <code>bot</code>.</li>
+                    <li><strong>The bot source captures duplicate messages:</strong> enable <strong>Bot reply-only (no capture)</strong> on the bot source.</li>
+                    <li><strong>The wrong account keeps opening:</strong> move the bot source to a separate browser session such as <code>bot-account</code>, then sign in again.</li>
+                    <li><strong>Testing is confusing:</strong> temporarily set a simple auto-reply command first, then test the LLM chatbot after routing is confirmed.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

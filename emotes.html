@@ -567,6 +567,72 @@
 		}
 	}
 
+	function normalizeImageSrcForCompare(value){
+		if (!value || typeof value !== "string"){
+			return "";
+		}
+		try {
+			value = new URL(value, window.location.href).href;
+		} catch(e){}
+		return value.split("#")[0].split("?")[0].toLowerCase();
+	}
+
+	function isExplicitEmoteImage(img){
+		if (!img){return false;}
+		if (img.dataset && (img.dataset.emoteId || img.dataset.emoteName || img.dataset.sticker || img.dataset.gift)){
+			return true;
+		}
+		if (img.classList && (img.classList.contains("sticker") || img.classList.contains("emote"))){
+			return true;
+		}
+		var src = (img.currentSrc || img.src || img.getAttribute("src") || "").toLowerCase();
+		return !!(src && src.includes("tiktokcdn.com/img/"));
+	}
+
+	function isTikTokProfileImage(img, data){
+		if (!img || isExplicitEmoteImage(img)){
+			return false;
+		}
+
+		var src = img.currentSrc || img.src || img.getAttribute("src") || "";
+		var comparableSrc = normalizeImageSrcForCompare(src);
+		var comparableChatImg = normalizeImageSrcForCompare(data && data.chatimg ? data.chatimg : "");
+		if (comparableSrc && comparableChatImg && comparableSrc === comparableChatImg){
+			return true;
+		}
+
+		var markers = [
+			img.className || "",
+			img.alt || "",
+			img.title || "",
+			img.getAttribute ? (img.getAttribute("aria-label") || "") : "",
+			img.getAttribute ? (img.getAttribute("data-e2e") || "") : ""
+		].join(" ").toLowerCase();
+
+		if (/(avatar|profile[-_\s]?picture|profile|user[-_\s]?photo|userpic|headshot)/i.test(markers)){
+			return true;
+		}
+
+		if (!comparableSrc || comparableSrc.indexOf("tiktokcdn") === -1){
+			return false;
+		}
+
+		return /\/tos-[^/]*-avt[-_/]/i.test(comparableSrc) ||
+			/[-_/]avt[-_/]/i.test(comparableSrc) ||
+			comparableSrc.indexOf("tplv-tiktokx-cropcenter") !== -1 ||
+			comparableSrc.indexOf("avatar") !== -1 ||
+			comparableSrc.indexOf("profilepicture") !== -1;
+	}
+
+	function filterTikTokProfileImages(data, images){
+		if (!data || String(data.type || "").toLowerCase() !== "tiktok" || !images){
+			return images;
+		}
+		return [...images].filter(function(img){
+			return !isTikTokProfileImage(img, data);
+		});
+	}
+
 	function processData(data){
 		var invisible = false;
 
@@ -597,9 +663,10 @@
 		let tmp = document.createElement("div");
 		tmp.innerHTML = data.chatmessage;
 		
-		
+
 		let svgs = tmp.querySelectorAll("svg"); // not bothering to check for dupes.
 		let images = tmp.querySelectorAll("img");
+		images = filterTikTokProfileImages(data, images);
 		//console.log(data.chatmessage);
 	
 		try {

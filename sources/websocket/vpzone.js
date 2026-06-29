@@ -1090,7 +1090,7 @@
 		var isOwner = eventFlag(ev, ["is_owner", "isOwner", "owner", "broadcaster"]);
 		if (!mapped || mapped === "presence" || mapped === "chat_message") return null;
 		if (state.settings.hideevents) return null;
-		if (mapped === "joined" && state.settings.capturejoinedevent === false) return null;
+		if (mapped === "joined" && !state.settings.capturejoinedevent) return null;
 		var rawName = ev.actorDisplayName || ev.displayName || ev.actorUsername || ev.username || "";
 		if (!rawName || String(rawName).toLowerCase() === "system") return null;
 		data = basePayload();

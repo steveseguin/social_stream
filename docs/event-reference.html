@@ -836,8 +836,8 @@
                     <p class="source-note">Implementation: <code>sources/tiktok.js</code> for native TikTok pages and <code>sources/tikfinity.js</code> for TikFinity's activity-feed widget/iframe. SSApp still has a native TikTok integration with the widest event coverage (see SSApp docs).</p>
                     <ul class="requirements">
                         <li>Works on the broadcaster's live page. Gift/like/follow banners only populate when the session is authenticated.</li>
-                        <li>TikTok provides many events via DOM detection <strong>without requiring WebSocket mode</strong> &ndash; gifts, follows, joins, and likes are captured automatically.</li>
-                        <li>TikFinity widget pages at <code>tikfinity.zerody.one/widget/activity-feed*</code> also work. The embedded activity-feed iframe emits the same canonical TikTok payload fields for chat, follows, shares, gifts, subscriptions, joins, and treasure chests.</li>
+                        <li>TikTok provides many events via DOM detection <strong>without requiring WebSocket mode</strong> &ndash; gifts, follows, likes, and opt-in joins are captured from rendered rows.</li>
+                        <li>TikFinity widget pages at <code>tikfinity.zerody.one/widget/activity-feed*</code> also work. The embedded activity-feed iframe emits the same canonical TikTok payload fields for chat, follows, shares, gifts, subscriptions, opt-in joins, and treasure chests.</li>
                         <li>No additional API authentication required.</li>
                         <li><strong>SSApp native mode</strong> still adds events beyond the page/widget capture paths: <code>question_new</code>, <code>emote</code>, and <code>viewer_update</code>.</li>
                     </ul>
@@ -857,7 +857,7 @@
                             </tr>
                             <tr>
                                 <td><code>joined</code></td>
-                                <td>Join notifications (requires <em>Capture Stream Events</em> and optional join toggle).</td>
+                                <td>Join notifications when the global <em>Capture "joined" stream events</em> setting is enabled.</td>
                                 <td>Skips share notifications; <code>chatname</code> might be empty for some system strings.</td>
                             </tr>
                             <tr>
@@ -900,7 +900,7 @@
                     <p class="source-note">Implementation: <code>sources/whatnot.js</code></p>
                     <ul class="requirements">
                         <li>Open the live Whatnot show page with chat visible; websocket transport now assists chat, raids, donations, and fast viewer updates, while product/giveaway snapshots still rely on DOM sections rendered in the show view.</li>
-                        <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; viewer counts still follow the viewer/hype toggles.</li>
+                        <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; joined rows also require <em>Capture "joined" stream events</em>; viewer counts still follow the viewer/hype toggles.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -928,7 +928,7 @@
                             </tr>
                             <tr>
                                 <td><code>joined</code></td>
-                                <td>Chat rows whose normalized body starts with <code>joined</code>.</td>
+                                <td>Chat rows whose normalized body starts with <code>joined</code>, when <em>Capture "joined" stream events</em> is enabled.</td>
                                 <td>Uses string event labels for join notices (not boolean <code>true</code>).</td>
                             </tr>
                             <tr>
@@ -1178,6 +1178,11 @@
                                 <td>VPZone <code>follow</code> frame.</td>
                                 <td>Mapped into the standard follower event shape.</td>
                             </tr>
+                            <tr>
+                                <td class="status-event"><code>joined</code></td>
+                                <td>VPZone join/presence-style websocket events, when <em>Capture "joined" stream events</em> is enabled.</td>
+                                <td>Mapped into a chat-style system event with VPZone actor metadata under <code>meta</code>.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </article>
@@ -1187,8 +1192,10 @@
                     <p class="source-note">Implementation: <code>sources/websocket/joystick.js</code></p>
                     <ul class="requirements">
                         <li>Uses Joystick bot credentials (<code>client_id</code> + <code>client_secret</code>), not direct user chat credentials.</li>
-                        <li>Connects to <code>wss://joystick.tv/cable</code> and subscribes to <code>GatewayChannel</code>.</li>
-                        <li>Optional OAuth token exchange is used only for helper endpoints like <code>/api/users/stream-settings</code>.</li>
+                        <li>Authorizes on <code>https://joystick.tv/api/oauth/authorize</code>, then exchanges/refreshes tokens at <code>https://api.joystick.tv/api/oauth/token</code>.</li>
+                        <li>Connects to <code>wss://api.joystick.tv/cable</code> and subscribes to <code>GatewayChannel</code>.</li>
+                        <li>Optional OAuth token exchange is used for helper endpoints like <code>https://api.joystick.tv/api/users/stream-settings</code>.</li>
+                        <li>Current Joystick bot docs expose stream settings, follower count, live state, and streamer photo, but not a live viewer count; this source does not emit <code>viewer_update</code>.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -1202,7 +1209,7 @@
                             <tr>
                                 <td><code>message</code></td>
                                 <td>Joystick <code>ChatMessage</code> / <code>new_message</code>.</td>
-                                <td><code>chatname</code>, <code>chatmessage</code>, <code>chatimg</code>, and author flags are normalized for overlays.</td>
+                                <td><code>chatname</code>, <code>chatmessage</code>, <code>chatimg</code>, role badges, <code>userid</code>, and optional <code>sourceName</code>/<code>sourceImg</code> are normalized for overlays; Joystick-specific IDs and role booleans stay in <code>meta</code>.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>new_follower</code></td>
@@ -1212,7 +1219,7 @@
                             <tr>
                                 <td><code>donation</code></td>
                                 <td>Joystick <code>StreamEvent</code> types <code>Tipped</code> / <code>TipMenu</code>.</td>
-                                <td><code>hasDonation</code> is populated when token amount can be inferred from metadata/text.</td>
+                                <td><code>hasDonation</code> is populated when token amount can be inferred from metadata/text; <code>meta.amount</code>, <code>meta.currency</code>, <code>meta.supporter</code>, and tip menu details carry structured data.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
@@ -1222,7 +1229,7 @@
                             <tr>
                                 <td><code>user_enter</code> / <code>user_leave</code></td>
                                 <td>Joystick <code>UserPresence</code> types <code>enter_stream</code> / <code>leave_stream</code>.</td>
-                                <td>Presence notifications are emitted as event messages and can be suppressed by hide-events settings.</td>
+                                <td>Presence notifications are emitted as event messages and can be suppressed by hide-events settings. Hide-events also suppresses non-donation stream events.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1364,6 +1371,73 @@
                     </table>
                 </article>
 
+                <article class="platform-card" id="meetme-dom">
+                    <h3>MeetMe - DOM and WebSocket Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/meetme.js</code></p>
+                    <ul class="requirements">
+                        <li>Reads MeetMe's rendered live chat DOM on <code>app.meetme.com/live/view/...</code> pages and inside the <code>api.gateway.meetme-live.com/web-live/...</code> iframe.</li>
+                        <li>When the iframe websocket is available, <code>wss://video-live.meetme.com/</code> frames are parsed before the DOM fallback to capture richer live events.</li>
+                        <li><code>hideevents</code> suppresses non-donation events; MeetMe gifts and diamond donations still populate donation fields. <code>capturejoinedevent</code> enables join/rejoin notices, and <code>capturelikeevent</code> controls whether likes appear in the main feed or only the reactions target.</li>
+                        <li>Viewer counts prefer the visible MeetMe header count, falling back to websocket totals only when the DOM count is unavailable. Counts emit on change and repeat the latest count about every 30 seconds while <code>showviewercount</code>/<code>hypemode</code> is enabled; follower totals are changed-only and rate-limited to roughly 60 seconds.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New <code>SNSChatMessage</code> websocket frames arrive, or new <code>ChatMessage_*</code> DOM rows appear under <code>ChatHistoryContainer_*</code>.</td>
+                                <td>Standard chat payload with sender name, avatar, message HTML/text, and badge images/text. DOM row details are flat <code>meta</code> keys, including <code>messageId</code>, <code>roomId</code>, <code>level</code>, <code>levelColor</code>, <code>badgeLabels</code>, <code>badgeSrcs</code>, <code>badgeClasses</code>, <code>isBouncer</code>, <code>isTopStreamer</code>, <code>isBestOfTheWeek</code>, <code>rank</code>, and <code>rowClassName</code>. Websocket payloads set <code>meta.source = "websocket"</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>joined</code> / <code>rejoined</code> / <code>left</code></td>
+                                <td><code>SNSChatParticipant</code> websocket create, update, or delete frames arrive, or MeetMe renders a DOM <code>join-cell</code> row. Joined/rejoined notices require <em>Capture "joined" stream events</em>.</td>
+                                <td>Emits chat-style system notices with actor name/avatar when MeetMe exposes them. <code>meta.isNewViewer</code>, <code>meta.viewerLevelId</code>, <code>meta.isBouncer</code>, and <code>meta.isSubscriber</code> preserve participant state.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td>MeetMe renders a DOM favorite/follow row such as <code>Favorited</code>.</td>
+                                <td>Uses the shared follower event vocabulary. <code>chatname</code> is the actor, <code>chatimg</code> is the detected profile photo when available, and flat <code>meta.favoriteText</code>/<code>meta.targetName</code> preserve the original row details.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>gift</code></td>
+                                <td><code>SNSGiftMessage</code> websocket frames arrive, or MeetMe renders a gift image in a chat row.</td>
+                                <td><code>hasDonation</code> carries the visible gift label or diamond value, <code>contentimg</code> carries the gift image when exposed, and flat keys such as <code>meta.giftName</code>, <code>meta.giftCount</code>, <code>meta.amount</code>, and <code>meta.currency</code> preserve structured details. The <code>gift</code> event is reserved for actual gift frames/rows; donation rendering should still key off <code>hasDonation</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>donation</code></td>
+                                <td><code>SNSDiamond</code> websocket frames expose diamond activity.</td>
+                                <td>Dedicated diamond frames are treated as donation events. <code>hasDonation</code> is formatted as diamonds, <code>donoValue</code> is numeric when available, and <code>meta.amount</code>/<code>meta.currency</code> stay flat for automations.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>liked</code> / <code>reaction</code></td>
+                                <td><code>SNSLike</code> websocket frames arrive.</td>
+                                <td>Actor-specific likes use the same <code>liked</code> vocabulary as TikTok. Aggregate/anonymous like totals are sent only to the reactions target as <code>reaction</code>, with flat <code>meta.reactionType</code>, <code>meta.totalLikes</code>, and <code>meta.subscriberLikes</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>follower_update</code></td>
+                                <td><code>SNSVideo</code> websocket metadata exposes follower totals.</td>
+                                <td><code>meta</code> is the follower integer, matching the shared counter-event convention.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>guest_update</code></td>
+                                <td><code>SNSVideoGuestBroadcast</code> create/update frames arrive.</td>
+                                <td>Metadata-only event for guest/live cohost state. Flat <code>meta</code> keys include <code>status</code>, <code>position</code>, <code>totalGuests</code>, <code>isMuted</code>, <code>guestBroadcastId</code>, <code>videoViewerId</code>, and <code>broadcastId</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The visible header viewer badge changes, or <code>SNSVideo</code> websocket metadata exposes viewer totals when the badge is unavailable; unchanged totals repeat about every 30 seconds while enabled.</td>
+                                <td><code>meta</code> integer viewer count; only emitted when viewer-count capture or hype mode is enabled.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
                 <article class="platform-card" id="velora">
                     <h3>Velora</h3>
                     <p class="source-note">Implementation: <code>sources/velora.js</code> and <code>sources/websocket/velora.js</code></p>
@@ -1404,6 +1478,41 @@
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Visible viewer count changes while viewer-count capture or hype mode is enabled.</td>
                                 <td><code>meta</code> integer viewer count.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="parti">
+                    <h3>Parti - Popout Chat Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/parti.js</code></p>
+                    <ul class="requirements">
+                        <li>Requires the popout URL shape <code>https://parti.com/popout-chat?id=*</code>.</li>
+                        <li>Viewer counts use Parti's livestream heartbeat endpoint when viewer-count capture or hype mode is enabled.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>Visible Parti chat rows appear in the popout chat stream.</td>
+                                <td>Standard chat payload; <code>nameColor</code> preserves Parti's rendered author color and <code>chatmessage</code> preserves inline content unless text-only mode is enabled.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>donation</code></td>
+                                <td>Visible Parti tip rows say a user tipped an amount.</td>
+                                <td><code>hasDonation</code> carries the displayed amount, <code>meta.amount</code>/<code>meta.currency</code> are populated when parsable, <code>meta.amountText</code> preserves the raw amount text, and <code>donoValue</code> is set for USD tips.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The Parti heartbeat returns a live viewer count.</td>
+                                <td><code>meta</code> is the integer viewer count; the page reuses one heartbeat token per source window to avoid inflating counts.</td>
                             </tr>
                         </tbody>
                     </table>

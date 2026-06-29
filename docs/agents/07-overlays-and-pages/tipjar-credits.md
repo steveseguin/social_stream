@@ -67,6 +67,7 @@ Bar/meter styling:
 | `fillend` / `barcolorend` | Full fill color. |
 | `fillmode` | `progress`, `gradient`, or `solid`. |
 | `barheight` | Track height for bar-based styles. |
+| `bartextsize` / `barfontsize` | Text size in px for the centered `bar` style amount text. |
 | `barradius` | Track corner radius; `0` gives square edges. |
 | `trackcolor` / `bartrackcolor` / `barbackground` | Bar track color. |
 | `noliquid` | Disables the animated liquid/bar effect. |
@@ -99,6 +100,7 @@ Hype mode:
 | `hidecompletions` | Hides completion count in hype mode. |
 | `completiondelay` | Delay before rollover/reset display. |
 | `levelsize` / `increment` | Repeating level size for level/band goals. |
+| `rollinggoal` / `cumulativegoal`, `goalstep` / `goalincrement` | Keeps the total cumulative and advances the displayed target to the next goal step, e.g. `$60 / $100` after passing a `$50` goal. |
 | `celebration` | `hearts`, `confetti`, `fireworks`, or `none`. |
 
 ## Tip Jar Commands
@@ -228,6 +230,7 @@ Support rule: credits needs the page open while messages arrive, unless `persist
 | `persistcredits` | Saves users to localStorage by session. |
 | `donationpriority` | Groups/sorts donors first, then members, then participants. |
 | `onlydonors` | Ignores users without donation payloads. |
+| `onlysupporters` | Ignores regular chat-only users and keeps donors plus members/subscribers. |
 | `hidecategories` | Hides category headers. |
 | `showavatar` / `showavatars` | Shows avatar images when available. |
 | `showamounts` | Shows donation totals next to donors. |

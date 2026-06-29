@@ -461,6 +461,16 @@
 		return false;
 	}
 
+	function splitLiveJoinedText(text){
+		var value = normalizeLiveText(text);
+		var match = value.match(/^(.+?)\s+joined$/i);
+		if (!match || !match[1]){ return null; }
+		return {
+			chatname: match[1].trim(),
+			chatmessage: "joined"
+		};
+	}
+
 	function findLiveMessageLeaf(leaves, chatname){
 		var placeholderLeaf = null;
 		for (var i = leaves.length - 1; i >= 0; i--){
@@ -555,13 +565,21 @@
 				}
 			} else if (leavesFb.length === 1){
 				var text = leavesFb[0].textContent.trim();
-				var split = text.indexOf(" ");
-				if (split > 0){
-					if (!chatname){ chatname = text.slice(0, split).trim(); }
-					if (!chatmessage){
-						messageLeaf = leavesFb[0];
-						chatmessage = escapeHtml(text.slice(split + 1).trim());
-						streamEvent = true;
+				var joinedParts = splitLiveJoinedText(text);
+				if (joinedParts){
+					chatname = joinedParts.chatname;
+					messageLeaf = leavesFb[0];
+					chatmessage = escapeHtml(joinedParts.chatmessage);
+					streamEvent = true;
+				} else {
+					var split = text.indexOf(" ");
+					if (split > 0){
+						if (!chatname){ chatname = text.slice(0, split).trim(); }
+						if (!chatmessage){
+							messageLeaf = leavesFb[0];
+							chatmessage = escapeHtml(text.slice(split + 1).trim());
+							streamEvent = true;
+						}
 					}
 				}
 			}

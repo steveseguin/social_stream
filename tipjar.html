@@ -472,6 +472,11 @@
         text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
         z-index: 5;
         white-space: nowrap;
+        max-width: calc(100% - 24px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+        line-height: 1.1;
         pointer-events: none;
     }
 
@@ -756,9 +761,12 @@
         const hasCustomFill = urlParams.has('fillstart') || urlParams.has('fillend') || urlParams.has('barcolorstart') || urlParams.has('barcolorend');
         const barLiquid = !urlParams.has('noliquid');
         const barHeight = readNumberParam('barheight', 0, 1);
+        const barTextSize = readNumberParam('bartextsize', readNumberParam('barfontsize', 0, 1), 1);
         const barRadius = urlParams.get('barradius'); // "0" for square edges, "12" for rounded, etc.
         const barOnly = urlParams.has('baronly');
         const levelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
+        const rollingGoal = urlParams.has('rollinggoal') || urlParams.has('cumulativegoal') || urlParams.has('goalladder');
+        const rollingGoalSize = readOptionalNumberParam(['rollinggoal', 'cumulativegoal', 'goalladder', 'goalstep', 'goalincrement'], 0.01) || goal;
         const startAmount = readOptionalNumberParam(['startamount', 'initialamount', 'currentamount'], 0);
         const barTrackColor = urlParams.get('trackcolor') || urlParams.get('bartrackcolor') || urlParams.get('barbackground') || '';
         const fillStartRgb = parseColorToRgb(fillStartColor, [33, 150, 243]);
@@ -824,6 +832,10 @@
             }
         } else if (style === 'bar') {
             document.getElementById('bar-title').textContent = customTitle;
+            if (barTextSize > 0) {
+                const text = document.getElementById('bar-text');
+                if (text) text.style.fontSize = barTextSize + 'px';
+            }
             if (barHeight > 0) {
                 const track = document.querySelector('.fluid-bar-track');
                 if (track) track.style.height = barHeight + 'px';
@@ -1135,7 +1147,7 @@
             } else if (style === 'meter') {
                 document.getElementById('meter-fill').style.width = percentage + '%';
                 document.getElementById('meter-text').textContent = formatProgressText();
-                if (state.isLevel) updateMeterChrome(state);
+                if (state.isLevel || state.isRolling) updateMeterChrome(state);
             } else if (style === 'minimal') {
                 document.getElementById('minimal-amount').textContent = formatGoalValue(state.current, true);
                 document.getElementById('minimal-percentage').textContent = `${Math.round(percentage)}%`;
@@ -1181,6 +1193,17 @@
             if (amount <= 0) {
                 clearLevelCompletionState();
                 renderAmount();
+                return;
+            }
+
+            if (rollingGoal) {
+                const previousCompleted = getRollingGoalCompletions(previousAmount);
+                const newCompleted = getRollingGoalCompletions(currentAmount);
+                clearLevelCompletionState();
+                renderAmount();
+                if (newCompleted > previousCompleted) {
+                    triggerRollingGoalComplete(newCompleted);
+                }
                 return;
             }
 
@@ -1264,6 +1287,15 @@
                 createConfetti();
             }
             showNotification(`${customTitle}: Level ${completedLevel} complete! 🎉`);
+        }
+
+        function triggerRollingGoalComplete(completedCount) {
+            if (celebration === 'fireworks') {
+                triggerFireworks();
+            } else if (celebration === 'confetti') {
+                createConfetti();
+            }
+            showNotification(`${customTitle}: ${formatGoalValue(completedCount * rollingGoalSize)} reached!`);
         }
 
         function addRecentTip(name, donationLabel) {
@@ -1509,7 +1541,32 @@
             return `$${forceCents ? num.toFixed(2) : formatNumber(num)}`;
         }
 
+        function getRollingGoalCompletions(amount) {
+            const step = Number(rollingGoalSize) || Number(goal) || 0;
+            if (step <= 0) return 0;
+            return Math.floor(Math.max(0, Number(amount) || 0) / step);
+        }
+
+        function getRollingGoalTarget(amount) {
+            const step = Number(rollingGoalSize) || Number(goal) || 0;
+            if (step <= 0) return goal;
+            return Math.max(step, (getRollingGoalCompletions(amount) + 1) * step);
+        }
+
         function getProgressState() {
+            if (rollingGoal) {
+                const rollingTarget = getRollingGoalTarget(currentAmount);
+                return {
+                    isLevel: false,
+                    isRolling: true,
+                    level: 0,
+                    completed: getRollingGoalCompletions(currentAmount),
+                    current: currentAmount,
+                    goal: rollingTarget,
+                    total: currentAmount,
+                    percentage: rollingTarget > 0 ? Math.min((currentAmount / rollingTarget) * 100, 100) : 0
+                };
+            }
             if (levelSize > 0) {
                 if (levelCompletionState) return levelCompletionState;
                 const completed = Math.floor(currentAmount / levelSize);
@@ -1552,6 +1609,19 @@
         function setElText(id, text) {
             const el = document.getElementById(id);
             if (el) el.textContent = text;
+        }
+
+        function setBarText(text, fallbackText) {
+            const el = document.getElementById('bar-text');
+            if (!el) return;
+            el.textContent = text;
+            if (!fallbackText || fallbackText === text) return;
+
+            const track = el.closest ? el.closest('.fluid-bar-track') : null;
+            const availableWidth = track ? Math.max(0, track.clientWidth - 24) : el.clientWidth;
+            if (availableWidth > 0 && el.scrollWidth > availableWidth) {
+                el.textContent = fallbackText;
+            }
         }
 
         function updateMeterChrome(state) {
@@ -1621,8 +1691,9 @@
             const glow = lerpColor(fillStartRgb, fillEndRgb, t);
             fill.style.boxShadow = `0 0 ${Math.round(14 + 18 * t)}px ${glow}`;
 
-            const barText = barOnly ? `${customTitle}: ${formatProgressPair(state)}` : formatProgressPair(state);
-            setElText('bar-text', barText);
+            const progressText = formatProgressPair(state);
+            const barText = barOnly ? `${customTitle}: ${progressText}` : progressText;
+            setBarText(barText, barOnly ? progressText : '');
             setElText('bar-title', state.isLevel ? `${customTitle} — Level ${state.level}` : customTitle);
             setElText('bar-level', state.isLevel ? `Level ${state.level} · ${formatGoalValue(state.total, true)} total` : '');
             setElText('bar-percent', `${Math.round(pct)}%`);
