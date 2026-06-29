@@ -10854,6 +10854,13 @@ input:checked + .slider:before {
                                     <input type="number" data-optionparam12="goal" class="textInput" placeholder="250" value="250" min="1" step="1" />
                                 </div>
                                 <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="rollinggoal" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Keep total and advance target after each goal</span>
+                                </div>
+                                <div>
                                     <label><span data-translate="custom-title">Custom Title:</span></label>
                                     <input type="text" data-optionparam12="title" class="textInput" placeholder="Stream Goal" />
                                 </div>
@@ -10924,6 +10931,10 @@ input:checked + .slider:before {
                                 <div>
                                     <label>Recurring goal increment:</label>
                                     <input type="number" data-optionparam12="levelsize" class="textInput" placeholder="0 = single goal (e.g. 1000 stars, 50 $)" min="0" step="1" />
+                                </div>
+                                <div>
+                                    <label>Bar text size (px):</label>
+                                    <input type="number" data-optionparam12="bartextsize" class="textInput" placeholder="26" min="1" step="1" />
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -12167,6 +12178,10 @@ input:checked + .slider:before {
 							<div class="options_group credits">
                                 <h3><span data-translate="other-customization-options">Other customization options</span></h3>
 								<div>
+									<div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+										<button type="button" class="overlayButton" data-credits-preset="supporters" style="flex: 1 1 190px;">Continuous supporter roll</button>
+										<button type="button" class="overlayButton" data-credits-preset="donors" style="flex: 1 1 190px;">Donors-only roll</button>
+									</div>
 									<div>
 										<label class="switch">
 											<input type="checkbox" data-param13="onlydonors" />
@@ -12174,6 +12189,15 @@ input:checked + .slider:before {
 										</label>
 										<span data-translate="include-donors">
 											💰 Only include donors
+										</span>
+									</div>
+									<div title="Only include donors and members/subscribers; excludes regular chat-only participants.">
+										<label class="switch">
+											<input type="checkbox" data-param13="onlysupporters" />
+											<span class="slider round"></span>
+										</label>
+										<span>
+											Only include supporters
 										</span>
 									</div>
 									<div title="This will enable the alternate scoring system where donors are prioritized and shown in their own category at the top, followed by members and then regular participants.">

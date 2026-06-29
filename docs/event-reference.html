@@ -1192,8 +1192,10 @@
                     <p class="source-note">Implementation: <code>sources/websocket/joystick.js</code></p>
                     <ul class="requirements">
                         <li>Uses Joystick bot credentials (<code>client_id</code> + <code>client_secret</code>), not direct user chat credentials.</li>
-                        <li>Connects to <code>wss://joystick.tv/cable</code> and subscribes to <code>GatewayChannel</code>.</li>
-                        <li>Optional OAuth token exchange is used only for helper endpoints like <code>/api/users/stream-settings</code>.</li>
+                        <li>Authorizes on <code>https://joystick.tv/api/oauth/authorize</code>, then exchanges/refreshes tokens at <code>https://api.joystick.tv/api/oauth/token</code>.</li>
+                        <li>Connects to <code>wss://api.joystick.tv/cable</code> and subscribes to <code>GatewayChannel</code>.</li>
+                        <li>Optional OAuth token exchange is used for helper endpoints like <code>https://api.joystick.tv/api/users/stream-settings</code>.</li>
+                        <li>Current Joystick bot docs expose stream settings, follower count, live state, and streamer photo, but not a live viewer count; this source does not emit <code>viewer_update</code>.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -1207,7 +1209,7 @@
                             <tr>
                                 <td><code>message</code></td>
                                 <td>Joystick <code>ChatMessage</code> / <code>new_message</code>.</td>
-                                <td><code>chatname</code>, <code>chatmessage</code>, <code>chatimg</code>, and author flags are normalized for overlays.</td>
+                                <td><code>chatname</code>, <code>chatmessage</code>, <code>chatimg</code>, role badges, <code>userid</code>, and optional <code>sourceName</code>/<code>sourceImg</code> are normalized for overlays; Joystick-specific IDs and role booleans stay in <code>meta</code>.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>new_follower</code></td>
@@ -1217,7 +1219,7 @@
                             <tr>
                                 <td><code>donation</code></td>
                                 <td>Joystick <code>StreamEvent</code> types <code>Tipped</code> / <code>TipMenu</code>.</td>
-                                <td><code>hasDonation</code> is populated when token amount can be inferred from metadata/text.</td>
+                                <td><code>hasDonation</code> is populated when token amount can be inferred from metadata/text; <code>meta.amount</code>, <code>meta.currency</code>, <code>meta.supporter</code>, and tip menu details carry structured data.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
@@ -1227,7 +1229,7 @@
                             <tr>
                                 <td><code>user_enter</code> / <code>user_leave</code></td>
                                 <td>Joystick <code>UserPresence</code> types <code>enter_stream</code> / <code>leave_stream</code>.</td>
-                                <td>Presence notifications are emitted as event messages and can be suppressed by hide-events settings.</td>
+                                <td>Presence notifications are emitted as event messages and can be suppressed by hide-events settings. Hide-events also suppresses non-donation stream events.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1476,6 +1478,41 @@
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>Visible viewer count changes while viewer-count capture or hype mode is enabled.</td>
                                 <td><code>meta</code> integer viewer count.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="parti">
+                    <h3>Parti - Popout Chat Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/parti.js</code></p>
+                    <ul class="requirements">
+                        <li>Requires the popout URL shape <code>https://parti.com/popout-chat?id=*</code>.</li>
+                        <li>Viewer counts use Parti's livestream heartbeat endpoint when viewer-count capture or hype mode is enabled.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>Visible Parti chat rows appear in the popout chat stream.</td>
+                                <td>Standard chat payload; <code>nameColor</code> preserves Parti's rendered author color and <code>chatmessage</code> preserves inline content unless text-only mode is enabled.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>donation</code></td>
+                                <td>Visible Parti tip rows say a user tipped an amount.</td>
+                                <td><code>hasDonation</code> carries the displayed amount, <code>meta.amount</code>/<code>meta.currency</code> are populated when parsable, <code>meta.amountText</code> preserves the raw amount text, and <code>donoValue</code> is set for USD tips.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The Parti heartbeat returns a live viewer count.</td>
+                                <td><code>meta</code> is the integer viewer count; the page reuses one heartbeat token per source window to avoid inflating counts.</td>
                             </tr>
                         </tbody>
                     </table>

@@ -493,7 +493,7 @@ try {
 	var liveChatPollingActive = false;
 	var tokenRefreshPromise = null;
 	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.";
-	const INNERTUBE_EMOJI_CACHE_TTL = 24 * 60 * 60 * 1000;
+	const INNERTUBE_EMOJI_CACHE_TTL = 14 * 24 * 60 * 60 * 1000;
 	
 
 	var emojiData = [];
@@ -617,6 +617,55 @@ try {
 
 	function areEmojiAssetsReadyForMessages() {
 		return emojiAssetsReady && channelEmojiAssetsReady;
+	}
+
+	function getYouTubeChannelEmojiCacheKeys(vidId) {
+		const keys = [];
+		const channelId = currentStream && currentStream.channelId ? String(currentStream.channelId).trim() : '';
+		if (channelId) {
+			keys.push({
+				data: 'ytChannelEmojiChannel_' + channelId,
+				time: 'ytChannelEmojiChannelTime_' + channelId
+			});
+		}
+		if (vidId) {
+			keys.push({
+				data: 'ytChannelEmoji_' + vidId,
+				time: 'ytChannelEmojiTime_' + vidId
+			});
+		}
+		return keys;
+	}
+
+	function restoreYouTubeChannelEmojiFromCache(vidId) {
+		const keys = getYouTubeChannelEmojiCacheKeys(vidId);
+		for (let i = 0; i < keys.length; i++) {
+			try {
+				const cached = localStorage.getItem(keys[i].data);
+				const cachedTime = parseInt(localStorage.getItem(keys[i].time) || '0');
+				if (cached && (Date.now() - cachedTime) < INNERTUBE_EMOJI_CACHE_TTL) {
+					const entries = JSON.parse(cached);
+					if (Array.isArray(entries)) {
+						return entries;
+					}
+				}
+			} catch (e) {}
+		}
+		return null;
+	}
+
+	function storeYouTubeChannelEmojiCache(vidId, entries) {
+		if (!Array.isArray(entries)) {
+			return;
+		}
+		const keys = getYouTubeChannelEmojiCacheKeys(vidId);
+		const now = String(Date.now());
+		keys.forEach(function(key) {
+			try {
+				localStorage.setItem(key.data, JSON.stringify(entries));
+				localStorage.setItem(key.time, now);
+			} catch (e) {}
+		});
 	}
 
 	function processEmojiData(data) {
@@ -1692,14 +1741,10 @@ function enableBackgroundKeepAlive() {
 			markChannelEmojiAssetsReady(fetchToken);
 			return;
 		}
-		const cacheKey = 'ytChannelEmoji_' + vidId;
-		const cacheTimeKey = 'ytChannelEmojiTime_' + vidId;
 		try {
 			// Restore from cache if fresh
-			const cached = localStorage.getItem(cacheKey);
-			const cachedTime = parseInt(localStorage.getItem(cacheTimeKey) || '0');
-			if (cached && (Date.now() - cachedTime) < INNERTUBE_EMOJI_CACHE_TTL) {
-				const entries = JSON.parse(cached);
+			const entries = restoreYouTubeChannelEmojiFromCache(vidId);
+			if (entries) {
 				if (fetchToken !== channelEmojiFetchToken) {
 					return;
 				}
@@ -1720,8 +1765,7 @@ function enableBackgroundKeepAlive() {
 				return;
 			}
 
-			localStorage.setItem(cacheKey, JSON.stringify(entries));
-			localStorage.setItem(cacheTimeKey, String(Date.now()));
+			storeYouTubeChannelEmojiCache(vidId, entries);
 			applyChannelEmojiEntries(entries);
 			console.log('Loaded ' + entries.length + ' custom YouTube emoji');
 			markChannelEmojiAssetsReady(fetchToken);
@@ -3204,7 +3248,7 @@ function enableBackgroundKeepAlive() {
 
 	function scheduleLiveChatStreamReconnect(delayMs = 2000) {
 		if (!liveChatId || fetchTimeout || liveChatStreamActive || liveChatStreamAbortController) return;
-		updateLiveChatStreamIndicator('reconnect');
+		updateLiveChatStreamIndicator('reconnecting');
 		fetchTimeout = setTrackedTimeout(startLiveChatStream, delayMs, !isPageVisible);
 	}
 
@@ -4754,7 +4798,7 @@ function enableBackgroundKeepAlive() {
 		spinner.style.animation = 'none';
 		void spinner.offsetWidth;
 		spinner.style.animation = `spinner-rotation ${interval}ms ease-in-out 1`;
-		document.getElementById('poll-time').textContent = `${seconds}s`;
+		document.getElementById('poll-time').textContent = `polling ${seconds}s`;
 	  }
 	}
 	function initializeSpinner() {
@@ -4769,6 +4813,7 @@ function enableBackgroundKeepAlive() {
 		</div>
 	  `;
 	  updatePollSpinner(5000);
+	  updateLiveChatStreamIndicator('connect');
 	}
 		function queueMessage(messageData) {
 			if (messageDataNeedsRichChannelEmojiResolution(messageData)) {

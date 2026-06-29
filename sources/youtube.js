@@ -436,7 +436,7 @@
 
 	function rememberRemovedYouTubeJewelDonationSlot(ele, previousSibling, nextSibling) {
 		try {
-			var giftNode = getYouTubeJewelDonationNode(ele) || ele;
+			var giftNode = getYouTubeJewelDonationNode(ele);
 			if (!giftNode || !isYouTubeJewelDonationProcessed(ele)) {
 				return;
 			}

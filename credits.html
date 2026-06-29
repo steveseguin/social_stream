@@ -679,6 +679,24 @@
 		return users.get(key);
 	}
 
+	function hasSupporterSignal(data) {
+		return !!(data && (data.hasDonation || data.membership));
+	}
+
+	function filterCreditsUsersForSupporters(userList) {
+		if (urlParams.has('onlydonors')) {
+			return userList.filter(function(user) {
+				return user.donations > 0;
+			});
+		}
+		if (urlParams.has('onlysupporters')) {
+			return userList.filter(function(user) {
+				return user.donations > 0 || user.isMember;
+			});
+		}
+		return userList;
+	}
+
 	let previewMode = false;
 
 	function processData(data) {
@@ -709,6 +727,7 @@
 
 		const onlydonors = urlParams.has('onlydonors');
 		if (onlydonors && !data.hasDonation) return;
+		if (!onlydonors && urlParams.has('onlysupporters') && !hasSupporterSignal(data)) return;
 
 		const user = getOrCreateUser(data.chatname, data.type);
 		user.messageCount++;
@@ -745,12 +764,7 @@
 
 	function generateCreditsContent() {
 		let sortedUsers = Array.from(users.values());
-		const onlydonors = urlParams.has('onlydonors');
-		if (onlydonors) {
-			sortedUsers = sortedUsers.filter(function(user) {
-				return user.donations > 0;
-			});
-		}
+		sortedUsers = filterCreditsUsersForSupporters(sortedUsers);
 		
 		if (donationPriority) {
 			// Separate users into donors and non-donors

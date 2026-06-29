@@ -5647,6 +5647,72 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				sendResponse({ ok: false, error: error && error.message ? error.message : "VPZone fetch failed" });
 			}
 			return true;
+		} else if (request.cmd && request.cmd === "joystickFetchJson") {
+			let parsedUrl;
+			try {
+				parsedUrl = new URL(request.url);
+			} catch (error) {
+				sendResponse({ ok: false, error: "Invalid Joystick API URL" });
+				return response;
+			}
+			if (parsedUrl.hostname !== "api.joystick.tv") {
+				sendResponse({ ok: false, error: "Joystick API URL not allowed" });
+				return response;
+			}
+			try {
+				const method = String(request.method || "GET").toUpperCase();
+				const isOAuthTokenPost = method === "POST" && parsedUrl.pathname === "/api/oauth/token";
+				const isStreamSettingsGet = method === "GET" && parsedUrl.pathname === "/api/users/stream-settings";
+				if (!isOAuthTokenPost && !isStreamSettingsGet) {
+					sendResponse({ ok: false, error: "Joystick API request not allowed" });
+					return response;
+				}
+				const headers = {
+					Accept: "application/json"
+				};
+				const authHeader = typeof request.auth === "string" ? request.auth.replace(/[\r\n]/g, "") : "";
+				if (isOAuthTokenPost) {
+					headers["Content-Type"] = "application/x-www-form-urlencoded";
+					if (request.authType === "basic" && authHeader.startsWith("Basic ")) {
+						headers.Authorization = authHeader;
+					}
+				} else if (isStreamSettingsGet) {
+					headers["Content-Type"] = "application/json";
+					if (request.authType === "bearer" && authHeader.startsWith("Bearer ")) {
+						headers.Authorization = authHeader;
+					}
+				}
+				const joystickResponse = await fetch(parsedUrl.toString(), {
+					method,
+					cache: "no-store",
+					credentials: "omit",
+					headers,
+					body: isOAuthTokenPost ? String(request.body || "") : undefined
+				});
+				const responseText = await joystickResponse.text();
+				let responseJson = {};
+				try {
+					responseJson = responseText ? JSON.parse(responseText) : {};
+				} catch (error) {
+					responseJson = null;
+				}
+				if (!joystickResponse.ok) {
+					sendResponse({
+						ok: false,
+						status: joystickResponse.status,
+						error: (responseJson && (responseJson.error_description || responseJson.message || (typeof responseJson.error === "string" ? responseJson.error : responseJson.error && responseJson.error.message))) || `HTTP ${joystickResponse.status}`
+					});
+					return response;
+				}
+				if (responseJson == null) {
+					sendResponse({ ok: false, status: joystickResponse.status, error: "Invalid JSON response" });
+					return response;
+				}
+				sendResponse({ ok: true, status: joystickResponse.status, data: responseJson });
+			} catch (error) {
+				sendResponse({ ok: false, error: error && error.message ? error.message : "Joystick API fetch failed" });
+			}
+			return true;
 		} else if (request.cmd && request.cmd === "rumbleFetchJson") {
 			try {
 				const rumbleResponse = await fetchRumbleJsonResponse(request.url);
