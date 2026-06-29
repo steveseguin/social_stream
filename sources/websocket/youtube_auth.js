@@ -202,6 +202,10 @@
 		if (!result || !result.code) {
 			throw new Error("YouTube sign-in did not return an authorization code.");
 		}
+		var expectedState = getStoredState();
+		if (!expectedState || result.state !== expectedState) {
+			throw new Error("State mismatch during YouTube sign-in. Please try signing in again.");
+		}
 		var data = await postHostedYouTubeAuthJson("/token", {
 			code: result.code,
 			redirect_uri: result.redirectUri,
