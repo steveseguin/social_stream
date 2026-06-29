@@ -344,6 +344,121 @@
 
 	const messageHistory = new Set();
 	const avatarHistory = new Map();
+	const removedJewelDonationSlots = new Set();
+	const removedJewelDonationSlotOrder = [];
+	const removedJewelDonationSlotLimit = 300;
+
+	function getYouTubeJewelDonationHistoryText(ele) {
+		try {
+			var giftNode = getYouTubeJewelDonationNode(ele) || ele;
+			var giftImage = giftNode && giftNode.querySelector ? giftNode.querySelector("#gift-image img, yt-image#gift-image img, img[alt]") : null;
+			return normalizeDonationText(
+				((giftNode && giftNode.textContent) || "") + " " +
+				((giftNode && giftNode.getAttribute && giftNode.getAttribute("aria-label")) || "") + " " +
+				((giftImage && giftImage.getAttribute("alt")) || "")
+			);
+		} catch (e) {}
+		return "";
+	}
+
+	function getYouTubeJewelDonationNeighborText(node) {
+		try {
+			var giftNode = getYouTubeJewelDonationNode(node);
+			if (giftNode) {
+				return getYouTubeJewelDonationHistoryText(giftNode).substring(0, 120);
+			}
+			return normalizeDonationText(
+				((node && node.textContent) || "") + " " +
+				((node && node.getAttribute && node.getAttribute("aria-label")) || "")
+			).substring(0, 120);
+		} catch (e) {}
+		return "";
+	}
+
+	function getYouTubeJewelDonationSlotKeyFromParts(textKey, previousText, nextText) {
+		return "jd_slot_" + textKey.substring(0, 200) +
+			"|p:" + (previousText || "") +
+			"|n:" + (nextText || "");
+	}
+
+	function getYouTubeJewelDonationSlotKey(ele, previousSibling, nextSibling) {
+		try {
+			var slotNode = ele;
+			var giftNode = getYouTubeJewelDonationNode(ele) || ele;
+			var textKey = getYouTubeJewelDonationHistoryText(giftNode);
+			if (!textKey) {
+				return "";
+			}
+			if (previousSibling === undefined && nextSibling === undefined && slotNode.__ssnJewelDonationSlotKey) {
+				return slotNode.__ssnJewelDonationSlotKey;
+			}
+			if (previousSibling === undefined && nextSibling === undefined && slotNode.__ssnJewelPreviousSiblingText !== undefined) {
+				return getYouTubeJewelDonationSlotKeyFromParts(textKey, slotNode.__ssnJewelPreviousSiblingText, slotNode.__ssnJewelNextSiblingText);
+			}
+			var prevNode = previousSibling !== undefined ? previousSibling : slotNode.previousSibling;
+			var nextNode = nextSibling !== undefined ? nextSibling : slotNode.nextSibling;
+			return getYouTubeJewelDonationSlotKeyFromParts(
+				textKey,
+				getYouTubeJewelDonationNeighborText(prevNode),
+				getYouTubeJewelDonationNeighborText(nextNode)
+			);
+		} catch (e) {}
+		return "";
+	}
+
+	function rememberInsertedYouTubeJewelDonationSlot(ele, previousSibling, nextSibling) {
+		try {
+			var giftNode = getYouTubeJewelDonationNode(ele);
+			if (!giftNode) {
+				return;
+			}
+			ele.__ssnJewelPreviousSiblingText = getYouTubeJewelDonationNeighborText(previousSibling);
+			ele.__ssnJewelNextSiblingText = getYouTubeJewelDonationNeighborText(nextSibling);
+			var historyKey = getYouTubeJewelDonationSlotKey(ele, previousSibling, nextSibling);
+			if (historyKey) {
+				ele.__ssnJewelDonationSlotKey = historyKey;
+			}
+		} catch (e) {}
+	}
+
+	function isYouTubeJewelDonationProcessed(ele) {
+		try {
+			var giftNode = getYouTubeJewelDonationNode(ele) || ele;
+			if (ele && (ele.skip || (ele.dataset && ele.dataset.mid))) {
+				return true;
+			}
+			if (giftNode && (giftNode.skip || (giftNode.dataset && giftNode.dataset.mid))) {
+				return true;
+			}
+		} catch (e) {}
+		return false;
+	}
+
+	function rememberRemovedYouTubeJewelDonationSlot(ele, previousSibling, nextSibling) {
+		try {
+			var giftNode = getYouTubeJewelDonationNode(ele) || ele;
+			if (!giftNode || !isYouTubeJewelDonationProcessed(ele)) {
+				return;
+			}
+			var historyKey = getYouTubeJewelDonationSlotKey(ele, previousSibling, nextSibling);
+			if (!historyKey || removedJewelDonationSlots.has(historyKey)) {
+				return;
+			}
+			removedJewelDonationSlots.add(historyKey);
+			removedJewelDonationSlotOrder.push(historyKey);
+			while (removedJewelDonationSlotOrder.length > removedJewelDonationSlotLimit) {
+				removedJewelDonationSlots.delete(removedJewelDonationSlotOrder.shift());
+			}
+		} catch (e) {}
+	}
+
+	function isKnownRemovedYouTubeJewelDonationSlot(ele) {
+		var historyKey = getYouTubeJewelDonationSlotKey(ele);
+		if (!historyKey) {
+			return false;
+		}
+		return removedJewelDonationSlots.has(historyKey);
+	}
 
 	function retryYouTubeMessageWhenReady(ele, eventType) {
 		try {
@@ -916,11 +1031,7 @@
 				}
 				//console.log(messageHistory);
 			} else if (eventType == "jeweldonation"){
-				// Content-based dedup for jewel donations which may lack stable IDs.
-				// Prevents duplicates when moderation actions cause YouTube to re-render DOM elements.
-				var contentKey = "jd_" + ((ele.textContent || "") + " " + (ele.getAttribute("aria-label") || "") + " " + (ele.outerHTML || "")).trim().substring(0, 200);
-				if (messageHistory.has(contentKey)) return 5;
-				messageHistory.add(contentKey);
+				if (isKnownRemovedYouTubeJewelDonationSlot(ele)) return 5;
 		    } else {
 				return 6; // no id.
 		    }
@@ -1797,9 +1908,21 @@
 	  var onMutationsObserved = function (mutations) {
 		mutations.forEach(function (mutation) {
 		  //console.log(mutation.addedNodes);
+		  if (mutation.removedNodes.length) {
+			for (var j = 0, jlen = mutation.removedNodes.length; j < jlen; j++) {
+			  try {
+				var previousRemovedSibling = j > 0 ? mutation.removedNodes[j - 1] : mutation.previousSibling;
+				var nextRemovedSibling = (j + 1) < jlen ? mutation.removedNodes[j + 1] : mutation.nextSibling;
+				rememberRemovedYouTubeJewelDonationSlot(mutation.removedNodes[j], previousRemovedSibling, nextRemovedSibling);
+			  } catch (e) {}
+			}
+		  }
 		  if (mutation.addedNodes.length) {
 			for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 			  try {
+				var previousAddedSibling = i > 0 ? mutation.addedNodes[i - 1] : mutation.previousSibling;
+				var nextAddedSibling = (i + 1) < len ? mutation.addedNodes[i + 1] : mutation.nextSibling;
+				rememberInsertedYouTubeJewelDonationSlot(mutation.addedNodes[i], previousAddedSibling, nextAddedSibling);
 				checkType(mutation.addedNodes[i], callback);
 			  } catch (e) {}
 			}
