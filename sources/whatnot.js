@@ -881,6 +881,7 @@
 		data.textColor = "";
 		data.nameColor = "";
 		data.chatmessage = formatWebSocketMessageText(messageText);
+		data.textonly = settings.textonlymode || false;
 		data.chatimg = user && user.profileImage && user.profileImage.url ? user.profileImage.url : "";
 		data.hasDonation = "";
 		data.membership = "";
@@ -1309,6 +1310,7 @@
 		data.textColor = "";
 		data.nameColor = "";
 		data.chatmessage = messageBody;
+		data.textonly = settings.textonlymode || false;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";

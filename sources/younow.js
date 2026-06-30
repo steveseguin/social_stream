@@ -176,6 +176,7 @@ function toDataURL(url, callback) {
 		data.textColor = "";
 		data.nameColor = nameColor
 		data.chatmessage = msg;
+		data.textonly = settings.textonlymode || false;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";

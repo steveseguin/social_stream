@@ -1,4 +1,6 @@
 (function () {
+	var settings = {};
+
 	function pushMessage(data){	  
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -122,6 +124,7 @@
 		  data.backgroundColor = backgroundColor;
 		  data.textColor = textColor;
 		  data.chatmessage = chatmessage;
+		  data.textonly = settings.textonlymode || false;
 		  data.chatimg = chatimg;
 		  data.hasDonation = hasDonation;
 		  data.membership = '';
@@ -163,6 +166,25 @@
 	}
 	
 	console.log("social stream injected");
+
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){
+		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError){return;}
+		if (response && "settings" in response){
+			settings = response.settings;
+		}
+	});
+
+	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
+		try {
+			if ("getSource" == request){sendResponse("livepush"); return;}
+			if (typeof request === "object" && "settings" in request){
+				settings = request.settings;
+				sendResponse(true);
+				return;
+			}
+		} catch(e){}
+		sendResponse(false);
+	});
 	
 	try {
 		onElementInserted(document.getElementById("chatlist"), function(element){
