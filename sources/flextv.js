@@ -89,8 +89,10 @@
 				} else {
 					if (node.nodeName === "IMG" && node.src) {
 						node.src = node.src + "";
+						resp += node.outerHTML || "";
+					} else if ((node.textContent || "").trim().length) {
+						resp += node.outerHTML || "";
 					}
-					resp += node.outerHTML || "";
 				}
 			}
 		});
@@ -180,6 +182,17 @@
 		return meta;
 	}
 
+	function findNameElement(item) {
+		var nameEle = item.querySelector(".chat-user-name [data-member]");
+		if (!nameEle) {
+			nameEle = item.querySelector(".chat-user-name .inline-block");
+		}
+		if (!nameEle) {
+			nameEle = item.querySelector(".chat-user-name");
+		}
+		return nameEle;
+	}
+
 	function rememberMessage(signature) {
 		var now = Date.now();
 		recentlySeenMessages.set(signature, now);
@@ -197,6 +210,13 @@
 		return !!previousSeenAt && Date.now() - previousSeenAt < DUPLICATE_WINDOW_MS;
 	}
 
+	function getMessageSignature(data) {
+		if (!data) {
+			return "";
+		}
+		return (data.userid || "") + "::" + data.chatname + "::" + data.chatmessage;
+	}
+
 	function markProcessed(item, signature) {
 		if (!item || !item.dataset) {
 			return;
@@ -208,7 +228,7 @@
 	}
 
 	function buildMessageData(item) {
-		var nameEle = item.querySelector(".chat-user-name [data-member], .chat-user-name .inline-block, .chat-user-name");
+		var nameEle = findNameElement(item);
 		var nameWrapper = item.querySelector(".chat-user-name");
 		var member = parseMember(nameEle);
 		var name = "";
@@ -262,9 +282,6 @@
 		if (!item || item.nodeType !== 1 || !item.querySelector) {
 			return;
 		}
-		if (!force && item.dataset && item.dataset.ssnProcessed === "1") {
-			return;
-		}
 
 		var data = buildMessageData(item);
 		if (!data) {
@@ -272,7 +289,12 @@
 			return;
 		}
 
-		var signature = data.userid + "::" + data.chatname + "::" + data.chatmessage;
+		var signature = getMessageSignature(data);
+		if (!force && item.dataset && item.dataset.ssnProcessed === "1") {
+			if (item.dataset.ssnLastMessageSignature === signature) {
+				return;
+			}
+		}
 		if (item.dataset && item.dataset.ssnLastMessageSignature === signature) {
 			markProcessed(item, signature);
 			return;
@@ -285,6 +307,24 @@
 		rememberMessage(signature);
 		markProcessed(item, signature);
 		sendToApp({ message: data });
+	}
+
+	function findMessageNode(node) {
+		if (!node) {
+			return null;
+		}
+		if (node.nodeType === 1) {
+			if (node.matches && node.matches(CHAT_ITEM_SELECTOR)) {
+				return node;
+			}
+			if (node.closest) {
+				return node.closest(CHAT_ITEM_SELECTOR);
+			}
+		}
+		if (node.parentElement && node.parentElement.closest) {
+			return node.parentElement.closest(CHAT_ITEM_SELECTOR);
+		}
+		return null;
 	}
 
 	function forEachMessageNode(node, callback) {
@@ -304,10 +344,13 @@
 	function markExistingMessages(container) {
 		try {
 			container.querySelectorAll(CHAT_ITEM_SELECTOR).forEach(function (item) {
-				markProcessed(item);
 				var data = buildMessageData(item);
 				if (data) {
-					rememberMessage(data.userid + "::" + data.chatname + "::" + data.chatmessage);
+					var signature = getMessageSignature(data);
+					rememberMessage(signature);
+					markProcessed(item, signature);
+				} else {
+					markProcessed(item);
 				}
 			});
 		} catch (e) {}
@@ -345,12 +388,20 @@
 							forEachMessageNode(mutation.addedNodes[i], processMessage);
 						} catch (e) {}
 					}
+				} else if (mutation.type === "characterData") {
+					try {
+						var item = findMessageNode(mutation.target);
+						if (item) {
+							processMessage(item);
+						}
+					} catch (e) {}
 				}
 			});
 		});
 
 		observer.observe(target, {
 			childList: true,
+			characterData: true,
 			subtree: true
 		});
 	}
