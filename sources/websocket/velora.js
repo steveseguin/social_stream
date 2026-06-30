@@ -1315,6 +1315,7 @@ function userDisplayName(user) {
 
 function handleFollow(data) {
     if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
     const name = userDisplayName(data.follower) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
     addAlert(`${escapeHtml(name)} followed!`, 'follow');
 
@@ -1329,7 +1330,7 @@ function handleFollow(data) {
         hasDonation: '',
         membership: '',
         contentimg: '',
-        textonly: false,
+        textonly: textOnlyMode,
         type: 'velora',
         event: 'follow'
     });
@@ -1337,6 +1338,7 @@ function handleFollow(data) {
 
 function handleSubscribe(data) {
     if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
     const name = userDisplayName(data.subscriber) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
     const monthsValue = data.months || data.subscriberMonths || data.subscriber_months || '';
     const months = monthsValue ? ` (${monthsValue} months)` : '';
@@ -1353,7 +1355,7 @@ function handleSubscribe(data) {
         hasDonation: '',
         membership: `Subscriber${months}`,
         contentimg: '',
-        textonly: false,
+        textonly: textOnlyMode,
         type: 'velora',
         event: 'subscribe'
     });
@@ -1361,6 +1363,7 @@ function handleSubscribe(data) {
 
 function handleGiftSub(data) {
     if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
     const gifterName = userDisplayName(data.gifter) || userDisplayName(data.user) || data.gifterDisplayName || data.gifterUsername || data.displayName || data.username || 'Anonymous';
     const count = data.quantity || data.count || 1;
     const label = `sub${count !== 1 ? 's' : ''}`;
@@ -1377,7 +1380,7 @@ function handleGiftSub(data) {
         hasDonation: '',
         membership: '',
         contentimg: '',
-        textonly: false,
+        textonly: textOnlyMode,
         type: 'velora',
         event: 'subscription_gift'
     });
@@ -1385,6 +1388,7 @@ function handleGiftSub(data) {
 
 function handleVolts(data) {
     if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
     const name = userDisplayName(data.sender) || userDisplayName(data.from) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
     const amount = data.amount || data.volts || data.amountVolts || data.quantity || data.value || '';
     const amountLabel = amount ? `${amount} Volts` : 'Volts';
@@ -1396,12 +1400,12 @@ function handleVolts(data) {
         backgroundColor: '',
         textColor: '',
         nameColor: '',
-        chatmessage: data.message ? escapeHtml(data.message) : '',
+        chatmessage: data.message ? (textOnlyMode ? String(data.message) : escapeHtml(data.message)) : '',
         chatimg: '',
         hasDonation: amountLabel,
         membership: '',
         contentimg: '',
-        textonly: false,
+        textonly: textOnlyMode,
         type: 'velora',
         event: 'volts'
     });
@@ -1409,6 +1413,7 @@ function handleVolts(data) {
 
 function handleRaid(data) {
     if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
     const name = userDisplayName(data.from) || userDisplayName(data.raider) || data.fromDisplayName || data.fromUsername || data.displayName || data.username || 'Someone';
     const viewers = data.viewerCount ?? data.viewers ?? data.viewer_count ?? '';
     const viewerStr = viewers !== '' ? ` with ${viewers} viewers` : '';
@@ -1425,7 +1430,7 @@ function handleRaid(data) {
         hasDonation: '',
         membership: '',
         contentimg: '',
-        textonly: false,
+        textonly: textOnlyMode,
         type: 'velora',
         event: 'raid'
     });
@@ -1433,6 +1438,7 @@ function handleRaid(data) {
 
 function handleChannelPoints(data) {
     if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
     const name = userDisplayName(data.redeemer) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
     const reward = data.rewardTitle || data.rewardName || data.itemName || data.reward?.title || data.reward?.name || data.item?.title || data.item?.name || 'channel point reward';
     const message = data.userInput || data.user_input || data.message || data.input || data.text || '';
@@ -1444,12 +1450,12 @@ function handleChannelPoints(data) {
         backgroundColor: '',
         textColor: '',
         nameColor: '',
-        chatmessage: message ? escapeHtml(message) : escapeHtml(reward),
+        chatmessage: message ? (textOnlyMode ? String(message) : escapeHtml(message)) : (textOnlyMode ? String(reward) : escapeHtml(reward)),
         chatimg: '',
         hasDonation: '',
         membership: '',
         contentimg: '',
-        textonly: false,
+        textonly: textOnlyMode,
         type: 'velora',
         event: 'channel_points',
         meta: {

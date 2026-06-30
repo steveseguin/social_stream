@@ -316,6 +316,7 @@
         event: type,
         chatname: sanitizeString(name) || 'Someone',
         chatmessage: msg,
+        textonly: settings.textonlymode || false,
         chatimg:
           entry.image ||
           entry.image_href ||
