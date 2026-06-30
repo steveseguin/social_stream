@@ -581,6 +581,9 @@ function applyTokenPayload(payload) {
 
 async function handleAuthSuccess(payload) {
     applyTokenPayload(payload && payload.tokens ? payload.tokens : payload);
+    if (!state.tokens?.access_token) {
+        loadTokens();
+    }
     await loadUserProfile();
     updateAuthUI();
     connectSocket();
@@ -604,6 +607,21 @@ async function handleAuthPayload(payload) {
         return true;
     }
     return false;
+}
+
+function maybeReloadAfterSsappAuthHandoff() {
+    if (!hasRuntimeFlag('ssapp')) {
+        return;
+    }
+    setTimeout(function () {
+        try {
+            if (!localStorage.getItem(TOKEN_KEY)) return;
+            const authText = els.authState ? String(els.authState.textContent || '') : '';
+            if (!/^Signed in\b/i.test(authText)) {
+                window.location.reload();
+            }
+        } catch (e) {}
+    }, 100);
 }
 
 async function consumeAuthResultFromHash() {
@@ -679,6 +697,7 @@ async function startExternalAuthFlow() {
     });
 
     if (await handleAuthPayload(result)) {
+        maybeReloadAfterSsappAuthHandoff();
         return true;
     }
 
@@ -686,6 +705,7 @@ async function startExternalAuthFlow() {
         ? (result.payload || result.authPayload || null)
         : null;
     if (await handleAuthPayload(nestedPayload)) {
+        maybeReloadAfterSsappAuthHandoff();
         return true;
     }
 
