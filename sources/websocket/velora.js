@@ -22,6 +22,7 @@ const CHAT_FEED_LIMIT = 100;
 const ALERTS_FEED_LIMIT = 80;
 const EVENT_LOG_LIMIT = 100;
 const VIEWER_POLL_INTERVAL_MS = 30000;
+const SOCKET_CONNECT_TIMEOUT_MS = 8000;
 const SOCKET_CONNECTED_EVENT_TIMEOUT_MS = 4000;
 const SSE_RECONNECT_DELAY_MS = 3000;
 const VELORA_EMOTE_MAP = {
@@ -1033,6 +1034,8 @@ function connectSse(reason) {
         if (xhr.readyState === 2 && xhr.status && xhr.status !== 200) {
             setSocketStatus('error');
             addEventLogEntry(`SSE connection failed: HTTP ${xhr.status}`, 'error');
+        } else if (xhr.readyState === 2 && xhr.status === 200 && !state.eventsConnected) {
+            applyConnectedChannelInfo(null, 'SSE');
         }
     };
 
@@ -1082,6 +1085,16 @@ function startSocketFallbackTimer() {
 
 // ─── Socket.IO connection ─────────────────────────────────────────────────────
 
+function startSocketConnectTimeout() {
+    clearSocketFallbackTimer();
+    state.socketFallbackTimer = setTimeout(function () {
+        if (state.eventsConnected || state.sseRequest) {
+            return;
+        }
+        connectSse('Velora WebSocket connection timed out. Falling back to SSE.');
+    }, SOCKET_CONNECT_TIMEOUT_MS);
+}
+
 function connectSocket() {
     if (!state.tokens?.access_token) return;
     if (typeof io !== 'function') {
@@ -1103,6 +1116,7 @@ function connectSocket() {
 
     state.socket = socket;
     setSocketStatus('connecting');
+    startSocketConnectTimeout();
 
     socket.on('connect', () => {
         setSocketStatus('connecting');
