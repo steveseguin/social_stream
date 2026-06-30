@@ -5920,14 +5920,14 @@ function enableBackgroundKeepAlive() {
 				userid: giftData.authorChannelId,
 				backgroundColor: "",
 				textColor: "#111",
-				chatmessage: escapeHtml(displayMessage),
+				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
 				hasDonation: jewelText,
 				membership: "",
 				subtitle: giftLabel,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "jeweldonation",
-				textonly: false,
+				textonly: settings.textonlymode || false,
 				meta: { youtubeGift: metaGift }
 			};
 			if (giftData.giftUrl) {
@@ -6104,14 +6104,14 @@ function enableBackgroundKeepAlive() {
 				nameColor: !settings.nosubcolor ? "#107516" : "",
 				backgroundColor: "",
 				textColor: "",
-				chatmessage: escapeHtml(displayMessage),
+				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "gift_recipient",
 				subtitle: giftData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftredemption",
-				textonly: false
+				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
 			console.error('Error processing gift redemption:', e);
@@ -6159,14 +6159,14 @@ function enableBackgroundKeepAlive() {
 				nameColor: "",
 				backgroundColor: "",
 				textColor: "",
-				chatmessage: escapeHtml(displayMessage),
+				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: giftData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "gift_giver",
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftpurchase",
-				textonly: false
+				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
 			console.error('Error processing gift purchase:', e);
@@ -6208,14 +6208,14 @@ function enableBackgroundKeepAlive() {
 				nameColor: !settings.nosubcolor ? "#107516" : "",
 				backgroundColor: "",
 				textColor: "",
-				chatmessage: escapeHtml(displayMessage),
+				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: sponsorData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "new_sponsor",
 				subtitle: sponsorData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "sponsorship",
-				textonly: false
+				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
 			console.error('Error processing new sponsorship:', e);
@@ -6275,14 +6275,14 @@ function enableBackgroundKeepAlive() {
 				nameColor: !settings.nosubcolor ? "#107516" : "",
 				backgroundColor: "",
 				textColor: "",
-				chatmessage: escapeHtml(displayMessage),
+				chatmessage: settings.textonlymode ? displayMessage : escapeHtml(displayMessage),
 				chatimg: milestoneData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "member_milestone",
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "membermilestone",
-				textonly: false
+				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
 			console.error('Error processing member milestone:', e);
@@ -6337,13 +6337,13 @@ function enableBackgroundKeepAlive() {
 				userid: stickerData.authorChannelId,
 				backgroundColor: "",
 				textColor: "#111",
-				chatmessage: escapeHtml(stickerMessage), // Just the message, no emoji prefix
+				chatmessage: settings.textonlymode ? stickerMessage : escapeHtml(stickerMessage), // Just the message, no emoji prefix
 				chatimg: stickerData.profileImageUrl || "",
 				hasDonation: stickerData.amount,
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "supersticker",
-				textonly: false
+				textonly: settings.textonlymode || false
 			}));
 		} catch (e) {
 			console.error('Error processing super sticker:', e);
