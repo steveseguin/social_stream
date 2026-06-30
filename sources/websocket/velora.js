@@ -331,10 +331,22 @@ function mergeCurrentSearchParams(url) {
 function getRuntimeOrigin() {
     try {
         if (window.location && window.location.origin && window.location.origin !== 'null') {
-            return window.location.origin;
+            const origin = window.location.origin;
+            if (/^https?:\/\//i.test(origin)) {
+                return origin;
+            }
         }
     } catch (e) {}
-    return '*';
+    try {
+        const returnTo = getAuthReturnTo();
+        if (returnTo) {
+            const parsed = new URL(returnTo);
+            if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                return parsed.origin;
+            }
+        }
+    } catch (e) {}
+    return 'https://socialstream.ninja';
 }
 
 function getAuthReturnTo() {

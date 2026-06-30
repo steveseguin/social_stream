@@ -82,6 +82,9 @@
                 <div class="alert-note alert-tip">
                     <strong>Building Automations?</strong> Check out the <a href="../actions/event-flow-guide.html">Event Flow Guide</a> to learn how to use these event payloads in custom triggers, alerts, and workflows. The guide includes a <a href="../actions/event-flow-guide.html#template-variables">Template Variables Reference</a> for text formatting.
                 </div>
+                <div class="alert-note alert-info">
+                    <strong>Payload shape:</strong> Donation-style chat rows should use <code>hasDonation</code> and optional <code>donoValue</code>. Do not set <code>event: "donation"</code> for a normal chat/tip row just because a donation value is present. Use <code>meta</code> only for additional structured data that consumers actually need and that existing fields do not already cover.
+                </div>
             </section>
 
             <section class="section-summary">
@@ -1443,6 +1446,7 @@
                     <p class="source-note">Implementation: <code>sources/velora.js</code> and <code>sources/websocket/velora.js</code></p>
                     <ul class="requirements">
                         <li>Standard mode reads the visible chat DOM; WebSocket mode uses the Velora Events API with OAuth.</li>
+                        <li>Supported Standard mode URLs include <code>https://velora.tv/*</code>, <code>https://velora.tv/dashboard/stream/popout?panels=chat%2Cactivity&amp;channel=CHANNEL&amp;layout=vertical</code>, and <code>https://velora.tv/dashboard/stream/popout/CHANNEL/obs-chat</code>.</li>
                         <li>Volts and channel point style cards are emitted as event payloads when exposed by the DOM or Events API.</li>
                     </ul>
                     <table class="event-table">
@@ -1484,10 +1488,10 @@
                 </article>
 
                 <article class="platform-card" id="parti">
-                    <h3>Parti - Popout Chat Capture</h3>
+                    <h3>Parti - Profile / Popout Chat Capture</h3>
                     <p class="source-note">Implementation: <code>sources/parti.js</code></p>
                     <ul class="requirements">
-                        <li>Requires the popout URL shape <code>https://parti.com/popout-chat?id=*</code>.</li>
+                        <li>Supports profile URLs like <code>https://parti.com/USERNAME</code> and popout URLs like <code>https://parti.com/popout-chat?id=USER_ID</code>.</li>
                         <li>Viewer counts use Parti's livestream heartbeat endpoint when viewer-count capture or hype mode is enabled.</li>
                     </ul>
                     <table class="event-table">
@@ -1501,7 +1505,7 @@
                         <tbody>
                             <tr>
                                 <td><code>message</code></td>
-                                <td>Visible Parti chat rows appear in the popout chat stream.</td>
+                                <td>Visible Parti chat rows appear in the profile or popout chat stream.</td>
                                 <td>Standard chat payload; <code>nameColor</code> preserves Parti's rendered author color and <code>chatmessage</code> preserves inline content unless text-only mode is enabled.</td>
                             </tr>
                             <tr>

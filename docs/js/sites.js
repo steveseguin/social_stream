@@ -1129,8 +1129,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			type: 'popout',
 			instructions: `
 				<ul>
-					<li>URL: https://parti.com/popout-chat?id=*</li>
-					<li>Pop out chat required</li>
+					<li>URL: https://parti.com/USERNAME or https://parti.com/popout-chat?id=USER_ID</li>
+					<li>Profile chat and popout chat are supported</li>
 				</ul>
 			`
 		},
@@ -1495,7 +1495,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			instructions: `
 				<ul>
 					<li>URL: https://velora.tv/*</li>
-					<li>No pop out needed</li>
+					<li>Dashboard popout is supported: https://velora.tv/dashboard/stream/popout?panels=chat%2Cactivity&amp;channel=CHANNEL&amp;layout=vertical</li>
+					<li>OBS chat popout is supported: https://velora.tv/dashboard/stream/popout/CHANNEL/obs-chat</li>
+					<li>Login URL: https://velora.tv/login</li>
 				</ul>
 			`
 		},

@@ -76,6 +76,7 @@ function toDataURL(blobUrl, callback) {
 	}
 
 	function buildMessageData(name, msg, nameColor, chatimg, chatbadge, hasDonation, extras){
+		extras = extras || {};
 		var data = {};
 		data.chatname = name;
 		data.chatbadges = chatbadge || "";
@@ -86,10 +87,9 @@ function toDataURL(blobUrl, callback) {
 		data.chatimg = chatimg || "";
 		data.hasDonation = hasDonation || "";
 		data.membership = "";
-		data.contentimg = "";
+		data.contentimg = extras.contentimg || "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "parti";
-		extras = extras || {};
 		if (extras.event){
 			data.event = extras.event;
 		}
@@ -108,7 +108,8 @@ function toDataURL(blobUrl, callback) {
 			data.event || "",
 			data.chatname || "",
 			data.chatmessage || "",
-			data.hasDonation || ""
+			data.hasDonation || "",
+			data.contentimg || ""
 		].join("\u00b6");
 		var previousSeenAt = recentlySeenMessages.get(key);
 		recentlySeenMessages.set(key, now);
@@ -127,7 +128,12 @@ function toDataURL(blobUrl, callback) {
 	function getRowSignature(ele){
 		try {
 			var index = ele && ele.parentNode && ele.parentNode.children ? Array.prototype.indexOf.call(ele.parentNode.children, ele) : -1;
-			return index + "|" + (ele.textContent || "");
+			var contentimg = "";
+			try {
+				var image = ele.querySelector && ele.querySelector("img[src]");
+				contentimg = image && image.src ? image.src : "";
+			} catch(e){}
+			return index + "|" + (ele.textContent || "") + "|" + contentimg;
 		} catch(e){
 			return ele && ele.textContent ? ele.textContent : "";
 		}
@@ -135,10 +141,6 @@ function toDataURL(blobUrl, callback) {
 
 	function getDonationDetails(amountText){
 		var cleanAmountText = (amountText || "").replace(/\s+/g, " ").trim();
-		var meta = {
-			amountText: cleanAmountText,
-			source: "dom"
-		};
 		var amountMatch = cleanAmountText.match(/^([$\u20ac\u00a3])?\s*([0-9][0-9,.]*)\s*([A-Za-z]{2,10})?$/);
 		var amount = "";
 		var currency = "";
@@ -151,16 +153,9 @@ function toDataURL(blobUrl, callback) {
 			if (!currency && symbol === "$"){ currency = "USD"; }
 			if (!currency && symbol === "\u20ac"){ currency = "EUR"; }
 			if (!currency && symbol === "\u00a3"){ currency = "GBP"; }
-			if (amount === amount){
-				meta.amount = amount;
-			}
-			if (currency){
-				meta.currency = currency;
-			}
 		}
 
 		return {
-			meta: meta,
 			donoValue: currency === "USD" && amount === amount ? amount : undefined
 		};
 	}
@@ -169,7 +164,7 @@ function toDataURL(blobUrl, callback) {
 		try {
 			if (!node || node.nodeType !== 1){return false;}
 			var text = (node.textContent || "").trim();
-			if (!text || !/^\d{1,2}:\d{2}$/.test(text)){return false;}
+			if (!text || !/^\d{1,2}:\d{2}(?:\s?[AP]M)?$/i.test(text)){return false;}
 			var style = window.getComputedStyle ? window.getComputedStyle(node) : null;
 			return !style || parseFloat(style.fontSize) <= 12;
 		} catch(e){
@@ -187,6 +182,7 @@ function toDataURL(blobUrl, callback) {
 		var nameColor = "";
 		var msg = "";
 		var hasDonation = "";
+		var contentimg = "";
 		var donationDetails = null;
 
 		if (userLink){
@@ -205,7 +201,11 @@ function toDataURL(blobUrl, callback) {
 				if (node.nodeType === 3){
 					msg += escapeHtml(node.textContent || "");
 				} else if (node.nodeType === 1){
-					msg += getAllContentNodes(node);
+					if (!settings.textonlymode && node.nodeName === "IMG" && node.src){
+						contentimg = node.src;
+					} else {
+						msg += getAllContentNodes(node);
+					}
 				}
 			}
 			msg = msg.trim();
@@ -225,8 +225,6 @@ function toDataURL(blobUrl, callback) {
 					if (names[name]){
 						var cached = names[name];
 						return buildMessageData(name, escapeHtml(msg), "", cached[0] || "", cached[1] || "", hasDonation, {
-							event: "donation",
-							meta: donationDetails.meta,
 							donoValue: donationDetails.donoValue
 						});
 					}
@@ -237,17 +235,84 @@ function toDataURL(blobUrl, callback) {
 		if (!name){
 			return null;
 		}
+		if (!msg && !contentimg && !hasDonation){
+			return null;
+		}
 
 		return buildMessageData(name, msg, nameColor, "", "", hasDonation, donationDetails ? {
-			event: "donation",
-			meta: donationDetails.meta,
 			donoValue: donationDetails.donoValue
-		} : null);
+		} : {
+			contentimg: contentimg
+		});
 	}
 	
 	var userId = "";
 	var heartbeatToken = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-	const urlParams = new URLSearchParams(window.location.search);
+	var resolvedUserHandle = "";
+	var userIdLookupPromise = null;
+	var reservedProfilePaths = {
+		assets: true,
+		"cdn-cgi": true,
+		login: true,
+		live: true,
+		markets: true,
+		overlay: true,
+		"popout-chat": true,
+		predict: true,
+		schedule: true
+	};
+
+	function getUrlUserId(){
+		try {
+			return (new URLSearchParams(window.location.search)).get('id') || "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getProfileHandle(){
+		try {
+			var pathParts = window.location.pathname.split('/').filter(Boolean);
+			var handle = pathParts[0] || "";
+			if (!handle || reservedProfilePaths[handle.toLowerCase()]){
+				return "";
+			}
+			return handle.replace(/^@+/, "");
+		} catch(e){
+			return "";
+		}
+	}
+
+	function resolveUserIdFromHandle(handle){
+		if (!handle){ return Promise.resolve(""); }
+		if (userId && resolvedUserHandle === handle){ return Promise.resolve(userId); }
+		if (userIdLookupPromise){ return userIdLookupPromise; }
+
+		resolvedUserHandle = handle;
+		userIdLookupPromise = fetch('https://api.parti.com/parti_v2/profile/bootstrap_by_user_name/' + encodeURIComponent(handle))
+		.then(function(response){
+			if (!response.ok){
+				throw new Error("Parti profile lookup HTTP " + response.status);
+			}
+			return response.json();
+		})
+		.then(function(data){
+			var resolvedId = data && data.user && data.user.user_id ? String(data.user.user_id) : "";
+			if (resolvedId){
+				userId = resolvedId;
+			}
+			return resolvedId;
+		})
+		.catch(function(e){
+			console.log('Parti profile lookup error:', e);
+			return "";
+		})
+		.finally(function(){
+			userIdLookupPromise = null;
+		});
+
+		return userIdLookupPromise;
+	}
 
 	function sendViewerCount(count) {
 		chrome.runtime.sendMessage(
@@ -278,29 +343,51 @@ function toDataURL(blobUrl, callback) {
 		});
 	}
 
+	function sendHeartbeatForUserId(rawUserId){
+		var parsedUserId = parseInt(rawUserId, 10);
+		if (parsedUserId !== parsedUserId){
+			return;
+		}
+		var heartbeatPayload = {
+			user_id: parsedUserId,
+			token: heartbeatToken
+		};
+		requestHeartbeat('https://api.parti.com/parti_v2/profile/livestream/heartbeat', heartbeatPayload)
+		.catch(function(){
+			return requestHeartbeat('https://prod-api.parti.com/parti_v2/profile/livestream/heartbeat', heartbeatPayload);
+		})
+		.then(function(data){
+			console.log('Parti heartbeat response:', data);
+			if (data && typeof data.viewer_count !== 'undefined') {
+				sendViewerCount(data.viewer_count);
+			}
+		})
+		.catch(function(e){
+			console.log('Parti heartbeat error:', e);
+		});
+	}
+
 	function checkFollowers(){
-		userId = urlParams.get('id') || "";
-		if (isExtensionOn && userId && (settings.showviewercount || settings.hypemode)){
-			var parsedUserId = parseInt(userId, 10);
-			if (parsedUserId !== parsedUserId){
+		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			var directUserId = getUrlUserId() || "";
+			if (directUserId){
+				userId = directUserId;
+				resolvedUserHandle = "";
+				sendHeartbeatForUserId(userId);
 				return;
 			}
-			var heartbeatPayload = {
-				user_id: parsedUserId,
-				token: heartbeatToken
-			};
-			requestHeartbeat('https://api.parti.com/parti_v2/profile/livestream/heartbeat', heartbeatPayload)
-			.catch(function(){
-				return requestHeartbeat('https://prod-api.parti.com/parti_v2/profile/livestream/heartbeat', heartbeatPayload);
-			})
-			.then(function(data){
-				console.log('Parti heartbeat response:', data);
-				if (data && typeof data.viewer_count !== 'undefined') {
-					sendViewerCount(data.viewer_count);
+			var profileHandle = getProfileHandle();
+			if (profileHandle && resolvedUserHandle && resolvedUserHandle !== profileHandle){
+				userId = "";
+			}
+			if (userId){
+				sendHeartbeatForUserId(userId);
+				return;
+			}
+			resolveUserIdFromHandle(profileHandle).then(function(resolvedId){
+				if (resolvedId){
+					sendHeartbeatForUserId(resolvedId);
 				}
-			})
-			.catch(function(e){
-				console.log('Parti heartbeat error:', e);
 			});
 		}
 	}
@@ -395,8 +482,6 @@ function toDataURL(blobUrl, callback) {
 		var data = buildMessageData(name, msg, nameColor, chatimg, chatbadge, hasDonation);
 		if (data.hasDonation){
 			var oldDonationDetails = getDonationDetails(data.hasDonation);
-			data.event = "donation";
-			data.meta = oldDonationDetails.meta;
 			if (typeof oldDonationDetails.donoValue !== "undefined"){
 				data.donoValue = oldDonationDetails.donoValue;
 			}
@@ -491,20 +576,30 @@ function toDataURL(blobUrl, callback) {
 	}
 	console.log("social stream injected");
 
+	function getRowsFromContainer(container){
+		try {
+			return container.querySelectorAll(':scope > .ccs-row, :scope > div');
+		} catch(e){
+			return container.children || [];
+		}
+	}
+
 	setInterval(function(){
 		try {
-			if (document.querySelector('.creator-chat-stream, #q-app main > div > div[class], .main-content-area >  [class] > [class] > [class] > div')){
-				if (!document.querySelector('.creator-chat-stream, #q-app main > div > div[class], .main-content-area >  [class] > [class] > [class] > div').marked){
-					document.querySelector('.creator-chat-stream, #q-app main > div > div[class], .main-content-area >  [class] > [class] > [class] > div').marked=true;
-					[...document.querySelectorAll('.creator-chat-stream > .ccs-row, #q-app main > div > div[class]>div, .main-content-area >  [class] > [class] > [class] > div')].forEach(ele=>{
+			var chatContainers = document.querySelectorAll('.creator-chat-stream, #q-app main > div > div[class], .main-content-area > [class] > [class] > [class]');
+			if (chatContainers && chatContainers.length){
+				[...chatContainers].forEach(function(container){
+					if (container.marked){ return; }
+					container.marked=true;
+					[...getRowsFromContainer(container)].forEach(ele=>{
 						try {
 							processMessage(ele);
 							ele.marked = true;
 						} catch(e){}
 					});
 					
-					onElementInserted(document.querySelector('.creator-chat-stream, #q-app main > div > div[class], .main-content-area  > [class] > [class] > [class]'));
-				}
+					onElementInserted(container);
+				});
 			}
 		} catch(e){}
 	},2000);

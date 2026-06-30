@@ -147,7 +147,7 @@ Evidence label: `focused-metadata-validation`; not runtime-tested. This map rema
 | Circle.so | standard | `sources/circle.js` (M49) | `community-membership-webapp-sources.md` | manifest route |
 | Estrim | standard | `sources/estrim.js` (M55) | `independent-live-platform-sources.md` | manifest route |
 | Online Church | standard | `sources/onlinechurch.js` (M18) | `embedded-chat-widget-sources.md` | manifest route |
-| Parti | popout | `sources/parti.js` (M21) | `popout-chat-only-sources.md` | manifest route |
+| Parti | profile/popout | `sources/parti.js` (M21) | `popout-chat-only-sources.md` | manifest route |
 | Wave Video | standard | `sources/wavevideo.js` (M22) | `webinar-and-event-sources.md` | manifest route |
 | WebinarGeek | standard | `sources/webinargeek.js` (M23) | `webinar-and-event-sources.md` | manifest route |
 | uScreen | standard | `sources/uscreen.js` (M34) | `regional-and-emerging-platform-sources.md` | manifest route |

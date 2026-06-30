@@ -45,7 +45,7 @@ For the inverse lookup from public site card to manifest row/source file, use `p
 | 18 | `sources/onlinechurch.js` | top-level source | 1 | - | `https://*.online.church/*` | Online Church | - |
 | 19 | `sources/beamstream.js` | top-level source | 1 | - | `https://beamstream.gg/*/chat` | Beamstream | - |
 | 20 | `sources/chzzk.js` | top-level source | 1 | - | `https://chzzk.naver.com/live/*/chat` | Chzzk.naver.com | - |
-| 21 | `sources/parti.js` | top-level source | 1 | - | `https://parti.com/popout-chat?id=*` | Parti | - |
+| 21 | `sources/parti.js` | top-level source | 1 | - | `https://parti.com/*` | Parti | - |
 | 22 | `sources/wavevideo.js` | top-level source | 1 | - | `https://wave.video/*` | Wave Video | - |
 | 23 | `sources/webinargeek.js` | top-level source | 2 | - | `https://*.webinargeek.com/webinar/*` | WebinarGeek | - |
 | 24 | `sources/openstreamingplatform.js` | top-level source | 1 | - | `https://demo.openstreamingplatform.com/view/*chatOnly=True*` | - | - |

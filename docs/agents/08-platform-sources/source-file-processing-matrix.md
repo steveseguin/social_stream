@@ -104,7 +104,7 @@ These are the main `sources/*.js` files. Most are normal extension/app content s
 | `sources/openai.js` | ChatGPT | toggle | 1 | - | quick/heavy | ChatGPT/OpenAI page capture; see `communication-and-sensitive-sources.md`. |
 | `sources/openstreamingplatform.js` | - | - | 1 | - | quick/heavy | OpenStreamingPlatform demo chat-only capture; public routing needs reconciliation; see `video-broadcast-platform-sources.md`. |
 | `sources/owncast.js` | Owncast | standard | 1 | - | quick/heavy | Owncast rendered chat and badge capture; see `video-broadcast-platform-sources.md`. |
-| `sources/parti.js` | Parti | popout | 1 | - | quick/heavy | Parti popout chat capture with tip and viewer heartbeat behavior; see `popout-chat-only-sources.md`. |
+| `sources/parti.js` | Parti | profile/popout | 1 | - | quick/heavy | Parti profile and popout chat capture with tip and viewer heartbeat behavior; see `popout-chat-only-sources.md`. |
 | `sources/patreon.js` | Patreon | toggle | 1 | - | quick/heavy | Patreon toggle-required chat/image/viewer-update capture; see `community-membership-webapp-sources.md`. |
 | `sources/peertube.js` | PeerTube | standard | 1 | - | quick/heavy | PeerTube livechat plugin room capture with login prompt caveat; see `video-broadcast-platform-sources.md`. |
 | `sources/picarto.js` | Picarto.tv | popout | 1 | - | quick/heavy | Picarto chatpopout capture with emote/avatar handling; see `popout-chat-only-sources.md`. |

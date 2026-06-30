@@ -961,6 +961,52 @@
 					.replace(/'/g, "&#039;");
 			}
 
+			function removeHtmlTagsFromPlainTextField(value) {
+				return String(value || "")
+					.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+					.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+					.replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, "")
+					.replace(/<template\b[^>]*>[\s\S]*?<\/template>/gi, "")
+					.replace(/<[^>]*>/g, "");
+			}
+
+			function plainTextField(value) {
+				if (typeof value !== "string") {
+					return value;
+				}
+				if (typeof stripHtmlToPlainText === "function") {
+					return stripHtmlToPlainText(value);
+				}
+				try {
+					if (typeof DOMParser !== "undefined") {
+						var doc = new DOMParser().parseFromString(value, "text/html");
+						if (doc && doc.body) {
+							var blocked = doc.body.querySelectorAll("script,style,noscript,template");
+							for (var i = 0; i < blocked.length; i++) {
+								blocked[i].remove();
+							}
+							return removeHtmlTagsFromPlainTextField(doc.body.textContent || "");
+						}
+					}
+				} catch (e) {}
+				return removeHtmlTagsFromPlainTextField(value);
+			}
+
+			function sanitizePlainTextAlertFields(data) {
+				if (!data) {
+					return;
+				}
+				["hasDonation", "donation", "membership", "hasMembership", "subtitle", "title"].forEach(function (field) {
+					if (typeof data[field] === "string") {
+						data[field] = plainTextField(data[field]);
+					}
+				});
+			}
+
+			function plainTextToHtml(value) {
+				return escapeHtml(value == null ? "" : value);
+			}
+
 			async function fetchWithTimeout(URL, timeout = 8000) {
 				// ref: https://dmitripavlutin.com/timeout-fetch-request/
 				try {
@@ -2869,6 +2915,8 @@
 					  data.chatname = data.chatname.toString();
 					}
 
+					sanitizePlainTextAlertFields(data);
+
 					var memebershipHTML = "";
 					
 					// MODIFIED MEMBERSHIP/DONATION HANDLING
@@ -2879,15 +2927,15 @@
 					  data.membership = data.hasMembership.toString();
 					  
 					  if (avatarForMessage) {
-						memebershipHTML = data.membership;
+						memebershipHTML = plainTextToHtml(data.membership);
 					  } else {
 						// No avatar membership display
 							if (data.membership.length > 30){
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else if (data.membership.length > 24){
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else {
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							}
 						  }
 					} else if (data.membership) {
@@ -2900,18 +2948,18 @@
 						  if (avatarForMessage) {
 							if (data.subtitle) {
 								if (data.membership.length > 24){
-									memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+									memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 								} else if (data.membership.length > 19){
-									memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+									memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 								} else {
-									memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+									memebershipHTML = '<div class="donation membership"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 								}
 							} else if (data.membership.length > 30){
-								memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + data.membership.toUpperCase() + "</div></div>";
+								memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 							} else if (data.membership.length > 24){
-								memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + data.membership.toUpperCase() + "</div></div>";
+								memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 							} else {
-								memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
+								memebershipHTML = '<div class="donation membership"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 							}
 						  } else {
 						// No avatar membership with possible subtitle
@@ -2919,28 +2967,28 @@
 											  data.membership.toLowerCase().includes('membership');
 							if (isSponsor) {
 							  // Special format for sponsorships to match the example image
-							  memebershipHTML = '<div class="no-avatar-donation sponsorship">' + data.membership.toUpperCase() + '</div>';
+							  memebershipHTML = '<div class="no-avatar-donation sponsorship">' + plainTextToHtml(data.membership.toUpperCase()) + '</div>';
 							} else if (data.subtitle) {
 								if (data.membership.length > 24){
-									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title verysmall">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase() + ': ' + data.subtitle) + '</div></div>';
 								} else if (data.membership.length > 19){
-									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title small">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase() + ': ' + data.subtitle) + '</div></div>';
 								} else {
-									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase() + ': ' + data.subtitle) + '</div></div>';
 								}
 							} else if (data.membership.length > 30){
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else if (data.membership.length > 24){
-								 memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
+								 memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else {
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							}
 						  }
 					} else if (data.subtitle) {
 					  if (avatarForMessage) {
-						memebershipHTML = '<div class="donation membership"><div class="subtitle">' + data.subtitle + "</div></div>";
+						memebershipHTML = '<div class="donation membership"><div class="subtitle">' + plainTextToHtml(data.subtitle) + "</div></div>";
 					  } else {
-						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.subtitle + '</div></div>';
+						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + plainTextToHtml(data.subtitle) + '</div></div>';
 					  }
 					} else {
 					  data.membership = "";
@@ -2955,9 +3003,9 @@
 						}
 						
 						if (avatarForMessage) {
-						  donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						  donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						} else {
-						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + '</div></div>';
+						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 						}
 					  } else if ((data.type == "youtube") || (data.type == "youtubeshorts")) {
 						let donationTitle = getTranslation("donation", "DONATION");
@@ -2967,9 +3015,9 @@
 						
 						if (avatarForMessage) {
 						  if (memebershipHTML) {
-							donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+							donationHTML = '<div class="donation">' + plainTextToHtml(data.hasDonation) + "</div>";
 						  } else {
-							donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+							donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						  }
 						} else {
 						  const isYouTubeSponsor = data.hasDonation.toLowerCase().includes('sponsor');
@@ -2977,21 +3025,21 @@
 						  if (isYouTubeSponsor) {
 							donationHTML = '<div class="no-avatar-donation sponsorship">' + 'SPONSORSHIP' + '</div>';
 						  } else if (memebershipHTML) {
-							donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.hasDonation + '</div></div>';
+							donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 						  } else {
-							donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ donationTitle + ': ' + data.hasDonation + '</div></div>';
+							donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ plainTextToHtml(donationTitle + ': ' + data.hasDonation) + '</div></div>';
 						  }
 						}
 					  } else if (data.title) {
 						if (avatarForMessage) {
-						  donationHTML = '<div class="donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						  donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(data.title) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						} else {
-						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + '</div></div>';
+						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ plainTextToHtml(data.title) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 						}
 					  } else if (avatarForMessage) {
-						donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+						donationHTML = '<div class="donation">' + plainTextToHtml(data.hasDonation) + "</div>";
 					  } else {
-						donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.hasDonation + '</div></div>';
+						donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 					  }
 					} else {
 					  data.hasDonation = "";
@@ -3081,6 +3129,7 @@
 					}
 
 					var renderChatMessageAsText = !!(data.textonly && !largeImage);
+					// Trusted relay HTML: chatname/chatmessage are sanitized upstream in background.js before rendering here.
 					var renderedChatMessage = renderChatMessageAsText ? "" : (data.chatmessage || "");
 
 					// ADD NO-AVATAR CLASS TO CONTAINER
@@ -3307,7 +3356,7 @@
 
 					  if (data.hasDonation && TTS.readDonos) {
 						var donoText = document.createElement("div");
-						donoText.innerHTML = data.hasDonation;
+						donoText.textContent = data.hasDonation;
 						donoText = donoText.innerText.trim();
 						donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
 						donoText = donoText.replaceAll("_", " ");

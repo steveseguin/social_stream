@@ -9,6 +9,27 @@ let messageQueue = [];
 let lastBackgroundRecoveryNotification = 0;
 
 const BACKGROUND_RECOVERY_NOTIFICATION_COOLDOWN = 60000;
+const BACKGROUND_PAGE_FILE = 'background.html';
+
+function getBackgroundPageUrl(options = {}) {
+  const query = options.sdk === true ? '?sdk=1' : '';
+  const hash = options.editor ? '#editor' : '';
+  return chrome.runtime.getURL(`${BACKGROUND_PAGE_FILE}${query}${hash}`);
+}
+
+function isBackgroundPageUrl(url) {
+  if (!url || typeof url !== 'string') {
+    return false;
+  }
+
+  const baseUrl = chrome.runtime.getURL(BACKGROUND_PAGE_FILE);
+  return url === baseUrl || url.startsWith(`${baseUrl}?`) || url.startsWith(`${baseUrl}#`);
+}
+
+async function queryBackgroundTabs() {
+  const tabs = await chrome.tabs.query({});
+  return (tabs || []).filter((tab) => isBackgroundPageUrl(tab.url || tab.pendingUrl || ''));
+}
 
 async function updateIconToOn() {
   if (chrome.action && chrome.action.setIcon) {
@@ -232,8 +253,8 @@ async function checkBackgroundPageIsOpen() {
   log("Checking if background page is open", backgroundPageTabId);
 
   try {
-    const existingTabs = await chrome.tabs.query({ url: chrome.runtime.getURL('background.html') });
-    
+    const existingTabs = await queryBackgroundTabs();
+
     if (existingTabs.length > 0) {
       log(`Found ${existingTabs.length} background tab(s).`);
       
@@ -368,17 +389,17 @@ async function ensureBackgroundPageIsOpen(load = true, force = false) {
     try {
       lastBackgroundPageCreated = now;
       
-      const existingTabs = await chrome.tabs.query({ url: chrome.runtime.getURL('background.html') });
+      const existingTabs = await queryBackgroundTabs();
       if (existingTabs.length > 0) {
         backgroundPageTabId = existingTabs[0].id;
         log("Reusing existing background page with ID:", backgroundPageTabId);
       } else {
         const tab = await chrome.tabs.create({
-          url: chrome.runtime.getURL('background.html'),
+          url: getBackgroundPageUrl(),
           active: false,
           pinned: true
         });
-        
+
         backgroundPageTabId = tab.id;
         log("Background page created with ID:", backgroundPageTabId);
       }
@@ -520,14 +541,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Handle opening the Event Flow Editor
     (async () => {
       try {
-        const existingTabs = await chrome.tabs.query({ url: chrome.runtime.getURL('background.html') });
-        
+        const existingTabs = await queryBackgroundTabs();
+
         if (existingTabs.length > 0) {
           // Background.html is already open, switch to it with #editor hash
           const tab = existingTabs[0];
-          await chrome.tabs.update(tab.id, { 
-            url: chrome.runtime.getURL('background.html#editor'),
-            active: true 
+          await chrome.tabs.update(tab.id, {
+            url: getBackgroundPageUrl({ editor: true }),
+            active: true
           });
           
           // Focus the window containing the tab
@@ -539,7 +560,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         } else {
           // No background.html tab exists, create a new one
           const newTab = await chrome.tabs.create({
-            url: chrome.runtime.getURL('background.html#editor'),
+            url: getBackgroundPageUrl({ editor: true }),
             active: true
           });
           
@@ -607,7 +628,7 @@ chrome.runtime.onStartup.addListener(async () => {
 });
 
 // Initialize the icon state on service worker startup
-chrome.tabs.query({ url: chrome.runtime.getURL('background.html') }, async (tabs) => {
+queryBackgroundTabs().then(async (tabs) => {
   if (tabs.length > 0) {
     backgroundPageTabId = tabs[0].id;
     backgroundPageTabIdLoaded = tabs[0].status === "complete";
@@ -622,7 +643,7 @@ chrome.tabs.query({ url: chrome.runtime.getURL('background.html') }, async (tabs
 });
 
 function isBackgroundPage(tab) {
-  return tab.url === chrome.runtime.getURL('background.html');
+  return isBackgroundPageUrl(tab && (tab.url || tab.pendingUrl || ''));
 }
 
 chrome.tabs.onCreated.addListener((tab) => {

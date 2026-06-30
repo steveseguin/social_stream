@@ -36,7 +36,9 @@ If you need more context on how Electron wiring differs from the extension boots
 ## Message Contracts
 
 - Every outbound event follows the canonical structure referenced in `docs/event-reference.html`. Required fields (`platform`, `type`, `chatname`, `chatmessage`, etc.) must stay intact.
-- Additional, non-standard details belong inside the top-level `meta` object. Populate `meta` with plain JSON values (no functions/classes) so downstream consumers can safely parse them.
+- Donation-style chat rows should use `hasDonation` and optional `donoValue`. Do not set `event: "donation"` just because a normal chat/tip row has a donation value; `event` changes routing/filter behavior and should only be used for true normalized events.
+- Use existing payload fields first. Only populate `meta` when there is additional structured data that downstream consumers actually need and no existing field handles it well.
+- Additional, non-standard details that truly need to be transmitted belong inside the top-level `meta` object. Populate `meta` with plain JSON values (no functions/classes) so downstream consumers can safely parse them.
 - Avoid emitting ad-hoc top-level keys—coordinate changes through the event reference doc before shipping.
 
 ## Custom Overlay Notes

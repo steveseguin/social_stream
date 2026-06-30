@@ -12,6 +12,12 @@
       "highlightColor": "url(javascript:alert(1))",
       "backgroundNameColor": "background-color:#fff;background-image:url(javascript:alert(1))",
       "textNameColor": "color:#fff;width:expression(alert(1))",
+      "hasDonation": "<img src=x onerror=alert(1)>$5.00",
+      "donation": "<svg onload=alert(1)>10 bits</svg>",
+      "membership": "<span onclick=alert(1)>Member</span>",
+      "hasMembership": "<script>alert(1)</script>VIP",
+      "subtitle": "Member for <img src=x onerror=alert(1)>3 months",
+      "title": "<img src=x onerror=alert(1)>DONATION",
       "chatbadges": [
         "javascript:alert(1)",
         "//cdn.example.test/badge.png' onerror='alert(1)",
@@ -42,10 +48,37 @@
       "backgroundColor": "",
       "highlightColor": "",
       "backgroundNameColor": "",
-      "textNameColor": ""
+      "textNameColor": "",
+      "hasDonation": "$5.00",
+      "donation": "10 bits",
+      "membership": "Member",
+      "hasMembership": "VIP",
+      "subtitle": "Member for 3 months",
+      "title": "DONATION"
     },
     "badgesLength": 3,
-    "mustNotContain": ["javascript:", "expression(", "<script", "style="]
+    "mustNotContain": ["javascript:", "expression(", "<script", "<img", "onload", "style="]
+  },
+  {
+    "name": "strips encoded HTML from plain text relay fields",
+    "input": {
+      "hasDonation": "&lt;img src=x onerror=alert(1)&gt;$15.00",
+      "donation": "&lt;svg onload=alert(1)&gt;250 bits&lt;/svg&gt;",
+      "membership": "&lt;span onclick=alert(1)&gt;Member&lt;/span&gt;",
+      "hasMembership": "&lt;script&gt;alert(1)&lt;/script&gt;VIP",
+      "subtitle": "Member for &lt;img src=x onerror=alert(1)&gt;6 months",
+      "title": "&lt;img src=x onerror=alert(1)&gt;SUPER CHAT"
+    },
+    "fields": {
+      "hasDonation": "$15.00",
+      "donation": "250 bits",
+      "membership": "Member",
+      "hasMembership": "VIP",
+      "subtitle": "Member for 6 months",
+      "title": "SUPER CHAT"
+    },
+    "badgesLength": 0,
+    "mustNotContain": ["<img", "<script", "onerror", "onload", "alert(1)"]
   },
   {
     "name": "keeps safe relay fields and emote-like classes",
@@ -60,6 +93,12 @@
       "highlightColor": "#fff387",
       "backgroundNameColor": "background-color:hsl(210, 60%, 30%);",
       "textNameColor": "color:rgba(255, 255, 255, 0.9);",
+      "hasDonation": "$10.00",
+      "donation": "100 bits",
+      "membership": "Member for 3 months",
+      "hasMembership": true,
+      "subtitle": "Coffee Addiction",
+      "title": "DONATION",
       "chatbadges": [
         "https://cdn.betterttv.net/emote/abc/3x.webp",
         {
@@ -89,7 +128,13 @@
       "backgroundColor": "rgb(1, 2, 3)",
       "highlightColor": "#fff387",
       "backgroundNameColor": "background-color:hsl(210, 60%, 30%);",
-      "textNameColor": "color:rgba(255, 255, 255, 0.9);"
+      "textNameColor": "color:rgba(255, 255, 255, 0.9);",
+      "hasDonation": "$10.00",
+      "donation": "100 bits",
+      "membership": "Member for 3 months",
+      "hasMembership": true,
+      "subtitle": "Coffee Addiction",
+      "title": "DONATION"
     },
     "badgesLength": 4,
     "mustContain": ["cdn.betterttv.net", "cdn.7tv.app", "ffz-zero-width", "seventv-zero-width", "VIP"]

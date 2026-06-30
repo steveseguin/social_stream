@@ -470,6 +470,7 @@ async function restoreBrowserHandle(key, mode = "readwrite") {
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
+var forceNinjaSDKFromUrl = urlParams.has("sdk") && !/^(0|false|off|no)$/i.test(urlParams.get("sdk") || "1");
 var lastUseNinjaSDK = undefined; // track effective SDK usage across settings loads
 // initial default (may be recalculated when settings load)
 useNinjaSDK = false;
@@ -1595,7 +1596,7 @@ function loadSettings(item, resave = false) {
 	// Recompute effective SDK usage on settings load
 	try {
 		const settingsSDK = settings?.sdk?.setting === true || settings?.sdk === true || settings?.usesdk?.setting === true;
-		const effective = !!settingsSDK;
+		const effective = !!(forceNinjaSDKFromUrl || settingsSDK);
 		if (lastUseNinjaSDK === undefined) {
 			lastUseNinjaSDK = effective;
 		} else if (effective !== lastUseNinjaSDK) {
@@ -2432,11 +2433,16 @@ async function bringBackgroundPageToFrontForPicker() {
 
 		const backgroundTabs = await new Promise((resolve, reject) => {
 			try {
-				chrome.tabs.query({ url: backgroundUrl }, function (tabs) {
+				chrome.tabs.query({}, function (tabs) {
 					if (chrome.runtime.lastError) {
 						reject(chrome.runtime.lastError);
 					} else {
-						resolve(tabs || []);
+						resolve(
+							(tabs || []).filter(tab => {
+								const tabUrl = tab && (tab.url || tab.pendingUrl || "");
+								return tabUrl === backgroundUrl || tabUrl.startsWith(backgroundUrl + "?") || tabUrl.startsWith(backgroundUrl + "#");
+							})
+						);
 					}
 				});
 			} catch (err) {
@@ -12307,15 +12313,15 @@ async function initTransport(roomStreamID, pass = false) {
 	// Re-evaluate effective SDK flag each init, based on flexible truthy parsing
 	try {
 		const raw = settings && (settings.sdk !== undefined ? settings.sdk : settings.usesdk);
-		let flag = false;
+		let flag = !!forceNinjaSDKFromUrl;
 		if (typeof raw === "boolean") {
-			flag = raw;
+			flag = flag || raw;
 		} else if (raw && typeof raw === "object") {
 			// supports { setting: true/"true"/1 }
 			const v = raw.setting;
-			flag = v === true || v === 1 || (typeof v === "string" && /^(1|true|on|yes)$/i.test(v));
+			flag = flag || v === true || v === 1 || (typeof v === "string" && /^(1|true|on|yes)$/i.test(v));
 		} else if (typeof raw === "string") {
-			flag = /^(1|true|on|yes)$/i.test(raw);
+			flag = flag || /^(1|true|on|yes)$/i.test(raw);
 		} else if (raw === 1) {
 			flag = true;
 		}
@@ -12539,9 +12545,9 @@ async function ensureNinjaSDKLoaded() {
 
 	if (typeof window.VDONinjaSDK === "undefined") {
 		if (typeof window.loadScript === "function") {
-			await window.loadScript("./thirdparty/vdoninja-sdk.js");
+			await window.loadScript("./sources/grabvideo.js").catch(() => window.loadScript("./thirdparty/vdoninja-sdk.js"));
 		} else {
-			await dynamicLoadScript("./thirdparty/vdoninja-sdk.js");
+			await dynamicLoadScript("./sources/grabvideo.js").catch(() => dynamicLoadScript("./thirdparty/vdoninja-sdk.js"));
 		}
 	}
 	if (typeof window.NinjaBridge === "undefined") {

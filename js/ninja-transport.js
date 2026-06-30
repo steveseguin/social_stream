@@ -53,24 +53,37 @@
       // Set up auto-view handlers before we join so we don't miss initial listing
       this._enableAutoView();
       await this.vdo.connect();
+      const publishStreamID = this.streamID || room;
 
-      // Join the room
-      await this.vdo.joinRoom({ room, password: this.password || false });
+      // Join the room using the same data-only stream ID that overlays will view.
+      await this.vdo.joinRoom({
+        room,
+        password: this.password || false,
+        streamID: publishStreamID,
+        push: publishStreamID,
+      });
 
       // Publish a data-only stream whose streamID equals the room's ID
       // so overlays can subscribe to it, mirroring the iframe's &push=room behavior.
-      try {
+      if (typeof this.vdo.announce === 'function') {
         await this.vdo.announce({
-          streamID: this.streamID || room,
+          streamID: publishStreamID,
           label: this.opts.label || 'SocialStream',
           // Keep metadata minimal; data-channel only
           allowchunked: true,
           iframe: false,
           widget: false,
         });
-      } catch (e) {
-        // If publish fails (older SDK), continue with DC-only viewer below
-        if (this.opts.debug) console.warn('NinjaBridge: publish failed; continuing', e);
+      } else if (typeof this.vdo._startListingBroadcast === 'function') {
+        if (this.vdo.state) {
+          this.vdo.state.streamID = publishStreamID;
+        }
+        this.vdo._startListingBroadcast();
+      } else if (typeof this.vdo._sendListing === 'function') {
+        if (this.vdo.state) {
+          this.vdo.state.streamID = publishStreamID;
+        }
+        await this.vdo._sendListing();
       }
 
       // Auto-view handlers already enabled above

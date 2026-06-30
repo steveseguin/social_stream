@@ -83,6 +83,24 @@
 	var processedMessages = new Set();
 	var processedEvents = new Set();
 
+	function getChatInput(){
+		try {
+			var selectors = [
+				'[aria-label="Chat message input"][contenteditable="true"][role="textbox"]',
+				'[aria-label="Chat message input"][contenteditable="true"]',
+				'[role="textbox"][contenteditable="true"][data-placeholder]'
+			];
+			for (var i = 0; i < selectors.length; i++){
+				var inputs = document.querySelectorAll(selectors[i]);
+				if (inputs && inputs.length){
+					return inputs[inputs.length - 1];
+				}
+			}
+		} catch(e){
+		}
+		return null;
+	}
+
 	function getChatMessageRoot(ele){
 		if (!ele || !ele.isConnected || !ele.querySelector){ return null; }
 		if (ele.classList && ele.classList.contains("chat-message-content")){
@@ -359,6 +377,22 @@
 		pushMessage(data);
 	}
 
+	function scanExistingChat(container){
+		if (!container || !container.querySelectorAll){ return; }
+		try {
+			container.querySelectorAll(".chat-message-content").forEach(function(chatNode){
+				processMessage(chatNode);
+			});
+		} catch(e){
+		}
+		try {
+			container.querySelectorAll(".mx-1.my-1\\.5, [class*='mx-1'][class*='my-1.5'], .flex.items-baseline").forEach(function(eventNode){
+				processEventNode(eventNode);
+			});
+		} catch(e){
+		}
+	}
+
 	function pushMessage(data){
 		try{
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -442,9 +476,9 @@
 				
 				if ("getSource" == request){sendResponse("velora");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					let cc = document.querySelectorAll('[aria-label="Chat message input"][contenteditable="true"][data-placeholder][spellcheck="false"][role="textbox"]');
-					if(cc.length){
-						cc[cc.length-1].focus();
+					var chatInput = getChatInput();
+					if(chatInput && chatInput.focus){
+						chatInput.focus();
 					}
 					sendResponse(true);
 					return;
@@ -527,6 +561,85 @@
 	
 	console.log("social stream injected");
 
+	function isVeloraPopoutRoute(){
+		try {
+			return /\/dashboard\/stream\/popout(?:\/|$)/i.test(window.location.pathname || "");
+		} catch(e){
+		}
+		return false;
+	}
+
+	function findPopoutChatScroller(){
+		if (!isVeloraPopoutRoute()){
+			return null;
+		}
+		try {
+			var containers = document.querySelectorAll(".overflow-y-auto, [class*='overflow-y-auto']");
+			var best = null;
+			var bestScore = 0;
+			for (var i = 0; i < containers.length; i++){
+				var container = containers[i];
+				var score = 0;
+				var text = "";
+				var className = "";
+				try {
+					text = (container.textContent || "").replace(/\s+/g, " ").trim();
+					className = String(container.className || "");
+				} catch(e){
+				}
+				if (container.querySelector && container.querySelector(".chat-message-content")){ score += 100; }
+				if (/No messages yet|Connecting to chat|New messages/i.test(text)){ score += 45; }
+				if (/Activity will appear here|transactions|followers|subscribers/i.test(text)){ score -= 30; }
+				if (className.indexOf("px-1") !== -1 && className.indexOf("pb-1") !== -1){ score += 30; }
+				if (className.indexOf("scrollbar-thumb-white/10") !== -1){ score += 25; }
+				if (className.indexOf("scrollbar-thin") !== -1){ score += 5; }
+				if (score > bestScore){
+					bestScore = score;
+					best = container;
+				}
+			}
+			if (best && bestScore > 0){
+				return best;
+			}
+			return document.body || null;
+		} catch(e){
+		}
+		return null;
+	}
+
+	function findScrollerNearInput(input){
+		if (!input){ return null; }
+		var node = input;
+		var fallback = null;
+		var depth = 0;
+		while (node && depth < 10){
+			try {
+				if (node.querySelectorAll){
+					var containers = node.querySelectorAll(".overflow-y-auto, [class*='overflow-y-auto']");
+					for (var i = 0; i < containers.length; i++){
+						var container = containers[i];
+						if (!container || container === input){ continue; }
+						if (container.contains && container.contains(input)){ continue; }
+						if (!fallback){ fallback = container; }
+						var text = (container.textContent || "").replace(/\s+/g, " ").trim();
+						var className = "";
+						try {
+							className = String(container.className || "");
+						} catch(e){
+						}
+						if (container.querySelector(".chat-message-content") || /No messages yet|Connecting to chat|New messages/i.test(text) || className.indexOf("scrollbar-thin") !== -1){
+							return container;
+						}
+					}
+				}
+			} catch(e){
+			}
+			node = node.parentElement;
+			depth++;
+		}
+		return fallback;
+	}
+
 	function findChatContainer(){
 		try {
 			var root = document.querySelector(".chat-message-content");
@@ -539,19 +652,17 @@
 		} catch(e){
 		}
 		try {
-			var input = document.querySelector('[aria-label="Chat message input"][contenteditable="true"][data-placeholder][spellcheck="false"][role="textbox"]');
-			if (!input || !input.closest){
-				return null;
+			var input = getChatInput();
+			var inputContainer = findScrollerNearInput(input);
+			if (inputContainer){
+				return inputContainer;
 			}
-			var aside = input.closest("aside");
-			if (!aside || !aside.querySelectorAll){
-				return null;
-			}
-			var containers = aside.querySelectorAll(".overflow-y-auto");
-			for (var i = 0; i < containers.length; i++){
-				if (containers[i].querySelector(".chat-message-content")){
-					return containers[i];
-				}
+		} catch(e){
+		}
+		try {
+			var popoutContainer = findPopoutChatScroller();
+			if (popoutContainer){
+				return popoutContainer;
 			}
 		} catch(e){
 		}
@@ -589,6 +700,7 @@
 					setTimeout(function(){
 						dataIndex = 0;
 						onElementInserted(container, true);
+						scanExistingChat(container);
 					},1000);
 				}
 				checkViewers();

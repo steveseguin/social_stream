@@ -1970,21 +1970,75 @@ body.light-mode .meta-value.badge {
 			} catch(e){console.error(e);}
 		}
 		
-		messageDiv.innerHTML = `
-			<div class="message-header">
-				<div class="message-meta">
-					${eventSpecificText ? `<div class="event-specific ${eventTypeClass || ''}">${eventSpecificText}</div>` : ''}
-					${eventTypeText ? `<div class="event-type">${eventTypeText}</div>` : ''}
-					<div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${displayName}</div>
-					${data.sourceicon ? `<img src="${data.sourceicon}" alt="${data.type}" class="source-icon">` : ''}
-				</div>
-			</div>
-			
-			<div class="text">${display.message || ''}</div>
-			${data.hasDonation ? `<div class="donation">💰 ${data.hasDonation}</div>` : ''}
-			${usdValue > 0 ? `<div class="usd-value">$${usdValue.toFixed(2)} USD</div>` : ''}
-			${hideTimestamps ? '' : `<div class="timestamp">${timeString}</div>`}
-		`;
+		messageDiv.textContent = '';
+
+		const header = document.createElement('div');
+		header.className = 'message-header';
+		const meta = document.createElement('div');
+		meta.className = 'message-meta';
+
+		if (eventSpecificText) {
+			const eventSpecific = document.createElement('div');
+			eventSpecific.className = 'event-specific';
+			if (eventTypeClass) {
+				eventSpecific.classList.add(eventTypeClass);
+			}
+			eventSpecific.textContent = eventSpecificText;
+			meta.appendChild(eventSpecific);
+		}
+
+		if (eventTypeText) {
+			const eventType = document.createElement('div');
+			eventType.className = 'event-type';
+			eventType.textContent = eventTypeText;
+			meta.appendChild(eventType);
+		}
+
+		const nameNode = document.createElement('div');
+		nameNode.className = 'name';
+		if (data.nameColor) {
+			nameNode.style.textShadow = '0 0 3px ' + data.nameColor;
+		}
+		nameNode.textContent = displayName;
+		meta.appendChild(nameNode);
+
+		if (data.sourceicon) {
+			const sourceIcon = document.createElement('img');
+			sourceIcon.src = data.sourceicon;
+			sourceIcon.alt = data.type || '';
+			sourceIcon.className = 'source-icon';
+			meta.appendChild(sourceIcon);
+		}
+
+		header.appendChild(meta);
+		messageDiv.appendChild(header);
+
+		const textNode = document.createElement('div');
+		textNode.className = 'text';
+		// Trusted relay HTML: event chatmessage is sanitized upstream in background.js before rendering here.
+		textNode.innerHTML = display.message || '';
+		messageDiv.appendChild(textNode);
+
+		if (data.hasDonation) {
+			const donationNode = document.createElement('div');
+			donationNode.className = 'donation';
+			donationNode.textContent = '\uD83D\uDCB0 ' + data.hasDonation;
+			messageDiv.appendChild(donationNode);
+		}
+
+		if (usdValue > 0) {
+			const usdNode = document.createElement('div');
+			usdNode.className = 'usd-value';
+			usdNode.textContent = '$' + usdValue.toFixed(2) + ' USD';
+			messageDiv.appendChild(usdNode);
+		}
+
+		if (!hideTimestamps) {
+			const timestampNode = document.createElement('div');
+			timestampNode.className = 'timestamp';
+			timestampNode.textContent = timeString;
+			messageDiv.appendChild(timestampNode);
+		}
 
 		const metaDetailsNode = hideMetaPanels ? null : createMetaDetailsNode(data);
 		if (metaDetailsNode) {

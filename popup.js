@@ -4971,6 +4971,12 @@ function updateURL(param, href) {
 }
 
 function removeQueryParamWithValue(url, paramWithValue) {
+    if (typeof url !== "string") {
+        url = url ? String(url) : "";
+    }
+    if (!url) {
+        return "";
+    }
     let [baseUrl, queryString] = url.split('?');
     if (!queryString) {
         return url;

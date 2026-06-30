@@ -85,7 +85,7 @@ It is listed as a [setup type] source. Start by [setup instruction]. If that doe
 | Fansly | Use `https://fansly.com/chatroom/*`. |
 | Favorited | Use `https://studio.favorited.com/popout/chat`. |
 | Rutube | Use `https://rutube.ru/live/chat/*/`. |
-| Parti | Use `https://parti.com/popout-chat?id=*`. |
+| Parti | Use `https://parti.com/USERNAME` or `https://parti.com/popout-chat?id=USER_ID`. |
 | SoopLive | Use `https://www.sooplive.com/chat/*` or `https://play.sooplive.com/*?vtype=chat`. |
 | Beamstream | Open `https://beamstream.gg/USERNAME/chat`. |
 | BoltPlus.tv | Use `https://boltplus.tv/chatpopout*`. |

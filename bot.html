@@ -1098,10 +1098,48 @@
 			}
 			
 			
+			function removeHtmlTagsFromPlainTextField(value) {
+				return String(value || "")
+					.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+					.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+					.replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, "")
+					.replace(/<template\b[^>]*>[\s\S]*?<\/template>/gi, "")
+					.replace(/<[^>]*>/g, "");
+			}
+
 			function stripHtmlFunction(html) {
+				html = String(html == null ? "" : html);
+				try {
+					if (typeof DOMParser !== "undefined") {
+						let doc = new DOMParser().parseFromString(html, "text/html");
+						if (doc && doc.body) {
+							doc.body.querySelectorAll("script,style,noscript,template").forEach(function (node) {
+								node.remove();
+							});
+							return removeHtmlTagsFromPlainTextField(doc.body.textContent || "");
+						}
+					}
+				} catch (e) {}
 				let tmp = document.createElement("DIV");
 				tmp.innerHTML = html;
-				return tmp.textContent || tmp.innerText || "";
+				return removeHtmlTagsFromPlainTextField(tmp.textContent || tmp.innerText || "");
+			}
+
+			function sanitizePlainTextAlertFields(data) {
+				if (!data) {
+					return;
+				}
+				["hasDonation", "donation", "membership", "hasMembership", "subtitle", "title"].forEach(function (field) {
+					if (typeof data[field] === "string") {
+						data[field] = stripHtmlFunction(data[field]);
+					}
+				});
+			}
+
+			function plainTextToHtml(value) {
+				let span = document.createElement("span");
+				span.textContent = value == null ? "" : String(value);
+				return span.innerHTML;
 			}
 			
 			function upscaleImages(data) {
@@ -2166,6 +2204,8 @@
 					  data.chatname = data.chatname.toString();
 					}
 
+					sanitizePlainTextAlertFields(data);
+
 					var memebershipHTML = "";
 
 					if (data.hasMembership) {
@@ -2174,7 +2214,7 @@
 					  }
 					  // doesn't have subtitles; shouldn't at least.
 					  data.membership = data.hasMembership.toString();
-					  memebershipHTML = data.membership;
+					  memebershipHTML = plainTextToHtml(data.membership);
 					} else if (data.membership) {
 					  if (data.membership === true) {
 						data.membership = getTranslation("membership", "Membership");
@@ -2183,12 +2223,12 @@
 					  }
 					  
 					  if (data.subtitle) {
-						memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+						memebershipHTML = '<div class="donation membership"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 					  } else {
-						memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
+						memebershipHTML = '<div class="donation membership"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 					  }
 					} else if (data.subtitle) {
-					  memebershipHTML = '<div class="donation membership"><div class="subtitle">' + data.subtitle + "</div></div>";
+					  memebershipHTML = '<div class="donation membership"><div class="subtitle">' + plainTextToHtml(data.subtitle) + "</div></div>";
 					} else {
 					  data.membership = "";
 					}
@@ -2206,7 +2246,7 @@
 						if ("title" in data) {
 						  donationTitle = data.title;
 						}
-						donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						
 					  } else if ((data.type == "youtube") || (data.type == "youtubeshorts")) {
 						let donationTitle = getTranslation("donation", "DONATION");
@@ -2214,16 +2254,16 @@
 						  donationTitle = data.title;
 						}
 						if (memebershipHTML) {
-						  donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+						  donationHTML = '<div class="donation">' + plainTextToHtml(data.hasDonation) + "</div>";
 						} else {
-						  donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						  donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						}
 						
 					  } else if (data.title) {
-						donationHTML = '<div class="donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(data.title) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						
 					  } else {
-						donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+						donationHTML = '<div class="donation">' + plainTextToHtml(data.hasDonation) + "</div>";
 					  }
 					} else {
 					  data.hasDonation = "";
@@ -2305,6 +2345,7 @@
 					}
 
 					var renderChatMessageAsText = !!(data.textonly && !largeImage);
+					// Trusted relay HTML: chatname/chatmessage are sanitized upstream in background.js before rendering here.
 					var renderedChatMessage = renderChatMessageAsText ? "" : data.chatmessage;
 
 					if (stacking) {

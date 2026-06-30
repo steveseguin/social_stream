@@ -127,12 +127,12 @@ Important fields:
 - `hasDonation`: donation/gift/bits amount label.
 - `membership`: member/subscription state.
 - `subtitle`: short secondary membership/donation detail.
-- `event`: normalized event name when this is not a normal chat message.
-- `meta`: structured extra details for event/UI/integration consumers.
+- `event`: normalized event name when this is not a normal chat message. Do not set `event: "donation"` just because a normal chat/tip row has `hasDonation`.
+- `meta`: structured extra details for event/UI/integration consumers only when that data is actually needed and no existing field already represents it.
 - `id`: stable-enough unique message ID for deletion/dedup/routing.
 - `userid`: platform user ID when available.
 
-Do not create new top-level fields casually. Prefer `meta` for source-specific details unless existing overlays need a top-level value.
+Do not create new top-level fields casually. Use existing fields first; put source-specific details in `meta` only when they need to be transmitted and are not already sufficiently handled.
 
 ## Event Support
 
@@ -142,6 +142,7 @@ Confirmed rules from current docs:
 
 - To hide events in dock/featured pages, users can use `&hideevents`, `&hideallevents`, or `&filterevents=...`.
 - Donation-style messages should still populate `hasDonation` even if `event` is blank or source-specific.
+- Normal chat/tip rows with donations should usually leave `event` blank; `hasDonation` is the donation signal.
 - YouTube, Twitch, and Kick need WebSocket mode for many richer stream events.
 - DOM capture is usually enough for chat and limited system events, but not always enough for follows, raids, subscriptions, or detailed gifts.
 
