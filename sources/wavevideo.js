@@ -1,4 +1,6 @@
 (function () {
+  let settings = {};
+
   function escapeHtml(unsafe) {
     return unsafe
       .replace(/&/g, "&amp;")
@@ -6,6 +8,11 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  function formatChatMessage(value) {
+    value = value || "";
+    return settings.textonlymode ? value : escapeHtml(value);
   }
 
   const chatContainerSelector = ".ydm0hk-1.fdPmo";
@@ -53,10 +60,10 @@
       const data = {
         chatname: escapeHtml(username),
         chatimg: profileImageUrl,
-        chatmessage: escapeHtml(messageText),
+        chatmessage: formatChatMessage(messageText),
         sourceImg: socialIconUrl,
 		// chatIconUrl: socialIconUrl,
-		textonly: false,
+		textonly: settings.textonlymode || false,
         type: getTypeFromAlt(socialIconAlt), // Determine the type of stream from the alt.
       };
 
@@ -91,6 +98,28 @@
   });
 
   const config = { childList: true, subtree: true };
+
+  chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) return;
+    if (response && "settings" in response) {
+      settings = response.settings;
+    }
+  });
+
+  chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    try {
+      if ("getSource" == request) {
+        sendResponse("wavevideo");
+        return;
+      }
+      if (typeof request === "object" && "settings" in request) {
+        settings = request.settings;
+        sendResponse(true);
+        return;
+      }
+    } catch (e) {}
+    sendResponse(false);
+  });
 
   // Iniciar observación
   const startObserving = () => {
