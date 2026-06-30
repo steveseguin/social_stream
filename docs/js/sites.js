@@ -1205,6 +1205,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'FLEX TV',
+			icon: 'flextv.png',
+			description: 'Korean live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://www.flextv.co.kr/channels/*/live</li>
+					<li>Open the live page with the chat panel visible</li>
+				</ul>
+			`,
+			notes: 'Chat capture is based on the rendered chat panel and starts with new messages after Social Stream attaches.'
+		},
+		{
 			name: 'Beamstream',
 			icon: 'beamstream.png',
 			description: 'Live streaming platform.',

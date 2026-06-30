@@ -354,6 +354,21 @@
             color: var(--muted);
         }
 
+        .runtime-alert {
+            margin-top: 12px;
+            padding: 11px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(249, 200, 108, 0.42);
+            background: rgba(249, 200, 108, 0.12);
+            color: #ffe4aa;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .runtime-alert.hidden {
+            display: none;
+        }
+
         .link {
             color: #8fe9e1;
             text-decoration: none;
@@ -402,6 +417,9 @@
                     <span id="viewer-chip" class="chip">Viewers: -</span>
                     <span id="last-event-chip" class="chip">Last event: Waiting</span>
                 </div>
+            </div>
+            <div id="bad-origin-help" class="runtime-alert hidden" role="alert">
+                Recent VPZone changes require Social Stream standalone app 0.4.0 or newer for WebSocket mode. Update the app, or use standard VPZone mode instead.
             </div>
         </section>
 

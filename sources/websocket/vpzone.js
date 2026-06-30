@@ -725,6 +725,12 @@
 		pushStatus(status, message, meta || {});
 	}
 
+	function showBadOriginHelp(show) {
+		if (!els.badOriginHelp) return;
+		if (show) els.badOriginHelp.classList.remove("hidden");
+		else els.badOriginHelp.classList.add("hidden");
+	}
+
 	function updateAuthChip() {
 		if (state.tokens && state.tokens.access_token) {
 			chip(els.authChip, "Signed in", "good");
@@ -1279,6 +1285,7 @@
 		state.currentChannel = channel;
 		updateLink();
 		wsProxy.readyState = READY_STATE.CONNECTING;
+		showBadOriginHelp(false);
 		setStatus("connecting", (isReconnect ? "Reconnecting" : "Connecting") + " @" + channel + "...", { channel: channel, wsUrl: wsUrl });
 		log((isReconnect ? "Reconnecting" : "Connecting") + " chat for @" + channel + ".", "info");
 		try { socket = new WebSocket(wsUrl); } catch (error) {
@@ -1313,11 +1320,13 @@
 			if (event && event.code === 1008) {
 				state.active = false;
 				var rejReason = String(event.reason || "");
+				var isBadOrigin = /bad origin/i.test(rejReason);
 				var msg = /bad channel/i.test(rejReason)
 					? "VPZone rejected channel @" + channel + "."
 					: /banned/i.test(rejReason)
 						? "VPZone banned this account from @" + channel + "."
 						: "VPZone rejected the connection: " + (rejReason || "policy violation");
+				showBadOriginHelp(isBadOrigin);
 				setStatus("error", msg, { channel: channel, wsUrl: wsUrl });
 				log(reason + ". " + msg, "error");
 				syncButtons();
@@ -1353,6 +1362,7 @@
 		state.active = false;
 		clearReconnect();
 		closeSocket();
+		showBadOriginHelp(false);
 		setStatus("disconnected", manual ? "Disconnected." : "VPZone connection stopped.");
 		syncButtons();
 	}
@@ -1443,6 +1453,7 @@
 		els.lastEventChip = document.getElementById("last-event-chip");
 		els.authChip = document.getElementById("auth-chip");
 		els.statusText = document.getElementById("status-text");
+		els.badOriginHelp = document.getElementById("bad-origin-help");
 		els.channelLink = document.getElementById("channel-link");
 		els.feed = document.getElementById("feed");
 		els.log = document.getElementById("log");

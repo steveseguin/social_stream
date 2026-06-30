@@ -200,6 +200,13 @@
                             <td>&mdash;</td>
                             <td>Viewer count plus chat names, colors, badges, replies, and links</td>
                         </tr>
+                        <tr>
+                            <td><strong>FLEX TV</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Rendered chat rows with names, author colors, badge images, and member metadata</td>
+                        </tr>
                     </tbody>
                 </table>
                 <p class="field-highlights">*YouTube subscriber alerts have a 4-hour API delay and only show subscribers with public subscription lists. This is a YouTube API limitation that also affects Streamlabs and other apps.</p>
@@ -1379,6 +1386,32 @@
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>The header viewer badge changes while viewer-count capture or hype mode is enabled.</td>
                                 <td><code>meta</code> integer viewer count.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="flextv">
+                    <h3>FLEX TV</h3>
+                    <p class="source-note">Implementation: <code>sources/flextv.js</code></p>
+                    <ul class="requirements">
+                        <li>Reads the rendered chat panel on <code>https://www.flextv.co.kr/channels/*/live</code> pages.</li>
+                        <li>The chat panel must be visible. Existing chat history is skipped when the source attaches, so test with a new chat row.</li>
+                        <li>No viewer count, donation, or send-back path is documented for this source yet.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>New visible FLEX TV <code>.chat-item</code> rows appear in the live chat feed.</td>
+                                <td>Standard chat payload with <code>type: "flextv"</code>, <code>chatname</code>, <code>chatmessage</code>, <code>nameColor</code>, badge images in <code>chatbadges</code>, and FLEX member details under <code>meta</code> when exposed by <code>data-member</code>.</td>
                             </tr>
                         </tbody>
                     </table>

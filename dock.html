@@ -6424,7 +6424,7 @@
 						viewers[data.type] = parseInt(data.meta) || 0;
 						
 						if (showviewercount){
-							let ele = topBarElement.querySelector("[data-type='"+data.type+"']");
+							let ele = topBarElement.querySelector(dataAttributeSelector("data-type", data.type));
 							if (ele){
 								ele.innerText = viewers[data.type];
 							} else {
@@ -6457,7 +6457,7 @@
 								
 								// Then update or create elements for types in the current update
 								Object.keys(data.meta).forEach(type=>{
-									let ele = topBarElement.querySelector("[data-type='"+type+"']");
+									let ele = topBarElement.querySelector(dataAttributeSelector("data-type", type));
 									if (ele){
 										ele.innerText = data.meta[type];
 									} else {
@@ -6553,13 +6553,13 @@
 			function deleteMessages(data, deleteOnlyLast=false) {
 				let selector = "";
 				if (data.delete.id) {
-					selector = `[data-mid='${data.delete.id}']`;
+					selector = dataAttributeSelector("data-mid", data.delete.id);
 				} else if (data.delete.chatname && data.delete.type) {
-					selector = `[data-chatname='${data.delete.chatname}'][data-source-type='${data.delete.type}']`;
+					selector = dataAttributeSelector("data-chatname", data.delete.chatname) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.type) {
-					selector = `[data-source-type='${data.delete.type}']`;
+					selector = dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.chatname) {
-					selector = `[data-chatname='${data.delete.chatname}']`;
+					selector = dataAttributeSelector("data-chatname", data.delete.chatname);
 				}
 
 				if (deleteOnlyLast || data.delete.onlyLast) {
@@ -6610,7 +6610,7 @@
 				historyMissedLiveBuffer = [];
 				buffered.forEach(function(msg) {
 					var displayId = (msg && msg.mid) ? msg.mid : msg.id;
-					if (!displayId || !document.querySelector("[data-mid='" + displayId + "']")) {
+					if (!displayId || !document.querySelector(dataAttributeSelector("data-mid", displayId))) {
 						processData({ contents: msg }, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
 					}
 				});
@@ -7158,18 +7158,18 @@
 						}
 
 						try {
-							
+
 							document.querySelectorAll("." + lastMessageClass).forEach(ele => {
 								// last message sent was to clear the overlay
 								ele.classList.remove(lastMessageClass); // no overlay is now active.
 							});
-							document.querySelector("[data-mid='" + data.mid + "']").classList.add(pressedClass, lastMessageClass); // add last-message class
-							
+							document.querySelector(dataAttributeSelector("data-mid", data.mid)).classList.add(pressedClass, lastMessageClass); // add last-message class
+
 						} catch (e) {
 							setTimeout(
 								function (mid) {
 									try {
-										document.querySelector("[data-mid='" + mid + "']").classList.add(pressedClass);
+										document.querySelector(dataAttributeSelector("data-mid", mid)).classList.add(pressedClass);
 									} catch (e) {}
 								},
 								500,
@@ -7189,9 +7189,9 @@
 							data.pin.forEach(dddd => {
 								if (typeof dddd === "object") {
 									try {
-										if (dddd.id && document.querySelector("[data-mid='" + dddd.id + "']")) {
-											pinIt(document.querySelector("[data-mid='" + dddd.id + "']"));
-											applyHiddenState(document.querySelector("[data-mid='" + dddd.id + "']"));
+										if (dddd.id && document.querySelector(dataAttributeSelector("data-mid", dddd.id))) {
+											pinIt(document.querySelector(dataAttributeSelector("data-mid", dddd.id)));
+											applyHiddenState(document.querySelector(dataAttributeSelector("data-mid", dddd.id)));
 										} else {
 											let ele = processInput(dddd, force);
 											pinIt(ele);
@@ -7200,8 +7200,8 @@
 									} catch (e) {}
 								} else {
 									try {
-										pinIt(document.querySelector("[data-mid='" + dddd + "']"));
-										applyHiddenState(document.querySelector("[data-mid='" + dddd + "']"));
+										pinIt(document.querySelector(dataAttributeSelector("data-mid", dddd)));
+										applyHiddenState(document.querySelector(dataAttributeSelector("data-mid", dddd)));
 									} catch (e) {}
 								}
 							});
@@ -7214,8 +7214,8 @@
 						if (typeof data.unpin == "object") {
 							data.unpin.forEach(mid => {
 								try {
-									unpinIt(document.querySelector("[data-mid='" + mid + "']"));
-									applyHiddenState(document.querySelector("[data-mid='" + mid + "']"));
+									unpinIt(document.querySelector(dataAttributeSelector("data-mid", mid)));
+									applyHiddenState(document.querySelector(dataAttributeSelector("data-mid", mid)));
 								} catch (e) {
 									// doesn't exist or whatever.
 								}
@@ -7231,7 +7231,7 @@
 							data.queueInit.forEach(dd => {
 								try {
 									if (dd && dd.id) {
-										var ele = document.querySelector("[data-mid='" + dd.id + "']");
+										var ele = document.querySelector(dataAttributeSelector("data-mid", dd.id));
 										if (!ele) {
 											ele = processInput(dd, force);
 										}
@@ -7266,7 +7266,7 @@
 									if (mid) {
 										if (typeof mid === "object") {
 											if ("id" in mid) {
-												var ele = document.querySelector("[data-mid='" + mid.id + "']");
+												var ele = document.querySelector(dataAttributeSelector("data-mid", mid.id));
 												if (ele) {
 													sq.push(ele);
 													ele.children[0].dataset.qid = sq.length;
@@ -7283,7 +7283,7 @@
 												}
 											}
 										} else {
-											var ele = document.querySelector("[data-mid='" + mid + "']");
+											var ele = document.querySelector(dataAttributeSelector("data-mid", mid));
 											if (ele) {
 												sq.push(ele);
 												ele.children[0].dataset.qid = sq.length;
@@ -7322,7 +7322,7 @@
 					// delete by message ID; likely another dock is syncing their delete with me
 					//if ((syncDocks || force)){
 					try {
-						var ele = document.querySelector("[data-mid='" + data.deleteMessage + "']");
+						var ele = document.querySelector(dataAttributeSelector("data-mid", data.deleteMessage));
 						if (ele) {
 							ele.remove();
 						}
@@ -7466,7 +7466,7 @@
 						recentMessages.forEach(function(msg) {
 							//console.log({contents:msg});
 							var displayId = (msg && msg.mid) ? msg.mid : msg.id;
-							if (!displayId || !document.querySelector("[data-mid='"+displayId+"']")){
+							if (!displayId || !document.querySelector(dataAttributeSelector("data-mid", displayId))){
 								var normalizedMsg = (msg && msg.mid && msg.mid !== msg.id) ? Object.assign({}, msg, { id: msg.mid, dbid: msg.id }) : msg;
 								if (prependRecentHistory) {
 									prependMode = true;
@@ -7502,7 +7502,7 @@
 					}
 					histMsgs.forEach(function(msg) {
 						var displayId = (msg && msg.mid) ? msg.mid : msg.id;
-						if (!displayId || !document.querySelector("[data-mid='" + displayId + "']")) {
+						if (!displayId || !document.querySelector(dataAttributeSelector("data-mid", displayId))) {
 							var normalizedMsg = (msg && msg.mid && msg.mid !== msg.id) ? Object.assign({}, msg, { id: msg.mid, dbid: msg.id }) : msg;
 							prependMode = true;
 							processData({contents: normalizedMsg});
@@ -7571,15 +7571,15 @@
 					try {
 						if (data.timeoutUser.username && data.timeoutUser.type && data.timeoutUser.duration) {
 							// Optional: Add visual feedback for timed out users
-							
+
 							timedOutUsers[data.timeoutUser.username+":"+data.timeoutUser.type] = Date.now() + data.timeoutUser.duration*1000;
-							
-							document.querySelectorAll("[data-chatname='" + data.timeoutUser.username + "'][data-source-type='" + data.timeoutUser.type + "']").forEach(ele => {
+
+							document.querySelectorAll(dataAttributeSelector("data-chatname", data.timeoutUser.username) + dataAttributeSelector("data-source-type", data.timeoutUser.type)).forEach(ele => {
 								ele.remove();
 							});
-							
+
 							if (data.timeoutUser.type=="youtube"){
-								document.querySelectorAll("[data-chatname='" + data.timeoutUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+								document.querySelectorAll(dataAttributeSelector("data-chatname", data.timeoutUser.username) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
 									ele.remove();
 								});
 							}
@@ -7613,7 +7613,7 @@
 							} else {
 								localBlockUserList[blockName] = [data.blockUser.type];
 							}
-							document.querySelectorAll("[data-chatname='" + blockName + "'][data-source-type='" + data.blockUser.type + "']").forEach(ele => {
+							document.querySelectorAll(dataAttributeSelector("data-chatname", blockName) + dataAttributeSelector("data-source-type", data.blockUser.type)).forEach(ele => {
 								ele.remove();
 							});
 
@@ -7621,7 +7621,7 @@
 								if (!localBlockUserList[blockName].includes("youtubeshorts")) {
 									localBlockUserList[blockName].push("youtubeshorts");
 								}
-								document.querySelectorAll("[data-chatname='" + blockName + "'][data-source-type='youtubeshorts']").forEach(ele => {
+								document.querySelectorAll(dataAttributeSelector("data-chatname", blockName) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
 									ele.remove();
 								});
 							}
@@ -7637,7 +7637,7 @@
 							} else {
 								localBlockUserList[data.blockUser.username] = ["*"];
 							}
-							document.querySelectorAll("[data-chatname='" + data.blockUser.username + "']").forEach(ele => {
+							document.querySelectorAll(dataAttributeSelector("data-chatname", data.blockUser.username)).forEach(ele => {
 								ele.remove();
 							});
 						}
@@ -7649,16 +7649,16 @@
 				} else if ("vipUser" in data) {
 					try {
 						if (data.vipUser.username && data.vipUser.type) {
-							document.querySelectorAll("[data-chatname='" + data.vipUser.username + "'][data-source-type='" + data.vipUser.type + "']").forEach(ele => {
+							document.querySelectorAll(dataAttributeSelector("data-chatname", data.vipUser.username) + dataAttributeSelector("data-source-type", data.vipUser.type)).forEach(ele => {
 								ele.classList.add("vip");
 							});
 							if (data.vipUser.type=="youtube"){
-								document.querySelectorAll("[data-chatname='" + data.vipUser.username + "'][data-source-type='youtubeshorts']").forEach(ele => {
+								document.querySelectorAll(dataAttributeSelector("data-chatname", data.vipUser.username) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
 									ele.classList.add("vip");
 								});
 							}
 						} else if (data.vipUser.username) {
-							document.querySelectorAll("[data-chatname='" + data.vipUser.username + "']").forEach(ele => {
+							document.querySelectorAll(dataAttributeSelector("data-chatname", data.vipUser.username)).forEach(ele => {
 								ele.classList.add("vip");
 							});
 						}
@@ -9015,7 +9015,7 @@
 						} else {
 							localBlockUserList[chatName] = [type];
 						}
-						document.querySelectorAll("[data-chatname='" + chatName + "'][data-source-type='" + type + "']").forEach(ele => {
+						document.querySelectorAll(dataAttributeSelector("data-chatname", chatName) + dataAttributeSelector("data-source-type", type)).forEach(ele => {
 							ele.remove();
 						});
 
@@ -9070,15 +9070,15 @@
 					try {
 						if (userId && userType && duration) {
 							// Optional: Add visual feedback for timed out users
-							
+
 							timedOutUsers[userId+":"+userType] = Date.now() + duration*1000;
-							
-							document.querySelectorAll("[data-chatname='" + userId + "'][data-source-type='" + userType + "']").forEach(ele => {
+
+							document.querySelectorAll(dataAttributeSelector("data-chatname", userId) + dataAttributeSelector("data-source-type", userType)).forEach(ele => {
 								ele.remove();
 							});
-							
+
 							if (userType=="youtube"){
-								document.querySelectorAll("[data-chatname='" + userId + "'][data-source-type='youtubeshorts']").forEach(ele => {
+								document.querySelectorAll(dataAttributeSelector("data-chatname", userId) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
 									ele.remove();
 								});
 							}
@@ -9235,7 +9235,7 @@
 				}
 
 				function applyRoleToType(typeToApply) {
-					document.querySelectorAll("[data-chatname='" + chatName + "'][data-source-type='" + typeToApply + "']").forEach(ele => {
+					document.querySelectorAll(dataAttributeSelector("data-chatname", chatName) + dataAttributeSelector("data-source-type", typeToApply)).forEach(ele => {
 						ele.classList.add(`marked-${role}`);
 						if (role === "host") {
 							ele.classList.add("host");
@@ -9664,6 +9664,23 @@
 				} catch (e) {
 					return "";
 				}
+			}
+
+			function escapeAttributeValue(value) {
+				return escapeHtml(String(value == null ? "" : value));
+			}
+
+			function cssAttributeValue(value) {
+				return String(value == null ? "" : value)
+					.replace(/\\/g, "\\\\")
+					.replace(/"/g, '\\"')
+					.replace(/\r/g, "\\D ")
+					.replace(/\n/g, "\\A ")
+					.replace(/\f/g, "\\C ");
+			}
+
+			function dataAttributeSelector(attributeName, value) {
+				return "[" + attributeName + '="' + cssAttributeValue(value) + '"]';
 			}
 			
 			function processURLs(element, { makeClickable = false, stripLinks = false, shortenURLs = false, maxLength = 40, replaceSubstring = "[Link]" } = {}) {
@@ -10546,6 +10563,8 @@
 						data.type = data.type.toString();
 						showType = data.type;
 					}
+					var safeDataId = escapeAttributeValue(data.id);
+					var safeDataType = escapeAttributeValue(data.type);
 					sanitizePlainTextAlertFields(data);
 					if (stripDonationData){
 						data.hasDonation = "";
@@ -10770,37 +10789,40 @@
 					}
 					if (!chatImg && avatars) {
 						if (fallbackImageAnnouncement && !data.chatname && data.event){
-							chatImg = '<img id="img_' + data.id + '" src="./icons/announcement.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
+							chatImg = '<img id="img_' + safeDataId + '" src="./icons/announcement.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
 						} else if (fallbackImage && !hideUnknownAvatar) {
-							chatImg = '<img id="img_' + data.id + '" src="./sources/images/unknown.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
+							chatImg = '<img id="img_' + safeDataId + '" src="./sources/images/unknown.png" class="icon ' + (darkmode ? "invert" : "") + ' hl-profile-pic" onerror="errorImage(this);" />';
 						} else {
 							chatImg = "";
 						}
 					} else if (avatars) {
 						if (data.type && data.type == "twitch" && avatars && !hideUnknownAvatar) {
-							chatImg = '<img id="img_' + data.id + '" src="./sources/images/unknown.png" class="fade-in-image ' + (darkmode ? "invert" : "") + ' icon hl-profile-pic" onerror="errorImage(this);" />';
+							chatImg = '<img id="img_' + safeDataId + '" src="./sources/images/unknown.png" class="fade-in-image ' + (darkmode ? "invert" : "") + ' icon hl-profile-pic" onerror="errorImage(this);" />';
 						} else {
-							chatImg = '<img id="img_' + data.id + '" src="' + chatImg + '" class="icon hl-profile-pic" onerror="errorImage(this);" />';
+							chatImg = '<img id="img_' + safeDataId + '" src="' + escapeAttributeValue(chatImg) + '" class="icon hl-profile-pic" onerror="errorImage(this);" />';
 						}
 					} else {
 						chatImg = "";
 					}
 
 					if (largeavatar && showType && showsource) {
-						var sourceNameText = showSourceName ? '<span class="source-name">' + showType.charAt(0).toUpperCase() + showType.slice(1) + '</span>' : '';
-						showType = '<img src="./sources/images/' + showType + '.png" class="icon hl-source-type avatar-badge" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />' + sourceNameText;
+						var sourceNameText = showSourceName ? '<span class="source-name">' + escapeHtml(showType.charAt(0).toUpperCase() + showType.slice(1)) + '</span>' : '';
+						var safeShowType = escapeAttributeValue(showType);
+						showType = '<img src="./sources/images/' + safeShowType + '.png" class="icon hl-source-type avatar-badge" data-icon-name="' + safeShowType + '" onerror="this.style.display=\'none\'" />' + sourceNameText;
 					} else if (showType && showsource) {
-						var sourceNameText = showSourceName ? '<span class="source-name">' + showType.charAt(0).toUpperCase() + showType.slice(1) + '</span>' : '';
-						showType = '<img src="./sources/images/' + showType + '.png" class="icon hl-source-type" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />' + sourceNameText;
+						var sourceNameText = showSourceName ? '<span class="source-name">' + escapeHtml(showType.charAt(0).toUpperCase() + showType.slice(1)) + '</span>' : '';
+						var safeShowType = escapeAttributeValue(showType);
+						showType = '<img src="./sources/images/' + safeShowType + '.png" class="icon hl-source-type" data-icon-name="' + safeShowType + '" onerror="this.style.display=\'none\'" />' + sourceNameText;
 					} else {
 						showType = "";
 					}
 
 					if (data.sourceImg && customSource) {
+						var safeSourceImg = escapeAttributeValue(data.sourceImg);
 						if (largeavatar) {
-							showType += '<img src="' + data.sourceImg + '" class="icon hl-source-type  avatar-badge" onerror="this.style.display=\'none\'" />';
+							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type  avatar-badge" onerror="this.style.display=\'none\'" />';
 						} else {
-							showType += '<img src="' + data.sourceImg + '" class="icon hl-source-type" onerror="this.style.display=\'none\'" />';
+							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type" onerror="this.style.display=\'none\'" />';
 						}
 					}
 
@@ -11023,7 +11045,7 @@
 
 					var mid = "";
 					if (data.id) {
-						mid = "data-mid='" + data.id + "'";
+						mid = 'data-mid="' + safeDataId + '"';
 					} else {
 						console.error("Messages should have an ID, else queuing/pinning won't work");
 					}
@@ -11038,24 +11060,24 @@
 					
 					// Trusted relay HTML: chatname/chatmessage are sanitized upstream in background.js before rendering here.
 					if (largeavatar) {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-firstline">' + "" + "<div class='queueid'></div>" + showType + chatImg + chatname + '</div><div class="hl-message"><span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">'+ timeArrived  + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-firstline">' + "" + "<div class='queueid'></div>" + showType + chatImg + chatname + '</div><div class="hl-message"><span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">'+ timeArrived  + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
 					} else if (splitMode) {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>" + "<div class='leftside " + larger + "'>"  + showType  + chatImg + chatname + "</div>" + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>" + "<div class='leftside " + larger + "'>"  + showType  + chatImg + chatname + "</div>" + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
 					} else if (compactmode) {
 						if (bubble){
-							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
+							var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
 						} else if (horizontal){
-							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + donationHTML + "</span>" + "</div>" + addImage + "</div>");
+							var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + donationHTML + "</span>" + "</div>" + addImage + "</div>");
 						} else {
-							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + "</div>" + addImage + donationHTML + "</div>");
+							var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + "</div>" + addImage + donationHTML + "</div>");
 						}
 					} else if (horizontal){
 						console.log(".>");
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + donationHTML+ "</div>" + addImage + "</div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + donationHTML+ "</div>" + addImage + "</div>");
 					} else {
-						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
 					}
 
 					if (filtering) {
@@ -11203,7 +11225,7 @@
 					}
 					// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 					// emojis and images are counted with char-length zero-value
-					var contentElement = node.querySelector("#content_" + data.id);
+					var contentElement = node.querySelector(dataAttributeSelector("id", "content_" + data.id));
 					var textContentLength = 0;
 					if (contentElement) {
 						textContentLength = contentElement.innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
@@ -11310,9 +11332,12 @@
 								getById("img_" + data.id).src = data.chatimg;
 								getById("img_" + data.id).classList.remove("invert");
 								getById("img_" + data.id).classList.remove("fade-in-image");
-								node.querySelector("#img_" + data.id).src = data.chatimg;
-								node.querySelector("#img_" + data.id).classList.remove("invert");
-								node.querySelector("#img_" + data.id).classList.remove("fade-in-image");
+								var imageNode = node.querySelector(dataAttributeSelector("id", "img_" + data.id));
+								if (imageNode) {
+									imageNode.src = data.chatimg;
+									imageNode.classList.remove("invert");
+									imageNode.classList.remove("fade-in-image");
+								}
 							} catch (e) {}
 						}.bind(data, node);
 						twitchImage.src = data.chatimg;
@@ -12523,7 +12548,7 @@
 						if (reload) {
 							reload = JSON.parse(reload);
 							for (var i = 0; i < reload.length; i++) {
-								if (!reload[i].id || !document.querySelector("[data-mid='"+reload[i].id+"']")){
+								if (!reload[i].id || !document.querySelector(dataAttributeSelector("data-mid", reload[i].id))){
 									processData({ contents: reload[i] }, true);
 								}
 							}

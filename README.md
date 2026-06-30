@@ -203,6 +203,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - bigo.tv (no pop out)
 - circle.so (and community domains like community.talkinghealthtech.com or members.firstinfam.com)
 - sooplive.com (pop out the chat to use; supports https://play.sooplive.com/*?vtype=chat)
+- flextv.co.kr (open the live channel page with chat visible)
 - on24.com ( Q&A - questions supported)
 - meetme
 - moonbeam.stream (no pop out)

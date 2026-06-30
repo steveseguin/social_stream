@@ -961,6 +961,10 @@
 					.replace(/'/g, "&#039;");
 			}
 
+			function escapeAttributeValue(value) {
+				return escapeHtml(value == null ? "" : String(value));
+			}
+
 			function removeHtmlTagsFromPlainTextField(value) {
 				return String(value || "")
 					.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
@@ -2875,12 +2879,16 @@
 					  data.type = data.type.toString();
 					  showType = data.type;
 					}
+					var safeDataId = escapeAttributeValue(data.id);
+					var safeDataType = escapeAttributeValue(data.type);
 
 					var customSourceClass = "sourceOffset";
 					if (showType && showsource && avatarForMessage) {
-					  showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+					  var safeShowType = escapeAttributeValue(showType);
+					  showType = '<img src="./sources/images/' + safeShowType + '.png" class="icon sourcetype" data-icon-name="' + safeShowType + '" onerror="this.style.display=\'none\'" />';
 					} else if (showType && showsource && !avatarForMessage) {
-					  showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+					  var safeShowType = escapeAttributeValue(showType);
+					  showType = '<img src="./sources/images/' + safeShowType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + safeShowType + '" onerror="this.style.display=\'none\'" />';
 					} else {
 					  customSourceClass = "";
 					  showType = "";
@@ -2888,9 +2896,9 @@
 
 					var resolvedSourceImg = data.sourceImg ? resolveSourceImageUrl(data.sourceImg) : "";
 					if (resolvedSourceImg && customSource && avatarForMessage) {
-					  showType += '<img src="' + resolvedSourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
+					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
 					} else if (resolvedSourceImg && customSource && !avatarForMessage) {
-					  showType += '<img src="' + resolvedSourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
+					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
 					}
 
 					if (hideNames) {
@@ -3091,9 +3099,10 @@
 					}
 
 					var avatarImg = "";
+					var safeAvatarUsername = escapeAttributeValue(data.username || data.chatname || "");
 					if (avatarForMessage) {
 					  if (data.backupChatimg) {
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="' + data.backupChatimg + '" data-username="' + (data.username || data.chatname || '') + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + safeDataId + '" src="' + escapeAttributeValue(data.chatimg) + '" class="hl-profile-pic" data-backup-image="' + escapeAttributeValue(data.backupChatimg) + '" data-username="' + safeAvatarUsername + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
 					  } else {
 						let chatimg = "";
 						if (!data.chatimg){
@@ -3105,9 +3114,9 @@
 						} else {
 						  chatimg = data.chatimg
 						}
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + chatimg + '" class="hl-profile-pic" data-username="' + (data.username || data.chatname || '') + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + safeDataId + '" src="' + escapeAttributeValue(chatimg) + '" class="hl-profile-pic" data-username="' + safeAvatarUsername + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
 					  }
-					} 
+					}
 
 					var chatbadges = "";
 					if (data.chatbadges && showbadges) {
@@ -3224,7 +3233,7 @@
 					  }
 					} else {
 					  // Original non-stacking behavior with no-avatar class added
-					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + data.type + '">' +
+					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + safeDataType + '">' +
 						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" +
 						'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" +
 						avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
