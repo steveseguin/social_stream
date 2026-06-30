@@ -73,6 +73,10 @@ function toDataURL(url, callback) {
 			 .replace(/'/g, "&#039;") || "";
 	}
 
+	function formatChatMessageText(unsafe){
+		return settings.textonlymode ? (unsafe || "") : escapeHtml(unsafe);
+	}
+
 	function getAllContentNodes(element) { // takes an element.
 		var resp = "";
 		
@@ -80,7 +84,7 @@ function toDataURL(url, callback) {
 		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
-				return escapeHtml(element.textContent) || "";
+				return formatChatMessageText(element.textContent) || "";
 			} else {
 				return "";
 			}
@@ -90,7 +94,7 @@ function toDataURL(url, callback) {
 			if (node.childNodes.length){
 				resp += getAllContentNodes(node)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent)+" ";
+				resp += formatChatMessageText(node.textContent)+" ";
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
