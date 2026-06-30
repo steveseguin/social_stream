@@ -123,7 +123,7 @@ Important fields:
 - `chatmessage`: message body. Sanitized HTML is allowed only when `textonly` is false.
 - `chatimg`: avatar URL or small data URI.
 - `type`: lowercase source identifier.
-- `textonly`: true means render as plain text.
+- `textonly`: applies only to `chatmessage`; true means render `chatmessage` as plain text, false means `chatmessage` may contain sanitized/renderable HTML. Do not use it to describe `chatname`, `membership`, `hasDonation`, or other normal text fields.
 - `hasDonation`: donation/gift/bits amount label.
 - `membership`: member/subscription state.
 - `subtitle`: short secondary membership/donation detail.

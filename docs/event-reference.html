@@ -227,6 +227,16 @@
                             <td>Identifier for system activity (for example <code>viewer_update</code>, <code>subscription_gift</code>, <code>giftpurchase</code>). Regular chat should leave this empty/false so overlays can distinguish system notices from conversational text.</td>
                         </tr>
                         <tr>
+                            <td><code>data.chatmessage</code></td>
+                            <td>string</td>
+                            <td>Message body. It may contain sanitized/renderable HTML only when <code>data.textonly</code> is false.</td>
+                        </tr>
+                        <tr>
+                            <td><code>data.textonly</code></td>
+                            <td>boolean</td>
+                            <td>Applies only to <code>data.chatmessage</code>. <code>true</code> means render <code>chatmessage</code> as plain text; <code>false</code> means <code>chatmessage</code> may contain sanitized/renderable HTML. Other normal fields are expected to be plain text, except media fields such as <code>chatimg</code> and <code>contentimg</code>.</td>
+                        </tr>
+                        <tr>
                             <td><code>data.membership</code></td>
                             <td>string</td>
                             <td>Readable membership state such as <code>MEMBERSHIP</code>, <code>new_sponsor</code>, <code>gift_recipient</code>. Surfaces use it for badges, filters, and announcements.</td>

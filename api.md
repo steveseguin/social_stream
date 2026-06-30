@@ -631,7 +631,7 @@ chatimg | string (URL or data URI \<= 55 KB) | Author avatar. Absolute URLs pref
 type | string (lowercase identifier) | Primary source identifier such as `twitch`, `youtube`, `kick`. Also used to resolve the default icon `https://socialstream.ninja/sources/images/{type}.png`.
 sourceImg | string (URL or `./sources/images/...`) | Optional alternate icon representing a sub-source (ex: channel avatar, Restream origin). Should generally differ from the `type` icon. Legacy relative paths are normalised to `./sources/images/{file}` for consistency but remain locally resolved.
 sourceName | string | Channel title, profile name, or host identifier associated with the source feed.
-textonly | boolean | Indicates whether `chatmessage` should be treated as plain text (`true`) or may contain markup (`false`).
+textonly | boolean | Applies only to `chatmessage`; indicates whether `chatmessage` should be treated as plain text (`true`) or may contain markup (`false`). Other normal fields are expected to be plain text, except media fields such as `chatimg` and `contentimg`.
 hasDonation | string | Donation amount with units, e.g., `"3 roses"` or `"$50 USD"`.
 chatbadges | Array<string \| BadgeDescriptor> | Badge icons shown beside the author. Strings are image URLs; `BadgeDescriptor` objects can include `{ type, text, src }` for richer badges.
 contentimg | string (URL) | Optional media attachment for the message (image/gif/mp4/webm).
