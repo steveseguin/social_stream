@@ -880,7 +880,7 @@ The `voice` parameter works with partial matching, so you can use terms like "si
 
 #### Premium TTS Options
 
-Unlike the system TTS (free), all premium TTS options are fully supported by both the Social Stream Ninja app and OBS browser sources with direct audio capture capabilities. These options provide superior language support and much easier integration.
+Unlike the system TTS (free), browser/provider TTS options are designed to play through the page, which makes OBS capture much easier when "Control audio via OBS" is enabled. Self-hosted local endpoints also work, but the endpoint still needs to be reachable from the page that is playing TTS; see the Local AI TTS Guide for localhost, CORS, and OBS browser-source setup notes.
 
 ##### Kokoro Premium FREE TTS
 Social Stream Ninja now includes Kokoro TTS, a high-quality browser-based text-to-speech solution that runs directly in the browser. Benefits include:

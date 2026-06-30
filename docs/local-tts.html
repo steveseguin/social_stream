@@ -259,6 +259,66 @@
         .badge.green { background: var(--success-color); }
         .badge.orange { background: var(--accent-color); }
 
+        .guide-screenshot {
+            margin: 18px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--bg-color);
+            box-shadow: 0 3px 14px rgba(0,0,0,0.12);
+        }
+
+        .guide-screenshot img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .guide-screenshot figcaption {
+            padding: 10px 14px;
+            color: var(--text-light);
+            font-size: 0.92em;
+            background: var(--card-bg);
+        }
+
+        .plain-steps {
+            display: grid;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .plain-step {
+            display: grid;
+            grid-template-columns: 34px 1fr;
+            gap: 10px;
+            align-items: start;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-color);
+            padding: 12px;
+        }
+
+        .plain-step b {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        .plain-step strong {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .tiny-note {
+            color: var(--text-light);
+            font-size: 0.92em;
+        }
+
         footer {
             text-align: center;
             margin-top: 50px;
@@ -370,7 +430,7 @@
                 <span class="theme-text">Toggle Dark Mode</span>
             </button>
             <h1>Local AI TTS Guide</h1>
-            <p>Read your live stream chat aloud using free, private, self-hosted AI voices — no API keys required</p>
+            <p>Read your live chat aloud with local AI voices. Start with the no-install option, then use a local server only if you need it.</p>
         </div>
     </header>
 
@@ -380,6 +440,8 @@
             <h3 style="margin-top:0">Table of Contents</h3>
             <ul>
                 <li><a href="#overview">Overview</a></li>
+                <li><a href="#quick-setup">Quick Setup</a></li>
+                <li><a href="#which-computer">The localhost / 127.0.0.1 Rule</a></li>
                 <li><a href="#where-to-click">Where to Click in SSN</a></li>
                 <li><a href="#flow">Self-Hosted Flow</a></li>
                 <li><a href="#builtin">Path 1 — Built-in TTS (Zero Setup)</a></li>
@@ -401,7 +463,7 @@
         <!-- OVERVIEW -->
         <h2 id="overview">Overview</h2>
         <div class="card">
-            <p>Social Stream Ninja supports fully local AI text-to-speech — your chat messages are converted to voice entirely on your own computer, with no data sent to external servers and no API key required.</p>
+            <p>Social Stream Ninja can read chat messages out loud using local AI text-to-speech. "Local" can mean two things: the voice runs inside the browser, or you run a small TTS server on your own computer.</p>
 
             <p>There are two approaches:</p>
             <div class="path-grid">
@@ -429,8 +491,41 @@
             </div>
 
             <div class="success">
-                <strong>Start with Path 1.</strong> The built-in Kokoro TTS rivals cloud services in quality, runs entirely in your browser, and works with OBS out of the box. Only move to Path 2 if you need more control or different models.
+                <strong>Start with Path 1.</strong> If you just want TTS working in OBS, try built-in Kokoro or Kitten first. They do not need Docker, a server, or an API key. Use a self-hosted server only when you specifically need a server voice, voice cloning, or another model.
             </div>
+        </div>
+
+        <!-- QUICK SETUP -->
+        <h2 id="quick-setup">Quick Setup</h2>
+        <div class="card">
+            <p>This is the shortest path for most streamers:</p>
+            <div class="plain-steps">
+                <div class="plain-step"><b>1</b><div><strong>Use the built-in provider first.</strong> Add <code>&amp;speech=en-US&amp;ttsprovider=kokoro</code> or <code>&amp;speech=en-US&amp;ttsprovider=kitten</code> to your <code>dock.html</code> URL.</div></div>
+                <div class="plain-step"><b>2</b><div><strong>Put that URL in OBS as a Browser Source.</strong> The OBS browser source is the page that will make the sound.</div></div>
+                <div class="plain-step"><b>3</b><div><strong>Turn on OBS audio capture.</strong> In the Browser Source properties, enable <strong>Control audio via OBS.</strong></div></div>
+                <div class="plain-step"><b>4</b><div><strong>Send one short test chat message.</strong> Use something simple like <code>Testing local TTS</code>. Wait for first-time model downloads if using Kokoro or Piper.</div></div>
+                <div class="plain-step"><b>5</b><div><strong>Only then try a self-hosted server.</strong> If you use Kokoro-FastAPI, openedai-speech, or another Docker server, read the localhost rule below before copying a URL into OBS.</div></div>
+            </div>
+        </div>
+
+        <!-- WHICH COMPUTER -->
+        <h2 id="which-computer">The localhost / 127.0.0.1 Rule</h2>
+        <div class="card">
+            <p>This is the most common local TTS mistake.</p>
+            <div class="warning">
+                <strong><code>localhost</code> and <code>127.0.0.1</code> always mean "this same computer."</strong> If OBS is on one computer and Kokoro is on another computer, <code>127.0.0.1</code> inside the OBS URL points to the OBS computer, not the Kokoro computer.
+            </div>
+            <figure class="guide-screenshot">
+                <img src="images/local-tts/tts-localhost-map.png" alt="Diagram showing that localhost means the same computer, while another computer needs a LAN IP address">
+                <figcaption>Use <code>127.0.0.1</code> only when the TTS server is on the same computer as the page playing audio. If the server is on another computer, use that computer's LAN IP address.</figcaption>
+            </figure>
+            <table>
+                <tr><th>Your setup</th><th>Endpoint to use</th></tr>
+                <tr><td>OBS and Kokoro run on the same computer</td><td><code>http://127.0.0.1:8880/v1/audio/speech</code></td></tr>
+                <tr><td>Kokoro runs on another computer on your home network</td><td><code>http://192.168.x.x:8880/v1/audio/speech</code>, using the Kokoro computer's LAN IP</td></tr>
+                <tr><td>The SSN desktop app test button works, but OBS is silent</td><td>OBS still needs its own working endpoint. The app test does not prove OBS can reach the server.</td></tr>
+            </table>
+            <p class="tiny-note">On Linux, macOS, and Windows, also make sure the firewall allows the port and Docker published the port with <code>-p 8880:8880</code>.</p>
         </div>
 
         <!-- WHERE TO CLICK -->
@@ -438,28 +533,10 @@
         <div class="card">
             <p>In the extension popup, open the TTS provider selector and choose <strong>Custom / Local TTS Endpoint</strong>. That shows the OpenAI-compatible local endpoint fields and the link back to this guide.</p>
 
-            <div class="screen-map" role="img" aria-label="Social Stream Ninja local TTS setup fields">
-                <div class="screen-map-title">SSN Popup - TTS Provider</div>
-                <div class="screen-map-body">
-                    <div class="fake-field">
-                        <strong>TTS Provider</strong>
-                        Custom / Local TTS Endpoint
-                    </div>
-                    <div class="fake-field">
-                        <strong>API Key</strong>
-                        Optional for local endpoints. Leave blank for <code>localhost</code> / <code>127.0.0.1</code>.
-                    </div>
-                    <div class="fake-field">
-                        <strong>Custom / Local API Endpoint</strong>
-                        <code>http://127.0.0.1:8124/v1/audio/speech</code> for the SSN bridge, or the server endpoint from the setup section below.
-                    </div>
-                    <div class="fake-field">
-                        <strong>Voice / Model / Format</strong>
-                        Use the voice name from the local server. Use <code>wav</code> when a voice-cloning server returns WAV.
-                    </div>
-                    <span class="fake-button">Test</span>
-                </div>
-            </div>
+            <figure class="guide-screenshot">
+                <img src="images/local-tts/tts-custom-endpoint-fields.png" alt="Screenshot-style map of the local TTS fields in Social Stream Ninja">
+                <figcaption>The endpoint field is the important one. For a local server, the API key can usually stay blank. Pick a voice name that your server actually supports.</figcaption>
+            </figure>
 
             <div class="info">
                 <strong>About screenshots:</strong> the SSN field map above shows the local endpoint fields. Third-party server UIs change by project version, so their current screenshots and UI details are linked from each project repo near the relevant setup step.
@@ -483,8 +560,14 @@
   "speed": 1.0
 }</div>
 
-            <h3>CORS and the Bridge</h3>
-            <p>If the request comes from Chrome or an OBS browser source, the local server must allow browser CORS requests. If it does not, run the <a href="../local-tts-bridge/README.md" target="_blank">SSN local TTS bridge</a> and point SSN at <code>http://127.0.0.1:8124/v1/audio/speech</code>. The bridge adds browser-safe CORS headers and can translate GPT-SoVITS or F5-TTS wrapper requests.</p>
+            <h3>CORS, Hosted Pages, and the Bridge</h3>
+            <p>CORS is a browser permission check. In plain terms: the TTS server has to tell the browser, "yes, this page is allowed to ask me for audio." If that permission is missing, the request may be blocked before Kokoro or another TTS server ever sees it.</p>
+            <ul>
+                <li>If you load <code>dock.html</code> in Chrome or OBS, CORS can matter.</li>
+                <li>If you load the hosted page, such as <code>https://beta.socialstream.ninja/dock.html</code>, Chrome may also block calls to local or private HTTP addresses.</li>
+                <li>If the SSN app test button works but the OBS Browser Source is silent, test OBS separately. OBS is its own browser.</li>
+            </ul>
+            <p>If the server does not allow browser requests, run the <a href="../local-tts-bridge/README.md" target="_blank">SSN local TTS bridge</a> and point SSN at <code>http://127.0.0.1:8124/v1/audio/speech</code>. For OBS, the easiest setup is to run the bridge on the same computer as OBS.</p>
 
             <h3>Supported Audio Responses</h3>
             <table>
@@ -601,7 +684,7 @@ British male:   bm_george, bm_lewis</div>
         <!-- DESKTOP APP NOTES -->
         <h2 id="desktop-app">Browser and Desktop App Notes</h2>
         <div class="card">
-            <p>The Chrome extension, OBS browser source, and standalone Social Stream Ninja desktop app all use the same <code>dock.html</code> URL parameters for TTS.</p>
+            <p>The Chrome extension, OBS browser source, and standalone Social Stream Ninja desktop app all use the same <code>dock.html</code> URL parameters for TTS. The important difference is where the sound is being made.</p>
 
             <table>
                 <tr>
@@ -627,7 +710,7 @@ British male:   bm_george, bm_lewis</div>
             </table>
 
             <div class="warning">
-                <strong>Packaging note:</strong> when shipping the standalone app, make sure the current <code>social_stream</code> files, <code>thirdparty/</code> assets, and <code>docs/</code> guide are included in the app's fallback resource bundle.
+                <strong>Do not mix up the app test and OBS.</strong> If you press Test inside the SSN app, the app is testing from the app. If you copy a <code>dock.html</code> URL into OBS, OBS is the one that must reach the TTS server and play the audio.
             </div>
         </div>
 
@@ -967,7 +1050,13 @@ bm_george, bm_lewis                              (British male)</div>
             <p>Browse and test all voices at <code>http://localhost:8880/web/</code> once the server is running.</p>
 
             <h3>SSN URL</h3>
-            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=openai&openaiendpoint=http://localhost:8880/v1/audio/speech&voiceopenai=af_bella</div>
+            <p>If Kokoro-FastAPI is on the same computer as OBS:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8880/v1/audio/speech&voiceopenai=af_bella</div>
+            <p>If Kokoro-FastAPI is on another computer, replace <code>192.168.x.x</code> with that computer's LAN IP address:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://192.168.x.x:8880/v1/audio/speech&voiceopenai=af_bella</div>
+            <div class="info">
+                <strong>Kokoro voice names are different from OpenAI voice names.</strong> For Kokoro-FastAPI, use voices like <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code>, or <code>bf_emma</code>. Names like <code>echo</code>, <code>nova</code>, and <code>alloy</code> are OpenAI/openedai-speech style names and may not work with Kokoro.
+            </div>
 
             <h3>Keep the Server Running</h3>
             <p>To keep Kokoro-FastAPI running automatically in the background, use Docker's restart flag:</p>
@@ -1014,15 +1103,27 @@ $env:Path = "$PWD\.venv\Scripts;$env:Path"
         <!-- LOCAL TTS BRIDGE -->
         <h2 id="bridge">Local TTS Bridge</h2>
         <div class="card">
-            <p>If a local TTS server does not allow browser CORS requests, run SSN's Node bridge locally and point SSN at the bridge instead. The bridge returns the third-party audio response unchanged. The standalone starter folder is <code>local-tts-bridge/</code>; see the <a href="../local-tts-bridge/README.md" target="_blank">bridge README</a> for the code and launch options.</p>
+            <p>The bridge is a small local helper. It accepts the browser request from SSN, talks to your TTS server, then gives the audio back to SSN with browser-friendly headers.</p>
+            <div class="success">
+                <strong>Simplest rule:</strong> run the bridge on the same computer as OBS. Then OBS can use <code>http://127.0.0.1:8124/v1/audio/speech</code>, even if the real TTS server is on another computer.
+            </div>
+            <figure class="guide-screenshot">
+                <img src="images/local-tts/tts-bridge-flow.png" alt="Diagram showing OBS calling the local bridge, and the bridge calling the TTS server">
+                <figcaption>The OBS browser source talks to the bridge on the OBS computer. The bridge can then call Kokoro-FastAPI, openedai-speech, or another server.</figcaption>
+            </figure>
+            <p>The standalone starter folder is <code>local-tts-bridge/</code>; see the <a href="../local-tts-bridge/README.md" target="_blank">bridge README</a> for all launch options.</p>
 
             <h3>OpenAI-Compatible Proxy</h3>
-            <div class="code">$env:SSN_TTS_TARGET="http://127.0.0.1:8000/v1/audio/speech"
+            <p>Windows PowerShell, when the TTS server is on this same computer:</p>
+            <div class="code">$env:SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech"
 npm run local-tts-bridge</div>
-            <p>Or run it from the bridge folder:</p>
-            <div class="code">cd local-tts-bridge
-node server.cjs</div>
-            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&voiceopenai=nova</div>
+            <p>Windows PowerShell, when the TTS server is on another computer:</p>
+            <div class="code">$env:SSN_TTS_TARGET="http://192.168.x.x:8880/v1/audio/speech"
+npm run local-tts-bridge</div>
+            <p>macOS/Linux terminal:</p>
+            <div class="code">SSN_TTS_TARGET="http://127.0.0.1:8880/v1/audio/speech" npm run local-tts-bridge</div>
+            <p>Then point the OBS <code>dock.html</code> URL at the bridge:</p>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=customtts&openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&voiceopenai=af_bella</div>
 
             <h3>GPT-SoVITS Proxy Mode</h3>
             <p>GPT-SoVITS uses its own <code>/tts</code> JSON shape, so the bridge can translate SSN's OpenAI-compatible request into the GPT-SoVITS request body.</p>
@@ -1090,6 +1191,9 @@ npm run local-tts-bridge -- --mode f5</div>
             <div class="info">
                 <strong>Endpoint aliases:</strong> <code>customttsendpoint</code> and <code>localttsendpoint</code> also work. <code>customttsvoice</code>, <code>localttsvoice</code>, <code>customttsmodel</code>, <code>localttsmodel</code>, <code>customttsformat</code>, and <code>localttsformat</code> are accepted aliases for the OpenAI-style fields.
             </div>
+            <div class="warning">
+                <strong>Check the endpoint and voice before debugging audio.</strong> <code>openaiendpoint</code> must be reachable from the page that is playing TTS, and <code>voiceopenai</code> must be a voice your server supports. Kokoro-FastAPI uses names like <code>af_bella</code>; openedai-speech often uses names like <code>nova</code> or <code>echo</code>.
+            </div>
 
             <h3>Full Example URLs</h3>
             <h4>Kokoro-FastAPI:</h4>
@@ -1138,6 +1242,11 @@ npm run local-tts-bridge -- --mode f5</div>
                     <td><code>readevents</code></td>
                     <td><code>&readevents</code></td>
                     <td>Also read subscriptions, donations, etc.</td>
+                </tr>
+                <tr>
+                    <td><code>ttsquick</code></td>
+                    <td><code>&ttsquick=100</code></td>
+                    <td>Intentionally cuts speech short after this many characters. Remove it if messages are being chopped off.</td>
                 </tr>
             </table>
 
@@ -1308,62 +1417,60 @@ npm run local-tts-bridge -- --mode f5</div>
         <!-- TROUBLESHOOTING -->
         <h2 id="troubleshooting">Troubleshooting</h2>
         <div class="card">
-            <h3>No audio playing</h3>
+            <figure class="guide-screenshot">
+                <img src="images/local-tts/tts-troubleshooting-checklist.png" alt="Screenshot-style checklist for local TTS troubleshooting">
+                <figcaption>When TTS works in one place but not another, check the machine, endpoint, voice, browser permission, and OBS audio capture in that order.</figcaption>
+            </figure>
+
+            <h3>The SSN app test works, but OBS has no sound</h3>
+            <p>The app test only proves the app can reach the server. The OBS Browser Source still has to reach the endpoint and play the audio.</p>
             <ul>
-                <li><strong>Click the page first.</strong> Browsers require user interaction before playing audio. Click anywhere on the dock.html page once.</li>
-                <li>Check that <code>&speech=en-US</code> is in your URL.</li>
-                <li>Check the browser console (F12) for error messages.</li>
+                <li>If OBS and the TTS server are on different computers, replace <code>127.0.0.1</code> with the TTS server computer's LAN IP.</li>
+                <li>Make sure the OBS Browser Source has <strong>Control audio via OBS</strong> checked.</li>
+                <li>Try the SSN local TTS bridge on the OBS computer if the browser blocks the request.</li>
             </ul>
 
-            <h3>Kokoro / Piper takes a long time on first load</h3>
-            <p>The model files are being downloaded (~50–200 MB). This only happens once — subsequent loads use the cached version. Wait for the first message before testing.</p>
-
-            <h3>Local server not responding (self-hosted setup)</h3>
+            <h3>Only the first letter or first few words are read</h3>
             <ul>
-                <li>Confirm Docker Desktop is running and the container is started.</li>
-                <li>Open <code>http://localhost:8880</code> (or your port) in a browser to confirm the server is up.</li>
-                <li>Check that no firewall is blocking the port.</li>
-                <li>If openedai-speech from source returns HTTP 500 on Windows, add <code>.venv\Scripts</code> to <code>PATH</code> and restart it.</li>
+                <li>Check the actual OBS URL for <code>ttsquick</code>. That option intentionally cuts the spoken text short.</li>
+                <li>If you see <code>&amp;ttsquick=14</code> or another small number, remove it and refresh the OBS Browser Source.</li>
+                <li>If you use <code>typewriter=</code>, temporarily remove it while testing. TTS normally uses the original message, but removing visual effects is a quick way to rule out timing issues.</li>
             </ul>
 
-            <h3>CORS error in browser console (extension mode)</h3>
-            <p>If you're using the Social Stream browser extension (not the standalone app), your local server must allow cross-origin requests from the extension.</p>
-            <p>Most FastAPI-based servers (Kokoro-FastAPI, openedai-speech) allow all origins by default. If you see a CORS error:</p>
+            <h3>Local server not responding</h3>
             <ul>
-                <li>Check the server's documentation for CORS configuration.</li>
-                <li>Run <code>npm run local-tts-bridge</code> and point SSN to <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
-                <li>The <strong>SSN standalone app</strong> does not have this limitation — use it instead.</li>
+                <li>Confirm Docker is running and the container is still started.</li>
+                <li>On the TTS server computer, open <code>http://127.0.0.1:8880/web/</code> for Kokoro-FastAPI, or the matching port for your server.</li>
+                <li>From the OBS computer, open <code>http://SERVER_LAN_IP:8880/web/</code>. If that does not load, OBS will not be able to use that server either.</li>
+                <li>Check the firewall on the server computer if the LAN IP does not load.</li>
             </ul>
 
-            <h3>"http://localhost" blocked in OBS browser source</h3>
-            <p>OBS browser sources can have trouble reaching <code>localhost</code> servers. Try:</p>
+            <h3>CORS or local network blocked</h3>
+            <p>If the browser says the request was blocked by CORS, local network access, private network access, or failed fetch, the TTS server may never receive the request.</p>
             <ul>
-                <li>Use <code>http://127.0.0.1:8880/v1/audio/speech</code> instead of <code>localhost</code></li>
-                <li>Or use the SSN standalone app instead of OBS browser source</li>
+                <li>Run <code>npm run local-tts-bridge</code> on the OBS computer and point SSN to <code>http://127.0.0.1:8124/v1/audio/speech</code>.</li>
+                <li>If you are using the hosted beta dock page, local HTTP endpoints are more likely to be blocked by the browser. The bridge or a local app window is usually easier.</li>
             </ul>
 
-            <h3>Audio plays but OBS doesn't capture it</h3>
+            <h3>Wrong voice or voice not found</h3>
             <ul>
-                <li>Make sure <strong>"Control audio via OBS"</strong> is checked in the browser source properties.</li>
-                <li>In OBS Audio Mixer, look for the browser source — its meter should move when TTS plays.</li>
-                <li>Ensure you're not using System TTS (<code>?speech=en-US</code> without <code>&ttsprovider=</code>) — that bypasses browser audio.</li>
+                <li>Kokoro-FastAPI: try <code>af_bella</code>, <code>af_sarah</code>, <code>am_adam</code>, or another voice from the Kokoro web UI.</li>
+                <li>openedai-speech: voices such as <code>nova</code>, <code>echo</code>, and <code>alloy</code> may be valid.</li>
+                <li>Voice names are case-sensitive on some servers.</li>
             </ul>
 
-            <h3>Wrong voice / voice not found</h3>
-            <p>Voice names are case-sensitive and must match what the server supports. Visit <code>http://localhost:8880/web/</code> (Kokoro-FastAPI) to browse and test available voices.</p>
+            <h3>Audio plays but OBS does not capture it</h3>
+            <ul>
+                <li>Make sure <strong>Control audio via OBS</strong> is checked in the Browser Source properties.</li>
+                <li>Watch the OBS Audio Mixer while a test message plays. The browser source meter should move.</li>
+                <li>Make sure you are not using system TTS only (<code>?speech=en-US</code> without <code>&amp;ttsprovider=</code>). System TTS may need desktop audio or virtual cable capture.</li>
+            </ul>
 
             <h3>Docker image not found</h3>
-            <p>Image tags change with new releases. If the tag in this guide no longer works, check the project's GitHub page for the latest version tag.</p>
+            <p>Docker image tags can change. If a command in this guide stops working, check the project page for the current tag:</p>
             <ul>
                 <li>Kokoro-FastAPI: <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank">github.com/remsky/Kokoro-FastAPI</a></li>
                 <li>openedai-speech: <a href="https://github.com/matatonic/openedai-speech" target="_blank">github.com/matatonic/openedai-speech</a></li>
-                <li>chatterbox-tts-api: <a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank">github.com/travisvn/chatterbox-tts-api</a></li>
-                <li>Chatterbox-TTS-Server: <a href="https://github.com/devnen/Chatterbox-TTS-Server" target="_blank">github.com/devnen/Chatterbox-TTS-Server</a></li>
-                <li>GPT-SoVITS: <a href="https://github.com/RVC-Boss/GPT-SoVITS" target="_blank">github.com/RVC-Boss/GPT-SoVITS</a></li>
-                <li>F5-TTS: <a href="https://github.com/SWivid/F5-TTS" target="_blank">github.com/SWivid/F5-TTS</a></li>
-                <li>F5-TTS_server: <a href="https://github.com/ValyrianTech/F5-TTS_server" target="_blank">github.com/ValyrianTech/F5-TTS_server</a></li>
-                <li>Qwen3-TTS: <a href="https://github.com/QwenLM/Qwen3-TTS" target="_blank">github.com/QwenLM/Qwen3-TTS</a></li>
-                <li>MisoTTS: <a href="https://github.com/MisoLabsAI/MisoTTS" target="_blank">github.com/MisoLabsAI/MisoTTS</a></li>
             </ul>
         </div>
 
