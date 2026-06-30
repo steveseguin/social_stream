@@ -116,6 +116,7 @@ const state = {
     sseRequest: null,
     sseReadOffset: 0,
     sseBuffer: '',
+    socketConnectTimer: null,
     eventsConnected: false,
     eventTransport: '',
     connectedChannel: '',
@@ -404,6 +405,14 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function isTextOnlyMode() {
+    const setting = state.settings && state.settings.textonlymode;
+    if (setting && typeof setting === 'object') {
+        return setting.setting === true;
+    }
+    return setting === true;
 }
 
 function renderVeloraMessageHtml(message) {
@@ -878,6 +887,11 @@ function clearSocketFallbackTimer() {
     state.socketFallbackTimer = null;
 }
 
+function clearSocketConnectTimer() {
+    clearTimeout(state.socketConnectTimer);
+    state.socketConnectTimer = null;
+}
+
 function clearSseReconnectTimer() {
     clearTimeout(state.sseReconnectTimer);
     state.sseReconnectTimer = null;
@@ -891,6 +905,7 @@ function resetEventConnectionState() {
 
 function disconnectSocketTransport() {
     clearSocketFallbackTimer();
+    clearSocketConnectTimer();
     if (state.socket) {
         try {
             state.socket.disconnect();
@@ -931,6 +946,7 @@ function applyConnectedChannelInfo(data, transportLabel) {
     }
 
     clearSocketFallbackTimer();
+    clearSocketConnectTimer();
     clearSseReconnectTimer();
     setSocketStatus('connected');
 
@@ -1074,6 +1090,7 @@ function connectSse(reason) {
 }
 
 function startSocketFallbackTimer() {
+    clearSocketConnectTimer();
     clearSocketFallbackTimer();
     state.socketFallbackTimer = setTimeout(function () {
         if (state.eventsConnected) {
@@ -1086,8 +1103,8 @@ function startSocketFallbackTimer() {
 // ─── Socket.IO connection ─────────────────────────────────────────────────────
 
 function startSocketConnectTimeout() {
-    clearSocketFallbackTimer();
-    state.socketFallbackTimer = setTimeout(function () {
+    clearSocketConnectTimer();
+    state.socketConnectTimer = setTimeout(function () {
         if (state.eventsConnected || state.sseRequest) {
             return;
         }
@@ -1243,6 +1260,7 @@ function handleChatMessage(data) {
 
     const name = displayName || username || '';
     const text = message || '';
+    const textOnlyMode = isTextOnlyMode();
     const renderedMessage = renderVeloraMessageHtml(text);
 
     // Skip pure system messages with no text
@@ -1251,14 +1269,14 @@ function handleChatMessage(data) {
     addChatFeedMessage(name, renderedMessage.html, badges, isMod, isVip, isSubscriber, color);
 
     let contentImg = '';
-    let msgText = renderedMessage.html;
+    let msgText = textOnlyMode ? text : renderedMessage.html;
 
     if (card) {
         if (card.imageUrl || card.thumbnailUrl) {
             contentImg = card.imageUrl || card.thumbnailUrl;
         }
         if (card.name && !msgText) {
-            msgText = escapeHtml(`[${card.name}]`);
+            msgText = textOnlyMode ? `[${card.name}]` : escapeHtml(`[${card.name}]`);
         }
     }
 
@@ -1275,7 +1293,7 @@ function handleChatMessage(data) {
         hasDonation: '',
         membership: isSubscriber ? (subscriberMonths ? `${subscriberMonths} month subscriber` : 'Subscriber') : '',
         contentimg: contentImg,
-        textonly: false,
+        textonly: textOnlyMode,
         type: 'velora',
         meta: {
             velora: {
