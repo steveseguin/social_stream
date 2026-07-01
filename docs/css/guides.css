@@ -533,6 +533,49 @@ pre {
         padding: 0.75rem 0.65rem;
         overflow-wrap: anywhere;
     }
+
+    .guide-table-stack {
+        display: block;
+        border: 0;
+    }
+
+    .guide-table-stack thead {
+        display: none;
+    }
+
+    .guide-table-stack tbody,
+    .guide-table-stack tr,
+    .guide-table-stack td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .guide-table-stack tr {
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        background-color: var(--background-light);
+    }
+
+    .guide-table-stack td {
+        display: grid;
+        grid-template-columns: minmax(8rem, 35%) 1fr;
+        gap: 0.8rem;
+        border: 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .guide-table-stack td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .guide-table-stack td:last-child {
+        border-bottom: 0;
+    }
 }
 
 .guide-image {

@@ -74,15 +74,15 @@
                     <img src="images/guides/guide-standalone-source-modes.png" alt="Standalone app sample source entries showing Standard and WebSocket connection mode controls, plus TikTok connection preset controls" class="guide-image">
                     <figcaption>Standard and WebSocket are common source modes. TikTok has its own preset selector because it has extra app-specific connection paths.</figcaption>
                 </figure>
-                <table class="guide-table">
+                <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>Mode</th><th>Plain Meaning</th><th>Use When</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>Standard</td><td>The app opens a normal platform/source page and reads the rendered page.</td><td>You need the simplest visible page capture, login, or manual verification.</td></tr>
-                        <tr><td>WebSocket/API</td><td>The source connects through a platform API, socket, or Social Stream source page.</td><td>The platform supports it and you want better background reliability or richer event data.</td></tr>
-                        <tr><td>Polling/Legacy</td><td>A compatibility path that checks for updates instead of using the preferred live socket path.</td><td>The newer connector fails or a platform-specific fallback is needed.</td></tr>
-                        <tr><td>TikTok Auto</td><td>The app chooses the best TikTok path and may fall back if one fails.</td><td>You are not sure which TikTok mode to use.</td></tr>
+                        <tr><td data-label="Mode">Standard</td><td data-label="Plain Meaning">The app opens a normal platform/source page and reads the rendered page.</td><td data-label="Use When">You need the simplest visible page capture, login, or manual verification.</td></tr>
+                        <tr><td data-label="Mode">WebSocket/API</td><td data-label="Plain Meaning">The source connects through a platform API, socket, or Social Stream source page.</td><td data-label="Use When">The platform supports it and you want better background reliability or richer event data.</td></tr>
+                        <tr><td data-label="Mode">Polling/Legacy</td><td data-label="Plain Meaning">A compatibility path that checks for updates instead of using the preferred live socket path.</td><td data-label="Use When">The newer connector fails or a platform-specific fallback is needed.</td></tr>
+                        <tr><td data-label="Mode">TikTok Auto</td><td data-label="Plain Meaning">The app chooses the best TikTok path and may fall back if one fails.</td><td data-label="Use When">You are not sure which TikTok mode to use.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -112,16 +112,16 @@
             <div class="guide-card">
                 <h2 id="tiktok-in-the-app">TikTok In The App</h2>
                 <p>TikTok in the desktop app is not one single mode. Always note which preset is active before troubleshooting.</p>
-                <table class="guide-table">
+                <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>TikTok Path</th><th>Use Case</th><th>Common Failure Point</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>Auto</td><td>First try for most users.</td><td>The app may fall back, so check the status text.</td></tr>
-                        <tr><td>Standard</td><td>Visible TikTok page capture.</td><td>Login, CAPTCHA, redirected page, or hidden chat.</td></tr>
-                        <tr><td>Local Signer</td><td>App-native reading and reply-support paths.</td><td>The app TikTok session/cookies must be valid.</td></tr>
-                        <tr><td>Polling/Compatibility</td><td>Fallback when socket/signing paths fail.</td><td>Less rich than the preferred connector.</td></tr>
-                        <tr><td>Proxy or custom signing</td><td>Advanced setups.</td><td>Provider availability, API key, room ID, or rate limits.</td></tr>
+                        <tr><td data-label="TikTok Path">Auto</td><td data-label="Use Case">First try for most users.</td><td data-label="Common Failure Point">The app may fall back, so check the status text.</td></tr>
+                        <tr><td data-label="TikTok Path">Standard</td><td data-label="Use Case">Visible TikTok page capture.</td><td data-label="Common Failure Point">Login, CAPTCHA, redirected page, or hidden chat.</td></tr>
+                        <tr><td data-label="TikTok Path">Local Signer</td><td data-label="Use Case">App-native reading and reply-support paths.</td><td data-label="Common Failure Point">The app TikTok session/cookies must be valid.</td></tr>
+                        <tr><td data-label="TikTok Path">Polling/Compatibility</td><td data-label="Use Case">Fallback when socket/signing paths fail.</td><td data-label="Common Failure Point">Less rich than the preferred connector.</td></tr>
+                        <tr><td data-label="TikTok Path">Proxy or custom signing</td><td data-label="Use Case">Advanced setups.</td><td data-label="Common Failure Point">Provider availability, API key, room ID, or rate limits.</td></tr>
                     </tbody>
                 </table>
                 <p>For a normal first attempt, add TikTok, leave the preset on Auto, activate the source, and watch the app status text.</p>

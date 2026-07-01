@@ -61,15 +61,15 @@
             <div class="guide-card">
                 <h2>Quick Choice</h2>
                 <p>If you only remember one thing: for OBS, start with a browser/provider voice such as Kokoro, Piper, Kitten, eSpeak, OpenAI-compatible, Google, ElevenLabs, Speechify, or Gemini. Plain system TTS is simple, but OBS Browser Source usually cannot capture it directly.</p>
-                <table class="guide-table">
+                <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>What You Want</th><th>Use This First</th><th>Why</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>Free voice in OBS</td><td><code>ttsprovider=kokoro</code>, <code>piper</code>, <code>kitten</code>, or <code>espeak</code></td><td>Audio plays from the browser page, so OBS can capture it.</td></tr>
-                        <tr><td>Best quality with less local setup</td><td>Cloud provider or OpenAI-compatible provider</td><td>Good voices, but account/API costs may apply.</td></tr>
-                        <tr><td>Use Windows or Mac system voices</td><td><code>speech=en-US</code> without a provider</td><td>Works for listening on the computer, but OBS audio capture is harder.</td></tr>
-                        <tr><td>Run your own voice server</td><td><code>ttsprovider=customtts</code> with <code>openaiendpoint</code></td><td>Private and flexible, but the endpoint and voice names must match your server.</td></tr>
+                        <tr><td data-label="What You Want">Free voice in OBS</td><td data-label="Use This First">Kokoro, Piper, Kitten, or eSpeak</td><td data-label="Why">Audio plays from the browser page, so OBS can capture it.</td></tr>
+                        <tr><td data-label="What You Want">Best quality with less local setup</td><td data-label="Use This First">Cloud provider or OpenAI-compatible provider</td><td data-label="Why">Good voices, but account/API costs may apply.</td></tr>
+                        <tr><td data-label="What You Want">Use Windows or Mac system voices</td><td data-label="Use This First">System TTS with <code>speech=en-US</code></td><td data-label="Why">Works for listening on the computer, but OBS audio capture is harder.</td></tr>
+                        <tr><td data-label="What You Want">Run your own voice server</td><td data-label="Use This First">Custom/local TTS with <code>openaiendpoint</code></td><td data-label="Why">Private and flexible, but the endpoint and voice names must match your server.</td></tr>
                     </tbody>
                 </table>
             </div>
