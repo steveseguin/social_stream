@@ -12,7 +12,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Template Quick Start - Social Stream Ninja</title>
+    <title>Overlay Template Quick Start - Social Stream Ninja</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/guides.css">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
@@ -69,52 +69,66 @@
 
     <section class="page-hero">
         <div class="container">
-            <h1>Template Quick Start</h1>
-            <p>Pick an overlay template, attach your session ID, and add it to OBS as a browser source.</p>
+            <h1>Overlay Template Quick Start</h1>
+            <p>Pick a layout, add your session ID, and paste it into OBS.</p>
         </div>
     </section>
 
     <section class="guide-section">
         <div class="container">
             <div class="guide-card">
-                <h3>1. Confirm Chat First</h3>
-                <p>Before setting up a template, make sure the dock receives messages for your session ID.</p>
-                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
-            </div>
-
-            <div class="guide-card">
-                <h3>2. Browse Templates</h3>
-                <p>Open the template gallery and choose a layout that matches the kind of chat overlay you want.</p>
+                <h3>1. Open The Template Gallery</h3>
+                <p>Use the <a href="templates.html">Templates Gallery</a> when you want a ready-made chat look instead of building CSS from scratch.</p>
                 <figure class="guide-figure">
-                    <img src="images/guides/template-gallery-browse.png" alt="Template gallery showing available Social Stream Ninja overlay layouts" class="guide-image">
-                    <figcaption>The template gallery contains ready-made overlay URLs for common stream layouts.</figcaption>
+                    <img src="images/guides/template-gallery-browse.png" alt="Template Gallery showing search, filters, and template cards" class="guide-image">
+                    <figcaption>Search or use the filter buttons, then pick a layout that is easy to read on your stream.</figcaption>
                 </figure>
             </div>
 
             <div class="guide-card">
-                <h3>3. Add Your Session ID</h3>
-                <p>Use the same session ID that your chat source and dock use.</p>
-                <pre>https://socialstream.ninja/templates/example.html?session=YOUR_SESSION_ID</pre>
+                <h3>2. Add Your Session ID</h3>
+                <p>Every overlay URL needs your session ID. Replace the placeholder with the same session used by your chat source and dock.</p>
+                <pre>https://socialstream.ninja/sampleoverlay.html?session=YOUR_SESSION_ID</pre>
             </div>
 
             <div class="guide-card">
-                <h3>4. Add The Browser Source</h3>
+                <h3>3. Preview The Look</h3>
+                <p>Open the template URL in a browser first. If it looks right there, it should be easier to debug in OBS.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/template-sample-overlay-preview.png" alt="Sample overlay preview with a chat message, name, platform icon, and donation badge" class="guide-image">
+                    <figcaption>This is the kind of overlay preview you should expect before adding it to OBS.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>4. Add It To OBS</h3>
                 <ol class="guide-steps">
-                    <li>In OBS, add a Browser Source.</li>
-                    <li>Paste the template URL.</li>
-                    <li>Set the browser source size to match the template or your scene.</li>
-                    <li>Refresh the source after changing URL options.</li>
+                    <li>In OBS, add a new Browser Source.</li>
+                    <li>Paste the template URL with your session ID.</li>
+                    <li>Set the width and height. A common start is 1920 by 1080.</li>
+                    <li>Click OK, then send a test message.</li>
                 </ol>
+            </div>
+
+            <div class="guide-card">
+                <h3>5. Confirm Chat Is Arriving</h3>
+                <p>If the overlay is blank, test the dock before changing template settings.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
                 <figure class="guide-figure">
-                    <img src="images/guides/template-sample-overlay-preview.png" alt="Sample Social Stream Ninja overlay template preview" class="guide-image">
-                    <figcaption>Templates update live once messages arrive for the matching session ID.</figcaption>
+                    <img src="images/guides/obs-dock-message-check.png" alt="Dock page with chat messages received from multiple sources" class="guide-image">
+                    <figcaption>If the dock is empty too, fix the chat source first. The template is waiting for messages.</figcaption>
                 </figure>
             </div>
 
             <div class="guide-card">
-                <h3>5. Adjust The Look</h3>
-                <p>Most templates support URL options for layout, fonts, colors, message limits, and animation behavior.</p>
-                <p>More options are covered in the <a href="templates.html">Templates Gallery</a> and <a href="guides.html#extension-customization">overlay customization guide</a>.</p>
+                <h3>Simple Fixes</h3>
+                <ul class="guide-list">
+                    <li>Use the same session ID in the source, dock, and OBS.</li>
+                    <li>Refresh the OBS browser source after changing the URL.</li>
+                    <li>Keep the chat source page or desktop source window open.</li>
+                    <li>Pick a high-contrast template if text is hard to read.</li>
+                </ul>
+                <p>More details: <a href="obs-quick-start.html">OBS Quick Start</a>.</p>
             </div>
         </div>
     </section>

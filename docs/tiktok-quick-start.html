@@ -70,51 +70,69 @@
     <section class="page-hero">
         <div class="container">
             <h1>TikTok Quick Start</h1>
-            <p>Connect a TikTok live chat, confirm messages in the dock, then add an overlay to OBS.</p>
+            <p>Use this first when you just need TikTok Live chat working.</p>
         </div>
     </section>
 
     <section class="guide-section">
         <div class="container">
             <div class="guide-card">
-                <h3>1. Pick A Session ID</h3>
-                <p>Use one session ID for the TikTok source, dock, and overlay URL.</p>
+                <h3>1. Search For TikTok</h3>
+                <p>Open the <a href="supported-sites.html">Supported Sites</a> page and search for TikTok. This confirms the basic setup rule before you start changing OBS.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/tiktok-supported-sites-search.png" alt="Supported Sites page filtered to TikTok Live" class="guide-image">
+                    <figcaption>If TikTok Live appears here, click it to see the current setup note.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>2. Open The TikTok Live Page</h3>
+                <p>For the browser extension, open the creator's live page and keep the chat visible.</p>
+                <pre>https://www.tiktok.com/@CHANNEL/live</pre>
+                <figure class="guide-figure">
+                    <img src="images/guides/tiktok-live-setup-modal.png" alt="TikTok Live setup popup showing the live URL format and visible chat requirement" class="guide-image">
+                    <figcaption>The important part is simple: use the live page and leave chat open.</figcaption>
+                </figure>
+                <p>If browser tabs keep pausing or hiding chat, try the desktop app path instead.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>3. Use One Session ID</h3>
+                <p>Pick one short session ID. Use that exact same ID in the TikTok source, the dock, and OBS.</p>
                 <pre>YOUR_SESSION_ID</pre>
             </div>
 
             <div class="guide-card">
-                <h3>2. Open The TikTok Source</h3>
-                <ol class="guide-steps">
-                    <li>Open Social Stream Ninja and go to the supported sites list.</li>
-                    <li>Search for TikTok and open the TikTok source.</li>
-                    <li>Enter the TikTok live username and connect while the account is live.</li>
-                </ol>
-                <figure class="guide-figure">
-                    <img src="images/guides/tiktok-supported-sites-search.png" alt="Supported sites search showing TikTok" class="guide-image">
-                    <figcaption>Use the supported sites search to find the TikTok source quickly.</figcaption>
-                </figure>
-            </div>
-
-            <div class="guide-card">
-                <h3>3. Connect To The Live</h3>
-                <p>Use the live setup dialog to enter the account name and start the TikTok connection.</p>
-                <figure class="guide-figure">
-                    <img src="images/guides/tiktok-live-setup-modal.png" alt="TikTok live setup dialog" class="guide-image">
-                    <figcaption>The account needs to be live for TikTok chat to start coming through.</figcaption>
-                </figure>
-            </div>
-
-            <div class="guide-card">
-                <h3>4. Check The Dock</h3>
-                <p>Open the dock with the same session ID. If chat appears there, the TikTok source is working.</p>
+                <h3>4. Check The Dock Before OBS</h3>
+                <p>Open the dock with your session ID. Send or wait for one TikTok chat message.</p>
                 <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-dock-message-check.png" alt="Social Stream Ninja dock showing received chat messages" class="guide-image">
+                    <figcaption>If the dock receives messages, Social Stream Ninja is working. OBS is the next step.</figcaption>
+                </figure>
             </div>
 
             <div class="guide-card">
-                <h3>5. Add OBS</h3>
-                <p>Add a Browser Source in OBS and use a template or featured overlay URL with the same session ID.</p>
+                <h3>5. Add The Overlay To OBS</h3>
+                <p>Add a Browser Source in OBS and use the same session ID.</p>
                 <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID</pre>
-                <p>For more setup modes and troubleshooting, see the full <a href="tiktok-guide.html">TikTok guide</a>.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-featured-overlay-preview.png" alt="Featured overlay preview with a sample chat message" class="guide-image">
+                    <figcaption>Use a template if you want a full chat layout instead of a single featured message.</figcaption>
+                </figure>
+                <p>Template setup: <a href="overlay-template-quick-start.html">Overlay Template Quick Start</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>If TikTok Does Not Show Up</h3>
+                <ul class="guide-list">
+                    <li>Make sure the TikTok live page is actually live.</li>
+                    <li>Keep the chat visible when using the browser extension.</li>
+                    <li>Confirm the dock and OBS use the same session ID.</li>
+                    <li>Refresh the dock after changing the session ID.</li>
+                    <li>Try the desktop app if the browser tab is being throttled.</li>
+                </ul>
+                <p>More detail: <a href="tiktok-guide.html">Full TikTok Guide</a>.</p>
             </div>
         </div>
     </section>
