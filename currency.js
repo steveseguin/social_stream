@@ -66,12 +66,6 @@ function convertToUSD(valueStr, source = '') {
     diamond: 0.005,
     diamonds: 0.005,
     
-    // YouTube
-    super: 1.0, // Super Chat base rate
-    superchat: 1.0,
-    jewel: 0.005,
-    jewels: 0.005,
-    
     // Generic/Other platforms
     rose: 0.01,
     roses: 0.01,
@@ -363,7 +357,9 @@ function convertToUSD(valueStr, source = '') {
       return amount * rate;
     }
   }
-  
+
+  if (hasCurrencyTerm('jewel') || hasCurrencyTerm('jewels')) return 0;
+
   // Check for currency symbols
   if (valueStr.includes('€')) return amount * currencyRates.EUR;
   if (valueStr.includes('£')) return amount * currencyRates.GBP;

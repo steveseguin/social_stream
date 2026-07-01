@@ -627,6 +627,7 @@
 			this.type = type;
 			this.messageCount = 0;
 			this.donations = 0;
+			this.hasDonationActivity = false;
 			this.isMember = false;
 			this.avatarUrl = null;
 		}
@@ -642,7 +643,7 @@
 		get displayName() {
 			let badges = [];
 			if (this.isMember) badges.push('👑');
-			if (this.donations > 0) badges.push('💝');
+			if (this.hasDonationActivity || this.donations > 0) badges.push('💝');
 			if (this.messageCount > 10) badges.push('💬');
 			
 			const nameDisplay = this.name;
@@ -688,15 +689,19 @@
 		return !isNaN(amount) && amount > 0 ? amount : 0;
 	}
 
+	function userHasDonationActivity(user) {
+		return !!(user && (user.hasDonationActivity || user.donations > 0));
+	}
+
 	function filterCreditsUsersForSupporters(userList) {
 		if (urlParams.has('onlydonors')) {
 			return userList.filter(function(user) {
-				return user.donations > 0;
+				return userHasDonationActivity(user);
 			});
 		}
 		if (urlParams.has('onlysupporters')) {
 			return userList.filter(function(user) {
-				return user.donations > 0 || user.isMember;
+				return userHasDonationActivity(user) || user.isMember;
 			});
 		}
 		return userList;
@@ -747,6 +752,7 @@
 		}
 
 		if (data.hasDonation) {
+			user.hasDonationActivity = true;
 			try {
 				const source = data.type ? data.type.toLowerCase() : '';
 				let donationAmount = getPositiveDonationAmount(data.donoValue);
@@ -776,7 +782,7 @@
 		
 		if (donationPriority) {
 			// Separate users into donors and non-donors
-			const donors = sortedUsers.filter(u => u.donations > 0)
+			const donors = sortedUsers.filter(userHasDonationActivity)
 				.sort((a, b) => {
 					// First sort by donation amount
 					if (b.donations !== a.donations) {
@@ -789,13 +795,13 @@
 					// Finally by participation
 					return b.messageCount - a.messageCount;
 				});
-			
-			const members = sortedUsers.filter(u => u.donations === 0 && u.isMember)
+
+			const members = sortedUsers.filter(u => !userHasDonationActivity(u) && u.isMember)
 				.sort((a, b) => b.messageCount - a.messageCount);
-			
-			const participants = sortedUsers.filter(u => u.donations === 0 && !u.isMember)
+
+			const participants = sortedUsers.filter(u => !userHasDonationActivity(u) && !u.isMember)
 				.sort((a, b) => b.messageCount - a.messageCount);
-			
+
 			const hidecategories = urlParams.has('hidecategories');
 			let content = '';
 			
@@ -855,6 +861,7 @@
 					type: user.type,
 					messageCount: user.messageCount,
 					donations: user.donations,
+					hasDonationActivity: userHasDonationActivity(user),
 					isMember: !!user.isMember,
 					avatarUrl: user.avatarUrl || null
 				});
@@ -880,6 +887,11 @@
 				user.messageCount = Math.max(0, Number(item.messageCount) || 0);
 				user.donations = Math.max(0, Number(item.donations) || 0);
 				user.isMember = !!item.isMember;
+				if (typeof item.hasDonationActivity === 'boolean') {
+					user.hasDonationActivity = item.hasDonationActivity;
+				} else {
+					user.hasDonationActivity = user.donations > 0 || urlParams.has('onlydonors');
+				}
 				user.avatarUrl = item.avatarUrl || null;
 			});
 		} catch (e) {
