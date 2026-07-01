@@ -683,6 +683,11 @@
 		return !!(data && (data.hasDonation || data.membership));
 	}
 
+	function getPositiveDonationAmount(value) {
+		const amount = parseFloat(String(value || '').replace(/,/g, ''));
+		return !isNaN(amount) && amount > 0 ? amount : 0;
+	}
+
 	function filterCreditsUsersForSupporters(userList) {
 		if (urlParams.has('onlydonors')) {
 			return userList.filter(function(user) {
@@ -743,19 +748,22 @@
 
 		if (data.hasDonation) {
 			try {
-				// Use convertToUSD function to handle donation conversion
 				const source = data.type ? data.type.toLowerCase() : '';
-				const donationAmount = convertToUSD(data.hasDonation, source);
-				
-				// Only add if we have a valid amount
+				let donationAmount = getPositiveDonationAmount(data.donoValue);
+				if (!donationAmount) {
+					donationAmount = convertToUSD(data.hasDonation, source);
+				}
+
 				if (!isNaN(donationAmount) && donationAmount > 0) {
 					user.donations += donationAmount;
 					console.log(`Added donation of ${donationAmount} for ${data.chatname}`);
 				} else {
-					console.warn(`Invalid donation format for ${data.chatname}:`, data.hasDonation);
+					user.donations += 0.01;
+					console.warn(`Using minimum donation value for ${data.chatname}:`, data.hasDonation);
 				}
 			} catch (error) {
 				console.error(`Error processing donation for ${data.chatname}:`, error, data.hasDonation);
+				user.donations += 0.01;
 			}
 		}
 

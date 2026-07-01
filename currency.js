@@ -69,6 +69,8 @@ function convertToUSD(valueStr, source = '') {
     // YouTube
     super: 1.0, // Super Chat base rate
     superchat: 1.0,
+    jewel: 0.005,
+    jewels: 0.005,
     
     // Generic/Other platforms
     rose: 0.01,
@@ -115,6 +117,17 @@ function convertToUSD(valueStr, source = '') {
     youtube: {
       superchat: 1.0,
       super: 1.0,
+      jewel: 0.005,
+      jewels: 0.005,
+      membership: 4.99,
+      giftmembership: 4.99,
+      sponsorship: 4.99
+    },
+    youtubeshorts: {
+      superchat: 1.0,
+      super: 1.0,
+      jewel: 0.005,
+      jewels: 0.005,
       membership: 4.99,
       giftmembership: 4.99,
       sponsorship: 4.99
@@ -186,6 +199,12 @@ function convertToUSD(valueStr, source = '') {
   
   const amount = parseCurrencyAmount(valueStr);
   if (isNaN(amount)) return 0;
+
+  if (valueStr.indexOf('\uD83D\uDC8E') !== -1) {
+    const sourceRates = source && platformAdjustments[source] ? platformAdjustments[source] : null;
+    const diamondRate = sourceRates && sourceRates.diamond ? sourceRates.diamond : virtualCurrencies.diamond;
+    return amount * diamondRate;
+  }
 
   // Clean the string for currency/type detection, preserve important symbols
   const cleanValue = valueStr.toLowerCase().replace(/[$€£¥₩₹₽]/g, '').replace(/[^\w\s]/g, ' ').trim();
