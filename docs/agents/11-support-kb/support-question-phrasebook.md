@@ -18,11 +18,11 @@ Use with:
 
 Safe sources used:
 
-- `C:\Users\steve\Code\stevesbot\resources\learnings\social-stream-ninja-top-issues.md`
-- `C:\Users\steve\Code\stevesbot\resources\learnings\support-qa\social-stream-configuration.md`
-- `C:\Users\steve\Code\stevesbot\resources\learnings\support-qa\social-stream-qa.md`
-- `C:\Users\steve\Code\stevesbot\resources\learnings\support-qa\social-stream-qa-expanded.md`
-- `C:\Users\steve\Code\stevesbot\data\sqlite\stevesbot.sqlite` summarized `support_records`
+- `<stevesbot repo>/resources/learnings/social-stream-ninja-top-issues.md`
+- `<stevesbot repo>/resources/learnings/support-qa/social-stream-configuration.md`
+- `<stevesbot repo>/resources/learnings/support-qa/social-stream-qa.md`
+- `<stevesbot repo>/resources/learnings/support-qa/social-stream-qa-expanded.md`
+- `<stevesbot repo>/data/sqlite/stevesbot.sqlite` summarized `support_records`
 - Existing agent docs under `docs/agents`
 
 No raw Discord transcript text, private support URLs, usernames, session IDs, or attachments were copied into this page.

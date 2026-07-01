@@ -4444,11 +4444,13 @@ function enableBackgroundKeepAlive() {
 		const expectedState = getExpectedOAuthState();
 		if (!expectedState || state !== expectedState) {
 			console.error('State mismatch - possible CSRF attack', { expectedState, receivedState: state });
+			clearExpectedOAuthState();
 			showOAuthFailure('State mismatch during YouTube sign-in. Please try again and avoid switching to a different browser tab/window during authentication.');
 			return;
 		}
 		if (!code) {
 			console.error('No authorization code supplied.');
+			clearExpectedOAuthState();
 			showOAuthFailure('No authorization code was returned by Google. Please try signing in again.');
 			return;
 		}
@@ -4487,6 +4489,7 @@ function enableBackgroundKeepAlive() {
 			verifyAndUseToken(data.access_token);
 		} catch (error) {
 			console.error('Error exchanging code for tokens:', error);
+			clearExpectedOAuthState();
 			const errorMessage = error && error.message ? error.message : 'unknown error';
 			showOAuthFailure(`YouTube sign-in failed after permission grant: ${errorMessage}`);
 		}
@@ -4529,12 +4532,14 @@ function enableBackgroundKeepAlive() {
 			});
 			if (!result || !result.code) {
 				console.error('YouTube OAuth did not return a code.');
+				clearExpectedOAuthState();
 				showAuthButton();
 				return;
 			}
 			await exchangeCodeForTokens(result.code, result.state || state, result.redirectUri);
 		} catch (error) {
 			console.error('External YouTube OAuth failed:', error);
+			clearExpectedOAuthState();
 			showAuthButton();
 		}
 	}

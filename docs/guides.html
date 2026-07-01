@@ -76,6 +76,98 @@
         </div>
     </section>
 
+	<section id="guide-directory" class="guide-directory">
+		<div class="container">
+			<h2>Guide Directory</h2>
+			<p class="section-subtitle">Open a category, then jump straight to the guide you need</p>
+			<div class="guide-filter">
+				<label for="guide-filter-input">Filter guides</label>
+				<input id="guide-filter-input" type="search" placeholder="Search OBS, TikTok, TTS, API..." autocomplete="off">
+				<button id="guide-filter-clear" type="button">Clear</button>
+			</div>
+			<div class="guide-tree">
+				<details class="guide-tree-group" open>
+					<summary>
+						<span>Start Here</span>
+						<small>Install, connect chat, add OBS overlays</small>
+					</summary>
+					<ul>
+						<li><a href="../docs/download.html">Install or update</a><span>Browser extension and desktop app downloads.</span></li>
+						<li><a href="../docs/obs-quick-start.html">OBS quick start</a><span>Session, dock, overlay, and browser source setup.</span></li>
+						<li><a href="../docs/platform-setup-picker.html">Platform setup picker</a><span>Choose popout, toggle, app, source page, or API mode.</span></li>
+						<li><a href="#extension-getting-started">Browser extension setup</a><span>Open chat, dock, and overlay links.</span></li>
+						<li><a href="#standalone-getting-started">Desktop app setup</a><span>Use managed source windows instead of browser tabs.</span></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span>Overlays And Customization</span>
+						<small>Templates, style options, fonts, events</small>
+					</summary>
+					<ul>
+						<li><a href="../docs/templates.html">Templates gallery</a><span>Ready-made overlay layouts.</span></li>
+						<li><a href="#extension-customization">Overlay customization</a><span>URL options, CSS, and layout controls.</span></li>
+						<li><a href="../docs/custom-fonts.html">Custom fonts</a><span>Self-hosted fonts and CSS examples.</span></li>
+						<li><a href="../docs/event-reference.html">Event reference</a><span>Payload fields for alerts, events, and overlays.</span></li>
+						<li><a href="#extension-hype-train-top-bar">Hype train top bar</a><span>Dedicated Twitch hype train overlay.</span></li>
+						<li><a href="#extension-first-time-chatters">First-time chatters</a><span>Highlight new viewers in chat.</span></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span>Automation And Integrations</span>
+						<small>API, commands, Event Flow, webhooks</small>
+					</summary>
+					<ul>
+						<li><a href="../docs/commands.html">Commands and API</a><span>WebSocket actions and integration examples.</span></li>
+						<li><a href="#extension-event-flow">Event Flow</a><span>Build rule-based actions from chat and events.</span></li>
+						<li><a href="../actions/event-flow-guide.html">Detailed Event Flow guide</a><span>Full editor and action-flow reference.</span></li>
+						<li><a href="index.html?file=kick-channel-points-event-flow.md">Kick rewards sounds/media</a><span>Reward-triggered action flow setup.</span></li>
+						<li><a href="#extension-webhooks">Webhooks</a><span>Stripe, Ko-fi, Buy Me a Coffee, Fourthwall.</span></li>
+						<li><a href="#extension-midi">MIDI</a><span>Trigger local MIDI actions from chat.</span></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span>AI And TTS</span>
+						<small>Text-to-speech, local voices, AI replies</small>
+					</summary>
+					<ul>
+						<li><a href="../docs/tts.html">TTS guide</a><span>Voice providers and overlay audio setup.</span></li>
+						<li><a href="../docs/local-tts.html">Local AI TTS</a><span>Local/private browser and server voice options.</span></li>
+						<li><a href="../docs/ai-cohost-guide.html">AI cohost</a><span>AI chat summaries, prompts, and cohost tools.</span></li>
+						<li><a href="../docs/twitch-bot-account-chatbot.html">Twitch bot account</a><span>Use a separate Twitch bot for AI replies.</span></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span>Platform Guides</span>
+						<small>TikTok, YouTube, Twitch, Kick, supported sites</small>
+					</summary>
+					<ul>
+						<li><a href="../docs/tiktok-guide.html">TikTok guide</a><span>Connection modes, app setup, and common failures.</span></li>
+						<li><a href="../docs/youtube-project-setup.html">YouTube project setup</a><span>API project and OAuth setup.</span></li>
+						<li><a href="#standalone-tiktok">TikTok in the desktop app</a><span>Standalone app TikTok mode notes.</span></li>
+						<li><a href="../docs/supported-sites.html">Supported sites list</a><span>All public platform setup notes.</span></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group" open>
+					<summary>
+						<span>Troubleshooting And Support</span>
+						<small>Missing chat, blank overlays, deeper support docs</small>
+					</summary>
+					<ul>
+						<li><a href="#extension-troubleshooting">Browser extension troubleshooting</a><span>Missing chat, permissions, throttling, and toggles.</span></li>
+						<li><a href="#standalone-troubleshooting">Desktop app troubleshooting</a><span>App source windows, updates, and setup checks.</span></li>
+						<li><a href="../docs/support.html">Support page</a><span>Discord, GitHub issues, and contribution paths.</span></li>
+						<li><a href="index.html?file=agents/common-guides.md">Advanced support index</a><span>Deeper routing for support workflows and AI agents.</span></li>
+					</ul>
+				</details>
+			</div>
+			<p class="guide-filter-empty" id="guide-filter-empty">No matching guides found.</p>
+		</div>
+	</section>
+
 	<section class="navigation" id="guides-nav">
 		<div class="container">
 			<div class="guide-tabs">
@@ -450,7 +542,7 @@
 					</ol>
 
 					<div class="guide-note">
-						<p><strong>Important:</strong> Enable "No Reflections" when relaying chat to prevent infinite echo loops. For detailed documentation, see the <a href="../actions/event-flow-guide.html">Event Flow Guide</a>. For Kick reward sounds or media, use the <a href="kick-channel-points-event-flow.md">Kick Channel Points / Rewards guide</a>.</p>
+						<p><strong>Important:</strong> Enable "No Reflections" when relaying chat to prevent infinite echo loops. For detailed documentation, see the <a href="../actions/event-flow-guide.html">Event Flow Guide</a>. For Kick reward sounds or media, use the <a href="index.html?file=kick-channel-points-event-flow.md">Kick Channel Points / Rewards guide</a>.</p>
 					</div>
 				</div>
 
@@ -1002,7 +1094,7 @@
 					<p>Add the Flow Actions URL as a browser source in OBS for audio/overlay actions to work. Find the URL in the app's "Flow Actions" section.</p>
 
 					<div class="guide-note">
-						<p>For detailed documentation, see the <a href="../actions/event-flow-guide.html">Event Flow Guide</a>. For Kick reward sounds or media, use the <a href="kick-channel-points-event-flow.md">Kick Channel Points / Rewards guide</a>.</p>
+						<p>For detailed documentation, see the <a href="../actions/event-flow-guide.html">Event Flow Guide</a>. For Kick reward sounds or media, use the <a href="index.html?file=kick-channel-points-event-flow.md">Kick Channel Points / Rewards guide</a>.</p>
 					</div>
 				</div>
 
@@ -1318,6 +1410,59 @@
 		const guideSections = document.querySelectorAll('.guide-section-wrapper');
 		const navSections = document.querySelectorAll('.nav-links');
 		const faqSection = document.getElementById('faq');
+		const guideFilterInput = document.getElementById('guide-filter-input');
+		const guideFilterClear = document.getElementById('guide-filter-clear');
+		const guideFilterEmpty = document.getElementById('guide-filter-empty');
+		const guideTreeGroups = document.querySelectorAll('.guide-tree-group');
+
+		guideTreeGroups.forEach(group => {
+			group.setAttribute('data-default-open', group.open ? 'true' : 'false');
+		});
+
+		function filterGuideDirectory(query) {
+			const term = (query || '').trim().toLowerCase();
+			let visibleCount = 0;
+
+			guideTreeGroups.forEach(group => {
+				const links = group.querySelectorAll('li');
+				let groupHasMatch = false;
+
+				links.forEach(item => {
+					const text = item.textContent.toLowerCase();
+					const isMatch = !term || text.indexOf(term) !== -1;
+					item.classList.toggle('guide-filter-hidden', !isMatch);
+					if (isMatch) {
+						groupHasMatch = true;
+						visibleCount += 1;
+					}
+				});
+
+				group.classList.toggle('guide-filter-hidden', !groupHasMatch);
+				if (term) {
+					group.open = groupHasMatch;
+				} else {
+					group.open = group.getAttribute('data-default-open') === 'true';
+				}
+			});
+
+			if (guideFilterEmpty) {
+				guideFilterEmpty.style.display = visibleCount ? 'none' : 'block';
+			}
+		}
+
+		if (guideFilterInput) {
+			guideFilterInput.addEventListener('input', function() {
+				filterGuideDirectory(this.value);
+			});
+		}
+
+		if (guideFilterClear) {
+			guideFilterClear.addEventListener('click', function() {
+				guideFilterInput.value = '';
+				filterGuideDirectory('');
+				guideFilterInput.focus();
+			});
+		}
 
 		// Anchor alias mapping for generic links (e.g., #getting-started -> #extension-getting-started)
 		const anchorAliases = {
@@ -1419,6 +1564,14 @@
 				});
 			}, 100);
 		}
+
+		document.querySelectorAll('.guide-tree a[href^="#"]').forEach(anchor => {
+			anchor.addEventListener('click', function(e) {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				handleHash(this.getAttribute('href'), true);
+			}, true);
+		});
 
 		tabButtons.forEach(button => {
 			button.addEventListener('click', () => {

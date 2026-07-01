@@ -13,7 +13,7 @@ Status: heavy reference pass started from public support/download/guides docs an
 - `docs/services.html`
 - `docs/agents/10-troubleshooting/*.md`
 - `docs/agents/11-support-kb/*.md`
-- `C:\Users\steve\Code\stevesbot\resources\instructions\social-stream-support.md`
+- `<stevesbot repo>/resources/instructions/social-stream-support.md`
 
 ## Public Support Resources
 

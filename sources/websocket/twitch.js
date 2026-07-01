@@ -4211,21 +4211,53 @@ async function cleanupCurrentConnection() {
     // Expose for optional upstream use
     window.ssWssNotifyTwitch = __tw_notifyApp;
 
+    function __tw_hasPendingAuthAttempt(){
+      try {
+        return !!sessionStorage.getItem('twitchOAuthState');
+      } catch(_){
+        return false;
+      }
+    }
+
+    function __tw_hasRefreshableAuth(){
+      try {
+        return !!localStorage.getItem('twitchOAuthRefreshToken');
+      } catch(_){
+        return false;
+      }
+    }
+
+    function __tw_shouldEmitSigninRequired(options){
+      try {
+        var ignoreAccessToken = !!(options && options.ignoreAccessToken);
+        var hasToken = !ignoreAccessToken && !!localStorage.getItem('twitchOAuthToken');
+        return !hasToken && !__tw_hasRefreshableAuth() && !__tw_hasPendingAuthAttempt();
+      } catch(_){
+        return false;
+      }
+    }
+
+    function __tw_maybeNotifySigninRequired(message, options){
+      if (__tw_shouldEmitSigninRequired(options)) {
+        __tw_notifyApp('signin_required', message || 'Please sign in');
+      }
+    }
+
     // 1) Initial sign-in check
     function __tw_initialCheck(){
       try {
-        var hasToken = !!localStorage.getItem('twitchOAuthToken');
-        if (!hasToken) __tw_notifyApp('signin_required','Please sign in');
+        __tw_maybeNotifySigninRequired('Please sign in');
       } catch(_){ }
     }
 
-    // 2) Patch showAuthButton to emit signin_required whenever UI shows auth prompt
+    // 2) Patch showAuthButton to emit signin_required only after refresh/auth attempts are exhausted.
     try {
       if (typeof showAuthButton === 'function') {
         var __tw_origShowAuth = showAuthButton;
         showAuthButton = function(){
-          try { __tw_notifyApp('signin_required','Please sign in'); } catch(_){ }
-          return __tw_origShowAuth.apply(this, arguments);
+          var result = __tw_origShowAuth.apply(this, arguments);
+          try { __tw_maybeNotifySigninRequired('Please sign in'); } catch(_){ }
+          return result;
         };
       }
     } catch(_){ }
@@ -4286,7 +4318,7 @@ async function cleanupCurrentConnection() {
                   var isHelixOrGql = url.indexOf('api.twitch.tv') !== -1 || url.indexOf('gql.twitch.tv') !== -1;
                   var isEventSubSubscription = url.indexOf('api.twitch.tv/helix/eventsub/subscriptions') !== -1;
                   if (isOAuth && res.status === 401) {
-                    emit('signin_required', 'Twitch auth expired');
+                    __tw_maybeNotifySigninRequired('Twitch auth expired', { ignoreAccessToken: true });
                   } else if (isEventSubSubscription && (res.status === 401 || res.status === 403)) {
                     console.warn('Optional Twitch EventSub feature unavailable:', msg);
                   } else if (isHelixOrGql && (res.status === 401 || res.status === 403)) {

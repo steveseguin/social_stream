@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Setup Picker - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Choose the right Social Stream Ninja setup path for each chat platform.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands & API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Platform Setup Picker</h1>
+            <p>Choose the simplest capture path before opening OBS.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>Use The Normal Browser Extension When</h3>
+                <ul class="guide-list">
+                    <li>The platform works in your normal browser.</li>
+                    <li>You already have the right account signed in.</li>
+                    <li>The supported-sites page says to open the site or pop out chat.</li>
+                </ul>
+                <p>Start here for YouTube, Twitch, Facebook, Discord, Slack, WhatsApp, and most browser-based sources.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>Use A Popout Or Chat-Only Window When</h3>
+                <ul class="guide-list">
+                    <li>The platform has a separate popout chat URL.</li>
+                    <li>The normal stream page is heavy or unreliable.</li>
+                    <li>You need the chat window visible while streaming.</li>
+                </ul>
+                <p>Check exact platform notes on the <a href="supported-sites.html">Supported Sites</a> page.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>Use The Desktop App When</h3>
+                <ul class="guide-list">
+                    <li>Browser tabs are being hidden, throttled, or discarded.</li>
+                    <li>You want source windows managed inside the app.</li>
+                    <li>You are using an app-specific integration, such as some TikTok modes.</li>
+                </ul>
+                <p>Desktop setup: <a href="guides.html#standalone-getting-started">Standalone App Guide</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>Use A Source Page When</h3>
+                <ul class="guide-list">
+                    <li>The platform needs a dedicated Social Stream source URL.</li>
+                    <li>The setup asks for a channel, room, token, or OAuth flow.</li>
+                    <li>You are using a WebSocket/API-style source instead of DOM capture.</li>
+                </ul>
+                <p>Source pages can behave differently than normal browser capture, especially for send-back and events.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>Quick Decision</h3>
+                <table class="guide-table">
+                    <tr><th>Situation</th><th>Use</th></tr>
+                    <tr><td>Standard supported chat site</td><td>Browser extension</td></tr>
+                    <tr><td>Site says pop out chat</td><td>Popout/chat-only window</td></tr>
+                    <tr><td>Hidden browser tab stops updating</td><td>Desktop app</td></tr>
+                    <tr><td>Setup asks for room/channel/token</td><td>Source page</td></tr>
+                    <tr><td>Custom automation or incoming data</td><td>Commands/API or custom source</td></tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

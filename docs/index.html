@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Social Stream Ninja Docs</title>
-  <meta name="description" content="Client-side Markdown documentation viewer for Social Stream Ninja.">
+  <title>Social Stream Ninja Advanced Docs</title>
+  <meta name="description" content="Advanced Social Stream Ninja documentation for users, support workflows, and AI agents.">
   <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
   <script defer src="../thirdparty/marked.umd.min.js"></script>
   <style>
@@ -372,10 +372,10 @@
   <div class="app">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <img src="../media/logo.png" alt="Social Stream Ninja logo">
+        <img src="../icons/logo.svg" alt="Social Stream Ninja logo">
         <div>
           <strong>Social Stream Ninja</strong>
-          <span>Markdown docs viewer</span>
+          <span>Advanced support docs</span>
         </div>
       </div>
       <input class="search" id="search" type="search" placeholder="Filter docs" autocomplete="off">
@@ -400,7 +400,7 @@
   </div>
 
   <script>
-    const DEFAULT_FILE = "agents/99-agent-index.md";
+    const DEFAULT_FILE = "agents/common-guides.md";
     const SITEMAP_FILE = "agents/SITEMAP.md";
     const state = { currentFile: DEFAULT_FILE };
 
@@ -424,16 +424,50 @@
       return index === -1 ? "" : value.slice(index);
     }
 
+    function splitLocalLink(path) {
+      const value = String(path || "");
+      const hash = getHash(value);
+      const withoutHash = hash ? value.slice(0, -hash.length) : value;
+      const queryIndex = withoutHash.indexOf("?");
+      return {
+        path: queryIndex === -1 ? withoutHash : withoutHash.slice(0, queryIndex),
+        query: queryIndex === -1 ? "" : withoutHash.slice(queryIndex),
+        hash
+      };
+    }
+
     function normalizeDocPath(path, baseFile) {
       if (!path) return DEFAULT_FILE;
       if (/^(https?:|mailto:|tel:)/i.test(path)) return path;
-      const cleaned = String(path).replace(/\\/g, "/");
+      const cleaned = splitLocalLink(path).path.replace(/\\/g, "/");
       const baseDir = baseFile && baseFile.includes("/") ? baseFile.split("/").slice(0, -1).join("/") + "/" : "";
       const url = new URL(cleaned, "https://docs.local/" + baseDir);
       const normalized = decodeURIComponent(url.pathname).replace(/^\/+/, "");
       if (!normalized || normalized.split("/").includes("..")) return DEFAULT_FILE;
       if (normalized.endsWith("/")) return normalized + "index.md";
       return normalized;
+    }
+
+    function resolveViewerLink(path, baseFile) {
+      if (!path || /^(https?:|mailto:|tel:)/i.test(path)) return null;
+      const parts = splitLocalLink(path);
+      const cleaned = parts.path.replace(/\\/g, "/");
+      const baseDir = baseFile && baseFile.includes("/") ? baseFile.split("/").slice(0, -1).join("/") + "/" : "";
+      const url = new URL(cleaned, "https://docs.local/docs/" + baseDir);
+      const pathname = decodeURIComponent(url.pathname);
+      if (pathname.startsWith("/docs/")) {
+        const docsPath = pathname.slice("/docs/".length);
+        if (!docsPath || docsPath.split("/").includes("..")) return null;
+        const normalized = docsPath.endsWith("/") ? docsPath + "index.md" : docsPath;
+        return {
+          docPath: normalized,
+          href: normalized + parts.query + parts.hash
+        };
+      }
+      return {
+        docPath: "",
+        href: ".." + pathname + parts.query + parts.hash
+      };
     }
 
     function fileFromLocation() {
@@ -562,13 +596,16 @@
           link.rel = "noopener";
           return;
         }
-        const target = normalizeDocPath(href, state.currentFile);
-        if (target.endsWith(".md")) {
-          link.href = `?file=${encodeURIComponent(stripHash(target))}${getHash(href)}`;
+        const target = resolveViewerLink(href, state.currentFile);
+        if (!target) return;
+        if (target.docPath.endsWith(".md")) {
+          link.href = `?file=${encodeURIComponent(stripHash(target.docPath))}${getHash(href)}`;
           link.addEventListener("click", event => {
             event.preventDefault();
-            loadDoc(target + getHash(href), true);
+            loadDoc(target.docPath + getHash(href), true);
           });
+        } else {
+          link.href = target.href;
         }
       });
     }

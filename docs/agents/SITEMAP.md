@@ -7,6 +7,7 @@ Use this as the static navigation source for `docs/index.html` and as a grep-fre
 ## Start Here
 
 - [Agent Brief](AGENT.md) - scope, write boundary, source priority, navigation, and validation rules.
+- [Common Guides And Support Routing](common-guides.md) - public guide shortcuts plus first-stop agent support routes.
 - [Master Agent Index](99-agent-index.md) - broad coverage summary and suggested next passes.
 - [Objective Coverage And Readiness Audit](15-objective-coverage-and-readiness-audit.md) - what is covered, what is answer-ready, and what still needs proof.
 - [Validation And Refresh Roadmap](14-validation-and-refresh-roadmap.md) - remaining source-check, browser, app, OBS, and support-history validation queue.

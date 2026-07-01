@@ -10,9 +10,9 @@ For a support-oriented decision guide covering install path choice, safe update 
 - `docs/download.html`
 - `docs/ssapp.html`
 - `docs/commands.html`
-- `C:\Users\steve\Code\ssapp\AGENTS.md`
-- `C:\Users\steve\Code\ssapp\package.json`
-- `C:\Users\steve\Code\ssapp\RELEASE.md`
+- `<ssapp repo>/AGENTS.md`
+- `<ssapp repo>/package.json`
+- `<ssapp repo>/RELEASE.md`
 
 ## Install Choices
 
@@ -119,8 +119,8 @@ Download-page notes:
 
 Repo boundary:
 
-- App code lives in `C:\Users\steve\Code\ssapp`.
-- Social Stream source edits still belong in `C:\Users\steve\Code\social_stream`.
+- App code lives in `<ssapp repo>`.
+- Social Stream source edits still belong in `<social_stream repo>`.
 - Do not use `ssapp/resources/social_stream_fallback` as the source of truth.
 
 ## Choosing Extension vs App
@@ -191,14 +191,14 @@ Do not use Lite docs to answer full extension/app questions unless the user is e
 
 For Social Stream extension/source development:
 
-- Work in `C:\Users\steve\Code\social_stream`.
+- Work in `<social_stream repo>`.
 - Load unpacked extension from that folder or a build-specific folder.
 - Use local/localhost source pages where manifest entries support them.
 - Use `scripts/validate-configs.sh` before commits/pushes that touch settings/config JSON.
 
 For standalone app development:
 
-- Work in `C:\Users\steve\Code\ssapp`.
+- Work in `<ssapp repo>`.
 - Read `ssapp/AGENTS.md` and `RELEASE.md` before release work.
 - Run app behavior in the actual Electron app for real validation.
 

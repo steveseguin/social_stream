@@ -22,8 +22,8 @@ On 2026-06-24, `node scripts/playwright-multi-alerts-overlay-e2e.cjs` was run fr
 
 ```text
 frame.waitForFunction: Timeout 30000ms exceeded.
-    at waitForPreviewFrame (C:\Users\steve\Code\social_stream\scripts\playwright-multi-alerts-overlay-e2e.cjs:212:15)
-    at async C:\Users\steve\Code\social_stream\scripts\playwright-multi-alerts-overlay-e2e.cjs:439:24
+    at waitForPreviewFrame (<social_stream repo>/scripts/playwright-multi-alerts-overlay-e2e.cjs:212:15)
+    at async <social_stream repo>/scripts/playwright-multi-alerts-overlay-e2e.cjs:439:24
 ```
 
 The failure happened while waiting for the popup preview iframe to expose `window.__multiAlertsOverlay.getSettings`. Do not use that run as evidence that multi-alert rendering, queueing, audio, filters, or server modes are validated.

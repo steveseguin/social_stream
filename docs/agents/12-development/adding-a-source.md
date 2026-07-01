@@ -17,7 +17,7 @@ Status: heavy extraction pass started from manifest/source patterns. This is a d
 - `custom_sample.js`
 - `sample_wss_source.html`
 - `docs/agents/13-reference/customization-path-decision-matrix.md`
-- `C:\Users\steve\Code\ssapp\AGENTS.md`
+- `<ssapp repo>/AGENTS.md`
 
 ## Before Adding A Source
 
@@ -189,7 +189,7 @@ Match the existing hosted/local/beta pattern for the closest source.
 
 ## Standalone App Compatibility
 
-Per `ssapp` project instructions, Social Stream source edits belong in `C:\Users\steve\Code\social_stream`. The standalone app loads Social Stream source files remotely from that repo at startup. Do not make source changes in `ssapp/resources/social_stream_fallback` during normal work; that folder is a rebuilt fallback bundle.
+Per `ssapp` project instructions, Social Stream source edits belong in `<social_stream repo>`. The standalone app loads Social Stream source files remotely from that repo at startup. Do not make source changes in `ssapp/resources/social_stream_fallback` during normal work; that folder is a rebuilt fallback bundle.
 
 When adding a source, consider:
 

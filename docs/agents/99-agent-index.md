@@ -5,6 +5,7 @@ Status: framework plus source-backed backbone, product/install, install/update/v
 ## Start Here
 
 - `AGENT.md`: scope, write boundary, source priority, exclusions, current navigation, answer workflow, and validation state.
+- `common-guides.md`: public guide shortcuts and first-stop support routing for common user questions.
 - `docs/agents/SITEMAP.md`: static viewer navigation source and grep-free map of root docs plus section sitemap links.
 - `00-inventory-and-plan.md`: initial inventory and proposed structure.
 - `01-extraction-checklist.md`: pass tracking, extraction levels, and status labels.

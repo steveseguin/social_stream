@@ -1,25 +1,25 @@
 # SSN AI Documentation Agent Brief
 
-This folder is a temporary, AI-focused documentation workspace for Social Stream Ninja. It is not a release artifact, not a ZIP package, and should not be treated as end-user website docs unless Steve later asks for that.
+This folder is an advanced documentation workspace for Social Stream Ninja. It is written for support workflows, future agents, and technical users who need deeper routing than the main public guides.
 
 ## Scope
 
-Create exhaustive markdown documentation for:
+Create and maintain detailed markdown documentation for:
 
-- Social Stream Ninja Chrome extension in `C:\Users\steve\Code\social_stream`
-- Social Stream Ninja standalone Electron app in `C:\Users\steve\Code\ssapp`
+- Social Stream Ninja Chrome extension in `<social_stream repo>`
+- Social Stream Ninja standalone Electron app in `<ssapp repo>`
 - Shared behavior between the extension and app, especially source scripts, overlays, sessions, APIs, settings, and troubleshooting
-- Support knowledge from `C:\Users\steve\Code\stevesbot`, filtered to SSN-related material
+- Support knowledge from the `<stevesbot repo>` support knowledge repo, filtered to SSN-related material
 
 ## Write Boundary
 
-Only write inside:
+When working on this advanced documentation set, only write inside:
 
-`C:\Users\steve\Code\social_stream\docs\agents`
+`docs/agents`
 
 Do not edit project code, generated docs, release files, app files, or support bot files while building this documentation set unless Steve explicitly changes the scope.
 
-Current explicit scope exception: Steve approved a static, human-facing Markdown viewer at `C:\Users\steve\Code\social_stream\docs\index.html` and sitemap Markdown files under `docs/agents`. Do not edit other public docs unless Steve asks.
+Current explicit scope exception: Steve approved a static, human-facing Markdown viewer at `docs/index.html` and sitemap Markdown files under `docs/agents`. Do not edit other public docs unless Steve asks.
 
 ## Source Priority
 
@@ -36,8 +36,8 @@ Use sources in this order:
 
 Do not use or document from:
 
-- `C:\Users\steve\Code\ssapp\resources\social_stream_fallback`
-- `C:\Users\steve\Code\stevesbot\resources\secrets`
+- `<ssapp repo>/resources/social_stream_fallback`
+- `<stevesbot repo>/resources/secrets`
 - Non-SSN support content unless it directly clarifies an SSN integration
 - Raw private support identities unless they are needed as anonymized examples
 
@@ -62,6 +62,7 @@ When support data conflicts with current code, mark it as historical and verify 
 
 Start with:
 
+- `docs/agents/common-guides.md`: public guide shortcuts and first-stop support routing for common user questions.
 - `docs/agents/99-agent-index.md`: master index, current coverage summary, and suggested next passes.
 - `docs/agents/SITEMAP.md`: static viewer navigation source and grep-free folder map.
 - `docs/agents/01-extraction-checklist.md`: extraction levels, pass history, and checklist status.

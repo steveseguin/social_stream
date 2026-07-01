@@ -12,7 +12,7 @@ Status: heavy extraction pass started from public repo docs and app docs. This i
 - `docs/commands.html`
 - `docs/ssapp.html`
 - `docs/js/sites.js`
-- `C:\Users\steve\Code\ssapp\AGENTS.md`
+- `<ssapp repo>/AGENTS.md`
 
 ## What Social Stream Ninja Is
 
@@ -60,7 +60,7 @@ Use the standalone app when:
 
 Boundary from `ssapp` instructions:
 
-- Source edits belong in `C:\Users\steve\Code\social_stream`.
+- Source edits belong in `<social_stream repo>`.
 - The standalone app loads Social Stream source files remotely from that repo at app startup.
 - `ssapp/resources/social_stream_fallback` is a rebuilt fallback bundle, not the primary source.
 

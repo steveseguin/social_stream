@@ -28,7 +28,7 @@ For proof status behind these short answers, use `priority-platform-validation-l
 This pass checked the current docs plus source terms in:
 
 - `sources/youtube.js`, `sources/websocket/youtube.js`, `providers/youtube/liveChat.js`
-- `sources/tiktok.js`, `C:\Users\steve\Code\ssapp\tiktok\connection-manager.js`
+- `sources/tiktok.js`, `<ssapp repo>/tiktok/connection-manager.js`
 - `sources/twitch.js`, `sources/websocket/twitch.js`, `providers/twitch/chatClient.js`
 - `sources/kick.js`, `sources/kick_new.js`, `sources/websocket/kick.js`, `providers/kick/core.js`
 - `sources/rumble.js`, `sources/websocket/rumble.js`

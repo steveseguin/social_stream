@@ -743,6 +743,8 @@ code {
     font-family: var(--font-mono);
     font-size: 1.4rem;
     padding: 0rem 0.5rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 
@@ -804,13 +806,14 @@ code {
     nav {
         position: fixed;
         top: 8rem;
-        right: -30rem;
-        width: 30rem;
+        right: 0;
+        width: min(30rem, calc(100vw - 4rem));
         height: 100vh;
         background-color: var(--background-light);
         padding: 4rem 2rem;
         box-shadow: var(--shadow-lg);
-        transition: right var(--transition-speed) ease;
+        transform: translateX(100%);
+        transition: transform var(--transition-speed) ease;
         z-index: 100;
     }
 
@@ -819,7 +822,7 @@ code {
     }
 
     nav.active {
-        right: 0;
+        transform: translateX(0);
     }
 
     nav ul {

@@ -6,7 +6,7 @@ Last updated on 2026-06-24.
 
 Use this file to track which source files and support datasets have been processed for the SSN AI documentation set. The goal is to support multiple AI passes without redoing the same work or skipping important resource areas.
 
-Only write extraction notes and status changes inside `C:\Users\steve\Code\social_stream\docs\agents`.
+Only write extraction notes and status changes inside `docs/agents`.
 
 ## Extraction Levels
 

@@ -16,7 +16,7 @@ For first-stop routing, use `docs/agents/11-support-kb/index.md`. For objective 
 - `custom_actions.js`
 - `sample_wss_source.html`
 - `docs/agents/08-platform-sources/*.md`
-- Future support-mining pass: `C:\Users\steve\Code\stevesbot\data\sqlite\*.sqlite`
+- Future support-mining pass: `<stevesbot repo>/data/sqlite/*.sqlite`
 
 ## Fast Reference Pages
 

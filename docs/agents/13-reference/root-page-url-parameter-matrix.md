@@ -12,7 +12,7 @@ For source-checked behavior and server/channel caveats, use `url-parameter-sourc
 
 ## Method
 
-The pass scanned 70 root `*.html` files in `C:\Users\steve\Code\social_stream` for:
+The pass scanned 70 root `*.html` files in `<social_stream repo>` for:
 
 - `URLSearchParams`
 - `location.search`

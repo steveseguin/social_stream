@@ -34,7 +34,7 @@ For setup-choice routing by user goal, use `workflow-setup-decision-tree.md`. Fo
 - `docs/agents/08-platform-sources/tiktok-standalone-app.md`
 - `docs/agents/08-platform-sources/platform-capability-matrix.md`
 - `docs/agents/13-reference/feature-support-decision-matrix.md`
-- `C:\Users\steve\Code\ssapp\AGENTS.md`
+- `<ssapp repo>/AGENTS.md`
 
 ## Product Surface Matrix
 

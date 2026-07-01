@@ -176,8 +176,8 @@ Observed failure output:
 
 ```text
 frame.waitForFunction: Timeout 30000ms exceeded.
-    at waitForPreviewFrame (C:\Users\steve\Code\social_stream\scripts\playwright-multi-alerts-overlay-e2e.cjs:212:15)
-    at async C:\Users\steve\Code\social_stream\scripts\playwright-multi-alerts-overlay-e2e.cjs:439:24
+    at waitForPreviewFrame (<social_stream repo>/scripts/playwright-multi-alerts-overlay-e2e.cjs:212:15)
+    at async <social_stream repo>/scripts/playwright-multi-alerts-overlay-e2e.cjs:439:24
 ```
 
 Product surface attempted: local `popup.html` and `multi-alerts.html` pages served by `scripts/playwright-static-server.cjs` and opened in headless Chromium through Playwright. Chrome extension APIs and audio playback were stubbed by the script.

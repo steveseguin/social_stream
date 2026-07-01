@@ -8,8 +8,8 @@ This file lists the source material that should be considered for SSN AI documen
 
 Do not use these for extraction unless Steve explicitly changes scope:
 
-- `C:\Users\steve\Code\ssapp\resources\social_stream_fallback`
-- `C:\Users\steve\Code\stevesbot\resources\secrets`
+- `<ssapp repo>/resources/social_stream_fallback`
+- `<stevesbot repo>/resources/secrets`
 - `node_modules`, `.git`, build output, temp folders, logs, and backup databases
 - Non-SSN support material unless it directly affects SSN setup or integration
 
@@ -22,7 +22,7 @@ Do not use these for extraction unless Steve explicitly changes scope:
 
 ## Social Stream Repo
 
-Root: `C:\Users\steve\Code\social_stream`
+Root: `<social_stream repo>`
 
 Observed candidate resource counts:
 
@@ -422,7 +422,7 @@ Track these by directory unless a page depends on a specific file:
 
 ## Standalone App Repo
 
-Root: `C:\Users\steve\Code\ssapp`
+Root: `<ssapp repo>`
 
 Observed candidate resource counts after excluding fallback/build/temp/log output:
 
@@ -537,7 +537,7 @@ Track by directory unless a feature page needs exact asset behavior:
 
 ## Stevesbot Support Data
 
-Root: `C:\Users\steve\Code\stevesbot`
+Root: `<stevesbot repo>`
 
 This repo is support evidence, not product source of truth.
 
@@ -640,12 +640,12 @@ Suggested units:
 Use these commands to refresh this manifest later.
 
 ```powershell
-cd C:\Users\steve\Code\social_stream
+cd <social_stream repo>
 rg --files -g '!node_modules/**' -g '!.git/**' -g '!docs/agents/**' | Sort-Object
 
-cd C:\Users\steve\Code\ssapp
+cd <ssapp repo>
 rg --files -g '!node_modules/**' -g '!.git/**' -g '!resources/social_stream_fallback/**' -g '!dist/**' -g '!tmp/**' | Sort-Object
 
-cd C:\Users\steve\Code\stevesbot
+cd <stevesbot repo>
 rg --files -g '!resources/secrets/**' -g '!logs/**' -g '!data/backups/**' -g '!data/replays/**' | Sort-Object
 ```

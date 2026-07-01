@@ -4,7 +4,7 @@ Status: support-history refresh workflow pass on 2026-06-24. This page documents
 
 ## Purpose
 
-Use this page when an agent needs to refresh common-question priorities, support wording, stale-claim lists, or topic frequency signals from `C:\Users\steve\Code\stevesbot`.
+Use this page when an agent needs to refresh common-question priorities, support wording, stale-claim lists, or topic frequency signals from `<stevesbot repo>`.
 
 This is a workflow and query playbook. It is not a user-facing FAQ, not product runtime validation, and not permission to copy raw support conversations into documentation.
 
@@ -20,7 +20,7 @@ Start here for a refresh, then update:
 
 ## Hard Safety Rules
 
-- Do not read `C:\Users\steve\Code\stevesbot\resources\secrets`.
+- Do not read `<stevesbot repo>/resources/secrets`.
 - Do not paste raw support conversations, user names, server names, channel names, thread URLs, screenshots, attachment contents, private URLs, API keys, webhook URLs, OAuth tokens, passwords, or session IDs into docs.
 - Use counts, paraphrases, category labels, and verification targets.
 - Treat current `social_stream` and `ssapp` code/docs as higher priority than support history.
@@ -52,8 +52,8 @@ Start here for a refresh, then update:
 
 Before running queries:
 
-- Confirm the current docs root is `C:\Users\steve\Code\social_stream\docs\agents`.
-- Confirm the support repo exists at `C:\Users\steve\Code\stevesbot`.
+- Confirm the current docs root is `docs/agents`.
+- Confirm the support repo exists at `<stevesbot repo>`.
 - Confirm `sqlite3.exe` is available.
 - Read `stevesbot-resource-inventory.md`, `mining-method.md`, and `support-source-map.md`.
 - Decide the refresh level: quick, heavy, or intense.
@@ -63,8 +63,8 @@ Command checks:
 
 ```powershell
 Get-Command sqlite3.exe
-Get-ChildItem C:\Users\steve\Code\stevesbot\data\sqlite -Filter *.sqlite
-Get-ChildItem C:\Users\steve\Code\stevesbot\data\exports\qa -Filter qa-export-*.json | Sort-Object LastWriteTime -Descending | Select-Object -First 5 Name,Length,LastWriteTime
+Get-ChildItem <stevesbot repo>/data/sqlite -Filter *.sqlite
+Get-ChildItem <stevesbot repo>/data/exports/qa -Filter qa-export-*.json | Sort-Object LastWriteTime -Descending | Select-Object -First 5 Name,Length,LastWriteTime
 ```
 
 ## Current Snapshot
@@ -88,13 +88,13 @@ Run aggregate queries first. These are safe because they do not expose raw suppo
 ### Mined Thread Count
 
 ```powershell
-sqlite3.exe C:\Users\steve\Code\stevesbot\data\sqlite\knowledge.sqlite "select count(*) from mined_threads where products_json like '%Social Stream%';"
+sqlite3.exe <stevesbot repo>/data/sqlite/knowledge.sqlite "select count(*) from mined_threads where products_json like '%Social Stream%';"
 ```
 
 ### Category Counts
 
 ```powershell
-sqlite3.exe C:\Users\steve\Code\stevesbot\data\sqlite\knowledge.sqlite "select category, count(*) from mined_threads where products_json like '%Social Stream%' group by category order by count(*) desc limit 20;"
+sqlite3.exe <stevesbot repo>/data/sqlite/knowledge.sqlite "select category, count(*) from mined_threads where products_json like '%Social Stream%' group by category order by count(*) desc limit 20;"
 ```
 
 Current result:
@@ -113,7 +113,7 @@ Current result:
 ### Resolved Status Counts
 
 ```powershell
-sqlite3.exe C:\Users\steve\Code\stevesbot\data\sqlite\knowledge.sqlite "select resolved, count(*) from mined_threads where products_json like '%Social Stream%' group by resolved order by count(*) desc;"
+sqlite3.exe <stevesbot repo>/data/sqlite/knowledge.sqlite "select resolved, count(*) from mined_threads where products_json like '%Social Stream%' group by resolved order by count(*) desc;"
 ```
 
 Current result:
@@ -128,7 +128,7 @@ Use the unresolved count as a prioritization signal only. Do not assume every un
 ### Platform Label Counts
 
 ```powershell
-sqlite3.exe C:\Users\steve\Code\stevesbot\data\sqlite\knowledge.sqlite "select json_each.value, count(*) from mined_threads, json_each(mined_threads.platforms_json) where products_json like '%Social Stream%' group by json_each.value order by count(*) desc limit 20;"
+sqlite3.exe <stevesbot repo>/data/sqlite/knowledge.sqlite "select json_each.value, count(*) from mined_threads, json_each(mined_threads.platforms_json) where products_json like '%Social Stream%' group by json_each.value order by count(*) desc limit 20;"
 ```
 
 Current result:
@@ -159,7 +159,7 @@ Current result:
 ### Term Count Pack
 
 ```powershell
-sqlite3.exe C:\Users\steve\Code\stevesbot\data\sqlite\knowledge.sqlite "with terms(term) as (values ('TikTok'),('YouTube'),('Twitch'),('Kick'),('Rumble'),('Facebook'),('Instagram'),('OBS'),('TTS'),('dock.html'),('featured.html'),('WebSocket'),('OAuth'),('settings'),('CSS'),('Electron'),('Chrome Extension'),('Desktop App'),('plugin'),('custom'),('API'),('Event Flow')) select term, (select count(*) from mined_threads where products_json like '%Social Stream%' and searchable_text like '%' || term || '%') as count from terms order by count desc;"
+sqlite3.exe <stevesbot repo>/data/sqlite/knowledge.sqlite "with terms(term) as (values ('TikTok'),('YouTube'),('Twitch'),('Kick'),('Rumble'),('Facebook'),('Instagram'),('OBS'),('TTS'),('dock.html'),('featured.html'),('WebSocket'),('OAuth'),('settings'),('CSS'),('Electron'),('Chrome Extension'),('Desktop App'),('plugin'),('custom'),('API'),('Event Flow')) select term, (select count(*) from mined_threads where products_json like '%Social Stream%' and searchable_text like '%' || term || '%') as count from terms order by count desc;"
 ```
 
 Current result:
@@ -194,7 +194,7 @@ Use this to decide which docs deserve the next source-check or runtime-validatio
 ### Curated Support Record Counts
 
 ```powershell
-sqlite3.exe C:\Users\steve\Code\stevesbot\data\sqlite\stevesbot.sqlite "select product_id, count(*) from support_records where product_id like 'social-stream%' group by product_id order by count(*) desc;"
+sqlite3.exe <stevesbot repo>/data/sqlite/stevesbot.sqlite "select product_id, count(*) from support_records where product_id like 'social-stream%' group by product_id order by count(*) desc;"
 ```
 
 Current result:
@@ -207,7 +207,7 @@ Current result:
 ### Generated QA Confidence Summary
 
 ```powershell
-sqlite3.exe C:\Users\steve\Code\stevesbot\data\sqlite\stevesbot.sqlite "select count(*), round(avg(review_confidence), 3), min(review_confidence), max(review_confidence) from qa_entries where route_id like 'social-stream%';"
+sqlite3.exe <stevesbot repo>/data/sqlite/stevesbot.sqlite "select count(*), round(avg(review_confidence), 3), min(review_confidence), max(review_confidence) from qa_entries where route_id like 'social-stream%';"
 ```
 
 Current result:

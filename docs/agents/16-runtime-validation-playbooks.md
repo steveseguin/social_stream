@@ -359,7 +359,7 @@ Then run docs-only validation and scope checks.
 
 ## Docs-Only Validation Commands
 
-From `C:\Users\steve\Code\social_stream`:
+From `<social_stream repo>`:
 
 ```powershell
 git diff --check -- docs/agents
@@ -368,7 +368,7 @@ rg -n "[ \t]+$" docs/agents
 git status --short | Where-Object { $_ -notmatch '^(..|\?\?) docs/agents/' }
 ```
 
-Also check `C:\Users\steve\Code\ssapp` remains clean when docs-only work should not touch it:
+Also check `<ssapp repo>` remains clean when docs-only work should not touch it:
 
 ```powershell
 git status --short

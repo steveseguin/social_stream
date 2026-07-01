@@ -12,10 +12,10 @@ This page filters cross-product support macros down to SSN-relevant routing. Muc
 
 Curated support files inspected:
 
-- `C:\Users\steve\Code\stevesbot\resources\learnings\playbooks\rapid-response-decision-tree.md`
-- `C:\Users\steve\Code\stevesbot\resources\learnings\playbooks\rapid-macros-wave3.md`
-- `C:\Users\steve\Code\stevesbot\resources\learnings\playbooks\escalation-prompts-wave3.md`
-- `C:\Users\steve\Code\stevesbot\resources\learnings\playbooks\triage-macros.md`
+- `<stevesbot repo>/resources/learnings/playbooks/rapid-response-decision-tree.md`
+- `<stevesbot repo>/resources/learnings/playbooks/rapid-macros-wave3.md`
+- `<stevesbot repo>/resources/learnings/playbooks/escalation-prompts-wave3.md`
+- `<stevesbot repo>/resources/learnings/playbooks/triage-macros.md`
 
 Agent docs to use with this page:
 

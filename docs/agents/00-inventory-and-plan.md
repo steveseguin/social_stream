@@ -12,13 +12,13 @@ This first pass creates the working folder, records what already exists, and lay
 
 All new AI documentation should live under:
 
-`C:\Users\steve\Code\social_stream\docs\agents`
+`docs/agents`
 
 No other files should be edited for this documentation project unless Steve explicitly changes the scope.
 
 ## Existing Source Map
 
-### `C:\Users\steve\Code\social_stream`
+### `<social_stream repo>`
 
 Primary source for the Chrome extension, public web overlays, shared source scripts, and code loaded by the standalone app.
 
@@ -93,9 +93,9 @@ Important repo instruction already present:
 - Remote executable scripts/WASM should not be introduced into extension code.
 - `docs/event-reference.html` is the canonical event payload reference.
 
-### `C:\Users\steve\Code\ssapp`
+### `<ssapp repo>`
 
-Standalone Electron app source. This app uses Social Stream source files from `C:\Users\steve\Code\social_stream` as the primary runtime source. The fallback bundle is disposable and was intentionally not inspected.
+Standalone Electron app source. This app uses Social Stream source files from `<social_stream repo>` as the primary runtime source. The fallback bundle is disposable and was intentionally not inspected.
 
 Observed structure:
 
@@ -130,7 +130,7 @@ Do not mine for normal docs:
 
 - `resources/social_stream_fallback`: disposable fallback bundle, not source of truth.
 
-### `C:\Users\steve\Code\stevesbot`
+### `<stevesbot repo>`
 
 Historical support and knowledge base material. This is a supporting evidence source, not the product source of truth.
 
