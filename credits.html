@@ -890,7 +890,7 @@
 				if (typeof item.hasDonationActivity === 'boolean') {
 					user.hasDonationActivity = item.hasDonationActivity;
 				} else {
-					user.hasDonationActivity = user.donations > 0 || urlParams.has('onlydonors');
+					user.hasDonationActivity = user.donations > 0 || urlParams.has('onlydonors') || (urlParams.has('onlysupporters') && !user.isMember);
 				}
 				user.avatarUrl = item.avatarUrl || null;
 			});
