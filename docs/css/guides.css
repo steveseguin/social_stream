@@ -522,6 +522,19 @@ pre {
     word-break: break-word;
 }
 
+@media (max-width: 600px) {
+    .guide-table {
+        table-layout: fixed;
+        font-size: 1.32rem;
+    }
+
+    .guide-table th,
+    .guide-table td {
+        padding: 0.75rem 0.65rem;
+        overflow-wrap: anywhere;
+    }
+}
+
 .guide-image {
     display: block;
     width: 100%;
@@ -530,6 +543,12 @@ pre {
     border-radius: var(--radius-sm);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
+}
+
+.guide-image-narrow {
+    width: min(100%, 22rem);
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .guide-figure {
