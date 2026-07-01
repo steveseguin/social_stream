@@ -42,7 +42,7 @@ That source is a chat-only/popout capture. Open the exact supported chat URL, ke
 | --- | --- | --- | --- | --- |
 | Beamstream | `https://beamstream.gg/*/chat` | Rows with `[property="sender.name"]`, `[property="body"]`, `[property="sender.avatar"]` | Can attach `contentimg` from media rows and `sourceImg` from `[property="service"]`; respects `settings.ignorealternatives` | Capture is tied to the `/chat` URL; source-service icon behavior needs live validation. |
 | BoltPlus | `https://boltplus.tv/chatpopout/*` or `https://boltplus.tv/chatpopout?*` | `.chat-user-name`, `MuiAvatar` image, Draft-style `[data-text="true"]` text | Can attach a Giphy image as `contentimg` | DOM traversal depends on Material UI wrapper structure. |
-| Chzzk | `https://chzzk.naver.com/live/*/chat` | Generated Chzzk live-chat item, name, text, badges | Donation amount parsing; 10-second startup backlog suppression; duplicate cache; anti-throttle helpers | Donation currency/unit parsing includes current page text; live validation is needed for exact payload text. |
+| Chzzk | `https://chzzk.naver.com/live/*/chat`, `https://chzzk.naver.com/iframe/live/*/chat` | Generated Chzzk live-chat item, name, text, badges/emotes | Donation amount parsing; viewer count polling when enabled; 10-second startup backlog suppression; duplicate cache; anti-throttle helpers | The iframe chat route is supported for embedded/current popout flows; donation currency/unit parsing includes current page text. |
 | FloatPlane | `https://*.floatplane.com/popout/livechat` | `.chat-message-list` / `.LiveChatMessage`, `.chat-username`, `.chat-text` | Captures name color and text content | Public setup says keep the main window open; no tip/rich-event path in inspected source. |
 | GoodGame.ru | `https://goodgame.ru/*/chat*`, `https://www.goodgame.ru/*/chat*` | `.chat-section` message blocks, `.user .nick`, `.message` | Text badges from `.icon[tooltip]`; avatar fallback selectors; sends through direct runtime or wrapped background fallback | Skips old rows on connection; public setup requires chat URL. |
 | Mixcloud Live | `https://www.mixcloud.com/live/*/chat/` | Live chat rows with `data-testid="chatline"` or older `.mixcloud-live-chat-row-link` selectors | Extracts username from profile link; subscription rows can populate `hasDonation`; dedupes repeated JSON payloads | Selector paths support multiple layouts and need live validation. |
@@ -76,7 +76,7 @@ That source is a chat-only/popout capture. Open the exact supported chat URL, ke
 ## Do Not Promise
 
 - Send-back support for this group without current source-control validation.
-- Viewer counts except where explicitly documented for Parti and VK Video, and still only when the relevant settings and page data are available.
+- Viewer counts except where explicitly documented for Chzzk, Parti, and VK Video, and still only when the relevant settings and page data are available.
 - Donation/tip support except where the inspected source parses it: Chzzk, Parti, RokFin, Mixcloud subscription rows, and similar source-specific paths.
 - Normal watch/profile page capture when the public setup requires popout or chat-only URLs.
 - Current support for `vkplay.js` as a manifest-loaded parser; current chat-only manifest rows use `vkvideo.js`.

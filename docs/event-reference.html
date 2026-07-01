@@ -201,6 +201,13 @@
                             <td>Viewer count plus chat names, colors, badges, replies, and links</td>
                         </tr>
                         <tr>
+                            <td><strong>CHZZK</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Visible cheese donation rows</td>
+                            <td>Chat rows, badge images, emotes, and viewer count polls</td>
+                        </tr>
+                        <tr>
                             <td><strong>FLEX TV</strong></td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
@@ -1560,6 +1567,41 @@
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>The Parti heartbeat returns a live viewer count.</td>
                                 <td><code>meta</code> is the integer viewer count; the page reuses one heartbeat token per source window to avoid inflating counts.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="chzzk">
+                    <h3>CHZZK - Popout Chat Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/chzzk.js</code></p>
+                    <ul class="requirements">
+                        <li>Supports <code>https://chzzk.naver.com/live/*/chat</code> and <code>https://chzzk.naver.com/iframe/live/*/chat</code>.</li>
+                        <li>Viewer counts use CHZZK's live-status polling endpoint when viewer-count capture or hype mode is enabled.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>Visible CHZZK chat rows appear in the popout chat stream.</td>
+                                <td>Standard chat payload with <code>type: "chzzk"</code>, <code>nameColor</code>, badge image URLs in <code>chatbadges</code>, and rendered emotes in <code>chatmessage</code> unless text-only mode is enabled.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>donation</code></td>
+                                <td>Visible CHZZK cheese donation rows appear in chat.</td>
+                                <td><code>hasDonation</code> carries the displayed cheese amount. These rows do not set <code>data.event</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The live-status poll returns a viewer count.</td>
+                                <td><code>meta</code> is the integer viewer count.</td>
                             </tr>
                         </tbody>
                     </table>

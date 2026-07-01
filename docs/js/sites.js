@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
             instructions: `
                 <ul>
                     <li>Pop out the chat</li>
-                    <li>URL: https://chzzk.naver.com/live/*/chat</li>
+                    <li>URL: https://chzzk.naver.com/live/*/chat or https://chzzk.naver.com/iframe/live/*/chat</li>
                 </ul>
             `
         },

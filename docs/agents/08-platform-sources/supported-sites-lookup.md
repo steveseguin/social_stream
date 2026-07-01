@@ -81,7 +81,7 @@ It is listed as a [setup type] source. Start by [setup instruction]. If that doe
 | Piczel.tv | Use `https://piczel.tv/chat/*`. |
 | Nimo.TV | Use `https://www.nimo.tv/popout/chat/xxxx`. |
 | FloatPlane | Use `https://*.floatplane.com/popout/livechat`; keep the main window open. |
-| Chzzk.naver.com | Use `https://chzzk.naver.com/live/*/chat`. |
+| Chzzk.naver.com | Use `https://chzzk.naver.com/live/*/chat` or `https://chzzk.naver.com/iframe/live/*/chat`. |
 | Fansly | Use `https://fansly.com/chatroom/*`. |
 | Favorited | Use `https://studio.favorited.com/popout/chat`. |
 | Rutube | Use `https://rutube.ru/live/chat/*/`. |
