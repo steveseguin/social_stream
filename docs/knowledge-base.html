@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Short fixes for common Social Stream Ninja problems: blank overlays, wrong session, OBS audio, TikTok, YouTube, desktop app, and bot issues.">
+</head>
+<body>
+    <header><div class="container"><div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div><nav><ul><li><a href="../index.html">Home</a></li><li><a href="features.html">Features</a></li><li><a href="download.html">Download</a></li><li><a href="guides.html" class="active">Guides</a></li><li><a href="commands.html">Commands &amp; API</a></li><li><a href="supported-sites.html">Supported Sites</a></li><li><a href="templates.html">Templates</a></li><li><a href="support.html">Support</a></li></ul></nav><div class="header-controls"><div class="mobile-nav-toggle"><span></span><span></span><span></span></div></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Knowledge Base</h1><p>Short answers for common problems. Use guides when you need the full walkthrough.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Blank OBS Overlay</h2>
+                <p>First check the dock. If the dock is empty, fix the source/platform. If the dock works, open the exact overlay URL in a normal browser, confirm the same <code>session</code>, then refresh the OBS browser source.</p>
+                <p><a href="obs-troubleshooting.html">Open OBS Troubleshooting</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Wrong Session</h2>
+                <p>The source, dock, overlay, bot, and Event Flow pages must use the same session ID. Treat session IDs like room names: different spelling means different rooms.</p>
+                <pre>dock.html?session=YOUR_SESSION</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2>OBS Cannot Hear TTS</h2>
+                <p>Plain system TTS often speaks through the computer but not through OBS Browser Source. Use a provider/browser TTS mode such as Kokoro, Piper, Kitten, eSpeak, OpenAI-compatible, or a cloud provider, or route system audio separately.</p>
+                <p><a href="tts-setup-guide.html">Open TTS Setup Guide</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Chrome Works But The Desktop App Does Not</h2>
+                <p>The desktop app uses Electron sessions, not your normal Chrome profile. Sign in inside the app source window or use the Chrome extension path when the platform blocks embedded/app browser contexts.</p>
+                <p><a href="standalone-app-modes.html">Open Standalone App Modes</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2>TikTok Fails Or Changes Modes</h2>
+                <p>Record the app mode, signing provider, status text, app version, and whether chat is visible in Standard mode. Test one TikTok mode at a time.</p>
+                <p><a href="tiktok-app-modes-guide.html">Open TikTok App Modes</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2>YouTube Chat Is Missing</h2>
+                <p>Confirm the stream is live, live chat is visible, and you are using the right YouTube path: live chat, static comments, Standard capture, or WebSocket/API mode.</p>
+                <p><a href="youtube-setup-guide.html">Open YouTube Setup Guide</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Bot Replies Do Not Send</h2>
+                <p>Reading chat is not the same as posting chat. Check platform send-back support, account login, account role, source mode, provider response, and rate limits.</p>
+                <p><a href="chatbot-basics-guide.html">Open Chat Bot Basics</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Event Flow Does Nothing</h2>
+                <p>Confirm the source event reaches the dock. For audio, media, and OBS actions, keep <code>actions.html?session=YOUR_SESSION</code> open with the same session.</p>
+                <p><a href="event-flow-recipes.html">Open Event Flow Recipes</a></p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

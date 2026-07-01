@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlay Customization Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Practical guide for customizing Social Stream Ninja overlays with templates, URL parameters, custom CSS, fonts, and OBS browser source CSS.">
+</head>
+<body>
+    <header><div class="container"><div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div><nav><ul><li><a href="../index.html">Home</a></li><li><a href="features.html">Features</a></li><li><a href="download.html">Download</a></li><li><a href="guides.html" class="active">Guides</a></li><li><a href="commands.html">Commands &amp; API</a></li><li><a href="supported-sites.html">Supported Sites</a></li><li><a href="templates.html">Templates</a></li><li><a href="support.html">Support</a></li></ul></nav><div class="header-controls"><div class="mobile-nav-toggle"><span></span><span></span><span></span></div></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Overlay Customization</h1><p>Start with templates, then use URL options and CSS only where needed.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Fastest Path: Pick A Template</h2>
+                <p>Templates are the easiest way to get a polished overlay without writing CSS from scratch.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/template-gallery-browse.png" alt="Templates gallery with search, category filters, and template previews" class="guide-image">
+                    <figcaption>Search and filter templates, then copy the generated overlay URL into OBS.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Customization Levels</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Level</th><th>Use For</th><th>Where</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Level">Template controls</td><td data-label="Use For">Quick visual changes.</td><td data-label="Where"><a href="templates.html">Templates Gallery</a>.</td></tr>
+                        <tr><td data-label="Level">URL parameters</td><td data-label="Use For">Behavior, labels, filters, scale, limits.</td><td data-label="Where">Overlay URL query string.</td></tr>
+                        <tr><td data-label="Level">OBS Custom CSS</td><td data-label="Use For">Small style overrides for one OBS source.</td><td data-label="Where">OBS Browser Source properties.</td></tr>
+                        <tr><td data-label="Level">Hosted/self-hosted CSS</td><td data-label="Use For">Reusable styles across overlays.</td><td data-label="Where"><code>&amp;css=</code> or <code>&amp;b64css=</code>.</td></tr>
+                        <tr><td data-label="Level">Custom overlay</td><td data-label="Use For">Fully custom behavior.</td><td data-label="Where"><a href="index.html?file=customoverlays.md">Custom overlays guide</a>.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common URL Options</h2>
+                <pre>featured.html?session=YOUR_SESSION&amp;scale=1.1&amp;hidesource&amp;limit=10</pre>
+                <ul class="guide-list">
+                    <li><code>session</code> connects the overlay to the right chat room.</li>
+                    <li><code>scale</code> changes size without rewriting CSS.</li>
+                    <li><code>limit</code> controls how many messages stay visible on supported pages.</li>
+                    <li><code>onlytype</code> and <code>hidetype</code> filter platform types on supported pages.</li>
+                    <li><code>css</code> and <code>b64css</code> load custom styling.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Preview Before OBS</h2>
+                <figure class="guide-figure">
+                    <img src="images/guides/template-sample-overlay-preview.png" alt="Sample overlay preview showing styled Social Stream chat message output" class="guide-image">
+                    <figcaption>Open the final URL in a normal browser before testing OBS.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common Fixes</h2>
+                <ul class="guide-list">
+                    <li><strong>Looks right in browser, wrong in OBS:</strong> remove OBS Custom CSS and refresh the browser source.</li>
+                    <li><strong>Font missing:</strong> use a direct HTTPS font file and check CORS/hotlink rules.</li>
+                    <li><strong>Everything is invisible:</strong> check opacity, color, filters, and whether the page needs a featured/event payload.</li>
+                    <li><strong>URL changes do nothing:</strong> refresh the OBS source or replace the URL.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Social Stream Ninja Advanced Docs</title>
-  <meta name="description" content="Advanced Social Stream Ninja documentation for users, support workflows, and AI agents.">
+  <title>Social Stream Ninja Docs</title>
+  <meta name="description" content="Social Stream Ninja documentation, guides, knowledge base, support workflows, and AI agent notes.">
   <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
   <script defer src="../thirdparty/marked.umd.min.js"></script>
   <style>
@@ -328,6 +328,52 @@
       border-radius: 8px;
     }
 
+    .landing-intro {
+      max-width: 760px;
+      margin-bottom: 24px;
+    }
+
+    .landing-intro p {
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .landing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .landing-card {
+      display: block;
+      min-height: 132px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      padding: 16px;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .landing-card:hover {
+      border-color: var(--accent);
+      text-decoration: none;
+    }
+
+    .landing-card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--accent-strong);
+      font-size: 17px;
+    }
+
+    .landing-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
     .mobile-toggle {
       display: none;
     }
@@ -375,12 +421,15 @@
         <img src="../icons/logo.svg" alt="Social Stream Ninja logo">
         <div>
           <strong>Social Stream Ninja</strong>
-          <span>Advanced support docs</span>
+          <span>Guides, support notes, and agent references</span>
         </div>
       </div>
       <input class="search" id="search" type="search" placeholder="Filter docs" autocomplete="off">
       <div class="nav-actions">
         <a class="button" href="../index.html">Home</a>
+        <a class="button" href="guides.html">Guides</a>
+        <a class="button" href="knowledge-base.html">Knowledge Base</a>
+        <a class="button" href="support.html">Support</a>
         <a class="button" href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">GitHub</a>
       </div>
       <nav class="sidebar-content" id="sidebarContent" aria-label="Documentation navigation">Loading sitemap...</nav>
@@ -473,6 +522,33 @@
     function fileFromLocation() {
       const params = new URLSearchParams(window.location.search);
       return normalizeDocPath(params.get("file") || DEFAULT_FILE);
+    }
+
+    function hasRequestedFile() {
+      return new URLSearchParams(window.location.search).has("file");
+    }
+
+    function renderDocsHome() {
+      state.currentFile = "";
+      elements.content.className = "content";
+      elements.currentPath.textContent = "Docs home";
+      elements.rawLink.style.display = "none";
+      elements.content.innerHTML = `
+        <div class="landing-intro">
+          <h1>Social Stream Ninja Docs</h1>
+          <p>Start with the public guides for setup and troubleshooting. Use the advanced support library when you need deeper notes for support workflows or AI agents.</p>
+        </div>
+        <div class="landing-grid">
+          <a class="landing-card" href="guides.html"><strong>Guide Directory</strong><span>Searchable guide tree for OBS, platforms, AI, TTS, overlays, and automation.</span></a>
+          <a class="landing-card" href="knowledge-base.html"><strong>Knowledge Base</strong><span>Short fixes for blank overlays, wrong sessions, OBS audio, bots, YouTube, and TikTok.</span></a>
+          <a class="landing-card" href="obs-quick-start.html"><strong>OBS Quick Start</strong><span>Session, dock URL, overlay URL, and first browser source setup.</span></a>
+          <a class="landing-card" href="obs-troubleshooting.html"><strong>OBS Troubleshooting</strong><span>Decision tree for blank overlays, dock checks, sessions, and silent TTS.</span></a>
+          <a class="landing-card" href="platform-setup-picker.html"><strong>Platform Setup Picker</strong><span>Choose browser chat, popout chat, source page, desktop app, or API mode.</span></a>
+          <a class="landing-card" href="tts-setup-guide.html"><strong>TTS Setup Guide</strong><span>OBS-safe voice setup, provider choices, Kokoro notes, and audio routing.</span></a>
+          <a class="landing-card" href="ai-modes-guide.html"><strong>AI Modes</strong><span>Chat bot, cohost, moderation, RAG, overlay builder, and prompt routing basics.</span></a>
+          <a class="landing-card" href="?file=agents/common-guides.md"><strong>Advanced Support Library</strong><span>Detailed Markdown notes for support work, maintainers, and AI agents.</span></a>
+        </div>
+      `;
     }
 
     function updateUrl(path) {
@@ -631,6 +707,7 @@
       elements.content.textContent = "Loading documentation...";
       elements.currentPath.textContent = cleanPath;
       elements.rawLink.href = cleanPath;
+      elements.rawLink.style.display = "";
       setActiveLink(cleanPath);
       if (push) updateUrl(cleanPath + hash);
       try {
@@ -699,11 +776,21 @@
       }
     });
 
-    window.addEventListener("popstate", () => loadDoc(fileFromLocation(), false));
+    window.addEventListener("popstate", () => {
+      if (hasRequestedFile()) {
+        loadDoc(fileFromLocation(), false);
+      } else {
+        renderDocsHome();
+      }
+    });
 
     document.addEventListener("DOMContentLoaded", async () => {
       await loadSitemap();
-      loadDoc(fileFromLocation() + window.location.hash, false);
+      if (hasRequestedFile()) {
+        loadDoc(fileFromLocation() + window.location.hash, false);
+      } else {
+        renderDocsHome();
+      }
     });
   </script>
 </body>
