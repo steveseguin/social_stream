@@ -1,4 +1,4 @@
-const STREAM_ENDPOINT = 'https://www.googleapis.com/youtube/v3/liveChat/messages:stream';
+const STREAM_ENDPOINT = 'https://www.googleapis.com/youtube/v3/liveChat/messages/stream';
 const DEFAULT_STREAMING = {
   endpoint: STREAM_ENDPOINT,
   maxResults: 500,

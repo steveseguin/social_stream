@@ -115,6 +115,12 @@ function convertToUSD(valueStr, source = '') {
       jewels: 0.005,
       membership: 4.99,
       giftmembership: 4.99,
+      'youtube gift': 0.01,
+      'youtube gifts': 0.01,
+      youtubegift: 0.01,
+      youtubegifts: 0.01,
+      gift: 0.01,
+      gifts: 0.01,
       sponsorship: 4.99
     },
     youtubeshorts: {
@@ -124,6 +130,12 @@ function convertToUSD(valueStr, source = '') {
       jewels: 0.005,
       membership: 4.99,
       giftmembership: 4.99,
+      'youtube gift': 0.01,
+      'youtube gifts': 0.01,
+      youtubegift: 0.01,
+      youtubegifts: 0.01,
+      gift: 0.01,
+      gifts: 0.01,
       sponsorship: 4.99
     },
     kick: {

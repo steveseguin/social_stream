@@ -76,7 +76,7 @@ Confirmed behavior:
 - It can send through `chrome.runtime.sendMessage` in the extension or through `window.ninjafy.sendMessage` in the standalone app.
 - It listens for `SOURCE_CONTROL` and `SEND_MESSAGE` messages from the extension/app bridge.
 - It requests settings from the background page and forwards settings changes to the source page through custom DOM events.
-- `providers/youtube/liveChat.js` supports polling mode and streaming mode. Default polling interval is 4000 ms; the streaming endpoint is `https://www.googleapis.com/youtube/v3/liveChat/messages:stream`.
+- `providers/youtube/liveChat.js` supports polling mode and streaming mode. Default polling interval is 4000 ms; the streaming endpoint is `https://www.googleapis.com/youtube/v3/liveChat/messages/stream`.
 - Provider events include status, chat, membership, Super Chat, Super Sticker, sponsor, ban, delete message, metric, error, and debug.
 
 Event-reference notes:
@@ -105,8 +105,9 @@ Support implication: if YouTube sign-in fails in the standalone app, check wheth
 
 Important event names from `docs/event-reference.html`:
 
-- Standard DOM: `sponsorship`, `giftpurchase`, `giftredemption`, `resub`, `jeweldonation`, `donation`, `thankyou`, `redirect`, `viewer_update`.
-- WebSocket/Data API: `donation`, `supersticker`, `jeweldonation`, `sponsorship`, `resub`, `giftpurchase`, `giftredemption`, `membermilestone`, `viewer_update`, `subscriber_update`, `view_update`, `live_chat_ended`, `user_banned`, `new_follower`.
+- Standard DOM: `sponsorship`, `giftpurchase`, `giftredemption`, `resub`, `thankyou`, `redirect`, `viewer_update`.
+- WebSocket/Data API: `supersticker`, `sponsorship`, `resub`, `giftpurchase`, `giftredemption`, `membermilestone`, `viewer_update`, `subscriber_update`, `view_update`, `live_chat_ended`, `user_banned`, `new_follower`.
+- Donation-style rows use `hasDonation` without forcing an event name. YouTube Gifts set `hasDonation` to `N Jewels` when YouTube exposes a jewel count, or `1 YouTube Gift` as the hidden-count fallback, and keep display details in `subtitle`, `contentimg`, and minimal `meta.youtubeGift`.
 
 Cross-platform note:
 

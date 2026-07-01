@@ -280,9 +280,7 @@
 			}
 		}
 
-		var metaGift = {
-			eventType: "jeweldonation"
-		};
+		var metaGift = {};
 		if (giftName) {
 			metaGift.giftName = giftName;
 		}
@@ -296,8 +294,7 @@
 		return {
 			chatname: authorName,
 			chatmessage: escapeHtml(plainMessage),
-			hasDonation: jewelAmount ? jewelAmount + " Jewels" : (giftName || getTranslation("youtube-gift", "YouTube Gift")),
-			donoValue: jewelAmount ? parseInt(jewelAmount, 10) / 100 : "",
+			hasDonation: jewelAmount ? jewelAmount + " Jewels" : "1 YouTube Gift",
 			giftName: giftName,
 			jewelsAmount: jewelAmount ? parseInt(jewelAmount, 10) : "",
 			giftUrl: giftUrl,
@@ -1313,7 +1310,6 @@
 		}
 		if (jewelDonation && jewelDonation.hasDonation) {
 			hasDonation = jewelDonation.hasDonation;
-			donoValue = jewelDonation.donoValue;
 		}
 
 
@@ -1459,7 +1455,6 @@
 				jewelDonation = jewelDonation || getYouTubeJewelDonationDetails(ele);
 				if (jewelDonation) {
 				  hasDonation = jewelDonation.hasDonation;
-				  donoValue = jewelDonation.donoValue;
 				  if (!chatmessage) {
 					chatmessage = jewelDonation.chatmessage;
 				  }
@@ -1657,7 +1652,9 @@
 			}
 		}
 		
-		data.event = eventType;
+		if (eventType && eventType !== "jeweldonation") {
+			data.event = eventType;
+		}
 		
 		//if (eventType){
 			//console.log(data);

@@ -349,14 +349,9 @@
                                 <td><code>subtitle</code> captures new tier label; <code>membership</code> remains “MEMBERSHIP”.</td>
                             </tr>
                             <tr>
-                                <td class="donation-event"><code>jeweldonation</code></td>
-                                <td>YouTube Gifts powered by Jewels (<code>yt-gift-message-view-model</code>).</td>
-                                <td>Parses jewel count into <code>hasDonation</code> ("500 Jewels") when present; if YouTube hides the count, <code>hasDonation</code> carries the gift name and <code>donoValue</code> is omitted. Gift images use <code>contentimg</code>, and gift details are mirrored under <code>meta.youtubeGift</code>.</td>
-                            </tr>
-                            <tr>
-                                <td class="donation-event"><code>donation</code></td>
-                                <td>Super Chats, Super Stickers, donation announcement cards.</td>
-                                <td><code>hasDonation</code> carries site-formatted amount; when no message is present the text fallback triggers <code>thankyou</code>.</td>
+                                <td class="donation-event"><code>hasDonation</code></td>
+                                <td>Super Chats, Super Stickers, donation announcement cards, and YouTube Gifts powered by Jewels (<code>yt-gift-message-view-model</code>).</td>
+                                <td>Donation-style rows should key off <code>hasDonation</code>, not an event name. YouTube Gifts use <code>N Jewels</code> when present, or <code>1 YouTube Gift</code> when YouTube hides the count. Gift images use <code>contentimg</code>, gift labels use <code>subtitle</code>, and minimal gift details are mirrored under <code>meta.youtubeGift</code>.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>thankyou</code></td>
@@ -398,9 +393,9 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="donation-event"><code>donation</code></td>
+                                <td class="donation-event"><code>hasDonation</code></td>
                                 <td>Super Chat entries from the Data API backlog or stream polling.</td>
-                                <td><code>hasDonation</code> preserves site amount (currency + value); badges/avatars come from API metadata.</td>
+                                <td><code>hasDonation</code> preserves site amount (currency + value); badges/avatars come from API metadata. No donation-only event name is required.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>supersticker</code></td>
@@ -408,9 +403,9 @@
                                 <td><code>hasDonation</code> holds the amount; <code>chatmessage</code> contains decoded description text.</td>
                             </tr>
                             <tr>
-                                <td class="donation-event"><code>jeweldonation</code></td>
+                                <td class="donation-event"><code>hasDonation</code></td>
                                 <td>YouTube <code>giftEvent</code> messages when viewers redeem Jewels for Gifts.</td>
-                                <td><code>hasDonation</code> holds “N Jewels”; <code>donoValue</code> estimates Ruby revenue in USD; <code>contentimg</code> uses the gift asset URL when exposed; <code>meta.youtubeGift</code> carries <code>giftName</code>, <code>jewelsAmount</code>, <code>giftUrl</code>, visual-effect/combo fields, and estimated Ruby revenue.</td>
+                                <td><code>hasDonation</code> holds <code>N Jewels</code>, or <code>1 YouTube Gift</code> when YouTube hides the count; <code>contentimg</code> uses the gift asset URL when exposed; <code>subtitle</code> carries the gift label; <code>meta.youtubeGift</code> identifies the row as a YouTube Gift for filters that need that distinction.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>sponsorship</code></td>
@@ -1751,7 +1746,7 @@
                         </tr>
                         <tr>
                             <td><strong>Donation/tip</strong></td>
-                            <td><code>donation</code> (Super Chat), <code>jeweldonation</code> (Gifts)</td>
+                            <td><code>hasDonation</code> (Super Chat, Gifts)</td>
                             <td><code>cheer</code> (bits)</td>
                             <td><code>donation</code></td>
                         </tr>
@@ -1805,7 +1800,7 @@
                     <li><strong>YouTube uses <code>sponsorship</code></strong> for new members, while Twitch and Kick use <code>new_subscriber</code>. Consider checking both when building cross-platform triggers.</li>
                     <li><strong><code>resub</code> is consistent</strong> across all three platforms for renewals.</li>
                     <li><strong>Gift events differ:</strong> YouTube uses <code>giftpurchase</code>/<code>giftredemption</code>, while Twitch and Kick use <code>subscription_gift</code>.</li>
-                    <li><strong>Donations vary by platform:</strong> YouTube has Super Chats (<code>donation</code>) and Gifts (<code>jeweldonation</code>), Twitch has bits (<code>cheer</code>), and Kick has tips (<code>donation</code>).</li>
+                    <li><strong>Donations vary by platform:</strong> YouTube Super Chats and Gifts use <code>hasDonation</code>, Twitch has bits (<code>cheer</code>), and Kick has tips (<code>donation</code>).</li>
                     <li><strong><code>new_follower</code> is now consistent</strong> across all three platforms, but YouTube has a 4-hour API delay and only shows subscribers with public subscription lists.</li>
                 </ul>
             </section>
@@ -1867,8 +1862,8 @@
                         </tr>
                         <tr>
                             <td>YouTube: Standard vs Websocket</td>
-                            <td>Shared: <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>donation</code>, <code>jeweldonation</code>, <code>viewer_update</code>. Standard-only: <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>.</td>
-                            <td>Core event names are aligned across both; YouTube gifts/donations use shared event paths in both modes (<code>donation</code>, <code>jeweldonation</code>, <code>giftpurchase</code>, <code>giftredemption</code>), with WebSocket mode adding extras like <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>.</td>
+                            <td>Shared: <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>viewer_update</code>. Standard-only: <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>.</td>
+                            <td>Core member/event names are aligned across both; YouTube paid rows use <code>hasDonation</code> in both modes, with WebSocket mode adding extras like <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>.</td>
                         </tr>
                         <tr>
                             <td>All surfaces</td>
