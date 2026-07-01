@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
     <meta name="description" content="Comprehensive guides for getting started with Social Stream Ninja, including setup, customization, and troubleshooting.">
 </head>
-<body>
+<body class="guides-page">
 	<header>
 		<div class="container">
 			<div class="logo">
@@ -78,95 +78,105 @@
 
 	<section id="guide-directory" class="guide-directory">
 		<div class="container">
-			<h2>Guide Directory</h2>
-			<p class="section-subtitle">Open a category, then jump straight to the guide you need</p>
-			<div class="guide-filter">
-				<label for="guide-filter-input">Filter guides</label>
-				<input id="guide-filter-input" type="search" placeholder="Search OBS, TikTok, TTS, API..." autocomplete="off">
-				<button id="guide-filter-clear" type="button">Clear</button>
+			<div class="guide-directory-header">
+				<div>
+					<h2>Find A Guide</h2>
+					<p class="section-subtitle">Search, or open one category. Start with OBS if you just need chat on screen.</p>
+				</div>
+				<div class="guide-filter">
+					<label for="guide-filter-input">Filter</label>
+					<input id="guide-filter-input" type="search" placeholder="OBS, TikTok, TTS, API..." autocomplete="off">
+					<button id="guide-filter-clear" type="button">Clear</button>
+				</div>
 			</div>
 			<div class="guide-tree">
 				<details class="guide-tree-group" open>
 					<summary>
-						<span>Start Here</span>
+						<span class="guide-tree-title"><i class="fas fa-rocket" aria-hidden="true"></i> Start Here</span>
 						<small>Install, connect chat, add OBS overlays</small>
 					</summary>
 					<ul>
-						<li><a href="../docs/download.html">Install or update</a><span>Browser extension and desktop app downloads.</span></li>
-						<li><a href="../docs/obs-quick-start.html">OBS quick start</a><span>Session, dock, overlay, and browser source setup.</span></li>
-						<li><a href="../docs/platform-setup-picker.html">Platform setup picker</a><span>Choose popout, toggle, app, source page, or API mode.</span></li>
-						<li><a href="#extension-getting-started">Browser extension setup</a><span>Open chat, dock, and overlay links.</span></li>
-						<li><a href="#standalone-getting-started">Desktop app setup</a><span>Use managed source windows instead of browser tabs.</span></li>
+						<li><a href="../docs/download.html"><i class="fas fa-download" aria-hidden="true"></i><span><strong>Install or update</strong><small>Extension and desktop app downloads.</small></span></a></li>
+						<li><a href="../docs/obs-quick-start.html"><i class="fas fa-desktop" aria-hidden="true"></i><span><strong>OBS quick start</strong><small>Session, dock, overlay, browser source.</small></span></a></li>
+						<li><a href="../docs/platform-setup-picker.html"><i class="fas fa-map-signs" aria-hidden="true"></i><span><strong>Platform setup picker</strong><small>Choose browser, popout, app, or source page.</small></span></a></li>
+						<li><a href="#extension-getting-started"><i class="fas fa-puzzle-piece" aria-hidden="true"></i><span><strong>Browser extension setup</strong><small>Open chat, dock, and overlay links.</small></span></a></li>
+						<li><a href="#standalone-getting-started"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>Desktop app setup</strong><small>Managed source windows instead of tabs.</small></span></a></li>
 					</ul>
 				</details>
 				<details class="guide-tree-group">
 					<summary>
-						<span>Overlays And Customization</span>
+						<span class="guide-tree-title"><i class="fas fa-layer-group" aria-hidden="true"></i> Overlays And Customization</span>
 						<small>Templates, style options, fonts, events</small>
 					</summary>
 					<ul>
-						<li><a href="../docs/templates.html">Templates gallery</a><span>Ready-made overlay layouts.</span></li>
-						<li><a href="#extension-customization">Overlay customization</a><span>URL options, CSS, and layout controls.</span></li>
-						<li><a href="../docs/custom-fonts.html">Custom fonts</a><span>Self-hosted fonts and CSS examples.</span></li>
-						<li><a href="../docs/event-reference.html">Event reference</a><span>Payload fields for alerts, events, and overlays.</span></li>
-						<li><a href="#extension-hype-train-top-bar">Hype train top bar</a><span>Dedicated Twitch hype train overlay.</span></li>
-						<li><a href="#extension-first-time-chatters">First-time chatters</a><span>Highlight new viewers in chat.</span></li>
+						<li><a href="../docs/templates.html"><i class="fas fa-th-large" aria-hidden="true"></i><span><strong>Templates gallery</strong><small>Ready-made overlay layouts.</small></span></a></li>
+						<li><a href="#extension-customization"><i class="fas fa-paint-brush" aria-hidden="true"></i><span><strong>Overlay customization</strong><small>URL options, CSS, and layout controls.</small></span></a></li>
+						<li><a href="../docs/custom-fonts.html"><i class="fas fa-font" aria-hidden="true"></i><span><strong>Custom fonts</strong><small>Self-hosted fonts and CSS examples.</small></span></a></li>
+						<li><a href="../docs/event-reference.html"><i class="fas fa-list-alt" aria-hidden="true"></i><span><strong>Event reference</strong><small>Payload fields for alerts and overlays.</small></span></a></li>
+						<li><a href="#extension-hype-train-top-bar"><i class="fas fa-fire" aria-hidden="true"></i><span><strong>Hype train top bar</strong><small>Dedicated Twitch hype train overlay.</small></span></a></li>
+						<li><a href="#extension-first-time-chatters"><i class="fas fa-user-plus" aria-hidden="true"></i><span><strong>First-time chatters</strong><small>Highlight new viewers in chat.</small></span></a></li>
 					</ul>
 				</details>
 				<details class="guide-tree-group">
 					<summary>
-						<span>Automation And Integrations</span>
+						<span class="guide-tree-title"><i class="fas fa-cogs" aria-hidden="true"></i> Automation And Integrations</span>
 						<small>API, commands, Event Flow, webhooks</small>
 					</summary>
 					<ul>
-						<li><a href="../docs/commands.html">Commands and API</a><span>WebSocket actions and integration examples.</span></li>
-						<li><a href="#extension-event-flow">Event Flow</a><span>Build rule-based actions from chat and events.</span></li>
-						<li><a href="../actions/event-flow-guide.html">Detailed Event Flow guide</a><span>Full editor and action-flow reference.</span></li>
-						<li><a href="index.html?file=kick-channel-points-event-flow.md">Kick rewards sounds/media</a><span>Reward-triggered action flow setup.</span></li>
-						<li><a href="#extension-webhooks">Webhooks</a><span>Stripe, Ko-fi, Buy Me a Coffee, Fourthwall.</span></li>
-						<li><a href="#extension-midi">MIDI</a><span>Trigger local MIDI actions from chat.</span></li>
+						<li><a href="../docs/commands.html"><i class="fas fa-terminal" aria-hidden="true"></i><span><strong>Commands and API</strong><small>WebSocket actions and examples.</small></span></a></li>
+						<li><a href="#extension-event-flow"><i class="fas fa-project-diagram" aria-hidden="true"></i><span><strong>Event Flow</strong><small>Rule-based actions from chat and events.</small></span></a></li>
+						<li><a href="../actions/event-flow-guide.html"><i class="fas fa-sitemap" aria-hidden="true"></i><span><strong>Detailed Event Flow guide</strong><small>Full editor and action-flow reference.</small></span></a></li>
+						<li><a href="index.html?file=kick-channel-points-event-flow.md"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>Kick rewards sounds/media</strong><small>Reward-triggered action flow setup.</small></span></a></li>
+						<li><a href="#extension-webhooks"><i class="fas fa-link" aria-hidden="true"></i><span><strong>Webhooks</strong><small>Stripe, Ko-fi, Fourthwall, and more.</small></span></a></li>
+						<li><a href="#extension-midi"><i class="fas fa-sliders-h" aria-hidden="true"></i><span><strong>MIDI</strong><small>Trigger local MIDI actions from chat.</small></span></a></li>
 					</ul>
 				</details>
 				<details class="guide-tree-group">
 					<summary>
-						<span>AI And TTS</span>
+						<span class="guide-tree-title"><i class="fas fa-robot" aria-hidden="true"></i> AI And TTS</span>
 						<small>Text-to-speech, local voices, AI replies</small>
 					</summary>
 					<ul>
-						<li><a href="../docs/tts.html">TTS guide</a><span>Voice providers and overlay audio setup.</span></li>
-						<li><a href="../docs/local-tts.html">Local AI TTS</a><span>Local/private browser and server voice options.</span></li>
-						<li><a href="../docs/ai-cohost-guide.html">AI cohost</a><span>AI chat summaries, prompts, and cohost tools.</span></li>
-						<li><a href="../docs/twitch-bot-account-chatbot.html">Twitch bot account</a><span>Use a separate Twitch bot for AI replies.</span></li>
+						<li><a href="../docs/tts.html"><i class="fas fa-volume-up" aria-hidden="true"></i><span><strong>TTS guide</strong><small>Voice providers and overlay audio setup.</small></span></a></li>
+						<li><a href="../docs/local-tts.html"><i class="fas fa-microphone-alt" aria-hidden="true"></i><span><strong>Local AI TTS</strong><small>Private browser and server voice options.</small></span></a></li>
+						<li><a href="../docs/ai-cohost-guide.html"><i class="fas fa-brain" aria-hidden="true"></i><span><strong>AI cohost</strong><small>Summaries, prompts, and cohost tools.</small></span></a></li>
+						<li><a href="../docs/twitch-bot-account-chatbot.html"><i class="fas fa-user-astronaut" aria-hidden="true"></i><span><strong>Twitch bot account</strong><small>Use a separate Twitch bot for AI replies.</small></span></a></li>
 					</ul>
 				</details>
 				<details class="guide-tree-group">
 					<summary>
-						<span>Platform Guides</span>
+						<span class="guide-tree-title"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> Platform Guides</span>
 						<small>TikTok, YouTube, Twitch, Kick, supported sites</small>
 					</summary>
 					<ul>
-						<li><a href="../docs/tiktok-guide.html">TikTok guide</a><span>Connection modes, app setup, and common failures.</span></li>
-						<li><a href="../docs/youtube-project-setup.html">YouTube project setup</a><span>API project and OAuth setup.</span></li>
-						<li><a href="#standalone-tiktok">TikTok in the desktop app</a><span>Standalone app TikTok mode notes.</span></li>
-						<li><a href="../docs/supported-sites.html">Supported sites list</a><span>All public platform setup notes.</span></li>
+						<li><a href="../docs/tiktok-guide.html"><i class="fas fa-comment-dots" aria-hidden="true"></i><span><strong>TikTok guide</strong><small>Connection modes and common failures.</small></span></a></li>
+						<li><a href="../docs/youtube-project-setup.html"><i class="fab fa-youtube" aria-hidden="true"></i><span><strong>YouTube project setup</strong><small>API project and OAuth setup.</small></span></a></li>
+						<li><a href="#standalone-tiktok"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>TikTok in the desktop app</strong><small>Standalone app TikTok mode notes.</small></span></a></li>
+						<li><a href="../docs/supported-sites.html"><i class="fas fa-globe" aria-hidden="true"></i><span><strong>Supported sites list</strong><small>All public platform setup notes.</small></span></a></li>
 					</ul>
 				</details>
-				<details class="guide-tree-group" open>
+				<details class="guide-tree-group">
 					<summary>
-						<span>Troubleshooting And Support</span>
+						<span class="guide-tree-title"><i class="fas fa-life-ring" aria-hidden="true"></i> Troubleshooting And Support</span>
 						<small>Missing chat, blank overlays, deeper support docs</small>
 					</summary>
 					<ul>
-						<li><a href="#extension-troubleshooting">Browser extension troubleshooting</a><span>Missing chat, permissions, throttling, and toggles.</span></li>
-						<li><a href="#standalone-troubleshooting">Desktop app troubleshooting</a><span>App source windows, updates, and setup checks.</span></li>
-						<li><a href="../docs/support.html">Support page</a><span>Discord, GitHub issues, and contribution paths.</span></li>
-						<li><a href="index.html?file=agents/common-guides.md">Advanced support index</a><span>Deeper routing for support workflows and AI agents.</span></li>
+						<li><a href="#extension-troubleshooting"><i class="fas fa-tools" aria-hidden="true"></i><span><strong>Browser extension troubleshooting</strong><small>Missing chat, permissions, throttling, toggles.</small></span></a></li>
+						<li><a href="#standalone-troubleshooting"><i class="fas fa-wrench" aria-hidden="true"></i><span><strong>Desktop app troubleshooting</strong><small>Source windows, updates, setup checks.</small></span></a></li>
+						<li><a href="../docs/support.html"><i class="fas fa-headset" aria-hidden="true"></i><span><strong>Support page</strong><small>Discord, GitHub issues, contribution paths.</small></span></a></li>
+						<li><a href="index.html?file=agents/common-guides.md"><i class="fas fa-book-open" aria-hidden="true"></i><span><strong>Advanced support index</strong><small>Support workflows and AI agents.</small></span></a></li>
 					</ul>
 				</details>
 			</div>
 			<p class="guide-filter-empty" id="guide-filter-empty">No matching guides found.</p>
 		</div>
 	</section>
+
+	<details class="guide-details" id="detailed-guides" open>
+		<summary>
+			<span><i class="fas fa-book" aria-hidden="true"></i> Detailed guide sections</span>
+			<small>Full step-by-step guide body. Collapse this if you only want the directory.</small>
+		</summary>
 
 	<section class="navigation" id="guides-nav">
 		<div class="container">
@@ -1338,7 +1348,8 @@
 			</div>
 		</div>
 	</section>
-	
+	</details>
+
 	<section class="get-started">
 		<div class="container">
 			<h2>Still Need Help?</h2>
@@ -1414,6 +1425,7 @@
 		const guideFilterClear = document.getElementById('guide-filter-clear');
 		const guideFilterEmpty = document.getElementById('guide-filter-empty');
 		const guideTreeGroups = document.querySelectorAll('.guide-tree-group');
+		const detailedGuides = document.getElementById('detailed-guides');
 
 		guideTreeGroups.forEach(group => {
 			group.setAttribute('data-default-open', group.open ? 'true' : 'false');
@@ -1528,6 +1540,10 @@
 			// Remove the # if present
 			hash = hash.replace(/^#/, '');
 
+			if (detailedGuides) {
+				detailedGuides.open = true;
+			}
+
 			// Check if it's an alias
 			if (anchorAliases[hash]) {
 				hash = anchorAliases[hash];
@@ -1575,6 +1591,9 @@
 
 		tabButtons.forEach(button => {
 			button.addEventListener('click', () => {
+				if (detailedGuides) {
+					detailedGuides.open = true;
+				}
 				const tabId = button.getAttribute('data-tab');
 				switchTab(tabId);
 
@@ -1682,7 +1701,16 @@
 		// Sticky navigation on scroll
 		const guideNav = document.getElementById('guides-nav');
 		if (guideNav) {
-			const navOffset = guideNav.offsetTop;
+			let navOffset = guideNav.offsetTop;
+			function refreshGuideNavOffset() {
+				navOffset = guideNav.offsetTop;
+			}
+
+			if (detailedGuides) {
+				detailedGuides.addEventListener('toggle', function() {
+					setTimeout(refreshGuideNavOffset, 0);
+				});
+			}
 
 			window.addEventListener('scroll', function() {
 				if (window.pageYOffset >= navOffset) {

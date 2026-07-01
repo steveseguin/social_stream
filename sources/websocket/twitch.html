@@ -113,6 +113,15 @@
         .moderation-ad-buttons .connect-button:nth-child(3) {
             flex-basis: 100%;
         }
+        .moderation-requirements {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.35;
+            margin: -2px 0 10px;
+        }
+        .moderation-requirements:empty {
+            display: none;
+        }
         .text-center { text-align: center; }
         
         /* Header styles */
@@ -154,9 +163,8 @@
             border-radius: 4px;
             width: 150px;
         }
-        /* Channel switcher is secondary to the current-channel status: keep it
-           calm so it does not read as a primary action (or a big bright bar
-           when the header stacks at narrow widths). */
+        /* The channel switcher now lives in the collapsible Advanced menu, so
+           keep the button calm and secondary, not a primary call-to-action. */
         #connect-button {
             background: transparent;
             color: #555;
@@ -168,12 +176,46 @@
             background: rgba(0, 0, 0, 0.06);
             color: #222;
         }
-        @media (min-width: 721px) {
-            .channel-input-container {
-                margin-left: 4px;
-                padding-left: 12px;
-                border-left: 1px solid rgba(0, 0, 0, 0.12);
-            }
+        .channel-source {
+            font-size: 12px;
+            color: #888;
+            font-style: italic;
+        }
+        .channel-source:empty { display: none; }
+        .advanced-menu {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+        .advanced-menu > summary {
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+        }
+        .advanced-menu > summary::-webkit-details-marker { display: none; }
+        .advanced-menu > summary::before {
+            content: "\25B8";
+            font-size: 11px;
+            color: #888;
+            transition: transform 0.15s ease;
+        }
+        .advanced-menu[open] > summary::before { transform: rotate(90deg); }
+        .advanced-body { margin-top: 10px; }
+        .advanced-subheading {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        .advanced-hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 6px;
         }
         
         /* Stats grid */
@@ -357,6 +399,9 @@
             .moderation-controls h4 {
                 color: #efeff1;
             }
+            .moderation-requirements {
+                color: #adadb8;
+            }
             #textarea div {
                 color: #efeff1;
             }
@@ -368,9 +413,11 @@
                 background: rgba(255, 255, 255, 0.06);
                 color: #efeff1;
             }
-            .channel-input-container {
-                border-left-color: rgba(255, 255, 255, 0.10);
-            }
+            .advanced-menu { border-top-color: #3d3d42; }
+            .advanced-subheading { color: #adadb8; }
+            .channel-source,
+            .advanced-hint { color: #808086; }
+            .advanced-menu > summary::before { color: #adadb8; }
         }
     </style>
     <link rel="stylesheet" href="websocket-responsive.css">
@@ -407,10 +454,7 @@
                         <div class="header-item">
                             <span>Channel:</span>
                             <span id="current-channel">No channel</span>
-                        </div>
-                        <div class="channel-input-container">
-                            <input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
-                            <button id="connect-button" class="connect-button">Connect</button>
+                            <span id="channel-source" class="channel-source"></span>
                         </div>
                     </div>
                     <button id="sign-out-button" class="sign-out-button">Sign Out</button>
@@ -456,6 +500,7 @@
         </div>
         <div class="moderation-controls" style="background:#fff; padding:12px; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,.1);">
             <h4 style="margin:0 0 8px 0;">Moderation & Ads</h4>
+            <div id="moderation-requirements" class="moderation-requirements"></div>
             <div class="moderation-input-grid">
                 <input type="text" id="mod-username" class="channel-input" placeholder="Username">
                 <input type="number" id="mod-seconds" class="channel-input" placeholder="Timeout (s)">
@@ -471,30 +516,39 @@
                 <button id="btn-ad-90" class="connect-button">Start 90s Ad</button>
                 <button id="btn-ad-schedule" class="connect-button" style="background:#555;">Fetch Ad Schedule</button>
             </div>
-            <div style="margin-top:12px; padding-top:12px; border-top:1px solid #eee;">
-                <h4 style="margin:0 0 8px 0;">Advanced Sync</h4>
-                <label class="auth-method-option" style="display:flex; margin-bottom:8px;">
-                    <input type="checkbox" id="sync-delete-messages">
-                    <span>Sync dock deletes to Twitch</span>
-                </label>
-                <label class="auth-method-option" style="display:flex; margin-bottom:12px;">
-                    <input type="checkbox" id="sync-block-users">
-                    <span>Sync dock blocks to Twitch bans</span>
-                </label>
-                <label class="auth-method-option" style="display:flex; margin-bottom:12px;">
-                    <input type="checkbox" id="hide-metrics">
-                    <span>Hide dashboard metrics</span>
-                </label>
-                <div class="moderation-input-grid">
-                    <input type="text" id="stream-title" class="channel-input" placeholder="Stream title">
-                    <input type="text" id="stream-category" class="channel-input" placeholder="Game / category">
-                    <div class="moderation-button-group">
-                        <button id="btn-update-channel" class="connect-button" style="background:#2255dd;">Update Title / Category</button>
-                        <button id="btn-refresh-channel" class="connect-button" style="background:#555;">Refresh Current</button>
+            <details class="advanced-menu">
+                <summary>Advanced settings</summary>
+                <div class="advanced-body">
+                    <div class="advanced-subheading">Channel</div>
+                    <div class="channel-input-container">
+                        <input type="text" id="channel-input" class="channel-input" placeholder="Connect to a channel">
+                        <button id="connect-button" class="connect-button">Connect</button>
                     </div>
+                    <div class="advanced-hint">Leave blank to connect to your own channel.</div>
+                    <div class="advanced-subheading" style="margin-top:14px;">Sync</div>
+                    <label class="auth-method-option" style="display:flex; margin-bottom:8px;">
+                        <input type="checkbox" id="sync-delete-messages">
+                        <span>Sync dock deletes to Twitch</span>
+                    </label>
+                    <label class="auth-method-option" style="display:flex; margin-bottom:12px;">
+                        <input type="checkbox" id="sync-block-users">
+                        <span>Sync dock blocks to Twitch bans</span>
+                    </label>
+                    <label class="auth-method-option" style="display:flex; margin-bottom:12px;">
+                        <input type="checkbox" id="hide-metrics">
+                        <span>Hide dashboard metrics</span>
+                    </label>
+                    <div class="moderation-input-grid">
+                        <input type="text" id="stream-title" class="channel-input" placeholder="Stream title">
+                        <input type="text" id="stream-category" class="channel-input" placeholder="Game / category">
+                        <div class="moderation-button-group">
+                            <button id="btn-update-channel" class="connect-button" style="background:#2255dd;">Update Title / Category</button>
+                            <button id="btn-refresh-channel" class="connect-button" style="background:#555;">Refresh Current</button>
+                        </div>
+                    </div>
+                    <div style="font-size:12px; color:#666; margin-top:8px;">Title/category editing requires the Twitch OAuth scope <code>channel:manage:broadcast</code>.</div>
                 </div>
-                <div style="font-size:12px; color:#666; margin-top:8px;">Title/category editing requires the Twitch OAuth scope <code>channel:manage:broadcast</code>.</div>
-            </div>
+            </details>
         </div>
         </div>
     </div>
@@ -550,12 +604,16 @@
 		function updateHeaderInfo(username, channelName) {
 			const currentUserElement = document.getElementById('current-user');
 			const currentChannelElement = document.getElementById('current-channel');
-			
+			const channelSourceElement = document.getElementById('channel-source');
+
 			if (currentUserElement) {
 				currentUserElement.textContent = username || 'Not signed in';
 			}
 			if (currentChannelElement) {
 				currentChannelElement.textContent = channelName || 'No channel';
+			}
+			if (channelSourceElement) {
+				channelSourceElement.textContent = '';
 			}
 		}
 

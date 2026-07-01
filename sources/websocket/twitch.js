@@ -332,6 +332,7 @@ try{
 		'channel:read:redemptions'
 	].join('+');
 	var channel = '';
+	var channelFromUrl = false;
 	var username = "SocialStreamNinja"; // Not supported at the moment
 	var BTTV = false;
 	var SEVENTV = false;
@@ -500,6 +501,7 @@ try{
 
 	var urlParams = new URLSearchParams(window.location.search);
 	var hashParams = new URLSearchParams(window.location.hash.slice(1));
+	channelFromUrl = !!(urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel"));
 	channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || "";
 		
 		
@@ -819,7 +821,9 @@ try{
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
 		updateHostedAuthPreferenceFromUrl();
-		channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("twitchChannel") || channel;
+		const urlChannel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel");
+		channelFromUrl = !!urlChannel;
+		channel = urlChannel || localStorage.getItem("twitchChannel") || channel;
 		syncThirdPartyEmotesForChannel(true);
 		
 		// Set up event listeners
@@ -923,6 +927,7 @@ try{
 			if (data && data.login) {
 				setStoredToken(getStoredToken() || token);
 				username = data.login;
+				if (!channel) { channel = data.login; channelFromUrl = false; }
 				localStorage.setItem("twitchChannel", channel);
 				
 				// Fetch user badges and store them
@@ -1467,6 +1472,7 @@ async function ensureChatClientInstance() {
 		}
 		token = getStoredToken() || token;
 
+		if (!channel && authUser.login) { channel = authUser.login; }
 		const channelInfo = await getUserInfo(channel);
 		if (!channelInfo) {
 			console.log('Failed to get channel info');
@@ -2880,10 +2886,11 @@ async function ensureChatClientInstance() {
 
 	document.getElementById('connect-button').addEventListener('click', async function() {
 		const channelInput = document.getElementById('channel-input');
-		const channelName = channelInput.value.trim().replace(/^#/, '');
+		const channelName = channelInput.value.trim().replace(/^#/, '') || username;
 		if (channelName) {
 			localStorage.setItem('twitchChannel', channelName);
 			channel = channelName;
+			channelFromUrl = false;
 			syncThirdPartyEmotesForChannel(true);
 			channelInput.value = '';
 			await connect();
@@ -2895,10 +2902,11 @@ async function ensureChatClientInstance() {
 			// Check if the pressed key is Enter (key code 13)
 			if (event.key === 'Enter' || event.keyCode === 13) {
 				const channelInput = document.getElementById('channel-input');
-				const channelName = channelInput.value.trim().replace(/^#/, '');
+				const channelName = channelInput.value.trim().replace(/^#/, '') || username;
 				if (channelName) {
 					localStorage.setItem('twitchChannel', channelName);
 					channel = channelName;
+					channelFromUrl = false;
 					syncThirdPartyEmotesForChannel(true);
 					channelInput.value = '';
 					await connect();
@@ -4118,6 +4126,7 @@ async function cleanupCurrentConnection() {
 			followerCount: document.getElementById('follower-count')?.parentElement,
 			chatInput: document.querySelector('.chat-input'),
 			moderationControls: document.querySelector('.moderation-controls'),
+			moderationRequirements: document.getElementById('moderation-requirements'),
 			permissionsInfo: document.getElementById('permissions-info') || createPermissionsInfo()
 		};
 
@@ -4127,13 +4136,43 @@ async function cleanupCurrentConnection() {
 				(permissions.canViewSubscribers && permissions.hasSubscriptionProgram) ? 'block' : 'none';
 		}
 
-		// Update moderation controls visibility
+		// Keep controls visible so users can see what exists, then explain missing access.
 		if (elements.moderationControls) {
-			elements.moderationControls.style.display = permissions.canModerate ? 'block' : 'none';
+			elements.moderationControls.style.display = 'block';
 		}
+		updateModerationRequirements(permissions, elements.moderationRequirements);
 
 		// Update permissions info display
 		updatePermissionsDisplay(permissions, elements.permissionsInfo);
+	}
+
+	function updateModerationRequirements(permissions, container) {
+		if (!container) {
+			return;
+		}
+		if (!permissions) {
+			container.textContent = 'Sign in and connect to a channel to use moderation, ads, and channel controls.';
+			return;
+		}
+
+		const notes = [];
+		if (!permissions.isBroadcaster && !permissions.isModerator) {
+			notes.push('Moderation actions require broadcaster or moderator access for this channel.');
+		}
+		if (!permissions.canBanUsers || !permissions.canDeleteMessages) {
+			notes.push('Ban, timeout, and delete sync actions require Twitch moderation scopes.');
+		}
+		if (!permissions.canManageAds) {
+			notes.push('Starting ads requires channel:manage:ads.');
+		}
+		if (!permissions.canReadAds) {
+			notes.push('Fetching ad schedule requires channel:read:ads.');
+		}
+		if (!permissions.canManageBroadcast) {
+			notes.push('Title/category editing requires broadcaster access and channel:manage:broadcast.');
+		}
+
+		container.textContent = notes.length ? notes.join(' ') : 'Your current sign-in has access to these channel controls.';
 	}
 
 	function createPermissionsInfo() {
@@ -4173,12 +4212,24 @@ async function cleanupCurrentConnection() {
 	function updateHeaderInfo(username, channelName) {
 		const currentUserElement = document.getElementById('current-user');
 		const currentChannelElement = document.getElementById('current-channel');
+		const channelSourceElement = document.getElementById('channel-source');
 		
 		if (currentUserElement) {
 			currentUserElement.textContent = username || 'Not signed in';
 		}
 		if (currentChannelElement) {
 			currentChannelElement.textContent = channelName || 'No channel';
+		}
+		if (channelSourceElement) {
+			let hint = '';
+			if (channelName) {
+				if (channelFromUrl) {
+					hint = '\u00b7 from link';
+				} else if (username && channelName.toLowerCase() !== username.toLowerCase()) {
+					hint = '\u00b7 viewing';
+				}
+			}
+			channelSourceElement.textContent = hint;
 		}
 	}
 } catch(e){
