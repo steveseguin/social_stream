@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple API Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #messages { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; margin-top: 10px; }
+        .message { margin: 5px 0; padding: 5px; background: #f0f0f0; }
+        input, button { margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Simple Social Stream API Client</h1>
+    
+    <input type="text" id="sessionID" placeholder="Session ID">
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+    <span id="status">Disconnected</span>
+    
+    <div>
+        <input type="text" id="messageInput" placeholder="Type a message">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    
+    <div id="messages"></div>
+
+    <script>
+        let socket;
+        let sessionID;
+        
+        function connect() {
+            sessionID = document.getElementById('sessionID').value;
+            if (!sessionID) {
+                alert('Please enter a session ID');
+                return;
+            }
+            
+            socket = new WebSocket('wss://io.socialstream.ninja:443');
+            
+            socket.onopen = function() {
+                socket.send(JSON.stringify({
+                    join: sessionID,
+                    out: 3,
+                    in: 4
+                }));
+                document.getElementById('status').textContent = 'Connected (out:3, in:4)';
+            };
+            
+            socket.onmessage = function(event) {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'message';
+                msgDiv.textContent = 'Received: ' + event.data;
+                document.getElementById('messages').appendChild(msgDiv);
+            };
+            
+            socket.onclose = function() {
+                document.getElementById('status').textContent = 'Disconnected';
+            };
+        }
+        
+        function disconnect() {
+            if (socket) socket.close();
+        }
+        
+        function sendMessage() {
+            const msg = document.getElementById('messageInput').value;
+            if (!msg || !socket || socket.readyState !== WebSocket.OPEN) return;
+            
+            socket.send(JSON.stringify({
+                action: 'sendChat',
+                apiid: sessionID,
+                value: msg
+            }));
+            
+            document.getElementById('messageInput').value = '';
+        }
+        
+        // Enter key to send
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+        });
+    </script>
+</body>
+</html>

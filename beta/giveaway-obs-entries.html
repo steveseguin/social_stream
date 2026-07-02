@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giveaway Wheel - OBS Widget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .wheel-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* No transitions/filters on the canvas: keep the compositor idle when nothing changes */
+        #wheel-canvas {
+            display: block;
+        }
+
+        .winner-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            border: 3px solid var(--accent, #4CAF50);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: none;
+            animation: winnerPop 0.5s ease-out;
+        }
+
+        @keyframes winnerPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .winner-text {
+            margin-bottom: 10px;
+            color: var(--accent, #4CAF50);
+        }
+
+        .winner-name {
+            font-size: 1.2em;
+            color: #FFD700;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 1000;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+
+        /* One-shot connection indicator: fades out and is removed; no infinite animation */
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4CAF50;
+            z-index: 50;
+            animation: statusFade 4s ease-in forwards;
+        }
+
+        @keyframes statusFade {
+            0%, 70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .keyword-display {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid var(--accent, #FFD700);
+            font-size: 16px;
+            z-index: 50;
+        }
+
+        .keyword-label {
+            color: #ccc;
+            font-size: 12px;
+        }
+
+        .keyword-value {
+            color: var(--accent, #FFD700);
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .no-participants {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #888;
+            font-size: 1.5em;
+            display: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-indicator" id="status-indicator"></div>
+
+    <div class="keyword-display" id="keyword-display">
+        <div class="keyword-label">Entry Keyword:</div>
+        <div class="keyword-value" id="current-keyword">ENTER</div>
+    </div>
+
+    <div class="wheel-container" id="wheel-container">
+        <canvas id="wheel-canvas" width="400" height="400"></canvas>
+
+        <div class="winner-display" id="winner-display">
+            <div class="winner-text">🎉 WINNER! 🎉</div>
+            <div class="winner-name" id="winner-name"></div>
+        </div>
+
+        <div class="no-participants" id="no-participants">
+            Waiting for participants...
+        </div>
+    </div>
+
+    <script>
+        // ------------------------------------------------------------------
+        // URL parameters
+        // ------------------------------------------------------------------
+        var urlParams = new URLSearchParams(window.location.search);
+        var giveawayDebug = urlParams.has("debug");
+        function dbg() {
+            if (giveawayDebug) {
+                console.log.apply(console, arguments);
+            }
+        }
+
+        var roomID = "test";
+        var password = "false";
+
+        if (urlParams.has("session")) {
+            roomID = urlParams.get("session");
+        } else if (urlParams.has("s")) {
+            roomID = urlParams.get("s");
+        } else if (urlParams.has("id")) {
+            roomID = urlParams.get("id");
+        }
+
+        if (urlParams.has("password")) {
+            password = urlParams.get("password") || "false";
+        }
+
+        var urlTheme = urlParams.get("style") || urlParams.get("theme") || "";
+        var themeLockedByUrl = !!urlTheme;
+
+        var MAX_OBS_WHEEL_SIZE = 1000;
+        var wheelSize = parseInt(urlParams.get("size"), 10);
+        if (!wheelSize || wheelSize < 100) {
+            wheelSize = 400;
+        } else if (wheelSize > MAX_OBS_WHEEL_SIZE) {
+            wheelSize = MAX_OBS_WHEEL_SIZE;
+        }
+
+        if (urlParams.has("hidekeyword")) {
+            document.getElementById("keyword-display").classList.add("hidden");
+        }
+        if (urlParams.has("hidestatus")) {
+            document.getElementById("status-indicator").classList.add("hidden");
+        }
+
+        // Remove the status dot entirely once its fade-out finishes so it can't
+        // contribute to compositing afterwards.
+        (function () {
+            var dot = document.getElementById("status-indicator");
+            dot.addEventListener("animationend", function () {
+                dot.remove();
+            });
+        })();
+
+        // ------------------------------------------------------------------
+        // Themes (wheel palettes shared with giveaway.html — keep in sync)
+        // ------------------------------------------------------------------
+        var GIVEAWAY_THEMES = {
+            classic: {
+                usePlatformColors: true,
+                palette: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140', '#38bdf8'],
+                rim: '#ffffff',
+                segmentStroke: 'rgba(255,255,255,0.8)',
+                labelColor: '#ffffff',
+                pointer: ['#ff6b6b', '#ff5252', '#f44336'],
+                hub: ['#ffffff', '#f8f9fa', '#e9ecef'],
+                accent: '#FFD700'
+            },
+            midnight: {
+                usePlatformColors: false,
+                palette: ['#312e81', '#1e3a8a', '#4338ca', '#1e40af', '#3730a3', '#172554'],
+                rim: '#0f172a',
+                segmentStroke: 'rgba(148,163,184,0.35)',
+                labelColor: '#e2e8f0',
+                pointer: ['#7dd3fc', '#38bdf8', '#0284c7'],
+                hub: ['#334155', '#1e293b', '#0f172a'],
+                accent: '#38bdf8'
+            },
+            neon: {
+                usePlatformColors: false,
+                palette: ['#9b5de5', '#f15bb5', '#fee440', '#00bbf9', '#00f5d4'],
+                rim: '#0a0a0f',
+                segmentStroke: 'rgba(255,255,255,0.25)',
+                labelColor: '#ffffff',
+                pointer: ['#fff7ae', '#fee440', '#facc15'],
+                hub: ['#1c1c28', '#10101a', '#050508'],
+                accent: '#00f5d4'
+            },
+            sunset: {
+                usePlatformColors: false,
+                palette: ['#f83600', '#fe8c00', '#ffd452', '#ff6a88', '#ff9a8b', '#c2410c'],
+                rim: '#fff7ed',
+                segmentStroke: 'rgba(255,255,255,0.6)',
+                labelColor: '#ffffff',
+                pointer: ['#fde68a', '#f59e0b', '#b45309'],
+                hub: ['#fff7ed', '#ffedd5', '#fed7aa'],
+                accent: '#fb923c'
+            },
+            casino: {
+                usePlatformColors: false,
+                palette: ['#b91c1c', '#18181b'],
+                rim: '#d4af37',
+                segmentStroke: 'rgba(212,175,55,0.9)',
+                labelColor: '#ffffff',
+                pointer: ['#fde68a', '#d4af37', '#92700c'],
+                hub: ['#3f3f46', '#27272a', '#18181b'],
+                accent: '#d4af37'
+            },
+            mono: {
+                usePlatformColors: false,
+                palette: ['#1f1f1f', '#3d3d3d', '#5b5b5b', '#787878'],
+                rim: '#fafafa',
+                segmentStroke: 'rgba(255,255,255,0.5)',
+                labelColor: '#ffffff',
+                pointer: ['#fafafa', '#d4d4d4', '#a3a3a3'],
+                hub: ['#e5e5e5', '#d4d4d4', '#a3a3a3'],
+                accent: '#fafafa'
+            }
+        };
+
+        function resolveTheme(name) {
+            return GIVEAWAY_THEMES[String(name || '').toLowerCase()] || GIVEAWAY_THEMES.classic;
+        }
+
+        function applyAccent(theme) {
+            document.documentElement.style.setProperty('--accent', theme.accent);
+        }
+
+        // ------------------------------------------------------------------
+        // Cached wheel renderer (shared design with giveaway.html — keep in sync)
+        //
+        // The wheel base (segments, labels, icons, rim shadow) is drawn once
+        // into an offscreen canvas whenever entrants or theme change
+        // (debounced). Each animation frame is then a single rotated
+        // drawImage plus the pointer/hub, so spin cost is O(1) regardless of
+        // entrant count, and idle cost is zero.
+        // ------------------------------------------------------------------
+        var WHEEL_LABEL_LIMIT = 60;     // labels + icons drawn up to this many entrants
+        var WHEEL_MAX_SEGMENTS = 240;   // visual segments are capped at this
+
+        var WHEEL_PLATFORM_COLORS = {
+            'twitch': '#9146ff',
+            'youtube': '#ff0000',
+            'facebook': '#1877f2',
+            'instagram': '#e4405f',
+            'tiktok': '#444444',
+            'discord': '#5865f2',
+            'kick': '#53fc18'
+        };
+
+        function shadeColor(hex, percent) {
+            var num = parseInt(hex.slice(1), 16);
+            if (isNaN(num)) {
+                return hex;
+            }
+            var r = (num >> 16) & 255;
+            var g = (num >> 8) & 255;
+            var b = num & 255;
+            var t = percent < 0 ? 0 : 255;
+            var p = Math.abs(percent) / 100;
+            r = Math.round((t - r) * p) + r;
+            g = Math.round((t - g) * p) + g;
+            b = Math.round((t - b) * p) + b;
+            return 'rgb(' + r + ',' + g + ',' + b + ')';
+        }
+
+        function createWheelRenderer(canvas, options) {
+            var ctx = canvas.getContext('2d');
+            var cache = document.createElement('canvas');
+            var cctx = cache.getContext('2d');
+            var rotation = 0;
+            var theme = options.theme || resolveTheme('classic');
+            var rebuildTimer = null;
+            var dirty = true;
+            var hasContent = false;
+            var spinning = false;
+            var iconCache = {};
+            var iconPending = {};
+
+            function loadIcon(platform) {
+                var key = String(platform || '').toLowerCase();
+                if (!key || (key in iconCache) || iconPending[key]) {
+                    return;
+                }
+                iconPending[key] = true;
+                var img = new Image();
+                img.onload = function () {
+                    iconCache[key] = img;
+                    delete iconPending[key];
+                    markDirty(150);
+                };
+                img.onerror = function () {
+                    iconCache[key] = null;
+                    delete iconPending[key];
+                };
+                img.src = './sources/images/' + key + '.png';
+            }
+
+            function segmentColor(platform, index) {
+                if (theme.usePlatformColors && platform) {
+                    var c = WHEEL_PLATFORM_COLORS[String(platform).toLowerCase()];
+                    if (c) {
+                        return c;
+                    }
+                }
+                return theme.palette[index % theme.palette.length];
+            }
+
+            function rebuildNow() {
+                dirty = false;
+                var w = canvas.width;
+                var h = canvas.height;
+                if (cache.width !== w || cache.height !== h) {
+                    cache.width = w;
+                    cache.height = h;
+                }
+                cctx.clearRect(0, 0, w, h);
+
+                var list = options.getEntrants();
+                var total = list.length;
+                hasContent = total > 0;
+                if (!hasContent) {
+                    render();
+                    return;
+                }
+
+                var cx = w / 2;
+                var cy = h / 2;
+                var radius = Math.min(cx, cy) - 20;
+                var segments = Math.min(total, WHEEL_MAX_SEGMENTS);
+                var detailed = total <= WHEEL_LABEL_LIMIT;
+                var angle = (2 * Math.PI) / segments;
+
+                // Base disc with a symmetric soft shadow (rotation-invariant,
+                // so it can be baked into the cached bitmap).
+                cctx.save();
+                cctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                cctx.shadowBlur = 18;
+                cctx.beginPath();
+                cctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+                cctx.fillStyle = theme.rim;
+                cctx.fill();
+                cctx.restore();
+
+                for (var i = 0; i < segments; i++) {
+                    var entrant = list[i];
+                    var startAngle = i * angle;
+                    var endAngle = startAngle + angle;
+                    var color = segmentColor(entrant ? entrant.platform : null, i);
+
+                    cctx.beginPath();
+                    cctx.moveTo(cx, cy);
+                    cctx.arc(cx, cy, radius, startAngle, endAngle);
+                    cctx.closePath();
+
+                    if (detailed) {
+                        var midAngle = startAngle + angle / 2;
+                        var gx = cx + Math.cos(midAngle) * radius * 0.3;
+                        var gy = cy + Math.sin(midAngle) * radius * 0.3;
+                        var gradient = cctx.createRadialGradient(gx, gy, 0, cx, cy, radius);
+                        gradient.addColorStop(0, shadeColor(color, 18));
+                        gradient.addColorStop(0.7, color);
+                        gradient.addColorStop(1, shadeColor(color, -18));
+                        cctx.fillStyle = gradient;
+                    } else {
+                        cctx.fillStyle = color;
+                    }
+                    cctx.fill();
+                    cctx.strokeStyle = theme.segmentStroke;
+                    cctx.lineWidth = detailed ? 3 : 1;
+                    cctx.stroke();
+                }
+
+                if (detailed) {
+                    cctx.textAlign = 'center';
+                    cctx.textBaseline = 'middle';
+                    var maxTextWidth = radius * 0.5;
+                    for (var j = 0; j < segments; j++) {
+                        var person = list[j];
+                        if (!person) {
+                            continue;
+                        }
+                        cctx.save();
+                        cctx.translate(cx, cy);
+                        cctx.rotate(j * angle + angle / 2);
+
+                        var textX = radius - 60;
+                        cctx.fillStyle = theme.labelColor;
+                        cctx.font = '600 ' + Math.max(12, Math.min(20, Math.round(360 / segments) + 8)) + 'px "Segoe UI", system-ui, sans-serif';
+                        cctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                        cctx.shadowBlur = 6;
+                        cctx.shadowOffsetY = 2;
+
+                        var displayText = person.name || 'Anonymous';
+                        if (cctx.measureText(displayText).width > maxTextWidth) {
+                            while (displayText.length > 1 && cctx.measureText(displayText + '…').width > maxTextWidth) {
+                                displayText = displayText.slice(0, -1);
+                            }
+                            displayText += '…';
+                        }
+                        cctx.fillText(displayText, textX, segments > 24 ? 0 : -15);
+
+                        if (segments <= 24 && person.platform) {
+                            var icon = iconCache[String(person.platform).toLowerCase()];
+                            if (icon) {
+                                var iconSize = 24;
+                                cctx.shadowColor = 'transparent';
+                                cctx.beginPath();
+                                cctx.arc(textX, 8 + iconSize / 2, iconSize / 2 + 4, 0, 2 * Math.PI);
+                                cctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                                cctx.fill();
+                                cctx.drawImage(icon, textX - iconSize / 2, 8, iconSize, iconSize);
+                            }
+                        }
+                        cctx.restore();
+                    }
+                }
+
+                render();
+            }
+
+            function markDirty(delay) {
+                dirty = true;
+                if (spinning) {
+                    return; // rebuilt once the spin finishes
+                }
+                if (rebuildTimer) {
+                    return;
+                }
+                rebuildTimer = setTimeout(function () {
+                    rebuildTimer = null;
+                    if (dirty && !spinning) {
+                        rebuildNow();
+                    }
+                }, typeof delay === 'number' ? delay : 250);
+            }
+
+            function drawHub(c, cx, cy) {
+                var hubRadius = Math.max(16, canvas.width * 0.0625);
+                var hubGradient = c.createRadialGradient(cx, cy - 5, 0, cx, cy, hubRadius);
+                hubGradient.addColorStop(0, theme.hub[0]);
+                hubGradient.addColorStop(0.7, theme.hub[1]);
+                hubGradient.addColorStop(1, theme.hub[2]);
+                c.beginPath();
+                c.arc(cx, cy, hubRadius, 0, 2 * Math.PI);
+                c.fillStyle = hubGradient;
+                c.fill();
+                c.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+                c.lineWidth = 2;
+                c.stroke();
+            }
+
+            function drawPointer(c, cx, cy, radius) {
+                var pointerLength = Math.max(26, canvas.width * 0.1);
+                var pointerWidth = pointerLength / 2;
+                c.beginPath();
+                c.moveTo(cx + radius - 5, cy);
+                c.lineTo(cx + radius - pointerLength, cy - pointerWidth / 2);
+                c.lineTo(cx + radius - pointerLength, cy + pointerWidth / 2);
+                c.closePath();
+                var grad = c.createLinearGradient(cx + radius - pointerLength, cy, cx + radius - 5, cy);
+                grad.addColorStop(0, theme.pointer[0]);
+                grad.addColorStop(0.5, theme.pointer[1]);
+                grad.addColorStop(1, theme.pointer[2]);
+                c.fillStyle = grad;
+                c.fill();
+                c.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                c.lineWidth = 2;
+                c.stroke();
+            }
+
+            function render() {
+                var w = canvas.width;
+                var h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+                if (options.onEmptyChange) {
+                    options.onEmptyChange(!hasContent);
+                }
+                if (!hasContent) {
+                    return;
+                }
+                var cx = w / 2;
+                var cy = h / 2;
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(rotation);
+                ctx.translate(-cx, -cy);
+                ctx.drawImage(cache, 0, 0);
+                ctx.restore();
+                drawHub(ctx, cx, cy);
+                drawPointer(ctx, cx, cy, Math.min(cx, cy) - 20);
+            }
+
+            return {
+                invalidate: markDirty,
+                rebuildNow: rebuildNow,
+                render: render,
+                ensureIcon: loadIcon,
+                setTheme: function (nextTheme) {
+                    theme = nextTheme;
+                    markDirty(0);
+                },
+                setRotation: function (radians) {
+                    rotation = radians;
+                },
+                getRotation: function () {
+                    return rotation;
+                },
+                beginSpin: function () {
+                    spinning = true;
+                },
+                endSpin: function () {
+                    spinning = false;
+                    if (dirty) {
+                        markDirty(0);
+                    }
+                }
+            };
+        }
+
+        function runSpinAnimation(renderer, spec, onDone) {
+            var startTime = spec.startTime || Date.now();
+            var duration = spec.duration || 4000;
+            var fromDeg = spec.fromDeg || 0;
+            var toDeg = spec.toDeg || 0;
+            var delay = Math.max(0, startTime - Date.now());
+            setTimeout(function () {
+                renderer.beginSpin();
+                var finished = false;
+                function finish() {
+                    if (finished) {
+                        return;
+                    }
+                    finished = true;
+                    renderer.setRotation((toDeg * Math.PI) / 180);
+                    renderer.render();
+                    renderer.endSpin();
+                    if (onDone) {
+                        onDone();
+                    }
+                }
+                function step() {
+                    if (finished) {
+                        return;
+                    }
+                    var progress = Math.min((Date.now() - startTime) / duration, 1);
+                    var eased = 1 - Math.pow(1 - progress, 3);
+                    renderer.setRotation(((fromDeg + (toDeg - fromDeg) * eased) * Math.PI) / 180);
+                    renderer.render();
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        finish();
+                    }
+                }
+                requestAnimationFrame(step);
+                // rAF pauses in background tabs; guarantee completion regardless
+                setTimeout(finish, duration + 150);
+            }, delay);
+        }
+
+        // ------------------------------------------------------------------
+        // Confetti via the Web Animations API (compositor-only transform and
+        // opacity; nodes remove themselves when finished).
+        // ------------------------------------------------------------------
+        function launchConfetti(colors) {
+            var count = 70;
+            var fragment = document.createDocumentFragment();
+            var height = window.innerHeight + 60;
+            for (var i = 0; i < count; i++) {
+                var el = document.createElement('div');
+                el.className = 'confetti';
+                var size = 6 + Math.random() * 8;
+                el.style.width = size + 'px';
+                el.style.height = (size * 0.6) + 'px';
+                el.style.background = colors[i % colors.length];
+                el.style.left = (Math.random() * 100) + 'vw';
+                el.style.top = '-20px';
+                if (i % 3 === 0) {
+                    el.style.borderRadius = '50%';
+                }
+                fragment.appendChild(el);
+                (function (node) {
+                    var drift = (Math.random() * 2 - 1) * 160;
+                    var rot = 360 + Math.random() * 720;
+                    var anim = node.animate([
+                        { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+                        { transform: 'translate(' + drift + 'px, ' + height + 'px) rotate(' + rot + 'deg)', opacity: 0 }
+                    ], {
+                        duration: 2200 + Math.random() * 2200,
+                        easing: 'cubic-bezier(0.2, 0.5, 0.4, 1)'
+                    });
+                    anim.onfinish = function () {
+                        node.remove();
+                    };
+                })(el);
+            }
+            document.body.appendChild(fragment);
+        }
+
+        // ------------------------------------------------------------------
+        // OBS widget state and transports
+        // ------------------------------------------------------------------
+        var entrants = new Map();
+        var currentTheme = resolveTheme(urlTheme);
+        var isSpinning = false;
+        var localChannel = null;
+        var iframe = null;
+
+        var canvas = document.getElementById('wheel-canvas');
+        canvas.width = wheelSize;
+        canvas.height = wheelSize;
+        document.getElementById('wheel-container').style.width = wheelSize + 'px';
+        document.getElementById('wheel-container').style.height = wheelSize + 'px';
+
+        applyAccent(currentTheme);
+
+        var noParticipantsEl = document.getElementById('no-participants');
+        var wheel = createWheelRenderer(canvas, {
+            theme: currentTheme,
+            getEntrants: function () {
+                return Array.from(entrants.values());
+            },
+            onEmptyChange: function (isEmpty) {
+                noParticipantsEl.style.display = isEmpty ? 'block' : 'none';
+            }
+        });
+
+        function entrantRebuildDelay() {
+            return entrants.size > 1000 ? 1000 : 250;
+        }
+
+        function setEntrantsFromObject(obj) {
+            entrants = new Map();
+            if (obj) {
+                var keys = Object.keys(obj);
+                for (var i = 0; i < keys.length; i++) {
+                    var entrant = obj[keys[i]];
+                    if (entrant) {
+                        entrants.set(keys[i], entrant);
+                        if (entrants.size <= WHEEL_LABEL_LIMIT) {
+                            wheel.ensureIcon(entrant.platform);
+                        }
+                    }
+                }
+            }
+            wheel.invalidate(entrantRebuildDelay());
+        }
+
+        function mergeEntrants(obj) {
+            if (!obj) {
+                return;
+            }
+            var keys = Object.keys(obj);
+            var changed = false;
+            for (var i = 0; i < keys.length; i++) {
+                var id = keys[i];
+                if (!entrants.has(id) && obj[id]) {
+                    entrants.set(id, obj[id]);
+                    if (entrants.size <= WHEEL_LABEL_LIMIT) {
+                        wheel.ensureIcon(obj[id].platform);
+                    }
+                    changed = true;
+                }
+            }
+            if (changed) {
+                wheel.invalidate(entrantRebuildDelay());
+            }
+        }
+
+        function removeEntrants(ids) {
+            if (!ids || !ids.length) {
+                return;
+            }
+            var changed = false;
+            for (var i = 0; i < ids.length; i++) {
+                if (entrants.delete(ids[i])) {
+                    changed = true;
+                }
+            }
+            if (changed) {
+                wheel.invalidate(0);
+            }
+        }
+
+        function handleSpinState(spinState) {
+            if (!spinState || !spinState.isSpinning || isSpinning) {
+                return;
+            }
+            isSpinning = true;
+            var initialDeg = spinState.initialRotation || 0;
+            var targetDeg = (spinState.targetRotationDegrees !== undefined && spinState.targetRotationDegrees !== null)
+                ? spinState.targetRotationDegrees
+                : ((spinState.targetRotation || 0) * 180 / Math.PI);
+            wheel.setRotation((initialDeg * Math.PI) / 180);
+            wheel.render();
+            runSpinAnimation(wheel, {
+                startTime: spinState.startTime,
+                duration: spinState.duration || 4000,
+                fromDeg: initialDeg,
+                toDeg: targetDeg
+            }, function () {
+                isSpinning = false;
+            });
+        }
+
+        function showWinner(winnerData) {
+            if (!winnerData) {
+                return;
+            }
+            try {
+                if (typeof winnerData === 'string') {
+                    winnerData = JSON.parse(winnerData);
+                }
+            } catch (e) {
+                return;
+            }
+            if (!winnerData || !winnerData.name) {
+                return;
+            }
+            var winnerDisplay = document.getElementById('winner-display');
+            document.getElementById('winner-name').textContent = winnerData.name;
+            winnerDisplay.style.display = 'block';
+            launchConfetti(currentTheme.palette);
+            setTimeout(function () {
+                winnerDisplay.style.display = 'none';
+            }, 5000);
+        }
+
+        function handleKeywordUpdate(keyword) {
+            if (keyword) {
+                document.getElementById('current-keyword').textContent = keyword;
+                try {
+                    localStorage.setItem('giveaway_keyword', keyword);
+                } catch (e) {}
+            }
+        }
+
+        function handleStyleUpdate(styleName) {
+            if (themeLockedByUrl || !styleName) {
+                return;
+            }
+            currentTheme = resolveTheme(styleName);
+            applyAccent(currentTheme);
+            wheel.setTheme(currentTheme);
+        }
+
+        function handleGiveawayMessage(data) {
+            if (!data || typeof data !== 'object' || !data.action) {
+                return;
+            }
+            if (data.action === 'entrants_update') {
+                if (data.data) {
+                    mergeEntrants(data.data.entrants);
+                }
+            } else if (data.action === 'giveaway_update') {
+                if (data.data && data.data.entrants) {
+                    setEntrantsFromObject(data.data.entrants);
+                }
+            } else if (data.action === 'entrant_remove') {
+                if (data.data) {
+                    removeEntrants(data.data.ids);
+                }
+            } else if (data.action === 'keyword_update') {
+                handleKeywordUpdate(data.keyword);
+            } else if (data.action === 'spin_update') {
+                handleSpinState(data.data);
+            } else if (data.action === 'winner_update') {
+                showWinner(data.data);
+            } else if (data.action === 'style_update') {
+                handleStyleUpdate(data.style);
+            } else {
+                dbg('OBS widget: unknown action', data.action);
+            }
+        }
+
+        function sendWidgetMessage(message) {
+            if (localChannel) {
+                localChannel.postMessage(message);
+            } else {
+                try {
+                    var key = 'giveaway_broadcast_' + roomID;
+                    localStorage.setItem(key, JSON.stringify(message));
+                    setTimeout(function () {
+                        localStorage.removeItem(key);
+                    }, 100);
+                } catch (e) {}
+            }
+            if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+                socketserver.send(JSON.stringify(message));
+            }
+            if (iframe && iframe.contentWindow) {
+                try {
+                    iframe.contentWindow.postMessage({
+                        sendData: { overlayNinja: message },
+                        type: "rpcs"
+                    }, '*');
+                } catch (e) {}
+            }
+        }
+
+        function requestFullState() {
+            sendWidgetMessage({
+                action: 'giveaway_state_request',
+                timestamp: Date.now()
+            });
+        }
+
+        // Local communication (BroadcastChannel with localStorage fallback)
+        function setupLocalCommunication() {
+            if (typeof BroadcastChannel !== 'undefined') {
+                localChannel = new BroadcastChannel('giveaway_' + roomID);
+                localChannel.addEventListener('message', function (event) {
+                    handleGiveawayMessage(event.data);
+                });
+            } else {
+                window.addEventListener('storage', function (e) {
+                    if (e.key === 'giveaway_broadcast_' + roomID && e.newValue) {
+                        try {
+                            handleGiveawayMessage(JSON.parse(e.newValue));
+                        } catch (error) {}
+                    }
+                });
+            }
+        }
+
+        // Hidden VDO.Ninja iframe bridge (WebRTC)
+        function setupWebRTCConnection() {
+            if (!roomID || roomID === "test") {
+                dbg("OBS widget: test session; local communication only");
+                return;
+            }
+            iframe = document.createElement('iframe');
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "obs-frame";
+            iframe.allow = "midi;microphone;";
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + "&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
+            document.body.appendChild(iframe);
+
+            window.addEventListener('message', function (e) {
+                if (e.source !== iframe.contentWindow) {
+                    return;
+                }
+                var d = e.data;
+                if (d && typeof d === "object") {
+                    if (d.dataReceived && typeof d.dataReceived === "object" && "overlayNinja" in d.dataReceived) {
+                        handleGiveawayMessage(d.dataReceived.overlayNinja);
+                    } else if (d.overlayNinja) {
+                        handleGiveawayMessage(d.overlayNinja);
+                    }
+                }
+            });
+        }
+
+        // WebSocket fallback (enabled with &server)
+        var socketserver = null;
+        var socketRetries = 1;
+        function setupWebSocketConnection() {
+            if (!urlParams.has("server") && !urlParams.has("localserver")) {
+                return;
+            }
+            var serverURL = urlParams.has("localserver")
+                ? "ws://127.0.0.1:3000"
+                : (urlParams.get("server") || "wss://io.socialstream.ninja/api");
+
+            function connect() {
+                socketserver = new WebSocket(serverURL);
+                socketserver.onopen = function () {
+                    socketRetries = 1;
+                    socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 6, in: 5 }));
+                };
+                socketserver.onclose = function () {
+                    socketRetries += 1;
+                    setTimeout(connect, Math.min(100 * socketRetries, 5000));
+                };
+                socketserver.onerror = function () {
+                    try {
+                        socketserver.close();
+                    } catch (e) {}
+                };
+                socketserver.addEventListener('message', function (event) {
+                    if (event.data) {
+                        try {
+                            handleGiveawayMessage(JSON.parse(event.data));
+                        } catch (e) {}
+                    }
+                });
+            }
+            connect();
+        }
+
+        // ------------------------------------------------------------------
+        // Init
+        // ------------------------------------------------------------------
+        (function init() {
+            try {
+                var wheelState = localStorage.getItem('giveawayWheelState');
+                if (wheelState) {
+                    var state = JSON.parse(wheelState);
+                    if (state && state.entrants) {
+                        setEntrantsFromObject(state.entrants);
+                    }
+                }
+            } catch (error) {}
+            try {
+                var savedKeyword = localStorage.getItem('giveaway_keyword');
+                if (savedKeyword) {
+                    document.getElementById('current-keyword').textContent = savedKeyword;
+                }
+            } catch (error) {}
+
+            wheel.rebuildNow();
+            setupLocalCommunication();
+            setupWebRTCConnection();
+            setupWebSocketConnection();
+            requestFullState();
+            setTimeout(requestFullState, 1000);
+            setTimeout(requestFullState, 3000);
+        })();
+    </script>
+</body>
+</html>

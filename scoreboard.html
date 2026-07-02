@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+	<meta content="utf-8" http-equiv="encoding">
+	<title>Social Stream - Scoreboard</title>
+	<link rel="icon" href="./favicon.ico">
+	<style>
+		:root {
+			--score-bg: rgba(9, 13, 23, 0.86);
+			--score-panel: rgba(255, 255, 255, 0.08);
+			--score-border: rgba(255, 255, 255, 0.16);
+			--score-text: #f8fafc;
+			--score-muted: rgba(226, 232, 240, 0.76);
+			--score-accent: #38bdf8;
+			--score-rank: #facc15;
+			--score-font: "Segoe UI", Roboto, Arial, sans-serif;
+			--score-scale: 1;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html,
+		body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			overflow: hidden;
+			background: transparent;
+			color: var(--score-text);
+			font-family: var(--score-font);
+		}
+
+		body {
+			display: flex;
+			align-items: flex-end;
+			justify-content: flex-end;
+			padding: 28px;
+			text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+		}
+
+		body[data-layout="fullscreen"] {
+			align-items: center;
+			justify-content: center;
+			padding: 40px;
+		}
+
+		body[data-layout="ticker"] {
+			align-items: flex-end;
+			justify-content: stretch;
+			padding: 0;
+		}
+
+		body[data-layout="compact"] {
+			align-items: flex-end;
+			justify-content: flex-end;
+			padding: 18px;
+		}
+
+		.scoreboard {
+			width: min(420px, calc(100vw - 56px));
+			max-height: calc(100vh - 56px);
+			padding: calc(18px * var(--score-scale));
+			border: 1px solid var(--score-border);
+			border-radius: 10px;
+			background: var(--score-bg);
+			box-shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
+			backdrop-filter: blur(12px);
+			-webkit-backdrop-filter: blur(12px);
+			overflow: hidden;
+		}
+
+		body[data-layout="fullscreen"] .scoreboard {
+			width: min(760px, calc(100vw - 80px));
+			max-height: calc(100vh - 80px);
+			padding: calc(28px * var(--score-scale));
+		}
+
+		body[data-layout="ticker"] .scoreboard {
+			width: 100%;
+			max-height: 130px;
+			border-radius: 0;
+			border-left: 0;
+			border-right: 0;
+			border-bottom: 0;
+			padding: 14px 22px;
+			display: grid;
+			grid-template-columns: auto 1fr;
+			gap: 18px;
+			align-items: center;
+		}
+
+		body[data-layout="compact"] .scoreboard {
+			width: min(320px, calc(100vw - 36px));
+			padding: 12px;
+			border-radius: 8px;
+		}
+
+		.scoreboard-header {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 14px;
+			padding-bottom: 12px;
+			border-bottom: 1px solid var(--score-border);
+		}
+
+		body[data-layout="ticker"] .scoreboard-header {
+			margin: 0;
+			padding: 0;
+			border: 0;
+			min-width: 160px;
+		}
+
+		.scoreboard-title {
+			margin: 0;
+			font-size: calc(22px * var(--score-scale));
+			line-height: 1.1;
+			letter-spacing: 0;
+		}
+
+		body[data-layout="fullscreen"] .scoreboard-title {
+			font-size: calc(34px * var(--score-scale));
+		}
+
+		body[data-layout="compact"] .scoreboard-title,
+		body[data-layout="ticker"] .scoreboard-title {
+			font-size: calc(18px * var(--score-scale));
+		}
+
+		.scoreboard-subtitle {
+			margin-top: 4px;
+			color: var(--score-muted);
+			font-size: calc(12px * var(--score-scale));
+			font-weight: 600;
+		}
+
+		.scoreboard-status {
+			flex: 0 0 auto;
+			width: 9px;
+			height: 9px;
+			margin-top: 5px;
+			border-radius: 99px;
+			background: var(--score-accent);
+			box-shadow: 0 0 12px var(--score-accent);
+		}
+
+		.scoreboard-list {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			max-height: calc(100vh - 150px);
+			overflow: hidden;
+		}
+
+		body[data-layout="fullscreen"] .scoreboard-list {
+			gap: 10px;
+			max-height: calc(100vh - 210px);
+		}
+
+		body[data-layout="ticker"] .scoreboard-list {
+			flex-direction: row;
+			gap: 12px;
+			max-height: none;
+			overflow: hidden;
+		}
+
+		.score-row {
+			display: grid;
+			grid-template-columns: auto auto 1fr auto;
+			align-items: center;
+			gap: 10px;
+			min-height: 48px;
+			padding: 8px 10px;
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			border-radius: 8px;
+			background: var(--score-panel);
+		}
+
+		body[data-layout="ticker"] .score-row {
+			min-width: 190px;
+			max-width: 260px;
+			grid-template-columns: auto auto 1fr auto;
+			flex: 0 0 auto;
+		}
+
+		body[data-layout="compact"] .score-row {
+			min-height: 40px;
+			padding: 6px 8px;
+			gap: 8px;
+		}
+
+		body[data-animated="true"] .score-row {
+			animation: rowIn 220ms ease-out both;
+		}
+
+		body[data-highlight="true"] .score-row.changed {
+			border-color: rgba(56, 189, 248, 0.85);
+			box-shadow: 0 0 18px rgba(56, 189, 248, 0.25);
+		}
+
+		.rank {
+			min-width: 28px;
+			color: var(--score-rank);
+			font-size: calc(17px * var(--score-scale));
+			font-weight: 800;
+			text-align: center;
+		}
+
+		.avatar {
+			width: calc(34px * var(--score-scale));
+			height: calc(34px * var(--score-scale));
+			border-radius: 50%;
+			object-fit: cover;
+			background: rgba(255, 255, 255, 0.12);
+			border: 1px solid rgba(255, 255, 255, 0.2);
+		}
+
+		body[data-layout="compact"] .avatar,
+		body[data-layout="ticker"] .avatar {
+			width: 28px;
+			height: 28px;
+		}
+
+		.avatar-fallback {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 13px;
+			font-weight: 800;
+			color: #07111f;
+			background: var(--score-accent);
+		}
+
+		.identity {
+			min-width: 0;
+		}
+
+		.name {
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			font-size: calc(15px * var(--score-scale));
+			font-weight: 800;
+		}
+
+		.meta {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			min-height: 16px;
+			color: var(--score-muted);
+			font-size: calc(11px * var(--score-scale));
+			font-weight: 600;
+			text-transform: uppercase;
+		}
+
+		.platform-icon {
+			width: 14px;
+			height: 14px;
+			object-fit: contain;
+		}
+
+		.points {
+			white-space: nowrap;
+			font-size: calc(18px * var(--score-scale));
+			font-weight: 900;
+			color: var(--score-accent);
+			text-align: right;
+		}
+
+		.points-label {
+			display: block;
+			color: var(--score-muted);
+			font-size: 10px;
+			font-weight: 700;
+			text-transform: uppercase;
+		}
+
+		.empty-state {
+			padding: 18px;
+			border: 1px dashed var(--score-border);
+			border-radius: 8px;
+			color: var(--score-muted);
+			background: rgba(255, 255, 255, 0.05);
+			font-weight: 700;
+			text-align: center;
+		}
+
+		body[data-hide-rank="true"] .rank,
+		body[data-hide-avatar="true"] .avatar,
+		body[data-hide-platform="true"] .platform-icon,
+		body[data-hide-points="true"] .points {
+			display: none;
+		}
+
+		body[data-hide-avatar="true"] .score-row {
+			grid-template-columns: auto 1fr auto;
+		}
+
+		body[data-hide-rank="true"][data-hide-avatar="true"] .score-row {
+			grid-template-columns: 1fr auto;
+		}
+
+		body[data-hide-points="true"] .score-row {
+			grid-template-columns: auto auto 1fr;
+		}
+
+		body[data-hide-rank="true"][data-hide-avatar="true"][data-hide-points="true"] .score-row {
+			grid-template-columns: 1fr;
+		}
+
+		body[data-theme="classic"] {
+			--score-bg: rgba(28, 24, 18, 0.9);
+			--score-panel: rgba(255, 245, 218, 0.12);
+			--score-accent: #f2c36b;
+			--score-rank: #f7df9e;
+		}
+
+		body[data-theme="gaming"] {
+			--score-bg: rgba(10, 12, 18, 0.92);
+			--score-panel: rgba(31, 255, 138, 0.1);
+			--score-border: rgba(31, 255, 138, 0.25);
+			--score-accent: #20f287;
+			--score-rank: #ffdf3d;
+		}
+
+		body[data-theme="minimal"] {
+			--score-bg: rgba(0, 0, 0, 0.58);
+			--score-panel: rgba(255, 255, 255, 0.06);
+			--score-border: rgba(255, 255, 255, 0.1);
+			--score-accent: #ffffff;
+			--score-rank: #ffffff;
+		}
+
+		body[data-theme="neon"] {
+			--score-bg: rgba(8, 12, 28, 0.9);
+			--score-panel: rgba(236, 72, 153, 0.1);
+			--score-border: rgba(56, 189, 248, 0.32);
+			--score-accent: #22d3ee;
+			--score-rank: #f0abfc;
+		}
+
+		body[data-theme="dark"] {
+			--score-bg: rgba(0, 0, 0, 0.88);
+			--score-panel: rgba(255, 255, 255, 0.07);
+			--score-accent: #94a3b8;
+			--score-rank: #e2e8f0;
+		}
+
+		@keyframes rowIn {
+			from {
+				opacity: 0;
+				transform: translateY(8px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+	</style>
+</head>
+<body>
+	<section class="scoreboard" id="scoreboard">
+		<header class="scoreboard-header" id="scoreboardHeader">
+			<div>
+				<h1 class="scoreboard-title" id="scoreboardTitle">Scoreboard</h1>
+				<div class="scoreboard-subtitle" id="scoreboardSubtitle">Waiting for points</div>
+			</div>
+			<div class="scoreboard-status" title="Live"></div>
+		</header>
+		<div class="scoreboard-list" id="scoreboardList">
+			<div class="empty-state">Enable Points System or send a points leaderboard update.</div>
+		</div>
+	</section>
+
+	<script>
+	(function () {
+		function getById(id) {
+			return document.getElementById(id);
+		}
+
+		function clampNumber(value, fallback, min, max) {
+			var parsed = parseFloat(value);
+			if (!isFinite(parsed)) parsed = fallback;
+			return Math.max(min, Math.min(max, parsed));
+		}
+
+		function normalizeColor(value) {
+			if (typeof value !== "string") return "";
+			var trimmed = value.trim();
+			if (!trimmed) return "";
+			if (/^[0-9a-fA-F]{3,8}$/.test(trimmed)) return "#" + trimmed;
+			return trimmed;
+		}
+
+		function safeText(value) {
+			return value == null ? "" : String(value);
+		}
+
+		function normalizePlatform(value) {
+			return safeText(value || "default").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "") || "default";
+		}
+
+		function parseDonationAmount(value) {
+			if (typeof value === "number") return value;
+			var match = safeText(value).replace(/,/g, "").match(/[0-9]+(?:\.[0-9]+)?/);
+			return match ? parseFloat(match[0]) : 0;
+		}
+
+		var urlParams = new URLSearchParams(window.location.search);
+		var roomID = urlParams.get("session") || urlParams.get("s") || urlParams.get("id") || "";
+		var password = urlParams.get("password") || "false";
+		var layout = urlParams.get("layout") || "sidebar";
+		var theme = urlParams.get("theme") || "modern";
+		var maxUsers = Math.round(clampNumber(urlParams.get("maxusers"), 10, 1, 50));
+		var minPoints = clampNumber(urlParams.get("minpoints"), 0, 0, 999999999);
+		var showLocalChatPoints = urlParams.has("chatpoints");
+		var showLocalDonationPoints = urlParams.has("donationpoints");
+		var showCustomScores = urlParams.has("customtriggers");
+		var lastScores = {};
+		var entries = [];
+		var localScores = {};
+		var iframe = null;
+
+		if (layout === "full") layout = "fullscreen";
+		if (!/^(sidebar|ticker|fullscreen|compact)$/.test(layout)) layout = "sidebar";
+		if (!/^(modern|classic|gaming|minimal|neon|dark)$/.test(theme)) theme = "modern";
+
+		document.body.setAttribute("data-layout", layout);
+		document.body.setAttribute("data-theme", theme);
+		document.body.setAttribute("data-hide-points", urlParams.has("hidepoints") ? "true" : "false");
+		document.body.setAttribute("data-hide-rank", urlParams.has("hiderank") ? "true" : "false");
+		document.body.setAttribute("data-hide-avatar", urlParams.has("hideavatar") ? "true" : "false");
+		document.body.setAttribute("data-hide-platform", urlParams.has("hideplatform") ? "true" : "false");
+		document.body.setAttribute("data-animated", urlParams.has("animations") ? "true" : "false");
+		document.body.setAttribute("data-highlight", urlParams.has("highlightchanges") ? "true" : "false");
+
+		if (urlParams.get("title")) {
+			getById("scoreboardTitle").textContent = urlParams.get("title");
+		}
+
+		if (urlParams.get("font")) {
+			document.documentElement.style.setProperty("--score-font", urlParams.get("font") + ', "Segoe UI", Roboto, Arial, sans-serif');
+		}
+
+		if (urlParams.get("googlefont")) {
+			var fontNames = urlParams.get("googlefont").split(",").map(function (font) {
+				return font.trim();
+			}).filter(Boolean);
+			if (fontNames.length) {
+				var fontLink = document.createElement("link");
+				fontLink.rel = "stylesheet";
+				fontLink.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(fontNames[0]).replace(/%20/g, "+") + ":wght@400;600;700;800;900&display=swap";
+				document.head.appendChild(fontLink);
+				document.documentElement.style.setProperty("--score-font", '"' + fontNames[0].replace(/"/g, "") + '", "Segoe UI", Roboto, Arial, sans-serif');
+			}
+		}
+
+		var bgColor = normalizeColor(urlParams.get("bgcolor"));
+		if (bgColor) document.documentElement.style.setProperty("--score-bg", bgColor);
+
+		var textColor = normalizeColor(urlParams.get("textcolor"));
+		if (textColor) document.documentElement.style.setProperty("--score-text", textColor);
+
+		if (urlParams.get("scale")) {
+			document.documentElement.style.setProperty("--score-scale", clampNumber(urlParams.get("scale"), 1, 0.5, 2.5));
+		}
+
+		function getEntryKey(entry) {
+			return normalizePlatform(entry.type || entry.platform) + "::" + safeText(entry.chatname || entry.username).toLowerCase();
+		}
+
+		function normalizeEntry(entry, index) {
+			var points = Number(entry.available);
+			if (!isFinite(points)) points = Number(entry.points);
+			if (!isFinite(points)) points = Number(entry.score);
+			if (!isFinite(points)) points = 0;
+			return {
+				chatname: safeText(entry.chatname || entry.username || "Viewer"),
+				type: normalizePlatform(entry.type || entry.platform || "default"),
+				chatimg: safeText(entry.chatimg || entry.avatar || entry.avatarUrl || ""),
+				points: points,
+				pointsSpent: Number(entry.pointsSpent) || 0,
+				currentStreak: Number(entry.currentStreak) || 0,
+				rank: Number(entry.rank) || index + 1,
+				key: ""
+			};
+		}
+
+		function setEntries(nextEntries, reason) {
+			entries = nextEntries
+				.map(normalizeEntry)
+				.filter(function (entry) {
+					return entry.points >= minPoints && entry.chatname;
+				})
+				.sort(function (a, b) {
+					if (b.points !== a.points) return b.points - a.points;
+					return a.rank - b.rank;
+				})
+				.slice(0, maxUsers);
+
+			for (var i = 0; i < entries.length; i++) {
+				entries[i].rank = i + 1;
+				entries[i].key = getEntryKey(entries[i]);
+			}
+
+			render(reason || "update");
+		}
+
+		function updateSubtitle(reason) {
+			var subtitle = getById("scoreboardSubtitle");
+			if (!entries.length) {
+				subtitle.textContent = "Waiting for points";
+				return;
+			}
+			var label = reason ? reason.replace(/_/g, " ") : "live";
+			subtitle.textContent = entries.length + " ranked viewer" + (entries.length === 1 ? "" : "s") + " - " + label;
+		}
+
+		function createAvatar(entry) {
+			var node;
+			if (entry.chatimg) {
+				node = document.createElement("img");
+				node.src = entry.chatimg;
+				node.alt = "";
+				node.onerror = function () {
+					this.className = "avatar avatar-fallback";
+					this.removeAttribute("src");
+					this.textContent = entry.chatname.charAt(0).toUpperCase();
+				};
+			} else {
+				node = document.createElement("div");
+				node.textContent = entry.chatname.charAt(0).toUpperCase();
+			}
+			node.className = entry.chatimg ? "avatar" : "avatar avatar-fallback";
+			return node;
+		}
+
+		function createPlatformIcon(entry) {
+			var img = document.createElement("img");
+			img.className = "platform-icon";
+			img.alt = entry.type;
+			img.src = "./sources/images/" + entry.type + ".png";
+			img.onerror = function () {
+				this.style.display = "none";
+			};
+			return img;
+		}
+
+		function render(reason) {
+			var list = getById("scoreboardList");
+			list.textContent = "";
+			updateSubtitle(reason);
+
+			if (!entries.length) {
+				var empty = document.createElement("div");
+				empty.className = "empty-state";
+				empty.textContent = "Enable Points System, then wait for chat activity or manage points from the popup.";
+				list.appendChild(empty);
+				document.title = "Scoreboard";
+				return;
+			}
+
+			for (var i = 0; i < entries.length; i++) {
+				var entry = entries[i];
+				var row = document.createElement("div");
+				var previousScore = lastScores[entry.key];
+				row.className = "score-row" + (previousScore !== undefined && previousScore !== entry.points ? " changed" : "");
+				row.style.animationDelay = (i * 35) + "ms";
+
+				var rank = document.createElement("div");
+				rank.className = "rank";
+				rank.textContent = "#" + entry.rank;
+
+				var identity = document.createElement("div");
+				identity.className = "identity";
+
+				var name = document.createElement("div");
+				name.className = "name";
+				name.textContent = entry.chatname;
+
+				var meta = document.createElement("div");
+				meta.className = "meta";
+				meta.appendChild(createPlatformIcon(entry));
+				var metaText = document.createElement("span");
+				metaText.textContent = entry.currentStreak ? entry.type + " streak " + entry.currentStreak : entry.type;
+				meta.appendChild(metaText);
+				identity.appendChild(name);
+				identity.appendChild(meta);
+
+				var points = document.createElement("div");
+				points.className = "points";
+				points.textContent = Math.round(entry.points).toLocaleString();
+				var label = document.createElement("span");
+				label.className = "points-label";
+				label.textContent = "points";
+				points.appendChild(label);
+
+				row.appendChild(rank);
+				row.appendChild(createAvatar(entry));
+				row.appendChild(identity);
+				row.appendChild(points);
+				list.appendChild(row);
+				lastScores[entry.key] = entry.points;
+			}
+
+			document.title = "Scoreboard: " + entries[0].chatname + " (" + Math.round(entries[0].points) + ")";
+		}
+
+		function processPointsSnapshot(data) {
+			if (!Array.isArray(data.leaderboard)) return;
+			setEntries(data.leaderboard, data.reason || "points update");
+		}
+
+		function addLocalScore(data) {
+			if (!data || !data.chatname || !data.type || data.bot === true) return;
+			var amount = 0;
+			if (showLocalChatPoints && data.chatmessage) amount += 1;
+			if (showLocalDonationPoints && data.hasDonation) amount += Math.round(parseDonationAmount(data.hasDonation) * 100);
+			if (showCustomScores) {
+				if (isFinite(Number(data.score))) amount += Number(data.score);
+				if (data.meta && isFinite(Number(data.meta.score))) amount += Number(data.meta.score);
+				if (data.meta && isFinite(Number(data.meta.points))) amount += Number(data.meta.points);
+			}
+			if (!amount) return;
+
+			var key = normalizePlatform(data.type) + "::" + safeText(data.chatname).toLowerCase();
+			if (!localScores[key]) {
+				localScores[key] = {
+					chatname: data.chatname,
+					type: data.type,
+					chatimg: data.chatimg || "",
+					points: 0,
+					rank: 0
+				};
+			}
+			localScores[key].points += amount;
+			if (data.chatimg) localScores[key].chatimg = data.chatimg;
+			setEntries(Object.keys(localScores).map(function (scoreKey) {
+				return localScores[scoreKey];
+			}), "local scoring");
+		}
+
+		function processData(data) {
+			if (!data) return;
+			if (data.content) data = data.content;
+			if (data.overlayNinja) data = data.overlayNinja;
+
+			if (data.event === "points_leaderboard" || data.type === "points_leaderboard") {
+				processPointsSnapshot(data);
+				return;
+			}
+
+			if (Array.isArray(data.leaderboard) && data.reason) {
+				processPointsSnapshot(data);
+				return;
+			}
+
+			addLocalScore(data);
+		}
+
+		function setupSocket() {
+			if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) return;
+			var serverURL = urlParams.get("server") || urlParams.get("server2") || urlParams.get("server3") || "wss://io.socialstream.ninja/extension";
+			var attempts = 1;
+			var socket = null;
+			function connect() {
+				if (socket) {
+					socket.onclose = null;
+					try { socket.close(); } catch (e) {}
+				}
+				socket = new WebSocket(serverURL);
+				socket.onopen = function () {
+					attempts = 1;
+					socket.send(JSON.stringify({ join: roomID, out: 3, in: 4 }));
+				};
+				socket.onclose = function () {
+					setTimeout(connect, Math.min(5000, 100 * attempts++));
+				};
+				socket.onerror = function () {
+					try { socket.close(); } catch (e) {}
+				};
+				socket.addEventListener("message", function (event) {
+					if (!event.data) return;
+					try {
+						var data = JSON.parse(event.data);
+						processData(data);
+						if (data.get) {
+							socket.send(JSON.stringify({ callback: { get: data.get, result: true } }));
+						}
+					} catch (e) {}
+				});
+			}
+			connect();
+		}
+
+		function setupIframeBridge() {
+			if (!roomID) return;
+			var lanonly = urlParams.has("lanonly") ? "&lanonly" : "";
+			iframe = document.createElement("iframe");
+			iframe.src =
+				"https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=" +
+				encodeURIComponent(password) +
+				lanonly +
+				"&solo&view=" +
+				encodeURIComponent(roomID) +
+				"&novideo&noaudio&label=dock&cleanoutput&room=" +
+				encodeURIComponent(roomID);
+			iframe.style.width = "0px";
+			iframe.style.height = "0px";
+			iframe.style.position = "fixed";
+			iframe.style.left = "-100px";
+			iframe.style.top = "-100px";
+			document.body.appendChild(iframe);
+		}
+
+		window.addEventListener("message", function (event) {
+			if (!urlParams.has("preview") && iframe && event.source !== iframe.contentWindow) return;
+			var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
+			if (typeof payload !== "undefined") {
+				processData(payload);
+			}
+		});
+
+		window.__scoreboardProcessData = processData;
+
+		if (urlParams.has("transparent")) {
+			document.body.style.background = "transparent";
+		}
+
+		setupIframeBridge();
+		setupSocket();
+		render("ready");
+	})();
+	</script>
+</body>
+</html>

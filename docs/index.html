@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Stream Ninja Docs</title>
+  <meta name="description" content="Client-side Markdown documentation viewer for Social Stream Ninja.">
+  <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+  <script defer src="../thirdparty/marked.umd.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #eef3f8;
+      --text: #18212f;
+      --muted: #59687c;
+      --line: #d8e0ea;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --code-bg: #eef2f7;
+      --shadow: 0 12px 30px rgba(22, 34, 51, 0.12);
+      --sidebar-width: 330px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #10141b;
+        --panel: #171d26;
+        --panel-soft: #202938;
+        --text: #edf2f7;
+        --muted: #a8b4c4;
+        --line: #2d3748;
+        --accent: #2dd4bf;
+        --accent-strong: #5eead4;
+        --code-bg: #0f172a;
+        --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--accent-strong);
+      text-decoration: underline;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 18px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 16px;
+    }
+
+    .brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .brand span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .search {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font: inherit;
+      margin-bottom: 14px;
+    }
+
+    .nav-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    button,
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 8px 10px;
+      font: inherit;
+      text-decoration: none;
+    }
+
+    button:hover,
+    .button:hover {
+      border-color: var(--accent);
+      color: var(--accent-strong);
+      text-decoration: none;
+    }
+
+    .sidebar-content {
+      font-size: 14px;
+    }
+
+    .sidebar-content h1,
+    .sidebar-content h2,
+    .sidebar-content h3 {
+      margin: 18px 0 8px;
+      font-size: 14px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .sidebar-content ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .sidebar-content li {
+      margin: 2px 0;
+    }
+
+    .sidebar-content li ul {
+      margin-left: 12px;
+      padding-left: 10px;
+      border-left: 1px solid var(--line);
+    }
+
+    .sidebar-content a {
+      display: block;
+      border-radius: 8px;
+      color: var(--text);
+      padding: 6px 8px;
+      text-decoration: none;
+    }
+
+    .sidebar-content a:hover,
+    .sidebar-content a.active {
+      background: var(--panel-soft);
+      color: var(--accent-strong);
+    }
+
+    .sidebar-content .hidden {
+      display: none;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 28px;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      box-shadow: var(--shadow);
+      padding: 10px 12px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    .toolbar-path {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+    }
+
+    .toolbar-buttons {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .content {
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 34px;
+    }
+
+    .content.loading,
+    .content.error {
+      color: var(--muted);
+    }
+
+    .content h1,
+    .content h2,
+    .content h3,
+    .content h4 {
+      line-height: 1.25;
+      margin: 28px 0 10px;
+    }
+
+    .content h1:first-child {
+      margin-top: 0;
+    }
+
+    .content h1 {
+      font-size: 32px;
+    }
+
+    .content h2 {
+      border-top: 1px solid var(--line);
+      padding-top: 24px;
+      font-size: 24px;
+    }
+
+    .content h3 {
+      font-size: 19px;
+    }
+
+    .content p,
+    .content li {
+      color: var(--text);
+    }
+
+    .content table {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      border-collapse: collapse;
+      margin: 18px 0;
+    }
+
+    .content th,
+    .content td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .content th {
+      background: var(--panel-soft);
+    }
+
+    .content code {
+      background: var(--code-bg);
+      border-radius: 6px;
+      padding: 2px 5px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+    }
+
+    .content pre {
+      background: var(--code-bg);
+      border-radius: 8px;
+      overflow-x: auto;
+      padding: 16px;
+    }
+
+    .content pre code {
+      background: transparent;
+      padding: 0;
+    }
+
+    .content blockquote {
+      border-left: 4px solid var(--accent);
+      margin: 18px 0;
+      padding: 8px 16px;
+      background: var(--panel-soft);
+      color: var(--muted);
+    }
+
+    .content img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    .mobile-toggle {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+        position: fixed;
+        z-index: 10;
+        width: min(92vw, 360px);
+        box-shadow: var(--shadow);
+      }
+
+      body.nav-open .sidebar {
+        display: block;
+      }
+
+      .mobile-toggle {
+        display: inline-flex;
+      }
+
+      .main {
+        padding: 14px;
+      }
+
+      .toolbar {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .content {
+        padding: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <img src="../media/logo.png" alt="Social Stream Ninja logo">
+        <div>
+          <strong>Social Stream Ninja</strong>
+          <span>Markdown docs viewer</span>
+        </div>
+      </div>
+      <input class="search" id="search" type="search" placeholder="Filter docs" autocomplete="off">
+      <div class="nav-actions">
+        <a class="button" href="../index.html">Home</a>
+        <a class="button" href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <nav class="sidebar-content" id="sidebarContent" aria-label="Documentation navigation">Loading sitemap...</nav>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <button class="mobile-toggle" id="toggleNav" type="button">Menu</button>
+        <div class="toolbar-path" id="currentPath">Loading...</div>
+        <div class="toolbar-buttons">
+          <button id="copyLink" type="button">Copy Link</button>
+          <a class="button" id="rawLink" href="#" target="_blank" rel="noopener">Raw</a>
+        </div>
+      </div>
+      <article class="content loading" id="content">Loading documentation...</article>
+    </main>
+  </div>
+
+  <script>
+    const DEFAULT_FILE = "agents/99-agent-index.md";
+    const SITEMAP_FILE = "agents/SITEMAP.md";
+    const state = { currentFile: DEFAULT_FILE };
+
+    const elements = {
+      content: document.getElementById("content"),
+      sidebarContent: document.getElementById("sidebarContent"),
+      currentPath: document.getElementById("currentPath"),
+      rawLink: document.getElementById("rawLink"),
+      copyLink: document.getElementById("copyLink"),
+      search: document.getElementById("search"),
+      toggleNav: document.getElementById("toggleNav")
+    };
+
+    function stripHash(path) {
+      return String(path || "").split("#")[0];
+    }
+
+    function getHash(path) {
+      const value = String(path || "");
+      const index = value.indexOf("#");
+      return index === -1 ? "" : value.slice(index);
+    }
+
+    function normalizeDocPath(path, baseFile) {
+      if (!path) return DEFAULT_FILE;
+      if (/^(https?:|mailto:|tel:)/i.test(path)) return path;
+      const cleaned = String(path).replace(/\\/g, "/");
+      const baseDir = baseFile && baseFile.includes("/") ? baseFile.split("/").slice(0, -1).join("/") + "/" : "";
+      const url = new URL(cleaned, "https://docs.local/" + baseDir);
+      const normalized = decodeURIComponent(url.pathname).replace(/^\/+/, "");
+      if (!normalized || normalized.split("/").includes("..")) return DEFAULT_FILE;
+      if (normalized.endsWith("/")) return normalized + "index.md";
+      return normalized;
+    }
+
+    function fileFromLocation() {
+      const params = new URLSearchParams(window.location.search);
+      return normalizeDocPath(params.get("file") || DEFAULT_FILE);
+    }
+
+    function updateUrl(path) {
+      const cleanPath = stripHash(path);
+      const hash = getHash(path);
+      const url = new URL(window.location.href);
+      url.searchParams.set("file", cleanPath);
+      url.hash = hash.replace(/^#/, "");
+      history.pushState({ file: cleanPath }, "", url);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function fallbackMarkdown(markdown) {
+      const lines = markdown.split(/\r?\n/);
+      let inCode = false;
+      let html = "";
+      let inList = false;
+      for (const line of lines) {
+        if (line.startsWith("```")) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          html += inCode ? "</code></pre>" : "<pre><code>";
+          inCode = !inCode;
+          continue;
+        }
+        if (inCode) {
+          html += escapeHtml(line) + "\n";
+          continue;
+        }
+        const heading = line.match(/^(#{1,4})\s+(.*)$/);
+        if (heading) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          const level = heading[1].length;
+          html += `<h${level}>${inlineMarkdown(heading[2])}</h${level}>`;
+          continue;
+        }
+        const bullet = line.match(/^\s*[-*]\s+(.*)$/);
+        if (bullet) {
+          if (!inList) {
+            html += "<ul>";
+            inList = true;
+          }
+          html += `<li>${inlineMarkdown(bullet[1])}</li>`;
+          continue;
+        }
+        if (!line.trim()) {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          continue;
+        }
+        html += `<p>${inlineMarkdown(line)}</p>`;
+      }
+      if (inList) html += "</ul>";
+      if (inCode) html += "</code></pre>";
+      return html;
+    }
+
+    function inlineMarkdown(value) {
+      return escapeHtml(value)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    }
+
+    function renderMarkdown(markdown) {
+      if (window.marked && window.marked.parse) {
+        return window.marked.parse(markdown, { gfm: true, breaks: false });
+      }
+      return fallbackMarkdown(markdown);
+    }
+
+    function slugify(text) {
+      return String(text)
+        .toLowerCase()
+        .replace(/<[^>]+>/g, "")
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
+    }
+
+    function addHeadingLinks() {
+      const used = new Set();
+      elements.content.querySelectorAll("h1, h2, h3, h4").forEach(heading => {
+        let id = heading.id || slugify(heading.textContent);
+        if (!id) return;
+        let unique = id;
+        let count = 2;
+        while (used.has(unique)) {
+          unique = `${id}-${count}`;
+          count += 1;
+        }
+        used.add(unique);
+        heading.id = unique;
+        if (!heading.querySelector(".header-link")) {
+          const text = heading.innerHTML;
+          heading.innerHTML = `<a class="header-link" href="#${unique}">${text}</a>`;
+        }
+      });
+    }
+
+    function rewriteContentLinks() {
+      elements.content.querySelectorAll("a[href]").forEach(link => {
+        const href = link.getAttribute("href");
+        if (!href || href.startsWith("#")) return;
+        if (/^(https?:|mailto:|tel:)/i.test(href)) {
+          link.target = "_blank";
+          link.rel = "noopener";
+          return;
+        }
+        const target = normalizeDocPath(href, state.currentFile);
+        if (target.endsWith(".md")) {
+          link.href = `?file=${encodeURIComponent(stripHash(target))}${getHash(href)}`;
+          link.addEventListener("click", event => {
+            event.preventDefault();
+            loadDoc(target + getHash(href), true);
+          });
+        }
+      });
+    }
+
+    function setActiveLink(path) {
+      const cleanPath = stripHash(path);
+      elements.sidebarContent.querySelectorAll("a").forEach(link => {
+        const target = normalizeDocPath(link.getAttribute("href"), SITEMAP_FILE);
+        link.classList.toggle("active", stripHash(target) === cleanPath);
+      });
+    }
+
+    async function loadDoc(path, push) {
+      const normalized = normalizeDocPath(path || DEFAULT_FILE);
+      if (/^https?:/i.test(normalized)) {
+        window.open(normalized, "_blank", "noopener");
+        return;
+      }
+      const cleanPath = stripHash(normalized);
+      const hash = getHash(normalized);
+      state.currentFile = cleanPath;
+      elements.content.className = "content loading";
+      elements.content.textContent = "Loading documentation...";
+      elements.currentPath.textContent = cleanPath;
+      elements.rawLink.href = cleanPath;
+      setActiveLink(cleanPath);
+      if (push) updateUrl(cleanPath + hash);
+      try {
+        const response = await fetch(cleanPath, { cache: "no-cache" });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const markdown = await response.text();
+        elements.content.innerHTML = renderMarkdown(markdown);
+        elements.content.className = "content";
+        addHeadingLinks();
+        rewriteContentLinks();
+        if (hash) {
+          requestAnimationFrame(() => {
+            const target = document.getElementById(hash.slice(1));
+            if (target) target.scrollIntoView();
+          });
+        } else {
+          window.scrollTo({ top: 0 });
+        }
+      } catch (error) {
+        elements.content.className = "content error";
+        elements.content.innerHTML = `<h1>Unable to load document</h1><p>${escapeHtml(cleanPath)}</p><p>${escapeHtml(error.message)}</p>`;
+      }
+    }
+
+    async function loadSitemap() {
+      try {
+        const response = await fetch(SITEMAP_FILE, { cache: "no-cache" });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const markdown = await response.text();
+        elements.sidebarContent.innerHTML = renderMarkdown(markdown);
+        elements.sidebarContent.querySelectorAll("a[href]").forEach(link => {
+          const href = link.getAttribute("href");
+          const target = normalizeDocPath(href, SITEMAP_FILE);
+          if (target.endsWith(".md")) {
+            link.href = `?file=${encodeURIComponent(stripHash(target))}${getHash(href)}`;
+            link.addEventListener("click", event => {
+              event.preventDefault();
+              document.body.classList.remove("nav-open");
+              loadDoc(target + getHash(href), true);
+            });
+          }
+        });
+      } catch (error) {
+        elements.sidebarContent.innerHTML = `<p>Unable to load sitemap.</p><p><a href="?file=${encodeURIComponent(DEFAULT_FILE)}">${DEFAULT_FILE}</a></p>`;
+      }
+    }
+
+    function filterSidebar(query) {
+      const term = query.trim().toLowerCase();
+      elements.sidebarContent.querySelectorAll("li").forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.classList.toggle("hidden", Boolean(term) && !text.includes(term));
+      });
+    }
+
+    elements.search.addEventListener("input", event => filterSidebar(event.target.value));
+    elements.toggleNav.addEventListener("click", () => document.body.classList.toggle("nav-open"));
+    elements.copyLink.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        elements.copyLink.textContent = "Copied";
+        setTimeout(() => { elements.copyLink.textContent = "Copy Link"; }, 1200);
+      } catch (_) {
+        elements.copyLink.textContent = "Copy Failed";
+        setTimeout(() => { elements.copyLink.textContent = "Copy Link"; }, 1200);
+      }
+    });
+
+    window.addEventListener("popstate", () => loadDoc(fileFromLocation(), false));
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadSitemap();
+      loadDoc(fileFromLocation() + window.location.hash, false);
+    });
+  </script>
+</body>
+</html>

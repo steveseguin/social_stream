@@ -1,0 +1,241 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas {
+    max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+    max-width: 100%;
+    font: inherit;
+}
+
+input,
+select,
+textarea {
+    min-width: 0;
+}
+
+button {
+    min-width: 0;
+}
+
+pre,
+code,
+.hint,
+.subtitle,
+.status-note,
+.status-chip,
+.chip,
+.pill,
+.message,
+.chat-message,
+.feed-message,
+.log-entry,
+.system-log,
+#status,
+#status-detail,
+#messageArea,
+#textarea,
+#messageContainer,
+#systemLogContainer,
+#roomInfoContainer,
+#event-log,
+#events-list {
+    overflow-wrap: anywhere;
+}
+
+.container,
+.wrap,
+.page,
+.content,
+.layout,
+.split,
+.primary-grid,
+.layout-main,
+.main-content,
+.sidebar,
+.left-panel,
+.right-panel,
+.panel,
+.card,
+.channel-header,
+.landing-container,
+.chat-container,
+.stats-container,
+.connection-status,
+.recent-events,
+.config-panel,
+.message-panel,
+.system-panel,
+.info-panel {
+    min-width: 0;
+}
+
+@media (max-width: 720px) {
+    body {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .page,
+    .wrap {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .container,
+    .content,
+    .wrap,
+    .page {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .container,
+    .layout,
+    .split,
+    .primary-grid,
+    .layout-main,
+    .setup-grid,
+    .chat-compose,
+    .channel-picker-row,
+    .field-row,
+    .stats-grid,
+    .status-grid,
+    .stats {
+        grid-template-columns: 1fr !important;
+    }
+
+    .container,
+    .header-row,
+    .channel-header,
+    .header-info,
+    .header-top,
+    .header-bottom,
+    .channel-input-container,
+    .room-input-container,
+    .chat-input,
+    .hero-actions,
+    .page-actions,
+    .button-row,
+    .popup-actions,
+    .inline-row,
+    .auth-row,
+    .status-row,
+    .setup-row,
+    .setup-actions,
+    .account-actions,
+    .token-row,
+    .row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .left-panel,
+    .right-panel,
+    .main-content,
+    .sidebar {
+        width: 100%;
+    }
+
+    .channel-input,
+    .room-input,
+    .setup-row input[type="text"],
+    .chat-input input,
+    .channel-input-container > *,
+    .room-input-container > *,
+    .chat-input > *,
+    .hero-actions > button,
+    .page-actions > button,
+    .button-row > *,
+    .setup-actions > button,
+    .account-actions > button,
+    .auth-row > button,
+    .token-row > *,
+    .row > button {
+        width: 100% !important;
+    }
+
+    .auth-method-selector,
+    .auth-method-options {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .auth-method-options {
+        gap: 8px;
+    }
+
+    .landing-container {
+        padding: 24px 16px !important;
+    }
+
+    .message-panel,
+    #messageArea,
+    #textarea,
+    .chat-feed,
+    .alerts-feed,
+    .feed,
+    .log {
+        min-height: 220px !important;
+        max-height: 55vh;
+    }
+}
+
+@media (max-width: 340px) {
+    body,
+    .page,
+    .wrap {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    .panel,
+    .card,
+    .channel-header,
+    .chat-container,
+    .stats-container,
+    .connection-status,
+    .recent-events,
+    .landing-container,
+    .config-panel,
+    .message-panel,
+    .system-panel,
+    .info-panel {
+        padding: 10px !important;
+        border-radius: 6px;
+    }
+
+    h1,
+    .landing-title {
+        font-size: 22px !important;
+        line-height: 1.2;
+    }
+
+    h2 {
+        font-size: 18px !important;
+    }
+
+    button {
+        white-space: normal;
+    }
+}

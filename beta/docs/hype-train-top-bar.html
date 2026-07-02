@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hype Train Top Bar Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="How to add the Social Stream Ninja Twitch Hype Train top bar overlay to OBS and test it before going live.">
+    <style>
+        .guide-image {
+            display: block;
+            width: 100%;
+            max-width: 1100px;
+            margin: 1.5rem auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-note {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.4rem 1.6rem;
+            margin: 1.5rem 0;
+        }
+
+        .dark-mode .quick-note {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .warning-note {
+            background: rgba(251, 188, 5, 0.14);
+            border-left-color: #f9ab00;
+        }
+
+        .dark-mode .warning-note {
+            background: rgba(251, 188, 5, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../media/logo.png" alt="Social Stream Ninja logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Hype Train Top Bar Guide</h1>
+            <p>Add a Twitch-style Hype Train progress bar to OBS, test it before going live, and know what to check if it does not appear.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>What this overlay does</h3>
+                    <p>The Hype Train Top Bar is a dedicated overlay for Twitch Hype Train and Treasure Train events. It shows the current level, progress, total, timer, and top contributors in a top-bar style layout.</p>
+                    <p>It does not show normal chat messages. Hype Train data is metadata-only, so the bar updates when Twitch sends a Hype Train event.</p>
+                    <img src="images/hype-train-top-bar-preview.png" alt="Hype Train Top Bar preview showing progress, level, timer, and contributors" class="guide-image">
+                </div>
+
+                <div class="guide-card">
+                    <h3>Before you start</h3>
+                    <ul class="guide-list">
+                        <li>Use Twitch WebSocket mode for Twitch event capture.</li>
+                        <li>If prompted, re-authorize Twitch so Social Stream Ninja can request the <code>channel:read:hype_train</code> scope.</li>
+                        <li>Add the Hype Train Top Bar as a browser source, not as a normal chat overlay.</li>
+                    </ul>
+                    <div class="quick-note warning-note">
+                        <strong>Important:</strong> A Hype Train will not appear in the normal chat overlay. Use the Hype Train Top Bar, the Meta Data Bar, or <code>events.html</code> to see it.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Set it up from the popup</h3>
+                    <ol class="guide-steps">
+                        <li>Open the Social Stream Ninja popup.</li>
+                        <li>Find <strong>Hype Meter and Viewer Count</strong>.</li>
+                        <li>Copy the <strong>Hype Train Top Bar</strong> link.</li>
+                        <li>Add that link to OBS as a Browser Source.</li>
+                        <li>Use the <strong>Fake Hype Train</strong> button to confirm the bar appears.</li>
+                    </ol>
+                    <img src="images/hype-train-popup-options.png" alt="Social Stream Ninja popup showing Hype Train Top Bar link and layout options" class="guide-image">
+                    <div class="quick-note">
+                        <strong>Tip:</strong> The copied URL includes <code>&amp;hype</code>, which makes the overlay focus on Hype Train and Treasure Train events.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Customize the bar</h3>
+                    <p>The Hype Train Top Bar options work like the other overlay options in the popup. Toggle an option, then copy the updated link again.</p>
+                    <ul class="guide-list">
+                        <li><strong>Align overlay to the right-side:</strong> places the bar against the right edge.</li>
+                        <li><strong>Align overlay to the center:</strong> centers the bar horizontally.</li>
+                        <li><strong>Scale multiplier:</strong> makes the bar smaller or larger.</li>
+                        <li><strong>Panel opacity:</strong> adjusts the whole bar opacity.</li>
+                        <li><strong>Transparent bar background:</strong> removes the filled background behind the bar.</li>
+                        <li><strong>Disable text outlining:</strong> removes the black text shadow.</li>
+                        <li><strong>Custom page background color:</strong> useful when testing outside OBS or when you want a non-transparent page background.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Testing options</h3>
+                    <ul class="guide-list">
+                        <li>Use <strong>Fake Hype Train</strong> in the popup for the quickest test.</li>
+                        <li>Use <code>sampleapi.html</code> and select a Hype Train preset if you want to test through the API route.</li>
+                        <li>Use <code>events.html</code> if you want to confirm the raw Twitch Hype Train event is being received.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>If it does not show</h3>
+                    <ol class="guide-steps">
+                        <li>Confirm your Twitch account was re-authorized after Hype Train support was added.</li>
+                        <li>Confirm the copied overlay URL has the same session ID as the Social Stream Ninja popup.</li>
+                        <li>Confirm the URL includes <code>&amp;hype</code>.</li>
+                        <li>Test with the <strong>Fake Hype Train</strong> button.</li>
+                        <li>Open <code>events.html</code> with the same session to verify Hype Train metadata is arriving.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../media/logo.png" alt="Social Stream Ninja logo">
+                    <span>Social Stream Ninja</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>Resources</h4>
+                        <ul>
+                            <li><a href="guides.html">Guides</a></li>
+                            <li><a href="event-reference.html">Event Reference</a></li>
+                            <li><a href="support.html">Support</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Social Stream Ninja. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

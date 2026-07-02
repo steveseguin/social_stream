@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Setup Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Choose the right YouTube Social Stream Ninja setup path: live chat, static comments, Standard capture, WebSocket/API mode, and OAuth project setup.">
+</head>
+<body>
+    <header><div class="container"><div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div><nav><ul><li><a href="../index.html">Home</a></li><li><a href="features.html">Features</a></li><li><a href="download.html">Download</a></li><li><a href="guides.html" class="active">Guides</a></li><li><a href="commands.html">Commands &amp; API</a></li><li><a href="supported-sites.html">Supported Sites</a></li><li><a href="templates.html">Templates</a></li><li><a href="support.html">Support</a></li></ul></nav><div class="header-controls"><div class="mobile-nav-toggle"><span></span><span></span><span></span></div></div></div></header>
+    <section class="page-hero"><div class="container"><h1>YouTube Setup Guide</h1><p>Choose live chat, comments, Standard capture, or API mode deliberately.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Start From Supported Sites</h2>
+                <p>Search for YouTube first. Social Stream separates live chat from static comments because they are different workflows.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-youtube-supported-sites.png" alt="Supported Sites page filtered to YouTube Live and YouTube Static Comments" class="guide-image">
+                    <figcaption>Use YouTube Live for live stream chat. Use YouTube Static Comments for normal video comments.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Choose The Mode</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Situation</th><th>Try First</th><th>Notes</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Situation">Normal live chat in Chrome</td><td data-label="Try First">Browser extension / Standard capture</td><td data-label="Notes">Open the live chat where the extension can read it.</td></tr>
+                        <tr><td data-label="Situation">Need background reliability or richer API events</td><td data-label="Try First">WebSocket/API source mode</td><td data-label="Notes">OAuth scopes, account permissions, and API limits matter.</td></tr>
+                        <tr><td data-label="Situation">Need your own API quota</td><td data-label="Try First">Custom YouTube project</td><td data-label="Notes">Use the YouTube Project Setup guide.</td></tr>
+                        <tr><td data-label="Situation">Static video comments</td><td data-label="Try First">YouTube Static Comments</td><td data-label="Notes">This is not live chat.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Live Chat Setup</h2>
+                <ol class="guide-steps">
+                    <li>Make sure the stream is actually live or that live chat is available.</li>
+                    <li>Open the YouTube live chat page or the mode-specific source page.</li>
+                    <li>Confirm the dock receives messages before opening OBS.</li>
+                    <li>Use the same session ID in the dock and overlay.</li>
+                </ol>
+                <p>If YouTube asks for sign-in or permissions, complete that step in the same browser/app context that is doing the capture.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>API And OAuth Notes</h2>
+                <ul class="guide-list">
+                    <li>API mode can expose different event families than visible page capture.</li>
+                    <li>Subscriber data can be delayed by YouTube and may only include public subscriptions.</li>
+                    <li>Write actions need stronger scopes than read-only chat capture.</li>
+                    <li>The desktop app does not automatically share normal Chrome cookies.</li>
+                </ul>
+                <p>Full setup: <a href="youtube-project-setup.html">YouTube Project Setup</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common Fixes</h2>
+                <ul class="guide-list">
+                    <li><strong>No chat:</strong> confirm the stream is live and chat is visible.</li>
+                    <li><strong>Chrome works but app does not:</strong> sign into YouTube inside the app or use the extension path.</li>
+                    <li><strong>API mode fails:</strong> check OAuth, scopes, project credentials, and quota.</li>
+                    <li><strong>OBS blank:</strong> test the dock first, then the overlay URL in a normal browser.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

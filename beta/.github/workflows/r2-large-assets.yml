@@ -1,0 +1,57 @@
+name: R2 Large Assets
+
+on:
+    workflow_dispatch:
+        inputs:
+            mode:
+                description: Plan, verify, or upload large assets
+                required: true
+                default: verify
+                type: choice
+                options:
+                    - plan
+                    - verify
+                    - upload
+            bucket:
+                description: R2 bucket name
+                required: false
+                default: ssnlargefiles
+            host:
+                description: Public large asset host
+                required: false
+                default: https://largefiles.socialstream.ninja/
+            prefix:
+                description: Optional object-key prefix filter
+                required: false
+                default: ""
+
+permissions:
+    contents: read
+
+jobs:
+    sync:
+        runs-on: ubuntu-latest
+        env:
+            CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+            CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+            SSN_R2_BUCKET: ${{ inputs.bucket }}
+            SSN_LARGE_ASSET_HOST: ${{ inputs.host }}
+            SSN_R2_PREFIX: ${{ inputs.prefix }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+
+            - name: Plan large asset sync
+              if: inputs.mode == 'plan'
+              run: npm run r2:large-assets:plan
+
+            - name: Verify large asset URLs
+              if: inputs.mode == 'verify'
+              run: npm run r2:large-assets:verify
+
+            - name: Upload missing large assets
+              if: inputs.mode == 'upload'
+              run: npm run r2:large-assets:upload

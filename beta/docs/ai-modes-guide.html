@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Modes Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Plain-English guide to Social Stream Ninja AI modes, chat bots, cohost pages, moderation, RAG, local models, and AI overlay builder pages.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="download.html">Download</a></li>
+                    <li><a href="guides.html" class="active">Guides</a></li>
+                    <li><a href="commands.html">Commands &amp; API</a></li>
+                    <li><a href="supported-sites.html">Supported Sites</a></li>
+                    <li><a href="templates.html">Templates</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>AI Modes Guide</h1>
+            <p>Pick the AI tool that matches the job.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Start With The Job</h2>
+                <p>Do not start by picking a model. Start by deciding what the AI should do for you.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-ai-integration-overview.png" alt="AI Integration section showing automated chat responses, content moderation, RAG search, and multiple bot instances" class="guide-image">
+                    <figcaption>The AI section is split by job: replies, moderation, knowledge search, and separate bot instances.</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Job</th><th>Use</th><th>Best For</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Job">Public chat bot</td><td data-label="Use"><code>bot.html</code></td><td data-label="Best For">On-stream bot replies, optional TTS, public chat responses.</td></tr>
+                        <tr><td data-label="Job">Private helper bot</td><td data-label="Use"><code>chatbot.html</code></td><td data-label="Best For">Testing prompts, one-on-one help, private bot behavior.</td></tr>
+                        <tr><td data-label="Job">AI cohost</td><td data-label="Use"><code>cohost.html</code> plus <code>cohost-overlay.html</code></td><td data-label="Best For">A visible or audible assistant controlled by the streamer.</td></tr>
+                        <tr><td data-label="Job">AI overlay builder</td><td data-label="Use"><code>aiprompt.html</code> plus <code>aioverlay.html</code></td><td data-label="Best For">Generating and previewing overlay HTML from prompts.</td></tr>
+                        <tr><td data-label="Job">Moderation or RAG</td><td data-label="Use">AI settings in the popup</td><td data-label="Best For">Blocking/flagging messages or answering from your knowledge base.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>1. Choose A Provider</h2>
+                <p>Social Stream Ninja can use local or cloud providers. Local can be private and cheap, but it can be slower or harder to install. Cloud providers are usually easier, but accounts, API keys, and costs are controlled by the provider.</p>
+                <ul class="guide-list">
+                    <li><strong>Ollama Native API:</strong> good first local option if Ollama is already installed.</li>
+                    <li><strong>Custom API:</strong> use for OpenAI-compatible local servers such as llama.cpp, LM Studio, vLLM, or similar tools.</li>
+                    <li><strong>Hosted providers:</strong> OpenAI, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock, and similar services can change pricing and model names outside Social Stream Ninja.</li>
+                    <li><strong>Browser/local model pages:</strong> useful for advanced local experiments, but model assets and browser limits can make setup heavier.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>2. Chat Bot Basics</h2>
+                <ol class="guide-steps">
+                    <li>Configure an AI provider in the popup.</li>
+                    <li>Open the bot page you want: <code>bot.html</code> for the main bot or <code>chatbot.html</code> for a private one-on-one bot.</li>
+                    <li>Use the same <code>session</code> as your dock and overlays.</li>
+                    <li>Test with short messages before letting it answer live chat.</li>
+                    <li>If the bot sends messages back to a platform, confirm that platform supports send-back and that the account is allowed to post.</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>Start safe:</strong> test in monitor-only or approval-style workflows before allowing automatic public replies.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>3. AI Cohost</h2>
+                <p>The cohost has a control side and an output side. The streamer controls it from the dock or <code>cohost.html</code>. OBS captures <code>cohost-overlay.html</code> when you want the cohost on stream.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-ai-cohost-controls.png" alt="AI cohost controls showing media devices, AI provider settings, system instructions, and live chat mode" class="guide-image">
+                    <figcaption>The cohost page lets you choose media devices, AI provider settings, instructions, and live chat behavior.</figcaption>
+                </figure>
+                <pre>cohost.html?session=YOUR_SESSION</pre>
+                <pre>cohost-overlay.html?session=YOUR_SESSION&amp;tts</pre>
+                <p>More detail: <a href="ai-cohost-guide.html">AI Co-host Guide</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>4. AI Overlay Builder</h2>
+                <p>The builder is for making an overlay, not for capturing chat by itself. Use <code>aiprompt.html</code> to describe and test the overlay. Use <code>aioverlay.html</code> as the OBS output page after it is saved.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-ai-overlay-builder.png" alt="AI Overlay Builder showing prompt field, save controls, preview tab, and simulation buttons" class="guide-image">
+                    <figcaption>Use the preview and simulation buttons before adding the generated overlay to OBS.</figcaption>
+                </figure>
+                <ol class="guide-steps">
+                    <li>Open the builder and describe the overlay you want.</li>
+                    <li>Preview it with sample chat, follow, sub, donation, or raid events.</li>
+                    <li>Save the overlay.</li>
+                    <li>Add the matching <code>aioverlay.html</code> URL to OBS with the same session and overlay name.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>5. Moderation And Knowledge Search</h2>
+                <p>AI moderation and RAG search are support tools, not magic. Keep a human review path for anything that could ban, delete, block, or publicly answer viewers.</p>
+                <ul class="guide-list">
+                    <li>Use non-blocking moderation first so you can see what the AI would flag.</li>
+                    <li>Keep knowledge base text short, current, and specific to your stream or product.</li>
+                    <li>If answers are wrong, fix the source material before changing random prompt wording.</li>
+                    <li>If a provider times out, test with a smaller model or a simpler prompt before debugging the whole overlay.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common Fixes</h2>
+                <ul class="guide-list">
+                    <li><strong>No response:</strong> confirm the AI provider, API key, model name, and endpoint.</li>
+                    <li><strong>Wrong session:</strong> make sure the dock, bot, cohost, and overlay all use the same <code>session</code>.</li>
+                    <li><strong>Cohost overlay blank:</strong> open <code>cohost-overlay.html</code> and check the label if multiple overlays are running.</li>
+                    <li><strong>Overlay builder result not showing:</strong> confirm the builder page saved the overlay and OBS is pointed at the matching <code>aioverlay.html</code> page.</li>
+                    <li><strong>Bot cannot post:</strong> check platform send-back support, login state, permissions, and rate limits.</li>
+                </ul>
+                <p>Full reference: <a href="commands.html#ai-integration">Commands &amp; API AI Integration</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

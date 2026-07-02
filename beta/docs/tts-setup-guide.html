@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Setup Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Plain-English setup guide for Social Stream Ninja text-to-speech, OBS audio, browser voices, local voices, and TTS server modes.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="download.html">Download</a></li>
+                    <li><a href="guides.html" class="active">Guides</a></li>
+                    <li><a href="commands.html">Commands &amp; API</a></li>
+                    <li><a href="supported-sites.html">Supported Sites</a></li>
+                    <li><a href="templates.html">Templates</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>TTS Setup Guide</h1>
+            <p>Choose a voice mode that OBS can actually hear.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Quick Choice</h2>
+                <p>If you only remember one thing: for OBS, start with a browser/provider voice such as Kokoro, Piper, Kitten, eSpeak, OpenAI-compatible, Google, ElevenLabs, Speechify, or Gemini. Plain system TTS is simple, but OBS Browser Source usually cannot capture it directly.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>What You Want</th><th>Use This First</th><th>Why</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="What You Want">Free voice in OBS</td><td data-label="Use This First">Kokoro, Piper, Kitten, or eSpeak</td><td data-label="Why">Audio plays from the browser page, so OBS can capture it.</td></tr>
+                        <tr><td data-label="What You Want">Best quality with less local setup</td><td data-label="Use This First">Cloud provider or OpenAI-compatible provider</td><td data-label="Why">Good voices, but account/API costs may apply.</td></tr>
+                        <tr><td data-label="What You Want">Use Windows or Mac system voices</td><td data-label="Use This First">System TTS with <code>speech=en-US</code></td><td data-label="Why">Works for listening on the computer, but OBS audio capture is harder.</td></tr>
+                        <tr><td data-label="What You Want">Run your own voice server</td><td data-label="Use This First">Custom/local TTS with <code>openaiendpoint</code></td><td data-label="Why">Private and flexible, but the endpoint and voice names must match your server.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>1. Turn On TTS</h2>
+                <p>In the settings reference, search for <strong>text to speech</strong>. In the popup, the matching setting is under the chat bot and TTS options. Enable only the TTS features you plan to use.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-tts-settings-search.png" alt="Settings reference filtered to the Enable Text to Speech setting" class="guide-image">
+                    <figcaption>Use search instead of hunting through the full settings list.</figcaption>
+                </figure>
+                <p>For overlay URLs, TTS is enabled with a language value such as:</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2>2. Pick A Provider</h2>
+                <p>The provider decides where the voice is generated. Built-in browser/local providers are usually the easiest way to get free audio into OBS.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-tts-provider-options.png" alt="TTS provider options table showing system TTS, local free providers, and OBS capture notes" class="guide-image">
+                    <figcaption>Provider voices play through the browser page. That is why they are easier to capture in OBS than plain system TTS.</figcaption>
+                </figure>
+                <p>Good first tests:</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kokoro</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kitten</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2>3. Avoid The OBS System TTS Trap</h2>
+                <p>System TTS uses the operating system speech engine. OBS Browser Source does not directly capture that system-level speech. If you use system TTS, route desktop audio, use a virtual cable, or switch to a browser/provider TTS mode.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-tts-obs-audio.png" alt="OBS audio capture note explaining that system TTS cannot be captured directly by OBS browser sources" class="guide-image">
+                    <figcaption>If the dock speaks on your speakers but OBS is silent, this is usually the reason.</figcaption>
+                </figure>
+                <div class="warning-note">
+                    <p><strong>Simpler OBS path:</strong> use a provider like Kokoro, Piper, Kitten, eSpeak, OpenAI-compatible, Google, ElevenLabs, Speechify, or Gemini and enable OBS Browser Source audio control.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>4. Local Server TTS</h2>
+                <p>A local TTS server is useful when you want private voices, a specific voice model, or a server such as Kokoro-FastAPI or openedai-speech. The page that plays TTS must be able to reach the endpoint.</p>
+                <figure class="guide-figure">
+                    <img src="images/local-tts/tts-bridge-flow.png" alt="Diagram showing OBS Browser Source sending TTS requests through the Social Stream Ninja local TTS bridge to a TTS server" class="guide-image">
+                    <figcaption>For OBS, the local bridge usually works best when it runs on the same computer as OBS.</figcaption>
+                </figure>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=af_bella</pre>
+                <p><code>localhost</code> means the computer running the page. If your TTS server is on another computer, use that computer's LAN IP or run the bridge on the OBS computer.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>5. Test In This Order</h2>
+                <ol class="guide-steps">
+                    <li>Open the dock URL in a normal browser first, outside OBS.</li>
+                    <li>Send a short chat message and confirm the dock receives it.</li>
+                    <li>Confirm the browser speaks.</li>
+                    <li>Move the same URL into OBS Browser Source.</li>
+                    <li>If OBS is silent, check whether you are using plain system TTS or a provider voice.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common Fixes</h2>
+                <ul class="guide-list">
+                    <li><strong>No voice list:</strong> try Chrome or Edge. Some browsers have limited speech support.</li>
+                    <li><strong>OBS is silent:</strong> switch away from plain system TTS or route desktop audio/virtual cable audio.</li>
+                    <li><strong>Kokoro is slow:</strong> try Piper, Kitten, eSpeak, a smaller voice, or a server/bridge setup.</li>
+                    <li><strong>Local server returns errors:</strong> check endpoint URL, CORS, voice name, model name, and whether the server can be reached from the OBS computer.</li>
+                    <li><strong>Voice name fails:</strong> Kokoro names can look like <code>af_bella</code>; OpenAI/openedai-speech names can look like <code>nova</code> or <code>echo</code>. Use a voice your server supports.</li>
+                </ul>
+                <p>Full reference: <a href="tts.html">TTS guide</a> and <a href="local-tts.html">Local AI TTS guide</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

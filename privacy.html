@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Social Stream Ninja</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #333;
+        }
+        p, li {
+            color: #666;
+        }
+        a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Privacy Policy for Social Stream Ninja</h1>
+    <p><strong>Last Updated: April 11, 2026</strong></p>
+
+    <p>Social Stream Ninja is open-source software for capturing, relaying, displaying, and automating live chat and related stream events. This policy applies to the Social Stream Ninja browser extension, the hosted Social Stream Ninja pages and overlays, and the standalone desktop app commonly referred to as SSAPP, which loads substantially the same Social Stream logic.</p>
+
+    <h2>1. Scope and General Approach</h2>
+    <p>Social Stream Ninja does not require a central user account to use the core software. However, depending on how you configure it, the software may access, process, store, and transmit information that may qualify as personal information under some laws.</p>
+    <p>In many cases, the software operates locally on your device and under your control. However, some features use third-party platforms, user-configured destinations, or hosted helper services, and those services may receive data needed to perform the requested feature.</p>
+
+    <h2>2. Information the Software May Process</h2>
+    <p>Depending on the features you enable, Social Stream Ninja may process the following categories of information:</p>
+    <ul>
+        <li><strong>Authentication information</strong>: OAuth access tokens, refresh tokens, API keys, client IDs, client secrets, channel or room credentials, session tokens, passwords, and similar authorization data entered by the user or granted by a connected service.</li>
+        <li><strong>Personal communications</strong>: Chat messages, replies, chat commands, moderation actions, membership messages, donation messages, support messages, and other user-submitted communications received from connected platforms.</li>
+        <li><strong>Web history and page context</strong>: Supported page URLs, tab information, channel names, usernames, video IDs, room IDs, stream identifiers, and related page context needed to connect to or monitor a source.</li>
+        <li><strong>Website content</strong>: Chat DOM content, message content, event content, stream metadata, viewer counts, badges, emotes, profile images, and other content available on supported pages or APIs.</li>
+        <li><strong>Personally identifiable information and profile data</strong>: Usernames, display names, avatars, account or channel IDs, badges, name colors, membership status, follower/subscriber labels, and similar profile metadata.</li>
+        <li><strong>Configuration and local app data</strong>: Settings, connected sources, custom commands, blocklists, allowlists, local caches, file-handle information, and other data needed to keep the software working on your device.</li>
+        <li><strong>Optional media and file data</strong>: If you enable optional capture, export, ticker, logging, or file features, the software may process selected local files, exported files, tab/media capture data, or user-created backups.</li>
+    </ul>
+
+    <h2>3. How the Information Is Used</h2>
+    <p>Social Stream Ninja may use that information to:</p>
+    <ul>
+        <li>Connect to supported chat, event, and stream sources.</li>
+        <li>Display chat messages, overlays, dashboards, alerts, waitlists, polls, scoreboards, and related interfaces.</li>
+        <li>Perform moderation, filtering, automation, relay, bot, TTS, AI, translation, or export features that the user enables.</li>
+        <li>Authenticate with third-party platforms and maintain source sessions.</li>
+        <li>Cache lookups and maintain local app state so the software continues working between sessions.</li>
+        <li>Send data to destinations explicitly configured by the user, such as webhooks, local files, local websocket endpoints, third-party bots, or other services.</li>
+    </ul>
+
+    <h2>4. Local Storage and Device Storage</h2>
+    <p>Social Stream Ninja stores a significant amount of working data locally on the user's device. Depending on the surface in use, this may include browser storage, localStorage, sessionStorage, IndexedDB, extension storage, Electron app storage, and optional files chosen by the user.</p>
+    <p>This local data may include settings, connected source details, cached channel or profile lookups, message history if the user enables it, and authentication/session data needed for enabled features.</p>
+    <p>The standalone desktop app may also keep local recovery backups of settings and source storage on the device. Those local backups may include OAuth tokens or other session state so the app can restore a previous working session after restart or failure.</p>
+
+    <h2>5. When Data May Leave Your Device</h2>
+    <p>Depending on how you use the software, information may be transmitted off-device in the following situations:</p>
+    <p><strong>We do not sell user data.</strong></p>
+    <p><strong>Social Stream Ninja is not designed to transfer user data beyond the transmissions described in this policy, which may occur when you use connected platforms, user-enabled features, user-configured destinations, required helper or service providers, or when security or legal obligations require it.</strong></p>
+    <ul>
+        <li><strong>Connected platforms and APIs</strong>: When you connect YouTube, Twitch, Kick, Facebook, Discord, or other supported services, the software sends requests to those platforms and may receive or transmit chat, event, profile, and auth-related data.</li>
+        <li><strong>Hosted helper services</strong>: Some features use helper endpoints or hosted pages for auth, lookups, transport, chat, or fallback assets. Examples in current builds include Social Stream Ninja or related helper domains used for auth exchange, lookups, or hosted pages.</li>
+        <li><strong>User-configured destinations</strong>: If you enable webhooks, relays, bots, AI providers, TTS providers, streamer tools, websocket servers, or other integrations, the software may forward message content, usernames, avatars, event payloads, and related metadata to those destinations.</li>
+        <li><strong>Peer or transport services</strong>: If you use VDO.Ninja, WebRTC, TURN relays, hidden iframe bridges, or websocket-based transports, data may pass through those systems. Optional websocket transport may not be end-to-end encrypted.</li>
+    </ul>
+
+    <h2>6. YouTube and Other OAuth-Based Features</h2>
+    <p>When you use YouTube API Services or other OAuth-based integrations, Social Stream Ninja may request authorization tokens and related account access needed for the feature you choose to use.</p>
+    <ul>
+        <li><strong>YouTube</strong>: The software may access YouTube live chat messages, message metadata, channel information, avatar information, stream status, moderation endpoints, and viewer or subscriber statistics, depending on which YouTube features you enable.</li>
+        <li><strong>Hosted auth helpers</strong>: In some builds and modes, OAuth code exchange or token refresh may be handled through a hosted helper service instead of entirely on-device. If you use that mode, auth codes, refresh tokens, and related token request data may pass through that helper to complete sign-in.</li>
+        <li><strong>Local token storage</strong>: Depending on the feature and sign-in flow in use, tokens may be stored locally on the user's device and may also be sent to helper services if remote exchange or refresh is required.</li>
+        <li><strong>Google policy</strong>: Your use of YouTube features is also subject to the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>. You can revoke Google access through your Google account permissions settings.</li>
+    </ul>
+
+    <h2>7. Desktop App Error Reporting</h2>
+    <p>The standalone desktop app includes an optional error-reporting feature that is disabled unless the user enables it.</p>
+    <ul>
+        <li>If enabled, the desktop app may send error messages, stack traces, app version, a random install ID, context, and sanitized settings to the developer's error-reporting endpoint.</li>
+        <li>At the time of writing, the desktop app's in-app disclosure states that OAuth tokens, session data, and backup credentials are excluded from those reports.</li>
+        <li>At the time of writing, the desktop app's in-app disclosure states that these reports are sent through a Cloudflare Worker endpoint and retained for 30 days. Users should review the current in-app disclosure before enabling this feature.</li>
+    </ul>
+
+    <h2>8. Third-Party Services and User-Configured Integrations</h2>
+    <p>Social Stream Ninja can interact with a wide range of third-party platforms and user-selected services. Their privacy policies, terms, security controls, and retention practices are separate from this policy and may differ materially.</p>
+    <p>If you configure the software to send data to third-party services, you are responsible for reviewing those services and deciding whether you are permitted to send that data there.</p>
+
+    <h2>9. Retention, Deletion, and User Control</h2>
+    <p>Because much of Social Stream Ninja operates locally, retention usually depends on the user's device and configuration.</p>
+    <ul>
+        <li>Local settings, caches, tokens, and backups may remain on the device until the user clears storage, removes sources, resets the app, deletes exported files, revokes tokens, or uninstalls the software.</li>
+        <li>User-configured third-party destinations may keep copies of forwarded data under their own policies.</li>
+        <li>Hosted helper services or APIs may log or retain technical request data according to their own practices. This policy does not guarantee any specific retention period for third-party services.</li>
+    </ul>
+
+    <h2>10. Security and Risk</h2>
+    <ul>
+        <li><strong>No absolute security guarantee</strong>: No software or networked service is perfectly secure. Use of Social Stream Ninja is at your own risk.</li>
+        <li><strong>Session and source credentials</strong>: If a stream ID, room ID, token, password, or relay link becomes known to others, those parties may be able to view or inject data depending on your configuration.</li>
+        <li><strong>Transport risk</strong>: WebRTC, TURN, websocket, webhook, relay, and third-party API traffic may expose information to the services needed to carry that traffic.</li>
+    </ul>
+
+    <h2>11. User Responsibility</h2>
+    <p>The user decides which sites, accounts, chats, and services to connect to Social Stream Ninja; what data to capture; what overlays to display; what files to save; and what external services to relay data to.</p>
+    <ul>
+        <li>You are responsible for ensuring you have the right and lawful basis to collect, process, display, store, export, or forward any data you handle with the software.</li>
+        <li>You are responsible for compliance with the terms of service, privacy terms, and local laws that apply to the services and individuals whose data you process.</li>
+        <li>You should treat tokens, passwords, room IDs, stream IDs, and exported data as sensitive.</li>
+    </ul>
+
+    <h2>12. Indemnification and No Warranty</h2>
+    <p>Social Stream Ninja is provided "as is" and "as available," without warranties of any kind, express or implied, including implied warranties of merchantability, fitness for a particular purpose, and non-infringement.</p>
+    <p>By using the software, you agree that the author, contributors, and service providers are not responsible for claims, damages, liabilities, or losses arising from your configuration or use of the software, including claims related to third-party content, data collection, data forwarding, or legal compliance.</p>
+
+    <h2>13. Changes to This Policy</h2>
+    <p>This Privacy Policy may be updated from time to time. Continued use of the software after a policy change means you accept the revised policy.</p>
+
+    <h2>14. Contact Information</h2>
+    <p>For privacy-related inquiries, please contact:</p>
+    <p>
+        Steve Seguin<br>
+        Email: <a href="mailto:steve@seguin.email">steve@seguin.email</a>
+    </p>
+</body>
+</html>

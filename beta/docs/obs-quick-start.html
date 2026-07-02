@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Quick Start - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Quick setup guide for using Social Stream Ninja chat overlays in OBS.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands & API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>OBS Quick Start</h1>
+            <p>Get chat into OBS with the fewest moving parts.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>1. Pick One Session ID</h3>
+                <p>Make up one short session ID and use it everywhere. It is how your chat source, dock, and OBS overlay find each other.</p>
+                <pre>YOUR_SESSION_ID</pre>
+            </div>
+
+            <div class="guide-card">
+                <h3>2. Start A Chat Source</h3>
+                <ol class="guide-steps">
+                    <li>Install or open Social Stream Ninja.</li>
+                    <li>Open the chat source for your platform and leave it open.</li>
+                    <li>Send or wait for one chat message so you know the source is working.</li>
+                </ol>
+                <p>Not sure which source mode to use? See the <a href="platform-setup-picker.html">Platform Setup Picker</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>3. Open The Dock</h3>
+                <p>The dock is your test screen. Open it before changing OBS settings.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-dock-message-check.png" alt="Social Stream Ninja dock showing three received chat messages" class="guide-image">
+                    <figcaption>If messages appear here, Social Stream Ninja is receiving chat. Use the same session ID in OBS.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>4. Add An OBS Browser Source</h3>
+                <p>In OBS, add a Browser Source and paste the overlay URL.</p>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-featured-overlay-preview.png" alt="Featured message overlay preview with a sample chat message and donation badge" class="guide-image">
+                    <figcaption>A browser source can show a featured message like this after chat is reaching the dock.</figcaption>
+                </figure>
+                <p>For regular chat overlay layouts, use a template from the <a href="templates.html">Templates Gallery</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>5. If OBS Is Blank</h3>
+                <p>Check one thing at a time, in this order.</p>
+                <ul class="guide-list">
+                    <li>Confirm the dock receives messages first. If the dock is empty, OBS is not the problem yet.</li>
+                    <li>Confirm the OBS URL has the same <code>session</code>.</li>
+                    <li>Refresh the OBS browser source after changing URL options.</li>
+                    <li>Check that the source chat page or app source window is still running.</li>
+                </ul>
+                <p>More details: <a href="guides.html#extension-troubleshooting">Troubleshooting</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

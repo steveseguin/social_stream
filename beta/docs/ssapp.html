@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Social Stream Ninja</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom right, #4a8dc700, #63a4d800);
+            color: #ffffff;
+            margin: 0;
+            padding: 0; /* Remove body padding if this is the full page */
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.3); /* Slightly darker background for readability */
+            border-radius: 10px;
+            padding: 25px 35px;
+            margin: 30px; /* Add margin around the container */
+            max-width: 900px;
+            width: 90%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+         h2 {
+            color: #e0f2ff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 8px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+        }
+        p, li {
+            font-size: 1.05em;
+            color: #e8faff;
+        }
+        a {
+            color: #a9dcff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        ol, ul {
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        code {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            font-size: 0.95em;
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            background: #000;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+         .note {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #a9dcff;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.95em;
+        }
+        .warning {
+            background-color: rgba(255, 193, 7, 0.15);
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.95em;
+        }
+        .footer {
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 15px;
+            text-align: center;
+        }
+        .lightblue {
+            color: #a9dcff;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 15px;
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+             h2 {
+                font-size: 1.4em;
+            }
+            p, li {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 data-i18n-html="welcome.title">Welcome to Social Stream Ninja! 🥷</h1>
+        <p data-i18n-html="welcome.intro">Consolidate your live social messaging streams and more, all in one place. This page will guide you through the first steps.</p>
+        <p class="note" data-i18n-html="welcome.note">Once you add your first source, this welcome message will disappear.</p>
+        
+        <div class="warning" data-i18n-html="welcome.warning">
+            <strong>Important Notice:</strong> Using this application may potentially violate the Terms of Service of some social media platforms. Additionally, using timed commands, bots, or automated messaging in chats increases the risk of your account being temporarily blocked or permanently banned by these platforms. Please use responsibly and be aware of each platform's terms before proceeding.
+        </div>
+
+        <h2 data-i18n-html="video.title">Video Guide</h2>
+        <p data-i18n-html="video.intro">Watch this video for a visual walkthrough:</p>
+        <div class="video-container">
+            <iframe 
+                src="https://www.youtube.com/embed/VpD2pnZVYF0" 
+                title="YouTube video player" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowfullscreen>
+            </iframe>
+        </div>
+
+        <h2 data-i18n-html="gettingStarted.title">Getting Started: Adding Your First Chat Source</h2>
+        <ol>
+            <li data-i18n-html="steps.sidebar">Look at the <strong>left sidebar</strong> of the main application window.</li>
+            <li data-i18n-html="steps.platformButton">Click the button corresponding to the platform you want to add (e.g., <img src="https://socialstream.ninja/sources/images/youtube.png" alt="YouTube icon" style="height: 1em; vertical-align: middle; border-radius: 50%;"> <code>YouTube Username</code>, <img src="https://socialstream.ninja/sources/images/twitch.png" alt="Twitch icon" style="height: 1em; vertical-align: middle; border-radius: 50%;"> <code>Twitch Username</code>, etc.).</li>
+            <li><span data-i18n-html="steps.prompt">A prompt will appear. Enter your <strong>username</strong>, <strong>Video ID</strong>, or <strong>URL</strong> as requested.</span>
+                <ul>
+                    <li data-i18n-html="steps.username">For most platforms, this is your username (e.g., <code>YourChannelName</code>).</li>
+                    <li data-i18n-html="steps.youtubeVideoId">For YouTube, you can also add by <strong>Video ID</strong> if you know it.</li>
+                    <li data-i18n-html="steps.otherSites">For unsupported sites, use <code>Other chat sites</code> and paste the direct chat URL.</li>
+                </ul>
+            </li>
+            <li data-i18n-html="steps.activate">The source will be added to the main area. Now click the <code>Activate source</code> button (or <code>Select Live Sources</code> / <code>Auto-find & Activate</code> for YouTube channel sources).</li>
+            <li data-i18n-html="steps.signIn">For some sites (like Facebook, TikTok, Instagram), you may need to use the <code>Sign in</code> button first or navigate within the popped-out window to find the live chat.</li>
+            <li data-i18n-html="steps.streamingChat">Your chat messages will now start appearing in the <strong>Streaming Chat</strong> page! You can access this via the link at the top right of the main app window, labeled <code>Streaming chat (dock & overlay)</code>. Copy this link into OBS as a Browser Source or Dock.</li>
+        </ol>
+
+        <h2 data-i18n-html="features.title">Key Features</h2>
+        <ul>
+            <li data-i18n-html="features.twoWay">Supports live automated <strong>two-way chat messaging</strong> with Facebook, YouTube, Twitch, Kick, Zoom, TikTok, Rumble, DLive, and dozens more.</li>
+            <li data-i18n-html="features.featured">Includes a "<strong>Featured Chat</strong>" overlay, with messages selectable via the dockable dashboard (auto or manual selection).</li>
+            <li data-i18n-html="features.bots">Supports <strong>bot commands</strong> and automated chat responses (custom logic via scriptable plugins).</li>
+            <li data-i18n-html="features.llm"><strong>LLM support</strong> (including native Ollama API) for AI moderation, chat assistance, RAG, and custom instructions.</li>
+            <li data-i18n-html="features.tts"><strong>Text-to-Speech (TTS)</strong> support for free, premium, and ultra-premium services.</li>
+            <li data-i18n-html="features.icons">Multi-channel source-icon support to easily differentiate streams.</li>
+            <li data-i18n-html="features.relaying">Automatic <strong>message relaying</strong> between platforms.</li>
+            <li data-i18n-html="features.noLogin"><strong>No user login, API key, or permissions needed</strong> for chat capture from most sites.</li>
+            <li data-i18n-html="features.queue">Message queuing for later highlighting.</li>
+            <li data-i18n-html="features.transport">Secure data transport using VDO.Ninja's API - free and low latency!</li>
+        </ul>
+
+        <h2 data-i18n-html="help.title">Need Help?</h2>
+        <p data-i18n-html="help.intro">If you have questions or run into issues, the best place to get help is our friendly community on Discord.</p>
+        <p><a href="https://discord.socialstream.ninja" target="_blank" data-i18n-html="help.discord">Join the Social Stream Ninja Discord Server</a></p>
+
+        <p style="text-align: center; margin-top: 30px;" data-i18n-html="help.happy"><strong>Happy Streaming!</strong></p>
+
+        <div class="footer">
+            <p data-i18n-html="footer.terms">By using Social Stream Ninja, you agree to our <a href="https://socialstream.ninja/TOS" target="_blank">Terms of Service</a> and <a href="https://socialstream.ninja/privacy" target="_blank">Privacy Policy</a>. Please also be aware of <a class="lightblue" href="https://www.youtube.com/t/terms " target="_blank">YouTube's Terms of Service</a>.</p>
+        </div>
+    </div>
+    <script>
+        (function() {
+            var supportedLanguages = ["en-us", "en-uk", "pt-br", "es", "de", "cs", "th", "zh-CN", "zh-TW", "tr", "uk", "test"];
+            var translations = {
+                "en-us": {
+                    documentTitle: "Welcome to Social Stream Ninja",
+                    videoPlayerTitle: "YouTube video player",
+                    "welcome.title": "Welcome to Social Stream Ninja! 🥷",
+                    "welcome.intro": "Consolidate your live social messaging streams and more, all in one place. This page will guide you through the first steps.",
+                    "welcome.note": "Once you add your first source, this welcome message will disappear.",
+                    "welcome.warning": "<strong>Important Notice:</strong> Using this application may potentially violate the Terms of Service of some social media platforms. Additionally, using timed commands, bots, or automated messaging in chats increases the risk of your account being temporarily blocked or permanently banned by these platforms. Please use responsibly and be aware of each platform's terms before proceeding.",
+                    "video.title": "Video Guide",
+                    "video.intro": "Watch this video for a visual walkthrough:",
+                    "video.fallback": "Watch the walkthrough on YouTube",
+                    "gettingStarted.title": "Getting Started: Adding Your First Chat Source",
+                    "steps.sidebar": "Look at the <strong>left sidebar</strong> of the main application window.",
+                    "steps.platformButton": "Click the button corresponding to the platform you want to add (e.g., <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"YouTube icon\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>YouTube Username</code>, <img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Twitch icon\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Twitch Username</code>, etc.).",
+                    "steps.prompt": "A prompt will appear. Enter your <strong>username</strong>, <strong>Video ID</strong>, or <strong>URL</strong> as requested.",
+                    "steps.username": "For most platforms, this is your username (e.g., <code>YourChannelName</code>).",
+                    "steps.youtubeVideoId": "For YouTube, you can also add by <strong>Video ID</strong> if you know it.",
+                    "steps.otherSites": "For unsupported sites, use <code>Other chat sites</code> and paste the direct chat URL.",
+                    "steps.activate": "The source will be added to the main area. Now click the <code>Activate source</code> button (or <code>Select Live Sources</code> / <code>Auto-find & Activate</code> for YouTube channel sources).",
+                    "steps.signIn": "For some sites (like Facebook, TikTok, Instagram), you may need to use the <code>Sign in</code> button first or navigate within the popped-out window to find the live chat.",
+                    "steps.streamingChat": "Your chat messages will now start appearing in the <strong>Streaming Chat</strong> page! You can access this via the link at the top right of the main app window, labeled <code>Streaming chat (dock & overlay)</code>. Copy this link into OBS as a Browser Source or Dock.",
+                    "features.title": "Key Features",
+                    "features.twoWay": "Supports live automated <strong>two-way chat messaging</strong> with Facebook, YouTube, Twitch, Kick, Zoom, TikTok, Rumble, DLive, and dozens more.",
+                    "features.featured": "Includes a \"<strong>Featured Chat</strong>\" overlay, with messages selectable via the dockable dashboard (auto or manual selection).",
+                    "features.bots": "Supports <strong>bot commands</strong> and automated chat responses (custom logic via scriptable plugins).",
+                    "features.llm": "<strong>LLM support</strong> (including native Ollama API) for AI moderation, chat assistance, RAG, and custom instructions.",
+                    "features.tts": "<strong>Text-to-Speech (TTS)</strong> support for free, premium, and ultra-premium services.",
+                    "features.icons": "Multi-channel source-icon support to easily differentiate streams.",
+                    "features.relaying": "Automatic <strong>message relaying</strong> between platforms.",
+                    "features.noLogin": "<strong>No user login, API key, or permissions needed</strong> for chat capture from most sites.",
+                    "features.queue": "Message queuing for later highlighting.",
+                    "features.transport": "Secure data transport using VDO.Ninja's API - free and low latency!",
+                    "help.title": "Need Help?",
+                    "help.intro": "If you have questions or run into issues, the best place to get help is our friendly community on Discord.",
+                    "help.discord": "Join the Social Stream Ninja Discord Server",
+                    "help.happy": "<strong>Happy Streaming!</strong>",
+                    "footer.terms": "By using Social Stream Ninja, you agree to our <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">Terms of Service</a> and <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">Privacy Policy</a>. Please also be aware of <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms \" target=\"_blank\">YouTube's Terms of Service</a>."
+                },
+                "en-uk": {
+                    documentTitle: "Welcome to Social Stream Ninja",
+                    videoPlayerTitle: "YouTube video player",
+                    "welcome.intro": "Bring your live social messaging streams and more together in one place. This page will guide you through the first steps.",
+                    "welcome.warning": "<strong>Important Notice:</strong> Using this application may potentially violate the Terms of Service of some social media platforms. Using timed commands, bots, or automated messages in chats also increases the risk of your account being temporarily blocked or permanently banned by those platforms. Please use it responsibly and check each platform's terms before proceeding."
+                },
+                "pt-br": {
+                    documentTitle: "Bem-vindo ao Social Stream Ninja",
+                    videoPlayerTitle: "Reprodutor de vídeo do YouTube",
+                    "welcome.title": "Bem-vindo ao Social Stream Ninja! 🥷",
+                    "welcome.intro": "Reúna seus chats ao vivo de redes sociais e muito mais em um só lugar. Esta página vai guiar você pelos primeiros passos.",
+                    "welcome.note": "Depois que você adicionar sua primeira fonte, esta mensagem de boas-vindas desaparecerá.",
+                    "welcome.warning": "<strong>Aviso importante:</strong> Usar este aplicativo pode violar os Termos de Serviço de algumas plataformas sociais. Além disso, comandos temporizados, bots ou mensagens automatizadas em chats aumentam o risco de sua conta ser bloqueada temporariamente ou banida permanentemente por essas plataformas. Use com responsabilidade e leia os termos de cada plataforma antes de continuar.",
+                    "video.title": "Guia em vídeo",
+                    "video.intro": "Assista a este vídeo para ver um passo a passo visual:",
+                    "video.fallback": "Assistir ao passo a passo no YouTube",
+                    "gettingStarted.title": "Primeiros passos: adicionando sua primeira fonte de chat",
+                    "steps.sidebar": "Olhe para a <strong>barra lateral esquerda</strong> da janela principal do aplicativo.",
+                    "steps.platformButton": "Clique no botão da plataforma que você quer adicionar (por exemplo, <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"Ícone do YouTube\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Nome de usuário do YouTube</code>, <img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Ícone da Twitch\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Nome de usuário da Twitch</code>, etc.).",
+                    "steps.prompt": "Uma janela será exibida. Insira seu <strong>nome de usuário</strong>, <strong>ID do vídeo</strong> ou <strong>URL</strong>, conforme solicitado.",
+                    "steps.username": "Na maioria das plataformas, isso é seu nome de usuário (por exemplo, <code>NomeDoSeuCanal</code>).",
+                    "steps.youtubeVideoId": "No YouTube, você também pode adicionar pelo <strong>ID do vídeo</strong>, se souber.",
+                    "steps.otherSites": "Para sites sem suporte direto, use <code>Other chat sites</code> e cole a URL direta do chat.",
+                    "steps.activate": "A fonte será adicionada à área principal. Agora clique no botão <code>Activate source</code> (ou <code>Select Live Sources</code> / <code>Auto-find & Activate</code> para fontes de canais do YouTube).",
+                    "steps.signIn": "Em alguns sites (como Facebook, TikTok e Instagram), talvez você precise usar o botão <code>Sign in</code> primeiro ou navegar na janela aberta para encontrar o chat ao vivo.",
+                    "steps.streamingChat": "Suas mensagens de chat começarão a aparecer na página <strong>Streaming Chat</strong>. Você pode acessá-la pelo link no canto superior direito da janela principal, chamado <code>Streaming chat (dock & overlay)</code>. Copie esse link para o OBS como Browser Source ou Dock.",
+                    "features.title": "Principais recursos",
+                    "features.twoWay": "Suporta <strong>mensagens de chat bidirecionais</strong> ao vivo e automatizadas com Facebook, YouTube, Twitch, Kick, Zoom, TikTok, Rumble, DLive e dezenas de outras plataformas.",
+                    "features.featured": "Inclui uma sobreposição de \"<strong>Featured Chat</strong>\", com mensagens selecionáveis pelo painel encaixável (seleção automática ou manual).",
+                    "features.bots": "Suporta <strong>comandos de bot</strong> e respostas automáticas no chat (lógica personalizada via plugins com script).",
+                    "features.llm": "<strong>Suporte a LLM</strong> (incluindo API nativa do Ollama) para moderação por IA, assistência no chat, RAG e instruções personalizadas.",
+                    "features.tts": "Suporte a <strong>Text-to-Speech (TTS)</strong> para serviços gratuitos, premium e ultra-premium.",
+                    "features.icons": "Suporte a ícones de fonte por canal para diferenciar facilmente os streams.",
+                    "features.relaying": "<strong>Retransmissão de mensagens</strong> automática entre plataformas.",
+                    "features.noLogin": "<strong>Sem login, chave de API ou permissões necessárias</strong> para capturar chat da maioria dos sites.",
+                    "features.queue": "Fila de mensagens para destacar mais tarde.",
+                    "features.transport": "Transporte seguro de dados usando a API do VDO.Ninja - gratuito e com baixa latência!",
+                    "help.title": "Precisa de ajuda?",
+                    "help.intro": "Se tiver dúvidas ou problemas, o melhor lugar para obter ajuda é nossa comunidade no Discord.",
+                    "help.discord": "Entrar no servidor Discord do Social Stream Ninja",
+                    "help.happy": "<strong>Boas transmissões!</strong>",
+                    "footer.terms": "Ao usar o Social Stream Ninja, você concorda com nossos <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">Termos de Serviço</a> e nossa <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">Política de Privacidade</a>. Também esteja ciente dos <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms \" target=\"_blank\">Termos de Serviço do YouTube</a>."
+                },
+                "es": {
+                    documentTitle: "Bienvenido a Social Stream Ninja",
+                    videoPlayerTitle: "Reproductor de video de YouTube",
+                    "welcome.title": "¡Bienvenido a Social Stream Ninja! 🥷",
+                    "welcome.intro": "Consolida tus chats sociales en vivo y mucho más en un solo lugar. Esta página te guiará por los primeros pasos.",
+                    "welcome.note": "Cuando agregues tu primera fuente, este mensaje de bienvenida desaparecerá.",
+                    "welcome.warning": "<strong>Aviso importante:</strong> Usar esta aplicación puede violar los Términos de Servicio de algunas plataformas sociales. Además, usar comandos programados, bots o mensajes automatizados en chats aumenta el riesgo de que tu cuenta sea bloqueada temporalmente o suspendida permanentemente por esas plataformas. Úsala con responsabilidad y revisa los términos de cada plataforma antes de continuar.",
+                    "video.title": "Guía en video",
+                    "video.intro": "Mira este video para ver una guía visual:",
+                    "video.fallback": "Ver la guía en YouTube",
+                    "gettingStarted.title": "Primeros pasos: agrega tu primera fuente de chat",
+                    "steps.sidebar": "Mira la <strong>barra lateral izquierda</strong> de la ventana principal de la aplicación.",
+                    "steps.platformButton": "Haz clic en el botón de la plataforma que quieres agregar (por ejemplo, <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"Icono de YouTube\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Nombre de usuario de YouTube</code>, <img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Icono de Twitch\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Nombre de usuario de Twitch</code>, etc.).",
+                    "steps.prompt": "Aparecerá una ventana. Ingresa tu <strong>nombre de usuario</strong>, <strong>ID de video</strong> o <strong>URL</strong>, según se solicite.",
+                    "steps.username": "Para la mayoría de las plataformas, esto es tu nombre de usuario (por ejemplo, <code>NombreDeTuCanal</code>).",
+                    "steps.youtubeVideoId": "En YouTube, también puedes agregar por <strong>ID de video</strong> si lo conoces.",
+                    "steps.otherSites": "Para sitios no compatibles, usa <code>Other chat sites</code> y pega la URL directa del chat.",
+                    "steps.activate": "La fuente se agregará al área principal. Ahora haz clic en <code>Activate source</code> (o <code>Select Live Sources</code> / <code>Auto-find & Activate</code> para fuentes de canales de YouTube).",
+                    "steps.signIn": "En algunos sitios (como Facebook, TikTok e Instagram), quizá debas usar primero el botón <code>Sign in</code> o navegar dentro de la ventana emergente para encontrar el chat en vivo.",
+                    "steps.streamingChat": "Tus mensajes de chat empezarán a aparecer en la página <strong>Streaming Chat</strong>. Puedes abrirla desde el enlace de la esquina superior derecha de la ventana principal, llamado <code>Streaming chat (dock & overlay)</code>. Copia ese enlace en OBS como Browser Source o Dock.",
+                    "features.title": "Funciones principales",
+                    "features.twoWay": "Admite <strong>mensajes de chat bidireccionales</strong> en vivo y automatizados con Facebook, YouTube, Twitch, Kick, Zoom, TikTok, Rumble, DLive y muchas más plataformas.",
+                    "features.featured": "Incluye una superposición de \"<strong>Featured Chat</strong>\", con mensajes seleccionables desde el panel acoplable (selección automática o manual).",
+                    "features.bots": "Admite <strong>comandos de bot</strong> y respuestas automatizadas de chat (lógica personalizada mediante plugins con scripts).",
+                    "features.llm": "<strong>Compatibilidad con LLM</strong> (incluida la API nativa de Ollama) para moderación con IA, asistencia de chat, RAG e instrucciones personalizadas.",
+                    "features.tts": "Compatibilidad con <strong>Text-to-Speech (TTS)</strong> para servicios gratuitos, premium y ultra-premium.",
+                    "features.icons": "Iconos de fuente por canal para diferenciar fácilmente los streams.",
+                    "features.relaying": "<strong>Retransmisión automática de mensajes</strong> entre plataformas.",
+                    "features.noLogin": "<strong>No se requiere inicio de sesión, clave API ni permisos</strong> para capturar chats de la mayoría de los sitios.",
+                    "features.queue": "Cola de mensajes para destacarlos más tarde.",
+                    "features.transport": "Transporte seguro de datos usando la API de VDO.Ninja: gratis y con baja latencia.",
+                    "help.title": "¿Necesitas ayuda?",
+                    "help.intro": "Si tienes preguntas o problemas, el mejor lugar para recibir ayuda es nuestra comunidad en Discord.",
+                    "help.discord": "Únete al servidor de Discord de Social Stream Ninja",
+                    "help.happy": "<strong>¡Felices directos!</strong>",
+                    "footer.terms": "Al usar Social Stream Ninja, aceptas nuestros <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">Términos de Servicio</a> y nuestra <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">Política de Privacidad</a>. También ten en cuenta los <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms \" target=\"_blank\">Términos de Servicio de YouTube</a>."
+                },
+                "de": {
+                    documentTitle: "Willkommen bei Social Stream Ninja",
+                    videoPlayerTitle: "YouTube-Videoplayer",
+                    "welcome.title": "Willkommen bei Social Stream Ninja! 🥷",
+                    "welcome.intro": "Bündle deine Live-Chats aus sozialen Plattformen und mehr an einem Ort. Diese Seite führt dich durch die ersten Schritte.",
+                    "welcome.note": "Sobald du deine erste Quelle hinzufügst, verschwindet diese Willkommensmeldung.",
+                    "welcome.warning": "<strong>Wichtiger Hinweis:</strong> Die Nutzung dieser Anwendung kann gegen die Nutzungsbedingungen einiger Social-Media-Plattformen verstoßen. Zeitgesteuerte Befehle, Bots oder automatisierte Chat-Nachrichten erhöhen außerdem das Risiko, dass dein Konto vorübergehend gesperrt oder dauerhaft gebannt wird. Nutze die App verantwortungsvoll und prüfe vorab die Bedingungen jeder Plattform.",
+                    "video.title": "Videoanleitung",
+                    "video.intro": "Sieh dir dieses Video für eine visuelle Anleitung an:",
+                    "video.fallback": "Anleitung auf YouTube ansehen",
+                    "gettingStarted.title": "Erste Schritte: Deine erste Chat-Quelle hinzufügen",
+                    "steps.sidebar": "Sieh dir die <strong>linke Seitenleiste</strong> im Hauptfenster der Anwendung an.",
+                    "steps.platformButton": "Klicke auf die Schaltfläche der Plattform, die du hinzufügen möchtest (z. B. <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"YouTube-Symbol\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>YouTube Username</code>, <img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Twitch-Symbol\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Twitch Username</code> usw.).",
+                    "steps.prompt": "Eine Eingabeaufforderung erscheint. Gib wie angefordert deinen <strong>Benutzernamen</strong>, deine <strong>Video-ID</strong> oder eine <strong>URL</strong> ein.",
+                    "steps.username": "Bei den meisten Plattformen ist das dein Benutzername (z. B. <code>DeinKanalname</code>).",
+                    "steps.youtubeVideoId": "Bei YouTube kannst du auch eine <strong>Video-ID</strong> verwenden, wenn du sie kennst.",
+                    "steps.otherSites": "Für nicht unterstützte Websites nutze <code>Other chat sites</code> und füge die direkte Chat-URL ein.",
+                    "steps.activate": "Die Quelle wird im Hauptbereich hinzugefügt. Klicke jetzt auf <code>Activate source</code> (oder <code>Select Live Sources</code> / <code>Auto-find & Activate</code> bei YouTube-Kanalquellen).",
+                    "steps.signIn": "Bei einigen Websites (z. B. Facebook, TikTok, Instagram) musst du eventuell zuerst <code>Sign in</code> verwenden oder im geöffneten Fenster zum Live-Chat navigieren.",
+                    "steps.streamingChat": "Deine Chat-Nachrichten erscheinen nun auf der Seite <strong>Streaming Chat</strong>. Du erreichst sie über den Link oben rechts im Hauptfenster mit der Bezeichnung <code>Streaming chat (dock & overlay)</code>. Kopiere diesen Link in OBS als Browser Source oder Dock.",
+                    "features.title": "Wichtige Funktionen",
+                    "features.twoWay": "Unterstützt automatisierte Live-<strong>Zwei-Wege-Chatnachrichten</strong> mit Facebook, YouTube, Twitch, Kick, Zoom, TikTok, Rumble, DLive und vielen weiteren Plattformen.",
+                    "features.featured": "Enthält ein \"<strong>Featured Chat</strong>\"-Overlay, bei dem Nachrichten über das andockbare Dashboard ausgewählt werden können (automatisch oder manuell).",
+                    "features.bots": "Unterstützt <strong>Bot-Befehle</strong> und automatische Chat-Antworten (eigene Logik über skriptfähige Plugins).",
+                    "features.llm": "<strong>LLM-Unterstützung</strong> (inklusive nativer Ollama-API) für KI-Moderation, Chat-Hilfe, RAG und eigene Anweisungen.",
+                    "features.tts": "<strong>Text-to-Speech (TTS)</strong>-Unterstützung für kostenlose, Premium- und Ultra-Premium-Dienste.",
+                    "features.icons": "Quell-Icons pro Kanal helfen dabei, Streams leicht zu unterscheiden.",
+                    "features.relaying": "Automatische <strong>Nachrichtenweiterleitung</strong> zwischen Plattformen.",
+                    "features.noLogin": "<strong>Kein Benutzerlogin, API-Schlüssel oder Berechtigungen nötig</strong>, um Chats von den meisten Websites zu erfassen.",
+                    "features.queue": "Nachrichten-Warteschlange zum späteren Hervorheben.",
+                    "features.transport": "Sichere Datenübertragung über die VDO.Ninja-API - kostenlos und mit niedriger Latenz!",
+                    "help.title": "Brauchst du Hilfe?",
+                    "help.intro": "Wenn du Fragen hast oder auf Probleme stößt, hilft dir unsere Community auf Discord am besten weiter.",
+                    "help.discord": "Dem Social Stream Ninja Discord-Server beitreten",
+                    "help.happy": "<strong>Viel Spaß beim Streamen!</strong>",
+                    "footer.terms": "Durch die Nutzung von Social Stream Ninja stimmst du unseren <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">Nutzungsbedingungen</a> und unserer <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">Datenschutzerklärung</a> zu. Bitte beachte auch die <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms \" target=\"_blank\">Nutzungsbedingungen von YouTube</a>."
+                },
+                "cs": {
+                    documentTitle: "Vítejte v Social Stream Ninja",
+                    videoPlayerTitle: "Přehrávač videa YouTube",
+                    "welcome.title": "Vítejte v Social Stream Ninja! 🥷",
+                    "welcome.intro": "Sjednoťte své živé chaty ze sociálních sítí a další obsah na jednom místě. Tato stránka vás provede prvními kroky.",
+                    "welcome.note": "Jakmile přidáte svůj první zdroj, tato uvítací zpráva zmizí.",
+                    "welcome.warning": "<strong>Důležité upozornění:</strong> Používání této aplikace může porušovat podmínky služby některých sociálních platforem. Časované příkazy, boti nebo automatizované zprávy v chatech navíc zvyšují riziko dočasného zablokování nebo trvalého zákazu účtu. Používejte aplikaci zodpovědně a před pokračováním si ověřte podmínky každé platformy.",
+                    "video.title": "Video průvodce",
+                    "video.intro": "Podívejte se na toto video s vizuálním průvodcem:",
+                    "video.fallback": "Podívat se na průvodce na YouTube",
+                    "gettingStarted.title": "Začínáme: přidání prvního zdroje chatu",
+                    "steps.sidebar": "Podívejte se na <strong>levý postranní panel</strong> hlavního okna aplikace.",
+                    "steps.platformButton": "Klikněte na tlačítko platformy, kterou chcete přidat (např. <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"Ikona YouTube\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>YouTube Username</code>, <img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Ikona Twitch\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Twitch Username</code> atd.).",
+                    "steps.prompt": "Zobrazí se výzva. Zadejte podle požadavku své <strong>uživatelské jméno</strong>, <strong>ID videa</strong> nebo <strong>URL</strong>.",
+                    "steps.username": "U většiny platforem jde o vaše uživatelské jméno (např. <code>NazevVasehoKanalu</code>).",
+                    "steps.youtubeVideoId": "U YouTube můžete také použít <strong>ID videa</strong>, pokud ho znáte.",
+                    "steps.otherSites": "U nepodporovaných webů použijte <code>Other chat sites</code> a vložte přímou URL chatu.",
+                    "steps.activate": "Zdroj se přidá do hlavní oblasti. Poté klikněte na <code>Activate source</code> (nebo <code>Select Live Sources</code> / <code>Auto-find & Activate</code> pro zdroje kanálů YouTube).",
+                    "steps.signIn": "U některých webů (například Facebook, TikTok, Instagram) může být nejdříve potřeba použít tlačítko <code>Sign in</code> nebo v otevřeném okně najít živý chat.",
+                    "steps.streamingChat": "Zprávy chatu se nyní začnou zobrazovat na stránce <strong>Streaming Chat</strong>. Otevřete ji odkazem vpravo nahoře v hlavním okně aplikace, označeným <code>Streaming chat (dock & overlay)</code>. Tento odkaz zkopírujte do OBS jako Browser Source nebo Dock.",
+                    "features.title": "Hlavní funkce",
+                    "features.twoWay": "Podporuje živé automatizované <strong>obousměrné chatové zprávy</strong> s Facebookem, YouTube, Twitchem, Kickem, Zoomem, TikTokem, Rumble, DLive a desítkami dalších platforem.",
+                    "features.featured": "Obsahuje overlay \"<strong>Featured Chat</strong>\", kde lze zprávy vybírat v dokovatelném panelu (automaticky nebo ručně).",
+                    "features.bots": "Podporuje <strong>příkazy botů</strong> a automatizované odpovědi v chatu (vlastní logika přes skriptovatelné pluginy).",
+                    "features.llm": "<strong>Podpora LLM</strong> (včetně nativního API Ollama) pro moderování pomocí AI, asistenci v chatu, RAG a vlastní instrukce.",
+                    "features.tts": "Podpora <strong>Text-to-Speech (TTS)</strong> pro bezplatné, prémiové a ultra-prémiové služby.",
+                    "features.icons": "Ikony zdrojů pro více kanálů usnadňují rozlišení streamů.",
+                    "features.relaying": "Automatické <strong>přeposílání zpráv</strong> mezi platformami.",
+                    "features.noLogin": "<strong>Bez přihlášení, API klíče nebo oprávnění</strong> pro zachytávání chatu z většiny webů.",
+                    "features.queue": "Řazení zpráv do fronty pro pozdější zvýraznění.",
+                    "features.transport": "Bezpečný přenos dat přes API VDO.Ninja - zdarma a s nízkou latencí!",
+                    "help.title": "Potřebujete pomoc?",
+                    "help.intro": "Pokud máte otázky nebo narazíte na problém, nejlepší pomoc najdete v naší komunitě na Discordu.",
+                    "help.discord": "Připojit se k Discord serveru Social Stream Ninja",
+                    "help.happy": "<strong>Šťastné streamování!</strong>",
+                    "footer.terms": "Používáním Social Stream Ninja souhlasíte s našimi <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">Podmínkami služby</a> a <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">Zásadami ochrany osobních údajů</a>. Berte prosím na vědomí také <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms \" target=\"_blank\">Podmínky služby YouTube</a>."
+                }
+            };
+
+            var remainingTranslations = {
+                "th": {
+                    documentTitle: "ยินดีต้อนรับสู่ Social Stream Ninja",
+                    videoPlayerTitle: "เครื่องเล่นวิดีโอ YouTube",
+                    "welcome.title": "ยินดีต้อนรับสู่ Social Stream Ninja! 🥷",
+                    "welcome.intro": "รวมแชตสดจากโซเชียลและเครื่องมืออื่น ๆ ไว้ในที่เดียว หน้านี้จะแนะนำขั้นตอนแรกให้คุณ",
+                    "welcome.note": "เมื่อคุณเพิ่มแหล่งแชตแรกแล้ว ข้อความต้อนรับนี้จะหายไป",
+                    "welcome.warning": "<strong>ประกาศสำคัญ:</strong> การใช้แอปนี้อาจขัดต่อข้อกำหนดการให้บริการของบางแพลตฟอร์มโซเชียล นอกจากนี้ การใช้คำสั่งตั้งเวลา บอต หรือข้อความอัตโนมัติในแชตอาจเพิ่มความเสี่ยงที่บัญชีของคุณจะถูกบล็อกชั่วคราวหรือถูกแบนถาวร โปรดใช้อย่างรับผิดชอบและตรวจสอบข้อกำหนดของแต่ละแพลตฟอร์มก่อนดำเนินการต่อ",
+                    "video.title": "วิดีโอแนะนำ",
+                    "video.intro": "ดูวิดีโอนี้เพื่อเรียนรู้ขั้นตอนแบบเห็นภาพ:",
+                    "video.fallback": "ดูคำแนะนำบน YouTube",
+                    "gettingStarted.title": "เริ่มต้น: เพิ่มแหล่งแชตแรกของคุณ",
+                    "steps.sidebar": "ดูที่ <strong>แถบด้านซ้าย</strong> ของหน้าต่างแอปหลัก",
+                    "steps.platformButton": "คลิกปุ่มของแพลตฟอร์มที่คุณต้องการเพิ่ม (เช่น <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"ไอคอน YouTube\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>YouTube Username</code>, <img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"ไอคอน Twitch\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Twitch Username</code> เป็นต้น)",
+                    "steps.prompt": "จะมีกล่องข้อความปรากฏขึ้น ให้กรอก <strong>ชื่อผู้ใช้</strong>, <strong>Video ID</strong> หรือ <strong>URL</strong> ตามที่ระบบขอ",
+                    "steps.username": "สำหรับแพลตฟอร์มส่วนใหญ่ ค่านี้คือชื่อผู้ใช้ของคุณ (เช่น <code>YourChannelName</code>)",
+                    "steps.youtubeVideoId": "สำหรับ YouTube คุณสามารถเพิ่มด้วย <strong>Video ID</strong> ได้หากทราบ",
+                    "steps.otherSites": "สำหรับเว็บไซต์ที่ยังไม่รองรับ ให้ใช้ <code>Other chat sites</code> แล้ววาง URL แชตโดยตรง",
+                    "steps.activate": "แหล่งแชตจะถูกเพิ่มในพื้นที่หลัก จากนั้นคลิกปุ่ม <code>Activate source</code> (หรือ <code>Select Live Sources</code> / <code>Auto-find & Activate</code> สำหรับแหล่งช่อง YouTube)",
+                    "steps.signIn": "บางเว็บไซต์ (เช่น Facebook, TikTok, Instagram) อาจต้องใช้ปุ่ม <code>Sign in</code> ก่อน หรือไปยังหน้าแชตสดในหน้าต่างที่เปิดขึ้น",
+                    "steps.streamingChat": "ข้อความแชตของคุณจะเริ่มแสดงในหน้า <strong>Streaming Chat</strong> คุณเปิดได้จากลิงก์มุมขวาบนของหน้าต่างหลัก ชื่อ <code>Streaming chat (dock & overlay)</code> แล้วคัดลอกลิงก์นี้ไปใส่ใน OBS เป็น Browser Source หรือ Dock",
+                    "features.title": "คุณสมบัติหลัก",
+                    "features.twoWay": "รองรับ <strong>ข้อความแชตสองทาง</strong> แบบสดและอัตโนมัติกับ Facebook, YouTube, Twitch, Kick, Zoom, TikTok, Rumble, DLive และแพลตฟอร์มอื่น ๆ อีกมากมาย",
+                    "features.featured": "มีโอเวอร์เลย์ \"<strong>Featured Chat</strong>\" ที่เลือกข้อความได้จากแดชบอร์ดแบบ dock (เลือกอัตโนมัติหรือเลือกเอง)",
+                    "features.bots": "รองรับ <strong>คำสั่งบอต</strong> และการตอบกลับแชตอัตโนมัติ (ตรรกะปรับแต่งได้ผ่านปลั๊กอินแบบสคริปต์)",
+                    "features.llm": "<strong>รองรับ LLM</strong> (รวมถึง Ollama API แบบเนทีฟ) สำหรับการมอดเดอเรตด้วย AI, ผู้ช่วยแชต, RAG และคำสั่งกำหนดเอง",
+                    "features.tts": "รองรับ <strong>Text-to-Speech (TTS)</strong> สำหรับบริการฟรี พรีเมียม และอัลตราพรีเมียม",
+                    "features.icons": "รองรับไอคอนแหล่งที่มาตามช่อง เพื่อแยกสตรีมได้ง่าย",
+                    "features.relaying": "<strong>ส่งต่อข้อความ</strong> อัตโนมัติระหว่างแพลตฟอร์ม",
+                    "features.noLogin": "<strong>ไม่ต้องเข้าสู่ระบบ ไม่ต้องใช้ API key หรือสิทธิ์เพิ่มเติม</strong> สำหรับการจับแชตจากเว็บไซต์ส่วนใหญ่",
+                    "features.queue": "จัดคิวข้อความไว้ไฮไลต์ภายหลัง",
+                    "features.transport": "ส่งข้อมูลอย่างปลอดภัยผ่าน API ของ VDO.Ninja - ฟรีและหน่วงต่ำ!",
+                    "help.title": "ต้องการความช่วยเหลือ?",
+                    "help.intro": "หากคุณมีคำถามหรือพบปัญหา ชุมชน Discord ของเราเป็นที่ที่ดีที่สุดในการขอความช่วยเหลือ",
+                    "help.discord": "เข้าร่วมเซิร์ฟเวอร์ Discord ของ Social Stream Ninja",
+                    "help.happy": "<strong>ขอให้สตรีมสนุก!</strong>",
+                    "footer.terms": "เมื่อใช้ Social Stream Ninja คุณยอมรับ <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">ข้อกำหนดการให้บริการ</a> และ <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">นโยบายความเป็นส่วนตัว</a> ของเรา โปรดทราบถึง <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms \" target=\"_blank\">ข้อกำหนดการให้บริการของ YouTube</a> ด้วย"
+                },
+                "zh-CN": {
+                    documentTitle: "欢迎使用 Social Stream Ninja",
+                    videoPlayerTitle: "YouTube 视频播放器",
+                    "welcome.title": "欢迎使用 Social Stream Ninja！🥷",
+                    "welcome.intro": "将你的社交平台直播聊天和更多内容集中到一个地方。本页会带你完成最初的设置步骤。",
+                    "welcome.note": "添加第一个来源后，这条欢迎信息会自动消失。",
+                    "welcome.warning": "<strong>重要提示：</strong> 使用此应用可能会违反某些社交媒体平台的服务条款。另外，在聊天中使用定时命令、机器人或自动消息，会增加账号被临时限制或永久封禁的风险。请负责任地使用，并在继续前了解各平台的条款。",
+                    "video.title": "视频指南",
+                    "video.intro": "观看此视频了解可视化操作流程：",
+                    "video.fallback": "在 YouTube 上观看指南",
+                    "gettingStarted.title": "入门：添加你的第一个聊天来源",
+                    "steps.sidebar": "查看主应用窗口的<strong>左侧边栏</strong>。",
+                    "steps.platformButton": "点击你要添加的平台对应按钮（例如 <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"YouTube 图标\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>YouTube Username</code>、<img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Twitch 图标\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Twitch Username</code> 等）。",
+                    "steps.prompt": "系统会弹出提示。按要求输入你的<strong>用户名</strong>、<strong>视频 ID</strong> 或 <strong>URL</strong>。",
+                    "steps.username": "对大多数平台来说，这就是你的用户名（例如 <code>YourChannelName</code>）。",
+                    "steps.youtubeVideoId": "对于 YouTube，如果你知道<strong>视频 ID</strong>，也可以用它添加。",
+                    "steps.otherSites": "对于不支持的网站，使用 <code>Other chat sites</code> 并粘贴直接聊天 URL。",
+                    "steps.activate": "来源会添加到主区域。然后点击 <code>Activate source</code> 按钮（YouTube 频道来源可使用 <code>Select Live Sources</code> / <code>Auto-find & Activate</code>）。",
+                    "steps.signIn": "某些网站（如 Facebook、TikTok、Instagram）可能需要先使用 <code>Sign in</code> 按钮，或在弹出的窗口中找到直播聊天。",
+                    "steps.streamingChat": "你的聊天消息现在会开始显示在 <strong>Streaming Chat</strong> 页面中。你可以通过主应用窗口右上角标为 <code>Streaming chat (dock & overlay)</code> 的链接访问它。将此链接复制到 OBS，作为 Browser Source 或 Dock 使用。",
+                    "features.title": "主要功能",
+                    "features.twoWay": "支持与 Facebook、YouTube、Twitch、Kick、Zoom、TikTok、Rumble、DLive 以及更多平台进行自动化实时<strong>双向聊天消息</strong>。",
+                    "features.featured": "包含 \"<strong>Featured Chat</strong>\" 覆盖层，可通过可停靠面板选择消息（自动或手动选择）。",
+                    "features.bots": "支持<strong>机器人命令</strong>和自动聊天回复（可通过脚本插件自定义逻辑）。",
+                    "features.llm": "<strong>支持 LLM</strong>（包括原生 Ollama API），用于 AI 审核、聊天辅助、RAG 和自定义指令。",
+                    "features.tts": "支持免费、高级和超高级服务的 <strong>Text-to-Speech (TTS)</strong>。",
+                    "features.icons": "支持多频道来源图标，便于区分不同直播。",
+                    "features.relaying": "自动在平台之间<strong>转发消息</strong>。",
+                    "features.noLogin": "从大多数网站抓取聊天时<strong>无需用户登录、API key 或权限</strong>。",
+                    "features.queue": "可将消息排队，稍后高亮显示。",
+                    "features.transport": "使用 VDO.Ninja API 安全传输数据 - 免费且低延迟！",
+                    "help.title": "需要帮助？",
+                    "help.intro": "如果你有问题或遇到故障，最适合获取帮助的地方是我们的 Discord 社区。",
+                    "help.discord": "加入 Social Stream Ninja Discord 服务器",
+                    "help.happy": "<strong>祝你直播顺利！</strong>",
+                    "footer.terms": "使用 Social Stream Ninja 即表示你同意我们的 <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">服务条款</a> 和 <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">隐私政策</a>。也请注意 <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms \" target=\"_blank\">YouTube 的服务条款</a>。"
+                },
+                "zh-TW": {
+                    documentTitle: "歡迎使用 Social Stream Ninja",
+                    videoPlayerTitle: "YouTube 影片播放器",
+                    "welcome.title": "歡迎使用 Social Stream Ninja！🥷",
+                    "welcome.intro": "將你的社群直播聊天室和更多內容集中在同一個地方。本頁會引導你完成最初的設定步驟。",
+                    "welcome.note": "加入第一個來源後，這則歡迎訊息就會消失。",
+                    "welcome.warning": "<strong>重要提醒：</strong> 使用此應用程式可能會違反某些社群媒體平台的服務條款。此外，在聊天室使用定時指令、機器人或自動訊息，會增加帳號遭暫時封鎖或永久停權的風險。請負責任地使用，並在繼續前了解各平台條款。",
+                    "video.title": "影片指南",
+                    "video.intro": "觀看此影片了解視覺化操作流程：",
+                    "video.fallback": "在 YouTube 上觀看教學",
+                    "gettingStarted.title": "開始使用：加入你的第一個聊天來源",
+                    "steps.sidebar": "查看主應用程式視窗的<strong>左側邊欄</strong>。",
+                    "steps.platformButton": "點選你想加入的平台對應按鈕（例如 <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"YouTube 圖示\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>YouTube Username</code>、<img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Twitch 圖示\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Twitch Username</code> 等）。",
+                    "steps.prompt": "系統會跳出提示。依要求輸入你的<strong>使用者名稱</strong>、<strong>影片 ID</strong> 或 <strong>URL</strong>。",
+                    "steps.username": "對大多數平台而言，這就是你的使用者名稱（例如 <code>YourChannelName</code>）。",
+                    "steps.youtubeVideoId": "YouTube 也可以用<strong>影片 ID</strong> 加入，如果你知道的話。",
+                    "steps.otherSites": "對於未支援的網站，使用 <code>Other chat sites</code> 並貼上直接聊天室 URL。",
+                    "steps.activate": "來源會加入主區域。接著點選 <code>Activate source</code> 按鈕（YouTube 頻道來源可使用 <code>Select Live Sources</code> / <code>Auto-find & Activate</code>）。",
+                    "steps.signIn": "某些網站（如 Facebook、TikTok、Instagram）可能需要先使用 <code>Sign in</code> 按鈕，或在彈出的視窗中找到直播聊天室。",
+                    "steps.streamingChat": "你的聊天訊息現在會開始出現在 <strong>Streaming Chat</strong> 頁面。你可以透過主應用程式視窗右上角標示為 <code>Streaming chat (dock & overlay)</code> 的連結開啟。將此連結複製到 OBS，作為 Browser Source 或 Dock。",
+                    "features.title": "主要功能",
+                    "features.twoWay": "支援與 Facebook、YouTube、Twitch、Kick、Zoom、TikTok、Rumble、DLive 以及更多平台進行自動化即時<strong>雙向聊天訊息</strong>。",
+                    "features.featured": "包含 \"<strong>Featured Chat</strong>\" 覆蓋層，可透過可停駐儀表板選取訊息（自動或手動選取）。",
+                    "features.bots": "支援<strong>機器人指令</strong>和自動聊天回覆（可透過腳本插件自訂邏輯）。",
+                    "features.llm": "<strong>支援 LLM</strong>（包含原生 Ollama API），用於 AI 審核、聊天協助、RAG 和自訂指令。",
+                    "features.tts": "支援免費、進階和超進階服務的 <strong>Text-to-Speech (TTS)</strong>。",
+                    "features.icons": "支援多頻道來源圖示，方便區分不同直播。",
+                    "features.relaying": "自動在平台之間<strong>轉發訊息</strong>。",
+                    "features.noLogin": "從大多數網站擷取聊天時<strong>不需要使用者登入、API key 或權限</strong>。",
+                    "features.queue": "可將訊息排入佇列，稍後再醒目顯示。",
+                    "features.transport": "使用 VDO.Ninja API 安全傳輸資料 - 免費且低延遲！",
+                    "help.title": "需要幫助？",
+                    "help.intro": "如果你有問題或遇到狀況，最適合取得協助的地方是我們的 Discord 社群。",
+                    "help.discord": "加入 Social Stream Ninja Discord 伺服器",
+                    "help.happy": "<strong>祝你直播順利！</strong>",
+                    "footer.terms": "使用 Social Stream Ninja 即表示你同意我們的 <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">服務條款</a> 和 <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">隱私權政策</a>。也請留意 <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms \" target=\"_blank\">YouTube 的服務條款</a>。"
+                },
+                "tr": {
+                    documentTitle: "Social Stream Ninja'ya Hoş Geldiniz",
+                    videoPlayerTitle: "YouTube video oynatıcı",
+                    "welcome.title": "Social Stream Ninja'ya hoş geldiniz! 🥷",
+                    "welcome.intro": "Canlı sosyal mesaj akışlarınızı ve daha fazlasını tek bir yerde toplayın. Bu sayfa ilk adımlarda size rehberlik eder.",
+                    "welcome.note": "İlk kaynağınızı eklediğinizde bu karşılama mesajı kaybolur.",
+                    "welcome.warning": "<strong>Önemli uyarı:</strong> Bu uygulamayı kullanmak bazı sosyal medya platformlarının Hizmet Şartlarını ihlal edebilir. Ayrıca sohbetlerde zamanlanmış komutlar, botlar veya otomatik mesajlar kullanmak hesabınızın geçici olarak engellenmesi ya da kalıcı olarak yasaklanması riskini artırır. Lütfen sorumlu kullanın ve devam etmeden önce her platformun şartlarını inceleyin.",
+                    "video.title": "Video rehberi",
+                    "video.intro": "Görsel anlatım için bu videoyu izleyin:",
+                    "video.fallback": "Rehberi YouTube'da izle",
+                    "gettingStarted.title": "Başlangıç: İlk sohbet kaynağınızı ekleme",
+                    "steps.sidebar": "Ana uygulama penceresindeki <strong>sol kenar çubuğuna</strong> bakın.",
+                    "steps.platformButton": "Eklemek istediğiniz platforma karşılık gelen düğmeye tıklayın (ör. <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"YouTube simgesi\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>YouTube Username</code>, <img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Twitch simgesi\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Twitch Username</code> vb.).",
+                    "steps.prompt": "Bir istem açılır. İstenen şekilde <strong>kullanıcı adınızı</strong>, <strong>Video ID</strong>'nizi veya <strong>URL</strong>'nizi girin.",
+                    "steps.username": "Çoğu platform için bu kullanıcı adınızdır (ör. <code>YourChannelName</code>).",
+                    "steps.youtubeVideoId": "YouTube için biliyorsanız <strong>Video ID</strong> ile de ekleyebilirsiniz.",
+                    "steps.otherSites": "Desteklenmeyen siteler için <code>Other chat sites</code> seçeneğini kullanıp doğrudan sohbet URL'sini yapıştırın.",
+                    "steps.activate": "Kaynak ana alana eklenecek. Şimdi <code>Activate source</code> düğmesine tıklayın (YouTube kanal kaynakları için <code>Select Live Sources</code> / <code>Auto-find & Activate</code>).",
+                    "steps.signIn": "Bazı sitelerde (Facebook, TikTok, Instagram gibi) önce <code>Sign in</code> düğmesini kullanmanız veya açılan pencerede canlı sohbeti bulmanız gerekebilir.",
+                    "steps.streamingChat": "Sohbet mesajlarınız artık <strong>Streaming Chat</strong> sayfasında görünmeye başlar. Bu sayfaya ana uygulama penceresinin sağ üstündeki <code>Streaming chat (dock & overlay)</code> bağlantısından ulaşabilirsiniz. Bu bağlantıyı OBS'ye Browser Source veya Dock olarak kopyalayın.",
+                    "features.title": "Temel özellikler",
+                    "features.twoWay": "Facebook, YouTube, Twitch, Kick, Zoom, TikTok, Rumble, DLive ve daha birçok platformla canlı otomatik <strong>iki yönlü sohbet mesajlarını</strong> destekler.",
+                    "features.featured": "Yerleşebilir panodan seçilebilen mesajlarla \"<strong>Featured Chat</strong>\" katmanı içerir (otomatik veya manuel seçim).",
+                    "features.bots": "<strong>Bot komutlarını</strong> ve otomatik sohbet yanıtlarını destekler (betiklenebilir eklentilerle özel mantık).",
+                    "features.llm": "AI moderasyonu, sohbet yardımı, RAG ve özel yönergeler için <strong>LLM desteği</strong> (yerel Ollama API dahil).",
+                    "features.tts": "Ücretsiz, premium ve ultra-premium servisler için <strong>Text-to-Speech (TTS)</strong> desteği.",
+                    "features.icons": "Akışları kolayca ayırt etmek için çok kanallı kaynak simgesi desteği.",
+                    "features.relaying": "Platformlar arasında otomatik <strong>mesaj aktarma</strong>.",
+                    "features.noLogin": "Çoğu siteden sohbet yakalamak için <strong>kullanıcı girişi, API anahtarı veya izin gerekmez</strong>.",
+                    "features.queue": "Daha sonra öne çıkarmak için mesaj kuyruğu.",
+                    "features.transport": "VDO.Ninja API ile güvenli veri aktarımı - ücretsiz ve düşük gecikmeli!",
+                    "help.title": "Yardıma mı ihtiyacınız var?",
+                    "help.intro": "Sorularınız veya sorunlarınız varsa yardım almak için en iyi yer Discord topluluğumuzdur.",
+                    "help.discord": "Social Stream Ninja Discord sunucusuna katıl",
+                    "help.happy": "<strong>İyi yayınlar!</strong>",
+                    "footer.terms": "Social Stream Ninja'yı kullanarak <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">Hizmet Şartlarımızı</a> ve <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">Gizlilik Politikamızı</a> kabul etmiş olursunuz. Lütfen <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms \" target=\"_blank\">YouTube Hizmet Şartları</a>nı da dikkate alın."
+                },
+                "uk": {
+                    documentTitle: "Ласкаво просимо до Social Stream Ninja",
+                    videoPlayerTitle: "Відеопрогравач YouTube",
+                    "welcome.title": "Ласкаво просимо до Social Stream Ninja! 🥷",
+                    "welcome.intro": "Об'єднуйте живі чати із соціальних платформ та інші потоки в одному місці. Ця сторінка проведе вас першими кроками.",
+                    "welcome.note": "Щойно ви додасте перше джерело, це вітальне повідомлення зникне.",
+                    "welcome.warning": "<strong>Важливе застереження:</strong> Використання цієї програми може порушувати Умови надання послуг деяких соціальних платформ. Крім того, використання таймерних команд, ботів або автоматизованих повідомлень у чатах підвищує ризик тимчасового блокування або постійного бану вашого облікового запису на цих платформах. Користуйтеся відповідально та ознайомтеся з умовами кожної платформи перед продовженням.",
+                    "video.title": "Відеогід",
+                    "video.intro": "Перегляньте це відео для наочного проходження:",
+                    "video.fallback": "Дивитися гід на YouTube",
+                    "gettingStarted.title": "Початок роботи: додавання першого джерела чату",
+                    "steps.sidebar": "Подивіться на <strong>ліву бічну панель</strong> головного вікна програми.",
+                    "steps.platformButton": "Натисніть кнопку платформи, яку хочете додати (наприклад, <img src=\"https://socialstream.ninja/sources/images/youtube.png\" alt=\"Іконка YouTube\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>YouTube Username</code>, <img src=\"https://socialstream.ninja/sources/images/twitch.png\" alt=\"Іконка Twitch\" style=\"height: 1em; vertical-align: middle; border-radius: 50%;\"> <code>Twitch Username</code> тощо).",
+                    "steps.prompt": "З'явиться запит. Введіть свій <strong>логін</strong>, <strong>Video ID</strong> або <strong>URL</strong>, залежно від вимоги.",
+                    "steps.username": "Для більшості платформ це ваш логін (наприклад, <code>YourChannelName</code>).",
+                    "steps.youtubeVideoId": "Для YouTube також можна додати за <strong>Video ID</strong>, якщо він вам відомий.",
+                    "steps.otherSites": "Для непідтримуваних сайтів використайте <code>Other chat sites</code> і вставте пряму URL-адресу чату.",
+                    "steps.activate": "Джерело буде додано в головну область. Тепер натисніть <code>Activate source</code> (або <code>Select Live Sources</code> / <code>Auto-find & Activate</code> для джерел каналів YouTube).",
+                    "steps.signIn": "Для деяких сайтів (Facebook, TikTok, Instagram) може знадобитися спочатку натиснути <code>Sign in</code> або перейти у відкритому вікні до живого чату.",
+                    "steps.streamingChat": "Ваші повідомлення чату почнуть з'являтися на сторінці <strong>Streaming Chat</strong>. Її можна відкрити за посиланням у правому верхньому куті головного вікна програми з назвою <code>Streaming chat (dock & overlay)</code>. Скопіюйте це посилання в OBS як Browser Source або Dock.",
+                    "features.title": "Основні можливості",
+                    "features.twoWay": "Підтримує живі автоматизовані <strong>двосторонні повідомлення чату</strong> з Facebook, YouTube, Twitch, Kick, Zoom, TikTok, Rumble, DLive та багатьма іншими платформами.",
+                    "features.featured": "Містить оверлей \"<strong>Featured Chat</strong>\", де повідомлення можна вибирати з докованої панелі (автоматично або вручну).",
+                    "features.bots": "Підтримує <strong>команди ботів</strong> і автоматизовані відповіді в чаті (власна логіка через скриптові плагіни).",
+                    "features.llm": "<strong>Підтримка LLM</strong> (зокрема нативного Ollama API) для AI-модерації, допомоги в чаті, RAG і власних інструкцій.",
+                    "features.tts": "Підтримка <strong>Text-to-Speech (TTS)</strong> для безкоштовних, преміум і ультра-преміум сервісів.",
+                    "features.icons": "Підтримка іконок джерел для кількох каналів, щоб легко розрізняти стріми.",
+                    "features.relaying": "Автоматична <strong>ретрансляція повідомлень</strong> між платформами.",
+                    "features.noLogin": "<strong>Без входу користувача, API key або дозволів</strong> для захоплення чату з більшості сайтів.",
+                    "features.queue": "Черга повідомлень для подальшого виділення.",
+                    "features.transport": "Безпечна передача даних через API VDO.Ninja - безкоштовно і з низькою затримкою!",
+                    "help.title": "Потрібна допомога?",
+                    "help.intro": "Якщо у вас є запитання або проблеми, найкраще місце для допомоги - наша спільнота в Discord.",
+                    "help.discord": "Приєднатися до Discord-сервера Social Stream Ninja",
+                    "help.happy": "<strong>Вдалих стрімів!</strong>",
+                    "footer.terms": "Використовуючи Social Stream Ninja, ви погоджуєтеся з нашими <a href=\"https://socialstream.ninja/TOS\" target=\"_blank\">Умовами надання послуг</a> і <a href=\"https://socialstream.ninja/privacy\" target=\"_blank\">Політикою конфіденційності</a>. Також зверніть увагу на <a class=\"lightblue\" href=\"https://www.youtube.com/t/terms \" target=\"_blank\">Умови надання послуг YouTube</a>."
+                },
+                "test": {
+                    documentTitle: "[TEST] Welcome to Social Stream Ninja",
+                    videoPlayerTitle: "[TEST] YouTube video player",
+                    "welcome.title": "[TEST] Welcome to Social Stream Ninja! 🥷",
+                    "welcome.intro": "[TEST] Consolidate your live social messaging streams and more, all in one place. This page will guide you through the first steps.",
+                    "welcome.note": "[TEST] Once you add your first source, this welcome message will disappear.",
+                    "welcome.warning": "<strong>[TEST] Important Notice:</strong> Using this application may potentially violate the Terms of Service of some social media platforms.",
+                    "video.title": "[TEST] Video Guide",
+                    "video.intro": "[TEST] Watch this video for a visual walkthrough:",
+                    "video.fallback": "[TEST] Watch the walkthrough on YouTube"
+                }
+            };
+
+            Object.keys(remainingTranslations).forEach(function(lang) {
+                translations[lang] = remainingTranslations[lang];
+            });
+            translations["en-uk"] = Object.assign({}, translations["en-us"], translations["en-uk"]);
+            translations["test"] = Object.assign({}, translations["en-us"], translations["test"]);
+
+            function normalizeWelcomeLanguage(value) {
+                if (!value || typeof value !== "string") return "en-us";
+                var trimmed = value.trim();
+                var lower = trimmed.toLowerCase();
+                if (lower === "zh" || lower === "zh-cn" || lower === "zh-hans") return "zh-CN";
+                if (lower === "zh-tw" || lower === "zh-hk" || lower === "zh-hant") return "zh-TW";
+                if (lower === "en-gb" || lower === "en-uk") return "en-uk";
+                if (lower === "en" || lower.indexOf("en-") === 0) return "en-us";
+                if (lower === "pt-br" || lower.indexOf("pt") === 0) return "pt-br";
+                if (lower.indexOf("es") === 0) return "es";
+                if (lower.indexOf("de") === 0) return "de";
+                if (lower.indexOf("cs") === 0) return "cs";
+                if (lower.indexOf("th") === 0) return "th";
+                if (lower.indexOf("tr") === 0) return "tr";
+                if (lower.indexOf("uk") === 0) return "uk";
+                if (lower === "test") return "test";
+                return supportedLanguages.indexOf(trimmed) >= 0 ? trimmed : "en-us";
+            }
+
+            function getRequestedLanguage() {
+                if (typeof window.SSAPP_WELCOME_LANGUAGE === "string") {
+                    return window.SSAPP_WELCOME_LANGUAGE;
+                }
+                try {
+                    var params = new URLSearchParams(window.location.search || "");
+                    return params.get("ln") || params.get("lang") || params.get("language") || "";
+                } catch (_) {
+                    return "";
+                }
+            }
+
+            function applyWelcomeLanguage(value) {
+                var lang = normalizeWelcomeLanguage(value);
+                var content = translations[lang] || translations["en-us"];
+                document.documentElement.lang = lang;
+                document.title = content.documentTitle || translations["en-us"].documentTitle;
+                Array.prototype.forEach.call(document.querySelectorAll("[data-i18n-html]"), function(element) {
+                    var key = element.getAttribute("data-i18n-html");
+                    var nextValue = content[key] || translations["en-us"][key];
+                    if (typeof nextValue === "string") {
+                        element.innerHTML = nextValue;
+                    }
+                });
+                var videoFrame = document.querySelector(".video-container iframe");
+                if (videoFrame && content.videoPlayerTitle) {
+                    videoFrame.setAttribute("title", content.videoPlayerTitle);
+                }
+            }
+
+            window.applyWelcomeLanguage = applyWelcomeLanguage;
+            window.addEventListener("message", function(event) {
+                var data = event && event.data;
+                if (data && data.type === "changeLanguage" && data.language) {
+                    applyWelcomeLanguage(data.language);
+                }
+            });
+            applyWelcomeLanguage(getRequestedLanguage());
+        })();
+    </script>
+</body>
+</html>

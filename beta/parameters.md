@@ -1,0 +1,437 @@
+# All URL Parameters for Social Stream Ninja
+
+This completes the comprehensive list of URL parameters available for your live streaming chat overlay system. Each parameter can be added to the URL using standard query string format:
+
+```
+?parameter1=value&parameter2=value
+```
+
+For boolean parameters, simply including the parameter name enables it:
+```
+?darkmode&compact
+```
+
+For parameters requiring values:
+```
+?scale=1.5&limit=200&ttskey=YOUR_API_KEY
+```
+
+## URL Parameters for the Streaming Overlay (dock.html)
+
+These are for the main streaming overlay
+```
+https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
+```
+### Basic Configuration Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `session` or `s` or `id` | string | Sets the session ID for connecting to the chat |
+| `password` | string | Sets a password for the session |
+| `scale` | float | Adjusts the size scaling of the overlay (default: 1.0) |
+| `limit` | number | Maximum number of messages to show before older ones are removed |
+| `opacity` | 0.0-1.0 | Sets the opacity of the main overlay window |
+| `hidemenu` or `nomenu` | boolean or "2" | Hides the menu bar. Value of "2" keeps scroll lock functionality |
+| `css` | URL or CSS string | Applies custom CSS styling via URL or direct CSS |
+| `cssb64` or `b64css` or `base64css` or `cssbase64` | base64 string | Applies custom CSS styling via base64 encoded string |
+| `js` or `base64js` or `b64js` or `jsbase64` or `jsb64` | URL or base64 string | Loads external JavaScript (limited to trusted hosting contexts) |
+| `label` | string | Assigns a label to this instance |
+
+### Visual Style Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `darkmode` | boolean | Enables dark theme with black background |
+| `lightmode` | boolean | Enables light theme with white background |
+| `transparent` or `transparency` | boolean | Makes background transparent and hides scrollbar |
+| `chroma` | hex color | Sets a specific background color (without #) |
+| `blur` or `blurred` | number | Applies blur effect to messages (value in pixels) |
+| `noblur` | boolean | Disables blur rendering (including hidden-source blur and timed-out blur) |
+| `compact` or `overlaymode` | boolean | Enables compact mode with less spacing |
+| `padding` | number | Sets padding between messages in pixels |
+| `largeavatar` | boolean | Shows larger user avatars on the left side |
+| `emoji` or `emojis` | number | Sets emoji size scaling (percentage, default: 140) |
+| `nooutline` | boolean | Removes text outline effects |
+| `font` | string | Sets custom font family |
+| `googlefont` | string | Loads and uses a Google Font |
+| `color` or `colorednames` | boolean | Uses platform accent colors for usernames |
+| `fontcolor` | hex color | Overrides the body text color |
+| `namecolor` | hex color | Overrides the username text color |
+| `fontweight` | number or keyword | Sets font weight for message text |
+| `nameweight` | number or keyword | Sets font weight for usernames |
+| `outlinewidth` | number | Width (px) of the outer outline highlight |
+| `outlinecolor` | hex color | Color applied to the outer outline highlight |
+| `strokewidth` or `stroke` | number | Width (px) for the text stroke effect |
+| `strokecolor` or `strokeColor` | hex color (alpha supported) | Color applied to the text stroke effect (accepts 8-digit hex/rgba for transparency) |
+| `border` | hex color | Adds a profile image border using the provided color (without `#`) |
+| `pressedcolor` | hex color or empty | Custom highlight color for pinned/featured states |
+| `donationhighlightcolor` | hex/color | Custom donation row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `memberhighlightcolor` | hex/color | Custom member row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `firsttimehighlightcolor` | hex/color | Custom first-time chatter row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `questionhighlightcolor` | hex/color | Custom question row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `hideshadow` | boolean | Removes alternating card drop shadows |
+| `largecontent` | boolean | Enlarges embedded content or image cards |
+| `donationright` | number | Sets donation amount margin-right in pixels |
+| `bubbleopacity` | 0.0-1.0 | Sets message bubble background opacity |
+| `namebubblecolor` | hex/color | Background color for the rounded name bubble |
+| `namebubbletext` | hex/color | Text color for the rounded name bubble |
+| `namebubbleradius` | number or CSS length | Border radius for the rounded name bubble |
+| `namebubblepadding` | CSS padding string | Padding for the rounded name bubble |
+| `bolder` | boolean | Applies a thicker drop shadow around text |
+| `thinner` | boolean | Applies a thinner drop shadow around text |
+| `unhighlight` | boolean | Uses an alternate style when un-featuring messages |
+| `nofeaturedhightlight` | boolean | Disables the flash highlight when a card is featured |
+| `nomemberhighlight` | boolean | Disables highlight color for member messages |
+| `noquestionhightlight` | boolean | Disables highlight color for question cards |
+
+### Layout Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `horizontal` | boolean | Makes messages scroll horizontally |
+| `horizontalreverse` | boolean | When horizontal is enabled, enters left-to-right mode so newest messages slide in from the left |
+| `alignbottom` | boolean | Makes messages start from bottom |
+| `alignright` | boolean | Aligns messages to the right side |
+| `rtl` | boolean | Enables right-to-left text direction |
+| `fixed` | boolean | Makes messages overlap each other |
+| `twolines` | boolean | Places messages on a separate line below usernames |
+| `split` | boolean | Enables split mode for message alignment |
+| `bubble` | boolean | Styles messages as chat bubbles |
+| `namebubble` | boolean | Adds a separate rounded bubble behind usernames (bubble mode) |
+| `fadedtop` | boolean | Fades out the top of the overlay |
+| `reverse` | boolean | Displays the feed in reverse order (newest at the top) |
+| `dropdown` | boolean | Enables reverse order with drop-down style animations |
+
+### Animation Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `fadein` | boolean | Enables fade-in animation for new messages |
+| `fadeout` | boolean | Enables fade-out animation when removing messages |
+| `swipeleft` | boolean | Messages slide in from the right |
+| `swiperight` | boolean | Messages slide in from the left |
+| `swipeup` | boolean | Messages slide up from bottom |
+| `smooth` | boolean | Enables smooth scrolling |
+| `animatein` | string | Sets specific entrance animation (see animate.css) |
+| `animateout` | string | Sets specific exit animation (see animate.css) |
+| `typewriter` | boolean or number | Types chat text letter-by-letter with a blinking cursor; optional numeric value sets the per-character delay (ms) while messages wait for the current typing to finish |
+
+### Message Display Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `showtime` | number | Auto-hides messages after specified milliseconds |
+| `delaytime` | number | Delays showing messages by specified milliseconds |
+| `trim` | number | Trims messages longer than specified characters |
+| `trimname` | number | Trims usernames longer than specified characters |
+| `hidenames` | boolean | Hides usernames completely |
+| `firstnamesonly` or `firstname` or `firstnames` | boolean | Shows only first names of users |
+| `hidesource` | boolean | Hides the source platform icons (YouTube, Twitch, etc.) |
+| `noavatar` or `noavatars` | boolean | Hides user avatars |
+| `nobadges` or `hidebadges` | boolean | Hides user badges |
+| `limitbadges` | number | Limits number of badges shown per message |
+| `notime` or `notimestamp` or `nodate` | boolean | Hides timestamp |
+| `24hr` | boolean | Displays timestamps using 24-hour format |
+| `sequence` | boolean | Hides name/icons if sequential messages from same user |
+| `attachmentsonly` | boolean | Displays only messages that include an attached image or clip |
+| `hidequestions` | boolean | Hides cards flagged as questions |
+| `onlyquestions` | boolean | Shows only messages that contain question metadata |
+| `hidenumbers` | boolean | Hides messages that contain only digits |
+| `showsourcename` | boolean | Displays the originating platform label on each card |
+| `showviewercount` | boolean | Shows the current viewer count indicator |
+| `nocolon` | boolean | Removes the colon between username and message body |
+| `namefilter` | boolean | Applies filters to usernames instead of message text |
+| `stripreplyto` | boolean | Removes “replying to” prefaces from imported messages |
+| `normalize` | boolean | Normalizes characters (e.g., removes diacritics) for comparisons |
+
+### Filtering Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `hidecommands` | boolean | Hides messages starting with "!" |
+| `hideshortmessages` | number | Hides messages shorter than specified length |
+| `noemojisonly` | boolean | Filters out messages containing only emojis |
+| `stripemoji` | boolean | Removes all emojis from messages |
+| `striphtml` or `strip` | boolean | Removes HTML formatting from messages |
+| `striplinks` | boolean | Removes links from messages |
+| `activelinks` | boolean | Makes URLs clickable |
+| `shortlink` | boolean | Shortens displayed links |
+| `onlytwitch` | boolean | Shows only Twitch messages |
+| `hidetwitch` | boolean | Hides Twitch messages |
+| `hidefrom` or `exclude` | comma-separated strings | List of usernames to hide messages from |
+| `onlyfrom` or `fromonly` | comma-separated strings | List of usernames to exclusively show |
+| `badkarma` | 0.0-1.0 | Filters messages based on sentiment score |
+| `showonlymods` | boolean | Shows messages from moderators only |
+| `showonlyvips` | boolean | Shows messages from VIPs only |
+| `excludefiltered` | boolean | Prevents filtered messages from being auto-featured |
+
+### Message Selection & Queue Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `autoshow` | boolean | Automatically features new messages |
+| `autoshowtime` | number | Custom timing for auto-show feature (milliseconds) |
+| `chartime` | number | Time per character for auto-show duration |
+| `autoshowdonos` | boolean | Auto-features only donation messages |
+| `autoshowmembers` | boolean | Auto-features only member messages |
+| `autoshowqueued` | boolean | Auto-shows queued messages |
+| `autoshowcontentimages` | boolean | Auto-features queued messages that include image/content attachments |
+| `queueonly` | boolean | Shows only queued messages |
+| `pinnedonly` | boolean | Shows only pinned messages |
+| `viewonly` | boolean | Disables chat, pin, and feature capabilities |
+| `featuredmode` | boolean | Connects `dock.html` to the featured-message feed so it only receives selected messages |
+| `chatmode` | boolean | Enables chat-only mode (no pin/feature) |
+| `helpermode` | boolean | Enables view/pin/queue mode (no chat/feature) |
+| `chatonly` | boolean | Moves the chat input into the toolbar for a chat-centric layout |
+| `openchat` | boolean | Automatically opens the chat composer on load |
+| `showmenu` | boolean | Forces the main toolbar to remain visible |
+| `sync` or `synced` | boolean | Syncs message selection across multiple docks |
+| `autopindonations` | boolean | Auto-pins donation cards as they arrive |
+| `autopinquestions` or `autopinquestion` | boolean | Auto-pins cards marked as questions |
+| `autoqueuedonations` or `autoqueuedonation` | boolean | Auto-queues donation cards |
+| `autoqueuequestions` or `autoqueuequestion` | boolean | Auto-queues question cards |
+| `skipdonations` | boolean | Prevents donation cards from being auto-featured |
+| `selfqueue` | comma-separated strings | Viewer commands that add themselves to the queue (e.g., `!queue`) |
+| `deleteonlylast` | boolean | Only removes the most recent card when clearing messages |
+| `disabletimeout` | boolean | Disables the auto-timeout on featured messages |
+| `altselect` | boolean | Keeps the Feature button visible when menus are hidden |
+| `autoscroll` | boolean | Scrolls to the latest message once and leaves scrolling unlocked |
+| `manualscroll` | boolean | Disables automatic near-bottom scrolling unless Force scroll is enabled |
+| `buffer` | boolean | Enables adaptive buffering for smoother message pacing |
+| `bufferdelay` | number | Base delay (ms) used when buffering messages |
+| `buffermin` | number | Minimum delay (ms) used when buffering messages |
+| `buffermax` | number | Maximum delay (ms) used when buffering messages |
+| `random` | boolean | Randomizes which queued message is featured next |
+
+### Text-to-Speech (TTS) Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `speech` or `tts` | language code | Enables TTS with specified language (e.g., "en-US") |
+| `volume` | 0.0-1.0 | Sets TTS volume |
+| `rate` | number | Sets TTS speaking rate |
+| `pitch` | number | Sets TTS pitch |
+| `voice` | string | Specifies TTS voice to use |
+| `ttscommand` | string | Custom command to trigger TTS (default: "!say") |
+| `ttscommandmembersonly` | boolean | Restricts TTS command to members only |
+| `simpletts` | boolean | Simplified TTS output without "says" phrases |
+| `readevents` | boolean | Enables TTS for stream events |
+| `readouturls` | boolean | Reads URLs instead of saying "link" |
+
+### Donation & Member Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `showonlydonos` | boolean | Shows only messages with donations |
+| `showonlymembers` | boolean | Shows only messages from members |
+| `stripdonations` | boolean | Removes donation data from messages |
+| `nodonohighlight` | boolean | Disables background highlighting for donations |
+| `autoyoutubememberchat` | boolean | Auto-features YouTube member milestone chat cards |
+| `tiktokfans` | boolean | Treats TikTok fans as channel members for highlighting |
+| `t1` | number | First donation threshold amount (USD) |
+| `t1c` | hex/color | Color for first donation threshold messages |
+| `t2` | number | Second donation threshold amount (USD) |
+| `t2c` | hex/color | Color for second donation threshold messages |
+| `t3` | number | Third donation threshold amount (USD) |
+| `t3c` | hex/color | Color for third donation threshold messages |
+
+### Bot & Host Control Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `myname` or `botlist` or `botnames` | comma-separated strings | List of bot usernames to identify |
+| `hidebots` | boolean | Hides messages from identified bots |
+| `hidebotnames` | boolean | Hides names of identified bots |
+| `hidehosts` | boolean | Hides messages from hosts |
+| `hidehostnames` | boolean | Hides names of hosts |
+| `nobeepbot` | boolean | Disables notification sound for bot messages |
+| `nobeephost` | boolean | Disables notification sound for host messages |
+| `nobeepevent` | boolean | Disables notification sound for events |
+| `nobeepmod` | boolean | Disables notification sound for moderator messages |
+| `showvipbadge` | boolean | Shows special badge for VIP users |
+| `autofeaturevip` | boolean | Auto-features messages from VIP users |
+| `autofeaturepriv` | boolean | Auto-features messages from privileged users |
+
+### Notification & Sound Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `beep` | boolean | Enables sound notification for new messages |
+| `beepvolume` | 0-100 | Sets volume for notification sound (percentage) |
+| `custombeep` | URL | Custom sound file URL for notifications |
+| `beepwords` | boolean | Replaces asterisks with "beep" in messages |
+| `quietcommands` | boolean | Disables the TTS beep when command shortcuts trigger |
+
+### OBS Integration Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `remote` | boolean/string | Enables OBS scene state display |
+| `cycle` | boolean | Allows guests to change OBS scenes with !cycle |
+| `startstop` | boolean | Allows privileged users to start/stop OBS |
+| `server` | URL | Custom WebSocket server URL |
+| `server2` | URL | Secondary WebSocket server URL |
+| `server3` | URL | Tertiary WebSocket server URL |
+| `lanonly` | boolean | Restricts P2P connections to LAN only |
+
+### External Automation & Integrations
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `postserver` | URL | Endpoint that receives featured message data via POST |
+| `putserver` | URL | Endpoint that receives featured message data via PUT |
+| `h2rurl` | URL | Base URL for H2R Graphics API posts |
+| `h2r` | string | Path or endpoint suffix appended to `h2rurl` |
+| `spxserver` | URL | Base URL for SPX-GC |
+| `spxfunction` | string | SPX function invoked when a message is featured |
+| `spxlayer` | string | SPX template/layer identifier to update |
+| `singular` | string | Singular.live data node ID for webhook updates |
+| `passtts` | boolean | Allows the `!pass` shortcut to forward TTS to remote automation |
+| `passttsmod` | boolean | Restricts the `!pass` TTS shortcut to moderators |
+| `v` | string | Overrides the dock version used for remote compatibility checks |
+
+### Export & Saving Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `save` | boolean | Auto-saves messages to downloads folder |
+| `savesingle` | boolean | Saves last message to a file |
+| `savefeatured` | boolean | Saves featured message to file |
+| `saveimg` | boolean | Includes user avatar URLs when saving |
+| `reload` | boolean | Reloads last ~50 messages on refresh |
+| `loadlast` | number | Loads specified number of messages from database |
+
+### Professional API Integration Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `ttskey` or `googlettskey` | string | Google Cloud TTS API key |
+| `elevenlabskey` | string | ElevenLabs TTS API key |
+| `speechifykey` | string | Speechify TTS API key |
+| `geminikey` | string | Gemini TTS API key |
+| `openaikey` or `customttskey` or `localttskey` | string | OpenAI or custom local TTS endpoint API key. Optional for local endpoints. |
+
+### OpenAI-Compatible and Custom TTS Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `ttsprovider` | `openai`, `customtts`, `localtts` | Uses the OpenAI-compatible audio speech request format. `customtts` and `localtts` are aliases for local/self-hosted endpoints. |
+| `openaiendpoint` or `customttsendpoint` or `localttsendpoint` | URL | OpenAI-compatible TTS endpoint, such as `http://127.0.0.1:8124/v1/audio/speech` |
+| `voiceopenai` or `customttsvoice` or `localttsvoice` | string | Voice name, speaker ID, or cloned voice name accepted by the endpoint |
+| `openaicustomvoice` | string | Custom voice value used when the popup voice selector is set to Custom |
+| `openaimodel` or `customttsmodel` or `localttsmodel` | string | TTS model name sent in the request body |
+| `openaicustommodelx` | string | Custom model value used when the popup model selector is set to Custom |
+| `openaispeed` or `customttsspeed` or `localttsspeed` | float | Speaking speed sent to compatible endpoints |
+| `openaiformat` or `customttsformat` or `localttsformat` | `mp3`, `wav`, `opus`, `aac`, `flac` | Preferred audio response format |
+
+### Google Cloud TTS Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `googlerate` | float | Google TTS speaking rate |
+| `googlepitch` | float | Google TTS pitch adjustment |
+| `googleaudioprofile` | string | Audio profile (e.g., "handset-class-device") |
+| `voicegoogle` | string | Google TTS voice name (e.g., "en-GB-Standard-A") |
+
+### Gemini TTS Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `geminimodel` | string | Gemini TTS model (e.g., "gemini-2.5-flash-preview-tts") |
+| `voicegemini` | string | Gemini prebuilt voice name (e.g., "Kore") |
+| `geminilang` | BCP-47 code | Optional Gemini speech language code (e.g., "th-TH") |
+| `geministyle` or `geminiprompt` | string | Gemini-only style instructions prepended to the TTS prompt |
+
+### ElevenLabs TTS Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `elevenlatency` | 0-4 | Latency optimization level |
+| `elevenstability` | 0.0-1.0 | Voice stability setting |
+| `elevensimilarity` | 0.0-1.0 | Voice similarity boost |
+| `elevenstyle` | 0.0-1.0 | Style intensity |
+| `elevenrate` | float | Speaking rate |
+| `elevenspeakerboost` | boolean | Enables speaker boost |
+| `voice11` or `elevenlabsvoice` | string | Voice ID |
+| `elevenlabsmodel` | string | Model selection |
+
+### Speechify Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `speechifyspeed` | float | Speaking speed |
+| `speechifymodel` | string | Model selection (e.g., 'simba-english') |
+| `voicespeechify` | string | Voice selection |
+
+### Event Handling Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `filterevents` | comma-separated strings | Exact event names or text keywords to filter when `data.event` is present |
+| `trivialevents` | boolean | Allows background shading for minor events |
+| `showonlyevents` | boolean | Shows only stream events |
+| `hideallevents` | boolean | Hides all stream events |
+| `dissolve` | boolean | Stream events fade away after 3s |
+
+### Privacy & Security Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `privateonly` | boolean | Shows only private messages |
+| `includeprivate` | boolean | Includes private messages |
+| `password` | string | Sets password for connection |
+| `localserver` | boolean | Uses local WebSocket server |
+
+### Debug & Development Parameters
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `debug` | boolean | Enables debug mode |
+| `notobs` | boolean | Disables OBS studio detection |
+| `filtertid` | comma-separated numbers | Filter by thread IDs |
+| `branded` | boolean | Shows channel icon |
+
+## Tip Jar & Goal Meter Parameters (`tipjar.html`)
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text` | Selects the tip jar display style. `bar` is the fluid goal bar; `compact`/`vertical` are simple square-edged bars for corners; `text` is a one-line readout |
+| `goal` | number | Sets the target amount for the bar or jar |
+| `title` | string | Sets the visible goal title (e.g. `Star Goal`, `SuperChat Goal`) |
+| `tipjartype` | `usd`, `stars`, `bits`, `coins`, `diamonds`, `kicks`, `jewels`, `tokens`, `hearts`, `gold` | Counts only that donation unit/type. When set, the jar uses the raw unit count instead of converting to USD |
+| `tipjarunit` or `donationtype` | same as `tipjartype` | Alias for `tipjartype` |
+| `tipjarunitlabel` | string | Overrides the displayed unit label for a filtered unit bar |
+| `tipjarsource` | source type such as `facebook`, `youtube`, `twitch`, `kick`, `tiktok`, `stripe`, `kofi`, `bmac`, `fourthwall` | Counts only donations from that source while preserving the normal USD conversion unless `tipjartype` is also set |
+| `donationsource` | same as `tipjarsource` | Alias for `tipjarsource` |
+| `persistent` | boolean | Keeps the current amount between sessions. Filtered bars use separate saved totals |
+| `controls` | boolean | Shows reset/history/export controls |
+| `sound` | boolean | Plays a sound on accepted donations |
+| `hype` | boolean | Enables hype cup scoring mode |
+| `levelsize` or `increment` | number | Turns the goal into repeating bands/levels of this size (e.g. `1000` stars or `50` dollars). The bar fills, celebrates, and rolls into the next level instead of stopping |
+| `rollinggoal` or `cumulativegoal` | boolean or number | Keeps the displayed amount cumulative and advances the target to the next goal step after each completion. Example: `goal=50&rollinggoal` displays `$60 / $100` after a $60 total |
+| `goalstep` or `goalincrement` | number | Optional step size for `rollinggoal`; defaults to `goal` |
+| `fillstart` or `barcolorstart` | CSS color | Fill color when empty/low (default `#2196F3` blue). Applies to `bar`/`compact`/`vertical`, and recolors the `meter` fill |
+| `fillend` or `barcolorend` | CSS color | Fill color when full (default `#f44336` red). Applies to `bar`/`compact`/`vertical`, and recolors the `meter` fill |
+| `fillmode` | `progress`, `gradient`, `solid` | `bar` fill behavior. `progress` (default) shifts the whole bar from start→end color as it fills; `gradient` reveals a fixed start→end gradient; `solid` uses only the start color |
+| `barheight` | number | Track height (px) for `bar`/`compact`/`vertical` styles |
+| `bartextsize` or `barfontsize` | number | Text size in px for the centered `bar` style amount text |
+| `barradius` | number or CSS length | Corner radius for bar tracks. Use `0` for square corner-overlay edges |
+| `noliquid` | boolean | Disables the flowing-liquid animation on the `bar` style |
+| `theme` | `default`, `neon`, `gold` | Visual theme for the meter/bar |
+| `celebration` | `hearts`, `confetti`, `fireworks`, `none` | Effect played on milestones/level-ups |
+
+## Credits Roll Parameters (`credits.html`)
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `loop` | boolean | Restarts the credits animation when it reaches the end |
+| `persistcredits` | boolean | Saves the collected credits list in the overlay's local storage so refreshes/source toggles keep the current stream's supporters until reset |
+| `onlysupporters` | boolean | Only includes donors and members/subscribers; excludes regular chat-only participants |
+| `onlydonors` | boolean | Only includes users with donation payloads |
+| `donationpriority` | boolean | Groups/sorts donors first, then members, then participants |
+| `showamounts` | boolean | Shows donation totals next to donors |
+
+## Other options for other overlays.
+
+WIP.
+

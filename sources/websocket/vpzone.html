@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Stream - VPZone Chat Source</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48cGF0aCBkPSJNMTQgMThoMTBsOCAyNCA4LTI0aDEwTDM3IDUwSDI3TDE0IDE4eiIgZmlsbD0iIzEyYzdjMiIvPjxjaXJjbGUgY3g9IjQ4IiBjeT0iMTYiIHI9IjYiIGZpbGw9IiM3YzVjZmYiLz48L3N2Zz4=" type="image/svg+xml" />
+    <link rel="shortcut icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxMTE4MjciLz48cGF0aCBkPSJNMTQgMThoMTBsOCAyNCA4LTI0aDEwTDM3IDUwSDI3TDE0IDE4eiIgZmlsbD0iIzEyYzdjMiIvPjxjaXJjbGUgY3g9IjQ4IiBjeT0iMTYiIHI9IjYiIGZpbGw9IiM3YzVjZmYiLz48L3N2Zz4=" type="image/svg+xml" />
+    <style>
+        :root {
+            --bg: #0d1118;
+            --panel: #171c26;
+            --panel-alt: #1f2632;
+            --text: #eef3ff;
+            --muted: #9eabc7;
+            --line: #2d3647;
+            --accent: #12c7c2;
+            --accent-alt: #7c5cff;
+            --good: #6ee7b7;
+            --warn: #f9c86c;
+            --bad: #ff8e9c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(124, 92, 255, 0.18), transparent 36%),
+                radial-gradient(circle at top left, rgba(18, 199, 194, 0.14), transparent 32%),
+                linear-gradient(180deg, #111724 0%, var(--bg) 100%);
+        }
+
+        .wrap {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .card {
+            background: linear-gradient(160deg, var(--panel) 0%, var(--panel-alt) 100%);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+        }
+
+        h1, h2 {
+            margin: 0 0 8px 0;
+        }
+
+        h1 {
+            font-size: 26px;
+            letter-spacing: 0.02em;
+        }
+
+        h2 {
+            font-size: 17px;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        .header-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .header-row .chips {
+            justify-content: flex-end;
+            min-width: 260px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .setup-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: minmax(260px, 1fr) auto;
+            align-items: end;
+        }
+
+        .setup-actions,
+        .account-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .setup-actions {
+            margin-top: 12px;
+        }
+
+        .chat-compose {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: minmax(220px, 1fr) auto;
+            align-items: end;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+        }
+
+        .primary-action {
+            min-width: 140px;
+        }
+
+        label,
+        .field-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: rgba(10, 14, 22, 0.7);
+            color: var(--text);
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        button {
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 9px 13px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            background: var(--accent);
+            color: #081115;
+        }
+
+        button.alt {
+            background: var(--accent-alt);
+            color: #fff;
+        }
+
+        button.ghost {
+            background: transparent;
+            color: var(--text);
+            border-color: var(--line);
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            padding: 6px 11px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(8, 12, 18, 0.55);
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chip.good {
+            border-color: rgba(110, 231, 183, 0.35);
+            color: var(--good);
+        }
+
+        .chip.warn {
+            border-color: rgba(249, 200, 108, 0.35);
+            color: var(--warn);
+        }
+
+        .chip.bad {
+            border-color: rgba(255, 142, 156, 0.35);
+            color: var(--bad);
+        }
+
+        body.hide-metrics #viewer-chip {
+            display: none !important;
+        }
+
+        .advanced-options {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(158, 171, 199, 0.16);
+        }
+
+        .advanced-options summary {
+            width: max-content;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .advanced-panel {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            margin-top: 12px;
+        }
+
+        .setting-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin: 0;
+            text-transform: none;
+            letter-spacing: 0;
+            color: var(--text);
+        }
+
+        .split {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 1.2fr 0.85fr;
+        }
+
+        .feed,
+        .log {
+            min-height: 320px;
+            max-height: 560px;
+            overflow: auto;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: rgba(8, 12, 18, 0.82);
+        }
+
+        .feed-entry,
+        .log-entry {
+            border-bottom: 1px dashed rgba(158, 171, 199, 0.16);
+            padding: 10px 0;
+        }
+
+        .feed-entry:first-child,
+        .log-entry:first-child {
+            padding-top: 0;
+        }
+
+        .feed-entry:last-child,
+        .log-entry:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .feed-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            flex: 0 0 28px;
+            background: #202733;
+            object-fit: cover;
+        }
+
+        .avatar.placeholder {
+            display: inline-block;
+        }
+
+        .feed-meta,
+        .log-meta {
+            font-size: 11px;
+            color: #8ab8ff;
+            margin-bottom: 3px;
+        }
+
+        .feed-name {
+            font-weight: 700;
+            color: #d4b5ff;
+            margin-right: 6px;
+        }
+
+        .badge-strip {
+            display: inline-flex;
+            gap: 4px;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        .badge-strip svg {
+            height: 15px;
+            width: auto;
+            vertical-align: middle;
+        }
+
+        .feed-message {
+            color: var(--text);
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .feed-message img.vpzone-emote {
+            width: 22px;
+            height: 22px;
+            vertical-align: middle;
+            margin: 0 1px;
+        }
+
+        .event-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(124, 92, 255, 0.14);
+            border: 1px solid rgba(124, 92, 255, 0.35);
+            color: #d8ccff;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .hint {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .link {
+            color: #8fe9e1;
+            text-decoration: none;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 920px) {
+            .split {
+                grid-template-columns: 1fr;
+            }
+
+            .header-row {
+                flex-direction: column;
+            }
+
+            .setup-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-compose {
+                grid-template-columns: 1fr;
+            }
+
+            .header-row .chips {
+                justify-content: flex-start;
+                min-width: 0;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="websocket-responsive.css">
+</head>
+<body>
+    <div class="wrap">
+        <section class="card">
+            <div class="header-row">
+                <div>
+                    <h1>VPZone Chat Source</h1>
+                    <p id="status-text">Enter a VPZone channel and connect.</p>
+                </div>
+                <div class="chips">
+                    <span id="socket-chip" class="chip bad">Connection: disconnected</span>
+                    <span id="auth-chip" class="chip">Not signed in</span>
+                    <span id="viewer-chip" class="chip">Viewers: -</span>
+                    <span id="last-event-chip" class="chip">Last event: Waiting</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Connect Chat</h2>
+            <div class="setup-grid">
+                <div>
+                    <label for="channel-input">VPZone Channel</label>
+                    <input id="channel-input" type="text" autocomplete="off" placeholder="username or vpzone.tv/watch/username" />
+                </div>
+                <div>
+                    <div class="field-label">VPZone Account</div>
+                    <div class="account-actions">
+                        <button id="authorize-btn" class="alt">Sign in to VPZone</button>
+                        <button id="clear-auth-btn" class="ghost">Sign out</button>
+                    </div>
+                </div>
+            </div>
+            <div class="setup-actions">
+                <button id="connect-btn" class="primary-action">Connect Chat</button>
+                <button id="disconnect-btn" class="ghost">Disconnect</button>
+            </div>
+            <form id="chat-compose" class="chat-compose">
+                <div>
+                    <label for="chat-message">Message</label>
+                    <input id="chat-message" type="text" autocomplete="off" placeholder="Send a message to chat" />
+                </div>
+                <button id="send-message-btn" type="submit" class="alt">Send</button>
+            </form>
+            <p class="hint">VPZone page: <a id="channel-link" class="link" href="https://vpzone.tv" target="_blank" rel="noopener">vpzone.tv</a></p>
+
+            <details class="advanced-options">
+                <summary>Advanced</summary>
+                <div class="advanced-panel">
+                    <div>
+                        <label for="ws-url">Chat Server</label>
+                        <input id="ws-url" type="text" autocomplete="off" value="wss://chat.nexus-7.vpzone.tv/ws" />
+                    </div>
+                    <div>
+                        <label for="auth-token">Chat Token</label>
+                        <input id="auth-token" type="password" autocomplete="off" placeholder="Optional developer token" />
+                    </div>
+                    <div>
+                        <label class="setting-toggle">
+                            <input id="hide-metrics" type="checkbox" />
+                            <span>Hide metrics</span>
+                        </label>
+                    </div>
+                    <div class="setup-actions" style="margin-top:0;">
+                        <button id="save-config" class="ghost">Save advanced settings</button>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <section class="split">
+            <section class="card">
+                <h2>Feed</h2>
+                <div id="feed" class="feed"></div>
+            </section>
+
+            <section class="card">
+                <h2>Diagnostics</h2>
+                <div id="log" class="log"></div>
+            </section>
+        </section>
+    </div>
+    <script src="vpzone.js?v=20260615h"></script>
+</body>
+</html>

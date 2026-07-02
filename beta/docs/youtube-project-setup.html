@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Project Setup - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Detailed setup guide for using your own YouTube API project with the Social Stream Ninja desktop app.">
+    <style>
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .setup-grid .guide-card {
+            margin-bottom: 0;
+        }
+
+        .mini-label {
+            display: inline-block;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .callout-box {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 8px 8px 0;
+            padding: 1.6rem;
+            margin: 2rem 0;
+        }
+
+        .callout-box.warning {
+            background: rgba(251, 188, 5, 0.14);
+            border-left-color: #f9ab00;
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        .steps-table th,
+        .steps-table td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .steps-table th {
+            color: var(--primary-color);
+        }
+
+        .steps-table code,
+        .guide-card code,
+        .callout-box code {
+            word-break: break-word;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../media/logo.png" alt="Social Stream Ninja logo">
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html" class="active">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/services.html">Hire</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>YouTube Project Setup</h1>
+            <p>How to create a Google Cloud project for the SSN Standalone desktop app without weakening your key security.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <span class="mini-label">Overview</span>
+                    <h3>What this setup is for</h3>
+                    <p>Use this only if you want the desktop app to use <strong>your own YouTube API quota</strong> instead of Social Stream Ninja's default shared project.</p>
+                    <div class="callout-box">
+                        <strong>Important:</strong> all 3 values below must come from the <strong>same Google Cloud project</strong>:
+                        <ul class="guide-list">
+                            <li>OAuth Client ID</li>
+                            <li>OAuth Client Secret</li>
+                            <li>API Key</li>
+                        </ul>
+                    </div>
+                    <div class="callout-box warning">
+                        <strong>Do not confuse these two fields in Google Cloud:</strong>
+                        <ul class="guide-list">
+                            <li><strong>Authorized JavaScript origins</strong> must be just the origin, with no path.</li>
+                            <li><strong>Authorized redirect URIs</strong> must include the full <code>/sources/websocket/youtube.html</code> path.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">Step 1</span>
+                        <h3>Create the project</h3>
+                        <ol class="guide-steps">
+                            <li>Open Google Cloud Console.</li>
+                            <li>Create a new project or pick a dedicated existing one.</li>
+                            <li>Enable <strong>YouTube Data API v3</strong>.</li>
+                            <li>Open the OAuth consent screen settings.</li>
+                            <li>If the app is in testing, add your Google account as a test user.</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">Step 2</span>
+                        <h3>Create the OAuth client</h3>
+                        <ol class="guide-steps">
+                            <li>Create credentials.</li>
+                            <li>Choose <strong>OAuth client ID</strong>.</li>
+                            <li>Use type <strong>Web application</strong>.</li>
+                            <li>Add the exact origins and redirect URIs shown below.</li>
+                        </ol>
+                        <table class="steps-table">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Authorized JavaScript origins</td>
+                                    <td><code>http://localhost:8181</code><br><code>http://localhost:8080</code></td>
+                                </tr>
+                                <tr>
+                                    <td>Authorized redirect URIs</td>
+                                    <td><code>http://localhost:8181/sources/websocket/youtube.html</code><br><code>http://localhost:8080/sources/websocket/youtube.html</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">Step 3</span>
+                        <h3>Create the API key safely</h3>
+                        <ol class="guide-steps">
+                            <li>Create an <strong>API key</strong> in the same project.</li>
+                            <li>Open that key's restrictions.</li>
+                            <li>Under <strong>API restrictions</strong>, restrict it to <strong>YouTube Data API v3</strong> only.</li>
+                            <li>Do <strong>not</strong> use HTTP referrer restrictions for the desktop app.</li>
+                        </ol>
+                        <div class="guide-note">
+                            <p><strong>Desktop app rule:</strong> HTTP referrer restrictions are for browser pages, not this local desktop auth flow.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">Step 4</span>
+                    <h3>Paste the values into the desktop app</h3>
+                    <ol class="guide-steps">
+                        <li>Open the YouTube source page inside the desktop app.</li>
+                        <li>Paste the <strong>OAuth Client ID</strong>, <strong>OAuth Client Secret</strong>, and <strong>API Key</strong>.</li>
+                        <li>Click <strong>Save</strong>.</li>
+                        <li>Sign out if needed.</li>
+                        <li>Click <strong>Sign in with YouTube</strong>.</li>
+                        <li>Complete the Google login in the external browser window.</li>
+                    </ol>
+                    <div class="callout-box">
+                        <strong>Expected result:</strong> if everything matches, Google sign-in works and the desktop app uses your saved YouTube project instead of the default shared one.
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">Security</span>
+                        <h3>Keep the credentials safe</h3>
+                        <ul class="guide-list">
+                            <li>Treat the Client Secret and API key as sensitive.</li>
+                            <li>Do not paste them into screenshots, chat logs, or bug reports.</li>
+                            <li>If you accidentally expose them, rotate or delete them.</li>
+                            <li>Use a dedicated test project if you are experimenting.</li>
+                            <li>Delete temporary projects once you are done testing.</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">Troubleshooting</span>
+                        <h3>Common problems</h3>
+                        <ul class="guide-list">
+                            <li><strong><code>redirect_uri_mismatch</code>:</strong> the redirect URI is not an exact match.</li>
+                            <li><strong><code>invalid_client</code>:</strong> the Client ID and Client Secret do not match.</li>
+                            <li><strong><code>quotaExceeded</code>:</strong> your API key project is out of YouTube quota.</li>
+                            <li><strong>Account validation failed:</strong> on older builds, this could happen when OAuth and API key came from different projects.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="footer-links">
+                    <a href="guides.html" class="btn btn-secondary">Back To Guides</a>
+                    <a href="download.html" class="btn btn-primary">Download Desktop App</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giveaway Communication Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background: white; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .log { height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #f9f9f9; font-family: monospace; font-size: 12px; }
+        .status { padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Giveaway Communication Test</h1>
+    
+    <div class="test-section info">
+        <h3>📋 Session Information</h3>
+        <p><strong>Session ID:</strong> <span id="session-id">Loading...</span></p>
+        <p><strong>Communication Status:</strong> <span id="comm-status" class="status disconnected">Disconnected</span></p>
+        <p><strong>Messages Received:</strong> <span id="message-count">0</span></p>
+    </div>
+    
+    <div class="test-section">
+        <h3>🧪 Test Communication</h3>
+        <button onclick="testKeyword()">Test Keyword Update</button>
+        <button onclick="testEntrants()">Test Entrants Update</button>
+        <button onclick="testSpin()">Test Wheel Spin</button>
+        <button onclick="testWinner()">Test Winner Announcement</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>🔗 Quick Links</h3>
+        <button onclick="openGiveaway()">Open Main Giveaway Page</button>
+        <button onclick="openOBS()">Open OBS Entries Widget</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>📊 Communication Log</h3>
+        <div id="message-log" class="log"></div>
+    </div>
+
+    <script>
+        // Get session parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        let roomID = urlParams.get("session") || urlParams.get("s") || urlParams.get("id") || "rhTAjPwZ3z";
+        let password = urlParams.get("password") || "false";
+        
+        document.getElementById('session-id').textContent = roomID;
+        
+        let messageCount = 0;
+        let channel = null;
+        
+        function log(message) {
+            const logDiv = document.getElementById('message-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function setupCommunication() {
+            if (typeof BroadcastChannel !== 'undefined') {
+                channel = new BroadcastChannel('giveaway_' + roomID);
+                
+                channel.addEventListener('message', function(event) {
+                    messageCount++;
+                    document.getElementById('message-count').textContent = messageCount;
+                    log(`📥 Received: ${event.data.action} - ${JSON.stringify(event.data)}`);
+                });
+                
+                document.getElementById('comm-status').textContent = 'Connected (BroadcastChannel)';
+                document.getElementById('comm-status').className = 'status connected';
+                log('✅ BroadcastChannel communication established');
+            } else {
+                // Fallback to localStorage
+                window.addEventListener('storage', function(e) {
+                    if (e.key === 'giveaway_broadcast_' + roomID) {
+                        messageCount++;
+                        document.getElementById('message-count').textContent = messageCount;
+                        try {
+                            const data = JSON.parse(e.newValue);
+                            log(`📥 Received: ${data.action} - ${JSON.stringify(data)}`);
+                        } catch (error) {
+                            log(`❌ Error parsing message: ${error}`);
+                        }
+                    }
+                });
+                
+                document.getElementById('comm-status').textContent = 'Connected (localStorage)';
+                document.getElementById('comm-status').className = 'status connected';
+                log('✅ localStorage communication established');
+            }
+        }
+        
+        function broadcast(message) {
+            if (channel) {
+                channel.postMessage(message);
+                log(`📤 Sent: ${message.action} - ${JSON.stringify(message)}`);
+            } else {
+                // localStorage fallback
+                const key = 'giveaway_broadcast_' + roomID;
+                localStorage.setItem(key, JSON.stringify(message));
+                log(`📤 Sent: ${message.action} - ${JSON.stringify(message)}`);
+                setTimeout(() => localStorage.removeItem(key), 100);
+            }
+        }
+        
+        function testKeyword() {
+            broadcast({
+                action: 'keyword_update',
+                keyword: 'TEST_' + Date.now(),
+                timestamp: Date.now()
+            });
+        }
+        
+        function testEntrants() {
+            broadcast({
+                action: 'giveaway_update',
+                data: {
+                    entrants: {
+                        'test1': { name: 'TestUser1', platform: 'twitch' },
+                        'test2': { name: 'TestUser2', platform: 'youtube' },
+                        'test3': { name: 'TestUser3', platform: 'discord' }
+                    },
+                    timestamp: Date.now()
+                },
+                timestamp: Date.now()
+            });
+        }
+        
+        function testSpin() {
+            broadcast({
+                action: 'spin_update',
+                data: {
+                    isSpinning: true,
+                    targetRotation: Math.PI * 6,
+                    duration: 3000,
+                    winnerIndex: 1,
+                    timestamp: Date.now()
+                },
+                timestamp: Date.now()
+            });
+            
+            // Stop spinning after 3 seconds
+            setTimeout(() => {
+                broadcast({
+                    action: 'spin_update',
+                    data: {
+                        isSpinning: false,
+                        timestamp: Date.now()
+                    },
+                    timestamp: Date.now()
+                });
+            }, 3000);
+        }
+        
+        function testWinner() {
+            broadcast({
+                action: 'winner_update',
+                data: {
+                    name: 'TestWinner_' + Date.now(),
+                    platform: 'twitch',
+                    timestamp: Date.now()
+                },
+                timestamp: Date.now()
+            });
+        }
+        
+        function clearLog() {
+            document.getElementById('message-log').innerHTML = '';
+            messageCount = 0;
+            document.getElementById('message-count').textContent = '0';
+        }
+        
+        function openGiveaway() {
+            window.open(`giveaway.html?session=${roomID}&password=${password}`, '_blank');
+        }
+        
+        function openOBS() {
+            window.open(`giveaway-obs-entries.html?session=${roomID}&password=${password}`, '_blank');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupCommunication();
+            log('🚀 Test page initialized');
+            log(`📋 Session ID: ${roomID}`);
+            log('💡 Use the test buttons to send messages between giveaway pages');
+        });
+    </script>
+</body>
+</html>

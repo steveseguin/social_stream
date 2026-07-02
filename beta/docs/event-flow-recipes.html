@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Flow Recipes - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Practical Event Flow recipes for Social Stream Ninja: sounds, media, rewards, OBS actions, webhooks, and safe testing.">
+</head>
+<body>
+    <header><div class="container"><div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div><nav><ul><li><a href="../index.html">Home</a></li><li><a href="features.html">Features</a></li><li><a href="download.html">Download</a></li><li><a href="guides.html" class="active">Guides</a></li><li><a href="commands.html">Commands &amp; API</a></li><li><a href="supported-sites.html">Supported Sites</a></li><li><a href="templates.html">Templates</a></li><li><a href="support.html">Support</a></li></ul></nav><div class="header-controls"><div class="mobile-nav-toggle"><span></span><span></span><span></span></div></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Event Flow Recipes</h1><p>Build useful automations one small recipe at a time.</p></div></section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>What Event Flow Is For</h2>
+                <p>Event Flow is the advanced automation editor. Use it when popup toggles are not enough: filter chat, trigger media, relay messages, call webhooks, or control OBS.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-event-flow-overview.png" alt="Event Flow Guide overview explaining sources, logic nodes, actions, and payloads" class="guide-image">
+                    <figcaption>Think in three pieces: source event, logic/filter, action.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Before Any Recipe</h2>
+                <ol class="guide-steps">
+                    <li>Use one test platform and one Social Stream session.</li>
+                    <li>Open the dock and confirm chat arrives.</li>
+                    <li>Open <code>actions.html?session=YOUR_SESSION</code> if the recipe plays audio, media, or controls OBS.</li>
+                    <li>Test with a fake message or a safe trigger before going live.</li>
+                    <li>Export a working flow before making a large edit.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>Recipe Ideas</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Recipe</th><th>Trigger</th><th>Action</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Recipe">Keyword sound</td><td data-label="Trigger">Message contains <code>!hype</code></td><td data-label="Action">Play audio clip in <code>actions.html</code>.</td></tr>
+                        <tr><td data-label="Recipe">Kick reward media</td><td data-label="Trigger">Reward/channel point event</td><td data-label="Action">Show an image, video, or sound.</td></tr>
+                        <tr><td data-label="Recipe">First-time chatter</td><td data-label="Trigger">First-time chatter flag or filter</td><td data-label="Action">Feature the message or show a welcome overlay.</td></tr>
+                        <tr><td data-label="Recipe">Donation alert</td><td data-label="Trigger"><code>hasDonation</code> or donation event</td><td data-label="Action">Send to alert overlay, webhook, or OBS scene action.</td></tr>
+                        <tr><td data-label="Recipe">Webhook relay</td><td data-label="Trigger">Platform/type filter</td><td data-label="Action">POST a selected payload to your service.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Kick Reward Media Example</h2>
+                <p>This is the most common practical Event Flow pattern: match a reward, then play media through Flow Actions.</p>
+                <figure class="guide-figure">
+                    <img src="images/kick-channel-points-event-flow/event-flow-reward-trigger.png" alt="Event Flow reward trigger example for Kick rewards" class="guide-image">
+                    <figcaption>Start with a specific trigger so the flow does not fire for every chat message.</figcaption>
+                </figure>
+                <figure class="guide-figure">
+                    <img src="images/kick-channel-points-event-flow/event-flow-media-action-values.png" alt="Event Flow media action fields for reward-triggered sound or media" class="guide-image">
+                    <figcaption>Then point the action to the sound, image, video, or overlay output you want.</figcaption>
+                </figure>
+                <p>Full deep dive: <a href="index.html?file=kick-channel-points-event-flow.md">Kick rewards sounds/media guide</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common Fixes</h2>
+                <ul class="guide-list">
+                    <li><strong>Nothing happens:</strong> confirm the source event arrives in the dock first.</li>
+                    <li><strong>Audio or media does not play:</strong> keep <code>actions.html</code> open with the same session.</li>
+                    <li><strong>OBS action fails:</strong> check OBS WebSocket v5, port <code>4455</code>, password, and permissions.</li>
+                    <li><strong>Flow fires too often:</strong> add a stricter platform, event, keyword, or user filter.</li>
+                </ul>
+                <p>Full reference: <a href="../actions/event-flow-guide.html">Event Flow Editor Guide</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

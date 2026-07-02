@@ -1,0 +1,242 @@
+﻿name: AI Code Review
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for auto-enhanced commit
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest commit message
+          COMMIT_MSG=$(gh api repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }} --jq '.commit.message')
+          if echo "$COMMIT_MSG" | grep -q "\[auto-enhanced\]"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping - commit was auto-enhanced"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout repository
+        if: steps.check.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        if: steps.check.outputs.skip != 'true'
+        id: diff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the diff between base and head
+          DIFF=$(gh pr diff ${{ github.event.pull_request.number }} --repo ${{ github.repository }})
+
+          # Truncate if too large (API has token limits)
+          MAX_CHARS=30000
+          if [ ${#DIFF} -gt $MAX_CHARS ]; then
+            DIFF="${DIFF:0:$MAX_CHARS}
+
+          ... [diff truncated due to size]"
+          fi
+
+          # Save to file to handle special characters
+          echo "$DIFF" > /tmp/pr_diff.txt
+
+      - name: Get PR info
+        if: steps.check.outputs.skip != 'true'
+        id: pr_info
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_TITLE=$(gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --json title -q '.title')
+          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --json body -q '.body')
+          echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "$PR_BODY" > /tmp/pr_body.txt
+
+      - name: Run AI Code Review
+        if: steps.check.outputs.skip != 'true'
+        id: review
+        env:
+          ZEN_API_TOKEN: ${{ secrets.ZEN_API_TOKEN }}
+        run: |
+          DIFF=$(cat /tmp/pr_diff.txt)
+          PR_BODY=$(cat /tmp/pr_body.txt)
+
+          # Prepare the prompt
+          SYSTEM_PROMPT="You are a bug finder. Only report issues you can PROVE from the diff.
+
+          CRITICAL: If no provable bugs exist, respond with ONLY: NO_ISSUES_FOUND
+
+          ABSOLUTE RULES:
+          1. NEVER invent 'old code' - you can only see the diff, not history. Do NOT claim 'previously X did Y' or 'the old code had Z' unless the removed lines (-) explicitly show it.
+          2. NEVER claim 'this breaks existing behavior' unless the diff shows both the old AND new code.
+          3. Lines marked with + are NEW code. If there's no corresponding - line, there is NO 'old version' to compare against.
+          4. Do NOT infer what 'should' exist based on variable names or patterns.
+
+          ONLY report:
+          - Syntax errors that will crash
+          - Null/undefined access on lines shown in the diff
+          - Security issues (injection, XSS, exposed secrets)
+          - Logic errors provable from the code shown
+
+          Do NOT report:
+          - Style, formatting, whitespace
+          - 'Missing' fallbacks or features you think should exist
+          - Hypothetical regressions without proof in the diff
+          - Suggestions or improvements
+
+          If in doubt, say nothing."
+
+          USER_PROMPT="Find bugs ONLY. Do not invent what 'old code' looked like - you cannot see git history.
+
+          **PR:** ${{ steps.pr_info.outputs.title }}
+
+          **Context:** ${PR_BODY}
+
+          **Diff (+ = added, - = removed):**
+          \`\`\`diff
+          ${DIFF}
+          \`\`\`
+
+          Remember: If there are no - lines for a section, there is NO old code to compare against. Do not hallucinate previous behavior."
+
+          ZEN_MODELS_ENDPOINT="https://opencode.ai/zen/v1/models"
+          ZEN_RESPONSE_ENDPOINT="https://opencode.ai/zen/v1/responses"
+          ZEN_CHAT_COMPLETIONS_ENDPOINT="https://opencode.ai/zen/v1/chat/completions"
+          OPENCODE_ZEN_FREE_ORDER='["big-pickle","deepseek-v4-flash-free","mimo-v2.5-free","qwen3.6-plus-free","minimax-m3-free","nemotron-3-ultra-free","nemotron-3-super-free"]'
+
+          extract_zen_text() {
+            echo "$1" | jq -r '
+              (
+                .choices[0].message.content //
+                .output[0].content[0].text //
+                .output[0].text //
+                ""
+              )'
+          }
+
+          query_zen_model() {
+            local endpoint="$1"
+            local model="$2"
+            local mode="$3"
+            local payload=""
+            if [ "$mode" = "responses" ]; then
+              payload=$(jq -n \
+                --arg model "$model" \
+                --arg system "$SYSTEM_PROMPT" \
+                --arg user "$USER_PROMPT" \
+                '{model:$model,instructions:$system,input:[{role:"user",content:$user}],temperature:0.1}')
+            else
+              payload=$(jq -n \
+                --arg model "$model" \
+                --arg system "$SYSTEM_PROMPT" \
+                --arg user "$USER_PROMPT" \
+                '{
+                  model:$model,
+                  messages:[{role:"system",content:$system},{role:"user",content:$user}],
+                  temperature:0.1,
+                  stream:false
+                }')
+            fi
+            curl -s -X POST "$endpoint" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $ZEN_API_TOKEN" \
+              -d "$payload"
+          }
+
+          ZEN_MODEL_LIST=$(curl -s -X GET "$ZEN_MODELS_ENDPOINT" \
+            -H "Authorization: Bearer $ZEN_API_TOKEN" | jq -r --argjson freeOrder "$OPENCODE_ZEN_FREE_ORDER" '
+            ( .data // [] )
+            | map(select(.id | type == "string"))
+            | to_entries
+            | map(
+              .value as $model
+              | {
+                id: ($model.id | ascii_downcase),
+                api_index: .key,
+                free_rank: (($model.id | ascii_downcase) as $id | $freeOrder | index($id)),
+                free: (
+                  ($model.id | ascii_downcase) == "big-pickle"
+                  or ($model.id | endswith("-free"))
+                  or (($model.meta and ($model.meta.is_free | tostring == "true")) // false)
+                  or (($model.is_free | tostring == "true") // false)
+                  or (
+                    (($model.pricing.input? // $model.pricing.prompt? // $model.pricing.output? // $model.pricing.completion? // 0)
+                    | tonumber? // 0)
+                    <= 0
+                  )
+                )
+              }
+            )
+            | sort_by([if .free then 0 else 1 end, (.free_rank // 9999), .api_index, .id])
+            | map(.id)
+            | .[]')
+
+          if [ -z "$ZEN_MODEL_LIST" ]; then
+            ZEN_MODEL_LIST="big-pickle
+          deepseek-v4-flash-free
+          mimo-v2.5-free
+          qwen3.6-plus-free
+          minimax-m3-free
+          nemotron-3-ultra-free
+          nemotron-3-super-free"
+          fi
+
+          REVIEW=""
+          while IFS= read -r ZEN_MODEL; do
+            [ -z "$ZEN_MODEL" ] && continue
+            RESPONSE=$(query_zen_model "$ZEN_RESPONSE_ENDPOINT" "$ZEN_MODEL" "responses")
+            REVIEW=$(extract_zen_text "$RESPONSE")
+            if [ -n "$REVIEW" ] && [ "$REVIEW" != "null" ]; then
+              break
+            fi
+            RESPONSE=$(query_zen_model "$ZEN_CHAT_COMPLETIONS_ENDPOINT" "$ZEN_MODEL" "chat")
+            REVIEW=$(extract_zen_text "$RESPONSE")
+            if [ -n "$REVIEW" ] && [ "$REVIEW" != "null" ]; then
+              break
+            fi
+          done <<< "$ZEN_MODEL_LIST"
+
+          if [ -z "$REVIEW" ] || [ "$REVIEW" = "null" ]; then
+            echo "Error: Failed to get AI review"
+            echo "Response: $RESPONSE"
+            REVIEW="Warning: AI review failed to generate. Please check the workflow logs."
+          fi
+
+          # Save review to file
+          echo "$REVIEW" > /tmp/review.txt
+
+      - name: Post review comment
+        if: steps.check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REVIEW=$(cat /tmp/review.txt)
+
+          # Skip posting if no issues found
+          if echo "$REVIEW" | grep -q "NO_ISSUES_FOUND"; then
+            echo "No issues found - skipping comment"
+            exit 0
+          fi
+
+          # Create the comment with header
+          COMMENT="## OpenCode Zen AI Bug Check
+
+          $REVIEW
+
+          ---
+          <sub>Auto-check by OpenCode Zen (opencode.ai/zen) · Style/formatting ignored · Verify findings before acting</sub>"
+
+          # Post comment to PR
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "$COMMENT"

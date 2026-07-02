@@ -1,0 +1,30 @@
+{
+  "scripts": {
+    "test:rag:benchmark": "node tests/rag-benchmark.test.js",
+    "test:rag:e2e": "node tests/rag-e2e.test.js",
+    "test:rag:scale": "node tests/rag-scale-benchmark.test.js",
+    "test:aiprompt:smoke": "node scripts/playwright-aiprompt-smoke.cjs",
+    "test:xss:sanitizer": "node tests/xss-sanitizer.test.js",
+    "test:aiprompt:adversarial": "node scripts/aiprompt-ssnpatch-adversarial-e2e.cjs",
+    "test:aiprompt:conversation": "node scripts/playwright-aiprompt-conversation-e2e.cjs",
+    "test:aiprompt:expectations": "node scripts/playwright-aiprompt-expectations-e2e.cjs",
+    "test:flextv": "node tests/flextv-source.test.js",
+    "local-tts-bridge": "node scripts/local-tts-bridge.cjs",
+    "r2:large-assets:plan": "node scripts/sync-large-assets-r2.cjs",
+    "r2:large-assets:verify": "node scripts/sync-large-assets-r2.cjs --verify",
+    "r2:large-assets:upload": "node scripts/sync-large-assets-r2.cjs --upload",
+    "lint:js": "eslint .",
+    "lint:js:background:strict": "eslint background.js --rule \"no-redeclare:error\" --rule \"no-shadow:error\" --rule \"no-unreachable:error\" --rule \"no-duplicate-case:error\" --rule \"no-mixed-spaces-and-tabs:error\"",
+    "format:js:background": "prettier --write background.js",
+    "lint:js:background:indent-audit": "prettier --check background.js",
+    "lint:js:background:format-audit": "prettier --check background.js"
+  },
+  "dependencies": {
+    "playwright": "^1.58.2",
+    "python3": "^0.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^10.1.0",
+    "prettier": "^3.8.1"
+  }
+}

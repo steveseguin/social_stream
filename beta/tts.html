@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Speech Synthesis Languages</title>
+   <style>
+body {
+   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   background-color: #222;
+   color: #e0e0e0;
+   margin: 0;
+   padding: 0;
+   min-height: 100vh;
+}
+
+.container {
+   max-width: 100%;
+   padding: 15px;
+   box-sizing: border-box;
+}
+
+h1 {
+   font-size: clamp(1.3rem, 4vw, 1.8rem);
+   text-align: center;
+   margin: 15px 0;
+   color: #fff;
+}
+
+p {
+   font-size: clamp(0.85rem, 2.5vw, 1rem);
+   text-align: center;
+   margin: 15px auto;
+   max-width: 600px;
+   line-height: 1.5;
+}
+
+#loadBtn {
+   display: block;
+   width: 100%;
+   max-width: 300px;
+   margin: 25px auto;
+   padding: 15px;
+   font-size: clamp(1rem, 3vw, 1.2rem);
+   background-color: #007bff;
+   color: #fff;
+   border: none;
+   border-radius: 8px;
+   cursor: pointer;
+   transition: background-color 0.2s;
+}
+
+#loadBtn:hover {
+   background-color: #0056b3;
+}
+
+#languageSelect, #status {
+   display: none;
+}
+
+#status {
+   text-align: center;
+   padding: 10px;
+   margin: 10px auto;
+   border-radius: 4px;
+   max-width: 600px;
+}
+
+#status.offline {
+   background-color: #d32f2f;
+   color: white;
+}
+
+#status.error {
+   background-color: #f57c00;
+   color: white;
+}
+
+.table-container {
+   overflow-x: auto;
+   margin: 25px auto;
+   border-radius: 8px;
+   background-color: #333;
+   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+   width: fit-content;
+   max-width: 1400px;
+}
+
+table {
+   width: 100%;
+   border-collapse: collapse;
+   min-width: 400px;
+   max-width: 800px;
+   font-size: clamp(0.8rem, 2vw, 0.95rem);
+}
+
+th, td {
+   border: 1px solid #444;
+   padding: 12px 8px;
+   text-align: left;
+}
+
+th {
+   background-color: #2a2a2a;
+   color: #fff;
+   font-weight: 600;
+   position: sticky;
+   top: 0;
+   z-index: 10;
+}
+
+tr:nth-child(even) {
+   background-color: #3a3a3a;
+}
+
+tr:nth-child(odd) {
+   background-color: #333;
+}
+
+tr:hover {
+   background-color: #444 !important;
+}
+
+.test-btn {
+   background-color: #007bff;
+   color: #fff;
+   border: none;
+   padding: 8px 12px;
+   border-radius: 4px;
+   cursor: pointer;
+   font-size: clamp(0.75rem, 2vw, 0.9rem);
+   transition: background-color 0.2s;
+   min-width: 60px;
+}
+
+.test-btn:hover {
+   background-color: #0056b3;
+}
+
+.test-btn:active {
+   background-color: #004494;
+}
+
+.local-indicator {
+   display: inline-block;
+   width: 10px;
+   height: 10px;
+   border-radius: 50%;
+   margin-right: 5px;
+}
+
+.local-yes {
+   background-color: #4caf50;
+}
+
+.local-no {
+   background-color: #f44336;
+}
+
+.local-status {
+   display: flex;
+   align-items: center;
+}
+
+@media (max-width: 768px) {
+   .container {
+       padding: 10px;
+   }
+
+   th, td {
+       padding: 8px 4px;
+   }
+
+   table {
+       font-size: 0.85rem;
+   }
+
+   .test-btn {
+       padding: 6px 8px;
+       font-size: 0.8rem;
+   }
+}
+
+@media (max-width: 480px) {
+   td:nth-child(4), th:nth-child(4) {
+       display: none;
+   }
+
+   th, td {
+       padding: 6px 3px;
+   }
+
+   .test-btn {
+       padding: 5px 6px;
+       font-size: 0.75rem;
+       min-width: 45px;
+   }
+   
+   .local-status span:last-child {
+       display: none;
+   }
+}
+   </style>
+</head>
+<body>
+   <div class="container">
+       <h1>Available TTS Language Options</h1>
+       <p>This list only applies to the current browser that loads it. Different browsers have different options. You might be able to add more, however OBS Studio specific has very options by default</p>
+       <button id="loadBtn" onclick="populateVoices();">Load Voice List</button>
+       <select id="languageSelect"></select>
+       <div id="status"></div>
+       
+       <!-- Main Content Wrapper for Side-by-Side Layout -->
+       <div id="mainContent" style="display: none; max-width: 1400px; margin: 0 auto;">
+           <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+               
+               <!-- Left Column: TTS Test Controls -->
+               <div id="ttsControls" style="flex: 1 1 500px; min-width: 300px; margin: 20px 0; padding: 20px; background-color: #2a2a2a; border-radius: 8px;">
+                   <h3 style="color: #fff; margin-bottom: 15px;">Test TTS Settings</h3>
+           
+           <div style="margin-bottom: 15px;">
+               <label style="display: inline-block; width: 80px; color: #e0e0e0;">Voice:</label>
+               <select id="voiceSelect" style="width: calc(100% - 90px); padding: 5px; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px;">
+                   <option value="">Select a voice...</option>
+               </select>
+           </div>
+           
+           <div style="margin-bottom: 15px;">
+               <label style="display: inline-block; width: 80px; color: #e0e0e0;">Rate:</label>
+               <input type="range" id="rateSlider" min="0.25" max="4" step="0.1" value="1" style="width: calc(100% - 140px);">
+               <span id="rateValue" style="color: #e0e0e0; margin-left: 10px;">1.0</span>
+           </div>
+           
+           <div style="margin-bottom: 15px;">
+               <label style="display: inline-block; width: 80px; color: #e0e0e0;">Pitch:</label>
+               <input type="range" id="pitchSlider" min="0" max="2" step="0.1" value="1" style="width: calc(100% - 140px);">
+               <span id="pitchValue" style="color: #e0e0e0; margin-left: 10px;">1.0</span>
+           </div>
+           
+           <div style="margin-bottom: 15px;">
+               <label style="display: inline-block; width: 80px; color: #e0e0e0;">Volume:</label>
+               <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="1" style="width: calc(100% - 140px);">
+               <span id="volumeValue" style="color: #e0e0e0; margin-left: 10px;">1.0</span>
+           </div>
+           
+           <div style="margin-bottom: 15px;">
+               <label style="display: inline-block; width: 80px; color: #e0e0e0; vertical-align: top;">Test Text:</label>
+               <textarea id="testText" style="width: calc(100% - 90px); padding: 5px; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; resize: vertical;" rows="3">Hello, this is a test of the text-to-speech system.</textarea>
+           </div>
+           
+                   <button id="testButton" onclick="testCustomSettings();" style="width: 100%; padding: 10px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Test Voice</button>
+               </div>
+               
+               <!-- Right Column: URL Parameter Guide -->
+               <div style="flex: 1 1 600px; min-width: 300px; margin: 20px 0; padding: 20px; background-color: #2a2a2a; border-radius: 8px;">
+           <h3 style="color: #fff; margin-bottom: 15px;">📋 TTS URL Parameters for Social Stream Ninja</h3>
+           <p style="color: #e0e0e0; margin-bottom: 15px;">To use specific TTS voices in your Social Stream Ninja overlays (dock.html, featured.html, etc.), remove any existing TTS parameters and add the following:</p>
+           
+           <div style="background-color: #333; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+               <h4 style="color: #fff; margin-top: 0;">Available TTS Parameters (Examples):</h4>
+               <p style="color: #b0b0b0; font-size: 14px; margin: 0 0 10px 0; font-style: italic;">These are example parameters - use the controls above to generate URLs with your specific settings</p>
+               <ul style="color: #e0e0e0; list-style: none; padding-left: 0;">
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&speech=en-US</code> - Enable TTS with language code (required)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&voice=Google%20US%20English</code> - Specific voice name (optional, URL encoded)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&rate=1.2</code> - Speaking rate (optional, range: 0.25-4, default: 1)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&pitch=1.1</code> - Voice pitch (optional, range: 0-2, default: 1)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&volume=0.8</code> - Volume level (optional, range: 0-1, default: 1)</li>
+               </ul>
+           </div>
+           
+           <div style="background-color: #333; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+               <h4 style="color: #fff; margin-top: 0;">🔗 Your Generated URLs (Based on Your Settings Above):</h4>
+               <p style="color: #b0b0b0; font-size: 14px; margin: 0 0 10px 0;">These URLs automatically update when you change the voice settings above</p>
+               
+               <div style="margin-bottom: 15px;">
+                   <h5 style="color: #e0e0e0; margin: 10px 0 5px;">Dock Overlay (dock.html):</h5>
+                   <div style="background-color: #222; padding: 10px; border-radius: 4px; word-break: break-all;">
+                       <code id="generatedUrlDock" style="color: #4caf50;">https://socialstream.ninja/dock.html?session=YOUR_SESSION&speech=en-US</code>
+                   </div>
+                   <button onclick="copyUrl('generatedUrlDock');" style="margin-top: 5px; padding: 6px 12px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Copy</button>
+               </div>
+               
+               <div style="margin-bottom: 15px;">
+                   <h5 style="color: #e0e0e0; margin: 10px 0 5px;">Featured Overlay (featured.html):</h5>
+                   <div style="background-color: #222; padding: 10px; border-radius: 4px; word-break: break-all;">
+                       <code id="generatedUrlFeatured" style="color: #4caf50;">https://socialstream.ninja/featured.html?session=YOUR_SESSION&speech=en-US</code>
+                   </div>
+                   <button onclick="copyUrl('generatedUrlFeatured');" style="margin-top: 5px; padding: 6px 12px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Copy</button>
+               </div>
+               
+               <div style="margin-bottom: 15px;">
+                   <h5 style="color: #e0e0e0; margin: 10px 0 5px;">Bot Overlay (bot.html):</h5>
+                   <div style="background-color: #222; padding: 10px; border-radius: 4px; word-break: break-all;">
+                       <code id="generatedUrlBot" style="color: #4caf50;">https://socialstream.ninja/bot.html?session=YOUR_SESSION&speech=en-US</code>
+                   </div>
+                   <button onclick="copyUrl('generatedUrlBot');" style="margin-top: 5px; padding: 6px 12px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Copy</button>
+               </div>
+               
+               <div style="margin-bottom: 0;">
+                   <h5 style="color: #e0e0e0; margin: 10px 0 5px;">Chatbot Overlay (chatbot.html):</h5>
+                   <div style="background-color: #222; padding: 10px; border-radius: 4px; word-break: break-all;">
+                       <code id="generatedUrlChatbot" style="color: #4caf50;">https://socialstream.ninja/chatbot.html?session=YOUR_SESSION&speech=en-US</code>
+                   </div>
+                   <button onclick="copyUrl('generatedUrlChatbot');" style="margin-top: 5px; padding: 6px 12px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Copy</button>
+               </div>
+           </div>
+           
+           <div style="background-color: #d32f2f; padding: 15px; border-radius: 4px; margin-bottom: 15px;">
+               <h4 style="color: #fff; margin-top: 0;">⚠️ Important Notes:</h4>
+               <ul style="color: #fff; margin: 0;">
+                   <li>Remove existing TTS parameters before adding new ones</li>
+                   <li>Voice names must match exactly (case-sensitive)</li>
+                   <li>Not all voices work in all browsers/contexts</li>
+                   <li>Google online voices require internet connection</li>
+               </ul>
+                   </div>
+               </div>
+           </div>
+       </div>
+       
+       <div class="table-container">
+           <table id="voicesTable">
+               <tr>
+                   <th>Name</th>
+                   <th>Language</th>
+                   <th>Local</th>
+                   <th>Default</th>
+                   <th>Test</th>
+               </tr>
+           </table>
+       </div>
+   </div>
+   <script>
+       let englishPhraseIndex = 0;
+       let allVoices = [];
+       
+       document.addEventListener('DOMContentLoaded', () => {
+           const select = document.getElementById('languageSelect');
+           const table = document.getElementById('voicesTable');
+           speechSynthesis.onvoiceschanged = function() {
+               if (document.getElementById("loadBtn").style.display === 'none') {
+                   populateVoices();
+               }
+           };
+           
+           window.addEventListener('online', updateConnectionStatus);
+           window.addEventListener('offline', updateConnectionStatus);
+           updateConnectionStatus();
+           
+           // Setup slider listeners
+           document.getElementById('rateSlider').addEventListener('input', function() {
+               document.getElementById('rateValue').textContent = this.value;
+               updateGeneratedUrl();
+           });
+           
+           document.getElementById('pitchSlider').addEventListener('input', function() {
+               document.getElementById('pitchValue').textContent = this.value;
+               updateGeneratedUrl();
+           });
+           
+           document.getElementById('volumeSlider').addEventListener('input', function() {
+               document.getElementById('volumeValue').textContent = this.value;
+               updateGeneratedUrl();
+           });
+           
+           document.getElementById('voiceSelect').addEventListener('change', updateGeneratedUrl);
+       });
+
+       function updateConnectionStatus() {
+           const status = document.getElementById('status');
+           if (!navigator.onLine) {
+               status.className = 'offline';
+               status.style.display = 'block';
+               status.textContent = 'You are offline - some voices may not work';
+           } else {
+               status.style.display = 'none';
+           }
+       }
+
+   	function populateVoices() {
+   		const select = document.getElementById('languageSelect');
+   		select.innerHTML = "";
+   		const table = document.getElementById('voicesTable');
+   		table.innerHTML = "<tr><th>Name</th><th>Language</th><th>Local</th><th>Default</th><th>Test</th></tr>";
+
+   		document.getElementById('loadBtn').style.display = 'none';
+   		document.getElementById('mainContent').style.display = 'block';
+
+   		const voices = speechSynthesis.getVoices();
+   		allVoices = voices;
+   		
+   		const sortedVoices = voices.sort((a, b) => {
+   			const aIsEnglish = a.lang.toLowerCase().startsWith('en');
+   			const bIsEnglish = b.lang.toLowerCase().startsWith('en');
+   			
+   			if (aIsEnglish && !bIsEnglish) return -1;
+   			if (!aIsEnglish && bIsEnglish) return 1;
+   			return 0;
+   		});
+   		
+   		// Populate voice select dropdown
+   		const voiceSelect = document.getElementById('voiceSelect');
+   		voiceSelect.innerHTML = '<option value="">Select a voice...</option>';
+   		
+   		sortedVoices.forEach((voice, index) => {
+   			const option = document.createElement('option');
+   			option.textContent = `${voice.name} (${voice.lang})`;
+   			select.appendChild(option);
+   			
+   			// Add to voice select dropdown
+   			const voiceOption = document.createElement('option');
+   			voiceOption.value = index;
+   			voiceOption.textContent = `${voice.name} (${voice.lang})`;
+   			voiceSelect.appendChild(voiceOption);
+   			
+   			const row = table.insertRow();
+   			row.insertCell().textContent = voice.name;
+   			row.insertCell().textContent = voice.lang;
+   			
+   			const localCell = row.insertCell();
+   			const localStatus = document.createElement('div');
+   			localStatus.className = 'local-status';
+   			
+   			const indicator = document.createElement('span');
+   			indicator.className = 'local-indicator ' + (voice.localService ? 'local-yes' : 'local-no');
+   			
+   			const text = document.createElement('span');
+   			text.textContent = voice.localService ? 'Yes' : 'No';
+   			
+   			localStatus.appendChild(indicator);
+   			localStatus.appendChild(text);
+   			localCell.appendChild(localStatus);
+   			
+   			row.insertCell().textContent = voice.default ? 'Yes' : 'No';
+
+   			const testCell = row.insertCell();
+   			const testBtn = document.createElement('button');
+   			testBtn.textContent = 'Test';
+   			testBtn.className = 'test-btn';
+   			testBtn.onclick = function() { testVoice(index, sortedVoices); };
+   			testCell.appendChild(testBtn);
+   		});
+   		
+   		updateGeneratedUrl();
+   	}
+
+   	function testVoice(voiceIndex, voicesList = null) {
+   		const voices = voicesList || speechSynthesis.getVoices();
+   		const selectedVoice = voices[voiceIndex];
+
+   		speechSynthesis.cancel();
+
+   		const message = new SpeechSynthesisUtterance(getTestPhrase(selectedVoice.lang));
+   		message.voice = selectedVoice;
+   		message.lang = selectedVoice.lang;
+   		message.rate = 1;
+   		message.pitch = 1;
+   		message.volume = 1;
+
+   		let timeout;
+   		let speechStarted = false;
+   		let speechEnded = false;
+   		let hasError = false;
+
+   		message.onstart = function() {
+   			speechStarted = true;
+   			clearTimeout(timeout);
+   		};
+
+   		message.onerror = function(event) {
+   			hasError = true;
+   			clearTimeout(timeout);
+   			showError(`Error playing voice: ${event.error}. This voice may require an internet connection.`);
+   		};
+
+   		message.onend = function() {
+   			speechEnded = true;
+   			clearTimeout(timeout);
+   		};
+
+   		timeout = setTimeout(() => {
+   			if (!speechStarted && !speechEnded && !hasError) {
+   				speechSynthesis.cancel();
+   				showError('Voice test timed out. This voice may not be available offline.');
+   			}
+   		}, 8000);
+
+   		speechSynthesis.speak(message);
+   	}
+
+   	function showError(errorText) {
+   		const status = document.getElementById('status');
+   		status.className = 'error';
+   		status.style.display = 'block';
+   		status.textContent = errorText;
+   		setTimeout(() => {
+   			status.style.display = 'none';
+   		}, 3000);
+   	}
+
+       function getTestPhrase(lang) {
+           const phrases = {
+               'en': [
+                   'The quick brown fox jumps over the lazy dog.',
+                   'Pack my box with five dozen liquor jugs.',
+                   'How quickly daft jumping zebras vex.',
+                   'Sphinx of black quartz, judge my vow.',
+                   'Testing speech synthesis for the English language.',
+                   'Hello, this is a voice test.',
+                   'Can you hear me now?',
+                   'Every good boy does fine.',
+                   'The wizard quickly jinxed the gnomes before they vaporized.',
+                   'Amazingly few discotheques provide jukeboxes.'
+               ],
+               'es': 'El rápido zorro marrón salta sobre el perro perezoso.',
+               'fr': 'Le rapide renard brun saute par-dessus le chien paresseux.',
+               'de': 'Der schnelle braune Fuchs springt über den faulen Hund.',
+               'it': 'La rapida volpe marrone salta sopra il cane pigro.',
+               'pt': 'A rápida raposa marrom salta sobre o cão preguiçoso.',
+               'ru': 'Быстрая коричневая лиса перепрыгивает через ленивую собаку.',
+               'ja': '素早い茶色の狐が怠け者の犬を飛び越える。',
+               'ko': '빠른 갈색 여우가 게으른 개 위로 점프합니다.',
+               'zh': '快速的棕色狐狸跳过懒狗。',
+               'nl': 'De snelle bruine vos springt over de luie hond.',
+               'pl': 'Szybki brązowy lis przeskakuje nad leniwym psem.',
+               'id': 'Rubah cokelat yang cepat melompati anjing yang malas.',
+               'hi': 'तेज भूरी लोमड़ी आलसी कुत्ते के ऊपर कूदती है।',
+               'ar': 'الثعلب البني السريع يقفز فوق الكلب الكسول.',
+               'sv': 'Snabba bruna räven hoppar över den lata hunden.',
+               'tr': 'Hızlı kahverengi tilki tembel köpeğin üzerinden atlar.',
+               'cs': 'Rychlá hnědá liška skáče přes líného psa.',
+               'el': 'Η γρήγορη καφέ αλεπού πηδάει πάνω από τον τεμπέλη σκύλο.',
+               'fi': 'Nopea ruskea kettu hyppää laiskan koiran yli.',
+               'da': 'Den hurtige brune ræv hopper over den dovne hund.',
+               'no': 'Den raske brune reven hopper over den late hunden.'
+           };
+
+           const normalizedLang = lang.toLowerCase();
+
+           for (const [key, phraseOrArray] of Object.entries(phrases)) {
+               if (normalizedLang === key || normalizedLang.startsWith(key + '-') || normalizedLang.startsWith(key + '_')) {
+                   if (Array.isArray(phraseOrArray)) {
+                       const phrase = phraseOrArray[englishPhraseIndex % phraseOrArray.length];
+                       englishPhraseIndex++;
+                       return phrase;
+                   }
+                   return phraseOrArray;
+               }
+           }
+
+           return 'This is a test of the speech synthesis system.';
+       }
+       
+       function updateGeneratedUrl() {
+           const voiceSelect = document.getElementById('voiceSelect');
+           const rateSlider = document.getElementById('rateSlider');
+           const pitchSlider = document.getElementById('pitchSlider');
+           const volumeSlider = document.getElementById('volumeSlider');
+           
+           // Generate parameters
+           let params = '';
+           
+           // Add speech parameter with language
+           if (voiceSelect.value && allVoices[voiceSelect.value]) {
+               const voice = allVoices[voiceSelect.value];
+               params += `&speech=${encodeURIComponent(voice.lang)}`;
+               params += `&voice=${encodeURIComponent(voice.name)}`;
+           } else {
+               params += '&speech=en-US';
+           }
+           
+           // Add rate if not default
+           if (rateSlider.value !== '1') {
+               params += `&rate=${encodeURIComponent(rateSlider.value)}`;
+           }
+           
+           // Add pitch if not default
+           if (pitchSlider.value !== '1') {
+               params += `&pitch=${encodeURIComponent(pitchSlider.value)}`;
+           }
+           
+           // Add volume if not default
+           if (volumeSlider.value !== '1') {
+               params += `&volume=${encodeURIComponent(volumeSlider.value)}`;
+           }
+           
+           // Update all overlay URLs
+           document.getElementById('generatedUrlDock').textContent = `https://socialstream.ninja/dock.html?session=YOUR_SESSION${params}`;
+           document.getElementById('generatedUrlFeatured').textContent = `https://socialstream.ninja/featured.html?session=YOUR_SESSION${params}`;
+           document.getElementById('generatedUrlBot').textContent = `https://socialstream.ninja/bot.html?session=YOUR_SESSION${params}`;
+           document.getElementById('generatedUrlChatbot').textContent = `https://socialstream.ninja/chatbot.html?session=YOUR_SESSION${params}`;
+       }
+       
+       function copyUrl(elementId) {
+           const urlText = document.getElementById(elementId).textContent;
+           navigator.clipboard.writeText(urlText).then(() => {
+               const button = event.target;
+               const originalText = button.textContent;
+               button.textContent = 'Copied!';
+               button.style.backgroundColor = '#2e7d32';
+               setTimeout(() => {
+                   button.textContent = originalText;
+                   button.style.backgroundColor = '#4caf50';
+               }, 2000);
+           }).catch(err => {
+               console.error('Failed to copy:', err);
+               alert('Failed to copy URL');
+           });
+       }
+       
+       function testCustomSettings() {
+           const voiceSelect = document.getElementById('voiceSelect');
+           const rateSlider = document.getElementById('rateSlider');
+           const pitchSlider = document.getElementById('pitchSlider');
+           const volumeSlider = document.getElementById('volumeSlider');
+           const testText = document.getElementById('testText').value;
+           
+           if (!voiceSelect.value) {
+               showError('Please select a voice first');
+               return;
+           }
+           
+           const selectedVoice = allVoices[voiceSelect.value];
+           
+           speechSynthesis.cancel();
+           
+           const message = new SpeechSynthesisUtterance(testText);
+           message.voice = selectedVoice;
+           message.lang = selectedVoice.lang;
+           message.rate = parseFloat(rateSlider.value);
+           message.pitch = parseFloat(pitchSlider.value);
+           message.volume = parseFloat(volumeSlider.value);
+           
+           let timeout;
+           let speechStarted = false;
+           let speechEnded = false;
+           let hasError = false;
+           
+           message.onstart = function() {
+               speechStarted = true;
+               clearTimeout(timeout);
+           };
+           
+           message.onerror = function(event) {
+               hasError = true;
+               clearTimeout(timeout);
+               showError(`Error playing voice: ${event.error}. This voice may require an internet connection.`);
+           };
+           
+           message.onend = function() {
+               speechEnded = true;
+               clearTimeout(timeout);
+           };
+           
+           timeout = setTimeout(() => {
+               if (!speechStarted && !speechEnded && !hasError) {
+                   speechSynthesis.cancel();
+                   showError('Voice test timed out. This voice may not be available offline.');
+               }
+           }, 8000);
+           
+           speechSynthesis.speak(message);
+       }
+   </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+This is where future site integrations will be added; outside the main folder. However, the main folder will contain a copy of these files while undergoing the transition.
