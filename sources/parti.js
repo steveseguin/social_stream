@@ -104,15 +104,27 @@ function toDataURL(blobUrl, callback) {
 
 	function shouldSkipDuplicate(data, rowSignature){
 		var now = Date.now();
-		var key = rowSignature || [
+		var keys = [[
+			"payload",
 			data.event || "",
 			data.chatname || "",
 			data.chatmessage || "",
 			data.hasDonation || "",
 			data.contentimg || ""
-		].join("\u00b6");
-		var previousSeenAt = recentlySeenMessages.get(key);
-		recentlySeenMessages.set(key, now);
+		].join("\u00b6")];
+		if (rowSignature){
+			keys.push(["row", rowSignature].join("\u00b6"));
+		}
+		var isDuplicate = false;
+		for (var i = 0; i < keys.length; i++){
+			var previousSeenAt = recentlySeenMessages.get(keys[i]);
+			if (previousSeenAt && ((now - previousSeenAt) < DUPLICATE_WINDOW_MS)){
+				isDuplicate = true;
+			}
+		}
+		for (var j = 0; j < keys.length; j++){
+			recentlySeenMessages.set(keys[j], now);
+		}
 
 		if (recentlySeenMessages.size > 200){
 			recentlySeenMessages.forEach(function(timestamp, cacheKey){
@@ -122,7 +134,7 @@ function toDataURL(blobUrl, callback) {
 			});
 		}
 
-		return !!previousSeenAt && ((now - previousSeenAt) < DUPLICATE_WINDOW_MS);
+		return isDuplicate;
 	}
 
 	function getRowSignature(ele){
@@ -395,7 +407,46 @@ function toDataURL(blobUrl, callback) {
 	setInterval(function(){checkFollowers()},60000);
 
 
+	function hasDirectSelector(ele, selector){
+		try {
+			if (ele.querySelector && ele.querySelector(selector)){
+				return true;
+			}
+		} catch(e){}
+		return false;
+	}
+	
+	function hasShallowLegacyRowContent(ele){
+		try {
+			var usernameNode = ele.querySelector && ele.querySelector("span.username > h6");
+			if (usernameNode && usernameNode.parentNode && usernameNode.parentNode.parentNode === ele){
+				return true;
+			}
+			var coinNode = ele.querySelector && ele.querySelector(".bi-coin");
+			if (coinNode && coinNode.parentNode && coinNode.parentNode.parentNode === ele){
+				return true;
+			}
+		} catch(e){}
+		return false;
+	}
+
+	function isLikelyPartiRow(ele){
+		if (!ele || ele.nodeType !== 1){
+			return false;
+		}
+		if (ele.classList && ele.classList.contains("ccs-row")){
+			return true;
+		}
+		if (hasDirectSelector(ele, ":scope > span.username > h6") || hasDirectSelector(ele, ":scope > .bi-coin") || hasShallowLegacyRowContent(ele)){
+			return true;
+		}
+		return false;
+	}
+
 	function processMessage(ele){
+		if (!isLikelyPartiRow(ele)){
+			return;
+		}
 		if (ele && ele.marked){
 		  return;
 		} else {
@@ -555,20 +606,33 @@ function toDataURL(blobUrl, callback) {
 		}
 	});
 
+	function processMessageTree(node){
+		try {
+			processMessage(node);
+			if (node && node.querySelectorAll){
+				var rows = node.querySelectorAll(".ccs-row, div");
+				for (var i = 0; i < rows.length; i++){
+					processMessage(rows[i]);
+				}
+			}
+		} catch(e){}
+	}
+
 	function onElementInserted(target) {
+		if (!target || target.partiObserverAttached){return;}
+		target.partiObserverAttached = true;
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							processMessage(mutation.addedNodes[i]);
+							processMessageTree(mutation.addedNodes[i]);
 						} catch(e){}
 					}
 				}
 			});
 		};
-		if (!target){return;}
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -577,11 +641,13 @@ function toDataURL(blobUrl, callback) {
 	console.log("social stream injected");
 
 	function getRowsFromContainer(container){
+		var rows = [];
 		try {
-			return container.querySelectorAll(':scope > .ccs-row, :scope > div');
+			rows = Array.prototype.slice.call(container.querySelectorAll(':scope > .ccs-row, :scope > div'));
 		} catch(e){
-			return container.children || [];
+			rows = Array.prototype.slice.call(container.children || []);
 		}
+		return rows.filter(isLikelyPartiRow);
 	}
 
 	setInterval(function(){
@@ -589,12 +655,11 @@ function toDataURL(blobUrl, callback) {
 			var chatContainers = document.querySelectorAll('.creator-chat-stream, #q-app main > div > div[class], .main-content-area > [class] > [class] > [class]');
 			if (chatContainers && chatContainers.length){
 				[...chatContainers].forEach(function(container){
-					if (container.marked){ return; }
-					container.marked=true;
+					if (container.partiContainerMarked){ return; }
+					container.partiContainerMarked=true;
 					[...getRowsFromContainer(container)].forEach(ele=>{
 						try {
 							processMessage(ele);
-							ele.marked = true;
 						} catch(e){}
 					});
 					

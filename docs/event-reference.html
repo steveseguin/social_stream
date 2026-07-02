@@ -83,7 +83,7 @@
                     <strong>Building Automations?</strong> Check out the <a href="../actions/event-flow-guide.html">Event Flow Guide</a> to learn how to use these event payloads in custom triggers, alerts, and workflows. The guide includes a <a href="../actions/event-flow-guide.html#template-variables">Template Variables Reference</a> for text formatting.
                 </div>
                 <div class="alert-note alert-info">
-                    <strong>Payload shape:</strong> Donation-style chat rows should use <code>hasDonation</code> and optional <code>donoValue</code>. Do not set <code>event: "donation"</code> for a normal chat/tip row just because a donation value is present. Use <code>meta</code> only for additional structured data that consumers actually need and that existing fields do not already cover.
+                    <strong>Payload shape:</strong> Donation-style chat rows should use <code>hasDonation</code> and optional <code>donoValue</code>. Do not set <code>event: "donation"</code> just because a normal chat/tip row has value; use specific event names only for real platform actions or paid item types, such as <code>superchat</code>, <code>supersticker</code>, <code>gift</code>, or <code>jeweldonation</code>. Use <code>meta</code> only for additional structured data that consumers actually need and that existing fields do not already cover.
                 </div>
             </section>
 
@@ -393,9 +393,9 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="donation-event"><code>hasDonation</code></td>
+                                <td class="donation-event"><code>superchat</code></td>
                                 <td>Super Chat entries from the Data API backlog or stream polling.</td>
-                                <td><code>hasDonation</code> preserves site amount (currency + value); badges/avatars come from API metadata. No donation-only event name is required.</td>
+                                <td><code>hasDonation</code> preserves site amount (currency + value); <code>event</code> is <code>superchat</code>. Older WebSocket builds used <code>event: "donation"</code> for this row, so consumers may keep accepting that as a legacy alias.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>supersticker</code></td>
@@ -403,9 +403,9 @@
                                 <td><code>hasDonation</code> holds the amount; <code>chatmessage</code> contains decoded description text.</td>
                             </tr>
                             <tr>
-                                <td class="donation-event"><code>hasDonation</code></td>
+                                <td class="donation-event"><code>jeweldonation</code></td>
                                 <td>YouTube <code>giftEvent</code> messages when viewers redeem Jewels for Gifts.</td>
-                                <td><code>hasDonation</code> holds <code>N Jewels</code>, or <code>1 YouTube Gift</code> when YouTube hides the count; <code>contentimg</code> uses the gift asset URL when exposed; <code>subtitle</code> carries the gift label; <code>meta.youtubeGift</code> identifies the row as a YouTube Gift for filters that need that distinction.</td>
+                                <td><code>hasDonation</code> holds <code>N Jewels</code>, or <code>1 YouTube Gift</code> when YouTube hides the count; <code>contentimg</code> uses the gift asset URL when exposed; <code>subtitle</code> carries the gift label; <code>meta.youtubeGift</code> carries extra gift details.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>sponsorship</code></td>
@@ -505,7 +505,7 @@
                             <tr><td><code>giftpurchase</code></td><td><code>gift_giver</code></td><td>Gifted memberships to channel</td></tr>
                             <tr><td><code>giftredemption</code></td><td><code>gift_recipient</code></td><td>Received a gifted membership</td></tr>
                             <tr><td><code>membermilestone</code></td><td><code>member_milestone</code></td><td>Membership anniversary chat</td></tr>
-                            <tr><td><code>donation</code></td><td>&mdash;</td><td>Super Chat</td></tr>
+                            <tr><td><code>superchat</code></td><td>&mdash;</td><td>Super Chat</td></tr>
                             <tr><td><code>supersticker</code></td><td>&mdash;</td><td>Super Sticker</td></tr>
                             <tr><td><code>user_banned</code></td><td>&mdash;</td><td>Metadata-only ban/timeout event</td></tr>
                             <tr><td><code>new_follower</code></td><td>&mdash;</td><td>New subscriber (up to 4hr delay)</td></tr>
@@ -1746,7 +1746,7 @@
                         </tr>
                         <tr>
                             <td><strong>Donation/tip</strong></td>
-                            <td><code>hasDonation</code> (Super Chat, Gifts)</td>
+                            <td><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code> with <code>hasDonation</code></td>
                             <td><code>cheer</code> (bits)</td>
                             <td><code>donation</code></td>
                         </tr>
@@ -1800,7 +1800,7 @@
                     <li><strong>YouTube uses <code>sponsorship</code></strong> for new members, while Twitch and Kick use <code>new_subscriber</code>. Consider checking both when building cross-platform triggers.</li>
                     <li><strong><code>resub</code> is consistent</strong> across all three platforms for renewals.</li>
                     <li><strong>Gift events differ:</strong> YouTube uses <code>giftpurchase</code>/<code>giftredemption</code>, while Twitch and Kick use <code>subscription_gift</code>.</li>
-                    <li><strong>Donations vary by platform:</strong> YouTube Super Chats and Gifts use <code>hasDonation</code>, Twitch has bits (<code>cheer</code>), and Kick has tips (<code>donation</code>).</li>
+                    <li><strong>Donations vary by platform:</strong> YouTube uses specific paid event names such as <code>superchat</code>, <code>supersticker</code>, and <code>jeweldonation</code> with <code>hasDonation</code>; Twitch has bits (<code>cheer</code>); Kick has tips (<code>donation</code>).</li>
                     <li><strong><code>new_follower</code> is now consistent</strong> across all three platforms, but YouTube has a 4-hour API delay and only shows subscribers with public subscription lists.</li>
                 </ul>
             </section>
@@ -1862,8 +1862,8 @@
                         </tr>
                         <tr>
                             <td>YouTube: Standard vs Websocket</td>
-                            <td>Shared: <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>viewer_update</code>. Standard-only: <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>.</td>
-                            <td>Core member/event names are aligned across both; YouTube paid rows use <code>hasDonation</code> in both modes, with WebSocket mode adding extras like <code>supersticker</code>, <code>membermilestone</code>, <code>new_follower</code>.</td>
+                            <td>Shared: <code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code>, <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>viewer_update</code>. Standard-only: <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>.</td>
+                            <td>Core member/event names are aligned across both; YouTube paid rows use <code>hasDonation</code> for value and specific event names for the paid item type.</td>
                         </tr>
                         <tr>
                             <td>All surfaces</td>

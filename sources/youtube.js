@@ -1497,6 +1497,9 @@
 		}
 		
 		if (chatsticker) {
+			if (!eventType) {
+				eventType = "supersticker";
+			}
 			if (!settings.textonlymode) {
 				chatmessage = '<img class="supersticker" src="' + chatsticker + '">';
 			}
@@ -1652,7 +1655,7 @@
 			}
 		}
 		
-		if (eventType && eventType !== "jeweldonation") {
+		if (eventType) {
 			data.event = eventType;
 		}
 		
@@ -1876,7 +1879,7 @@
 	  } else if (ele.tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
 		callback(ele);
 	  } else if (ele.tagName == "yt-live-chat-paid-message-renderer".toUpperCase()) {
-		callback(ele);
+		callback(ele, "superchat");
 	  } else if (ele.tagName == "yt-live-chat-membership-item-renderer".toUpperCase()) {
 		if (ele.hasAttribute("show-only-header") && ele.hasAttribute("modern")) {
 		  callback(ele, "membershiprenewal");
@@ -1884,7 +1887,7 @@
 		  callback(ele);
 		}
 	  } else if (ele.tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
-		callback(ele);
+		callback(ele, "supersticker");
 	  } else if (ele.tagName == "ytd-sponsorships-live-chat-gift-redemption-announcement-renderer".toUpperCase()) {
 		callback(ele, "giftredemption");
 	  } else if (ele.tagName == "ytd-sponsorships-live-chat-gift-purchase-announcement-renderer".toUpperCase()) {

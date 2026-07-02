@@ -2428,7 +2428,7 @@ class EventFlowEditor {
 			eventNewSubscriber: 'new_subscriber',
 			eventResub: 'resub',
 			eventGiftSub: 'subscription_gift',
-			eventDonation: 'donation',
+			eventDonation: 'superchat',
 			eventRaid: 'raid',
 			eventCheer: 'cheer'
 		};
@@ -3156,7 +3156,7 @@ class EventFlowEditor {
 				break;
 
 			case 'eventDonation':
-				html += this.renderEventSourceFilter(node, 'donation,cheer,supersticker');
+				html += this.renderEventSourceFilter(node, 'superchat,donation,cheer,supersticker');
 				html += `
 					<div class="property-group">
 						<label class="property-label">Minimum Amount (optional)</label>
@@ -3168,13 +3168,12 @@ class EventFlowEditor {
 						<strong>💰 Donation / Super Chat</strong><br>
 						Triggers on donations, Super Chats, Super Stickers, etc.<br><br>
 						<strong>⚡ Supported platforms:</strong><br>
-						• <strong>YouTube:</strong> Super Chat, Super Stickers (WebSocket mode)<br>
+						• <strong>YouTube:</strong> Super Chat, Super Stickers<br>
 						• <strong>Twitch:</strong> Cheers/Bits (WebSocket mode)<br>
-						• <strong>TikTok:</strong> Coin gifts (many events)<br>
 						• <strong>Kick:</strong> Donations (WebSocket mode)<br>
 						• <strong>Many others:</strong> Streamlabs, Ko-fi integrations, etc.<br><br>
 						<div style="background: #ffecb3; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
-							⚠️ <strong>YouTube/Twitch/Kick require WebSocket mode</strong> for monetary events.
+								⚠️ <strong>Twitch/Kick require WebSocket mode</strong> for monetary events.
 						</div>
 								<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #f57f17;">📖 Event Reference Documentation</a>
 					</div>`;

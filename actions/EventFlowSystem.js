@@ -1578,7 +1578,7 @@ class EventFlowSystem {
 
             case 'eventDonation': {
                 const event = (message.event || '').toLowerCase();
-                const eventMatch = event === 'donation' || event === 'cheer' || event === 'supersticker';
+                const eventMatch = event === 'superchat' || event === 'donation' || event === 'cheer' || event === 'supersticker';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum amount if specified
