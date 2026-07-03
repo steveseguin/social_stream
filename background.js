@@ -9193,6 +9193,128 @@ function getDockTransportHealth() {
 	};
 }
 
+function getStreamDeckRemoteControlRouter() {
+	return typeof window !== "undefined" ? window.StreamDeckRemoteControl : null;
+}
+
+async function getStreamDeckCapabilities() {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router || typeof router.buildCapabilities !== "function") {
+		return {
+			type: "capabilities",
+			version: 1,
+			runtime: isSSAPP ? "electron" : "web",
+			ssapp: { available: false },
+			ssn: { actions: {} }
+		};
+	}
+
+	let ssapp = { available: false };
+	if (isSSAPP && ipcRenderer && typeof ipcRenderer.invoke === "function") {
+		try {
+			const response = await ipcRenderer.invoke("ssapp:background-command", {
+				cmd: "streamDeckSourceCommand",
+				action: "getCapabilities"
+			});
+			if (response && response.ok === true && response.payload && response.payload.available === true) {
+				ssapp = response.payload;
+			}
+		} catch (error) {
+			console.warn("[StreamDeck] SSApp capability provider unavailable", error?.message || error);
+		}
+	}
+
+	return router.buildCapabilities({
+		runtime: isSSAPP ? "electron" : "web",
+		ssapp
+	});
+}
+
+async function sendStreamDeckCapabilities(socket) {
+	try {
+		const capabilities = await getStreamDeckCapabilities();
+		if (socket && socket.readyState === WebSocket.OPEN) {
+			socket.send(JSON.stringify(capabilities));
+		}
+	} catch (error) {
+		console.warn("[StreamDeck] Failed to send capabilities", error?.message || error);
+	}
+}
+
+function sendStreamDeckCallback(socket, request, result) {
+	if (!request || !request.get || !socket || socket.readyState !== WebSocket.OPEN) {
+		return false;
+	}
+	socket.send(
+		JSON.stringify({
+			callback: {
+				get: request.get,
+				result
+			}
+		})
+	);
+	return true;
+}
+
+function sendStreamDeckCommandResult(socket, request, result) {
+	if (!socket || socket.readyState !== WebSocket.OPEN) {
+		return false;
+	}
+	if (sendStreamDeckCallback(socket, request, result)) {
+		return true;
+	}
+	socket.send(
+		JSON.stringify({
+			type: "commandResult",
+			action: request && request.action ? request.action : null,
+			result
+		})
+	);
+	return true;
+}
+
+async function handleStreamDeckSsappRequest(request) {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router) {
+		return {
+			ok: false,
+			request: request && request.get ? request.get : null,
+			error: {
+				code: "UNSUPPORTED_ACTION",
+				message: "Stream Deck remote control router is unavailable."
+			}
+		};
+	}
+
+	const normalizedAction = router.normalizeAction(request.action);
+	const capabilities = await getStreamDeckCapabilities();
+	if (!capabilities || !capabilities.ssapp || capabilities.ssapp.available !== true) {
+		return router.makeError(request, "SSAPP_UNAVAILABLE", "SSApp source controls are unavailable in this runtime.");
+	}
+	if (!router.isSsappActionSupported(normalizedAction, capabilities)) {
+		return router.makeError(request, "UNSUPPORTED_ACTION", "SSApp action is not supported by the advertised capabilities.");
+	}
+
+	try {
+		const response = await ipcRenderer.invoke("ssapp:background-command", {
+			cmd: "streamDeckSourceCommand",
+			request: {
+				...request,
+				action: normalizedAction
+			}
+		});
+
+		if (response && response.ok === false) {
+			const error = response.error && typeof response.error === "object" ? response.error : {};
+			return router.makeError(request, error.code || response.code || "UNSUPPORTED_ACTION", error.message || response.message || "SSApp command failed.");
+		}
+
+		return router.makeResponse(request, response && "payload" in response ? response.payload : response);
+	} catch (error) {
+		return router.makeError(request, "SSAPP_UNAVAILABLE", error?.message || "SSApp command bridge failed.");
+	}
+}
+
 function setupSocket() {
 	if (!settings.socketserver) {
 		return;
@@ -9250,6 +9372,7 @@ function setupSocket() {
 	socketserver.onopen = function () {
 		conCon = 0;
 		socketserver.send(JSON.stringify({ join: streamID, out: 2, in: 1 }));
+		sendStreamDeckCapabilities(socketserver);
 	};
 	socketserver.addEventListener("message", async function (event) {
 		if (event.data) {
@@ -9284,6 +9407,22 @@ function setupSocket() {
 
 			if (data.target && data.target === "null") {
 				data.target = "";
+			}
+
+			const streamDeckRouter = getStreamDeckRemoteControlRouter();
+			if (streamDeckRouter && streamDeckRouter.isCapabilityRequest(data)) {
+				const capabilities = await getStreamDeckCapabilities();
+				if (data.get) {
+					sendStreamDeckCallback(socketserver, data, capabilities);
+				} else if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+					socketserver.send(JSON.stringify(capabilities));
+				}
+				return;
+			}
+			if (streamDeckRouter && streamDeckRouter.isSsappRequest(data)) {
+				const result = await handleStreamDeckSsappRequest(data);
+				sendStreamDeckCommandResult(socketserver, data, result);
+				return;
 			}
 
 			if (data.action && data.action === "eventFlowEvent" && data.value) {
