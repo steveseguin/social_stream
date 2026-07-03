@@ -169,6 +169,28 @@ async function runTests() {
         assert(JSON.stringify(targeted[0].payload) === JSON.stringify({ action: 'nextPinned' }), 'nextPinned command matches dock API');
     }
 
+    console.log('\n[6] targeted nextPinned keeps the dock label target in the payload');
+    {
+        const targeted = [];
+        const EFS = loadEventFlowSystem({
+            sendTargetP2P: (payload, target) => {
+                targeted.push({ payload, target });
+            },
+            sendToDestinations: async () => {
+                throw new Error('targeted nextPinned should not use chat fan-out');
+            }
+        });
+        const sys = new EFS();
+        const result = await sys.executeAction(
+            { id: 'pin4', actionType: 'pinMessage', config: { mode: 'nextPinned', target: 'moderator-dock' } },
+            { id: 1, chatmessage: 'ignored' }
+        );
+
+        assert(result.modified === false, 'targeted nextPinned does not modify the message');
+        assert(targeted[0].target === 'dock', 'targeted nextPinned still uses the dock P2P label');
+        assert(JSON.stringify(targeted[0].payload) === JSON.stringify({ action: 'nextPinned', target: 'moderator-dock' }), 'targeted nextPinned command carries the dock label');
+    }
+
     console.log(`\n${'-'.repeat(50)}`);
     console.log(`Results: ${passed} passed, ${failed} failed`);
     if (failed > 0) {

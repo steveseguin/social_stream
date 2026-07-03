@@ -86,6 +86,7 @@
 	var currentHistoryChannel = "";
 	var historyFallbackMisses = 0;
 	var historyPublishedMessages = false;
+	var historyPollStartedAt = 0;
 	var recentMessageContent = {};
 	var historyChannelCache = {};
 	var historyChannelPending = {};
@@ -130,6 +131,12 @@
 			return "";
 		}
 		return "content|\u00b6|" + channel + "|\u00b6|" + name + "|\u00b6|" + text;
+	}
+
+	function getApiMessageKey(msg, channel){
+		return msg.id
+			? "api-id|\u00b6|" + channel + "|\u00b6|" + msg.id
+			: "api-chat|\u00b6|" + channel + "|\u00b6|" + msg.timestamp + "|\u00b6|" + msg.name + "|\u00b6|" + msg.text;
 	}
 
 	function rememberRecentMessageContent(key){
@@ -361,9 +368,7 @@
 		if (!msg || !msg.name || !msg.text){
 			return;
 		}
-		msgKey = msg.id
-			? "api-id|\u00b6|" + channel + "|\u00b6|" + msg.id
-			: "api-chat|\u00b6|" + channel + "|\u00b6|" + msg.timestamp + "|\u00b6|" + msg.name + "|\u00b6|" + msg.text;
+		msgKey = getApiMessageKey(msg, channel);
 		if (!rememberMessageKey(msgKey)){
 			return;
 		}
@@ -386,6 +391,19 @@
 		historyPublishedMessages = true;
 	}
 
+	function seedApiMessage(raw, channel){
+		var msg = normalizeVeloraApiMessage(raw, channel);
+		var contentKey;
+		if (!msg || !msg.name || !msg.text){
+			return;
+		}
+		rememberMessageKey(getApiMessageKey(msg, channel));
+		contentKey = getMessageContentKey(channel, msg.name, msg.text);
+		if (contentKey){
+			rememberRecentMessageContent(contentKey);
+		}
+	}
+
 	function pollVeloraChatHistory(){
 		var channel;
 		if (!isExtensionOn){
@@ -397,17 +415,28 @@
 		}
 		if (channel !== currentHistoryChannel){
 			currentHistoryChannel = channel;
+			historyPublishedMessages = false;
+			historyPollStartedAt = Date.now();
 		}
 		resolveVeloraHistoryChannel(channel).then(function(resolvedChannel){
 			var pollChannel = resolvedChannel || channel;
 			return fetchVeloraJson("https://api.velora.tv/api/chat/channels/" + encodeURIComponent(pollChannel) + "/history?limit=50").then(function(data){
 				var messages = getHistoryMessagesFromResponse(data).slice();
+				var initialBatch = !historyPublishedMessages;
 				if (messages.length > 1 && getVeloraTimestampValue(messages[0]) > getVeloraTimestampValue(messages[messages.length - 1])){
 					messages.reverse();
 				}
 				messages.forEach(function(message){
+					var timestampValue = getVeloraTimestampValue(message);
+					if ((timestampValue && timestampValue < historyPollStartedAt) || (initialBatch && !timestampValue)){
+						seedApiMessage(message, channel);
+						return;
+					}
 					processApiMessage(message, channel);
 				});
+				if (initialBatch){
+					historyPublishedMessages = true;
+				}
 			});
 		}).catch(function(){
 		});
@@ -418,6 +447,7 @@
 			return;
 		}
 		historyPublishedMessages = false;
+		historyPollStartedAt = Date.now();
 		pollVeloraChatHistory();
 		historyPollTimer = setInterval(pollVeloraChatHistory, 3000);
 	}
@@ -427,6 +457,7 @@
 			clearInterval(historyPollTimer);
 			historyPollTimer = null;
 		}
+		historyPollStartedAt = 0;
 	}
 
 	function getChatInput(){

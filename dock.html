@@ -7151,6 +7151,9 @@
 				if (data.chatbotChunk || data.chatbotResponse) {
 					return true;
 				}
+				if (data.action && data.target && data.target !== "null" && data.target !== thisLabel) {
+					return; // does not match, so we assume this isn't for us.
+				}
 				if ("mid" in data) {
 					if (data.mid && (syncDocks || force)) {
 						if (autoTimeoutEnabled) {
