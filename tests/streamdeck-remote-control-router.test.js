@@ -8,6 +8,10 @@ const unavailable = router.buildCapabilities({
 
 assert.equal(unavailable.runtime, "web");
 assert.equal(unavailable.ssapp.available, false);
+assert.equal(unavailable.ssn.actions.pin, true);
+assert.equal(unavailable.ssn.actions.removefromwaitlist, true);
+assert.equal(unavailable.ssn.actions.startentries, true);
+assert.equal(unavailable.ssn.actions.waitlistmessage, true);
 assert.equal(router.isSsappRequest({ action: "startSource" }), true);
 assert.equal(router.isSsappRequest({ action: "ssapp.stopSource" }), true);
 assert.equal(router.isSsappRequest({ action: "customThing", target: "ssapp" }), true);
