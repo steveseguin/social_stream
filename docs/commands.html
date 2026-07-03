@@ -342,13 +342,23 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 							</tr>
 							<tr>
 								<td><code>stopentries</code> / <code>startentries</code></td>
-								<td>Stops or resumes new waitlist entries without clearing the existing list</td>
+								<td>Stops or resumes new waitlist entries without clearing the existing list. <code>openentries</code> and <code>resumeentries</code> are aliases for <code>startentries</code>.</td>
 								<td><code>https://io.socialstream.ninja/SESSIONID/stopentries</code></td>
 							</tr>
 							<tr>
 								<td><code>selectwinner</code></td>
 								<td>Selects one or more random waitlist/draw winners</td>
 								<td><code>https://io.socialstream.ninja/SESSIONID/selectwinner/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>downloadwaitlist</code></td>
+								<td>Downloads the current waitlist as a TSV file from the running Social Stream page/app</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/downloadwaitlist</code></td>
+							</tr>
+							<tr>
+								<td><code>drawmode</code></td>
+								<td>Turns draw mode on/off, or toggles it when <code>value</code> is <code>toggle</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/drawmode/null/toggle</code></td>
 							</tr>
 							<tr>
 								<td><code>waitlistmessage</code></td>
