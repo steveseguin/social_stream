@@ -41,6 +41,23 @@
 	const SOURCE_STATUS_VALUES = ["inactive", "activating", "active", "error"];
 	const CONNECTION_MODE_VALUES = ["classic", "websocket", "tiktok-websocket", "tiktok-legacy"];
 
+	function cloneCapabilityValue(value) {
+		if (Array.isArray(value)) {
+			return value.slice();
+		}
+		if (value && typeof value === "object") {
+			return { ...value };
+		}
+		return value;
+	}
+
+	function capabilityValue(options, key, fallback) {
+		if (Object.prototype.hasOwnProperty.call(options, key)) {
+			return cloneCapabilityValue(options[key]);
+		}
+		return cloneCapabilityValue(fallback);
+	}
+
 	function buildSsappCapabilities(options = {}) {
 		if (!options.available) {
 			return {
@@ -60,38 +77,38 @@
 			available: true,
 			runtime: options.runtime || "electron",
 			version: options.version || null,
-			sourceControls: {
+			sourceControls: capabilityValue(options, "sourceControls", {
 				list: true,
 				get: true,
 				start: true,
 				stop: true,
 				restart: true
-			},
-			bulkControls: {
+			}),
+			bulkControls: capabilityValue(options, "bulkControls", {
 				startAll: true,
 				stopAll: true,
 				restartAll: true,
 				filters: ["all", "target", "groupId", "status"]
-			},
-			visibility: {
+			}),
+			visibility: capabilityValue(options, "visibility", {
 				get: true,
 				set: true,
 				toggle: true
-			},
-			mute: {
+			}),
+			mute: capabilityValue(options, "mute", {
 				get: true,
 				set: true,
 				toggle: true
-			},
-			connectionMode: {
+			}),
+			connectionMode: capabilityValue(options, "connectionMode", {
 				get: true,
 				set: true,
 				values: CONNECTION_MODE_VALUES.slice()
-			},
-			sourceStatus: {
+			}),
+			sourceStatus: capabilityValue(options, "sourceStatus", {
 				get: true,
 				values: SOURCE_STATUS_VALUES.slice()
-			}
+			})
 		};
 	}
 
@@ -134,6 +151,9 @@
 		}
 		if (typeof request.action === "string" && request.action.startsWith("ssapp.")) {
 			return true;
+		}
+		if (request.target && request.target !== "null") {
+			return false;
 		}
 		return !!SSAPP_ACTIONS[normalizeAction(request.action)];
 	}

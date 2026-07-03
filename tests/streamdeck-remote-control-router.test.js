@@ -11,6 +11,7 @@ assert.equal(unavailable.ssapp.available, false);
 assert.equal(router.isSsappRequest({ action: "startSource" }), true);
 assert.equal(router.isSsappRequest({ action: "ssapp.stopSource" }), true);
 assert.equal(router.isSsappRequest({ action: "customThing", target: "ssapp" }), true);
+assert.equal(router.isSsappRequest({ action: "startSource", target: "overlay" }), false);
 assert.equal(router.isSsappRequest({ action: "nextInQueue" }), false);
 assert.equal(router.isSsappActionSupported("startSource", unavailable), false);
 
@@ -23,6 +24,26 @@ assert.equal(available.ssapp.available, true);
 assert.equal(router.isSsappActionSupported("startSource", available), true);
 assert.equal(router.isSsappActionSupported("ssapp.stopSource", available), true);
 assert.equal(router.isSsappActionSupported("unknownSourceAction", available), false);
+
+const partial = router.buildCapabilities({
+	runtime: "electron",
+	ssapp: {
+		available: true,
+		runtime: "electron",
+		sourceControls: {
+			list: true,
+			get: true,
+			start: false
+		},
+		mute: false
+	}
+});
+
+assert.equal(partial.ssapp.sourceControls.start, false);
+assert.equal(partial.ssapp.mute, false);
+assert.equal(router.isSsappActionSupported("getSources", partial), true);
+assert.equal(router.isSsappActionSupported("startSource", partial), false);
+assert.equal(router.isSsappActionSupported("toggleSourceMute", partial), false);
 
 const noMute = router.buildCapabilities({
 	runtime: "electron",

@@ -9230,17 +9230,6 @@ async function getStreamDeckCapabilities() {
 	});
 }
 
-async function sendStreamDeckCapabilities(socket) {
-	try {
-		const capabilities = await getStreamDeckCapabilities();
-		if (socket && socket.readyState === WebSocket.OPEN) {
-			socket.send(JSON.stringify(capabilities));
-		}
-	} catch (error) {
-		console.warn("[StreamDeck] Failed to send capabilities", error?.message || error);
-	}
-}
-
 function sendStreamDeckCallback(socket, request, result) {
 	if (!request || !request.get || !socket || socket.readyState !== WebSocket.OPEN) {
 		return false;
@@ -9372,7 +9361,6 @@ function setupSocket() {
 	socketserver.onopen = function () {
 		conCon = 0;
 		socketserver.send(JSON.stringify({ join: streamID, out: 2, in: 1 }));
-		sendStreamDeckCapabilities(socketserver);
 	};
 	socketserver.addEventListener("message", async function (event) {
 		if (event.data) {
