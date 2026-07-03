@@ -67,6 +67,7 @@
                     </thead>
                     <tbody>
                         <tr><td data-label="What You Want">Free voice in OBS</td><td data-label="Use This First">Kokoro, Piper, Kitten, or eSpeak</td><td data-label="Why">Audio plays from the browser page, so OBS can capture it.</td></tr>
+                        <tr><td data-label="What You Want">Portuguese or Spanish voice in OBS</td><td data-label="Use This First">Piper <code>pt_BR-faber-medium</code> / <code>es_ES-davefx-medium</code>, or eSpeak <code>pt-br</code> / <code>es</code></td><td data-label="Why">Kokoro's built-in voices are English; these local providers have Portuguese and Spanish paths.</td></tr>
                         <tr><td data-label="What You Want">Best quality with less local setup</td><td data-label="Use This First">Cloud provider or OpenAI-compatible provider</td><td data-label="Why">Good voices, but account/API costs may apply.</td></tr>
                         <tr><td data-label="What You Want">Use Windows or Mac system voices</td><td data-label="Use This First">System TTS with <code>speech=en-US</code></td><td data-label="Why">Works for listening on the computer, but OBS audio capture is harder.</td></tr>
                         <tr><td data-label="What You Want">Run your own voice server</td><td data-label="Use This First">Custom/local TTS with <code>openaiendpoint</code></td><td data-label="Why">Private and flexible, but the endpoint and voice names must match your server.</td></tr>
@@ -96,6 +97,11 @@
                 <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kokoro</pre>
                 <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</pre>
                 <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kitten</pre>
+                <p>For Portuguese or Spanish, start with one of these instead:</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=pt-BR&amp;ttsprovider=piper&amp;pipervoice=pt_BR-faber-medium</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=pt-BR&amp;ttsprovider=espeak&amp;espeakvoice=pt-br</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=es-ES&amp;ttsprovider=piper&amp;pipervoice=es_ES-davefx-medium</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=es-ES&amp;ttsprovider=espeak&amp;espeakvoice=es</pre>
             </div>
 
             <div class="guide-card">
@@ -138,6 +144,7 @@
                     <li><strong>No voice list:</strong> try Chrome or Edge. Some browsers have limited speech support.</li>
                     <li><strong>OBS is silent:</strong> switch away from plain system TTS or route desktop audio/virtual cable audio.</li>
                     <li><strong>Kokoro is slow:</strong> try Piper, Kitten, eSpeak, a smaller voice, or a server/bridge setup.</li>
+                    <li><strong>Kokoro is not speaking Portuguese or Spanish:</strong> use Piper with <code>pipervoice=pt_BR-faber-medium</code> or <code>pipervoice=es_ES-davefx-medium</code>, eSpeak with <code>espeakvoice=pt-br</code> or <code>espeakvoice=es</code>, or a matching voice from a cloud/local server provider.</li>
                     <li><strong>Local server returns errors:</strong> check endpoint URL, CORS, voice name, model name, and whether the server can be reached from the OBS computer.</li>
                     <li><strong>Voice name fails:</strong> Kokoro names can look like <code>af_bella</code>; OpenAI/openedai-speech names can look like <code>nova</code> or <code>echo</code>. Use a voice your server supports.</li>
                 </ul>

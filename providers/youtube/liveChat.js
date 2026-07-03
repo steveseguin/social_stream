@@ -1,3 +1,5 @@
+// YouTube names this API liveChatMessages.streamList, but the REST URL is /liveChat/messages/stream.
+// The gRPC-style /liveChat/messages:stream path returns 404 on googleapis.com.
 const STREAM_ENDPOINT = 'https://www.googleapis.com/youtube/v3/liveChat/messages/stream';
 const DEFAULT_STREAMING = {
   endpoint: STREAM_ENDPOINT,

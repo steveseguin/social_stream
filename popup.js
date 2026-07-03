@@ -2381,7 +2381,7 @@ function uploadCustomJsFile() {
       alert('File is too large. Maximum size is 1MB.');
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = function(e) {
       const contents = e.target.result;
@@ -2389,7 +2389,7 @@ function uploadCustomJsFile() {
       const maxLength = 100000;
       const truncatedContents = contents.length > maxLength ? 
         contents.substring(0, maxLength) : contents;
-        
+
       chrome.runtime.sendMessage({
         cmd: 'uploadCustomJs', 
         data: truncatedContents
@@ -3116,17 +3116,27 @@ function removeTTSProviderParams(url, selectedProvider=null) {
 
 
 function setupTtsProviders(response) {
+    const getSavedTtsProvider = (paramType) => {
+        const value = response.settings?.ttsprovider?.[paramType];
+        return value ? value.toString().trim().toLowerCase() : "";
+    };
+    const inferTtsProvider = (ttsService, paramNum) => {
+        if (ttsService !== "system") return ttsService;
+        const textParam = `textparam${paramNum}`;
+        if (response.settings?.geminikey?.[textParam]) return "gemini";
+        if (response.settings?.ttskey?.[textParam]) return "google";
+        if (response.settings?.googleAPIKey?.[textParam]) return "google";
+        if (response.settings?.elevenlabskey?.[textParam]) return "elevenlabs";
+        if (response.settings?.speechifykey?.[textParam]) return "speechify";
+        if (response.settings?.openaikey?.[textParam]) return "openai";
+        if (response.settings?.openaiendpoint?.[textParam]) return "customtts";
+        return ttsService;
+    };
+
     // Handle main TTS provider
     if (!response.settings?.ttsProvider?.optionsetting) {
-        let ttsService = "system";
-        if (response.settings?.geminikey?.textparam1) ttsService = "gemini";
-        else if (response.settings?.ttskey?.textparam1) ttsService = "google";
-        else if (response.settings?.googleAPIKey?.textparam1) ttsService = "google";
-        else if (response.settings?.elevenlabskey?.textparam1) ttsService = "elevenlabs";
-        else if (response.settings?.speechifykey?.textparam1) ttsService = "speechify";
-        else if (response.settings?.openaikey?.textparam1) ttsService = "openai";
-        else if (response.settings?.openaiendpoint?.textparam1) ttsService = "customtts";
-        
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam1") || "system", "1");
+
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
         }
@@ -3135,36 +3145,32 @@ function setupTtsProviders(response) {
     
     // Handle featured TTS provider (for param2)
     if (!response.settings?.ttsProvider?.optionsetting2) {
-        let ttsService = "system";
-        if (response.settings?.geminikey?.textparam2) ttsService = "gemini";
-        else if (response.settings?.ttskey?.textparam2) ttsService = "google";
-        else if (response.settings?.googleAPIKey?.textparam2) ttsService = "google";
-        else if (response.settings?.elevenlabskey?.textparam2) ttsService = "elevenlabs";
-        else if (response.settings?.speechifykey?.textparam2) ttsService = "speechify";
-        else if (response.settings?.openaikey?.textparam2) ttsService = "openai";
-        else if (response.settings?.openaiendpoint?.textparam2) ttsService = "customtts";
-        
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam2") || "system", "2");
+
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
         }
         response.settings.ttsProvider.optionsetting2 = ttsService;
     }
-    
+
     // Handle secondary TTS provider (for param10)
     if (!response.settings?.ttsProvider?.optionsetting10) {
-        let ttsService = "system";
-        if (response.settings?.geminikey?.textparam10) ttsService = "gemini";
-        else if (response.settings?.ttskey?.textparam10) ttsService = "google";
-        else if (response.settings?.googleAPIKey?.textparam10) ttsService = "google";
-        else if (response.settings?.elevenlabskey?.textparam10) ttsService = "elevenlabs";
-        else if (response.settings?.speechifykey?.textparam10) ttsService = "speechify";
-        else if (response.settings?.openaikey?.textparam10) ttsService = "openai";
-        else if (response.settings?.openaiendpoint?.textparam10) ttsService = "customtts";
-        
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam10") || "system", "10");
+
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
         }
         response.settings.ttsProvider.optionsetting10 = ttsService;
+    }
+
+    // Handle Flow Actions TTS provider (for param18)
+    if (!response.settings?.ttsProvider?.optionsetting18) {
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam18") || "system", "18");
+
+        if (!response.settings.ttsProvider) {
+            response.settings.ttsProvider = {};
+        }
+        response.settings.ttsProvider.optionsetting18 = ttsService;
     }
 }
 
@@ -4495,7 +4501,7 @@ function isOpenAITTSProvider(provider) {
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS"].forEach(id => {
+    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS", "piperTTS", "espeakTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -4516,13 +4522,17 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("kittenTTS").classList.remove("hidden");
     } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS").classList.remove("hidden");
+    } else if (provider == "piper") {
+        document.getElementById("piperTTS").classList.remove("hidden");
+    } else if (provider == "espeak") {
+        document.getElementById("espeakTTS").classList.remove("hidden");
     }
 }
 
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10"].forEach(id => {
+    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10", "piperTTS10", "espeakTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -4543,6 +4553,10 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("kittenTTS10").classList.remove("hidden");
     } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS10").classList.remove("hidden");
+    } else if (provider == "piper") {
+        document.getElementById("piperTTS10").classList.remove("hidden");
+    } else if (provider == "espeak") {
+        document.getElementById("espeakTTS10").classList.remove("hidden");
     }
 }
 
@@ -4580,7 +4594,7 @@ function handleTTSProvider2Visibility(provider) {
 // Handle Flow Actions TTS provider visibility (param18)
 function handleTTSProvider18Visibility(provider) {
     // Hide all TTS18 elements
-    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18"].forEach(id => {
+    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18", "piperTTS18", "espeakTTS18"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
 
@@ -4601,6 +4615,10 @@ function handleTTSProvider18Visibility(provider) {
         document.getElementById("kittenTTS18")?.classList.remove("hidden");
     } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS18")?.classList.remove("hidden");
+    } else if (provider == "piper") {
+        document.getElementById("piperTTS18")?.classList.remove("hidden");
+    } else if (provider == "espeak") {
+        document.getElementById("espeakTTS18")?.classList.remove("hidden");
     }
 }
 

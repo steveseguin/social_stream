@@ -313,9 +313,13 @@ try {
 		localStorage.setItem(YT_PENDING_ACCESS_LEVEL_KEY, normalizeYouTubeAccessLevel(value));
 	}
 
+	function clearPendingYouTubeTokenAccessLevel() {
+		localStorage.removeItem(YT_PENDING_ACCESS_LEVEL_KEY);
+	}
+
 	function consumePendingYouTubeTokenAccessLevel() {
 		const stored = localStorage.getItem(YT_PENDING_ACCESS_LEVEL_KEY);
-		localStorage.removeItem(YT_PENDING_ACCESS_LEVEL_KEY);
+		clearPendingYouTubeTokenAccessLevel();
 		return stored === null ? null : normalizeYouTubeAccessLevel(stored);
 	}
     function getRuntimeParams() {
@@ -3007,14 +3011,14 @@ function enableBackgroundKeepAlive() {
 		}
 		return null;
 	}
-	function setStoredToken(token, expiresIn = 3600, refresh = null, authSource = null) {
+	function setStoredToken(token, expiresIn = 3600, refresh = null, authSource = null, tokenAccessLevel = null) {
 		const expiryTime = new Date().getTime() + (expiresIn * 1000);
 		localStorage.setItem('youtubeOAuthToken', token);
 		localStorage.setItem('youtubeOAuthExpiry', expiryTime.toString());
 		if (refresh) {
 			localStorage.setItem('youtubeRefreshToken', refresh);
 		}
-		localStorage.setItem(YT_TOKEN_ACCESS_LEVEL_KEY, normalizeYouTubeAccessLevel(consumePendingYouTubeTokenAccessLevel() || localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY) || getYouTubeAccessLevel()));
+		localStorage.setItem(YT_TOKEN_ACCESS_LEVEL_KEY, normalizeYouTubeAccessLevel(tokenAccessLevel || localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY) || getYouTubeAccessLevel()));
 		setStoredAuthSource(authSource || YT_AUTH_SOURCE_HOSTED);
 	}function clearStoredToken() {
 		localStorage.removeItem('youtubeOAuthToken');
@@ -4329,11 +4333,13 @@ function enableBackgroundKeepAlive() {
 		});
 		if (tokens.access_token) {
 			const expiresIn = tokens.expires_in ? parseInt(tokens.expires_in) : 3600;
-			setStoredToken(tokens.access_token, expiresIn);
+			setStoredToken(tokens.access_token, expiresIn, null, null, consumePendingYouTubeTokenAccessLevel());
+			clearExpectedOAuthState();
             window.history.replaceState({}, document.title, redirectURI);
 			verifyAndUseToken(tokens.access_token);
 		} else {
 			console.error('No access token found in URL fragment');
+			clearExpectedOAuthState();
 			showAuthButton();
 		}
 	}
@@ -4386,6 +4392,7 @@ function enableBackgroundKeepAlive() {
 		try {
 			localStorage.removeItem('youtubeOAuthState');
 		} catch (_) {}
+		clearPendingYouTubeTokenAccessLevel();
 	}
 	function getPostSignInQuotaMessage() {
 		if (getStoredAuthSource() === YT_AUTH_SOURCE_CUSTOM) {
@@ -4542,7 +4549,7 @@ function enableBackgroundKeepAlive() {
 			if (!data.access_token) {
 				throw new Error('Token exchange response did not include access_token.');
 			}
-			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource);
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource, consumePendingYouTubeTokenAccessLevel());
 			clearExpectedOAuthState();
 			window.history.replaceState({}, document.title, redirectURI);
 			verifyAndUseToken(data.access_token);

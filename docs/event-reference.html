@@ -263,7 +263,7 @@
                         <tr>
                             <td><code>data.hasDonation</code></td>
                             <td>string</td>
-                            <td>Monetary or virtual gift amount (<code>$5.00</code>, <code>5 Gifted</code>, <code>300 coins</code>). Populate even when <code>data.event</code> is blank so donation overlays can detect it.</td>
+                            <td>Monetary or virtual gift amount (<code>$5.00</code>, <code>500 bits</code>, <code>300 coins</code>). Populate even when <code>data.event</code> is blank so donation overlays can detect it.</td>
                         </tr>
                         <tr>
                             <td><code>data.meta</code></td>
@@ -297,6 +297,7 @@
                     <li>Chat transports that support source-control delete sync should expose the platform-native chat identifier as <code>meta.messageId</code> instead of relying on the dock's internal <code>data-mid</code> value.</li>
                     <li>SSApp source identity metadata may add <code>meta.ssnAccountRole</code>, <code>meta.ssnSourceId</code>, and <code>meta.ssnSession</code> when a source is assigned a non-normal account role.</li>
                     <li>Event Flow can request a highlight by setting <code>meta.featured = true</code> on the chat payload, which auto-features the message in dock/featured overlays.</li>
+                    <li>Event Flow can request dock pinning by setting <code>meta.pinned = true</code>; optional <code>meta.pinnedTarget</code> limits that pin to a dock with the matching <code>label</code>.</li>
                     <li>AI stage overlay commands use <code>{ action: "aiOverlay", target, meta }</code> or dock-controlled co-host playout uses <code>{ action: "cohostOverlay", target, meta }</code>; keep all command details such as <code>command</code>, <code>text</code>, <code>emotion</code>, <code>avatar</code>, and <code>tts</code> inside <code>meta</code>.</li>
                     <li>If a platform exposes multiple counters together, prefer a structured object with explicit keys (<code>meta.viewer_count</code>, <code>meta.follower_count</code>) instead of overloading strings.</li>
                     <li>Commerce overlays should use snapshot objects under <code>meta</code> (for example <code>auction_update</code> and <code>commerce_update</code>) and avoid ad-hoc top-level fields.</li>
@@ -331,7 +332,7 @@
                             <tr>
                                 <td class="membership-event"><code>giftpurchase</code></td>
                                 <td>Gift bundle purchase banner (<code>ytd-sponsorships-live-chat-gift-purchase</code>).</td>
-                                <td><code>hasDonation</code> set to “N Gifted”; <code>donoValue</code> approximates USD (5 × quantity); <code>membership</code> becomes “SPONSORSHIP”.</td>
+                                <td><code>membership</code> becomes <code>gift_giver</code>; <code>subtitle</code> carries the gift count when known; no <code>hasDonation</code> or <code>donoValue</code>.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>giftredemption</code></td>
@@ -349,9 +350,9 @@
                                 <td><code>subtitle</code> captures new tier label; <code>membership</code> remains “MEMBERSHIP”.</td>
                             </tr>
                             <tr>
-                                <td class="donation-event"><code>hasDonation</code></td>
+                                <td class="donation-event"><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code></td>
                                 <td>Super Chats, Super Stickers, donation announcement cards, and YouTube Gifts powered by Jewels (<code>yt-gift-message-view-model</code>).</td>
-                                <td>Donation-style rows should key off <code>hasDonation</code>, not an event name. YouTube Gifts use <code>N Jewels</code> when present, or <code>1 YouTube Gift</code> when YouTube hides the count. Gift images use <code>contentimg</code>, gift labels use <code>subtitle</code>, and minimal gift details are mirrored under <code>meta.youtubeGift</code>.</td>
+                                <td><code>hasDonation</code> carries the value; <code>event</code> identifies the YouTube paid item type. YouTube Gifts use <code>N Jewels</code> when present, or <code>1 YouTube Gift</code> when YouTube hides the count. Gift images use <code>contentimg</code>, gift labels use <code>subtitle</code>, and minimal gift details are mirrored under <code>meta.youtubeGift</code>.</td>
                             </tr>
                             <tr>
                                 <td class="donation-event"><code>thankyou</code></td>
@@ -420,7 +421,7 @@
                             <tr>
                                 <td class="membership-event"><code>giftpurchase</code></td>
                                 <td>Gift bundles purchased via the API.</td>
-                                <td><code>membership</code> set to <code>gift_giver</code>; <code>subtitle</code> lists count/tier; <code>meta</code> mirrors membership mapping.</td>
+                                <td><code>membership</code> set to <code>gift_giver</code>; <code>subtitle</code> lists count/tier; no <code>hasDonation</code> or <code>donoValue</code>.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>giftredemption</code></td>
@@ -841,8 +842,8 @@
                             </tr>
                             <tr>
                                 <td><code>superchat</code></td>
-                                <td>Super Chat style alerts emitted by Streamlabs.</td>
-                                <td>Donation fields populated similarly to <code>donation</code>.</td>
+                                <td>Super Chat style alerts from YouTube or supported alert integrations.</td>
+                                <td><code>hasDonation</code> carries the amount; consumers may keep accepting legacy <code>donation</code> aliases.</td>
                             </tr>
                             <tr>
                                 <td><code>sponsor</code></td>
@@ -1863,7 +1864,7 @@
                         <tr>
                             <td>YouTube: Standard vs Websocket</td>
                             <td>Shared: <code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code>, <code>sponsorship</code>, <code>resub</code>, <code>giftpurchase</code>, <code>giftredemption</code>, <code>viewer_update</code>. Standard-only: <code>thankyou</code>, <code>redirect</code>. Websocket-only: <code>membermilestone</code>, <code>new_follower</code>, <code>subscriber_update</code>, <code>view_update</code>.</td>
-                            <td>Core member/event names are aligned across both; YouTube paid rows use <code>hasDonation</code> for value and specific event names for the paid item type.</td>
+                            <td>Core member/event names are aligned across both; Super Chat, Super Sticker, and Jewels use <code>hasDonation</code>, while membership gift purchases/redemptions do not.</td>
                         </tr>
                         <tr>
                             <td>All surfaces</td>

@@ -105,15 +105,15 @@ Support implication: if YouTube sign-in fails in the standalone app, check wheth
 
 Important event names from `docs/event-reference.html`:
 
-- Standard DOM: `sponsorship`, `giftpurchase`, `giftredemption`, `resub`, `thankyou`, `redirect`, `viewer_update`.
-- WebSocket/Data API: `supersticker`, `sponsorship`, `resub`, `giftpurchase`, `giftredemption`, `membermilestone`, `viewer_update`, `subscriber_update`, `view_update`, `live_chat_ended`, `user_banned`, `new_follower`.
-- Donation-style rows use `hasDonation` without forcing an event name. YouTube Gifts set `hasDonation` to `N Jewels` when YouTube exposes a jewel count, or `1 YouTube Gift` as the hidden-count fallback, and keep display details in `subtitle`, `contentimg`, and minimal `meta.youtubeGift`.
+- Standard DOM: `superchat`, `supersticker`, `jeweldonation`, `sponsorship`, `giftpurchase`, `giftredemption`, `resub`, `thankyou`, `redirect`, `viewer_update`.
+- WebSocket/Data API: `superchat`, `supersticker`, `jeweldonation`, `sponsorship`, `resub`, `giftpurchase`, `giftredemption`, `membermilestone`, `viewer_update`, `subscriber_update`, `view_update`, `live_chat_ended`, `user_banned`, `new_follower`.
+- Super Chats, Super Stickers, and YouTube Gifts/Jewels use `hasDonation` with their specific event names. Gift membership purchases/redemptions use `giftpurchase`/`giftredemption` and do not set `hasDonation` or `donoValue`.
 
 Cross-platform note:
 
 - YouTube uses `sponsorship` for new members. Twitch and Kick use `new_subscriber`.
 - YouTube gift events use `giftpurchase` and `giftredemption`, not Twitch/Kick `subscription_gift`.
-- Donation-like events are often signaled by `hasDonation`, even when the event name differs.
+- Donation-value events are signaled by `hasDonation`; membership purchases are not donation-value events.
 
 ## Common Failures
 

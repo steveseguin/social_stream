@@ -181,6 +181,9 @@ https://io.socialstream.ninja/SESSION_ID/sendChat/null/Hello?channel=2
 | `getQueueSize` | Request queue size | `{"action":"getQueueSize","get":"queue-1"}` |
 | `autoShow` | Toggle/set auto-show mode | `{"action":"autoShow","value":"toggle"}` |
 | `feature` | Feature next unfeatured message | `{"action":"feature"}` |
+| `pin` | Pin an existing dock message by `mid`, or pin a full message object. Requires `dock.html` open. | `{"action":"pin","value":"MESSAGE_MID"}` |
+| `unpin` | Unpin an existing dock message by `mid`. Requires `dock.html` open. | `{"action":"unpin","value":"MESSAGE_MID"}` |
+| `nextPinned` | Feature the first pinned dock message. | `{"action":"nextPinned"}` |
 | `blockUser` | Block a user by source/user | `{"action":"blockUser","value":{"chatname":"name","type":"twitch"}}` |
 | `extContent` | Inject external content into processing | `{"action":"extContent","value":"{\"chatname\":\"User\",\"chatmessage\":\"Hello\"}"}` |
 | `getChatSources` | Ask for active source list | `{"action":"getChatSources","get":"sources-1"}` |

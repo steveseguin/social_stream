@@ -1826,6 +1826,8 @@
 			if (urlParams.has("stacking") || urlParams.has("stacked") || urlParams.has("stack")) {
 				stacking = true;
 			}
+			var currentFeaturedMessageEl = null;
+			var currentFeaturedNameEl = null;
 
 			var textDirection = "auto";
 			if (urlParams.has("rtl")) {
@@ -2191,18 +2193,34 @@
 			  return validTLDs.has(tld.toLowerCase());
 			}
 
-
+			function getFeaturedElementByClass(className, referenceNode, fallbackId, fallbackElement) {
+				try {
+					if (referenceNode && referenceNode.closest) {
+						var container = referenceNode.closest(".highlight-chat");
+						if (container) {
+							var scopedElement = container.querySelector("." + className);
+							if (scopedElement) {
+								return scopedElement;
+							}
+						}
+					}
+				} catch (e) {}
+				return document.getElementById(fallbackId) || fallbackElement || null;
+			}
 
 			function realign(eventtype = false) {
+				var referenceNode = eventtype && eventtype.target ? eventtype.target : null;
+				var activeMessageEl = getFeaturedElementByClass("hl-message", referenceNode, "message", currentFeaturedMessageEl);
+				var activeNameEl = getFeaturedElementByClass("hl-name", referenceNode, "nameDIV", currentFeaturedNameEl);
 				if (centering) {
 					try {
-						var offsetLeft = (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth + 20)) / 2;
+						var offsetLeft = (parseInt(window.innerWidth) - parseInt(activeMessageEl.clientWidth + 20)) / 2;
 						offsetLeft -= 15;
 						document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft + "px");
 					} catch (e) {}
 				}
 				try {
-					var img = document.getElementById("img");
+					var img = referenceNode && referenceNode.tagName === "IMG" ? referenceNode : document.getElementById("img");
 					if (!img) {
 						return;
 					}
@@ -2222,7 +2240,10 @@
 					if (ar1 > ar) {
 						ar = ar1;
 					}
-					var message = document.getElementById("message");
+					var message = activeMessageEl;
+					if (!message) {
+						return false;
+					}
 					var width = 300 * ar; // window.innerWidth*ar
 					//img.style.width = width+"px";
 
@@ -2252,14 +2273,14 @@
 						imgContent.style.right = "unset";
 
 						var offset = 0;
-						if (document.getElementById("nameDIV")) {
-							offset = document.getElementById("nameDIV").clientWidth + 110;
+						if (activeNameEl) {
+							offset = activeNameEl.clientWidth + 110;
 						}
 						if (offset < 300) {
 							offset = 300;
 						}
-						if (offset < document.getElementById("message").clientWidth + 19) {
-							offset = document.getElementById("message").clientWidth + 19;
+						if (offset < message.clientWidth + 19) {
+							offset = message.clientWidth + 19;
 						}
 						if (offset > window.innerWidth - 100) {
 							offset = Math.max(20, window.innerWidth - 100);
@@ -2278,8 +2299,8 @@
 						img.style.transformOrigin = "bottom";
 						imgContent.style.right = 0;
 						var offset = 0;
-						if (document.getElementById("nameDIV")) {
-							offset = document.getElementById("nameDIV").clientWidth + 110;
+						if (activeNameEl) {
+							offset = activeNameEl.clientWidth + 110;
 						}
 						if (offset < 300) {
 							offset = 300;
@@ -3143,6 +3164,8 @@
 
 					// ADD NO-AVATAR CLASS TO CONTAINER
 					var noAvatarClass = avatarForMessage ? "" : " no-avatar";
+					var activeNameDiv = null;
+					var activeMessageDiv = null;
 
 					if (stacking) {
 					  try {
@@ -3182,6 +3205,10 @@
 						messageDiv.innerHTML = data.chatmessage;
 					  }
 					  messageContainer.appendChild(messageDiv);
+					  activeNameDiv = nameDiv;
+					  activeMessageDiv = messageDiv;
+					  currentFeaturedNameEl = nameDiv;
+					  currentFeaturedMessageEl = messageDiv;
 
 					  // Add the avatar and source type elements first
 					  const avatarContent = document.createElement('div');
@@ -3237,39 +3264,43 @@
 						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" +
 						'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" +
 						avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
-					  if (renderChatMessageAsText && document.getElementById("message")) {
-						document.getElementById("message").textContent = data.chatmessage || "";
+					  activeNameDiv = document.getElementById("nameDIV");
+					  activeMessageDiv = document.getElementById("message");
+					  currentFeaturedNameEl = activeNameDiv;
+					  currentFeaturedMessageEl = activeMessageDiv;
+					  if (renderChatMessageAsText && activeMessageDiv) {
+						activeMessageDiv.textContent = data.chatmessage || "";
 					  }
 
 					  if (data.hasDonation || memebershipHTML) {
 						document.getElementById("newmessage").classList.add("dono");
 					  }
 					  
-					  if ((stripLinks || activeLinks || shortlink) && data.chatmessage && document.getElementById("message")) {
-						processURLs(document.getElementById("message"), { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					  if ((stripLinks || activeLinks || shortlink) && data.chatmessage && activeMessageDiv) {
+						processURLs(activeMessageDiv, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
 					  } 
 					}
 					
-					if (!data.chatname && !data.chatbadges) {
-					  document.getElementById("nameDIV").style.display = "none";
+					if (!data.chatname && !data.chatbadges && activeNameDiv) {
+					  activeNameDiv.style.display = "none";
 					}
 
 					var fontsize = "";
 					var limitchar = parseInt(window.innerWidth / 6.5);
 
-					if (largeImage){
-					  document.getElementById("message").classList.add("largeImage");
-					} else if (fontfit) {
-					  if (document.getElementById("message").innerText.length > limitchar) {
-						fontsize = parseInt((limitchar * 100) / document.getElementById("message").innerText.length);
+					if (largeImage && activeMessageDiv){
+					  activeMessageDiv.classList.add("largeImage");
+					} else if (fontfit && activeMessageDiv) {
+					  if (activeMessageDiv.innerText.length > limitchar) {
+						fontsize = parseInt((limitchar * 100) / activeMessageDiv.innerText.length);
 						if (fontsize < 43) {
 						  fontsize = 43;
 						}
 
 						if (data.textColor && !data.textColor.startsWith("color")) {
-						  document.getElementById("message").style = data.backgroundColor + "; color:" + data.textColor + "; font-size: " + fontsize + "%;";
+						  activeMessageDiv.style = data.backgroundColor + "; color:" + data.textColor + "; font-size: " + fontsize + "%;";
 						} else {
-						  document.getElementById("message").style = data.backgroundColor + " " + data.textColor + "; font-size: " + fontsize + "%;";
+						  activeMessageDiv.style = data.backgroundColor + " " + data.textColor + "; font-size: " + fontsize + "%;";
 						}
 					  }
 					}
@@ -3299,7 +3330,7 @@
 
 					if (centering) {
 					  try {
-						var offsetLeft = (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth + 20)) / 2;
+						var offsetLeft = (parseInt(window.innerWidth) - parseInt(activeMessageDiv.clientWidth + 20)) / 2;
 						offsetLeft -= 15;
 						document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft + "px");
 					  } catch (e) {}

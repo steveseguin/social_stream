@@ -6009,6 +6009,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && (request.cmd === "startentries" || request.cmd === "openentries" || request.cmd === "resumeentries")) {
+			toggleEntries(true);
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && (request.cmd === "waitlistmessage" || request.cmd === "setwaitlistmessage")) {
+			setWaitlistMessage(request.value);
+			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "removefromwaitlist") {
 			removeWaitlist(parseInt(request.value) || 0);
 			sendResponse({ state: isExtensionOn });
@@ -9577,6 +9583,12 @@ function setupSocket() {
 				toggleEntries(false);
 				resp = true;
 				//sendResponse({ state: isExtensionOn });
+			} else if (data.action && (data.action === "startentries" || data.action === "openentries" || data.action === "resumeentries")) {
+				toggleEntries(true);
+				resp = true;
+			} else if (data.action && (data.action === "waitlistmessage" || data.action === "setwaitlistmessage")) {
+				setWaitlistMessage(data.value);
+				resp = true;
 			} else if (data.action && data.action === "downloadwaitlist") {
 				downloadWaitlist();
 				resp = true;
@@ -11896,6 +11908,95 @@ function extractWaitlistMessage(chatMessage = "", trigger = "") {
 	}
 }
 
+function getWaitlistControlCommand(settingKey, fallback) {
+	try {
+		const entry = settings && settings[settingKey];
+		if (entry && entry.textsetting !== undefined && entry.textsetting !== null && entry.textsetting.toString().trim()) {
+			return entry.textsetting.toString().trim();
+		}
+	} catch (e) {}
+	return fallback;
+}
+
+function getWaitlistControlValue(chatMessage, commandString, fallback) {
+	try {
+		const matchedCommand = getMatchedCommandAlias(commandString, chatMessage, "startsWithToken");
+		if (!matchedCommand) {
+			return fallback;
+		}
+		const rest = String(chatMessage || "")
+			.trim()
+			.slice(matchedCommand.length)
+			.trim();
+		const value = parseInt(rest, 10);
+		if (Number.isFinite(value) && value > 0) {
+			return value;
+		}
+	} catch (e) {}
+	return fallback;
+}
+
+function processWaitlistControlCommand(data) {
+	try {
+		if (!getSettingFlag("waitlistcontrolcommands") || !data || !data.chatmessage || data.bot || data.reflection || data.replay || data.history || data.reload) {
+			return false;
+		}
+		if (!(data.mod || data.host || data.admin)) {
+			return false;
+		}
+
+		const message = data.chatmessage;
+		const commands = [
+			{
+				setting: "waitlistcommandstop",
+				fallback: "!wlstop",
+				action: function () {
+					toggleEntries(false);
+				}
+			},
+			{
+				setting: "waitlistcommandremove",
+				fallback: "!wlremove",
+				action: function (command) {
+					removeWaitlist(getWaitlistControlValue(message, command, 0));
+				}
+			},
+			{
+				setting: "waitlistcommandreset",
+				fallback: "!wlreset",
+				action: function () {
+					resetWaitlist();
+				}
+			},
+			{
+				setting: "waitlistcommandselect",
+				fallback: "!wlpick",
+				action: function (command) {
+					selectRandomWaitlist(getWaitlistControlValue(message, command, 1));
+				}
+			},
+			{
+				setting: "waitlistcommandhighlight",
+				fallback: "!wlhighlight",
+				action: function (command) {
+					highlightWaitlist(getWaitlistControlValue(message, command, 0));
+				}
+			}
+		];
+
+		for (var i = 0; i < commands.length; i++) {
+			const command = getWaitlistControlCommand(commands[i].setting, commands[i].fallback);
+			if (command && commandAliasMatches(command, message, "startsWithToken")) {
+				commands[i].action(command);
+				return true;
+			}
+		}
+	} catch (e) {
+		console.error(e);
+	}
+	return false;
+}
+
 function forgetWaitlistUser(entry) {
 	try {
 		if (!entry || !entry.type || !entry.chatname || !waitListUsers[entry.type]) {
@@ -12204,6 +12305,13 @@ function resetWaitlist() {
 function toggleEntries(state = false) {
 	allowNewEntries = state;
 	sendWaitlistConfig();
+}
+function setWaitlistMessage(value = "") {
+	const message = value === undefined || value === null ? "" : String(value);
+	settings.customwaitlistmessagetoggle = true;
+	settings.customwaitlistmessage = { textsetting: message };
+	chrome.storage.local.set({ settings: settings });
+	sendWaitlistConfig(null, true);
 }
 function objectArrayToCSV(data, delimiter = ",") {
 	if (!data || !Array.isArray(data) || data.length === 0) {
@@ -16683,6 +16791,14 @@ async function applyBotActions(data, tab = false) {
 		if (settings.defaultavatar.textsetting && !data.chatimg) {
 			data.chatimg = settings.defaultavatar.textsetting;
 		}
+	}
+
+	try {
+		if (settings.waitlistmode && processWaitlistControlCommand(data)) {
+			return null;
+		}
+	} catch (e) {
+		console.error(e);
 	}
 
 	try {

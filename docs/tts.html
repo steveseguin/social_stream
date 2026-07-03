@@ -636,6 +636,7 @@
                 <li>Works directly with OBS browser source</li>
                 <li>Voice selection: <code>&voicekokoro=af_bella</code></li>
                 <li>Speed control: <code>&kokorospeed=1.2</code></li>
+                <li>Kokoro's built-in voices are English voices; <code>&speech=pt-BR</code>, <code>&speech=es-ES</code>, or matching <code>&language=</code> values will not turn Kokoro into Portuguese or Spanish TTS</li>
             </ul>
 
             <h3>Piper TTS (Free, Built-in)</h3>
@@ -643,6 +644,8 @@
                 <li>Enable with <code>?ttsprovider=piper</code></li>
                 <li>Fast, CPU-friendly neural TTS running in browser</li>
                 <li>Voice selection: <code>&pipervoice=en_US-hfc_female-medium</code></li>
+                <li>Portuguese voices: <code>&pipervoice=pt_BR-faber-medium</code> or <code>&pipervoice=pt_BR-edresson-low</code></li>
+                <li>Spanish voices: <code>&pipervoice=es_ES-davefx-medium</code> or <code>&pipervoice=es_MX-ald-medium</code></li>
                 <li>Speed control: <code>&piperspeed=1.0</code></li>
             </ul>
 
@@ -658,7 +661,18 @@
                 <li>Enable with <code>?ttsprovider=espeak</code></li>
                 <li>Classic open-source TTS, works on any hardware</li>
                 <li>Voice selection: <code>&espeakvoice=en</code></li>
+                <li>Portuguese example: <code>&speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>Spanish example: <code>&speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
                 <li>Speed control: <code>&espeakspeed=175</code></li>
+            </ul>
+
+            <h3>Portuguese and Spanish TTS Examples</h3>
+            <ul>
+                <li>Portuguese, best free local quality tested in SSN: <code>?speech=pt-BR&ttsprovider=piper&pipervoice=pt_BR-faber-medium</code></li>
+                <li>Portuguese, fastest fallback tested in SSN: <code>?speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>Spanish, best free local quality tested in SSN: <code>?speech=es-ES&ttsprovider=piper&pipervoice=es_ES-davefx-medium</code></li>
+                <li>Spanish, fastest fallback tested in SSN: <code>?speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
+                <li>For cloud voices, use a provider voice/language that supports the target language, such as Google Cloud, ElevenLabs, Speechify, Gemini, or an OpenAI-compatible local server.</li>
             </ul>
 
             <h3>OpenAI / Local Server TTS</h3>

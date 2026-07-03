@@ -6,9 +6,9 @@ Use this page to find exact popup setting keys quickly. For UI behavior, storage
 
 ## Counts
 
-- Total setting keys: 327
-- Categories: 54
-- Types: boolean=170, text=98, select=10, number=49
+- Total setting keys: 333
+- Categories: 55
+- Types: boolean=171, text=103, select=10, number=49
 
 ## Focused Validation Note
 
@@ -274,6 +274,19 @@ Category key: `must_enable_the_trigger_to_use`. Settings: 5.
 | `ticker` | boolean | Enable to Select the ticker source file |
 | `waitlistmode` | boolean | Enable the waitlist/queue overlay and listen for the join command. |
 | `wordcloud` | boolean | Enable the word cloud overlay trigger. |
+
+## Chat control commands
+
+Category key: `chat_control_commands`. Settings: 6.
+
+| Key | Type | Short Description |
+| --- | --- | --- |
+| `waitlistcontrolcommands` | boolean | Enable mod/host/admin chat commands for waitlist controls. |
+| `waitlistcommandhighlight` | text | Chat command to highlight the top or numbered waitlist entry. |
+| `waitlistcommandremove` | text | Chat command to remove the top or numbered waitlist entry. |
+| `waitlistcommandreset` | text | Chat command to reset the waitlist. |
+| `waitlistcommandselect` | text | Chat command to select one or more names. |
+| `waitlistcommandstop` | text | Chat command to stop new waitlist entries. |
 
 ## Other customization options
 

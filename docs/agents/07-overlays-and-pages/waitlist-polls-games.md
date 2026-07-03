@@ -98,6 +98,14 @@ Common API actions documented in `api.md`:
 - `drawmode`
 - `waitlistmessage`
 
+Optional waitlist chat control commands can be enabled in the Waitlist menu. They are limited to mod/host/admin users and default to:
+
+- `!wlstop`: stop new entries.
+- `!wlremove`: remove the top entry; accepts an optional active-entry index.
+- `!wlreset`: reset the waitlist.
+- `!wlpick`: select a name; accepts an optional count.
+- `!wlhighlight`: highlight the top entry; accepts an optional active-entry index.
+
 Support notes:
 
 - If the waitlist page is blank, confirm the URL has the right session and the waitlist is actually receiving `waitlist` or draw payloads.

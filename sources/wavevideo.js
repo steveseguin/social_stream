@@ -1,6 +1,14 @@
 (function () {
   let settings = {};
 
+  function hasChromeRuntime() {
+    return typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage;
+  }
+
+  function hasChromeRuntimeListener() {
+    return typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage && chrome.runtime.onMessage.addListener;
+  }
+
   function escapeHtml(unsafe) {
     return unsafe
       .replace(/&/g, "&amp;")
@@ -79,6 +87,9 @@
 
   function pushMessage(data) {
     try {
+      if (!hasChromeRuntime()) {
+        return;
+      }
       chrome.runtime.sendMessage(
         chrome.runtime.id,
         { message: data },
@@ -99,27 +110,31 @@
 
   const config = { childList: true, subtree: true };
 
-  chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
-    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) return;
-    if (response && "settings" in response) {
-      settings = response.settings;
-    }
-  });
+  if (hasChromeRuntime()) {
+    chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
+      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) return;
+      if (response && "settings" in response) {
+        settings = response.settings;
+      }
+    });
+  }
 
-  chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    try {
-      if ("getSource" == request) {
-        sendResponse("wavevideo");
-        return;
-      }
-      if (typeof request === "object" && "settings" in request) {
-        settings = request.settings;
-        sendResponse(true);
-        return;
-      }
-    } catch (e) {}
-    sendResponse(false);
-  });
+  if (hasChromeRuntimeListener()) {
+    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+      try {
+        if ("getSource" == request) {
+          sendResponse("wavevideo");
+          return;
+        }
+        if (typeof request === "object" && "settings" in request) {
+          settings = request.settings;
+          sendResponse(true);
+          return;
+        }
+      } catch (e) {}
+      sendResponse(false);
+    });
+  }
 
   // Iniciar observación
   const startObserving = () => {

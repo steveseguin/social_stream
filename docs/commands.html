@@ -315,6 +315,51 @@ wss://io.socialstream.ninja/join/SESSION_ID</pre>
 								<td>Sends external content as a chat message</td>
 								<td><code>https://io.socialstream.ninja/SESSIONID/extContent/null/{"chatname":"User","chatmessage":"Hello"}</code></td>
 							</tr>
+							<tr>
+								<td><code>pin</code></td>
+								<td>Pins an existing dock message by message ID, or pins a full message object. Requires <code>dock.html</code> open on the same session.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/pin/null/MESSAGE_MID</code></td>
+							</tr>
+							<tr>
+								<td><code>unpin</code></td>
+								<td>Unpins an existing dock message by message ID. Use the target field/path segment for a labeled dock.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/unpin/null/MESSAGE_MID</code></td>
+							</tr>
+							<tr>
+								<td><code>nextPinned</code></td>
+								<td>Features the first pinned dock message.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/nextPinned</code></td>
+							</tr>
+							<tr>
+								<td><code>removefromwaitlist</code></td>
+								<td>Removes the first active waitlist entry, or the numbered active entry in <code>value</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/removefromwaitlist/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>highlightwaitlist</code></td>
+								<td>Highlights the first active waitlist entry, or the numbered active entry in <code>value</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/highlightwaitlist/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>stopentries</code> / <code>startentries</code></td>
+								<td>Stops or resumes new waitlist entries without clearing the existing list</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/stopentries</code></td>
+							</tr>
+							<tr>
+								<td><code>selectwinner</code></td>
+								<td>Selects one or more random waitlist/draw winners</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/selectwinner/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>waitlistmessage</code></td>
+								<td>Sets the waitlist or draw title message shown on the waitlist page</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/waitlistmessage/null/Type%20!join%20to%20enter</code></td>
+							</tr>
+							<tr>
+								<td><code>resetwaitlist</code></td>
+								<td>Clears the waitlist and reopens entries</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/resetwaitlist</code></td>
+							</tr>
 						</tbody>
 					</table>
 				</div>

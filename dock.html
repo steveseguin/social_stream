@@ -5630,7 +5630,7 @@
 				'new_follower','follow','followed',
 				'new_subscriber','subscription_gift','resub','sponsorship','giftpurchase','giftredemption','membermilestone',
 				'subscription','subgift','membership','new_member','new_membership','newmember','upgraded_membership','membership_upgrade','membership_milestone','member_milestone','gift_membership','membership_gift','community_gift',
-				'donation','supersticker','thankyou','jeweldonation','tip','support',
+				'donation','superchat','supersticker','thankyou','jeweldonation','tip','support',
 				'cheer','bits',
 				'raid','host','hosting'
 			]);
@@ -8078,6 +8078,32 @@
 						} else{
 							console.log("No message found to feature that hasn't already been featured");
 						}
+					} else if (data.action == "pin" || data.action == "unpin") {
+						var pinValues = Array.isArray(data.value) ? data.value : [data.value];
+						pinValues.forEach(function(pinValue) {
+							var pinElement = false;
+							if (pinValue && typeof pinValue === "object") {
+								var pinId = pinValue.id || pinValue.mid;
+								if (pinId) {
+									pinElement = document.querySelector(dataAttributeSelector("data-mid", pinId));
+								}
+								if (!pinElement && data.action == "pin") {
+									pinElement = processInput(pinValue, true);
+								}
+							} else if (pinValue !== undefined && pinValue !== null && pinValue !== "") {
+								pinElement = document.querySelector(dataAttributeSelector("data-mid", pinValue));
+							}
+							if (!pinElement) {
+								return;
+							}
+							if (data.action == "pin") {
+								pinIt(pinElement);
+							} else {
+								unpinIt(pinElement);
+							}
+							applyHiddenState(pinElement);
+						});
+						return true;
 					} else if (data.action === "toggleTTS" || data.action === "tts") {
 						if ("value" in data){
 							if (data.value == "toggle") {
@@ -11400,6 +11426,8 @@
 					node.rawContents = data;
 					
 					const metaFeatured = data.meta && data.meta.featured;
+					const metaPinnedTarget = data.meta && data.meta.pinnedTarget;
+					const metaPinned = data.meta && data.meta.pinned === true && (!metaPinnedTarget || metaPinnedTarget === thisLabel);
 
 					if (!suppressLiveSideEffects) {
 						if (metaFeatured) {
@@ -11557,6 +11585,10 @@
 						}
 						
 						if (autoPinDonations && data.hasDonation) {
+							pinIt(node);
+						}
+
+						if (metaPinned) {
 							pinIt(node);
 						}
 						

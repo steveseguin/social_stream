@@ -77,7 +77,7 @@ As of the 2026-06-24 extraction pass:
 - `manifest.json` contains 155 content-script entries.
 - `sources/*.js` contains 143 top-level source scripts.
 - `sources/websocket/*` contains 28 source-page HTML/JS files.
-- `shared/config/settingsDefinitions.js` contains 327 popup setting definitions.
+- `shared/config/settingsDefinitions.js` contains 333 popup setting definitions.
 - The generated settings categories include 36 LLM/API settings, many TTS provider settings, command settings, filters, source toggles, webhook automation, MIDI, printer control, Spotify/now-playing, custom injection, and management controls.
 
 These counts are reference signals, not user-facing guarantees.

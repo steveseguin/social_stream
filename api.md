@@ -290,11 +290,14 @@ When a message is sent, it goes to the specified output channel. Those who have 
    - Example: `{"action": "extContent", "value": "{\"chatname\":\"User\",\"chatmessage\":\"Hello\"}"}`
 
 5. **Waitlist Operations**
-   - Remove: `{"action": "removefromwaitlist", "value": 1}`
-   - Highlight: `{"action": "highlightwaitlist", "value": 2}`
+   - Remove the first active entry: `{"action": "removefromwaitlist", "value": 1}`
+   - Highlight an active entry: `{"action": "highlightwaitlist", "value": 2}`
    - Reset: `{"action": "resetwaitlist"}`
+   - Stop accepting new entries: `{"action": "stopentries"}`
+   - Start accepting new entries again: `{"action": "startentries"}`
+   - Set the waitlist/draw title message: `{"action": "waitlistmessage", "value": "Type !join to enter!"}`
    - Download: `{"action": "downloadwaitlist"}`
-   - Select Winner: `{"action": "selectwinner", "value": 1}`
+   - Select winners: `{"action": "selectwinner", "value": 1}`
 
 6. **Clear Messages**
    - All: `{"action": "clear"}` or `{"action": "clearAll"}`
@@ -319,14 +322,11 @@ When a message is sent, it goes to the specified output channel. Those who have 
 12. **Get User History**
     - `{"action": "getUserHistory", "value": {"chatname": "username", "type": "twitch"}}`
 
-13. **Waitlist Message**
-    - `{"action": "waitlistmessage", "value": "Your custom message"}`
-
-14. **Draw Mode**
+13. **Draw Mode**
     - `{"action": "drawmode", "value": true}`
     - `{"action": "drawmode", "value": "toggle"}`
 
-15. **Emote-only Filter**
+14. **Emote-only Filter**
     - Toggle or set the global emote-only mode that keeps only emotes/emoji from chat messages. Messages that become empty (and have no donation/content image) after filtering are dropped.
     - Examples:
       - `{"action": "emoteonly", "value": "toggle"}`
@@ -438,6 +438,28 @@ Note: Not all commands support or require this callback mechanism.
 4. **Queuing and Pinning Messages**
    - Queue: Hold CTRL (cmd on Mac) and click messages in the dock
    - Pin: Hold ALT and click messages to pin them at the top
+   - API pin existing row: `{"action":"pin","value":"MESSAGE_MID"}`
+   - API pin by full message object: `{"action":"pin","value":{"id":"external-1","chatname":"User","chatmessage":"Pinned note","type":"api"}}`
+   - API unpin row: `{"action":"unpin","value":"MESSAGE_MID"}`
+   - API feature the first pinned row: `{"action":"nextPinned"}`
+   - Existing dock sync payloads are still supported: `{"pin":["MESSAGE_MID"]}` and `{"unpin":["MESSAGE_MID"]}`
+
+   Pinning is handled by `dock.html`, so a dock must be open on the same session. If you have multiple docks, use a dock `label` and target it:
+
+   ```javascript
+   {"action":"pin","target":"moderator-dock","value":"MESSAGE_MID"}
+   {"action":"unpin","target":"moderator-dock","value":"MESSAGE_MID"}
+   {"action":"nextPinned","target":"moderator-dock"}
+   ```
+
+   HTTP GET examples:
+
+   ```text
+   https://io.socialstream.ninja/SESSION_ID/pin/null/MESSAGE_MID
+   https://io.socialstream.ninja/SESSION_ID/unpin/null/MESSAGE_MID
+   https://io.socialstream.ninja/SESSION_ID/nextPinned
+   https://io.socialstream.ninja/SESSION_ID/pin/moderator-dock/MESSAGE_MID
+   ```
 
 5. **MIDI Hotkey Support**
    - Toggle in the extension menu
@@ -753,7 +775,10 @@ The dock page responds to various API actions, including:
 5. `autoShow`: Controls automatic message display
 6. `content`: Processes and displays new content
 7. `feature`: Features the next unfeatured message
-8. `toggleTTS` or `tts`: Controls Text-to-Speech functionality
+8. `pin`: Pins an existing dock message by `mid`, or pins a full message object.
+9. `unpin`: Unpins an existing dock message by `mid`.
+10. `nextPinned`: Features the first pinned message.
+11. `toggleTTS` or `tts`: Controls Text-to-Speech functionality
 
 ### Example API Usage
 
@@ -827,9 +852,11 @@ The extension processes various API actions, including:
 6. `highlightwaitlist`: Highlights an entry in the waitlist.
 7. `resetwaitlist`: Resets the entire waitlist.
 8. `stopentries`: Stops accepting new entries.
-9. `downloadwaitlist`: Initiates a download of the waitlist.
-10. `selectwinner`: Selects a random winner from the waitlist.
-11. `drawmode`: Toggles draw mode for giveaways/waitlists.
+9. `startentries`, `openentries`, or `resumeentries`: Starts accepting new entries again.
+10. `waitlistmessage` or `setwaitlistmessage`: Sets the waitlist/draw title message.
+11. `downloadwaitlist`: Initiates a download of the waitlist.
+12. `selectwinner`: Selects one or more random winners from the waitlist.
+13. `drawmode`: Toggles draw mode for giveaways/waitlists.
 
 .. and most actions that targets the dock can be sent via the extension API or other overlays.
 
@@ -947,7 +974,22 @@ The waitlist page processes various types of messages:
 
 ### API Actions
 
-The waitlist page responds to various API actions, including:
+The normal remote API command path controls waitlist state in the extension/app. The waitlist page then receives display payloads from that state.
+
+Remote API actions:
+
+```javascript
+{ "action": "removefromwaitlist", "value": 1 }
+{ "action": "highlightwaitlist", "value": 1 }
+{ "action": "resetwaitlist" }
+{ "action": "stopentries" }
+{ "action": "startentries" }
+{ "action": "waitlistmessage", "value": "Type !join to enter!" }
+{ "action": "selectwinner", "value": 1 }
+{ "action": "drawmode", "value": "toggle" }
+```
+
+Display payloads handled by `waitlist.html` include:
 
 1. `waitlistmessage`: Sets a custom message for the waitlist.
    ```javascript
@@ -1015,8 +1057,11 @@ removefromwaitlist
 highlightwaitlist
 resetwaitlist
 stopentries
+startentries
+waitlistmessage
 downloadwaitlist
 selectwinner
+drawmode
 ```
 
 ## Poll Control via API

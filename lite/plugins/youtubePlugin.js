@@ -1297,7 +1297,7 @@ export class YoutubePlugin extends BasePlugin {
       return 'giftredemption';
     }
     if (type === 'giftevent' || snippet?.giftEventDetails || snippet?.giftDetails) {
-      return null;
+      return 'jeweldonation';
     }
     return type;
   }
@@ -1912,7 +1912,7 @@ export class YoutubePlugin extends BasePlugin {
     }
 
     if (normalized === 'giftevent' || snippet.giftEventDetails || snippet.giftDetails) {
-      return null;
+      return 'jeweldonation';
     }
 
     return normalized;

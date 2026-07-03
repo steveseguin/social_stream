@@ -139,7 +139,7 @@ Product surface: static metadata validation only. The checker evaluated generate
 
 What this supports:
 
-- `shared/config/settingsDefinitions.js` currently exposes 327 settings across 54 categories.
+- `shared/config/settingsDefinitions.js` currently exposes 333 settings across 55 categories.
 - The checked setting definitions have no duplicate object-key tokens, missing generated category references, or missing required `type`/`category`/`description` fields.
 - `shared/config/urlParameters.js` currently exposes 255 generated URL parameter items across 23 sections and 2 groups.
 - The checked URL parameter items have no missing required `key`/`displayName`/`aliases`/`description` fields.

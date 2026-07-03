@@ -5,6 +5,8 @@
 const VELORA_API_BASE = 'https://api.velora.tv';
 const VELORA_WS_URL = 'wss://api.velora.tv/ws/events';
 const VELORA_EVENTS_SSE_URL = `${VELORA_API_BASE}/api/events/stream`;
+const VELORA_CHAT_HISTORY_INTERVAL_MS = 3000;
+const VELORA_CHAT_HISTORY_LIMIT = 50;
 const DEFAULT_VELORA_AUTH_BASE = 'https://sso.socialstream.ninja/auth/velora';
 const DEFAULT_VELORA_CLIENT_ID = 'velora_9c9ae006ec8bc256';
 const DEFAULT_VELORA_REDIRECT_URI = 'https://sso.socialstream.ninja/auth/velora/callback';
@@ -120,7 +122,16 @@ const state = {
     eventsConnected: false,
     eventTransport: '',
     connectedChannel: '',
-    hideMetrics: false
+    hideMetrics: false,
+    chatHistoryTimer: null,
+    chatHistoryChannel: '',
+    chatHistoryInFlight: false,
+    chatHistoryLastError: '',
+    chatHistoryHadSuccess: false,
+    chatHistoryStartedAt: 0,
+    chatHistoryResolveCache: {},
+    chatHistoryResolvePending: {},
+    processedChatMessages: new Set()
 };
 
 const els = {};
@@ -438,6 +449,205 @@ function renderVeloraMessageHtml(message) {
         html: html || escapeHtml(raw),
         emotes: emotes
     };
+}
+
+function getObjectValue(obj, keys) {
+    if (!obj) return '';
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== '') {
+            return obj[key];
+        }
+    }
+    return '';
+}
+
+function normalizeVeloraBadges(badges) {
+    const badgeList = [];
+    if (!Array.isArray(badges)) {
+        return badgeList;
+    }
+    badges.forEach(function (badge) {
+        let badgeUrl = '';
+        if (!badge) return;
+        if (typeof badge === 'string') {
+            if (/^https?:\/\//i.test(badge)) {
+                badgeUrl = badge;
+            }
+        } else if (typeof badge === 'object') {
+            badgeUrl = getObjectValue(badge, [
+                'url',
+                'imageUrl',
+                'imageURL',
+                'image',
+                'icon',
+                'src',
+                'badgeUrl',
+                'staticAssetUrl'
+            ]);
+        }
+        if (badgeUrl) {
+            badgeList.push(String(badgeUrl));
+        }
+    });
+    return badgeList;
+}
+
+function getVeloraChatText(raw) {
+    let text = getObjectValue(raw, ['text', 'message', 'content', 'body']);
+    if (text && typeof text === 'object') {
+        text = getObjectValue(text, ['text', 'message', 'content', 'body']);
+    }
+    return text === undefined || text === null ? '' : String(text);
+}
+
+function normalizeVeloraChatMessage(raw) {
+    if (!raw || typeof raw !== 'object') {
+        return null;
+    }
+    if (raw.message && typeof raw.message === 'object' && !raw.text && !raw.content && !raw.messageId && !raw.id) {
+        raw = raw.message;
+    }
+
+    const user = raw.user || raw.sender || raw.author || {};
+    const card = raw.card || null;
+    const cardName = card ? getObjectValue(card, ['name', 'title']) : '';
+    const text = getVeloraChatText(raw) || (cardName ? `[${cardName}]` : '');
+    const username = getObjectValue(raw, ['username', 'login']) || getObjectValue(user, ['username', 'login']);
+    const displayName = getObjectValue(raw, ['displayName', 'display_name', 'name']) ||
+        getObjectValue(user, ['displayName', 'display_name', 'name']) ||
+        username;
+
+    if (raw.isSystem && !text && !cardName) {
+        return null;
+    }
+
+    return {
+        messageId: getObjectValue(raw, ['messageId', 'message_id', 'id', '_id', 'uuid']),
+        userId: getObjectValue(raw, ['userId', 'user_id']) || getObjectValue(user, ['id', 'userId', 'user_id']),
+        username: username,
+        displayName: displayName,
+        message: text,
+        badges: normalizeVeloraBadges(raw.badges || user.badges || []),
+        isMod: !!(getObjectValue(raw, ['isMod', 'is_mod', 'moderator']) || getObjectValue(user, ['isMod', 'is_mod', 'moderator'])),
+        isVip: !!(getObjectValue(raw, ['isVip', 'is_vip', 'vip']) || getObjectValue(user, ['isVip', 'is_vip', 'vip'])),
+        isSubscriber: !!(getObjectValue(raw, ['isSubscriber', 'is_subscriber', 'subscriber']) || getObjectValue(user, ['isSubscriber', 'is_subscriber', 'subscriber'])),
+        subscriberMonths: getObjectValue(raw, ['subscriberMonths', 'subscriber_months']) || getObjectValue(user, ['subscriberMonths', 'subscriber_months']),
+        color: getObjectValue(raw, ['color', 'accentColor', 'accent_color']) || getObjectValue(user, ['color', 'accentColor', 'accent_color']),
+        avatarUrl: getObjectValue(raw, ['avatarUrl', 'avatar_url', 'profileImageUrl']) || getObjectValue(user, ['avatarUrl', 'avatar_url', 'profileImageUrl', 'image']),
+        card: card,
+        isSystem: !!(raw.isSystem || raw.is_system),
+        timestamp: getObjectValue(raw, ['timestamp', 'createdAt', 'created_at', 'sentAt', 'sent_at'])
+    };
+}
+
+function rememberChatMessage(message) {
+    if (!message) {
+        return false;
+    }
+    const key = message.messageId
+        ? `chat-id|${message.messageId}`
+        : `chat-text|${message.timestamp || ''}|${message.displayName || message.username || ''}|${message.message || ''}`;
+    if (!key || state.processedChatMessages.has(key)) {
+        return false;
+    }
+    state.processedChatMessages.add(key);
+    while (state.processedChatMessages.size > 300) {
+        state.processedChatMessages.delete(state.processedChatMessages.values().next().value);
+    }
+    return true;
+}
+
+function getChatMessageTimestampValue(message) {
+    try {
+        const stamp = getObjectValue(message, ['timestamp', 'createdAt', 'created_at', 'sentAt', 'sent_at']);
+        const value = Date.parse(stamp);
+        return Number.isNaN(value) ? 0 : value;
+    } catch (e) {}
+    return 0;
+}
+
+function getHistoryMessagesFromResponse(data) {
+    if (Array.isArray(data)) {
+        return data;
+    }
+    if (!data || typeof data !== 'object') {
+        return [];
+    }
+    if (Array.isArray(data.messages)) {
+        return data.messages;
+    }
+    if (Array.isArray(data.data)) {
+        return data.data;
+    }
+    if (data.message && typeof data.message === 'object') {
+        return [data.message];
+    }
+    return [];
+}
+
+function looksLikeVeloraId(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || ''));
+}
+
+function getVeloraChannelIdFromResponse(data) {
+    if (!data || typeof data !== 'object') {
+        return '';
+    }
+    return getObjectValue(data, ['id', 'userId', 'user_id', 'channelId', 'channel_id']) ||
+        getObjectValue(data.user || data.channel || {}, ['id', 'userId', 'user_id', 'channelId', 'channel_id']) ||
+        getObjectValue(data.data || {}, ['id', 'userId', 'user_id', 'channelId', 'channel_id']);
+}
+
+async function fetchVeloraJson(url) {
+    const response = await fetch(url, {
+        cache: 'no-store',
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
+}
+
+async function resolveChatHistoryChannelId(channel) {
+    const normalized = normalizeChannelName(channel);
+    if (!normalized) {
+        return '';
+    }
+    if (looksLikeVeloraId(normalized)) {
+        return normalized;
+    }
+    if (state.chatHistoryResolveCache[normalized]) {
+        return state.chatHistoryResolveCache[normalized];
+    }
+    if (state.chatHistoryResolvePending[normalized]) {
+        return state.chatHistoryResolvePending[normalized];
+    }
+
+    state.chatHistoryResolvePending[normalized] = fetchVeloraJson(`${VELORA_API_BASE}/api/users/${encodeURIComponent(channel)}`)
+        .then(function (data) {
+            return getVeloraChannelIdFromResponse(data) || '';
+        })
+        .catch(function () {
+            return fetchVeloraJson(`${VELORA_API_BASE}/api/streams/user/${encodeURIComponent(channel)}`)
+                .then(function (data) {
+                    return getVeloraChannelIdFromResponse(data) || '';
+                });
+        })
+        .then(function (resolved) {
+            state.chatHistoryResolveCache[normalized] = normalizeChannelName(resolved) || normalized;
+            delete state.chatHistoryResolvePending[normalized];
+            return state.chatHistoryResolveCache[normalized];
+        })
+        .catch(function () {
+            delete state.chatHistoryResolvePending[normalized];
+            return normalized;
+        });
+
+    return state.chatHistoryResolvePending[normalized];
 }
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
@@ -837,6 +1047,92 @@ async function loadUserProfile() {
 
 // ─── Viewer count polling ─────────────────────────────────────────────────────
 
+function getChatHistoryChannelId() {
+    return normalizeChannelName(
+        state.requestedChannel ||
+        state.authUser?.id ||
+        state.authUser?.username ||
+        state.authUser?.login ||
+        getAuthedChannelName()
+    );
+}
+
+async function pollChatHistory() {
+    const requestedChannel = getChatHistoryChannelId();
+    if (!requestedChannel || state.chatHistoryInFlight) {
+        return;
+    }
+
+    state.chatHistoryInFlight = true;
+    try {
+        const channelId = await resolveChatHistoryChannelId(requestedChannel);
+        if (!channelId) {
+            return;
+        }
+
+        const channelKey = `${requestedChannel}|${channelId}`;
+        if (state.chatHistoryChannel !== channelKey) {
+            state.chatHistoryChannel = channelKey;
+            state.processedChatMessages.clear();
+            state.chatHistoryLastError = '';
+            state.chatHistoryHadSuccess = false;
+            state.chatHistoryStartedAt = Date.now();
+        }
+
+        const data = await fetchVeloraJson(`${VELORA_API_BASE}/api/chat/channels/${encodeURIComponent(channelId)}/history?limit=${VELORA_CHAT_HISTORY_LIMIT}`);
+        const messages = getHistoryMessagesFromResponse(data).slice();
+        if (messages.length > 1 && getChatMessageTimestampValue(messages[0]) > getChatMessageTimestampValue(messages[messages.length - 1])) {
+            messages.reverse();
+        }
+        messages.forEach(function (message) {
+            const timestampValue = getChatMessageTimestampValue(message);
+            if (!state.chatHistoryHadSuccess && (!timestampValue || timestampValue < state.chatHistoryStartedAt)) {
+                rememberChatMessage(normalizeVeloraChatMessage(message));
+                return;
+            }
+            handleChatMessage(message);
+        });
+
+        if (!state.chatHistoryHadSuccess) {
+            state.chatHistoryHadSuccess = true;
+            state.chatHistoryLastError = '';
+            addEventLogEntry(`Chat history polling active for @${requestedChannel}.`, 'info');
+        }
+    } catch (err) {
+        const message = err && err.message ? err.message : String(err || 'Unknown error');
+        if (message !== state.chatHistoryLastError) {
+            state.chatHistoryLastError = message;
+            addEventLogEntry(`Chat history polling unavailable: ${message}`, 'warn');
+        }
+    } finally {
+        state.chatHistoryInFlight = false;
+    }
+}
+
+function startChatHistoryPoll() {
+    if (!getChatHistoryChannelId()) {
+        return;
+    }
+    if (!state.chatHistoryTimer) {
+        pollChatHistory();
+        state.chatHistoryTimer = setInterval(pollChatHistory, VELORA_CHAT_HISTORY_INTERVAL_MS);
+        return;
+    }
+    pollChatHistory();
+}
+
+function stopChatHistoryPoll() {
+    if (state.chatHistoryTimer) {
+        clearInterval(state.chatHistoryTimer);
+        state.chatHistoryTimer = null;
+    }
+    state.chatHistoryChannel = '';
+    state.chatHistoryInFlight = false;
+    state.chatHistoryLastError = '';
+    state.chatHistoryHadSuccess = false;
+    state.chatHistoryStartedAt = 0;
+}
+
 async function pollViewerCount() {
     if (!state.tokens?.access_token || !state.authUser) return;
     try {
@@ -972,6 +1268,7 @@ function applyConnectedChannelInfo(data, transportLabel) {
     }
 
     startViewerPoll();
+    startChatHistoryPoll();
 }
 
 function scheduleSseReconnect(reason) {
@@ -1115,12 +1412,14 @@ function startSocketConnectTimeout() {
 function connectSocket() {
     if (!state.tokens?.access_token) return;
     if (typeof io !== 'function') {
+        startChatHistoryPoll();
         connectSse('socket.io client not loaded. Using SSE instead.');
         return;
     }
 
     disconnectSocket();
     resetEventConnectionState();
+    startChatHistoryPoll();
 
     const socket = io(VELORA_WS_URL, {
         auth: { token: state.tokens.access_token },
@@ -1242,6 +1541,9 @@ function handleEvent(payload) {
 function handleChatMessage(data) {
     if (!data) return;
 
+    const normalized = normalizeVeloraChatMessage(data);
+    if (!normalized) return;
+
     const {
         messageId,
         userId,
@@ -1254,9 +1556,10 @@ function handleChatMessage(data) {
         isSubscriber,
         subscriberMonths,
         color,
+        avatarUrl,
         card,
         isSystem
-    } = data;
+    } = normalized;
 
     const name = displayName || username || '';
     const text = message || '';
@@ -1265,6 +1568,8 @@ function handleChatMessage(data) {
 
     // Skip pure system messages with no text
     if (isSystem && !text && !card) return;
+    if (!name || (!text && !card)) return;
+    if (!rememberChatMessage(normalized)) return;
 
     addChatFeedMessage(name, renderedMessage.html, badges, isMod, isVip, isSubscriber, color);
 
@@ -1289,7 +1594,7 @@ function handleChatMessage(data) {
         textColor: '',
         nameColor: color || '',
         chatmessage: msgText,
-        chatimg: '',
+        chatimg: avatarUrl || '',
         hasDonation: '',
         membership: isSubscriber ? (subscriberMonths ? `${subscriberMonths} month subscriber` : 'Subscriber') : '',
         contentimg: contentImg,
@@ -1870,6 +2175,7 @@ function bindEvents() {
     if (els.signOut) {
         els.signOut.addEventListener('click', () => {
             disconnectSocket();
+            stopChatHistoryPoll();
             clearAuthState();
             updateAuthUI();
             setSocketStatus('disconnected');
@@ -1926,6 +2232,7 @@ async function init() {
     wirePostMessageBridge();
     notifyBridgeStatus();
     updateAuthUI();
+    startChatHistoryPoll();
 
     // Handle OAuth redirect callback
     const wasCallback = await handleAuthCallback();

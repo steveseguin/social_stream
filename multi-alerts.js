@@ -86,6 +86,7 @@ const DONATION_EVENTS = new Set([
   'tiktok_gift',
   'title_gifter',
   'top_gifter',
+  'superchat',
   'supersticker',
   'thankyou',
   'jeweldonation',
@@ -110,8 +111,8 @@ const EVENT_ALIASES = Object.freeze({
   'subscription_renewal': 'resub',
   'member_milestone': 'membermilestone',
   'membership_milestone': 'membermilestone',
-  'super_chat': 'donation',
-  'superchat': 'donation',
+  'super_chat': 'superchat',
+  'superchat': 'superchat',
   'super_sticker': 'supersticker',
   'gift_send': 'gift_sent',
   'gift_sent_to_user': 'gift_sent',
@@ -292,6 +293,10 @@ function normalizeText(value) {
 
 function normalizeKey(value) {
   return normalizeText(value).toLowerCase();
+}
+
+function normalizeCssToken(value) {
+  return normalizeKey(value).replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'unknown';
 }
 
 function pickFirstText(candidates) {
@@ -813,6 +818,10 @@ function isGiftEventKey(eventKey) {
     eventKey === 'subscription_gift';
 }
 
+function isSuperChatEventKey(eventKey) {
+  return eventKey === 'superchat';
+}
+
 function pickActorName(payload = {}) {
   if (isGiftEventKey(pickEventKey(payload))) {
     const giftActor = pickGiftActorName(payload);
@@ -1230,6 +1239,9 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount, payload =
 function buildTitle(category, eventKey) {
   if (category === ALERT_CATEGORIES.DONATION && isGiftEventKey(eventKey)) {
     return getTranslation('alert-title-new-gift', 'New Gift');
+  }
+  if (category === ALERT_CATEGORIES.DONATION && isSuperChatEventKey(eventKey)) {
+    return getTranslation('alert-title-new-super-chat', 'New Super Chat');
   }
   return getCategoryLabel(category) || getTranslation('alert-title-new-alert', 'New Alert');
 }
@@ -1994,7 +2006,10 @@ function renderAlert(model) {
   const article = document.createElement('article');
   const styleKey = settings.styles[model.category] || DEFAULT_ALERT_STYLE;
   const accentRgb = toAccentRgbTriplet(model.accent);
-  article.className = `alert-card theme-${styleKey} category-${model.category}`;
+  const eventClass = normalizeCssToken(model.eventKey);
+  article.className = `alert-card theme-${styleKey} category-${model.category} event-${eventClass}`;
+  article.dataset.eventKey = model.eventKey || '';
+  article.dataset.alertCategory = model.category || '';
   article.style.setProperty('--alert-accent', model.accent);
   article.style.setProperty('--alert-accent-rgb', accentRgb);
   article.style.setProperty('--progress-duration', `${settings.showTime}ms`);

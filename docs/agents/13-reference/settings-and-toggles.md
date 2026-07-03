@@ -51,7 +51,7 @@ On 2026-06-24, focused generated metadata validation also inspected `shared/conf
 
 Evidence label: `focused-metadata-validation`; not runtime-tested.
 
-What this supports for settings: `shared/config/settingsDefinitions.js` currently exposes 327 settings across 54 categories with no duplicate object-key tokens, missing generated category references, or missing required `type`/`category`/`description` fields.
+What this supports for settings: `shared/config/settingsDefinitions.js` currently exposes 333 settings across 55 categories with no duplicate object-key tokens, missing generated category references, or missing required `type`/`category`/`description` fields.
 
 What this supports for URL parameters: `shared/config/urlParameters.js` currently exposes 255 generated URL parameter items across 23 sections and 2 groups with no missing required `key`/`displayName`/`aliases`/`description` fields.
 
@@ -63,8 +63,8 @@ What it does not support: popup UI behavior, generated link behavior, page-speci
 
 As of the 2026-06-24 extraction pass:
 
-- `shared/config/settingsDefinitions.js` exposes 327 popup setting definitions.
-- Setting types: 170 boolean toggles, 98 text fields, 49 number fields, and 10 select fields.
+- `shared/config/settingsDefinitions.js` exposes 333 popup setting definitions.
+- Setting types: 171 boolean toggles, 103 text fields, 49 number fields, and 10 select fields.
 - `shared/config/urlParameters.js` exposes 255 generated URL parameter items across 23 sections and 2 groups, all current items under the dock/streaming-overlay group plus an empty placeholder group for other overlays.
 
 Do not hard-code these counts in user support answers without checking the generated files again; they are useful for agent orientation and extraction tracking.
@@ -129,6 +129,7 @@ The generated category list below comes from `SETTINGS_CATEGORY_INFO` and curren
 | Must enable the trigger to use | 5 | Trigger-gated features. If a command does nothing, check these first. |
 | Other customization options | 7 | Mixed customization controls. Search exact key before answering. |
 | Configure select-a-winner draw mode | 1 | Giveaway/draw behavior. Cross-check giveaway docs. |
+| Chat control commands | 6 | Waitlist control commands. Requires waitlist mode and role-gated chat users. |
 | Poll Settings | 10 | Poll behavior. Cross-check `poll.html` and waitlist/polls/games docs. |
 | Top Bar Settings | 1 | Top bar display/tool behavior. |
 | Custom GIF Commands Settings | 1 | GIF command setup. Cross-check Giphy/Tenor settings. |

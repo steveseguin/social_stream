@@ -1315,8 +1315,37 @@
 
 		var giftedmemembership = ele.querySelector("#primary-text.ytd-sponsorships-live-chat-header-renderer");
 
-		if (treatAsMemberChat) {
-			if (chatmessage) {
+		if (treatAsMemberChat || eventType === "giftpurchase" || eventType === "giftredemption") {
+			if (eventType === "giftpurchase") {
+			  try {
+				var giftedBy = ele.querySelector("#primary-text");
+				if (giftedBy) {
+				  var giftCount = findSingleInteger(giftedBy.innerText) || 1;
+				  var membershipWord = giftCount === 1 ? getTranslation("membership-singular", "membership") : getTranslation("membership-plural", "memberships");
+				  chatmessage = giftedBy.innerText.trim();
+				  subtitle = giftCount + " " + membershipWord;
+				  hasMembership = "gift_giver";
+				  eventType = "giftpurchase";
+				}
+			  } catch (e) {
+				console.error("Error processing gift purchase:", e);
+			  }
+			} else if (eventType === "giftredemption") {
+			  try {
+				var messageElement = ele.querySelector("#message");
+				if (messageElement) {
+				  chatmessage = messageElement.innerText.trim();
+				  eventType = "giftredemption";
+				  var gifterElement = messageElement.querySelector(".bold.italic");
+				  if (gifterElement) {
+					subtitle = getTranslation("gifted-by", "Gifted by") + " " + gifterElement.innerText;
+				  }
+				  hasMembership = getTranslation("membership", "MEMBERSHIP");
+				}
+			  } catch (e) {
+				console.error("Error processing gift redemption:", e);
+			  }
+			} else if (chatmessage) {
 				//if (mod) {
 				//	hasMembership = chatmembership || getTranslation("moderator-chat", "MODERATOR");
 				//} else {
@@ -1338,36 +1367,7 @@
 			  hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
 			  chatmessage = getAllContentNodes(giftedmemembership);
 			  eventType = "sponsorship";
-			  
-			} else if (eventType === "giftpurchase") {
-			  try {
-				var giftedBy = ele.querySelector("#primary-text");
-				if (giftedBy) {
-				  var giftCount = findSingleInteger(giftedBy.innerText) || 1;
-				  chatmessage = giftedBy.innerText.trim();
-				  hasDonation = giftCount + " " + getTranslation("gifted-memberships", "Gifted");
-				  donoValue = 5 * giftCount; // Assuming $5 per membership
-				  hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
-				  eventType = "giftpurchase";
-				}
-			  } catch (e) {
-				console.error("Error processing gift purchase:", e);
-			  }
-			} else if (eventType === "giftredemption") {
-			  try {
-				var messageElement = ele.querySelector("#message");
-				if (messageElement) {
-				  chatmessage = messageElement.innerText.trim();
-				  eventType = "giftredemption";
-				  var gifterElement = messageElement.querySelector(".bold.italic");
-				  if (gifterElement) {
-					subtitle = getTranslation("gifted-by", "Gifted by") + " " + gifterElement.innerText;
-				  }
-				  hasMembership = getTranslation("membership", "MEMBERSHIP");
-				}
-			  } catch (e) {
-				console.error("Error processing gift redemption:", e);
-			  }
+
 			} else {
 				// Consolidated handler for new members, renewals, and upgrades.
 				try {
@@ -1478,24 +1478,6 @@
 			return 9;
 		}
 
-		if (giftedmemembership && !hasDonation) {
-			try {
-				const match = giftedmemembership.innerText.match(/\b\d+\b/);
-				hasDonation = match ? parseInt(match[0], 10) : null;
-				if (hasDonation) {
-					donoValue = 5*hasDonation;
-					if (hasDonation==1){
-						hasDonation += " " + getTranslation("gifted-membership", "Gifted");
-					} else {
-						hasDonation += " " + getTranslation("gifted-memberships", "Gifted");
-					}
-					
-				}
-			} catch (e) {
-				hasDonation = "";
-			}
-		}
-		
 		if (chatsticker) {
 			if (!eventType) {
 				eventType = "supersticker";

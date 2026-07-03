@@ -163,7 +163,7 @@ Use this page when an AI agent needs a short, practical answer to a common SSN s
 | User Question | Short Answer | Route To |
 | --- | --- | --- |
 | Is this a setting or URL parameter? | Popup settings persist. URL parameters affect a page at load time. Some changes need a reload or source/window refresh. | `13-reference/settings-and-toggles.md`, `13-reference/settings-change-impact-matrix.md` |
-| What is the exact setting key? | Use the generated setting key index. It lists 327 popup setting keys from current shared config. | `13-reference/settings-key-index.md` |
+| What is the exact setting key? | Use the generated setting key index. It lists 333 popup setting keys from current shared config. | `13-reference/settings-key-index.md` |
 | What is the exact URL parameter? | Use the generated URL parameter index. It lists 255 generated URL parameter entries and notes current duplicate alias findings for `password` and normalized `strokecolor`. | `13-reference/url-parameter-index.md` |
 | Why did changing a URL not affect the page? | Many URL parameters are read at page load. Refresh the target page and confirm the parameter belongs to that page. | `13-reference/url-parameters.md` |
 | Can I share my settings screenshot? | Hide session IDs, passwords, API keys, webhooks, private endpoints, and user/channel identifiers where possible. | `13-reference/settings-and-toggles.md` |

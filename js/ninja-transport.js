@@ -65,26 +65,7 @@
 
       // Publish a data-only stream whose streamID equals the room's ID
       // so overlays can subscribe to it, mirroring the iframe's &push=room behavior.
-      if (typeof this.vdo.announce === 'function') {
-        await this.vdo.announce({
-          streamID: publishStreamID,
-          label: this.opts.label || 'SocialStream',
-          // Keep metadata minimal; data-channel only
-          allowchunked: true,
-          iframe: false,
-          widget: false,
-        });
-      } else if (typeof this.vdo._startListingBroadcast === 'function') {
-        if (this.vdo.state) {
-          this.vdo.state.streamID = publishStreamID;
-        }
-        this.vdo._startListingBroadcast();
-      } else if (typeof this.vdo._sendListing === 'function') {
-        if (this.vdo.state) {
-          this.vdo.state.streamID = publishStreamID;
-        }
-        await this.vdo._sendListing();
-      }
+      await this._announcePublishStream(publishStreamID);
 
       // Auto-view handlers already enabled above
 
@@ -92,6 +73,43 @@
       this._syncGlobalPeers();
       this.dispatchEvent(new CustomEvent('ready'));
       return true;
+    }
+
+    async _announcePublishStream(publishStreamID) {
+      try {
+        if (typeof this.vdo.announce === 'function') {
+          await this.vdo.announce({
+            streamID: publishStreamID,
+            label: this.opts.label || 'SocialStream',
+            // Keep metadata minimal; data-channel only
+            allowchunked: true,
+            iframe: false,
+            widget: false,
+          });
+          return;
+        }
+
+        await this._sendLegacyListing(publishStreamID);
+      } catch (error) {
+        console.warn('[NinjaBridge] Stream announcement failed; continuing transport init.', error);
+        try {
+          await this._sendLegacyListing(publishStreamID);
+        } catch (fallbackError) {
+          console.warn('[NinjaBridge] Legacy listing fallback failed; continuing transport init.', fallbackError);
+        }
+      }
+    }
+
+    async _sendLegacyListing(publishStreamID) {
+      if (this.vdo.state) {
+        this.vdo.state.streamID = publishStreamID;
+      }
+
+      if (typeof this.vdo._startListingBroadcast === 'function') {
+        this.vdo._startListingBroadcast();
+      } else if (typeof this.vdo._sendListing === 'function') {
+        await this.vdo._sendListing();
+      }
     }
 
     _bindEvents() {

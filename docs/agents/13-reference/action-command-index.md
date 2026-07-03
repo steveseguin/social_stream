@@ -49,6 +49,9 @@ These are documented in `api.md` and/or `docs/commands.html`.
 | `getQueueSize` | Dock | optional `get` callback token | Request current queue size. | `api.md`, `dock.html` |
 | `autoShow` | Dock | `toggle`, boolean, or state-like value | Toggle or set automatic featuring. | `api.md`, `dock.html`, `docs/commands.html` |
 | `feature` | Dock | optional content context | Feature next unfeatured/current message. | `api.md`, `dock.html` |
+| `pin` | Dock | message `mid` string/number, array of IDs, or full message object | Pin a message at the top of the dock. Dock must be open. | `api.md`, `dock.html`, `docs/commands.html` |
+| `unpin` | Dock | message `mid` string/number or array of IDs | Remove a pinned message from the pinned area. Dock must be open. | `api.md`, `dock.html`, `docs/commands.html` |
+| `nextPinned` | Dock | none | Feature the first pinned message. Dock must be open. | `api.md`, `dock.html`, `docs/commands.html` |
 | `getChatSources` | Extension/app | none | Request active source list where supported. | `api.md`, `background.js` |
 | `toggleVIPUser` | Dock/background user tools | object with `chatname`, `type` | Toggle VIP state for a user. | `api.md`, `dock.html`, `background.js` |
 | `getUserHistory` | Dock/background user tools | object with `chatname`, `type` | Request user history. | `api.md`, `dock.html`, `background.js` |
@@ -135,7 +138,7 @@ These are implemented in `background.js`; verify target pages before recommendin
 | `feature` | `dock.html` | Feature message. |
 | `toggleTTS` | `featured.html`, `dock.html` | Toggle TTS. |
 | `tts` | `featured.html`, `dock.html` | Alias/path for TTS state/action. |
-| `nextPinned` | `dock.html` | Observed dock action for pinned-message navigation. Source-check before public recipe. |
+| `nextPinned` | `dock.html` | Feature the first pinned message. |
 
 ## Background/Internal Runtime Actions
 

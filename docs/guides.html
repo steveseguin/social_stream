@@ -422,7 +422,7 @@
 					<h4>Setting Up TTS:</h4>
 					<ol class="guide-steps">
 						<li>Add <code>&speech=en-US</code> to your featured.html or dock.html URL</li>
-						<li>For other languages, change the language code (e.g., <code>&speech=fr-FR</code> for French)</li>
+						<li>For other languages, use a provider and voice that supports that language. For example, Portuguese can use Piper <code>&pipervoice=pt_BR-faber-medium</code> or eSpeak <code>&espeakvoice=pt-br</code>, while Spanish can use Piper <code>&pipervoice=es_ES-davefx-medium</code> or eSpeak <code>&espeakvoice=es</code>.</li>
 						<li>Customize voice settings with parameters like <code>&pitch=1&volume=1&rate=1</code></li>
 					</ol>
 
@@ -430,6 +430,7 @@
 					<ul class="guide-list">
 						<li><strong>Kokoro TTS:</strong> Built-in browser AI, excellent quality — <code>&ttsprovider=kokoro</code></li>
 						<li><strong>Piper TTS:</strong> Fast, lightweight neural TTS — <code>&ttsprovider=piper</code></li>
+						<li><strong>eSpeak-NG:</strong> Lightweight language fallback, including Portuguese <code>&espeakvoice=pt-br</code> and Spanish <code>&espeakvoice=es</code></li>
 						<li><strong>Kitten TTS:</strong> Smallest footprint, CPU-only — <code>&ttsprovider=kitten</code></li>
 						<li><strong>Self-hosted server:</strong> Run Kokoro-FastAPI or openedai-speech locally via Docker — <code>&ttsprovider=openai&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
 					</ul>

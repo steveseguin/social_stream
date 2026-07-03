@@ -661,16 +661,26 @@ English male:   am_adam, am_michael
 British female: bf_emma, bf_isabella
 British male:   bm_george, bm_lewis</div>
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kokoro&voicekokoro=af_bella&kokorospeed=1.1</div>
+            <div class="warning">
+                <strong>Language note:</strong> Built-in Kokoro voices are English voices. Changing <code>&amp;speech=</code> or <code>&amp;language=</code> to <code>pt-BR</code> or <code>es-ES</code> does not make Kokoro speak Portuguese or Spanish. For those languages, use Piper, eSpeak, a cloud provider, or a local TTS server with a matching model.
+            </div>
 
             <h3>Piper TTS Options</h3>
             <p>Specify a voice model with <code>&amp;pipervoice=</code>:</p>
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=piper&pipervoice=en_US-hfc_female-medium</div>
+            <p>Portuguese and Spanish Piper voices are available:</p>
+            <div class="code">Brazilian Portuguese: pt_BR-faber-medium, pt_BR-edresson-low</div>
+            <div class="code">Spanish: es_ES-davefx-medium, es_MX-ald-medium</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=pt-BR&ttsprovider=piper&pipervoice=pt_BR-faber-medium</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=es-ES&ttsprovider=piper&pipervoice=es_ES-davefx-medium</div>
 
             <h3>Kitten TTS Options</h3>
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=kitten&kittenvoice=expr-voice-4-f</div>
 
             <h3>eSpeak-NG Options</h3>
             <div class="url-example">dock.html?session=YOUR_SESSION&speech=en-US&ttsprovider=espeak&espeakvoice=en&espeakspeed=175</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br&espeakspeed=145</div>
+            <div class="url-example">dock.html?session=YOUR_SESSION&speech=es-ES&ttsprovider=espeak&espeakvoice=es&espeakspeed=145</div>
 
             <div class="warning">
                 <strong>First-time load:</strong> Kokoro and Piper need to download their model files on first use (~50–200 MB). This happens automatically in the background. Subsequent loads are instant (cached in browser).

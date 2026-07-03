@@ -81,13 +81,15 @@ Examples:
 
 - Follow: `new_follower`, `follow`, `followed`.
 - Subscription: `new_subscriber`, `subscription_gift`, `resub`, `sponsorship`, `giftpurchase`, `giftredemption`, `membermilestone`, plus older aliases such as `subscription`, `membership`, `new_member`, and `membership_upgrade`.
-- Donation/gift: `donation`, `gift`, `gift_sent`, `gift_message`, `live_gift`, `tiktok_gift`, `supersticker`, `tip`, `support`, and related aliases.
+- Donation/gift: `donation`, `superchat`, `supersticker`, `jeweldonation`, `gift`, `gift_sent`, `gift_message`, `live_gift`, `tiktok_gift`, `tip`, `support`, and related aliases.
 - Bits: `cheer`, `bits`.
 - Raid: `raid`, `host`, `hosting`, `redirect`.
 - Auction: `auction_update`.
 - Hype train: `hype_train`.
 
 Count/status events such as `viewer_update`, `viewer_updates`, `follower_update`, `subscriber_update`, `stream_status`, and ad-break events are not treated as normal alert cards.
+
+`superchat` stays a donation-category alert for layout/sound settings, but the rendered card keeps `data-event-key="superchat"` and an `event-superchat` class so custom CSS or future logic can treat it separately from generic `donation`.
 
 ## Important Payload Fields
 

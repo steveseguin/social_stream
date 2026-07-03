@@ -743,7 +743,6 @@
         const countGifts = !urlParams.has('nogifts');
         const countResubs = !urlParams.has('noresubs');
         const countGiftRedemptions = urlParams.has('countgiftredemptions');
-        const excludeGiftPurchases = urlParams.has('excludegiftpurchase') || urlParams.has('excludegiftpurchases');
         const resetOnComplete = hypeMode ? !urlParams.has('noresetoncomplete') : urlParams.has('resetoncomplete');
         const carryOverGoal = urlParams.has('carryover');
         const showCompletions = hypeMode && !urlParams.has('hidecompletions');
@@ -1796,9 +1795,9 @@
 
         function getDonationRaw(data) {
             const meta = getMeta(data);
-            if (getEventName(data) === 'giftpurchase') {
-                const value = firstNumber([data.donoValue, data.donationAmount, meta.amount, meta.price]);
-                return '$' + (value || (extractContributionCount(data) * 5));
+            const eventName = getEventName(data);
+            if (eventName === 'giftpurchase' || eventName === 'giftredemption') {
+                return '';
             }
             return data.donation || data.hasDonation || data.donationAmount || data.donoValue ||
                 meta.amountText || meta.priceText || meta.amount || '';
@@ -1815,6 +1814,7 @@
             const eventName = getEventName(data);
             const membership = data.membership ? String(data.membership).toLowerCase() : '';
             if (eventName === 'jeweldonation' ||
+                eventName === 'giftpurchase' ||
                 eventName === 'giftredemption' ||
                 eventName === 'gift_subscription' ||
                 eventName === 'subscription_gift' ||
@@ -1823,10 +1823,6 @@
                 meta.youtubeGift) {
                 return false;
             }
-            if (eventName === 'giftpurchase' && excludeGiftPurchases) {
-                return false;
-            }
-
             if (unitInfo && unitInfo.type && unitInfo.type !== 'usd') {
                 return false;
             }
@@ -1835,7 +1831,7 @@
             if (/\bjewels?\b/.test(raw)) {
                 return false;
             }
-            return eventName === 'giftpurchase' || !(/\bgift(?:ed|s)?\b/.test(raw));
+            return !(/\bgift(?:ed|s)?\b/.test(raw));
         }
 
         function isGiftEvent(eventName, membership) {
