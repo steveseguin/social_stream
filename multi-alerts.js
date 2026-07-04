@@ -178,6 +178,44 @@ const SOURCE_ALIASES = Object.freeze({
 });
 
 const urlParams = new URLSearchParams(window.location.search);
+const SERVER_EXCLUSIVE_TRANSPORT_VERSION = '3.52.0';
+// Transport migration guard: only pages with full server parity may skip the legacy bridge.
+var TRANSPORT_CAPABILITIES = {
+	serverFeed: true,
+	serverTargeted: false,
+	upstreamCommands: false,
+	customChannel: false,
+	legacyBridgeRequired: true,
+	legacyBridgeReason: "Alert control commands such as clearAlerts are still sent with sendTargetP2P."
+};
+function versionAtLeast(value, minimum) {
+  const a = String(value || '').split('.');
+  const b = String(minimum || '').split('.');
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i += 1) {
+    const av = parseInt(a[i], 10) || 0;
+    const bv = parseInt(b[i], 10) || 0;
+    if (av > bv) return true;
+    if (av < bv) return false;
+  }
+  return true;
+}
+// Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+function hasExclusiveServerTransport(caps) {
+    var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+    return (params.server === true && urlParams.has("server")) ||
+        (params.server2 !== false && urlParams.has("server2")) ||
+        (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+}
+function useServerOnlyTransport() {
+	var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+	return hasExclusiveServerTransport(caps) &&
+		versionAtLeast(urlParams.get('v'), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+		caps.serverFeed === true &&
+		caps.legacyBridgeRequired !== true &&
+		caps.upstreamCommands !== true &&
+		caps.customChannel !== true;
+}
 let translation = {};
 
 const CATEGORY_STYLE_PARAMS = {
@@ -280,7 +318,9 @@ if (settings.previewOnly) {
 }
 
 if (!settings.previewOnly && settings.roomID) {
-  setupBridgeIframe();
+  if (!settings.useServerOnlyTransport) {
+    setupBridgeIframe();
+  }
   if (settings.useSocket) {
     setupSocket();
   }
@@ -1672,6 +1712,7 @@ function readSettings() {
     previewOnly: urlParams.has('preview'),
     showStatus: urlParams.has('showstatus') || urlParams.has('debug') || urlParams.has('preview'),
     debug: urlParams.has('debug'),
+    useServerOnlyTransport: useServerOnlyTransport(),
     useSocket: hasServer || hasServer2 || hasServer3 || hasLocalServer,
     serverURL,
     styles,

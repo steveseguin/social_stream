@@ -10986,6 +10986,10 @@ async function openchat(target = null, force = false) {
 function sendDataP2P(data, UUID = false) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
+	// TODO after 2026-09-01: make the server2 dock send additive instead of
+	// returning here. Overlay links generated from 3.52.0+ are prepared to use
+	// socket-only receive mode only when their TRANSPORT_CAPABILITIES opt in.
+	// Keep legacy sends for old/cached/custom overlays. Base reference: b26c7aeb.
 	if (!UUID && settings.server2 && socketserverDock && socketserverDock.readyState === 1) {
 		try {
 			if (data.out) {

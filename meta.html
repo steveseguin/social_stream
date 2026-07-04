@@ -1635,6 +1635,7 @@
 
             function connectIframe() {
                 var sessionId = urlParams.get("session");
+                // Transport migration: meta uses one receive path. Server modes connect by socket, so skip the VDO bridge to avoid duplicate feed events.
                 if (!sessionId || hasServerMode) return;
 
                 var password = encodeURIComponent(urlParams.get("password") || "false");

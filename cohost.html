@@ -278,11 +278,46 @@
 
 			#actionStatusSummary,
 			#voiceStatusSummary,
-			#liveChatStatusSummary {
+			#liveChatStatusSummary,
+			#geminiSessionPanel {
 				background: #181818;
 				border: 1px solid #2a2a2a;
 				border-radius: 10px;
 				padding: 10px 12px;
+			}
+
+			.gemini-session-panel {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+
+			.gemini-progress-row {
+				display: grid;
+				grid-template-columns: 110px 1fr 92px;
+				align-items: center;
+				gap: 8px;
+			}
+
+			.gemini-progress-row span {
+				min-width: 0;
+			}
+
+			.gemini-progress-row progress {
+				width: 100%;
+				height: 10px;
+				accent-color: #22c55e;
+			}
+
+			.gemini-session-actions {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 8px;
+			}
+
+			.gemini-session-actions button {
+				padding: 7px 10px;
+				font-size: 12px;
 			}
 
 			.live-chat-actions {
@@ -1314,6 +1349,24 @@
 						<input type="password" id="apiKey" placeholder="Enter Gemini API Key" size="15" class="api-key" />
 						<div class="api-key-info" id="apikeyinfo">Get your free Gemini API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</div>
 					</div>
+					<div id="geminiSessionPanel" class="api-key-info gemini-session-panel" style="display: none">
+						<div><strong>Gemini Live:</strong> Google closes Live websocket connections around every 10 minutes. SSN will automatically resume when Google provides a resume handle.</div>
+						<div class="gemini-progress-row">
+							<span>Reconnect</span>
+							<progress id="geminiReconnectProgress" max="100" value="0"></progress>
+							<span id="geminiReconnectText">waiting</span>
+						</div>
+						<div class="gemini-progress-row">
+							<span>Context</span>
+							<progress id="geminiContextProgress" max="100" value="0"></progress>
+							<span id="geminiContextText">auto</span>
+						</div>
+						<div id="geminiSessionStatus">Context compression is automatic; resetting context starts fresh.</div>
+						<div class="gemini-session-actions">
+							<button id="geminiReconnectNow" type="button" title="Reconnect now using the latest Gemini resume handle">Reconnect now</button>
+							<button id="geminiResetContext" type="button" title="Start a fresh Gemini session and clear the resume handle">Reset context</button>
+						</div>
+					</div>
 					<div class="api-key-container" id="customEndpointContainer" style="display: none; width: 100%">
 						<input type="text" id="customEndpoint" placeholder="Custom OpenAI-compatible endpoint (eg: http://127.0.0.1:1234/v1)" class="api-key" style="flex: 1" />
 						<button id="customModelsRefresh" type="button" style="white-space: nowrap">Refresh Models</button>
@@ -1717,6 +1770,12 @@
 				}
 			}
 			const GEMINI_DEFAULT_LIVE_MODEL = "models/gemini-2.5-flash-native-audio-preview-12-2025";
+			const GEMINI_LIVE_CONNECTION_LIMIT_MS = 10 * 60 * 1000;
+			const GEMINI_GOAWAY_RECONNECT_GRACE_MS = 5000;
+			const GEMINI_CONTEXT_TRIGGER_TOKENS = 20000;
+			const GEMINI_CONTEXT_TARGET_TOKENS = 10000;
+			const GEMINI_AUDIO_TOKENS_PER_SECOND = 25;
+			const GEMINI_VIDEO_TOKENS_PER_SECOND = 258;
 			const LOCAL_BROWSER_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
 			const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js";
 			const CUSTOM_OPENAI_DEFAULT_ENDPOINT = "http://127.0.0.1:1234/v1";
@@ -2018,6 +2077,20 @@
 				outputPreview: "-",
 				updated: Date.now()
 			};
+			const geminiSessionUiState = {
+				visible: false,
+				connected: false,
+				connectionStartedAt: 0,
+				goAwayDeadline: 0,
+				hasResumeHandle: false,
+				resumable: false,
+				compressionEnabled: false,
+				contextTokens: 0,
+				contextTriggerTokens: GEMINI_CONTEXT_TRIGGER_TOKENS,
+				contextTargetTokens: GEMINI_CONTEXT_TARGET_TOKENS,
+				status: "Gemini session resumption is ready when the stream starts.",
+				updated: Date.now()
+			};
 			function formatDiagnosticsTime(timestamp) {
 				if (!timestamp) return "-";
 				try {
@@ -2025,6 +2098,81 @@
 				} catch (e) {
 					return "-";
 				}
+			}
+			function formatGeminiDuration(ms) {
+				const safeMs = Math.max(0, Number(ms) || 0);
+				const totalSeconds = Math.ceil(safeMs / 1000);
+				const minutes = Math.floor(totalSeconds / 60);
+				const seconds = totalSeconds % 60;
+				return minutes + ":" + String(seconds).padStart(2, "0");
+			}
+			function formatGeminiTokenLabel(tokens) {
+				const safeTokens = Math.max(0, Math.round(Number(tokens) || 0));
+				if (safeTokens >= 1000) {
+					return Math.round(safeTokens / 1000) + "k";
+				}
+				return String(safeTokens);
+			}
+			function renderGeminiSessionStatus() {
+				const panel = document.getElementById("geminiSessionPanel");
+				if (!panel) return;
+				panel.style.display = geminiSessionUiState.visible ? "flex" : "none";
+				const reconnectProgress = document.getElementById("geminiReconnectProgress");
+				const reconnectText = document.getElementById("geminiReconnectText");
+				const contextProgress = document.getElementById("geminiContextProgress");
+				const contextText = document.getElementById("geminiContextText");
+				const statusText = document.getElementById("geminiSessionStatus");
+				const reconnectButton = document.getElementById("geminiReconnectNow");
+				const resetButton = document.getElementById("geminiResetContext");
+				const now = Date.now();
+				let reconnectPercent = 0;
+				let reconnectLabel = geminiSessionUiState.connected ? "starting" : "idle";
+				if (geminiSessionUiState.connected && geminiSessionUiState.goAwayDeadline > now) {
+					const remaining = geminiSessionUiState.goAwayDeadline - now;
+					reconnectPercent = Math.max(0, Math.min(100, 100 - (remaining / GEMINI_LIVE_CONNECTION_LIMIT_MS) * 100));
+					reconnectLabel = formatGeminiDuration(remaining);
+				} else if (geminiSessionUiState.connected && geminiSessionUiState.connectionStartedAt) {
+					const elapsed = now - geminiSessionUiState.connectionStartedAt;
+					const remaining = Math.max(0, GEMINI_LIVE_CONNECTION_LIMIT_MS - elapsed);
+					reconnectPercent = Math.max(0, Math.min(100, (elapsed / GEMINI_LIVE_CONNECTION_LIMIT_MS) * 100));
+					reconnectLabel = formatGeminiDuration(remaining);
+				} else if (geminiSessionUiState.hasResumeHandle) {
+					reconnectLabel = "resume ready";
+				}
+				if (reconnectProgress) reconnectProgress.value = reconnectPercent;
+				if (reconnectText) reconnectText.textContent = reconnectLabel;
+				const triggerTokens = geminiSessionUiState.contextTriggerTokens || GEMINI_CONTEXT_TRIGGER_TOKENS;
+				const contextTokens = Math.max(0, Number(geminiSessionUiState.contextTokens) || 0);
+				const contextPercent = Math.max(0, Math.min(100, (contextTokens / triggerTokens) * 100));
+				if (contextProgress) contextProgress.value = contextPercent;
+				if (contextText) {
+					contextText.textContent = formatGeminiTokenLabel(contextTokens) + "/" + formatGeminiTokenLabel(triggerTokens);
+				}
+				if (statusText) {
+					const resumeText = geminiSessionUiState.hasResumeHandle ? "Resume handle ready." : "Waiting for resume handle.";
+					const compressionText = geminiSessionUiState.compressionEnabled ? "Context compression is automatic and estimated here." : "Context compression not confirmed.";
+					statusText.textContent = geminiSessionUiState.status || resumeText + " " + compressionText;
+				}
+				let activeGemini = false;
+				try {
+					activeGemini = typeof publisher !== "undefined" && publisher instanceof GoogleLivePublisher;
+				} catch (_error) {
+					activeGemini = false;
+				}
+				if (reconnectButton) reconnectButton.disabled = !activeGemini;
+				if (resetButton) resetButton.disabled = !activeGemini;
+			}
+			function updateGeminiSessionStatus(patch = {}) {
+				Object.assign(geminiSessionUiState, patch);
+				geminiSessionUiState.updated = Date.now();
+				renderGeminiSessionStatus();
+			}
+			function syncGeminiProviderPanel(providerName) {
+				const visible = providerName === "gemini";
+				updateGeminiSessionStatus({
+					visible,
+					status: visible ? geminiSessionUiState.status || "Gemini session resumption is ready when the stream starts." : geminiSessionUiState.status
+				});
 			}
 			function normalizeVoicePreview(text) {
 				const normalized = String(text || "")
@@ -2374,6 +2522,7 @@
 					return;
 				}
 				if (startCohostLiveChatSocket(params.room)) return;
+				// Transport migration: server params use the websocket above; this iframe is only the non-server live-chat fallback.
 				setCohostLiveChatStatus("connecting bridge", "session " + params.room);
 				const frame = document.createElement("iframe");
 				frame.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(params.password) + "&push&notmobile&label=cohost&view=" + encodeURIComponent(params.room) + "&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + encodeURIComponent(params.room);
@@ -2447,6 +2596,11 @@
 							line: "Restarting stream...",
 							detail: "Rebuilding the active stream and provider connection."
 						};
+					case "reconnecting":
+						return {
+							line: "Reconnecting...",
+							detail: "Resuming the provider connection."
+						};
 					case "stopped":
 						return {
 							line: "Stopped",
@@ -2490,6 +2644,7 @@
 				document.getElementById("diagError").textContent = diagnosticsState.lastError || "-";
 				document.getElementById("diagUpdated").textContent = formatDiagnosticsTime(diagnosticsState.updated);
 				renderCohostLiveChatStatus();
+				renderGeminiSessionStatus();
 				renderActionStatusSummary();
 				syncSendButtonAvailability();
 			}
@@ -2537,6 +2692,18 @@
 					voice: {
 						...voiceTelemetryState,
 						updatedIso: new Date(voiceTelemetryState.updated).toISOString()
+					},
+					gemini: {
+						visible: geminiSessionUiState.visible,
+						connected: geminiSessionUiState.connected,
+						hasResumeHandle: geminiSessionUiState.hasResumeHandle,
+						resumable: geminiSessionUiState.resumable,
+						compressionEnabled: geminiSessionUiState.compressionEnabled,
+						contextTokens: Math.round(geminiSessionUiState.contextTokens || 0),
+						contextTriggerTokens: geminiSessionUiState.contextTriggerTokens,
+						contextTargetTokens: geminiSessionUiState.contextTargetTokens,
+						status: geminiSessionUiState.status,
+						updatedIso: new Date(geminiSessionUiState.updated).toISOString()
 					},
 					liveChat: {
 						...cohostLiveChatState,
@@ -5455,6 +5622,15 @@
 					this.reconnectTimeout = null;
 					this.pingInterval = null;
 					this.lastHeartbeatResponse = Date.now();
+					this.sessionResumptionHandle = "";
+					this.sessionResumable = false;
+					this.expectedReconnectSocket = null;
+					this.goAwayReconnectTimeout = null;
+					this.geminiStatusInterval = null;
+					this.connectionStartedAt = 0;
+					this.contextEstimateStartedAt = Date.now();
+					this.contextEstimateBaseTokens = 0;
+					this.lastUsageTokenCount = 0;
 					this.conversationHistory = [];
 					this.responseActive = false;
 					this.pendingAudioResponse = false;
@@ -5605,6 +5781,127 @@
 
 					console.log("Conversation history cleared");
 				}
+				parseGoogleDurationMs(value) {
+					if (typeof value === "number" && isFinite(value)) {
+						return value > 1000 ? value : value * 1000;
+					}
+					if (typeof value === "string") {
+						const match = value.match(/^(-?\d+(?:\.\d+)?)s$/);
+						if (match) {
+							return Math.max(0, parseFloat(match[1]) * 1000);
+						}
+						const numeric = parseFloat(value);
+						if (isFinite(numeric)) {
+							return numeric > 1000 ? numeric : numeric * 1000;
+						}
+						return 0;
+					}
+					if (value && typeof value === "object") {
+						const seconds = Number(value.seconds || value.sec || 0);
+						const nanos = Number(value.nanos || value.nanoseconds || 0);
+						return Math.max(0, seconds * 1000 + nanos / 1000000);
+					}
+					return 0;
+				}
+				getRealtimeInputTokenRate() {
+					let rate = 0;
+					if (this.stream && this.stream.getAudioTracks && this.stream.getAudioTracks().some(track => track.readyState !== "ended")) {
+						rate += GEMINI_AUDIO_TOKENS_PER_SECOND;
+					}
+					if (this.stream && this.stream.getVideoTracks && this.stream.getVideoTracks().some(track => track.readyState !== "ended")) {
+						rate += GEMINI_VIDEO_TOKENS_PER_SECOND;
+					}
+					return rate;
+				}
+				getEstimatedContextTokens() {
+					const elapsedSeconds = Math.max(0, (Date.now() - this.contextEstimateStartedAt) / 1000);
+					return this.contextEstimateBaseTokens + elapsedSeconds * this.getRealtimeInputTokenRate();
+				}
+				resetContextEstimate(tokens) {
+					this.contextEstimateBaseTokens = Math.max(0, Number(tokens) || 0);
+					this.contextEstimateStartedAt = Date.now();
+					this.lastUsageTokenCount = this.contextEstimateBaseTokens;
+					this.updateGeminiSessionPanel();
+				}
+				updateGeminiSessionPanel(extra = {}) {
+					updateGeminiSessionStatus({
+						visible: typeof providerSelect !== "undefined" ? providerSelect.value === "gemini" : true,
+						connected: this.isConnected(),
+						connectionStartedAt: this.connectionStartedAt,
+						hasResumeHandle: !!this.sessionResumptionHandle,
+						resumable: this.sessionResumable,
+						compressionEnabled: true,
+						contextTokens: this.getEstimatedContextTokens(),
+						contextTriggerTokens: GEMINI_CONTEXT_TRIGGER_TOKENS,
+						contextTargetTokens: GEMINI_CONTEXT_TARGET_TOKENS,
+						status: this.sessionResumptionHandle ? "Resume handle ready. Context compression is automatic and estimated here." : "Waiting for Gemini to provide a resume handle. Context compression is automatic and estimated here.",
+						...extra
+					});
+				}
+				startGeminiStatusUpdates() {
+					if (this.geminiStatusInterval) {
+						clearInterval(this.geminiStatusInterval);
+					}
+					this.updateGeminiSessionPanel();
+					this.geminiStatusInterval = setInterval(() => {
+						this.updateGeminiSessionPanel();
+					}, 1000);
+				}
+				stopGeminiStatusUpdates() {
+					if (this.geminiStatusInterval) {
+						clearInterval(this.geminiStatusInterval);
+						this.geminiStatusInterval = null;
+					}
+				}
+				handleSessionResumptionUpdate(update) {
+					if (!update || typeof update !== "object") return;
+					this.sessionResumable = !!update.resumable;
+					const newHandle = update.newHandle || update.new_handle || update.handle || "";
+					if (update.resumable && newHandle) {
+						this.sessionResumptionHandle = newHandle;
+						updateDiagnostics({
+							state: "connected",
+							connected: "yes",
+							lastEvent: "gemini.resume.handle.updated",
+							lastError: "-"
+						});
+						this.updateGeminiSessionPanel({
+							hasResumeHandle: true,
+							resumable: true,
+							status: "Resume handle ready. SSN can resume this Gemini session across Google's reconnect."
+						});
+					} else {
+						this.updateGeminiSessionPanel({
+							resumable: this.sessionResumable,
+							status: this.sessionResumptionHandle ? "Gemini session is temporarily not resumable during this turn; latest handle is retained." : "Waiting for Gemini to provide a resumable session handle."
+						});
+					}
+				}
+				handleGoAway(goAway) {
+					const timeLeftMs = this.parseGoogleDurationMs(goAway && (goAway.timeLeft || goAway.time_left));
+					const reconnectDelay = Math.max(0, timeLeftMs - GEMINI_GOAWAY_RECONNECT_GRACE_MS);
+					if (this.goAwayReconnectTimeout) {
+						clearTimeout(this.goAwayReconnectTimeout);
+					}
+					updateDiagnostics({
+						state: "connected",
+						connected: "yes",
+						lastEvent: "gemini.goAway",
+						lastError: "-"
+					});
+					this.updateGeminiSessionPanel({
+						goAwayDeadline: timeLeftMs ? Date.now() + timeLeftMs : 0,
+						status: this.sessionResumptionHandle ? "Google will close this connection soon; SSN will resume automatically." : "Google will close this connection soon, but no resume handle has arrived yet."
+					});
+					this.goAwayReconnectTimeout = setTimeout(() => {
+						this.goAwayReconnectTimeout = null;
+						if (!this.stopped && this.isConnected()) {
+							this.reconnect().catch(error => {
+								console.error("Failed to reconnect after Gemini goAway:", error);
+							});
+						}
+					}, reconnectDelay);
+				}
 				handleConnectionFailure() {
 					this.stop();
 					const startButton = document.getElementById("startButton");
@@ -5655,6 +5952,27 @@
 						// Update counts for reconnection logic
 						this.inactivityReconnectAttempts = 0;
 						this.reconnectAttempts = 0; // Reset reconnect attempts on successful message
+
+						const sessionResumptionUpdate = response.sessionResumptionUpdate || response.session_resumption_update;
+						const goAway = response.goAway || response.go_away;
+						const usageMetadata = response.usageMetadata || response.usage_metadata;
+
+						if (sessionResumptionUpdate) {
+							this.handleSessionResumptionUpdate(sessionResumptionUpdate);
+						}
+
+						if (goAway) {
+							this.handleGoAway(goAway);
+						}
+
+						const totalTokenCount = usageMetadata && (usageMetadata.totalTokenCount || usageMetadata.total_token_count);
+						const parsedTokenCount = typeof totalTokenCount === "number" ? totalTokenCount : parseInt(totalTokenCount, 10);
+						if (isFinite(parsedTokenCount)) {
+							this.lastUsageTokenCount = parsedTokenCount;
+							this.contextEstimateBaseTokens = this.lastUsageTokenCount;
+							this.contextEstimateStartedAt = Date.now();
+							this.updateGeminiSessionPanel();
+						}
 
 						// Process based on message type
 						if (response.setupComplete) {
@@ -5716,6 +6034,12 @@
 								connected: "yes",
 								lastEvent: "response.turn.complete"
 							});
+							if (this.getEstimatedContextTokens() >= GEMINI_CONTEXT_TRIGGER_TOKENS) {
+								this.resetContextEstimate(GEMINI_CONTEXT_TARGET_TOKENS);
+								this.updateGeminiSessionPanel({
+									status: "Context compression should run automatically around this point; progress is estimated."
+								});
+							}
 						}
 
 						// Handle ANY response from server as a valid heartbeat response
@@ -5937,6 +6261,17 @@
 							return;
 						}
 
+						if (this.expectedReconnectSocket && (!event.target || this.expectedReconnectSocket === event.target)) {
+							this.expectedReconnectSocket = null;
+							updateDiagnostics({
+								state: "reconnecting",
+								connected: "no",
+								lastEvent: `ws.close.reconnect:${event.code}`,
+								lastError: "-"
+							});
+							return;
+						}
+
 						if (event.code === 1007) {
 							// Handle invalid JSON payload error specially
 							if (event.reason && event.reason.includes("Invalid JSON payload")) {
@@ -6010,6 +6345,12 @@
 							"open",
 							() => {
 								clearTimeout(connectionTimeout);
+								this.connectionStartedAt = Date.now();
+								this.updateGeminiSessionPanel({
+									goAwayDeadline: 0,
+									status: this.sessionResumptionHandle ? "Reconnected to Gemini with the latest resume handle." : "Connected to a new Gemini session; waiting for resume handle."
+								});
+								this.startGeminiStatusUpdates();
 								this.startHeartbeat();
 								const systemPrompt = document.getElementById("systemPrompt");
 								const setupMessage = {
@@ -6037,6 +6378,13 @@
 													}
 												}
 											})
+										},
+										sessionResumption: this.sessionResumptionHandle ? { handle: this.sessionResumptionHandle } : {},
+										contextWindowCompression: {
+											triggerTokens: GEMINI_CONTEXT_TRIGGER_TOKENS,
+											slidingWindow: {
+												targetTokens: GEMINI_CONTEXT_TARGET_TOKENS
+											}
 										}
 									}
 								};
@@ -6150,6 +6498,7 @@
 						lastEvent: "reconnect.start"
 					});
 					if (this.ws) {
+						this.expectedReconnectSocket = this.ws;
 						try {
 							this.ws.close();
 						} catch (e) {
@@ -6157,6 +6506,8 @@
 						}
 						this.ws = null;
 					}
+					this.contextEstimateBaseTokens = this.getEstimatedContextTokens();
+					this.contextEstimateStartedAt = Date.now();
 					this.clearAllTimers();
 					this._reconnectPromise = (async () => {
 						try {
@@ -6185,6 +6536,26 @@
 					})();
 					return this._reconnectPromise;
 				}
+				async resetSessionContext() {
+					this.sessionResumptionHandle = "";
+					this.sessionResumable = false;
+					this.resetContextEstimate(0);
+					updateDiagnostics({
+						state: "reconnecting",
+						connected: "no",
+						lastEvent: "gemini.context.reset",
+						lastError: "-"
+					});
+					this.updateGeminiSessionPanel({
+						hasResumeHandle: false,
+						resumable: false,
+						status: "Starting a fresh Gemini session with cleared context."
+					});
+					if (this.stopped) {
+						return false;
+					}
+					return this.reconnect();
+				}
 				clearAllTimers() {
 					if (this.pingInterval) {
 						clearInterval(this.pingInterval);
@@ -6198,6 +6569,11 @@
 						clearInterval(this.keepaliveInterval);
 						this.keepaliveInterval = null;
 					}
+					if (this.goAwayReconnectTimeout) {
+						clearTimeout(this.goAwayReconnectTimeout);
+						this.goAwayReconnectTimeout = null;
+					}
+					this.stopGeminiStatusUpdates();
 					if (this.reconnectTimeout) {
 						clearTimeout(this.reconnectTimeout);
 						this.reconnectTimeout = null;
@@ -6302,6 +6678,18 @@
 					this.responseActive = false;
 					this.clearAllTimers();
 					this._reconnectPromise = null;
+					this.sessionResumptionHandle = "";
+					this.sessionResumable = false;
+					this.expectedReconnectSocket = null;
+					this.connectionStartedAt = 0;
+					this.resetContextEstimate(0);
+					this.updateGeminiSessionPanel({
+						connected: false,
+						goAwayDeadline: 0,
+						hasResumeHandle: false,
+						resumable: false,
+						status: "Gemini stream stopped. A new start will create a fresh session."
+					});
 					if (this.ws) {
 						try {
 							this.ws.close();
@@ -6592,6 +6980,8 @@
 			const configuredLLMTestContainer = document.getElementById("configuredLLMTestContainer");
 			const configuredLLMTestButton = document.getElementById("configuredLLMTest");
 			const ttsProviderSelect = document.getElementById("ttsProviderSelect");
+			const geminiReconnectNowButton = document.getElementById("geminiReconnectNow");
+			const geminiResetContextButton = document.getElementById("geminiResetContext");
 			let customModelList = [];
 			let customModelsLoading = false;
 			let customModelsQueuedRefresh = false;
@@ -7769,6 +8159,34 @@
 					startCohostLiveChatBridge();
 				});
 			}
+			if (geminiReconnectNowButton) {
+				geminiReconnectNowButton.addEventListener("click", function () {
+					if (!(publisher instanceof GoogleLivePublisher)) {
+						showError("Start Google Gemini Live before reconnecting it.");
+						return;
+					}
+					updateGeminiSessionStatus({ status: "Manual Gemini reconnect requested." });
+					publisher.reconnect().catch(error => {
+						console.error("Manual Gemini reconnect failed:", error);
+						showError("Gemini reconnect failed: " + (error.message || error));
+					});
+				});
+			}
+			if (geminiResetContextButton) {
+				geminiResetContextButton.addEventListener("click", function () {
+					if (!(publisher instanceof GoogleLivePublisher)) {
+						showError("Start Google Gemini Live before resetting context.");
+						return;
+					}
+					if (!window.confirm("Reset Gemini context and start a fresh session? The co-host will forget prior session context.")) {
+						return;
+					}
+					publisher.resetSessionContext().catch(error => {
+						console.error("Gemini context reset failed:", error);
+						showError("Gemini context reset failed: " + (error.message || error));
+					});
+				});
+			}
 			applyCohostLiveChatMode(liveChatModeSelect ? liveChatModeSelect.value : getStoredCohostLiveChatMode(), false);
 			function resetSendButton() {
 				sendButton.textContent = SEND_BUTTON_IDLE_TEXT;
@@ -8205,6 +8623,7 @@
 				if (configuredLLMTestContainer) {
 					configuredLLMTestContainer.style.display = isConfiguredLLMProvider ? "flex" : "none";
 				}
+				syncGeminiProviderPanel(providerName);
 				if (isCustomOpenAIProvider) {
 					const endpointValue = getEffectiveCustomEndpoint(providerName);
 					customEndpointInput.value = endpointValue;

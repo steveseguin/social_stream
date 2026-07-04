@@ -246,6 +246,7 @@ Development Notes:
                 this.config.serverURL = urlParams.get('server3') || this.config.serverURL;
                 this.setupSocket(2);
             } else {
+                // Transport migration: server modes use setupSocket above; the iframe fallback is only for non-server URLs.
                 this.setupRecvDataWindow();
             }
         },

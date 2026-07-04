@@ -160,6 +160,7 @@
 
 		function requestExtensionOverlays() {
 			if (!roomID) return false;
+			// This bridge fetches saved AI overlay HTML/control responses. In server mode, feed payloads from it are ignored below.
 			bridgeFrame = createBridgeFrame("aioverlay");
 			return true;
 		}

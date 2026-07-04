@@ -1912,6 +1912,7 @@
 				});
 			}
 
+			// Transport migration: this page already chooses socket OR iframe; do not start the iframe when a server socket is active.
 			if (!socketserver) {
 				RecvDataWindow(); // only load the iframe if not connecting via wss
 			}
