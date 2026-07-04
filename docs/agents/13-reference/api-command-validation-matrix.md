@@ -115,7 +115,7 @@ These are handled directly in the `/api` socket branch before generic forwarding
 | `blockUser` with `value` | Treats `target` as source type and `value` as username string. | Platform/source moderation support and a matched user/source. |
 | no `action`, with `extContent` | Requires `extContent.type`; calls `processIncomingMessage`. | Valid SSN-shaped payload and destination pages/listeners. |
 | `extContent` action with JSON `value` | Parses JSON, applies bot actions, runs Event Flow, then calls `sendToDestinations`. | Valid JSON and open destinations. |
-| `removefromwaitlist`, `highlightwaitlist`, `resetwaitlist`, `stopentries`, `downloadwaitlist`, `selectwinner` | Mutates waitlist/draw state or triggers download/selection helpers. | Waitlist state and display pages need separate validation. |
+| `removefromwaitlist`, `highlightwaitlist`, `resetwaitlist`, `stopentries`, `startentries`, `openentries`, `resumeentries`, `downloadwaitlist`, `selectwinner`, `waitlistmessage`, `setwaitlistmessage` | Mutates waitlist/draw state, entry intake, title message, or triggers download/selection helpers. | Waitlist state and display pages need separate validation. |
 | `resettipjar`, `settipjaramount` | Sends `cmd` payloads to target `tipjar`. | Tip jar page must be open/listening. |
 | `resetpoll`, `closepoll` | Sends `cmd` payloads to target `poll`. | Poll page must be open/listening. |
 | `loadpoll`, `setpollsettings`, `getpollpresets`, `createpoll` | Calls background poll preset/settings helpers. | Preset storage and page sync need runtime validation. |

@@ -77,10 +77,14 @@ Source: `api.md`. Verify current relay behavior against server/page settings bef
 | Action | Value Shape | Purpose | Verify In |
 | --- | --- | --- | --- |
 | `waitlistmessage` | string | Set waitlist title/message. | `api.md`, `waitlist.html`, `background.js` |
+| `setwaitlistmessage` | string | Alias for setting waitlist title/message. | `api.md`, `waitlist.html`, `background.js` |
 | `removefromwaitlist` | index/id-like value | Remove an entry. | `api.md`, `background.js` |
 | `highlightwaitlist` | index/id-like value | Highlight an entry. | `api.md`, `background.js` |
 | `resetwaitlist` | none | Reset waitlist. | `api.md`, `background.js` |
 | `stopentries` | none | Stop accepting new entries. | `api.md`, `background.js` |
+| `startentries` | none | Resume accepting entries. | `api.md`, `background.js` |
+| `openentries` | none | Alias for resuming entries. | `api.md`, `background.js` |
+| `resumeentries` | none | Alias for resuming entries. | `api.md`, `background.js` |
 | `downloadwaitlist` | none | Trigger waitlist download. | `api.md`, `background.js` |
 | `selectwinner` | value/index/count | Select winner. | `api.md`, `background.js` |
 | `drawmode` | boolean or `toggle` | Toggle/set draw mode. | `api.md`, `background.js` |

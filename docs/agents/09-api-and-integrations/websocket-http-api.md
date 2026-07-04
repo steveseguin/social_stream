@@ -208,10 +208,15 @@ Waitlist/giveaway controls:
 
 - `removefromwaitlist`
 - `highlightwaitlist`
+- `stopentries`
+- `startentries`
+- `openentries`
+- `resumeentries`
 - `resetwaitlist`
 - `downloadwaitlist`
 - `selectwinner`
 - `waitlistmessage`
+- `setwaitlistmessage`
 
 Timer controls:
 
