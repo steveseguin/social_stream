@@ -94,7 +94,7 @@ function toDataURL(url, callback) {
 			if (closestRow && closestRow.querySelector(".title-cell-name-holder")){
 				return closestRow;
 			}
-			return ele.querySelector("[id^='ChatMessage_']");
+			return ele.querySelector("[id^='ChatMessage_'], .tmg-live-video-chat-message-item");
 		} catch(e){
 			return null;
 		}
@@ -916,9 +916,11 @@ function toDataURL(url, callback) {
 	function processMessage(ele){
 		var row = getMessageRow(ele);
 		if (!row || row.ssnProcessed){return;}
-		if (!row.id || row.id.indexOf("ChatMessage_") !== 0){return;}
+		var hasChatMessageId = row.id && row.id.indexOf("ChatMessage_") === 0;
+		var isClassOnlyMessageRow = row.matches && row.matches(".tmg-live-video-chat-message-item");
+		if (!hasChatMessageId && !isClassOnlyMessageRow){return;}
 
-		var messageId = row.id.replace("ChatMessage_", "");
+		var messageId = hasChatMessageId ? row.id.replace("ChatMessage_", "") : (row.getAttribute("data-message-id") || row.getAttribute("data-id") || "");
 		var rowClassName = getClassName(row).replace(/\s+/g, " ").trim();
 		var chatimg = "";
 		var avatarAlt = "";
@@ -1144,7 +1146,7 @@ function toDataURL(url, callback) {
 						try {
 							processMessage(mutation.addedNodes[i]);
 							if (mutation.addedNodes[i].querySelectorAll) {
-								mutation.addedNodes[i].querySelectorAll("[id^='ChatMessage_']").forEach(function(row){
+								mutation.addedNodes[i].querySelectorAll("[id^='ChatMessage_'], .tmg-live-video-chat-message-item").forEach(function(row){
 									processMessage(row);
 								});
 							}
