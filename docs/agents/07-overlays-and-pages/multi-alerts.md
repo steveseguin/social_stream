@@ -154,7 +154,12 @@ Category styles:
 - `auctionstyle`
 - `hypestyle`
 
-Default style is `twitch`. HTML/CSS also defines `classic`, `twitch`, and `minimal` themes.
+Default style is `twitch`. HTML/CSS defines `twitch`, `classic`, `minimal`, and `solid` themes. `solid` is a flat preset: opaque card, no blur/glow/accent stripe, 7px default corner radius.
+
+Category accent colors (optional overrides; hex like `ff2d5e` or any CSS color):
+
+- `accent`: overrides the accent color for every category.
+- `followaccent`, `subaccent`, `donoaccent`, `bitsaccent`, `raidaccent`, `auctionaccent`, `hypeaccent`: per-category overrides that beat `accent`.
 
 Category disable/enable:
 
@@ -200,6 +205,14 @@ Layout/display:
 - `chroma`
 - `transparent` or `transparency`
 - `embedded`
+
+Opt-in style overrides (added 2026-07-03; absent params keep the stock look of every preset):
+
+- `flat`: solid card fills; removes translucent gradients, backdrop blur, glow, and drop shadows on all presets.
+- `radius`: corner radius in px for cards and media boxes, clamped 0 to 48 (`radius=7`). Non-numeric values fall back to 7.
+- `cardbg`: card background color; implies a solid card fill (`cardbg=18122b`). Pairs well with `flat`.
+- `textcolor`: main text color; the muted text color is derived at 85% alpha when a hex value is given.
+- `animation`: entrance/exit animation. One of `slidedown` (enters from the top edge, no fade), `slideup`, `pop`, or `none`. Unknown values, or `fade`, keep the default fade-and-rise.
 
 Source filters:
 

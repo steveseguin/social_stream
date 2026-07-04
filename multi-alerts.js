@@ -10,6 +10,8 @@ const ALERT_CATEGORIES = Object.freeze({
 
 const DEFAULT_ALERT_STYLE = 'twitch';
 
+const ANIMATION_STYLES = new Set(['slidedown', 'slideup', 'pop', 'none']);
+
 const CATEGORY_LABELS = Object.freeze({
   [ALERT_CATEGORIES.FOLLOW]: 'New Follower',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'New Subscriber',
@@ -210,6 +212,16 @@ const CATEGORY_SOUND_PARAMS = {
   [ALERT_CATEGORIES.RAID]: 'raidsound',
   [ALERT_CATEGORIES.AUCTION]: 'auctionsound',
   [ALERT_CATEGORIES.HYPE]: 'hypesound'
+};
+
+const CATEGORY_ACCENT_PARAMS = {
+  [ALERT_CATEGORIES.FOLLOW]: 'followaccent',
+  [ALERT_CATEGORIES.SUBSCRIPTION]: 'subaccent',
+  [ALERT_CATEGORIES.DONATION]: 'donoaccent',
+  [ALERT_CATEGORIES.BITS]: 'bitsaccent',
+  [ALERT_CATEGORIES.RAID]: 'raidaccent',
+  [ALERT_CATEGORIES.AUCTION]: 'auctionaccent',
+  [ALERT_CATEGORIES.HYPE]: 'hypeaccent'
 };
 
 const SOURCE_ICON_MAP = {
@@ -1349,7 +1361,7 @@ function buildAlertViewModel(payload = {}) {
     sourceKey,
     sourceLabel,
     title: buildTitle(category, eventKey),
-    accent: CATEGORY_ACCENTS[category] || '#9146ff',
+    accent: resolveAccent(category),
     actor,
     amount,
     cashValue,
@@ -1390,7 +1402,7 @@ function createMockAlertPayload(category, overrides = {}) {
   const mock = pickMockUser(category);
   const baseName = overrides.chatname || mock.name;
   const baseImg = overrides.chatimg || mock.img;
-  const accent = CATEGORY_ACCENTS[category] || '#9146ff';
+  const accent = resolveAccent(category);
   const common = {
     type: 'twitch',
     platform: 'twitch',
@@ -1560,6 +1572,18 @@ function normalizeColor(value) {
   return normalizeText(value);
 }
 
+function resolveAccent(category) {
+  return settings.categoryAccents[category] || settings.accent || CATEGORY_ACCENTS[category] || '#9146ff';
+}
+
+function deriveMutedColor(colorValue) {
+  const trimmed = normalizeText(colorValue).replace(/^#/, '');
+  if (/^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmed)) {
+    return `rgba(${toAccentRgbTriplet(colorValue)}, 0.85)`;
+  }
+  return colorValue;
+}
+
 function readSettings() {
   const styles = {};
   Object.entries(CATEGORY_STYLE_PARAMS).forEach(([category, paramName]) => {
@@ -1633,6 +1657,17 @@ function readSettings() {
     detailScale: Math.max(0.8, Math.min(1.8, parseNumberParam('detailscale', 1))),
     pageBg: normalizeColor(urlParams.get('pagebg')),
     chroma: normalizeColor(urlParams.get('chroma')),
+    flat: urlParams.has('flat'),
+    cardRadius: urlParams.has('radius') ? Math.max(0, Math.min(48, parseNumberParam('radius', 7))) : null,
+    accent: normalizeColor(urlParams.get('accent')),
+    categoryAccents: Object.fromEntries(
+      Object.entries(CATEGORY_ACCENT_PARAMS).map(([cat, param]) => [cat, normalizeColor(urlParams.get(param))])
+    ),
+    cardBg: normalizeColor(urlParams.get('cardbg')),
+    textColor: normalizeColor(urlParams.get('textcolor')),
+    animation: ANIMATION_STYLES.has(normalizeText(urlParams.get('animation')).toLowerCase())
+      ? normalizeText(urlParams.get('animation')).toLowerCase()
+      : '',
     transparent: urlParams.has('transparent') || urlParams.has('transparency'),
     previewOnly: urlParams.has('preview'),
     showStatus: urlParams.has('showstatus') || urlParams.has('debug') || urlParams.has('preview'),
@@ -1649,6 +1684,24 @@ function applyPagePresentation() {
   document.documentElement.style.setProperty('--media-scale', String(settings.mediaScale));
   document.documentElement.style.setProperty('--headline-scale', String(settings.headlineScale));
   document.documentElement.style.setProperty('--detail-scale', String(settings.detailScale));
+  if (settings.cardRadius !== null) {
+    document.documentElement.style.setProperty('--card-radius', `${settings.cardRadius}px`);
+  }
+  if (settings.cardBg) {
+    document.documentElement.style.setProperty('--card-bg', settings.cardBg);
+    document.body.classList.add('custom-cardbg');
+  }
+  if (settings.textColor) {
+    document.documentElement.style.setProperty('--text-main', settings.textColor);
+    document.documentElement.style.setProperty('--text-muted', deriveMutedColor(settings.textColor));
+    document.body.classList.add('custom-textcolor');
+  }
+  if (settings.flat) {
+    document.body.classList.add('flat-mode');
+  }
+  if (settings.animation) {
+    document.body.dataset.anim = settings.animation;
+  }
   document.body.dataset.align = settings.align;
   document.body.classList.toggle('show-status', settings.showStatus);
 
@@ -2502,6 +2555,13 @@ window.__multiAlertsOverlay = {
       pageBg: settings.pageBg,
       chroma: settings.chroma,
       transparent: settings.transparent,
+      flat: settings.flat,
+      cardRadius: settings.cardRadius,
+      accent: settings.accent,
+      categoryAccents: Object.assign({}, settings.categoryAccents),
+      cardBg: settings.cardBg,
+      textColor: settings.textColor,
+      animation: settings.animation,
       previewOnly: settings.previewOnly,
       showStatus: settings.showStatus,
       debug: settings.debug,

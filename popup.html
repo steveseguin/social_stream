@@ -6024,6 +6024,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -6032,6 +6033,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -6040,6 +6042,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -6048,6 +6051,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -6056,6 +6060,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -6064,6 +6069,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -6072,9 +6078,50 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
-								<small style="opacity: 0.8;">Each category maps all supported platforms into one shared alert style, while still keeping the source badge and event wording platform-aware.</small>
+								<div>
+									<label>Entrance animation</label>
+									<select data-optionparam25="animation" class="textInput">
+										<option value="fade" selected>Fade &amp; rise (default)</option>
+										<option value="slidedown">Slide in from top</option>
+										<option value="slideup">Slide in from bottom</option>
+										<option value="pop">Pop in</option>
+										<option value="none">No animation</option>
+									</select>
+								</div>
+								<div title="Replaces translucent gradients, blur, and glow with solid fills on every preset.">
+									<label class="switch">
+										<input type="checkbox" data-param25="flat" />
+										<span class="slider round"></span>
+									</label>
+									<span>Flat cards (solid fills, no blur/glow)</span>
+								</div>
+								<div title="Overrides the corner rounding of alert cards and media boxes.">
+									<label class="switch">
+										<input type="checkbox" data-param25="radius" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										⬜ Corner radius
+										<input type="range" min="0" max="32" step="1" value="7" style="width: 150px;" data-numbersetting25="radius" data-range-display="multi-alert-radius-display" data-range-suffix="px" />
+										<span class="range-value" id="multi-alert-radius-display">7px</span>
+									</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Overrides the accent color for every alert type. Per-type URL params also exist: followaccent, subaccent, donoaccent, bitsaccent, raidaccent, auctionaccent, hypeaccent.">
+									<input type="text" id="multialertaccent" class="textInput instant" autocomplete="off" placeholder="#ff2d5e" data-textparam25="accent" />
+									<label for="multialertaccent"><span>&gt; Accent color (all alert types)</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Solid background color for the alert card. Pairs well with flat cards.">
+									<input type="text" id="multialertcardbg" class="textInput instant" autocomplete="off" placeholder="#18122b" data-textparam25="cardbg" />
+									<label for="multialertcardbg"><span>&gt; Card background color</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Overrides the main and muted text colors.">
+									<input type="text" id="multialerttextcolor" class="textInput instant" autocomplete="off" placeholder="#f8fafc" data-textparam25="textcolor" />
+									<label for="multialerttextcolor"><span>&gt; Text color</span></label>
+								</div>
+								<small style="opacity: 0.8;">Each category maps all supported platforms into one shared alert style, while still keeping the source badge and event wording platform-aware. The animation, flat, radius, and color options apply on top of every preset; leave them untouched to keep the stock look.</small>
 							</div>
 						</div>
 					</div>
