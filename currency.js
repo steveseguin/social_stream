@@ -3,6 +3,7 @@ var Currencies = { usd: { d: 2, s: "$" }, cad: { d: 2, s: "$" }, eur: { d: 2, s:
 function convertToUSD(valueStr, source = '') {
   // Currency conversion rates
   const currencyRates = {
+    USD: 1.0,
     EUR: 1.17,
     GBP: 1.26,
     JPY: 0.0067,
@@ -71,8 +72,11 @@ function convertToUSD(valueStr, source = '') {
     roses: 0.01,
     gold: 0.01,
     gift: 0.02,
+    gifts: 0.02,
     gem: 0.01,
     gems: 0.01,
+    star: 0.01,
+    stars: 0.01,
     token: 0.01,
     tokens: 0.01,
     heart: 0.01,
@@ -82,7 +86,9 @@ function convertToUSD(valueStr, source = '') {
     kick: 0.0015,
     kicks: 0.0015,
     sub: 4.99,
+    subs: 4.99,
     subscription: 4.99,
+    subscriptions: 4.99,
     
     // Platform-specific tokens
     flame: 0.01,
@@ -95,13 +101,21 @@ function convertToUSD(valueStr, source = '') {
     balloons: 0.01
   };
 
+  const unknownUnitRate = 0.0001; // Unknown virtual units: 100 units = $0.01 USD.
+
   // Platform-specific adjustments
   const platformAdjustments = {
     twitch: {
       bits: 0.01,
       bit: 0.01,
       sub: 4.99,
+      subs: 4.99,
       subscription: 4.99,
+      subscriptions: 4.99,
+      'gift sub': 4.99,
+      'gift subs': 4.99,
+      'gifted sub': 4.99,
+      'gifted subs': 4.99,
       giftsub: 4.99,
       giftsubscription: 4.99,
       tier1: 4.99,
@@ -114,6 +128,11 @@ function convertToUSD(valueStr, source = '') {
       jewel: 0.005,
       jewels: 0.005,
       membership: 4.99,
+      memberships: 4.99,
+      'gift membership': 4.99,
+      'gift memberships': 4.99,
+      'gifted membership': 4.99,
+      'gifted memberships': 4.99,
       giftmembership: 4.99,
       'youtube gift': 0.01,
       'youtube gifts': 0.01,
@@ -121,7 +140,8 @@ function convertToUSD(valueStr, source = '') {
       youtubegifts: 0.01,
       gift: 0.01,
       gifts: 0.01,
-      sponsorship: 4.99
+      sponsorship: 4.99,
+      sponsorships: 4.99
     },
     youtubeshorts: {
       superchat: 1.0,
@@ -129,6 +149,11 @@ function convertToUSD(valueStr, source = '') {
       jewel: 0.005,
       jewels: 0.005,
       membership: 4.99,
+      memberships: 4.99,
+      'gift membership': 4.99,
+      'gift memberships': 4.99,
+      'gifted membership': 4.99,
+      'gifted memberships': 4.99,
       giftmembership: 4.99,
       'youtube gift': 0.01,
       'youtube gifts': 0.01,
@@ -136,13 +161,20 @@ function convertToUSD(valueStr, source = '') {
       youtubegifts: 0.01,
       gift: 0.01,
       gifts: 0.01,
-      sponsorship: 4.99
+      sponsorship: 4.99,
+      sponsorships: 4.99
     },
     kick: {
       kick: 0.0015, // 10,000 KICKs = $15 USD
       kicks: 0.0015,
       sub: 3.75, // Kick takes a smaller cut
+      subs: 3.75,
       subscription: 3.75,
+      subscriptions: 3.75,
+      'gift sub': 3.75,
+      'gift subs': 3.75,
+      'gifted sub': 3.75,
+      'gifted subs': 3.75,
       giftsub: 3.75,
       giftsubscription: 3.75
     },
@@ -159,7 +191,8 @@ function convertToUSD(valueStr, source = '') {
       star: 0.01,
       stars: 0.01,
       support: 0.99,
-      badge: 0.99
+      badge: 0.99,
+      badges: 0.99
     }
   };
 
@@ -202,7 +235,7 @@ function convertToUSD(valueStr, source = '') {
   // Extract numeric value, including negative numbers, decimals, and thousands separators.
   const numericMatch = valueStr.match(/-?\d[\d.,]*(?:\s\d{3})*/);
   if (!numericMatch) return 0;
-  
+
   const amount = parseCurrencyAmount(valueStr);
   if (isNaN(amount)) return 0;
 
@@ -314,6 +347,20 @@ function convertToUSD(valueStr, source = '') {
     return new RegExp('(^|\\s|\\d)' + escapedTerm + '(?=\\s|\\d|$)').test(cleanValue);
   }
 
+  function hasCurrencyAmountTerm(term) {
+    const escapedTerm = String(term).toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const amountPattern = '-?\\d[\\d.,]*(?:\\s\\d{3})*';
+    return new RegExp('(^|\\s)' + escapedTerm + '\\s*' + amountPattern + '(?=\\s|$)').test(cleanValue) ||
+      new RegExp('(^|\\s)' + amountPattern + '\\s*' + escapedTerm + '(?=\\s|$)').test(cleanValue);
+  }
+
+  function hasUnknownUnitCandidate() {
+    const amountPattern = '-?\\d[\\d.,]*(?:\\s\\d{3})*';
+    const wordPattern = '[a-z][a-z0-9_]*';
+    return new RegExp('(^|\\s)' + amountPattern + '\\s*' + wordPattern + '(?=\\s|$)').test(cleanValue) ||
+      new RegExp('(^|\\s)' + wordPattern + '\\s*' + amountPattern + '(?=\\s|$)').test(cleanValue);
+  }
+
   const currencySymbolPatterns = [
     { pattern: /\bBZ\s*\$/i, currency: 'BZD' },
     { pattern: /\bBDS\s*\$/i, currency: 'BBD' },
@@ -343,13 +390,13 @@ function convertToUSD(valueStr, source = '') {
 
   // Check fiat currencies and common YouTube display aliases before platform words like "super chat".
   for (const [alias, currency] of Object.entries(currencyAliases)) {
-    if (currencyRates[currency] && hasCurrencyTerm(alias)) {
+    if (currencyRates[currency] && hasCurrencyAmountTerm(alias)) {
       return amount * currencyRates[currency];
     }
   }
 
   for (const [currency, rate] of Object.entries(currencyRates)) {
-    if (hasCurrencyTerm(currency.toLowerCase())) {
+    if (hasCurrencyAmountTerm(currency.toLowerCase())) {
       return amount * rate;
     }
   }
@@ -357,20 +404,20 @@ function convertToUSD(valueStr, source = '') {
   // Check for platform-specific currencies first
   if (source && platformAdjustments[source]) {
     for (const [currency, rate] of Object.entries(platformAdjustments[source])) {
-      if (cleanValue.includes(currency)) {
+      if (hasCurrencyTerm(currency)) {
         return amount * rate;
       }
     }
   }
-  
+
   // Check for virtual currencies
   for (const [currency, rate] of Object.entries(virtualCurrencies)) {
-    if (cleanValue.includes(currency)) {
+    if (hasCurrencyTerm(currency)) {
       return amount * rate;
     }
   }
 
-  if (hasCurrencyTerm('jewel') || hasCurrencyTerm('jewels')) return 0;
+  if (hasCurrencyTerm('jewel') || hasCurrencyTerm('jewels')) return amount * unknownUnitRate;
 
   // Check for currency symbols
   if (valueStr.includes('€')) return amount * currencyRates.EUR;
@@ -383,7 +430,12 @@ function convertToUSD(valueStr, source = '') {
   if (/S\/\.?/i.test(valueStr)) return amount * currencyRates.PEN;
   if (valueStr.includes('₲')) return amount * currencyRates.PYG;
   if (/\$U/i.test(valueStr)) return amount * currencyRates.UYU;
-  
+  if (valueStr.includes('$')) return amount;
+
+  if (hasUnknownUnitCandidate()) {
+    return amount * unknownUnitRate;
+  }
+
   // Default to USD if no specific currency found
   return amount;
 }

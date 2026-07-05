@@ -185,6 +185,16 @@
 			getObjectValue(data.data || {}, ["id", "userId", "user_id", "channelId", "channel_id"]);
 	}
 
+	function getVeloraChannelIdFromStreamResponse(data){
+		if (!data || typeof data !== "object"){
+			return "";
+		}
+		return getObjectValue(data, ["userId", "user_id", "channelId", "channel_id"]) ||
+			getObjectValue(data.user || data.channel || {}, ["id", "userId", "user_id", "channelId", "channel_id"]) ||
+			getObjectValue(data.data || {}, ["userId", "user_id", "channelId", "channel_id"]) ||
+			getVeloraChannelIdFromResponse(data);
+	}
+
 	function fetchVeloraJson(url){
 		return fetch(url, {
 			cache: "no-store",
@@ -219,7 +229,7 @@
 			}).catch(function(){
 				return fetchVeloraJson("https://api.velora.tv/api/streams/user/" + encodeURIComponent(channel))
 					.then(function(data){
-						return getVeloraChannelIdFromResponse(data) || "";
+						return getVeloraChannelIdFromStreamResponse(data) || "";
 					});
 			}).then(function(resolved){
 				historyChannelCache[cacheKey] = normalizeVeloraChannel(resolved) || channel;

@@ -43,7 +43,7 @@ For support-facing high-volume platform questions, start with `priority-platform
 - `independent-live-platform-sources.md`: grouped independent live/chat platform sources for BandLab, Bigo.tv, Bitchute, Blaze, Castr, Cherry TV, CloutHub, Cozy.tv, DLive, Estrim, FC2, Jaco.live, LFG.tv, Locals.com, and Loco.gg.
 - `video-broadcast-platform-sources.md`: grouped video/audio/broadcast chat sources for Mixlr, NicoVideo, NonOLive, OpenStreamingPlatform, Owncast, PeerTube, Restream.io Chat, Steam Broadcasts, Trovo, Truffle.vip, TwitCasting, Vimeo, YouNow, and Zap.stream.
 - `community-membership-webapp-sources.md`: grouped community, membership, collaboration, and web-app sources for Circle.so, MeetMe, NextCloud, Patreon, Roll20, Simps, Tellonym, Whop, Wix Live/widgets, and Workplace legacy routing.
-- `regional-and-emerging-platform-sources.md`: grouped regional, emerging, app-specific, and newly added rendered-page sources for Bilibili DOM paths, Favorited, Kwai, Pilled, Portal, Pump.fun, Retake, Rooter, SharePlay, SoulBound, Stream.place, Substack, Tikfinity, uScreen, VK Live, and Xeenon.
+- `regional-and-emerging-platform-sources.md`: grouped regional, emerging, app-specific, and newly added rendered-page sources for Bilibili DOM paths, Favorited, Kwai, Pilled, Portal, Pump.fun, Retake, Rooter, SharePlay, SoulBound, Stream.place, Substack, Tikfinity, uScreen, and VK Live. Xeenon is retired under `sources/graveyard/`.
 - `special-case-platform-and-helper-sources.md`: remaining special-case routing for Joystick DOM chat, Velora DOM chat, VPZone rendered/WS-intercepted capture, X live chat, Vertical Pixel Zone, Vercel demo helper, and top-level YouTube helper copies.
 
 ## Source Anchors

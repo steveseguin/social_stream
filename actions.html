@@ -1283,7 +1283,7 @@
             if (!useServerOnlyTransport()) {
                 iframe = document.createElement("iframe");
                 iframe.connectedPeers = connectedPeers;
-                iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password +
+                iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) +
                     "&solo&view=" + roomID + "&novideo&noaudio&label=actions&cleanoutput&room=" + roomID;
                 iframe.style.width = "0px";
                 iframe.style.height = "0px";

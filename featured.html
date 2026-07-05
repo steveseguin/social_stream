@@ -1481,6 +1481,39 @@
 				stripLinks = true;
 			}
 
+			var allowBotLinks = false;
+			if (urlParams.has("allowbotlinks")) {
+				allowBotLinks = true;
+			}
+
+			var allowHostLinks = false;
+			if (urlParams.has("allowhostlinks")) {
+				allowHostLinks = true;
+			}
+
+			var allowModLinks = false;
+			if (urlParams.has("allowmodlinks")) {
+				allowModLinks = true;
+			}
+
+			var allowVipLinks = false;
+			if (urlParams.has("allowviplinks")) {
+				allowVipLinks = true;
+			}
+
+			function shouldStripLinksForMessage(data) {
+				if (!stripLinks) {
+					return false;
+				}
+				if (!data) {
+					return true;
+				}
+				if ((allowBotLinks && data.bot) || (allowHostLinks && data.host) || (allowModLinks && data.mod) || (allowVipLinks && data.vip)) {
+					return false;
+				}
+				return true;
+			}
+
 			var activeLinks = false;
 			if (urlParams.has("activelinks")) {
 				activeLinks = true;
@@ -2540,10 +2573,10 @@
 				var iframe = document.createElement("iframe");
 
 				if (pseudodock) {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID; // push and view, as we will connect with other docks also.
-					// iframe.src = "https://vdo.socialstream.ninja/?ln&password="+password+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
+					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + lanonly + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID; // push and view, as we will connect with other docks also.
+					// iframe.src = "https://vdo.socialstream.ninja/?ln&password="+encodeURIComponent(password)+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
 				} else {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID; // exclude raw feed; we only want selected inputs.
+					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID; // exclude raw feed; we only want selected inputs.
 				}
 
 				iframe.style.width = "0px";
@@ -3233,8 +3266,9 @@
 						}
 					  }
 					  
-					  if (data.chatmessage && messageDiv && (stripLinks || activeLinks || shortlink)) {
-						processURLs(messageDiv, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					  var stripLinksForMessage = shouldStripLinksForMessage(data);
+					  if (data.chatmessage && messageDiv && (stripLinksForMessage || activeLinks || shortlink)) {
+						processURLs(messageDiv, { makeClickable: activeLinks, stripLinks: stripLinksForMessage, shortenURLs: shortlink });
 					  } 
 
 					  document.getElementById("output").appendChild(messageContainer);
@@ -3277,8 +3311,9 @@
 						document.getElementById("newmessage").classList.add("dono");
 					  }
 					  
-					  if ((stripLinks || activeLinks || shortlink) && data.chatmessage && activeMessageDiv) {
-						processURLs(activeMessageDiv, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					  var stripLinksForMessage = shouldStripLinksForMessage(data);
+					  if ((stripLinksForMessage || activeLinks || shortlink) && data.chatmessage && activeMessageDiv) {
+						processURLs(activeMessageDiv, { makeClickable: activeLinks, stripLinks: stripLinksForMessage, shortenURLs: shortlink });
 					  } 
 					}
 					

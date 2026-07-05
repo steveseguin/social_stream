@@ -2207,9 +2207,9 @@ body.light-mode .meta-value.badge {
 	if (roomID && !useServerOnlyTransport()){
         iframe = document.createElement("iframe");
 		if (featuredMode){ // featuredMode is false by default in events.html
-			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
 		} else { // This is the path typically taken by events.html
-			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+encodeURIComponent(password)+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
 		}
 		iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
 	

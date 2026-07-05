@@ -1867,7 +1867,7 @@
 			function RecvDataWindow() {
 				var iframe = document.createElement("iframe");
 
-				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + "&push&notmobile&label=bot&view=" + roomID + "&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
+				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + lanonly + "&push&notmobile&label=bot&view=" + roomID + "&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
 
 				iframe.style.width = "0px";
 				iframe.style.height = "0px";

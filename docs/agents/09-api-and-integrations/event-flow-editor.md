@@ -1,6 +1,6 @@
 # Event Flow Editor
 
-Status: heavy extraction pass plus focused Node-test evidence on 2026-06-24.
+Status: heavy extraction pass plus focused Node-test evidence updated on 2026-07-05.
 
 ## Purpose
 
@@ -22,7 +22,7 @@ Event Flow is SSN's visual automation layer. It lets users connect source trigge
 
 ## Focused Validation Evidence
 
-On 2026-06-24, these focused Node tests passed:
+On 2026-07-05, these focused Node tests passed:
 
 ```powershell
 node tests/eventflow-customjs.test.js
@@ -34,17 +34,25 @@ node tests/eventflow-play-media-duration.test.js
 Results:
 
 - `eventflow-customjs.test.js`: `23 passed, 0 failed`
-- `eventflow-compare-property.test.js`: `18 passed, 0 failed`
+- `eventflow-compare-property.test.js`: `39 passed, 0 failed`
 - `eventflow-template-vars.test.js`: `6 passed, 0 failed`
 - `eventflow-play-media-duration.test.js`: `2 passed, 0 failed`
 
 Evidence label: `focused-node-test`; not runtime-tested.
 
-What this supports: custom JS allow/block detection, custom JS trigger/action behavior, syntax-error handling, compare-property behavior, OBS system trigger matching, dynamic template variables, counter-derived `counterRemaining`, and `playTenorGiphy` duration payload behavior.
+What this supports: custom JS allow/block detection, custom JS trigger/action behavior, syntax-error handling, compare-property behavior including donation label currency conversion, OBS system trigger matching, dynamic template variables, counter-derived `counterRemaining`, and `playTenorGiphy` duration payload behavior.
 
 What it does not support: Event Flow editor UI behavior, flow save/import/export, Flow Actions overlay rendering, OBS Browser Source output, OBS WebSocket control, Chrome extension runtime behavior, standalone app runtime behavior, live source payloads, webhook/relay/TTS/Spotify/MIDI/points/send-message actions, or long-running state.
 
 Full evidence entry: `../18-focused-validation-evidence-log.md`.
+
+## Donation Value Semantics
+
+Event Flow treats `hasDonation` as the paid-support display label and `donoValue` as the exact numeric value when a source provides one. Threshold logic for `eventDonation`, `compareProperty` on `donoValue`/`donationAmount`, and numeric `hasDonation` comparisons uses the exact `donoValue` first, then legacy `donationAmount`, then `currency.js` conversion of `hasDonation` with the source `type`.
+
+This conversion is only for normalized donation labels such as `1500 bits`, `$15 CAD`, `500 Stars`, `100 gifted subs`, `cheer100`, or `200 Jewels`. Event Flow does not parse `chatmessage` prose for donation values. Unknown named virtual units use the shared fallback of 100 units = $0.01 USD.
+
+`eventDonation` matches the named paid-support events `superchat`, `supersticker`, `jeweldonation`, legacy `donation`, and Twitch `cheer`; value-only rows with no `event` still use the `hasDonation` trigger.
 
 ## Mental Model
 

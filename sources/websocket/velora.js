@@ -112,6 +112,8 @@ const state = {
     refreshTimer: null,
     sseReconnectTimer: null,
     socketFallbackTimer: null,
+    authHandoffPollTimer: null,
+    authHandoffInFlight: false,
     streamId: null,
     authPopup: null,
     requestedChannel: '',
@@ -599,6 +601,16 @@ function getVeloraChannelIdFromResponse(data) {
         getObjectValue(data.data || {}, ['id', 'userId', 'user_id', 'channelId', 'channel_id']);
 }
 
+function getVeloraChannelIdFromStreamResponse(data) {
+    if (!data || typeof data !== 'object') {
+        return '';
+    }
+    return getObjectValue(data, ['userId', 'user_id', 'channelId', 'channel_id']) ||
+        getObjectValue(data.user || data.channel || {}, ['id', 'userId', 'user_id', 'channelId', 'channel_id']) ||
+        getObjectValue(data.data || {}, ['userId', 'user_id', 'channelId', 'channel_id']) ||
+        getVeloraChannelIdFromResponse(data);
+}
+
 async function fetchVeloraJson(url) {
     const response = await fetch(url, {
         cache: 'no-store',
@@ -634,7 +646,7 @@ async function resolveChatHistoryChannelId(channel) {
         .catch(function () {
             return fetchVeloraJson(`${VELORA_API_BASE}/api/streams/user/${encodeURIComponent(channel)}`)
                 .then(function (data) {
-                    return getVeloraChannelIdFromResponse(data) || '';
+                    return getVeloraChannelIdFromStreamResponse(data) || '';
                 });
         })
         .then(function (resolved) {
@@ -722,6 +734,14 @@ function clearAuthState() {
     state.refreshTimer = null;
 }
 
+function clearAuthHandoffWatcher() {
+    if (state.authHandoffPollTimer) {
+        clearInterval(state.authHandoffPollTimer);
+        state.authHandoffPollTimer = null;
+    }
+    state.authHandoffInFlight = false;
+}
+
 function isTokenExpired() {
     if (!state.tokens) return true;
     const expiresAt = state.tokens.expires_at;
@@ -800,6 +820,7 @@ function applyTokenPayload(payload) {
 }
 
 async function handleAuthSuccess(payload) {
+    clearAuthHandoffWatcher();
     applyTokenPayload(payload && payload.tokens ? payload.tokens : payload);
     if (!state.tokens?.access_token) {
         loadTokens();
@@ -810,8 +831,56 @@ async function handleAuthSuccess(payload) {
 }
 
 function handleAuthError(payload) {
+    clearAuthHandoffWatcher();
     const message = payload && payload.message ? payload.message : 'Velora sign-in failed.';
     setAuthStatus(message, 'danger');
+}
+
+async function completeStoredAuthHandoff() {
+    if (state.authHandoffInFlight) {
+        return false;
+    }
+    state.authHandoffInFlight = true;
+    try {
+        const hadToken = !!state.tokens?.access_token;
+        loadTokens();
+        if (!state.tokens?.access_token || isTokenExpired()) {
+            return false;
+        }
+        scheduleTokenRefresh();
+        if (hadToken && state.authUser && state.eventsConnected) {
+            clearAuthHandoffWatcher();
+            return true;
+        }
+        await loadUserProfile();
+        updateAuthUI();
+        connectSocket();
+        if (state.authPopup && !state.authPopup.closed) {
+            try {
+                state.authPopup.close();
+            } catch (e) {}
+        }
+        state.authPopup = null;
+        clearAuthHandoffWatcher();
+        return true;
+    } catch (err) {
+        console.warn('[Velora] Failed to complete stored auth handoff:', err && err.message ? err.message : err);
+        return false;
+    } finally {
+        state.authHandoffInFlight = false;
+    }
+}
+
+function startAuthHandoffWatcher() {
+    clearAuthHandoffWatcher();
+    const started = Date.now();
+    state.authHandoffPollTimer = setInterval(function () {
+        if ((Date.now() - started) > 120000) {
+            clearAuthHandoffWatcher();
+            return;
+        }
+        completeStoredAuthHandoff();
+    }, 1000);
 }
 
 async function handleAuthPayload(payload) {
@@ -954,6 +1023,7 @@ function startBrowserAuthFlow() {
     }
     state.authPopup = popup;
     setAuthStatus('Complete Velora sign-in in the popup.', 'warning');
+    startAuthHandoffWatcher();
 }
 
 async function startAuthFlow() {
@@ -1969,6 +2039,15 @@ function wirePostMessageBridge() {
     });
 }
 
+function wireAuthStorageBridge() {
+    window.addEventListener('storage', function (event) {
+        if (!event || event.key !== TOKEN_KEY || !event.newValue) {
+            return;
+        }
+        completeStoredAuthHandoff();
+    });
+}
+
 // ─── UI updates ───────────────────────────────────────────────────────────────
 
 function updateAuthUI() {
@@ -2176,6 +2255,7 @@ function bindEvents() {
         els.signOut.addEventListener('click', () => {
             disconnectSocket();
             stopChatHistoryPoll();
+            clearAuthHandoffWatcher();
             clearAuthState();
             updateAuthUI();
             setSocketStatus('disconnected');
@@ -2230,6 +2310,7 @@ async function init() {
     bindEvents();
     wireExtensionBridge();
     wirePostMessageBridge();
+    wireAuthStorageBridge();
     notifyBridgeStatus();
     updateAuthUI();
     startChatHistoryPoll();

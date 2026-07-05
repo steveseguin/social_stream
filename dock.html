@@ -3767,6 +3767,39 @@
 				stripLinks = true;
 			}
 
+			var allowBotLinks = false;
+			if (urlParams.has("allowbotlinks")) {
+				allowBotLinks = true;
+			}
+
+			var allowHostLinks = false;
+			if (urlParams.has("allowhostlinks")) {
+				allowHostLinks = true;
+			}
+
+			var allowModLinks = false;
+			if (urlParams.has("allowmodlinks")) {
+				allowModLinks = true;
+			}
+
+			var allowVipLinks = false;
+			if (urlParams.has("allowviplinks")) {
+				allowVipLinks = true;
+			}
+
+			function shouldStripLinksForMessage(data) {
+				if (!stripLinks) {
+					return false;
+				}
+				if (!data) {
+					return true;
+				}
+				if ((allowBotLinks && data.bot) || (allowHostLinks && data.host) || (allowModLinks && data.mod) || (allowVipLinks && data.vip)) {
+					return false;
+				}
+				return true;
+			}
+
 			var activeLinks = false;
 			if (urlParams.has("activelinks")) {
 				activeLinks = true;
@@ -4838,7 +4871,7 @@
 
 			function getColorForAmount(data) {
 				
-				let amount = data.donoValue || toUSD(data.donation || data.hasDonation);
+				let amount = data.donoValue || toUSD(data.donation || data.hasDonation, data.type);
 				
 				for (const [threshold, color] of tiers) {
 					if (amount >= threshold) return color;
@@ -4846,9 +4879,9 @@
 				return null;
 			}
 			
-			function toUSD(value) {
+			function toUSD(value, source) {
 				 // Use the new convertToUSD function
-				 return convertToUSD(value);
+				 return convertToUSD(value, source || '');
 			}
 			
 			const tiers = processTierParam(urlParams);
@@ -6124,7 +6157,7 @@
 				setTimeout(function(){ // timeout to avoid middle+click causing override.
 					let pass = "";
 					if (urlParams.has("password")) {
-						pass = "&password="+password;
+						pass = "&password="+encodeURIComponent(password);
 					}
 
 					const uniqueName = "popup_" + Date.now();
@@ -8284,9 +8317,9 @@
 				var iframe = document.createElement("iframe");
 				iframe.connectedPeers = {};
 				if (featuredMode) {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + room + "&scene&novideo&noaudio&cleanoutput&room=" + room;
+					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + room + "&scene&novideo&noaudio&cleanoutput&room=" + room;
 				} else {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + obsremote + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + room;
+					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + lanonly + obsremote + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + room;
 				}
 				// push and view, as we will connect with other docks also. I suppose I can have it only do this if &sync is enabled?
 				iframe.style.width = "0px";
@@ -11393,8 +11426,9 @@
 
 
 					
-					if (chatmessage && hlMessage && (stripLinks || activeLinks || shortlink)) {
-						processURLs(hlMessage, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					var stripLinksForMessage = shouldStripLinksForMessage(data);
+					if (chatmessage && hlMessage && (stripLinksForMessage || activeLinks || shortlink)) {
+						processURLs(hlMessage, { makeClickable: activeLinks, stripLinks: stripLinksForMessage, shortenURLs: shortlink });
 					} 
 					
 					if (data.type && data.type == "twitch" && avatars && data.chatimg && data.chatname) { 

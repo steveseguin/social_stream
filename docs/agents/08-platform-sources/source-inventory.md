@@ -201,7 +201,6 @@ Support note: these public entries represent source-page/API workflows. They can
 - Whatnot
 - Whop
 - Wix Live
-- Xeenon
 - YouNow
 - Zap.stream
 - Zoom
@@ -402,7 +401,6 @@ wix.js
 wix2.js
 workplace.js
 x.js
-xeenon.js
 younow.js
 youtube.js
 youtube_comments.js
@@ -433,7 +431,7 @@ Observed graveyard examples include:
 - Twitter old variant
 - Vimm
 - Vstream
-- Xeenon old variant
+- Xeenon retired variants
 
 ## How To Answer "Is X Supported?"
 

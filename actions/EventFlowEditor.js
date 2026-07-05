@@ -3212,7 +3212,7 @@ class EventFlowEditor {
 				break;
 
 			case 'eventDonation':
-				html += this.renderEventSourceFilter(node, 'superchat,donation,cheer,supersticker');
+				html += this.renderEventSourceFilter(node, 'superchat,donation,cheer,supersticker,jeweldonation');
 				html += `
 					<div class="property-group">
 						<label class="property-label">Minimum Amount (optional)</label>
@@ -3222,10 +3222,10 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group" style="background: #fff8e1; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>💰 Specific Donation Event</strong><br>
-						Matches specific event names: <code>superchat</code>, legacy <code>donation</code>, <code>cheer</code>, and <code>supersticker</code>.<br>
+						Matches specific event names: <code>superchat</code>, legacy <code>donation</code>, <code>cheer</code>, <code>supersticker</code>, and <code>jeweldonation</code>.<br>
 						For normal value-only tips or donations with no event name, use <strong>Has Donation</strong> instead.<br><br>
 						<strong>⚡ Supported platforms:</strong><br>
-						• <strong>YouTube:</strong> Super Chat, Super Stickers<br>
+						• <strong>YouTube:</strong> Super Chat, Super Stickers, Jewels/Gifts<br>
 						• <strong>Twitch:</strong> Cheers/Bits (WebSocket mode)<br>
 						• <strong>Kick:</strong> Donations (WebSocket mode)<br>
 						• <strong>Many others:</strong> Streamlabs, Ko-fi integrations, etc.<br><br>

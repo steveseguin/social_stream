@@ -266,7 +266,7 @@ These are active source extraction targets. Start with the high-volume platforms
 - `sources/wix2.js`
 - `sources/workplace.js`
 - `sources/x.js`
-- `sources/xeenon.js`
+- `sources/graveyard/xeenon.js`
 - `sources/younow.js`
 - `sources/youtube.js`
 - `sources/youtube_comments.js`

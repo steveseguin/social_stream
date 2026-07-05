@@ -216,7 +216,7 @@ Source-checked page families:
 - `reactions.html`: `session`, `room`, `password`, `label`, `out`, `outchan`, `in`, `inchan`, `scale`, `speed`, `burst`, `limit`, `pagebg`, `align`, `layout`, `server`, `server2`, `server3`, `localserver`
 - `scoreboard.html`: `session`, `s`, `id`, `password`, `layout`, `theme`, `maxusers`, `minpoints`, `chatpoints`, `donationpoints`, `customtriggers`, `hidepoints`, `hiderank`, `hideavatar`, `hideplatform`, `animations`, `highlightchanges`, `title`, `font`, `googlefont`, `bgcolor`, `textcolor`, `scale`, `server`, `server2`, `server3`, `lanonly`, `preview`, `transparent`
 - `ticker.html`: `session`, `s`, `id`, `password`, `font`, `fontsize`, `googlefont`, `style`, `css`, base64 CSS aliases, `server`, `server2`, `localserver`, `chroma`, `speed`, `speedmode`, `display`, `rotateinterval`, `rotatepause`, `rotateorder`, `separator`, `gap`, `transparent`, `scrollcopies`, `js`
-- `map.html`: case-insensitive/normalized parameters for map type, region filters, visual settings, iframe bridge, `session`, `password`, `label`, `server`, `server2`, `server3`, and `localserver`
+- `map.html`: case-insensitive/normalized parameters for map type, region filters, visual settings, base land styling (`mapopacity`, `mapfill`, `mapborder`, `mapbg`, `transparent`, `hidegrid` and aliases), custom CSS (`css`, base64 CSS aliases), iframe bridge, `session`, `password`, `label`, `server`, `server2`, `server3`, and `localserver`
 
 Support caveat: these pages consume narrow payload shapes. A blank page may mean no matching payload has arrived, not that the session is broken.
 

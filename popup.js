@@ -2561,7 +2561,7 @@ function getAiOverlayControlValue(id, fallback = "") {
 function getAiOverlayPasswordParam(response) {
   let password = "";
   if (response && response.password) {
-    password = "&password=" + response.password;
+    password = "&password=" + encodeURIComponent(response.password);
   }
   if (urlParams.has("localserver")) {
     password += "&localserver";
@@ -3531,7 +3531,7 @@ function update(response, sync = true) {
 
             var password = "";
             if ('password' in response && response.password) {
-                password = "&password=" + response.password;
+                password = "&password=" + encodeURIComponent(response.password);
             }
 
             var localServer = urlParams.has("localserver") ? "&localserver" : "";
@@ -9851,6 +9851,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	var popupSearchLockedWidth = null;
 	var popupSearchIndex = null;
 	var popupSearchTimer = null;
+	var popupSearchUserToggles = null;
+	var popupSearchAnchor = null;
+	var popupSearchScrollY = null;
 
 	function normalizePopupSearchText(value) {
 		return String(value || '').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -10013,12 +10016,42 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return;
 		}
 		popupSearchOpenState = [];
+		popupSearchUserToggles = null;
+		popupSearchAnchor = null;
+		popupSearchScrollY = window.scrollY || document.documentElement.scrollTop || 0;
 		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
 			popupSearchOpenState.push({
 				input: input,
 				checked: input.checked
 			});
 		});
+	}
+
+	function recordPopupSearchToggle(input) {
+		if (!popupSearchUserToggles) {
+			popupSearchUserToggles = [];
+		}
+		for (var i = 0; i < popupSearchUserToggles.length; i++) {
+			if (popupSearchUserToggles[i].input === input) {
+				popupSearchUserToggles[i].checked = input.checked;
+				return;
+			}
+		}
+		popupSearchUserToggles.push({
+			input: input,
+			checked: input.checked
+		});
+	}
+
+	function getPopupSearchUserToggle(input, fallback) {
+		if (popupSearchUserToggles) {
+			for (var i = 0; i < popupSearchUserToggles.length; i++) {
+				if (popupSearchUserToggles[i].input === input) {
+					return popupSearchUserToggles[i].checked;
+				}
+			}
+		}
+		return fallback;
 	}
 
 	function openPopupSearchSections() {
@@ -10033,10 +10066,76 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		popupSearchOpenState.forEach(function(state) {
 			if (state.input) {
-				state.input.checked = state.checked;
+				state.input.checked = getPopupSearchUserToggle(state.input, state.checked);
 			}
 		});
 		popupSearchOpenState = null;
+	}
+
+	function restorePopupSearchScrollContext() {
+		var anchor = popupSearchAnchor;
+		var scrollY = popupSearchScrollY;
+		popupSearchAnchor = null;
+		popupSearchScrollY = null;
+		popupSearchUserToggles = null;
+		if (anchor && document.contains(anchor) && !isPopupSearchNormallyHidden(anchor)) {
+			var sectionInput = anchor.querySelector('input.collapsible-input');
+			if (sectionInput) {
+				sectionInput.checked = true;
+			}
+			var target = anchor.querySelector('.collapsible-label') || anchor;
+			target.scrollIntoView({block: 'start'});
+		} else if (typeof scrollY === 'number') {
+			var htmlStyle = document.documentElement.style;
+			var previousBehavior = htmlStyle.scrollBehavior;
+			htmlStyle.scrollBehavior = 'auto';
+			window.scrollTo(0, scrollY);
+			htmlStyle.scrollBehavior = previousBehavior || '';
+		}
+	}
+
+	function getPopupSearchFollowingWrapper(startNode) {
+		var node = startNode;
+		while (node && node.nextElementSibling) {
+			node = node.nextElementSibling;
+			if (node.classList && node.classList.contains('wrapper') && !isPopupSearchNormallyHidden(node)) {
+				return node;
+			}
+		}
+		return null;
+	}
+
+	function setPopupSearchAnchorFromEvent(e) {
+		if (!document.body.classList.contains('popup-searching')) {
+			return;
+		}
+		var target = e.target;
+		if (!target || !target.closest) {
+			return;
+		}
+		var optionsLink = target.closest('a.options-link[href^="#"]');
+		if (optionsLink) {
+			var hash = (optionsLink.getAttribute('href') || '').slice(1);
+			var named = hash ? document.getElementById(hash) : null;
+			if (named) {
+				var section = named.closest('.wrapper');
+				if (!section) {
+					section = getPopupSearchFollowingWrapper(named);
+				}
+				if (!section) {
+					var linkContainer = optionsLink.closest('.container > .link, .generic_category_title');
+					section = getPopupSearchFollowingWrapper(linkContainer);
+				}
+				if (section) {
+					popupSearchAnchor = section;
+					return;
+				}
+			}
+		}
+		var container = target.closest('.wrapper, .container > .link');
+		if (container) {
+			popupSearchAnchor = container;
+		}
 	}
 
 	function lockPopupSearchWidth() {
@@ -10203,6 +10302,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			setPopupSearchActive(false, false);
 			restorePopupSearchOpenState();
 			unlockPopupSearchWidth();
+			restorePopupSearchScrollContext();
 			return;
 		}
 
@@ -10285,6 +10385,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		setPopupSearchActive(false, false);
 		restorePopupSearchOpenState();
 		unlockPopupSearchWidth();
+		restorePopupSearchScrollContext();
 		popupSearchIndex = null;
 	}
 
@@ -10298,23 +10399,72 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 	}
-	
-	document.getElementById('searchIcon').addEventListener('click', function() {
+
+	document.addEventListener('change', function(e) {
+		if (!document.body.classList.contains('popup-searching')) {
+			return;
+		}
+		var input = e.target;
+		if (input && input.classList && input.classList.contains('collapsible-input')) {
+			recordPopupSearchToggle(input);
+		}
+	}, true);
+
+	document.addEventListener('click', setPopupSearchAnchorFromEvent, true);
+
+	function openPopupSearch() {
 		var searchInput = popupSearchInput || document.getElementById('searchInput');
+		if (!searchInput) {
+			return;
+		}
 		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
 			searchInput.style.display = 'block';
 			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
 			searchInput.focus(); // Optional: Focus on the input field when it's shown
 			setTimeout(preparePopupSearchIndex, 0);
 		} else {
+			searchInput.focus();
+			searchInput.select();
+		}
+	}
+
+	document.addEventListener('keydown', function(e) {
+		if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === 'f' || e.key === 'F')) {
+			e.preventDefault();
+			openPopupSearch();
+		} else if (e.key === 'Escape') {
+			var searchInput = popupSearchInput || document.getElementById('searchInput');
+			if (searchInput && window.getComputedStyle(searchInput).display !== 'none') {
+				e.preventDefault();
+				closePopupSearch();
+			}
+		}
+	});
+
+	document.getElementById('searchIcon').addEventListener('click', function() {
+		var searchInput = popupSearchInput || document.getElementById('searchInput');
+		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
+			openPopupSearch();
+		} else {
 			closePopupSearch();
 		}
 	});
 	
 	var activeToggle = false;
+	var activeToggleOpenState = null;
+	var activeToggleScrollY = null;
 	document.getElementById('activeIcon').addEventListener('click', function() {
 		activeToggle = !activeToggle;
 		if (activeToggle) {
+			// Remember open sections and scroll position so toggling off restores them
+			activeToggleOpenState = [];
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				activeToggleOpenState.push({
+					input: ele,
+					checked: ele.checked
+				});
+			});
+			activeToggleScrollY = window.scrollY || document.documentElement.scrollTop || 0;
 			// Open all collapsible sections
 			document.querySelectorAll('input.collapsible-input').forEach(ele => {
 				ele.checked = true;
@@ -10364,15 +10514,32 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				item.style.display = '';
 			});
 			// Reset to original state
-			document.querySelectorAll('input.collapsible-input').forEach(ele => {
-				ele.checked = false;
-			});
+			if (activeToggleOpenState) {
+				activeToggleOpenState.forEach(function(state) {
+					if (state.input) {
+						state.input.checked = state.checked;
+					}
+				});
+				activeToggleOpenState = null;
+			} else {
+				document.querySelectorAll('input.collapsible-input').forEach(ele => {
+					ele.checked = false;
+				});
+			}
 			document.querySelectorAll('.wrapper').forEach(ele => {
 				ele.style.display = "";
 			});
 			document.querySelectorAll('.options_group > div').forEach(ele => {
 				ele.style.display = "";
 			});
+			if (typeof activeToggleScrollY === 'number') {
+				var htmlStyle = document.documentElement.style;
+				var previousBehavior = htmlStyle.scrollBehavior;
+				htmlStyle.scrollBehavior = 'auto';
+				window.scrollTo(0, activeToggleScrollY);
+				htmlStyle.scrollBehavior = previousBehavior || '';
+				activeToggleScrollY = null;
+			}
 		}
 	});
 	

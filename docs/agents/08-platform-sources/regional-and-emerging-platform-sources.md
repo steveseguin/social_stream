@@ -22,7 +22,6 @@ This page covers:
 - Tikfinity activity feed widget
 - uScreen-style live chat pages
 - VK Live
-- Xeenon
 
 ## Core Boundary
 
@@ -69,7 +68,6 @@ Do not assume:
 | Tikfinity activity feed | `sources/tikfinity.js` | Manifest uses `https://tikfinity.zerody.one/*` with all-frame behavior; active code exits unless path includes `/widget/vite/src/activity-feed/`. | Window message payloads from Tikfinity activity feed normalized as TikTok payloads; payload `type: "tiktok"`. | Supports chat, gift, follow, share, subscribe, joined, and envelope events with metadata; gift filtering respects TikTok donation settings and join filtering respects `capturejoinedevent`. `getSource` and `focusChat` return false. | Use the Tikfinity activity feed widget path; treat it as read-only event ingestion, not a platform send-back target. |
 | uScreen-style live pages | `sources/uscreen.js` | Public card is uScreen; manifest row in this pass includes `https://www.ilmfix.de/programs/*`. | Live chat rows with avatar, author, message; payload `type` is derived from the main domain or falls back to `uscreen`. | Uses `ds-text-editor` shadow DOM for focus. | Confirm the exact uScreen/program domain and live-chat sidebar; source identity may be the site domain rather than literal `uscreen`. |
 | VK Live | `sources/vklive.js` | Public card is VK Live; manifest includes broad `https://vk.com/*`. | VK video chat rows with author and message; payload `type: "vklive"`. | Optional `customlivespacestate` and `customlivespaceaccount` settings can restrict capture/focus to a configured channel. | Confirm VK live/chat page, `#react_rootVideoChat`, account filter settings, and `#type-a-message` input presence. |
-| Xeenon | `sources/xeenon.js` | Public/manifest route uses `https://xeenon.xyz/*`. | Chat rows with profile image, author, message; payload `type: "xeenon"`. | Viewer-count helper exists, but `isExtensionOn` is initialized false and not refreshed from state in the inspected path, so do not promise viewer events without validation. WebRTC keepalive is present. | Confirm chat message container exists and a new row renders; do not treat viewer counts as verified. |
 
 ## Common Behavior
 
@@ -84,7 +82,7 @@ Do not assume:
 
 | Feature | Source-Backed Notes |
 | --- | --- |
-| Viewer counts | Active/gated paths were found for Kwai, SharePlay, SoulBound, Stream.place, and Substack. Portal, Pump.fun, Retake, and Xeenon contain viewer helper code, but the inspected active path does not prove emission. |
+| Viewer counts | Active/gated paths were found for Kwai, SharePlay, SoulBound, Stream.place, and Substack. Portal, Pump.fun, and Retake contain viewer helper code, but the inspected active path does not prove emission. |
 | Tips/gifts/donations | Kwai parses gift count text; Pump.fun and Retake parse `Tipped` rows; SoulBound parses tipped rows; Tikfinity gift payloads emit `event: "gift"` with coin value. |
 | Joins | Kwai can mark joined feed rows; Substack can mark joined rows; Tikfinity emits joined/member events only when `capturejoinedevent` allows it. |
 | Raids/shoutouts | SharePlay detects shoutout cards and Blitz cards, mapping Blitz to `event: "raid"` with optional viewer metadata. |
@@ -130,7 +128,7 @@ Tikfinity is treated as a read-only activity-feed ingest path. It normalizes fee
 ## Do Not Promise Yet
 
 - App parity for any source in this group.
-- Viewer counts for Portal, Pump.fun, Retake, or Xeenon without live validation.
+- Viewer counts for Portal, Pump.fun, or Retake without live validation.
 - Send-back for any source in this group.
 - Full gift/tip/raid parity beyond the explicitly noted source paths.
 - Broad URL support beyond manifest/public setup paths.
@@ -143,4 +141,4 @@ Tikfinity is treated as a read-only activity-feed ingest path. It normalizes fee
 - Exact manifest-to-public-site reconciliation for Kwai, SoulBound, uScreen domain variants, VK Live, and Bilibili aliases.
 - App source-window parity validation.
 - Controlled payload samples for SharePlay shoutout/Blitz, Tikfinity gifts/envelopes/subs, Kwai gifts, SoulBound tips, Pump.fun/Retake tips, and Stream.place relayed rows.
-- Line-level validation of inactive/commented viewer-count helpers in Portal, Pump.fun, Retake, and Xeenon.
+- Line-level validation of inactive/commented viewer-count helpers in Portal, Pump.fun, and Retake.

@@ -1,6 +1,6 @@
 # Focused Validation Evidence Log
 
-Status: focused validation evidence entries updated on 2026-06-24.
+Status: focused validation evidence entries updated on 2026-07-05.
 
 ## Purpose
 
@@ -399,11 +399,11 @@ Follow-up:
 
 ### Event Flow Focused Node Tests
 
-Validation date: 2026-06-24
+Validation date: 2026-07-05
 
 Validator: Codex
 
-Area: Event Flow system internals, custom JS boundaries, compare-property triggers, template variables, counters, OBS system triggers, and play-media duration payloads
+Area: Event Flow system internals, custom JS boundaries, compare-property triggers, donation label currency conversion, template variables, counters, OBS system triggers, and play-media duration payloads
 
 Evidence label: `focused-node-test`; not runtime-tested
 
@@ -419,7 +419,7 @@ node tests/eventflow-play-media-duration.test.js
 Results:
 
 - `eventflow-customjs.test.js`: `23 passed, 0 failed`
-- `eventflow-compare-property.test.js`: `18 passed, 0 failed`
+- `eventflow-compare-property.test.js`: `39 passed, 0 failed`
 - `eventflow-template-vars.test.js`: `6 passed, 0 failed`
 - `eventflow-play-media-duration.test.js`: `2 passed, 0 failed`
 
@@ -441,7 +441,11 @@ Observed result:
 - Custom JS triggers returned expected booleans in the allowed context.
 - Custom JS syntax errors failed the node without failing the whole test run.
 - Custom JS actions could mutate the message in the allowed context and were blocked when eval was disabled.
-- `compareProperty` supported string equality and numeric comparisons.
+- `compareProperty` supported string equality, numeric comparisons, and donation label conversion via `currency.js`.
+- Donation thresholds treated YouTube Super Chat labels as monetary values, Twitch bits as converted USD-equivalent values, and YouTube Jewels/Gifts as converted support values rather than raw visible counts.
+- Unknown named virtual units used the shared fallback of 100 units = $0.01 USD.
+- Unknown value-plus-unit labels that contain fiat or platform-token substrings did not override known virtual-unit conversion or the unknown-unit fallback.
+- `eventDonation` matched `jeweldonation`, and its minimum amount filter used the converted support value.
 - Digit-prefixed strings were treated as strings for exact matching rather than by numeric prefix only.
 - OBS system payloads matched OBS-specific triggers and did not trigger `anyMessage`.
 - Template rendering included dynamic top-level fields and derived `counterRemaining`.
@@ -471,6 +475,56 @@ Follow-up:
 - Runtime-validate Event Flow editor UI and Flow Actions overlay behavior before calling flows browser-validated.
 - Validate OBS actions against OBS WebSocket v5 and/or OBS Browser Source access before making OBS control claims.
 - Run targeted tests for webhook, relay, TTS, Spotify, MIDI, points, and send-message actions before promoting those action families.
+
+### Map Overlay Focused Browser Smoke Test
+
+Validation date: 2026-07-05
+
+Validator: Codex
+
+Area: `map.html` base-map styling URL options and popup-style live setting payloads
+
+Evidence label: `focused-browser-smoke`; not OBS/runtime-tested
+
+Command run:
+
+```powershell
+@'
+# Inline Playwright smoke with a temporary local static server.
+# Loaded map.html with mapopacity/mapfill/transparent/hidegrid.
+# Loaded a session-labeled map and dispatched a popup-style setting/value message for mapopacity.
+'@ | node -
+```
+
+Result: passed with output `map smoke passed`.
+
+Product surface: Headless Chromium against local `map.html` through a temporary `127.0.0.1` static server. The test used packaged `thirdparty` map data and synthetic message dispatch. It did not use OBS, the live Chrome extension background, VDO.Ninja signaling, production hosted pages, or real chat traffic.
+
+Observed result:
+
+- Local map datasets loaded and rendered 177 country paths.
+- `mapopacity=100` made base land solid.
+- `mapfill=2d7dd2` tinted base land blue.
+- Bare `transparent` produced a transparent page background.
+- Bare `hidegrid` hid the grid surface after its CSS transition completed.
+- A popup-style `{ setting: "mapopacity", value: "25" }` payload delivered through the iframe bridge path updated base land fill alpha to 25%.
+
+What was not tested:
+
+- OBS Browser Source compositing.
+- Real popup-to-background-to-overlay routing.
+- Live VDO.Ninja or websocket transport.
+- Real chat/vote traffic.
+- All map style presets, regions, state/city modes, or hosted production deployment.
+
+Docs updated:
+
+- `07-overlays-and-pages/live-display-utilities.md`
+
+Follow-up:
+
+- Runtime-validate the popup control against a real extension session before calling the map popup workflow fully runtime-tested.
+- Validate OBS transparency with an OBS Browser Source before making OBS-specific display claims.
 
 ### Twitch Provider Subgift Focused Node Test
 

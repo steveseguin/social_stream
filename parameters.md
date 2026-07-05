@@ -154,6 +154,10 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `stripemoji` | boolean | Removes all emojis from messages |
 | `striphtml` or `strip` | boolean | Removes HTML formatting from messages |
 | `striplinks` | boolean | Removes links from messages |
+| `allowbotlinks` | boolean | With `striplinks`, keeps links visible for bot messages |
+| `allowhostlinks` | boolean | With `striplinks`, keeps links visible for host messages |
+| `allowmodlinks` | boolean | With `striplinks`, keeps links visible for mod messages |
+| `allowviplinks` | boolean | With `striplinks`, keeps links visible for VIP messages |
 | `activelinks` | boolean | Makes URLs clickable |
 | `shortlink` | boolean | Shortens displayed links |
 | `onlytwitch` | boolean | Shows only Twitch messages |

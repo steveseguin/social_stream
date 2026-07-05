@@ -1465,18 +1465,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Also works with: https://manage.wix.com/dashboard/*/live-video/* and embedded widgets at https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*'
 		},
 		{
-			name: 'Xeenon',
-			icon: 'xeenon.png',
-			description: 'Live streaming on Xeenon dashboard.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://xeenon.xyz/dashboard</li>
-					<li>Pop out not supported</li>
-				</ul>
-			`
-		},
-		{
 			name: 'Retake.tv',
 			icon: 'retake.png',
 			description: 'Web3 live streaming platform.',

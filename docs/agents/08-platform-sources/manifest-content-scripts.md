@@ -26,9 +26,9 @@ Checked on 2026-06-24 against manifest version `3.50.1`.
 
 | Inventory | Count | Notes |
 | --- | ---: | --- |
-| Content-script entries | 155 | Each entry is a manifest object with one or more URL match patterns. |
-| Unique JS files loaded by content scripts | 155 | One unique JS file per content-script entry in the current manifest. |
-| Top-level `sources/*.js` scripts | 135 | Normal platform/source DOM capture scripts. |
+| Content-script entries | 154 | Each entry is a manifest object with one or more URL match patterns. |
+| Unique JS files loaded by content scripts | 154 | One unique JS file per content-script entry in the current manifest. |
+| Top-level `sources/*.js` scripts | 134 | Normal platform/source DOM capture scripts. |
 | `sources/static/*` helpers | 6 | Manual/static/scout helpers, not normal live-chat capture scripts. |
 | `sources/inject/*` helpers | 2 | Page-context helpers that run early for specific platforms. |
 | `sources/websocket/*` source-page scripts | 11 | Scripts loaded on hosted/beta WebSocket source pages. |
@@ -93,28 +93,28 @@ These manifest entries have `document_start` and/or `all_frames` enabled. They d
 | ---: | --- | ---: | --- | --- | --- |
 | 2 | `sources/stripchat.js` | 3 | default | yes | `https://stripchat.com/*` |
 | 7 | `sources/meetme.js` | 2 | default | yes | `https://*.meetme.com/*` |
-| 39 | `sources/steam.js` | 1 | default | yes | `https://steamcommunity.com/broadcast/chatonly/*` |
-| 40 | `sources/megaphonetv.js` | 1 | default | yes | `https://apps.megaphonetv.com/socialharvest/live/*` |
-| 43 | `sources/inject/vpzone-ws.js` | 3 | `document_start` | no | `https://vpzone.tv/*` |
-| 52 | `sources/inject/whatnot-ws.js` | 2 | `document_start` | no | `https://www.whatnot.com/live/*` |
-| 63 | `sources/cbox.js` | 1 | default | yes | `https://*.cbox.ws/box/*` |
-| 80 | `sources/youtube.js` | 1 | default | yes | `https://studio.youtube.com/live_chat*` |
-| 88 | `sources/wix2.js` | 1 | default | yes | `https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*` |
-| 93 | `sources/static/kick_chatroom_scout.js` | 1 | `document_start` | no | `https://kick.com/*` |
-| 110 | `sources/minnit.js` | 3 | default | yes | `https://minnit.chat/*&popout` |
-| 111 | `sources/chatroll.js` | 1 | default | yes | `https://chatroll.com/embed/chat/*` |
-| 118 | `sources/twitch.js` | 1 | `document_start` | no | `https://*.twitch.tv/popout/*` |
-| 119 | `sources/static/twitch_points.js` | 1 | `document_start` | no | `https://*.twitch.tv/*` |
-| 121 | `sources/ebay.js` | 22 | default | yes | `https://www.ebay.com/ebaylive/events/*` |
-| 128 | `sources/vimeo.js` | 3 | default | yes | `https://www.vimeo.com/live*` |
-| 132 | `sources/teams.js` | 3 | default | yes | `https://teams.live.com/*` |
-| 137 | `sources/tikfinity.js` | 2 | default | yes | `https://tikfinity.zerody.one/widget/activity-feed*` |
-| 138 | `sources/vdoninja.js` | 3 | default | yes | `https://vdo.ninja/popout.html*` |
-| 140 | `sources/webex.js` | 2 | default | yes | `https://*.webex.com/*` |
-| 144 | `sources/trovo.js` | 1 | `document_start` | yes | `https://trovo.live/chat/*` |
-| 145 | `sources/amazon.js` | 2 | `document_start` | no | `https://www.amazon.com/live*` |
-| 153 | `sources/streamlabs.js` | 2 | default | yes | `https://streamlabs.com/alert-box/*` |
-| 154 | `sources/streamelements.js` | 1 | `document_start` | yes | `https://streamelements.com/overlay/*` |
+| 38 | `sources/steam.js` | 1 | default | yes | `https://steamcommunity.com/broadcast/chatonly/*` |
+| 39 | `sources/megaphonetv.js` | 1 | default | yes | `https://apps.megaphonetv.com/socialharvest/live/*` |
+| 42 | `sources/inject/vpzone-ws.js` | 3 | `document_start` | no | `https://vpzone.tv/*` |
+| 51 | `sources/inject/whatnot-ws.js` | 2 | `document_start` | no | `https://www.whatnot.com/live/*` |
+| 62 | `sources/cbox.js` | 1 | default | yes | `https://*.cbox.ws/box/*` |
+| 79 | `sources/youtube.js` | 1 | default | yes | `https://studio.youtube.com/live_chat*` |
+| 87 | `sources/wix2.js` | 1 | default | yes | `https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*` |
+| 92 | `sources/static/kick_chatroom_scout.js` | 1 | `document_start` | no | `https://kick.com/*` |
+| 109 | `sources/minnit.js` | 3 | default | yes | `https://minnit.chat/*&popout` |
+| 110 | `sources/chatroll.js` | 1 | default | yes | `https://chatroll.com/embed/chat/*` |
+| 117 | `sources/twitch.js` | 1 | `document_start` | no | `https://*.twitch.tv/popout/*` |
+| 118 | `sources/static/twitch_points.js` | 1 | `document_start` | no | `https://*.twitch.tv/*` |
+| 120 | `sources/ebay.js` | 22 | default | yes | `https://www.ebay.com/ebaylive/events/*` |
+| 127 | `sources/vimeo.js` | 3 | default | yes | `https://www.vimeo.com/live*` |
+| 131 | `sources/teams.js` | 3 | default | yes | `https://teams.live.com/*` |
+| 136 | `sources/tikfinity.js` | 2 | default | yes | `https://tikfinity.zerody.one/widget/activity-feed*` |
+| 137 | `sources/vdoninja.js` | 3 | default | yes | `https://vdo.ninja/popout.html*` |
+| 139 | `sources/webex.js` | 2 | default | yes | `https://*.webex.com/*` |
+| 143 | `sources/trovo.js` | 1 | `document_start` | yes | `https://trovo.live/chat/*` |
+| 144 | `sources/amazon.js` | 2 | `document_start` | no | `https://www.amazon.com/live*` |
+| 152 | `sources/streamlabs.js` | 2 | default | yes | `https://streamlabs.com/alert-box/*` |
+| 153 | `sources/streamelements.js` | 1 | `document_start` | yes | `https://streamelements.com/overlay/*` |
 
 ## High-Coverage URL Match Entries
 

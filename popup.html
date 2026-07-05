@@ -389,6 +389,11 @@ input[type="range"] {
     width: calc(100% - 35px); /* Adjust width as needed */
 }
 
+#searchInput::-webkit-search-cancel-button {
+    -webkit-appearance: searchfield-cancel-button;
+    cursor: pointer;
+}
+
 #searchIcon {
     position: fixed;
     top: 60px;
@@ -2181,7 +2186,7 @@ input:checked + .slider:before {
         </div>
         <div id="newVersion"></div>
         <div id="importantChanges"></div>
-        <input type="text" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
+        <input type="search" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
         <div id="searchIcon" title="Search all options by keyword">🔍</div>
         <div id="popupSearchNoResults" data-translate="search-no-results">No matching options found</div>
 		<div id="activeIcon" title="Show only enabled options">🔰</div>
@@ -3892,6 +3897,34 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="replace-links-in-messages">🚫🔗 Replace links in messages with just '[Link]' </span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as bots">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="allowbotlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from bots</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as hosts">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="allowhostlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from hosts</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as mods">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="allowmodlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from mods</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as VIPs">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="allowviplinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from VIPs</span>
                                 </div>
                                 <div title="Links are make clickable and will open a new tab if clicked">
                                     <label class="switch">
@@ -5659,6 +5692,34 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="replace-links-in-messages">🚫🔗 Replace links in messages with just '[Link]' </span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as bots">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="allowbotlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from bots</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as hosts">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="allowhostlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from hosts</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as mods">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="allowmodlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from mods</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as VIPs">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="allowviplinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from VIPs</span>
                                 </div>
                                 <div title="Links are make clickable and will open a new tab if clicked">
                                     <label class="switch">
@@ -12347,6 +12408,7 @@ input:checked + .slider:before {
 									<label>🎨 Map Style/Theme:</label>
 									<select data-optionparam23="mapstyle" data-target="map" id="mapStyle">
 										<option value="default">Default</option>
+										<option value="contrast">High Contrast</option>
 										<option value="aurora">Aurora</option>
 										<option value="ember">Ember</option>
 										<option value="neon">Neon</option>
@@ -12354,6 +12416,22 @@ input:checked + .slider:before {
 										<option value="minimal">Minimal Clean</option>
 										<option value="retro">Retro Print</option>
 										<option value="radar">Radar Sweep</option>
+										<option value="noir">Noir</option>
+										<option value="atlas">Vintage Atlas</option>
+										<option value="synthwave">Synthwave</option>
+										<option value="terminal">Terminal</option>
+										<option value="ocean">Deep Ocean</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label>💡 Base map visibility:</label>
+									<select data-optionparam23="mapopacity" data-target="map" id="mapOpacity">
+										<option value="" selected>Theme default</option>
+										<option value="25">Subtle (25%)</option>
+										<option value="50">Medium (50%)</option>
+										<option value="75">Strong (75%)</option>
+										<option value="100">Solid (100%)</option>
 									</select>
 								</div>
 								<br>

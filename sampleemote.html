@@ -57,7 +57,7 @@ For all modifications, ensure the critical components above remain functional.
 
     // Core connection setup
     const iframe = document.createElement("iframe");
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${roomID}&novideo&noaudio&label=dock&cleanoutput&room=${roomID}`;
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${roomID}&novideo&noaudio&label=dock&cleanoutput&room=${roomID}`;
     iframe.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;";
     document.body.appendChild(iframe);
 

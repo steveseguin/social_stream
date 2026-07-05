@@ -9664,7 +9664,7 @@ function setupSocket() {
 				resp = { emoteonlymode: enable };
 			} else if (data.action) {
 				try {
-					if (data.target && data.target.toLowerCase !== "null") {
+					if (data.target && String(data.target).toLowerCase() !== "null") {
 						sendTargetP2P(data, data.target);
 					} else {
 						sendDataP2P(data);
@@ -12755,13 +12755,13 @@ async function initTransport(roomStreamID, pass = false) {
 		if (!pass) {
 			pass = "false";
 		}
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(pass) + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
 	} else {
 		iframe = document.createElement("iframe");
 		if (!pass) {
 			pass = "false";
 		}
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(pass) + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
 		document.body.appendChild(iframe);
 	}
 }

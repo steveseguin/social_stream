@@ -6379,6 +6379,7 @@
 												}
 											})
 										},
+										// Google Live API: {} starts a fresh resumable session; reconnects send { handle }. See https://ai.google.dev/api/live
 										sessionResumption: this.sessionResumptionHandle ? { handle: this.sessionResumptionHandle } : {},
 										contextWindowCompression: {
 											triggerTokens: GEMINI_CONTEXT_TRIGGER_TOKENS,

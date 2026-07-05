@@ -10,17 +10,21 @@
     <style>
         :root {
             --bg: rgba(6, 10, 16, 0.35);
+            --bg-glow: radial-gradient(120% 90% at 15% 15%, rgba(110, 247, 200, 0.12), transparent), radial-gradient(80% 70% at 80% 20%, rgba(244, 181, 86, 0.14), transparent);
             --grid: rgba(255, 255, 255, 0.08);
             --text: #e8edf6;
             --muted: #9fb4cf;
             --accent: #6ef7c8;
             --accent-2: #f4b556;
             --panel: rgba(14, 20, 32, 0.65);
-            --stroke: rgba(255, 255, 255, 0.14);
-            --country-fill: rgba(255, 255, 255, 0.06);
+            --stroke: rgba(255, 255, 255, 0.2);
+            --country-fill: rgba(255, 255, 255, 0.09);
             --country-highlight: rgba(255, 255, 255, 0.45);
             --stroke-width: 0.6;
             --country-opacity: 1;
+            --country-base-opacity: 0.75;
+            --country-data-opacity: 0.95;
+            --marker-text: #0b141f;
             --surface-opacity: 0.45;
             --surface-blend: lighten;
             --surface-rotate: 0deg;
@@ -52,10 +56,7 @@
             font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             color: var(--text);
             perspective: var(--map-perspective, none);
-            background:
-                radial-gradient(120% 90% at 15% 15%, rgba(110, 247, 200, 0.12), transparent),
-                radial-gradient(80% 70% at 80% 20%, rgba(244, 181, 86, 0.14), transparent),
-                var(--bg);
+            background: var(--bg-glow, none), var(--bg);
         }
 
         .map-surface {
@@ -96,15 +97,16 @@
         }
 
         .country {
-            fill: var(--country-fill, rgba(255, 255, 255, 0.06));
+            fill: var(--country-fill, rgba(255, 255, 255, 0.09));
             stroke: var(--stroke);
             stroke-width: var(--stroke-width, 0.6);
-            opacity: var(--country-opacity, 1);
+            opacity: var(--country-base-final-opacity, 0.75);
             transition: fill 0.4s ease, stroke 0.4s ease, opacity 0.4s ease;
         }
 
         .country.has-data {
             stroke: var(--country-highlight, rgba(255, 255, 255, 0.45));
+            opacity: var(--country-data-final-opacity, 0.95);
         }
 
         .country-label {
@@ -129,7 +131,7 @@
         }
 
         .marker text {
-            fill: #0b141f;
+            fill: var(--marker-text, #0b141f);
             font-size: 11px;
             font-weight: 700;
         }
@@ -366,34 +368,65 @@
             return fallback;
         }
 
-        const debugMode = normalizeBoolean(getParam('debug'), false);
+        // Boolean URL param: presence without a value counts as true (e.g. &hidenumbers)
+        function paramBoolean(keys, fallback) {
+            for (const key of keys) {
+                if (!hasParam(key)) continue;
+                const raw = getParam(key);
+                if (raw === null || raw === '') return true;
+                return normalizeBoolean(raw, true);
+            }
+            return fallback;
+        }
+
+        // Accept bare hex codes (fff, ff0000, ff0000cc) as well as any CSS color string
+        function normalizeColor(value) {
+            if (!value && value !== 0) return null;
+            const trimmed = value.toString().trim();
+            if (!trimmed) return null;
+            if (/^[0-9a-f]{3}$/i.test(trimmed) || /^[0-9a-f]{6}$/i.test(trimmed) || /^[0-9a-f]{8}$/i.test(trimmed)) {
+                return '#' + trimmed;
+            }
+            return trimmed;
+        }
+
+        // Accept 0-1 or 0-100 and clamp to 0-1
+        function normalizeOpacity(value) {
+            if (value === null || value === undefined || value === '') return null;
+            let num = parseFloat(value);
+            if (!Number.isFinite(num)) return null;
+            if (num > 1) num = num / 100;
+            return Math.max(0, Math.min(num, 1));
+        }
+
+        const debugMode = paramBoolean(['debug'], false);
         const settings = {
             title: getParam('title') || 'Where is everyone watching from?',
-            showList: normalizeBoolean(getParam('showlist') ?? getParam('showList'), true),
-            showTotals: normalizeBoolean(getParam('showtotals') ?? getParam('showTotals'), true),
-            allowChanges: normalizeBoolean(getParam('allowchanges') ?? getParam('allowChanges'), false),
-            accent: getParam('accent') || null,
-            accentAlt: getParam('accentalt') ?? getParam('accentAlt') ?? null,
-            mapType: (getParam('maptype') ?? getParam('mapType') ?? 'country').toLowerCase(),
-            mapStyle: (getParam('mapstyle') ?? getParam('mapStyle') ?? 'default').toLowerCase(),
+            showList: paramBoolean(['showlist'], true),
+            showTotals: paramBoolean(['showtotals'], true),
+            allowChanges: paramBoolean(['allowchanges'], false),
+            accent: normalizeColor(getParam('accent')),
+            accentAlt: normalizeColor(getParam('accentalt')),
+            mapType: (getParam('maptype') ?? 'country').toLowerCase(),
+            mapStyle: (getParam('mapstyle') ?? 'default').toLowerCase(),
             region: (getParam('region') ?? getParam('mapregion') ?? 'global').toLowerCase(),
-            multiVote: (() => {
-                const keys = ['multi', 'mapspam', 'mapSpam'];
-                for (const key of keys) {
-                    const raw = getParam(key);
-                    if (raw !== null && raw !== undefined && raw !== '') {
-                        return normalizeBoolean(raw, false);
-                    }
-                    if (hasParam(key)) return true; // presence without value counts as true
-                }
-                return false;
+            multiVote: paramBoolean(['multi', 'mapspam'], false),
+            motion: paramBoolean(['motion', 'mapmotion'], false),
+            autoStart: paramBoolean(['autostart'], true),
+            autoFitMarkers: paramBoolean(['autofit', 'autofitmarkers', 'mapautofit'], false),
+            hideNumbers: paramBoolean(['hidenumbers', 'maphidenumbers'], false),
+            colorIntensity: paramBoolean(['colorintensity', 'mapcolorintensity'], false),
+            mapScale: parseFloat(getParam('mapscale') ?? '100') / 100 || 1,
+            baseOpacity: normalizeOpacity(getParam('mapopacity') ?? getParam('landopacity') ?? getParam('baseopacity')),
+            landColor: normalizeColor(getParam('mapfill') ?? getParam('landcolor') ?? getParam('fillcolor')),
+            borderColor: normalizeColor(getParam('mapborder') ?? getParam('bordercolor') ?? getParam('strokecolor')),
+            borderWidth: (() => {
+                const raw = parseFloat(getParam('borderwidth') ?? getParam('strokewidth'));
+                return Number.isFinite(raw) && raw >= 0 ? raw : null;
             })(),
-            motion: normalizeBoolean(getParam('motion') ?? getParam('mapmotion') ?? getParam('mapMotion'), false),
-            autoStart: normalizeBoolean(getParam('autostart') ?? getParam('autoStart'), true),
-            autoFitMarkers: normalizeBoolean(getParam('autofit') ?? getParam('autoFit') ?? getParam('autofitmarkers') ?? getParam('autoFitMarkers') ?? getParam('mapautofit') ?? getParam('mapAutoFit'), false),
-            hideNumbers: normalizeBoolean(getParam('hidenumbers') ?? getParam('hideNumbers') ?? getParam('maphidenumbers') ?? getParam('mapHideNumbers'), false),
-            colorIntensity: normalizeBoolean(getParam('colorintensity') ?? getParam('colorIntensity') ?? getParam('mapcolorintensity') ?? getParam('mapColorIntensity'), false),
-            mapScale: parseFloat(getParam('mapscale') ?? getParam('mapScale') ?? '100') / 100 || 1
+            bgColor: normalizeColor(getParam('mapbg') ?? getParam('bgcolor')),
+            transparentBg: paramBoolean(['transparent'], false),
+            hideGrid: paramBoolean(['hidegrid', 'nogrid'], false)
         };
 
         const VALID_MAP_TYPES = new Set(['country', 'state', 'city']);
@@ -583,17 +616,21 @@
         const STYLE_PRESETS = {
             default: {
                 '--bg': 'rgba(6, 10, 16, 0.35)',
+                '--bg-glow': 'radial-gradient(120% 90% at 15% 15%, rgba(110, 247, 200, 0.12), transparent), radial-gradient(80% 70% at 80% 20%, rgba(244, 181, 86, 0.14), transparent)',
                 '--grid': 'rgba(255, 255, 255, 0.08)',
                 '--text': '#e8edf6',
                 '--muted': '#9fb4cf',
                 '--accent': '#6ef7c8',
                 '--accent-2': '#f4b556',
                 '--panel': 'rgba(14, 20, 32, 0.65)',
-                '--stroke': 'rgba(255, 255, 255, 0.14)',
-                '--country-fill': 'rgba(255, 255, 255, 0.06)',
+                '--stroke': 'rgba(255, 255, 255, 0.2)',
+                '--country-fill': 'rgba(255, 255, 255, 0.09)',
                 '--country-highlight': 'rgba(255, 255, 255, 0.45)',
                 '--stroke-width': '0.6',
                 '--country-opacity': '1',
+                '--country-base-opacity': '0.75',
+                '--country-data-opacity': '0.95',
+                '--marker-text': '#0b141f',
                 '--surface-opacity': '0.45',
                 '--surface-blend': 'lighten',
                 '--surface-rotate': '0deg',
@@ -791,6 +828,127 @@
                 '--panel-border': '1px solid rgba(127, 255, 212, 0.18)',
                 '--hud-shadow': '0 16px 44px rgba(0, 0, 0, 0.52)',
                 '--hud-blur': '14px'
+            },
+            contrast: {
+                '--bg': 'radial-gradient(120% 90% at 20% 12%, rgba(110, 247, 200, 0.08), transparent), #0a1020',
+                '--bg-glow': 'none',
+                '--grid': 'rgba(255, 255, 255, 0.05)',
+                '--text': '#f4f8ff',
+                '--muted': '#aebfd8',
+                '--accent': '#37e6a7',
+                '--accent-2': '#ffb340',
+                '--panel': 'rgba(10, 16, 30, 0.85)',
+                '--stroke': 'rgba(255, 255, 255, 0.55)',
+                '--country-fill': 'rgba(148, 170, 205, 0.5)',
+                '--country-highlight': '#ffffff',
+                '--stroke-width': '0.8',
+                '--country-base-opacity': '1',
+                '--surface-opacity': '0.25',
+                '--map-filter': 'drop-shadow(0 12px 30px rgba(0, 0, 0, 0.5))',
+                '--panel-border': '1px solid rgba(255, 255, 255, 0.18)'
+            },
+            noir: {
+                '--bg': '#050505',
+                '--bg-glow': 'none',
+                '--grid': 'rgba(255, 255, 255, 0.04)',
+                '--text': '#f5f5f5',
+                '--muted': '#9a9a9a',
+                '--accent': '#1a1a1a',
+                '--accent-2': '#000000',
+                '--panel': 'rgba(12, 12, 12, 0.88)',
+                '--stroke': 'rgba(0, 0, 0, 0.85)',
+                '--country-fill': 'rgba(235, 235, 235, 0.92)',
+                '--country-highlight': '#000000',
+                '--stroke-width': '0.7',
+                '--country-base-opacity': '1',
+                '--surface-opacity': '0.15',
+                '--map-filter': 'drop-shadow(0 12px 34px rgba(0, 0, 0, 0.85))',
+                '--panel-border': '1px solid rgba(255, 255, 255, 0.24)',
+                '--marker-text': '#ffffff',
+                '--status-bg': 'rgba(245, 245, 245, 0.9)',
+                '--status-color': '#111111'
+            },
+            atlas: {
+                '--bg': 'radial-gradient(120% 90% at 50% 0%, rgba(120, 90, 40, 0.12), transparent), #ede3cd',
+                '--bg-glow': 'none',
+                '--grid': 'rgba(91, 74, 50, 0.12)',
+                '--text': '#3b2f1e',
+                '--muted': '#7a6a4f',
+                '--accent': '#b3552e',
+                '--accent-2': '#6f2814',
+                '--panel': 'rgba(247, 240, 224, 0.88)',
+                '--stroke': 'rgba(91, 74, 50, 0.55)',
+                '--country-fill': '#dbc9a3',
+                '--country-highlight': '#5b4a32',
+                '--stroke-width': '0.7',
+                '--country-base-opacity': '1',
+                '--surface-opacity': '0.35',
+                '--surface-blend': 'multiply',
+                '--map-filter': 'drop-shadow(0 6px 16px rgba(91, 74, 50, 0.25))',
+                '--panel-border': '1px solid rgba(91, 74, 50, 0.25)',
+                '--hud-shadow': '0 12px 34px rgba(91, 74, 50, 0.22)',
+                '--marker-text': '#fdf6e8',
+                '--status-bg': 'rgba(247, 240, 224, 0.9)',
+                '--status-color': '#3b2f1e'
+            },
+            synthwave: {
+                '--bg': 'linear-gradient(180deg, #16052e 0%, #2b0a4e 55%, #4a1259 100%)',
+                '--bg-glow': 'none',
+                '--grid': 'rgba(255, 83, 195, 0.22)',
+                '--text': '#ffe9fb',
+                '--muted': '#c99ae0',
+                '--accent': '#ff53c3',
+                '--accent-2': '#35e0ff',
+                '--panel': 'rgba(30, 8, 56, 0.78)',
+                '--stroke': 'rgba(255, 83, 195, 0.45)',
+                '--country-fill': 'rgba(120, 40, 160, 0.5)',
+                '--country-highlight': '#ffd1f3',
+                '--stroke-width': '0.8',
+                '--country-base-opacity': '0.95',
+                '--surface-opacity': '0.5',
+                '--surface-blend': 'screen',
+                '--map-filter': 'drop-shadow(0 0 18px rgba(255, 83, 195, 0.35))',
+                '--panel-border': '1px solid rgba(255, 83, 195, 0.35)',
+                '--hud-blur': '14px'
+            },
+            terminal: {
+                '--bg': 'radial-gradient(120% 100% at 50% 40%, rgba(28, 74, 40, 0.35), transparent), #020803',
+                '--bg-glow': 'none',
+                '--grid': 'rgba(51, 255, 102, 0.14)',
+                '--text': '#c8ffdc',
+                '--muted': '#63b57e',
+                '--accent': '#33ff66',
+                '--accent-2': '#b4ff3c',
+                '--panel': 'rgba(2, 12, 5, 0.85)',
+                '--stroke': 'rgba(51, 255, 102, 0.55)',
+                '--country-fill': 'rgba(51, 255, 102, 0.14)',
+                '--country-highlight': '#8dffb0',
+                '--stroke-width': '0.7',
+                '--country-base-opacity': '1',
+                '--surface-opacity': '0.55',
+                '--surface-blend': 'screen',
+                '--map-filter': 'drop-shadow(0 0 14px rgba(51, 255, 102, 0.25))',
+                '--panel-border': '1px solid rgba(51, 255, 102, 0.3)',
+                '--status-bg': 'rgba(2, 12, 5, 0.8)',
+                '--status-color': '#c8ffdc'
+            },
+            ocean: {
+                '--bg': 'radial-gradient(120% 90% at 30% 10%, rgba(45, 125, 210, 0.25), transparent), #06263f',
+                '--bg-glow': 'none',
+                '--grid': 'rgba(140, 200, 255, 0.08)',
+                '--text': '#e7f3ff',
+                '--muted': '#9cc3e0',
+                '--accent': '#ffd166',
+                '--accent-2': '#ff7b54',
+                '--panel': 'rgba(6, 30, 50, 0.8)',
+                '--stroke': 'rgba(10, 40, 60, 0.8)',
+                '--country-fill': '#3f6f8f',
+                '--country-highlight': '#cfe9ff',
+                '--stroke-width': '0.7',
+                '--country-base-opacity': '1',
+                '--surface-opacity': '0.15',
+                '--map-filter': 'drop-shadow(0 10px 26px rgba(0, 0, 0, 0.4))',
+                '--panel-border': '1px solid rgba(140, 200, 255, 0.2)'
             }
         };
 
@@ -806,17 +964,106 @@
                 });
             }
             document.body.dataset.mapStyle = presetName in STYLE_PRESETS ? presetName : 'default';
+            updateCountryOpacityVars();
         }
 
         function applyMotionPreference(enabled) {
             document.body.classList.toggle('motion-drift', !!enabled);
         }
+
+        function readOpacityVar(style, name, fallback) {
+            const value = parseFloat(style.getPropertyValue(name));
+            if (!Number.isFinite(value)) return fallback;
+            return Math.max(0, Math.min(value, 1));
+        }
+
+        function updateCountryOpacityVars() {
+            const computed = getComputedStyle(document.documentElement);
+            const base = readOpacityVar(computed, '--country-base-opacity', 0.75);
+            const data = readOpacityVar(computed, '--country-data-opacity', 0.95);
+            const overall = readOpacityVar(computed, '--country-opacity', 1);
+            const root = document.documentElement.style;
+            root.setProperty('--country-base-final-opacity', String(Math.max(0, Math.min(base * overall, 1))));
+            root.setProperty('--country-data-final-opacity', String(Math.max(0, Math.min(data * overall, 1))));
+        }
+
+        // URL-driven style overrides; applied after every preset change so they always win
+        function applyCustomOverrides() {
+            const root = document.documentElement.style;
+            if (settings.accent) root.setProperty('--accent', settings.accent);
+            if (settings.accentAlt) root.setProperty('--accent-2', settings.accentAlt);
+            if (settings.landColor) root.setProperty('--country-fill', settings.landColor);
+            if (settings.borderColor) root.setProperty('--stroke', settings.borderColor);
+            if (settings.borderWidth !== null) root.setProperty('--stroke-width', String(settings.borderWidth));
+            if (settings.baseOpacity !== null) {
+                // mapopacity sets the land's actual visibility: bake it into the fill alpha
+                const fillValue = getComputedStyle(document.documentElement).getPropertyValue('--country-fill').trim();
+                const parsed = d3.color(fillValue || '#ffffff');
+                if (parsed) {
+                    parsed.opacity = settings.baseOpacity;
+                    root.setProperty('--country-fill', parsed.formatRgb());
+                }
+                root.setProperty('--country-base-opacity', '1');
+            }
+            if (settings.bgColor) {
+                root.setProperty('--bg', settings.bgColor);
+                root.setProperty('--bg-glow', 'none');
+            }
+            if (settings.transparentBg) {
+                root.setProperty('--bg', 'transparent');
+                root.setProperty('--bg-glow', 'none');
+            }
+            if (settings.hideGrid) root.setProperty('--surface-opacity', '0');
+            updateCountryOpacityVars();
+        }
+
+        function injectCustomCss() {
+            if (hasParam('css')) {
+                let cssURL = getParam('css') || '';
+                try {
+                    cssURL = decodeURI(cssURL);
+                } catch (e) {}
+                if (cssURL.startsWith('http')) {
+                    const sheet = document.createElement('link');
+                    sheet.rel = 'stylesheet';
+                    sheet.type = 'text/css';
+                    sheet.href = cssURL;
+                    sheet.onload = updateCountryOpacityVars;
+                    document.head.appendChild(sheet);
+                } else if (cssURL) {
+                    const styleTag = document.createElement('style');
+                    styleTag.textContent = cssURL;
+                    document.head.appendChild(styleTag);
+                    updateCountryOpacityVars();
+                }
+            }
+            const b64Keys = ['base64css', 'b64css', 'cssbase64', 'cssb64'];
+            for (const key of b64Keys) {
+                if (!hasParam(key)) continue;
+                try {
+                    let cssText = getParam(key) || '';
+                    try {
+                        cssText = atob(cssText); // window.btoa(encodeURIComponent(".country{fill:red;}"))
+                    } catch (e) {}
+                    try {
+                        cssText = decodeURIComponent(cssText);
+                    } catch (e) {}
+                    const styleTag = document.createElement('style');
+                    styleTag.textContent = cssText;
+                    document.head.appendChild(styleTag);
+                    updateCountryOpacityVars();
+                } catch (e) {
+                    console.error(e);
+                }
+                break;
+            }
+        }
+
         applyStylePreset(settings.mapStyle);
         applyMotionPreference(settings.motion);
+        applyCustomOverrides();
+        injectCustomCss();
         // Apply map scale is called after hudEl is defined
-
-        if (settings.accent) document.documentElement.style.setProperty('--accent', settings.accent);
-        if (settings.accentAlt) document.documentElement.style.setProperty('--accent-2', settings.accentAlt);
 
         const REGION_PRESETS = {
             global: (meta) => true,
@@ -1760,8 +2007,7 @@
             const key = (value || 'default').toString().trim().toLowerCase();
             settings.mapStyle = key;
             applyStylePreset(key);
-            if (settings.accent) document.documentElement.style.setProperty('--accent', settings.accent);
-            if (settings.accentAlt) document.documentElement.style.setProperty('--accent-2', settings.accentAlt);
+            applyCustomOverrides();
             updateMapFill();
         }
 
@@ -1813,11 +2059,12 @@
                     entry = tally.get(iso) || tally.get(normalizedName);
                 }
                 const hasData = entry && entry.count > 0;
-                const fill = hasData ? colorScaleForCount(entry.count, maxCount, accent, accent2) : 'rgba(255,255,255,0.06)';
+                // Countries without data fall back to the stylesheet (--country-fill / --country-base-opacity)
+                // so presets and URL overrides control the base map's look
                 d3.select(this)
                     .classed('has-data', !!hasData)
-                    .style('fill', fill)
-                    .style('opacity', hasData ? 0.95 : 0.55);
+                    .style('fill', hasData ? colorScaleForCount(entry.count, maxCount, accent, accent2) : null)
+                    .style('opacity', null);
             });
         }
 
@@ -2007,6 +2254,17 @@
             if (payload.mapstyle && (payload.mapstyle.setting || payload.mapstyle.textsetting || typeof payload.mapstyle === 'string')) {
                 const nextStyle = payload.mapstyle.setting ?? payload.mapstyle.textsetting ?? payload.mapstyle;
                 setMapStyle(nextStyle);
+            }
+            const opacityPayload = payload.mapOpacity ?? payload.mapopacity;
+            if (opacityPayload !== undefined && opacityPayload !== null) {
+                const rawOpacity = (typeof opacityPayload === 'object')
+                    ? (opacityPayload.numbersetting ?? opacityPayload.setting ?? opacityPayload.textsetting)
+                    : opacityPayload;
+                settings.baseOpacity = normalizeOpacity(rawOpacity);
+                // Re-run the preset so an empty value restores the theme's own land visibility
+                applyStylePreset(settings.mapStyle);
+                applyCustomOverrides();
+                if (ready) updateMapFill();
             }
             if (payload.mapspam && Object.prototype.hasOwnProperty.call(payload.mapspam, 'setting')) {
                 setMultiVote(normalizeBoolean(payload.mapspam.setting, settings.multiVote));

@@ -75,19 +75,55 @@ class EventFlowSystem {
         return isFinite(parsed) ? parsed : null;
     }
 
+    getDonationValueConverter() {
+        try {
+            if (typeof convertToUSD === 'function') return convertToUSD;
+        } catch (e) {}
+
+        try {
+            if (typeof window !== 'undefined' && typeof window.convertToUSD === 'function') {
+                return window.convertToUSD;
+            }
+        } catch (e) {}
+
+        return null;
+    }
+
+    parseDonationLabelValue(value, source) {
+        if (value === undefined || value === null || value === '') return null;
+        if (typeof value === 'number') return isFinite(value) ? value : null;
+
+        // Donation values are derived only from normalized amount labels such as "$5",
+        // "500 bits", or "cheer100"; never from prose in chatmessage.
+        const text = String(value);
+        if (!/[+-]?(?:\d+\.?\d*|\.\d+)/.test(text.replace(/,/g, ''))) {
+            return null;
+        }
+
+        const converter = this.getDonationValueConverter();
+        if (converter) {
+            try {
+                const converted = converter(text, String(source || '').toLowerCase());
+                if (typeof converted === 'number' && isFinite(converted)) {
+                    return converted;
+                }
+            } catch (e) {}
+        }
+
+        return this.parseDonationNumericValue(value);
+    }
+
     getDonationNumericValue(message) {
         if (!message) return null;
 
-        const fields = [
-            message.donoValue,
-            message.donationAmount,
-            message.hasDonation
-        ];
+        const explicitValue = this.parseDonationNumericValue(message.donoValue);
+        if (explicitValue !== null) return explicitValue;
 
-        for (const value of fields) {
-            const parsed = this.parseDonationNumericValue(value);
-            if (parsed !== null) return parsed;
-        }
+        const legacyValue = this.parseDonationLabelValue(message.donationAmount, message.type);
+        if (legacyValue !== null) return legacyValue;
+
+        const labelValue = this.parseDonationLabelValue(message.hasDonation, message.type);
+        if (labelValue !== null) return labelValue;
 
         return null;
     }
@@ -1607,7 +1643,7 @@ class EventFlowSystem {
 
             case 'eventDonation': {
                 const event = (message.event || '').toLowerCase();
-                const eventMatch = event === 'superchat' || event === 'donation' || event === 'cheer' || event === 'supersticker';
+                const eventMatch = event === 'superchat' || event === 'donation' || event === 'cheer' || event === 'supersticker' || event === 'jeweldonation';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum amount if specified

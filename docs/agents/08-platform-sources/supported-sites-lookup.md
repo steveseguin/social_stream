@@ -32,12 +32,12 @@ Checked on 2026-06-24:
 
 | Setup Type | Count | Meaning |
 | --- | ---: | --- |
-| `standard` | 100 | Open the normal site/page with chat visible unless the row says otherwise. |
+| `standard` | 99 | Open the normal site/page with chat visible unless the row says otherwise. |
 | `popout` | 23 | Open the platform's popout chat or equivalent chat-only URL. |
 | `toggle` | 9 | Enable the matching SSN source toggle first, then reload the site. |
 | `websocket` | 4 | Use an SSN source page/API workflow. |
 | `manual` | 3 | Manually select/push content from the page. |
-| Total | 139 | Public site cards in `docs/js/sites.js`. |
+| Total | 138 | Public site cards in `docs/js/sites.js`. |
 
 ## Focused Validation Note
 
@@ -218,7 +218,7 @@ Support note: WebSocket source pages can have different event coverage and auth 
 | Vercel Demo | Demo launcher at `https://maestro-launcher.vercel.app/`. |
 | CBOX | Use `https://*.cbox.ws/box/*`. |
 | Wix Live | Use Wix pages and embedded Wix video widget URLs. |
-| Xeenon | Use `https://xeenon.xyz/dashboard`; public notes say popout not supported. |
+| Xeenon | Retired; active manifest route removed after Xeenon hibernation. |
 | Retake.tv | Use `https://retake.tv/live/*`. |
 | Velora.tv | Use `https://velora.tv/*`. |
 | Stream.place | Use `https://stream.place/*`. |
