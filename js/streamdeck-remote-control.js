@@ -38,6 +38,7 @@
 		removefromwaitlist: true,
 		highlightwaitlist: true,
 		resetwaitlist: true,
+		resetleaderboard: true,
 		stopentries: true,
 		startentries: true,
 		openentries: true,

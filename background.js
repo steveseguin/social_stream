@@ -5992,6 +5992,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "resetwaitlist") {
 			resetWaitlist();
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resetleaderboard") {
+			broadcastLeaderboardReset();
+			sendResponse({ state: isExtensionOn, success: true });
 		} else if (request.cmd && request.cmd === "resettipjar") {
 			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 			sendResponse({ state: isExtensionOn });
@@ -9486,6 +9489,9 @@ function setupSocket() {
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
 				resp = true;
+			} else if (data.action && data.action === "resetleaderboard") {
+				broadcastLeaderboardReset();
+				resp = true;
 			} else if (data.action && data.action === "resettipjar") {
 				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 				resp = true;
@@ -11407,6 +11413,22 @@ function sendTargetP2P(data, target) {
 				}
 			} catch (e) {}
 		}
+	}
+}
+
+function broadcastLeaderboardReset() {
+	var payload = { action: "resetleaderboard" };
+	try {
+		sendTargetP2P(payload, "dock");
+	} catch (e) {
+		console.error(e);
+	}
+	try {
+		if (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN) {
+			socketserverDock.send(JSON.stringify(payload));
+		}
+	} catch (e) {
+		console.error(e);
 	}
 }
 

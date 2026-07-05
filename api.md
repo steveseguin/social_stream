@@ -299,37 +299,40 @@ When a message is sent, it goes to the specified output channel. Those who have 
    - Download: `{"action": "downloadwaitlist"}`
    - Select winners: `{"action": "selectwinner", "value": 1}`
 
-6. **Clear Messages**
+6. **Leaderboard Operations**
+   - Reset open leaderboard overlays: `{"action": "resetleaderboard"}`
+
+7. **Clear Messages**
    - All: `{"action": "clear"}` or `{"action": "clearAll"}`
    - Overlay: `{"action": "clearOverlay"}`
 
-7. **Queue Operations**
+8. **Queue Operations**
    - Next: `{"action": "nextInQueue"}`
    - Get Size: `{"action": "getQueueSize"}`
 
-8. **Auto-show Toggle**
+9. **Auto-show Toggle**
    - `{"action": "autoShow", "value": "toggle"}`
 
-9. **Feature Next Message**
+10. **Feature Next Message**
    - `{"action": "feature"}`
 
-10. **Get Chat Sources**
-    - `{"action": "getChatSources"}`
+11. **Get Chat Sources**
+   - `{"action": "getChatSources"}`
 
-11. **VIP User Operations**
-    - Toggle: `{"action": "toggleVIPUser", "value": {"chatname": "username", "type": "twitch"}}`
+12. **VIP User Operations**
+   - Toggle: `{"action": "toggleVIPUser", "value": {"chatname": "username", "type": "twitch"}}`
 
-12. **Get User History**
-    - `{"action": "getUserHistory", "value": {"chatname": "username", "type": "twitch"}}`
+13. **Get User History**
+   - `{"action": "getUserHistory", "value": {"chatname": "username", "type": "twitch"}}`
 
-13. **Draw Mode**
-    - `{"action": "drawmode", "value": true}`
-    - `{"action": "drawmode", "value": "toggle"}`
+14. **Draw Mode**
+   - `{"action": "drawmode", "value": true}`
+   - `{"action": "drawmode", "value": "toggle"}`
 
-14. **Emote-only Filter**
-    - Toggle or set the global emote-only mode that keeps only emotes/emoji from chat messages. Messages that become empty (and have no donation/content image) after filtering are dropped.
-    - Examples:
-      - `{"action": "emoteonly", "value": "toggle"}`
+15. **Emote-only Filter**
+   - Toggle or set the global emote-only mode that keeps only emotes/emoji from chat messages. Messages that become empty (and have no donation/content image) after filtering are dropped.
+   - Examples:
+     - `{"action": "emoteonly", "value": "toggle"}`
       - `{"action": "emoteonly", "value": true}`
       - `{"action": "emoteonly", "value": false}`
 
@@ -851,12 +854,13 @@ The extension processes various API actions, including:
 5. `removefromwaitlist`: Removes an entry from the waitlist.
 6. `highlightwaitlist`: Highlights an entry in the waitlist.
 7. `resetwaitlist`: Resets the entire waitlist.
-8. `stopentries`: Stops accepting new entries.
-9. `startentries`, `openentries`, or `resumeentries`: Starts accepting new entries again.
-10. `waitlistmessage` or `setwaitlistmessage`: Sets the waitlist/draw title message.
-11. `downloadwaitlist`: Initiates a download of the waitlist.
-12. `selectwinner`: Selects one or more random winners from the waitlist.
-13. `drawmode`: Toggles draw mode for giveaways/waitlists.
+8. `resetleaderboard`: Resets open leaderboard overlays and clears their saved leaderboard state.
+9. `stopentries`: Stops accepting new entries.
+10. `startentries`, `openentries`, or `resumeentries`: Starts accepting new entries again.
+11. `waitlistmessage` or `setwaitlistmessage`: Sets the waitlist/draw title message.
+12. `downloadwaitlist`: Initiates a download of the waitlist.
+13. `selectwinner`: Selects one or more random winners from the waitlist.
+14. `drawmode`: Toggles draw mode for giveaways/waitlists.
 
 .. and most actions that targets the dock can be sent via the extension API or other overlays.
 

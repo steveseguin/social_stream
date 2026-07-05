@@ -10661,6 +10661,23 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	const resetLeaderboardBtn = document.getElementById('resetLeaderboard');
+	if (resetLeaderboardBtn) {
+		resetLeaderboardBtn.addEventListener('click', function() {
+			if (confirm('Reset leaderboard data in open leaderboard overlays? This cannot be undone.')) {
+				chrome.runtime.sendMessage({
+					cmd: "resetleaderboard"
+				}, function(response) {
+					if (response && response.success) {
+						alert('Leaderboard data reset command sent.');
+					} else {
+						alert('Failed to send leaderboard reset command. Please try again.');
+					}
+				});
+			}
+		});
+	}
+
 	// Export Points Data
 	const exportPointsBtn = document.getElementById('exportPointsData');
 	if (exportPointsBtn) {

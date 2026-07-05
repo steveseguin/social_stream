@@ -1709,6 +1709,48 @@
             }
         }
 
+        function isLeaderboardResetCommand(data) {
+            return data && (data.cmd === 'resetleaderboard' || data.action === 'resetleaderboard');
+        }
+
+        function clearTickerDisplay() {
+            if (tickerAnimationId) {
+                cancelAnimationFrame(tickerAnimationId);
+                tickerAnimationId = null;
+            }
+            tickerInitialized = false;
+            lastTickerUpdate = 0;
+            tickerPosition = 0;
+            tickerContainer = null;
+
+            const tickerWrapper = document.querySelector('.ticker-wrapper');
+            if (tickerWrapper) {
+                tickerWrapper.remove();
+            }
+        }
+
+        function resetLeaderboardData() {
+            users.clear();
+            lastResetTime = Date.now();
+            lastActivityTime = lastResetTime;
+
+            try {
+                localStorage.removeItem(getStorageKey());
+            } catch (error) {
+                console.error('Error clearing leaderboard data:', error);
+            }
+
+            clearTickerDisplay();
+
+            const leaderboardContent = document.getElementById('leaderboard-content');
+            if (leaderboardContent) {
+                leaderboardContent.style.display = '';
+                leaderboardContent.innerHTML = '';
+            }
+
+            updateLeaderboard();
+        }
+
         function resetLoyaltyData(timestamp = Date.now()) {
             users.forEach(user => {
                 user.loyaltyPoints = 0;
@@ -1758,8 +1800,17 @@
         }
 
         function processData(data) {
-            if (data.content) {
+            if (!data || typeof data !== 'object') {
+                return;
+            }
+
+            if (data.content && typeof data.content === 'object') {
                 data = data.content;
+            }
+
+            if (isLeaderboardResetCommand(data)) {
+                resetLeaderboardData();
+                return;
             }
 
 			console.log(data);
