@@ -1278,6 +1278,15 @@ export class YoutubePlugin extends BasePlugin {
       return null;
     }
     const type = typeof snippet.type === 'string' ? snippet.type.trim().toLowerCase() : '';
+    const hasJewelGiftDetails = Boolean(
+      snippet?.giftEventDetails ||
+      snippet?.giftDetails ||
+      snippet?.gift_event_details ||
+      snippet?.gift_details
+    );
+    if (type === 'giftevent' || hasJewelGiftDetails) {
+      return 'jeweldonation';
+    }
     if (!type || type === 'textmessageevent') {
       return null;
     }
@@ -1295,9 +1304,6 @@ export class YoutubePlugin extends BasePlugin {
     }
     if (type === 'giftmembershipreceivedevent' || snippet?.giftMembershipReceivedDetails) {
       return 'giftredemption';
-    }
-    if (type === 'giftevent' || snippet?.giftEventDetails || snippet?.giftDetails) {
-      return 'jeweldonation';
     }
     return type;
   }
@@ -1886,6 +1892,16 @@ export class YoutubePlugin extends BasePlugin {
 
     const rawType = typeof snippet.type === 'string' ? snippet.type.trim() : '';
     const normalized = rawType.toLowerCase();
+    const hasJewelGiftDetails = Boolean(
+      snippet.giftEventDetails ||
+      snippet.giftDetails ||
+      snippet.gift_event_details ||
+      snippet.gift_details
+    );
+
+    if (normalized === 'giftevent' || hasJewelGiftDetails) {
+      return 'jeweldonation';
+    }
 
     if (!normalized || normalized === 'textmessageevent') {
       return null;
@@ -1909,10 +1925,6 @@ export class YoutubePlugin extends BasePlugin {
 
     if (normalized === 'giftmembershipreceivedevent' || snippet.giftMembershipReceivedDetails) {
       return 'giftredemption';
-    }
-
-    if (normalized === 'giftevent' || snippet.giftEventDetails || snippet.giftDetails) {
-      return 'jeweldonation';
     }
 
     return normalized;
