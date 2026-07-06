@@ -471,6 +471,7 @@ body.hide-metrics .stats-container {
 /* Style for the header items to handle overflow */
 .header-item {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 6px;
 	min-width: 0;
@@ -489,6 +490,58 @@ body.hide-metrics .stats-container {
 	font-weight: bold;
 	color: #FF0000;
 	white-space: nowrap;
+}
+
+.header-source-type {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
+.header-source-type span:first-child {
+	font-weight: bold;
+	color: #FF0000;
+	white-space: nowrap;
+}
+
+.source-type-value {
+	font-family: monospace;
+	font-size: 12px;
+	color: #333;
+	background: #f1f3f4;
+	border: 1px solid #dadce0;
+	border-radius: 4px;
+	padding: 3px 6px;
+	white-space: nowrap;
+}
+
+.source-type-buttons {
+	display: inline-flex;
+	border: 1px solid #dadce0;
+	border-radius: 4px;
+	overflow: hidden;
+	background: #fff;
+}
+
+.source-type-button {
+	border: 0;
+	border-right: 1px solid #dadce0;
+	background: #fff;
+	color: #333;
+	padding: 4px 8px;
+	font-size: 12px;
+	line-height: 1.2;
+	cursor: pointer;
+}
+
+.source-type-button:last-child {
+	border-right: 0;
+}
+
+.source-type-button.active {
+	background: #FF0000;
+	color: #fff;
 }
 
 .target-text {

@@ -99,6 +99,14 @@
 										<span>Target:</span>
 										<span id="current-channel" class="target-text">No target</span>
 									</div>
+									<div class="header-source-type">
+										<span>Type:</span>
+										<span id="youtube-source-type-value" class="source-type-value">youtube</span>
+										<div class="source-type-buttons" aria-label="YouTube source type">
+											<button type="button" id="youtube-type-standard" class="source-type-button">YouTube</button>
+											<button type="button" id="youtube-type-shorts" class="source-type-button">Shorts</button>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -419,6 +427,115 @@ try {
     }
     refreshClientOverrides();
     var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
+	const YT_SHORTS_MODE_SESSION_KEY = "youtubeRedirectShorts";
+
+	function rememberYouTubeShortsMode(enabled) {
+		try {
+			if (enabled) {
+				sessionStorage.setItem(YT_SHORTS_MODE_SESSION_KEY, "true");
+			} else {
+				sessionStorage.removeItem(YT_SHORTS_MODE_SESSION_KEY);
+			}
+		} catch (_) {}
+	}
+
+	function hasRememberedYouTubeShortsMode() {
+		try {
+			return sessionStorage.getItem(YT_SHORTS_MODE_SESSION_KEY) === "true";
+		} catch (_) {
+			return false;
+		}
+	}
+
+	function isYouTubeOAuthCallbackUrl() {
+		return urlParams.has("code") || hashParams.has("access_token");
+	}
+
+	function getInitialYouTubeShortsMode() {
+		if (containsShorts(window.location.href)) {
+			rememberYouTubeShortsMode(true);
+			return true;
+		}
+		if (isYouTubeOAuthCallbackUrl() && hasRememberedYouTubeShortsMode()) {
+			return true;
+		}
+		rememberYouTubeShortsMode(false);
+		return false;
+	}
+
+	function getPostAuthRedirectUrl() {
+		if (!youtubeShorts) {
+			return redirectURI;
+		}
+		return redirectURI + (redirectURI.indexOf("?") === -1 ? "?shorts" : "&shorts");
+	}
+
+	function getYouTubeSourceType() {
+		return youtubeShorts ? "youtubeshorts" : "youtube";
+	}
+
+	function updateYouTubeShortsUrl(enabled) {
+		try {
+			const currentUrl = new URL(window.location.href);
+			if (enabled) {
+				currentUrl.searchParams.set("shorts", "1");
+			} else {
+				currentUrl.searchParams.delete("shorts");
+			}
+			window.history.replaceState({}, document.title, currentUrl.toString());
+		} catch (_) {}
+	}
+
+	function updateYouTubeSourceTypeControl() {
+		const sourceType = getYouTubeSourceType();
+		const value = document.getElementById("youtube-source-type-value");
+		const standardButton = document.getElementById("youtube-type-standard");
+		const shortsButton = document.getElementById("youtube-type-shorts");
+		if (value) {
+			value.textContent = sourceType;
+			value.title = sourceType;
+		}
+		if (standardButton) {
+			standardButton.classList.toggle("active", !youtubeShorts);
+			standardButton.setAttribute("aria-pressed", youtubeShorts ? "false" : "true");
+		}
+		if (shortsButton) {
+			shortsButton.classList.toggle("active", youtubeShorts);
+			shortsButton.setAttribute("aria-pressed", youtubeShorts ? "true" : "false");
+		}
+	}
+
+	function setYouTubeShortsMode(enabled, options = {}) {
+		const nextValue = !!enabled;
+		const changed = youtubeShorts !== nextValue;
+		youtubeShorts = nextValue;
+		rememberYouTubeShortsMode(youtubeShorts);
+		updateYouTubeShortsUrl(youtubeShorts);
+		updateYouTubeSourceTypeControl();
+		if (changed && !options.silent) {
+			addYouTubeStatusEvent("Source type set to " + getYouTubeSourceType());
+		}
+	}
+
+	function initYouTubeSourceTypeControl() {
+		const standardButton = document.getElementById("youtube-type-standard");
+		const shortsButton = document.getElementById("youtube-type-shorts");
+		updateYouTubeSourceTypeControl();
+		if (standardButton) {
+			const standardHandler = function() {
+				setYouTubeShortsMode(false);
+			};
+			standardButton.addEventListener("click", standardHandler);
+			registerCleanup(() => standardButton.removeEventListener("click", standardHandler));
+		}
+		if (shortsButton) {
+			const shortsHandler = function() {
+				setYouTubeShortsMode(true);
+			};
+			shortsButton.addEventListener("click", shortsHandler);
+			registerCleanup(() => shortsButton.removeEventListener("click", shortsHandler));
+		}
+	}
     var username = "";
     var channel = '';
     var videoId = '';
@@ -2105,7 +2222,7 @@ function enableBackgroundKeepAlive() {
 			chatimg: summary.thumbnail,
 			hasDonation: "",
 			membership: "",
-			type: "youtube",
+			type: getYouTubeSourceType(),
 			event: "new_follower",
 			textonly: settings.textonlymode || false,
 			meta: {
@@ -2142,7 +2259,7 @@ function enableBackgroundKeepAlive() {
 			chatimg: first.thumbnail,
 			hasDonation: "",
 			membership: "",
-			type: "youtube",
+			type: getYouTubeSourceType(),
 			event: "new_follower",
 			textonly: settings.textonlymode || false,
 			meta: {
@@ -4335,7 +4452,7 @@ function enableBackgroundKeepAlive() {
 			const expiresIn = tokens.expires_in ? parseInt(tokens.expires_in) : 3600;
 			setStoredToken(tokens.access_token, expiresIn, null, null, consumePendingYouTubeTokenAccessLevel());
 			clearExpectedOAuthState();
-            window.history.replaceState({}, document.title, redirectURI);
+            window.history.replaceState({}, document.title, getPostAuthRedirectUrl());
 			verifyAndUseToken(tokens.access_token);
 		} else {
 			console.error('No access token found in URL fragment');
@@ -4551,7 +4668,7 @@ function enableBackgroundKeepAlive() {
 			}
 			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource, consumePendingYouTubeTokenAccessLevel());
 			clearExpectedOAuthState();
-			window.history.replaceState({}, document.title, redirectURI);
+			window.history.replaceState({}, document.title, getPostAuthRedirectUrl());
 			verifyAndUseToken(data.access_token);
 		} catch (error) {
 			console.error('Error exchanging code for tokens:', error);
@@ -5724,10 +5841,7 @@ function enableBackgroundKeepAlive() {
 		return hasShortsParam || hasShortsPath;
 	}
 	
-	var youtubeShorts = false;
-	if (containsShorts(window.location.href)){
-		youtubeShorts = true;
-	}
+	var youtubeShorts = getInitialYouTubeShortsMode();
 
 	function processMessage(messageData, options = {}) {
 		const { suppressRelay = false } = options;
@@ -6533,6 +6647,7 @@ function enableBackgroundKeepAlive() {
 			registerCleanup(() => signOutButton.removeEventListener('click', signOut));
 		}
 		const advancedControlSettings = loadAdvancedControlSettings();
+		initYouTubeSourceTypeControl();
 		const syncDeleteMessages = document.getElementById('sync-delete-messages');
 		const syncBlockUsers = document.getElementById('sync-block-users');
 		const hideMetrics = document.getElementById('hide-metrics');
