@@ -11492,6 +11492,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	var serverFallbackUndoState = null;
+	var serverFallbackHealthCheckTimer = null;
+	var serverFallbackAutoClearTimer = null;
+	var serverFallbackAutoClearUntil = 0;
 
 	function getServerFallbackInputState() {
 		return {
@@ -11544,6 +11547,50 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return banner;
 	}
 
+	function hideServerFallbackBanner() {
+		var banner = getServerFallbackBanner();
+		if (banner) {
+			banner.classList.remove("show");
+			banner.classList.remove("success");
+		}
+		if (serverFallbackAutoClearTimer) {
+			clearTimeout(serverFallbackAutoClearTimer);
+			serverFallbackAutoClearTimer = null;
+		}
+	}
+
+	function requestDockTransportHealth(callback) {
+		if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
+			return;
+		}
+		chrome.runtime.sendMessage({ cmd: "getDockTransportHealth" }, function (response) {
+			if (typeof callback === "function") {
+				callback(response);
+			}
+		});
+	}
+
+	function scheduleServerFallbackAutoClear() {
+		if (serverFallbackAutoClearTimer) {
+			clearTimeout(serverFallbackAutoClearTimer);
+		}
+		serverFallbackAutoClearUntil = Date.now() + 30000;
+		serverFallbackAutoClearTimer = setTimeout(function checkDockTransport() {
+			requestDockTransportHealth(function (response) {
+				var health = response && response.dockTransportHealth;
+				if (health && health.fakeMessageTransportReady) {
+					hideServerFallbackBanner();
+					return;
+				}
+				if (Date.now() < serverFallbackAutoClearUntil) {
+					serverFallbackAutoClearTimer = setTimeout(checkDockTransport, 2000);
+				} else {
+					serverFallbackAutoClearTimer = null;
+				}
+			});
+		}, 2000);
+	}
+
 	function showServerFallbackBanner(health, customMessage, success, hideEnableButton, showUndoButton) {
 		var banner = getServerFallbackBanner();
 		if (!banner) {
@@ -11594,9 +11641,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			banner.classList.remove("success");
 		}
 		banner.classList.add("show");
+		if (!success) {
+			scheduleServerFallbackAutoClear();
+		}
 	}
 
-	function maybePromptServerFallbackAfterFakeMessage(response) {
+	function maybePromptServerFallbackAfterFakeMessage(response, afterGrace) {
 		var health = response && response.dockTransportHealth;
 		if (!health) {
 			return;
@@ -11606,6 +11656,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return;
 		}
 		if (health.fakeMessageTransportReady) {
+			hideServerFallbackBanner();
+			return;
+		}
+		if (!afterGrace) {
+			if (serverFallbackHealthCheckTimer) {
+				clearTimeout(serverFallbackHealthCheckTimer);
+			}
+			serverFallbackHealthCheckTimer = setTimeout(function () {
+				requestDockTransportHealth(function (updatedResponse) {
+					maybePromptServerFallbackAfterFakeMessage(updatedResponse, true);
+				});
+			}, 3000);
 			return;
 		}
 		if (health.serverFallbackEnabled) {
