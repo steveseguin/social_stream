@@ -1010,6 +1010,7 @@ try{
 	}
 
 	var userDetails = {};
+	var userDetailsById = {};
 
 	async function getUserInfo(username) {
 		
@@ -1035,9 +1036,44 @@ try{
 			const data = await response.json();
 			const deets = data.data[0];
 			userDetails[username] = deets;
+			if (deets && deets.id) {
+				userDetailsById[deets.id] = deets;
+			}
 			return deets;
 		} catch (error) {
 			console.error('Error fetching user info:', error);
+			return null;
+		}
+	}
+
+	async function getUserInfoById(userId) {
+		if (!userId) {
+			return null;
+		}
+		if (userDetailsById[userId]) {
+			return userDetailsById[userId];
+		}
+		
+		const token = getStoredToken();
+		if (!token) {
+			console.error('No token available');
+			return null;
+		}
+
+		try {
+			const response = await fetchWithTimeout(`https://api.twitch.tv/helix/users?id=${encodeURIComponent(userId)}`, 5000, {'Client-ID': getTwitchApiClientId(), 'Authorization': `Bearer ${token}`});
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const data = await response.json();
+			const deets = data.data[0];
+			userDetailsById[userId] = deets;
+			if (deets && deets.login) {
+				userDetails[deets.login] = deets;
+			}
+			return deets;
+		} catch (error) {
+			console.error('Error fetching user info by id:', error);
 			return null;
 		}
 	}
@@ -2519,7 +2555,8 @@ async function ensureChatClientInstance() {
 
 	var channels = {};
 	function getTwitchAvatarImage(usernome) {
-		if (!usernome || channels[usernome]){return;}
+		if (!usernome){return "";}
+		if (channels[usernome]){return channels[usernome];}
 		fetchWithTimeout("https://api.socialstream.ninja/twitch/avatar?username=" + encodeURIComponent(usernome.replace("@",""))).then(response => {
 			response.text().then(function(text) {
 				if (text.startsWith("https://")) {
@@ -2529,6 +2566,25 @@ async function ensureChatClientInstance() {
 		}).catch(error => {
 			//console.log("Couldn't get avatar image URL. API service down?");
 		});
+		return "";
+	}
+
+	async function getTwitchMessageSourceInfo(tags, fallbackChannel) {
+		const roomId = tags && tags['room-id'] ? String(tags['room-id']) : "";
+		const sourceRoomId = tags && tags['source-room-id'] ? String(tags['source-room-id']) : "";
+		let sourceInfo = null;
+
+		if (sourceRoomId && sourceRoomId !== roomId) {
+			sourceInfo = await getUserInfoById(sourceRoomId);
+		}
+		if (!sourceInfo && fallbackChannel) {
+			sourceInfo = await getUserInfo(fallbackChannel);
+		}
+
+		return {
+			name: sourceInfo?.login || sourceInfo?.display_name || fallbackChannel || "",
+			image: sourceInfo?.profile_image_url || getTwitchAvatarImage(fallbackChannel)
+		};
 	}
 
 
@@ -2546,6 +2602,7 @@ async function ensureChatClientInstance() {
 			channel = parsedMessage.params[0].replace(/^#/, '');
 		}
 		const userInfo = await getUserInfo(user);
+		const sourceInfo = await getTwitchMessageSourceInfo(parsedMessage.tags, channel);
 		
 		// Parse subscriber info from badge tags
 		let subscriber = "";
@@ -2719,9 +2776,11 @@ async function ensureChatClientInstance() {
 			data.timestamp = normalizedPayload.timestamp;
 		}
 		data.hasDonation = hasDonation;
-		if (channel) {
-			data.sourceImg = getTwitchAvatarImage(channel);
-			data.sourceName = channel;
+		if (sourceInfo.image) {
+			data.sourceImg = sourceInfo.image;
+		}
+		if (sourceInfo.name) {
+			data.sourceName = sourceInfo.name;
 		}
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
