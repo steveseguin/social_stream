@@ -5,6 +5,7 @@ const path = require("path");
 const repoRoot = path.resolve(__dirname, "..");
 const piperFile = fs.readFileSync(path.join(repoRoot, "thirdparty", "piper", "piper-tts-web.js"), "utf8");
 const properPiperFile = fs.readFileSync(path.join(repoRoot, "thirdparty", "piper", "piper-tts-proper.js"), "utf8");
+const phonemizerFile = fs.readFileSync(path.join(repoRoot, "thirdparty", "piper", "piper-o91UDS6e.js"), "utf8");
 
 assert.ok(!piperFile.includes("https://huggingface.co/diffusionstudio/piper-voices/resolve/main"));
 assert.ok(!piperFile.includes("https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.18.0/"));
@@ -17,7 +18,11 @@ assert.ok(piperFile.includes("getVoiceAssetCandidates(this.voiceId"));
 assert.ok(piperFile.includes("return Object.values(LOCAL_VOICES_JSON.default);"));
 assert.ok(!properPiperFile.includes("https://steveseguin.github.io/piper"));
 assert.ok(properPiperFile.includes("const DEFAULT_REMOTE_PIPER_BASE = 'https://largefiles.socialstream.ninja/piper';"));
-assert.ok(properPiperFile.includes("const FALLBACK_REMOTE_PIPER_BASE = 'https://raw.githubusercontent.com/steveseguin/social_stream/beta/thirdparty/piper';"));
+assert.ok(!properPiperFile.includes("raw.githubusercontent.com/steveseguin/social_stream/beta/thirdparty/piper"));
+assert.ok(!properPiperFile.includes("script.textContent"));
+assert.ok(!properPiperFile.includes("script.src = this.baseUrl + '/thirdparty/piper/piper-o91UDS6e.js';"));
+assert.ok(properPiperFile.includes("const module = await import(url);"));
 assert.ok(properPiperFile.includes("window.SSN_PIPER_REMOTE_BASE || window.ProperPiperRemoteBaseUrl || window.PIPER_REMOTE_BASE_URL"));
+assert.ok(phonemizerFile.includes("export {\n  createPiperPhonemize\n};"));
 
 console.log("PASS piper local asset wiring");

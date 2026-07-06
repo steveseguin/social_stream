@@ -57,8 +57,6 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
   - [Changing CSS without OBS](#changing-css-without-obs)
   - [Pre-styled templates / themes](#pre-styled-templates--themes)
     - [Custom Overlays from scratch](#custom-overlays-from-scratch)
-    - [Custom Javascript](#custom-javascript)
-    - [Auto responding / custom actions](#auto-responding--custom-actions)
     - [Profanity filtering and blocking](#profanity-filtering-and-blocking)
   - [Queuing messages](#queuing-messages)
   - [Pinning messages](#pinning-messages)
@@ -216,12 +214,6 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - bitchute.com (pop out chat)
 - substack
 - online.church (no pop out)
-- fansly - pop out chat
-- camsoda.com (no pop out; open the stream page with chat visible)
-- chaturbate.com (no pop out; open the performer page with chat)
-- cherry.tv (no pop out; open the stream page)
-- myfreecams.com (no pop out; open the performer page with chat)
-- joystick.tv (no pop out; open https://joystick.tv/u/CHANNEL/chat)
 - nextcloud (requires domain added)
 - favorited (studio pop out chat)
 - simps.com/app (open https://simps.com/app/* for chat capture)
@@ -230,7 +222,6 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - versus.cam (test chat page at https://versus.cam/?testchat)
 - patreon
 - arena.social (open https://arena.social/live/*)
-- velora.tv (no popup; just channel watch page)
 - blaze.stream (no popup; just channel watch page)
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
@@ -514,18 +505,6 @@ Check it out here: https://socialstream.ninja/sampleoverlay?session=XXXXX
   
 ![image](https://github.com/steveseguin/social_stream/assets/2575698/26f26421-ac44-47f7-bcfc-04627deb85f9)
 
-#### Custom Javascript
-
-You can inject a bit of javascript into the dock or featured pages using `&js={URL ENCODED JAVASCRIPT}`
-
-For example, 
-[https://socialstream.ninja/featured.html?session=test123&js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js](https://socialstream.ninja/featured.html?session=test123&js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js)
-
-#### Auto responding / custom actions
-
-You can create your own custom auto-responding triggers or other actions by including a `custom.js` file. You don't need to host the featured or dock file for this.
-
-Included in the code is the `custom_sample.js` file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
 #### Profanity filtering and blocking
 
 Social Stream Ninja ships with a shared profanity list baked directly into `libs/objects.js` (the legacy vocabulary merged with the MIT-licensed MauriceButler corpus — 743 normalized entries at the moment). Because the list now lives beside the core library again, every surface (extension, Electron, Lite embeds) gets the same data without needing to fetch `shared/data/badwords.json`.
@@ -538,10 +517,6 @@ Social Stream Ninja ships with a shared profanity list baked directly into `libs
 
 The profanity toggles live under **Other filters** inside the extension popup and are also exposed through `shared/config/settingsDefinitions.js` for remote configuration tooling.
 
-It's fairly easy to modify the `auto1` trigger to do whatever you want. You can also customize or remove the URL-parameter trigger needed to activate it.
-
-Please note that currently the custom.js file needs the dock.html to be opened locally, if you wish to have it load there.
-
 ### Queuing messages
 
 If you hold CTRL (or cmd on mac), you can select messages in the dock that get added to a queue.  A button should appear in the top dock menu bar that will let you cycle through the queue, one at a time.  When pressing the Next in Queue button, messages from the queue will appear as featured chat messages in the overlay page.
@@ -552,7 +527,7 @@ Like queuing a message, you can also instead hold down the ALT key while clickin
 
 ### Togglable Menu Commands 
 
-These are some generic auto-reply commands that can be toggled on/off via the extension's menu. They do not need a custom.js file to work
+These are some generic auto-reply commands that can be toggled on/off via the extension's menu.
 
 - !joke  (tells a random geeky dad joke)
 - hi  (Welcomes anyone who says "hi" into chat)

@@ -25,6 +25,79 @@ let latestExternalTranslationApply = "";
 let requestedImmediateTranslationLanguage = "";
 let appliedImmediateTranslationLanguage = "";
 
+const WEBSTORE_CONSERVATIVE_RELEASE = true;
+const WEBSTORE_DISABLED_TTS_PROVIDERS = new Set(["kokoro", "kitten", "espeak", "piper"]);
+const WEBSTORE_DISABLED_AI_PROVIDERS = new Set(["localgemma", "localqwen"]);
+
+function normalizeWebStoreTtsProvider(provider) {
+	const normalized = (provider || "").toString().trim().toLowerCase();
+	return WEBSTORE_CONSERVATIVE_RELEASE && WEBSTORE_DISABLED_TTS_PROVIDERS.has(normalized) ? "system" : provider;
+}
+
+function normalizeWebStoreAiProvider(provider) {
+	const normalized = (provider || "").toString().trim().toLowerCase();
+	return WEBSTORE_CONSERVATIVE_RELEASE && WEBSTORE_DISABLED_AI_PROVIDERS.has(normalized) ? "ollama" : provider;
+}
+
+function removeWebStoreDisabledSelectOptions() {
+	if (!WEBSTORE_CONSERVATIVE_RELEASE) return;
+	document.querySelectorAll("select").forEach(function(select) {
+		Array.from(select.options || []).forEach(function(option) {
+			const value = (option.value || "").toString().trim().toLowerCase();
+			if (WEBSTORE_DISABLED_TTS_PROVIDERS.has(value) || WEBSTORE_DISABLED_AI_PROVIDERS.has(value)) {
+				option.remove();
+			}
+		});
+	});
+}
+
+function hideWebStoreDisabledElement(id) {
+	const element = document.getElementById(id);
+	if (element) {
+		element.classList.add("hidden");
+		element.style.display = "none";
+	}
+}
+
+function hideWebStoreDisabledControl(selector) {
+	document.querySelectorAll(selector).forEach(function(control) {
+		if ("checked" in control) control.checked = false;
+		control.disabled = true;
+		const container = control.closest("div");
+		(container || control).style.display = "none";
+	});
+}
+
+function applyWebStoreConservativeReleaseGates() {
+	if (!WEBSTORE_CONSERVATIVE_RELEASE) return;
+	removeWebStoreDisabledSelectOptions();
+	[
+		"kokoroTTS", "kittenTTS", "kokoroTTS2", "kittenTTS2", "espeakTTS2", "piperTTS2",
+		"kokoroTTS10", "kittenTTS10", "kokoroTTS18", "kittenTTS18",
+		"localgemmahost", "localbrowserhelp", "localgemmamodel", "localqwenmodel"
+	].forEach(hideWebStoreDisabledElement);
+	["map", "wordcloud"].forEach(function(id) {
+		hideWebStoreDisabledElement(id);
+		hideWebStoreDisabledElement(id + "link");
+	});
+	const mapHeading = document.querySelector(".map_mode_title");
+	if (mapHeading && mapHeading.closest(".link")) mapHeading.closest(".link").style.display = "none";
+	const mapOptions = document.getElementById("wrapper-map-options");
+	if (mapOptions && mapOptions.closest(".wrapper")) mapOptions.closest(".wrapper").style.display = "none";
+	const wordCloudHeading = document.querySelector(".wordcloud_mode_title");
+	if (wordCloudHeading && wordCloudHeading.closest(".link")) wordCloudHeading.closest(".link").style.display = "none";
+	const wordCloudOptions = document.getElementById("wrapper-wordcloud-general-options");
+	if (wordCloudOptions && wordCloudOptions.closest(".wrapper")) wordCloudOptions.closest(".wrapper").style.display = "none";
+	document.querySelectorAll('a[href*="streamelements-importer.html"]').forEach(function(link) {
+		const container = link.closest("div") || link;
+		container.style.display = "none";
+	});
+	[
+		'input[data-setting="addkarma"]',
+		'input[data-param1="badkarma"]'
+	].forEach(hideWebStoreDisabledControl);
+}
+
 function refreshPopupSettingsAfterLanguageSave() {
 	if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
 		return false;
@@ -2366,70 +2439,6 @@ async function ensureSourcesListLoaded(options = {}) {
 }
 
 
-// Function to handle custom JS file upload
-function uploadCustomJsFile() {
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = '.js';
-  
-  fileInput.addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    // Check file size before reading (1MB limit)
-    if (file.size > 1 * 1024 * 1024) {
-      alert('File is too large. Maximum size is 1MB.');
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const contents = e.target.result;
-      // Limit content size
-      const maxLength = 100000;
-      const truncatedContents = contents.length > maxLength ? 
-        contents.substring(0, maxLength) : contents;
-        
-      chrome.runtime.sendMessage({
-        cmd: 'uploadCustomJs', 
-        data: truncatedContents
-      }, function(response) {
-        if (response && response.success) {
-          alert('Custom JavaScript file uploaded and activated successfully.');
-          // Update the UI to show the file is now active
-          document.getElementById('customJsEnabled').checked = true;
-          updateSettings(document.getElementById('customJsEnabled'), true);
-        } else {
-          alert('Failed to upload custom JavaScript file: ' + (response && response.error ? response.error : 'Unknown error'));
-        }
-      });
-    };
-    
-    reader.onerror = function() {
-      alert('Error reading file.');
-    };
-    
-    reader.readAsText(file);
-  });
-  
-  fileInput.click();
-}
-
-function deleteCustomJsFile() {
-  if (confirm('Are you sure you want to delete the custom JavaScript file?')) {
-    chrome.runtime.sendMessage({cmd: 'deleteCustomJs'}, function(response) {
-      if (response && response.success) {
-        alert('Custom JavaScript file deleted and deactivated successfully.');
-        // Update the UI to show the file is now inactive
-        document.getElementById('customJsEnabled').checked = false;
-        updateSettings(document.getElementById('customJsEnabled'), true);
-      } else {
-        alert('Failed to delete custom JavaScript file.');
-      }
-    });
-  }
-}
-
 let tabsInitialized = false;
 
 function createTabsFromSettings(response) {
@@ -2911,7 +2920,6 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "leaderboard", path: "leaderboard.html" },
 	{ id: "games", path: "games.html" },
     { id: "ticker", path: "ticker.html" },
-    { id: "wordcloud", path: "wordcloud.html" },
     { id: "poll", path: "poll.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
 	{ id: "cohost", path: "cohost.html" },
@@ -2926,7 +2934,6 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "custom-gif-commands", path: "gif.html" },
 	{ id: "spotify", path: "spotify-overlay.html" },
 	{ id: "scoreboard", path: "scoreboard.html"},
-	{ id: "map", path: "map.html" },
 	{ id: "timer", path: "timer.html" },
 	
   ];
@@ -3166,6 +3173,12 @@ function setupTtsProviders(response) {
         }
         response.settings.ttsProvider.optionsetting10 = ttsService;
     }
+
+    ["optionsetting", "optionsetting2", "optionsetting10", "optionsetting18"].forEach(function(key) {
+        if (response.settings?.ttsProvider?.[key]) {
+            response.settings.ttsProvider[key] = normalizeWebStoreTtsProvider(response.settings.ttsProvider[key]);
+        }
+    });
 }
 
 // Process parameter settings from objects with a consistent approach
@@ -3413,6 +3426,11 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting='${key}']`);
         if (ele) {
+            if (key === "ttsProvider") {
+                settingObj.optionsetting = normalizeWebStoreTtsProvider(settingObj.optionsetting);
+            } else if (key === "aiProvider") {
+                settingObj.optionsetting = normalizeWebStoreAiProvider(settingObj.optionsetting);
+            }
             if (key == "midiOutputDevice" || key.startsWith("mididevice") || key == "opencodemodel") {
                 if (settingObj.optionsetting && (ele.value !== settingObj.optionsetting)) {
                     // Check if option already exists
@@ -3452,6 +3470,9 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting2" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting2='${key}']`);
         if (ele) {
+            if (key === "ttsProvider") {
+                settingObj.optionsetting2 = normalizeWebStoreTtsProvider(settingObj.optionsetting2);
+            }
             ensureSelectValueOption(ele, settingObj.optionsetting2);
             ele.value = settingObj.optionsetting2;
             updateSettings(ele, sync);
@@ -3464,6 +3485,9 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting10" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting10='${key}']`);
         if (ele) {
+            if (key === "ttsProvider") {
+                settingObj.optionsetting10 = normalizeWebStoreTtsProvider(settingObj.optionsetting10);
+            }
             ensureSelectValueOption(ele, settingObj.optionsetting10);
             ele.value = settingObj.optionsetting10;
             updateSettings(ele, sync);
@@ -3568,9 +3592,9 @@ function update(response, sync = true) {
                 const linkIdsToClean = [
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aioverlaylink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'hypetrainlink', 'metalink', 'waitlistlink',
-                    'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
+                    'tipjarlink', 'tickerlink', 'polllink', 'flowactionslink',
                     'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
-					'spotifylink','maplink'
+					'spotifylink'
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -3913,6 +3937,7 @@ async function loadOpenCodeModels(force) {
 
 // Handle AI provider visibility
 function handleAIProviderVisibility(provider) {
+    provider = normalizeWebStoreAiProvider(provider);
     // Hide all provider-specific elements first
     [
         "ollamamodel", "ollamaendpoint", "chatgptApiKey", "ollamaKeepAlive",
@@ -4101,7 +4126,6 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-param1="normalize"]',
 		'[data-param1="fixed"]',
 		'[data-textparam1="cssb64"]',
-		'[data-textparam1="jsb64"]',
 		'[data-textparam1="googlefont"]'
 	],
 	"wrapper-global-mechanics-options": [
@@ -4181,7 +4205,6 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="dice"]',
 		'[data-setting="questionKeywords"]',
 		'[data-textsetting="questionKeywords"]',
-		'[data-setting="customJsEnabled"]',
 		'[data-setting="giphy"]',
 		'[data-setting="tenor"]',
 		'[data-setting="giphy2"]',
@@ -4232,7 +4255,6 @@ var BEGINNER_ADVANCED_OPTION_HEADINGS = {
 var BEGINNER_ADVANCED_OPTION_HEADING_SECTIONS = {
 	"wrapper-global-message-visibility-options": ["Message doubling / echos / duplicates / relayed"],
 	"wrapper-global-mechanics-options": [
-		"Custom JavaScript",
 		"Giphy/Tenor support",
 		"Trigger webhook URL by a !command",
 		"Send fixed messages at intervals",
@@ -4494,6 +4516,7 @@ function isOpenAITTSProvider(provider) {
 
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
+    provider = normalizeWebStoreTtsProvider(provider);
     // Hide all TTS elements
     ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
@@ -4521,6 +4544,7 @@ function handleTTSProviderVisibility(provider) {
 
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
+    provider = normalizeWebStoreTtsProvider(provider);
     // Hide all TTS10 elements
     ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
@@ -4548,6 +4572,7 @@ function handleTTSProvider10Visibility(provider) {
 
 // Handle featured TTS provider visibility (param2)
 function handleTTSProvider2Visibility(provider) {
+    provider = normalizeWebStoreTtsProvider(provider);
     // Hide all TTS2 elements
     ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
@@ -4579,6 +4604,7 @@ function handleTTSProvider2Visibility(provider) {
 
 // Handle Flow Actions TTS provider visibility (param18)
 function handleTTSProvider18Visibility(provider) {
+    provider = normalizeWebStoreTtsProvider(provider);
     // Hide all TTS18 elements
     ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
@@ -4942,11 +4968,8 @@ if (location.href.includes("/beta/") || location.hostname === "beta.socialstream
 if (sourcemode){
 	baseURL = sourcemode;
 } else if (devmode) {
-    if (location.protocol === "file:") {
-        baseURL = location.href.substring(0, location.href.lastIndexOf('/') + 1);
-    } else {
-        baseURL = "file:///C:/Users/steve/Code/social_stream/";
-    }
+    const currentPageUrl = location.href.split(/[?#]/)[0];
+    baseURL = currentPageUrl.substring(0, currentPageUrl.lastIndexOf('/') + 1);
 } else if (location.hostname === "cache.socialstream.ninja") {
     baseURL = Beta ? "https://beta.socialstream.ninja/" : "https://socialstream.ninja/";
 } else if (location.protocol !== "chrome-extension:" && !Beta) {
@@ -5782,6 +5805,14 @@ function handleOptionSetting(ele, sync) {
                        (ele.dataset.optionsetting2 ? 'optionsetting2' :
                        (ele.dataset.optionsetting10 ? 'optionsetting10' : 'optionsetting18'));
     const settingValue = ele.dataset[settingType];
+
+    if (settingValue === "ttsProvider") {
+        const normalizedProvider = normalizeWebStoreTtsProvider(ele.value);
+        if (normalizedProvider !== ele.value) ele.value = normalizedProvider;
+    } else if (settingValue === "aiProvider") {
+        const normalizedProvider = normalizeWebStoreAiProvider(ele.value);
+        if (normalizedProvider !== ele.value) ele.value = normalizedProvider;
+    }
     
     // Handle poll type
     if (settingValue === "pollType") {
@@ -9323,6 +9354,7 @@ function initHotkeys() {
 }
 
 document.addEventListener("DOMContentLoaded", async function(event) {
+    applyWebStoreConservativeReleaseGates();
     loadSourcesListFromRuntimeManifest();
     setupDynamicCustomUrlControls();
 
@@ -9537,18 +9569,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		document.head.appendChild(style);
 	}
 
-	
-	const uploadCustomJsButton = document.getElementById('uploadCustomJsButton');
-	const deleteCustomJsButton = document.getElementById('deleteCustomJsButton');
-
-	if (uploadCustomJsButton) {
-	  uploadCustomJsButton.addEventListener('click', uploadCustomJsFile);
-	}
-
-	if (deleteCustomJsButton) {
-	  deleteCustomJsButton.addEventListener('click', deleteCustomJsFile);
-	}
-	
 	//document.body.className = "extension-disabled";
 	document.getElementById("disableButton").style.display = "";
 	//chrome.browserAction.setIcon({path: "/icons/off.png"});

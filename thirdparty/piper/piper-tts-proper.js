@@ -119,32 +119,26 @@
     }
 
     async loadPhonemizer() {
-      // Load piper-o91UDS6e.js as text and convert to function
-      const response = await fetch(this.baseUrl + '/thirdparty/piper/piper-o91UDS6e.js');
-      const moduleText = await response.text();
-      
-      // Extract the createPiperPhonemize function
-      // Remove the ES6 export and make it available
-      const modifiedText = moduleText.replace(
-        /export\s*{\s*createPiperPhonemize\s*};?/,
-        'window.__createPiperPhonemize = createPiperPhonemize;'
-      );
-      
-      // Execute the module code
-      const script = document.createElement('script');
-      script.textContent = modifiedText;
-      document.head.appendChild(script);
-      
-      // Wait for it to be available
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      if (!window.__createPiperPhonemize) {
-        throw new Error('Failed to load createPiperPhonemize');
+      const moduleUrls = [
+        this.baseUrl + '/thirdparty/piper/piper-o91UDS6e.js',
+        this.extensionPiperBase ? this.extensionPiperBase + '/piper-o91UDS6e.js' : null
+      ].filter(Boolean);
+
+      let lastError = null;
+      for (const url of moduleUrls) {
+        try {
+          const module = await import(url);
+          if (module && typeof module.createPiperPhonemize === 'function') {
+            this.createPiperPhonemize = module.createPiperPhonemize;
+            console.log('Phonemizer module loaded');
+            return;
+          }
+        } catch (error) {
+          lastError = error;
+        }
       }
-      
-      this.createPiperPhonemize = window.__createPiperPhonemize;
-      delete window.__createPiperPhonemize;
-      console.log('Phonemizer module loaded');
+
+      throw lastError || new Error('Failed to load createPiperPhonemize');
     }
 
     async initPhonemizer() {

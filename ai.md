@@ -49,8 +49,6 @@ I don't believe you need to worry about CORS if using the Social Stream Ninja st
 
 ![image](https://github.com/user-attachments/assets/7587ed12-aa85-498c-8cd4-25fdb56a6543)
 
-If you want to access Ollama directly via the dock.html page, with custom.js commands, you may need to host Ollama behind a reverse proxy service. Refer to their documentation for info on this.
-
 ## Using
 
 To use the AI Chat bot mode, just make sure the toggle is on, and that you have Ollama /w Llama3 installed/running locally, and you should be good to go now.
@@ -67,5 +65,4 @@ There's already a lot of options beyond just a chat bot, including censorship op
 
 - Steve
  ps. BLARGH!
-
 

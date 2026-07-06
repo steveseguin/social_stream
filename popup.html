@@ -3449,7 +3449,7 @@ input:checked + .slider:before {
 						<div class="tts-provider-options options_group hidden" id="openaiTTS">
 							<h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
 							<div style="margin: -4px 0 12px 0; font-size: 0.9em;">
-								<a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+								<a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/local-tts.html">Local TTS setup guide</a>
 							</div>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="openaiAPIKey" class="textInput instant" autocomplete="off" 
@@ -3708,13 +3708,6 @@ input:checked + .slider:before {
                                         🗃️ Limit total messages to
                                         <input type="number" style="max-width: 6ch;" max="99999" min="1" value="200" size="5" data-numbersetting="limit" />
                                     </span>
-                                </div>
-                                <div title="This will enable the 'add sentiment scores to messages' option also">
-                                    <label class="switch">
-                                        <input type="checkbox" data-param1="badkarma" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="filter-out-messages-with-bad-karma">🤬 Filter out messages with bad karma </span>
                                 </div>
                                 <div title="Hide messages that start with !">
                                     <label class="switch">
@@ -4107,11 +4100,6 @@ input:checked + .slider:before {
 								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
 									<textarea id="customCSS" class="textInput" rows="4" data-textparam1="cssb64" placeholder="Enter your custom CSS here"></textarea>
 									<label for="customCSS">&gt; Custom CSS</label>
-								</div>
-								
-								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
-									<textarea id="customJS" class="textInput" rows="4" data-textparam1="jsb64" placeholder="For security/privacy purposes, Javascript injection is only allowed if hosted on file://, github.io, github.com, or if using OBS Studio or in the standalone app."></textarea>
-									<label for="customJS">&gt; Custom Javascript</label>
 								</div>
 								
                                 <div>
@@ -4654,7 +4642,7 @@ input:checked + .slider:before {
 
 			<div class="chat-overlay-design-note beginner-basic">
 				Want to design your own? Check out our <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">AI-friendly starter templates</a>.
-				Have a StreamElements or Streamlabs chat widget? <a class="lightblue" href="./streamelements-importer.html" target="_blank">Import and export it as a standalone SSN overlay</a>.
+				Have a StreamElements or Streamlabs chat widget? <a class="lightblue" href="https://socialstream.ninja/streamelements-importer.html" target="_blank">Import and export it as a standalone SSN overlay</a>.
 			</div>
             <div class="link beginner-basic" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
                 <h2 class="featured_chat_title">
@@ -5342,7 +5330,7 @@ input:checked + .slider:before {
                         <div class="tts-provider-options options_group hidden" id="openaiTTS2">
                             <h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
                             <div style="margin: -4px 0 12px 0; font-size: 0.9em;">
-                                <a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+                                <a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/local-tts.html">Local TTS setup guide</a>
                             </div>
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="password" id="openaiAPIKey2" class="textInput instant" autocomplete="off" 
@@ -6654,7 +6642,7 @@ input:checked + .slider:before {
                                     <span>🔔👋 Beep for new or returning chatters (8h+ quiet)</span>
                                 </div>
                                 <div title="Open the first-time chatter setup guide.">
-                                    <span><a href="./docs/first-time-chatters.html" target="_blank" class="lightblue">Open the First-Time Chatters guide</a></span>
+                                    <span><a href="https://socialstream.ninja/docs/first-time-chatters.html" target="_blank" class="lightblue">Open the First-Time Chatters guide</a></span>
                                 </div>
 								<div title="Override's the database 30-day storage limits">
                                     <label class="switch">
@@ -6805,13 +6793,6 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <img src="./sources/images/twitch.png" class="icon" /><span data-translate="no-all-twitch-member-chat-included"> Only Twitch subscription/resub notifications are marked as a membership </span>
-                                </div>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="addkarma" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="add-sentiment-scores-to-messages"> 😈😇 Add sentiment scores to messages </span>
                                 </div>
 								<div>
                                     <label class="switch">
@@ -7337,18 +7318,6 @@ input:checked + .slider:before {
 										<input type="text" id="questionKeywords" class="textInput" autocomplete="off" placeholder="?,how,what,when,why" data-textsetting="questionKeywords" />
 										<label for="questionKeywords"><span data-translate="question-keywords">&gt; Custom question keywords</span></label>
 									</div>
-								</div>
-								
-
-								<h3><span data-translate="custom-javascript">Custom JavaScript</span></h3>
-								<div title="Upload custom JavaScript to extend functionality">
-									<label class="switch">
-										<input type="checkbox" id="customJsEnabled" data-setting="customJsEnabled" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="enable-custom-javascript">⚙️ Enable custom JavaScript </span><br>
-									<button id="uploadCustomJsButton" class="glowingButton" style="width: 160px; margin-left: 0px;" title="Upload custom JavaScript file"><span>⬆️ Upload Script</span></button>
-									<button id="deleteCustomJsButton" class="glowingButton" style="width: 160px; margin-left: 0px;" title="Delete uploaded JavaScript file"><span>⛔ Delete</span></button>
 								</div>
                                 <h3><span data-translate="giphy-support">Giphy/Tenor support</span></h3>
                                 <div>
@@ -8004,17 +7973,6 @@ input:checked + .slider:before {
                                 </div>
                                 <center>
                                     <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="rumble">
-                                        <span><span data-translate="open-chat">Open chat</span></span>
-                                    </button>
-                                </center>
-                                <br />
-
-                                <div class="textInputContainer" style="width: 95%;">
-                                    <input type="text" id="joystick_username" class="textInput" autocomplete="off" placeholder="Channel name (optional)" data-textsetting="joystick_username" />
-                                    <label for="joystick_username">&gt; Joystick Bot WebSocket</label>
-                                </div>
-                                <center>
-                                    <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="joystickws">
                                         <span><span data-translate="open-chat">Open chat</span></span>
                                     </button>
                                 </center>
@@ -9337,7 +9295,7 @@ input:checked + .slider:before {
 						<div class="tts-provider-options options_group hidden" id="openaiTTS10">
 							<h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
 							<div style="margin: -4px 0 12px 0; font-size: 0.9em;">
-								<a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+								<a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/local-tts.html">Local TTS setup guide</a>
 							</div>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="openaiAPIKey10" class="textInput instant" autocomplete="off" 
@@ -9580,7 +9538,7 @@ input:checked + .slider:before {
 								<p class="ai-tool-copy">This work-in-progress AI co-host can view your screen or webcam, listen to microphone/audio, and respond by text or audio.</p>
 								<p class="ai-tool-copy">With a session link, it can also receive the SSN live chat feed; it defaults to monitor-only, and the Live Chat panel can opt into answering questions.</p>
 								<p class="ai-tool-copy">For the SSN Configured LLM provider, enable the <a href="#wrapper-chatbot-private-options">private chat bot option</a> above.</p>
-								<p class="ai-tool-copy"><a href="./docs/ai-cohost-guide.html" target="_blank">AI co-host guide</a></p>
+								<p class="ai-tool-copy"><a href="https://socialstream.ninja/docs/ai-cohost-guide.html" target="_blank">AI co-host guide</a></p>
 								<p class="ai-tool-copy">Future tool permissions can add live chat, OBS, stream events, games, and other interactive controls.</p>
 								<div class="cohost-tool-panel">
 									<h4>Co-host tool permissions</h4>
@@ -9618,7 +9576,7 @@ input:checked + .slider:before {
 									</div>
 								</div>
 								<p class="ai-tool-copy">Shows an AI avatar and speech bubble on stream. Co-host and chat bot services can send commands to it.</p>
-								<p class="ai-tool-copy"><a href="./docs/ai-cohost-guide.html" target="_blank">AI co-host and stage overlay guide</a></p>
+								<p class="ai-tool-copy"><a href="https://socialstream.ninja/docs/ai-cohost-guide.html" target="_blank">AI co-host and stage overlay guide</a></p>
 								<div style="display: inline-block;" title="Optional: also send primary chat bot replies to the AI stage overlay. This is not needed for dock right-click co-host actions.">
 									<label class="switch">
 										<input type="checkbox" id="aiOverlayFromChatBot" data-setting="aiOverlayFromChatBot" />
@@ -10335,7 +10293,7 @@ input:checked + .slider:before {
 									<div id="hypetrain" data-raw="" class="streaming_chat"><a href="" id="hypetrainlink"></a></div>
 								</div>
 								<p class="ai-tool-copy">Shows Twitch Hype Train and Treasure Train progress as a top bar using <code>meta.html?hype</code>.</p>
-								<p class="ai-tool-copy"><a href="./docs/hype-train-top-bar.html" target="_blank">Hype Train Top Bar guide</a></p>
+								<p class="ai-tool-copy"><a href="https://socialstream.ninja/docs/hype-train-top-bar.html" target="_blank">Hype Train Top Bar guide</a></p>
 								<div class="sticky-action-row top-67">
 									<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="hype" title="Send a fake hype_train meta event">
 										<span>Fake Hype Train</span>
@@ -11325,7 +11283,7 @@ input:checked + .slider:before {
                                 <div style="margin-top: 8px;">
                                     <small>Flow Actions use OBS WebSocket v5 on OBS 28+ (default port 4455). Password is optional; leave it blank if OBS does not require one.</small><br>
                                     <small>For a live status badge on the overlay itself, append <code>&amp;obsdebug=1</code> to the <code>actions.html</code> URL.</small><br>
-                                    <a href="./obs-websocket-test.html" target="_blank" rel="noopener">Open OBS WebSocket Tester</a>
+                                    <a href="https://socialstream.ninja/obs-websocket-test.html" target="_blank" rel="noopener">Open OBS WebSocket Tester</a>
                                 </div>
                                 <div style="margin-top: 10px; padding: 10px; background-color: var(--color-accent-subtle); border-radius: 5px;">
                                     <small data-translate="obs-websocket-info">💡 Configure your OBS WebSocket settings here to enable Flow Actions to control OBS. Make sure OBS WebSocket Server is enabled in OBS: Tools → WebSocket Server Settings</small>
@@ -11726,7 +11684,7 @@ input:checked + .slider:before {
                         <div class="tts-provider-options options_group hidden" id="openaiTTS18">
                             <h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
                             <div style="margin: -4px 0 12px 0; font-size: 0.9em;">
-                                <a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+                                <a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/local-tts.html">Local TTS setup guide</a>
                             </div>
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="password" id="openaiAPIKey18" class="textInput instant" autocomplete="off" placeholder="Your OpenAI API Key" data-textparam18="openaikey" />
@@ -14465,11 +14423,8 @@ input:checked + .slider:before {
                 <i><span data-translate="made-with">Made with</span></i> 💖 <i><span data-translate="for-the-community">for the community</span></i>.
             </p>
 			</span>
-        </div>
+		</div>
 		<script type="text/javascript" src="./libs/profiles.js"></script>
-		<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
-		<script type="text/javascript" src="./shared/ai/kokoroAssetCatalog.js"></script>
-		<!-- Kitten TTS will be loaded dynamically as ES module when needed -->
         <script type="text/javascript" src="popup.js?v=3"></script>
         <script type="text/javascript" src="spotify-auth-helper.js"></script>
     </body>

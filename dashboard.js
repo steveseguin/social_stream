@@ -125,10 +125,6 @@ function updateFeatureStatus() {
     const midiStatus = document.getElementById('midi-status');
     midiStatus.className = 'status-indicator ' + (settings.midi ? 'status-active' : 'status-inactive');
     
-    // Sentiment Analysis
-    const sentimentStatus = document.getElementById('sentiment-status');
-    sentimentStatus.className = 'status-indicator ' + (settings.addkarma ? 'status-active' : 'status-inactive');
-    
     // Waitlist Mode
     const waitlistStatus = document.getElementById('waitlist-status');
     waitlistStatus.className = 'status-indicator ' + (settings.waitlistmode ? 'status-active' : 'status-inactive');
@@ -149,11 +145,6 @@ function updateFeatureStatus() {
         streamerbotStatus.className = 'status-indicator ' + (settings.streamerbot ? 'status-active' : 'status-inactive');
     }
 
-    // Custom JS
-    const customjsStatus = document.getElementById('customjs-status');
-    if (customjsStatus) {
-        customjsStatus.className = 'status-indicator ' + (settings.customJsEnabled ? 'status-active' : 'status-inactive');
-    }
 }
 
 

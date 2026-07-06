@@ -1025,8 +1025,6 @@
 
 			var nextComment = null;
 			var roomID = "test";
-			var applyCustomFeatureActions = false;
-
 			if (urlParams.has("session")) {
 				roomID = urlParams.get("session");
 			} else if (urlParams.has("s")) {
@@ -1597,21 +1595,6 @@
 				playtone();
 			}
 
-			try {
-				if (window.location.host !== "socialstream.ninja") {
-					// don't check if not private hosted, since it won't exist
-					var script = document.createElement("script");
-					script.onload = function () {
-						console.log("Loaded personal actions");
-					};
-					script.onerror = function () {
-						console.log("no personal actions file found. skipping.");
-					};
-					script.src = "custom.js";
-					document.head.appendChild(script);
-				}
-			} catch (e) {}
-
 			function realign(eventtype = false) {
 				if (centering) {
 					try {
@@ -1852,17 +1835,6 @@
 						// raw data
 
 						if ("overlayNinja" in e.data.dataReceived) {
-
-							try {
-								if (applyCustomFeatureActions) {
-									applyCustomFeatureActions(e.data.dataReceived.overlayNinja); 
-								}
-							} catch (e) {
-								console.error(e);
-							}
-							
-							
-
 							//console.log(e.data.dataReceived.overlayNinja);
 							if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
 								// pass
@@ -2469,107 +2441,7 @@
 			}
 
 
-			// Whitelist of trusted domains for external JS
-			const trustedJSDomains = [
-				"socialstream.ninja",
-				"cdn.jsdelivr.net", 
-				"cdnjs.cloudflare.com",
-				"vdo.ninja",
-				// Add other trusted domains as needed
-			];
 
-			// Function to validate external JavaScript URL
-			function isValidJSSource(url) {
-				try {
-					const jsURL = new URL(url);
-					return trustedJSDomains.some(domain => jsURL.hostname === domain || jsURL.hostname.endsWith('.' + domain));
-				} catch (e) {
-					return false; // Invalid URL format
-				}
-			}
-
-			if (urlParams.has("js")) {
-				try {
-					if (window.obsstudio || isMELD || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
-						var jsURL = urlParams.get("js");
-						try {
-							jsURL = decodeURI(jsURL);
-						} catch(e) {
-							warnlog(e);
-						}
-						log(jsURL);
-						
-						// Add domain validation but allow bypassing for local files
-						if (jsURL.startsWith("file://") || isValidJSSource(jsURL) || !jsURL.startsWith("http")) {
-							let externalJavaascript = document.createElement("script");
-							externalJavaascript.type = "text/javascript";
-							externalJavaascript.crossorigin = "anonymous";
-							externalJavaascript.src = jsURL;
-							externalJavaascript.onerror = function() {
-								warnlog("Third-party Javascript failed to load");
-							};
-							externalJavaascript.onload = function() {
-								log("Third-party Javascript loaded");
-							};
-							document.head.appendChild(externalJavaascript);
-						} else {
-							warnlog("JavaScript URL not from trusted domain. For security reasons, external JS should be loaded from approved domains.");
-							
-							// Still allow loading but with a warning
-							let externalJavaascript = document.createElement("script");
-							externalJavaascript.type = "text/javascript";
-							externalJavaascript.crossorigin = "anonymous";
-							externalJavaascript.src = jsURL;
-							externalJavaascript.onerror = function() {
-								warnlog("Third-party Javascript failed to load");
-							};
-							externalJavaascript.onload = function() {
-								log("Third-party Javascript loaded from untrusted domain: " + jsURL);
-							};
-							document.head.appendChild(externalJavaascript);
-						}
-					} else {
-						console.error("For security/privacy purposes, Javascript injection is only allowed if hosted on file://, github.io, github.com, or if using OBS Studio or Electron.");
-					}
-				} catch(e) {
-					errorlog(e);
-				}
-			}
-
-			// For base64js, maintain existing functionality but add warning
-			if (urlParams.has("base64js") || urlParams.has("b64js") || urlParams.has("jsbase64") || urlParams.has("jsb64")) {
-				try {
-					if (window.obsstudio || isMELD || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
-						warnlog("Base64 JavaScript injection poses security risks. Consider using the 'js' parameter with a URL from a trusted domain instead.");
-						
-						var base64js = urlParams.get("base64js") || urlParams.get("b64js") || urlParams.get("jsbase64") || urlParams.get("jsb64");
-						
-						try {
-							base64js = decodeURIComponent(atob(base64js));
-							var externalJavaascript = document.createElement("script");
-							externalJavaascript.type = "text/javascript";
-							externalJavaascript.crossorigin = "anonymous";
-							externalJavaascript.innerHTML = base64js;
-							externalJavaascript.onerror = function() {
-								errorlog("Third-party Javascript failed to load");
-							};
-							externalJavaascript.onload = function() {
-								log("Third-party Javascript loaded via base64");
-							};
-							document.head.appendChild(externalJavaascript);
-						} catch(e) {
-							errorlog("Failed to decode base64 JavaScript:", e);
-						}
-						
-						
-					} else {
-						console.error("For security/privacy purposes, Javascript B64 injection is only allowed if hosted on file://, github.io, github.com, or if using OBS Studio or Electron.");
-					}
-				} catch(e) {
-					console.error(e);
-				}
-			}
-			
 			// Clean up audio context when page unloads
 			window.addEventListener('beforeunload', function() {
 				if (audioContext && audioContext.state !== 'closed') {

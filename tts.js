@@ -13,6 +13,7 @@ TTS.voices = null;
 TTS.kokoroDevice = null;
 TTS.kokoroDtype = null;
 TTS.currentObjectUrl = null;
+TTS.webStoreDisabledTTSProviders = new Set(["kokoro", "kitten", "espeak", "piper"]);
 
 // eSpeak TTS variables
 TTS.espeakLoaded = false;
@@ -712,10 +713,10 @@ TTS.configure = function(urlParams) {
     TTS.SpeechifyAPIKey = urlParams.get("speechifykey") || false;
     TTS.OpenAIAPIKey = urlParams.get("openaikey") || urlParams.get("customttskey") || urlParams.get("localttskey") || false;
     TTS.GeminiAPIKey = urlParams.get("geminikey") || urlParams.get("geminiapikey") || urlParams.get("geminiApiKey") || false;
-    TTS.useKokoroTTS = urlParams.has("kokorotts") || urlParams.has("kokoro") || false;
-    TTS.usePiper = urlParams.has("piper") || urlParams.has("pipertts") || false;
-    TTS.useEspeak = urlParams.has("espeak") || urlParams.has("espeaktts") || false;
-    TTS.useKitten = urlParams.has("kitten") || urlParams.has("kittentts") || false;
+    TTS.useKokoroTTS = false;
+    TTS.usePiper = false;
+    TTS.useEspeak = false;
+    TTS.useKitten = false;
 
     var configuredOpenAIEndpoint = urlParams.get("openaiendpoint") || urlParams.get("customttsendpoint") || urlParams.get("localttsendpoint") || "https://api.openai.com/v1/audio/speech";
 
@@ -723,6 +724,10 @@ TTS.configure = function(urlParams) {
     TTS.TTSProvider = (urlParams.get("ttsprovider") || "system").toString().trim().toLowerCase();
     if (TTS.isCustomEndpointProvider(TTS.TTSProvider)) {
         TTS.TTSProvider = "openai";
+    }
+    if (TTS.webStoreDisabledTTSProviders.has(TTS.TTSProvider)) {
+        console.warn("This TTS provider is disabled in the Chrome Web Store build. Falling back to system TTS.");
+        TTS.TTSProvider = "system";
     }
 
     // Validate provider selection
@@ -753,14 +758,8 @@ TTS.configure = function(urlParams) {
         }
     } else {
         // Backwards compatibility
-        if (TTS.useEspeak) {
-            TTS.TTSProvider = "espeak";
-        } else if (TTS.useKitten) {
-            TTS.TTSProvider = "kitten";
-        } else if (TTS.usePiper) {
+        if (TTS.usePiper) {
             TTS.TTSProvider = "piper";
-        } else if (TTS.useKokoroTTS) {
-            TTS.TTSProvider = "kokoro";
         } else if (TTS.GeminiAPIKey) {
             TTS.TTSProvider = "gemini";
         } else if (TTS.GoogleAPIKey) {

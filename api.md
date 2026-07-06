@@ -431,11 +431,7 @@ Note: Not all commands support or require this callback mechanism.
    - Communicates on channel 5
    - Supports actions like selecting winners and managing the waitlist
 
-3. **Custom Actions**
-   - Create custom auto-responding triggers or actions using a `custom.js` file
-   - Example: `auto1` trigger responds "1" to any message that is "1"
-
-4. **Queuing and Pinning Messages**
+3. **Queuing and Pinning Messages**
    - Queue: Hold CTRL (cmd on Mac) and click messages in the dock
    - Pin: Hold ALT and click messages to pin them at the top
 

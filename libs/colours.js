@@ -242,8 +242,6 @@ function getColorFromType(source) {
             return "#635BFF"; // Stripe brand color
         case "teams":
             return "#6264A7"; // Microsoft Teams Purple
-        case "chaturbate":
-            return "#2A8BEE"; // Approx from their logo
         case "vimeo":
             return "#1AB7EA"; // Vimeo Blue
         case "kick":
@@ -296,8 +294,6 @@ function getColorFromType(source) {
             return "#D9763E";
         case "chatroll":
             return "#2196F3";
-        case "cherrytv":
-            return "#FF6C6C";
         case "cime":
             return "#00C2FF";
         case "chime":

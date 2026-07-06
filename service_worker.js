@@ -100,8 +100,6 @@ function isBackgroundWriteRequest(message) {
     "setOnOffState",
     "saveSetting",
     "sidUpdated",
-    "uploadCustomJs",
-    "deleteCustomJs",
     "uploadBadwords",
     "deleteBadwords",
     "uploadRAGfile",

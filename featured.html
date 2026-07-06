@@ -1369,8 +1369,6 @@
 
 			var nextComment = null;
 			var roomID = "test";
-			var applyCustomFeatureActions = false;
-
 			if (urlParams.has("session")) {
 				roomID = urlParams.get("session");
 			} else if (urlParams.has("s")) {
@@ -1958,21 +1956,6 @@
 			
 			
 
-			try {
-				if (window.location.host !== "socialstream.ninja") {
-					// don't check if not private hosted, since it won't exist
-					var script = document.createElement("script");
-					script.onload = function () {
-						console.log("Loaded personal actions");
-					};
-					script.onerror = function () {
-						console.log("no personal actions file found. skipping.");
-					};
-					script.src = "custom.js";
-					document.head.appendChild(script);
-				}
-			} catch (e) {}
-			
 			function cleanupOldMessages() {
 				const messages = document.querySelectorAll('.hl-c-cont.highlight-chat.stacked');
 				if (messages.length > MAX_MESSAGES) {
@@ -2495,14 +2478,6 @@
 					if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
 						// raw data
 						if ("overlayNinja" in e.data.dataReceived) {
-							try {
-								if (applyCustomFeatureActions) {
-									applyCustomFeatureActions(e.data.dataReceived.overlayNinja);
-								}
-							} catch (e) {
-								console.error(e);
-							}
-
 							//console.log(e.data.dataReceived.overlayNinja);
 							if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
 								// pass
@@ -3409,25 +3384,6 @@
 			  }
 			}
 
-			/*if (urlParams.has("js")) {
-				// ie: &js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js
-				console.warn("Third-party Javascript has been injected into the code. Security cannot be ensured.");
-				var jsURL = urlParams.get("js");
-				jsURL = decodeURI(jsURL);
-				console.log(jsURL);
-				// type="text/javascript" crossorigin="anonymous"
-				var externalJavaascript = document.createElement("script");
-				externalJavaascript.type = "text/javascript";
-				externalJavaascript.crossorigin = "anonymous";
-				externalJavaascript.src = jsURL;
-				externalJavaascript.onerror = function () {
-					console.warn("Third-party Javascript failed to load");
-				};
-				externalJavaascript.onload = function () {
-					console.log("Third-party Javascript loaded");
-				};
-				document.head.appendChild(externalJavaascript);
-			}*/
 			
 			// Clean up audio context when page unloads
 			window.addEventListener('beforeunload', function() {

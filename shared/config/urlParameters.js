@@ -112,19 +112,6 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Applies custom CSS styling via base64 encoded string"
           },
           {
-            "key": "js",
-            "displayName": "js or base64js or b64js or jsbase64 or jsb64",
-            "aliases": [
-              "js",
-              "base64js",
-              "b64js",
-              "jsbase64",
-              "jsb64"
-            ],
-            "values": "URL or base64 string",
-            "description": "Loads external JavaScript (limited to trusted hosting contexts)"
-          },
-          {
             "key": "label",
             "displayName": "label",
             "aliases": [

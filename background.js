@@ -19,11 +19,16 @@ var lastSentMessage = "";
 var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 const fakeChatThrottleState = new Map();
+const WEBSTORE_CONSERVATIVE_RELEASE = true;
 var sentimentAnalysisLoaded = false;
 const commandAliasCache = new Map();
 const settingCommaListCache = new Map();
 const settingRoleListCache = new Map();
 const DEFAULT_QUESTION_KEYWORDS = ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
+
+function isSentimentAnalysisAvailable() {
+	return !WEBSTORE_CONSERVATIVE_RELEASE && typeof loadSentimentAnalysis === "function" && typeof inferSentiment === "function";
+}
 
 function trimSettingCache(cache) {
 	if (cache.size > 500) {
@@ -1114,114 +1119,6 @@ try {
 	}
 } catch (e) {}
 
-///////////////////
-// Add this placeholder function to background.js
-window.customUserFunction = function (data) {
-	// This is a placeholder function that can be overridden by custom user JavaScript
-	console.log("Default customUserFunction - no custom implementation loaded");
-	// Return false to indicate no custom processing was done
-	return data;
-};
-
-function loadCustomJs(code) {
-	try {
-		// Instead of trying to evaluate the code, we'll extract the function
-		// and manually assign it to window.customUserFunction
-
-		// Extract just the function body from the code
-		const functionBodyMatch = code.match(/window\.customUserFunction\s*=\s*function\s*\(\s*data\s*\)\s*\{([\s\S]*?)\}\s*;/);
-
-		if (!functionBodyMatch || !functionBodyMatch[1]) {
-			console.error("Could not extract function body from code");
-			return false;
-		}
-
-		// Get the function body
-		const functionBody = functionBodyMatch[1];
-
-		// Create a new function using the Function constructor
-		// We can't use this directly because of CSP, but we'll use it as a template
-		const functionTemplate = `
-            window.customUserFunction = function(data) {
-                // Custom implementation
-                const processedData = window.processCustomFunctionBody(data);
-                return processedData;
-            };
-            
-            // Extract and define any helper functions
-            ${code.replace(functionBodyMatch[0], "")}
-        `;
-
-		// Now implement a function that will process data according to the extracted body
-		// This will be called by our wrapper function
-		window.processCustomFunctionBody = function (data) {
-			// Here you would implement logic to process the data according to the function body
-			// Since we can't eval the code directly, you'll need to implement specific behaviors
-
-			// Log that we're using the custom implementation
-			console.log("Custom implementation processing data");
-
-			// Simple implementation that modifies data in a predetermined way
-			// Replace this with your actual custom logic
-			if (data.chatmessage) {
-				// Example custom processing
-				if (data.chatmessage.startsWith("!")) {
-					// Handle commands
-					const commandParts = data.chatmessage.split(" ");
-					const command = commandParts[0].toLowerCase();
-
-					if (command === "!hello") {
-						console.log("Command processed: hello");
-						// Custom command handling
-						// You'd implement sendCustomReply here
-					}
-				}
-
-				// Other custom processing
-				// ...
-			}
-
-			return data;
-		};
-
-		// Create a script tag to hold the template
-		const script = document.createElement("script");
-		script.id = "custom-user-js";
-		script.textContent = functionTemplate;
-
-		// Remove any existing script
-		const existingScript = document.getElementById("custom-user-js");
-		if (existingScript) {
-			existingScript.remove();
-		}
-
-		// Add the script to the page
-		document.body.appendChild(script);
-
-		console.log("Custom JavaScript loaded successfully");
-		return true;
-	} catch (error) {
-		console.error("Error loading custom JavaScript:", error);
-		return false;
-	}
-}
-// Function to reset the custom function to default
-function resetCustomJs() {
-	// Remove any existing custom script
-	const existingScript = document.getElementById("custom-user-js");
-	if (existingScript) {
-		existingScript.remove();
-	}
-
-	// Reset to default function
-	window.customUserFunction = function (data) {
-		console.log("Default customUserFunction - no custom implementation loaded");
-		return false;
-	};
-
-	console.log("Custom JavaScript function reset to default");
-}
-//////////////
 function printThermal(htmlContent, options = {}) {
 	// --kiosk --kiosk-printing
 	// Default options
@@ -1627,7 +1524,7 @@ function loadSettings(item, resave = false) {
 
 	toggleMidi();
 
-	if (settings.addkarma) {
+	if (settings.addkarma && isSentimentAnalysisAvailable()) {
 		if (!sentimentAnalysisLoaded) {
 			try {
 				loadSentimentAnalysis();
@@ -1673,17 +1570,6 @@ function loadSettings(item, resave = false) {
 	if (settings.translationlanguage) {
 		changeLg(settings.translationlanguage.optionsetting);
 	}
-	/////
-	const customJs = localStorage.getItem("customJavaScript");
-	const isEnabled = settings.customJsEnabled || false;
-
-	if (customJs && isEnabled) {
-		loadCustomJs(customJs);
-	} else {
-		resetCustomJs();
-	}
-	/////////
-
 	setupSocket();
 	setupSocketDock();
 	handleVideoStatsSettingsChange();
@@ -5075,7 +4961,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					await getPronouns();
 				}
 			}
-			if (request.setting == "addkarma") {
+			if (request.setting == "addkarma" && isSentimentAnalysisAvailable()) {
 				if (request.value) {
 					if (!sentimentAnalysisLoaded) {
 						try {
@@ -5647,72 +5533,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				sendResponse({ ok: false, error: error && error.message ? error.message : "VPZone fetch failed" });
 			}
 			return true;
-		} else if (request.cmd && request.cmd === "joystickFetchJson") {
-			let parsedUrl;
-			try {
-				parsedUrl = new URL(request.url);
-			} catch (error) {
-				sendResponse({ ok: false, error: "Invalid Joystick API URL" });
-				return response;
-			}
-			if (parsedUrl.hostname !== "api.joystick.tv") {
-				sendResponse({ ok: false, error: "Joystick API URL not allowed" });
-				return response;
-			}
-			try {
-				const method = String(request.method || "GET").toUpperCase();
-				const isOAuthTokenPost = method === "POST" && parsedUrl.pathname === "/api/oauth/token";
-				const isStreamSettingsGet = method === "GET" && parsedUrl.pathname === "/api/users/stream-settings";
-				if (!isOAuthTokenPost && !isStreamSettingsGet) {
-					sendResponse({ ok: false, error: "Joystick API request not allowed" });
-					return response;
-				}
-				const headers = {
-					Accept: "application/json"
-				};
-				const authHeader = typeof request.auth === "string" ? request.auth.replace(/[\r\n]/g, "") : "";
-				if (isOAuthTokenPost) {
-					headers["Content-Type"] = "application/x-www-form-urlencoded";
-					if (request.authType === "basic" && authHeader.startsWith("Basic ")) {
-						headers.Authorization = authHeader;
-					}
-				} else if (isStreamSettingsGet) {
-					headers["Content-Type"] = "application/json";
-					if (request.authType === "bearer" && authHeader.startsWith("Bearer ")) {
-						headers.Authorization = authHeader;
-					}
-				}
-				const joystickResponse = await fetch(parsedUrl.toString(), {
-					method,
-					cache: "no-store",
-					credentials: "omit",
-					headers,
-					body: isOAuthTokenPost ? String(request.body || "") : undefined
-				});
-				const responseText = await joystickResponse.text();
-				let responseJson = {};
-				try {
-					responseJson = responseText ? JSON.parse(responseText) : {};
-				} catch (error) {
-					responseJson = null;
-				}
-				if (!joystickResponse.ok) {
-					sendResponse({
-						ok: false,
-						status: joystickResponse.status,
-						error: (responseJson && (responseJson.error_description || responseJson.message || (typeof responseJson.error === "string" ? responseJson.error : responseJson.error && responseJson.error.message))) || `HTTP ${joystickResponse.status}`
-					});
-					return response;
-				}
-				if (responseJson == null) {
-					sendResponse({ ok: false, status: joystickResponse.status, error: "Invalid JSON response" });
-					return response;
-				}
-				sendResponse({ ok: true, status: joystickResponse.status, data: responseJson });
-			} catch (error) {
-				sendResponse({ ok: false, error: error && error.message ? error.message : "Joystick API fetch failed" });
-			}
-			return true;
 		} else if (request.cmd && request.cmd === "rumbleFetchJson") {
 			try {
 				const rumbleResponse = await fetchRumbleJsonResponse(request.url);
@@ -6187,25 +6007,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} else {
 				sendResponse({ state: isExtensionOn, streamID: streamID, password: password });
 			}
-		} else if (request.cmd && request.cmd === "uploadCustomJs") {
-			localStorage.setItem("customJavaScript", request.data);
-			try {
-				// Load the custom JavaScript immediately using script injection
-				const success = loadCustomJs(request.data);
-				if (success) {
-					sendResponse({ success: true, state: isExtensionOn });
-				} else {
-					throw new Error("Failed to load custom JavaScript");
-				}
-			} catch (e) {
-				console.error("Custom JS loading error:", e);
-				sendResponse({ success: false, error: e.message, state: isExtensionOn });
-			}
-		} else if (request.cmd && request.cmd === "deleteCustomJs") {
-			localStorage.removeItem("customJavaScript");
-			// Reset the custom function to default
-			resetCustomJs();
-			sendResponse({ success: true, state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "uploadBadwords") {
 			localStorage.setItem("customBadwords", request.data);
 			try {
@@ -10730,17 +10531,6 @@ async function openchat(target = null, force = false) {
 		if (target == "rumble" && openedRumble) {
 			return;
 		}
-	}
-
-	if (target == "joystickws") {
-		let url = "https://socialstream.ninja/sources/websocket/joystick.html";
-		if (settings.joystick_username && settings.joystick_username.textsetting) {
-			const joystickChannel = settings.joystick_username.textsetting.trim();
-			if (joystickChannel) {
-				url += "?channel=" + encodeURIComponent(joystickChannel);
-			}
-		}
-		openURL(url);
 	}
 
 	if (target == "vpzonews" || (!target && settings.vpzone_username && settings.vpzone_username.textsetting)) {
@@ -16493,7 +16283,7 @@ async function applyBotActions(data, tab = false) {
 		console.error(e);
 	}
 
-	if (settings.addkarma) {
+	if (settings.addkarma && isSentimentAnalysisAvailable()) {
 		try {
 			if (!sentimentAnalysisLoaded) {
 				loadSentimentAnalysis();
@@ -16670,10 +16460,6 @@ async function applyBotActions(data, tab = false) {
 			} catch (e) {
 				console.log(e); // ai.js file missing?
 			}
-		}
-
-		if (settings.customJsEnabled) {
-			data = customUserFunction(data);
 		}
 
 		const emoteOnlyModeEnabled = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));

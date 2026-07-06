@@ -140,7 +140,6 @@ SSN includes many other features, such as:
 
 -   **Points System:** Award points for engagement, track streaks, allow spending points on actions (`points.js`, `pointsactions.js`).
 -   **AI Integration:** LLM support (Ollama, ChatGPT, etc.) for chat responses, message censoring, RAG knowledge base (`ai.js`).
--   **Custom Actions:** Scriptable actions via `custom.js`.
 -   **MIDI Hotkeys:** Trigger actions via MIDI devices.
 -   **Webhooks:** Integrate with external services via webhooks.
 -   **Game Overlays:** Battle Royale game, Polls, Word Clouds, etc. (`README.md`).

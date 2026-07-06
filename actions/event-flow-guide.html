@@ -289,7 +289,7 @@
                     </div>
                     <div class="card">
                         <h4>Payload Structure</h4>
-                        <p>Every message carries a JSON object. Mandatory keys follow <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> (platform, type, chatname, chatmessage, etc.). Attach custom data under <code>meta</code>.</p>
+                        <p>Every message carries a JSON object. Mandatory keys follow <a href="https://socialstream.ninja/docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> (platform, type, chatname, chatmessage, etc.). Attach custom data under <code>meta</code>.</p>
                     </div>
                 </div>
             </section>
@@ -323,7 +323,7 @@
                 <div class="panel">
                     <strong>Recommended diagnostic path:</strong>
                     <ol>
-                        <li>Open <a href="../obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
+                        <li>Open <a href="https://socialstream.ninja/obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
                         <li>Confirm <code>GetVersion</code>, <code>GetCurrentProgramScene</code>, and <code>GetSceneList</code> succeed.</li>
                         <li>Run the matching action check there before testing the full Event Flow automation.</li>
                     </ol>
@@ -561,8 +561,8 @@ Event Payload ─▶ State Check (isAlertMuted)
                     <li>Use <strong>State Nodes</strong> (counters, toggles, timers) to track context between events.</li>
                     <li>Combine <strong>Variables + Logic</strong> to build queue systems, raffles, or scoring engines.</li>
                     <li>Hook into the <strong>Points &amp; Rewards</strong> system so viewers can intentionally trigger flows.</li>
-                    <li>Running the <strong>SSApp desktop app?</strong> Unlock <a href="#custom-js"><strong>Custom JavaScript nodes</strong></a> for arbitrary logic that no built-in node covers.</li>
-                    <li>Check the <a href="../docs/event-reference.html"><strong>Event Reference</strong></a> for detailed payload documentation across all platforms.</li>
+                    <li><a href="#custom-js"><strong>Custom JavaScript nodes</strong></a> are disabled in the Chrome Web Store build; use built-in nodes for release flows.</li>
+                    <li>Check the <a href="https://socialstream.ninja/docs/event-reference.html"><strong>Event Reference</strong></a> for detailed payload documentation across all platforms.</li>
                 </ul>
                 <p>This guide is intentionally standalone—copy it locally, adapt it for your team, and keep experimenting inside the editor.</p>
             </section>
@@ -579,11 +579,11 @@ Event Payload ─▶ State Check (isAlertMuted)
                    #custom-js-example-flow → complete worked example
             ══════════════════════════════════════════════════════════════ -->
             <section id="custom-js">
-                <h2>9. Custom JavaScript <span class="desktop-badge">SSApp / Desktop only</span></h2>
+                <h2>9. Custom JavaScript <span class="desktop-badge">Disabled in Web Store build</span></h2>
                 <p>Two nodes in the Event Flow editor let you write arbitrary JavaScript that runs inside the flow pipeline: <strong>Custom Code</strong> (trigger) and <strong>Execute Custom Code</strong> (action). They are the escape hatch for anything the built-in nodes cannot express.</p>
 
                 <div class="callout warn">
-                    <strong>Desktop app required.</strong> Custom JavaScript nodes are disabled in the browser extension because Chrome's Manifest V3 Content Security Policy blocks <code>new Function()</code> / <code>eval()</code>. Open the editor through the <strong>SSApp desktop app</strong> to enable them. In extension mode the nodes appear greyed-out with the label <em>"Desktop only"</em>.
+                    <strong>Chrome Web Store build:</strong> Custom JavaScript nodes are disabled due Manifest V3 dynamic-code restrictions. Use built-in trigger, logic, and action nodes for release flows.
                 </div>
 
                 <figure class="screenshot">

@@ -34,7 +34,6 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hidemenu` or `nomenu` | boolean or "2" | Hides the menu bar. Value of "2" keeps scroll lock functionality |
 | `css` | URL or CSS string | Applies custom CSS styling via URL or direct CSS |
 | `cssb64` or `b64css` or `base64css` or `cssbase64` | base64 string | Applies custom CSS styling via base64 encoded string |
-| `js` or `base64js` or `b64js` or `jsbase64` or `jsb64` | URL or base64 string | Loads external JavaScript (limited to trusted hosting contexts) |
 | `label` | string | Assigns a label to this instance |
 
 ### Visual Style Parameters

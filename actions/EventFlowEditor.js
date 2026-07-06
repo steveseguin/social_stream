@@ -588,8 +588,8 @@ class EventFlowEditor {
                                         ${group.triggers.map(trigger => `
                                             ${(() => {
                                                 const isDisabled = !this.eventFlowSystem.customJsEvalSupported && trigger.id === 'customJs';
-                                                const label = isDisabled ? `${trigger.name} (Desktop only)` : trigger.name;
-                                                return `<div class="node-item trigger ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="trigger" data-subtype="${trigger.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in extension mode due browser CSP (unsafe-eval blocked).' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
+                                                const label = isDisabled ? `${trigger.name} (Web Store disabled)` : trigger.name;
+                                                return `<div class="node-item trigger ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="trigger" data-subtype="${trigger.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in the Chrome Web Store build due MV3 dynamic-code restrictions.' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
                                                     ${label}
                                                 </div>`;
                                             })()}
@@ -610,8 +610,8 @@ class EventFlowEditor {
                                         ${group.actions.map(action => `
                                             ${(() => {
                                                 const isDisabled = !this.eventFlowSystem.customJsEvalSupported && action.id === 'customJs';
-                                                const label = isDisabled ? `${action.name} (Desktop only)` : action.name;
-                                                return `<div class="node-item action ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="action" data-subtype="${action.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in extension mode due browser CSP (unsafe-eval blocked).' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
+                                                const label = isDisabled ? `${action.name} (Web Store disabled)` : action.name;
+                                                return `<div class="node-item action ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="action" data-subtype="${action.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in the Chrome Web Store build due MV3 dynamic-code restrictions.' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
                                                     ${label}
                                                 </div>`;
                                             })()}
@@ -2986,9 +2986,9 @@ class EventFlowEditor {
 				break;
 			case 'fromSource':
 				const isCustomSource = node.config.source !== undefined && node.config.source !== null && !['*', 'amazon', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
-  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
-  'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
-  'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
+  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chime', 'chzzk', 'cime',
+  'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'favorited',
+  'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'kick',
   'kiwiirc', 'kofi', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
   'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
   'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
@@ -3003,9 +3003,9 @@ class EventFlowEditor {
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
 						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
 						    ${['amazon', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
-  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk', 'cime',
-  'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
-  'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
+  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chime', 'chzzk', 'cime',
+  'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'favorited',
+  'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'kick',
   'kiwiirc', 'kofi', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
   'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
   'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
@@ -3309,12 +3309,18 @@ class EventFlowEditor {
 							value="${this.escapeHtml(node.config.eventType || '')}" placeholder="e.g., custom_event">
 						<div class="property-help">Enter the exact <code>data.event</code> value to match</div>
 					</div>
-					<div class="property-group">
-						<label class="property-label">Additional Condition (optional)</label>
-						<input type="text" class="property-input" id="prop-customCondition"
-							value="${this.escapeHtml(node.config.customCondition || '')}" placeholder="e.g., data.type === 'youtube'">
-						<div class="property-help">JavaScript expression for additional filtering (advanced)</div>
-					</div>
+					${this.eventFlowSystem.customJsEvalSupported ? `
+						<div class="property-group">
+							<label class="property-label">Additional Condition (optional)</label>
+							<input type="text" class="property-input" id="prop-customCondition"
+								value="${this.escapeHtml(node.config.customCondition || '')}" placeholder="e.g., data.type === 'youtube'">
+							<div class="property-help">JavaScript expression for additional filtering (advanced)</div>
+						</div>
+					` : `
+						<div class="property-group">
+							<div class="property-help" style="color:#f0ad4e;">Additional JavaScript conditions are disabled in the Chrome Web Store build due MV3 dynamic-code restrictions.</div>
+						</div>
+					`}
 					<div class="property-group" style="background: #f3e5f5; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>✏️ Custom Event</strong><br>
 						Create a custom trigger for any event type. Use the Event Reference to find available event names.<br><br>
@@ -3815,7 +3821,7 @@ class EventFlowEditor {
 			// --- Custom JS Trigger ---
 			case 'customJs': // Assuming 'customJs' can be a trigger, action, or logic type based on context
 				if (!this.eventFlowSystem.customJsEvalSupported) {
-					html += `<div class="property-group"><div class="property-help" style="color:#f0ad4e;">Custom Code execution is disabled in extension mode due browser CSP restrictions. Use SSApp desktop.</div></div>`;
+					html += `<div class="property-group"><div class="property-help" style="color:#f0ad4e;">Custom Code execution is disabled in the Chrome Web Store build due MV3 dynamic-code restrictions.</div></div>`;
 				}
 				if (node.type === 'trigger') {
 					 html += `<div class="property-group"><label class="property-label">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false">${node.config.code || 'return message.chatmessage.includes("test");'}</textarea>
@@ -4050,7 +4056,6 @@ class EventFlowEditor {
 					{ value: 'chzzk', label: 'CHZZK' },
 					{ value: 'nicovideo', label: 'Niconico' },
 					{ value: 'picarto', label: 'Picarto' },
-					{ value: 'chaturbate', label: 'Chaturbate' },
 					{ value: 'custom', label: '🔧 Custom...' }
 				];
 				
@@ -4114,7 +4119,6 @@ class EventFlowEditor {
 					{ value: 'chzzk', label: 'CHZZK' },
 					{ value: 'nicovideo', label: 'Niconico' },
 					{ value: 'picarto', label: 'Picarto' },
-					{ value: 'chaturbate', label: 'Chaturbate' },
 					{ value: 'custom', label: '🔧 Custom...' }
 				];
 				

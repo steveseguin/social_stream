@@ -39,7 +39,6 @@ const SETTINGS_CATEGORIES = Object.freeze({
   'general_settings': { label: "General Settings", order: 126 },
   'commands': { label: "Commands", order: 127 },
   'management': { label: "Management", order: 128 },
-  'custom_javascript': { label: "Custom JavaScript", order: 129 },
   'giphy_tenor_support': { label: "Giphy/Tenor support", order: 130 },
   'trigger_webhook_url_by_a_command': { label: "Trigger webhook URL by a !command", order: 131 },
   'send_fixed_messages_at_intervals': { label: "Send fixed messages at intervals", order: 132 },
@@ -412,11 +411,6 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "text",
     category: "configure_llm_api",
     description: "Model identifier or folder name override for the Local Qwen browser model."
-  },
-  "customJsEnabled": {
-    type: "boolean",
-    category: "custom_javascript",
-    description: "Upload custom JavaScript to extend functionality"
   },
   "customdiscordchannel": {
     type: "text",

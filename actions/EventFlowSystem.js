@@ -20,9 +20,7 @@ class EventFlowSystem {
 		});
 		this.messageStore = options.messageStore || window.messageStore || {}; // Share message store from background.js
 		this.handleMessageStore = options.handleMessageStore || window.handleMessageStore || null; // Function to handle message storage
-		this.allowEvalCustomJs = (typeof options.allowEvalCustomJs === 'boolean')
-			? options.allowEvalCustomJs
-			: this.detectCustomJsEvalSupport();
+		this.allowEvalCustomJs = false;
 		this.customJsEvalSupported = this.allowEvalCustomJs; // alias used by EventFlowEditor
 		this.customJsEvalWarningShown = false;
 		
@@ -64,37 +62,13 @@ class EventFlowSystem {
     }
 
 	detectCustomJsEvalSupport() {
-		try {
-			if (typeof isSSAPP !== 'undefined' && isSSAPP) return true;
-			if (typeof window !== 'undefined' && (
-				window.ssapp === true ||
-				window.ninjafy ||
-				window.electronApi
-			)) return true;
-			if (typeof window !== 'undefined' && window.location && typeof window.location.search === 'string') {
-				const params = new URLSearchParams(window.location.search || '');
-				if (params.has('ssapp')) return true;
-			}
-		} catch (error) {
-			// ignore and continue to extension detection
-		}
-
-		// MV3 extension pages do not allow dynamic eval/new Function under default CSP.
-		try {
-			if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
-				return false;
-			}
-		} catch (error) {
-			// If this check fails, fall through to default allow.
-		}
-
-		return true;
+		return false;
 	}
 
 	warnCustomJsEvalDisabled(scope = 'customJs') {
 		if (this.customJsEvalWarningShown) return;
 		this.customJsEvalWarningShown = true;
-		console.warn(`[EventFlowSystem] ${scope} is disabled in extension context due CSP (unsafe-eval not allowed). Use SSApp/Electron or a runtime addon.`);
+		console.warn(`[EventFlowSystem] ${scope} is disabled in the Chrome Web Store build due MV3 dynamic-code restrictions.`);
 	}
 
     // Start periodic evaluation for time-based triggers (timeInterval/timeOfDay)
@@ -1632,15 +1606,8 @@ class EventFlowSystem {
 
                 // If there's a custom condition, evaluate it
                 if (eventMatch && config.customCondition) {
-                    try {
-                        // Create a safe evaluation context
-                        const data = message;
-                        const result = new Function('data', `return ${config.customCondition}`)(data);
-                        return !!result;
-                    } catch (e) {
-                        console.warn('Custom condition evaluation failed:', e);
-                        return false;
-                    }
+                    this.warnCustomJsEvalDisabled('custom event condition');
+                    return false;
                 }
 
                 return eventMatch;
@@ -1796,19 +1763,8 @@ class EventFlowSystem {
                 return false;
                 
             case 'customJs':
-                if (!this.allowEvalCustomJs) {
-                    this.warnCustomJsEvalDisabled('customJs trigger');
-                    return false;
-                }
-                try {
-                    const evalFunction = new Function('message', config.code);
-                    match = evalFunction(message);
-                  ////console.log(`[EvaluateTrigger - customJs] Code executed. Result: ${match}`);
-                    return match;
-                } catch (e) {
-                    console.error('[EvaluateTrigger - customJs] Error in custom JS trigger:', e);
-                    return false;
-                }
+                this.warnCustomJsEvalDisabled('customJs trigger');
+                return false;
                 
             case 'counter': {
                 const {
@@ -2960,23 +2916,7 @@ class EventFlowSystem {
 				break;
                 
             case 'customJs':
-                if (!this.allowEvalCustomJs) {
-                    this.warnCustomJsEvalDisabled('customJs action');
-                    break;
-                }
-                try {
-                    const evalFunction = new Function('message', 'result', config.code);
-                    const customResult = evalFunction(message, { ...result });
-                    
-                    if (customResult && typeof customResult === 'object') {
-                        result = {
-                            ...result,
-                            ...customResult
-                        };
-                    }
-                } catch (e) {
-                    console.error('Error in custom JS action:', e);
-                }
+                this.warnCustomJsEvalDisabled('customJs action');
                 break;
 				
 			case 'playTenorGiphy':

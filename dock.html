@@ -3284,7 +3284,6 @@
 			var messageTimeout = 0;
 			var filtering = "";
 			var filterAddNameAndTime = false;
-			var applyCustomActions = false;
 			var showsource = true;
 			var compactmode = false;
 			var darkmode = null;
@@ -6739,27 +6738,6 @@
 					return `${Math.round(secondsPast / 86400)} days ago`;
 				}
 			}
-
-			try {
-				var dockHost = window.location.hostname || window.location.host || "";
-				if (
-					dockHost !== "socialstream.ninja" &&
-					dockHost !== "beta.socialstream.ninja" &&
-					dockHost !== "cfpages.socialstream.ninja" &&
-					!/\.pages\.dev$/i.test(dockHost)
-				) {
-					// Only private/self-hosted copies should try to load local custom actions.
-					var script = document.createElement("script");
-					script.onload = function () {
-						console.log("Loaded personal actions");
-					};
-					script.onerror = function () {
-						console.log("no personal actions file found. skipping.");
-					};
-					script.src = "custom.js";
-					document.head.appendChild(script);
-				}
-			} catch (e) {}
 
 			var activeChatDestinations = new Set();
 
@@ -10465,26 +10443,6 @@
 					}
 				}
 
-					if (!suppressLiveSideEffects) {
-						try {
-							if (applyCustomActions) {
-								let response = applyCustomActions(data); // Any custom actions (not synced with github)
-								if (response === false) {
-									// cancel
-									return;
-								} else if (response === null) {
-									// cancel <== official way of cancelling.
-									return;
-								} else if (response) {
-									// replace with modified message
-									data = response;
-								} // else if 'undefined', just ignore the response.
-							}
-						} catch (e) {
-							console.error(e);
-						}
-					}
-
 					if (filterEvents && data.event) {
 						const eventName = typeof data.event === "string" ? data.event.trim().toLowerCase() : "";
 						const messageText = (data.textContent || data.chatmessage || "").toLowerCase();
@@ -12424,59 +12382,7 @@
 				}
 			}
 
-			if (urlParams.has("js")) {
-				try {
-					if (window.obsstudio || isMELD || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
-						var jsURL = urlParams.get("js");
-						try {
-							jsURL = decodeURI(jsURL);
-						} catch(e) {
-							warnlog(e);
-						}
-						log(jsURL);
-						
-						let externalJavaascript = document.createElement("script");
-						externalJavaascript.type = "text/javascript";
-						externalJavaascript.crossorigin = "anonymous";
-						externalJavaascript.src = jsURL;
-						externalJavaascript.onerror = function() {
-							warnlog("Third-party Javascript failed to load");
-						};
-						externalJavaascript.onload = function() {
-							log("Third-party Javascript loaded");
-						};
-						document.head.appendChild(externalJavaascript);
-					} else {
-						console.error("For security/privacy purposes, Javascript injection is only allowed if hosted on file://, github.io, github.com, or if using OBS Studio or Electron.");
-					}
-				} catch(e) {
-					errorlog(e);
-				}
-			}
 
-			if (urlParams.has("base64js") || urlParams.has("b64js") || urlParams.has("jsbase64") || urlParams.has("jsb64")) {
-				try {
-					if (window.obsstudio || isMELD || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
-						var base64js = urlParams.get("base64js") || urlParams.get("b64js") || urlParams.get("jsbase64") || urlParams.get("jsb64");
-						base64js = decodeURIComponent(atob(base64js));
-						var externalJavaascript = document.createElement("script");
-						externalJavaascript.type = "text/javascript";
-						externalJavaascript.crossorigin = "anonymous";
-						externalJavaascript.innerHTML = base64js;
-						externalJavaascript.onerror = function() {
-							errorlog("Third-party Javascript failed to load");
-						};
-						externalJavaascript.onload = function() {
-							log("Third-party Javascript loaded");
-						};
-						document.head.appendChild(externalJavaascript);
-					} else {
-						console.error("For security/privacy purposes, Javascript B64 injection is only allowed if hosted on file://, github.io, github.com, or if using OBS Studio or Electron.");
-					}
-				} catch(e) {
-					console.error(e);
-				}
-			}
 			if (urlParams.has("reload")) {
 				try {
 					setTimeout(function () {

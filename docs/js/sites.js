@@ -283,18 +283,6 @@ document.addEventListener('DOMContentLoaded', function() {
             `
         },
         {
-            name: 'Joystick Bot WebSocket',
-            icon: 'joystick.png',
-            description: 'WebSocket connection using your own Joystick bot credentials.',
-            type: 'websocket',
-            instructions: `
-                <ul>
-                    <li>URL: https://socialstream.ninja/sources/websocket/joystick</li>
-                    <li>Enter your bot client ID/client secret, then connect to GatewayChannel</li>
-                </ul>
-            `
-        },
-        {
             name: 'IRC WebSocket',
             icon: 'irc.png',
             description: 'WebSocket connection to IRC networks.',
@@ -733,78 +721,6 @@ document.addEventListener('DOMContentLoaded', function() {
             `
         },
 		{
-			name: 'Fansly',
-			icon: 'fansly.png',
-			description: 'Creator subscription platform.',
-			type: 'popout',
-			instructions: `
-				<ul>
-					<li>Pop out chat</li>
-					<li>URL: https://fansly.com/chatroom/*</li>
-				</ul>
-			`
-		},
-		{
-			name: 'Camsoda',
-			icon: 'camsoda.png',
-			description: 'Adult live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>No pop out needed</li>
-					<li>URL: https://www.camsoda.com/*</li>
-				</ul>
-			`
-		},
-		{
-			name: 'MyFreeCams',
-			icon: 'myfreecams.png',
-			description: 'Adult live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>No pop out needed</li>
-					<li>URL: https://myfreecams.com/* or https://www.myfreecams.com/*</li>
-				</ul>
-			`
-		},
-		{
-			name: 'Bongacams',
-			icon: 'bongacams.png',
-			description: 'Adult live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>No pop out needed</li>
-					<li>URL: https://bongacams.com/* or https://www.bongacams.com/*</li>
-				</ul>
-			`
-		},
-		{
-			name: 'CAM4',
-			icon: 'cam4.png',
-			description: 'Adult live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>No pop out needed</li>
-					<li>URL: https://cam4.com/* or https://www.cam4.com/*</li>
-				</ul>
-			`
-		},
-		{
-			name: 'Stripchat',
-			icon: 'stripchat.png',
-			description: 'Adult live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>No pop out needed</li>
-					<li>URL: https://stripchat.com/*</li>
-				</ul>
-			`
-		},
-		{
 			name: 'TwitCasting',
 			icon: 'twitcasting.png',
 			description: 'Japanese live streaming platform.',
@@ -862,30 +778,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 </ul>
             `
         },
-		{
-			name: 'Chaturbate',
-			icon: 'chaturbate.png',
-			description: 'Adult live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://chaturbate.com/*/</li>
-					<li>No pop out needed</li>
-				</ul>
-			`
-		},
-		{
-			name: 'Cherry TV',
-			icon: 'cherrytv.png',
-			description: 'Live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://cherry.tv/*</li>
-					<li>No pop out needed</li>
-				</ul>
-			`
-		},
 		{
 			name: 'Claude.ai',
 			icon: 'claude.png',
@@ -1333,17 +1225,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
-			name: 'Joystick.tv',
-			icon: 'joystick.png',
-			description: 'Adult streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://joystick.tv/u/*/chat</li>
-				</ul>
-			`
-		},
-		{
 			name: 'Rooter',
 			icon: 'rooter.png',
 			description: 'Game streaming platform.',
@@ -1484,18 +1365,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				<ul>
 					<li>URL: https://boltplus.tv/chatpopout*</li>
 					<li>Use the chat popout</li>
-				</ul>
-			`
-		},
-		{
-			name: 'Velora.tv',
-			icon: 'velora.png',
-			description: 'Live streaming platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://velora.tv/*</li>
-					<li>No pop out needed</li>
 				</ul>
 			`
 		},

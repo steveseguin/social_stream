@@ -1294,10 +1294,6 @@
 						</select>
 						<select id="ttsProviderSelect" style="display: none" title="Text-to-speech voice engine">
 							<option value="system">System TTS</option>
-							<option value="kokoro">Kokoro TTS</option>
-							<option value="piper">Piper TTS</option>
-							<option value="espeak">eSpeak TTS</option>
-							<option value="kitten">Kitten TTS</option>
 						</select>
 						<select id="voiceSelect" style="display: none">
 							<option value="Puck">Puck (Conversational)</option>
@@ -1407,7 +1403,6 @@
 			</svg>
 		</a>
 		<div id="puppet-container"></div>
-		<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
 		<script type="text/javascript" src="tts.js"></script>
 		<script>
 			const cohostOverlayParams = new URLSearchParams(location.search);
@@ -6595,13 +6590,25 @@
 			let customModelList = [];
 			let customModelsLoading = false;
 			let customModelsQueuedRefresh = false;
+			const WEBSTORE_DISABLED_COHOST_PROVIDERS = new Set(["localqwen", "localgemma"]);
+			const WEBSTORE_DISABLED_COHOST_TTS_PROVIDERS = new Set(["kokoro", "kitten", "espeak", "piper"]);
+
+			function normalizeCohostProvider(provider) {
+				const normalized = (provider || "").toString().trim().toLowerCase();
+				return WEBSTORE_DISABLED_COHOST_PROVIDERS.has(normalized) ? "gemini" : (provider || "gemini");
+			}
+
+			function normalizeCohostTtsProvider(provider) {
+				const normalized = (provider || "").toString().trim().toLowerCase();
+				return WEBSTORE_DISABLED_COHOST_TTS_PROVIDERS.has(normalized) ? "system" : (provider || "system");
+			}
 
 			function getStoredCohostTtsProvider() {
-				return localStorage.getItem("cohostTtsProvider") || "system";
+				return normalizeCohostTtsProvider(localStorage.getItem("cohostTtsProvider"));
 			}
 
 			function applyCohostTtsProvider(provider) {
-				const selectedProvider = provider || "system";
+				const selectedProvider = normalizeCohostTtsProvider(provider);
 				localStorage.setItem("cohostTtsProvider", selectedProvider);
 				if (ttsProviderSelect) {
 					ttsProviderSelect.value = selectedProvider;
@@ -6976,10 +6983,12 @@
 			}
 
 			function isRealtimeProvider(providerName) {
-				return providerName === "chatgpt" || providerName === "xai" || providerName === "localqwen" || providerName === "localgemma" || providerName === "customopenai" || providerName === "configuredllm";
+				const effectiveProvider = normalizeCohostProvider(providerName);
+				return effectiveProvider === "chatgpt" || effectiveProvider === "xai" || effectiveProvider === "customopenai" || effectiveProvider === "configuredllm";
 			}
 
 			function createPublisherForProvider(providerName, activeStream, apiKey) {
+				providerName = normalizeCohostProvider(providerName);
 				const effectiveModel = getEffectiveModelForProvider(providerName);
 				if (providerName === "gemini") {
 					return new GoogleLivePublisher(activeStream, apiKey, effectiveModel);
@@ -7939,8 +7948,6 @@
 			providerSelect.id = "providerSelect";
 			providerSelect.innerHTML = `
     <option value="gemini">Google Gemini Live</option>
-    <option value="localqwen">Local Qwen 3.5 0.8B (Browser)</option>
-    <option value="localgemma">Local Gemma 4 E2B (Browser, self-hosted)</option>
     <option value="configuredllm">SSN Configured LLM</option>
     <option value="customopenai">OpenAI-Compatible (Custom)</option>
     <option value="chatgpt">OpenAI Realtime</option>
@@ -8244,7 +8251,7 @@
 					Object.assign(defaultPrompts, prompts);
 				}
 			}
-			const savedProvider = localStorage.getItem("selectedProvider");
+			const savedProvider = normalizeCohostProvider(localStorage.getItem("selectedProvider"));
 			providerSelect.value = providerUIConfig[savedProvider] ? savedProvider : "gemini";
 			applyProviderUI(providerSelect.value, true);
 			systemPrompt.addEventListener("change", function () {
