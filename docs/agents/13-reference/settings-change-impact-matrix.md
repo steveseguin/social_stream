@@ -11,6 +11,7 @@ This page is the practical "what has to reload or reconnect?" layer over:
 - `settings-and-toggles.md`
 - `settings-session-storage-source-trace.md`
 - `url-parameter-source-trace.md`
+- `options-settings-proof-ledger.md`
 - `04-standalone-app-source-windows.md`
 - `10-troubleshooting/settings-loss-and-backups.md`
 

@@ -344,17 +344,34 @@
             // Use event timestamp (created_at) if available, otherwise current time
             var timestamp = data.timestamp || Math.floor(Date.now() / 1000);
             var time = new Date(timestamp * 1000).toLocaleTimeString();
-            var msgClass = data.hasDonation ? 'message zap' : 'message';
-            var zapHtml = data.hasDonation ? 
-                '<span class="zap-amount">&#9889; ' + data.hasDonation + '</span> ' : '';
-            
             var msgDiv = document.createElement('div');
-            msgDiv.className = msgClass;
+            msgDiv.className = data.hasDonation ? 'message zap' : 'message';
             msgDiv.dataset.timestamp = timestamp;
-            msgDiv.innerHTML = '<span class="timestamp">[' + time + ']</span> ' +
-                '<span class="nickname">' + escapeHtml(data.chatname) + '</span>: ' +
-                zapHtml +
-                '<span class="text">' + data.chatmessage + '</span>';
+
+            var timestampSpan = document.createElement('span');
+            timestampSpan.className = 'timestamp';
+            timestampSpan.textContent = '[' + time + ']';
+            msgDiv.appendChild(timestampSpan);
+            msgDiv.appendChild(document.createTextNode(' '));
+
+            var nicknameSpan = document.createElement('span');
+            nicknameSpan.className = 'nickname';
+            nicknameSpan.textContent = data.chatname || '';
+            msgDiv.appendChild(nicknameSpan);
+            msgDiv.appendChild(document.createTextNode(': '));
+
+            if (data.hasDonation) {
+                var zapSpan = document.createElement('span');
+                zapSpan.className = 'zap-amount';
+                zapSpan.textContent = '\u26a1 ' + data.hasDonation;
+                msgDiv.appendChild(zapSpan);
+                msgDiv.appendChild(document.createTextNode(' '));
+            }
+
+            var textSpan = document.createElement('span');
+            textSpan.className = 'text';
+            textSpan.textContent = data.plainChatmessage || data.chatmessage || '';
+            msgDiv.appendChild(textSpan);
             
             // Insert in chronological order based on timestamp
             var inserted = false;
@@ -488,7 +505,7 @@
                 seenEvents.delete(iterator.next().value);
             }
             
-            var data = { chatname: '', chatimg: '', chatmessage: '', hasDonation: '' };
+            var data = { chatname: '', chatimg: '', chatmessage: '', plainChatmessage: '', hasDonation: '' };
             
             switch(event.kind) {
                 case 0: // Profile
@@ -513,6 +530,7 @@
                     return;
                     
                 case 1311: // Live chat
+                    data.plainChatmessage = event.content;
                     data.chatmessage = escapeHtml(event.content);
                     break;
                     
@@ -525,6 +543,7 @@
                         // Still show zap but indicate unknown amount
                         data.hasDonation = 'Zap';
                     }
+                    data.plainChatmessage = zap.message || 'Zap!';
                     data.chatmessage = zap.message ? escapeHtml(zap.message) : 'Zap!';
                     if (zap.zapper) {
                         event.pubkey = zap.zapper;
@@ -553,7 +572,9 @@
         // --- Message Queue for sorted sending to extension ---
         
         function queueForExtension(data) {
-            messageBuffer.push(data);
+            var outbound = Object.assign({}, data);
+            delete outbound.plainChatmessage;
+            messageBuffer.push(outbound);
             
             // During initial load, wait for batch of messages
             if (isInitialLoad) {

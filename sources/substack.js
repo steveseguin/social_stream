@@ -65,6 +65,7 @@
 		
 		let eventType = "";
 		if (ele.querySelector("[class*='joinedText']")){
+			if (!settings.capturejoinedevent){return;}
 			eventType = "joined";
 		}
 		

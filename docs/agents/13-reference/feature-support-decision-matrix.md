@@ -2,7 +2,7 @@
 
 Status: heavy reference pass from public feature docs, generated setting categories, platform inventory, mode docs, and current agent pages on 2026-06-24.
 
-Use this page to answer "can SSN do X?" quickly. It is a decision matrix, not a substitute for source validation. For setup-choice routing by user goal, use `workflow-setup-decision-tree.md`. For broad public/marketing-style claims, use `public-claims-boundary-matrix.md`. For platform-specific or provider-specific details, follow the linked docs and source files.
+Use this page to answer "can SSN do X?" quickly. It is a decision matrix, not a substitute for source validation. For setup-choice routing by user goal, use `workflow-setup-decision-tree.md`. For broad public/marketing-style claims, use `public-claims-boundary-matrix.md`. For evidence labels, minimum proof packs, and do-not-promise boundaries around feature, cost, provider, support, service, app-vs-extension, or public claims, use `feature-cost-claims-proof-ledger.md`. For platform-specific or provider-specific details, follow the linked docs and source files.
 
 ## Legend
 

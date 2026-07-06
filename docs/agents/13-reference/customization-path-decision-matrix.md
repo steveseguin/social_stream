@@ -10,6 +10,7 @@ This is the fast "which path should I choose?" layer over:
 
 - `customization-plugin-recipes.md`
 - `customization-source-trace.md`
+- `customization-validation-ledger.md`
 - `custom-plugins-and-extensions.md`
 - `07-overlays-and-pages/custom-overlays.md`
 - `12-development/adding-a-source.md`
@@ -38,6 +39,7 @@ Source and public docs checked:
 - `docs/event-reference.html`
 - `docs/agents/13-reference/customization-plugin-recipes.md`
 - `docs/agents/13-reference/customization-source-trace.md`
+- `docs/agents/13-reference/customization-validation-ledger.md`
 - `docs/agents/13-reference/custom-plugins-and-extensions.md`
 - `docs/agents/07-overlays-and-pages/custom-overlays.md`
 - `docs/agents/12-development/adding-a-source.md`
@@ -144,6 +146,8 @@ Minimum support checklist:
 ### Local `custom.js`
 
 Use this for local/forked dock or featured behavior. For exact host-loading and return-value behavior, use `customization-source-trace.md`.
+
+For evidence labels and proof requirements before stronger custom JS claims, use `customization-validation-ledger.md`.
 
 Source-backed behavior:
 

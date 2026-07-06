@@ -7526,6 +7526,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     premiumQueueActive: false,
     currentTtsSection: "",
     feedbackTimeouts: {},
+    kokoroCacheDownloads: {},
+    cancelRequested: false,
+    activeAudioElement: null,
+    activeAudioUrl: null,
     
     init(voices) {
         this.voices = voices;
@@ -7587,9 +7591,80 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     border: 1px solid #c3e6cb;
                     color: #155724;
                 }
+                .tts-test-actions {
+                    display: flex;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                }
+                .tts-test-button[disabled],
+                .tts-test-cancel-button[disabled] {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+                .tts-test-cancel-button.hidden {
+                    display: none;
+                }
+                .tts-kokoro-cache-controls {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                    padding: 8px;
+                    border: 1px solid rgba(0, 0, 0, 0.12);
+                    border-radius: 4px;
+                    background: rgba(0, 0, 0, 0.03);
+                }
+                .tts-kokoro-cache-controls.hidden {
+                    display: none;
+                }
+                .tts-cache-actions {
+                    display: flex;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                }
+                .tts-cache-button,
+                .tts-cache-cancel-button,
+                .tts-cache-clear-button {
+                    padding: 3px 8px 2px 6px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    color: white;
+                    background-color: #5b667a;
+                }
+                .tts-cache-button {
+                    background-color: #198754;
+                }
+                .tts-cache-cancel-button {
+                    background-color: #dc3545;
+                }
+                .tts-cache-clear-button {
+                    background-color: #6c757d;
+                }
+                .tts-cache-button[disabled],
+                .tts-cache-cancel-button[disabled],
+                .tts-cache-clear-button[disabled] {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+                .tts-cache-cancel-button.hidden {
+                    display: none;
+                }
+                .tts-cache-status {
+                    font-size: 13px;
+                    line-height: 1.35;
+                    color: inherit;
+                }
+                .tts-cache-status.error {
+                    color: #721c24;
+                }
+                .tts-cache-status.success {
+                    color: #155724;
+                }
             `;
             document.head.appendChild(style);
         }
+
+        this.updateAllKokoroCacheControls();
     },
 	
 	getSectionKey(section) {
@@ -7641,14 +7716,402 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         testButton.textContent = "Test";
         testButton.className = "tts-test-button";
         testButton.onclick = () => this.testTTS(section);
+
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = "Cancel";
+        cancelButton.className = "tts-test-cancel-button hidden";
+        cancelButton.onclick = () => this.cancelTest(section);
+
+        const actions = document.createElement('div');
+        actions.className = 'tts-test-actions';
+        actions.appendChild(testButton);
+        actions.appendChild(cancelButton);
         
         const feedback = document.createElement('div');
         feedback.className = 'tts-feedback hidden';
         feedback.id = this.getFeedbackId(section);
+
+        const kokoroCacheControls = this.createKokoroCacheControls(section);
         
-        container.appendChild(testButton);
+        container.appendChild(actions);
         container.appendChild(feedback);
+        container.appendChild(kokoroCacheControls);
         menuWrapper.replaceWith(container);
+
+        if (!provider.dataset.kokoroCacheListenerAttached) {
+            provider.dataset.kokoroCacheListenerAttached = "true";
+            provider.addEventListener('change', () => this.updateKokoroCacheControls(section));
+        }
+
+        const voiceSelect = document.getElementById(`kokoroVoiceSelect${section || ""}`);
+        if (voiceSelect && !voiceSelect.dataset.kokoroCacheListenerAttached) {
+            voiceSelect.dataset.kokoroCacheListenerAttached = "true";
+            voiceSelect.addEventListener('change', () => this.refreshKokoroCacheState(section));
+        }
+
+        this.updateKokoroCacheControls(section);
+    },
+
+    getTestContainer(section = "") {
+        return document.getElementById(section ? `ttsTestContainer${section}` : 'ttsTestContainer');
+    },
+
+    getTestButton(section = "") {
+        const container = this.getTestContainer(section);
+        return container ? container.querySelector('.tts-test-button') : null;
+    },
+
+    getCancelButton(section = "") {
+        const container = this.getTestContainer(section);
+        return container ? container.querySelector('.tts-test-cancel-button') : null;
+    },
+
+    setTestRunning(section = "", running = false, label = "") {
+        const testButton = this.getTestButton(section);
+        const cancelButton = this.getCancelButton(section);
+        if (testButton) {
+            testButton.disabled = !!running;
+            testButton.textContent = running ? (label || "Testing...") : "Test";
+        }
+        if (cancelButton) {
+            cancelButton.classList.toggle('hidden', !running);
+            cancelButton.disabled = !running;
+        }
+    },
+
+    createKokoroCacheControls(section = "") {
+        const container = document.createElement('div');
+        container.className = 'tts-kokoro-cache-controls hidden';
+        container.dataset.section = section || "";
+
+        const actions = document.createElement('div');
+        actions.className = 'tts-cache-actions';
+
+        const cacheButton = document.createElement('button');
+        cacheButton.type = "button";
+        cacheButton.textContent = "Cache Kokoro model";
+        cacheButton.className = "tts-cache-button";
+        cacheButton.onclick = () => this.cacheKokoroModel(section);
+
+        const cancelButton = document.createElement('button');
+        cancelButton.type = "button";
+        cancelButton.textContent = "Cancel download";
+        cancelButton.className = "tts-cache-cancel-button hidden";
+        cancelButton.onclick = () => this.cancelKokoroCacheDownload(section);
+
+        const clearButton = document.createElement('button');
+        clearButton.type = "button";
+        clearButton.textContent = "Clear Kokoro cache";
+        clearButton.className = "tts-cache-clear-button";
+        clearButton.onclick = () => this.clearKokoroCache(section);
+
+        const status = document.createElement('div');
+        status.className = 'tts-cache-status';
+        status.textContent = "Kokoro can be cached before testing to avoid a large first-use download.";
+
+        actions.appendChild(cacheButton);
+        actions.appendChild(cancelButton);
+        actions.appendChild(clearButton);
+        container.appendChild(actions);
+        container.appendChild(status);
+
+        return container;
+    },
+
+    getKokoroCacheControls(section = "") {
+        const container = this.getTestContainer(section)?.querySelector('.tts-kokoro-cache-controls');
+        if (!container) return null;
+        return {
+            container,
+            cacheButton: container.querySelector('.tts-cache-button'),
+            cancelButton: container.querySelector('.tts-cache-cancel-button'),
+            clearButton: container.querySelector('.tts-cache-clear-button'),
+            status: container.querySelector('.tts-cache-status')
+        };
+    },
+
+    getKokoroSelectedVoice(section = "") {
+        return document.getElementById(`kokoroVoiceSelect${section || ""}`)?.value || "af_aoede";
+    },
+
+    getKokoroCacheDtype() {
+        const assets = getKokoroAssets();
+        const device = navigator.gpu ? "webgpu" : "wasm";
+        return typeof assets.getPreferredDtype === "function" ? assets.getPreferredDtype(device) : (device === "webgpu" ? "fp16" : "q8");
+    },
+
+    getKokoroDtypeLabel(dtype) {
+        if (dtype === "fp16") return "fp16 model (~156 MB)";
+        if (dtype === "q8") return "q8 model (~88 MB)";
+        if (dtype === "fp32") return "fp32 model";
+        return dtype + " model";
+    },
+
+    getKokoroCacheAssets(section = "") {
+        const assets = getKokoroAssets();
+        const dtype = this.getKokoroCacheDtype(section);
+        const resolveBase = typeof assets.getResolveBase === "function" ? assets.getResolveBase() : "https://largefiles.socialstream.ninja/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/";
+        const modelFile = typeof assets.getModelFile === "function" ? assets.getModelFile(dtype) : (dtype === "q8" ? "onnx/model_quantized.onnx" : `onnx/model_${dtype}.onnx`);
+        const voice = this.getKokoroSelectedVoice(section);
+        const modelUrl = typeof assets.getModelUrl === "function" ? assets.getModelUrl(dtype) : resolveBase + modelFile;
+        const voiceUrl = typeof assets.getVoiceUrl === "function" ? assets.getVoiceUrl(voice) : resolveBase + "voices/" + voice + ".bin";
+
+        return {
+            dtype,
+            dtypeLabel: this.getKokoroDtypeLabel(dtype),
+            voice,
+            files: [
+                { url: resolveBase + "config.json", cacheName: "transformers-cache", label: "config.json" },
+                { url: resolveBase + "tokenizer.json", cacheName: "transformers-cache", label: "tokenizer.json" },
+                { url: resolveBase + "tokenizer_config.json", cacheName: "transformers-cache", label: "tokenizer_config.json" },
+                { url: modelUrl, cacheName: "transformers-cache", label: modelFile },
+                { url: voiceUrl, cacheName: "kokoro-voices", label: voice + ".bin" }
+            ]
+        };
+    },
+
+    setKokoroCacheStatus(section = "", message = "", type = "") {
+        const controls = this.getKokoroCacheControls(section);
+        if (!controls?.status) return;
+        controls.status.textContent = message;
+        controls.status.className = `tts-cache-status${type ? " " + type : ""}`;
+    },
+
+    setKokoroCacheBusy(section = "", busy = false) {
+        const controls = this.getKokoroCacheControls(section);
+        if (!controls) return;
+        if (controls.cacheButton) controls.cacheButton.disabled = !!busy;
+        if (controls.clearButton) controls.clearButton.disabled = !!busy;
+        if (controls.cancelButton) {
+            controls.cancelButton.classList.toggle('hidden', !busy);
+            controls.cancelButton.disabled = !busy;
+        }
+
+        const testButton = this.getTestButton(section);
+        if (testButton && !this.premiumQueueActive) {
+            testButton.disabled = !!busy;
+        }
+    },
+
+    updateAllKokoroCacheControls() {
+        ["", "2", "10", "18"].forEach(section => this.updateKokoroCacheControls(section));
+    },
+
+    updateKokoroCacheControls(section = "") {
+        const controls = this.getKokoroCacheControls(section);
+        if (!controls) return;
+        const provider = this.getProviderSelect(section)?.value || "system";
+        const showControls = provider === "kokoro" && !ssapp;
+        controls.container.classList.toggle('hidden', !showControls);
+        if (showControls) {
+            this.refreshKokoroCacheState(section);
+        }
+    },
+
+    async refreshKokoroCacheState(section = "") {
+        const sectionKey = this.getSectionKey(section);
+        if (this.kokoroCacheDownloads[sectionKey]) return;
+
+        const controls = this.getKokoroCacheControls(section);
+        if (!controls || controls.container.classList.contains('hidden')) return;
+
+        if (!("caches" in window)) {
+            this.setKokoroCacheStatus(section, "Browser cache storage is unavailable here. Kokoro will download during first use.", "error");
+            if (controls.cacheButton) controls.cacheButton.disabled = true;
+            if (controls.clearButton) controls.clearButton.disabled = true;
+            return;
+        }
+
+        try {
+            const assetSet = this.getKokoroCacheAssets(section);
+            let cached = 0;
+            for (const file of assetSet.files) {
+                const cache = await caches.open(file.cacheName);
+                if (await cache.match(file.url)) {
+                    cached++;
+                }
+            }
+
+            if (controls.cacheButton) controls.cacheButton.disabled = false;
+            if (controls.clearButton) controls.clearButton.disabled = cached === 0;
+
+            if (cached === assetSet.files.length) {
+                this.setKokoroCacheStatus(section, `Kokoro ${assetSet.dtypeLabel} and ${assetSet.voice} voice are cached locally.`, "success");
+            } else if (cached > 0) {
+                this.setKokoroCacheStatus(section, `Kokoro cache is partial (${cached}/${assetSet.files.length}). Cache again to finish the current model and voice.`);
+            } else {
+                this.setKokoroCacheStatus(section, `Not cached yet. First Kokoro use will download the ${assetSet.dtypeLabel} and selected voice.`);
+            }
+        } catch (error) {
+            console.error("Failed to check Kokoro cache:", error);
+            this.setKokoroCacheStatus(section, "Unable to check the Kokoro cache state.", "error");
+        }
+    },
+
+    async requestKokoroPersistentStorage(section = "") {
+        if (!navigator.storage?.persist) return;
+        try {
+            const persisted = await navigator.storage.persist();
+            if (!persisted) {
+                this.setKokoroCacheStatus(section, "Downloading Kokoro model. Browser storage may still be cleared automatically later.");
+            }
+        } catch (error) {
+            console.warn("Unable to request persistent Kokoro storage:", error);
+        }
+    },
+
+    cloneResponseHeaders(response) {
+        const headers = new Headers();
+        try {
+            response.headers.forEach((value, key) => {
+                if (/^(content-encoding|content-length|transfer-encoding)$/i.test(key)) {
+                    return;
+                }
+                headers.set(key, value);
+            });
+        } catch (_) { }
+        return headers;
+    },
+
+    formatKokoroBytes(bytes) {
+        if (!Number.isFinite(bytes) || bytes <= 0) return "";
+        if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + " MB";
+        if (bytes >= 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return bytes + " B";
+    },
+
+    async fetchAndCacheKokoroAsset(file, signal, onProgress) {
+        const cache = await caches.open(file.cacheName);
+        if (await cache.match(file.url)) {
+            return { skipped: true, loaded: 0, total: 0 };
+        }
+
+        const response = await fetch(file.url, { signal });
+        if (!response.ok) {
+            throw new Error(`Download failed for ${file.label} (${response.status})`);
+        }
+
+        const total = parseInt(response.headers.get("content-length") || "0", 10) || 0;
+        let loaded = 0;
+        let blob = null;
+
+        if (response.body?.getReader) {
+            const reader = response.body.getReader();
+            const chunks = [];
+            while (true) {
+                const result = await reader.read();
+                if (result.done) break;
+                chunks.push(result.value);
+                loaded += result.value?.byteLength || 0;
+                if (onProgress) onProgress(loaded, total);
+            }
+            blob = new Blob(chunks);
+        } else {
+            blob = await response.blob();
+            loaded = blob.size || total;
+            if (onProgress) onProgress(loaded, total);
+        }
+
+        if (signal.aborted) {
+            throw new DOMException("Download cancelled", "AbortError");
+        }
+
+        await cache.put(file.url, new Response(blob, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: this.cloneResponseHeaders(response)
+        }));
+
+        return { skipped: false, loaded, total };
+    },
+
+    async cacheKokoroModel(section = "") {
+        if (!("caches" in window)) {
+            this.setKokoroCacheStatus(section, "Browser cache storage is unavailable here. Kokoro will download during first use.", "error");
+            return;
+        }
+
+        const sectionKey = this.getSectionKey(section);
+        if (this.kokoroCacheDownloads[sectionKey]) {
+            this.setKokoroCacheStatus(section, "Kokoro model download is already running.");
+            return;
+        }
+
+        const controller = new AbortController();
+        this.kokoroCacheDownloads[sectionKey] = controller;
+        this.setKokoroCacheBusy(section, true);
+        let wasCancelled = false;
+
+        try {
+            await this.requestKokoroPersistentStorage(section);
+            const assetSet = this.getKokoroCacheAssets(section);
+            this.setKokoroCacheStatus(section, `Caching Kokoro ${assetSet.dtypeLabel} and ${assetSet.voice} voice...`);
+
+            for (let i = 0; i < assetSet.files.length; i++) {
+                const file = assetSet.files[i];
+                const prefix = `Caching ${i + 1}/${assetSet.files.length}: ${file.label}`;
+                this.setKokoroCacheStatus(section, prefix + "...");
+                const result = await this.fetchAndCacheKokoroAsset(file, controller.signal, (loaded, total) => {
+                    if (total) {
+                        this.setKokoroCacheStatus(section, `${prefix} ${Math.round((loaded / total) * 100)}% (${this.formatKokoroBytes(loaded)} / ${this.formatKokoroBytes(total)})`);
+                    } else {
+                        this.setKokoroCacheStatus(section, `${prefix} ${this.formatKokoroBytes(loaded)}`);
+                    }
+                });
+
+                if (result.skipped) {
+                    this.setKokoroCacheStatus(section, `${prefix} already cached.`);
+                }
+            }
+
+            this.setKokoroCacheStatus(section, `Kokoro ${assetSet.dtypeLabel} and ${assetSet.voice} voice are cached locally.`, "success");
+        } catch (error) {
+            if (error?.name === "AbortError") {
+                wasCancelled = true;
+                this.setKokoroCacheStatus(section, "Kokoro model download cancelled.");
+            } else {
+                console.error("Failed to cache Kokoro model:", error);
+                this.setKokoroCacheStatus(section, "Kokoro model cache failed: " + (error?.message || error), "error");
+            }
+        } finally {
+            delete this.kokoroCacheDownloads[sectionKey];
+            this.setKokoroCacheBusy(section, false);
+            if (!wasCancelled) {
+                this.refreshKokoroCacheState(section);
+            }
+        }
+    },
+
+    cancelKokoroCacheDownload(section = "") {
+        const controller = this.kokoroCacheDownloads[this.getSectionKey(section)];
+        if (controller) {
+            controller.abort();
+        }
+    },
+
+    async clearKokoroCache(section = "") {
+        if (!("caches" in window)) {
+            this.setKokoroCacheStatus(section, "Browser cache storage is unavailable here.", "error");
+            return;
+        }
+
+        const sectionKey = this.getSectionKey(section);
+        if (this.kokoroCacheDownloads[sectionKey]) {
+            this.cancelKokoroCacheDownload(section);
+        }
+
+        try {
+            const assetSet = this.getKokoroCacheAssets(section);
+            for (const file of assetSet.files) {
+                const cache = await caches.open(file.cacheName);
+                await cache.delete(file.url);
+            }
+            this.setKokoroCacheStatus(section, `Cleared Kokoro ${assetSet.dtypeLabel} and ${assetSet.voice} voice cache.`);
+            this.refreshKokoroCacheState(section);
+        } catch (error) {
+            console.error("Failed to clear Kokoro cache:", error);
+            this.setKokoroCacheStatus(section, "Unable to clear the Kokoro cache.", "error");
+        }
     },
 
     getSettings(section = "") {
@@ -7795,8 +8258,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         
         return settings;
     },
-    
-    showFeedback(message, type = 'info', section = this.currentTtsSection || "") {
+
+    showFeedback(message, type = 'info', section = this.currentTtsSection || "", autoHideMs = 5000) {
         const feedback = document.getElementById(this.getFeedbackId(section));
         if (feedback) {
             feedback.textContent = message;
@@ -7805,11 +8268,15 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             const sectionKey = this.getSectionKey(section);
             if (this.feedbackTimeouts[sectionKey]) {
                 clearTimeout(this.feedbackTimeouts[sectionKey]);
+                this.feedbackTimeouts[sectionKey] = null;
             }
             
-            this.feedbackTimeouts[sectionKey] = setTimeout(() => {
-                feedback.className = 'tts-feedback hidden';
-            }, 5000);
+            if (autoHideMs > 0) {
+                this.feedbackTimeouts[sectionKey] = setTimeout(() => {
+                    feedback.className = 'tts-feedback hidden';
+                    this.feedbackTimeouts[sectionKey] = null;
+                }, autoHideMs);
+            }
         }
     },
 	
@@ -7834,6 +8301,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         
         // Check if the provider supports testing
         const provider = this.getProviderSelect(section)?.value || "system";
+        if (this.premiumQueueActive) {
+            this.showFeedback("A TTS test is already running. Cancel it before starting another test.", 'warning', section, 0);
+            return;
+        }
         if (provider === 'piper' || provider === 'espeak') {
             let warningMsg = getTranslation("tts-test-not-available", "Testing is not available for {provider}. This TTS provider works during streaming only.");
             warningMsg = warningMsg.replace('{provider}', serviceName);
@@ -7841,14 +8312,15 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             return;
         }
         
-        if (provider === 'kitten') {
+        if (provider === 'kitten' || provider === 'kokoro') {
             let warningMsg = getTranslation("tts-test-limited", "Testing for {provider} requires significant browser resources. Works best during streaming.");
             warningMsg = warningMsg.replace('{provider}', serviceName);
-            this.showFeedback(warningMsg, 'warning', section);
+            this.showFeedback(warningMsg, 'warning', section, provider === 'kokoro' ? 0 : 5000);
             // Continue with test despite warning
         }
         
-        this.showFeedback(`Testing ${serviceName}...`, 'info', section);
+        this.cancelRequested = false;
+        this.showFeedback(`Testing ${serviceName}...`, 'info', section, provider === 'kokoro' ? 0 : 5000);
         
         const originalOnEnded = this.audio?.onended;
         const settings = this.getSettings(section);
@@ -7958,27 +8430,40 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         window.speechSynthesis.speak(utterance);
     },
 	
-	async kokoroTTS(text, settings) {
+	async kokoroTTS(text, settings, section = this.currentTtsSection || "") {
 		try {
+            this.premiumQueueActive = true;
+            this.cancelRequested = false;
+            this.setTestRunning(section, true, "Loading...");
 			if (ssapp){
 				try {
+                    this.setTestRunning(section, true, "Generating...");
+                    this.showFeedback("Generating Kokoro test audio in the desktop app...", 'info', section, 0);
 					// Get WAV buffer directly from main process
 					
 					const wavBuffer = await ipcRenderer.invoke("tts", {text, settings: (settings?.kokoro || {} )});
+                    if (this.cancelRequested) {
+                        return;
+                    }
 					
 					// Create blob from buffer
 					const audioBlob = new Blob([wavBuffer], { type: "audio/wav" });
 					
 					// Play the audio
 					const audioElement = document.createElement("audio");
-					audioElement.src = URL.createObjectURL(audioBlob);
-					audioElement.onended = this.finishedAudio;
+					this.activeAudioElement = audioElement;
+                    this.activeAudioUrl = URL.createObjectURL(audioBlob);
+					audioElement.src = this.activeAudioUrl;
+					audioElement.onended = () => {
+                        this.showFeedback("Kokoro TTS test completed successfully", 'success', section);
+                        this.finishedAudio(section);
+                    };
 					
 					// Set volume if needed
 					//const settings = { volume: 0.8 }; // Replace with your actual settings
 					//if (settings.volume) audioElement.volume = settings.volume;
 					
-					audioElement.play();
+					await audioElement.play();
 					return;
 			  } catch (error) {
 				console.error("Error playing TTS:", error);
@@ -7987,19 +8472,28 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			}
 			
 			if (!kokoroTtsInstance) {
+                this.showFeedback("Loading Kokoro TTS. First use may download a large model and can take a while.", 'warning', section, 0);
 				const initialized = await initKokoro();
+                if (this.cancelRequested) {
+                    return;
+                }
 				if (!initialized) {
-					this.finishedAudio();
+					this.finishedAudio(section);
 					return;
 				}
 			}
-			premiumQueueActive = true;
+            this.setTestRunning(section, true, "Generating...");
+            this.showFeedback("Generating Kokoro test audio...", 'info', section, 0);
 			const streamer = new TextSplitterStream();
 			streamer.push(text);
 			streamer.close();
 			
 			const audioElement = document.createElement("audio");
-			audioElement.onended = this.finishedAudio;
+            this.activeAudioElement = audioElement;
+			audioElement.onended = () => {
+                this.showFeedback("Kokoro TTS test completed successfully", 'success', section);
+                this.finishedAudio(section);
+            };
 			
 			const stream = kokoroTtsInstance.stream(streamer, { 
 				voice: settings.kokoro.voice || "af_aoede",
@@ -8008,26 +8502,39 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			});
 
 			for await (const { audio } of stream) {
+                if (this.cancelRequested) {
+                    return;
+                }
 				if (!audio) {
-					this.finishedAudio();
+					this.finishedAudio(section);
 					return;
 				}
 				
 				const audioBlob = audio.toBlob();
-				audioElement.src = URL.createObjectURL(audioBlob);
+                if (this.activeAudioUrl) {
+                    try {
+                        URL.revokeObjectURL(this.activeAudioUrl);
+                    } catch (e) {}
+                }
+                this.activeAudioUrl = URL.createObjectURL(audioBlob);
+				audioElement.src = this.activeAudioUrl;
 				if (settings.volume) audioElement.volume = settings.volume;
 				
 				try {
+                    this.setTestRunning(section, true, "Playing...");
 					await audioElement.play();
 				} catch (e) {
-					this.finishedAudio();
+					this.finishedAudio(section);
 					console.error(e);
 					errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
 				}
 			}
+            if (!this.activeAudioUrl && !this.cancelRequested) {
+                this.finishedAudio(section);
+            }
 		} catch (e) {
 			console.error("Kokoro TTS error:", e);
-			this.finishedAudio();
+			this.finishedAudio(section);
 		}
 	},
     
@@ -8462,9 +8969,43 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             this.finishedAudio();
         }
     },
-    
-    finishedAudio() {
+
+    cancelTest(section = this.currentTtsSection || "") {
+        if (!this.premiumQueueActive) return;
+        this.cancelRequested = true;
+        try {
+            if (this.activeAudioElement) {
+                this.activeAudioElement.pause();
+                this.activeAudioElement.currentTime = 0;
+            }
+        } catch (e) {}
+        try {
+            if (this.audio) {
+                this.audio.pause();
+                this.audio.currentTime = 0;
+            }
+        } catch (e) {}
+        this.showFeedback("TTS test cancelled. If Kokoro is still loading, the browser may finish its current model step first.", 'warning', section);
+        this.finishTtsTest(section, true);
+    },
+
+    finishTtsTest(section = this.currentTtsSection || "", keepCancelFlag = false) {
+        if (this.activeAudioUrl) {
+            try {
+                URL.revokeObjectURL(this.activeAudioUrl);
+            } catch (e) {}
+        }
+        this.activeAudioElement = null;
+        this.activeAudioUrl = null;
         this.premiumQueueActive = false;
+        if (!keepCancelFlag) {
+            this.cancelRequested = false;
+        }
+        this.setTestRunning(section, false);
+    },
+
+    finishedAudio(section = this.currentTtsSection || "") {
+        this.finishTtsTest(section);
     },
 };
 
@@ -8489,9 +9030,18 @@ function logKokoroProgress(progress) {
 	if (!progress) {
 		return;
 	}
-	if ((progress.status === "progress_total" || progress.status === "progress") && progress.total) {
-		const percentage = (progress.loaded / progress.total) * 100;
+	let percentage = null;
+	if (typeof progress.progress === "number") {
+		percentage = progress.progress <= 1 ? progress.progress * 100 : progress.progress;
+	} else if ((progress.status === "progress_total" || progress.status === "progress") && progress.total) {
+		percentage = (progress.loaded / progress.total) * 100;
+	}
+	if (percentage !== null) {
 		console.log("Kokoro download:", percentage.toFixed(1) + "%");
+        if (typeof TTSManager !== "undefined" && TTSManager.premiumQueueActive) {
+            TTSManager.setTestRunning(TTSManager.currentTtsSection || "", true, "Downloading...");
+            TTSManager.showFeedback("Downloading Kokoro model... " + percentage.toFixed(1) + "%", 'info', TTSManager.currentTtsSection || "", 0);
+        }
 	}
 }
 
@@ -8811,6 +9361,55 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const creditsResetBtn = document.getElementById('creditsResetBtn');
 	const creditsTriggerMode = document.querySelector('select[data-optionparam13="triggermode"]');
 	const creditsActionsDiv = document.querySelector('.credits-actions');
+	const creditsOptionsGroup = document.querySelector('.options_group.credits');
+	const setCreditsPresetParams = function(paramsToEnable, paramsToDisable) {
+		const findCreditsParamInput = function(paramName) {
+			const selector = `input[data-param13="${paramName}"]`;
+			return (creditsOptionsGroup && creditsOptionsGroup.querySelector(selector)) || document.querySelector(selector);
+		};
+		if (typeof beginPopupLinkRefreshBatch === "function") {
+			beginPopupLinkRefreshBatch();
+		}
+		try {
+			(paramsToDisable || []).forEach(function(paramName) {
+				const input = findCreditsParamInput(paramName);
+				if (input && input.checked) {
+					input.checked = false;
+					updateSettings(input, true);
+				}
+			});
+			(paramsToEnable || []).forEach(function(paramName) {
+				const input = findCreditsParamInput(paramName);
+				if (input && !input.checked) {
+					input.checked = true;
+					updateSettings(input, true);
+				}
+			});
+		} finally {
+			if (typeof endPopupLinkRefreshBatch === "function") {
+				endPopupLinkRefreshBatch();
+			} else {
+				refreshLinks();
+			}
+		}
+	};
+
+	document.querySelectorAll('[data-credits-preset]').forEach(function(button) {
+		button.addEventListener('click', function() {
+			const preset = button.getAttribute('data-credits-preset');
+			if (preset === 'supporters') {
+				setCreditsPresetParams(
+					['loop', 'persistcredits', 'onlysupporters', 'donationpriority', 'showamounts'],
+					['onlydonors']
+				);
+			} else if (preset === 'donors') {
+				setCreditsPresetParams(
+					['loop', 'persistcredits', 'onlydonors', 'showamounts'],
+					['onlysupporters', 'donationpriority']
+				);
+			}
+		});
+	});
 
 	if (creditsStartBtn) {
 		creditsStartBtn.addEventListener('click', function() {
@@ -10682,7 +11281,40 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	var serverFallbackUndoState = null;
+
+	function getServerFallbackInputState() {
+		return {
+			server2: !!(document.getElementById("server2") && document.getElementById("server2").checked),
+			server3: !!(document.getElementById("server3") && document.getElementById("server3").checked)
+		};
+	}
+
+	function setServerFallbackInputState(state) {
+		["server2", "server3"].forEach(function (id) {
+			var input = document.getElementById(id);
+			if (input && input.checked !== !!state[id]) {
+				input.checked = !!state[id];
+				updateSettings(input, true);
+			}
+		});
+		refreshLinks();
+	}
+
+	function undoServerFallbackForDockLinks() {
+		if (!serverFallbackUndoState) {
+			return;
+		}
+		setServerFallbackInputState(serverFallbackUndoState);
+		serverFallbackUndoState = null;
+		showServerFallbackBanner(null, "Server Fallback was undone. Your previous dock/overlay link settings are restored.", true);
+	}
+
 	function enableServerFallbackForDockLinks() {
+		if (!confirm("Server Fallback changes your dock and overlay links. After enabling, copy the updated links into OBS or reload/re-add those sources. Continue?")) {
+			return;
+		}
+		serverFallbackUndoState = getServerFallbackInputState();
 		["server2", "server3"].forEach(function (id) {
 			var input = document.getElementById(id);
 			if (input && !input.checked) {
@@ -10691,7 +11323,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 		refreshLinks();
-		showServerFallbackBanner(null, "Server Fallback is enabled. Re-open or reload your dock and overlays using the updated links.", true);
+		showServerFallbackBanner(null, "Server Fallback is enabled. Copy the updated dock/overlay links into OBS, then reload those sources.", true, false, true);
 	}
 
 	function getServerFallbackBanner() {
@@ -10702,13 +11334,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return banner;
 	}
 
-	function showServerFallbackBanner(health, customMessage, success, hideEnableButton) {
+	function showServerFallbackBanner(health, customMessage, success, hideEnableButton, showUndoButton) {
 		var banner = getServerFallbackBanner();
 		if (!banner) {
 			return;
 		}
 		var messageNode = banner.querySelector('[data-role="message"]');
 		var enableButton = banner.querySelector('[data-role="enable"]');
+		var undoButton = banner.querySelector('[data-role="undo"]');
 		var dismissButton = banner.querySelector('[data-role="dismiss"]');
 		var message = customMessage || (health && !health.webRTCSupported
 			? "This browser does not appear to support WebRTC. If the fake test message did not appear, Server Fallback may help."
@@ -10723,6 +11356,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				enableButton.dataset.boundServerFallback = "1";
 				enableButton.onclick = function () {
 					enableServerFallbackForDockLinks();
+				};
+			}
+		}
+		if (undoButton) {
+			undoButton.style.display = showUndoButton && serverFallbackUndoState ? "" : "none";
+			if (!undoButton.dataset.boundServerFallback) {
+				undoButton.dataset.boundServerFallback = "1";
+				undoButton.onclick = function () {
+					undoServerFallbackForDockLinks();
 				};
 			}
 		}
@@ -10761,16 +11403,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return;
 		}
 
+		if (health.canOfferServerFallback) {
+			showServerFallbackBanner(health, "A dock or overlay was detected on signaling, but WebRTC is not connected. If the fake test message did not appear, Server Fallback may help.");
+			return;
+		}
 		if (!health.webRTCSupported) {
-			showServerFallbackBanner(health, "This browser does not appear to support WebRTC. If the fake test message did not appear, Server Fallback may help.");
+			showServerFallbackBanner(health, "This browser does not appear to support WebRTC. Open or reload your dock/overlay link first; Server Fallback is only offered after SSN detects an overlay.", false, true);
 			return;
 		}
 		if (health.recentP2PFailure) {
-			showServerFallbackBanner(health, "A WebRTC connection appears to have failed recently. If the fake test message did not appear, Server Fallback may help.");
+			showServerFallbackBanner(health, "A WebRTC failure was detected, but no dock or overlay is currently visible on signaling. Reload your dock/overlay link, then test again.", false, true);
 			return;
 		}
 		if (health.everHadP2PPeer) {
-			showServerFallbackBanner(health, "A dock or overlay was connected before, but none are connected now. Reload your dock or overlay, or try Server Fallback if it still does not work.");
+			showServerFallbackBanner(health, "A dock or overlay was connected before, but none are connected now. Reload your dock or overlay, then test again.", false, true);
 			return;
 		}
 

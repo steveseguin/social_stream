@@ -8,12 +8,13 @@ Use this page when a user asks how to customize SSN, make a plugin, build a cust
 
 SSN has several plugin-like paths. Do not frame them as one official plugin marketplace, zip package, or installer flow.
 
-If the user has not already chosen a path, start with `customization-path-decision-matrix.md`. Use this page after that for recipe-level setup and first-failure checks.
+If the user has not already chosen a path, start with `customization-path-decision-matrix.md`. Use this page after that for recipe-level setup and first-failure checks. Use `customization-validation-ledger.md` before making stronger claims about what is source-backed, focused-tested, runtime-tested, or not supported.
 
 ## Source Anchors
 
 - `customization-path-decision-matrix.md`
 - `customization-source-trace.md`
+- `customization-validation-ledger.md`
 - `custom-plugins-and-extensions.md`
 - `07-overlays-and-pages/custom-overlays.md`
 - `09-api-and-integrations/websocket-http-api.md`

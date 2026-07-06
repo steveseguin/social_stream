@@ -1,14 +1,32 @@
 (function () {
     try {
+        var isExtensionOn = true;
         var settings = {};
 
+        function sendData(data) {
+            if (!isExtensionOn) {
+                return;
+            }
+            try {
+                chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function (response) { });
+            } catch (e) { }
+        }
+
         function escapeHtml(unsafe) {
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            try {
+                unsafe = unsafe || "";
+                if (settings.textonlymode) {
+                    return unsafe;
+                }
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            } catch (e) {
+                return "";
+            }
         }
 
         function getAllContentNodes(element) {
@@ -20,8 +38,12 @@
                     resp += escapeHtml(node.textContent);
                 } else if (node.nodeType === 1) {
                     if (node.nodeName === "IMG" && node.src) {
-                        resp += `<img src="${node.src}">`;
-                    } else {
+                        if (settings.textonlymode) {
+                            resp += escapeHtml(node.alt || "");
+                        } else {
+                            resp += `<img src="${node.src}">`;
+                        }
+                    } else if (!settings.textonlymode) {
                         resp += node.outerHTML;
                     }
                 }
@@ -30,18 +52,25 @@
         }
 
         function processMessage(ele) {
-            if (!ele) {
+            if (!isExtensionOn) {
+                return;
+            }
+            if (!ele || ele.nodeType !== 1) {
                 console.error("Element not found");
                 return;
             }
             try {
                 if (ele.querySelector('img[alt*="User Joined"]')) {
+                    if (!settings.capturejoinedevent) {
+                        return;
+                    }
                     console.log("User joined:", ele.textContent.trim());
                     let data = {};
                     data.chatmessage = ele.textContent.trim();
                     data.event = "joined";
-                    data.type = "cherry";
-                    chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function (response) { });
+                    data.type = "cherrytv";
+                    data.textonly = settings.textonlymode || false;
+                    sendData(data);
                     return;
                 }
 
@@ -83,14 +112,25 @@
                 data.chatmessage = chatMessage;
                 data.type = "cherrytv";
                 data.chatimg = chatImg;
-                data.textonly = false;
+                data.textonly = settings.textonlymode || false;
 
-                chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function (response) { });
+                sendData(data);
             } catch (e) {
                 console.error("Error processing message:", e);
                 return;
             }
         }
+
+        chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response) {
+            if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
+            response = response || {};
+            if ("settings" in response) {
+                settings = response.settings || {};
+            }
+            if ("state" in response) {
+                isExtensionOn = response.state;
+            }
+        });
 
         chrome.runtime.onMessage.addListener(
             function (request, sender, sendResponse) {
@@ -102,8 +142,15 @@
                         return;
                     }
                     if (typeof request === "object") {
+                        if ("state" in request) {
+                            isExtensionOn = request.state;
+                        }
                         if ("settings" in request) {
-                            settings = request.settings;
+                            settings = request.settings || {};
+                            sendResponse(true);
+                            return;
+                        }
+                        if ("state" in request) {
                             sendResponse(true);
                             return;
                         }

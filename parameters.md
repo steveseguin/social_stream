@@ -408,10 +408,13 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `sound` | boolean | Plays a sound on accepted donations |
 | `hype` | boolean | Enables hype cup scoring mode |
 | `levelsize` or `increment` | number | Turns the goal into repeating bands/levels of this size (e.g. `1000` stars or `50` dollars). The bar fills, celebrates, and rolls into the next level instead of stopping |
+| `rollinggoal` or `cumulativegoal` | boolean or number | Keeps the displayed amount cumulative and advances the target to the next goal step after each completion. Example: `goal=50&rollinggoal` displays `$60 / $100` after a $60 total |
+| `goalstep` or `goalincrement` | number | Optional step size for `rollinggoal`; defaults to `goal` |
 | `fillstart` or `barcolorstart` | CSS color | Fill color when empty/low (default `#2196F3` blue). Applies to `bar`/`compact`/`vertical`, and recolors the `meter` fill |
 | `fillend` or `barcolorend` | CSS color | Fill color when full (default `#f44336` red). Applies to `bar`/`compact`/`vertical`, and recolors the `meter` fill |
 | `fillmode` | `progress`, `gradient`, `solid` | `bar` fill behavior. `progress` (default) shifts the whole bar from start→end color as it fills; `gradient` reveals a fixed start→end gradient; `solid` uses only the start color |
 | `barheight` | number | Track height (px) for `bar`/`compact`/`vertical` styles |
+| `bartextsize` or `barfontsize` | number | Text size in px for the centered `bar` style amount text |
 | `barradius` | number or CSS length | Corner radius for bar tracks. Use `0` for square corner-overlay edges |
 | `noliquid` | boolean | Disables the flowing-liquid animation on the `bar` style |
 | `theme` | `default`, `neon`, `gold` | Visual theme for the meter/bar |
@@ -423,6 +426,10 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 |-----------|--------|-------------|
 | `loop` | boolean | Restarts the credits animation when it reaches the end |
 | `persistcredits` | boolean | Saves the collected credits list in the overlay's local storage so refreshes/source toggles keep the current stream's supporters until reset |
+| `onlysupporters` | boolean | Only includes donors and members/subscribers; excludes regular chat-only participants |
+| `onlydonors` | boolean | Only includes users with donation payloads |
+| `donationpriority` | boolean | Groups/sorts donors first, then members, then participants |
+| `showamounts` | boolean | Shows donation totals next to donors |
 
 ## Other options for other overlays.
 

@@ -2304,6 +2304,9 @@
 					  chatbadges = '<div class="hl-badges" >' + chatbadges + "</div>";
 					}
 
+					var renderChatMessageAsText = !!(data.textonly && !largeImage);
+					var renderedChatMessage = renderChatMessageAsText ? "" : data.chatmessage;
+
 					if (stacking) {
 					  try {
 						document.getElementById("message").id = "";
@@ -2311,7 +2314,7 @@
 						document.getElementById("newmessage").id = "";
 					  } catch (e) {}
 
-					  document.getElementById("output").innerHTML += '<div class="hl-c-cont highlight-chat stacked" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + data.chatmessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
+					  document.getElementById("output").innerHTML += '<div class="hl-c-cont highlight-chat stacked" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
 
 					  if (data.hasDonation || memebershipHTML) {
 						document.getElementById("newmessage").classList.add("dono");
@@ -2319,13 +2322,16 @@
 						document.getElementById("newmessage").classList.remove("dono");
 					  }
 					} else {
-					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + data.chatmessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
+					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat" id="newmessage" data-source-type="' + data.type + '">' + '<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" + '<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" + avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
 
 					  if (data.hasDonation || memebershipHTML) {
 						document.getElementById("newmessage").classList.add("dono");
 					  } else {
 						document.getElementById("newmessage").classList.remove("dono");
 					  }
+					}
+					if (renderChatMessageAsText && document.getElementById("message")) {
+					  document.getElementById("message").textContent = data.chatmessage;
 					}
 
 					if (!data.chatname && !data.chatbadges) {

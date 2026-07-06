@@ -1075,6 +1075,9 @@
 		var data = createWebSocketChatData(user, messageText);
 		var normalizedMessage = normalizeText(messageText);
 		data.event = /^joined\b/i.test(normalizedMessage) ? "joined" : false;
+		if (data.event === "joined" && !settings.capturejoinedevent) {
+			return;
+		}
 		if (!data.event && messageText.indexOf("?") > -1) {
 			data.question = true;
 		}
@@ -1314,6 +1317,9 @@
 
 		var normalizedMessage = (messageBody || "").replace(/\s+/g, " ").trim();
 		data.event = /^joined\b/i.test(normalizedMessage) ? "joined" : false;
+		if (data.event === "joined" && !settings.capturejoinedevent) {
+			return;
+		}
 
 		var meta = {};
 		if (messageIndex !== null) {

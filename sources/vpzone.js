@@ -597,7 +597,7 @@
 		var simpleMatch = rowText.match(/^(.+?)\s+(?:just\s+)?(joined|left)$/i);
 		if (simpleMatch && simpleMatch[1] && simpleMatch[2]) {
 			var simpleType = simpleMatch[2].toLowerCase();
-			if (simpleType === "joined" && settings.capturejoinedevent === false) {
+			if (simpleType === "joined" && !settings.capturejoinedevent) {
 				return null;
 			}
 			var simpleData = buildBaseData();
@@ -624,7 +624,7 @@
 		}
 
 		var eventType = match[2].toLowerCase();
-		if (eventType === "joined" && settings.capturejoinedevent === false) {
+		if (eventType === "joined" && !settings.capturejoinedevent) {
 			return null;
 		}
 

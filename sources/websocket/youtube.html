@@ -270,7 +270,9 @@ try {
     var YT_ADMIN_SCOPES = YT_READONLY_SCOPES.concat([
         'https://www.googleapis.com/auth/youtube.force-ssl'
     ]);
-    var AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
+    var AUTH_BASE_URL = 'https://sso.socialstream.ninja/youtube';
+    // Legacy auth is the old Cloudflare Worker/domain using the same client ID and behavior; keep only as a temporary migration fallback.
+    var LEGACY_AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
     var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
     var YT_ACCESS_LEVEL_KEY = 'youtubeOAuthAccessLevel';
     var YT_AUTH_SOURCE_KEY = 'youtubeOAuthSource';
@@ -491,7 +493,7 @@ try {
 	var liveChatPollingActive = false;
 	var tokenRefreshPromise = null;
 	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In the desktop app, you can add your own YouTube project to use your own quota.";
-	const INNERTUBE_EMOJI_CACHE_TTL = 24 * 60 * 60 * 1000;
+	const INNERTUBE_EMOJI_CACHE_TTL = 14 * 24 * 60 * 60 * 1000;
 	
 
 	var emojiData = [];
@@ -615,6 +617,55 @@ try {
 
 	function areEmojiAssetsReadyForMessages() {
 		return emojiAssetsReady && channelEmojiAssetsReady;
+	}
+
+	function getYouTubeChannelEmojiCacheKeys(vidId) {
+		const keys = [];
+		const channelId = currentStream && currentStream.channelId ? String(currentStream.channelId).trim() : '';
+		if (channelId) {
+			keys.push({
+				data: 'ytChannelEmojiChannel_' + channelId,
+				time: 'ytChannelEmojiChannelTime_' + channelId
+			});
+		}
+		if (vidId) {
+			keys.push({
+				data: 'ytChannelEmoji_' + vidId,
+				time: 'ytChannelEmojiTime_' + vidId
+			});
+		}
+		return keys;
+	}
+
+	function restoreYouTubeChannelEmojiFromCache(vidId) {
+		const keys = getYouTubeChannelEmojiCacheKeys(vidId);
+		for (let i = 0; i < keys.length; i++) {
+			try {
+				const cached = localStorage.getItem(keys[i].data);
+				const cachedTime = parseInt(localStorage.getItem(keys[i].time) || '0');
+				if (cached && (Date.now() - cachedTime) < INNERTUBE_EMOJI_CACHE_TTL) {
+					const entries = JSON.parse(cached);
+					if (Array.isArray(entries)) {
+						return entries;
+					}
+				}
+			} catch (e) {}
+		}
+		return null;
+	}
+
+	function storeYouTubeChannelEmojiCache(vidId, entries) {
+		if (!Array.isArray(entries)) {
+			return;
+		}
+		const keys = getYouTubeChannelEmojiCacheKeys(vidId);
+		const now = String(Date.now());
+		keys.forEach(function(key) {
+			try {
+				localStorage.setItem(key.data, JSON.stringify(entries));
+				localStorage.setItem(key.time, now);
+			} catch (e) {}
+		});
 	}
 
 	function processEmojiData(data) {
@@ -1690,14 +1741,10 @@ function enableBackgroundKeepAlive() {
 			markChannelEmojiAssetsReady(fetchToken);
 			return;
 		}
-		const cacheKey = 'ytChannelEmoji_' + vidId;
-		const cacheTimeKey = 'ytChannelEmojiTime_' + vidId;
 		try {
 			// Restore from cache if fresh
-			const cached = localStorage.getItem(cacheKey);
-			const cachedTime = parseInt(localStorage.getItem(cacheTimeKey) || '0');
-			if (cached && (Date.now() - cachedTime) < INNERTUBE_EMOJI_CACHE_TTL) {
-				const entries = JSON.parse(cached);
+			const entries = restoreYouTubeChannelEmojiFromCache(vidId);
+			if (entries) {
 				if (fetchToken !== channelEmojiFetchToken) {
 					return;
 				}
@@ -1718,8 +1765,7 @@ function enableBackgroundKeepAlive() {
 				return;
 			}
 
-			localStorage.setItem(cacheKey, JSON.stringify(entries));
-			localStorage.setItem(cacheTimeKey, String(Date.now()));
+			storeYouTubeChannelEmojiCache(vidId, entries);
 			applyChannelEmojiEntries(entries);
 			console.log('Loaded ' + entries.length + ' custom YouTube emoji');
 			markChannelEmojiAssetsReady(fetchToken);
@@ -3202,7 +3248,7 @@ function enableBackgroundKeepAlive() {
 
 	function scheduleLiveChatStreamReconnect(delayMs = 2000) {
 		if (!liveChatId || fetchTimeout || liveChatStreamActive || liveChatStreamAbortController) return;
-		updateLiveChatStreamIndicator('reconnect');
+		updateLiveChatStreamIndicator('reconnecting');
 		fetchTimeout = setTrackedTimeout(startLiveChatStream, delayMs, !isPageVisible);
 	}
 
@@ -4318,6 +4364,37 @@ function enableBackgroundKeepAlive() {
 			? bridge
 			: null;
 	}
+	function shouldFallbackToLegacyYouTubeAuth(error) {
+		const status = Number(error && error.status);
+		return !status || status === 401 || status === 403 || status === 405 || status >= 500;
+	}
+	async function postHostedYouTubeAuthJson(path, payload) {
+		async function postToBase(baseUrl) {
+			const response = await fetch(baseUrl + path, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
+				const error = new Error(msg);
+				error.status = response.status;
+				error.payload = data;
+				throw error;
+			}
+			return data;
+		}
+		try {
+			return await postToBase(AUTH_BASE_URL);
+		} catch (error) {
+			if (AUTH_BASE_URL !== LEGACY_AUTH_BASE_URL && shouldFallbackToLegacyYouTubeAuth(error)) {
+				console.warn('YouTube SSO bridge failed; falling back to legacy ytauth bridge.', error);
+				return postToBase(LEGACY_AUTH_BASE_URL);
+			}
+			throw error;
+		}
+	}
 	async function refreshAccessToken(refreshTokenValue) {
 		if (!refreshTokenValue) {
             console.log('No refresh token available for refreshAccessToken.');
@@ -4344,16 +4421,10 @@ function enableBackgroundKeepAlive() {
 					clientSecret: credentials.clientSecret
 				});
 			} else {
-				const response = await fetch(AUTH_BASE_URL + '/refresh', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ refresh_token: refreshTokenValue, client_id: DEFAULT_YT_CLIENT_ID })
+				data = await postHostedYouTubeAuthJson('/refresh', {
+					refresh_token: refreshTokenValue,
+					client_id: DEFAULT_YT_CLIENT_ID
 				});
-				data = await response.json().catch(() => ({}));
-				if (!response.ok) {
-					const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
-					throw new Error(msg);
-				}
 			}
 			if (!data || !data.access_token) {
 				throw new Error('Token refresh response did not include access_token.');
@@ -4401,16 +4472,11 @@ function enableBackgroundKeepAlive() {
 					clientSecret: credentials.clientSecret
 				});
 			} else {
-				const response = await fetch(AUTH_BASE_URL + '/token', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ code: code, redirect_uri: redirectTarget, client_id: DEFAULT_YT_CLIENT_ID })
+				data = await postHostedYouTubeAuthJson('/token', {
+					code: code,
+					redirect_uri: redirectTarget,
+					client_id: DEFAULT_YT_CLIENT_ID
 				});
-				data = await response.json().catch(() => ({}));
-				if (!response.ok) {
-					const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
-					throw new Error(msg);
-				}
 			}
 			if (!data.access_token) {
 				throw new Error('Token exchange response did not include access_token.');
@@ -4732,7 +4798,7 @@ function enableBackgroundKeepAlive() {
 		spinner.style.animation = 'none';
 		void spinner.offsetWidth;
 		spinner.style.animation = `spinner-rotation ${interval}ms ease-in-out 1`;
-		document.getElementById('poll-time').textContent = `${seconds}s`;
+		document.getElementById('poll-time').textContent = `polling ${seconds}s`;
 	  }
 	}
 	function initializeSpinner() {
@@ -4747,6 +4813,7 @@ function enableBackgroundKeepAlive() {
 		</div>
 	  `;
 	  updatePollSpinner(5000);
+	  updateLiveChatStreamIndicator('connect');
 	}
 		function queueMessage(messageData) {
 			if (messageDataNeedsRichChannelEmojiResolution(messageData)) {
@@ -5674,8 +5741,14 @@ function enableBackgroundKeepAlive() {
 						var span = document.createElement("div");
 						const badgeHtml = renderChatBadgesForPage(chatbadges);
 						
-						const renderedMessage = textOnlyMode ? strictEscapeHtml(finalChatMessage) : finalChatMessage;
-						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: ${renderedMessage}`;
+						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: `;
+						if (textOnlyMode) {
+							span.appendChild(document.createTextNode(finalChatMessage));
+						} else {
+							var messagePreview = document.createElement("span");
+							messagePreview.innerHTML = finalChatMessage;
+							span.appendChild(messagePreview);
+						}
 						textarea.appendChild(span);
 						// More aggressive cleanup to prevent memory buildup
 						const maxMessages = 50;
@@ -5854,7 +5927,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: giftLabel,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "jeweldonation",
-				textonly: settings.textonlymode || false,
+				textonly: false,
 				meta: { youtubeGift: metaGift }
 			};
 			if (giftData.giftUrl) {
@@ -6038,7 +6111,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: giftData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftredemption",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing gift redemption:', e);
@@ -6093,7 +6166,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftpurchase",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing gift purchase:', e);
@@ -6142,7 +6215,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: sponsorData.memberLevelName,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "sponsorship",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing new sponsorship:', e);
@@ -6209,7 +6282,7 @@ function enableBackgroundKeepAlive() {
 				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "membermilestone",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing member milestone:', e);
@@ -6270,7 +6343,7 @@ function enableBackgroundKeepAlive() {
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "supersticker",
-				textonly: settings.textonlymode || false
+				textonly: false
 			}));
 		} catch (e) {
 			console.error('Error processing super sticker:', e);

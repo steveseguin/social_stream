@@ -70,7 +70,23 @@
             <label for="test-message">Message:</label>
             <textarea id="test-message" rows="3">Hello, world!</textarea>
         </div>
-        
+
+        <div class="test-group">
+            <label for="test-event">Event Type:</label>
+            <select id="test-event">
+                <option value="">None / chat message</option>
+                <option value="new_follower">new_follower - Follow</option>
+                <option value="new_subscriber">new_subscriber - New subscriber/member</option>
+                <option value="resub">resub - Resub/renewal</option>
+                <option value="subscription_gift">subscription_gift - Gift sub</option>
+                <option value="donation">donation - Donation/Super Chat</option>
+                <option value="cheer">cheer - Bits/Cheer</option>
+                <option value="raid">raid - Raid</option>
+            </select>
+            <input type="text" id="test-event-custom" placeholder="Custom event, e.g. sponsorship" style="margin-top: 8px;">
+            <p class="test-help" style="color: #a0a0a0; font-size: 13px; margin: 6px 0 0 0;">Use <code>new_follower</code> to test New Follower flows, or enter a custom event name.</p>
+        </div>
+
         <div class="test-options">
             <label class="test-checkbox">
                 <input type="checkbox" id="test-mod">

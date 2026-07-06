@@ -57,6 +57,7 @@
 
 		function forwardToOverlay(payload) {
 			if (!payload) return;
+			payload = normalizeForwardPayload(payload);
 			if (!shouldForwardPayload(payload)) return;
 			if (!overlayReady || !overlayFrame || !overlayFrame.contentWindow) {
 				pendingPayloads.push(payload);
@@ -64,6 +65,25 @@
 				return;
 			}
 			overlayFrame.contentWindow.postMessage({ dataReceived: { overlayNinja: payload } }, "*");
+		}
+
+		function escapeHtml(value) {
+			return String(value == null ? "" : value)
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#039;");
+		}
+
+		function normalizeForwardPayload(payload) {
+			if (!payload || typeof payload !== "object" || payload.textonly !== true || !Object.prototype.hasOwnProperty.call(payload, "chatmessage")) {
+				return payload;
+			}
+			var normalized = Object.assign({}, payload);
+			normalized.chatmessage = escapeHtml(normalized.chatmessage);
+			normalized.textonly = false;
+			return normalized;
 		}
 
 		function shouldForwardPayload(payload) {

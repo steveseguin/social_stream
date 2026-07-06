@@ -296,7 +296,11 @@
 			// Parse IRC message
 			let parsedMessage = parseIRCMessage(message);
 			
-			div.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+			const timestampSpan = document.createElement('span');
+			timestampSpan.className = 'timestamp';
+			timestampSpan.textContent = `[${timestamp}]`;
+			div.appendChild(timestampSpan);
+			div.appendChild(document.createTextNode(' ' + String(message || '')));
 			messageArea.appendChild(div);
 			
 			const messages = messageArea.children;

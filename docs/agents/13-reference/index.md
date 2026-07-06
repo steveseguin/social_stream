@@ -16,6 +16,7 @@ Use these pages when the user asks "how do I do X?" and the answer may involve m
 - `command-action-source-trace.md`: source-checked command/action routing notes, handler boundaries, target/page caveats, and high-risk public examples.
 - `api-command-validation-matrix.md`: command/API acceptance versus target page/source action, runtime proof boundaries, callbacks, and false-positive matrix.
 - `api-command-examples.md`: safe copy/paste HTTP, WebSocket, JSON, page-label, waitlist, poll, timer, and troubleshooting examples.
+- `api-command-proof-ledger.md`: evidence labels, claim status, minimum proof packs, and update rules for command/API behavior claims.
 - `url-parameters.md`: high-value URL parameter families for dock, featured, TTS, filters, automation, tip jar, credits, and security.
 - `url-option-examples.md`: safe copy/paste page URL and parameter examples for OBS, dock, featured, filters, themes, TTS, labels, server modes, and failures.
 - `url-parameter-index.md`: exact generated URL parameter, alias, value-hint, and short-description lookup from `shared/config/urlParameters.js`.
@@ -57,9 +58,11 @@ Use these pages when the user asks "how do I do X?" and the answer may involve m
 - `08-platform-sources/special-case-platform-and-helper-sources.md`: routing for Joystick/Velora/VPZone rendered-site versus source-page modes, X live versus static capture, Vertical Pixel Zone identity caveats, Vercel helper behavior, and top-level YouTube helper copies.
 - `free-paid-and-support-boundaries.md`: what is free, what can cost money, support expectations, donations, Terms/Privacy, and third-party limits.
 - `public-claims-boundary-matrix.md`: safe boundaries for broad public claims such as 100+/120+ supported sites, two-way chat, no API keys, free/open-source, AI/TTS, app, plugin, services, and support promises.
+- `feature-cost-claims-proof-ledger.md`: evidence labels, claim status, minimum proof packs, and do-not-promise boundaries for feature, cost, provider, support, service, app-vs-extension, and public-claim answers.
 - `privacy-security-and-secrets.md`: what to redact, session/webhook/key safety, private source handling, support-log rules, and secret leak response.
 - `customization-plugin-recipes.md`: recipe-style routing for URL/CSS, themes, custom overlays, `custom.js`, custom actions, API apps, Event Flow, new sources, and sharing custom work.
 - `customization-source-trace.md`: source-checked local `custom.js`, uploaded custom JavaScript, custom overlay, API/WebSocket source, Event Flow, and first-class source hook boundaries.
+- `customization-validation-ledger.md`: evidence labels, claim status, minimum proof packs, and update rules for plugin/customization paths.
 - `custom-plugins-and-extensions.md`: exact meaning of plugin-like support in SSN and how to build custom behavior safely.
 - `11-support-kb/index.md`: first-answer routing by support question type, evidence checklist, and support-history safety rules.
 - `11-support-kb/question-intent-router.md`: plain-language user wording to canonical doc route, first disambiguation question, and wrong-route warnings.
@@ -78,6 +81,7 @@ Use these pages when the user asks "how do I do X?" and the answer may involve m
 - `11-support-kb/support-intake-templates.md`: copyable intake/repro templates for collecting useful support details without secrets.
 - `support-resources-and-escalation.md`: where to send users, what to collect, and when to escalate a support issue.
 - `settings-and-toggles.md`: popup settings, URL parameters, storage layers, generated setting categories, and common setting support patterns.
+- `options-settings-proof-ledger.md`: evidence labels, claim status, minimum proof packs, and update rules for URL option, popup setting, generated link, session/password, app state, and provider-setting claims.
 - `settings-session-storage-source-trace.md`: source-checked extension/app storage split, session/password save flow, popup-generated links, app cached-state backups, and settings-loss guardrails.
 - `settings-change-impact-matrix.md`: practical "why did this setting/option/link/app change not take effect?" routing, reload/reconnect rules, and false-positive checks.
 - `settings-key-index.md`: exact generated popup setting-key, category, type, and short-description lookup from `shared/config/settingsDefinitions.js`.
@@ -107,10 +111,13 @@ Prefer current code and source docs in this order:
 | "How is this command actually handled in source?" | `command-action-source-trace.md` |
 | "Why did the API command say success but nothing changed?" | `api-command-validation-matrix.md` |
 | "Can you give me a safe API command example?" | `api-command-examples.md` |
+| "What proof exists for this command/API claim?" | `api-command-proof-ledger.md` |
 | "What URL option changes this overlay?" | `url-parameters.md` |
 | "Can you give me a safe overlay URL example?" | `url-option-examples.md` |
 | "What exact URL parameter or alias exists?" | `url-parameter-index.md` |
 | "Why does this URL option work on one page but not another?" | `url-parameter-source-trace.md` |
+| "What proof exists for this option or setting claim?" | `options-settings-proof-ledger.md` |
+| "What proof exists for this feature, cost, or public claim?" | `feature-cost-claims-proof-ledger.md` |
 | "Which root page appears to parse this URL parameter?" | `root-page-url-parameter-matrix.md` |
 | "Which theme, game, or WebSocket source page parses this URL parameter?" | `subpage-url-parameter-matrix.md` |
 | "Which SSN page or URL should I open?" | `surface-url-cheatsheet.md` |
@@ -157,10 +164,12 @@ Prefer current code and source docs in this order:
 | "Can I safely repeat this broad public claim?" | `public-claims-boundary-matrix.md` |
 | "What does 100+/120+ supported sites mean?" | `public-claims-boundary-matrix.md` |
 | "Is this free? Does support cost money?" | `free-paid-and-support-boundaries.md` |
+| "Can I say this feature, provider, app, service, or cost claim works?" | `feature-cost-claims-proof-ledger.md` |
 | "Can I share this URL, log, screenshot, key, or settings file?" | `privacy-security-and-secrets.md` |
 | "Which customization/plugin/source path should I use?" | `customization-path-decision-matrix.md` |
 | "Can I make my own plugin/source/overlay?" | `customization-plugin-recipes.md` |
 | "How does custom.js or uploaded custom JavaScript actually hook into source?" | `customization-source-trace.md` |
+| "What proof exists for this customization or plugin claim?" | `customization-validation-ledger.md` |
 | "What answer page should I start with?" | `11-support-kb/index.md` |
 | "Do the AI docs cover this question family?" | `11-support-kb/common-question-coverage-map.md` |
 | "What should I avoid overpromising?" | `11-support-kb/common-misconceptions-and-boundaries.md` |
@@ -190,9 +199,9 @@ Prefer current code and source docs in this order:
 - Page-by-page URL/support matrix generated from actual root HTML files, building on `surface-url-cheatsheet.md`.
 - Page-by-page capability, dependency, state, and OBS/API/Event Flow matrix generated from root HTML files, building on `07-overlays-and-pages/page-capability-matrix.md`.
 - Runtime health validation for `08-platform-sources/public-site-implementation-map.md`, building on `08-platform-sources/public-site-support-status.md`.
-- Runtime/source promotion of broad public claims in `public-claims-boundary-matrix.md`, especially site counts, two-way chat, no API keys, AI/TTS, app, plugin, services, and free/support wording.
+- Runtime/source promotion of broad public claims in `public-claims-boundary-matrix.md` and `feature-cost-claims-proof-ledger.md`, especially site counts, two-way chat, no API keys, AI/TTS, app, plugin, services, and free/support wording.
 - Intense validation of `08-platform-sources/platform-capability-matrix.md` by browser/app/OS/platform.
-- Runtime validation of `customization-path-decision-matrix.md` and `customization-source-trace.md`, especially local `custom.js`, uploaded custom user functions, custom overlay payloads, and hosted/local/app differences.
+- Runtime validation of `customization-path-decision-matrix.md`, `customization-source-trace.md`, and `customization-validation-ledger.md`, especially local `custom.js`, uploaded custom user functions, custom overlay payloads, and hosted/local/app differences.
 - Live/browser validation of `08-platform-sources/manual-static-and-helper-sources.md` helper behavior.
 - Line-level/live validation of `08-platform-sources/websocket-source-pages.md` send-back, auth, reconnect, and app parity behavior.
 - Live/browser validation of `08-platform-sources/communication-and-sensitive-sources.md` opt-in toggles, current DOM selectors, meeting/chat panels, and send-back boundaries.

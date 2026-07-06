@@ -10,6 +10,8 @@ This page is a source trace. It narrows storage and session claims, but it does 
 
 For practical reload/reconnect triage after a setting, URL option, generated link, or app source change, use `settings-change-impact-matrix.md` after this source trace.
 
+For evidence labels and proof requirements before stronger settings, URL option, generated link, session/password, or app-state claims, use `options-settings-proof-ledger.md`.
+
 ## Source Anchors
 
 Extension and shared source:
