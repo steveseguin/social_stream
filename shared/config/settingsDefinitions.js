@@ -132,7 +132,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "bedrockmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Bedrock model identifier to request (for example anthropic.claude-v2)."
+    description: "Bedrock model identifier to request (for example anthropic.claude-sonnet-5)."
   },
   "beepvolume": {
     type: "number",
@@ -227,7 +227,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "chatgptmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Model slug to request from OpenAI (for example gpt-4o-mini)."
+    description: "Model slug to request from OpenAI (for example gpt-5.4-mini)."
   },
   "chatwebhookpost": {
     type: "boolean",
@@ -497,7 +497,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "deepseekmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "DeepSeek model name to request (e.g., deepseek-chat)."
+    description: "DeepSeek model name to request (e.g., deepseek-v4-flash)."
   },
   "defaultavatar": {
     type: "text",
@@ -777,7 +777,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "groqmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Model slug provided by Groq (for example llama-3.1-8b-instant)."
+    description: "Model slug provided by Groq (for example openai/gpt-oss-120b)."
   },
   "h2r": {
     type: "boolean",
@@ -1172,7 +1172,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "openroutermodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Model identifier from the OpenRouter catalog (e.g., openai/gpt-4o)."
+    description: "Model identifier from the OpenRouter catalog (e.g., openai/gpt-5.4-mini)."
   },
   "overlayPreset": {
     type: "select",

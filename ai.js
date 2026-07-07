@@ -1144,6 +1144,70 @@ function normalizeLocalBrowserImage(image) {
     return '';
 }
 
+function extractImageString(image) {
+    if (!image) {
+        return '';
+    }
+    if (typeof image === 'string') {
+        return image.trim();
+    }
+    if (typeof image === 'object') {
+        if (typeof image.url === 'string') {
+            return image.url.trim();
+        }
+        if (typeof image.image_url === 'string') {
+            return image.image_url.trim();
+        }
+        if (image.image_url && typeof image.image_url.url === 'string') {
+            return image.image_url.url.trim();
+        }
+    }
+    return '';
+}
+
+function guessBase64ImageMimeType(base64) {
+    if (base64.startsWith('iVBOR')) return 'image/png';
+    if (base64.startsWith('R0lGOD')) return 'image/gif';
+    if (base64.startsWith('UklGR')) return 'image/webp';
+    return 'image/jpeg';
+}
+
+function normalizeImagesForOpenAI(images) {
+    return (Array.isArray(images) ? images : (images ? [images] : []))
+        .map(extractImageString)
+        .filter(Boolean)
+        .map(value => {
+            if (/^(data:|https?:\/\/)/i.test(value)) {
+                return value;
+            }
+            return `data:${guessBase64ImageMimeType(value)};base64,${value}`;
+        });
+}
+
+function normalizeImagesForOllama(images) {
+    return (Array.isArray(images) ? images : (images ? [images] : []))
+        .map(extractImageString)
+        .filter(value => value && !/^https?:\/\//i.test(value)) // Ollama only accepts base64 payloads
+        .map(value => {
+            const match = value.match(/^data:image\/[a-z0-9.+-]+;base64,/i);
+            return match ? value.slice(match[0].length) : value;
+        });
+}
+
+function supportsOpenAICompatibleImages(provider, model) {
+    const modelId = String(model || "");
+    switch (provider) {
+        case "deepseek":
+        case "bedrock":
+        case "xai":
+            return false;
+        case "groq":
+            return /llama-4|vision|pixtral/i.test(modelId);
+        default:
+            return true;
+    }
+}
+
 function isLocalBrowserProvider(providerKey) {
     const catalog = getLocalBrowserCatalog();
     return !!(providerKey && catalog?.getLocalBrowserModelConfig?.(providerKey));
@@ -1214,13 +1278,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		}
 		case "chatgpt":
 			endpoint = "https://api.openai.com/v1/chat/completions";
-			model = model || llmSettings.chatgptmodel?.textsetting || "gpt-4o-mini";
+			model = model || llmSettings.chatgptmodel?.textsetting || "gpt-5.4-mini";
 			apiKey = llmSettings.chatgptApiKey?.textsetting;
 			callback = null;
 			break;
 		case "deepseek":
-			endpoint = "https://api.deepseek.com/v1/chat/completions";
-			model = model || llmSettings.deepseekmodel?.textsetting || "deepseek-chat";
+			endpoint = "https://api.deepseek.com/chat/completions";
+			model = model || llmSettings.deepseekmodel?.textsetting || "deepseek-v4-flash";
 			apiKey = llmSettings.deepseekApiKey?.textsetting;
 			callback = null;
 			break;
@@ -1232,14 +1296,14 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			break;
 		case "xai":  // New case for Grok
 			endpoint = "https://api.x.ai/v1/chat/completions";
-			model = model || llmSettings.xaimodel?.textsetting || "grok-beta";  // Default to grok-beta
+			model = model || llmSettings.xaimodel?.textsetting || "grok-4.3";
 			apiKey = llmSettings.xaiApiKey?.textsetting;  // Requires an API key from xAI
 			// streamable = true;  // Grok supports streaming
 			callback = null;
 			break;
 		case "bedrock":
 			endpoint = `https://bedrock-runtime.${llmSettings.bedrockRegion?.textsetting || "us-east-1"}.amazonaws.com/model`;
-			model = model || llmSettings.bedrockmodel?.textsetting || "anthropic.claude-3-sonnet-20240229-v1:0";
+			model = model || llmSettings.bedrockmodel?.textsetting || "anthropic.claude-sonnet-5";
 			apiKey = llmSettings.bedrockAccessKey?.textsetting;
 			const secretKey = llmSettings.bedrockSecretKey?.textsetting;
 			const region = llmSettings.bedrockRegion?.textsetting || "us-east-1";
@@ -1247,13 +1311,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			break;
 		case "openrouter":
 			endpoint = "https://openrouter.ai/api/v1/chat/completions";
-			model = model || llmSettings.openroutermodel?.textsetting || "openai/gpt-4o";
+			model = model || llmSettings.openroutermodel?.textsetting || "openai/gpt-5.4-mini";
 			apiKey = llmSettings.openrouterApiKey?.textsetting;
 			callback = null;
 			break;
 		case "groq":
 			endpoint = "https://api.groq.com/openai/v1/chat/completions";
-			model = model || llmSettings.groqmodel?.textsetting || "llama-3.1-8b-instant";
+			model = model || llmSettings.groqmodel?.textsetting || "openai/gpt-oss-120b";
 			apiKey = llmSettings.groqApiKey?.textsetting;
 			break;
 		case "opencode":
@@ -1661,18 +1725,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		}
     // Replace the else block in callLLMAPI with:
 	} else { // non-Ollama Request, but rather ChatGPT compatible APIs
-		const normalizedImages = (Array.isArray(images) ? images : (images ? [images] : []))
-			.map(img => {
-				if (!img) return null;
-				if (typeof img === 'string') return img.trim();
-				if (typeof img === 'object') {
-					if (typeof img.image_url === 'string') return img.image_url.trim();
-					if (img.image_url && typeof img.image_url.url === 'string') return img.image_url.url.trim();
-					if (typeof img.url === 'string') return img.url.trim();
-				}
-				return null;
-			})
-			.filter(Boolean);
+		const normalizedImages = supportsOpenAICompatibleImages(provider, model) ? normalizeImagesForOpenAI(images) : [];
 
 		const userContent = normalizedImages.length
 			? [{ type: "text", text: prompt }].concat(
@@ -1904,6 +1957,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 
     async function makeRequestToOllama(currentModel) {  // ollama only api
         const isStreaming = callback !== null;
+        const ollamaImages = normalizeImagesForOllama(images);
         let fullResponse = '';
         let responseComplete = false;
 
@@ -1946,8 +2000,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 							keep_alive: llmSettings.ollamaKeepAlive ?  parseInt(llmSettings.ollamaKeepAlive.numbersetting)+"m" : "5m"
                         };
                         
-                        if (images){
-                            message.images = images;
+                        if (ollamaImages.length){
+                            message.images = ollamaImages;
                         }
 
                         ipcRenderer.send('streaming-nodepost', {
@@ -1973,8 +2027,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                         stream: false
                     };
                     
-                    if (images){
-                        message.images = images;
+                    if (ollamaImages.length){
+                        message.images = ollamaImages;
                     }
                     
                     response = fetchNode(`${endpoint}/api/generate`, {
@@ -2005,8 +2059,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					keep_alive: llmSettings.ollamaKeepAlive ?  parseInt(llmSettings.ollamaKeepAlive.numbersetting)+"m" : "5m"
                 };
                 
-                if (images){
-                    message.images = images;
+                if (ollamaImages.length){
+                    message.images = ollamaImages;
                 }
                 
                 response = await fetch(`${endpoint}/api/generate`, {
@@ -2155,6 +2209,11 @@ let recentCensorMessages = [];
 
 function getActiveCensorProviderKey() {
     return settings?.aiProvider?.optionsetting || "ollama";
+}
+
+function getAiSettingFlag(settingKey) {
+    const entry = settings && settings[settingKey];
+    return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
 }
 
 function shouldUseBinaryCensorPrompt(providerKey) {
@@ -2397,7 +2456,7 @@ async function censorMessageWithLLM(data) {
 
     if (compactProfanityCandidate) {
         rememberCensorContextMessage(data, cleanedText, true);
-        if (getSettingFlag("ollamaCensorBotBlockMode")) {
+        if (getAiSettingFlag("ollamaCensorBotBlockMode")) {
             return false;
         } else if (isExtensionOn) {
             sendToDestinations({ delete: data });
@@ -2442,7 +2501,7 @@ async function censorMessageWithLLM(data) {
 
         if (decision.blocked) {
             rememberCensorContextMessage(data, cleanedText, true);
-            if (getSettingFlag("ollamaCensorBotBlockMode")) {
+            if (getAiSettingFlag("ollamaCensorBotBlockMode")) {
                 return false;
             } else if (isExtensionOn) {
                 sendToDestinations({ delete: data });
@@ -2686,7 +2745,7 @@ function getAITranslateCacheKey(targetLanguage, text) {
 }
 
 function getCachedAITranslation(targetLanguage, text) {
-    if (getSettingFlag("aiAutoTranslateContext")) {
+    if (getAiSettingFlag("aiAutoTranslateContext")) {
         return null;
     }
     const normalizedText = String(text || "").trim();
@@ -2698,7 +2757,7 @@ function getCachedAITranslation(targetLanguage, text) {
 }
 
 function setCachedAITranslation(targetLanguage, text, translatedText) {
-    if (getSettingFlag("aiAutoTranslateContext")) {
+    if (getAiSettingFlag("aiAutoTranslateContext")) {
         return;
     }
     const normalizedText = String(text || "").trim();
@@ -2726,7 +2785,7 @@ function stripAITranslateHtmlToText(value, textonly) {
 }
 
 async function getAITranslateContextLines(limit = 10) {
-    if (!getSettingFlag("aiAutoTranslateContext") || typeof messageStoreDB === "undefined" || !messageStoreDB?.getRecentMessages) {
+    if (!getAiSettingFlag("aiAutoTranslateContext") || typeof messageStoreDB === "undefined" || !messageStoreDB?.getRecentMessages) {
         return [];
     }
     try {
@@ -2929,7 +2988,7 @@ function ensureAITranslateMeta(data) {
 
 async function translateMessageWithLLM(data, options = {}) {
     const enabledSetting = options.enabledSetting || "aiAutoTranslate";
-    if (!getSettingFlag(enabledSetting) || !data || data.bot || !data.chatmessage) {
+    if (!getAiSettingFlag(enabledSetting) || !data || data.bot || !data.chatmessage) {
         return true;
     }
 
@@ -2940,7 +2999,7 @@ async function translateMessageWithLLM(data, options = {}) {
         return true;
     }
 
-    const blockOnBusy = options.blockOnFailure === true || getSettingFlag("aiAutoTranslateBlockMode");
+    const blockOnBusy = options.blockOnFailure === true || getAiSettingFlag("aiAutoTranslateBlockMode");
     const availableSlot = aiTranslateProcessingSlots.findIndex(function (slot) { return !slot; });
     if (availableSlot === -1) {
         return blockOnBusy ? false : true;
@@ -3158,7 +3217,7 @@ function queueOutgoingTranslation(data, originalResponse) {
 }
 
 async function translateOutgoingMessageWithLLM(data) {
-    if (!getSettingFlag("aiAutoTranslateOutgoing") || !data || typeof data.response !== "string" || !data.response.trim()) {
+    if (!getAiSettingFlag("aiAutoTranslateOutgoing") || !data || typeof data.response !== "string" || !data.response.trim()) {
         return true;
     }
 
@@ -3348,7 +3407,7 @@ function inferAiOverlayEmotion(text) {
 }
 
 function sendChatBotAiOverlay(text, data, botname, source = "chatbot") {
-    if (!getSettingFlag("aiOverlayFromChatBot") || typeof sendAiOverlayCommand !== "function") {
+    if (!getAiSettingFlag("aiOverlayFromChatBot") || typeof sendAiOverlayCommand !== "function") {
         return;
     }
     const responseText = String(text || "").trim();
@@ -3363,7 +3422,7 @@ function sendChatBotAiOverlay(text, data, botname, source = "chatbot") {
             source,
             emotion: inferAiOverlayEmotion(responseText),
             talking: true,
-            tts: getSettingFlag("aiOverlayTts")
+            tts: getAiSettingFlag("aiOverlayTts")
         }
     }, {
         target: settings?.aiOverlayLabel?.textsetting || "",

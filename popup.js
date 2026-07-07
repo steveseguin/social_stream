@@ -17,6 +17,7 @@ function normalizePopupTranslationLanguage(lang) {
 	if (lower.startsWith("th")) return "th";
 	if (lower.startsWith("tr")) return "tr";
 	if (lower.startsWith("uk")) return "uk";
+	if (lower.startsWith("ar")) return "ar";
 	return "";
 }
 
@@ -24,6 +25,16 @@ let pendingExternalTranslationLanguage = "";
 let latestExternalTranslationApply = "";
 let requestedImmediateTranslationLanguage = "";
 let appliedImmediateTranslationLanguage = "";
+
+function applyPopupTextDirection(lang) {
+	const normalized = normalizePopupTranslationLanguage(lang);
+	const isRtl = normalized === "ar";
+	document.documentElement.lang = normalized || "en";
+	document.documentElement.dir = isRtl ? "rtl" : "ltr";
+	if (document.body) {
+		document.body.dir = document.documentElement.dir;
+	}
+}
 
 function refreshPopupSettingsAfterLanguageSave() {
 	if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
@@ -57,6 +68,7 @@ function applyPopupTranslationLanguageImmediately(lang) {
 			if (lastResponse && lastResponse.settings) {
 				lastResponse.settings.translation = data;
 			}
+			applyPopupTextDirection(normalized);
 			miniTranslate(document.body);
 		})
 		.catch(function(error) {
@@ -3648,6 +3660,9 @@ function update(response, sync = true) {
 
                 if ("translation" in response.settings) {
                     translation = response.settings["translation"];
+                    applyPopupTextDirection(
+                        response.settings.translationlanguage && response.settings.translationlanguage.optionsetting
+                    );
                     miniTranslate(document.body); // Assuming miniTranslate is defined
                 }
 

@@ -676,6 +676,7 @@
                 var lang = normalizeWelcomeLanguage(value);
                 var content = translations[lang] || translations["en-us"];
                 document.documentElement.lang = lang;
+                document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
                 document.title = content.documentTitle || translations["en-us"].documentTitle;
                 Array.prototype.forEach.call(document.querySelectorAll("[data-i18n-html]"), function(element) {
                     var key = element.getAttribute("data-i18n-html");

@@ -11,7 +11,7 @@ var isExtensionOn = false;
 var iframe = null;
 // Optional: Use VDONinjaSDK instead of iframe transport to reduce memory
 var ninjaBridge = null;
-var useNinjaSDK = false; // toggled via URL param &sdk, or can be wired to settings in future
+var useNinjaSDK = false; // toggled via URL params &sdk/&beta, or can be wired to settings in future
 
 var settings = {};
 var messageTimeout = {};
@@ -470,7 +470,10 @@ async function restoreBrowserHandle(key, mode = "readwrite") {
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
-var forceNinjaSDKFromUrl = urlParams.has("sdk") && !/^(0|false|off|no)$/i.test(urlParams.get("sdk") || "1");
+function isTruthyUrlFlag(name) {
+	return urlParams.has(name) && !/^(0|false|off|no)$/i.test(urlParams.get(name) || "1");
+}
+var forceNinjaSDKFromUrl = isTruthyUrlFlag("sdk") || isTruthyUrlFlag("beta");
 var lastUseNinjaSDK = undefined; // track effective SDK usage across settings loads
 // initial default (may be recalculated when settings load)
 useNinjaSDK = false;
@@ -13355,6 +13358,16 @@ async function processIncomingRequest(request, UUID = false) {
 		} else if (request.action === "getAiPromptOverlays" && UUID) {
 			const overlayStore = await getAiPromptOverlays();
 			sendDataP2PChunked({ aiPromptOverlays: { target: request.target || null, value: overlayStore } }, UUID);
+		} else if (request.action === "chatbotStop" && UUID) {
+			const activeController = privateChatbotControllers[UUID];
+			if (activeController) {
+				try {
+					activeController.abort();
+				} catch (e) {}
+				delete privateChatbotControllers[UUID];
+			}
+		} else if (request.action === "chatbotCapabilities" && UUID) {
+			sendDataP2P({ chatbotCapabilities: { target: request.target || null, value: getPrivateChatbotCapabilities() } }, UUID);
 		} else if (request.value && "target" in request && UUID && request.action === "chatbot") {
 			// target is the callback ID
 			if (isExtensionOn && settings.allowChatBot) {
@@ -13367,6 +13380,10 @@ async function processIncomingRequest(request, UUID = false) {
 						sendDataP2P({ chatbotChunk: { value: chunk, target: request.target } }, UUID);
 					};
 					const sendChatbotFinal = fullResponse => {
+						if (fullResponse && typeof fullResponse === "object") {
+							// aborted requests can resolve with an object instead of text
+							fullResponse = fullResponse.response || fullResponse.value || "";
+						}
 						const responseText = fullResponse == null ? "" : String(fullResponse);
 						if (streamedChunks > 0) {
 							sendDataP2P({ chatbotResponse: { value: "", target: request.target } }, UUID);
@@ -13389,12 +13406,19 @@ async function processIncomingRequest(request, UUID = false) {
 					}
 					let model = request.model || null;
 					const controller = new AbortController();
+					privateChatbotControllers[UUID] = controller;
 
 					callLLMAPI(prompt, model, sendChatbotChunk, controller, UUID, request.images || null)
 						.then(fullResponse => {
+							if (privateChatbotControllers[UUID] === controller) {
+								delete privateChatbotControllers[UUID];
+							}
 							sendChatbotFinal(fullResponse);
 						})
 						.catch(error => {
+							if (privateChatbotControllers[UUID] === controller) {
+								delete privateChatbotControllers[UUID];
+							}
 							let payload;
 							if (typeof LLMServiceError !== "undefined" && error instanceof LLMServiceError) {
 								payload = {
@@ -13427,6 +13451,76 @@ async function processIncomingRequest(request, UUID = false) {
 			}
 		}
 	}
+}
+
+const privateChatbotControllers = {};
+
+function getPrivateChatbotCapabilities() {
+	// Describes the currently configured LLM to the private chatbot page.
+	// imageInput: true = vision known to work, false = never sent to the model, "maybe" = model-dependent.
+	const enabled = !!(isExtensionOn && settings?.allowChatBot);
+	if (!enabled) {
+		return { enabled: false, imageInput: false };
+	}
+	const provider = settings?.aiProvider?.optionsetting || "ollama";
+	let model = "";
+	let imageInput = "maybe";
+	switch (provider) {
+		case "ollama":
+			model = settings?.ollamamodel?.textsetting || "";
+			imageInput = /vision|llava|moondream|minicpm|bakllava|gemma3|qwen2\.5vl|qwen2-vl|qwen-vl|pixtral|llama4|internvl/i.test(model) ? true : "maybe";
+			break;
+		case "localgemma":
+		case "localqwen":
+			try {
+				const localBrowserSettings = typeof getLocalBrowserProviderSettings === "function" ? getLocalBrowserProviderSettings(provider, settings || {}) : null;
+				model = localBrowserSettings?.modelId || "";
+				imageInput = localBrowserSettings ? !!localBrowserSettings.supportsVision : "maybe";
+			} catch (e) {}
+			break;
+		case "chatgpt":
+			model = settings?.chatgptmodel?.textsetting || "gpt-5.4-mini";
+			imageInput = true;
+			break;
+		case "gemini":
+			model = settings?.geminimodel?.textsetting || "gemini-2.5-flash";
+			imageInput = true;
+			break;
+		case "deepseek":
+			model = settings?.deepseekmodel?.textsetting || "deepseek-v4-flash";
+			imageInput = false;
+			break;
+		case "xai":
+			model = settings?.xaimodel?.textsetting || "grok-4.3";
+			imageInput = false; // xAI image understanding uses Responses API, not this Chat Completions path
+			break;
+		case "bedrock":
+			model = settings?.bedrockmodel?.textsetting || "anthropic.claude-sonnet-5";
+			imageInput = false; // the Bedrock request path is text-only
+			break;
+		case "openrouter":
+			model = settings?.openroutermodel?.textsetting || "openai/gpt-5.4-mini";
+			imageInput = /gpt-[45]|gpt-5|gemini|claude|grok|vision|llava|pixtral/i.test(model) ? true : "maybe";
+			break;
+		case "groq":
+			model = settings?.groqmodel?.textsetting || "openai/gpt-oss-120b";
+			imageInput = /llama-4|vision|pixtral/i.test(model) ? true : false;
+			break;
+		case "opencode":
+			try {
+				model = typeof getOpenCodeZenSelectedModel === "function" ? getOpenCodeZenSelectedModel(settings || {}, null) : "";
+			} catch (e) {}
+			break;
+		case "custom":
+			model = settings?.customAIModel?.textsetting || "";
+			break;
+	}
+	return {
+		enabled,
+		provider,
+		model: model || "",
+		imageInput
+	};
 }
 
 function fowardOBSCommand(data) {
