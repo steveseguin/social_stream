@@ -1,1175 +1,2337 @@
-(function () {
-	 
-	 
-	var checking = false;
-	
-	function toDataURL(url, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function() {
-		  
-		var blob = xhr.response;
-    
-		if (blob.size > (55 * 1024)) {
-		  callback(url); // Image size is larger than 25kb.
-		  return;
-		}
+// Velora WebSocket integration for Social Stream
+// Uses the official Velora Events API (Socket.IO) with OAuth 2.0 PKCE user sign-in.
+// API docs: https://developer.velora.tv/developer/docs/webhooks/events
 
-		var reader = new FileReader();
-		
-		
-		reader.onloadend = function() {
-		  callback(reader.result);
-		}
-		reader.readAsDataURL(xhr.response);
-	  };
-	  xhr.open('GET', url);
-	  xhr.responseType = 'blob';
-	  xhr.send();
-	}
+const VELORA_API_BASE = 'https://api.velora.tv';
+const VELORA_WS_URL = 'wss://api.velora.tv/ws/events';
+const VELORA_EVENTS_SSE_URL = `${VELORA_API_BASE}/api/events/stream`;
+const VELORA_CHAT_HISTORY_INTERVAL_MS = 3000;
+const VELORA_CHAT_HISTORY_LIMIT = 50;
+const DEFAULT_VELORA_AUTH_BASE = 'https://sso.socialstream.ninja/auth/velora';
+const DEFAULT_VELORA_CLIENT_ID = 'velora_9c9ae006ec8bc256';
+const DEFAULT_VELORA_REDIRECT_URI = 'https://sso.socialstream.ninja/auth/velora/callback';
+const DEFAULT_LOCAL_RETURN_BASE = 'http://127.0.0.1:8181/';
+const VELORA_SCOPES = 'user:read chat:read chat:write';
+const VELORA_AUTH_MESSAGE_SUCCESS = 'ssn-velora-auth-success';
+const VELORA_AUTH_MESSAGE_ERROR = 'ssn-velora-auth-error';
+const VELORA_AUTH_RESULT_KEY = 'velora_auth_result';
+const VELORA_AUTH_ERROR_KEY = 'velora_auth_error';
 
-	function escapeHtml(unsafe){ // when goofs be trying to hack me
-		try {
-			unsafe = unsafe == null ? "" : String(unsafe);
-			return unsafe
-				 .replace(/&/g, "&amp;")
-				 .replace(/</g, "&lt;")
-				 .replace(/>/g, "&gt;")
-				 .replace(/"/g, "&quot;")
-				 .replace(/'/g, "&#039;") || "";
-		} catch(e){
-			return "";
-		}
-	}
+const STORAGE_KEY = 'veloraApiConfig';
+const TOKEN_KEY = 'veloraApiTokens';
 
-	function getAllContentNodes(element) { // takes an element.
-		var resp = "";
-		
-		if (!element){return resp;}
-		
-		if (!element.childNodes || !element.childNodes.length){
-			if (element.textContent){
-				return escapeHtml(element.textContent) || "";
-			} else {
-				return "";
-			}
-		}
-		
-		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent)+" ";
-			} else if (node.nodeType === 1){
-				if (!isTextOnlyMode()){
-					if ((node.nodeName == "IMG") && node.src){
-						node.src = node.src+"";
-					}
-					resp += node.outerHTML;
-				}
-			}
-		});
-		return resp;
-	}
-	
-	var settings = {};
-	// settings.textonlymode
-	// settings.captureevents
-	
-	
-	var dataIndex = -5;
-	
-	var channelName = "";
-	
-	var processedMessages = new Set();
-	var processedEvents = new Set();
-	var historyPollTimer = null;
-	var currentHistoryChannel = "";
-	var historyFallbackMisses = 0;
-	var historyPublishedMessages = false;
-	var historyPollStartedAt = 0;
-	var recentMessageContent = {};
-	var historyChannelCache = {};
-	var historyChannelPending = {};
+const CHAT_FEED_LIMIT = 100;
+const ALERTS_FEED_LIMIT = 80;
+const EVENT_LOG_LIMIT = 100;
+const VIEWER_POLL_INTERVAL_MS = 30000;
+const SOCKET_CONNECT_TIMEOUT_MS = 8000;
+const SOCKET_CONNECTED_EVENT_TIMEOUT_MS = 4000;
+const SSE_RECONNECT_DELAY_MS = 3000;
+const VELORA_EMOTE_MAP = {
+    "AirRaid": "https://assets.velora.tv/emotes/raid/raid-airraid/56.webp",
+    "BlueGlitzRaid": "https://assets.velora.tv/emotes/raid/raid-blueglitzraid/56.webp",
+    "CannonRaid": "https://assets.velora.tv/emotes/raid/raid-cannonraid/56.webp",
+    "FireRaid": "https://assets.velora.tv/emotes/raid/raid-fireraid/56.webp",
+    "GlitzRaid": "https://assets.velora.tv/emotes/raid/raid-glitzraid/56.webp",
+    "PinkRaid": "https://assets.velora.tv/emotes/raid/raid-pinkraid/56.webp",
+    "PixtextRaid": "https://assets.velora.tv/emotes/raid/raid-pixtextraid/56.webp",
+    "RainbowRaid": "https://assets.velora.tv/emotes/raid/raid-rainbowraid/56.webp",
+    "SimpleRaid": "https://assets.velora.tv/emotes/raid/raid-simpleraid/56.webp",
+    "SplitRedRaid": "https://assets.velora.tv/emotes/raid/raid-splitredraid/56.webp",
+    "VeloraFlameAllSmiles": "https://assets.velora.tv/emotes/flame/flame-allsmiles/56.webp",
+    "VeloraFlameAngel": "https://assets.velora.tv/emotes/flame/flame-angel/56.webp",
+    "VeloraFlameAngry": "https://assets.velora.tv/emotes/flame/flame-angry/56.webp",
+    "VeloraFlameBigF": "https://assets.velora.tv/emotes/flame/flame-bigf/56.webp",
+    "VeloraFlameBigGrin": "https://assets.velora.tv/emotes/flame/flame-biggrin/56.webp",
+    "VeloraFlameBlowKisses": "https://assets.velora.tv/emotes/flame/flame-blowkisses/56.webp",
+    "VeloraFlameCoolLook": "https://assets.velora.tv/emotes/flame/flame-coollook/56.webp",
+    "VeloraFlameCrying": "https://assets.velora.tv/emotes/flame/flame-crying/56.webp",
+    "VeloraFlameDazed": "https://assets.velora.tv/emotes/flame/flame-dazed/56.webp",
+    "VeloraFlameDead": "https://assets.velora.tv/emotes/flame/flame-dead/56.webp",
+    "VeloraFlameDropLaugh": "https://assets.velora.tv/emotes/flame/flame-droplaugh/56.webp",
+    "VeloraFlameEvil": "https://assets.velora.tv/emotes/flame/flame-evil/56.webp",
+    "VeloraFlameInjured": "https://assets.velora.tv/emotes/flame/flame-injured/56.webp",
+    "VeloraFlameLaugh": "https://assets.velora.tv/emotes/flame/flame-laugh/56.webp",
+    "VeloraFlameLove": "https://assets.velora.tv/emotes/flame/flame-love/56.webp",
+    "VeloraFlameLoveEyes": "https://assets.velora.tv/emotes/flame/flame-loveeyes/56.webp",
+    "VeloraFlameMelting": "https://assets.velora.tv/emotes/flame/flame-melting/56.webp",
+    "VeloraFlameMindBlown": "https://assets.velora.tv/emotes/flame/flame-mindblown/56.webp",
+    "VeloraFlameMoney": "https://assets.velora.tv/emotes/flame/flame-money/56.webp",
+    "VeloraFlameNerdy": "https://assets.velora.tv/emotes/flame/flame-nerdy/56.webp",
+    "VeloraFlameRedEye": "https://assets.velora.tv/emotes/flame/flame-redeye/56.webp",
+    "VeloraFlameShock": "https://assets.velora.tv/emotes/flame/flame-shock/56.webp",
+    "VeloraFlameSick": "https://assets.velora.tv/emotes/flame/flame-sick/56.webp",
+    "VeloraFlameSleeping": "https://assets.velora.tv/emotes/flame/flame-sleeping/56.webp",
+    "VeloraFlameThinking": "https://assets.velora.tv/emotes/flame/flame-thinking/56.webp",
+    "VeloraFlameThumbsDown": "https://assets.velora.tv/emotes/flame/flame-thumbsdown/56.webp",
+    "VeloraFlameThumbsUp": "https://assets.velora.tv/emotes/flame/flame-thumbsup/56.webp",
+    "VeloraFlameTongueWink": "https://assets.velora.tv/emotes/flame/flame-tonguewink/56.webp",
+    "VeloraFlameWellMeh": "https://assets.velora.tv/emotes/flame/flame-wellmeh/56.webp",
+    "VeloraFlameYawning": "https://assets.velora.tv/emotes/flame/flame-yawning/56.webp",
+    "VeloraPXLAFK": "https://assets.velora.tv/emotes/pixel/pixel-afk/56.webp",
+    "VeloraPXLBait": "https://assets.velora.tv/emotes/pixel/pixel-bait/56.webp",
+    "VeloraPXLBan": "https://assets.velora.tv/emotes/pixel/pixel-ban/56.webp",
+    "VeloraPXLBg": "https://assets.velora.tv/emotes/pixel/pixel-bg/56.webp",
+    "VeloraPXLBro": "https://assets.velora.tv/emotes/pixel/pixel-bro/56.webp",
+    "VeloraPXLBuff": "https://assets.velora.tv/emotes/pixel/pixel-buff/56.webp",
+    "VeloraPXLBug": "https://assets.velora.tv/emotes/pixel/pixel-bug/56.webp",
+    "VeloraPXLDc": "https://assets.velora.tv/emotes/pixel/pixel-dc/56.webp",
+    "VeloraPXLFB": "https://assets.velora.tv/emotes/pixel/pixel-fb/56.webp",
+    "VeloraPXLFix": "https://assets.velora.tv/emotes/pixel/pixel-fix/56.webp",
+    "VeloraPXLFu": "https://assets.velora.tv/emotes/pixel/pixel-fu/56.webp",
+    "VeloraPXLGg": "https://assets.velora.tv/emotes/pixel/pixel-gg/56.webp",
+    "VeloraPXLGold": "https://assets.velora.tv/emotes/pixel/pixel-gold/56.webp",
+    "VeloraPXLHack": "https://assets.velora.tv/emotes/pixel/pixel-hack/56.webp",
+    "VeloraPXLHit": "https://assets.velora.tv/emotes/pixel/pixel-hit/56.webp",
+    "VeloraPXLLol": "https://assets.velora.tv/emotes/pixel/pixel-lol/56.webp",
+    "VeloraPXLLoot": "https://assets.velora.tv/emotes/pixel/pixel-loot/56.webp",
+    "VeloraPXLLoveYouText": "https://assets.velora.tv/emotes/pixel/pixel-loveyoutext/56.webp",
+    "VeloraPXLMp": "https://assets.velora.tv/emotes/pixel/pixel-mp/56.webp",
+    "VeloraPXLNoText": "https://assets.velora.tv/emotes/pixel/pixel-notext/56.webp",
+    "VeloraPXLOp": "https://assets.velora.tv/emotes/pixel/pixel-op/56.webp",
+    "VeloraPXLQq": "https://assets.velora.tv/emotes/pixel/pixel-qq/56.webp",
+    "VeloraPXLRage": "https://assets.velora.tv/emotes/pixel/pixel-rage/56.webp",
+    "VeloraPXLSad": "https://assets.velora.tv/emotes/pixel/pixel-sad/56.webp",
+    "VeloraPXLSave": "https://assets.velora.tv/emotes/pixel/pixel-save/56.webp",
+    "VeloraPXLStfu": "https://assets.velora.tv/emotes/pixel/pixel-stfu/56.webp",
+    "VeloraPXLUp": "https://assets.velora.tv/emotes/pixel/pixel-up/56.webp",
+    "VeloraPXLWtf": "https://assets.velora.tv/emotes/pixel/pixel-wtf/56.webp",
+    "VeloraPXLYes": "https://assets.velora.tv/emotes/pixel/pixel-yes/56.webp"
+};
 
-	function isTextOnlyMode(){
-		var setting = settings.textonlymode;
-		if (setting && typeof setting === "object"){
-			return setting.setting === true;
-		}
-		return setting === true;
-	}
+const state = {
+    clientId: DEFAULT_VELORA_CLIENT_ID,
+    redirectUri: DEFAULT_VELORA_REDIRECT_URI,
+    tokens: null,
+    authUser: null,
+    socket: null,
+    socketStatus: 'disconnected',
+    isExtensionOn: false,
+    settings: {},
+    viewerPollTimer: null,
+    refreshTimer: null,
+    sseReconnectTimer: null,
+    socketFallbackTimer: null,
+    authHandoffPollTimer: null,
+    authHandoffInFlight: false,
+    streamId: null,
+    authPopup: null,
+    requestedChannel: '',
+    sseRequest: null,
+    sseReadOffset: 0,
+    sseBuffer: '',
+    socketConnectTimer: null,
+    eventsConnected: false,
+    eventTransport: '',
+    connectedChannel: '',
+    hideMetrics: false,
+    chatHistoryTimer: null,
+    chatHistoryChannel: '',
+    chatHistoryInFlight: false,
+    chatHistoryLastError: '',
+    chatHistoryHadSuccess: false,
+    chatHistoryStartedAt: 0,
+    chatHistoryResolveCache: {},
+    chatHistoryResolvePending: {},
+    processedChatMessages: new Set()
+};
 
-	function rememberMessageKey(key){
-		key = String(key || "").replace(/\s+/g, " ").trim();
-		if (!key || processedMessages.has(key)){
-			return false;
-		}
-		processedMessages.add(key);
-		if (processedMessages.size > 300){
-			processedMessages.delete(processedMessages.values().next().value);
-		}
-		return true;
-	}
+const els = {};
+let backgroundKeepAliveInitialized = false;
 
-	function normalizeMessageTextForKey(value){
-		value = String(value || "");
-		value = value.replace(/<[^>]*>/g, " ");
-		value = value.replace(/&nbsp;/gi, " ");
-		value = value.replace(/&amp;/gi, "&");
-		value = value.replace(/&lt;/gi, "<");
-		value = value.replace(/&gt;/gi, ">");
-		value = value.replace(/&quot;/gi, '"');
-		value = value.replace(/&#039;/g, "'");
-		return value.replace(/\s+/g, " ").trim().toLowerCase();
-	}
+// ─── DOM helpers ──────────────────────────────────────────────────────────────
 
-	function getMessageContentKey(channel, name, text){
-		name = normalizeMessageTextForKey(name);
-		text = normalizeMessageTextForKey(text);
-		channel = normalizeVeloraChannel(channel || currentHistoryChannel || getVeloraHistoryChannel());
-		if (!name || !text){
-			return "";
-		}
-		return "content|\u00b6|" + channel + "|\u00b6|" + name + "|\u00b6|" + text;
-	}
+function enableBackgroundKeepAlive() {
+    if (backgroundKeepAliveInitialized) {
+        return;
+    }
+    backgroundKeepAliveInitialized = true;
 
-	function getApiMessageKey(msg, channel){
-		return msg.id
-			? "api-id|\u00b6|" + channel + "|\u00b6|" + msg.id
-			: "api-chat|\u00b6|" + channel + "|\u00b6|" + msg.timestamp + "|\u00b6|" + msg.name + "|\u00b6|" + msg.text;
-	}
+    try {
+        const receiveChannelCallback = function (event) {
+            const channel = event.channel;
+            if (!channel) {
+                return;
+            }
+            channel.onmessage = function () {};
+            channel.onopen = function () {};
+            channel.onclose = function () {};
+            setInterval(function () {
+                try { channel.send('KEEPALIVE'); } catch (e) {}
+            }, 1000);
+        };
+        const errorHandle = function () {};
+        const localConnection = new RTCPeerConnection();
+        const remoteConnection = new RTCPeerConnection();
+        localConnection.onicecandidate = function (event) {
+            return !event.candidate || remoteConnection.addIceCandidate(event.candidate).catch(errorHandle);
+        };
+        remoteConnection.onicecandidate = function (event) {
+            return !event.candidate || localConnection.addIceCandidate(event.candidate).catch(errorHandle);
+        };
+        remoteConnection.ondatachannel = receiveChannelCallback;
+        localConnection.sendChannel = localConnection.createDataChannel('sendChannel');
+        localConnection.sendChannel.onopen = function () {
+            try { localConnection.sendChannel.send('CONNECTED'); } catch (e) {}
+        };
+        localConnection.createOffer()
+            .then(function (offer) { return localConnection.setLocalDescription(offer); })
+            .then(function () { return remoteConnection.setRemoteDescription(localConnection.localDescription); })
+            .then(function () { return remoteConnection.createAnswer(); })
+            .then(function (answer) { return remoteConnection.setLocalDescription(answer); })
+            .then(function () { return localConnection.setRemoteDescription(remoteConnection.localDescription); })
+            .catch(errorHandle);
+    } catch (e) {}
 
-	function rememberRecentMessageContent(key){
-		var now = Date.now();
-		var keys;
-		var i;
-		key = String(key || "");
-		if (!key){
-			return true;
-		}
-		keys = Object.keys(recentMessageContent);
-		for (i = 0; i < keys.length; i++){
-			if ((now - recentMessageContent[keys[i]]) > 12000){
-				delete recentMessageContent[keys[i]];
-			}
-		}
-		if (recentMessageContent[key]){
-			return false;
-		}
-		recentMessageContent[key] = now;
-		keys = Object.keys(recentMessageContent);
-		while (keys.length > 300){
-			delete recentMessageContent[keys.shift()];
-		}
-		return true;
-	}
+    const preventBackgroundThrottling = function () {
+        try {
+            window.onblur = null;
+            window.blurred = false;
+            document.hasFocus = function () { return true; };
+            window.onFocus = function () { return true; };
+            Object.defineProperties(document, {
+                hidden: { value: false, configurable: true },
+                mozHidden: { value: false, configurable: true },
+                msHidden: { value: false, configurable: true },
+                webkitHidden: { value: false, configurable: true },
+                visibilityState: {
+                    get: function () { return 'visible'; },
+                    configurable: true
+                }
+            });
+        } catch (e) {}
+    };
 
-	function normalizeVeloraChannel(value){
-		value = String(value || "").trim().replace(/^@+/, "").replace(/^\/+|\/+$/g, "");
-		if (!value || /^(dashboard|developer|directory|login|logout|settings|support|terms|privacy)$/i.test(value)){
-			return "";
-		}
-		return value;
-	}
+    [
+        'visibilitychange',
+        'webkitvisibilitychange',
+        'mozvisibilitychange',
+        'msvisibilitychange',
+        'blur'
+    ].forEach(function (eventName) {
+        window.addEventListener(eventName, function (event) {
+            try {
+                event.stopImmediatePropagation();
+                event.preventDefault();
+            } catch (e) {}
+        }, true);
+    });
 
-	function looksLikeVeloraId(value){
-		return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || ""));
-	}
+    setInterval(preventBackgroundThrottling, 200);
+}
 
-	function getVeloraChannelIdFromResponse(data){
-		if (!data || typeof data !== "object"){
-			return "";
-		}
-		return getObjectValue(data, ["id", "userId", "user_id", "channelId", "channel_id"]) ||
-			getObjectValue(data.user || data.channel || {}, ["id", "userId", "user_id", "channelId", "channel_id"]) ||
-			getObjectValue(data.data || {}, ["id", "userId", "user_id", "channelId", "channel_id"]);
-	}
+function q(id) {
+    return document.getElementById(id);
+}
 
-	function fetchVeloraJson(url){
-		return fetch(url, {
-			cache: "no-store",
-			headers: {
-				"Accept": "application/json"
-			}
-		}).then(function(response){
-			if (!response.ok){
-				throw new Error("HTTP " + response.status);
-			}
-			return response.json();
-		});
-	}
+function getRuntimeParam(key) {
+    try {
+        const search = new URLSearchParams(window.location.search || '');
+        const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+        return search.get(key) || hash.get(key) || '';
+    } catch (e) {
+        return '';
+    }
+}
 
-	function resolveVeloraHistoryChannel(channel){
-		var cacheKey = normalizeVeloraChannel(channel).toLowerCase();
-		if (!cacheKey){
-			return Promise.resolve("");
-		}
-		if (looksLikeVeloraId(cacheKey)){
-			return Promise.resolve(cacheKey);
-		}
-		if (historyChannelCache[cacheKey]){
-			return Promise.resolve(historyChannelCache[cacheKey]);
-		}
-		if (historyChannelPending[cacheKey]){
-			return historyChannelPending[cacheKey];
-		}
-		historyChannelPending[cacheKey] = fetchVeloraJson("https://api.velora.tv/api/users/" + encodeURIComponent(channel))
-			.then(function(data){
-				return getVeloraChannelIdFromResponse(data) || "";
-			}).catch(function(){
-				return fetchVeloraJson("https://api.velora.tv/api/streams/user/" + encodeURIComponent(channel))
-					.then(function(data){
-						return getVeloraChannelIdFromResponse(data) || "";
-					});
-			}).then(function(resolved){
-				historyChannelCache[cacheKey] = normalizeVeloraChannel(resolved) || channel;
-				delete historyChannelPending[cacheKey];
-				return historyChannelCache[cacheKey];
-			}).catch(function(){
-				delete historyChannelPending[cacheKey];
-				return channel;
-			});
-		return historyChannelPending[cacheKey];
-	}
+function normalizeChannelName(value) {
+    return String(value || '').trim().replace(/^@+/, '').toLowerCase();
+}
 
-	function getRuntimeParam(key){
-		try {
-			var search = new URLSearchParams(window.location.search || "");
-			var hash = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
-			return search.get(key) || hash.get(key) || "";
-		} catch(e){
-		}
-		return "";
-	}
+function getRequestedChannel() {
+    return normalizeChannelName(
+        getRuntimeParam('channel') ||
+        getRuntimeParam('username') ||
+        getRuntimeParam('user')
+    );
+}
 
-	function getVeloraHistoryChannel(){
-		var channel = normalizeVeloraChannel(getRuntimeParam("channel") || getRuntimeParam("username") || getRuntimeParam("user"));
-		if (channel){
-			return channel;
-		}
-		try {
-			var parts = (window.location.pathname || "").split("/").filter(Boolean);
-			if (parts[0] === "dashboard" && parts[1] === "stream" && parts[2] === "popout"){
-				return normalizeVeloraChannel(parts[3] || "");
-			}
-			return normalizeVeloraChannel(parts[0] || "");
-		} catch(e){
-		}
-		return "";
-	}
+function getAuthedChannelName() {
+    return normalizeChannelName(
+        state.authUser?.username ||
+        state.authUser?.login ||
+        state.authUser?.channelUsername ||
+        ''
+    );
+}
 
-	function getObjectValue(obj, keys){
-		if (!obj){ return ""; }
-		for (var i = 0; i < keys.length; i++){
-			var key = keys[i];
-			if (obj[key] !== undefined && obj[key] !== null && obj[key] !== ""){
-				return obj[key];
-			}
-		}
-		return "";
-	}
+function normalizeRedirectUri(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    return raw;
+}
 
-	function normalizeVeloraBadges(badges){
-		var badgeList = [];
-		if (!Array.isArray(badges)){
-			return badgeList;
-		}
-		badges.forEach(function(badge){
-			var badgeUrl = "";
-			if (!badge){ return; }
-			if (typeof badge === "string"){
-				if (/^https?:\/\//i.test(badge)){
-					badgeUrl = badge;
-				}
-			} else if (typeof badge === "object"){
-				badgeUrl = getObjectValue(badge, ["url", "imageUrl", "imageURL", "image", "icon", "src", "badgeUrl", "staticAssetUrl"]);
-			}
-			if (badgeUrl){
-				badgeList.push(String(badgeUrl));
-			}
-		});
-		return badgeList;
-	}
+function normalizeAuthBase(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return DEFAULT_VELORA_AUTH_BASE;
+    return raw.replace(/\/+$/, '');
+}
 
-	function getVeloraMessageText(raw){
-		var text = getObjectValue(raw, ["text", "message", "content", "body"]);
-		if (text && typeof text === "object"){
-			text = getObjectValue(text, ["text", "message", "content", "body"]);
-		}
-		return text === undefined || text === null ? "" : String(text);
-	}
+function getVeloraAuthBase() {
+    return normalizeAuthBase(getRuntimeParam('authBase') || getRuntimeParam('auth_base') || DEFAULT_VELORA_AUTH_BASE);
+}
 
-	function normalizeVeloraApiMessage(raw, channel){
-		var user;
-		var card;
-		var text;
-		var cardName;
-		if (!raw || typeof raw !== "object"){
-			return null;
-		}
-		user = raw.user || raw.sender || {};
-		card = raw.card || null;
-		text = getVeloraMessageText(raw);
-		cardName = card ? getObjectValue(card, ["name", "title"]) : "";
-		if (raw.isSystem && !text && !cardName){
-			return null;
-		}
-		return {
-			id: getObjectValue(raw, ["messageId", "message_id", "id", "_id", "uuid"]),
-			name: getObjectValue(raw, ["displayName", "display_name", "username", "name"]) || getObjectValue(user, ["displayName", "display_name", "username", "name"]),
-			userId: getObjectValue(raw, ["userId", "user_id"]) || getObjectValue(user, ["id", "userId", "user_id"]),
-			text: text || (cardName ? "[" + cardName + "]" : ""),
-			timestamp: getObjectValue(raw, ["timestamp", "createdAt", "created_at", "sentAt", "sent_at"]),
-			badges: normalizeVeloraBadges(raw.badges || user.badges || []),
-			avatar: getObjectValue(raw, ["avatarUrl", "avatar_url", "profileImageUrl"]) || getObjectValue(user, ["avatarUrl", "avatar_url", "profileImageUrl", "image"]),
-			color: getObjectValue(raw, ["color", "accentColor", "accent_color"]) || getObjectValue(user, ["color", "accentColor", "accent_color"]),
-			card: card,
-			isSubscriber: !!(raw.isSubscriber || raw.is_subscriber || user.isSubscriber || user.is_subscriber),
-			subscriberMonths: getObjectValue(raw, ["subscriberMonths", "subscriber_months"]) || getObjectValue(user, ["subscriberMonths", "subscriber_months"]),
-			channel: channel
-		};
-	}
+function getExpectedAuthMessageOrigin() {
+    try {
+        return new URL(getVeloraAuthBase()).origin;
+    } catch (e) {
+        return '';
+    }
+}
 
-	function getHistoryMessagesFromResponse(data){
-		if (Array.isArray(data)){
-			return data;
-		}
-		if (!data || typeof data !== "object"){
-			return [];
-		}
-		if (Array.isArray(data.messages)){
-			return data.messages;
-		}
-		if (Array.isArray(data.data)){
-			return data.data;
-		}
-		if (data.message && typeof data.message === "object"){
-			return [data.message];
-		}
-		return [];
-	}
+function hasRuntimeFlag(key) {
+    try {
+        const search = new URLSearchParams(window.location.search || '');
+        const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+        return search.has(key) || hash.has(key);
+    } catch (e) {
+        return false;
+    }
+}
 
-	function getVeloraTimestampValue(message){
-		try {
-			var stamp = getObjectValue(message, ["timestamp", "createdAt", "created_at", "sentAt", "sent_at"]);
-			var value = Date.parse(stamp);
-			return isNaN(value) ? 0 : value;
-		} catch(e){
-		}
-		return 0;
-	}
+function isVeloraSocketPage(pathname) {
+    return /\/velora\.html$/i.test(String(pathname || ''));
+}
 
-	function processApiMessage(raw, channel){
-		var msg = normalizeVeloraApiMessage(raw, channel);
-		var msgKey;
-		var contentKey;
-		var data;
-		var textOnly = isTextOnlyMode();
-		if (!msg || !msg.name || !msg.text){
-			return;
-		}
-		msgKey = getApiMessageKey(msg, channel);
-		if (!rememberMessageKey(msgKey)){
-			return;
-		}
-		contentKey = getMessageContentKey(channel, msg.name, msg.text);
-		if (contentKey && !rememberRecentMessageContent(contentKey)){
-			return;
-		}
-		data = makeBaseData();
-		data.chatname = escapeHtml(msg.name);
-		data.chatbadges = msg.badges;
-		data.nameColor = msg.color || "";
-		data.chatmessage = textOnly ? msg.text : escapeHtml(msg.text);
-		data.chatimg = msg.avatar || "";
-		data.membership = msg.isSubscriber ? (msg.subscriberMonths ? msg.subscriberMonths + " month subscriber" : "Subscriber") : "";
-		data.textonly = textOnly;
-		if (msg.card){
-			data.contentimg = getObjectValue(msg.card, ["imageUrl", "thumbnailUrl", "image", "thumbnail"]) || "";
-		}
-		pushMessage(data);
-		historyPublishedMessages = true;
-	}
+function buildVeloraReturnUrlFromBase(base) {
+    if (!base) return '';
+    try {
+        const parsed = new URL(String(base).trim(), window.location.href);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return '';
+        }
+        parsed.hash = '';
+        if (isVeloraSocketPage(parsed.pathname)) {
+            return parsed.toString();
+        }
+        const lowerPath = String(parsed.pathname || '').toLowerCase();
+        const relativePath = /\/(?:beta\/)?sources\/websocket\/?$/i.test(lowerPath)
+            ? 'velora.html'
+            : 'sources/websocket/velora.html';
+        const normalizedBase = new URL(parsed.toString());
+        normalizedBase.search = '';
+        if (!/\/$/.test(normalizedBase.pathname)) {
+            normalizedBase.pathname = `${normalizedBase.pathname}/`;
+        }
+        return new URL(relativePath, normalizedBase.toString()).toString();
+    } catch (e) {
+        return '';
+    }
+}
 
-	function seedApiMessage(raw, channel){
-		var msg = normalizeVeloraApiMessage(raw, channel);
-		var contentKey;
-		if (!msg || !msg.name || !msg.text){
-			return;
-		}
-		rememberMessageKey(getApiMessageKey(msg, channel));
-		contentKey = getMessageContentKey(channel, msg.name, msg.text);
-		if (contentKey){
-			rememberRecentMessageContent(contentKey);
-		}
-	}
+function mergeCurrentSearchParams(url) {
+    if (!url) return '';
+    try {
+        const target = new URL(url);
+        const current = new URL(window.location.href);
+        const params = new URLSearchParams(current.search);
+        const ignored = {
+            return_to: true,
+            returnTo: true,
+            redirect_uri: true,
+            redirectUri: true
+        };
+        params.forEach(function (value, key) {
+            if (!ignored[key] && !target.searchParams.has(key)) {
+                target.searchParams.set(key, value);
+            }
+        });
+        target.hash = '';
+        return target.toString();
+    } catch (e) {
+        return url;
+    }
+}
 
-	function pollVeloraChatHistory(){
-		var channel;
-		if (!isExtensionOn){
-			return;
-		}
-		channel = getVeloraHistoryChannel();
-		if (!channel){
-			return;
-		}
-		if (channel !== currentHistoryChannel){
-			currentHistoryChannel = channel;
-			historyPublishedMessages = false;
-			historyPollStartedAt = Date.now();
-		}
-		resolveVeloraHistoryChannel(channel).then(function(resolvedChannel){
-			var pollChannel = resolvedChannel || channel;
-			return fetchVeloraJson("https://api.velora.tv/api/chat/channels/" + encodeURIComponent(pollChannel) + "/history?limit=50").then(function(data){
-				var messages = getHistoryMessagesFromResponse(data).slice();
-				var initialBatch = !historyPublishedMessages;
-				if (messages.length > 1 && getVeloraTimestampValue(messages[0]) > getVeloraTimestampValue(messages[messages.length - 1])){
-					messages.reverse();
-				}
-				messages.forEach(function(message){
-					var timestampValue = getVeloraTimestampValue(message);
-					if ((timestampValue && timestampValue < historyPollStartedAt) || (initialBatch && !timestampValue)){
-						seedApiMessage(message, channel);
-						return;
-					}
-					processApiMessage(message, channel);
-				});
-				if (initialBatch){
-					historyPublishedMessages = true;
-				}
-			});
-		}).catch(function(){
-		});
-	}
+function getRuntimeOrigin() {
+    try {
+        if (window.location && window.location.origin && window.location.origin !== 'null') {
+            const origin = window.location.origin;
+            if (/^https?:\/\//i.test(origin)) {
+                return origin;
+            }
+        }
+    } catch (e) {}
+    try {
+        const returnTo = getAuthReturnTo();
+        if (returnTo) {
+            const parsed = new URL(returnTo);
+            if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                return parsed.origin;
+            }
+        }
+    } catch (e) {}
+    return 'https://socialstream.ninja';
+}
 
-	function startHistoryPolling(){
-		if (historyPollTimer){
-			return;
-		}
-		historyPublishedMessages = false;
-		historyPollStartedAt = Date.now();
-		pollVeloraChatHistory();
-		historyPollTimer = setInterval(pollVeloraChatHistory, 3000);
-	}
+function getAuthReturnTo() {
+    const explicitReturnTo = getRuntimeParam('return_to') || getRuntimeParam('returnTo');
+    const explicitUrl = mergeCurrentSearchParams(buildVeloraReturnUrlFromBase(explicitReturnTo));
+    if (explicitUrl) {
+        return explicitUrl;
+    }
 
-	function stopHistoryPolling(){
-		if (historyPollTimer){
-			clearInterval(historyPollTimer);
-			historyPollTimer = null;
-		}
-		historyPollStartedAt = 0;
-	}
+    try {
+        const currentUrl = new URL(String(window.location.href || ''));
+        if ((currentUrl.protocol === 'http:' || currentUrl.protocol === 'https:') && isVeloraSocketPage(currentUrl.pathname)) {
+            currentUrl.hash = '';
+            return currentUrl.toString();
+        }
+    } catch (e) {
+    }
 
-	function getChatInput(){
-		try {
-			var selectors = [
-				'[aria-label="Chat message input"][contenteditable="true"][role="textbox"]',
-				'[aria-label="Chat message input"][contenteditable="true"]',
-				'[role="textbox"][contenteditable="true"][data-placeholder]'
-			];
-			for (var i = 0; i < selectors.length; i++){
-				var inputs = document.querySelectorAll(selectors[i]);
-				if (inputs && inputs.length){
-					return inputs[inputs.length - 1];
-				}
-			}
-		} catch(e){
-		}
-		return null;
-	}
+    const sourceModeUrl = mergeCurrentSearchParams(buildVeloraReturnUrlFromBase(getRuntimeParam('sourcemode')));
+    if (sourceModeUrl) {
+        return sourceModeUrl;
+    }
 
-	function getChatMessageRoot(ele){
-		if (!ele || !ele.isConnected || !ele.querySelector){ return null; }
-		if (ele.classList && ele.classList.contains("chat-message-content")){
-			return ele;
-		}
-		return ele.querySelector(".chat-message-content");
-	}
+    const isBetaRuntime = hasRuntimeFlag('beta') || getRuntimeParam('branch') === 'beta';
+    const fallbackBase = hasRuntimeFlag('devmode')
+        ? DEFAULT_LOCAL_RETURN_BASE
+        : isBetaRuntime
+            ? 'https://beta.socialstream.ninja/'
+            : 'https://socialstream.ninja/';
+    const fallbackUrl = mergeCurrentSearchParams(buildVeloraReturnUrlFromBase(fallbackBase));
+    if (fallbackUrl) {
+        return fallbackUrl;
+    }
 
-	function getChatMessageRow(ele){
-		var root = getChatMessageRoot(ele);
-		if (!root){ return null; }
-		if (root.closest){
-			var row = root.closest(".group");
-			if (row){ return row; }
-		}
-		return root.parentNode || root;
-	}
-	
-	function processMessage(ele){
-		var row = getChatMessageRow(ele);
-		var root = getChatMessageRoot(ele);
-		if (!row || !root){
-			return;
-		}
-		
-		if (row.skip || root.skip){
-			return;
-		}
+    try {
+        return String(window.location.href || '').split('#')[0];
+    } catch (e) {
+        return '';
+    }
+}
 
-		var inlineEl = null;
-		try {
-			inlineEl = root.querySelector("span.inline");
-		} catch(e){
-		}
-		if (!inlineEl){
-			return;
-		}
-		
-		var chatimg = "";
-		
-		var name="";
-		var nameEl = null;
-		try {
-			nameEl = inlineEl.querySelector("button");
-			if (nameEl) {
-				name = escapeHtml(nameEl.textContent.replace(/:\s*$/, "").trim());
-			}
-		} catch(e){
-		}
-		
-		var namecolor="";
-		try {
-			if (nameEl){
-				namecolor = nameEl.style.color || "";
-				if (!namecolor && window.getComputedStyle){
-					namecolor = window.getComputedStyle(nameEl).color || "";
-				}
-			}
-		} catch(e){
-		}
-		
-		var badges=[];
-		try {
-			for (var i = 0; i < inlineEl.childNodes.length; i++){
-				var badge = inlineEl.childNodes[i];
-				if (badge === nameEl){
-					break;
-				}
-				if ((badge.nodeType === 1) && (badge.nodeName === "IMG") && badge.src){
-					badges.push(badge.src + "");
-				}
-			}
-		} catch(e){
-		} 
+function getAuthStartUrl() {
+    const url = new URL(`${getVeloraAuthBase()}/start`);
+    url.searchParams.set('return_to', getAuthReturnTo());
+    url.searchParams.set('origin', getRuntimeOrigin());
+    return url.toString();
+}
 
-		var timeText = "";
-		try {
-			for (var j = 0; j < inlineEl.childNodes.length; j++){
-				var timeNode = inlineEl.childNodes[j];
-				if (timeNode === nameEl){
-					break;
-				}
-				if ((timeNode.nodeType === 1) && (timeNode.nodeName === "SPAN") && timeNode.textContent){
-					timeText = timeNode.textContent.trim();
-					if (timeText){
-						break;
-					}
-				}
-			}
-		} catch(e){
-		}
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
-		var msg="";
-		try {
-			var msgEl = nameEl ? nameEl.nextElementSibling : null;
-			if (!msgEl && nameEl && nameEl.parentNode && nameEl.parentNode.querySelector){
-				msgEl = nameEl.parentNode.querySelector("button + span");
-			}
-			if (msgEl) {
-				msg = getAllContentNodes(msgEl).trim();
-			}
-		} catch(e){
-		}
-		
-		
-		var donation = "";
-		try {
-			donation = escapeHtml(row.querySelector(".flex-1.space-y-2 svg>path[d='m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z']").parentNode.nextSibling.textContent);
-			if (msg){
-				msg = msg.replaceAll('“',"").replaceAll('”',"").trim(); 
-			}
-		} catch(e){
-		}
-		
-		if (!name || (!msg && !donation)){
-	//		console.log("no name");
-			return;
-		}
-		
-		var msgKey = "chat|\u00b6|" + timeText + "|\u00b6|" + name + "|\u00b6|" + msg;
-		var contentKey = getMessageContentKey(getVeloraHistoryChannel(), name, msg);
-		if (!rememberMessageKey(msgKey)){
-			row.skip = true;
-			root.skip = true;
-			return;
-		}
-		if (contentKey && !rememberRecentMessageContent(contentKey)){
-			row.skip = true;
-			root.skip = true;
-			return;
-		}
-		
-		row.skip = true;
-		root.skip = true;
-		
-		
-		var data = {};
-		data.chatname = name;
-		data.chatbadges = badges;
-		data.backgroundColor = "";
-		data.textColor = "";
-		data.nameColor = namecolor;
-		data.chatmessage = msg;
-		data.chatimg = chatimg;
-		data.hasDonation = donation;
-		data.membership = "";
-		data.contentimg = "";
-		data.textonly = isTextOnlyMode();
-		data.type = "velora";
-		
-		
-		pushMessage(data);
-	}
+function isTextOnlyMode() {
+    const setting = state.settings && state.settings.textonlymode;
+    if (setting && typeof setting === 'object') {
+        return setting.setting === true;
+    }
+    return setting === true;
+}
 
-	function makeBaseData(){
-		return {
-			chatbadges: [],
-			backgroundColor: "",
-			textColor: "",
-			nameColor: "",
-			chatimg: "",
-			hasDonation: "",
-			membership: "",
-			contentimg: "",
-			textonly: isTextOnlyMode(),
-			type: "velora"
-		};
-	}
+function renderVeloraMessageHtml(message) {
+    const raw = String(message || '');
+    const emotes = [];
+    const html = raw.split(/(\s+)/).map(function (part) {
+        if (!part) return '';
+        if (/^\s+$/.test(part)) {
+            return part.replace(/\r?\n/g, '<br>');
+        }
+        const emoteUrl = VELORA_EMOTE_MAP[part];
+        if (!emoteUrl) {
+            return escapeHtml(part);
+        }
+        emotes.push({
+            code: part,
+            url: emoteUrl
+        });
+        return `<img class="velora-inline-emote" src="${escapeHtml(emoteUrl)}" alt="${escapeHtml(part)}" title="${escapeHtml(part)}" loading="lazy" draggable="false">`;
+    }).join('');
 
-	function rememberEvent(key, row){
-		key = String(key || "").replace(/\s+/g, " ").trim();
-		if (!key || processedEvents.has(key)){
-			if (row){ row.skip = true; }
-			return false;
-		}
-		processedEvents.add(key);
-		if (processedEvents.size > 200){
-			processedEvents.delete(processedEvents.values().next().value);
-		}
-		if (row){ row.skip = true; }
-		return true;
-	}
+    return {
+        html: html || escapeHtml(raw),
+        emotes: emotes
+    };
+}
 
-	function nearestVeloraEventRow(ele){
-		if (!ele || !ele.closest){ return null; }
-		return ele.closest(".mx-1.my-1\\.5") || ele.closest("[class*='mx-1'][class*='my-1.5']") || ele.closest(".group") || ele;
-	}
+function getObjectValue(obj, keys) {
+    if (!obj) return '';
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== '') {
+            return obj[key];
+        }
+    }
+    return '';
+}
 
-	function parseVoltsEvent(row){
-		var amountNode = null;
-		var nameNode = null;
-		try {
-			var spans = Array.from(row.querySelectorAll("span"));
-			amountNode = spans.find(function(span){
-				return /\b\d[\d,.]*\s*V(?:olts?)?\b/i.test((span.textContent || "").trim());
-			}) || null;
-			if (!amountNode){ return null; }
-			nameNode = spans.find(function(span){
-				var text = (span.textContent || "").trim();
-				return text && span !== amountNode && !/\b\d[\d,.]*\s*V(?:olts?)?\b/i.test(text);
-			}) || null;
-		} catch(e){
-			return null;
-		}
-		var amountText = amountNode ? (amountNode.textContent || "").trim() : "";
-		var name = nameNode ? (nameNode.textContent || "").trim() : "";
-		if (!name || !amountText){ return null; }
-		var data = makeBaseData();
-		data.chatname = escapeHtml(name);
-		data.chatmessage = "";
-		data.hasDonation = escapeHtml(amountText.replace(/\bV\b/i, "Volts"));
-		data.event = "volts";
-		data.meta = {
-			amountText: amountText,
-			source: "dom"
-		};
-		return data;
-	}
+function normalizeVeloraBadges(badges) {
+    const badgeList = [];
+    if (!Array.isArray(badges)) {
+        return badgeList;
+    }
+    badges.forEach(function (badge) {
+        let badgeUrl = '';
+        if (!badge) return;
+        if (typeof badge === 'string') {
+            if (/^https?:\/\//i.test(badge)) {
+                badgeUrl = badge;
+            }
+        } else if (typeof badge === 'object') {
+            badgeUrl = getObjectValue(badge, [
+                'url',
+                'imageUrl',
+                'imageURL',
+                'image',
+                'icon',
+                'src',
+                'badgeUrl',
+                'staticAssetUrl'
+            ]);
+        }
+        if (badgeUrl) {
+            badgeList.push(String(badgeUrl));
+        }
+    });
+    return badgeList;
+}
 
-	function parseChannelPointsEvent(row){
-		var labelNode = null;
-		var valueNode = null;
-		try {
-			var divs = Array.from(row.querySelectorAll("div"));
-			labelNode = divs.find(function(div){
-				return /\bsays\b/i.test((div.textContent || "").trim()) && (div.textContent || "").trim().length < 80;
-			}) || null;
-			if (!labelNode){ return null; }
-			valueNode = labelNode.parentElement ? Array.from(labelNode.parentElement.querySelectorAll("span")).find(function(span){
-				return (span.textContent || "").trim();
-			}) : null;
-		} catch(e){
-			return null;
-		}
-		var label = labelNode ? (labelNode.textContent || "").trim() : "";
-		var match = label.match(/^(.+?)\s+says$/i);
-		var name = match && match[1] ? match[1].trim() : "";
-		var message = valueNode ? getAllContentNodes(valueNode).trim() : "";
-		if (!name || !message){ return null; }
-		var data = makeBaseData();
-		data.chatname = escapeHtml(name);
-		data.chatmessage = message;
-		data.event = "channel_points";
-		data.meta = {
-			rewardTitle: "Says",
-			source: "dom"
-		};
-		return data;
-	}
+function getVeloraChatText(raw) {
+    let text = getObjectValue(raw, ['text', 'message', 'content', 'body']);
+    if (text && typeof text === 'object') {
+        text = getObjectValue(text, ['text', 'message', 'content', 'body']);
+    }
+    return text === undefined || text === null ? '' : String(text);
+}
 
-	function parseSimpleActivityEvent(row){
-		var text = (row && row.textContent || "").replace(/\s+/g, " ").trim();
-		var match;
-		var data;
-		if (!text){ return null; }
-		match = text.match(/^(.+?)\s+just became a\s+(.+?)!?$/i);
-		if (!match){ return null; }
-		data = makeBaseData();
-		data.chatname = escapeHtml(match[1].trim());
-		data.chatmessage = escapeHtml("became a " + match[2].trim());
-		data.membership = escapeHtml(match[2].trim());
-		data.event = "subscription";
-		data.meta = { source: "dom" };
-		return data;
-	}
+function normalizeVeloraChatMessage(raw) {
+    if (!raw || typeof raw !== 'object') {
+        return null;
+    }
+    if (raw.message && typeof raw.message === 'object' && !raw.text && !raw.content && !raw.messageId && !raw.id) {
+        raw = raw.message;
+    }
 
-	function processEventNode(ele){
-		var row = nearestVeloraEventRow(ele);
-		var data;
-		if (!row || row.skip || getChatMessageRoot(row)){ return; }
-		data = parseVoltsEvent(row) || parseChannelPointsEvent(row) || parseSimpleActivityEvent(row);
-		if (!data){ return; }
-		if (!rememberEvent("event|\u00b6|" + (data.event || "") + "|\u00b6|" + (data.chatname || "") + "|\u00b6|" + (data.chatmessage || "") + "|\u00b6|" + (data.hasDonation || "") + "|\u00b6|" + (row.textContent || ""), row)){
-			return;
-		}
-		pushMessage(data);
-	}
+    const user = raw.user || raw.sender || raw.author || {};
+    const card = raw.card || null;
+    const cardName = card ? getObjectValue(card, ['name', 'title']) : '';
+    const text = getVeloraChatText(raw) || (cardName ? `[${cardName}]` : '');
+    const username = getObjectValue(raw, ['username', 'login']) || getObjectValue(user, ['username', 'login']);
+    const displayName = getObjectValue(raw, ['displayName', 'display_name', 'name']) ||
+        getObjectValue(user, ['displayName', 'display_name', 'name']) ||
+        username;
 
-	function scanExistingChat(container){
-		if (!container || !container.querySelectorAll){ return; }
-		try {
-			container.querySelectorAll(".chat-message-content").forEach(function(chatNode){
-				processMessage(chatNode);
-			});
-		} catch(e){
-		}
-		try {
-			container.querySelectorAll(".mx-1.my-1\\.5, [class*='mx-1'][class*='my-1.5'], .flex.items-baseline").forEach(function(eventNode){
-				processEventNode(eventNode);
-			});
-		} catch(e){
-		}
-	}
+    if (raw.isSystem && !text && !cardName) {
+        return null;
+    }
 
-	function pushMessage(data){
-		try{
-			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
-		} catch(e){
-		}
-	}
-	var isExtensionOn = true;
-	var cachedViewerEl = null;
-	
-	function checkViewers(){
-		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
-			try {
-				
-				
-				if (!cachedViewerEl || !cachedViewerEl.isConnected){
-					cachedViewerEl = null;
-					var els = document.querySelectorAll("div, span");
-					for (var i = 0; i < els.length; i++){
-						var el = els[i];
-						if (!el.childElementCount && /^[\d,.]+[km]?\s+viewers?$/i.test(el.textContent.trim())){
-							cachedViewerEl = el;
-							break;
-						}
-					}
-				}
-				
-				if (cachedViewerEl && cachedViewerEl.textContent){
-					let views = cachedViewerEl.textContent.toUpperCase();
-					let multiplier = 1;
-					if (views.includes("K")){
-						multiplier = 1000;
-						views = views.replace("K","");
-					} else if (views.includes("M")){
-						multiplier = 1000000;
-						views = views.replace("M","");
-					}
-					views = views.split(" ")[0];
-					if (views == parseFloat(views)){
-						views = parseFloat(views) * multiplier;
-						chrome.runtime.sendMessage(
-							chrome.runtime.id,
-							({message:{
-									type: 'velora',
-									event: 'viewer_update',
-									meta: views
-								}
-							}),
-							function (e) {}
-						);
-					}
-				}
-			} catch (e) {
-			}
-		}
-	}
+    return {
+        messageId: getObjectValue(raw, ['messageId', 'message_id', 'id', '_id', 'uuid']),
+        userId: getObjectValue(raw, ['userId', 'user_id']) || getObjectValue(user, ['id', 'userId', 'user_id']),
+        username: username,
+        displayName: displayName,
+        message: text,
+        badges: normalizeVeloraBadges(raw.badges || user.badges || []),
+        isMod: !!(getObjectValue(raw, ['isMod', 'is_mod', 'moderator']) || getObjectValue(user, ['isMod', 'is_mod', 'moderator'])),
+        isVip: !!(getObjectValue(raw, ['isVip', 'is_vip', 'vip']) || getObjectValue(user, ['isVip', 'is_vip', 'vip'])),
+        isSubscriber: !!(getObjectValue(raw, ['isSubscriber', 'is_subscriber', 'subscriber']) || getObjectValue(user, ['isSubscriber', 'is_subscriber', 'subscriber'])),
+        subscriberMonths: getObjectValue(raw, ['subscriberMonths', 'subscriber_months']) || getObjectValue(user, ['subscriberMonths', 'subscriber_months']),
+        color: getObjectValue(raw, ['color', 'accentColor', 'accent_color']) || getObjectValue(user, ['color', 'accentColor', 'accent_color']),
+        avatarUrl: getObjectValue(raw, ['avatarUrl', 'avatar_url', 'profileImageUrl']) || getObjectValue(user, ['avatarUrl', 'avatar_url', 'profileImageUrl', 'image']),
+        card: card,
+        isSystem: !!(raw.isSystem || raw.is_system),
+        timestamp: getObjectValue(raw, ['timestamp', 'createdAt', 'created_at', 'sentAt', 'sent_at'])
+    };
+}
 
+function rememberChatMessage(message) {
+    if (!message) {
+        return false;
+    }
+    const key = message.messageId
+        ? `chat-id|${message.messageId}`
+        : `chat-text|${message.timestamp || ''}|${message.displayName || message.username || ''}|${message.message || ''}`;
+    if (!key || state.processedChatMessages.has(key)) {
+        return false;
+    }
+    state.processedChatMessages.add(key);
+    while (state.processedChatMessages.size > 300) {
+        state.processedChatMessages.delete(state.processedChatMessages.values().next().value);
+    }
+    return true;
+}
 
-	// OnlineViewers_root_orkvv
-	
-	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
-		response = response || {};
-		if ("settings" in response){
-			settings = response.settings;
-		}
-		if ("state" in response){
-			isExtensionOn = response.state;
-		}
-		if (!checking){
-			startCheck();
-		}
-	});
+function getChatMessageTimestampValue(message) {
+    try {
+        const stamp = getObjectValue(message, ['timestamp', 'createdAt', 'created_at', 'sentAt', 'sent_at']);
+        const value = Date.parse(stamp);
+        return Number.isNaN(value) ? 0 : value;
+    } catch (e) {}
+    return 0;
+}
 
-	chrome.runtime.onMessage.addListener(
-		function (request, sender, sendResponse) {
-			try{
-				
-				if (!checking){
-					startCheck();
-				}
-				
-				if ("getSource" == request){sendResponse("velora");	return;	}
-				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					var chatInput = getChatInput();
-					if(chatInput && chatInput.focus){
-						chatInput.focus();
-					}
-					sendResponse(true);
-					return;
-				}
-				if (typeof request === "object"){
-					if ("state" in request) {
-						isExtensionOn = request.state;
-						startCheck();
-					
-					}
-					
-					if ("settings" in request){
-						settings = request.settings;
-						sendResponse(true);
-						return;
-					}
-				}
-				
-				
-			} catch(e){}
-			sendResponse(false);
-		}
-	);
+function getHistoryMessagesFromResponse(data) {
+    if (Array.isArray(data)) {
+        return data;
+    }
+    if (!data || typeof data !== 'object') {
+        return [];
+    }
+    if (Array.isArray(data.messages)) {
+        return data.messages;
+    }
+    if (Array.isArray(data.data)) {
+        return data.data;
+    }
+    if (data.message && typeof data.message === 'object') {
+        return [data.message];
+    }
+    return [];
+}
 
-	var lastURL =  "";
-	var observer = null;
-	var observerTarget = null;
-	
-	
-	function onElementInserted(target, subtree=false) {
-		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-				//	console.log(mutation.addedNodes);
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							const addedNode = mutation.addedNodes[i];
-							if (addedNode.nodeType !== 1) continue; // Only process element nodes
+function looksLikeVeloraId(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || ''));
+}
 
-							if (addedNode.skip){continue;}
+function getVeloraChannelIdFromResponse(data) {
+    if (!data || typeof data !== 'object') {
+        return '';
+    }
+    return getObjectValue(data, ['id', 'userId', 'user_id', 'channelId', 'channel_id']) ||
+        getObjectValue(data.user || data.channel || {}, ['id', 'userId', 'user_id', 'channelId', 'channel_id']) ||
+        getObjectValue(data.data || {}, ['id', 'userId', 'user_id', 'channelId', 'channel_id']);
+}
 
-							setTimeout(()=>{
-								if (getChatMessageRoot(addedNode)){
-									processMessage(addedNode);
-								} else if (addedNode.querySelectorAll){
-									addedNode.querySelectorAll(".chat-message-content").forEach(function(chatNode){
-										processMessage(chatNode);
-									});
-								}
-								processEventNode(addedNode);
-								if (addedNode.querySelectorAll){
-									addedNode.querySelectorAll(".mx-1.my-1\\.5, [class*='mx-1'][class*='my-1.5'], .flex.items-baseline").forEach(function(eventNode){
-										processEventNode(eventNode);
-									});
-								}
-							},300);
+function getVeloraChannelIdFromStreamResponse(data) {
+    if (!data || typeof data !== 'object') {
+        return '';
+    }
+    return getObjectValue(data, ['userId', 'user_id', 'channelId', 'channel_id']) ||
+        getObjectValue(data.user || data.channel || {}, ['id', 'userId', 'user_id', 'channelId', 'channel_id']) ||
+        getObjectValue(data.data || {}, ['userId', 'user_id', 'channelId', 'channel_id']) ||
+        getVeloraChannelIdFromResponse(data);
+}
 
-						} catch(e){
-							console.error("Error processing added node:", e);
-						}
-					}
-				}
-			});
-		};
-		
-		var config = { childList: true, subtree: subtree };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		if (observer){
-			try {
-				observer.disconnect();
-			} catch(e){}
-		}
-		
-		observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
-	}
-	
-	console.log("social stream injected");
+async function fetchVeloraJson(url) {
+    const response = await fetch(url, {
+        cache: 'no-store',
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
+}
 
-	function isVeloraPopoutRoute(){
-		try {
-			return /\/dashboard\/stream\/popout(?:\/|$)/i.test(window.location.pathname || "");
-		} catch(e){
-		}
-		return false;
-	}
+async function resolveChatHistoryChannelId(channel) {
+    const normalized = normalizeChannelName(channel);
+    if (!normalized) {
+        return '';
+    }
+    if (looksLikeVeloraId(normalized)) {
+        return normalized;
+    }
+    if (state.chatHistoryResolveCache[normalized]) {
+        return state.chatHistoryResolveCache[normalized];
+    }
+    if (state.chatHistoryResolvePending[normalized]) {
+        return state.chatHistoryResolvePending[normalized];
+    }
 
-	function findPopoutChatScroller(){
-		if (!isVeloraPopoutRoute()){
-			return null;
-		}
-		try {
-			var containers = document.querySelectorAll(".overflow-y-auto, [class*='overflow-y-auto']");
-			var best = null;
-			var bestScore = 0;
-			for (var i = 0; i < containers.length; i++){
-				var container = containers[i];
-				var score = 0;
-				var text = "";
-				var className = "";
-				try {
-					text = (container.textContent || "").replace(/\s+/g, " ").trim();
-					className = String(container.className || "");
-				} catch(e){
-				}
-				if (container.querySelector && container.querySelector(".chat-message-content")){ score += 100; }
-				if (/No messages yet|Connecting to chat|New messages/i.test(text)){ score += 45; }
-				if (/Activity will appear here|transactions|followers|subscribers/i.test(text)){ score -= 30; }
-				if (className.indexOf("px-1") !== -1 && className.indexOf("pb-1") !== -1){ score += 30; }
-				if (className.indexOf("scrollbar-thumb-white/10") !== -1){ score += 25; }
-				if (className.indexOf("scrollbar-thin") !== -1){ score += 5; }
-				if (score > bestScore){
-					bestScore = score;
-					best = container;
-				}
-			}
-			if (best && bestScore > 0){
-				return best;
-			}
-			return document.body || null;
-		} catch(e){
-		}
-		return null;
-	}
+    state.chatHistoryResolvePending[normalized] = fetchVeloraJson(`${VELORA_API_BASE}/api/users/${encodeURIComponent(channel)}`)
+        .then(function (data) {
+            return getVeloraChannelIdFromResponse(data) || '';
+        })
+        .catch(function () {
+            return fetchVeloraJson(`${VELORA_API_BASE}/api/streams/user/${encodeURIComponent(channel)}`)
+                .then(function (data) {
+                    return getVeloraChannelIdFromStreamResponse(data) || '';
+                });
+        })
+        .then(function (resolved) {
+            state.chatHistoryResolveCache[normalized] = normalizeChannelName(resolved) || normalized;
+            delete state.chatHistoryResolvePending[normalized];
+            return state.chatHistoryResolveCache[normalized];
+        })
+        .catch(function () {
+            delete state.chatHistoryResolvePending[normalized];
+            return normalized;
+        });
 
-	function findScrollerNearInput(input){
-		if (!input){ return null; }
-		var node = input;
-		var fallback = null;
-		var depth = 0;
-		while (node && depth < 10){
-			try {
-				if (node.querySelectorAll){
-					var containers = node.querySelectorAll(".overflow-y-auto, [class*='overflow-y-auto']");
-					for (var i = 0; i < containers.length; i++){
-						var container = containers[i];
-						if (!container || container === input){ continue; }
-						if (container.contains && container.contains(input)){ continue; }
-						if (!fallback){ fallback = container; }
-						var text = (container.textContent || "").replace(/\s+/g, " ").trim();
-						var className = "";
-						try {
-							className = String(container.className || "");
-						} catch(e){
-						}
-						if (container.querySelector(".chat-message-content") || /No messages yet|Connecting to chat|New messages/i.test(text) || className.indexOf("scrollbar-thin") !== -1){
-							return container;
-						}
-					}
-				}
-			} catch(e){
-			}
-			node = node.parentElement;
-			depth++;
-		}
-		return fallback;
-	}
+    return state.chatHistoryResolvePending[normalized];
+}
 
-	function findChatContainer(){
-		try {
-			var root = document.querySelector(".chat-message-content");
-			if (root && root.closest){
-				var container = root.closest(".overflow-y-auto");
-				if (container){
-					return container;
-				}
-			}
-		} catch(e){
-		}
-		try {
-			var input = getChatInput();
-			var inputContainer = findScrollerNearInput(input);
-			if (inputContainer){
-				return inputContainer;
-			}
-		} catch(e){
-		}
-		try {
-			var popoutContainer = findPopoutChatScroller();
-			if (popoutContainer){
-				return popoutContainer;
-			}
-		} catch(e){
-		}
-		return null;
-	}
+// ─── Storage ──────────────────────────────────────────────────────────────────
 
+function loadConfig() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const conf = JSON.parse(raw);
+        if (conf.redirectUri) state.redirectUri = conf.redirectUri;
+        state.hideMetrics = !!conf.hideMetrics;
+    } catch (e) {}
+}
 
-	function startCheck(){
-		if (isExtensionOn && checking){return;}
+function applyRuntimeOverrides() {
+    const redirectUri = normalizeRedirectUri(getRuntimeParam('redirect_uri') || getRuntimeParam('redirectUri'));
 
-		clearInterval(checking);
-		checking = false;
-		if (observer){
-			try {
-				observer.disconnect();
-			} catch(e){}
-			observer = null;
-			observerTarget = null;
-		}
-		if (!isExtensionOn){
-			stopHistoryPolling();
-			return;
-		}
-		historyFallbackMisses = 0;
-		startHistoryPolling();
-		checking = setInterval(function(){
-			try {
-				var container = findChatContainer();
-				
-				if (!container){
-					historyFallbackMisses++;
-					return;
-				}
-				var skipInitialScan = false;
-				historyFallbackMisses = 0;
-				
-				if (observerTarget !== container){
-					observerTarget = container;
-					container.marked=true;
+    if (redirectUri) {
+        state.redirectUri = redirectUri;
+    }
 
-					console.log("CONNECTED chat detected");
+    if (!state.clientId) {
+        state.clientId = DEFAULT_VELORA_CLIENT_ID;
+    }
+    if (!state.redirectUri) {
+        state.redirectUri = DEFAULT_VELORA_REDIRECT_URI;
+    }
+}
 
-					setTimeout(function(skipScan){
-						dataIndex = 0;
-						onElementInserted(container, true);
-						if (!skipScan){
-							scanExistingChat(container);
-						}
-					},1000, skipInitialScan);
-				}
-				checkViewers();
-			} catch(e){}
-		},2000);
-	}
-	
-	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
-	try {
-		var receiveChannelCallback = function (event) {
-			remoteConnection.datachannel = event.channel;
-			remoteConnection.datachannel.onmessage = function (e) {};
-			remoteConnection.datachannel.onopen = function (e) {};
-			remoteConnection.datachannel.onclose = function (e) {};
-			setInterval(function () {
-				remoteConnection.datachannel.send("KEEPALIVE");
-			}, 1000);
-		};
-		var errorHandle = function (e) {};
-		var localConnection = new RTCPeerConnection();
-		var remoteConnection = new RTCPeerConnection();
-		localConnection.onicecandidate = e => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
-		remoteConnection.onicecandidate = e => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
-		remoteConnection.ondatachannel = receiveChannelCallback;
-		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
-		localConnection.sendChannel.onopen = function (e) {
-			localConnection.sendChannel.send("CONNECTED");
-		};
-		localConnection.sendChannel.onclose = function (e) {};
-		localConnection.sendChannel.onmessage = function (e) {};
-		localConnection
-			.createOffer()
-			.then(offer => localConnection.setLocalDescription(offer))
-			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
-			.then(() => remoteConnection.createAnswer())
-			.then(answer => remoteConnection.setLocalDescription(answer))
-			.then(() => {
-				localConnection.setRemoteDescription(remoteConnection.localDescription);
-				console.log("KEEP ALIVE TRICk ENABLED");
-			})
-			.catch(errorHandle);
-	} catch (e) {
-		console.log(e);
-	}
-	
-	
-	function preventBackgroundThrottling() {
-		window.onblur = null;
-		window.blurred = false;
-		document.hidden = false;
-		document.mozHidden = false;
-		document.webkitHidden = false;
-		
-		document.hasFocus = () => true;
-		window.onFocus = () => true;
+function persistConfig() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            redirectUri: state.redirectUri,
+            hideMetrics: !!state.hideMetrics
+        }));
+    } catch (e) {}
+}
 
-		Object.defineProperties(document, {
-			mozHidden: { value: false, configurable: true },
-			msHidden: { value: false, configurable: true },
-			webkitHidden: { value: false, configurable: true },
-			hidden: { value: false, configurable: true, writable: true },
-			visibilityState: { 
-				get: () => "visible",
-				configurable: true
-			}
-		});
-	}
+function applyMetricsVisibility() {
+    if (typeof document !== 'undefined' && document.body) {
+        document.body.classList.toggle('hide-metrics', !!state.hideMetrics);
+    }
+}
 
-	const events = [
-		"visibilitychange",
-		"webkitvisibilitychange",
-		"blur",
-		"mozvisibilitychange",
-		"msvisibilitychange"
-	];
+function loadTokens() {
+    try {
+        const raw = localStorage.getItem(TOKEN_KEY);
+        if (!raw) return;
+        const tokens = JSON.parse(raw);
+        if (tokens && tokens.access_token) {
+            state.tokens = tokens;
+        }
+    } catch (e) {}
+}
 
-	events.forEach(event => {
-		window.addEventListener(event, (e) => {
-			e.stopImmediatePropagation();
-			e.preventDefault();
-		}, true);
-	});
+function persistTokens() {
+    if (!state.tokens) {
+        localStorage.removeItem(TOKEN_KEY);
+        return;
+    }
+    try {
+        localStorage.setItem(TOKEN_KEY, JSON.stringify(state.tokens));
+    } catch (e) {}
+}
 
-	setInterval(preventBackgroundThrottling, 200);
+function clearAuthState() {
+    state.tokens = null;
+    state.authUser = null;
+    state.streamId = null;
+    persistTokens();
+    clearTimeout(state.refreshTimer);
+    state.refreshTimer = null;
+}
 
-})();
+function clearAuthHandoffWatcher() {
+    if (state.authHandoffPollTimer) {
+        clearInterval(state.authHandoffPollTimer);
+        state.authHandoffPollTimer = null;
+    }
+    state.authHandoffInFlight = false;
+}
+
+function isTokenExpired() {
+    if (!state.tokens) return true;
+    const expiresAt = state.tokens.expires_at;
+    if (!expiresAt) return false;
+    return Date.now() > (expiresAt - 60000);
+}
+
+// ─── PKCE helpers ─────────────────────────────────────────────────────────────
+
+function generateRandomString(length) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    return Array.from(array, b => chars[b % chars.length]).join('');
+}
+
+async function createCodeChallenge(verifier) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+}
+
+// ─── OAuth flow ───────────────────────────────────────────────────────────────
+
+function getVeloraOAuthBridge() {
+    if (window.ninjafy && typeof window.ninjafy.startVeloraOAuth === 'function') {
+        return window.ninjafy;
+    }
+    if (window.__ssapp && typeof window.__ssapp.startVeloraOAuth === 'function') {
+        return window.__ssapp;
+    }
+    return null;
+}
+
+function getRedirectUri() {
+    return normalizeRedirectUri(state.redirectUri) || DEFAULT_VELORA_REDIRECT_URI;
+}
+
+function base64UrlToJson(value) {
+    if (!value) return null;
+    try {
+        const normalized = String(value).replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized + '==='.slice((normalized.length + 3) % 4);
+        const decoded = atob(padded);
+        return JSON.parse(decoded);
+    } catch (e) {
+        return null;
+    }
+}
+
+function normalizeTokenPayload(payload) {
+    if (!payload || !payload.access_token) {
+        return null;
+    }
+    const expiresIn = Number(payload.expires_in);
+    return {
+        access_token: String(payload.access_token),
+        refresh_token: payload.refresh_token ? String(payload.refresh_token) : null,
+        token_type: payload.token_type ? String(payload.token_type) : 'Bearer',
+        expires_at: Number.isFinite(expiresIn) && expiresIn > 0 ? (Date.now() + expiresIn * 1000) : null
+    };
+}
+
+function applyTokenPayload(payload) {
+    const tokens = normalizeTokenPayload(payload);
+    if (!tokens) {
+        throw new Error('Velora auth payload did not include an access token.');
+    }
+    state.tokens = tokens;
+    persistTokens();
+    scheduleTokenRefresh();
+}
+
+async function handleAuthSuccess(payload) {
+    clearAuthHandoffWatcher();
+    applyTokenPayload(payload && payload.tokens ? payload.tokens : payload);
+    if (!state.tokens?.access_token) {
+        loadTokens();
+    }
+    await loadUserProfile();
+    updateAuthUI();
+    connectSocket();
+}
+
+function handleAuthError(payload) {
+    clearAuthHandoffWatcher();
+    const message = payload && payload.message ? payload.message : 'Velora sign-in failed.';
+    setAuthStatus(message, 'danger');
+}
+
+async function completeStoredAuthHandoff() {
+    if (state.authHandoffInFlight) {
+        return false;
+    }
+    state.authHandoffInFlight = true;
+    try {
+        const hadToken = !!state.tokens?.access_token;
+        loadTokens();
+        if (!state.tokens?.access_token || isTokenExpired()) {
+            return false;
+        }
+        scheduleTokenRefresh();
+        if (hadToken && state.authUser && state.eventsConnected) {
+            clearAuthHandoffWatcher();
+            return true;
+        }
+        await loadUserProfile();
+        updateAuthUI();
+        connectSocket();
+        if (state.authPopup && !state.authPopup.closed) {
+            try {
+                state.authPopup.close();
+            } catch (e) {}
+        }
+        state.authPopup = null;
+        clearAuthHandoffWatcher();
+        return true;
+    } catch (err) {
+        console.warn('[Velora] Failed to complete stored auth handoff:', err && err.message ? err.message : err);
+        return false;
+    } finally {
+        state.authHandoffInFlight = false;
+    }
+}
+
+function startAuthHandoffWatcher() {
+    clearAuthHandoffWatcher();
+    const started = Date.now();
+    state.authHandoffPollTimer = setInterval(function () {
+        if ((Date.now() - started) > 120000) {
+            clearAuthHandoffWatcher();
+            return;
+        }
+        completeStoredAuthHandoff();
+    }, 1000);
+}
+
+async function handleAuthPayload(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return false;
+    }
+    if (payload.type === VELORA_AUTH_MESSAGE_SUCCESS || payload.tokens || payload.access_token) {
+        await handleAuthSuccess(payload);
+        return true;
+    }
+    if (payload.type === VELORA_AUTH_MESSAGE_ERROR) {
+        handleAuthError(payload);
+        return true;
+    }
+    return false;
+}
+
+function maybeReloadAfterSsappAuthHandoff() {
+    if (!hasRuntimeFlag('ssapp')) {
+        return;
+    }
+    setTimeout(function () {
+        try {
+            if (!localStorage.getItem(TOKEN_KEY)) return;
+            const authText = els.authState ? String(els.authState.textContent || '') : '';
+            if (!/^Signed in\b/i.test(authText)) {
+                window.location.reload();
+            }
+        } catch (e) {}
+    }, 100);
+}
+
+async function consumeAuthResultFromHash() {
+    let changed = false;
+    let handled = false;
+    try {
+        const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+        const encodedResult = hash.get(VELORA_AUTH_RESULT_KEY);
+        const encodedError = hash.get(VELORA_AUTH_ERROR_KEY);
+        if (encodedResult) {
+            const payload = base64UrlToJson(encodedResult);
+            if (await handleAuthPayload(payload)) {
+                handled = true;
+            }
+            hash.delete(VELORA_AUTH_RESULT_KEY);
+            changed = true;
+        }
+        if (encodedError) {
+            const payload = base64UrlToJson(encodedError);
+            if (await handleAuthPayload(payload)) {
+                handled = true;
+            }
+            hash.delete(VELORA_AUTH_ERROR_KEY);
+            changed = true;
+        }
+        if (changed) {
+            const cleanUrl = `${window.location.pathname}${window.location.search}${hash.toString() ? `#${hash.toString()}` : ''}`;
+            history.replaceState({}, document.title, cleanUrl);
+        }
+    } catch (e) {
+        console.warn('[Velora] Failed to consume auth callback payload:', e);
+    }
+    return handled;
+}
+
+async function exchangeCodeForToken(code, verifier, redirectUri) {
+    const response = await fetch(`${getVeloraAuthBase()}/exchange`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            code: code,
+            code_verifier: verifier,
+            redirect_uri: normalizeRedirectUri(redirectUri) || getRedirectUri()
+        })
+    });
+
+    const text = await response.text();
+    let data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch (e) {}
+
+    if (!response.ok) {
+        throw new Error(data.message || data.error_description || data.error || text || `HTTP ${response.status}`);
+    }
+
+    applyTokenPayload(data);
+}
+
+async function startExternalAuthFlow() {
+    const bridge = getVeloraOAuthBridge();
+    if (!bridge || typeof bridge.startVeloraOAuth !== 'function') {
+        return false;
+    }
+
+    const scopes = VELORA_SCOPES.split(/\s+/).filter(Boolean);
+    const result = await bridge.startVeloraOAuth({
+        authBase: getVeloraAuthBase(),
+        clientId: state.clientId,
+        redirectUri: getRedirectUri(),
+        scopes: scopes
+    });
+
+    if (await handleAuthPayload(result)) {
+        maybeReloadAfterSsappAuthHandoff();
+        return true;
+    }
+
+    const nestedPayload = result && typeof result === 'object'
+        ? (result.payload || result.authPayload || null)
+        : null;
+    if (await handleAuthPayload(nestedPayload)) {
+        maybeReloadAfterSsappAuthHandoff();
+        return true;
+    }
+
+    if (!result || !result.code || !result.codeVerifier) {
+        throw new Error('Velora OAuth did not return a code and PKCE verifier.');
+    }
+
+    if (result.redirectUri) {
+        state.redirectUri = normalizeRedirectUri(result.redirectUri) || getRedirectUri();
+        persistConfig();
+    }
+
+    await exchangeCodeForToken(result.code, result.codeVerifier, result.redirectUri || getRedirectUri());
+    await loadUserProfile();
+    updateAuthUI();
+    connectSocket();
+    return true;
+}
+
+function startBrowserAuthFlow() {
+    const authUrl = getAuthStartUrl();
+    const popup = window.open(authUrl, 'veloraAuth', 'width=560,height=760');
+    if (!popup) {
+        window.location.href = authUrl;
+        return;
+    }
+    state.authPopup = popup;
+    setAuthStatus('Complete Velora sign-in in the popup.', 'warning');
+    startAuthHandoffWatcher();
+}
+
+async function startAuthFlow() {
+    try {
+        const handled = await startExternalAuthFlow();
+        if (!handled) {
+            startBrowserAuthFlow();
+        }
+    } catch (err) {
+        console.error('[Velora] Sign-in failed:', err);
+        setAuthStatus(`Sign-in failed: ${err.message}`, 'danger');
+    }
+}
+
+async function handleAuthCallback() {
+    return consumeAuthResultFromHash();
+}
+
+async function refreshAccessToken() {
+    if (!state.tokens?.refresh_token) {
+        clearAuthState();
+        updateAuthUI();
+        disconnectSocket();
+        return;
+    }
+
+    try {
+        const response = await fetch(`${getVeloraAuthBase()}/refresh`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                refresh_token: state.tokens.refresh_token
+            })
+        });
+
+        const text = await response.text();
+        let data = {};
+        try { data = text ? JSON.parse(text) : {}; } catch (e) {}
+
+        if (!response.ok) throw new Error(data.message || data.error_description || data.error || text || `HTTP ${response.status}`);
+
+        const tokens = normalizeTokenPayload(data);
+        if (!tokens) {
+            throw new Error('Velora refresh response did not include an access token.');
+        }
+        if (!tokens.refresh_token && state.tokens && state.tokens.refresh_token) {
+            tokens.refresh_token = state.tokens.refresh_token;
+        }
+        state.tokens = tokens;
+        persistTokens();
+        scheduleTokenRefresh();
+
+        // Re-auth the active events transport with the new token
+        if (state.socket && state.socket.connected) {
+            state.socket.auth = { token: state.tokens.access_token };
+        }
+        if (state.sseRequest) {
+            connectSse('Refreshing Velora SSE connection with updated token.');
+        }
+    } catch (err) {
+        console.error('[Velora] Token refresh failed:', err);
+        clearAuthState();
+        updateAuthUI();
+        disconnectSocket();
+    }
+}
+
+function scheduleTokenRefresh() {
+    clearTimeout(state.refreshTimer);
+    if (!state.tokens?.expires_at) return;
+    const delay = Math.max(10000, state.tokens.expires_at - Date.now() - 120000);
+    state.refreshTimer = setTimeout(refreshAccessToken, delay);
+}
+
+// ─── User profile ─────────────────────────────────────────────────────────────
+
+async function loadUserProfile() {
+    if (!state.tokens?.access_token) return;
+    try {
+        const response = await fetch(`${VELORA_API_BASE}/api/users/me`, {
+            headers: { 'Authorization': `Bearer ${state.tokens.access_token}` }
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        state.authUser = data.user || data;
+    } catch (e) {}
+}
+
+// ─── Viewer count polling ─────────────────────────────────────────────────────
+
+function getChatHistoryChannelId() {
+    return normalizeChannelName(
+        state.requestedChannel ||
+        state.authUser?.id ||
+        state.authUser?.username ||
+        state.authUser?.login ||
+        getAuthedChannelName()
+    );
+}
+
+async function pollChatHistory() {
+    const requestedChannel = getChatHistoryChannelId();
+    if (!requestedChannel || state.chatHistoryInFlight) {
+        return;
+    }
+
+    state.chatHistoryInFlight = true;
+    try {
+        const channelId = await resolveChatHistoryChannelId(requestedChannel);
+        if (!channelId) {
+            return;
+        }
+
+        const channelKey = `${requestedChannel}|${channelId}`;
+        if (state.chatHistoryChannel !== channelKey) {
+            state.chatHistoryChannel = channelKey;
+            state.processedChatMessages.clear();
+            state.chatHistoryLastError = '';
+            state.chatHistoryHadSuccess = false;
+            state.chatHistoryStartedAt = Date.now();
+        }
+
+        const data = await fetchVeloraJson(`${VELORA_API_BASE}/api/chat/channels/${encodeURIComponent(channelId)}/history?limit=${VELORA_CHAT_HISTORY_LIMIT}`);
+        const messages = getHistoryMessagesFromResponse(data).slice();
+        if (messages.length > 1 && getChatMessageTimestampValue(messages[0]) > getChatMessageTimestampValue(messages[messages.length - 1])) {
+            messages.reverse();
+        }
+        messages.forEach(function (message) {
+            const timestampValue = getChatMessageTimestampValue(message);
+            if (!state.chatHistoryHadSuccess && (!timestampValue || timestampValue < state.chatHistoryStartedAt)) {
+                rememberChatMessage(normalizeVeloraChatMessage(message));
+                return;
+            }
+            handleChatMessage(message);
+        });
+
+        if (!state.chatHistoryHadSuccess) {
+            state.chatHistoryHadSuccess = true;
+            state.chatHistoryLastError = '';
+            addEventLogEntry(`Chat history polling active for @${requestedChannel}.`, 'info');
+        }
+    } catch (err) {
+        const message = err && err.message ? err.message : String(err || 'Unknown error');
+        if (message !== state.chatHistoryLastError) {
+            state.chatHistoryLastError = message;
+            addEventLogEntry(`Chat history polling unavailable: ${message}`, 'warn');
+        }
+    } finally {
+        state.chatHistoryInFlight = false;
+    }
+}
+
+function startChatHistoryPoll() {
+    if (!getChatHistoryChannelId()) {
+        return;
+    }
+    if (!state.chatHistoryTimer) {
+        pollChatHistory();
+        state.chatHistoryTimer = setInterval(pollChatHistory, VELORA_CHAT_HISTORY_INTERVAL_MS);
+        return;
+    }
+    pollChatHistory();
+}
+
+function stopChatHistoryPoll() {
+    if (state.chatHistoryTimer) {
+        clearInterval(state.chatHistoryTimer);
+        state.chatHistoryTimer = null;
+    }
+    state.chatHistoryChannel = '';
+    state.chatHistoryInFlight = false;
+    state.chatHistoryLastError = '';
+    state.chatHistoryHadSuccess = false;
+    state.chatHistoryStartedAt = 0;
+}
+
+async function pollViewerCount() {
+    if (!state.tokens?.access_token || !state.authUser) return;
+    try {
+        const username = state.authUser.username || state.authUser.login;
+        if (!username) return;
+        const response = await fetch(`${VELORA_API_BASE}/api/streams/user/${encodeURIComponent(username)}`, {
+            headers: { 'Authorization': `Bearer ${state.tokens.access_token}` }
+        });
+        if (response.status === 404) {
+            state.streamId = null;
+            updateViewerCount(null);
+            return;
+        }
+        if (!response.ok) return;
+        const data = await response.json();
+        const stream = Array.isArray(data.streams)
+            ? data.streams[0]
+            : (data.stream || data.data || data || null);
+        if (stream) {
+            state.streamId = stream.id || stream.streamId || null;
+            updateViewerCount(
+                stream.viewerCount ??
+                stream.viewer_count ??
+                stream.viewers ??
+                stream.viewer_count_live ??
+                null
+            );
+        } else {
+            state.streamId = null;
+            updateViewerCount(null);
+        }
+    } catch (e) {}
+}
+
+function startViewerPoll() {
+    stopViewerPoll();
+    pollViewerCount();
+    state.viewerPollTimer = setInterval(pollViewerCount, VIEWER_POLL_INTERVAL_MS);
+}
+
+function stopViewerPoll() {
+    clearInterval(state.viewerPollTimer);
+    state.viewerPollTimer = null;
+}
+
+function clearSocketFallbackTimer() {
+    clearTimeout(state.socketFallbackTimer);
+    state.socketFallbackTimer = null;
+}
+
+function clearSocketConnectTimer() {
+    clearTimeout(state.socketConnectTimer);
+    state.socketConnectTimer = null;
+}
+
+function clearSseReconnectTimer() {
+    clearTimeout(state.sseReconnectTimer);
+    state.sseReconnectTimer = null;
+}
+
+function resetEventConnectionState() {
+    state.eventsConnected = false;
+    state.eventTransport = '';
+    state.connectedChannel = '';
+}
+
+function disconnectSocketTransport() {
+    clearSocketFallbackTimer();
+    clearSocketConnectTimer();
+    if (state.socket) {
+        try {
+            state.socket.disconnect();
+        } catch (e) {}
+        state.socket = null;
+    }
+}
+
+function disconnectSseTransport() {
+    clearSseReconnectTimer();
+    const xhr = state.sseRequest;
+    state.sseRequest = null;
+    state.sseReadOffset = 0;
+    state.sseBuffer = '';
+    if (xhr) {
+        try {
+            xhr.abort();
+        } catch (e) {}
+    }
+}
+
+function applyConnectedChannelInfo(data, transportLabel) {
+    const channelName = normalizeChannelName(
+        (data && (data.channelUsername || data.username)) ||
+        getAuthedChannelName() ||
+        state.requestedChannel
+    );
+    const labelName = channelName || '-';
+    const transportKey = String(transportLabel || '').toLowerCase();
+    const isFirstConnection = !state.eventsConnected;
+    const channelChanged = channelName && channelName !== state.connectedChannel;
+    const transportChanged = transportKey !== state.eventTransport;
+
+    state.eventsConnected = true;
+    state.eventTransport = transportKey;
+    if (channelName) {
+        state.connectedChannel = channelName;
+    }
+
+    clearSocketFallbackTimer();
+    clearSocketConnectTimer();
+    clearSseReconnectTimer();
+    setSocketStatus('connected');
+
+    if (transportKey === 'sse') {
+        disconnectSocketTransport();
+    } else if (transportKey === 'websocket') {
+        disconnectSseTransport();
+    }
+
+    if (isFirstConnection || transportChanged) {
+        addEventLogEntry(`Connected to Velora Events API via ${transportLabel}.`, 'info');
+    }
+    if (isFirstConnection || transportChanged || channelChanged) {
+        addEventLogEntry(`Authenticated as channel: ${labelName}`, 'info');
+    }
+
+    if (els.channelLabel) {
+        els.channelLabel.querySelector('span').textContent = labelName;
+    }
+
+    if (state.requestedChannel && channelName && channelName !== state.requestedChannel) {
+        addEventLogEntry(`URL requested @${state.requestedChannel}, but Velora connected as @${channelName}.`, 'warn');
+    }
+
+    startViewerPoll();
+    startChatHistoryPoll();
+}
+
+function scheduleSseReconnect(reason) {
+    if (!state.tokens?.access_token || state.sseRequest) {
+        return;
+    }
+    clearSseReconnectTimer();
+    state.sseReconnectTimer = setTimeout(function () {
+        connectSse(reason);
+    }, SSE_RECONNECT_DELAY_MS);
+}
+
+function handleSsePayload(eventName, payload) {
+    if (!payload || typeof payload !== 'object') {
+        return;
+    }
+    if (eventName === 'connected' || payload.event === 'connected') {
+        applyConnectedChannelInfo(payload.data || payload, 'SSE');
+        return;
+    }
+    handleEvent(payload);
+}
+
+function processSseChunk(chunk) {
+    if (!chunk) return;
+    state.sseBuffer += chunk;
+    const blocks = state.sseBuffer.split(/\r?\n\r?\n/);
+    state.sseBuffer = blocks.pop() || '';
+
+    blocks.forEach(function (block) {
+        if (!block) return;
+        let eventName = '';
+        const dataLines = [];
+        block.split(/\r?\n/).forEach(function (line) {
+            if (!line || line.charAt(0) === ':') return;
+            if (line.indexOf('event:') === 0) {
+                eventName = line.slice(6).trim();
+                return;
+            }
+            if (line.indexOf('data:') === 0) {
+                dataLines.push(line.slice(5).replace(/^\s*/, ''));
+            }
+        });
+        if (!dataLines.length) return;
+        try {
+            handleSsePayload(eventName, JSON.parse(dataLines.join('\n')));
+        } catch (e) {
+            addEventLogEntry('Failed to parse Velora SSE payload.', 'warn');
+        }
+    });
+}
+
+function connectSse(reason) {
+    if (!state.tokens?.access_token) return;
+
+    disconnectSseTransport();
+    disconnectSocketTransport();
+    resetEventConnectionState();
+    setSocketStatus('connecting');
+
+    if (reason) {
+        addEventLogEntry(reason, 'warn');
+    }
+
+    const xhr = new XMLHttpRequest();
+    state.sseRequest = xhr;
+    state.sseReadOffset = 0;
+    state.sseBuffer = '';
+
+    xhr.open('GET', VELORA_EVENTS_SSE_URL, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${state.tokens.access_token}`);
+    xhr.setRequestHeader('Accept', 'text/event-stream');
+
+    xhr.onreadystatechange = function () {
+        if (xhr !== state.sseRequest) return;
+        if (xhr.readyState === 2 && xhr.status && xhr.status !== 200) {
+            setSocketStatus('error');
+            addEventLogEntry(`SSE connection failed: HTTP ${xhr.status}`, 'error');
+        } else if (xhr.readyState === 2 && xhr.status === 200 && !state.eventsConnected) {
+            applyConnectedChannelInfo(null, 'SSE');
+        }
+    };
+
+    xhr.onprogress = function () {
+        if (xhr !== state.sseRequest) return;
+        const text = xhr.responseText || '';
+        const chunk = text.slice(state.sseReadOffset);
+        state.sseReadOffset = text.length;
+        processSseChunk(chunk);
+    };
+
+    xhr.onerror = function () {
+        if (xhr !== state.sseRequest) return;
+        state.sseRequest = null;
+        state.sseReadOffset = 0;
+        state.sseBuffer = '';
+        if (!state.eventsConnected) {
+            setSocketStatus('error');
+        }
+        addEventLogEntry('Velora SSE connection error.', 'error');
+        scheduleSseReconnect('Retrying Velora SSE connection.');
+    };
+
+    xhr.onload = function () {
+        if (xhr !== state.sseRequest) return;
+        state.sseRequest = null;
+        state.sseReadOffset = 0;
+        state.sseBuffer = '';
+        if (state.tokens?.access_token) {
+            addEventLogEntry('Velora SSE stream closed. Reconnecting…', 'warn');
+            scheduleSseReconnect();
+        }
+    };
+
+    xhr.send();
+}
+
+function startSocketFallbackTimer() {
+    clearSocketConnectTimer();
+    clearSocketFallbackTimer();
+    state.socketFallbackTimer = setTimeout(function () {
+        if (state.eventsConnected) {
+            return;
+        }
+        connectSse('WebSocket connected without Velora channel confirmation. Falling back to SSE.');
+    }, SOCKET_CONNECTED_EVENT_TIMEOUT_MS);
+}
+
+// ─── Socket.IO connection ─────────────────────────────────────────────────────
+
+function startSocketConnectTimeout() {
+    clearSocketConnectTimer();
+    state.socketConnectTimer = setTimeout(function () {
+        if (state.eventsConnected || state.sseRequest) {
+            return;
+        }
+        connectSse('Velora WebSocket connection timed out. Falling back to SSE.');
+    }, SOCKET_CONNECT_TIMEOUT_MS);
+}
+
+function connectSocket() {
+    if (!state.tokens?.access_token) return;
+    if (typeof io !== 'function') {
+        startChatHistoryPoll();
+        connectSse('socket.io client not loaded. Using SSE instead.');
+        return;
+    }
+
+    disconnectSocket();
+    resetEventConnectionState();
+    startChatHistoryPoll();
+
+    const socket = io(VELORA_WS_URL, {
+        auth: { token: state.tokens.access_token },
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionDelay: 2000,
+        reconnectionDelayMax: 30000,
+        reconnectionAttempts: Infinity
+    });
+
+    state.socket = socket;
+    setSocketStatus('connecting');
+    startSocketConnectTimeout();
+
+    socket.on('connect', () => {
+        setSocketStatus('connecting');
+        addEventLogEntry('Velora WebSocket transport connected. Waiting for channel confirmation…', 'info');
+        startSocketFallbackTimer();
+    });
+
+    socket.on('connected', (data) => {
+        applyConnectedChannelInfo(data, 'WebSocket');
+    });
+
+    socket.on('event', (payload) => {
+        if (!state.eventsConnected) {
+            applyConnectedChannelInfo(payload && payload.data ? payload.data : null, 'WebSocket');
+        }
+        handleEvent(payload);
+    });
+
+    socket.on('disconnect', (reason) => {
+        clearSocketFallbackTimer();
+        if (!state.sseRequest) {
+            setSocketStatus('disconnected');
+            addEventLogEntry(`Disconnected: ${reason}`, 'warn');
+            stopViewerPoll();
+            resetEventConnectionState();
+        }
+    });
+
+    socket.on('connect_error', (err) => {
+        setSocketStatus('error');
+        addEventLogEntry(`Connection error: ${err.message}`, 'error');
+        connectSse('WebSocket connection failed. Falling back to SSE.');
+    });
+
+    socket.on('error', (err) => {
+        const message = err && err.message ? err.message : String(err || 'Unknown socket error');
+        addEventLogEntry(`Socket error: ${message}`, 'error');
+    });
+}
+
+function disconnectSocket() {
+    disconnectSocketTransport();
+    disconnectSseTransport();
+    stopViewerPoll();
+    resetEventConnectionState();
+    setSocketStatus('disconnected');
+}
+
+// ─── Event routing ────────────────────────────────────────────────────────────
+
+function handleEvent(payload) {
+    if (!payload || !payload.event) return;
+    const { event, data } = payload;
+
+    addEventLogEntry(event, 'info', data);
+
+    switch (event) {
+        case 'chat.message':
+            handleChatMessage(data);
+            break;
+        case 'channel.follow':
+        case 'user.follow':
+            handleFollow(data);
+            break;
+        case 'channel.subscribe':
+            handleSubscribe(data);
+            break;
+        case 'channel.subscription.gift':
+        case 'channel.gift':
+            handleGiftSub(data);
+            break;
+        case 'channel.volts':
+            handleVolts(data);
+            break;
+        case 'channel.raid':
+            handleRaid(data);
+            break;
+        case 'channel.channel_points_redemption':
+        case 'channel.points.redeem':
+            handleChannelPoints(data);
+            break;
+        case 'channel.ban':
+        case 'channel.unban':
+        case 'channel.moderator.add':
+        case 'channel.moderator.remove':
+        case 'channel.poll.begin':
+        case 'channel.poll.end':
+        case 'channel.prediction.begin':
+        case 'channel.prediction.lock':
+        case 'channel.prediction.end':
+        case 'channel.hype_train.begin':
+        case 'channel.hype_train.progress':
+        case 'channel.hype_train.end':
+        case 'stream.online':
+        case 'stream.offline':
+        case 'stream.update':
+            // Logged above; no additional UI action needed for these
+            break;
+        default:
+            break;
+    }
+}
+
+// ─── Chat messages ────────────────────────────────────────────────────────────
+
+function handleChatMessage(data) {
+    if (!data) return;
+
+    const normalized = normalizeVeloraChatMessage(data);
+    if (!normalized) return;
+
+    const {
+        messageId,
+        userId,
+        username,
+        displayName,
+        message,
+        badges,
+        isMod,
+        isVip,
+        isSubscriber,
+        subscriberMonths,
+        color,
+        avatarUrl,
+        card,
+        isSystem
+    } = normalized;
+
+    const name = displayName || username || '';
+    const text = message || '';
+    const textOnlyMode = isTextOnlyMode();
+    const renderedMessage = renderVeloraMessageHtml(text);
+
+    // Skip pure system messages with no text
+    if (isSystem && !text && !card) return;
+    if (!name || (!text && !card)) return;
+    if (!rememberChatMessage(normalized)) return;
+
+    addChatFeedMessage(name, renderedMessage.html, badges, isMod, isVip, isSubscriber, color);
+
+    let contentImg = '';
+    let msgText = textOnlyMode ? text : renderedMessage.html;
+
+    if (card) {
+        if (card.imageUrl || card.thumbnailUrl) {
+            contentImg = card.imageUrl || card.thumbnailUrl;
+        }
+        if (card.name && !msgText) {
+            msgText = textOnlyMode ? `[${card.name}]` : escapeHtml(`[${card.name}]`);
+        }
+    }
+
+    const badgeList = Array.isArray(badges) ? badges : [];
+
+    pushMessage({
+        chatname: escapeHtml(name),
+        chatbadges: badgeList,
+        backgroundColor: '',
+        textColor: '',
+        nameColor: color || '',
+        chatmessage: msgText,
+        chatimg: avatarUrl || '',
+        hasDonation: '',
+        membership: isSubscriber ? (subscriberMonths ? `${subscriberMonths} month subscriber` : 'Subscriber') : '',
+        contentimg: contentImg,
+        textonly: textOnlyMode,
+        type: 'velora',
+        meta: {
+            velora: {
+                rawMessage: text,
+                emotes: renderedMessage.emotes,
+                messageId: messageId || '',
+                userId: userId || ''
+            }
+        }
+    });
+}
+
+// ─── Alert events ─────────────────────────────────────────────────────────────
+
+function userDisplayName(user) {
+    if (!user) return '';
+    return user.displayName || user.display_name || user.name || user.username || user.login || '';
+}
+
+function handleFollow(data) {
+    if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
+    const name = userDisplayName(data.follower) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
+    addAlert(`${escapeHtml(name)} followed!`, 'follow');
+
+    pushMessage({
+        chatname: escapeHtml(name),
+        chatbadges: [],
+        backgroundColor: '',
+        textColor: '',
+        nameColor: '',
+        chatmessage: 'New follower!',
+        chatimg: '',
+        hasDonation: '',
+        membership: '',
+        contentimg: '',
+        textonly: textOnlyMode,
+        type: 'velora',
+        event: 'follow'
+    });
+}
+
+function handleSubscribe(data) {
+    if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
+    const name = userDisplayName(data.subscriber) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
+    const monthsValue = data.months || data.subscriberMonths || data.subscriber_months || '';
+    const months = monthsValue ? ` (${monthsValue} months)` : '';
+    addAlert(`${escapeHtml(name)} subscribed${months}!`, 'sub');
+
+    pushMessage({
+        chatname: escapeHtml(name),
+        chatbadges: [],
+        backgroundColor: '',
+        textColor: '',
+        nameColor: '',
+        chatmessage: `New subscriber${months}!`,
+        chatimg: '',
+        hasDonation: '',
+        membership: `Subscriber${months}`,
+        contentimg: '',
+        textonly: textOnlyMode,
+        type: 'velora',
+        event: 'subscribe'
+    });
+}
+
+function handleGiftSub(data) {
+    if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
+    const gifterName = userDisplayName(data.gifter) || userDisplayName(data.user) || data.gifterDisplayName || data.gifterUsername || data.displayName || data.username || 'Anonymous';
+    const count = data.quantity || data.count || 1;
+    const label = `sub${count !== 1 ? 's' : ''}`;
+    addAlert(`${escapeHtml(gifterName)} gifted ${count} ${label}!`, 'gift');
+
+    pushMessage({
+        chatname: escapeHtml(gifterName),
+        chatbadges: [],
+        backgroundColor: '',
+        textColor: '',
+        nameColor: '',
+        chatmessage: `Gifted ${count} ${label}!`,
+        chatimg: '',
+        hasDonation: '',
+        membership: '',
+        contentimg: '',
+        textonly: textOnlyMode,
+        type: 'velora',
+        event: 'subscription_gift'
+    });
+}
+
+function handleVolts(data) {
+    if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
+    const name = userDisplayName(data.sender) || userDisplayName(data.from) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
+    const amount = data.amount || data.volts || data.amountVolts || data.quantity || data.value || '';
+    const amountLabel = amount ? `${amount} Volts` : 'Volts';
+    addAlert(`${escapeHtml(name)} sent ${amountLabel}!`, 'volts');
+
+    pushMessage({
+        chatname: escapeHtml(name),
+        chatbadges: [],
+        backgroundColor: '',
+        textColor: '',
+        nameColor: '',
+        chatmessage: data.message ? (textOnlyMode ? String(data.message) : escapeHtml(data.message)) : '',
+        chatimg: '',
+        hasDonation: amountLabel,
+        membership: '',
+        contentimg: '',
+        textonly: textOnlyMode,
+        type: 'velora',
+        event: 'volts'
+    });
+}
+
+function handleRaid(data) {
+    if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
+    const name = userDisplayName(data.from) || userDisplayName(data.raider) || data.fromDisplayName || data.fromUsername || data.displayName || data.username || 'Someone';
+    const viewers = data.viewerCount ?? data.viewers ?? data.viewer_count ?? '';
+    const viewerStr = viewers !== '' ? ` with ${viewers} viewers` : '';
+    addAlert(`${escapeHtml(name)} raided${viewerStr}!`, 'raid');
+
+    pushMessage({
+        chatname: escapeHtml(name),
+        chatbadges: [],
+        backgroundColor: '',
+        textColor: '',
+        nameColor: '',
+        chatmessage: `Incoming raid${viewerStr}!`,
+        chatimg: '',
+        hasDonation: '',
+        membership: '',
+        contentimg: '',
+        textonly: textOnlyMode,
+        type: 'velora',
+        event: 'raid'
+    });
+}
+
+function handleChannelPoints(data) {
+    if (!data) return;
+    const textOnlyMode = isTextOnlyMode();
+    const name = userDisplayName(data.redeemer) || userDisplayName(data.user) || data.displayName || data.username || 'Someone';
+    const reward = data.rewardTitle || data.rewardName || data.itemName || data.reward?.title || data.reward?.name || data.item?.title || data.item?.name || 'channel point reward';
+    const message = data.userInput || data.user_input || data.message || data.input || data.text || '';
+    addAlert(`${escapeHtml(name)} redeemed: ${escapeHtml(reward)}`, 'points');
+
+    pushMessage({
+        chatname: escapeHtml(name),
+        chatbadges: [],
+        backgroundColor: '',
+        textColor: '',
+        nameColor: '',
+        chatmessage: message ? (textOnlyMode ? String(message) : escapeHtml(message)) : (textOnlyMode ? String(reward) : escapeHtml(reward)),
+        chatimg: '',
+        hasDonation: '',
+        membership: '',
+        contentimg: '',
+        textonly: textOnlyMode,
+        type: 'velora',
+        event: 'channel_points',
+        meta: {
+            rewardTitle: reward,
+            rewardCost: data.rewardCost || data.reward_cost || data.cost || data.points || data.reward?.cost || data.item?.cost || '',
+            redemptionId: data.redemptionId || data.redemption_id || data.id || ''
+        }
+    });
+}
+
+// ─── Chat sending ─────────────────────────────────────────────────────────────
+
+async function sendChatMessage() {
+    if (!els.chatMessage) return;
+    const text = els.chatMessage.value.trim();
+    if (!text) return;
+    if (!state.tokens?.access_token) {
+        setChatStatus('Not signed in.', true);
+        return;
+    }
+
+    els.sendChat.disabled = true;
+
+    try {
+        // Velora chat send: POST /api/integrations/oauth/chat/channels/:channelId/messages
+        // channelId == the authenticated user's id
+        const channelId = state.authUser?.id;
+        if (!channelId) {
+            setChatStatus('No channel ID — profile not loaded.', true);
+            els.sendChat.disabled = false;
+            return;
+        }
+        const response = await fetch(`${VELORA_API_BASE}/api/integrations/oauth/chat/channels/${channelId}/messages`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${state.tokens.access_token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ message: text })
+        });
+
+        if (!response.ok) {
+            let errMsg = `HTTP ${response.status}`;
+            try {
+                const err = await response.json();
+                errMsg = err.message || err.error || errMsg;
+            } catch (_) {}
+            throw new Error(errMsg);
+        }
+
+        els.chatMessage.value = '';
+        setChatStatus('Sent.', false);
+        setTimeout(() => setChatStatus('', false), 3000);
+    } catch (err) {
+        setChatStatus(`Error: ${err.message}`, true);
+    } finally {
+        els.sendChat.disabled = false;
+    }
+}
+
+async function sendChatBridgeMessage(text) {
+    text = String(text || '').trim();
+    if (!text) {
+        return false;
+    }
+    if (!state.tokens?.access_token) {
+        throw new Error('Not signed in.');
+    }
+
+    const channelId = state.authUser?.id;
+    if (!channelId) {
+        throw new Error('No channel ID - profile not loaded.');
+    }
+
+    const response = await fetch(`${VELORA_API_BASE}/api/integrations/oauth/chat/channels/${channelId}/messages`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${state.tokens.access_token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ message: text })
+    });
+
+    if (!response.ok) {
+        let errMsg = `HTTP ${response.status}`;
+        try {
+            const err = await response.json();
+            errMsg = err.message || err.error || errMsg;
+        } catch (_) {}
+        throw new Error(errMsg);
+    }
+
+    setChatStatus('Sent.', false);
+    setTimeout(() => setChatStatus('', false), 3000);
+    return true;
+}
+
+// ─── Extension bridge ─────────────────────────────────────────────────────────
+
+function pushMessage(data) {
+    try {
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+            chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function (e) {});
+        }
+    } catch (e) {}
+}
+
+function notifyBridgeStatus() {
+    const connected = Boolean(
+        typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id
+    );
+    if (els.bridgeState) {
+        els.bridgeState.textContent = connected ? 'Extension connected' : 'Extension disconnected';
+        els.bridgeState.className = `status-chip ${connected ? 'ok' : 'warning'}`;
+    }
+}
+
+function wireExtensionBridge() {
+    if (!(typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id)) {
+        return;
+    }
+
+    try {
+        chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+            try {
+                if (request === 'getSource') {
+                    sendResponse('velora');
+                    return;
+                }
+                if (request === 'focusChat') {
+                    if (els.chatMessage) {
+                        els.chatMessage.focus();
+                        sendResponse(true);
+                    } else {
+                        sendResponse(false);
+                    }
+                    return;
+                }
+                if (request && typeof request === 'object') {
+                    if ('settings' in request) {
+                        state.settings = request.settings || {};
+                        sendResponse(true);
+                        return;
+                    }
+                    if ('state' in request) {
+                        state.isExtensionOn = !!request.state;
+                        sendResponse(true);
+                        return;
+                    }
+                    if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+                        sendChatBridgeMessage(request.message).then(function () {
+                            sendResponse(true);
+                        }).catch(function () {
+                            sendResponse(false);
+                        });
+                        return true;
+                    }
+                }
+            } catch (e) {}
+            sendResponse(false);
+        });
+    } catch (e) {}
+
+    try {
+        chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
+                return;
+            }
+            response = response || {};
+            if ('settings' in response) {
+                state.settings = response.settings || {};
+            }
+            if ('state' in response) {
+                state.isExtensionOn = !!response.state;
+            }
+        });
+    } catch (e) {}
+}
+
+function wirePostMessageBridge() {
+    window.addEventListener('message', function (event) {
+        const expectedOrigin = getExpectedAuthMessageOrigin();
+        if (expectedOrigin && event.origin === expectedOrigin) {
+            Promise.resolve(handleAuthPayload(event.data)).then(function (handled) {
+                if (!handled) return;
+                if (state.authPopup && !state.authPopup.closed) {
+                    try {
+                        state.authPopup.close();
+                    } catch (e) {}
+                }
+                state.authPopup = null;
+            }).catch(function () {});
+        }
+        let request = event && event.data;
+        if (!request || typeof request !== 'object') {
+            return;
+        }
+        if (request.__ssappSendToTab) {
+            request = request.__ssappSendToTab;
+        }
+        if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+            sendChatBridgeMessage(request.message).catch(function () {});
+        }
+    });
+}
+
+function wireAuthStorageBridge() {
+    window.addEventListener('storage', function (event) {
+        if (!event || event.key !== TOKEN_KEY || !event.newValue) {
+            return;
+        }
+        completeStoredAuthHandoff();
+    });
+}
+
+// ─── UI updates ───────────────────────────────────────────────────────────────
+
+function updateAuthUI() {
+    const authed = Boolean(state.tokens?.access_token) && !isTokenExpired();
+    const username = state.authUser?.displayName || state.authUser?.username || '';
+    const actualChannel = getAuthedChannelName();
+    const channelMismatch = Boolean(state.requestedChannel && actualChannel && state.requestedChannel !== actualChannel);
+
+    if (els.authState) {
+        if (authed) {
+            els.authState.textContent = channelMismatch
+                ? `Signed in as ${username || actualChannel} - URL expects @${state.requestedChannel}`
+                : (username ? `Signed in as ${username}` : 'Signed in');
+        } else {
+            els.authState.textContent = state.requestedChannel
+                ? `Sign in as @${state.requestedChannel}`
+                : 'Not signed in';
+        }
+        els.authState.className = `status-chip ${channelMismatch ? 'warning' : (authed ? 'ok' : 'warning')}`;
+    }
+    if (els.startAuth) {
+        els.startAuth.style.display = authed ? 'none' : '';
+    }
+    if (els.signOut) {
+        els.signOut.style.display = authed ? '' : 'none';
+    }
+    if (els.setupNotice) {
+        els.setupNotice.style.display = authed ? 'none' : '';
+    }
+    if (els.channelLabel) {
+        const channel = actualChannel || state.requestedChannel || '';
+        els.channelLabel.querySelector('span').textContent = channel || '-';
+    }
+}
+
+function setAuthStatus(msg, level) {
+    if (els.authState) {
+        els.authState.textContent = msg;
+        els.authState.className = `status-chip ${level}`;
+    }
+}
+
+function setSocketStatus(status) {
+    state.socketStatus = status;
+    if (!els.socketState) return;
+    const labels = {
+        connected: 'Events connected',
+        connecting: 'Events connecting…',
+        disconnected: 'Events disconnected',
+        error: 'Events error'
+    };
+    const chips = {
+        connected: 'ok',
+        connecting: 'warning',
+        disconnected: 'warning',
+        error: 'danger'
+    };
+    els.socketState.textContent = labels[status] || status;
+    els.socketState.className = `status-chip ${chips[status] || 'warning'}`;
+}
+
+function updateViewerCount(count) {
+    if (!els.viewerCount) return;
+    if (count === null || count === undefined) {
+        els.viewerCount.textContent = 'Viewers: -';
+        els.viewerCount.className = 'status-chip warning';
+    } else {
+        els.viewerCount.textContent = `Viewers: ${Number(count).toLocaleString()}`;
+        els.viewerCount.className = 'status-chip ok';
+        try {
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+                chrome.runtime.sendMessage(chrome.runtime.id, {
+                    message: { type: 'velora', event: 'viewer_update', meta: count }
+                }, function (e) {});
+            }
+        } catch (e) {}
+    }
+}
+
+function setChatStatus(msg, isError) {
+    if (els.chatStatus) {
+        els.chatStatus.textContent = msg;
+        els.chatStatus.style.color = isError ? 'var(--velora-danger-fg)' : '';
+    }
+}
+
+// ─── Feed UI ──────────────────────────────────────────────────────────────────
+
+function addChatFeedMessage(name, messageHtml, badges, isMod, isVip, isSubscriber, color) {
+    if (!els.chatFeed) return;
+
+    const empty = q('chat-feed-empty');
+    if (empty) empty.remove();
+
+    const entry = document.createElement('div');
+    entry.className = 'chat-msg';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'chat-msg-name' +
+        (isMod ? ' is-mod' : '') +
+        (isSubscriber ? ' is-sub' : '');
+    if (color) nameSpan.style.color = color;
+    nameSpan.textContent = name + ':';
+    entry.appendChild(nameSpan);
+
+    const space = document.createTextNode(' ');
+    entry.appendChild(space);
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'chat-msg-text';
+    textSpan.innerHTML = messageHtml || '';
+    entry.appendChild(textSpan);
+
+    els.chatFeed.appendChild(entry);
+
+    // Trim to limit
+    while (els.chatFeed.children.length > CHAT_FEED_LIMIT) {
+        els.chatFeed.removeChild(els.chatFeed.firstChild);
+    }
+
+    // Auto-scroll if near bottom
+    const threshold = 60;
+    const nearBottom = els.chatFeed.scrollHeight - els.chatFeed.scrollTop - els.chatFeed.clientHeight < threshold;
+    if (nearBottom) {
+        els.chatFeed.scrollTop = els.chatFeed.scrollHeight;
+    }
+}
+
+function addAlert(text, type) {
+    if (!els.alertsFeed) return;
+
+    const empty = q('alerts-feed-empty');
+    if (empty) empty.remove();
+
+    const item = document.createElement('div');
+    item.className = `alert-item type-${type}`;
+    item.textContent = text;
+
+    els.alertsFeed.insertBefore(item, els.alertsFeed.firstChild);
+
+    while (els.alertsFeed.children.length > ALERTS_FEED_LIMIT) {
+        els.alertsFeed.removeChild(els.alertsFeed.lastChild);
+    }
+}
+
+function addEventLogEntry(label, level, data) {
+    if (!els.eventLog) return;
+
+    const entry = document.createElement('div');
+    entry.className = `log-entry level-${level || 'info'}`;
+
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'log-time';
+    timeSpan.textContent = new Date().toLocaleTimeString();
+    entry.appendChild(timeSpan);
+
+    const eventSpan = document.createElement('span');
+    eventSpan.className = 'log-event';
+    eventSpan.textContent = label;
+    entry.appendChild(eventSpan);
+
+    if (data) {
+        try {
+            const detail = document.createTextNode(JSON.stringify(data).slice(0, 200));
+            entry.appendChild(detail);
+        } catch (_) {}
+    }
+
+    els.eventLog.insertBefore(entry, els.eventLog.firstChild);
+
+    while (els.eventLog.children.length > EVENT_LOG_LIMIT) {
+        els.eventLog.removeChild(els.eventLog.lastChild);
+    }
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+function initElements() {
+    Object.assign(els, {
+        setupNotice: q('setup-notice'),
+        redirectUriHint: q('redirect-uri-hint'),
+        startAuth: q('start-auth'),
+        signOut: q('sign-out'),
+        authState: q('auth-state'),
+        channelLabel: q('channel-label'),
+        viewerCount: q('viewer-count'),
+        hideMetrics: q('hide-metrics'),
+        socketState: q('socket-state'),
+        bridgeState: q('bridge-state'),
+        chatFeed: q('chat-feed'),
+        chatMessage: q('chat-message'),
+        sendChat: q('send-chat'),
+        chatStatus: q('chat-status'),
+        eventLog: q('event-log'),
+        alertsFeed: q('alerts-feed')
+    });
+}
+
+function bindEvents() {
+    if (els.startAuth) {
+        els.startAuth.addEventListener('click', startAuthFlow);
+    }
+
+    if (els.signOut) {
+        els.signOut.addEventListener('click', () => {
+            disconnectSocket();
+            stopChatHistoryPoll();
+            clearAuthHandoffWatcher();
+            clearAuthState();
+            updateAuthUI();
+            setSocketStatus('disconnected');
+            updateViewerCount(null);
+            if (els.channelLabel) els.channelLabel.querySelector('span').textContent = '-';
+        });
+    }
+
+    if (els.sendChat) {
+        els.sendChat.addEventListener('click', sendChatMessage);
+    }
+
+    if (els.chatMessage) {
+        els.chatMessage.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+    }
+
+    if (els.hideMetrics) {
+        els.hideMetrics.addEventListener('change', () => {
+            state.hideMetrics = !!els.hideMetrics.checked;
+            applyMetricsVisibility();
+            persistConfig();
+        });
+    }
+}
+
+try {
+    window.__SSAPP_START_VELORA_AUTH__ = startExternalAuthFlow;
+} catch (e) {}
+
+async function init() {
+    enableBackgroundKeepAlive();
+    initElements();
+
+    state.requestedChannel = getRequestedChannel();
+    loadConfig();
+    applyRuntimeOverrides();
+    loadTokens();
+    if (els.hideMetrics) {
+        els.hideMetrics.checked = !!state.hideMetrics;
+    }
+    applyMetricsVisibility();
+
+    if (els.redirectUriHint) {
+        els.redirectUriHint.textContent = getRedirectUri();
+    }
+
+    bindEvents();
+    wireExtensionBridge();
+    wirePostMessageBridge();
+    wireAuthStorageBridge();
+    notifyBridgeStatus();
+    updateAuthUI();
+    startChatHistoryPoll();
+
+    // Handle OAuth redirect callback
+    const wasCallback = await handleAuthCallback();
+
+    // If already authenticated (stored tokens, not a fresh callback), connect
+    if (!wasCallback && state.tokens?.access_token && !isTokenExpired()) {
+        scheduleTokenRefresh();
+        await loadUserProfile();
+        updateAuthUI();
+        connectSocket();
+    } else if (!wasCallback && state.tokens?.access_token && isTokenExpired()) {
+        await refreshAccessToken();
+        if (state.tokens?.access_token) {
+            await loadUserProfile();
+            updateAuthUI();
+            connectSocket();
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', init);

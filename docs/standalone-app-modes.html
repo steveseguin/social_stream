@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standalone App Modes - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Plain-English guide to Social Stream Ninja desktop app source modes, Standard mode, WebSocket mode, TikTok presets, source windows, and common app troubleshooting.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="download.html">Download</a></li>
+                    <li><a href="guides.html" class="active">Guides</a></li>
+                    <li><a href="commands.html">Commands &amp; API</a></li>
+                    <li><a href="supported-sites.html">Supported Sites</a></li>
+                    <li><a href="templates.html">Templates</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Standalone App Modes</h1>
+            <p>Understand source windows, Standard mode, WebSocket mode, and TikTok presets.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>What The App Is For</h2>
+                <p>The desktop app manages Social Stream source windows outside your normal browser. It can help with source organization and some browser-tab throttling problems. It is not the same as Chrome, and it does not automatically share your Chrome login or cookies.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-standalone-add-source.png" alt="Standalone app Add source sidebar with YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook, and TikTok source buttons" class="guide-image guide-image-narrow">
+                    <figcaption>Start by adding the platform source you need. The app then creates and manages that source entry.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Mode Names</h2>
+                <p>Some sources have more than one connection mode. The right mode depends on the platform, login state, and whether you need richer events or simple page capture.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-standalone-source-modes.png" alt="Standalone app sample source entries showing Standard and WebSocket connection mode controls, plus TikTok connection preset controls" class="guide-image">
+                    <figcaption>Standard and WebSocket are common source modes. TikTok has its own preset selector because it has extra app-specific connection paths.</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Mode</th><th>Plain Meaning</th><th>Use When</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Mode">Standard</td><td data-label="Plain Meaning">The app opens a normal platform/source page and reads the rendered page.</td><td data-label="Use When">You need the simplest visible page capture, login, or manual verification.</td></tr>
+                        <tr><td data-label="Mode">WebSocket/API</td><td data-label="Plain Meaning">The source connects through a platform API, socket, or Social Stream source page.</td><td data-label="Use When">The platform supports it and you want better background reliability or richer event data.</td></tr>
+                        <tr><td data-label="Mode">Polling/Legacy</td><td data-label="Plain Meaning">A compatibility path that checks for updates instead of using the preferred live socket path.</td><td data-label="Use When">The newer connector fails or a platform-specific fallback is needed.</td></tr>
+                        <tr><td data-label="Mode">TikTok Auto</td><td data-label="Plain Meaning">The app chooses the best TikTok path and may fall back if one fails.</td><td data-label="Use When">You are not sure which TikTok mode to use.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Use Standard Mode When</h2>
+                <ul class="guide-list">
+                    <li>The platform works when you can see the live page or popout chat.</li>
+                    <li>The site needs you to sign in, solve a prompt, or keep a visible chat panel open.</li>
+                    <li>You are comparing app behavior against the Chrome extension.</li>
+                    <li>You need the most familiar troubleshooting path: open page, see chat, test dock, then OBS.</li>
+                </ul>
+                <p>Standard mode can still fail if the platform changes its page layout, blocks embedded/app browsers, asks for CAPTCHA, or hides chat behind a login.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Use WebSocket Or API Mode When</h2>
+                <ul class="guide-list">
+                    <li>The source specifically supports WebSocket/API mode.</li>
+                    <li>You want a source that can keep working better in the background.</li>
+                    <li>You need event families that normal page scraping may not expose.</li>
+                    <li>You can handle provider tokens, account permissions, API scopes, or source-page setup.</li>
+                </ul>
+                <p>WebSocket/API mode is not always better. If auth, tokens, provider access, or a platform API is failing, Standard mode may be the faster test.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="tiktok-in-the-app">TikTok In The App</h2>
+                <p>TikTok in the desktop app is not one single mode. Always note which preset is active before troubleshooting.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>TikTok Path</th><th>Use Case</th><th>Common Failure Point</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="TikTok Path">Auto</td><td data-label="Use Case">First try for most users.</td><td data-label="Common Failure Point">The app may fall back, so check the status text.</td></tr>
+                        <tr><td data-label="TikTok Path">Standard</td><td data-label="Use Case">Visible TikTok page capture.</td><td data-label="Common Failure Point">Login, CAPTCHA, redirected page, or hidden chat.</td></tr>
+                        <tr><td data-label="TikTok Path">Local Signer</td><td data-label="Use Case">App-native reading and reply-support paths.</td><td data-label="Common Failure Point">The app TikTok session/cookies must be valid.</td></tr>
+                        <tr><td data-label="TikTok Path">Polling/Compatibility</td><td data-label="Use Case">Fallback when socket/signing paths fail.</td><td data-label="Common Failure Point">Less rich than the preferred connector.</td></tr>
+                        <tr><td data-label="TikTok Path">Proxy or custom signing</td><td data-label="Use Case">Advanced setups.</td><td data-label="Common Failure Point">Provider availability, API key, room ID, or rate limits.</td></tr>
+                    </tbody>
+                </table>
+                <p>For a normal first attempt, add TikTok, leave the preset on Auto, activate the source, and watch the app status text.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>What To Check Before OBS</h2>
+                <ol class="guide-steps">
+                    <li>Confirm the app source is activated.</li>
+                    <li>Confirm the source window is signed in if the platform needs login.</li>
+                    <li>Confirm the dock receives chat with the same session ID.</li>
+                    <li>Only after the dock works, add or refresh the OBS overlay URL.</li>
+                    <li>If Chrome works but the app does not, remember that app sessions and Chrome sessions are separate.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common Fixes</h2>
+                <ul class="guide-list">
+                    <li><strong>Chrome is logged in but the app is not:</strong> sign into the platform inside the app source window or use the extension as the capture path.</li>
+                    <li><strong>Source says active but no chat arrives:</strong> check the mode, source window, live URL/user name, and dock session.</li>
+                    <li><strong>App is using the wrong source files:</strong> check whether the app is using packaged, cached, remote, beta, stable, or local Social Stream assets.</li>
+                    <li><strong>TikTok fails:</strong> record the current preset, status text, app version, and whether the source switched to a fallback mode.</li>
+                    <li><strong>OBS is blank:</strong> test the dock first. If the dock is empty, OBS is not the problem yet.</li>
+                </ul>
+                <p>Related guide: <a href="platform-setup-picker.html">Platform Setup Picker</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

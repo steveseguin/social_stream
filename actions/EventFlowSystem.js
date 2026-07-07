@@ -63,6 +63,71 @@ class EventFlowSystem {
         this.initPromise = this.initDatabase();
     }
 
+    parseDonationNumericValue(value) {
+        if (value === undefined || value === null || value === '') return null;
+        if (typeof value === 'number') return isFinite(value) ? value : null;
+
+        const text = String(value).replace(/,/g, '');
+        const match = text.match(/[+-]?(?:\d+\.?\d*|\.\d+)/);
+        if (!match) return null;
+
+        const parsed = parseFloat(match[0]);
+        return isFinite(parsed) ? parsed : null;
+    }
+
+    getDonationValueConverter() {
+        try {
+            if (typeof convertToUSD === 'function') return convertToUSD;
+        } catch (e) {}
+
+        try {
+            if (typeof window !== 'undefined' && typeof window.convertToUSD === 'function') {
+                return window.convertToUSD;
+            }
+        } catch (e) {}
+
+        return null;
+    }
+
+    parseDonationLabelValue(value, source) {
+        if (value === undefined || value === null || value === '') return null;
+        if (typeof value === 'number') return isFinite(value) ? value : null;
+
+        // Donation values are derived only from normalized amount labels such as "$5",
+        // "500 bits", or "cheer100"; never from prose in chatmessage.
+        const text = String(value);
+        if (!/[+-]?(?:\d+\.?\d*|\.\d+)/.test(text.replace(/,/g, ''))) {
+            return null;
+        }
+
+        const converter = this.getDonationValueConverter();
+        if (converter) {
+            try {
+                const converted = converter(text, String(source || '').toLowerCase());
+                if (typeof converted === 'number' && isFinite(converted)) {
+                    return converted;
+                }
+            } catch (e) {}
+        }
+
+        return this.parseDonationNumericValue(value);
+    }
+
+    getDonationNumericValue(message) {
+        if (!message) return null;
+
+        const explicitValue = this.parseDonationNumericValue(message.donoValue);
+        if (explicitValue !== null) return explicitValue;
+
+        const legacyValue = this.parseDonationLabelValue(message.donationAmount, message.type);
+        if (legacyValue !== null) return legacyValue;
+
+        const labelValue = this.parseDonationLabelValue(message.hasDonation, message.type);
+        if (labelValue !== null) return labelValue;
+
+        return null;
+    }
+
 	detectCustomJsEvalSupport() {
 		try {
 			if (typeof isSSAPP !== 'undefined' && isSSAPP) return true;
@@ -1578,15 +1643,13 @@ class EventFlowSystem {
 
             case 'eventDonation': {
                 const event = (message.event || '').toLowerCase();
-                const eventMatch = event === 'donation' || event === 'cheer' || event === 'supersticker';
+                const eventMatch = event === 'superchat' || event === 'donation' || event === 'cheer' || event === 'supersticker' || event === 'jeweldonation';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum amount if specified
                 let amountMatch = true;
-                if (config.minAmount > 0 && message.hasDonation) {
-                    // Try to parse donation amount from hasDonation string
-                    const amountStr = String(message.hasDonation).replace(/[^0-9.]/g, '');
-                    const amount = parseFloat(amountStr) || 0;
+                if (config.minAmount > 0) {
+                    const amount = this.getDonationNumericValue(message) || 0;
                     amountMatch = amount >= config.minAmount;
                 }
 
@@ -1684,7 +1747,7 @@ class EventFlowSystem {
             }
 
             case 'compareProperty': {
-                const prop = config.property || 'donationAmount';
+                const prop = config.property || 'donoValue';
                 const operator = config.operator || 'gt';
                 const rawCompareValue = config.value;
 
@@ -1692,7 +1755,10 @@ class EventFlowSystem {
                 let msgValue = message[prop];
 
                 // Handle special cases for message length and word count
-                if (prop === 'messageLength' && message.chatmessage) {
+                if (prop === 'donationAmount' || prop === 'donoValue' ||
+                    (prop === 'hasDonation' && ['gt', 'gte', 'lt', 'lte'].includes(operator))) {
+                    msgValue = this.getDonationNumericValue(message);
+                } else if (prop === 'messageLength' && message.chatmessage) {
                     msgValue = message.chatmessage.length;
                 } else if (prop === 'wordCount' && message.chatmessage) {
                     msgValue = message.chatmessage.trim().split(/\s+/).filter(w => w.length > 0).length;
@@ -2300,6 +2366,9 @@ class EventFlowSystem {
 		if (!text) return text || '';
 		if (!message) return text;
 
+		const donationNumericValue = this.getDonationNumericValue(message);
+		const donationAmountValue = donationNumericValue !== null ? donationNumericValue : (message.donationAmount || message.donoValue || '');
+
 		// Build lookup map with all supported variables (lowercase keys for case-insensitive matching)
 		const messageData = {
 			// Core aliases for backward compatibility
@@ -2313,7 +2382,8 @@ class EventFlowSystem {
 			chatmessage: message.chatmessage || '',
 			type: message.type || '',
 			hasdonation: message.hasDonation || '',
-			donationamount: message.donationAmount || '',
+			donationamount: donationAmountValue,
+			donovalue: donationAmountValue,
 			event: message.event || '',
 			membership: message.membership || '',
 			subtitle: message.subtitle || '',
@@ -2598,6 +2668,70 @@ class EventFlowSystem {
                     meta: currentMeta
                 };
                 result.modified = true;
+                break;
+            }
+
+            case 'pinMessage': {
+                const actionConfig = config || {};
+                const mode = actionConfig.mode || 'pin';
+                const target = (actionConfig.target || '').toString().trim();
+                const sendDockPayload = async (payload) => {
+                    if (!payload || typeof payload !== 'object') return;
+                    const dockPayload = target ? { ...payload, target } : payload;
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P(dockPayload, 'dock');
+                        return;
+                    }
+                    console.warn('[EventFlow pinMessage] Dock messaging is not available.');
+                };
+
+                if (mode === 'nextPinned') {
+                    await sendDockPayload({ action: 'nextPinned' });
+                    break;
+                }
+
+                const currentMeta = (message && typeof message.meta === 'object' && message.meta !== null && !Array.isArray(message.meta))
+                    ? { ...message.meta }
+                    : (message && message.meta !== undefined ? { value: message.meta } : {});
+                const idTemplate = actionConfig.messageId || '{id}';
+                const usesTriggerId = String(idTemplate).trim().toLowerCase() === '{id}';
+                const messageId = (usesTriggerId && message && message.id !== undefined && message.id !== null)
+                    ? message.id
+                    : this.replaceTemplateVars(idTemplate, message || {}).trim();
+
+                if (mode === 'unpin') {
+                    if (usesTriggerId || (message && messageId !== undefined && messageId !== null && String(messageId) === String(message.id))) {
+                        currentMeta.pinned = false;
+                        delete currentMeta.pinnedTarget;
+                        result.message = {
+                            ...(message || {}),
+                            meta: currentMeta
+                        };
+                        result.modified = true;
+                    }
+                    if (messageId !== undefined && messageId !== null && messageId !== '') {
+                        await sendDockPayload({ action: 'unpin', value: messageId });
+                    }
+                    break;
+                }
+
+                const pinsTriggerMessage = usesTriggerId || (message && messageId !== undefined && messageId !== null && String(messageId) === String(message.id));
+                if (pinsTriggerMessage) {
+                    currentMeta.pinned = true;
+                    if (target) {
+                        currentMeta.pinnedTarget = target;
+                    } else {
+                        delete currentMeta.pinnedTarget;
+                    }
+                    result.message = {
+                        ...(message || {}),
+                        meta: currentMeta
+                    };
+                    result.modified = true;
+                }
+                if (messageId !== undefined && messageId !== null && messageId !== '') {
+                    await sendDockPayload({ action: 'pin', value: messageId });
+                }
                 break;
             }
                 
@@ -3043,6 +3177,8 @@ class EventFlowSystem {
 
 			case 'showText':
 				{
+					const donationNumericValue = this.getDonationNumericValue(message);
+					const donationAmountValue = donationNumericValue !== null ? donationNumericValue : (message.donationAmount || message.donoValue || '');
 					const actionPayload = {
 						actionType: 'show_text',
 						text: config.text || 'Hello {username}!',
@@ -3075,7 +3211,8 @@ class EventFlowSystem {
 							chatmessage: message.chatmessage || '',
 							type: message.type || '',
 							hasdonation: message.hasDonation || '',
-							donationamount: message.donationAmount || '',
+							donationamount: donationAmountValue,
+							donovalue: donationAmountValue,
 							event: message.event || '',
 							membership: message.membership || '',
 							subtitle: message.subtitle || '',

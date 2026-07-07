@@ -34,7 +34,7 @@ For setup-choice routing by user goal, use `workflow-setup-decision-tree.md`. Fo
 - `docs/agents/08-platform-sources/tiktok-standalone-app.md`
 - `docs/agents/08-platform-sources/platform-capability-matrix.md`
 - `docs/agents/13-reference/feature-support-decision-matrix.md`
-- `C:\Users\steve\Code\ssapp\AGENTS.md`
+- `<ssapp repo>/AGENTS.md`
 
 ## Product Surface Matrix
 
@@ -96,7 +96,7 @@ For setup-choice routing by user goal, use `workflow-setup-decision-tree.md`. Fo
 | Independent live platform sources | BandLab, Bigo.tv, Bitchute, Blaze, Castr, Cherry TV, CloutHub, Cozy.tv, DLive, Estrim, FC2, Jaco.live, LFG.tv, Locals.com, Loco.gg | Use `08-platform-sources/independent-live-platform-sources.md`; ask for exact URL, visible chat, new-message test, and whether the user expects viewer counts, tips/donations, replies, joins, stickers/images, or send-back. |
 | Video/broadcast platform sources | Mixlr, NicoVideo, NonOLive, OpenStreamingPlatform, Owncast, PeerTube, Restream.io Chat, Steam Broadcasts, Trovo, Truffle.vip, TwitCasting, Vimeo, YouNow, Zap.stream | Use `08-platform-sources/video-broadcast-platform-sources.md`; ask for exact URL, visible chat, new-message test, and whether the user expects Q&A, upstream source labels/icons, badges, login-gated chat, or send-back. |
 | Community/membership web-app sources | Circle.so, MeetMe, NextCloud, Patreon, Roll20, Simps, Tellonym, Whop, Wix Live/widgets, Workplace legacy routing | Use `08-platform-sources/community-membership-webapp-sources.md`; ask for exact URL, access/login state, visible panel, source toggle where required, and whether the user expects viewer counts, images, identity fields, or send-back. |
-| Regional/emerging platform sources | Bilibili DOM paths, Favorited, Kwai, Pilled, Portal, Pump.fun, Retake, Rooter, SharePlay, SoulBound, Stream.place, Substack, Tikfinity, uScreen, VK Live, Xeenon | Use `08-platform-sources/regional-and-emerging-platform-sources.md`; ask for exact URL form, visible chat/activity panel, new-row test, and whether the user expects viewer counts, tips/gifts, joins, raids/shoutouts, relayed source identity, or send-back. |
+| Regional/emerging platform sources | Bilibili DOM paths, Favorited, Kwai, Pilled, Portal, Pump.fun, Retake, Rooter, SharePlay, SoulBound, Stream.place, Substack, Tikfinity, uScreen, VK Live | Use `08-platform-sources/regional-and-emerging-platform-sources.md`; ask for exact URL form, visible chat/activity panel, new-row test, and whether the user expects viewer counts, tips/gifts, joins, raids/shoutouts, relayed source identity, or send-back. Xeenon is retired. |
 | Special-case platform/helper sources | Joystick, Velora, VPZone, X live/static split, Vertical Pixel Zone, Vercel demo helper, top-level YouTube helper copies | Use `08-platform-sources/special-case-platform-and-helper-sources.md`; ask whether the user is on the rendered site, source-page/API mode, static/manual helper, or an unmanifested helper copy. |
 | Other WebSocket/API pages | Bilibili, IRC, Joystick, Nostr, Social Stream Chat, StageTEN, Streamlabs, Velora, VPZone | Use `08-platform-sources/websocket-source-pages.md`; send-back and auth vary by source page. |
 

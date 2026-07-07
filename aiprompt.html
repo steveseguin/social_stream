@@ -2332,6 +2332,7 @@ If the user asks a question that does not require a file change, answer normally
 			var urlParams = new URLSearchParams(location.search);
 			bridgeRoomID = urlParams.get("session") || "";
 			bridgePassword = urlParams.get("password") || "false";
+			// This bridge is the editor's upstream AI/control path, not an overlay chat-feed receiver.
 			if (!bridgeRoomID) {
 				setStatus("No session in URL. You can still build, preview, and export overlays. Add ?session=YOUR_ID to ask the AI.", "warn");
 				return;

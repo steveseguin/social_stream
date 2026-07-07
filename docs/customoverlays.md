@@ -50,7 +50,7 @@ This is the most common and straightforward method for overlay pages. Your custo
     // &view=roomID ensures it only receives data. &label=dock receives normal live chat/events.
     // Custom labels only receive targeted messages.
     // &noaudio &novideo &cleanoutput are typical for data-only VDO.Ninja clients.
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
 
     // Listen for messages from the iframe
     window.addEventListener('message', function(event) {
@@ -343,7 +343,7 @@ How you display messages is entirely up to your HTML and CSS design.
         const label = urlParams.get("label") || "dock"; // Use dock for the normal live feed
 
         const iframe = document.getElementById('ssn_bridge');
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
 
         window.addEventListener('message', function(event) {
             if (event.source !== iframe.contentWindow) { return; }
@@ -538,7 +538,7 @@ This example shows an overlay that only displays new follower and subscriber eve
         const label = urlParams.get("label") || "dock";
 
         const iframe = document.getElementById('ssn_bridge');
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
 
         const notificationContainer = document.getElementById('event-notification-container');
 

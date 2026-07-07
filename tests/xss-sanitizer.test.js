@@ -118,6 +118,12 @@ function readText(relativePath) {
       if (payload.textColor || payload.backgroundColor) html += "<span style='background-color:" + (payload.backgroundColor || "transparent") + ";color:" + (payload.textColor || "inherit") + "'>message</span>";
       if (payload.highlightColor) html += "<span style='background-color:" + payload.highlightColor + "'>highlight</span>";
       if (payload.backgroundNameColor || payload.textNameColor) html += "<span style='" + (payload.backgroundNameColor || "") + (payload.textNameColor || "") + "'>styled name</span>";
+      if (payload.title) html += "<div class='donation-title'>" + payload.title + "</div>";
+      if (payload.hasDonation) html += "<span class='donationAmount hl-donation'>" + payload.hasDonation + "</span>";
+      if (payload.donation) html += "<span class='donationAmount hl-donation'>" + payload.donation + "</span>";
+      if (payload.membership) html += "<div class='donation membership'>" + payload.membership + "</div>";
+      if (payload.hasMembership && payload.hasMembership !== true) html += "<div class='donation membership'>" + payload.hasMembership + "</div>";
+      if (payload.subtitle) html += "<div class='subtitle'>" + payload.subtitle + "</div>";
       if (typeof payload.chatbadges === "string") {
         html += payload.chatbadges;
       } else if (Array.isArray(payload.chatbadges)) {

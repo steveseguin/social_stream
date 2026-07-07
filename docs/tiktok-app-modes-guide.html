@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok App Modes - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Practical guide to TikTok connection modes in the Social Stream Ninja desktop app: Auto, Standard, Local Signer, Polling, and proxy signing.">
+</head>
+<body>
+    <header><div class="container"><div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div><nav><ul><li><a href="../index.html">Home</a></li><li><a href="features.html">Features</a></li><li><a href="download.html">Download</a></li><li><a href="guides.html" class="active">Guides</a></li><li><a href="commands.html">Commands &amp; API</a></li><li><a href="supported-sites.html">Supported Sites</a></li><li><a href="templates.html">Templates</a></li><li><a href="support.html">Support</a></li></ul></nav><div class="header-controls"><div class="mobile-nav-toggle"><span></span><span></span><span></span></div></div></div></header>
+    <section class="page-hero"><div class="container"><h1>TikTok App Modes</h1><p>Use Auto first, then switch modes only when the status text points you there.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Start Simple</h2>
+                <p>Add TikTok in the desktop app and leave the preset on Auto unless you are troubleshooting a specific failure.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-standalone-source-modes.png" alt="Standalone app source entries showing Standard, WebSocket, and TikTok connection preset controls" class="guide-image">
+                    <figcaption>The TikTok preset selector exists because TikTok has several app-specific paths.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Mode Picker</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Mode</th><th>Use When</th><th>Watch For</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Mode">Auto</td><td data-label="Use When">Normal first setup.</td><td data-label="Watch For">The app may move through fallback states.</td></tr>
+                        <tr><td data-label="Mode">Standard</td><td data-label="Use When">You need visible page capture or manual login/verification.</td><td data-label="Watch For">Redirects, CAPTCHA, hidden chat, or wrong live URL.</td></tr>
+                        <tr><td data-label="Mode">Local Signer</td><td data-label="Use When">You need app-native reading or reply-support paths.</td><td data-label="Watch For">TikTok app session/cookies must be valid.</td></tr>
+                        <tr><td data-label="Mode">Polling</td><td data-label="Use When">Compatibility fallback when socket/signing paths fail.</td><td data-label="Watch For">Fewer/richer events than preferred connectors.</td></tr>
+                        <tr><td data-label="Mode">Proxy/custom signing</td><td data-label="Use When">Advanced setup with provider/API key requirements.</td><td data-label="Watch For">Provider limits, room ID, signing errors, and rate limits.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>What To Collect When It Fails</h2>
+                <ul class="guide-list">
+                    <li>Desktop app version and whether beta mode is enabled.</li>
+                    <li>TikTok preset/mode currently selected.</li>
+                    <li>Exact app status text or error message.</li>
+                    <li>Whether the account is signed into TikTok inside the app.</li>
+                    <li>Whether chat is visible on the live page in Standard mode.</li>
+                    <li>Whether the dock receives anything before OBS is tested.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Supported Sites Check</h2>
+                <p>For basic browser-extension TikTok setup, use the public TikTok setup note first.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/tiktok-live-setup-modal.png" alt="TikTok Live setup modal showing live page setup guidance" class="guide-image">
+                    <figcaption>Desktop app mode troubleshooting starts after the basic TikTok source path is understood.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common Fixes</h2>
+                <ul class="guide-list">
+                    <li><strong>Auto fails:</strong> try Standard to confirm the visible page and login work.</li>
+                    <li><strong>Standard redirects:</strong> reveal the capture page, check the username/live URL, and complete TikTok verification if prompted.</li>
+                    <li><strong>Replies fail:</strong> check TikTok session/cookies and whether the current mode supports send-back.</li>
+                    <li><strong>Duplicate or missing messages:</strong> close duplicate TikTok source windows/tabs and test one mode at a time.</li>
+                </ul>
+                <p>Related: <a href="tiktok-guide.html">TikTok guide</a> and <a href="standalone-app-modes.html">Standalone app modes</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

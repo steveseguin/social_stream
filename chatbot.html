@@ -559,7 +559,7 @@
 
 		document.addEventListener('DOMContentLoaded', () => {
 			iframe = document.createElement("iframe");
-			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=chatbot&view=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=chatbot&view=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
 			
 			iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
 			document.body.appendChild(iframe);

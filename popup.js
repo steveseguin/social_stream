@@ -2381,7 +2381,7 @@ function uploadCustomJsFile() {
       alert('File is too large. Maximum size is 1MB.');
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = function(e) {
       const contents = e.target.result;
@@ -2389,7 +2389,7 @@ function uploadCustomJsFile() {
       const maxLength = 100000;
       const truncatedContents = contents.length > maxLength ? 
         contents.substring(0, maxLength) : contents;
-        
+
       chrome.runtime.sendMessage({
         cmd: 'uploadCustomJs', 
         data: truncatedContents
@@ -2561,7 +2561,7 @@ function getAiOverlayControlValue(id, fallback = "") {
 function getAiOverlayPasswordParam(response) {
   let password = "";
   if (response && response.password) {
-    password = "&password=" + response.password;
+    password = "&password=" + encodeURIComponent(response.password);
   }
   if (urlParams.has("localserver")) {
     password += "&localserver";
@@ -2656,6 +2656,7 @@ const CHAT_OVERLAY_TEMPLATE_CONFIGS = {
   "themes/overlay-cards.html": "overlay-cards-overlay-config",
   "themes/horizontal.html": "horizontal-overlay-config",
   "themes/overlay-ticker-news.html": "ticker-news-overlay-config",
+  "themes/overlay-credits.html": "credits-overlay-config",
   "themes/overlay-danmaku.html": "danmaku-overlay-config",
   "themes/Neutron/chatOnly.html": "Neutron-overlay-config",
   "themes/Neutron/stream.html": "Neutron-overlay-config",
@@ -2676,6 +2677,7 @@ const CHAT_OVERLAY_COMMON_SUPPORT = new Set([
   "themes/overlay-comic-classic.html",
   "themes/horizontal.html",
   "themes/overlay-ticker-news.html",
+  "themes/overlay-credits.html",
   "themes/overlay-danmaku.html",
   "themes/overlay-xacception.html",
   "themes/pretty.html",
@@ -3116,17 +3118,27 @@ function removeTTSProviderParams(url, selectedProvider=null) {
 
 
 function setupTtsProviders(response) {
+    const getSavedTtsProvider = (paramType) => {
+        const value = response.settings?.ttsprovider?.[paramType];
+        return value ? value.toString().trim().toLowerCase() : "";
+    };
+    const inferTtsProvider = (ttsService, paramNum) => {
+        if (ttsService !== "system") return ttsService;
+        const textParam = `textparam${paramNum}`;
+        if (response.settings?.geminikey?.[textParam]) return "gemini";
+        if (response.settings?.ttskey?.[textParam]) return "google";
+        if (response.settings?.googleAPIKey?.[textParam]) return "google";
+        if (response.settings?.elevenlabskey?.[textParam]) return "elevenlabs";
+        if (response.settings?.speechifykey?.[textParam]) return "speechify";
+        if (response.settings?.openaikey?.[textParam]) return "openai";
+        if (response.settings?.openaiendpoint?.[textParam]) return "customtts";
+        return ttsService;
+    };
+
     // Handle main TTS provider
     if (!response.settings?.ttsProvider?.optionsetting) {
-        let ttsService = "system";
-        if (response.settings?.geminikey?.textparam1) ttsService = "gemini";
-        else if (response.settings?.ttskey?.textparam1) ttsService = "google";
-        else if (response.settings?.googleAPIKey?.textparam1) ttsService = "google";
-        else if (response.settings?.elevenlabskey?.textparam1) ttsService = "elevenlabs";
-        else if (response.settings?.speechifykey?.textparam1) ttsService = "speechify";
-        else if (response.settings?.openaikey?.textparam1) ttsService = "openai";
-        else if (response.settings?.openaiendpoint?.textparam1) ttsService = "customtts";
-        
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam1") || "system", "1");
+
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
         }
@@ -3135,36 +3147,32 @@ function setupTtsProviders(response) {
     
     // Handle featured TTS provider (for param2)
     if (!response.settings?.ttsProvider?.optionsetting2) {
-        let ttsService = "system";
-        if (response.settings?.geminikey?.textparam2) ttsService = "gemini";
-        else if (response.settings?.ttskey?.textparam2) ttsService = "google";
-        else if (response.settings?.googleAPIKey?.textparam2) ttsService = "google";
-        else if (response.settings?.elevenlabskey?.textparam2) ttsService = "elevenlabs";
-        else if (response.settings?.speechifykey?.textparam2) ttsService = "speechify";
-        else if (response.settings?.openaikey?.textparam2) ttsService = "openai";
-        else if (response.settings?.openaiendpoint?.textparam2) ttsService = "customtts";
-        
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam2") || "system", "2");
+
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
         }
         response.settings.ttsProvider.optionsetting2 = ttsService;
     }
-    
+
     // Handle secondary TTS provider (for param10)
     if (!response.settings?.ttsProvider?.optionsetting10) {
-        let ttsService = "system";
-        if (response.settings?.geminikey?.textparam10) ttsService = "gemini";
-        else if (response.settings?.ttskey?.textparam10) ttsService = "google";
-        else if (response.settings?.googleAPIKey?.textparam10) ttsService = "google";
-        else if (response.settings?.elevenlabskey?.textparam10) ttsService = "elevenlabs";
-        else if (response.settings?.speechifykey?.textparam10) ttsService = "speechify";
-        else if (response.settings?.openaikey?.textparam10) ttsService = "openai";
-        else if (response.settings?.openaiendpoint?.textparam10) ttsService = "customtts";
-        
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam10") || "system", "10");
+
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
         }
         response.settings.ttsProvider.optionsetting10 = ttsService;
+    }
+
+    // Handle Flow Actions TTS provider (for param18)
+    if (!response.settings?.ttsProvider?.optionsetting18) {
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam18") || "system", "18");
+
+        if (!response.settings.ttsProvider) {
+            response.settings.ttsProvider = {};
+        }
+        response.settings.ttsProvider.optionsetting18 = ttsService;
     }
 }
 
@@ -3523,7 +3531,7 @@ function update(response, sync = true) {
 
             var password = "";
             if ('password' in response && response.password) {
-                password = "&password=" + response.password;
+                password = "&password=" + encodeURIComponent(response.password);
             }
 
             var localServer = urlParams.has("localserver") ? "&localserver" : "";
@@ -4495,7 +4503,7 @@ function isOpenAITTSProvider(provider) {
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS"].forEach(id => {
+    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS", "piperTTS", "espeakTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -4516,13 +4524,17 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("kittenTTS").classList.remove("hidden");
     } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS").classList.remove("hidden");
+    } else if (provider == "piper") {
+        document.getElementById("piperTTS").classList.remove("hidden");
+    } else if (provider == "espeak") {
+        document.getElementById("espeakTTS").classList.remove("hidden");
     }
 }
 
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10"].forEach(id => {
+    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10", "piperTTS10", "espeakTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -4543,6 +4555,10 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("kittenTTS10").classList.remove("hidden");
     } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS10").classList.remove("hidden");
+    } else if (provider == "piper") {
+        document.getElementById("piperTTS10").classList.remove("hidden");
+    } else if (provider == "espeak") {
+        document.getElementById("espeakTTS10").classList.remove("hidden");
     }
 }
 
@@ -4580,7 +4596,7 @@ function handleTTSProvider2Visibility(provider) {
 // Handle Flow Actions TTS provider visibility (param18)
 function handleTTSProvider18Visibility(provider) {
     // Hide all TTS18 elements
-    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18"].forEach(id => {
+    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18", "piperTTS18", "espeakTTS18"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
 
@@ -4601,6 +4617,10 @@ function handleTTSProvider18Visibility(provider) {
         document.getElementById("kittenTTS18")?.classList.remove("hidden");
     } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS18")?.classList.remove("hidden");
+    } else if (provider == "piper") {
+        document.getElementById("piperTTS18")?.classList.remove("hidden");
+    } else if (provider == "espeak") {
+        document.getElementById("espeakTTS18")?.classList.remove("hidden");
     }
 }
 
@@ -4971,6 +4991,12 @@ function updateURL(param, href) {
 }
 
 function removeQueryParamWithValue(url, paramWithValue) {
+    if (typeof url !== "string") {
+        url = url ? String(url) : "";
+    }
+    if (!url) {
+        return "";
+    }
     let [baseUrl, queryString] = url.split('?');
     if (!queryString) {
         return url;
@@ -9825,6 +9851,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	var popupSearchLockedWidth = null;
 	var popupSearchIndex = null;
 	var popupSearchTimer = null;
+	var popupSearchUserToggles = null;
+	var popupSearchAnchor = null;
+	var popupSearchScrollY = null;
 
 	function normalizePopupSearchText(value) {
 		return String(value || '').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -9987,12 +10016,42 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return;
 		}
 		popupSearchOpenState = [];
+		popupSearchUserToggles = null;
+		popupSearchAnchor = null;
+		popupSearchScrollY = window.scrollY || document.documentElement.scrollTop || 0;
 		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
 			popupSearchOpenState.push({
 				input: input,
 				checked: input.checked
 			});
 		});
+	}
+
+	function recordPopupSearchToggle(input) {
+		if (!popupSearchUserToggles) {
+			popupSearchUserToggles = [];
+		}
+		for (var i = 0; i < popupSearchUserToggles.length; i++) {
+			if (popupSearchUserToggles[i].input === input) {
+				popupSearchUserToggles[i].checked = input.checked;
+				return;
+			}
+		}
+		popupSearchUserToggles.push({
+			input: input,
+			checked: input.checked
+		});
+	}
+
+	function getPopupSearchUserToggle(input, fallback) {
+		if (popupSearchUserToggles) {
+			for (var i = 0; i < popupSearchUserToggles.length; i++) {
+				if (popupSearchUserToggles[i].input === input) {
+					return popupSearchUserToggles[i].checked;
+				}
+			}
+		}
+		return fallback;
 	}
 
 	function openPopupSearchSections() {
@@ -10007,10 +10066,76 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		popupSearchOpenState.forEach(function(state) {
 			if (state.input) {
-				state.input.checked = state.checked;
+				state.input.checked = getPopupSearchUserToggle(state.input, state.checked);
 			}
 		});
 		popupSearchOpenState = null;
+	}
+
+	function restorePopupSearchScrollContext() {
+		var anchor = popupSearchAnchor;
+		var scrollY = popupSearchScrollY;
+		popupSearchAnchor = null;
+		popupSearchScrollY = null;
+		popupSearchUserToggles = null;
+		if (anchor && document.contains(anchor) && !isPopupSearchNormallyHidden(anchor)) {
+			var sectionInput = anchor.querySelector('input.collapsible-input');
+			if (sectionInput) {
+				sectionInput.checked = true;
+			}
+			var target = anchor.querySelector('.collapsible-label') || anchor;
+			target.scrollIntoView({block: 'start'});
+		} else if (typeof scrollY === 'number') {
+			var htmlStyle = document.documentElement.style;
+			var previousBehavior = htmlStyle.scrollBehavior;
+			htmlStyle.scrollBehavior = 'auto';
+			window.scrollTo(0, scrollY);
+			htmlStyle.scrollBehavior = previousBehavior || '';
+		}
+	}
+
+	function getPopupSearchFollowingWrapper(startNode) {
+		var node = startNode;
+		while (node && node.nextElementSibling) {
+			node = node.nextElementSibling;
+			if (node.classList && node.classList.contains('wrapper') && !isPopupSearchNormallyHidden(node)) {
+				return node;
+			}
+		}
+		return null;
+	}
+
+	function setPopupSearchAnchorFromEvent(e) {
+		if (!document.body.classList.contains('popup-searching')) {
+			return;
+		}
+		var target = e.target;
+		if (!target || !target.closest) {
+			return;
+		}
+		var optionsLink = target.closest('a.options-link[href^="#"]');
+		if (optionsLink) {
+			var hash = (optionsLink.getAttribute('href') || '').slice(1);
+			var named = hash ? document.getElementById(hash) : null;
+			if (named) {
+				var section = named.closest('.wrapper');
+				if (!section) {
+					section = getPopupSearchFollowingWrapper(named);
+				}
+				if (!section) {
+					var linkContainer = optionsLink.closest('.container > .link, .generic_category_title');
+					section = getPopupSearchFollowingWrapper(linkContainer);
+				}
+				if (section) {
+					popupSearchAnchor = section;
+					return;
+				}
+			}
+		}
+		var container = target.closest('.wrapper, .container > .link');
+		if (container) {
+			popupSearchAnchor = container;
+		}
 	}
 
 	function lockPopupSearchWidth() {
@@ -10177,6 +10302,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			setPopupSearchActive(false, false);
 			restorePopupSearchOpenState();
 			unlockPopupSearchWidth();
+			restorePopupSearchScrollContext();
 			return;
 		}
 
@@ -10259,6 +10385,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		setPopupSearchActive(false, false);
 		restorePopupSearchOpenState();
 		unlockPopupSearchWidth();
+		restorePopupSearchScrollContext();
 		popupSearchIndex = null;
 	}
 
@@ -10272,23 +10399,72 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 	}
-	
-	document.getElementById('searchIcon').addEventListener('click', function() {
+
+	document.addEventListener('change', function(e) {
+		if (!document.body.classList.contains('popup-searching')) {
+			return;
+		}
+		var input = e.target;
+		if (input && input.classList && input.classList.contains('collapsible-input')) {
+			recordPopupSearchToggle(input);
+		}
+	}, true);
+
+	document.addEventListener('click', setPopupSearchAnchorFromEvent, true);
+
+	function openPopupSearch() {
 		var searchInput = popupSearchInput || document.getElementById('searchInput');
+		if (!searchInput) {
+			return;
+		}
 		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
 			searchInput.style.display = 'block';
 			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
 			searchInput.focus(); // Optional: Focus on the input field when it's shown
 			setTimeout(preparePopupSearchIndex, 0);
 		} else {
+			searchInput.focus();
+			searchInput.select();
+		}
+	}
+
+	document.addEventListener('keydown', function(e) {
+		if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === 'f' || e.key === 'F')) {
+			e.preventDefault();
+			openPopupSearch();
+		} else if (e.key === 'Escape') {
+			var searchInput = popupSearchInput || document.getElementById('searchInput');
+			if (searchInput && window.getComputedStyle(searchInput).display !== 'none') {
+				e.preventDefault();
+				closePopupSearch();
+			}
+		}
+	});
+
+	document.getElementById('searchIcon').addEventListener('click', function() {
+		var searchInput = popupSearchInput || document.getElementById('searchInput');
+		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
+			openPopupSearch();
+		} else {
 			closePopupSearch();
 		}
 	});
 	
 	var activeToggle = false;
+	var activeToggleOpenState = null;
+	var activeToggleScrollY = null;
 	document.getElementById('activeIcon').addEventListener('click', function() {
 		activeToggle = !activeToggle;
 		if (activeToggle) {
+			// Remember open sections and scroll position so toggling off restores them
+			activeToggleOpenState = [];
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				activeToggleOpenState.push({
+					input: ele,
+					checked: ele.checked
+				});
+			});
+			activeToggleScrollY = window.scrollY || document.documentElement.scrollTop || 0;
 			// Open all collapsible sections
 			document.querySelectorAll('input.collapsible-input').forEach(ele => {
 				ele.checked = true;
@@ -10338,15 +10514,32 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				item.style.display = '';
 			});
 			// Reset to original state
-			document.querySelectorAll('input.collapsible-input').forEach(ele => {
-				ele.checked = false;
-			});
+			if (activeToggleOpenState) {
+				activeToggleOpenState.forEach(function(state) {
+					if (state.input) {
+						state.input.checked = state.checked;
+					}
+				});
+				activeToggleOpenState = null;
+			} else {
+				document.querySelectorAll('input.collapsible-input').forEach(ele => {
+					ele.checked = false;
+				});
+			}
 			document.querySelectorAll('.wrapper').forEach(ele => {
 				ele.style.display = "";
 			});
 			document.querySelectorAll('.options_group > div').forEach(ele => {
 				ele.style.display = "";
 			});
+			if (typeof activeToggleScrollY === 'number') {
+				var htmlStyle = document.documentElement.style;
+				var previousBehavior = htmlStyle.scrollBehavior;
+				htmlStyle.scrollBehavior = 'auto';
+				window.scrollTo(0, activeToggleScrollY);
+				htmlStyle.scrollBehavior = previousBehavior || '';
+				activeToggleScrollY = null;
+			}
 		}
 	});
 	
@@ -10462,6 +10655,23 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						alert('All user points have been reset.');
 					} else {
 						alert('Failed to reset points. Please try again.');
+					}
+				});
+			}
+		});
+	}
+
+	const resetLeaderboardBtn = document.getElementById('resetLeaderboard');
+	if (resetLeaderboardBtn) {
+		resetLeaderboardBtn.addEventListener('click', function() {
+			if (confirm('Reset leaderboard data in open leaderboard overlays? This cannot be undone.')) {
+				chrome.runtime.sendMessage({
+					cmd: "resetleaderboard"
+				}, function(response) {
+					if (response && response.success) {
+						alert('Leaderboard data reset command sent.');
+					} else {
+						alert('Failed to send leaderboard reset command. Please try again.');
 					}
 				});
 			}
@@ -11282,6 +11492,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	var serverFallbackUndoState = null;
+	var serverFallbackHealthCheckTimer = null;
+	var serverFallbackAutoClearTimer = null;
+	var serverFallbackAutoClearUntil = 0;
 
 	function getServerFallbackInputState() {
 		return {
@@ -11334,6 +11547,50 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return banner;
 	}
 
+	function hideServerFallbackBanner() {
+		var banner = getServerFallbackBanner();
+		if (banner) {
+			banner.classList.remove("show");
+			banner.classList.remove("success");
+		}
+		if (serverFallbackAutoClearTimer) {
+			clearTimeout(serverFallbackAutoClearTimer);
+			serverFallbackAutoClearTimer = null;
+		}
+	}
+
+	function requestDockTransportHealth(callback) {
+		if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
+			return;
+		}
+		chrome.runtime.sendMessage({ cmd: "getDockTransportHealth" }, function (response) {
+			if (typeof callback === "function") {
+				callback(response);
+			}
+		});
+	}
+
+	function scheduleServerFallbackAutoClear() {
+		if (serverFallbackAutoClearTimer) {
+			clearTimeout(serverFallbackAutoClearTimer);
+		}
+		serverFallbackAutoClearUntil = Date.now() + 30000;
+		serverFallbackAutoClearTimer = setTimeout(function checkDockTransport() {
+			requestDockTransportHealth(function (response) {
+				var health = response && response.dockTransportHealth;
+				if (health && health.fakeMessageTransportReady) {
+					hideServerFallbackBanner();
+					return;
+				}
+				if (Date.now() < serverFallbackAutoClearUntil) {
+					serverFallbackAutoClearTimer = setTimeout(checkDockTransport, 2000);
+				} else {
+					serverFallbackAutoClearTimer = null;
+				}
+			});
+		}, 2000);
+	}
+
 	function showServerFallbackBanner(health, customMessage, success, hideEnableButton, showUndoButton) {
 		var banner = getServerFallbackBanner();
 		if (!banner) {
@@ -11384,9 +11641,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			banner.classList.remove("success");
 		}
 		banner.classList.add("show");
+		if (!success) {
+			scheduleServerFallbackAutoClear();
+		}
 	}
 
-	function maybePromptServerFallbackAfterFakeMessage(response) {
+	function maybePromptServerFallbackAfterFakeMessage(response, afterGrace) {
 		var health = response && response.dockTransportHealth;
 		if (!health) {
 			return;
@@ -11396,6 +11656,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return;
 		}
 		if (health.fakeMessageTransportReady) {
+			hideServerFallbackBanner();
+			return;
+		}
+		if (!afterGrace) {
+			if (serverFallbackHealthCheckTimer) {
+				clearTimeout(serverFallbackHealthCheckTimer);
+			}
+			serverFallbackHealthCheckTimer = setTimeout(function () {
+				requestDockTransportHealth(function (updatedResponse) {
+					maybePromptServerFallbackAfterFakeMessage(updatedResponse, true);
+				});
+			}, 3000);
 			return;
 		}
 		if (health.serverFallbackEnabled) {

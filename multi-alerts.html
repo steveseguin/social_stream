@@ -211,7 +211,7 @@
       align-items: center;
       min-height: 102px;
       padding: 24px 18px 18px 18px;
-      border-radius: 18px;
+      border-radius: var(--card-radius, 18px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       background: linear-gradient(135deg, rgba(9, 12, 18, 0.8), rgba(9, 12, 18, 0.5));
       box-shadow:
@@ -388,7 +388,7 @@
     .alert-media {
       width: calc(166px * var(--media-scale));
       height: calc(94px * var(--media-scale));
-      border-radius: 14px;
+      border-radius: var(--card-radius, 14px);
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.1);
       background: rgba(255, 255, 255, 0.05);
@@ -410,7 +410,7 @@
     .compact .alert-media {
       width: calc(132px * var(--media-scale));
       height: calc(76px * var(--media-scale));
-      border-radius: 12px;
+      border-radius: var(--card-radius, 12px);
     }
 
     .alert-media img {
@@ -451,7 +451,7 @@
     }
 
     .theme-classic .alert-shell {
-      border-radius: 22px;
+      border-radius: var(--card-radius, 22px);
       border-color: rgba(255, 255, 255, 0.18);
       background:
         linear-gradient(180deg, rgba(var(--alert-accent-rgb), 0.18), rgba(var(--alert-accent-rgb), 0.02) 28%),
@@ -482,7 +482,7 @@
     }
 
     .theme-twitch .alert-shell {
-      border-radius: 14px 18px 18px 14px;
+      border-radius: var(--card-radius, 14px 18px 18px 14px);
       border-color: rgba(var(--alert-accent-rgb), 0.32);
       background:
         linear-gradient(180deg, rgba(var(--alert-accent-rgb), 0.11), rgba(var(--alert-accent-rgb), 0) 38%),
@@ -512,7 +512,7 @@
     .theme-minimal .alert-shell {
       background: linear-gradient(90deg, rgba(6, 9, 14, 0.48), rgba(6, 9, 14, 0.14));
       border-color: rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
+      border-radius: var(--card-radius, 12px);
       box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -547,6 +547,105 @@
       box-shadow: none;
     }
 
+    .theme-solid .alert-shell {
+      border-radius: var(--card-radius, 7px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: var(--card-bg, #14161f);
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .theme-solid .alert-shell::before,
+    .theme-solid .alert-shell::after,
+    .alert-card.theme-solid::before {
+      display: none;
+    }
+
+    .theme-solid .alert-title {
+      border-radius: var(--card-radius, 7px);
+      border-color: transparent;
+      background: var(--alert-accent);
+      text-shadow: none;
+      box-shadow: none;
+    }
+
+    .theme-solid .alert-headline {
+      text-shadow: none;
+    }
+
+    .theme-solid .source-badge,
+    .theme-solid .alert-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      box-shadow: none;
+      text-shadow: none;
+    }
+
+    .theme-solid .source-badge {
+      background: var(--source-color, rgba(255, 255, 255, 0.08));
+    }
+
+    .theme-solid .alert-amount {
+      background: var(--alert-accent);
+      border-color: transparent;
+    }
+
+    .theme-solid .alert-media {
+      border-radius: var(--card-radius, 7px);
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+    }
+
+    .theme-solid .alert-avatar {
+      border-color: rgba(255, 255, 255, 0.16);
+      box-shadow: none;
+    }
+
+    /* Opt-in overrides below only activate via URL params; defaults stay untouched. */
+    body.flat-mode .alert-shell {
+      background: var(--card-bg, #10131b);
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    body.flat-mode .alert-card::before,
+    body.flat-mode .alert-shell::after {
+      display: none;
+    }
+
+    body.flat-mode .alert-title {
+      background: var(--alert-accent);
+      text-shadow: none;
+      box-shadow: none;
+    }
+
+    body.flat-mode .alert-headline {
+      text-shadow: none;
+    }
+
+    body.flat-mode .source-badge {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    body.flat-mode .alert-media,
+    body.flat-mode .alert-avatar {
+      box-shadow: none;
+    }
+
+    body.custom-cardbg .alert-shell {
+      background: var(--card-bg);
+    }
+
+    body.custom-textcolor .alert-tail,
+    body.custom-textcolor .alert-pill {
+      color: var(--text-main);
+    }
+
     @keyframes alertIn {
       from {
         opacity: 0;
@@ -575,6 +674,101 @@
       }
       to {
         transform: scaleX(0);
+      }
+    }
+
+    /* Entrance animation variants (opt-in via &animation=) */
+    body[data-anim="slidedown"] .alert-card {
+      animation: slideDownIn 480ms cubic-bezier(0.22, 0.9, 0.32, 1) forwards;
+    }
+
+    body[data-anim="slidedown"] .alert-card.is-hiding {
+      animation: slideDownOut 360ms cubic-bezier(0.55, 0.08, 0.82, 0.39) forwards;
+    }
+
+    body[data-anim="slideup"] .alert-card {
+      animation: slideUpIn 480ms cubic-bezier(0.22, 0.9, 0.32, 1) forwards;
+    }
+
+    body[data-anim="slideup"] .alert-card.is-hiding {
+      animation: slideUpOut 360ms cubic-bezier(0.55, 0.08, 0.82, 0.39) forwards;
+    }
+
+    body[data-anim="pop"] .alert-card {
+      animation: popIn 360ms cubic-bezier(0.34, 1.4, 0.4, 1) forwards;
+    }
+
+    body[data-anim="pop"] .alert-card.is-hiding {
+      animation: popOut 300ms cubic-bezier(0.55, 0.08, 0.82, 0.39) forwards;
+    }
+
+    body[data-anim="none"] .alert-card {
+      animation: none;
+    }
+
+    body[data-anim="none"] .alert-card.is-hiding {
+      animation: none;
+      visibility: hidden;
+    }
+
+    @keyframes slideDownIn {
+      from {
+        transform: translateY(-100vh);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideDownOut {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(-100vh);
+      }
+    }
+
+    @keyframes slideUpIn {
+      from {
+        transform: translateY(100vh);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideUpOut {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(100vh);
+      }
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0.55);
+        opacity: 0;
+      }
+      55% {
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes popOut {
+      from {
+        transform: scale(1);
+        opacity: 1;
+      }
+      to {
+        transform: scale(0.85);
+        opacity: 0;
       }
     }
 

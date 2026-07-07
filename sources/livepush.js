@@ -1,6 +1,17 @@
 (function () {
+	var settings = {};
+
+	function hasChromeRuntime(){
+		return typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage;
+	}
+
+	function hasChromeRuntimeListener(){
+		return typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage && chrome.runtime.onMessage.addListener;
+	}
+
 	function pushMessage(data){	  
 		try {
+			if (!hasChromeRuntime()){return;}
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
 		} catch(e){}
 	}
@@ -122,6 +133,7 @@
 		  data.backgroundColor = backgroundColor;
 		  data.textColor = textColor;
 		  data.chatmessage = chatmessage;
+		  data.textonly = settings.textonlymode || false;
 		  data.chatimg = chatimg;
 		  data.hasDonation = hasDonation;
 		  data.membership = '';
@@ -163,6 +175,29 @@
 	}
 	
 	console.log("social stream injected");
+
+	if (hasChromeRuntime()){
+		chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){
+			if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError){return;}
+			if (response && "settings" in response){
+				settings = response.settings;
+			}
+		});
+	}
+
+	if (hasChromeRuntimeListener()){
+		chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
+			try {
+				if ("getSource" == request){sendResponse("livepush"); return;}
+				if (typeof request === "object" && "settings" in request){
+					settings = request.settings;
+					sendResponse(true);
+					return;
+				}
+			} catch(e){}
+			sendResponse(false);
+		});
+	}
 	
 	try {
 		onElementInserted(document.getElementById("chatlist"), function(element){

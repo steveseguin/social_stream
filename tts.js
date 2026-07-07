@@ -123,6 +123,9 @@ TTS.voiceGender = false;
 TTS.audio = false;
 TTS.premiumQueueTTS = [];
 TTS.premiumQueueActive = false;
+TTS.browserKokoroStreamActive = false;
+TTS.browserKokoroSkipRequested = false;
+TTS.resolveCurrentAudioPlayback = null;
 TTS.volume = 1;
 TTS.pitch = 0;
 TTS.rate = 1;
@@ -226,7 +229,12 @@ TTS.logKokoroProgress = function(progress) {
     }
 
     if (progress.status === "progress" && progress.progress !== undefined) {
-        console.log("Kokoro download:", (progress.progress * 100).toFixed(1) + "%");
+        var percent = Number(progress.progress);
+        if (!Number.isFinite(percent)) return;
+        if (percent <= 1) {
+            percent *= 100;
+        }
+        console.log("Kokoro download:", percent.toFixed(1) + "%");
     }
 };
 
@@ -405,7 +413,20 @@ TTS.finishedAudio = function(e) {
     TTS.revokeCurrentObjectUrl();
     TTS.premiumQueueActive = false;
     if (TTS.premiumQueueTTS.length) {
-        TTS.speak(TTS.premiumQueueTTS.shift()); // play next
+        TTS.speakQueuedPremiumTTS(); // play next
+    }
+};
+
+TTS.queuePremiumTTS = function(text, allow) {
+    TTS.premiumQueueTTS.push({ text: text, allow: !!allow });
+};
+
+TTS.speakQueuedPremiumTTS = function() {
+    const next = TTS.premiumQueueTTS.shift();
+    if (next && typeof next === "object" && Object.prototype.hasOwnProperty.call(next, "text")) {
+        TTS.speak(next.text, !!next.allow);
+    } else {
+        TTS.speak(next);
     }
 };
 
@@ -422,6 +443,91 @@ TTS.setAudioSource = function(src, isObjectUrl) {
     TTS.revokeCurrentObjectUrl();
     TTS.audio.src = src;
     TTS.currentObjectUrl = isObjectUrl ? src : null;
+};
+
+TTS.playAudioBlobAndWait = async function(audioBlob) {
+    if (!TTS.audio) {
+        TTS.audio = document.createElement("audio");
+        TTS.audio.onended = TTS.finishedAudio;
+    }
+
+    TTS.audio.onended = null;
+    const audioUrl = URL.createObjectURL(audioBlob);
+    TTS.setAudioSource(audioUrl, true);
+    if (TTS.volume) {
+        TTS.audio.volume = TTS.volume;
+    }
+
+    return await new Promise(async function(resolve) {
+        let settled = false;
+        let timeoutId = null;
+        const audio = TTS.audio;
+
+        function cleanup(success) {
+            if (settled) return;
+            settled = true;
+            if (TTS.resolveCurrentAudioPlayback === cleanup) {
+                TTS.resolveCurrentAudioPlayback = null;
+            }
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            try {
+                audio.removeEventListener("ended", onEnded);
+                audio.removeEventListener("error", onError);
+                audio.removeEventListener("pause", onPause);
+                audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+            } catch (e) {}
+            resolve(!!success);
+        }
+
+        TTS.resolveCurrentAudioPlayback = cleanup;
+
+        function armTimeout(timeoutMs) {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            timeoutId = setTimeout(function() {
+                console.warn("TTS audio playback timed out.");
+                cleanup(false);
+            }, timeoutMs);
+        }
+
+        function onLoadedMetadata() {
+            const durationMs = Number.isFinite(audio.duration) && audio.duration > 0
+                ? Math.ceil(audio.duration * 1000) + 10000
+                : 120000;
+            armTimeout(Math.min(180000, Math.max(15000, durationMs)));
+        }
+
+        function onEnded() {
+            cleanup(true);
+        }
+
+        function onError() {
+            cleanup(false);
+        }
+
+        function onPause() {
+            cleanup(false);
+        }
+
+        audio.addEventListener("ended", onEnded);
+        audio.addEventListener("error", onError);
+        audio.addEventListener("pause", onPause);
+        audio.addEventListener("loadedmetadata", onLoadedMetadata);
+        armTimeout(120000);
+
+        try {
+            if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
+                await TTS.audioContext.resume();
+            }
+            await audio.play();
+        } catch (e) {
+            console.error("Audio playback failed:", e);
+            cleanup(false);
+        }
+    });
 };
 
 TTS.parseFloatParam = function(urlParams, name, fallback) {
@@ -1193,14 +1299,14 @@ TTS.speak = function(text, allow = false) {
 			if (!TTS.premiumQueueActive) {
 				TTS.piperTTS(text);
 			} else {
-				TTS.premiumQueueTTS.push(text);
+				TTS.queuePremiumTTS(text, allow);
 			}
 			return;
 		case "espeak":
 			if (!TTS.premiumQueueActive) {
 				TTS.espeakTTS(text);
 			} else {
-				TTS.premiumQueueTTS.push(text);
+				TTS.queuePremiumTTS(text, allow);
 			}
 			return;
 		case "kitten":
@@ -1211,14 +1317,14 @@ TTS.speak = function(text, allow = false) {
 					TTS.finishedAudio();
 				});
 			} else {
-				TTS.premiumQueueTTS.push(text);
+				TTS.queuePremiumTTS(text, allow);
 			}
 			return;
 		case "kokoro":
 			if (!TTS.premiumQueueActive) {
 				TTS.kokoroTTS(text);
 			} else {
-				TTS.premiumQueueTTS.push(text);
+				TTS.queuePremiumTTS(text, allow);
 			}
 			return;
         case "google":
@@ -1226,7 +1332,7 @@ TTS.speak = function(text, allow = false) {
                 if (!TTS.premiumQueueActive) {
                     TTS.googleTTS(text);
                 } else {
-                    TTS.premiumQueueTTS.push(text);
+                    TTS.queuePremiumTTS(text, allow);
                 }
                 return;
             }
@@ -1236,7 +1342,7 @@ TTS.speak = function(text, allow = false) {
                 if (!TTS.premiumQueueActive) {
                     TTS.geminiTTS(text);
                 } else {
-                    TTS.premiumQueueTTS.push(text);
+                    TTS.queuePremiumTTS(text, allow);
                 }
                 return;
             }
@@ -1246,7 +1352,7 @@ TTS.speak = function(text, allow = false) {
                 if (!TTS.premiumQueueActive) {
                     TTS.ElevenLabsTTS(text);
                 } else {
-					TTS.premiumQueueTTS.push(text);
+					TTS.queuePremiumTTS(text, allow);
 				}
 				return;
 			}
@@ -1256,7 +1362,7 @@ TTS.speak = function(text, allow = false) {
 				if (!TTS.premiumQueueActive) {
 					TTS.SpeechifyTTS(text);
 				} else {
-					TTS.premiumQueueTTS.push(text);
+					TTS.queuePremiumTTS(text, allow);
 				}
 				return;
 			}
@@ -1265,7 +1371,7 @@ TTS.speak = function(text, allow = false) {
 			if (!TTS.premiumQueueActive) {
 				TTS.openAITTS(text);
 			} else {
-				TTS.premiumQueueTTS.push(text);
+				TTS.queuePremiumTTS(text, allow);
 			}
 			return;
 	}
@@ -1373,9 +1479,17 @@ TTS.skipCurrent = function() {
     } else if (TTS.premiumQueueActive && TTS.audio) {
         // For premium TTS providers
         try {
+            const waitForBrowserKokoro = TTS.browserKokoroStreamActive;
+            if (waitForBrowserKokoro) {
+                TTS.browserKokoroSkipRequested = true;
+            }
             TTS.audio.pause();
             TTS.audio.currentTime = 0;
-            TTS.finishedAudio(); // This will play the next item in queue
+            if (waitForBrowserKokoro && typeof TTS.resolveCurrentAudioPlayback === "function") {
+                TTS.resolveCurrentAudioPlayback(false);
+            } else if (!waitForBrowserKokoro) {
+                TTS.finishedAudio(); // This will play the next item in queue
+            }
         } catch (e) {
             console.warn(e);
         }
@@ -2186,41 +2300,57 @@ TTS.kokoroTTS = async function(text) {
         streamAudio: false
       });
       
-      for await (const { audio } of stream) {
-        if (!audio) continue;
-        
-        if (TTS.neuroSyncEnabled) {
-          TTS.sendToNeuroSync(audio, { 
-            isKokoroAudio: true,
-            onProgress: (progress) => {
-              //console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
-            }
-          }).then(result => {
-            if (result && result.blendshapes) {
-              //console.log(`Received ${result.blendshapes.length} blendshape frames`);
-            }
-          }).catch(err => {
-            console.error("NeuroSync error:", err);
-          });
-          TTS.finishedAudio();
-          return;
+      let playedAnyAudio = false;
+      const previousOnEnded = TTS.audio ? TTS.audio.onended : null;
+      TTS.browserKokoroStreamActive = true;
+      TTS.browserKokoroSkipRequested = false;
+      try {
+        if (TTS.audio) {
+          TTS.audio.onended = null;
         }
-        
-        const audioBlob = audio.toBlob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        TTS.setAudioSource(audioUrl, true);
-        if (TTS.volume) TTS.audio.volume = TTS.volume;
-        
-        try {
-          if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
-            await TTS.audioContext.resume();
+        for await (const { audio } of stream) {
+          if (TTS.browserKokoroSkipRequested) {
+            break;
           }
-          await TTS.audio.play();
-        } catch (e) {
-          console.error("Audio playback failed:", e);
-          TTS.finishedAudio();
+          if (!audio) continue;
+
+          if (TTS.neuroSyncEnabled) {
+            TTS.sendToNeuroSync(audio, {
+              isKokoroAudio: true,
+              onProgress: (progress) => {
+                //console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
+              }
+            }).then(result => {
+              if (result && result.blendshapes) {
+                //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+              }
+            }).catch(err => {
+              console.error("NeuroSync error:", err);
+            });
+            TTS.finishedAudio();
+            return;
+          }
+
+          const audioBlob = audio.toBlob();
+          const played = await TTS.playAudioBlobAndWait(audioBlob);
+          if (!played || TTS.browserKokoroSkipRequested) {
+            break;
+          }
+          playedAnyAudio = true;
         }
+      } finally {
+        if (TTS.audio) {
+          TTS.audio.onended = previousOnEnded || TTS.finishedAudio;
+        }
+        TTS.browserKokoroStreamActive = false;
+        TTS.browserKokoroSkipRequested = false;
+        TTS.resolveCurrentAudioPlayback = null;
       }
+
+      if (!playedAnyAudio) {
+        console.warn("Kokoro TTS produced no playable audio.");
+      }
+      TTS.finishedAudio();
     } catch (err) {
       console.error("Stream processing error:", err);
       TTS.finishedAudio();

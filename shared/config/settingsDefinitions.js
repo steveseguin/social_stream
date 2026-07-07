@@ -25,6 +25,7 @@ const SETTINGS_CATEGORIES = Object.freeze({
   'must_enable_the_trigger_to_use': { label: "Must enable the trigger to use", order: 47 },
   'other_customization_options': { label: "Other customization options", order: 48 },
   'configure_select_a_winner_draw_mode': { label: "Configure select-a-winner draw mode", order: 57 },
+  'chat_control_commands': { label: "Chat control commands", order: 58 },
   'poll_settings': { label: "Poll Settings", order: 64 },
   'top_bar_settings': { label: "Top Bar Settings", order: 71 },
   'custom_gif_commands_settings': { label: "Custom GIF Commands Settings", order: 116 },
@@ -1632,6 +1633,36 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "boolean",
     category: "other_customization_options",
     description: "Allow removed users to join the waitlist again."
+  },
+  "waitlistcommandhighlight": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to highlight the top or numbered waitlist entry."
+  },
+  "waitlistcommandremove": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to remove the top or numbered waitlist entry."
+  },
+  "waitlistcommandreset": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to reset the waitlist."
+  },
+  "waitlistcommandselect": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to select one or more names."
+  },
+  "waitlistcommandstop": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to stop new waitlist entries."
+  },
+  "waitlistcontrolcommands": {
+    type: "boolean",
+    category: "chat_control_commands",
+    description: "Enable mod/host/admin chat commands for waitlist controls."
   },
   "waitlistmode": {
     type: "boolean",

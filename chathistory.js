@@ -107,6 +107,42 @@ function initDatabase() {
     });
 }
 
+function removeHtmlTagsFromPlainText(value) {
+    return String(value || '')
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, '')
+        .replace(/<template\b[^>]*>[\s\S]*?<\/template>/gi, '')
+        .replace(/<[^>]*>/g, '');
+}
+
+function stripHtmlToPlainText(value) {
+    const text = String(value == null ? '' : value);
+    try {
+        if (typeof DOMParser !== 'undefined') {
+            const doc = new DOMParser().parseFromString(text, 'text/html');
+            if (doc && doc.body) {
+                doc.body.querySelectorAll('script,style,noscript,template').forEach(node => node.remove());
+                return removeHtmlTagsFromPlainText(doc.body.textContent || '');
+            }
+        }
+    } catch (e) {}
+    return removeHtmlTagsFromPlainText(text);
+}
+
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function safePlainText(value) {
+    return escapeHtml(stripHtmlToPlainText(value));
+}
+
 function debounceFilters() {
     if (filterDebounceHandle) {
         clearTimeout(filterDebounceHandle);
@@ -366,6 +402,7 @@ function renderMessages() {
         return;
     }
 
+    // Stored relay HTML comes from the background.js path where chat fields are sanitized before persistence.
     const html = messages.map(message => `
         <div class="message-wrapper" id="message-${message.id}">
             <div class="message">
@@ -378,8 +415,8 @@ function renderMessages() {
                     </div>
                     <p class="message-text">${message.chatmessage || ''}</p>
                     ${message.contentimg ? `<img src="${message.contentimg}" alt="Content" class="content-image" data-error-hide="self">` : ''}
-                    ${message.hasDonation ? `<p class="donation">Donation: ${message.hasDonation}</p>` : ''}
-                    ${(message.membership || message.hasMembership) ? `<p class="membership">Membership: ${message.membership || message.hasMembership}</p>` : ''}
+                    ${message.hasDonation ? `<p class="donation">Donation: ${safePlainText(message.hasDonation)}</p>` : ''}
+                    ${(message.membership || message.hasMembership) ? `<p class="membership">Membership: ${safePlainText(message.membership || message.hasMembership)}</p>` : ''}
                 </div>
             </div>
         </div>

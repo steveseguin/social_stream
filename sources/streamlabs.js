@@ -87,7 +87,8 @@
 
     // Bits / cheers
     if (eventType === 'cheer' && amountToken) {
-      return { hasDonation: `${amountToken} bits`, donoValue: Number(amountToken) || null };
+      const bits = Number.parseFloat(amountToken.replace(/[^0-9.]+/g, ''));
+      return { hasDonation: `${amountToken} bits`, donoValue: Number.isFinite(bits) ? bits / 100 : null };
     }
 
     // Monetary amounts

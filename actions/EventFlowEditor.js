@@ -195,11 +195,11 @@ const FLOW_TEMPLATES = {
         description: 'Special alert for donations over $10',
         nodes: [
             { id: 'trigger_1', type: 'trigger', triggerType: 'hasDonation', x: 50, y: 50, config: {} },
-            { id: 'trigger_2', type: 'trigger', triggerType: 'compareProperty', x: 320, y: 50, config: { property: 'donationAmount', operator: 'gte', value: 10 } },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'compareProperty', x: 320, y: 50, config: { property: 'donoValue', operator: 'gte', value: 10 } },
             { id: 'logic_1', type: 'logic', logicType: 'AND', x: 185, y: 230, config: {} },
             { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 410, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
-            { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 410, config: { text: '🎉 BIG DONATION! {username} donated ${donationAmount}!', x: 20, y: 30, width: 60, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(139,0,0,0.9)', padding: 30, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
-            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 320, y: 590, config: { text: 'Wow! {username} just donated ${donationAmount}! Thank you so much!', voice: '', rate: 1, pitch: 1, volume: 1 } }
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 410, config: { text: '🎉 BIG DONATION! {username} donated {hasDonation}!', x: 20, y: 30, width: 60, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(139,0,0,0.9)', padding: 30, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
+            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 320, y: 590, config: { text: 'Wow! {username} just donated {hasDonation}! Thank you so much!', voice: '', rate: 1, pitch: 1, volume: 1 } }
         ],
         connections: [
             { from: 'trigger_1', to: 'logic_1' },
@@ -248,7 +248,7 @@ class EventFlowEditor {
                     { id: 'eventNewSubscriber', name: '⭐ New Subscriber' },
                     { id: 'eventResub', name: '🔄 Resub/Renewal' },
                     { id: 'eventGiftSub', name: '🎁 Gift Sub' },
-                    { id: 'eventDonation', name: '💰 Donation/Super Chat' },
+                    { id: 'eventDonation', name: '💰 Specific Donation Event' },
                     { id: 'eventRaid', name: '🚀 Raid' },
                     { id: 'eventCheer', name: '💎 Cheer/Bits' },
                     { id: 'eventOther', name: '📋 Other Event...' },
@@ -359,6 +359,7 @@ class EventFlowEditor {
                     { id: 'removeText', name: '✂️ Remove Text' },
                     { id: 'setProperty', name: '🎨 Set Property' },
                     { id: 'featureMessage', name: '🌟 Feature Message' },
+                    { id: 'pinMessage', name: 'Pin Message' },
                     { id: 'sendMessage', name: '💬 Send Message' },
                     { id: 'relay', name: '📢 Relay Chat' },
                     { id: 'reflectionFilter', name: '🪞 Reflection Filter' }
@@ -1884,7 +1885,7 @@ class EventFlowEditor {
                     return 'Any event';
                 }
                 case 'compareProperty': {
-                    const prop = node.config.property || 'donationAmount';
+                    const prop = node.config.property || 'donoValue';
                     const op = node.config.operator || 'gt';
                     const val = node.config.value ?? 0;
                     const opSymbols = { gt: '>', lt: '<', eq: '=', gte: '>=', lte: '<=', ne: '!=' };
@@ -1936,7 +1937,7 @@ class EventFlowEditor {
                 case 'eventDonation': {
                     const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All';
                     const minAmt = node.config.minAmount > 0 ? ` ≥$${node.config.minAmount}` : '';
-                    return `Donation${minAmt} (${sources})`;
+                    return `Donation event${minAmt} (${sources})`;
                 }
                 case 'eventRaid': {
                     const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All';
@@ -1989,6 +1990,11 @@ class EventFlowEditor {
                     return `${prop} = ${shortValue}`;
                 }
                 case 'featureMessage': return 'Feature in dock/overlay';
+                case 'pinMessage': {
+                    const modeMap = { pin: 'Pin', unpin: 'Unpin', nextPinned: 'Show next pinned' };
+                    const pinConfig = node.config || {};
+                    return modeMap[pinConfig.mode] || modeMap.pin;
+                }
                 case 'sendMessage': return `Send to: ${node.config.destination || 'All'}`;
                 case 'relay': return `Relay to: ${node.config.destination || 'All'}`;
                 case 'reflectionFilter': {
@@ -2302,7 +2308,55 @@ class EventFlowEditor {
 		
 		return testResult;
 	}
-	
+
+	parseTestDonationAmount(rawValue, fallback) {
+		const raw = String(rawValue || '').replace(/,/g, '');
+		const match = raw.match(/[+-]?(?:\d+\.?\d*|\.\d+)/);
+		if (!match) return fallback;
+		const parsed = parseFloat(match[0]);
+		return isFinite(parsed) && parsed > 0 ? parsed : fallback;
+	}
+
+	buildTestDonationPayload(source, rawValue) {
+		const platform = String(source || '').toLowerCase();
+
+		if (platform === 'twitch') {
+			const bits = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 100)));
+			return { hasDonation: bits + ' bits' };
+		}
+
+		if (platform === 'facebook') {
+			const stars = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 100)));
+			return {
+				hasDonation: stars + ' Stars',
+				donoValue: stars / 100
+			};
+		}
+
+		if (platform === 'kick') {
+			const kicks = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 10)));
+			return { hasDonation: kicks + (kicks === 1 ? ' KICK' : ' KICKs') };
+		}
+
+		if (platform === 'tiktok') {
+			const coins = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 100)));
+			return { hasDonation: coins + ' coins' };
+		}
+
+		const amount = this.parseTestDonationAmount(rawValue, 10);
+		const payload = {
+			hasDonation: '$' + amount.toFixed(2) + ' CAD',
+			donoValue: amount
+		};
+
+		if (platform === 'youtube' || platform === 'youtubeshorts') {
+			payload.event = 'superchat';
+			delete payload.donoValue;
+		}
+
+		return payload;
+	}
+
 	initTestPanel() {
 		const testOverlay = document.getElementById('test-overlay');
 		const testPanel = document.getElementById('test-panel');
@@ -2359,22 +2413,27 @@ class EventFlowEditor {
 				this.unsavedChanges ? 'block' : 'none';
 			
 			// Create test message from form inputs
+			const isDonation = document.getElementById('test-donation').checked;
+			const source = document.getElementById('test-source').value;
+			const donationPayload = isDonation ? this.buildTestDonationPayload(source, document.getElementById('test-donation-amount').value) : {};
 			const testMessage = {
-				type: document.getElementById('test-source').value,
+				type: source,
 				chatname: document.getElementById('test-username').value,
 				userid: document.getElementById('test-username').value.toLowerCase(),
 				chatmessage: document.getElementById('test-message').value,
 				mod: document.getElementById('test-mod').checked,
 				vip: document.getElementById('test-vip').checked,
 				admin: document.getElementById('test-admin').checked,
-				hasDonation: document.getElementById('test-donation').checked,
 				// Add other required properties
 				timestamp: Date.now(),
 			};
+			Object.assign(testMessage, donationPayload);
 
 			const eventType = document.getElementById('test-event')?.value || document.getElementById('test-event-custom')?.value?.trim() || '';
 			if (eventType) {
 				testMessage.event = eventType;
+			} else if (donationPayload.event) {
+				testMessage.event = donationPayload.event;
 			}
 
 			// Apply first-time chatter flag
@@ -2391,11 +2450,6 @@ class EventFlowEditor {
 				const ts = Math.max(0, Date.now() - (amount * windowMs));
 				testMessage.lastactivity = ts;
 				testMessage.lastActivity = ts; // support either casing
-			}
-			
-			// Add donation amount if donation checkbox is checked
-			if (testMessage.hasDonation) {
-				testMessage.donationAmount = document.getElementById('test-donation-amount').value;
 			}
 			
 			// Run the test
@@ -2428,7 +2482,7 @@ class EventFlowEditor {
 			eventNewSubscriber: 'new_subscriber',
 			eventResub: 'resub',
 			eventGiftSub: 'subscription_gift',
-			eventDonation: 'donation',
+			eventDonation: 'superchat',
 			eventRaid: 'raid',
 			eventCheer: 'cheer'
 		};
@@ -2528,7 +2582,7 @@ class EventFlowEditor {
                 case 'obsRecordingStopped': node.config = {}; break;
                 case 'obsSceneChanged': node.config = {}; break;
                 case 'obsReplaybufferSaved': node.config = {}; break;
-                case 'compareProperty': node.config = { property: 'donationAmount', operator: 'gt', value: 0 }; break;
+                case 'compareProperty': node.config = { property: 'donoValue', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
                 case 'timeOfDay': node.config = { times: ['12:00'] }; break;
@@ -2561,6 +2615,8 @@ class EventFlowEditor {
 					node.config = { property: 'nameColor', value: '#FF0000' }; break;
                 case 'featureMessage':
                     node.config = {}; break;
+                case 'pinMessage':
+                    node.config = { mode: 'pin', messageId: '{id}', target: '' }; break;
                 case 'sendMessage':
 					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0, sanitizeMode: 'safe' }; break;
                 case 'relay':
@@ -3156,25 +3212,25 @@ class EventFlowEditor {
 				break;
 
 			case 'eventDonation':
-				html += this.renderEventSourceFilter(node, 'donation,cheer,supersticker');
+				html += this.renderEventSourceFilter(node, 'superchat,donation,cheer,supersticker,jeweldonation');
 				html += `
 					<div class="property-group">
 						<label class="property-label">Minimum Amount (optional)</label>
 						<input type="number" class="property-input" id="prop-minAmount"
 							value="${node.config.minAmount || 0}" min="0" step="0.01">
-						<div class="property-help">Set to 0 to trigger on any donation amount</div>
+						<div class="property-help">Set to 0 to trigger on any matched event amount</div>
 					</div>
 					<div class="property-group" style="background: #fff8e1; color: #333; padding: 10px; border-radius: 4px;">
-						<strong>💰 Donation / Super Chat</strong><br>
-						Triggers on donations, Super Chats, Super Stickers, etc.<br><br>
+						<strong>💰 Specific Donation Event</strong><br>
+						Matches specific event names: <code>superchat</code>, legacy <code>donation</code>, <code>cheer</code>, <code>supersticker</code>, and <code>jeweldonation</code>.<br>
+						For normal value-only tips or donations with no event name, use <strong>Has Donation</strong> instead.<br><br>
 						<strong>⚡ Supported platforms:</strong><br>
-						• <strong>YouTube:</strong> Super Chat, Super Stickers (WebSocket mode)<br>
+						• <strong>YouTube:</strong> Super Chat, Super Stickers, Jewels/Gifts<br>
 						• <strong>Twitch:</strong> Cheers/Bits (WebSocket mode)<br>
-						• <strong>TikTok:</strong> Coin gifts (many events)<br>
 						• <strong>Kick:</strong> Donations (WebSocket mode)<br>
 						• <strong>Many others:</strong> Streamlabs, Ko-fi integrations, etc.<br><br>
 						<div style="background: #ffecb3; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
-							⚠️ <strong>YouTube/Twitch/Kick require WebSocket mode</strong> for monetary events.
+								⚠️ <strong>Twitch/Kick require WebSocket mode</strong> for monetary events.
 						</div>
 								<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #f57f17;">📖 Event Reference Documentation</a>
 					</div>`;
@@ -3332,7 +3388,8 @@ class EventFlowEditor {
 
 			case 'compareProperty':
 				const commonProperties = [
-					{ value: 'donationAmount', label: 'Donation Amount' },
+					{ value: 'donoValue', label: 'Donation Value' },
+					{ value: 'donationAmount', label: 'Donation Amount (legacy)' },
 					{ value: 'type', label: 'Source Type' },
 					{ value: 'event', label: 'Event Name' },
 					{ value: 'sourceName', label: 'Channel Name' },
@@ -3381,7 +3438,7 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>💡 Examples:</strong><br>
-						• donationAmount > 50 (tips over $50)<br>
+						• donoValue > 50 (tips over $50)<br>
 						• karma < 0.3 (low karma users)<br>
 						• memberMonths >= 12 (1 year+ members)
 					</div>`;
@@ -3756,7 +3813,7 @@ class EventFlowEditor {
 					<div class="property-group">
 						<label class="property-label">Property Name</label>
 						<input type="text" class="property-input" id="prop-propertyName" 
-							value="${node.config.propertyName || 'amount'}" placeholder="e.g., amount, donationAmount">
+							value="${node.config.propertyName || 'amount'}" placeholder="e.g., amount, donoValue">
 						<div class="property-help">Message property to accumulate</div>
 					</div>
 					
@@ -4019,6 +4076,30 @@ class EventFlowEditor {
                     <div class="property-help">Use with a trigger like “Message Starts With” or “Channel Points” to auto-feature specific messages.</div>
                 </div>`;
                 break;
+            case 'pinMessage': {
+                const pinConfig = node.config || {};
+                const pinMode = pinConfig.mode || 'pin';
+                html += `<div class="property-group">
+                            <label class="property-label">Dock Pin Action</label>
+                            <select class="property-input" id="prop-mode">
+                                <option value="pin" ${pinMode === 'pin' ? 'selected' : ''}>Pin triggering message</option>
+                                <option value="unpin" ${pinMode === 'unpin' ? 'selected' : ''}>Unpin message by ID</option>
+                                <option value="nextPinned" ${pinMode === 'nextPinned' ? 'selected' : ''}>Feature next pinned message</option>
+                            </select>
+                            <div class="property-help">Pins the incoming dock row, unpins an existing dock row, or shows the next pinned row.</div>
+                        </div>
+                        <div class="property-group" id="pin-message-id-group" style="${pinMode === 'nextPinned' ? 'display:none;' : ''}">
+                            <label class="property-label">Message ID</label>
+                            <input type="text" class="property-input" id="prop-messageId" value="${pinConfig.messageId || '{id}'}">
+                            <div class="property-help">Use <code>{id}</code> for the triggering message, or a template/custom ID for delayed actions.</div>
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Dock Label (optional)</label>
+                            <input type="text" class="property-input" id="prop-target" value="${pinConfig.target || ''}" placeholder="moderator-dock">
+                            <div class="property-help">Leave blank for all docks. Set this only for a custom-labeled dock.</div>
+                        </div>`;
+                break;
+            }
             case 'sendMessage':
 				// Send Message allows sending generated messages (e.g., thank you messages, announcements)
 				const sendDestinations = [
@@ -5399,6 +5480,19 @@ class EventFlowEditor {
                 // ensure config refresh
                 if (nodeData && nodeData.config) {
                     nodeData.config.policy = e.target.value;
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        const pinModeSelect = document.getElementById('prop-mode');
+        const pinMessageIdGroup = document.getElementById('pin-message-id-group');
+        if (pinModeSelect && pinMessageIdGroup && nodeData.actionType === 'pinMessage') {
+            pinModeSelect.addEventListener('change', (e) => {
+                pinMessageIdGroup.style.display = e.target.value === 'nextPinned' ? 'none' : '';
+                if (nodeData && nodeData.config) {
+                    nodeData.config.mode = e.target.value;
                 }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);

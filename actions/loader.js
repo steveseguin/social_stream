@@ -13,6 +13,7 @@ function loadScript(src) {
 
 async function loadScriptsInOrder() {
     const scripts = [
+        '../currency.js',
         'EventFlowSystem.js',
         'EventFlowEditor.js',
         'interface.js'

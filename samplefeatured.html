@@ -246,6 +246,7 @@ Development Notes:
                 this.config.serverURL = urlParams.get('server3') || this.config.serverURL;
                 this.setupSocket(2);
             } else {
+                // Transport migration: server modes use setupSocket above; the iframe fallback is only for non-server URLs.
                 this.setupRecvDataWindow();
             }
         },
@@ -277,7 +278,7 @@ Development Notes:
 
         setupRecvDataWindow() {
             const iframe = document.createElement('iframe');
-            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${this.state.password}&notmobile&salt=vdo.ninja&label=overlay&exclude=${this.state.roomID}&scene&novideo&noaudio&cleanoutput&room=${this.state.roomID}`;
+            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(this.state.password)}&notmobile&salt=vdo.ninja&label=overlay&exclude=${this.state.roomID}&scene&novideo&noaudio&cleanoutput&room=${this.state.roomID}`;
             iframe.id = 'frame1';
             iframe.allow = 'midi;microphone;';
             document.body.appendChild(iframe);

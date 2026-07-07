@@ -209,8 +209,11 @@ URL parameters observed:
 - Session/security: `session`, `password`, `label`.
 - Server/path: `server`, `server2`, `server3`, `localserver`.
 - Display/settings: `title`, `showlist`, `showList`, `showtotals`, `showTotals`, `allowchanges`, `allowChanges`, `accent`, `accentalt`, `accentAlt`, `maptype`, `mapType`, `mapstyle`, `mapStyle`, `region`, `mapregion`, `motion`, `mapmotion`, `mapMotion`, `mapscale`, `mapScale`.
+- Styling overrides (all case-insensitive; hex colors may omit `#`): `mapopacity`/`landopacity`/`baseopacity` (land visibility, `0`-`1` or `0`-`100`; overrides the theme's base land alpha), `mapfill`/`landcolor`/`fillcolor` (land fill color), `mapborder`/`bordercolor`/`strokecolor` (country border color), `borderwidth`/`strokewidth`, `mapbg`/`bgcolor` (background), `transparent` (transparent background for OBS), `hidegrid`/`nogrid`, plus standard `css` and `b64css`/`base64css`/`cssb64`/`cssbase64` custom CSS injection.
+- `mapstyle` presets: `default`, `contrast`, `aurora`, `ember`, `neon`, `blueprint`, `minimal`, `retro`, `radar`, `noir`, `atlas`, `synthwave`, `terminal`, `ocean`.
 - Voting: `multi`, `mapspam`, `mapSpam`.
-- Behavior: `autostart`, `autoStart`, `autofit`, `autoFit`, `autofitmarkers`, `autoFitMarkers`, `mapautofit`, `mapAutoFit`, `hidenumbers`, `hideNumbers`, `maphidenumbers`, `mapHideNumbers`, `colorintensity`, `colorIntensity`, `mapcolorintensity`, `mapColorIntensity`, `debug`.
+- Behavior: `autostart`, `autoStart`, `autofit`, `autoFit`, `autofitmarkers`, `autoFitMarkers`, `mapautofit`, `mapAutoFit`, `hidenumbers`, `hideNumbers`, `maphidenumbers`, `mapHideNumbers`, `colorintensity`, `colorIntensity`, `mapcolorintensity`, `mapColorIntensity`, `debug`. Boolean params treat bare presence (no value) as true.
+- Note: `mapcolorintensity` recolors the vote markers (red intensity scale); it does not change base land visibility — use `mapopacity` for that.
 
 Support checks:
 
@@ -219,6 +222,7 @@ Support checks:
 - If users cannot change their answer, check `allowchanges`.
 - If repeated messages inflate counts, check `multi`, `mapspam`, or `mapSpam`.
 - If state/city mode misses a location, switch to `maptype=country` to confirm base voting works.
+- If the base land is too faint, use `mapopacity=75` or `mapstyle=contrast`; `mapcolorintensity` only changes vote markers.
 
 ## Page Choice Notes
 

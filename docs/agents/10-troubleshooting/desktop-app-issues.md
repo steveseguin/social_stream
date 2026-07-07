@@ -6,7 +6,7 @@ Status: heavy extraction pass started.
 
 Document common standalone app support issues and the operational differences between the SSN desktop app and the Chrome extension.
 
-The app is a host for Social Stream source files. For Social Stream feature behavior, use `C:\Users\steve\Code\social_stream` as the source of truth. For desktop shell behavior, use `C:\Users\steve\Code\ssapp`.
+The app is a host for Social Stream source files. For Social Stream feature behavior, use `<social_stream repo>` as the source of truth. For desktop shell behavior, use `<ssapp repo>`.
 
 For source-window lifecycle, custom session, injection, and app-parity routing, use `../04-standalone-app-source-windows.md`. For app-specific TikTok modes, signing providers, fallbacks, replies, and test assets, use `../08-platform-sources/tiktok-standalone-app.md`.
 
@@ -48,7 +48,7 @@ Confirmed from `ssapp/main.js`:
 Important support rule:
 
 - Do not tell users to edit the packaged fallback mirror for normal work.
-- For source edits, use `C:\Users\steve\Code\social_stream`.
+- For source edits, use `<social_stream repo>`.
 - If the app is pointed at the wrong local folder, clear the saved local source or reload with a validated Social Stream source folder.
 
 ## Window And Tray Behavior

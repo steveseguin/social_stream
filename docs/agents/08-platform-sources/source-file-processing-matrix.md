@@ -104,7 +104,7 @@ These are the main `sources/*.js` files. Most are normal extension/app content s
 | `sources/openai.js` | ChatGPT | toggle | 1 | - | quick/heavy | ChatGPT/OpenAI page capture; see `communication-and-sensitive-sources.md`. |
 | `sources/openstreamingplatform.js` | - | - | 1 | - | quick/heavy | OpenStreamingPlatform demo chat-only capture; public routing needs reconciliation; see `video-broadcast-platform-sources.md`. |
 | `sources/owncast.js` | Owncast | standard | 1 | - | quick/heavy | Owncast rendered chat and badge capture; see `video-broadcast-platform-sources.md`. |
-| `sources/parti.js` | Parti | popout | 1 | - | quick/heavy | Parti popout chat capture with tip and viewer heartbeat behavior; see `popout-chat-only-sources.md`. |
+| `sources/parti.js` | Parti | profile/popout | 1 | - | quick/heavy | Parti profile and popout chat capture with tip and viewer heartbeat behavior; see `popout-chat-only-sources.md`. |
 | `sources/patreon.js` | Patreon | toggle | 1 | - | quick/heavy | Patreon toggle-required chat/image/viewer-update capture; see `community-membership-webapp-sources.md`. |
 | `sources/peertube.js` | PeerTube | standard | 1 | - | quick/heavy | PeerTube livechat plugin room capture with login prompt caveat; see `video-broadcast-platform-sources.md`. |
 | `sources/picarto.js` | Picarto.tv | popout | 1 | - | quick/heavy | Picarto chatpopout capture with emote/avatar handling; see `popout-chat-only-sources.md`. |
@@ -166,7 +166,7 @@ These are the main `sources/*.js` files. Most are normal extension/app content s
 | `sources/wix2.js` | - | - | 1 | all_frames | quick/heavy | Embedded Wix/Annoto widget capture that emits `type: "wix"`; see `community-membership-webapp-sources.md`. |
 | `sources/workplace.js` | - | - | 0 | - | quick/heavy | Legacy/unreferenced Workplace parser; current Workplace routing starts in `facebook.md`; see `community-membership-webapp-sources.md`. |
 | `sources/x.js` | X Live (Twitter); X Static Posts | popout, manual | 1 | - | quick/heavy | X live/broadcast chat capture; static/manual post capture is separate; see `special-case-platform-and-helper-sources.md`. |
-| `sources/xeenon.js` | Xeenon | standard | 1 | - | quick/heavy | Xeenon rendered chat capture; viewer helper needs validation; see `regional-and-emerging-platform-sources.md`. |
+| `sources/graveyard/xeenon.js` | Xeenon | retired | - | - | quick/heavy | Retired rendered chat capture; active manifest route removed after Xeenon hibernation. |
 | `sources/younow.js` | YouNow | standard | 1 | - | quick/heavy | YouNow rendered chat and badge capture; see `video-broadcast-platform-sources.md`. |
 | `sources/youtube.js` | YouTube Live; YouTube Static Comments | popout, manual | 2 | all_frames | heavy | Intense parser/event/setup validation. |
 | `sources/youtube_comments.js` | - | - | 0 | - | quick/heavy | Unmanifested YouTube live-chat helper/legacy file; see `special-case-platform-and-helper-sources.md` and `youtube.md`. |

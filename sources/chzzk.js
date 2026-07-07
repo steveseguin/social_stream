@@ -61,15 +61,18 @@ function toDataURL(url, callback) {
 	}
 
 	var CHAT_WRAPPER_SELECTOR = "[class*='live_chatting_list_wrapper__'], [class^='live_chatting_list_wrapper']";
-	var CHAT_ITEM_SELECTOR = "[class*='live_chatting_list_item__'], [class^='live_chatting_list_item'], [class*='_chatting_message_']";
+	var CHAT_ITEM_SELECTOR = "[class*='live_chatting_list_item__'], [class^='live_chatting_list_item'], [class*='_chatting_message_'], [class*='_container_y6h6c_']";
 	var CHAT_NAME_SELECTOR = "[class*='live_chatting_username_nickname__'], [class^='live_chatting_username_nickname']";
 	var CHAT_TEXT_SELECTOR = "[class*='live_chatting_message_text__'], [class^='live_chatting_message_text'], [class*='live_chatting_donation_message_text__'], [class^='live_chatting_donation_message_text']";
 	var CHAT_DONATION_AMOUNT_SELECTOR = "[class*='live_chatting_donation_message_money__'], [class^='live_chatting_donation_message_money']";
-	var CHAT_BADGE_SELECTOR = "[class*='badge_container'] img[src], [class*='live_chatting_badge'] img[src]";
+	var CHAT_BADGE_SELECTOR = "[class*='badge_container'] img[src], [class*='live_chatting_badge'] img[src], button[class*='_nickname_'] img[src], button[class*='_profile_button_'] img[src]";
 	var DUPLICATE_WINDOW_MS = 1200;
 	var INITIAL_BACKLOG_SUPPRESS_MS = 10000;
 	var startupSuppressUntil = Date.now() + INITIAL_BACKLOG_SUPPRESS_MS;
 	var recentlySeenMessages = new Map();
+	var viewerCountInterval = null;
+	var viewerCountInFlight = false;
+	var lastViewerCount = null;
 
 	function shouldSkipDuplicate(name, msg){
 		var now = Date.now();
@@ -140,6 +143,109 @@ function toDataURL(url, callback) {
 			return "";
 		}
 	}
+
+	function getCurrentDonationElement(ele){
+		if (!ele || ele.nodeType !== 1 || !ele.querySelector){
+			return null;
+		}
+		if (ele.matches && ele.matches("[class*='_container_y6h6c_']")){
+			return ele;
+		}
+		var donationEle = ele.querySelector("[class*='_container_y6h6c_']");
+		if (donationEle){
+			return donationEle;
+		}
+		var profileButton = ele.querySelector("button[class*='_profile_button_']");
+		var moneyEle = ele.querySelector("[class*='_money_']");
+		if (profileButton && moneyEle){
+			return ele;
+		}
+		return null;
+	}
+
+	function getDonationTextElement(ele, profileButton, moneyEle){
+		var textNodes = ele.querySelectorAll("[class*='_text_'], p");
+		for (var i = 0; i < textNodes.length; i++){
+			var node = textNodes[i];
+			if (!node || (profileButton && profileButton.contains(node)) || (moneyEle && moneyEle.contains(node))){
+				continue;
+			}
+			if ((node.textContent || "").trim()){
+				return node;
+			}
+		}
+		return null;
+	}
+
+	function getDonationAmount(moneyEle){
+		if (!moneyEle){
+			return "";
+		}
+		var amountClone = moneyEle.cloneNode(true);
+		try {
+			amountClone.querySelectorAll(".blind, [class*='blind']").forEach(function(hiddenNode){
+				hiddenNode.remove();
+			});
+		} catch(e){}
+		var amount = (amountClone.textContent || "").replace(/\s+/g, "").replace(/[^0-9.,]/g, "").trim();
+		if (!amount){
+			return "";
+		}
+		return escapeHtml(amount + " \uCE58\uC988");
+	}
+
+	function parseCurrentDonationMessage(ele){
+		var donationEle = getCurrentDonationElement(ele);
+		if (!donationEle){
+			return null;
+		}
+		var profileButton = donationEle.querySelector("button[class*='_profile_button_']");
+		var moneyEle = donationEle.querySelector("[class*='_money_']");
+		var name = "";
+		var namecolor = "";
+		var msg = "";
+		var badges = [];
+
+		if (profileButton){
+			name = escapeHtml((profileButton.textContent || "").trim());
+			try {
+				var coloredName = profileButton.querySelector("[style*='color']");
+				if (coloredName && coloredName.style && coloredName.style.color){
+					namecolor = coloredName.style.color;
+				}
+			} catch(e){}
+			try {
+				profileButton.querySelectorAll("img[src]").forEach(function(badge){
+					badges.push(badge.src);
+				});
+			} catch(e){}
+		}
+
+		var textEle = getDonationTextElement(donationEle, profileButton, moneyEle);
+		if (textEle){
+			msg = getAllContentNodes(textEle).trim();
+		}
+
+		var hasDonation = getDonationAmount(moneyEle);
+		if (!name || (!msg && !hasDonation)){
+			return null;
+		}
+
+		return {
+			chatname: name,
+			chatbadges: badges,
+			backgroundColor: "",
+			textColor: "",
+			chatmessage: msg,
+			nameColor: namecolor,
+			chatimg: "",
+			hasDonation: hasDonation,
+			membership: "",
+			contentimg: "",
+			textonly: settings.textonlymode || false,
+			type: "chzzk"
+		};
+	}
 	
 	
 	function processMessage(ele, force){
@@ -156,10 +262,34 @@ function toDataURL(url, callback) {
 			return;
 		}
 
+		var donationData = parseCurrentDonationMessage(ele);
+		if (donationData){
+			var donationSignature = donationData.chatname + "::" + donationData.chatmessage + "::" + donationData.hasDonation;
+			if (ele.dataset && ele.dataset.ssnLastMessageSignature === donationSignature){
+				ele.dataset.ssnProcessed = "1";
+				return;
+			}
+			if (shouldSkipDuplicate(donationData.chatname, donationData.chatmessage + "::" + donationData.hasDonation)){
+				if (ele.dataset){
+					ele.dataset.ssnLastMessageSignature = donationSignature;
+					ele.dataset.ssnProcessed = "1";
+				}
+				return;
+			}
+			if (ele.dataset){
+				ele.dataset.ssnLastMessageSignature = donationSignature;
+				ele.dataset.ssnProcessed = "1";
+			}
+			pushMessage(donationData);
+			return;
+		}
+
 		var badges = [];
 		try{
 			 ele.querySelectorAll(CHAT_BADGE_SELECTOR).forEach(b=>{
-				badges.push(b.src);	
+				if (badges.indexOf(b.src) === -1){
+					badges.push(b.src);
+				}
 			});
 		} catch(e){
 		}
@@ -255,9 +385,69 @@ function toDataURL(url, callback) {
 
 	function pushMessage(data){
 		try{
+			if (!isExtensionOn){return;}
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
 		} catch(e){
 		}
+	}
+
+	function getChannelIdFromUrl(){
+		try {
+			var match = window.location.pathname.match(/\/(?:iframe\/)?live\/([^\/?#]+)\/chat/);
+			return match ? match[1] : "";
+		} catch(e){
+			return "";
+		}
+	}
+
+	function sendViewerCount(count){
+		var parsedCount = parseInt(count, 10);
+		if (parsedCount !== parsedCount || parsedCount === lastViewerCount){
+			return;
+		}
+		lastViewerCount = parsedCount;
+		pushMessage({
+			type: "chzzk",
+			event: "viewer_update",
+			meta: parsedCount
+		});
+	}
+
+	function checkViewers(){
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode) || viewerCountInFlight){
+			return;
+		}
+		var channelId = getChannelIdFromUrl();
+		if (!channelId){
+			return;
+		}
+		viewerCountInFlight = true;
+		fetch("https://api.chzzk.naver.com/polling/v3.1/channels/" + encodeURIComponent(channelId) + "/live-status?includePlayerRecommendContent=false", {
+			headers: {
+				"front-client-platform-type": "PC",
+				"front-client-product-type": "web",
+				"if-modified-since": "Mon, 26 Jul 1997 05:00:00 GMT"
+			}
+		}).then(function(response){
+			if (!response.ok){
+				throw new Error("CHZZK viewer count HTTP " + response.status);
+			}
+			return response.json();
+		}).then(function(response){
+			if (response && response.content && typeof response.content.concurrentUserCount !== "undefined"){
+				sendViewerCount(response.content.concurrentUserCount);
+			}
+		}).catch(function(){}).finally(function(){
+			viewerCountInFlight = false;
+		});
+	}
+
+	function startViewerCountInterval(){
+		if (viewerCountInterval){
+			return;
+		}
+		viewerCountInterval = setInterval(checkViewers, 60000);
+		checkViewers();
 	}
 	
 	var settings = {};
@@ -268,8 +458,12 @@ function toDataURL(url, callback) {
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
 		response = response || {};
+		if ("state" in response){
+			isExtensionOn = response.state;
+		}
 		if ("settings" in response){
 			settings = response.settings;
+			startViewerCountInterval();
 		}
 	});
 
@@ -283,8 +477,15 @@ function toDataURL(url, callback) {
 					return;
 				}
 				if (typeof request === "object"){
+					if ("state" in request){
+						isExtensionOn = request.state;
+						sendResponse(true);
+						return;
+					}
 					if ("settings" in request){
 						settings = request.settings;
+						startViewerCountInterval();
+						checkViewers();
 						sendResponse(true);
 						return;
 					}
@@ -301,6 +502,10 @@ function toDataURL(url, callback) {
 
 	function forEachMessageNode(node, callback){
 		if (!node || node.nodeType !== 1){
+			return;
+		}
+		if (getCurrentDonationElement(node)){
+			callback(node);
 			return;
 		}
 		if (node.matches && node.matches(CHAT_ITEM_SELECTOR)){

@@ -3,6 +3,14 @@
   'use strict';
   
   const DEFAULT_REMOTE_PIPER_BASE = 'https://largefiles.socialstream.ninja/piper';
+  const HUGGING_FACE_PIPER_BASE = 'https://huggingface.co/rhasspy/piper-voices/resolve/main';
+  const PIPER_VOICE_PATHS = {
+    'es_ES-davefx-medium': 'es/es_ES/davefx/medium/es_ES-davefx-medium.onnx',
+    'es_MX-ald-medium': 'es/es_MX/ald/medium/es_MX-ald-medium.onnx',
+    'pt_BR-edresson-low': 'pt/pt_BR/edresson/low/pt_BR-edresson-low.onnx',
+    'pt_BR-faber-medium': 'pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx',
+    'pt_PT-tug\u00e3o-medium': 'pt/pt_PT/tug\u00e3o/medium/pt_PT-tug\u00e3o-medium.onnx'
+  };
   const trimTrailingSlash = (value) => typeof value === 'string' ? value.replace(/\/+$/, '') : '';
   
   class ProperPiperTTS {
@@ -37,7 +45,14 @@
         'en_US-ryan-high': 'US Male (Ryan) - High Quality',
         // British English voices
         'en_GB-alan-low': 'British Male (Alan) - Low',
-        'en_GB-alba-medium': 'British Female (Alba) - Medium'
+        'en_GB-alba-medium': 'British Female (Alba) - Medium',
+        // Spanish voices
+        'es_ES-davefx-medium': 'Spanish (Spain DaveFX) - Medium',
+        'es_MX-ald-medium': 'Spanish (Mexico Ald) - Medium',
+        // Portuguese voices
+        'pt_BR-edresson-low': 'Brazilian Portuguese (Edresson) - Low',
+        'pt_BR-faber-medium': 'Brazilian Portuguese (Faber) - Medium',
+        'pt_PT-tug\u00e3o-medium': 'Portuguese (Portugal Tugao) - Medium'
       };
     }
 
@@ -554,10 +569,22 @@
         bases.push(`${trimmed}/piper-voices/${voiceId}`);
         bases.push(`${trimmed}/piper-voices/${voiceId}/${voiceId}`);
       };
+      const addMappedBase = (root, prefix = '') => {
+        const voicePath = PIPER_VOICE_PATHS[voiceId];
+        if (!voicePath || !root || typeof root !== 'string') return;
+        const trimmed = trimTrailingSlash(root.trim());
+        const modelBasePath = voicePath.replace(/\.onnx$/i, '');
+        bases.push(`${trimmed}/${prefix}${modelBasePath}`);
+      };
       addBase(this.localPiperBase);
       addBase(this.extensionPiperBase);
       addBase(this.remoteBaseUrl);
       if (this.remoteBaseUrl !== DEFAULT_REMOTE_PIPER_BASE) addBase(DEFAULT_REMOTE_PIPER_BASE);
+      addMappedBase(this.localPiperBase, 'piper-voices/');
+      addMappedBase(this.extensionPiperBase, 'piper-voices/');
+      addMappedBase(this.remoteBaseUrl);
+      if (this.remoteBaseUrl !== DEFAULT_REMOTE_PIPER_BASE) addMappedBase(DEFAULT_REMOTE_PIPER_BASE);
+      addMappedBase(HUGGING_FACE_PIPER_BASE);
       return bases;
     }
 
@@ -587,7 +614,8 @@
           const contentType = (response.headers && response.headers.get && response.headers.get('content-type')) || '';
           let data;
           if (responseType === 'json') {
-            if (contentType && !contentType.includes('application/json')) {
+            const isJsonAssetUrl = /\.json(?:[?#]|$)/i.test(url);
+            if (contentType && !contentType.includes('application/json') && !isJsonAssetUrl) {
               throw new Error(`Unexpected content-type for JSON fetch: ${contentType}`);
             }
             data = await response.json();

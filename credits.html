@@ -585,6 +585,44 @@
 	
 	    // Get URL parameters
 	    const urlParams = new URLSearchParams(window.location.search);
+	    const SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+	    // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+	    var TRANSPORT_CAPABILITIES = {
+            serverFeed: true,
+            serverTargeted: false,
+            upstreamCommands: false,
+            customChannel: false,
+            legacyBridgeRequired: true,
+            legacyBridgeReason: "Credits start/preview/reset commands are still sent with sendTargetP2P."
+	    };
+	    function versionAtLeast(value, minimum) {
+	        const a = String(value || "").split(".");
+	        const b = String(minimum || "").split(".");
+	        const len = Math.max(a.length, b.length);
+	        for (let i = 0; i < len; i++) {
+	            const av = parseInt(a[i], 10) || 0;
+	            const bv = parseInt(b[i], 10) || 0;
+	            if (av > bv) return true;
+	            if (av < bv) return false;
+	        }
+	        return true;
+	    }
+	    // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+	    function hasExclusiveServerTransport(caps) {
+	        var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+	        return (params.server === true && urlParams.has("server")) ||
+	            (params.server2 !== false && urlParams.has("server2")) ||
+	            (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+	    }
+	    function useServerOnlyTransport() {
+            var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+            return hasExclusiveServerTransport(caps) &&
+                versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+                caps.serverFeed === true &&
+                caps.legacyBridgeRequired !== true &&
+                caps.upstreamCommands !== true &&
+                caps.customChannel !== true;
+	    }
 	    const donationPriority = urlParams.has('donationpriority');
 	    // Session security and network options
 	    const password = urlParams.get('password') || 'false';
@@ -592,6 +630,12 @@
 	    const persistCredits = urlParams.has('persistcredits');
 	    const creditsStorageSession = (urlParams.get('session') || 'local').split(',')[0] || 'local';
 	    const creditsStorageKey = 'ssn-credits-users-v1:' + creditsStorageSession;
+	    function getCreditsFilterMode() {
+	        if (urlParams.has('onlydonors')) return 'onlydonors';
+	        if (urlParams.has('onlysupporters')) return 'onlysupporters';
+	        return 'all';
+	    }
+	    const creditsFilterMode = getCreditsFilterMode();
 	    function normalizeColorParam(value) {
 	        if (typeof value !== "string") return null;
 	        const trimmed = value.trim();
@@ -627,6 +671,7 @@
 			this.type = type;
 			this.messageCount = 0;
 			this.donations = 0;
+			this.hasDonationActivity = false;
 			this.isMember = false;
 			this.avatarUrl = null;
 		}
@@ -642,7 +687,7 @@
 		get displayName() {
 			let badges = [];
 			if (this.isMember) badges.push('👑');
-			if (this.donations > 0) badges.push('💝');
+			if (this.hasDonationActivity || this.donations > 0) badges.push('💝');
 			if (this.messageCount > 10) badges.push('💬');
 			
 			const nameDisplay = this.name;
@@ -683,15 +728,24 @@
 		return !!(data && (data.hasDonation || data.membership));
 	}
 
+	function getPositiveDonationAmount(value) {
+		const amount = parseFloat(String(value || '').replace(/,/g, ''));
+		return !isNaN(amount) && amount > 0 ? amount : 0;
+	}
+
+	function userHasDonationActivity(user) {
+		return !!(user && (user.hasDonationActivity || user.donations > 0));
+	}
+
 	function filterCreditsUsersForSupporters(userList) {
 		if (urlParams.has('onlydonors')) {
 			return userList.filter(function(user) {
-				return user.donations > 0;
+				return userHasDonationActivity(user);
 			});
 		}
 		if (urlParams.has('onlysupporters')) {
 			return userList.filter(function(user) {
-				return user.donations > 0 || user.isMember;
+				return userHasDonationActivity(user) || user.isMember;
 			});
 		}
 		return userList;
@@ -742,20 +796,24 @@
 		}
 
 		if (data.hasDonation) {
+			user.hasDonationActivity = true;
 			try {
-				// Use convertToUSD function to handle donation conversion
 				const source = data.type ? data.type.toLowerCase() : '';
-				const donationAmount = convertToUSD(data.hasDonation, source);
-				
-				// Only add if we have a valid amount
+				let donationAmount = getPositiveDonationAmount(data.donoValue);
+				if (!donationAmount) {
+					donationAmount = convertToUSD(data.hasDonation, source);
+				}
+
 				if (!isNaN(donationAmount) && donationAmount > 0) {
 					user.donations += donationAmount;
 					console.log(`Added donation of ${donationAmount} for ${data.chatname}`);
 				} else {
-					console.warn(`Invalid donation format for ${data.chatname}:`, data.hasDonation);
+					user.donations += 0.01;
+					console.warn(`Using minimum donation value for ${data.chatname}:`, data.hasDonation);
 				}
 			} catch (error) {
 				console.error(`Error processing donation for ${data.chatname}:`, error, data.hasDonation);
+				user.donations += 0.01;
 			}
 		}
 
@@ -768,7 +826,7 @@
 		
 		if (donationPriority) {
 			// Separate users into donors and non-donors
-			const donors = sortedUsers.filter(u => u.donations > 0)
+			const donors = sortedUsers.filter(userHasDonationActivity)
 				.sort((a, b) => {
 					// First sort by donation amount
 					if (b.donations !== a.donations) {
@@ -781,13 +839,13 @@
 					// Finally by participation
 					return b.messageCount - a.messageCount;
 				});
-			
-			const members = sortedUsers.filter(u => u.donations === 0 && u.isMember)
+
+			const members = sortedUsers.filter(u => !userHasDonationActivity(u) && u.isMember)
 				.sort((a, b) => b.messageCount - a.messageCount);
-			
-			const participants = sortedUsers.filter(u => u.donations === 0 && !u.isMember)
+
+			const participants = sortedUsers.filter(u => !userHasDonationActivity(u) && !u.isMember)
 				.sort((a, b) => b.messageCount - a.messageCount);
-			
+
 			const hidecategories = urlParams.has('hidecategories');
 			let content = '';
 			
@@ -847,12 +905,14 @@
 					type: user.type,
 					messageCount: user.messageCount,
 					donations: user.donations,
+					hasDonationActivity: userHasDonationActivity(user),
 					isMember: !!user.isMember,
 					avatarUrl: user.avatarUrl || null
 				});
 			});
 			localStorage.setItem(creditsStorageKey, JSON.stringify({
-				version: 1,
+				version: 2,
+				filterMode: creditsFilterMode,
 				updated: Date.now(),
 				users: savedUsers
 			}));
@@ -866,12 +926,18 @@
 		try {
 			const saved = JSON.parse(localStorage.getItem(creditsStorageKey) || 'null');
 			const savedUsers = saved && Array.isArray(saved.users) ? saved.users : [];
+			const savedFilterMode = saved && typeof saved.filterMode === 'string' ? saved.filterMode : '';
 			savedUsers.forEach(function(item) {
 				if (!item || !item.name || !item.type) return;
 				const user = getOrCreateUser(item.name, item.type);
 				user.messageCount = Math.max(0, Number(item.messageCount) || 0);
 				user.donations = Math.max(0, Number(item.donations) || 0);
 				user.isMember = !!item.isMember;
+				if (typeof item.hasDonationActivity === 'boolean') {
+					user.hasDonationActivity = item.hasDonationActivity;
+				} else {
+					user.hasDonationActivity = user.donations > 0 || savedFilterMode === 'onlydonors' || (savedFilterMode === 'onlysupporters' && !user.isMember);
+				}
 				user.avatarUrl = item.avatarUrl || null;
 			});
 		} catch (e) {
@@ -899,16 +965,19 @@
 	loadPersistedCredits();
 
 	// IFRAME setup for Social Stream Ninja
-    const iframe = document.createElement("iframe");
     const filename = "dock";
-    iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
-	iframe.style.width = "0px";
-	iframe.style.height = "0px";
-	iframe.style.position = "fixed";
-	iframe.style.left = "-100px";
-	iframe.style.top = "-100px";
-	iframe.id = "frame1";
-	document.body.appendChild(iframe);
+    let iframe = null;
+    if (!useServerOnlyTransport()) {
+        iframe = document.createElement("iframe");
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+    }
 
 	// Set end message if provided
 	const endMessage = urlParams.get('endmessage');
@@ -1071,18 +1140,20 @@
 		footerText.style.fontFamily = defaultFont;
 	}
 
-    // Handle message events
-    const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-    const eventer = window[eventMethod];
-    const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-    eventer(messageEvent, function (e) {
-        if (e.source != iframe.contentWindow) return;
-        if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-            if ("overlayNinja" in e.data.dataReceived) {
-                processData(e.data.dataReceived.overlayNinja);
+    if (iframe) {
+        // Handle message events
+        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+        const eventer = window[eventMethod];
+        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+        eventer(messageEvent, function (e) {
+            if (e.source != iframe.contentWindow) return;
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
             }
-        }
-    });
+        });
+    }
 
     // Optional: Extension server relay (server2/server3) for dock-labeled pages
     (function setupExtensionSocket(){

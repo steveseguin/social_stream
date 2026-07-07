@@ -722,6 +722,44 @@
     <script>
         // URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
+        const SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+        // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+        var TRANSPORT_CAPABILITIES = {
+            serverFeed: true,
+            serverTargeted: false,
+            upstreamCommands: false,
+            customChannel: false,
+            legacyBridgeRequired: true,
+            legacyBridgeReason: "Tip jar reset/set commands are still sent with sendTargetP2P."
+        };
+        function versionAtLeast(value, minimum) {
+            const a = String(value || "").split(".");
+            const b = String(minimum || "").split(".");
+            const len = Math.max(a.length, b.length);
+            for (let i = 0; i < len; i++) {
+                const av = parseInt(a[i], 10) || 0;
+                const bv = parseInt(b[i], 10) || 0;
+                if (av > bv) return true;
+                if (av < bv) return false;
+            }
+            return true;
+        }
+        // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+        function hasExclusiveServerTransport(caps) {
+            var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+            return (params.server === true && urlParams.has("server")) ||
+                (params.server2 !== false && urlParams.has("server2")) ||
+                (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+        }
+        function useServerOnlyTransport() {
+            var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+            return hasExclusiveServerTransport(caps) &&
+                versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+                caps.serverFeed === true &&
+                caps.legacyBridgeRequired !== true &&
+                caps.upstreamCommands !== true &&
+                caps.customChannel !== true;
+        }
         const style = urlParams.get('style') || 'jar'; // jar, meter, minimal
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
         const hypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype';
@@ -743,7 +781,6 @@
         const countGifts = !urlParams.has('nogifts');
         const countResubs = !urlParams.has('noresubs');
         const countGiftRedemptions = urlParams.has('countgiftredemptions');
-        const excludeGiftPurchases = urlParams.has('excludegiftpurchase') || urlParams.has('excludegiftpurchases');
         const resetOnComplete = hypeMode ? !urlParams.has('noresetoncomplete') : urlParams.has('resetoncomplete');
         const carryOverGoal = urlParams.has('carryover');
         const showCompletions = hypeMode && !urlParams.has('hidecompletions');
@@ -1796,9 +1833,9 @@
 
         function getDonationRaw(data) {
             const meta = getMeta(data);
-            if (getEventName(data) === 'giftpurchase') {
-                const value = firstNumber([data.donoValue, data.donationAmount, meta.amount, meta.price]);
-                return '$' + (value || (extractContributionCount(data) * 5));
+            const eventName = getEventName(data);
+            if (eventName === 'giftpurchase' || eventName === 'giftredemption') {
+                return '';
             }
             return data.donation || data.hasDonation || data.donationAmount || data.donoValue ||
                 meta.amountText || meta.priceText || meta.amount || '';
@@ -1815,6 +1852,7 @@
             const eventName = getEventName(data);
             const membership = data.membership ? String(data.membership).toLowerCase() : '';
             if (eventName === 'jeweldonation' ||
+                eventName === 'giftpurchase' ||
                 eventName === 'giftredemption' ||
                 eventName === 'gift_subscription' ||
                 eventName === 'subscription_gift' ||
@@ -1823,10 +1861,6 @@
                 meta.youtubeGift) {
                 return false;
             }
-            if (eventName === 'giftpurchase' && excludeGiftPurchases) {
-                return false;
-            }
-
             if (unitInfo && unitInfo.type && unitInfo.type !== 'usd') {
                 return false;
             }
@@ -1835,7 +1869,7 @@
             if (/\bjewels?\b/.test(raw)) {
                 return false;
             }
-            return eventName === 'giftpurchase' || !(/\bgift(?:ed|s)?\b/.test(raw));
+            return !(/\bgift(?:ed|s)?\b/.test(raw));
         }
 
         function isGiftEvent(eventName, membership) {
@@ -2442,30 +2476,32 @@
         }
 
         // IFRAME setup for Social Stream Ninja
-        const iframe = document.createElement("iframe");
-        const filename = "tipjar";
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + 
-            (password || "false") + "&solo&view=" + roomID + "&novideo&noaudio&label=" + 
-            filename + "&cleanoutput&room=" + roomID;
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
+        if (!useServerOnlyTransport()) {
+            const iframe = document.createElement("iframe");
+            const filename = "tipjar";
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" +
+                (password || "false") + "&solo&view=" + roomID + "&novideo&noaudio&label=" +
+                filename + "&cleanoutput&room=" + roomID;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
 
-        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-        const eventer = window[eventMethod];
-        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-        eventer(messageEvent, function (e) {
-            if (e.source != iframe.contentWindow) return;
-            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+            const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            const eventer = window[eventMethod];
+            const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+            eventer(messageEvent, function (e) {
+                if (e.source != iframe.contentWindow) return;
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
                 }
-            }
-        });
+            });
+        }
     </script>
 </body>
 </html>

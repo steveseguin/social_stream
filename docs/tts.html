@@ -636,6 +636,7 @@
                 <li>Works directly with OBS browser source</li>
                 <li>Voice selection: <code>&voicekokoro=af_bella</code></li>
                 <li>Speed control: <code>&kokorospeed=1.2</code></li>
+                <li>Kokoro's built-in voices are English voices; <code>&speech=pt-BR</code>, <code>&speech=es-ES</code>, or matching <code>&language=</code> values will not turn Kokoro into Portuguese or Spanish TTS</li>
             </ul>
 
             <h3>Piper TTS (Free, Built-in)</h3>
@@ -643,6 +644,8 @@
                 <li>Enable with <code>?ttsprovider=piper</code></li>
                 <li>Fast, CPU-friendly neural TTS running in browser</li>
                 <li>Voice selection: <code>&pipervoice=en_US-hfc_female-medium</code></li>
+                <li>Portuguese voices: <code>&pipervoice=pt_BR-faber-medium</code> or <code>&pipervoice=pt_BR-edresson-low</code></li>
+                <li>Spanish voices: <code>&pipervoice=es_ES-davefx-medium</code> or <code>&pipervoice=es_MX-ald-medium</code></li>
                 <li>Speed control: <code>&piperspeed=1.0</code></li>
             </ul>
 
@@ -658,7 +661,18 @@
                 <li>Enable with <code>?ttsprovider=espeak</code></li>
                 <li>Classic open-source TTS, works on any hardware</li>
                 <li>Voice selection: <code>&espeakvoice=en</code></li>
+                <li>Portuguese example: <code>&speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>Spanish example: <code>&speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
                 <li>Speed control: <code>&espeakspeed=175</code></li>
+            </ul>
+
+            <h3>Portuguese and Spanish TTS Examples</h3>
+            <ul>
+                <li>Portuguese, best free local quality tested in SSN: <code>?speech=pt-BR&ttsprovider=piper&pipervoice=pt_BR-faber-medium</code></li>
+                <li>Portuguese, fastest fallback tested in SSN: <code>?speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>Spanish, best free local quality tested in SSN: <code>?speech=es-ES&ttsprovider=piper&pipervoice=es_ES-davefx-medium</code></li>
+                <li>Spanish, fastest fallback tested in SSN: <code>?speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
+                <li>For cloud voices, use a provider voice/language that supports the target language, such as Google Cloud, ElevenLabs, Speechify, Gemini, or an OpenAI-compatible local server.</li>
             </ul>
 
             <h3>OpenAI / Local Server TTS</h3>
@@ -667,11 +681,12 @@
                 <li>Use <code>?ttsprovider=customtts</code> or <code>?ttsprovider=localtts</code> for a self-hosted endpoint</li>
                 <li>Uses OpenAI's API by default, or any compatible local server</li>
                 <li>Custom endpoint: <code>&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
+                <li><strong>Important:</strong> <code>localhost</code> and <code>127.0.0.1</code> mean the same computer that is playing the TTS page. If OBS is on a different computer than your TTS server, use the server computer's LAN IP instead.</li>
                 <li>No API key needed for local servers</li>
-                <li>If the local server has CORS problems, run <code>npm run local-tts-bridge</code> and point SSN at <code>http://127.0.0.1:8124/v1/audio/speech</code></li>
+                <li>If the local server has CORS or local network problems in Chrome/OBS, run <code>npm run local-tts-bridge</code> on the OBS computer and point SSN at <code>http://127.0.0.1:8124/v1/audio/speech</code></li>
                 <li>SSN sends <code>{ model, input, voice, response_format, speed }</code> and supports binary audio, JSON audio URLs, and JSON base64 audio</li>
                 <li>Custom/local endpoint playback is buffered today; SSN does not progressively play streamed audio chunks yet</li>
-                <li>Voice: <code>&voiceopenai=af_bella</code>, speed: <code>&openaispeed=1.0</code></li>
+                <li>Voice: <code>&voiceopenai=af_bella</code>, speed: <code>&openaispeed=1.0</code>. Use a voice name your server supports; Kokoro voices look like <code>af_bella</code>, while openedai-speech/OpenAI-style voices may look like <code>nova</code> or <code>echo</code>.</li>
                 <li>See the <a href="local-tts.html">Local AI TTS Guide</a> for self-hosted server setup</li>
             </ul>
             
@@ -711,9 +726,11 @@
         <div class="card">
             <h3>Common Issues</h3>
             <ul>
-                <li><strong>No audio playing:</strong> Click on the page first - browsers require user interaction for audio</li>
+                <li><strong>No audio playing:</strong> Check that TTS is enabled, the TTS-producing page is open, and the browser source is not muted. In a normal browser, click the page once.</li>
                 <li><strong>Voices not showing:</strong> Restart browser after installing language packs</li>
-                <li><strong>OBS not capturing:</strong> For system TTS, use one of the capture methods above</li>
+                <li><strong>OBS not capturing:</strong> For browser/provider TTS, check <strong>Control audio via OBS</strong>. For system TTS, use one of the capture methods above</li>
+                <li><strong>Local endpoint works in the app test but not OBS:</strong> OBS is a separate browser. Check the endpoint from the OBS computer, especially if using <code>127.0.0.1</code>.</li>
+                <li><strong>Only the first letter or first words are read:</strong> remove <code>ttsquick</code> from the OBS URL if present.</li>
                 <li><strong>Safari issues:</strong> Safari has limited automatic TTS support</li>
                 <li><strong>Premium service not working:</strong> Check API key and ensure provider is correctly specified</li>
             </ul>

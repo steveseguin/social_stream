@@ -1,4 +1,14 @@
 (function () {
+  let settings = {};
+
+  function hasChromeRuntime() {
+    return typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage;
+  }
+
+  function hasChromeRuntimeListener() {
+    return typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage && chrome.runtime.onMessage.addListener;
+  }
+
   function escapeHtml(unsafe) {
     return unsafe
       .replace(/&/g, "&amp;")
@@ -6,6 +16,11 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  function formatChatMessage(value) {
+    value = value || "";
+    return settings.textonlymode ? value : escapeHtml(value);
   }
 
   const chatContainerSelector = ".ydm0hk-1.fdPmo";
@@ -53,10 +68,10 @@
       const data = {
         chatname: escapeHtml(username),
         chatimg: profileImageUrl,
-        chatmessage: escapeHtml(messageText),
+        chatmessage: formatChatMessage(messageText),
         sourceImg: socialIconUrl,
 		// chatIconUrl: socialIconUrl,
-		textonly: false,
+		textonly: settings.textonlymode || false,
         type: getTypeFromAlt(socialIconAlt), // Determine the type of stream from the alt.
       };
 
@@ -72,6 +87,9 @@
 
   function pushMessage(data) {
     try {
+      if (!hasChromeRuntime()) {
+        return;
+      }
       chrome.runtime.sendMessage(
         chrome.runtime.id,
         { message: data },
@@ -91,6 +109,32 @@
   });
 
   const config = { childList: true, subtree: true };
+
+  if (hasChromeRuntime()) {
+    chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
+      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) return;
+      if (response && "settings" in response) {
+        settings = response.settings;
+      }
+    });
+  }
+
+  if (hasChromeRuntimeListener()) {
+    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+      try {
+        if ("getSource" == request) {
+          sendResponse("wavevideo");
+          return;
+        }
+        if (typeof request === "object" && "settings" in request) {
+          settings = request.settings;
+          sendResponse(true);
+          return;
+        }
+      } catch (e) {}
+      sendResponse(false);
+    });
+  }
 
   // Iniciar observación
   const startObserving = () => {

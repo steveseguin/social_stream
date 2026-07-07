@@ -389,6 +389,11 @@ input[type="range"] {
     width: calc(100% - 35px); /* Adjust width as needed */
 }
 
+#searchInput::-webkit-search-cancel-button {
+    -webkit-appearance: searchfield-cancel-button;
+    cursor: pointer;
+}
+
 #searchIcon {
     position: fixed;
     top: 60px;
@@ -2181,7 +2186,7 @@ input:checked + .slider:before {
         </div>
         <div id="newVersion"></div>
         <div id="importantChanges"></div>
-        <input type="text" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
+        <input type="search" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
         <div id="searchIcon" title="Search all options by keyword">🔍</div>
         <div id="popupSearchNoResults" data-translate="search-no-results">No matching options found</div>
 		<div id="activeIcon" title="Show only enabled options">🔰</div>
@@ -3523,6 +3528,60 @@ input:checked + .slider:before {
 								</span>
 							</div>
 						</div>
+						<!-- Piper TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="piperTTS">
+							<h4 data-translate="tts-piper-options">Piper TTS Options</h4>
+							<i>Note: Piper runs locally in your browser and downloads the selected voice model on first use.</i>
+							<br /><br />
+							<div>
+								Voice to use:
+								<select id="piperVoiceSelect" data-optionparam1="pipervoice" title="Select the Piper TTS Voice">
+									<option value="en_US-hfc_female-medium" selected>English US Female (HFC) - Medium</option>
+									<option value="es_ES-davefx-medium">Spanish Spain (DaveFX) - Medium</option>
+									<option value="es_MX-ald-medium">Spanish Mexico (Ald) - Medium</option>
+									<option value="pt_BR-faber-medium">Brazilian Portuguese (Faber) - Medium</option>
+									<option value="pt_BR-edresson-low">Brazilian Portuguese (Edresson) - Low</option>
+									<option value="pt_PT-tug&#227;o-medium">Portuguese Portugal (Tugao) - Medium</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="piperspeed" />
+									<span class="slider round"></span>
+								</label>
+								<span>
+									Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.1" value="1.0" size="5" data-numbersetting="piperspeed" />
+								</span>
+							</div>
+						</div>
+						<!-- eSpeak TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="espeakTTS">
+							<h4 data-translate="tts-espeak-options">eSpeak TTS Options</h4>
+							<i>Note: eSpeak runs locally in your browser.</i>
+							<br /><br />
+							<div>
+								Voice to use:
+								<select id="espeakVoiceSelect" data-optionparam1="espeakvoice" title="Select the eSpeak TTS Voice">
+									<option value="en" selected>English</option>
+									<option value="es">Spanish</option>
+									<option value="pt-br">Portuguese Brazil</option>
+									<option value="pt-pt">Portuguese Portugal</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="espeakspeed" />
+									<span class="slider round"></span>
+								</label>
+								<span>
+									Speaking rate
+									<input type="number" style="max-width: 6ch;" step="5" max="450" min="80" value="140" size="5" data-numbersetting="espeakspeed" />
+								</span>
+							</div>
+						</div>
 					</div>
                 </div>
             </div>
@@ -3839,6 +3898,34 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="replace-links-in-messages">🚫🔗 Replace links in messages with just '[Link]' </span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as bots">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="allowbotlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from bots</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as hosts">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="allowhostlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from hosts</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as mods">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="allowmodlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from mods</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as VIPs">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="allowviplinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from VIPs</span>
                                 </div>
                                 <div title="Links are make clickable and will open a new tab if clicked">
                                     <label class="switch">
@@ -4633,6 +4720,7 @@ input:checked + .slider:before {
 						<option value="themes/overlay-comic-classic.html">🗯️ Comic Pop Classic - Featured style chat</option>
 						<option value="themes/horizontal.html">➡️ Horizontal Scroll - Right-to-left ticker</option>
 						<option value="themes/overlay-ticker-news.html">📰 News Ticker - Breaking-news crawl bar</option>
+						<option value="themes/overlay-credits.html">🎬 Movie Credits - Continuous rolling credits</option>
 						<option value="themes/overlay-danmaku.html">🎯 Danmaku Bullet Chat - Messages fly across screen</option>
 						<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
 						<option value="themes/overlay-particles.html">✨ Particle System - Floating message effects</option>
@@ -5420,13 +5508,57 @@ input:checked + .slider:before {
                         <!-- Piper TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="piperTTS2">
                             <h4 data-translate="tts-piper-options">Piper TTS Options</h4>
-                            <i>Note: Piper runs locall in your browser</i>
+                            <i>Note: Piper runs locally in your browser and downloads the selected voice model on first use.</i>
+                            <br /><br />
+                            <div>
+                                Voice to use:
+                                <select id="piperVoiceSelect2" data-optionparam2="pipervoice" title="Select the Piper TTS Voice">
+                                    <option value="en_US-hfc_female-medium" selected>English US Female (HFC) - Medium</option>
+                                    <option value="es_ES-davefx-medium">Spanish Spain (DaveFX) - Medium</option>
+                                    <option value="es_MX-ald-medium">Spanish Mexico (Ald) - Medium</option>
+                                    <option value="pt_BR-faber-medium">Brazilian Portuguese (Faber) - Medium</option>
+                                    <option value="pt_BR-edresson-low">Brazilian Portuguese (Edresson) - Low</option>
+                                    <option value="pt_PT-tug&#227;o-medium">Portuguese Portugal (Tugao) - Medium</option>
+                                </select>
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="piperspeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span>
+                                    Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.1" value="1.0" size="5" data-numbersetting2="piperspeed" />
+                                </span>
+                            </div>
                         </div>
 
                         <!-- eSpeak TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="espeakTTS2">
                             <h4 data-translate="tts-espeak-options">eSpeak TTS Options</h4>
                             <i>Note: eSpeak runs locally in your browser</i>
+                            <br /><br />
+                            <div>
+                                Voice to use:
+                                <select id="espeakVoiceSelect2" data-optionparam2="espeakvoice" title="Select the eSpeak TTS Voice">
+                                    <option value="en" selected>English</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="pt-br">Portuguese Brazil</option>
+                                    <option value="pt-pt">Portuguese Portugal</option>
+                                </select>
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="espeakspeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span>
+                                    Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="5" max="450" min="80" value="140" size="5" data-numbersetting2="espeakspeed" />
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -5561,6 +5693,34 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="replace-links-in-messages">🚫🔗 Replace links in messages with just '[Link]' </span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as bots">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="allowbotlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from bots</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as hosts">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="allowhostlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from hosts</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as mods">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="allowmodlinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from mods</span>
+                                </div>
+                                <div title="When replacing links, leave links visible for messages marked as VIPs">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="allowviplinks" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Allow links from VIPs</span>
                                 </div>
                                 <div title="Links are make clickable and will open a new tab if clicked">
                                     <label class="switch">
@@ -5926,6 +6086,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -5934,6 +6095,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -5942,6 +6104,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -5950,6 +6113,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -5958,6 +6122,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -5966,6 +6131,7 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
 								<div>
@@ -5974,9 +6140,50 @@ input:checked + .slider:before {
 										<option value="twitch" selected>Twitch Style</option>
 										<option value="classic">Classic</option>
 										<option value="minimal">Minimal</option>
+										<option value="solid">Solid / Flat</option>
 									</select>
 								</div>
-								<small style="opacity: 0.8;">Each category maps all supported platforms into one shared alert style, while still keeping the source badge and event wording platform-aware.</small>
+								<div>
+									<label>Entrance animation</label>
+									<select data-optionparam25="animation" class="textInput">
+										<option value="fade" selected>Fade &amp; rise (default)</option>
+										<option value="slidedown">Slide in from top</option>
+										<option value="slideup">Slide in from bottom</option>
+										<option value="pop">Pop in</option>
+										<option value="none">No animation</option>
+									</select>
+								</div>
+								<div title="Replaces translucent gradients, blur, and glow with solid fills on every preset.">
+									<label class="switch">
+										<input type="checkbox" data-param25="flat" />
+										<span class="slider round"></span>
+									</label>
+									<span>Flat cards (solid fills, no blur/glow)</span>
+								</div>
+								<div title="Overrides the corner rounding of alert cards and media boxes.">
+									<label class="switch">
+										<input type="checkbox" data-param25="radius" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										⬜ Corner radius
+										<input type="range" min="0" max="32" step="1" value="7" style="width: 150px;" data-numbersetting25="radius" data-range-display="multi-alert-radius-display" data-range-suffix="px" />
+										<span class="range-value" id="multi-alert-radius-display">7px</span>
+									</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Overrides the accent color for every alert type. Per-type URL params also exist: followaccent, subaccent, donoaccent, bitsaccent, raidaccent, auctionaccent, hypeaccent.">
+									<input type="text" id="multialertaccent" class="textInput instant" autocomplete="off" placeholder="#ff2d5e" data-textparam25="accent" />
+									<label for="multialertaccent"><span>&gt; Accent color (all alert types)</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Solid background color for the alert card. Pairs well with flat cards.">
+									<input type="text" id="multialertcardbg" class="textInput instant" autocomplete="off" placeholder="#18122b" data-textparam25="cardbg" />
+									<label for="multialertcardbg"><span>&gt; Card background color</span></label>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Overrides the main and muted text colors.">
+									<input type="text" id="multialerttextcolor" class="textInput instant" autocomplete="off" placeholder="#f8fafc" data-textparam25="textcolor" />
+									<label for="multialerttextcolor"><span>&gt; Text color</span></label>
+								</div>
+								<small style="opacity: 0.8;">Each category maps all supported platforms into one shared alert style, while still keeping the source badge and event wording platform-aware. The animation, flat, radius, and color options apply on top of every preset; leave them untouched to keep the stock look.</small>
 							</div>
 						</div>
 					</div>
@@ -9466,6 +9673,60 @@ input:checked + .slider:before {
 								</span>
 							</div>
 						</div>
+						<!-- Piper TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="piperTTS10">
+							<h4 data-translate="tts-piper-options">Piper TTS Options</h4>
+							<i>Note: Piper runs locally in your browser and downloads the selected voice model on first use.</i>
+							<br /><br />
+							<div>
+								Voice to use:
+								<select id="piperVoiceSelect10" data-optionparam10="pipervoice" title="Select the Piper TTS Voice">
+									<option value="en_US-hfc_female-medium" selected>English US Female (HFC) - Medium</option>
+									<option value="es_ES-davefx-medium">Spanish Spain (DaveFX) - Medium</option>
+									<option value="es_MX-ald-medium">Spanish Mexico (Ald) - Medium</option>
+									<option value="pt_BR-faber-medium">Brazilian Portuguese (Faber) - Medium</option>
+									<option value="pt_BR-edresson-low">Brazilian Portuguese (Edresson) - Low</option>
+									<option value="pt_PT-tug&#227;o-medium">Portuguese Portugal (Tugao) - Medium</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="piperspeed" />
+									<span class="slider round"></span>
+								</label>
+								<span>
+									Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.1" value="1.0" size="5" data-numbersetting10="piperspeed" />
+								</span>
+							</div>
+						</div>
+						<!-- eSpeak TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="espeakTTS10">
+							<h4 data-translate="tts-espeak-options">eSpeak TTS Options</h4>
+							<i>Note: eSpeak runs locally in your browser.</i>
+							<br /><br />
+							<div>
+								Voice to use:
+								<select id="espeakVoiceSelect10" data-optionparam10="espeakvoice" title="Select the eSpeak TTS Voice">
+									<option value="en" selected>English</option>
+									<option value="es">Spanish</option>
+									<option value="pt-br">Portuguese Brazil</option>
+									<option value="pt-pt">Portuguese Portugal</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="espeakspeed" />
+									<span class="slider round"></span>
+								</label>
+								<span>
+									Speaking rate
+									<input type="number" style="max-width: 6ch;" step="5" max="450" min="80" value="140" size="5" data-numbersetting10="espeakspeed" />
+								</span>
+							</div>
+						</div>
 					</div>
                 </div>
             </div>
@@ -11055,6 +11316,37 @@ input:checked + .slider:before {
                                     <span data-translate="configure as winner-draw mode">🏆 Configure as winner-draw mode instead of queue </span>
                                 </div>
 
+                                <h3>Chat control commands</h3>
+                                <p>Optional mod/host/admin-only commands for the waitlist controls.</p>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="waitlistcontrolcommands" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Enable waitlist control commands</span>
+                                </div>
+                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                    <input type="text" id="waitlistcommandstop" class="textInput" autocomplete="off" value="!wlstop" placeholder="!wlstop" data-textsetting="waitlistcommandstop" />
+                                    <label for="waitlistcommandstop">&gt; Stop entries command</label>
+                                </div>
+                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                    <input type="text" id="waitlistcommandremove" class="textInput" autocomplete="off" value="!wlremove" placeholder="!wlremove" data-textsetting="waitlistcommandremove" />
+                                    <label for="waitlistcommandremove">&gt; Remove top entry command</label>
+                                </div>
+                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                    <input type="text" id="waitlistcommandreset" class="textInput" autocomplete="off" value="!wlreset" placeholder="!wlreset" data-textsetting="waitlistcommandreset" />
+                                    <label for="waitlistcommandreset">&gt; Reset command</label>
+                                </div>
+                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                    <input type="text" id="waitlistcommandselect" class="textInput" autocomplete="off" value="!wlpick" placeholder="!wlpick" data-textsetting="waitlistcommandselect" />
+                                    <label for="waitlistcommandselect">&gt; Select name command</label>
+                                </div>
+                                <div class="textInputContainer" style="display: inline-block; width: 215px;">
+                                    <input type="text" id="waitlistcommandhighlight" class="textInput" autocomplete="off" value="!wlhighlight" placeholder="!wlhighlight" data-textsetting="waitlistcommandhighlight" />
+                                    <label for="waitlistcommandhighlight">&gt; Highlight top entry command</label>
+                                </div>
+                                <p><i>Use a number for count/index where supported, such as !wlpick 3 or !wlremove 2.</i></p>
+
                                 <h3><span data-translate="other-customization-options">Other customization options</span></h3>
                                 <div>
                                     <label class="switch">
@@ -11345,7 +11637,7 @@ input:checked + .slider:before {
                         <!-- TTS Provider Selection -->
                         <div class="tts-provider-selection" style="margin:0 10px 10px 10px">
                             <h3 data-translate="tts-service-provider">Text-to-Speech Service Provider</h3>
-                            <select id="ttsProvider18" data-optionparam18="ttsprovider" class="textInput">
+                            <select id="ttsProvider18" data-optionparam18="ttsprovider" data-optionsetting18="ttsProvider" class="textInput">
                                 <option selected value="system">System TTS</option>
                                 <option value="kokoro">Kokoro (webGPU/CPU)</option>
                                 <option value="kitten">Kitten TTS (browser-based)</option>
@@ -11794,6 +12086,62 @@ input:checked + .slider:before {
                             </div>
                         </div>
 
+                        <!-- Piper TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="piperTTS18">
+                            <h4 data-translate="tts-piper-options">Piper TTS Options</h4>
+                            <i>Note: Piper runs locally in your browser and downloads the selected voice model on first use.</i>
+                            <br /><br />
+                            <div>
+                                Voice to use:
+                                <select id="piperVoiceSelect18" data-optionparam18="pipervoice" title="Select the Piper TTS Voice">
+                                    <option value="en_US-hfc_female-medium" selected>English US Female (HFC) - Medium</option>
+                                    <option value="es_ES-davefx-medium">Spanish Spain (DaveFX) - Medium</option>
+                                    <option value="es_MX-ald-medium">Spanish Mexico (Ald) - Medium</option>
+                                    <option value="pt_BR-faber-medium">Brazilian Portuguese (Faber) - Medium</option>
+                                    <option value="pt_BR-edresson-low">Brazilian Portuguese (Edresson) - Low</option>
+                                    <option value="pt_PT-tug&#227;o-medium">Portuguese Portugal (Tugao) - Medium</option>
+                                </select>
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="piperspeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span>
+                                    Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.1" value="1.0" size="5" data-numbersetting18="piperspeed" />
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- eSpeak TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="espeakTTS18">
+                            <h4 data-translate="tts-espeak-options">eSpeak TTS Options</h4>
+                            <i>Note: eSpeak runs locally in your browser.</i>
+                            <br /><br />
+                            <div>
+                                Voice to use:
+                                <select id="espeakVoiceSelect18" data-optionparam18="espeakvoice" title="Select the eSpeak TTS Voice">
+                                    <option value="en" selected>English</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="pt-br">Portuguese Brazil</option>
+                                    <option value="pt-pt">Portuguese Portugal</option>
+                                </select>
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="espeakspeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span>
+                                    Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="5" max="450" min="80" value="140" size="5" data-numbersetting18="espeakspeed" />
+                                </span>
+                            </div>
+                        </div>
+
                         <div style="margin: 10px; padding: 10px; background-color: var(--color-accent-subtle); border-radius: 5px;">
                             <small data-translate="tts-info">💡 Configure TTS settings for the Flow Actions overlay. API keys are stored locally and added to the overlay URL.</small>
                         </div>
@@ -12061,6 +12409,7 @@ input:checked + .slider:before {
 									<label>🎨 Map Style/Theme:</label>
 									<select data-optionparam23="mapstyle" data-target="map" id="mapStyle">
 										<option value="default">Default</option>
+										<option value="contrast">High Contrast</option>
 										<option value="aurora">Aurora</option>
 										<option value="ember">Ember</option>
 										<option value="neon">Neon</option>
@@ -12068,6 +12417,22 @@ input:checked + .slider:before {
 										<option value="minimal">Minimal Clean</option>
 										<option value="retro">Retro Print</option>
 										<option value="radar">Radar Sweep</option>
+										<option value="noir">Noir</option>
+										<option value="atlas">Vintage Atlas</option>
+										<option value="synthwave">Synthwave</option>
+										<option value="terminal">Terminal</option>
+										<option value="ocean">Deep Ocean</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label>💡 Base map visibility:</label>
+									<select data-optionparam23="mapopacity" data-target="map" id="mapOpacity">
+										<option value="" selected>Theme default</option>
+										<option value="25">Subtle (25%)</option>
+										<option value="50">Medium (50%)</option>
+										<option value="75">Strong (75%)</option>
+										<option value="100">Solid (100%)</option>
 									</select>
 								</div>
 								<br>
@@ -12583,6 +12948,9 @@ input:checked + .slider:before {
 									<span data-translate="persist-leaderboard-data">
 										💾 Persist data between sessions (7 days max)
 									</span>
+								</div>
+								<div style="margin-top: 10px;">
+									<button id="resetLeaderboard" class="button" type="button" data-translate="reset-leaderboard-data">Reset Leaderboard Data</button>
 								</div>
 								<br>
 
@@ -13123,6 +13491,35 @@ input:checked + .slider:before {
 								<div>
 									<label class="switch"><input type="checkbox" data-param30="nonames" /><span class="slider round"></span></label>
 									<span data-translate="ticker-nonames">🙈 Hide names</span>
+								</div>
+							</div>
+
+							<!-- Movie Credits Options -->
+							<div class="overlay-config-section" id="credits-overlay-config" style="display: none;">
+								<h3>🎬 <span data-translate="credits-overlay-options">Movie Credits Options</span></h3>
+								<div class="textInputContainer" style="width: 95%;" title="How fast the credits roll upward, in pixels per second (default 80)">
+									<input type="number" id="credits-speed" class="textInput instant" autocomplete="off" min="10" max="1000" placeholder="e.g. 80" data-textparam30="speed" />
+									<label for="credits-speed"><span data-translate="credits-speed">&gt; Scroll speed (px/sec)</span></label>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="nofade" /><span class="slider round"></span></label>
+									<span data-translate="credits-nofade">🌘 Disable fade-out at the top edge</span>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="hideavatars" /><span class="slider round"></span></label>
+									<span data-translate="credits-hideavatars">👤 Hide avatars</span>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="hidenames" /><span class="slider round"></span></label>
+									<span data-translate="credits-hidenames">🙈 Hide names</span>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="hidesource" /><span class="slider round"></span></label>
+									<span data-translate="credits-hidesource">🚫 Hide platform icon</span>
+								</div>
+								<div>
+									<label class="switch"><input type="checkbox" data-param30="hidebadges" /><span class="slider round"></span></label>
+									<span data-translate="credits-hidebadges">🏅 Hide chat badges</span>
 								</div>
 							</div>
 

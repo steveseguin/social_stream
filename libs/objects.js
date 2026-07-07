@@ -27,6 +27,32 @@ function fallbackEscapeHtml(value) {
 	});
 }
 
+function removeHtmlTagsFromPlainText(value) {
+	return String(value || "")
+		.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+		.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+		.replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, "")
+		.replace(/<template\b[^>]*>[\s\S]*?<\/template>/gi, "")
+		.replace(/<[^>]*>/g, "");
+}
+
+function stripHtmlToPlainText(value) {
+	var text = String(value == null ? "" : value);
+	try {
+		if (typeof DOMParser !== "undefined") {
+			var doc = new DOMParser().parseFromString(text, "text/html");
+			if (doc && doc.body) {
+				var blocked = doc.body.querySelectorAll("script,style,noscript,template");
+				for (var i = 0; i < blocked.length; i++) {
+					blocked[i].remove();
+				}
+				return removeHtmlTagsFromPlainText(doc.body.textContent || "");
+			}
+		}
+	} catch (e) {}
+	return removeHtmlTagsFromPlainText(text);
+}
+
 function hasUnsafeUrlCharacters(value) {
 	return /[\u0000-\u001f\u007f<>"'`\s]/.test(String(value || ""));
 }
@@ -356,6 +382,14 @@ function sanitizeRelayPayloadFields(message) {
 	if (message.backgroundNameColor) message.backgroundNameColor = sanitizeRelayCssDeclaration(message.backgroundNameColor, "background-color");
 	if (message.textNameColor) message.textNameColor = sanitizeRelayCssDeclaration(message.textNameColor, "color");
 	if (message.chatbadges) message.chatbadges = sanitizeRelayBadges(message.chatbadges);
+
+	var plainTextFields = ["hasDonation", "donation", "membership", "hasMembership", "subtitle", "title"];
+	for (var i = 0; i < plainTextFields.length; i++) {
+		var field = plainTextFields[i];
+		if (typeof message[field] === "string") {
+			message[field] = stripHtmlToPlainText(message[field]);
+		}
+	}
 
 	return message;
 }

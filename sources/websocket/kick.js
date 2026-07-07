@@ -2719,6 +2719,10 @@ function resolveAuthIdentity() {
 function updateAuthStatus() {
     if (!els.authState) return;
     const authed = state.tokens?.access_token && !isTokenExpired();
+    const waitingForRefresh = !authed
+        && !!state.tokens?.access_token
+        && !!state.tokens?.refresh_token
+        && (isTokenExpired() || !!state.refreshPromise);
     const identity = authed ? resolveAuthIdentity() : null;
     if (authed && identity) {
         const safeDisplay = escapeHtml(identity.displayName || identity.username || '');
@@ -2735,7 +2739,7 @@ function updateAuthStatus() {
             els.authState.innerHTML = `Signed in as <span class="status-emphasis">${safeDisplay}</span>${safeUsername ? ` <span class="status-subtle">(@${safeUsername})</span>` : ''}`;
         }
     } else {
-        els.authState.textContent = authed ? 'Signed in' : 'Not signed in';
+        els.authState.textContent = authed ? 'Signed in' : (waitingForRefresh ? 'Refreshing sign-in...' : 'Not signed in');
     }
     els.authState.className = authed ? 'status-chip' : 'status-chip warning';
     // Hide auth-dependent status chips when not signed in
@@ -2757,8 +2761,8 @@ function updateAuthStatus() {
         const showSelector = !authed && isElectronEnvironment();
         authMethodSelector.classList.toggle('hidden', !showSelector);
     }
-    const status = authed ? 'authorized' : 'signin_required';
-    if (status !== lastAuthNotifyStatus) {
+    const status = authed ? 'authorized' : (waitingForRefresh ? 'auth_refreshing' : 'signin_required');
+    if (status !== 'auth_refreshing' && status !== lastAuthNotifyStatus) {
         lastAuthNotifyStatus = status;
         notifyApp({
             wssStatus: {
@@ -4370,6 +4374,19 @@ async function refreshAccessToken() {
 function isTokenExpired() {
     if (!state.tokens?.expires_at) return true;
     return Date.now() >= state.tokens.expires_at;
+}
+
+async function refreshStoredKickAuthBeforeStatus() {
+    if (!state.tokens?.access_token || !state.tokens?.refresh_token || !isTokenExpired()) {
+        return false;
+    }
+    try {
+        await refreshAccessToken();
+        return true;
+    } catch (err) {
+        console.warn('Kick startup token refresh failed:', err?.message || err);
+        return false;
+    }
 }
 
 async function ensureToken() {
@@ -8837,6 +8854,7 @@ async function bootstrap() {
         loadConfig();
         applyDefaultConfig();
         loadTokens();
+        await refreshStoredKickAuthBeforeStatus();
         loadEventTypesCache();
         applyUrlParams();
         await loadSourceWindowConfig();

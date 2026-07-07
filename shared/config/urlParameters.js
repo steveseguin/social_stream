@@ -1030,6 +1030,42 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Removes links from messages"
           },
           {
+            "key": "allowbotlinks",
+            "displayName": "allowbotlinks",
+            "aliases": [
+              "allowbotlinks"
+            ],
+            "values": "boolean",
+            "description": "When striplinks is enabled, keeps links visible for messages marked as bots"
+          },
+          {
+            "key": "allowhostlinks",
+            "displayName": "allowhostlinks",
+            "aliases": [
+              "allowhostlinks"
+            ],
+            "values": "boolean",
+            "description": "When striplinks is enabled, keeps links visible for messages marked as hosts"
+          },
+          {
+            "key": "allowmodlinks",
+            "displayName": "allowmodlinks",
+            "aliases": [
+              "allowmodlinks"
+            ],
+            "values": "boolean",
+            "description": "When striplinks is enabled, keeps links visible for messages marked as mods"
+          },
+          {
+            "key": "allowviplinks",
+            "displayName": "allowviplinks",
+            "aliases": [
+              "allowviplinks"
+            ],
+            "values": "boolean",
+            "description": "When striplinks is enabled, keeps links visible for messages marked as VIPs"
+          },
+          {
             "key": "activelinks",
             "displayName": "activelinks",
             "aliases": [

@@ -961,6 +961,56 @@
 					.replace(/'/g, "&#039;");
 			}
 
+			function escapeAttributeValue(value) {
+				return escapeHtml(value == null ? "" : String(value));
+			}
+
+			function removeHtmlTagsFromPlainTextField(value) {
+				return String(value || "")
+					.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+					.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+					.replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, "")
+					.replace(/<template\b[^>]*>[\s\S]*?<\/template>/gi, "")
+					.replace(/<[^>]*>/g, "");
+			}
+
+			function plainTextField(value) {
+				if (typeof value !== "string") {
+					return value;
+				}
+				if (typeof stripHtmlToPlainText === "function") {
+					return stripHtmlToPlainText(value);
+				}
+				try {
+					if (typeof DOMParser !== "undefined") {
+						var doc = new DOMParser().parseFromString(value, "text/html");
+						if (doc && doc.body) {
+							var blocked = doc.body.querySelectorAll("script,style,noscript,template");
+							for (var i = 0; i < blocked.length; i++) {
+								blocked[i].remove();
+							}
+							return removeHtmlTagsFromPlainTextField(doc.body.textContent || "");
+						}
+					}
+				} catch (e) {}
+				return removeHtmlTagsFromPlainTextField(value);
+			}
+
+			function sanitizePlainTextAlertFields(data) {
+				if (!data) {
+					return;
+				}
+				["hasDonation", "donation", "membership", "hasMembership", "subtitle", "title"].forEach(function (field) {
+					if (typeof data[field] === "string") {
+						data[field] = plainTextField(data[field]);
+					}
+				});
+			}
+
+			function plainTextToHtml(value) {
+				return escapeHtml(value == null ? "" : value);
+			}
+
 			async function fetchWithTimeout(URL, timeout = 8000) {
 				// ref: https://dmitripavlutin.com/timeout-fetch-request/
 				try {
@@ -1431,6 +1481,39 @@
 				stripLinks = true;
 			}
 
+			var allowBotLinks = false;
+			if (urlParams.has("allowbotlinks")) {
+				allowBotLinks = true;
+			}
+
+			var allowHostLinks = false;
+			if (urlParams.has("allowhostlinks")) {
+				allowHostLinks = true;
+			}
+
+			var allowModLinks = false;
+			if (urlParams.has("allowmodlinks")) {
+				allowModLinks = true;
+			}
+
+			var allowVipLinks = false;
+			if (urlParams.has("allowviplinks")) {
+				allowVipLinks = true;
+			}
+
+			function shouldStripLinksForMessage(data) {
+				if (!stripLinks) {
+					return false;
+				}
+				if (!data) {
+					return true;
+				}
+				if ((allowBotLinks && data.bot) || (allowHostLinks && data.host) || (allowModLinks && data.mod) || (allowVipLinks && data.vip)) {
+					return false;
+				}
+				return true;
+			}
+
 			var activeLinks = false;
 			if (urlParams.has("activelinks")) {
 				activeLinks = true;
@@ -1776,6 +1859,8 @@
 			if (urlParams.has("stacking") || urlParams.has("stacked") || urlParams.has("stack")) {
 				stacking = true;
 			}
+			var currentFeaturedMessageEl = null;
+			var currentFeaturedNameEl = null;
 
 			var textDirection = "auto";
 			if (urlParams.has("rtl")) {
@@ -2141,18 +2226,34 @@
 			  return validTLDs.has(tld.toLowerCase());
 			}
 
-
+			function getFeaturedElementByClass(className, referenceNode, fallbackId, fallbackElement) {
+				try {
+					if (referenceNode && referenceNode.closest) {
+						var container = referenceNode.closest(".highlight-chat");
+						if (container) {
+							var scopedElement = container.querySelector("." + className);
+							if (scopedElement) {
+								return scopedElement;
+							}
+						}
+					}
+				} catch (e) {}
+				return document.getElementById(fallbackId) || fallbackElement || null;
+			}
 
 			function realign(eventtype = false) {
+				var referenceNode = eventtype && eventtype.target ? eventtype.target : null;
+				var activeMessageEl = getFeaturedElementByClass("hl-message", referenceNode, "message", currentFeaturedMessageEl);
+				var activeNameEl = getFeaturedElementByClass("hl-name", referenceNode, "nameDIV", currentFeaturedNameEl);
 				if (centering) {
 					try {
-						var offsetLeft = (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth + 20)) / 2;
+						var offsetLeft = (parseInt(window.innerWidth) - parseInt(activeMessageEl.clientWidth + 20)) / 2;
 						offsetLeft -= 15;
 						document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft + "px");
 					} catch (e) {}
 				}
 				try {
-					var img = document.getElementById("img");
+					var img = referenceNode && referenceNode.tagName === "IMG" ? referenceNode : document.getElementById("img");
 					if (!img) {
 						return;
 					}
@@ -2172,7 +2273,10 @@
 					if (ar1 > ar) {
 						ar = ar1;
 					}
-					var message = document.getElementById("message");
+					var message = activeMessageEl;
+					if (!message) {
+						return false;
+					}
 					var width = 300 * ar; // window.innerWidth*ar
 					//img.style.width = width+"px";
 
@@ -2202,14 +2306,14 @@
 						imgContent.style.right = "unset";
 
 						var offset = 0;
-						if (document.getElementById("nameDIV")) {
-							offset = document.getElementById("nameDIV").clientWidth + 110;
+						if (activeNameEl) {
+							offset = activeNameEl.clientWidth + 110;
 						}
 						if (offset < 300) {
 							offset = 300;
 						}
-						if (offset < document.getElementById("message").clientWidth + 19) {
-							offset = document.getElementById("message").clientWidth + 19;
+						if (offset < message.clientWidth + 19) {
+							offset = message.clientWidth + 19;
 						}
 						if (offset > window.innerWidth - 100) {
 							offset = Math.max(20, window.innerWidth - 100);
@@ -2228,8 +2332,8 @@
 						img.style.transformOrigin = "bottom";
 						imgContent.style.right = 0;
 						var offset = 0;
-						if (document.getElementById("nameDIV")) {
-							offset = document.getElementById("nameDIV").clientWidth + 110;
+						if (activeNameEl) {
+							offset = activeNameEl.clientWidth + 110;
 						}
 						if (offset < 300) {
 							offset = 300;
@@ -2469,10 +2573,10 @@
 				var iframe = document.createElement("iframe");
 
 				if (pseudodock) {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID; // push and view, as we will connect with other docks also.
-					// iframe.src = "https://vdo.socialstream.ninja/?ln&password="+password+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
+					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + lanonly + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID; // push and view, as we will connect with other docks also.
+					// iframe.src = "https://vdo.socialstream.ninja/?ln&password="+encodeURIComponent(password)+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
 				} else {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID; // exclude raw feed; we only want selected inputs.
+					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID; // exclude raw feed; we only want selected inputs.
 				}
 
 				iframe.style.width = "0px";
@@ -2514,6 +2618,7 @@
 				});
 			}
 
+			// Transport migration: this page already chooses socket OR iframe; do not start the iframe when a server socket is active.
 			if (!socketserver) {
 				RecvDataWindow(); // only load the iframe if not connecting via wss
 			}
@@ -2829,12 +2934,16 @@
 					  data.type = data.type.toString();
 					  showType = data.type;
 					}
+					var safeDataId = escapeAttributeValue(data.id);
+					var safeDataType = escapeAttributeValue(data.type);
 
 					var customSourceClass = "sourceOffset";
 					if (showType && showsource && avatarForMessage) {
-					  showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+					  var safeShowType = escapeAttributeValue(showType);
+					  showType = '<img src="./sources/images/' + safeShowType + '.png" class="icon sourcetype" data-icon-name="' + safeShowType + '" onerror="this.style.display=\'none\'" />';
 					} else if (showType && showsource && !avatarForMessage) {
-					  showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+					  var safeShowType = escapeAttributeValue(showType);
+					  showType = '<img src="./sources/images/' + safeShowType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + safeShowType + '" onerror="this.style.display=\'none\'" />';
 					} else {
 					  customSourceClass = "";
 					  showType = "";
@@ -2842,9 +2951,9 @@
 
 					var resolvedSourceImg = data.sourceImg ? resolveSourceImageUrl(data.sourceImg) : "";
 					if (resolvedSourceImg && customSource && avatarForMessage) {
-					  showType += '<img src="' + resolvedSourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
+					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
 					} else if (resolvedSourceImg && customSource && !avatarForMessage) {
-					  showType += '<img src="' + resolvedSourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
+					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
 					}
 
 					if (hideNames) {
@@ -2869,6 +2978,8 @@
 					  data.chatname = data.chatname.toString();
 					}
 
+					sanitizePlainTextAlertFields(data);
+
 					var memebershipHTML = "";
 					
 					// MODIFIED MEMBERSHIP/DONATION HANDLING
@@ -2877,17 +2988,17 @@
 						data.hasMembership = getTranslation("membership", "Membership");
 					  }
 					  data.membership = data.hasMembership.toString();
-					  
+
 					  if (avatarForMessage) {
-						memebershipHTML = data.membership;
+						memebershipHTML = plainTextToHtml(data.membership);
 					  } else {
 						// No avatar membership display
 							if (data.membership.length > 30){
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else if (data.membership.length > 24){
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else {
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							}
 						  }
 					} else if (data.membership) {
@@ -2900,18 +3011,18 @@
 						  if (avatarForMessage) {
 							if (data.subtitle) {
 								if (data.membership.length > 24){
-									memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+									memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 								} else if (data.membership.length > 19){
-									memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+									memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 								} else {
-									memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+									memebershipHTML = '<div class="donation membership"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + "</div><div class='subtitle'>" + plainTextToHtml(data.subtitle) + "</div></div>";
 								}
 							} else if (data.membership.length > 30){
-								memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + data.membership.toUpperCase() + "</div></div>";
+								memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 							} else if (data.membership.length > 24){
-								memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + data.membership.toUpperCase() + "</div></div>";
+								memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 							} else {
-								memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
+								memebershipHTML = '<div class="donation membership"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + "</div></div>";
 							}
 						  } else {
 						// No avatar membership with possible subtitle
@@ -2919,28 +3030,28 @@
 											  data.membership.toLowerCase().includes('membership');
 							if (isSponsor) {
 							  // Special format for sponsorships to match the example image
-							  memebershipHTML = '<div class="no-avatar-donation sponsorship">' + data.membership.toUpperCase() + '</div>';
+							  memebershipHTML = '<div class="no-avatar-donation sponsorship">' + plainTextToHtml(data.membership.toUpperCase()) + '</div>';
 							} else if (data.subtitle) {
 								if (data.membership.length > 24){
-									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title verysmall">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase() + ': ' + data.subtitle) + '</div></div>';
 								} else if (data.membership.length > 19){
-									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title small">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase() + ': ' + data.subtitle) + '</div></div>';
 								} else {
-									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase() + ': ' + data.subtitle) + '</div></div>';
 								}
 							} else if (data.membership.length > 30){
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else if (data.membership.length > 24){
-								 memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
+								 memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							} else {
-								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + plainTextToHtml(data.membership.toUpperCase()) + '</div></div>';
 							}
 						  }
 					} else if (data.subtitle) {
 					  if (avatarForMessage) {
-						memebershipHTML = '<div class="donation membership"><div class="subtitle">' + data.subtitle + "</div></div>";
+						memebershipHTML = '<div class="donation membership"><div class="subtitle">' + plainTextToHtml(data.subtitle) + "</div></div>";
 					  } else {
-						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.subtitle + '</div></div>';
+						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + plainTextToHtml(data.subtitle) + '</div></div>';
 					  }
 					} else {
 					  data.membership = "";
@@ -2955,9 +3066,9 @@
 						}
 						
 						if (avatarForMessage) {
-						  donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						  donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						} else {
-						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + '</div></div>';
+						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 						}
 					  } else if ((data.type == "youtube") || (data.type == "youtubeshorts")) {
 						let donationTitle = getTranslation("donation", "DONATION");
@@ -2967,9 +3078,9 @@
 						
 						if (avatarForMessage) {
 						  if (memebershipHTML) {
-							donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+							donationHTML = '<div class="donation">' + plainTextToHtml(data.hasDonation) + "</div>";
 						  } else {
-							donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+							donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(donationTitle) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						  }
 						} else {
 						  const isYouTubeSponsor = data.hasDonation.toLowerCase().includes('sponsor');
@@ -2977,21 +3088,21 @@
 						  if (isYouTubeSponsor) {
 							donationHTML = '<div class="no-avatar-donation sponsorship">' + 'SPONSORSHIP' + '</div>';
 						  } else if (memebershipHTML) {
-							donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.hasDonation + '</div></div>';
+							donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 						  } else {
-							donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ donationTitle + ': ' + data.hasDonation + '</div></div>';
+							donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ plainTextToHtml(donationTitle + ': ' + data.hasDonation) + '</div></div>';
 						  }
 						}
 					  } else if (data.title) {
 						if (avatarForMessage) {
-						  donationHTML = '<div class="donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
+						  donationHTML = '<div class="donation"><div class="donation-title">'+ plainTextToHtml(data.title) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + "</div></div>";
 						} else {
-						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + '</div></div>';
+						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ plainTextToHtml(data.title) +'</div><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 						}
 					  } else if (avatarForMessage) {
-						donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
+						donationHTML = '<div class="donation">' + plainTextToHtml(data.hasDonation) + "</div>";
 					  } else {
-						donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.hasDonation + '</div></div>';
+						donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + plainTextToHtml(data.hasDonation) + '</div></div>';
 					  }
 					} else {
 					  data.hasDonation = "";
@@ -3043,9 +3154,10 @@
 					}
 
 					var avatarImg = "";
+					var safeAvatarUsername = escapeAttributeValue(data.username || data.chatname || "");
 					if (avatarForMessage) {
 					  if (data.backupChatimg) {
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="' + data.backupChatimg + '" data-username="' + (data.username || data.chatname || '') + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + safeDataId + '" src="' + escapeAttributeValue(data.chatimg) + '" class="hl-profile-pic" data-backup-image="' + escapeAttributeValue(data.backupChatimg) + '" data-username="' + safeAvatarUsername + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
 					  } else {
 						let chatimg = "";
 						if (!data.chatimg){
@@ -3057,9 +3169,9 @@
 						} else {
 						  chatimg = data.chatimg
 						}
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + chatimg + '" class="hl-profile-pic" data-username="' + (data.username || data.chatname || '') + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + safeDataId + '" src="' + escapeAttributeValue(chatimg) + '" class="hl-profile-pic" data-username="' + safeAvatarUsername + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
 					  }
-					} 
+					}
 
 					var chatbadges = "";
 					if (data.chatbadges && showbadges) {
@@ -3081,10 +3193,13 @@
 					}
 
 					var renderChatMessageAsText = !!(data.textonly && !largeImage);
+					// Trusted relay HTML: chatname/chatmessage are sanitized upstream in background.js before rendering here.
 					var renderedChatMessage = renderChatMessageAsText ? "" : (data.chatmessage || "");
 
 					// ADD NO-AVATAR CLASS TO CONTAINER
 					var noAvatarClass = avatarForMessage ? "" : " no-avatar";
+					var activeNameDiv = null;
+					var activeMessageDiv = null;
 
 					if (stacking) {
 					  try {
@@ -3124,6 +3239,10 @@
 						messageDiv.innerHTML = data.chatmessage;
 					  }
 					  messageContainer.appendChild(messageDiv);
+					  activeNameDiv = nameDiv;
+					  activeMessageDiv = messageDiv;
+					  currentFeaturedNameEl = nameDiv;
+					  currentFeaturedMessageEl = messageDiv;
 
 					  // Add the avatar and source type elements first
 					  const avatarContent = document.createElement('div');
@@ -3147,8 +3266,9 @@
 						}
 					  }
 					  
-					  if (data.chatmessage && messageDiv && (stripLinks || activeLinks || shortlink)) {
-						processURLs(messageDiv, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					  var stripLinksForMessage = shouldStripLinksForMessage(data);
+					  if (data.chatmessage && messageDiv && (stripLinksForMessage || activeLinks || shortlink)) {
+						processURLs(messageDiv, { makeClickable: activeLinks, stripLinks: stripLinksForMessage, shortenURLs: shortlink });
 					  } 
 
 					  document.getElementById("output").appendChild(messageContainer);
@@ -3175,43 +3295,48 @@
 					  }
 					} else {
 					  // Original non-stacking behavior with no-avatar class added
-					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + data.type + '">' +
+					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + safeDataType + '">' +
 						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + data.chatname + chatbadges + "</div>" +
 						'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" +
 						avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
-					  if (renderChatMessageAsText && document.getElementById("message")) {
-						document.getElementById("message").textContent = data.chatmessage || "";
+					  activeNameDiv = document.getElementById("nameDIV");
+					  activeMessageDiv = document.getElementById("message");
+					  currentFeaturedNameEl = activeNameDiv;
+					  currentFeaturedMessageEl = activeMessageDiv;
+					  if (renderChatMessageAsText && activeMessageDiv) {
+						activeMessageDiv.textContent = data.chatmessage || "";
 					  }
 
 					  if (data.hasDonation || memebershipHTML) {
 						document.getElementById("newmessage").classList.add("dono");
 					  }
 					  
-					  if ((stripLinks || activeLinks || shortlink) && data.chatmessage && document.getElementById("message")) {
-						processURLs(document.getElementById("message"), { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					  var stripLinksForMessage = shouldStripLinksForMessage(data);
+					  if ((stripLinksForMessage || activeLinks || shortlink) && data.chatmessage && activeMessageDiv) {
+						processURLs(activeMessageDiv, { makeClickable: activeLinks, stripLinks: stripLinksForMessage, shortenURLs: shortlink });
 					  } 
 					}
 					
-					if (!data.chatname && !data.chatbadges) {
-					  document.getElementById("nameDIV").style.display = "none";
+					if (!data.chatname && !data.chatbadges && activeNameDiv) {
+					  activeNameDiv.style.display = "none";
 					}
 
 					var fontsize = "";
 					var limitchar = parseInt(window.innerWidth / 6.5);
 
-					if (largeImage){
-					  document.getElementById("message").classList.add("largeImage");
-					} else if (fontfit) {
-					  if (document.getElementById("message").innerText.length > limitchar) {
-						fontsize = parseInt((limitchar * 100) / document.getElementById("message").innerText.length);
+					if (largeImage && activeMessageDiv){
+					  activeMessageDiv.classList.add("largeImage");
+					} else if (fontfit && activeMessageDiv) {
+					  if (activeMessageDiv.innerText.length > limitchar) {
+						fontsize = parseInt((limitchar * 100) / activeMessageDiv.innerText.length);
 						if (fontsize < 43) {
 						  fontsize = 43;
 						}
 
 						if (data.textColor && !data.textColor.startsWith("color")) {
-						  document.getElementById("message").style = data.backgroundColor + "; color:" + data.textColor + "; font-size: " + fontsize + "%;";
+						  activeMessageDiv.style = data.backgroundColor + "; color:" + data.textColor + "; font-size: " + fontsize + "%;";
 						} else {
-						  document.getElementById("message").style = data.backgroundColor + " " + data.textColor + "; font-size: " + fontsize + "%;";
+						  activeMessageDiv.style = data.backgroundColor + " " + data.textColor + "; font-size: " + fontsize + "%;";
 						}
 					  }
 					}
@@ -3241,7 +3366,7 @@
 
 					if (centering) {
 					  try {
-						var offsetLeft = (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth + 20)) / 2;
+						var offsetLeft = (parseInt(window.innerWidth) - parseInt(activeMessageDiv.clientWidth + 20)) / 2;
 						offsetLeft -= 15;
 						document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft + "px");
 					  } catch (e) {}
@@ -3307,7 +3432,7 @@
 
 					  if (data.hasDonation && TTS.readDonos) {
 						var donoText = document.createElement("div");
-						donoText.innerHTML = data.hasDonation;
+						donoText.textContent = data.hasDonation;
 						donoText = donoText.innerText.trim();
 						donoText = donoText.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
 						donoText = donoText.replaceAll("_", " ");

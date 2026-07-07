@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Bot Basics - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Plain-English guide for setting up Social Stream Ninja chat bots, AI providers, public replies, private chat, and safe testing.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../icons/logo.svg" alt="Social Stream Ninja Logo">
+                    <span>Social Stream Ninja</span>
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="download.html">Download</a></li>
+                    <li><a href="guides.html" class="active">Guides</a></li>
+                    <li><a href="commands.html">Commands &amp; API</a></li>
+                    <li><a href="supported-sites.html">Supported Sites</a></li>
+                    <li><a href="templates.html">Templates</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <div class="mobile-nav-toggle"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Chat Bot Basics</h1>
+            <p>Set up AI chat replies without accidentally spamming your live chat.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Pick The Right Bot Page</h2>
+                <p>Social Stream Ninja has more than one AI bot surface. Choose the smallest one that fits the job.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-chatbot-pages-reference.png" alt="Bot Instances and Overlays table showing bot.html, chatbot.html, background censor bot, and cohost.html" class="guide-image">
+                    <figcaption>The main bot, private chat page, censor bot, and cohost are separate tools.</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Need</th><th>Use</th><th>Notes</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Need">On-stream replies</td><td data-label="Use"><code>bot.html</code></td><td data-label="Notes">Use for the primary public bot and optional TTS.</td></tr>
+                        <tr><td data-label="Need">Private testing</td><td data-label="Use"><code>chatbot.html</code></td><td data-label="Notes">Use for one-on-one testing without sharing the main bot state.</td></tr>
+                        <tr><td data-label="Need">Moderation</td><td data-label="Use">Censor/moderation settings</td><td data-label="Notes">Start in non-blocking mode before letting it block messages.</td></tr>
+                        <tr><td data-label="Need">Visible assistant</td><td data-label="Use"><code>cohost.html</code></td><td data-label="Notes">Use the cohost pages when the AI should be seen or heard on stream.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>1. Configure The AI Provider</h2>
+                <p>Choose a provider in the popup before opening the bot page. For local models, use Ollama Native API or Custom API. For cloud models, add the provider API key and model name required by that service.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-ai-integration-overview.png" alt="AI Integration overview showing chat responses, moderation, RAG search, and multiple bot instances" class="guide-image">
+                    <figcaption>Start with provider setup, then choose what the bot is allowed to do.</figcaption>
+                </figure>
+                <ul class="guide-list">
+                    <li>Use <strong>Ollama Native API</strong> if Ollama is already running on your computer.</li>
+                    <li>Use <strong>Custom API</strong> for OpenAI-compatible local servers.</li>
+                    <li>Use hosted providers when you want easier setup and accept provider account/API costs.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>2. Test Privately First</h2>
+                <ol class="guide-steps">
+                    <li>Open <code>chatbot.html?session=YOUR_SESSION</code> in a normal browser.</li>
+                    <li>Send a short test message.</li>
+                    <li>Confirm the provider responds.</li>
+                    <li>Adjust the prompt, model, and response length before public use.</li>
+                    <li>Only then try <code>bot.html</code> or a public reply path.</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>Do not start with automatic public replies.</strong> First make sure the bot answers safely and briefly.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>3. Public Replies Need Platform Support</h2>
+                <p>A bot can only send messages back when the platform, account, login state, and mode support sending. Reading chat and replying to chat are different features.</p>
+                <ul class="guide-list">
+                    <li>Confirm the account is signed in where Social Stream is capturing chat.</li>
+                    <li>Confirm the source mode supports send-back for that platform.</li>
+                    <li>For Twitch, consider a separate bot account so replies do not come from your main streamer account.</li>
+                    <li>Use rate limits and approval workflows when testing live.</li>
+                </ul>
+                <p>Related: <a href="twitch-bot-account-chatbot.html">Twitch bot account guide</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common Fixes</h2>
+                <ul class="guide-list">
+                    <li><strong>No reply:</strong> check provider key, model name, endpoint, and browser console errors.</li>
+                    <li><strong>Wrong chat room:</strong> make sure bot page, dock, and source use the same <code>session</code>.</li>
+                    <li><strong>Bot talks too much:</strong> lower response length, add a cooldown, or require approval.</li>
+                    <li><strong>Bot cannot send to platform:</strong> check platform send-back support, account role, login, and rate limits.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

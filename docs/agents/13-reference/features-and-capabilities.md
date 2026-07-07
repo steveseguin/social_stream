@@ -77,7 +77,7 @@ As of the 2026-06-24 extraction pass:
 - `manifest.json` contains 155 content-script entries.
 - `sources/*.js` contains 143 top-level source scripts.
 - `sources/websocket/*` contains 28 source-page HTML/JS files.
-- `shared/config/settingsDefinitions.js` contains 327 popup setting definitions.
+- `shared/config/settingsDefinitions.js` contains 333 popup setting definitions.
 - The generated settings categories include 36 LLM/API settings, many TTS provider settings, command settings, filters, source toggles, webhook automation, MIDI, printer control, Spotify/now-playing, custom injection, and management controls.
 
 These counts are reference signals, not user-facing guarantees.
@@ -183,7 +183,7 @@ Check in this order:
 13. `08-platform-sources/independent-live-platform-sources.md` if it is BandLab, Bigo.tv, Bitchute, Blaze, Castr, Cherry TV, CloutHub, Cozy.tv, DLive, Estrim, FC2, Jaco.live, LFG.tv, Locals.com, or Loco.gg.
 14. `08-platform-sources/video-broadcast-platform-sources.md` if it is Mixlr, NicoVideo, NonOLive, OpenStreamingPlatform, Owncast, PeerTube, Restream.io Chat, Steam Broadcasts, Trovo, Truffle.vip, TwitCasting, Vimeo, YouNow, or Zap.stream.
 15. `08-platform-sources/community-membership-webapp-sources.md` if it is Circle.so, MeetMe, NextCloud, Patreon, Roll20, Simps, Tellonym, Whop, Wix Live/widgets, or Workplace legacy routing.
-16. `08-platform-sources/regional-and-emerging-platform-sources.md` if it is Bilibili DOM paths, Favorited, Kwai, Pilled, Portal, Pump.fun, Retake, Rooter, SharePlay, SoulBound, Stream.place, Substack, Tikfinity, uScreen, VK Live, or Xeenon.
+16. `08-platform-sources/regional-and-emerging-platform-sources.md` if it is Bilibili DOM paths, Favorited, Kwai, Pilled, Portal, Pump.fun, Retake, Rooter, SharePlay, SoulBound, Stream.place, Substack, Tikfinity, uScreen, or VK Live. Xeenon is retired.
 17. `08-platform-sources/special-case-platform-and-helper-sources.md` if it is Joystick, Velora, VPZone, X live/static split, Vertical Pixel Zone, Vercel Demo, or top-level YouTube helper copies.
 18. Existing platform-specific agent page, if present.
 

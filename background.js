@@ -470,6 +470,7 @@ async function restoreBrowserHandle(key, mode = "readwrite") {
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
+var forceNinjaSDKFromUrl = urlParams.has("sdk") && !/^(0|false|off|no)$/i.test(urlParams.get("sdk") || "1");
 var lastUseNinjaSDK = undefined; // track effective SDK usage across settings loads
 // initial default (may be recalculated when settings load)
 useNinjaSDK = false;
@@ -1595,7 +1596,7 @@ function loadSettings(item, resave = false) {
 	// Recompute effective SDK usage on settings load
 	try {
 		const settingsSDK = settings?.sdk?.setting === true || settings?.sdk === true || settings?.usesdk?.setting === true;
-		const effective = !!settingsSDK;
+		const effective = !!(forceNinjaSDKFromUrl || settingsSDK);
 		if (lastUseNinjaSDK === undefined) {
 			lastUseNinjaSDK = effective;
 		} else if (effective !== lastUseNinjaSDK) {
@@ -2432,11 +2433,16 @@ async function bringBackgroundPageToFrontForPicker() {
 
 		const backgroundTabs = await new Promise((resolve, reject) => {
 			try {
-				chrome.tabs.query({ url: backgroundUrl }, function (tabs) {
+				chrome.tabs.query({}, function (tabs) {
 					if (chrome.runtime.lastError) {
 						reject(chrome.runtime.lastError);
 					} else {
-						resolve(tabs || []);
+						resolve(
+							(tabs || []).filter(tab => {
+								const tabUrl = tab && (tab.url || tab.pendingUrl || "");
+								return tabUrl === backgroundUrl || tabUrl.startsWith(backgroundUrl + "?") || tabUrl.startsWith(backgroundUrl + "#");
+							})
+						);
 					}
 				});
 			} catch (err) {
@@ -4639,6 +4645,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
+		} else if (request.cmd && request.cmd === "getDockTransportHealth") {
+			sendResponse({ state: isExtensionOn, dockTransportHealth: getDockTransportHealth() });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
 			let responseData;
@@ -5986,6 +5994,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "resetwaitlist") {
 			resetWaitlist();
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resetleaderboard") {
+			broadcastLeaderboardReset();
+			sendResponse({ state: isExtensionOn, success: true });
 		} else if (request.cmd && request.cmd === "resettipjar") {
 			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 			sendResponse({ state: isExtensionOn });
@@ -6002,6 +6013,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && (request.cmd === "startentries" || request.cmd === "openentries" || request.cmd === "resumeentries")) {
+			toggleEntries(true);
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && (request.cmd === "waitlistmessage" || request.cmd === "setwaitlistmessage")) {
+			setWaitlistMessage(request.value);
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "removefromwaitlist") {
 			removeWaitlist(parseInt(request.value) || 0);
@@ -9187,6 +9204,117 @@ function getDockTransportHealth() {
 	};
 }
 
+function getStreamDeckRemoteControlRouter() {
+	return typeof window !== "undefined" ? window.StreamDeckRemoteControl : null;
+}
+
+async function getStreamDeckCapabilities() {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router || typeof router.buildCapabilities !== "function") {
+		return {
+			type: "capabilities",
+			version: 1,
+			runtime: isSSAPP ? "electron" : "web",
+			ssapp: { available: false },
+			ssn: { actions: {} }
+		};
+	}
+
+	let ssapp = { available: false };
+	if (isSSAPP && ipcRenderer && typeof ipcRenderer.invoke === "function") {
+		try {
+			const response = await ipcRenderer.invoke("ssapp:background-command", {
+				cmd: "streamDeckSourceCommand",
+				action: "getCapabilities"
+			});
+			if (response && response.ok === true && response.payload && response.payload.available === true) {
+				ssapp = response.payload;
+			}
+		} catch (error) {
+			console.warn("[StreamDeck] SSApp capability provider unavailable", error?.message || error);
+		}
+	}
+
+	return router.buildCapabilities({
+		runtime: isSSAPP ? "electron" : "web",
+		ssapp
+	});
+}
+
+function sendStreamDeckCallback(socket, request, result) {
+	if (!request || !request.get || !socket || socket.readyState !== WebSocket.OPEN) {
+		return false;
+	}
+	socket.send(
+		JSON.stringify({
+			callback: {
+				get: request.get,
+				result
+			}
+		})
+	);
+	return true;
+}
+
+function sendStreamDeckCommandResult(socket, request, result) {
+	if (!socket || socket.readyState !== WebSocket.OPEN) {
+		return false;
+	}
+	if (sendStreamDeckCallback(socket, request, result)) {
+		return true;
+	}
+	socket.send(
+		JSON.stringify({
+			type: "commandResult",
+			action: request && request.action ? request.action : null,
+			result
+		})
+	);
+	return true;
+}
+
+async function handleStreamDeckSsappRequest(request) {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router) {
+		return {
+			ok: false,
+			request: request && request.get ? request.get : null,
+			error: {
+				code: "UNSUPPORTED_ACTION",
+				message: "Stream Deck remote control router is unavailable."
+			}
+		};
+	}
+
+	const normalizedAction = router.normalizeAction(request.action);
+	const capabilities = await getStreamDeckCapabilities();
+	if (!capabilities || !capabilities.ssapp || capabilities.ssapp.available !== true) {
+		return router.makeError(request, "SSAPP_UNAVAILABLE", "SSApp source controls are unavailable in this runtime.");
+	}
+	if (!router.isSsappActionSupported(normalizedAction, capabilities)) {
+		return router.makeError(request, "UNSUPPORTED_ACTION", "SSApp action is not supported by the advertised capabilities.");
+	}
+
+	try {
+		const response = await ipcRenderer.invoke("ssapp:background-command", {
+			cmd: "streamDeckSourceCommand",
+			request: {
+				...request,
+				action: normalizedAction
+			}
+		});
+
+		if (response && response.ok === false) {
+			const error = response.error && typeof response.error === "object" ? response.error : {};
+			return router.makeError(request, error.code || response.code || "UNSUPPORTED_ACTION", error.message || response.message || "SSApp command failed.");
+		}
+
+		return router.makeResponse(request, response && "payload" in response ? response.payload : response);
+	} catch (error) {
+		return router.makeError(request, "SSAPP_UNAVAILABLE", error?.message || "SSApp command bridge failed.");
+	}
+}
+
 function setupSocket() {
 	if (!settings.socketserver) {
 		return;
@@ -9280,6 +9408,22 @@ function setupSocket() {
 				data.target = "";
 			}
 
+			const streamDeckRouter = getStreamDeckRemoteControlRouter();
+			if (streamDeckRouter && streamDeckRouter.isCapabilityRequest(data)) {
+				const capabilities = await getStreamDeckCapabilities();
+				if (data.get) {
+					sendStreamDeckCallback(socketserver, data, capabilities);
+				} else if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+					socketserver.send(JSON.stringify(capabilities));
+				}
+				return;
+			}
+			if (streamDeckRouter && streamDeckRouter.isSsappRequest(data)) {
+				const result = await handleStreamDeckSsappRequest(data);
+				sendStreamDeckCommandResult(socketserver, data, result);
+				return;
+			}
+
 			if (data.action && data.action === "eventFlowEvent" && data.value) {
 				resp = await processEventFlowBridgeEvent(data.value);
 			} else if (data.action && data.action === "sendChat" && data.value) {
@@ -9346,6 +9490,9 @@ function setupSocket() {
 				resp = true;
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
+				resp = true;
+			} else if (data.action && data.action === "resetleaderboard") {
+				broadcastLeaderboardReset();
 				resp = true;
 			} else if (data.action && data.action === "resettipjar") {
 				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
@@ -9444,6 +9591,12 @@ function setupSocket() {
 				toggleEntries(false);
 				resp = true;
 				//sendResponse({ state: isExtensionOn });
+			} else if (data.action && (data.action === "startentries" || data.action === "openentries" || data.action === "resumeentries")) {
+				toggleEntries(true);
+				resp = true;
+			} else if (data.action && (data.action === "waitlistmessage" || data.action === "setwaitlistmessage")) {
+				setWaitlistMessage(data.value);
+				resp = true;
 			} else if (data.action && data.action === "downloadwaitlist") {
 				downloadWaitlist();
 				resp = true;
@@ -9519,7 +9672,7 @@ function setupSocket() {
 				resp = { emoteonlymode: enable };
 			} else if (data.action) {
 				try {
-					if (data.target && data.target.toLowerCase !== "null") {
+					if (data.target && String(data.target).toLowerCase() !== "null") {
 						sendTargetP2P(data, data.target);
 					} else {
 						sendDataP2P(data);
@@ -10841,6 +10994,10 @@ async function openchat(target = null, force = false) {
 function sendDataP2P(data, UUID = false) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
+	// TODO after 2026-09-01: make the server2 dock send additive instead of
+	// returning here. Overlay links generated from 3.52.0+ are prepared to use
+	// socket-only receive mode only when their TRANSPORT_CAPABILITIES opt in.
+	// Keep legacy sends for old/cached/custom overlays. Base reference: b26c7aeb.
 	if (!UUID && settings.server2 && socketserverDock && socketserverDock.readyState === 1) {
 		try {
 			if (data.out) {
@@ -11258,6 +11415,22 @@ function sendTargetP2P(data, target) {
 				}
 			} catch (e) {}
 		}
+	}
+}
+
+function broadcastLeaderboardReset() {
+	var payload = { action: "resetleaderboard" };
+	try {
+		sendTargetP2P(payload, "dock");
+	} catch (e) {
+		console.error(e);
+	}
+	try {
+		if (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN) {
+			socketserverDock.send(JSON.stringify(payload));
+		}
+	} catch (e) {
+		console.error(e);
 	}
 }
 
@@ -11763,6 +11936,95 @@ function extractWaitlistMessage(chatMessage = "", trigger = "") {
 	}
 }
 
+function getWaitlistControlCommand(settingKey, fallback) {
+	try {
+		const entry = settings && settings[settingKey];
+		if (entry && entry.textsetting !== undefined && entry.textsetting !== null && entry.textsetting.toString().trim()) {
+			return entry.textsetting.toString().trim();
+		}
+	} catch (e) {}
+	return fallback;
+}
+
+function getWaitlistControlValue(chatMessage, commandString, fallback) {
+	try {
+		const matchedCommand = getMatchedCommandAlias(commandString, chatMessage, "startsWithToken");
+		if (!matchedCommand) {
+			return fallback;
+		}
+		const rest = String(chatMessage || "")
+			.trim()
+			.slice(matchedCommand.length)
+			.trim();
+		const value = parseInt(rest, 10);
+		if (Number.isFinite(value) && value > 0) {
+			return value;
+		}
+	} catch (e) {}
+	return fallback;
+}
+
+function processWaitlistControlCommand(data) {
+	try {
+		if (!getSettingFlag("waitlistcontrolcommands") || !data || !data.chatmessage || data.bot || data.reflection || data.replay || data.history || data.reload) {
+			return false;
+		}
+		if (!(data.mod || data.host || data.admin)) {
+			return false;
+		}
+
+		const message = data.chatmessage;
+		const commands = [
+			{
+				setting: "waitlistcommandstop",
+				fallback: "!wlstop",
+				action: function () {
+					toggleEntries(false);
+				}
+			},
+			{
+				setting: "waitlistcommandremove",
+				fallback: "!wlremove",
+				action: function (command) {
+					removeWaitlist(getWaitlistControlValue(message, command, 0));
+				}
+			},
+			{
+				setting: "waitlistcommandreset",
+				fallback: "!wlreset",
+				action: function () {
+					resetWaitlist();
+				}
+			},
+			{
+				setting: "waitlistcommandselect",
+				fallback: "!wlpick",
+				action: function (command) {
+					selectRandomWaitlist(getWaitlistControlValue(message, command, 1));
+				}
+			},
+			{
+				setting: "waitlistcommandhighlight",
+				fallback: "!wlhighlight",
+				action: function (command) {
+					highlightWaitlist(getWaitlistControlValue(message, command, 0));
+				}
+			}
+		];
+
+		for (var i = 0; i < commands.length; i++) {
+			const command = getWaitlistControlCommand(commands[i].setting, commands[i].fallback);
+			if (command && commandAliasMatches(command, message, "startsWithToken")) {
+				commands[i].action(command);
+				return true;
+			}
+		}
+	} catch (e) {
+		console.error(e);
+	}
+	return false;
+}
+
 function forgetWaitlistUser(entry) {
 	try {
 		if (!entry || !entry.type || !entry.chatname || !waitListUsers[entry.type]) {
@@ -12072,6 +12334,13 @@ function toggleEntries(state = false) {
 	allowNewEntries = state;
 	sendWaitlistConfig();
 }
+function setWaitlistMessage(value = "") {
+	const message = value === undefined || value === null ? "" : String(value);
+	settings.customwaitlistmessagetoggle = true;
+	settings.customwaitlistmessage = { textsetting: message };
+	chrome.storage.local.set({ settings: settings });
+	sendWaitlistConfig(null, true);
+}
 function objectArrayToCSV(data, delimiter = ",") {
 	if (!data || !Array.isArray(data) || data.length === 0) {
 		return "";
@@ -12307,15 +12576,15 @@ async function initTransport(roomStreamID, pass = false) {
 	// Re-evaluate effective SDK flag each init, based on flexible truthy parsing
 	try {
 		const raw = settings && (settings.sdk !== undefined ? settings.sdk : settings.usesdk);
-		let flag = false;
+		let flag = !!forceNinjaSDKFromUrl;
 		if (typeof raw === "boolean") {
-			flag = raw;
+			flag = flag || raw;
 		} else if (raw && typeof raw === "object") {
 			// supports { setting: true/"true"/1 }
 			const v = raw.setting;
-			flag = v === true || v === 1 || (typeof v === "string" && /^(1|true|on|yes)$/i.test(v));
+			flag = flag || v === true || v === 1 || (typeof v === "string" && /^(1|true|on|yes)$/i.test(v));
 		} else if (typeof raw === "string") {
-			flag = /^(1|true|on|yes)$/i.test(raw);
+			flag = flag || /^(1|true|on|yes)$/i.test(raw);
 		} else if (raw === 1) {
 			flag = true;
 		}
@@ -12510,13 +12779,13 @@ async function initTransport(roomStreamID, pass = false) {
 		if (!pass) {
 			pass = "false";
 		}
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(pass) + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
 	} else {
 		iframe = document.createElement("iframe");
 		if (!pass) {
 			pass = "false";
 		}
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(pass) + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
 		document.body.appendChild(iframe);
 	}
 }
@@ -12539,9 +12808,9 @@ async function ensureNinjaSDKLoaded() {
 
 	if (typeof window.VDONinjaSDK === "undefined") {
 		if (typeof window.loadScript === "function") {
-			await window.loadScript("./thirdparty/vdoninja-sdk.js");
+			await window.loadScript("./sources/grabvideo.js").catch(() => window.loadScript("./thirdparty/vdoninja-sdk.js"));
 		} else {
-			await dynamicLoadScript("./thirdparty/vdoninja-sdk.js");
+			await dynamicLoadScript("./sources/grabvideo.js").catch(() => dynamicLoadScript("./thirdparty/vdoninja-sdk.js"));
 		}
 	}
 	if (typeof window.NinjaBridge === "undefined") {
@@ -16550,6 +16819,14 @@ async function applyBotActions(data, tab = false) {
 		if (settings.defaultavatar.textsetting && !data.chatimg) {
 			data.chatimg = settings.defaultavatar.textsetting;
 		}
+	}
+
+	try {
+		if (settings.waitlistmode && processWaitlistControlCommand(data)) {
+			return null;
+		}
+	} catch (e) {
+		console.error(e);
 	}
 
 	try {

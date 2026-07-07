@@ -4,13 +4,13 @@ Status: quick/heavy resource classification pass started on 2026-06-24.
 
 ## Purpose
 
-Use this page before mining `C:\Users\steve\Code\stevesbot` for SSN docs. It classifies the support archive into safe curated sources, derivative summaries, raw/private evidence, and skip groups so agents do not repeatedly scan the same large trees or promote stale/private data into current SSN answers. Use `support-history-refresh-playbook.md` for the exact repeatable refresh workflow and query pack.
+Use this page before mining `<stevesbot repo>` for SSN docs. It classifies the support archive into safe curated sources, derivative summaries, raw/private evidence, and skip groups so agents do not repeatedly scan the same large trees or promote stale/private data into current SSN answers. Use `support-history-refresh-playbook.md` for the exact repeatable refresh workflow and query pack.
 
 This is a resource-control page, not a final troubleshooting page.
 
 ## Hard Rules
 
-- Write only inside `C:\Users\steve\Code\social_stream\docs\agents`.
+- Write only inside `docs/agents`.
 - Do not read `stevesbot/resources/secrets`.
 - Do not paste raw support conversations, private server/channel names, personal details, attachment contents, tokens, session IDs, webhook URLs, OAuth values, or API keys into docs.
 - Treat current `social_stream` and `ssapp` source as higher priority than any historical support answer.

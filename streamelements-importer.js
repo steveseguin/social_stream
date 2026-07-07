@@ -1246,8 +1246,56 @@
 							window.dispatchEvent(new CustomEvent("onWidgetLoad", { detail: detail }));
 						}
 
+						function versionAtLeast(value, minimum) {
+							var a = String(value || "").split(".");
+							var b = String(minimum || "").split(".");
+							var len = Math.max(a.length, b.length);
+							for (var i = 0; i < len; i++) {
+								var av = parseInt(a[i], 10) || 0;
+								var bv = parseInt(b[i], 10) || 0;
+								if (av > bv) return true;
+								if (av < bv) return false;
+							}
+							return true;
+						}
+
+						var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+						// Transport migration guard: only pages with full server parity may skip the legacy bridge.
+						var TRANSPORT_CAPABILITIES = {
+							serverFeed: true,
+							serverTargeted: false,
+							upstreamCommands: false,
+							customChannel: false,
+							legacyBridgeRequired: false,
+							exclusiveServerParams: { server: true, server2: true, server3: false }
+						};
+
+						// Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+
+						function hasExclusiveServerTransport(caps) {
+
+							var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+
+							return (params.server === true && urlParams.has("server")) ||
+
+								(params.server2 !== false && urlParams.has("server2")) ||
+
+								(params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+
+						}
+
+						function useServerOnlyTransport() {
+							var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+							return hasExclusiveServerTransport(caps) &&
+								versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+								caps.serverFeed === true &&
+								caps.legacyBridgeRequired !== true &&
+								caps.upstreamCommands !== true &&
+								caps.customChannel !== true;
+						}
+
 						function setupIframeBridge() {
-							if (!roomID || urlParams.has("serveronly")) return;
+							if (!roomID || urlParams.has("serveronly") || useServerOnlyTransport()) return;
 							var iframe = document.createElement("iframe");
 							iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + encodeURIComponent(roomID);
 							iframe.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;border:0;";

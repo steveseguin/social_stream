@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Overlay Builder Guide - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Practical guide for using the Social Stream Ninja AI Overlay Builder, previewing generated overlays, and loading them into OBS.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div>
+            <nav><ul><li><a href="../index.html">Home</a></li><li><a href="features.html">Features</a></li><li><a href="download.html">Download</a></li><li><a href="guides.html" class="active">Guides</a></li><li><a href="commands.html">Commands &amp; API</a></li><li><a href="supported-sites.html">Supported Sites</a></li><li><a href="templates.html">Templates</a></li><li><a href="support.html">Support</a></li></ul></nav>
+            <div class="header-controls"><div class="mobile-nav-toggle"><span></span><span></span><span></span></div></div>
+        </div>
+    </header>
+
+    <section class="page-hero"><div class="container"><h1>AI Overlay Builder</h1><p>Generate an overlay, test it, then load the saved output in OBS.</p></div></section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>What It Is</h2>
+                <p>The AI Overlay Builder helps create HTML overlays from a prompt. It is not the OBS page by itself. Use <code>aiprompt.html</code> to build and preview, then use <code>aioverlay.html</code> for the output page.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-ai-overlay-builder.png" alt="AI Overlay Builder page with prompt box, preview controls, event simulation buttons, save controls, and HTML source tab" class="guide-image">
+                    <figcaption>Preview and simulate events before you put the overlay into OBS.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>1. Build In The Prompt Page</h2>
+                <ol class="guide-steps">
+                    <li>Open <code>aiprompt.html?session=YOUR_SESSION</code>.</li>
+                    <li>Describe what the overlay should do and how it should look.</li>
+                    <li>Use a focused prompt: layout, message behavior, colors, animation timing, and what event types matter.</li>
+                    <li>Click the preview controls and simulate chat, follow, sub, gift, raid, donation, and custom JSON events.</li>
+                    <li>Save the overlay with a clear page name.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>2. Add The Output Page To OBS</h2>
+                <p>After saving, add the output page as an OBS Browser Source. Keep the same session and saved page name.</p>
+                <pre>https://socialstream.ninja/aioverlay.html?session=YOUR_SESSION&amp;page=chat-overlay</pre>
+                <p>If the overlay is transparent or only appears during events, use the builder's simulation buttons first so you know it can render.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>3. Use Templates When You Need Faster Setup</h2>
+                <p>If you want something reliable quickly, start from a template and customize it. Use the AI builder when you want something more specific.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/template-sample-overlay-preview.png" alt="Sample Social Stream Ninja overlay preview showing a styled chat message" class="guide-image">
+                    <figcaption>Templates are better for known layouts; AI generation is better for custom experiments.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common Fixes</h2>
+                <ul class="guide-list">
+                    <li><strong>Blank preview:</strong> click a simulation button and check the console panel.</li>
+                    <li><strong>OBS blank:</strong> confirm the saved page name and session match the builder.</li>
+                    <li><strong>Wrong event behavior:</strong> test with the exact event type you expect, not only normal chat.</li>
+                    <li><strong>Generated code is broken:</strong> use Review &amp; polish or simplify the prompt.</li>
+                    <li><strong>Overlay works in builder but not OBS:</strong> open the same <code>aioverlay.html</code> URL in a normal browser first.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

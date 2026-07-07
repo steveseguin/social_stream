@@ -16,7 +16,7 @@ For first-stop routing, use `docs/agents/11-support-kb/index.md`. For objective 
 - `custom_actions.js`
 - `sample_wss_source.html`
 - `docs/agents/08-platform-sources/*.md`
-- Future support-mining pass: `C:\Users\steve\Code\stevesbot\data\sqlite\*.sqlite`
+- Future support-mining pass: `<stevesbot repo>/data/sqlite/*.sqlite`
 
 ## Fast Reference Pages
 
@@ -473,7 +473,7 @@ Also check:
 - Substack must be a live-stream URL, either with `liveStream=` or `/live-stream/`.
 - Tikfinity is a read-only activity-feed ingest and emits TikTok-style SSN payloads; it is not a send-back target.
 - SharePlay has extra shoutout and Blitz/raid behavior that should be tested separately from normal chat.
-- Portal, Pump.fun, Retake, and Xeenon have viewer helper code, but viewer-count emission is not proven in the active inspected path.
+- Portal, Pump.fun, and Retake have viewer helper code, but viewer-count emission is not proven in the active inspected path. Xeenon is retired.
 - Crypto/trading, paid/community, app account, avatar, and tip evidence should be redacted before sharing.
 
 Use `docs/agents/08-platform-sources/regional-and-emerging-platform-sources.md` for the grouped behavior and caveats.

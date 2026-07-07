@@ -40,7 +40,7 @@ From `ssapp/package.json` and app instructions:
 
 - `npm run start`: start Electron app.
 - `npm run start2`: start development mode with `--running-from-source`.
-- `npm run start3`: start from `C:/Users/steve/Code/social_stream/`.
+- `npm run start3`: start from `<social_stream repo>/`.
 - `npm run start4`: macOS source path variant.
 - `npm run update:fallback`: regenerate Social Stream fallback bundle.
 - `npm run clean`: remove `dist`.
@@ -105,7 +105,7 @@ Rules:
 Source changes belong in:
 
 ```text
-C:\Users\steve\Code\social_stream
+<social_stream repo>
 ```
 
 ## Release Notes Style

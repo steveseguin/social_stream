@@ -230,6 +230,7 @@ var lastMessage = {};
 		data.backgroundColor = "";
 		data.textColor = "";
 		data.chatmessage = question;
+		data.textonly = settings.textonlymode || false;
 		data.chatimg = chatimg;
 		data.hasDonation = "";
 		data.membership = "";;
@@ -665,7 +666,7 @@ var lastMessage = {};
 				if (!data.chatmessage) return;
 				data.event = "reaction";
 				data.type = "zoom";
-				data.textonlymode = false;
+				data.textonly = false;
 				pushMessage(data);
 			});
 
@@ -679,7 +680,7 @@ var lastMessage = {};
 					if (!data.chatmessage) return;
 					data.event = "reaction";
 					data.type = "zoom";
-					data.textonlymode = false;
+					data.textonly = false;
 					pushMessage(data);
 			});
 
@@ -692,7 +693,7 @@ var lastMessage = {};
 				if (!data.chatmessage){return;}
 				data.event = "reaction";
 				data.type = "zoom";
-				data.textonlymode = false;
+				data.textonly = false;
 				////console.log(data);
 				pushMessage(data);
 				
@@ -708,7 +709,7 @@ var lastMessage = {};
 						if (!data.chatmessage){return;}
 						data.event = "reaction";
 						data.type = "zoom";
-						data.textonlymode = false;
+						data.textonly = false;
 						////console.log(data);
 						pushMessage(data);
 					});

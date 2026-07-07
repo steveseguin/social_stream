@@ -1076,9 +1076,16 @@ export class YoutubePlugin extends BasePlugin {
       chatmessage: sanitizedMessage,
       chatimg: author.profileImageUrl || '',
       timestamp,
-      hasDonation: snippet.superChatDetails?.amountDisplayString || (snippet.superStickerDetails ? 'Super Sticker' : giftInfo?.donationText || ''),
-      donationAmount: snippet.superChatDetails?.amountDisplayString || giftInfo?.donationText,
-      donationCurrency: snippet.superChatDetails?.currency,
+      hasDonation:
+        snippet.superChatDetails?.amountDisplayString ||
+        snippet.superStickerDetails?.amountDisplayString ||
+        giftInfo?.donationText ||
+        '',
+      donationAmount:
+        snippet.superChatDetails?.amountDisplayString ||
+        snippet.superStickerDetails?.amountDisplayString ||
+        giftInfo?.donationText,
+      donationCurrency: snippet.superChatDetails?.currency || snippet.superStickerDetails?.currency,
       isModerator: !!author.isChatModerator,
       isOwner: !!author.isChatOwner,
       isMember: !!author.isChatSponsor,
@@ -1100,7 +1107,6 @@ export class YoutubePlugin extends BasePlugin {
       message.subtitle = snippet.superStickerDetails.superStickerMetadata.altText;
     }
     if (giftInfo) {
-      message.event = 'jeweldonation';
       message.hasDonation = giftInfo.donationText || message.hasDonation || '';
       message.donationAmount = giftInfo.donationText || message.donationAmount;
       message.subtitle = giftInfo.giftName || giftInfo.altText || message.subtitle;
@@ -1110,9 +1116,6 @@ export class YoutubePlugin extends BasePlugin {
       }
       if (giftInfo.giftUrl) {
         message.contentimg = giftInfo.giftUrl;
-      }
-      if (Number.isFinite(giftInfo.estimatedRevenueUsd)) {
-        message.donoValue = giftInfo.estimatedRevenueUsd;
       }
     }
 
@@ -1205,7 +1208,7 @@ export class YoutubePlugin extends BasePlugin {
     };
 
     const jewelsAmount = parseInteger(source.jewelsAmount ?? source.jewels_amount);
-    const donationText = Number.isFinite(jewelsAmount) && jewelsAmount > 0 ? `${jewelsAmount} Jewels` : '';
+    const donationText = Number.isFinite(jewelsAmount) && jewelsAmount > 0 ? `${jewelsAmount} Jewels` : '1 YouTube Gift';
     const giftName = toPlainText(source.giftName || source.gift_name || '');
     const altText = toPlainText(source.altText || source.alt_text || '');
     const giftLabel = giftName || altText || 'Gift';
@@ -1230,14 +1233,13 @@ export class YoutubePlugin extends BasePlugin {
       giftDuration,
       hasVisualEffect: Boolean(source.hasVisualEffect || source.has_visual_effect),
       comboCount: parseInteger(source.comboCount ?? source.combo_count),
-      estimatedRevenueUsd: donationText ? jewelsAmount / 200 : null,
       previewText: fromSnippet || fromSanitized || fallback,
       note: donationText ? `${giftLabel} (${donationText})` : giftLabel
     };
   }
 
   buildGiftMeta(giftInfo = {}) {
-    const meta = { eventType: 'jeweldonation' };
+    const meta = {};
     if (giftInfo.giftName) {
       meta.giftName = giftInfo.giftName;
     }
@@ -1246,9 +1248,6 @@ export class YoutubePlugin extends BasePlugin {
     }
     if (Number.isFinite(giftInfo.jewelsAmount)) {
       meta.jewelsAmount = giftInfo.jewelsAmount;
-    }
-    if (Number.isFinite(giftInfo.estimatedRevenueUsd)) {
-      meta.estimatedRubyRevenueUsd = giftInfo.estimatedRevenueUsd;
     }
     if (giftInfo.giftUrl) {
       meta.giftUrl = giftInfo.giftUrl;
@@ -1279,6 +1278,15 @@ export class YoutubePlugin extends BasePlugin {
       return null;
     }
     const type = typeof snippet.type === 'string' ? snippet.type.trim().toLowerCase() : '';
+    const hasJewelGiftDetails = Boolean(
+      snippet?.giftEventDetails ||
+      snippet?.giftDetails ||
+      snippet?.gift_event_details ||
+      snippet?.gift_details
+    );
+    if (type === 'giftevent' || hasJewelGiftDetails) {
+      return 'jeweldonation';
+    }
     if (!type || type === 'textmessageevent') {
       return null;
     }
@@ -1296,9 +1304,6 @@ export class YoutubePlugin extends BasePlugin {
     }
     if (type === 'giftmembershipreceivedevent' || snippet?.giftMembershipReceivedDetails) {
       return 'giftredemption';
-    }
-    if (type === 'giftevent' || snippet?.giftEventDetails || snippet?.giftDetails) {
-      return 'jeweldonation';
     }
     return type;
   }
@@ -1887,6 +1892,16 @@ export class YoutubePlugin extends BasePlugin {
 
     const rawType = typeof snippet.type === 'string' ? snippet.type.trim() : '';
     const normalized = rawType.toLowerCase();
+    const hasJewelGiftDetails = Boolean(
+      snippet.giftEventDetails ||
+      snippet.giftDetails ||
+      snippet.gift_event_details ||
+      snippet.gift_details
+    );
+
+    if (normalized === 'giftevent' || hasJewelGiftDetails) {
+      return 'jeweldonation';
+    }
 
     if (!normalized || normalized === 'textmessageevent') {
       return null;
@@ -1910,10 +1925,6 @@ export class YoutubePlugin extends BasePlugin {
 
     if (normalized === 'giftmembershipreceivedevent' || snippet.giftMembershipReceivedDetails) {
       return 'giftredemption';
-    }
-
-    if (normalized === 'giftevent' || snippet.giftEventDetails || snippet.giftDetails) {
-      return 'jeweldonation';
     }
 
     return normalized;

@@ -494,7 +494,7 @@ Event Payload ─▶ State Check (isAlertMuted)
                         <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>Chat message text</td><td>Hello everyone!</td></tr>
                         <tr><td><code>{source}</code></td><td>—</td><td>Platform name (capitalized)</td><td>Twitch, YouTube</td></tr>
                         <tr><td><code>{type}</code></td><td>—</td><td>Platform name (raw)</td><td>twitch, youtube</td></tr>
-                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>Donation/tip amount</td><td>$5.00, 500 bits</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>Donation/tip display label</td><td>$5.00, 500 bits</td></tr>
                     </tbody>
                 </table>
 
@@ -505,7 +505,7 @@ Event Payload ─▶ State Check (isAlertMuted)
                     </thead>
                     <tbody>
                         <tr><td><code>{displayname}</code></td><td>Display name (alternate field)</td><td>CoolViewer123</td></tr>
-                        <tr><td><code>{donationAmount}</code></td><td>Numeric donation value</td><td>5.00</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>Numeric donation value when known; Event Flow derives threshold values from normalized <code>hasDonation</code> labels such as value, <code>$</code>value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD. <code>{donationAmount}</code> is a legacy alias</td><td>5.00</td></tr>
                         <tr><td><code>{event}</code></td><td>Event type identifier</td><td>cheer, raid, new_follower</td></tr>
                         <tr><td><code>{membership}</code></td><td>Membership state</td><td>MEMBERSHIP, new_sponsor</td></tr>
                         <tr><td><code>{subtitle}</code></td><td>Additional context</td><td>Member for 3 months</td></tr>
@@ -653,7 +653,7 @@ Event Payload ─▶ State Check (isAlertMuted)
                         <tr><td><code>message.userid</code></td><td>string</td><td>Platform user ID</td><td><code>"12345678"</code></td></tr>
                         <tr><td><code>message.type</code></td><td>string</td><td>Source platform (lowercase)</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
                         <tr><td><code>message.hasDonation</code></td><td>string</td><td>Formatted donation string if present</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
-                        <tr><td><code>message.donationAmount</code></td><td>number&nbsp;/&nbsp;string</td><td>Numeric donation value</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>number&nbsp;/&nbsp;string</td><td>Numeric donation value when the source can provide one. Event Flow falls back to <code>currency.js</code> conversion of normalized <code>hasDonation</code> labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse <code>chatmessage</code> prose for donation values.</td><td><code>5</code></td></tr>
                         <tr><td><code>message.event</code></td><td>string</td><td>Event type identifier</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
                         <tr><td><code>message.membership</code></td><td>string</td><td>Membership state when applicable</td><td><code>"MEMBERSHIP"</code></td></tr>
                         <tr><td><code>message.subtitle</code></td><td>string</td><td>Secondary context line</td><td><code>"Member for 3 months"</code></td></tr>
@@ -707,7 +707,9 @@ return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
                 <div class="snippet-block">
                     <div class="snippet-label">Donation above a threshold</div>
                     <div class="snippet-desc">Fire only when a donation meets or exceeds a minimum amount.</div>
-                    <div class="code-js">const amount = parseFloat(message.donationAmount || message.hasDonation || 0);
+                    <div class="code-js">const amount = message.donoValue !== undefined && message.donoValue !== null && message.donoValue !== ''
+  ? Number(message.donoValue)
+  : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
 return amount >= 5;</div>
                 </div>
 
@@ -768,7 +770,7 @@ return { modified: true, message };</div>
                 <div class="snippet-block">
                     <div class="snippet-label">Format a donation announcement</div>
                     <div class="snippet-desc">Rewrite the chatmessage into a consistent announcement string when a donation is present.</div>
-                    <div class="code-js">const amount = parseFloat(message.donationAmount || 0);
+                    <div class="code-js">const amount = parseFloat(message.donoValue || 0);
 if (amount > 0) {
     const note = (message.chatmessage || '').trim();
     message.chatmessage = `💰 ${message.chatname} donated $${amount.toFixed(2)}!`
@@ -784,7 +786,7 @@ return { modified: false, message };</div>
                     <div class="code-js">message.meta = message.meta || {};
 
 // Assign a donation tier so the next node can use {meta} to decide overlay colour
-const amount = parseFloat(message.donationAmount || 0);
+const amount = parseFloat(message.donoValue || 0);
 message.meta.donationTier = amount >= 20 ? 'gold' : amount >= 5 ? 'silver' : 'bronze';
 
 return { modified: true, message };</div>

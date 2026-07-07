@@ -76,7 +76,7 @@ Confirmed behavior:
 - It can send through `chrome.runtime.sendMessage` in the extension or through `window.ninjafy.sendMessage` in the standalone app.
 - It listens for `SOURCE_CONTROL` and `SEND_MESSAGE` messages from the extension/app bridge.
 - It requests settings from the background page and forwards settings changes to the source page through custom DOM events.
-- `providers/youtube/liveChat.js` supports polling mode and streaming mode. Default polling interval is 4000 ms; the streaming endpoint is `https://www.googleapis.com/youtube/v3/liveChat/messages:stream`.
+- `providers/youtube/liveChat.js` supports polling mode and streaming mode. Default polling interval is 4000 ms; the streaming endpoint is `https://www.googleapis.com/youtube/v3/liveChat/messages/stream`.
 - Provider events include status, chat, membership, Super Chat, Super Sticker, sponsor, ban, delete message, metric, error, and debug.
 
 Event-reference notes:
@@ -105,14 +105,15 @@ Support implication: if YouTube sign-in fails in the standalone app, check wheth
 
 Important event names from `docs/event-reference.html`:
 
-- Standard DOM: `sponsorship`, `giftpurchase`, `giftredemption`, `resub`, `jeweldonation`, `donation`, `thankyou`, `redirect`, `viewer_update`.
-- WebSocket/Data API: `donation`, `supersticker`, `jeweldonation`, `sponsorship`, `resub`, `giftpurchase`, `giftredemption`, `membermilestone`, `viewer_update`, `subscriber_update`, `view_update`, `live_chat_ended`, `user_banned`, `new_follower`.
+- Standard DOM: `superchat`, `supersticker`, `jeweldonation`, `sponsorship`, `giftpurchase`, `giftredemption`, `resub`, `thankyou`, `redirect`, `viewer_update`.
+- WebSocket/Data API: `superchat`, `supersticker`, `jeweldonation`, `sponsorship`, `resub`, `giftpurchase`, `giftredemption`, `membermilestone`, `viewer_update`, `subscriber_update`, `view_update`, `live_chat_ended`, `user_banned`, `new_follower`.
+- Super Chats, Super Stickers, and YouTube Gifts/Jewels use `hasDonation` with their specific event names. Gift membership purchases/redemptions use `giftpurchase`/`giftredemption` and do not set `hasDonation` or `donoValue`.
 
 Cross-platform note:
 
 - YouTube uses `sponsorship` for new members. Twitch and Kick use `new_subscriber`.
 - YouTube gift events use `giftpurchase` and `giftredemption`, not Twitch/Kick `subscription_gift`.
-- Donation-like events are often signaled by `hasDonation`, even when the event name differs.
+- Donation-value events are signaled by `hasDonation`; membership purchases are not donation-value events.
 
 ## Common Failures
 

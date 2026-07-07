@@ -12,7 +12,7 @@ This is a documentation hygiene audit. It is not product runtime validation and 
 
 Audited path:
 
-- `C:\Users\steve\Code\social_stream\docs\agents`
+- `docs/agents`
 
 Audited files:
 
@@ -57,6 +57,30 @@ consoleErrors: 0
 ```
 
 This proves the static Markdown viewer can load and route local docs from static hosting. It does not validate product behavior, external links, source-file links, or every heading anchor.
+
+## 2026-07-01 Result
+
+Read-only inline Node audit after adding `common-guides.md`:
+
+```text
+agentMarkdown: 169
+brokenAgentMdLinks: 0
+```
+
+Browser smoke result:
+
+```text
+viewer: docs/index.html
+default doc: Common Guides And Support Routing loaded
+default path: agents/common-guides.md
+guides.html: Guide Directory loaded before tab nav with 6 groups, 2 open groups, 29 guide links, and working filter
+support.html: Common Help Paths compact list loaded before support contact cards with 4 links
+obs-quick-start.html: loaded with 5 compact guide sections
+platform-setup-picker.html: loaded with 5 compact guide sections
+consoleErrors: 0
+```
+
+Mobile note: after replacing the hidden mobile nav offset with transform-based hiding and allowing inline code to wrap, `guides.html`, `support.html`, `obs-quick-start.html`, `platform-setup-picker.html`, and `docs/index.html` had no horizontal overflow at 390px width in the smoke test.
 
 ## Cleanup Performed
 

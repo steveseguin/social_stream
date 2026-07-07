@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Troubleshooting - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Troubleshoot blank Social Stream Ninja OBS overlays, wrong sessions, silent TTS, browser source cache, and source capture problems.">
+</head>
+<body>
+    <header><div class="container"><div class="logo"><a href="../index.html"><img src="../icons/logo.svg" alt="Social Stream Ninja Logo"><span>Social Stream Ninja</span></a></div><nav><ul><li><a href="../index.html">Home</a></li><li><a href="features.html">Features</a></li><li><a href="download.html">Download</a></li><li><a href="guides.html" class="active">Guides</a></li><li><a href="commands.html">Commands &amp; API</a></li><li><a href="supported-sites.html">Supported Sites</a></li><li><a href="templates.html">Templates</a></li><li><a href="support.html">Support</a></li></ul></nav><div class="header-controls"><div class="mobile-nav-toggle"><span></span><span></span><span></span></div></div></div></header>
+    <section class="page-hero"><div class="container"><h1>OBS Troubleshooting</h1><p>Find out whether the source, session, overlay, or OBS browser source is the problem.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Start With The Dock</h2>
+                <p>The dock is the fastest test. If the dock is empty, do not debug OBS yet. Fix the platform source first.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-dock-message-check.png" alt="Social Stream Ninja dock showing received chat messages" class="guide-image">
+                    <figcaption>If messages appear in the dock, Social Stream is receiving chat.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Decision Tree</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Test</th><th>Meaning</th><th>Next Step</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Test">Dock is empty</td><td data-label="Meaning">Source/platform capture is not working yet.</td><td data-label="Next Step">Check login, live page, popout/source page, app mode, or platform guide.</td></tr>
+                        <tr><td data-label="Test">Dock works, browser overlay works</td><td data-label="Meaning">OBS browser source is the likely issue.</td><td data-label="Next Step">Refresh OBS source, check URL, dimensions, visibility, cache, and custom CSS.</td></tr>
+                        <tr><td data-label="Test">Dock works, browser overlay blank</td><td data-label="Meaning">Wrong overlay page, wrong session, or no matching payload.</td><td data-label="Next Step">Use the same session and pick a page that matches the expected output.</td></tr>
+                        <tr><td data-label="Test">Image works, TTS silent</td><td data-label="Meaning">Audio routing issue.</td><td data-label="Next Step">Check provider vs system TTS and OBS audio capture.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Check The Overlay URL</h2>
+                <p>Use the exact same session ID everywhere. A one-character difference creates a separate room.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION</pre>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION</pre>
+                <figure class="guide-figure">
+                    <img src="images/guides/obs-featured-overlay-preview.png" alt="Featured overlay preview showing a selected message" class="guide-image">
+                    <figcaption>Some overlays only show content after a message is featured or a matching event happens.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>If TTS Is Silent In OBS</h2>
+                <p>Plain system TTS is the common trap. It may speak through your speakers while OBS Browser Source hears nothing.</p>
+                <figure class="guide-figure">
+                    <img src="images/guides/guide-tts-obs-audio.png" alt="OBS audio capture note explaining system TTS limitations" class="guide-image">
+                    <figcaption>Use provider/browser TTS for easier OBS capture, or route system audio separately.</figcaption>
+                </figure>
+                <p>Detailed help: <a href="tts-setup-guide.html">TTS Setup Guide</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Common Fixes</h2>
+                <ul class="guide-list">
+                    <li>Refresh the OBS Browser Source after changing URL parameters.</li>
+                    <li>Clear OBS browser source cache if an old page keeps loading.</li>
+                    <li>Make the source visible and check that width/height are not tiny.</li>
+                    <li>Temporarily remove custom OBS CSS to rule out hidden text or opacity.</li>
+                    <li>Open the same OBS URL in a normal browser to separate OBS issues from Social Stream issues.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License.</p></div></div></footer>
+    <script src="js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
