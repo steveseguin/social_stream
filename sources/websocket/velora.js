@@ -139,6 +139,37 @@ const state = {
 const els = {};
 let backgroundKeepAliveInitialized = false;
 
+function relayToApp(payload, callback) {
+    let sent = false;
+    try {
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+            chrome.runtime.sendMessage(chrome.runtime.id, payload, callback || function () {});
+            sent = true;
+        }
+    } catch (e) {}
+    if (!sent) {
+        try {
+            window.postMessage(payload, '*');
+            if (typeof callback === 'function') {
+                setTimeout(function () { callback(null); }, 0);
+            }
+            sent = true;
+        } catch (e) {}
+    }
+    return sent;
+}
+
+function notifyAppStatus(status, message, detail) {
+    relayToApp({
+        wssStatus: {
+            platform: 'velora',
+            status: status,
+            message: message || '',
+            detail: detail || {}
+        }
+    });
+}
+
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
 
 function enableBackgroundKeepAlive() {
@@ -1314,7 +1345,10 @@ function applyConnectedChannelInfo(data, transportLabel) {
     clearSocketFallbackTimer();
     clearSocketConnectTimer();
     clearSseReconnectTimer();
-    setSocketStatus('connected');
+    setSocketStatus('connected', `Velora ${transportLabel} connected.`, {
+        channel: labelName,
+        transport: transportLabel
+    });
 
     if (transportKey === 'sse') {
         disconnectSocketTransport();
@@ -1397,7 +1431,7 @@ function connectSse(reason) {
     disconnectSseTransport();
     disconnectSocketTransport();
     resetEventConnectionState();
-    setSocketStatus('connecting');
+    setSocketStatus('connecting', 'Connecting to Velora SSE...');
 
     if (reason) {
         addEventLogEntry(reason, 'warn');
@@ -1415,7 +1449,7 @@ function connectSse(reason) {
     xhr.onreadystatechange = function () {
         if (xhr !== state.sseRequest) return;
         if (xhr.readyState === 2 && xhr.status && xhr.status !== 200) {
-            setSocketStatus('error');
+            setSocketStatus('error', `Velora SSE error: HTTP ${xhr.status}`);
             addEventLogEntry(`SSE connection failed: HTTP ${xhr.status}`, 'error');
         } else if (xhr.readyState === 2 && xhr.status === 200 && !state.eventsConnected) {
             applyConnectedChannelInfo(null, 'SSE');
@@ -1436,7 +1470,7 @@ function connectSse(reason) {
         state.sseReadOffset = 0;
         state.sseBuffer = '';
         if (!state.eventsConnected) {
-            setSocketStatus('error');
+            setSocketStatus('error', 'Velora SSE connection error.');
         }
         addEventLogEntry('Velora SSE connection error.', 'error');
         scheduleSseReconnect('Retrying Velora SSE connection.');
@@ -1501,11 +1535,11 @@ function connectSocket() {
     });
 
     state.socket = socket;
-    setSocketStatus('connecting');
+    setSocketStatus('connecting', 'Connecting to Velora Events API...');
     startSocketConnectTimeout();
 
     socket.on('connect', () => {
-        setSocketStatus('connecting');
+        setSocketStatus('connecting', 'Velora WebSocket connected; waiting for channel confirmation...');
         addEventLogEntry('Velora WebSocket transport connected. Waiting for channel confirmation…', 'info');
         startSocketFallbackTimer();
     });
@@ -1524,7 +1558,7 @@ function connectSocket() {
     socket.on('disconnect', (reason) => {
         clearSocketFallbackTimer();
         if (!state.sseRequest) {
-            setSocketStatus('disconnected');
+            setSocketStatus('disconnected', `Velora disconnected: ${reason}`);
             addEventLogEntry(`Disconnected: ${reason}`, 'warn');
             stopViewerPoll();
             resetEventConnectionState();
@@ -1532,7 +1566,7 @@ function connectSocket() {
     });
 
     socket.on('connect_error', (err) => {
-        setSocketStatus('error');
+        setSocketStatus('error', `Velora WebSocket error: ${err.message}`);
         addEventLogEntry(`Connection error: ${err.message}`, 'error');
         connectSse('WebSocket connection failed. Falling back to SSE.');
     });
@@ -1548,7 +1582,7 @@ function disconnectSocket() {
     disconnectSseTransport();
     stopViewerPoll();
     resetEventConnectionState();
-    setSocketStatus('disconnected');
+    setSocketStatus('disconnected', 'Velora Events disconnected.');
 }
 
 // ─── Event routing ────────────────────────────────────────────────────────────
@@ -1933,11 +1967,7 @@ async function sendChatBridgeMessage(text) {
 // ─── Extension bridge ─────────────────────────────────────────────────────────
 
 function pushMessage(data) {
-    try {
-        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
-            chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function (e) {});
-        }
-    } catch (e) {}
+    relayToApp({ message: data }, function (e) {});
 }
 
 function notifyBridgeStatus() {
@@ -2090,7 +2120,7 @@ function setAuthStatus(msg, level) {
     }
 }
 
-function setSocketStatus(status) {
+function setSocketStatus(status, appMessage, detail) {
     state.socketStatus = status;
     if (!els.socketState) return;
     const labels = {
@@ -2107,6 +2137,7 @@ function setSocketStatus(status) {
     };
     els.socketState.textContent = labels[status] || status;
     els.socketState.className = `status-chip ${chips[status] || 'warning'}`;
+    notifyAppStatus(status, appMessage || labels[status] || status, detail || {});
 }
 
 function updateViewerCount(count) {
@@ -2118,11 +2149,9 @@ function updateViewerCount(count) {
         els.viewerCount.textContent = `Viewers: ${Number(count).toLocaleString()}`;
         els.viewerCount.className = 'status-chip ok';
         try {
-            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
-                chrome.runtime.sendMessage(chrome.runtime.id, {
-                    message: { type: 'velora', event: 'viewer_update', meta: count }
-                }, function (e) {});
-            }
+            relayToApp({
+                message: { type: 'velora', event: 'viewer_update', meta: count }
+            }, function (e) {});
         } catch (e) {}
     }
 }

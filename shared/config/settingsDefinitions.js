@@ -1424,6 +1424,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "printer_control",
     description: "See documentation on socialstream.ninja for details."
   },
+  "server2additivedelivery": {
+    type: "boolean",
+    category: "printer_control",
+    description: "Temporary experimental option to also send API-routed chat through normal dock/overlay connections."
+  },
   "soundvolume": {
     type: "number",
     category: "other_customization_options",

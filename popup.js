@@ -4150,6 +4150,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="disableRelayThrottle"]',
 		'[data-setting="disablehost"]',
 		'[data-setting="socketserver"]',
+		'[data-setting="server2additivedelivery"]',
 		'[data-setting="lanonly"]',
 		'[data-setting="ssc"]',
 		'[data-textsetting="sscapikey"]',

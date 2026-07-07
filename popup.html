@@ -7081,6 +7081,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="send-messages-to-dock-via-server-instead-of-p2p">📡 Send chat messages to API server (for external listeners)</span>
                                 </div>
+                                <div title="Temporary experimental option: when API chat forwarding is enabled, also keep sending those messages through normal dock/overlay connections. This may duplicate messages on older or mixed server/P2P links.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="server2additivedelivery" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Experimental/temporary: also send API-routed chat to normal dock/overlay connections</span>
+                                </div>
                                 <div title="Allows the Dock page to send commands back to the extension via the API server instead of P2P. Useful if P2P connections are blocked or unreliable.">
                                     <label class="switch" >
                                         <input type="checkbox" id="server3" data-both="server3" />

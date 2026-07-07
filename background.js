@@ -10997,17 +10997,21 @@ async function openchat(target = null, force = false) {
 function sendDataP2P(data, UUID = false) {
 	// function to send data to the DOCk via the VDO.Ninja API
 
-	// TODO after 2026-09-01: make the server2 dock send additive instead of
-	// returning here. Overlay links generated from 3.52.0+ are prepared to use
-	// socket-only receive mode only when their TRANSPORT_CAPABILITIES opt in.
-	// Keep legacy sends for old/cached/custom overlays. Base reference: b26c7aeb.
+	// TODO after 2026-09-01: make the server2 dock send additive by default.
+	// Overlay links generated from 3.52.0+ are prepared to use socket-only
+	// receive mode only when their TRANSPORT_CAPABILITIES opt in. Until then,
+	// this temporary setting lets users test additive delivery early.
 	if (!UUID && settings.server2 && socketserverDock && socketserverDock.readyState === 1) {
 		try {
-			if (data.out) {
-				delete data.out;
+			var server2Payload = data;
+			if (server2Payload && typeof server2Payload === "object" && server2Payload.out) {
+				server2Payload = Object.assign({}, server2Payload);
+				delete server2Payload.out;
 			}
-			socketserverDock.send(JSON.stringify(data));
-			return;
+			socketserverDock.send(JSON.stringify(server2Payload));
+			if (!getSettingFlag("server2additivedelivery")) {
+				return;
+			}
 		} catch (e) {
 			console.error(e);
 			// lets try to send it via P2P as a backup option
@@ -13492,7 +13496,7 @@ function getPrivateChatbotCapabilities() {
 			break;
 		case "xai":
 			model = settings?.xaimodel?.textsetting || "grok-4.3";
-			imageInput = false; // xAI image understanding uses Responses API, not this Chat Completions path
+			imageInput = /grok-4|vision|image/i.test(model) ? true : false;
 			break;
 		case "bedrock":
 			model = settings?.bedrockmodel?.textsetting || "anthropic.claude-sonnet-5";

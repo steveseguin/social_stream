@@ -1199,8 +1199,9 @@ function supportsOpenAICompatibleImages(provider, model) {
     switch (provider) {
         case "deepseek":
         case "bedrock":
-        case "xai":
             return false;
+        case "xai":
+            return /grok-4|vision|image/i.test(modelId);
         case "groq":
             return /llama-4|vision|pixtral/i.test(modelId);
         default:
