@@ -615,7 +615,12 @@ if (urlParams.has("chroma")) {
 }
 if (urlParams.has("font")) {
     const _fs = parseInt(urlParams.get("font"), 10);
-    if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+    if (!isNaN(_fs) && _fs > 0) {
+        document.documentElement.style.fontSize = _fs + "px";
+        document.documentElement.style.setProperty("--msgSize", _fs + "px");
+        document.documentElement.style.setProperty("--nameSize", Math.round(_fs * 1.4) + "px");
+        document.body.style.fontSize = _fs + "px";
+    }
 }
 if (urlParams.has("fontfamily")) {
     const _ff = (urlParams.get("fontfamily") || "").trim();

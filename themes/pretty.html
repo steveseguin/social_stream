@@ -98,12 +98,18 @@
 		if (!isNaN(_fs) && _fs > 0){ _fontSize = _fs + "px"; }
 	}
 	var _fontFamily = '"opendyslexic", opendyslexic, serif';
+	var _fontImport = "";
 	if (urlParams.has("fontfamily")){
 		var _ff = (urlParams.get("fontfamily") || "").trim();
-		if (_ff){ _fontFamily = "'" + _ff.replace(/['"\\;{}<>]/g, "") + "', sans-serif"; }
+		if (_ff){
+			var _safeFont = _ff.replace(/['"\\;{}<>]/g, "");
+			_fontFamily = "'" + _safeFont + "', sans-serif";
+			_fontImport = "@import url('https://fonts.googleapis.com/css2?family=" + encodeURIComponent(_safeFont).replace(/%20/g, "+") + ":wght@400;500;600;700&display=swap');\n";
+		}
 	}
 
 	var css = `
+		${_fontImport}
 		:root {
 			 --comment-font-size: ${_fontSize};
 			 --font-family: ${_fontFamily};

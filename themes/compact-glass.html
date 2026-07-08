@@ -323,7 +323,10 @@ body.ultra .content-img {
     }
     if (urlParams.has("font")) {
         var fs = parseInt(urlParams.get("font"), 10);
-        if (!isNaN(fs) && fs > 0) { document.documentElement.style.fontSize = fs + "px"; }
+        if (!isNaN(fs) && fs > 0) {
+            document.documentElement.style.fontSize = fs + "px";
+            document.body.style.fontSize = fs + "px";
+        }
     }
     if (urlParams.has("fontfamily")) {
         var ff = (urlParams.get("fontfamily") || "").trim();

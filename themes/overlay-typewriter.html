@@ -143,7 +143,7 @@ body::before {
     box-sizing: border-box;
     position: relative;
     font-family: 'Source Code Pro', monospace;
-    font-size: 13px;
+    font-size: var(--chat-font-size, 13px);
     line-height: 1.4;
 }
 
@@ -511,7 +511,11 @@ body::before {
     }
     if (urlParams.has("font")) {
         var _fs = parseInt(urlParams.get("font"), 10);
-        if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+        if (!isNaN(_fs) && _fs > 0) {
+            document.documentElement.style.fontSize = _fs + "px";
+            document.documentElement.style.setProperty("--chat-font-size", _fs + "px");
+            document.body.style.fontSize = _fs + "px";
+        }
     }
     if (urlParams.has("fontfamily")) {
         var _ff = (urlParams.get("fontfamily") || "").trim();

@@ -74,6 +74,8 @@ html.dark-mode {
 html {
     font-size: 62.5%; /* 10px = 1rem */
     scroll-behavior: smooth;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 body {
@@ -82,6 +84,7 @@ body {
     line-height: 1.6;
     color: var(--text-primary);
     background-color: var(--background-light);
+    max-width: 100%;
     overflow-x: hidden;
 }
 
@@ -720,10 +723,13 @@ footer {
     font-family: var(--font-mono);
     font-size: 1.4rem;
     position: relative;
+    max-width: 100%;
 }
 
 .code-block-wrapper {
     display: flex;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .code-block pre {
@@ -733,6 +739,7 @@ footer {
     line-height: 1.5;
     user-select: text;
     cursor: text;
+    max-width: 100%;
     overflow-x: auto;
 }
 

@@ -533,7 +533,10 @@ body.bigbubbles .message {
     }
     if (urlParams.has("font")) {
         var _fs = parseInt(urlParams.get("font"), 10);
-        if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+        if (!isNaN(_fs) && _fs > 0) {
+            document.documentElement.style.fontSize = _fs + "px";
+            document.body.style.fontSize = _fs + "px";
+        }
     }
     if (urlParams.has("fontfamily")) {
         var _ff = (urlParams.get("fontfamily") || "").trim();
