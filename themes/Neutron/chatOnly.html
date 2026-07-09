@@ -55,6 +55,11 @@
 	if (urlParams.has("showtime")){
 		params += "&showtime=" + urlParams.get("showtime");
 	}
+	["server", "server2", "server3", "localserver"].forEach(function(key){
+		if (!urlParams.has(key)) return;
+		var value = urlParams.get(key);
+		params += value ? "&" + key + "=" + encodeURIComponent(value) : "&" + key;
+	});
 
 	// --- Common overlay tweaks (shared across themes) ---
 	// hidebots is handled by the embedded dock.html, so pass it through

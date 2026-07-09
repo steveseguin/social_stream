@@ -2604,7 +2604,8 @@ function updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, v
     versionParam.split("&").filter(Boolean).forEach(part => params.push(part));
   }
 
-  const overlayUrl = baseURL + "cohost-overlay.html?" + params.join("&");
+  const overlayParams = mergeSupportedServerParamsIntoQuery(params.join("&"), "aioverlay", document.getElementById("dock"), "cohost-overlay.html");
+  const overlayUrl = baseURL + "cohost-overlay.html" + (overlayParams ? "?" + overlayParams : "");
   const overlayElement = document.getElementById("aioverlay");
   const overlayLink = document.getElementById("aioverlaylink");
   if (overlayElement) overlayElement.raw = overlayUrl;
@@ -2700,6 +2701,194 @@ const CHAT_OVERLAY_COMMON_SUPPORT = new Set([
   "themes/t3nk3y/index.html",
   "themes/LuckyLootTube/luckyloottube.html"
 ]);
+
+const SERVER_LINK_PARAM_NAMES = ["server", "server2", "server3"];
+const FULL_SERVER_LINK_SUPPORT = { server: true, server2: true, server3: true };
+const NO_SERVER_LINK_SUPPORT = { server: false, server2: false, server3: false };
+
+const SERVER_PARAM_SUPPORT_BY_TARGET = {
+  dock: FULL_SERVER_LINK_SUPPORT,
+  emoteswall: FULL_SERVER_LINK_SUPPORT,
+  multialerts: FULL_SERVER_LINK_SUPPORT,
+  chatbot: FULL_SERVER_LINK_SUPPORT,
+  cohost: { server: true, server2: true, server3: false },
+  aioverlay: { server: true, server2: true, server3: false },
+  meta: { server: true, server2: true, server3: false },
+  hypetrain: FULL_SERVER_LINK_SUPPORT,
+  poll: FULL_SERVER_LINK_SUPPORT,
+  reactions: FULL_SERVER_LINK_SUPPORT,
+  scoreboard: FULL_SERVER_LINK_SUPPORT,
+  spotify: FULL_SERVER_LINK_SUPPORT,
+  map: FULL_SERVER_LINK_SUPPORT,
+  aiprompt: { server: true, server2: true, server3: false },
+  hypemeter: { server: true, server2: true, server3: false },
+  ticker: { server: true, server2: true, server3: false },
+  tipjar: { server: true, server2: true, server3: false },
+  eventsdashboard: { server: true, server2: true, server3: false },
+  flowactions: { server: true, server2: true, server3: false },
+  timer: { server: true, server2: false, server3: false },
+  giveaway: { server: true, server2: false, server3: false },
+  credits: { server: false, server2: true, server3: true },
+  leaderboard: { server: false, server2: true, server3: true },
+  waitlist: NO_SERVER_LINK_SUPPORT,
+  wordcloud: NO_SERVER_LINK_SUPPORT,
+  "custom-gif-commands": NO_SERVER_LINK_SUPPORT,
+  privatechatbot: NO_SERVER_LINK_SUPPORT
+};
+
+const CHAT_OVERLAY_SERVER_PARAM_SUPPORT = {
+  "sampleoverlay.html": { server: true, server2: true, server3: false },
+  "themes/compact-classic.html": { server: true, server2: true, server3: false },
+  "themes/compact-clean.html": { server: true, server2: true, server3: false },
+  "themes/compact-glass.html": { server: true, server2: true, server3: false },
+  "themes/overlay-neon-cyberpunk.html": { server: true, server2: true, server3: false },
+  "themes/overlay-particles.html": { server: true, server2: true, server3: false },
+  "themes/overlay-typewriter.html": { server: true, server2: true, server3: false },
+  "themes/overlay-bubbles.html": { server: true, server2: true, server3: false },
+  "themes/overlay-cards.html": { server: true, server2: true, server3: false },
+  "themes/overlay-comic-pop.html": { server: true, server2: true, server3: false },
+  "themes/overlay-comic-classic.html": { server: true, server2: true, server3: false },
+  "themes/horizontal.html": { server: true, server2: true, server3: false },
+  "themes/overlay-ticker-news.html": { server: true, server2: true, server3: false },
+  "themes/overlay-credits.html": { server: true, server2: true, server3: false },
+  "themes/overlay-danmaku.html": { server: true, server2: true, server3: false },
+  "themes/overlay-xacception.html": { server: true, server2: true, server3: false },
+  "themes/pretty.html": FULL_SERVER_LINK_SUPPORT,
+  "themes/Neutron/chatOnly.html": FULL_SERVER_LINK_SUPPORT,
+  "themes/Neutron/stream.html": FULL_SERVER_LINK_SUPPORT,
+  "themes/Windows3.1/index.html": { server: true, server2: true, server3: false },
+  "themes/deuks_overlay/overlay1.html": { server: true, server2: true, server3: false },
+  "themes/deuks_overlay/overlay2.html": { server: true, server2: true, server3: false },
+  "themes/rainbowpuke/index.html": { server: true, server2: true, server3: false },
+  "themes/t3nk3y/index.html": { server: true, server2: true, server3: false }
+};
+
+const FULL_SERVER_GAME_PATHS = new Set([
+  "games.html",
+  "battle.html",
+  "games/chickenroyale.html"
+]);
+
+function normalizeGeneratedPath(path) {
+  path = (path || "").toString().replace(/\\/g, "/").split("#")[0].split("?")[0];
+  if (!path) return "";
+  try {
+    const url = new URL(path, baseURL);
+    path = url.pathname || path;
+  } catch (e) {}
+  const marker = "/social_stream/";
+  const markerIndex = path.toLowerCase().lastIndexOf(marker);
+  if (markerIndex !== -1) {
+    path = path.slice(markerIndex + marker.length);
+  }
+  path = path.replace(/^\/+/, "").replace(/^\.\//, "");
+  return path;
+}
+
+function getPathFromGeneratedUrl(rawUrl) {
+  return normalizeGeneratedPath(rawUrl || "");
+}
+
+function isServerLinkParam(paramName) {
+  return SERVER_LINK_PARAM_NAMES.indexOf(paramName) !== -1;
+}
+
+function getFeaturedServerParamSupport(contextPath) {
+  const selector = document.getElementById("featured-preset-select");
+  const selectedPath = contextPath || (selector && selector.value) || "featured.html";
+  return normalizeGeneratedPath(selectedPath) === "featured.html" ? FULL_SERVER_LINK_SUPPORT : NO_SERVER_LINK_SUPPORT;
+}
+
+function getGameServerParamSupport(contextPath) {
+  const selector = document.getElementById("games-preset-select");
+  let gamePath = contextPath || (selector && selector.value) || getPathFromGeneratedUrl(document.getElementById("games")?.raw) || "games.html";
+  gamePath = normalizeGeneratedPath(gamePath);
+  if (FULL_SERVER_GAME_PATHS.has(gamePath)) {
+    return FULL_SERVER_LINK_SUPPORT;
+  }
+  if (gamePath.indexOf("games/") === 0) {
+    return { server: true, server2: false, server3: false };
+  }
+  return SERVER_PARAM_SUPPORT_BY_TARGET.games || FULL_SERVER_LINK_SUPPORT;
+}
+
+function getServerParamSupportForTarget(targetId, contextPath) {
+  if (targetId === "chatoverlaytemplate") {
+    return CHAT_OVERLAY_SERVER_PARAM_SUPPORT[normalizeGeneratedPath(contextPath || getSelectedChatOverlayTemplatePath())] || NO_SERVER_LINK_SUPPORT;
+  }
+  if (targetId === "overlay") {
+    return getFeaturedServerParamSupport(contextPath);
+  }
+  if (targetId === "games") {
+    return getGameServerParamSupport(contextPath);
+  }
+  return SERVER_PARAM_SUPPORT_BY_TARGET[targetId] || NO_SERVER_LINK_SUPPORT;
+}
+
+function targetSupportsServerParam(targetId, paramName, contextPath) {
+  const support = getServerParamSupportForTarget(targetId, contextPath);
+  return !!(support && support[paramName]);
+}
+
+function isBothParamChecked(paramName) {
+  const checkbox = document.querySelector(`input[data-both='${paramName}']`);
+  return !!(checkbox && checkbox.checked);
+}
+
+function getQueryParamTokenFromUrl(url, paramName) {
+  if (!url || typeof url !== "string" || url.indexOf("?") === -1) return "";
+  const query = url.split("?")[1].split("#")[0];
+  const parts = query.split("&");
+  for (let i = 0; i < parts.length; i += 1) {
+    const part = parts[i];
+    if (!part) continue;
+    const key = part.split("=")[0];
+    if (key === paramName || decodeURIComponent(key) === paramName) {
+      return part;
+    }
+  }
+  return "";
+}
+
+function collectServerParamTokens(sourceElement) {
+  const tokens = {};
+  SERVER_LINK_PARAM_NAMES.forEach(function(paramName) {
+    tokens[paramName] = getQueryParamTokenFromUrl(sourceElement && sourceElement.raw, paramName) ||
+      getQueryParamTokenFromUrl(document.getElementById("dock")?.raw, paramName) ||
+      paramName;
+  });
+  return tokens;
+}
+
+function getServerParamToken(paramName, sourceElement, sourceTokens) {
+  return (sourceTokens && sourceTokens[paramName]) ||
+    getQueryParamTokenFromUrl(sourceElement && sourceElement.raw, paramName) ||
+    getQueryParamTokenFromUrl(document.getElementById("dock")?.raw, paramName) ||
+    paramName;
+}
+
+function mergeSupportedServerParamsIntoQuery(params, targetId, sourceElement, contextPath) {
+  const sourceTokens = collectServerParamTokens(sourceElement);
+  let workingUrl = "https://socialstream.invalid/" + (params ? "?" + params : "");
+  SERVER_LINK_PARAM_NAMES.forEach(function(paramName) {
+    workingUrl = removeQueryParamWithValue(workingUrl, paramName);
+    if (isBothParamChecked(paramName) && targetSupportsServerParam(targetId, paramName, contextPath)) {
+      workingUrl = updateURL(getServerParamToken(paramName, sourceElement, sourceTokens), workingUrl);
+    }
+  });
+  return workingUrl.indexOf("?") === -1 ? "" : workingUrl.split("?")[1];
+}
+
+function syncSupportedServerParamsForTarget(targetId, targetElement, sourceElement, contextPath, sourceTokens) {
+  if (!targetElement || typeof targetElement.raw !== "string") return;
+  SERVER_LINK_PARAM_NAMES.forEach(function(paramName) {
+    targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramName);
+    if (isBothParamChecked(paramName) && targetSupportsServerParam(targetId, paramName, contextPath)) {
+      targetElement.raw = updateURL(getServerParamToken(paramName, sourceElement, sourceTokens), targetElement.raw);
+    }
+  });
+  targetElement.raw = cleanURL(targetElement.raw);
+}
 
 function getSelectedChatOverlayTemplatePath() {
   const selector = document.getElementById("overlay-preset-select");
@@ -2856,7 +3045,8 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
   }
 
   const dockElement = document.getElementById("dock");
-  const params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
+  let params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
+  params = mergeSupportedServerParamsIntoQuery(params, "chatoverlaytemplate", dockElement, templatePath);
   let templateUrl = baseURL + (templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE);
   if (params) {
     templateUrl += (templateUrl.indexOf("?") === -1 ? "?" : "&") + params;
@@ -2946,6 +3136,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   ];
   
   // Process all standard pages
+  const serverParamTokenSource = document.getElementById("dock");
+  const serverParamTokens = collectServerParamTokens(serverParamTokenSource);
   pages.forEach(page => {
     // Skip featured overlay update if a preset is selected
     if (page.id === "overlay") {
@@ -2967,6 +3159,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
         ? "Click to open link" 
         : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${displayURL}</a>`;
       element.raw = fullURL;
+      syncSupportedServerParamsForTarget(page.id, element, serverParamTokenSource, page.path, serverParamTokens);
     }
   });
 
@@ -3031,6 +3224,9 @@ function applyFeaturedOverlayPreset(presetValue) {
 		if (session) {
 			newUrl += (presetUrl.includes('?') ? '&' : '?') + 'session=' + session;
 		}
+		const presetParams = newUrl.indexOf('?') === -1 ? '' : newUrl.split('?')[1];
+		const mergedPresetParams = mergeSupportedServerParamsIntoQuery(presetParams, 'overlay', document.getElementById('dock'), presetValue);
+		newUrl = baseURL + presetValue.split('?')[0] + (mergedPresetParams ? '?' + mergedPresetParams : '');
 
 		overlayDiv.raw = newUrl;
 		overlayLink.href = newUrl;
@@ -3055,7 +3251,8 @@ function applyFeaturedOverlayPreset(presetValue) {
 			}
 		}
 
-		const classicUrl = baseURL + 'featured.html' + (currentParams ? '?' + currentParams : '');
+		const mergedParams = mergeSupportedServerParamsIntoQuery(currentParams, 'overlay', document.getElementById('dock'), 'featured.html');
+		const classicUrl = baseURL + 'featured.html' + (mergedParams ? '?' + mergedParams : '');
 
 		overlayDiv.raw = classicUrl;
 		overlayLink.href = classicUrl;
@@ -3578,8 +3775,6 @@ function update(response, sync = true) {
 
             // Refresh all page links.
             refreshLinks();
-			const aipromptUrl = baseURL + "aiprompt.html?session=" + response.streamID + password + "&v=" + chrome.runtime.getManifest().version;
-			if (document.getElementById("aiprompt") && document.getElementById("aipromptlink")) document.getElementById("aiprompt").raw = document.getElementById("aipromptlink").href = document.getElementById("aipromptlink").innerText = aipromptUrl;
 
             try {
                 // Define your link configurations: { linkId: 'idOfLinkElement', sourcePropertyProvider: () => document.getElementById('sourceElementId')?.raw || document.getElementById('idOfLinkElement').href }
@@ -5063,6 +5258,7 @@ function getTargetMap() {
         'timer': 26,
 		'reactions': 27,
         'hypetrain': 29,
+        'aiprompt': 31,
     };
 }
 
@@ -5652,9 +5848,29 @@ function handleDelParam(ele, sync) {
 
 function handleBothParam(ele, sync) {
     if (!ele.dataset.both) return false;
+
+    if (isServerLinkParam(ele.dataset.both)) {
+        const sourceElement = document.getElementById("dock");
+        const sourceTokens = collectServerParamTokens(sourceElement);
+        Object.keys(getTargetMap()).forEach(id => {
+            syncSupportedServerParamsForTarget(id, document.getElementById(id), sourceElement, null, sourceTokens);
+        });
+
+        if (sync) {
+            chrome.runtime.sendMessage({
+                cmd: "saveSetting",
+                type: "both",
+                target: ele.dataset.target || null,
+                setting: ele.dataset.both,
+                value: ele.checked
+            }, function (response) {});
+        }
+
+        return true;
+    }
     
     // Use the same list of targets as defined in the targetMap
-    const elements = Object.keys(getTargetMap()).filter(id => id !== "chatoverlaytemplate");
+    const elements = Object.keys(getTargetMap());
 
     elements.forEach(id => {
         const element = document.getElementById(id);
@@ -11409,8 +11625,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 			overlayLink.style.display = '';
 
-			const getGameBaseParams = function(rawUrl) {
-				const keepParams = ['session', 'room', 'password', 'server', 'v'];
+			const getGameBaseParams = function(rawUrl, gamePath) {
+				const keepParams = ['session', 'room', 'password', 'v'];
 				const cleanParams = new URLSearchParams();
 				if (rawUrl && rawUrl.includes('?')) {
 					const params = new URLSearchParams(rawUrl.split('?')[1]);
@@ -11420,7 +11636,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						});
 					});
 				}
-				return cleanParams.toString();
+				return mergeSupportedServerParamsIntoQuery(cleanParams.toString(), 'games', document.getElementById('dock'), gamePath);
 			};
 
 			const updateGamesLink = function() {
@@ -11443,7 +11659,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				// A game was selected
 				const gameUrl = baseURL + this.value;
 
-				const existingParams = getGameBaseParams(overlayDiv.raw);
+				const existingParams = getGameBaseParams(overlayDiv.raw, this.value);
 
 				// Construct new URL preserving only shared connection/version parameters
 				let newUrl = gameUrl;
