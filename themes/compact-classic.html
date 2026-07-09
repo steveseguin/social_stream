@@ -25,7 +25,7 @@ URL PARAMETERS:
   noicon            hide the small source platform icon
   time              show a clock timestamp per message
   bg                add a subtle translucent background behind each row
-  ultra             super dense rows, smaller icons/media, narrow default column
+  ultra             super dense rows, smaller icons/media
   reverse           newest messages at top instead of bottom
   server / server2  connect via WebSocket instead of (or in addition to) WebRTC
   localserver       use ws://127.0.0.1:3000
@@ -124,14 +124,14 @@ html, body {
 .reverse-mode .message.hidden { transform: translateY(14px); }
 
 .avatar {
-    width: 16px;
-    height: 16px;
+    width: 1em;
+    height: 1em;
     border-radius: 50%;
     background-size: cover;
     background-position: center;
     display: inline-block;
-    vertical-align: -3px;
-    margin-right: 3px;
+    vertical-align: -0.18em;
+    margin-right: 0.2em;
     flex-shrink: 0;
 }
 .badge {
@@ -210,7 +210,7 @@ body.ultra {
     font-size: 13px;
 }
 body.ultra #chat-container {
-    max-width: 330px;
+    max-width: none;
     padding: 2px 5px;
 }
 body.ultra .message {
@@ -223,10 +223,10 @@ body.ultra.with-bg .message {
     padding: 1px 4px;
 }
 body.ultra .avatar {
-    width: 12px;
-    height: 12px;
-    margin-right: 2px;
-    vertical-align: -2px;
+    width: 0.85em;
+    height: 0.85em;
+    margin-right: 0.15em;
+    vertical-align: -0.15em;
 }
 body.ultra .badge {
     width: 0.75em;

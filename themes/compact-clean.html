@@ -19,14 +19,14 @@ URL PARAMETERS:
   font=PX           base font size in px (default 14)
   fontfamily=NAME   chat font family; loads matching Google Font (e.g. fontfamily=Roboto)
   hidebots          hide messages flagged as bots (dock still shows them)
-  width=PX          max width of the chat column in px (default 350)
+  width=PX          cap the chat column to a fixed px width (default: full window width)
   align=left|right  anchor side (default left)
   noavatar          hide avatars
   nobadges          hide platform badges
   noicon            hide the small source platform icon
   time              show a clock timestamp per message
   light             light theme cards instead of dark
-  ultra             super dense rows, smaller icons/media, narrow default column
+  ultra             super dense rows, smaller icons/media
   reverse           newest messages at top instead of bottom
   server / server2  connect via WebSocket instead of (or in addition to) WebRTC
   localserver       use ws://127.0.0.1:3000
@@ -81,7 +81,9 @@ body.light {
     bottom: 0;
     left: 0;
     width: 100%;
-    max-width: 350px;
+    /* Default: rows span the full page width; size it via the OBS/browser window.
+       Use ?width=PX to cap the column to a fixed pixel width instead. */
+    max-width: none;
     height: 100vh;
     overflow: hidden;
     padding: 5px 8px;
@@ -132,8 +134,8 @@ body.light {
 .reverse-mode .message.hidden { transform: translateY(16px); }
 
 .avatar {
-    width: 18px;
-    height: 18px;
+    width: 1.3em;
+    height: 1.3em;
     border-radius: 50%;
     background-size: cover;
     background-position: center;
@@ -195,7 +197,7 @@ body.ultra {
     font-size: 13px;
 }
 body.ultra #chat-container {
-    max-width: 320px;
+    max-width: none;
     padding: 2px 5px;
 }
 body.ultra .message {
@@ -206,8 +208,8 @@ body.ultra .message {
     margin-bottom: 1px;
 }
 body.ultra .avatar {
-    width: 14px;
-    height: 14px;
+    width: 1.1em;
+    height: 1.1em;
 }
 body.ultra .body {
     line-height: 1.1;
