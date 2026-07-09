@@ -809,6 +809,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "assign_roles_classes_to_certain_users",
     description: "When enabled, filter out messages for listed bots."
   },
+  "hideViewerCountSources": {
+    type: "text",
+    category: "other_filters",
+    description: "Selected source types to exclude from viewer-count totals while leaving chat capture enabled."
+  },
   "stripatext": {
     type: "boolean",
     category: "streaming_chat_dock_overlay",

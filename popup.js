@@ -1719,6 +1719,56 @@ function setupSourceSelection(inputId, isSettingBased = false) {
     updateSourceTypeList(inputId);
 }
 
+function setupViewerCountSourceTags() {
+    const inputId = 'hideViewerCountSources';
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    const container = input.closest('.textInputContainer');
+    if (!container || document.getElementById(`${inputId}List`)) return;
+
+    input.classList.add('hidden');
+
+    const listContainer = document.createElement('div');
+    listContainer.className = 'source-list-container';
+    listContainer.id = `${inputId}List`;
+
+    const addContainer = document.createElement('div');
+    addContainer.className = 'add-source-container';
+    addContainer.innerHTML = `
+        <select id="new${inputId}Type">
+            <option value="" selected>Select source</option>
+        </select>
+        <button id="add${inputId}">Add</button>
+    `;
+
+    container.parentNode.classList.add('isolate');
+    container.parentNode.insertBefore(listContainer, container.nextSibling);
+    container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+
+    const select = document.getElementById(`new${inputId}Type`);
+    setupLazySourceSelect(select);
+    ensureLazySourcesLoaded(function() {
+        appendSourceOptions(select);
+    });
+
+    listContainer.addEventListener('click', function(event) {
+        if (event.target.classList.contains('remove-source')) {
+            removeSourceType(event.target.dataset.sourceType, inputId);
+        }
+    });
+
+    document.getElementById(`add${inputId}`).addEventListener('click', function() {
+        const sourceType = select.value.trim();
+        if (sourceType) {
+            addSourceType(sourceType, inputId);
+            select.value = '';
+        }
+    });
+
+    updateSourceTypeList(inputId);
+}
+
 // Templates for different event types
 const eventTemplates = {
   botReply: (id) => `
@@ -2172,6 +2222,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 }
 
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
+const sourceSelectTagInputs = ['hideViewerCountSources'];
 const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
@@ -3617,7 +3668,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
             updateSettings(ele, sync);
             if (userTypes.includes(key)) {
                 updateUsernameList(key);
-            } else if (sourceTypes.includes(key)) {
+            } else if (sourceTypes.includes(key) || sourceSelectTagInputs.includes(key)) {
                 updateSourceTypeList(key);
             } else if (commaTagInputs.includes(key)) {
                 updateCommaTagList(key);
@@ -3977,6 +4028,8 @@ function processLegacySetting(key, value, sync) {
         updateSettings(ele, sync);
         if (commaTagInputs.includes(ele.id) || commaTagInputs.includes(key)) {
             refreshCommaTagInput(ele.id || key);
+        } else if (sourceSelectTagInputs.includes(ele.id) || sourceSelectTagInputs.includes(key)) {
+            updateSourceTypeList(ele.id || key);
         }
     }
 }
@@ -9601,6 +9654,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	// Initialize blocked words tag input
 	setupBlockedWordsInput();
+	setupViewerCountSourceTags();
 	commaTagInputs.forEach((inputId) => {
 		setupCommaTagInput(inputId);
 	});

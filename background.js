@@ -53,6 +53,44 @@ function getCachedCommaList(value, lowerCase = false, keepEmpty = false) {
 	return entries;
 }
 
+function getSettingTextValue(settingName) {
+	const entry = settings[settingName];
+	if (entry && typeof entry === "object" && !Array.isArray(entry) && "textsetting" in entry) {
+		return entry.textsetting || "";
+	}
+	return entry || "";
+}
+
+function normalizeSourceType(sourceType) {
+	return String(sourceType || "").trim().toLowerCase();
+}
+
+function isViewerCountSourceHidden(sourceType) {
+	const normalizedType = normalizeSourceType(sourceType);
+	if (!normalizedType) {
+		return false;
+	}
+	const hiddenSources = getCachedCommaList(getSettingTextValue("hideViewerCountSources"), true);
+	return hiddenSources.some(source => source && (normalizedType === source || normalizedType.startsWith(source + "-")));
+}
+
+function filterViewerCountSnapshotMeta(meta) {
+	if (!meta || typeof meta !== "object" || Array.isArray(meta)) {
+		return meta;
+	}
+	const filtered = {};
+	Object.keys(meta).forEach(type => {
+		if (!checkIfAllowed(type) && !isSSAPP) {
+			return;
+		}
+		if (isViewerCountSourceHidden(type)) {
+			return;
+		}
+		filtered[type] = meta[type];
+	});
+	return filtered;
+}
+
 function getCachedRoleList(value) {
 	const raw = String(value || "");
 	const cached = settingRoleListCache.get(raw);
@@ -4463,6 +4501,10 @@ async function processIncomingMessage(message, sender = null) {
 			return;
 		}
 
+		if (message.event === "viewer_update" && isViewerCountSourceHidden(message.type)) {
+			return;
+		}
+
 		if (settings.filtercommands && message.chatmessage && message.chatmessage.startsWith("!")) {
 			return;
 		}
@@ -5106,6 +5148,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			if (request.setting == "showviewercount") {
 				pushSettingChange();
+			}
+			if (request.setting == "hideViewerCountSources") {
+				pruneHiddenViewerCountMetaStore();
+				publishViewerCountsFromMetaStore();
 			}
 
 			if (request.setting == "waitlistmode") {
@@ -6639,6 +6685,51 @@ function ajax(object2send, url, ajaxType = "PUT", type = "application/json; char
 const metaDataStore = new Map(); // Using Map instead of {} for better cleanup
 let cleanUpLastTabs;
 
+function buildViewerCountsFromMetaStore() {
+	var counts = {};
+	for (const [tid, metaEntry] of metaDataStore) {
+		if (metaEntry.viewer_update && metaEntry.viewer_update.type) {
+			// Skip viewer counts from sites that are not opted-in or are viewer-count hidden.
+			if (!checkIfAllowed(metaEntry.viewer_update.type) || isViewerCountSourceHidden(metaEntry.viewer_update.type)) {
+				continue;
+			}
+
+			let count = parseInt(metaEntry.viewer_update.meta) || 0;
+
+			// Pump the numbers if enabled
+			if (settings.pumpTheNumbers) {
+				count = Math.round(count * 1.75);
+			}
+
+			counts[metaEntry.viewer_update.type] = (counts[metaEntry.viewer_update.type] || 0) + count;
+		}
+	}
+	return counts;
+}
+
+function publishViewerCountsFromMetaStore() {
+	var counts = buildViewerCountsFromMetaStore();
+	if (settings.hypemode) {
+		updateViewerCount({ event: "viewer_updates", meta: counts }); // updateViewerCount already calls combineHypeData and sends
+	}
+
+	var viewerUpdateEvent = { event: "viewer_updates", meta: counts };
+	sendDataP2P(viewerUpdateEvent);
+	sendTargetP2P(viewerUpdateEvent, "meta");
+	sendTargetP2P(viewerUpdateEvent, "aioverlay");
+}
+
+function pruneHiddenViewerCountMetaStore() {
+	for (const [tid, metaEntry] of metaDataStore) {
+		if (metaEntry.viewer_update && isViewerCountSourceHidden(metaEntry.viewer_update.type)) {
+			delete metaEntry.viewer_update;
+		}
+		if (!Object.keys(metaEntry).length) {
+			metaDataStore.delete(tid);
+		}
+	}
+}
+
 async function sendToDestinations(message) {
 	if (typeof message == "object") {
 		if (message.suppressRelay) {
@@ -6725,6 +6816,15 @@ async function sendToDestinations(message) {
 			}
 		}
 
+		if (message.event === "viewer_updates" && message.meta && typeof message.meta === "object") {
+			message = Object.assign({}, message, {
+				meta: filterViewerCountSnapshotMeta(message.meta)
+			});
+		}
+		if (message.event === "viewer_update" && !message.tid && isViewerCountSourceHidden(message.type)) {
+			return true;
+		}
+
 		if (message.event && message.tid && "meta" in message) {
 			if (["viewer_update", "follower_update"].includes(message.event)) {
 				let tabData = metaDataStore.get(message.tid);
@@ -6753,32 +6853,7 @@ async function sendToDestinations(message) {
 				}
 
 				if (message.event === "viewer_update") {
-					var viewerCounts = {};
-					for (const [tid, metaEntry] of metaDataStore) {
-						if (metaEntry.viewer_update && metaEntry.viewer_update.type) {
-							// Skip viewer counts from sites that are not opted-in
-							if (!checkIfAllowed(metaEntry.viewer_update.type)) {
-								continue;
-							}
-
-							let count = parseInt(metaEntry.viewer_update.meta) || 0;
-
-							// Pump the numbers if enabled
-							if (settings.pumpTheNumbers) {
-								count = Math.round(count * 1.75);
-							}
-
-							viewerCounts[metaEntry.viewer_update.type] = (viewerCounts[metaEntry.viewer_update.type] || 0) + count;
-						}
-					}
-					if (settings.hypemode) {
-						updateViewerCount({ event: "viewer_updates", meta: viewerCounts }); // updateViewerCount already calls combineHypeData and sends
-					}
-
-					var viewerUpdateEvent = { event: "viewer_updates", meta: viewerCounts };
-					sendDataP2P(viewerUpdateEvent);
-					sendTargetP2P(viewerUpdateEvent, "meta");
-					sendTargetP2P(viewerUpdateEvent, "aioverlay");
+					publishViewerCountsFromMetaStore();
 				}
 
 				return true;
@@ -11162,7 +11237,7 @@ function updateViewerCount(data) {
 		// Process each platform's viewer count
 		Object.keys(data.meta).forEach(type => {
 			// Skip viewer counts from sites that are not opted-in
-			if (!checkIfAllowed(type)) {
+			if (!checkIfAllowed(type) || isViewerCountSourceHidden(type)) {
 				return;
 			}
 			viewerCounts[type] = parseInt(data.meta[type]) || 0;
@@ -11175,7 +11250,7 @@ function updateViewerCount(data) {
 	// Handle legacy single viewer_update format
 	else if (data.type && "meta" in data) {
 		// Skip viewer counts from sites that are not opted-in
-		if (!checkIfAllowed(data.type)) {
+		if (!checkIfAllowed(data.type) || isViewerCountSourceHidden(data.type)) {
 			return;
 		}
 		const sourceKey = data.tid ? `${data.type}-${data.tid}` : data.type;
@@ -11257,7 +11332,7 @@ function combineHypeData() {
 
 	for (const sourceType in viewerCounts) {
 		// Skip sources that are not opted-in
-		if (!checkIfAllowed(sourceType)) {
+		if (!checkIfAllowed(sourceType) || isViewerCountSourceHidden(sourceType)) {
 			continue;
 		}
 		// Include all sources that have viewer data, even if 0
