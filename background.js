@@ -53,14 +53,6 @@ function getCachedCommaList(value, lowerCase = false, keepEmpty = false) {
 	return entries;
 }
 
-function getSettingTextValue(settingName) {
-	const entry = settings[settingName];
-	if (entry && typeof entry === "object" && !Array.isArray(entry) && "textsetting" in entry) {
-		return entry.textsetting || "";
-	}
-	return entry || "";
-}
-
 function normalizeSourceType(sourceType) {
 	return String(sourceType || "").trim().toLowerCase();
 }
