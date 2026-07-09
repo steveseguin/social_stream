@@ -54,7 +54,9 @@ function getCachedCommaList(value, lowerCase = false, keepEmpty = false) {
 }
 
 function normalizeSourceType(sourceType) {
-	return String(sourceType || "").trim().toLowerCase();
+	return String(sourceType || "")
+		.trim()
+		.toLowerCase();
 }
 
 function isViewerCountSourceHidden(sourceType) {
