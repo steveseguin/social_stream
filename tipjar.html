@@ -1893,6 +1893,7 @@
 
         function isResubEvent(eventName) {
             return eventName === 'resub' ||
+                eventName === 'membershiprenewal' ||
                 eventName === 'renewed_member' ||
                 eventName === 'membermilestone';
         }
@@ -1902,6 +1903,8 @@
             const membership = data.membership ? String(data.membership).toLowerCase() : '';
             const source = data.type ? String(data.type).toLowerCase() : '';
             const name = data.chatname || 'Anonymous';
+            const legacyMembershipEvent = eventName === 'true' && !!membership;
+            const legacyResubEvent = legacyMembershipEvent && /\bresub(?:scribed)?\b/i.test(String(data.chatmessage || ''));
 
             if (isGiftRedemptionEvent(eventName, membership)) {
                 const giver = extractGiftGiver(data);
@@ -1933,7 +1936,7 @@
                 };
             }
 
-            if (isSubEvent(eventName)) {
+            if (isSubEvent(eventName) || (legacyMembershipEvent && !legacyResubEvent)) {
                 return {
                     kind: 'sub',
                     donator: name,
@@ -1947,7 +1950,7 @@
                 };
             }
 
-            if (isResubEvent(eventName)) {
+            if (isResubEvent(eventName) || legacyResubEvent) {
                 return {
                     kind: 'resub',
                     donator: name,
