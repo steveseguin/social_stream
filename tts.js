@@ -131,6 +131,20 @@ TTS.pitch = 0;
 TTS.rate = 1;
 TTS.voiceLatency = 4;
 
+TTS.normalizeVolume = function(value) {
+    var parsed = parseFloat(value);
+    if (isNaN(parsed)) {
+        return 1;
+    }
+    return Math.max(0, Math.min(1, parsed));
+};
+
+TTS.applyVolume = function(audio) {
+    if (audio) {
+        audio.volume = TTS.normalizeVolume(TTS.volume);
+    }
+};
+
 // Provider settings
 TTS.googleSettings = {
     rate: 1,
@@ -454,9 +468,7 @@ TTS.playAudioBlobAndWait = async function(audioBlob) {
     TTS.audio.onended = null;
     const audioUrl = URL.createObjectURL(audioBlob);
     TTS.setAudioSource(audioUrl, true);
-    if (TTS.volume) {
-        TTS.audio.volume = TTS.volume;
-    }
+    TTS.applyVolume(TTS.audio);
 
     return await new Promise(async function(resolve) {
         let settled = false;
@@ -732,9 +744,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			TTS.volume = this.value / 100;
 			
 			// Also update any current audio element
-			if (TTS.audio) {
-				TTS.audio.volume = TTS.volume;
-			}
+			TTS.applyVolume(TTS.audio);
 		});
 	}
 	
@@ -763,7 +773,7 @@ TTS.configure = function(urlParams) {
 	
     // Volume
     if (urlParams.has("volume")) {
-        TTS.volume = TTS.parseFloatParam(urlParams, "volume", 1);
+        TTS.volume = TTS.normalizeVolume(TTS.parseFloatParam(urlParams, "volume", 1));
         const volumeSlider = document.getElementById('volumeSlider');
         if (volumeSlider) volumeSlider.value = TTS.volume * 100;
     }
@@ -1900,9 +1910,7 @@ TTS.ElevenLabsTTS = function(tts) {
                     TTS.audio.onended = TTS.finishedAudio;
                 }
                 TTS.setAudioSource(blobUrl, true);
-                if (TTS.volume) {
-                    TTS.audio.volume = TTS.volume;
-                }
+                TTS.applyVolume(TTS.audio);
                 
                 try {
                     if (TTS.audioContext.state === 'suspended') {
@@ -2048,9 +2056,7 @@ TTS.googleTTS = function(tts) {
                 }
                 TTS.audio.src = "data:audio/mp3;base64," + res.audioContent;
                 
-                if (TTS.volume) {
-                    TTS.audio.volume = TTS.volume;
-                }
+                TTS.applyVolume(TTS.audio);
                 try {
                     if (TTS.audioContext.state === 'suspended') {
                         await TTS.audioContext.resume();
@@ -2129,9 +2135,7 @@ TTS.geminiTTS = async function(tts) {
 
         const audioUrl = URL.createObjectURL(wavBlob);
         TTS.setAudioSource(audioUrl, true);
-        if (TTS.volume) {
-            TTS.audio.volume = TTS.volume;
-        }
+        TTS.applyVolume(TTS.audio);
 
         try {
             if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
@@ -2192,9 +2196,7 @@ TTS.SpeechifyTTS = function(tts) {
                         TTS.audio.onended = TTS.finishedAudio;
                     }
                     TTS.audio.src = "data:audio/mp3;base64," + json.audio_data;
-                    if (TTS.volume) {
-                        TTS.audio.volume = TTS.volume;
-                    }
+                    TTS.applyVolume(TTS.audio);
                     if (TTS.audioContext.state === 'suspended') {
                         await TTS.audioContext.resume();
                     }
@@ -2257,7 +2259,7 @@ TTS.kokoroTTS = async function(text) {
         const audioUrl = URL.createObjectURL(audioBlob);
         TTS.setAudioSource(audioUrl, true);
         
-        if (TTS.volume) TTS.audio.volume = TTS.volume;
+        TTS.applyVolume(TTS.audio);
         
         await TTS.audio.play();
         return;
@@ -2459,9 +2461,7 @@ TTS.espeakTTS = async function(text) {
         }
         
         TTS.setAudioSource(audioUrl, true);
-        if (TTS.volume) {
-            TTS.audio.volume = TTS.volume;
-        }
+        TTS.applyVolume(TTS.audio);
         
         // Resume audio context if suspended
         if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
@@ -2687,9 +2687,7 @@ TTS.kittenTTS = async function(text) {
         }
         
         TTS.setAudioSource(audioUrl, true);
-        if (TTS.volume) {
-            TTS.audio.volume = TTS.volume;
-        }
+        TTS.applyVolume(TTS.audio);
         
         // Resume audio context if suspended
         if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
@@ -2806,9 +2804,7 @@ TTS.playAudioBlob = async function(audioBlob) {
     }
     const audioUrl = window.URL.createObjectURL(audioBlob);
     TTS.setAudioSource(audioUrl, true);
-    if (TTS.volume) {
-        TTS.audio.volume = TTS.volume;
-    }
+    TTS.applyVolume(TTS.audio);
 
     try {
         if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
