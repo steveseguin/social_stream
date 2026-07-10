@@ -739,7 +739,7 @@ body.light-mode .meta-value.badge {
 		return trimmed;
 	}
 
-    var password = "false";
+    var password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw") || "false";
     var featuredMode = false;
     
     const chatContainer = document.getElementById('chat-container');

@@ -27,7 +27,7 @@
 	(function () {
 		var OverlayStore = window.SSNAiPromptOverlayStore;
 		var params = new URLSearchParams(location.search);
-		var requestedOverlay = params.get("overlay") || "";
+		var requestedOverlay = params.has("overlay") ? (params.get("overlay") || "") : (params.get("page") || "");
 		var roomID = params.get("session") || "";
 		var password = params.get("password") || "false";
 		var requestTarget = Math.floor(Math.random() * 999999999);

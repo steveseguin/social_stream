@@ -197,7 +197,7 @@ body.retro { filter: contrast(1.08) saturate(0.92) sepia(0.12); }
 	} else {
 		roomID = prompt("Enter your session ID");
 	}
-	var password = "false";
+	var password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw") || "false";
 	var featuredMode = false; // featured == selected messages only.  not featured == all messages.
 
 	// showtime: if set, messages will fade out and be removed after this many milliseconds

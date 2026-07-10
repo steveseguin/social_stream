@@ -194,7 +194,7 @@
 			caps.customChannel !== true;
 	}
 	const roomID = urlParams.get("session") || "7RUWtGBfz2";
-	const password = "false";
+	const password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw") || "false";
 	const featuredMode = false;
 
 	// showtime: if set via URL, override default. Otherwise keep current default (0 = no auto-hiding)

@@ -168,7 +168,7 @@
     if (urlParams.has("session")) {
         roomID = urlParams.get("session");
     }
-    var password = "false"; // Set password if needed
+    var password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw") || "false";
     var featuredMode = false; // Set to true if you only want to display featured messages
 
     // --- Common overlay tweaks (shared across themes) ---

@@ -2844,10 +2844,8 @@ function isServerLinkParam(paramName) {
   return SERVER_LINK_PARAM_NAMES.indexOf(paramName) !== -1;
 }
 
-function getFeaturedServerParamSupport(contextPath) {
-  const selector = document.getElementById("featured-preset-select");
-  const selectedPath = contextPath || (selector && selector.value) || "featured.html";
-  return normalizeGeneratedPath(selectedPath) === "featured.html" ? FULL_SERVER_LINK_SUPPORT : NO_SERVER_LINK_SUPPORT;
+function getFeaturedServerParamSupport() {
+  return FULL_SERVER_LINK_SUPPORT;
 }
 
 function getGameServerParamSupport(contextPath) {
@@ -2958,6 +2956,28 @@ function getKnownSessionParamValue() {
     return encodeURIComponent(lastResponse.streamID);
   }
   return "";
+}
+
+function buildGeneratedUrl(path, params, rootUrl) {
+  const targetUrl = new URL(path || "", rootUrl || baseURL);
+  const incomingParams = params instanceof URLSearchParams ? params : new URLSearchParams(params || "");
+  const valuesByKey = {};
+
+  incomingParams.forEach(function(value, key) {
+    if (!Object.prototype.hasOwnProperty.call(valuesByKey, key)) {
+      valuesByKey[key] = [];
+    }
+    valuesByKey[key].push(value);
+  });
+
+  Object.keys(valuesByKey).forEach(function(key) {
+    targetUrl.searchParams.delete(key);
+    valuesByKey[key].forEach(function(value) {
+      targetUrl.searchParams.append(key, value);
+    });
+  });
+
+  return targetUrl.href;
 }
 
 function getGeneratedLinkParams(primaryElement, fallbackElement) {
@@ -3098,10 +3118,7 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
   const dockElement = document.getElementById("dock");
   let params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
   params = mergeSupportedServerParamsIntoQuery(params, "chatoverlaytemplate", dockElement, templatePath);
-  let templateUrl = baseURL + (templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE);
-  if (params) {
-    templateUrl += (templateUrl.indexOf("?") === -1 ? "?" : "&") + params;
-  }
+  const templateUrl = buildGeneratedUrl(templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE, params);
 
   setGeneratedLink(templateElement, templateUrl);
   syncChatOverlayTemplateConfig(templatePath);
@@ -3194,21 +3211,24 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     if (page.id === "overlay") {
       const featuredPresetSelector = document.getElementById('featured-preset-select');
       if (featuredPresetSelector && featuredPresetSelector.value) {
-        return; // Skip updating featured overlay when preset is active
+        const existingOverlay = document.getElementById(page.id);
+        if (existingOverlay && existingOverlay.raw) {
+          setGeneratedLink(existingOverlay, existingOverlay.raw);
+          return; // Preserve the active preset, but always restore its anchor.
+        }
       }
     }
     
     const linkPath = page.linkPath || page.path;
     const pageDefaultParams = page.defaultParams || "";
-    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}`;
-    const displayURL = `${baseURL}${linkPath}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}`;
+    const generatedParams = `session=${encodeURIComponent(streamID)}${password}${customParams}${pageDefaultParams}${versionParam}`;
+    const fullURL = buildGeneratedUrl(page.path, generatedParams, baseURL);
+    const displayURL = buildGeneratedUrl(linkPath, generatedParams, baseURL);
     const element = document.getElementById(page.id);
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
-      element.innerHTML = hideLinks 
-        ? "Click to open link" 
-        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${displayURL}</a>`;
+      element.innerHTML = `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${hideLinks ? "Click to open link" : displayURL}</a>`;
       element.raw = fullURL;
       syncSupportedServerParamsForTarget(page.id, element, serverParamTokenSource, page.path, serverParamTokens);
     }
@@ -3220,23 +3240,103 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   // Update sample overlay and remote control URLs too
   const sampleOverlay = document.getElementById("sampleoverlay");
   if (sampleOverlay) {
-    sampleOverlay.href = `${baseURL}sampleoverlay.html?session=${streamID}${password}${customParams}${versionParam}`;
+    sampleOverlay.href = buildGeneratedUrl("sampleoverlay.html", `session=${encodeURIComponent(streamID)}${password}${customParams}${versionParam}`, baseURL);
   }
   
   const remoteControlUrl = document.getElementById("remote_control_url");
   if (remoteControlUrl) {
-    remoteControlUrl.href = `${baseURL}sampleapi.html?session=${streamID}${password}${customParams}${versionParam}`;
+    remoteControlUrl.href = buildGeneratedUrl("sampleapi.html", `session=${encodeURIComponent(streamID)}${password}${customParams}${versionParam}`, baseURL);
   }
 
   syncAllOverlayPreviews();
 }
 
+const FEATURED_CONNECTION_PARAM_NAMES = [
+	'session', 'password', 'v', 'ln', 'server', 'server2', 'server3', 'localserver'
+];
+
+function appendMissingGeneratedParams(targetParams, rawUrl, paramNames) {
+	if (!rawUrl) return;
+	let sourceUrl;
+	try {
+		sourceUrl = new URL(rawUrl, baseURL);
+	} catch (e) {
+		return;
+	}
+
+	paramNames.forEach(function(paramName) {
+		if (targetParams.has(paramName)) return;
+		sourceUrl.searchParams.getAll(paramName).forEach(function(value) {
+			targetParams.append(paramName, value);
+		});
+	});
+}
+
+function getFeaturedConnectionParams(rawUrl) {
+	const params = new URLSearchParams();
+	const dockElement = document.getElementById('dock');
+	const sources = [rawUrl, dockElement && dockElement.raw];
+
+	sources.forEach(function(sourceUrl) {
+		appendMissingGeneratedParams(params, sourceUrl, FEATURED_CONNECTION_PARAM_NAMES);
+	});
+
+	if (!params.has('session')) {
+		for (let i = 0; i < sources.length; i += 1) {
+			if (!sources[i]) continue;
+			try {
+				const room = new URL(sources[i], baseURL).searchParams.get('room');
+				if (room) {
+					params.set('session', room);
+					break;
+				}
+			} catch (e) {}
+		}
+	}
+
+	if (!params.has('session')) {
+		const sessionInput = document.getElementById('sessionid');
+		const session = (sessionInput && sessionInput.value) || (lastResponse && lastResponse.streamID) || '';
+		if (session) params.set('session', session);
+	}
+
+	if (!params.has('password')) {
+		const passwordInput = document.getElementById('sessionpassword');
+		const password = passwordInput ? passwordInput.value : ((lastResponse && lastResponse.password) || '');
+		if (password) params.set('password', password);
+	}
+
+	if (!params.has('v')) {
+		appendMissingGeneratedParams(params, 'https://socialstream.invalid/?' + getPopupVersionParam().replace(/^&/, ''), ['v']);
+	}
+	if (!params.has('ln')) {
+		appendMissingGeneratedParams(params, 'https://socialstream.invalid/?' + getSelectedTranslationLinkParam().replace(/^&/, ''), ['ln']);
+	}
+	if (!params.has('localserver') && urlParams.has('localserver')) {
+		params.set('localserver', '');
+	}
+
+	return params;
+}
+
+function getFeaturedClassicParams(rawUrl) {
+	if (!rawUrl) return '';
+	try {
+		const params = new URL(rawUrl, baseURL).searchParams;
+		FEATURED_CONNECTION_PARAM_NAMES.concat(['room']).forEach(function(paramName) {
+			params.delete(paramName);
+		});
+		return params.toString();
+	} catch (e) {
+		return '';
+	}
+}
+
 function applyFeaturedOverlayPreset(presetValue) {
 	const overlayDiv = document.getElementById('overlay');
-	const overlayLink = document.getElementById('overlaylink');
 	const presetSelector = document.getElementById('featured-preset-select');
 
-	if (!overlayDiv || !overlayLink) {
+	if (!overlayDiv) {
 		return;
 	}
 
@@ -3249,39 +3349,20 @@ function applyFeaturedOverlayPreset(presetValue) {
 	});
 
 	const toggleClassicOptions = (show) => {
-		document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
-			wrapper.style.display = show ? '' : 'none';
+		document.querySelectorAll('.wrapper').forEach(wrapper => {
+			if (wrapper.querySelector('.options_group.single_message')) {
+				wrapper.style.display = show ? '' : 'none';
+			}
 		});
 	};
 
 	if (presetValue) {
-		const presetUrl = baseURL + presetValue;
-		let currentParams = overlayDiv.raw?.split('?')[1] || '';
-		let session = '';
-
-		if (currentParams) {
-			const params = new URLSearchParams(currentParams);
-			session = params.get('session') || params.get('room') || '';
+		if (normalizeGeneratedPath(overlayDiv.raw) === 'featured.html') {
+			overlayDiv.classicParams = getFeaturedClassicParams(overlayDiv.raw);
 		}
 
-		if (!session) {
-			const sessionInput = document.getElementById('sessionid');
-			if (sessionInput && sessionInput.value) {
-				session = sessionInput.value;
-			}
-		}
-
-		let newUrl = presetUrl;
-		if (session) {
-			newUrl += (presetUrl.includes('?') ? '&' : '?') + 'session=' + session;
-		}
-		const presetParams = newUrl.indexOf('?') === -1 ? '' : newUrl.split('?')[1];
-		const mergedPresetParams = mergeSupportedServerParamsIntoQuery(presetParams, 'overlay', document.getElementById('dock'), presetValue);
-		newUrl = baseURL + presetValue.split('?')[0] + (mergedPresetParams ? '?' + mergedPresetParams : '');
-
-		overlayDiv.raw = newUrl;
-		overlayLink.href = newUrl;
-		overlayLink.innerText = document.body.classList.contains('hidelinks') ? 'Click to open link' : newUrl;
+		const newUrl = buildGeneratedUrl(presetValue, getFeaturedConnectionParams(overlayDiv.raw), baseURL);
+		setGeneratedLink(overlayDiv, newUrl);
 
 		toggleClassicOptions(false);
 
@@ -3293,21 +3374,16 @@ function applyFeaturedOverlayPreset(presetValue) {
 			}
 		}
 	} else {
-		let currentParams = overlayDiv.raw?.split('?')[1] || '';
-
-		if (!currentParams) {
-			const sessionInput = document.getElementById('sessionid');
-			if (sessionInput && sessionInput.value) {
-				currentParams = 'session=' + sessionInput.value;
-			}
-		}
-
-		const mergedParams = mergeSupportedServerParamsIntoQuery(currentParams, 'overlay', document.getElementById('dock'), 'featured.html');
-		const classicUrl = baseURL + 'featured.html' + (mergedParams ? '?' + mergedParams : '');
-
-		overlayDiv.raw = classicUrl;
-		overlayLink.href = classicUrl;
-		overlayLink.innerText = document.body.classList.contains('hidelinks') ? 'Click to open link' : classicUrl;
+		const classicParams = new URLSearchParams(overlayDiv.classicParams || '');
+		const connectionParams = getFeaturedConnectionParams(overlayDiv.raw);
+		FEATURED_CONNECTION_PARAM_NAMES.forEach(function(paramName) {
+			classicParams.delete(paramName);
+			connectionParams.getAll(paramName).forEach(function(value) {
+				classicParams.append(paramName, value);
+			});
+		});
+		const classicUrl = buildGeneratedUrl('featured.html', classicParams, baseURL);
+		setGeneratedLink(overlayDiv, classicUrl);
 
 		toggleClassicOptions(true);
 	}
@@ -5397,6 +5473,35 @@ function setupFirstTimerControls() {
     updateFirstTimerUiState();
 }
 
+function syncDuplicateParamCheckboxes(ele, paramType, paramValue) {
+    document.querySelectorAll(`input[data-${paramType}]`).forEach(function(peer) {
+        if (peer !== ele && peer.dataset[paramType] === paramValue) {
+            peer.checked = ele.checked;
+        }
+    });
+}
+
+function syncDuplicateParamValues(ele, paramType, paramValue) {
+    document.querySelectorAll(`[data-${paramType}]`).forEach(function(peer) {
+        if (peer !== ele && peer.dataset[paramType] === paramValue && 'value' in peer) {
+            peer.value = ele.value;
+            if (peer.dataset.rangeDisplay) {
+                updateRangeDisplay(peer);
+            }
+        }
+    });
+}
+
+function saveParamCheckboxState(ele, paramType, paramValue, checked) {
+    chrome.runtime.sendMessage({
+        cmd: "saveSetting",
+        type: paramType,
+        target: ele.dataset.target || null,
+        setting: paramValue,
+        value: checked
+    }, function (response) {});
+}
+
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const paramAttr = `data-${paramType}`;
     const paramValue = ele.dataset[paramType]; // e.g., 'scale=0.77' or 'darkmode'
@@ -5410,6 +5515,8 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const keyOnly = parts[0]; // e.g., 'scale' or 'darkmode'
     const valueInAttr = parts.length > 1 ? parts[1] : undefined; // e.g., '0.77' or undefined
     const effectiveKey = normalizeParamKey(keyOnly);
+
+    syncDuplicateParamCheckboxes(ele, paramType, paramValue);
 
     if (ele.checked) {
         // Remove any existing instance of this parameter based on the key part
@@ -5555,13 +5662,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
 
     if (sync) {
         // Still save the checkbox state using the full paramValue
-        chrome.runtime.sendMessage({
-            cmd: "saveSetting",
-            type: paramType,
-            target: ele.dataset.target || null,
-            setting: paramValue, // Save the full paramValue ('scale=0.77')
-            value: ele.checked
-        }, function (response) {});
+        saveParamCheckboxState(ele, paramType, paramValue, ele.checked);
 
         // Save associated text/number/option value if applicable, using the key part
         const numberSettingSuffixSave = paramNum === '1' ? '' : paramNum;
@@ -5591,13 +5692,18 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const paramPrefixRaw = paramValue.split('=')[0];
     const normalizedPrefix = normalizeParamKey(paramPrefixRaw);
     // Only handle siblings if the param contains '=' (like scale=2, opacity=0.3) or the bare key itself
-    if (paramValue.includes('=') || paramValue === paramPrefixRaw) {
+    if (ele.checked && (paramValue.includes('=') || paramValue === paramPrefixRaw)) {
         // Select only inputs that control the same key for this param group, excluding the current element
         const selector = `input[data-${paramType}^='${normalizedPrefix}='], input[data-${paramType}='${normalizedPrefix}'], input[data-${paramType}='${paramPrefixRaw}']`;
         document.querySelectorAll(selector).forEach(ele1 => {
-            if (ele1 !== ele && ele1.checked) {
+            if (ele1 === ele || ele1.dataset[paramType] === paramValue) {
+                return;
+            }
+            if (ele1.checked) {
                 ele1.checked = false;
-                updateSettings(ele1, sync);
+                if (sync) {
+                    saveParamCheckboxState(ele1, paramType, ele1.dataset[paramType], false);
+                }
             }
         });
     }
@@ -5683,6 +5789,8 @@ function handleTextParam(ele, targetId, paramType, sync) {
     
     const paramValue = ele.dataset[paramType];
     if (!paramValue) return false;
+
+    syncDuplicateParamValues(ele, paramType, paramValue);
     
     // Get the param number (e.g., "10" from "textparam10")
     const paramNum = paramType.match(/\d+$/) ? paramType.match(/\d+$/)[0] : '';
@@ -5703,12 +5811,19 @@ function handleTextParam(ele, targetId, paramType, sync) {
     // Only modify URL if there's no checkbox, or if checkbox exists and is checked
     if (!checkbox || checkbox.checked) {
         // First remove any existing instance of this parameter
-        targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+        if (paramValue === 'cssb64') {
+            ['base64css', 'b64css', 'cssbase64', 'cssb64'].forEach(function(alias) {
+                targetElement.raw = removeQueryParamWithValue(targetElement.raw, alias);
+            });
+        } else {
+            targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+        }
         
         if (ele.value) {
             // If there's a value, add the parameter with value
             if (paramValue === 'cssb64') {
-                targetElement.raw = updateURL(`${paramValue}=${btoa(encodeURIComponent(ele.value))}`, targetElement.raw);
+                const encodedCss = encodeURIComponent(btoa(encodeURIComponent(ele.value)));
+                targetElement.raw = updateURL(`${paramValue}=${encodedCss}`, targetElement.raw);
             } else {
                 targetElement.raw = updateURL(`${paramValue}=${encodeURIComponent(ele.value)}`, targetElement.raw);
             }
@@ -5771,6 +5886,8 @@ function handleOptionParam(ele, targetId, paramType, sync) {
     
     const paramValue = ele.dataset[paramType];
     if (!paramValue) return false;
+
+    syncDuplicateParamValues(ele, paramType, paramValue);
     
     const isMapTarget = targetId === 'map';
     const paramKey = isMapTarget ? paramValue.toLowerCase() : paramValue;
@@ -6044,6 +6161,42 @@ function handleSetting(ele, sync) {
     return true;
 }
 
+function replaceGeneratedConnectionParam(rawUrl, paramName, value) {
+    if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+    let updatedUrl = removeQueryParamWithValue(rawUrl, paramName);
+    if (paramName === 'session') {
+        updatedUrl = removeQueryParamWithValue(updatedUrl, 'room');
+    }
+    if (value !== null && value !== undefined && value !== '') {
+        updatedUrl = updateURL(paramName + '=' + encodeURIComponent(value), updatedUrl);
+    }
+    return cleanURL(updatedUrl);
+}
+
+function refreshGeneratedConnectionLinks(paramName, value) {
+    if (!lastResponse || typeof lastResponse !== 'object') {
+        lastResponse = {};
+    }
+    if (paramName === 'session') {
+        lastResponse.streamID = value;
+    } else if (paramName === 'password') {
+        lastResponse.password = value || '';
+    }
+
+    document.querySelectorAll('[data-raw]').forEach(function(element) {
+        if (typeof element.raw !== 'string' || !element.raw) return;
+        setGeneratedLink(element, replaceGeneratedConnectionParam(element.raw, paramName, value));
+    });
+
+    ['sampleoverlay', 'remote_control_url'].forEach(function(elementId) {
+        const link = document.getElementById(elementId);
+        if (!link || !link.href) return;
+        link.href = replaceGeneratedConnectionParam(link.href, paramName, value);
+    });
+
+    refreshLinks();
+}
+
 function handleSpecialSettings(ele, sync) {
     if (!ele.dataset.special) return false;
     
@@ -6053,6 +6206,7 @@ function handleSpecialSettings(ele, sync) {
             alert("Invalid session ID.");
         } else {
             ele.value = xsx;
+            refreshGeneratedConnectionLinks('session', xsx);
             if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
                 chrome.storage.sync.set({ streamID: xsx });
             }
@@ -6068,6 +6222,7 @@ function handleSpecialSettings(ele, sync) {
 			});
         }
     } else if (ele.dataset.special === "password") {
+        refreshGeneratedConnectionLinks('password', ele.value || '');
         if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
             chrome.storage.sync.set({ password: ele.value });
         }
@@ -6328,6 +6483,8 @@ function handleNumberSetting(ele, sync) {
         if (!ele.dataset[settingType]) continue;
         
         const settingValue = ele.dataset[settingType];
+
+        syncDuplicateParamValues(ele, settingType, settingValue);
         
         if (sync) {
             chrome.runtime.sendMessage({

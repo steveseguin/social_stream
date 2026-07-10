@@ -495,7 +495,7 @@ body::before {
     if (urlParams.has("session")) {
         roomID = urlParams.get("session");
     }
-    var password = "false";
+    var password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw") || "false";
     var featuredMode = false;
 
     // showtime: if set via URL, override default. Otherwise keep current default (45000ms for terminal feel)

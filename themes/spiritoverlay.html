@@ -505,7 +505,7 @@ body::after {
     if (urlParams.has('session')) {
         roomID = urlParams.get('session');
     }
-    const password = 'false';
+    const password = urlParams.get('password') || urlParams.get('pass') || urlParams.get('pw') || 'false';
     const featuredMode = false;
 
     const messageViewport = document.getElementById('message-viewport');

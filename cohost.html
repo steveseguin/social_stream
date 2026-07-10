@@ -2895,7 +2895,7 @@
 					};
 				}
 				getVoiceInputMode() {
-					return this.providerConfig.supportsVision ? "Browser STT + optional image frame" : "Browser STT -> text prompt";
+					return getCohostVoiceInputMode(this.providerConfig.supportsVision);
 				}
 				setupVideoProcessing() {
 					return Promise.resolve();
@@ -3363,12 +3363,18 @@
 					}
 				}
 				async setupSpeechRecognition() {
-					const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-					if (!SpeechRecognition) {
-						showError("Speech recognition is not supported in this browser. Try using Chrome.");
+					try {
+						this.recognition = await createCohostSpeechRecognition();
+					} catch (error) {
+						showError("Local speech recognition failed to initialize: " + (error?.message || error));
+						updateVoiceTelemetry({ inputState: "Local Whisper unavailable" });
 						return;
 					}
-					this.recognition = new SpeechRecognition();
+					if (!this.recognition) {
+						showError(DESKTOP_LOCAL_STT_AVAILABLE ? "Select a microphone to use local Whisper." : "Speech recognition is not supported in this browser. Try using Chrome.");
+						return;
+					}
+					attachCohostSpeechStatus(this.recognition);
 					this.recognition.continuous = true;
 					this.recognition.interimResults = true;
 					this.recognition.maxAlternatives = 1;
@@ -3378,7 +3384,7 @@
 						this.recognitionStartPending = false;
 						avatar.setEmotion("listening", false);
 						updateVoiceTelemetry({
-							inputState: "Listening",
+							inputState: DESKTOP_LOCAL_STT_AVAILABLE ? "Listening (Desktop Whisper)" : "Listening",
 							inputPreview: "-"
 						});
 					};
@@ -3465,7 +3471,7 @@
 					}
 				}
 				startRecognitionSafely(delayMs = 0) {
-					if (this.stopped || !this.recognition || micMuted || this.isRecognizing || this.recognitionStartPending) {
+					if (this.stopped || this.ttsActive || !this.recognition || micMuted || this.isRecognizing || this.recognitionStartPending) {
 						return;
 					}
 					if (this.recognitionRestartTimer) {
@@ -3475,7 +3481,7 @@
 					this.recognitionStartPending = true;
 					const attemptStart = () => {
 						this.recognitionRestartTimer = null;
-						if (this.stopped || !this.recognition || micMuted || this.isRecognizing) {
+						if (this.stopped || this.ttsActive || !this.recognition || micMuted || this.isRecognizing) {
 							this.recognitionStartPending = false;
 							return;
 						}
@@ -3589,7 +3595,9 @@
 				async start() {
 					this.stopped = false;
 					await this.connect();
-					await this.setupSpeechRecognition();
+					if (hasCohostSpeechInput(this.stream)) {
+						await this.setupSpeechRecognition();
+					}
 					if (this.pendingGreeting) {
 						this.pendingGreeting = false;
 						this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.", "greeting").catch(err => {
@@ -3706,7 +3714,9 @@
 					this.stop();
 					this.stopped = false;
 					await this.connect();
-					await this.setupSpeechRecognition();
+					if (hasCohostSpeechInput(this.stream)) {
+						await this.setupSpeechRecognition();
+					}
 					return true;
 				}
 				stop() {
@@ -4106,6 +4116,447 @@
 				if (!cohostLiveChatFrame || event.source !== cohostLiveChatFrame.contentWindow) return;
 				handleCohostLiveChatPayload(event.data);
 			});
+			const DESKTOP_LOCAL_STT_AVAILABLE = !!(
+				window.ninjafy &&
+				typeof window.ninjafy.getSttCapabilities === "function" &&
+				typeof window.ninjafy.transcribeAudio === "function"
+			);
+			const DESKTOP_WHISPER_SAMPLE_RATE = 16000;
+
+			function getCohostVoiceInputMode(supportsVision = false) {
+				if (DESKTOP_LOCAL_STT_AVAILABLE) {
+					return supportsVision ? "Desktop Whisper + optional image frame" : "Desktop Whisper -> text prompt";
+				}
+				return supportsVision ? "Browser STT + optional image frame" : "Browser STT -> text prompt";
+			}
+
+			function getCohostSpeechToTextNotice() {
+				if (DESKTOP_LOCAL_STT_AVAILABLE) {
+					return "Speech-to-text uses local Whisper with the selected microphone. The first use downloads about 42 MB; later use is offline.";
+				}
+				return "Speech-to-text uses your browser/system default microphone.";
+			}
+
+			function getLiveDesktopSpeechInputStream() {
+				if (typeof speechInputStream === "undefined" || !speechInputStream) return null;
+				const liveTrack = speechInputStream.getAudioTracks().find(track => track.readyState === "live");
+				return liveTrack ? speechInputStream : null;
+			}
+
+			function hasCohostSpeechInput(fallbackStream) {
+				if (DESKTOP_LOCAL_STT_AVAILABLE) return !!getLiveDesktopSpeechInputStream();
+				return !!(fallbackStream && fallbackStream.getAudioTracks().some(track => track.readyState === "live"));
+			}
+
+			function resampleMonoAudio(input, inputRate, outputRate) {
+				if (!input || !input.length) return new Float32Array(0);
+				if (!Number.isFinite(inputRate) || inputRate <= 0 || inputRate === outputRate) {
+					return new Float32Array(input);
+				}
+				const outputLength = Math.max(1, Math.round((input.length * outputRate) / inputRate));
+				const output = new Float32Array(outputLength);
+				const ratio = inputRate / outputRate;
+				for (let index = 0; index < outputLength; index++) {
+					const position = index * ratio;
+					const leftIndex = Math.floor(position);
+					const rightIndex = Math.min(input.length - 1, leftIndex + 1);
+					const fraction = position - leftIndex;
+					output[index] = input[leftIndex] * (1 - fraction) + input[rightIndex] * fraction;
+				}
+				return output;
+			}
+
+			class DesktopWhisperRecognition {
+				constructor(inputStream, capabilities = {}) {
+					this.inputStream = inputStream;
+					this.capabilities = capabilities;
+					this.continuous = true;
+					this.interimResults = true;
+					this.maxAlternatives = 1;
+					this.lang = "en-US";
+					this.onstart = null;
+					this.onresult = null;
+					this.onerror = null;
+					this.onend = null;
+					this.onstatus = null;
+					this.audioContext = null;
+					this.sourceNode = null;
+					this.captureNode = null;
+					this.keepAliveContext = null;
+					this.keepAliveSource = null;
+					this.keepAliveAnalyser = null;
+					this.keepAliveSamples = null;
+					this.keepAliveTimer = null;
+					this.statusSubscriptionId = "";
+					this.captureStarting = false;
+					this.capturing = false;
+					this.generation = 0;
+					this.noiseFloor = 0.003;
+					this.preRollChunks = [];
+					this.preRollSampleCount = 0;
+					this.speechStartChunks = 0;
+					this.speaking = false;
+					this.utteranceChunks = [];
+					this.utteranceSampleCount = 0;
+					this.voicedSampleCount = 0;
+					this.silentSampleCount = 0;
+					this.pendingTranscriptions = 0;
+					this.transcriptionChain = Promise.resolve();
+				}
+
+				start() {
+					if (this.captureStarting || this.capturing) {
+						const error = new Error("Desktop Whisper recognition is already running.");
+						error.name = "InvalidStateError";
+						throw error;
+					}
+					this.generation += 1;
+					const generation = this.generation;
+					this.captureStarting = true;
+					this.startCapture(generation).catch(error => {
+						if (generation !== this.generation) return;
+						this.captureStarting = false;
+						this.emitError(error);
+						this.closeCapture(true);
+					});
+				}
+
+				async startCapture(generation) {
+					const track = this.inputStream && this.inputStream.getAudioTracks().find(item => item.readyState === "live");
+					if (!track) throw new Error("The selected microphone is no longer available.");
+					const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+					if (!AudioContextClass) {
+						throw new Error("This Desktop build does not support local microphone processing.");
+					}
+					// Capture at the device/context-native rate; forcing a 16 kHz context
+					// can produce silent MediaStream input in Electron. Audio is resampled
+					// to Whisper's 16 kHz requirement after voice activity detection.
+					this.audioContext = new AudioContextClass();
+					if (this.audioContext.state === "suspended") {
+						await this.audioContext.resume();
+					}
+					if (generation !== this.generation) {
+						this.closeCapture(false);
+						return;
+					}
+					this.sourceNode = this.audioContext.createMediaStreamSource(this.inputStream);
+					this.captureNode = this.audioContext.createScriptProcessor(2048, 1, 1);
+					this.captureNode.onaudioprocess = event => {
+						const samples = event.inputBuffer && event.inputBuffer.numberOfChannels
+							? event.inputBuffer.getChannelData(0)
+							: null;
+						if (samples) this.handleAudioChunk(new Float32Array(samples));
+						if (event.outputBuffer) {
+							for (let channel = 0; channel < event.outputBuffer.numberOfChannels; channel++) {
+								event.outputBuffer.getChannelData(channel).fill(0);
+							}
+						}
+					};
+					this.sourceNode.connect(this.captureNode);
+					// ScriptProcessor is used only inside SSApp. Its silent connected
+					// output keeps Electron pulling the microphone without monitoring it.
+					this.captureNode.connect(this.audioContext.destination);
+					// Some Electron audio configurations stop an otherwise healthy input
+					// graph after its first render quantum. Reading the same track from a
+					// separate analyser context keeps the capture device active without
+					// sending microphone audio to an output device.
+					this.keepAliveContext = new AudioContextClass();
+					if (this.keepAliveContext.state === "suspended") {
+						await this.keepAliveContext.resume();
+					}
+					this.keepAliveSource = this.keepAliveContext.createMediaStreamSource(this.inputStream);
+					this.keepAliveAnalyser = this.keepAliveContext.createAnalyser();
+					this.keepAliveAnalyser.fftSize = 2048;
+					this.keepAliveSamples = new Float32Array(this.keepAliveAnalyser.fftSize);
+					this.keepAliveSource.connect(this.keepAliveAnalyser);
+					this.keepAliveTimer = setInterval(() => {
+						if (this.keepAliveAnalyser && this.keepAliveSamples) {
+							this.keepAliveAnalyser.getFloatTimeDomainData(this.keepAliveSamples);
+						}
+					}, 50);
+					if (typeof window.ninjafy.onSttStatus === "function") {
+						this.statusSubscriptionId = window.ninjafy.onSttStatus(status => this.handleBridgeStatus(status)) || "";
+					}
+					this.captureStarting = false;
+					this.capturing = true;
+					this.emitStatus("listening", "Listening (Desktop Whisper)");
+					setTimeout(() => {
+						if (generation === this.generation && this.capturing && typeof this.onstart === "function") {
+							this.onstart();
+						}
+					}, 0);
+				}
+
+				handleAudioChunk(value) {
+					if (!this.capturing || !value) return;
+					const chunk = value instanceof Float32Array ? value : value instanceof ArrayBuffer ? new Float32Array(value) : null;
+					if (!chunk || !chunk.length) return;
+					let sumSquares = 0;
+					let peak = 0;
+					for (let index = 0; index < chunk.length; index++) {
+						const sample = Number.isFinite(chunk[index]) ? chunk[index] : 0;
+						sumSquares += sample * sample;
+						peak = Math.max(peak, Math.abs(sample));
+					}
+					const rms = Math.sqrt(sumSquares / chunk.length);
+					const startThreshold = Math.max(0.007, Math.min(0.04, this.noiseFloor * 3.2));
+					const endThreshold = Math.max(0.005, startThreshold * 0.7);
+					const hasVoice = rms >= startThreshold || peak >= startThreshold * 3;
+
+					if (!this.speaking) {
+						if (!hasVoice) {
+							this.noiseFloor = Math.max(0.001, Math.min(0.02, this.noiseFloor * 0.97 + rms * 0.03));
+						}
+						this.pushPreRoll(chunk);
+						if (hasVoice) {
+							this.speechStartChunks += 1;
+							if (this.speechStartChunks >= 2) this.beginUtterance();
+						} else {
+							this.speechStartChunks = 0;
+						}
+						return;
+					}
+
+					this.utteranceChunks.push(chunk);
+					this.utteranceSampleCount += chunk.length;
+					if (rms >= endThreshold || peak >= endThreshold * 3) {
+						this.voicedSampleCount += chunk.length;
+						this.silentSampleCount = 0;
+					} else {
+						this.silentSampleCount += chunk.length;
+					}
+					const sampleRate = this.audioContext ? this.audioContext.sampleRate : DESKTOP_WHISPER_SAMPLE_RATE;
+					if (this.silentSampleCount >= sampleRate * 0.7 || this.utteranceSampleCount >= sampleRate * 15) {
+						this.finalizeUtterance();
+					}
+				}
+
+				pushPreRoll(chunk) {
+					this.preRollChunks.push(chunk);
+					this.preRollSampleCount += chunk.length;
+					const sampleRate = this.audioContext ? this.audioContext.sampleRate : DESKTOP_WHISPER_SAMPLE_RATE;
+					const maxSamples = Math.round(sampleRate * 0.35);
+					while (this.preRollSampleCount > maxSamples && this.preRollChunks.length > 1) {
+						this.preRollSampleCount -= this.preRollChunks.shift().length;
+					}
+				}
+
+				beginUtterance() {
+					this.speaking = true;
+					this.utteranceChunks = this.preRollChunks.slice();
+					this.utteranceSampleCount = this.preRollSampleCount;
+					this.voicedSampleCount = this.speechStartChunks * (this.preRollChunks[this.preRollChunks.length - 1]?.length || 0);
+					this.silentSampleCount = 0;
+					this.preRollChunks = [];
+					this.preRollSampleCount = 0;
+					this.speechStartChunks = 0;
+					this.emitStatus("speech", "Speech detected");
+				}
+
+				finalizeUtterance() {
+					const chunks = this.utteranceChunks;
+					const totalSamples = this.utteranceSampleCount;
+					const voicedSamples = this.voicedSampleCount;
+					const trailingSilence = this.silentSampleCount;
+					this.speaking = false;
+					this.utteranceChunks = [];
+					this.utteranceSampleCount = 0;
+					this.voicedSampleCount = 0;
+					this.silentSampleCount = 0;
+					const inputRate = this.audioContext ? this.audioContext.sampleRate : DESKTOP_WHISPER_SAMPLE_RATE;
+					if (!chunks.length || voicedSamples < inputRate * 0.16 || totalSamples < inputRate * 0.35) {
+						this.emitStatus("listening", "Listening (Desktop Whisper)");
+						return;
+					}
+					let audio = new Float32Array(totalSamples);
+					let offset = 0;
+					for (const chunk of chunks) {
+						audio.set(chunk, offset);
+						offset += chunk.length;
+					}
+					const keepTrailingSamples = Math.round(inputRate * 0.25);
+					if (trailingSilence > keepTrailingSamples && audio.length > trailingSilence - keepTrailingSamples) {
+						audio = audio.slice(0, audio.length - (trailingSilence - keepTrailingSamples));
+					}
+					const resampled = resampleMonoAudio(audio, inputRate, DESKTOP_WHISPER_SAMPLE_RATE);
+					this.queueTranscription(resampled, this.generation);
+				}
+
+				queueTranscription(audio, generation) {
+					if (!audio.length || generation !== this.generation) return;
+					if (this.pendingTranscriptions >= 2) {
+						this.emitStatus("busy", "Local Whisper is catching up; speech segment skipped");
+						return;
+					}
+					this.pendingTranscriptions += 1;
+					this.transcriptionChain = this.transcriptionChain
+						.then(() => this.transcribeSegment(audio, generation))
+						.catch(() => {})
+						.finally(() => {
+							this.pendingTranscriptions = Math.max(0, this.pendingTranscriptions - 1);
+						});
+				}
+
+				async transcribeSegment(audio, generation) {
+					if (generation !== this.generation || !this.capturing) return;
+					this.emitStatus("transcribing", this.capabilities.modelCached ? "Transcribing locally" : "Loading local Whisper (first use downloads about 42 MB)");
+					try {
+						const result = await window.ninjafy.transcribeAudio(audio.buffer, {
+							sampleRate: DESKTOP_WHISPER_SAMPLE_RATE
+						});
+						if (generation !== this.generation || !this.capturing) return;
+						this.capabilities.modelCached = true;
+						const transcript = String(result && result.text ? result.text : "")
+							.replace(/\s+/g, " ")
+							.trim();
+						if (transcript && typeof this.onresult === "function") {
+							const alternative = { transcript, confidence: 1 };
+							const recognitionResult = [alternative];
+							recognitionResult.isFinal = true;
+							this.onresult({ resultIndex: 0, results: [recognitionResult] });
+						}
+						this.emitStatus("listening", "Listening (Desktop Whisper)");
+					} catch (error) {
+						if (generation !== this.generation) return;
+						this.emitError(error);
+						this.closeCapture(true);
+					}
+				}
+
+				handleBridgeStatus(status) {
+					if (!this.capturing || !status || typeof status !== "object") return;
+					const phase = String(status.phase || "");
+					if (phase === "download" && Number.isFinite(status.progress)) {
+						this.emitStatus(phase, `Downloading local Whisper ${Math.round(status.progress)}%`, status);
+					} else if (phase === "model-download-needed") {
+						this.emitStatus(phase, "Preparing local Whisper download", status);
+					} else if (phase === "model-loading") {
+						this.emitStatus(phase, "Loading local Whisper", status);
+					} else if (phase === "model-ready") {
+						this.capabilities.modelCached = true;
+						this.emitStatus(phase, "Local Whisper ready", status);
+					} else if (phase === "queued") {
+						this.emitStatus(phase, "Waiting for local Whisper", status);
+					} else if (phase === "transcribing") {
+						this.emitStatus(phase, "Transcribing locally", status);
+					}
+				}
+
+				emitStatus(phase, label, detail = {}) {
+					if (typeof this.onstatus === "function") {
+						this.onstatus({ phase, label, ...detail });
+					}
+				}
+
+				emitError(error) {
+					const message = String(error && error.message ? error.message : error || "Local Whisper failed");
+					let errorCode = "service-not-allowed";
+					if (/network|fetch|download/i.test(message)) errorCode = "network";
+					if (/permission|forbidden|microphone/i.test(message)) errorCode = "not-allowed";
+					if (typeof this.onerror === "function") this.onerror({ error: errorCode, message });
+				}
+
+				stop() {
+					if (!this.captureStarting && !this.capturing) return;
+					this.generation += 1;
+					this.closeCapture(true);
+				}
+
+				abort() {
+					this.stop();
+				}
+
+				closeCapture(fireEnd) {
+					const wasActive = this.captureStarting || this.capturing;
+					this.captureStarting = false;
+					this.capturing = false;
+					this.speaking = false;
+					this.preRollChunks = [];
+					this.preRollSampleCount = 0;
+					this.utteranceChunks = [];
+					this.utteranceSampleCount = 0;
+					this.voicedSampleCount = 0;
+					this.silentSampleCount = 0;
+					if (this.statusSubscriptionId && typeof window.ninjafy.offSttStatus === "function") {
+						window.ninjafy.offSttStatus(this.statusSubscriptionId);
+					}
+					this.statusSubscriptionId = "";
+					if (this.captureNode) {
+						this.captureNode.onaudioprocess = null;
+						try {
+							this.captureNode.disconnect();
+						} catch (_error) {}
+						this.captureNode = null;
+					}
+					if (this.sourceNode) {
+						try {
+							this.sourceNode.disconnect();
+						} catch (_error) {}
+						this.sourceNode = null;
+					}
+					if (this.keepAliveTimer) {
+						clearInterval(this.keepAliveTimer);
+						this.keepAliveTimer = null;
+					}
+					if (this.keepAliveSource) {
+						try {
+							this.keepAliveSource.disconnect();
+						} catch (_error) {}
+						this.keepAliveSource = null;
+					}
+					if (this.keepAliveAnalyser) {
+						try {
+							this.keepAliveAnalyser.disconnect();
+						} catch (_error) {}
+						this.keepAliveAnalyser = null;
+					}
+					this.keepAliveSamples = null;
+					if (this.keepAliveContext) {
+						try {
+							Promise.resolve(this.keepAliveContext.close()).catch(() => {});
+						} catch (_error) {}
+						this.keepAliveContext = null;
+					}
+					if (this.audioContext) {
+						try {
+							Promise.resolve(this.audioContext.close()).catch(() => {});
+						} catch (_error) {}
+						this.audioContext = null;
+					}
+					if (fireEnd && wasActive) {
+						setTimeout(() => {
+							if (typeof this.onend === "function") this.onend();
+						}, 0);
+					}
+				}
+			}
+
+			async function createCohostSpeechRecognition() {
+				if (DESKTOP_LOCAL_STT_AVAILABLE) {
+					const inputStream = getLiveDesktopSpeechInputStream();
+					if (!inputStream) return null;
+					const capabilities = await window.ninjafy.getSttCapabilities();
+					if (!capabilities || capabilities.available !== true) {
+						throw new Error("Local Whisper is unavailable in this Desktop build.");
+					}
+					return new DesktopWhisperRecognition(inputStream, capabilities);
+				}
+				const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+				return SpeechRecognition ? new SpeechRecognition() : null;
+			}
+
+			function attachCohostSpeechStatus(recognition) {
+				if (!recognition || !(recognition instanceof DesktopWhisperRecognition)) return;
+				recognition.onstatus = status => {
+					const label = String(status && status.label ? status.label : "Listening (Desktop Whisper)");
+					const phase = String(status && status.phase ? status.phase : "listening");
+					updateVoiceTelemetry({ inputState: label });
+					updateDiagnostics({
+						lastEvent: `stt.${phase}`,
+						lastError: "-"
+					});
+				};
+			}
 			class OpenAICompatiblePublisher {
 				constructor(stream, apiKey, modelOverride = "", endpointOverride = "") {
 					this.stream = stream;
@@ -4566,12 +5017,18 @@
 					}
 				}
 				async setupSpeechRecognition() {
-					const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-					if (!SpeechRecognition) {
-						showError("Speech recognition is not supported in this browser. Try using Chrome.");
+					try {
+						this.recognition = await createCohostSpeechRecognition();
+					} catch (error) {
+						showError("Local speech recognition failed to initialize: " + (error?.message || error));
+						updateVoiceTelemetry({ inputState: "Local Whisper unavailable" });
 						return;
 					}
-					this.recognition = new SpeechRecognition();
+					if (!this.recognition) {
+						showError(DESKTOP_LOCAL_STT_AVAILABLE ? "Select a microphone to use local Whisper." : "Speech recognition is not supported in this browser. Try using Chrome.");
+						return;
+					}
+					attachCohostSpeechStatus(this.recognition);
 					this.recognition.continuous = true;
 					this.recognition.interimResults = true;
 					this.recognition.maxAlternatives = 1;
@@ -4580,7 +5037,7 @@
 						this.isRecognizing = true;
 						avatar.setEmotion("listening", false);
 						updateVoiceTelemetry({
-							inputState: "Listening",
+							inputState: DESKTOP_LOCAL_STT_AVAILABLE ? "Listening (Desktop Whisper)" : "Listening",
 							inputPreview: "-"
 						});
 					};
@@ -4632,15 +5089,26 @@
 						}
 					};
 					this.recognition.onerror = event => {
-						if (event.error !== "not-allowed" && this.isRecognizing && !micMuted) {
+						this.isRecognizing = false;
+						if (this.ttsActive) return;
+						const message = event.message || event.error || "Speech recognition failed";
+						updateVoiceTelemetry({
+							inputState: event.error === "not-allowed" ? "Permission blocked" : "Speech recognition error"
+						});
+						updateDiagnostics({
+							lastEvent: "stt.error",
+							lastError: message
+						});
+						if (event.error !== "no-speech" && event.error !== "aborted") {
+							showError("Speech recognition error: " + message);
+						}
+						if (event.error !== "not-allowed" && event.error !== "aborted" && !this.stopped && !micMuted) {
 							this.restartRecognition();
-						} else {
-							this.isRecognizing = false;
 						}
 					};
 					this.recognition.onend = () => {
 						this.isRecognizing = false;
-						if (!this.stopped && !micMuted) {
+						if (!this.ttsActive && !this.stopped && !micMuted) {
 							this.restartRecognition();
 						}
 					};
@@ -4649,9 +5117,9 @@
 					}
 				}
 				restartRecognition() {
-					if (this.stopped || !this.recognition || micMuted) return;
+					if (this.stopped || this.ttsActive || !this.recognition || micMuted) return;
 					setTimeout(() => {
-						if (!this.isRecognizing && !this.stopped && !micMuted) {
+						if (!this.isRecognizing && !this.ttsActive && !this.stopped && !micMuted) {
 							try {
 								this.recognition.start();
 							} catch (_e) {
@@ -4672,14 +5140,14 @@
 						lastError: "-"
 					});
 					resetVoiceTelemetry({
-						inputMode: "Browser STT -> text prompt",
+						inputMode: getCohostVoiceInputMode(false),
 						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 				}
 				async start() {
 					this.stopped = false;
 					await this.connect();
-					if (this.stream.getAudioTracks().length > 0) {
+					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
 					if (this.pendingGreeting) {
@@ -4776,7 +5244,7 @@
 					this.stop();
 					this.stopped = false;
 					await this.connect();
-					if (this.stream.getAudioTracks().length > 0) {
+					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
 					return true;
@@ -4787,7 +5255,7 @@
 					this.cancelBrowserTts();
 					this.finalizeResponse();
 					resetVoiceTelemetry({
-						inputMode: "Browser STT -> text prompt",
+						inputMode: getCohostVoiceInputMode(false),
 						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 					if (this.recognition) {
@@ -4926,7 +5394,7 @@
 						lastError: "-"
 					});
 					resetVoiceTelemetry({
-						inputMode: "Browser STT + optional image frame",
+						inputMode: getCohostVoiceInputMode(true),
 						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 					setConfiguredLLMInfo("Connected through the SSN session bridge. Uses the LLM provider configured in the popup.", false);
@@ -4934,7 +5402,7 @@
 				async start() {
 					this.stopped = false;
 					await this.connect();
-					if (this.stream.getAudioTracks().length > 0) {
+					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
 					if (this.pendingGreeting) {
@@ -5021,7 +5489,7 @@
 					this.stop();
 					this.stopped = false;
 					await this.connect();
-					if (this.stream.getAudioTracks().length > 0) {
+					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
 					return true;
@@ -5029,7 +5497,7 @@
 				stop() {
 					super.stop();
 					resetVoiceTelemetry({
-						inputMode: "Browser STT + optional image frame",
+						inputMode: getCohostVoiceInputMode(true),
 						outputState: this.shouldUseBrowserTts() ? getCohostTtsProviderLabel() + " ready" : "Text response only"
 					});
 				}
@@ -5290,7 +5758,7 @@
 									lastEvent: "ws.open"
 								});
 								resetVoiceTelemetry({
-									inputMode: "Browser STT -> text prompt",
+									inputMode: getCohostVoiceInputMode(false),
 									outputState: responseTypeValue === "audio" ? "Provider audio ready" : "Text response only"
 								});
 								resolve();
@@ -5348,13 +5816,18 @@
 					systemPrompt.disabled = false;
 				}
 				async setupSpeechRecognition() {
-					const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-					if (!SpeechRecognition) {
-						console.error("Speech recognition not supported in this browser");
-						showError("Speech recognition is not supported in your browser. Try using Chrome.");
+					try {
+						this.recognition = await createCohostSpeechRecognition();
+					} catch (error) {
+						showError("Local speech recognition failed to initialize: " + (error?.message || error));
+						updateVoiceTelemetry({ inputState: "Local Whisper unavailable" });
 						return;
 					}
-					this.recognition = new SpeechRecognition();
+					if (!this.recognition) {
+						showError(DESKTOP_LOCAL_STT_AVAILABLE ? "Select a microphone to use local Whisper." : "Speech recognition is not supported in your browser. Try using Chrome.");
+						return;
+					}
+					attachCohostSpeechStatus(this.recognition);
 					this.recognition.continuous = true;
 					this.recognition.interimResults = true;
 					this.recognition.maxAlternatives = 1;
@@ -5364,7 +5837,7 @@
 						this.isRecognizing = true;
 						avatar.setEmotion("listening", false);
 						updateVoiceTelemetry({
-							inputState: "Listening",
+							inputState: DESKTOP_LOCAL_STT_AVAILABLE ? "Listening (Desktop Whisper)" : "Listening",
 							inputPreview: "-"
 						});
 					};
@@ -5411,12 +5884,17 @@
 						}
 					};
 					this.recognition.onerror = event => {
-						console.error("Speech recognition error:", event.error);
+						const message = event.message || event.error || "Speech recognition failed";
+						console.error("Speech recognition error:", message);
 						if (event.error === "no-speech") {
 							console.log("No speech detected");
 						} else {
-							showError(`Speech recognition error: ${event.error}`);
+							showError(`Speech recognition error: ${message}`);
 						}
+						updateDiagnostics({
+							lastEvent: "stt.error",
+							lastError: message
+						});
 						if (event.error !== "not-allowed" && this.isRecognizing && !micMuted) {
 							this.restartRecognition();
 						} else {
@@ -5443,9 +5921,9 @@
 					}
 				}
 				restartRecognition() {
-					if (this.stopped || !this.recognition || micMuted) return;
+					if (this.stopped || this.ttsActive || !this.recognition || micMuted) return;
 					setTimeout(() => {
-						if (!this.isRecognizing && !this.stopped && !micMuted) {
+						if (!this.isRecognizing && !this.ttsActive && !this.stopped && !micMuted) {
 							try {
 								this.recognition.start();
 							} catch (_e) {
@@ -5527,7 +6005,7 @@
 							this.responseTimeout = null;
 						}
 						await this.connect();
-						if (this.stream.getAudioTracks().length > 0) {
+						if (hasCohostSpeechInput(this.stream)) {
 							await this.setupSpeechRecognition();
 						} else {
 							console.log("No audio tracks available, skipping speech recognition");
@@ -5582,7 +6060,7 @@
 					this.currentResponseText = "";
 					clearTimeout(this.recognitionTimeout);
 					resetVoiceTelemetry({
-						inputMode: "Browser STT -> text prompt",
+						inputMode: getCohostVoiceInputMode(false),
 						outputState: document.getElementById("responseType")?.value === "audio" ? "Provider audio ready" : "Text response only"
 					});
 					updateDiagnostics({
@@ -6964,6 +7442,24 @@
 				}
 			});
 			let stream = null;
+			let speechInputStream = null;
+			function stopSpeechInputStream() {
+				if (!speechInputStream) return;
+				speechInputStream.getTracks().forEach(track => track.stop());
+				speechInputStream = null;
+			}
+			function preserveSpeechInputTrack(track) {
+				stopSpeechInputStream();
+				if (!track || track.readyState !== "live") return;
+				try {
+					// Keep Whisper on the original raw microphone track. Cloned capture
+					// tracks can be silent in Electron, and the outgoing track may later
+					// be replaced with a system-audio mix.
+					speechInputStream = new MediaStream([track]);
+				} catch (error) {
+					console.warn("Unable to preserve the selected microphone for local Whisper:", error);
+				}
+			}
 			const videoSelect = document.getElementById("videoSource");
 			const audioSelect = document.getElementById("audioSource");
 			const preview = document.getElementById("preview");
@@ -7444,6 +7940,7 @@
 							stream.getTracks().forEach(track => track.stop());
 							stream = null;
 						}
+						stopSpeechInputStream();
 						if (currentAudioIndicator) {
 							currentAudioIndicator.remove();
 							currentAudioIndicator = null;
@@ -7517,6 +8014,7 @@
 						stream.getTracks().forEach(track => track.stop());
 						stream = null;
 					}
+					stopSpeechInputStream();
 					if (preview.srcObject) {
 						preview.srcObject.getTracks().forEach(track => track.stop());
 						preview.srcObject = null;
@@ -7844,6 +8342,7 @@
 			}
 			async function getStream() {
 				try {
+					stopSpeechInputStream();
 					if (preview.srcObject) {
 						preview.srcObject.getTracks().forEach(track => track.stop());
 						preview.srcObject = null;
@@ -7920,7 +8419,8 @@
 						try {
 							const audioConstraint = {
 								echoCancellation: true,
-								noiseSuppression: true
+								noiseSuppression: true,
+								autoGainControl: true
 							};
 							if (shouldUseExactDeviceId(audioSelect.value)) {
 								audioConstraint.deviceId = { exact: audioSelect.value };
@@ -7928,6 +8428,7 @@
 							micStream = await navigator.mediaDevices.getUserMedia({
 								audio: audioConstraint
 							});
+							if (DESKTOP_LOCAL_STT_AVAILABLE) preserveSpeechInputTrack(micStream.getAudioTracks()[0]);
 							outputStream.getAudioTracks().forEach(track => {
 								outputStream.removeTrack(track);
 								track.stop();
@@ -7945,7 +8446,6 @@
 									outputStream.addTrack(mixedTrack);
 								}
 								videoStream.getAudioTracks().forEach(track => track.stop());
-								micStream.getAudioTracks().forEach(track => track.stop());
 							} else {
 								const audioTrack = micStream.getAudioTracks()[0];
 								if (audioTrack) {
@@ -7960,11 +8460,13 @@
 									micStream = await navigator.mediaDevices.getUserMedia({
 										audio: {
 											echoCancellation: true,
-											noiseSuppression: true
+											noiseSuppression: true,
+											autoGainControl: true
 										}
 									});
 									const fallbackTrack = micStream.getAudioTracks()[0];
 									if (fallbackTrack) {
+										if (DESKTOP_LOCAL_STT_AVAILABLE) preserveSpeechInputTrack(fallbackTrack);
 										updateSelectedDeviceFromTrack(audioSelect, "selectedAudioId", fallbackTrack, true);
 										outputStream.getAudioTracks().forEach(track => {
 											outputStream.removeTrack(track);
@@ -8029,6 +8531,18 @@
 						const oldStream = stream;
 						stream = newStream;
 						publisher.stream = newStream;
+						if (typeof publisher.setupSpeechRecognition === "function") {
+							if (publisher.recognition) {
+								try {
+									publisher.recognition.stop();
+								} catch (_error) {}
+							}
+							publisher.recognition = null;
+							publisher.isRecognizing = false;
+							if (hasCohostSpeechInput(stream)) {
+								await publisher.setupSpeechRecognition();
+							}
+						}
 						if (typeof publisher.setupAudioProcessing === "function" && stream.getAudioTracks().length > 0) {
 							await publisher.setupAudioProcessing();
 						}
@@ -8073,6 +8587,7 @@
 						stream.getTracks().forEach(track => track.stop());
 						stream = null;
 					}
+					stopSpeechInputStream();
 					if (preview.srcObject) {
 						preview.srcObject.getTracks().forEach(track => track.stop());
 						preview.srcObject = null;
@@ -8386,7 +8901,7 @@
 					defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
 					modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_DEFAULT_MODEL} on ${LOCAL_QWEN_DEFAULT_REMOTE_HOST})`,
 					disableCaptureSelection: false,
-					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text uses your browser/system default microphone. If Audio Response is selected, Local Qwen replies are spoken with the selected TTS engine. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames." : "Speech-to-text uses your browser/system default microphone. Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames.",
+					deviceNotice: getCohostSpeechToTextNotice() + (COHOST_TTS_AVAILABLE ? " If Audio Response is selected, Local Qwen replies are spoken with the selected TTS engine." : "") + " Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames.",
 					requiresApiKey: false,
 					supportsAudioResponse: COHOST_TTS_AVAILABLE,
 					usesBrowserTts: true
@@ -8398,7 +8913,7 @@
 					defaultModel: LOCAL_GEMMA_DEFAULT_MODEL,
 					modelPlaceholder: `Optional model id/path (default folder ${LOCAL_GEMMA_DEFAULT_MODEL}; set host to your Gemma mirror)`,
 					disableCaptureSelection: false,
-					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees. Audio responses use the selected TTS engine." : "Speech-to-text uses your browser/system default microphone. If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees.",
+					deviceNotice: getCohostSpeechToTextNotice() + " If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
 					requiresApiKey: false,
 					supportsAudioResponse: COHOST_TTS_AVAILABLE,
 					usesBrowserTts: true
@@ -8410,7 +8925,7 @@
 					defaultModel: CUSTOM_OPENAI_DEFAULT_MODEL,
 					modelPlaceholder: "Optional model override or select a model from the endpoint",
 					disableCaptureSelection: false,
-					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is attached for multimodal models. Audio responses use the selected TTS engine." : "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is attached for multimodal models.",
+					deviceNotice: getCohostSpeechToTextNotice() + " If camera/screen is enabled, a frame is attached for multimodal models." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
 					requiresApiKey: false,
 					acceptsOptionalApiKey: true,
 					supportsAudioResponse: COHOST_TTS_AVAILABLE,
@@ -8423,7 +8938,7 @@
 					defaultModel: "",
 					modelPlaceholder: "Optional model override passed to the configured LLM provider",
 					disableCaptureSelection: false,
-					deviceNotice: COHOST_TTS_AVAILABLE ? "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is sent through the SSN LLM bridge for multimodal providers. Audio responses use the selected TTS engine." : "Speech-to-text runs in-browser. If camera/screen is enabled, a frame is sent through the SSN LLM bridge for multimodal providers.",
+					deviceNotice: getCohostSpeechToTextNotice() + " If camera/screen is enabled, a frame is sent through the SSN LLM bridge for multimodal providers." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
 					requiresApiKey: false,
 					supportsAudioResponse: COHOST_TTS_AVAILABLE,
 					usesBrowserTts: true
@@ -8507,28 +9022,28 @@
 						};
 					case "localqwen":
 						return {
-							inputMode: "Browser STT -> text prompt",
+							inputMode: getCohostVoiceInputMode(false),
 							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "localgemma":
 						return {
-							inputMode: "Browser STT + optional image frame",
+							inputMode: getCohostVoiceInputMode(true),
 							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "customopenai":
 						return {
-							inputMode: "Browser STT -> text prompt",
+							inputMode: getCohostVoiceInputMode(false),
 							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "configuredllm":
 						return {
-							inputMode: "Browser STT + optional image frame",
+							inputMode: getCohostVoiceInputMode(true),
 							outputState: getBrowserTtsOutputState(responseTypeValue)
 						};
 					case "chatgpt":
 					case "xai":
 						return {
-							inputMode: "Browser STT -> text prompt",
+							inputMode: getCohostVoiceInputMode(false),
 							outputState: responseTypeValue === "audio" ? "Provider audio ready" : "Text response only"
 						};
 					default:
@@ -8607,8 +9122,9 @@
 						localStorage.setItem("selectedAudioId", audioSelect.value);
 					}
 				}
-				if (config.deviceNotice) {
-					updateRealtimeDeviceNotice(config.deviceNotice);
+				const deviceNotice = DESKTOP_LOCAL_STT_AVAILABLE && (providerName === "chatgpt" || providerName === "xai") ? getCohostSpeechToTextNotice() + " Audio responses still come from the selected realtime provider." : config.deviceNotice;
+				if (deviceNotice) {
+					updateRealtimeDeviceNotice(deviceNotice);
 				} else {
 					removeRealtimeDeviceNotice();
 				}

@@ -214,7 +214,7 @@ body, html {
     if (urlParams.has("session")) {
         roomID = urlParams.get("session");
     }
-    var password = "false";
+    var password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw") || "false";
     var featuredMode = false;
     var deleteOnlyLast = urlParams.has("deleteonlylast");
 

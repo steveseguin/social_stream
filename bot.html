@@ -1401,13 +1401,13 @@
 				scale = parseFloat(scale);
 				if (scale < 1) {
 					if (centering) {
-						document.body.style.transform = "scale(" + scale + "), 0%)";
+						document.body.style.transform = "scale(" + scale + ")";
 					} else {
 						document.body.style.transform = "scale(" + scale + ")";
 					}
 				} else {
 					if (centering) {
-						document.body.style.transform = "scale(" + scale + ") translate(-" + -1 * (scale * 50.0 - 50) + "%, 0%)";
+						document.body.style.transform = "scale(" + scale + ") translate(" + -1 * (scale * 50.0 - 50) + "%, 0%)";
 					} else {
 						document.body.style.transform = "scale(" + scale + ") translate(" + -1 * (50 - 50 / scale) + "%, 0%)";
 					}
