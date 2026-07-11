@@ -97,7 +97,12 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "autoLiveYoutube": {
     type: "boolean",
     category: "miscellaneous_options_for_sites",
-    description: "Instead of Top Chat, which is default, auto-select Live Chat; Youtube Live chat pop out."
+    description: "Deprecated. YouTube Live Chat is now selected automatically unless disableAutoLiveYoutube is enabled."
+  },
+  "disableAutoLiveYoutube": {
+    type: "boolean",
+    category: "miscellaneous_options_for_sites",
+    description: "Do not automatically select Live Chat in the YouTube chat popout."
   },
   "disableYoutubeAutoScroll": {
     type: "boolean",

@@ -2470,7 +2470,7 @@
 	  
 	  // style-scope yt-live-chat-message-renderer
 	  
-	  if (settings.autoLiveYoutube && document.querySelector("#trigger") && !marked){
+	  if (youtubeSettingsLoaded && !settings.disableAutoLiveYoutube && document.querySelector("#trigger") && !marked){
 			marked = true;
 			document.querySelector("#trigger").click()
 			document.querySelector('[slot="dropdown-content"] [tabindex="0"]').click()
@@ -2481,7 +2481,7 @@
 					document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "10px";
 				}
 			},100)
-	  } else if (document.querySelector("#trigger") && !settings.autoLiveYoutube && marked){
+	  } else if (document.querySelector("#trigger") && settings.disableAutoLiveYoutube && marked){
 		  document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "unset";
 		  marked = false;
 	  }

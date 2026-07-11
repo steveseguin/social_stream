@@ -4943,7 +4943,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "twichadannounce") {
 				pushSettingChange();
 			}
-			if (request.setting == "autoLiveYoutube") {
+			if (request.setting == "disableAutoLiveYoutube") {
 				pushSettingChange();
 			}
 			if (request.setting == "relaytargets") {
