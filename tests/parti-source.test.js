@@ -14,7 +14,7 @@ async function waitForMessageCount(page, expected, timeout = 7000) {
   );
 }
 
-async function createPartiPage(browser, settings) {
+async function createPartiPage(browser, settings, initialMessages) {
   const page = await browser.newPage();
   const sourceSettings = settings || { textonlymode: false };
 
@@ -129,6 +129,12 @@ async function createPartiPage(browser, settings) {
     `
   });
 
+  if (Array.isArray(initialMessages)) {
+    await page.evaluate((messages) => {
+      messages.forEach((entry) => window.__addPartiMessage(entry.name, entry.message, entry.options));
+    }, initialMessages);
+  }
+
   await page.addScriptTag({ content: source });
   await page.waitForFunction(() => document.getElementById("parti-chat").partiObserverAttached === true);
   return page;
@@ -200,6 +206,52 @@ async function createPartiPage(browser, settings) {
   assert.ok(Array.isArray(legacy.chatbadges), "legacy badge should be captured as an array");
   assert.ok(legacy.chatmessage.indexOf("legacy") !== -1, legacy.chatmessage);
   assert.ok(legacy.chatmessage.indexOf("https://cdn.parti.test/emote.png") !== -1, legacy.chatmessage);
+
+  await page.waitForTimeout(1700);
+  await page.evaluate(() => {
+    var original = document.getElementById("parti-chat");
+    var mirror = original.cloneNode(true);
+    mirror.id = "parti-chat-mirror";
+    document.body.appendChild(mirror);
+  });
+  await page.waitForTimeout(2500);
+  assert.strictEqual(
+    await page.evaluate(() => window.__partiMessages.length),
+    6,
+    "the mirrored mobile/desktop Parti chat tree should not replay captured history"
+  );
+
+  await page.evaluate(() => {
+    var original = document.getElementById("parti-chat");
+    var replacement = original.cloneNode(true);
+    original.replaceWith(replacement);
+  });
+  await page.waitForTimeout(2500);
+  assert.strictEqual(
+    await page.evaluate(() => window.__partiMessages.length),
+    6,
+    "a delayed Parti chat remount should not replay captured history"
+  );
+
+  const defaultBacklogPage = await createPartiPage(
+    browser,
+    { textonlymode: false },
+    [{ name: "Existing", message: "capture me" }]
+  );
+  await waitForMessageCount(defaultBacklogPage, 1);
+
+  const noBacklogPage = await createPartiPage(
+    browser,
+    { textonlymode: false, ignorepartibacklog: { setting: true } },
+    [{ name: "Existing", message: "skip me" }]
+  );
+  assert.strictEqual(
+    await noBacklogPage.evaluate(() => window.__partiMessages.length),
+    0,
+    "disabling Parti backlog capture should mark existing rows without emitting them"
+  );
+  await noBacklogPage.evaluate(() => window.__addPartiMessage("Live", "capture me now"));
+  await waitForMessageCount(noBacklogPage, 1);
 
   const textOnlyPage = await createPartiPage(browser, { textonlymode: true });
 

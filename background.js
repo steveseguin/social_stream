@@ -4922,6 +4922,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "youtubeAudioPicker") {
 				pushSettingChange();
 			}
+			if (request.setting == "ignorepartibacklog") {
+				pushSettingChange();
+			}
 			if (request.setting == "vdoninjadiscord") {
 				pushSettingChange();
 			}

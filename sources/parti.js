@@ -26,6 +26,38 @@ function toDataURL(blobUrl, callback) {
 	var names = {};
 	var DUPLICATE_WINDOW_MS = 1500;
 	var recentlySeenMessages = new Map();
+	var LOGICAL_ROW_STORAGE_KEY = "socialstream_parti_seen_rows_v1:" + window.location.pathname;
+	var MAX_LOGICAL_ROWS = 2000;
+	var seenLogicalRows = new Map();
+
+	function loadSeenLogicalRows(){
+		try {
+			var stored = JSON.parse(sessionStorage.getItem(LOGICAL_ROW_STORAGE_KEY) || "[]");
+			if (!Array.isArray(stored)){return;}
+			stored.slice(-MAX_LOGICAL_ROWS).forEach(function(key){
+				if (typeof key === "string" && key){
+					seenLogicalRows.set(key, true);
+				}
+			});
+		} catch(e){}
+	}
+
+	function persistSeenLogicalRows(){
+		try {
+			sessionStorage.setItem(LOGICAL_ROW_STORAGE_KEY, JSON.stringify(Array.from(seenLogicalRows.keys())));
+		} catch(e){}
+	}
+
+	function rememberLogicalRow(key){
+		if (!key || seenLogicalRows.has(key)){return;}
+		seenLogicalRows.set(key, true);
+		while (seenLogicalRows.size > MAX_LOGICAL_ROWS){
+			seenLogicalRows.delete(seenLogicalRows.keys().next().value);
+		}
+		persistSeenLogicalRows();
+	}
+
+	loadSeenLogicalRows();
 	
 	
 	
@@ -149,6 +181,55 @@ function toDataURL(blobUrl, callback) {
 		} catch(e){
 			return ele && ele.textContent ? ele.textContent : "";
 		}
+	}
+
+	function getRowTimestamp(ele){
+		try {
+			var nodes = ele.querySelectorAll("span, time");
+			for (var i = nodes.length - 1; i >= 0; i--){
+				var text = (nodes[i].textContent || "").replace(/\s+/g, " ").trim();
+				if (/^\d{1,2}:\d{2}(?:\s?[AP]M)?$/i.test(text)){
+					return text.toUpperCase();
+				}
+			}
+		} catch(e){}
+		return "";
+	}
+
+	function getLogicalRowBaseKey(ele, data){
+		return [
+			data.event || "",
+			data.chatname || "",
+			data.chatmessage || "",
+			data.hasDonation || "",
+			data.contentimg || "",
+			getRowTimestamp(ele)
+		].join("\u00b6");
+	}
+
+	function getLogicalRowKey(ele, data){
+		var baseKey = getLogicalRowBaseKey(ele, data);
+		var occurrence = 1;
+		var sibling = ele.previousElementSibling;
+		while (sibling){
+			if (sibling.partiLogicalBaseKey === baseKey){
+				occurrence++;
+			}
+			sibling = sibling.previousElementSibling;
+		}
+		ele.partiLogicalBaseKey = baseKey;
+		return baseKey + "\u00b6occurrence:" + occurrence;
+	}
+
+	function shouldCaptureExistingPartiHistory(){
+		if (!("ignorepartibacklog" in settings)){
+			return true;
+		}
+		var value = settings.ignorepartibacklog;
+		if (value && typeof value === "object" && "setting" in value){
+			return value.setting !== true;
+		}
+		return value !== true;
 	}
 
 	function getDonationDetails(amountText){
@@ -443,7 +524,7 @@ function toDataURL(blobUrl, callback) {
 		return false;
 	}
 
-	function processMessage(ele){
+	function processMessage(ele, suppressCapture){
 		if (!isLikelyPartiRow(ele)){
 			return;
 		}
@@ -460,7 +541,10 @@ function toDataURL(blobUrl, callback) {
 			if (newData.chatname && !newData.hasDonation){
 				names[newData.chatname] = [newData.chatimg || "", newData.chatbadges || ""];
 			}
-			if (shouldSkipDuplicate(newData, getRowSignature(ele))){
+			var newLogicalKey = getLogicalRowKey(ele, newData);
+			var newLogicalDuplicate = seenLogicalRows.has(newLogicalKey);
+			rememberLogicalRow(newLogicalKey);
+			if (suppressCapture || newLogicalDuplicate || shouldSkipDuplicate(newData, getRowSignature(ele))){
 				return;
 			}
 			pushMessage(newData);
@@ -537,7 +621,10 @@ function toDataURL(blobUrl, callback) {
 				data.donoValue = oldDonationDetails.donoValue;
 			}
 		}
-		if (shouldSkipDuplicate(data, getRowSignature(ele))){
+		var logicalKey = getLogicalRowKey(ele, data);
+		var logicalDuplicate = seenLogicalRows.has(logicalKey);
+		rememberLogicalRow(logicalKey);
+		if (suppressCapture || logicalDuplicate || shouldSkipDuplicate(data, getRowSignature(ele))){
 			return;
 		}
 		
@@ -608,11 +695,11 @@ function toDataURL(blobUrl, callback) {
 
 	function processMessageTree(node){
 		try {
-			processMessage(node);
+			processMessage(node, false);
 			if (node && node.querySelectorAll){
 				var rows = node.querySelectorAll(".ccs-row, div");
 				for (var i = 0; i < rows.length; i++){
-					processMessage(rows[i]);
+					processMessage(rows[i], false);
 				}
 			}
 		} catch(e){}
@@ -657,9 +744,10 @@ function toDataURL(blobUrl, callback) {
 				[...chatContainers].forEach(function(container){
 					if (container.partiContainerMarked){ return; }
 					container.partiContainerMarked=true;
+					var suppressExisting = !shouldCaptureExistingPartiHistory();
 					[...getRowsFromContainer(container)].forEach(ele=>{
 						try {
-							processMessage(ele);
+							processMessage(ele, suppressExisting);
 						} catch(e){}
 					});
 					
