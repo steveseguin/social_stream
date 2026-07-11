@@ -93,8 +93,9 @@ In the Event Flow Editor test panel:
 
 1. Set `Source Platform` to `Kick`.
 2. Set `Username` to anything.
-3. Set `Message` to `redeemed Sound Alert`.
-4. Run the test.
+3. Set `Message` to the Kick reward name, such as `Sound Alert`.
+4. Set `Event Type` to `reward - Channel point/reward redemption`.
+5. Run the test.
 
 ![Event Flow test panel with Kick source and redeemed Sound Alert test message](images/kick-channel-points-event-flow/event-flow-test-panel.png)
 
