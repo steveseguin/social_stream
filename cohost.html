@@ -4134,7 +4134,10 @@
 				if (DESKTOP_LOCAL_STT_AVAILABLE) {
 					return "Speech-to-text uses local Whisper with the selected microphone. The first use downloads about 42 MB; later use is offline.";
 				}
-				return "Speech-to-text uses your browser/system default microphone.";
+				if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) {
+					return "Voice input is unavailable in this browser. Open this page in Chrome for Chrome Speech Recognition, or use typed chat instead.";
+				}
+				return "Chrome Speech Recognition uses the system-default microphone, not the selected stream device. It may require microphone permission and an internet connection; voice input is not available in every browser.";
 			}
 
 			function getLiveDesktopSpeechInputStream() {
@@ -4263,6 +4266,10 @@
 					this.keepAliveContext = new AudioContextClass();
 					if (this.keepAliveContext.state === "suspended") {
 						await this.keepAliveContext.resume();
+					}
+					if (generation !== this.generation) {
+						this.closeCapture(false);
+						return;
 					}
 					this.keepAliveSource = this.keepAliveContext.createMediaStreamSource(this.inputStream);
 					this.keepAliveAnalyser = this.keepAliveContext.createAnalyser();
@@ -4473,6 +4480,7 @@
 					this.speaking = false;
 					this.preRollChunks = [];
 					this.preRollSampleCount = 0;
+					this.speechStartChunks = 0;
 					this.utteranceChunks = [];
 					this.utteranceSampleCount = 0;
 					this.voicedSampleCount = 0;
@@ -7443,6 +7451,30 @@
 			});
 			let stream = null;
 			let speechInputStream = null;
+			let mixedAudioResources = null;
+			function stopMixedAudioResources() {
+				if (!mixedAudioResources) return;
+				const resources = mixedAudioResources;
+				mixedAudioResources = null;
+				[resources.systemSource, resources.micSource, resources.systemGain, resources.micGain].forEach(node => {
+					if (!node) return;
+					try {
+						node.disconnect();
+					} catch (_error) {}
+				});
+				const tracks = [].concat(resources.systemTracks || [], resources.micTracks || [], resources.mixedTrack || []);
+				tracks.forEach((track, index) => {
+					if (!track || tracks.indexOf(track) !== index) return;
+					try {
+						track.stop();
+					} catch (_error) {}
+				});
+				if (resources.context) {
+					try {
+						Promise.resolve(resources.context.close()).catch(() => {});
+					} catch (_error) {}
+				}
+			}
 			function stopSpeechInputStream() {
 				if (!speechInputStream) return;
 				speechInputStream.getTracks().forEach(track => track.stop());
@@ -7459,6 +7491,68 @@
 				} catch (error) {
 					console.warn("Unable to preserve the selected microphone for local Whisper:", error);
 				}
+			}
+			function setGainEnabled(gainNode, enabled) {
+				if (!gainNode || !gainNode.gain) return false;
+				try {
+					gainNode.gain.setValueAtTime(enabled ? 1 : 0, gainNode.context.currentTime);
+				} catch (_error) {
+					gainNode.gain.value = enabled ? 1 : 0;
+				}
+				return true;
+			}
+			function setTrackEnabled(track, enabled) {
+				if (!track || track.readyState !== "live") return false;
+				track.enabled = enabled;
+				return true;
+			}
+			function applyMicrophoneMutedState(muted) {
+				const enabled = !muted;
+				let changed = false;
+				if (mixedAudioResources) {
+					changed = setGainEnabled(mixedAudioResources.micGain, enabled) || changed;
+					(mixedAudioResources.micTracks || []).forEach(track => {
+						changed = setTrackEnabled(track, enabled) || changed;
+					});
+				}
+				if (speechInputStream) {
+					speechInputStream.getAudioTracks().forEach(track => {
+						changed = setTrackEnabled(track, enabled) || changed;
+					});
+				}
+				if (stream) {
+					stream.getAudioTracks().forEach(track => {
+						if (mixedAudioResources && track === mixedAudioResources.mixedTrack) return;
+						if (track.label && track.label.toLowerCase().includes("system")) return;
+						changed = setTrackEnabled(track, enabled) || changed;
+					});
+				}
+				return changed;
+			}
+			function applySystemAudioMutedState(muted) {
+				const enabled = !muted;
+				let changed = false;
+				if (mixedAudioResources) {
+					changed = setGainEnabled(mixedAudioResources.systemGain, enabled) || changed;
+					(mixedAudioResources.systemTracks || []).forEach(track => {
+						changed = setTrackEnabled(track, enabled) || changed;
+					});
+				}
+				if (stream) {
+					stream.getAudioTracks().forEach(track => {
+						if (mixedAudioResources && track === mixedAudioResources.mixedTrack) return;
+						if (!track.label || !track.label.toLowerCase().includes("system")) return;
+						changed = setTrackEnabled(track, enabled) || changed;
+					});
+				}
+				return changed;
+			}
+			function syncMuteButtonState(button, muted, mutedTitle, activeTitle) {
+				button.classList.toggle("muted", muted);
+				button.setAttribute("aria-pressed", muted ? "true" : "false");
+				const title = muted ? activeTitle : mutedTitle;
+				button.title = title;
+				button.setAttribute("aria-label", title);
 			}
 			const videoSelect = document.getElementById("videoSource");
 			const audioSelect = document.getElementById("audioSource");
@@ -7941,6 +8035,7 @@
 							stream = null;
 						}
 						stopSpeechInputStream();
+						stopMixedAudioResources();
 						if (currentAudioIndicator) {
 							currentAudioIndicator.remove();
 							currentAudioIndicator = null;
@@ -7949,9 +8044,9 @@
 						micMuted = false;
 						audioMuted = false;
 						videoMuted = false;
-						muteMicButton.classList.remove("muted");
+						syncMuteButtonState(muteMicButton, false, "Mute microphone", "Unmute microphone");
 						muteMicButton.querySelector(".mic-icon").classList.remove("muted");
-						muteAudioButton.classList.remove("muted");
+						syncMuteButtonState(muteAudioButton, false, "Mute system audio", "Unmute system audio");
 						muteAudioButton.querySelector(".speaker-icon").classList.remove("muted");
 						muteVideoButton.classList.remove("muted");
 						muteVideoButton.querySelector(".video-icon").classList.remove("muted");
@@ -8015,6 +8110,7 @@
 						stream = null;
 					}
 					stopSpeechInputStream();
+					stopMixedAudioResources();
 					if (preview.srcObject) {
 						preview.srcObject.getTracks().forEach(track => track.stop());
 						preview.srcObject = null;
@@ -8235,60 +8331,53 @@
 				muteVideoButton.querySelector(".video-icon").classList.toggle("muted");
 			});
 			muteMicButton.addEventListener("click", () => {
-				if (isRealtimeProvider(providerSelect.value) && publisher && publisher.recognition) {
-					if (!micMuted) {
-						publisher.recognition.stop();
-						publisher.isRecognizing = false;
-					} else {
-						if (!publisher.isRecognizing) {
-							try {
-								publisher.recognition.start();
-								publisher.isRecognizing = true;
-							} catch (err) {
-								console.error("Failed to restart speech recognition:", err);
-								setTimeout(() => {
-									publisher.restartRecognition();
-								}, 300);
-							}
-						}
-					}
-					micMuted = !micMuted;
-					muteMicButton.classList.toggle("muted");
-					muteMicButton.querySelector(".mic-icon").classList.toggle("muted");
-					return;
-				}
 				if (!stream) {
 					showError("Start the stream before muting microphone");
 					return;
 				}
-				let microphoneTracks = stream.getAudioTracks().filter(track => track.kind === "audio" && (!track.label || !track.label.toLowerCase().includes("system")));
-				if (microphoneTracks.length === 0) {
+				const nextMuted = !micMuted;
+				micMuted = nextMuted;
+				const recognition = isRealtimeProvider(providerSelect.value) && publisher ? publisher.recognition : null;
+				const changed = applyMicrophoneMutedState(micMuted);
+				if (!changed && !recognition) {
+					micMuted = !nextMuted;
 					console.warn("No microphone tracks found to mute/unmute");
 					return;
 				}
-				microphoneTracks.forEach(track => {
-					track.enabled = micMuted;
-				});
-				micMuted = !micMuted;
-				muteMicButton.classList.toggle("muted");
-				muteMicButton.querySelector(".mic-icon").classList.toggle("muted");
+				if (recognition) {
+					if (micMuted) {
+						try {
+							recognition.stop();
+						} catch (_error) {}
+						publisher.isRecognizing = false;
+					} else if (publisher.ttsActive) {
+						publisher.resumeRecognitionAfterSpeech = true;
+					} else if (!publisher.isRecognizing) {
+						try {
+							recognition.start();
+							publisher.isRecognizing = true;
+						} catch (err) {
+							console.error("Failed to restart speech recognition:", err);
+							setTimeout(() => publisher.restartRecognition(), 300);
+						}
+					}
+				}
+				syncMuteButtonState(muteMicButton, micMuted, "Mute microphone", "Unmute microphone");
+				muteMicButton.querySelector(".mic-icon").classList.toggle("muted", micMuted);
 			});
 			muteAudioButton.addEventListener("click", () => {
 				if (!stream) {
 					showError("Start the stream before muting audio");
 					return;
 				}
-				let systemTracks = stream.getAudioTracks().filter(track => track.kind === "audio" && track.label && track.label.toLowerCase().includes("system"));
-				if (systemTracks.length === 0) {
+				const nextMuted = !audioMuted;
+				if (!applySystemAudioMutedState(nextMuted)) {
 					console.warn("No system audio tracks found to mute/unmute");
 					return;
 				}
-				systemTracks.forEach(track => {
-					track.enabled = audioMuted;
-				});
-				audioMuted = !audioMuted;
-				muteAudioButton.classList.toggle("muted");
-				muteAudioButton.querySelector(".speaker-icon").classList.toggle("muted");
+				audioMuted = nextMuted;
+				syncMuteButtonState(muteAudioButton, audioMuted, "Mute system audio", "Unmute system audio");
+				muteAudioButton.querySelector(".speaker-icon").classList.toggle("muted", audioMuted);
 			});
 			let audioContext;
 			function shouldUseExactDeviceId(deviceId) {
@@ -8343,6 +8432,7 @@
 			async function getStream() {
 				try {
 					stopSpeechInputStream();
+					stopMixedAudioResources();
 					if (preview.srcObject) {
 						preview.srcObject.getTracks().forEach(track => track.stop());
 						preview.srcObject = null;
@@ -8438,14 +8528,32 @@
 								const dest = ctx.createMediaStreamDestination();
 								const systemSource = ctx.createMediaStreamSource(videoStream);
 								const micSource = ctx.createMediaStreamSource(micStream);
-								systemSource.connect(dest);
-								micSource.connect(dest);
+								const systemGain = ctx.createGain();
+								const micGain = ctx.createGain();
+								setGainEnabled(systemGain, !audioMuted);
+								setGainEnabled(micGain, !micMuted);
+								systemSource.connect(systemGain);
+								micSource.connect(micGain);
+								systemGain.connect(dest);
+								micGain.connect(dest);
+								if (ctx.state === "suspended") await ctx.resume();
 								const mixedTrack = dest.stream.getAudioTracks()[0];
 								if (mixedTrack) {
-									mixedTrack.label = "Mixed Audio (System + Microphone)";
 									outputStream.addTrack(mixedTrack);
+									mixedAudioResources = {
+										context: ctx,
+										destination: dest,
+										systemSource,
+										micSource,
+										systemGain,
+										micGain,
+										systemTracks: videoStream.getAudioTracks().slice(),
+										micTracks: micStream.getAudioTracks().slice(),
+										mixedTrack
+									};
+								} else {
+									await ctx.close();
 								}
-								videoStream.getAudioTracks().forEach(track => track.stop());
 							} else {
 								const audioTrack = micStream.getAudioTracks()[0];
 								if (audioTrack) {
@@ -8516,6 +8624,7 @@
 					}
 					return outputStream;
 				} catch (err) {
+					stopMixedAudioResources();
 					showError("Failed to get stream: " + err.message);
 					throw err;
 				}
@@ -8558,19 +8667,8 @@
 					if (stream.getAudioTracks().length > 0) {
 						setupAudioIndicator(stream);
 					}
-					if (previousMicMuted || previousAudioMuted) {
-						const audioTracks = stream.getAudioTracks();
-						audioTracks.forEach(track => {
-							if (track.kind === "audio" && track.label) {
-								if (previousMicMuted && !track.label.toLowerCase().includes("system")) {
-									track.enabled = false;
-								}
-								if (previousAudioMuted && track.label.toLowerCase().includes("system")) {
-									track.enabled = false;
-								}
-							}
-						});
-					}
+					applyMicrophoneMutedState(previousMicMuted);
+					applySystemAudioMutedState(previousAudioMuted);
 					if (videoMuted) {
 						stream.getVideoTracks().forEach(track => {
 							track.enabled = false;
@@ -8588,6 +8686,7 @@
 						stream = null;
 					}
 					stopSpeechInputStream();
+					stopMixedAudioResources();
 					if (preview.srcObject) {
 						preview.srcObject.getTracks().forEach(track => track.stop());
 						preview.srcObject = null;
@@ -8595,9 +8694,9 @@
 					micMuted = false;
 					audioMuted = false;
 					videoMuted = false;
-					muteMicButton.classList.remove("muted");
+					syncMuteButtonState(muteMicButton, false, "Mute microphone", "Unmute microphone");
 					muteMicButton.querySelector(".mic-icon").classList.remove("muted");
-					muteAudioButton.classList.remove("muted");
+					syncMuteButtonState(muteAudioButton, false, "Mute system audio", "Unmute system audio");
 					muteAudioButton.querySelector(".speaker-icon").classList.remove("muted");
 					muteVideoButton.classList.remove("muted");
 					muteVideoButton.querySelector(".video-icon").classList.remove("muted");

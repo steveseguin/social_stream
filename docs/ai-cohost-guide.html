@@ -139,6 +139,18 @@
             </div>
 
             <div class="guide-card">
+                <h2>Voice Conversation Support</h2>
+                <ul class="guide-list">
+                    <li><strong>SSN Desktop:</strong> Uses local Whisper with the microphone selected on <code>cohost.html</code>. The first use downloads about 42 MB; later transcription runs offline.</li>
+                    <li><strong>Chrome / Chrome extension link:</strong> The extension opens the hosted co-host page in a Chrome tab. Voice input uses Chrome Speech Recognition and the system-default microphone, may require internet, and does not use Desktop Whisper.</li>
+                    <li><strong>Other browsers:</strong> Voice recognition is not guaranteed. Typed co-host chat, live-chat input, camera/screen input, and configured LLM responses can still work without speech recognition.</li>
+                </ul>
+                <div class="guide-note">
+                    <p>The microphone meter only confirms that the page captured an audio stream. In Chrome, speech recognition separately uses Chrome's system-default microphone. In SSN Desktop, Diagnostics should show <strong>Listening (Desktop Whisper)</strong> and then the recognized text under <strong>Heard</strong>.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
                 <h2>How The Pages Talk</h2>
                 <p>The dock and overlay use the existing Social Stream session bridge. Messages are sent as <code>overlayNinja</code> payloads and targeted by label.</p>
                 <div class="cohost-flow">
@@ -204,6 +216,8 @@
                     <li>If Answer or Light Roast is disabled, the SSN bridge or Private Chat Bot is not available.</li>
                     <li>The primary chat bot overlay toggle is optional and does not enable dock right-click co-host actions.</li>
                     <li>If <code>cohost.html</code> is not seeing chat, confirm the URL has the same <code>session</code> as the popup and that the Live Chat mode is Monitor, Questions, or All.</li>
+					<li>If Desktop shows <strong>Listening (Desktop Whisper)</strong> but never fills <strong>Heard</strong>, confirm the selected microphone is not muted and allow the first model download to finish.</li>
+					<li>If Chrome never fills <strong>Heard</strong>, allow microphone permission, check the operating system's default microphone, confirm internet access, and verify that Chrome Speech Recognition is available.</li>
                     <li>If text appears but no audio plays, add <code>&amp;tts</code> or <code>&amp;speak=1</code> to the overlay URL.</li>
                     <li>If AI requests time out, check that Social Stream is on, the session matches, Private Chat Bot is enabled, and the selected LLM provider is reachable.</li>
                     <li>If Local Gemma is selected, set the asset host to your own mirrored Gemma folder; SSN largefiles does not currently include Gemma assets.</li>
