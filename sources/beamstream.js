@@ -205,6 +205,26 @@ function toDataURL(url, callback) {
 			console.error(e);
 		}
 	}
+
+	var lastViewerCount = null;
+	function parseViewerCount(value){
+		var match = (value || "").replace(/,/g, "").trim().match(/([0-9]+(?:\.[0-9]+)?)\s*([KMB])?/i);
+		if (!match){return null;}
+		var multiplier = {K: 1000, M: 1000000, B: 1000000000}[(match[2] || "").toUpperCase()] || 1;
+		return Math.round(parseFloat(match[1]) * multiplier);
+	}
+
+	function checkViewers(){
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)){return;}
+		try {
+			var viewerNode = document.querySelector('[property="viewers"], [property="viewerCount"], [data-viewer-count], [aria-label*="viewer" i]');
+			if (!viewerNode){return;}
+			var count = parseViewerCount(viewerNode.getAttribute("content") || viewerNode.getAttribute("value") || viewerNode.getAttribute("data-viewer-count") || viewerNode.getAttribute("aria-label") || viewerNode.textContent);
+			if (count === null || count === lastViewerCount){return;}
+			lastViewerCount = count;
+			pushMessage({type: "beamstream", event: "viewer_update", meta: count});
+		} catch(e){}
+	}
 	
 	var settings = {};
 	// settings.textonlymode
@@ -216,6 +236,9 @@ function toDataURL(url, callback) {
 		response = response || {};
 		if ("settings" in response){
 			settings = response.settings;
+		}
+		if ("state" in response){
+			isExtensionOn = response.state;
 		}
 	});
 
@@ -291,5 +314,7 @@ function toDataURL(url, callback) {
 			}
 		}
 	},1000);
+	setInterval(checkViewers, 30000);
+	setTimeout(checkViewers, 5000);
 
 })();

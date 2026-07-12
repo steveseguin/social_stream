@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Social Stream Ninja with AI</title>
+    <meta name="description" content="Launch and control the Social Stream Ninja desktop app through its authenticated localhost API or an AI skill.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+</head>
+<body class="guides-page">
+    <section class="page-hero">
+        <div class="container">
+            <h1>Control Social Stream Ninja with AI</h1>
+            <p>Run the desktop app visibly or headlessly, then manage sources and supported settings through a private localhost API.</p>
+        </div>
+    </section>
+    <main class="container" style="max-width: 920px; padding: 32px 20px 64px;">
+        <section class="guide-card">
+            <h2>Start the app</h2>
+            <p>Choose a long random token. Headless mode keeps Electron windows hidden, but Chromium still runs so capture pages continue working.</p>
+            <pre><code>SocialStream.exe --ssapp-headless-control --ssapp-control-port=17777 --ssapp-control-token=LONG_RANDOM_TOKEN</code></pre>
+            <p>Use <code>--ssapp-control-api</code> instead to keep the normal app window visible.</p>
+        </section>
+        <section class="guide-card">
+            <h2>Connect an AI or script</h2>
+            <p>The server listens only on <code>127.0.0.1</code>. Send the token in <code>X-SSAPP-Token</code> and discover the available controls first.</p>
+            <pre><code>GET http://127.0.0.1:17777/api/v1/capabilities
+GET http://127.0.0.1:17777/api/v1/status</code></pre>
+            <p>Commands use <code>POST /api/v1/command</code>. For example, list sources or reload one:</p>
+            <pre><code>{"action":"getSources","value":{}}
+{"action":"restartSource","value":{"sourceId":"SOURCE_ID"}}</code></pre>
+        </section>
+        <section class="guide-card">
+            <h2>What can be controlled</h2>
+            <ul>
+                <li>List, inspect, add, update, and remove sources.</li>
+                <li>Start, stop, or reload one source or a filtered set.</li>
+                <li>Change source visibility, mute state, and connection mode.</li>
+                <li>Read and update the supported global settings returned by capability discovery.</li>
+                <li>Read app, session, source, and local-media server status.</li>
+                <li>Reload or gracefully shut down the app with explicit confirmation.</li>
+            </ul>
+        </section>
+        <section class="guide-card">
+            <h2>Install the AI skill</h2>
+            <p>Download the <a href="skills/control-social-stream/SKILL.md">Control Social Stream skill</a> with its <a href="skills/control-social-stream/references/control-api.md">API reference</a> and <a href="skills/control-social-stream/scripts/ssapp_control.py">Python client</a>. Add the skill folder to the skills directory used by your AI tool.</p>
+            <p>The Python client reads <code>SSAPP_CONTROL_TOKEN</code> and supports capability discovery, status, and arbitrary supported commands.</p>
+        </section>
+        <section class="guide-card">
+            <h2>Security</h2>
+            <p>Never expose the control port to the Internet, publish the token, or place it behind a public proxy. The public API does not provide arbitrary JavaScript execution, cookies, sign-in secrets, unrestricted settings, or raw filesystem access.</p>
+        </section>
+    </main>
+</body>
+</html>

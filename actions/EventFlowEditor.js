@@ -534,6 +534,7 @@ class EventFlowEditor {
                     <button type="button" id="chooseLocalMediaBtn">Relink</button>
                     <button type="button" id="previewLocalMediaBtn">Preview</button>
                     <button type="button" id="revealLocalMediaBtn">Reveal in Folder</button>
+                    <button type="button" id="changeLocalMediaPortBtn">Change Server Port</button>
                     <button type="button" id="useMediaUrlBtn">Use URL Instead</button>
                 </div>
             </div>
@@ -6237,6 +6238,28 @@ class EventFlowEditor {
                     }
                 } catch (error) {
                     this.showNotification(`Unable to copy the local Flow Actions URL: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const changeLocalMediaPortBtn = document.getElementById('changeLocalMediaPortBtn');
+        if (changeLocalMediaPortBtn) {
+            changeLocalMediaPortBtn.addEventListener('click', async () => {
+                if (!localMediaApi || typeof localMediaApi.setPort !== 'function') return;
+                try {
+                    const status = await localMediaApi.status();
+                    const rawPort = window.prompt('Local media server port (1024–65535):', String(status && status.port ? status.port : 3001));
+                    if (rawPort === null) return;
+                    const port = Number.parseInt(rawPort, 10);
+                    if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+                        this.showNotification('Choose a port from 1024 through 65535.', 'warning');
+                        return;
+                    }
+                    await localMediaApi.setPort(port);
+                    this.showNotification('Local media port updated. Copy the Local Flow Actions URL into OBS again.', 'success');
+                    this.refreshLocalMediaStatus(nodeData);
+                } catch (error) {
+                    this.showNotification(`Unable to change the local media port: ${error && error.message ? error.message : error}`, 'error');
                 }
             });
         }
