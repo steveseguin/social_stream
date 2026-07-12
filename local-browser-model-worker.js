@@ -7,7 +7,7 @@ import {
     RawImage,
     TextStreamer,
     InterruptableStoppingCriteria
-} from './thirdparty/transformersjs/transformers.min.js';
+} from './thirdparty/transformersjs/transformers.web.min.js';
 
 const DEFAULT_REMOTE_HOST = 'https://largefiles.socialstream.ninja/';
 const DEFAULT_REMOTE_PATH_TEMPLATE = '{model}/';
@@ -16,9 +16,15 @@ const DEFAULT_GENERATION = {
     temperature: 0.6,
     topP: 0.95,
     topK: 20,
+    repetitionPenalty: 1.0,
+    noRepeatNgramSize: 4,
     maxTime: 25
 };
-const MAX_TURNS = 12;
+const MAX_TURNS = 24;
+const MAX_HISTORY_CHARACTERS = 12000;
+const MAX_MEMORY_CHARACTERS = 3000;
+const MAX_CONVERSATION_FACTS = 32;
+const CONVERSATION_GUIDANCE = 'Treat this as one ongoing conversation. Use the recent conversation to answer the latest user message directly. Follow constraints in the latest request exactly. Do not greet the user again, restart the conversation, repeatedly ask what they want to discuss, or end every reply with a question. Never use a generic readiness response such as asking what they want to discuss. If the latest speech is short or unclear, briefly acknowledge its specific words instead of greeting or asking a generic question. Avoid repeating earlier replies. A camera image is passive background context: ignore it when it is unrelated, and only mention or describe it when the user asks about it or it is directly relevant.';
 const DEGENERATE_CHAR_RUN_LENGTH = 12;
 const DEGENERATE_TAIL_PATTERN_REPEATS = 6;
 const DEGENERATE_TAIL_PATTERN_MAX_UNIT = 4;
@@ -78,6 +84,8 @@ let initializedGenerationConfig = null;
 let initializedRequiresWebGPU = false;
 let initializingPromise = null;
 let conversation = [];
+let conversationMemory = '';
+let conversationFacts = [];
 let activeRequestId = null;
 
 function toErrorMessage(error) {
@@ -94,12 +102,11 @@ function postStatus(state, message = '') {
     });
 }
 
-function buildWasmPaths(modelClassName = '') {
-    const base = new URL('./thirdparty/transformersjs/ort/', self.location.href).href;
-    const useJsep = modelClassName === 'Qwen3_5ForCausalLM' || modelClassName === 'Qwen3_5ForConditionalGeneration';
+function buildWasmPaths() {
+    const base = new URL('./thirdparty/transformersjs/ort/', import.meta.url).href;
     return {
-        wasm: `${base}ort-wasm-simd-threaded.${useJsep ? 'jsep' : 'asyncify'}.wasm`,
-        mjs: `${base}ort-wasm-simd-threaded.${useJsep ? 'jsep' : 'asyncify'}.mjs`
+        wasm: `${base}ort-wasm-simd-threaded.asyncify.wasm`,
+        mjs: `${base}ort-wasm-simd-threaded.asyncify.mjs`
     };
 }
 
@@ -129,16 +136,15 @@ function resolveModelSource(modelId, requestedRemoteHost = '', remotePathTemplat
     };
 }
 
-function configureEnvironment(source, runtime = {}) {
+function configureEnvironment(source) {
     const extensionRuntime = isExtensionRuntime();
-    const modelClassName = String(runtime.modelClass || '').trim();
 
     env.allowRemoteModels = !source.isLocalModel;
     env.allowLocalModels = source.isLocalModel;
     env.localModelPath = './';
     env.remoteHost = source.remoteHost;
     env.remotePathTemplate = source.remotePathTemplate || DEFAULT_REMOTE_PATH_TEMPLATE;
-    env.useBrowserCache = !extensionRuntime;
+    env.useBrowserCache = typeof caches !== 'undefined';
     env.useFSCache = false;
     env.useWasmCache = !extensionRuntime;
 
@@ -149,7 +155,7 @@ function configureEnvironment(source, runtime = {}) {
         env.backends.onnx.wasm = {};
     }
 
-    env.backends.onnx.wasm.wasmPaths = buildWasmPaths(modelClassName);
+    env.backends.onnx.wasm.wasmPaths = buildWasmPaths();
     env.backends.onnx.wasm.proxy = false;
     env.backends.onnx.wasm.numThreads = 1;
 }
@@ -164,16 +170,89 @@ function normalizeMessageContent(content) {
     return [{ type: 'text', text: String(content || '') }];
 }
 
+function rememberExplicitConversationFact(prompt) {
+    const match = String(prompt || '').match(/^(?:please\s+)?remember(?:\s+exactly)?\s*:?\s*(?:that\s+)?(?:my\s+)?(.{2,80}?)\s+(?:is|=)\s+([^.!?\n]{1,160})/i);
+    if (!match) return null;
+
+    const key = match[1].replace(/\s+/g, ' ').trim().toLowerCase();
+    const value = match[2].replace(/\s+/g, ' ').trim();
+    if (!key || !value) return null;
+
+    const existingIndex = conversationFacts.findIndex(fact => fact.key === key);
+    const fact = { key, value };
+    if (existingIndex >= 0) {
+        conversationFacts.splice(existingIndex, 1);
+    }
+    conversationFacts.push(fact);
+    if (conversationFacts.length > MAX_CONVERSATION_FACTS) {
+        conversationFacts.splice(0, conversationFacts.length - MAX_CONVERSATION_FACTS);
+    }
+    return fact;
+}
+
+function findRequestedConversationFact(prompt) {
+    const text = String(prompt || '').toLowerCase();
+    if (!conversationFacts.length || !/(?:what|which|recall|remember|remind|tell me)/i.test(text)) return null;
+
+    const ignoredWords = new Set(['answer', 'did', 'earlier', 'exactly', 'i', 'is', 'just', 'me', 'my', 'only', 'please', 'recall', 'remember', 'remind', 'tell', 'the', 'was', 'what', 'which', 'with', 'you']);
+    let bestFact = null;
+    let bestScore = 0;
+    for (const fact of conversationFacts) {
+        const words = fact.key.match(/[a-z0-9]+/g) || [];
+        const meaningfulWords = words.filter(word => word.length > 2 && !ignoredWords.has(word));
+        const score = meaningfulWords.reduce((total, word) => total + (text.includes(word) ? 1 : 0), 0);
+        if (score > bestScore) {
+            bestFact = fact;
+            bestScore = score;
+        }
+    }
+    return bestScore > 0 ? bestFact : null;
+}
+
+function respondWithConversationFact(message, prompt, fact) {
+    const responseText = fact.value;
+    self.postMessage({
+        type: 'token',
+        requestId: message.requestId,
+        text: responseText
+    });
+    conversation.push({ role: 'user', content: prompt });
+    conversation.push({ role: 'assistant', content: responseText });
+    trimConversation();
+    return {
+        text: responseText,
+        finishReason: 'memory',
+        guardReason: ''
+    };
+}
+
 function trimConversation() {
     const maxEntries = MAX_TURNS * 2;
-    if (conversation.length > maxEntries) {
-        conversation = conversation.slice(conversation.length - maxEntries);
+    const conversationCharacters = () => conversation.reduce((total, entry) => total + String(entry.content || '').length, 0);
+    const compactedUserStatements = [];
+
+    while (conversation.length > maxEntries || conversationCharacters() > MAX_HISTORY_CHARACTERS) {
+        const removed = conversation.splice(0, Math.min(2, conversation.length));
+        const userEntry = removed.find(entry => entry.role === 'user');
+        const userText = String(userEntry?.content || '').replace(/\s+/g, ' ').trim();
+        if (userText) compactedUserStatements.push(userText.slice(0, 500));
+    }
+
+    if (compactedUserStatements.length) {
+        conversationMemory = [conversationMemory, ...compactedUserStatements.map(text => `- ${text}`)]
+            .filter(Boolean)
+            .join('\n')
+            .slice(-MAX_MEMORY_CHARACTERS);
     }
 }
 
 function buildMessages(systemPrompt, prompt, imageCount = 0, includeConversation = true) {
     const messages = [];
-    const systemText = (systemPrompt || '').trim();
+    const memoryText = conversationMemory ? `Older user statements retained from this conversation:\n${conversationMemory}` : '';
+    const factsText = conversationFacts.length
+        ? `Exact user facts retained from this conversation; copy their values verbatim when recalled:\n${conversationFacts.map(fact => `- ${fact.key}: ${fact.value}`).join('\n')}`
+        : '';
+    const systemText = [(systemPrompt || '').trim(), CONVERSATION_GUIDANCE, factsText, memoryText].filter(Boolean).join('\n\n');
 
     if (systemText) {
         messages.push({
@@ -191,10 +270,11 @@ function buildMessages(systemPrompt, prompt, imageCount = 0, includeConversation
         }
     }
 
-    const userContent = [{ type: 'text', text: prompt }];
+    const userContent = [];
     for (let index = 0; index < imageCount; index += 1) {
         userContent.push({ type: 'image' });
     }
+    userContent.push({ type: 'text', text: prompt });
 
     messages.push({
         role: 'user',
@@ -334,7 +414,7 @@ function inferModelClassName(message, runtime = {}) {
     if (providerKey === 'localgemma') {
         return 'Gemma4ForConditionalGeneration';
     }
-    if (providerKey === 'localqwen') {
+    if (providerKey.startsWith('localqwen')) {
         return 'Qwen3_5ForConditionalGeneration';
     }
 
@@ -423,7 +503,7 @@ async function initModel(message) {
         await disposeModel();
     }
 
-    configureEnvironment(source, runtime);
+    configureEnvironment(source);
 
     initializingPromise = (async () => {
         const resolvedDevice = await resolveRequestedDevice(requestedDevice, requiresWebGPU);
@@ -550,6 +630,21 @@ function shouldRetryGenerationOnWasm(error, message) {
     return errorMessage.includes('webgpu') || errorMessage.includes('no available backend found');
 }
 
+function isRecoverableWebGPUExecutionError(error) {
+    const partialText = String(error?.partialText || '').trim();
+    const errorMessage = toErrorMessage(error).toLowerCase();
+
+    if (partialText || initializedDevice !== 'webgpu') {
+        return false;
+    }
+
+    return errorMessage.includes('ortrun') ||
+        errorMessage.includes('invalid buffer') ||
+        errorMessage.includes('mapasync') ||
+        errorMessage.includes('device lost') ||
+        errorMessage.includes('webgpu');
+}
+
 async function runGenerationPass(message, prompt, stateless) {
     const rawImages = await prepareImages(message.images);
     const generationProfiles = message.runtime?.generation || initializedGenerationConfig || {};
@@ -600,7 +695,9 @@ async function runGenerationPass(message, prompt, stateless) {
             max_time: Number.isFinite(message.maxTime)
                 ? message.maxTime
                 : DEFAULT_GENERATION.maxTime,
-            do_sample: true,
+            do_sample: typeof message.doSample === 'boolean'
+                ? message.doSample
+                : (typeof generationDefaults.doSample === 'boolean' ? generationDefaults.doSample : true),
             temperature: Number.isFinite(message.temperature)
                 ? message.temperature
                 : (Number.isFinite(generationDefaults.temperature) ? generationDefaults.temperature : DEFAULT_GENERATION.temperature),
@@ -610,6 +707,12 @@ async function runGenerationPass(message, prompt, stateless) {
             top_k: Number.isFinite(message.topK)
                 ? message.topK
                 : (Number.isFinite(generationDefaults.topK) ? generationDefaults.topK : DEFAULT_GENERATION.topK),
+            repetition_penalty: Number.isFinite(message.repetitionPenalty)
+                ? message.repetitionPenalty
+                : (Number.isFinite(generationDefaults.repetitionPenalty) ? generationDefaults.repetitionPenalty : DEFAULT_GENERATION.repetitionPenalty),
+            no_repeat_ngram_size: Number.isFinite(message.noRepeatNgramSize)
+                ? message.noRepeatNgramSize
+                : (Number.isFinite(generationDefaults.noRepeatNgramSize) ? generationDefaults.noRepeatNgramSize : DEFAULT_GENERATION.noRepeatNgramSize),
             stopping_criteria: [interruptableStop],
             streamer
         });
@@ -655,10 +758,31 @@ async function generateReply(message) {
 
     activeRequestId = message.requestId;
     try {
+        if (!stateless) {
+            const rememberedFact = rememberExplicitConversationFact(prompt);
+            const requestedFact = rememberedFact ? null : findRequestedConversationFact(prompt);
+            if (requestedFact) {
+                return respondWithConversationFact(message, prompt, requestedFact);
+            }
+        }
         await initModel(message);
         try {
             return await runGenerationPass(message, prompt, stateless);
         } catch (error) {
+            if (!message.webgpuRecoveryAttempt && isRecoverableWebGPUExecutionError(error)) {
+                postStatus('loading', 'WebGPU execution failed, rebuilding the local model session');
+                await disposeModel({
+                    preserveConversation: !stateless,
+                    preserveActiveRequestId: true,
+                    suppressStatus: true
+                });
+                const retryMessage = {
+                    ...message,
+                    webgpuRecoveryAttempt: true
+                };
+                await initModel(retryMessage);
+                return await runGenerationPass(retryMessage, prompt, stateless);
+            }
             if (!shouldRetryGenerationOnWasm(error, message)) {
                 throw error;
             }
@@ -694,6 +818,8 @@ async function disposeModel(options = {}) {
     }
     if (!preserveConversation) {
         conversation = [];
+        conversationMemory = '';
+        conversationFacts = [];
     }
 
     if (model && typeof model.dispose === 'function') {
@@ -747,6 +873,8 @@ self.addEventListener('message', async (event) => {
             }
             case 'reset': {
                 conversation = [];
+                conversationMemory = '';
+                conversationFacts = [];
                 self.postMessage({
                     type: 'response',
                     requestId,

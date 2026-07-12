@@ -1073,7 +1073,7 @@ let tmpModelFallback = "";
 let localBrowserLLMClient = null;
 let localBrowserActiveRequestState = null;
 let localBrowserLLMQueue = Promise.resolve();
-const LOCAL_BROWSER_WORKER_VERSION = '3';
+const LOCAL_BROWSER_WORKER_VERSION = '13';
 
 function getLocalBrowserWorkerPath() {
     if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
@@ -1220,7 +1220,7 @@ function getLocalBrowserProviderSettings(providerKey, llmSettings, modelOverride
         ? (catalog.getLocalBrowserModelConfig(providerKey) || {})
         : {};
     const fallbackHost = defaultConfig.remoteHost || catalog?.DEFAULT_REMOTE_HOST || 'https://largefiles.socialstream.ninja/';
-    const modelSettingKey = providerKey === 'localqwen' ? 'localqwenmodel' : 'localgemmamodel';
+    const modelSettingKey = providerKey.startsWith('localqwen') ? 'localqwenmodel' : 'localgemmamodel';
     const remoteHost = catalog?.normalizeRemoteHost
         ? catalog.normalizeRemoteHost(llmSettings.localgemmahost?.textsetting || fallbackHost)
         : String(llmSettings.localgemmahost?.textsetting || fallbackHost || '').trim().replace(/\/?$/, '/');
@@ -1270,7 +1270,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			model = model || llmSettings.ollamamodel?.textsetting || tmpModelFallback || null;
 			break;
 		case "localgemma":
-		case "localqwen": {
+		case "localqwen":
+		case "localqwen2b": {
 			const localBrowserSettings = getLocalBrowserProviderSettings(provider, llmSettings, model);
 			model = localBrowserSettings.modelId;
 			endpoint = localBrowserSettings.remoteHost;
@@ -2219,7 +2220,7 @@ function getAiSettingFlag(settingKey) {
 }
 
 function shouldUseBinaryCensorPrompt(providerKey) {
-    return providerKey === "localqwen";
+    return providerKey.startsWith("localqwen");
 }
 
 function buildCensorContextEntry(data, cleanedText) {

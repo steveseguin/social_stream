@@ -1,5 +1,5 @@
 ﻿param(
-    [string]$TargetDir = "thirdparty/models/qwen3.5-0.8b-onnx"
+    [string]$TargetDir = "thirdparty/models/qwen3.5-0.8b-onnx-opt"
 )
 
 $ErrorActionPreference = "Stop"

@@ -1629,6 +1629,45 @@ function removeBlockedWord(word) {
     }
 }
 
+function setupFeaturedUserTags() {
+    const inputId = 'filterfeaturedusers';
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const container = input.closest('.textInputContainer');
+    if (!container || document.getElementById(inputId + 'List')) return;
+    container.classList.add('tag-input-container');
+    input.classList.add('hidden');
+    const list = document.createElement('div');
+    list.className = 'source-list-container';
+    list.id = inputId + 'List';
+    const controls = document.createElement('div');
+    controls.className = 'add-source-container';
+    controls.innerHTML = '<input type="text" id="newfilterfeaturedusersName" placeholder="Username"><select id="newfilterfeaturedusersSource"><option value="*" selected>All sources</option></select><button id="addfilterfeaturedusers">Add</button>';
+    container.parentNode.classList.add('isolate');
+    container.parentNode.insertBefore(list, container.nextSibling);
+    container.parentNode.insertBefore(controls, list.nextSibling);
+    const username = document.getElementById('newfilterfeaturedusersName');
+    const source = document.getElementById('newfilterfeaturedusersSource');
+    setupLazySourceSelect(source);
+    ensureLazySourcesLoaded(function() { appendSourceOptions(source); });
+    function addUser() {
+        const name = username.value.trim();
+        const type = source.value.trim();
+        if (!name) return;
+        addCommaTagValue(inputId, type && type !== '*' ? name + ':' + type : name);
+        username.value = '';
+        source.value = '*';
+    }
+    list.addEventListener('click', function(event) {
+        if (event.target.classList.contains('remove-source')) removeCommaTagValue(inputId, event.target.dataset.value);
+    });
+    document.getElementById('addfilterfeaturedusers').addEventListener('click', addUser);
+    username.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') { event.preventDefault(); addUser(); }
+    });
+    updateCommaTagList(inputId);
+}
+
 function setupBlockedWordsInput() {
     const list = document.getElementById('blockedwordsList');
     const addBtn = document.getElementById('addBlockedWord');
@@ -4320,7 +4359,7 @@ function handleAIProviderVisibility(provider) {
         document.getElementById("localgemmahost").classList.remove("hidden");
         document.getElementById("localbrowserhelp").classList.remove("hidden");
         document.getElementById("localgemmamodel").classList.remove("hidden");
-    } else if (provider == "localqwen") {
+    } else if (provider == "localqwen" || provider == "localqwen2b") {
         document.getElementById("localgemmahost").classList.remove("hidden");
         document.getElementById("localbrowserhelp").classList.remove("hidden");
         document.getElementById("localqwenmodel").classList.remove("hidden");
@@ -6339,6 +6378,7 @@ function handleOptionSetting(ele, sync) {
                 document.getElementById("localgemmamodel").classList.remove("hidden");
                 break;
             case 'localqwen':
+            case 'localqwen2b':
                 document.getElementById("localgemmahost").classList.remove("hidden");
                 document.getElementById("localbrowserhelp").classList.remove("hidden");
                 document.getElementById("localqwenmodel").classList.remove("hidden");
@@ -9812,6 +9852,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Initialize blocked words tag input
 	setupBlockedWordsInput();
 	setupViewerCountSourceTags();
+	setupFeaturedUserTags();
 	commaTagInputs.forEach((inputId) => {
 		setupCommaTagInput(inputId);
 	});

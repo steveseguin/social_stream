@@ -2596,7 +2596,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="autoshow" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="auto-select-new-messages-skipping-as-needed">🔖 Auto-select new messages (skipping as needed) </span>
+                                    <span data-translate="auto-select-new-messages-skipping-as-needed">🔖 Automatically feature new messages (requires the dock to remain open) </span>
                                 </div>
 								<div data-keywords="manual selection context menu alt control choose yourself">
                                     <label class="switch">
@@ -4818,6 +4818,14 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group single_message">
+                                <div title="Automatically feature incoming messages directly in this overlay. The dock does not need to be open.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="autoshow" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="auto-show-without-dock">🌠 Automatically feature new messages (no dock required) </span>
+                                </div>
+                                <div style="margin: 0 0 12px 50px; opacity: 0.8;">By default, this overlay only shows messages selected from the dock. Enable this option to feature incoming messages automatically.</div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="scale" />
@@ -4948,13 +4956,6 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="text-align-right">🗨️🧱 Force right-to-left text reading </span>
-                                </div>
-                                <div title="Using the dock is the recommended way to auto-show messages">
-                                    <label class="switch">
-                                        <input type="checkbox" data-param2="autoshow" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="auto-show-without-dock">🌠 Auto-show messages without needing the dock </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5745,9 +5746,9 @@ input:checked + .slider:before {
                                     <div style="display: inline-block; margin: 0 0 6px 6px; font-size: 0.9em;"><a href="https://socialstream.ninja/docs/event-reference.html" class="lightblue" target="_blank" rel="noopener">See the full list of event names</a></div>
                                 </div>
 
-                                <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                <div class="textInputContainer" style="display: inline-block; width: 400px;" title="This only filters which users may appear. It does not automatically feature their messages.">
                                     <input type="text" id="filterfeaturedusers" class="textInput" autocomplete="off" placeholder="eg: name,name2:source,bob:twitch,Name3:*" data-textparam2="filterfeaturedusers" />
-                                    <label for="filterfeaturedusers"><span data-translate="filter-featured-users">&gt;List of allowed featured users</span></label>
+                                    <label for="filterfeaturedusers"><span data-translate="filter-featured-users">&gt; Allowed featured users (filter only; does not auto-feature)</span></label>
                                 </div>
                             </div>
                         </div>
@@ -8695,7 +8696,8 @@ input:checked + .slider:before {
 									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
 										<option selected value="ollama">Ollama (Native Local API)</option>
 										<option value="localgemma">Local Gemma 4 (Browser, self-hosted)</option>
-										<option value="localqwen">Local Qwen 3.5 (Browser, self-hosted)</option>
+										<option value="localqwen">Local Qwen 3.5 0.8B (Browser, fast)</option>
+										<option value="localqwen2b">Local Qwen 3.5 2B (Browser, quality)</option>
 										<option value="chatgpt">ChatGPT API</option>
 										<option value="gemini">Gemini API</option>
 										<option value="deepseek">DeepSeek API</option>
@@ -8789,7 +8791,7 @@ input:checked + .slider:before {
 									<label for="localgemmahost">&gt; Self-hosted browser model asset origin</label>
 								</div>
 								<div id="localbrowserhelp" class="hidden" style="width: 95%; font-size: 0.9em; opacity: 0.85; margin: 4px 0 10px 0;">
-									Local Qwen can use the SSN largefiles host. Local Gemma requires your own mirrored Gemma folder; SSN largefiles does not currently include Gemma assets. Leave the model field blank to use the selected provider's default folder.
+									Qwen 0.8B (fast), Qwen 2B (quality), and Gemma use the SSN largefiles host by default. Models stay cached by the browser after their first download. Leave the model field blank to use the selected provider's default folder.
 								</div>
 								<div id="localgemmamodel" class="hidden">
 									<div class="textInputContainer" style="width: 95%;">

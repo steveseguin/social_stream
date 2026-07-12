@@ -8,7 +8,7 @@
     function createWorkerClient(options) {
         var settings = options || {};
         var workerPath = settings.workerPath || 'local-browser-model-worker.js';
-        var initTimeoutMs = Number.isFinite(settings.initTimeoutMs) ? settings.initTimeoutMs : 420000;
+        var initTimeoutMs = Number.isFinite(settings.initTimeoutMs) ? settings.initTimeoutMs : 1800000;
         var generateTimeoutMs = Number.isFinite(settings.generateTimeoutMs) ? settings.generateTimeoutMs : 300000;
         var disposeTimeoutMs = Number.isFinite(settings.disposeTimeoutMs) ? settings.disposeTimeoutMs : 120000;
         var onStatus = typeof settings.onStatus === 'function' ? settings.onStatus : function () {};

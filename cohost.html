@@ -499,13 +499,6 @@
 				background: #404eed;
 			}
 
-			.github-link {
-				position: fixed;
-				bottom: 20px;
-				left: 20px;
-				z-index: 100;
-			}
-
 			#clearHistoryButton {
 				background: #333;
 				border: 1px solid #444;
@@ -1454,11 +1447,6 @@
 				</div>
 			</div>
 		</div>
-		<a href="https://github.com/steveseguin/social_stream" class="github-link" target="_blank" rel="noopener noreferrer" title="View Source on GitHub">
-			<svg width="24" height="24" viewBox="0 0 24 24" fill="#e0e0e0">
-				<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-			</svg>
-		</a>
 		<div id="puppet-container"></div>
 		<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
 		<script type="text/javascript" src="tts.js"></script>
@@ -1777,7 +1765,7 @@
 			const GEMINI_AUDIO_TOKENS_PER_SECOND = 25;
 			const GEMINI_VIDEO_TOKENS_PER_SECOND = 258;
 			const LOCAL_BROWSER_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
-			const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js?v=3";
+			const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js?v=13";
 			const CUSTOM_OPENAI_DEFAULT_ENDPOINT = "http://127.0.0.1:1234/v1";
 			const CUSTOM_OPENAI_DEFAULT_MODEL = "";
 			const CONFIGURED_LLM_BRIDGE_CHUNK_SIZE = 12000;
@@ -1806,7 +1794,23 @@
 			function createLocalBrowserWorker() {
 				const workerUrl = resolveLocalBrowserWorkerUrl();
 				if (window.location.protocol === "file:") {
-					const bootstrapSource = `import ${JSON.stringify(workerUrl)};`;
+					const bootstrapSource = `const pendingMessages = [];
+					const queueMessage = event => pendingMessages.push(event.data);
+					self.addEventListener("message", queueMessage);
+					import(${JSON.stringify(workerUrl)}).then(() => {
+						self.removeEventListener("message", queueMessage);
+						for (const data of pendingMessages) {
+							self.dispatchEvent(new MessageEvent("message", { data }));
+						}
+					}).catch(error => {
+						self.removeEventListener("message", queueMessage);
+						self.postMessage({
+							type: "status",
+							state: "error",
+							message: error && (error.stack || error.message) ? String(error.stack || error.message) : String(error)
+						});
+						setTimeout(() => { throw error; });
+					});`;
 					const bootstrapUrl = URL.createObjectURL(
 						new Blob([bootstrapSource], {
 							type: "text/javascript"
@@ -1848,7 +1852,7 @@
 				const providerKey = String(providerConfig?.key || "")
 					.trim()
 					.toLowerCase();
-				if (providerKey === "localqwen") {
+				if (providerKey.startsWith("localqwen")) {
 					return ["config.json", "generation_config.json", "tokenizer.json", "tokenizer_config.json", "preprocessor_config.json", "onnx/embed_tokens_q4.onnx", "onnx/embed_tokens_q4.onnx_data", "onnx/decoder_model_merged_q4.onnx", "onnx/decoder_model_merged_q4.onnx_data", "onnx/vision_encoder_q4.onnx", "onnx/vision_encoder_q4.onnx_data"];
 				}
 				return ["config.json"];
@@ -1998,12 +2002,38 @@
 						defaultPrompt: "You are a concise, friendly social chat co-host. You can reference visible context when it helps, but do not narrate the scene unless asked."
 					};
 				}
+				if (providerKey === "localqwen2b") {
+					return {
+						key: "localqwen2b",
+						label: "Local Qwen 3.5 2B (Browser, quality)",
+						providerLabel: "Local Qwen 3.5 2B (Browser, quality)",
+						modelId: "qwen3.5-2b-onnx-opt",
+						localPath: "thirdparty/models/qwen3.5-2b-onnx-opt",
+						remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
+						runtime: {
+							modelClass: "Qwen3_5ForConditionalGeneration",
+							requiresWebGPU: true,
+							dtype: {
+								embed_tokens: "q4",
+								decoder_model_merged: "q4",
+								model: "q4",
+								vision_encoder: "q4"
+							},
+							generation: {
+								text: { doSample: false, repetitionPenalty: 1.0, noRepeatNgramSize: 4 },
+								vision: { doSample: false, repetitionPenalty: 1.0, noRepeatNgramSize: 4 }
+							}
+						},
+						supportsVision: true,
+						defaultPrompt: "You are a concise, friendly social chat co-host. Remember recent turns and respond directly without repeating yourself."
+					};
+				}
 				return {
 					key: "localqwen",
 					label: "Local Qwen 3.5 (Browser)",
 					providerLabel: "Local Qwen 3.5 (Browser)",
 					modelId: "qwen3.5-0.8b-onnx-opt",
-					localPath: "thirdparty/models/qwen3.5-0.8b-onnx",
+					localPath: "thirdparty/models/qwen3.5-0.8b-onnx-opt",
 					remoteHost: LOCAL_BROWSER_DEFAULT_REMOTE_HOST,
 					runtime: {
 						modelClass: "Qwen3_5ForConditionalGeneration",
@@ -2028,9 +2058,12 @@
 				return cloneLocalBrowserConfig(config || buildLocalBrowserFallbackConfig(providerKey));
 			}
 			const LOCAL_QWEN_CONFIG = getLocalBrowserProviderConfig("localqwen");
+			const LOCAL_QWEN_2B_CONFIG = getLocalBrowserProviderConfig("localqwen2b");
 			const LOCAL_GEMMA_CONFIG = getLocalBrowserProviderConfig("localgemma");
 			const LOCAL_QWEN_DEFAULT_MODEL = LOCAL_QWEN_CONFIG.modelId;
 			const LOCAL_QWEN_DEFAULT_REMOTE_HOST = LOCAL_QWEN_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
+			const LOCAL_QWEN_2B_DEFAULT_MODEL = LOCAL_QWEN_2B_CONFIG.modelId;
+			const LOCAL_QWEN_2B_DEFAULT_REMOTE_HOST = LOCAL_QWEN_2B_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
 			const LOCAL_GEMMA_DEFAULT_MODEL = LOCAL_GEMMA_CONFIG.modelId;
 			const LOCAL_GEMMA_DEFAULT_REMOTE_HOST = LOCAL_GEMMA_CONFIG.remoteHost || LOCAL_BROWSER_DEFAULT_REMOTE_HOST;
 			const LOCAL_BROWSER_BUNDLED_MODEL_CHECKS = new Map();
@@ -2839,8 +2872,14 @@
 					this.responseActive = false;
 					this.currentResponseText = "";
 					this.promptQueue = Promise.resolve();
+					this.pendingSpeechPrompt = "";
+					this.speechDrainPromise = null;
+					this.recentSpeechPrompts = new Map();
 					this.lastSpeechPromptText = "";
 					this.lastSpeechPromptAt = 0;
+					this.lastAttachedFrameSignature = null;
+					this.latestCapturedFrameSignature = null;
+					this.lastAttachedFrameAt = 0;
 					this.pendingGreeting = true;
 					this.lastActivityTime = Date.now();
 					this.reconnectAttempts = 0;
@@ -2975,12 +3014,34 @@
 						return Promise.resolve();
 					}
 					if (source === "speech") {
-						const now = Date.now();
-						if (prompt === this.lastSpeechPromptText && now - this.lastSpeechPromptAt < 2500) {
-							return Promise.resolve();
+						this.pendingSpeechPrompt = prompt;
+						if (this.speechDrainPromise) {
+							return this.speechDrainPromise;
 						}
-						this.lastSpeechPromptText = prompt;
-						this.lastSpeechPromptAt = now;
+						const drainSpeech = async () => {
+							while (this.pendingSpeechPrompt && !this.stopped && this.isConnected()) {
+								const speechPrompt = this.pendingSpeechPrompt;
+								this.pendingSpeechPrompt = "";
+								const now = Date.now();
+								const normalizedSpeechPrompt = speechPrompt.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+								for (const [recentPrompt, timestamp] of this.recentSpeechPrompts.entries()) {
+									if (now - timestamp > 60000) this.recentSpeechPrompts.delete(recentPrompt);
+								}
+								if (normalizedSpeechPrompt && this.recentSpeechPrompts.has(normalizedSpeechPrompt)) {
+									continue;
+								}
+								if (normalizedSpeechPrompt) this.recentSpeechPrompts.set(normalizedSpeechPrompt, now);
+								this.lastSpeechPromptText = speechPrompt;
+								this.lastSpeechPromptAt = now;
+								await this.sendPromptNow(speechPrompt, "speech");
+							}
+						};
+						const speechRun = this.promptQueue.then(drainSpeech, drainSpeech);
+						this.speechDrainPromise = speechRun.finally(() => {
+							this.speechDrainPromise = null;
+						});
+						this.promptQueue = this.speechDrainPromise.catch(() => {});
+						return this.speechDrainPromise;
 					}
 					const run = () => {
 						if (this.isNonManualPromptSource(source) && (this.stopped || !this.isConnected())) {
@@ -3570,7 +3631,7 @@
 								runtime: cloneLocalBrowserConfig(this.providerConfig.runtime || {}),
 								remoteHost: this.remoteHost
 							},
-							420000
+							1800000
 						);
 					} catch (error) {
 						const baseMessage = error?.message || String(error || "");
@@ -3648,7 +3709,8 @@
 					});
 					try {
 						const hasLiveVideo = this.providerConfig.supportsVision && document.getElementById("videoSource")?.value !== "none" && this.stream.getVideoTracks().some(track => track.readyState === "live" && track.enabled);
-						const imageDataUrl = hasLiveVideo ? this.captureFrameDataUrl() : "";
+						const capturedFrame = hasLiveVideo ? this.captureFrameDataUrl() : "";
+						const imageDataUrl = capturedFrame && this.shouldAttachCapturedFrame(prompt) ? capturedFrame : "";
 						const result = await this.requestWorker(
 							"generate",
 							{
@@ -3712,7 +3774,37 @@
 					const ctx = canvas.getContext("2d");
 					if (!ctx) return "";
 					ctx.drawImage(preview, 0, 0, width, height);
+					const signatureCanvas = document.createElement("canvas");
+					signatureCanvas.width = 16;
+					signatureCanvas.height = 9;
+					const signatureContext = signatureCanvas.getContext("2d", { willReadFrequently: true });
+					if (signatureContext) {
+						signatureContext.drawImage(preview, 0, 0, signatureCanvas.width, signatureCanvas.height);
+						const pixels = signatureContext.getImageData(0, 0, signatureCanvas.width, signatureCanvas.height).data;
+						this.latestCapturedFrameSignature = [];
+						for (let index = 0; index < pixels.length; index += 4) {
+							this.latestCapturedFrameSignature.push(Math.round((pixels[index] * 0.299 + pixels[index + 1] * 0.587 + pixels[index + 2] * 0.114) / 16));
+						}
+					}
 					return canvas.toDataURL("image/jpeg", 0.8);
+				}
+				shouldAttachCapturedFrame(prompt) {
+					const signature = this.latestCapturedFrameSignature;
+					const asksAboutVisuals = /\b(?:see|look|camera|image|picture|photo|screen|visual|show|wearing|holding|behind|foreground|background|read this)\b/i.test(prompt || "");
+					let changed = !this.lastAttachedFrameSignature || !signature || signature.length !== this.lastAttachedFrameSignature.length;
+					if (!changed && signature) {
+						let totalDifference = 0;
+						for (let index = 0; index < signature.length; index += 1) {
+							totalDifference += Math.abs(signature[index] - this.lastAttachedFrameSignature[index]);
+						}
+						changed = totalDifference / signature.length >= 0.75;
+					}
+					if (!asksAboutVisuals && !changed && Date.now() - this.lastAttachedFrameAt < 60000) {
+						return false;
+					}
+					this.lastAttachedFrameSignature = signature ? signature.slice() : null;
+					this.lastAttachedFrameAt = Date.now();
+					return true;
 				}
 				isConnected() {
 					return this.connected && !!this.worker;
@@ -3733,6 +3825,8 @@
 					this.finalizeResponse();
 					this.resetPendingRequests();
 					this.promptQueue = Promise.resolve();
+					this.pendingSpeechPrompt = "";
+					this.recentSpeechPrompts.clear();
 					this.lastSpeechPromptText = "";
 					this.lastSpeechPromptAt = 0;
 					this.resumeRecognitionAfterSpeech = false;
@@ -7965,7 +8059,7 @@
 			}
 
 			function isRealtimeProvider(providerName) {
-				return providerName === "chatgpt" || providerName === "xai" || providerName === "localqwen" || providerName === "localgemma" || providerName === "customopenai" || providerName === "configuredllm";
+				return providerName === "chatgpt" || providerName === "xai" || providerName === "localqwen" || providerName === "localqwen2b" || providerName === "localgemma" || providerName === "customopenai" || providerName === "configuredllm";
 			}
 
 			function createPublisherForProvider(providerName, activeStream, apiKey) {
@@ -7973,7 +8067,7 @@
 				if (providerName === "gemini") {
 					return new GoogleLivePublisher(activeStream, apiKey, effectiveModel);
 				}
-				if (providerName === "localqwen" || providerName === "localgemma") {
+				if (providerName === "localqwen" || providerName === "localqwen2b" || providerName === "localgemma") {
 					return new LocalBrowserPublisher(activeStream, providerName, effectiveModel);
 				}
 				if (providerName === "customopenai") {
@@ -8735,25 +8829,42 @@
 					errorDisplay.textContent = "";
 				}, 5000);
 			}
+			getDevices();
 			if (!navigator.mediaDevices?.getUserMedia) {
 				showError("getUserMedia not supported");
 			} else {
 				let deviceInitialized = false;
+				const probeMediaPermission = async (constraints, label, timeoutMs = 5000) => {
+					let timedOut = false;
+					const request = navigator.mediaDevices.getUserMedia(constraints).catch(err => {
+						console.log(`${label} permission check failed:`, err.message);
+						return null;
+					});
+					let timeoutId = null;
+					const timeout = new Promise(resolve => {
+						timeoutId = setTimeout(() => {
+							timedOut = true;
+							resolve(null);
+						}, timeoutMs);
+					});
+					const mediaStream = await Promise.race([request, timeout]);
+					if (!timedOut && timeoutId) clearTimeout(timeoutId);
+					if (timedOut) {
+						console.warn(`${label} permission check timed out; continuing device discovery.`);
+						request.then(lateStream => lateStream?.getTracks().forEach(track => track.stop()));
+					}
+					return mediaStream;
+				};
 				const initializeDevices = async () => {
 					if (deviceInitialized) return;
 					deviceInitialized = true;
 					try {
-						const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }).catch(err => {
-							console.log("Audio permission check failed:", err.message);
-							return null;
-						});
+						await getDevices();
+						const audioStream = await probeMediaPermission({ audio: true, video: false }, "Audio");
 						if (audioStream) {
 							audioStream.getTracks().forEach(track => track.stop());
 						}
-						const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true }).catch(err => {
-							console.log("Video permission check failed:", err.message);
-							return null;
-						});
+						const videoStream = await probeMediaPermission({ audio: false, video: true }, "Video");
 						if (videoStream) {
 							videoStream.getTracks().forEach(track => track.stop());
 						}
@@ -8981,6 +9092,7 @@
 			providerSelect.innerHTML = `
     <option value="gemini">Google Gemini Live</option>
     <option value="localqwen">Local Qwen 3.5 0.8B (Browser)</option>
+    <option value="localqwen2b">Local Qwen 3.5 2B (Browser, quality)</option>
     <option value="localgemma">Local Gemma 4 E2B (Browser, self-hosted)</option>
     <option value="configuredllm">SSN Configured LLM</option>
     <option value="customopenai">OpenAI-Compatible (Custom)</option>
@@ -9002,13 +9114,25 @@
 					supportsAudioResponse: true
 				},
 				localqwen: {
-					label: "Local Qwen 3.5 0.8B (Browser)",
+					label: "Local Qwen 3.5 0.8B (Browser, fast)",
 					apiKeyPlaceholder: "No API key required",
 					apiKeyInfoHtml: "Uses your self-hosted model files (default: largefiles.socialstream.ninja) and local browser runtime. No third-party AI API key is used.",
 					defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
 					modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_DEFAULT_MODEL} on ${LOCAL_QWEN_DEFAULT_REMOTE_HOST})`,
 					disableCaptureSelection: false,
-					deviceNotice: getCohostSpeechToTextNotice() + (COHOST_TTS_AVAILABLE ? " If Audio Response is selected, Local Qwen replies are spoken with the selected TTS engine." : "") + " Camera or screen capture can stay enabled for the stream, but Local Qwen stays text-only and does not inspect frames.",
+					deviceNotice: getCohostSpeechToTextNotice() + " If camera or screen capture is enabled, Local Qwen attaches a frame so the co-host can reference what it sees." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
+					requiresApiKey: false,
+					supportsAudioResponse: COHOST_TTS_AVAILABLE,
+					usesBrowserTts: true
+				},
+				localqwen2b: {
+					label: "Local Qwen 3.5 2B (Browser, quality)",
+					apiKeyPlaceholder: "No API key required",
+					apiKeyInfoHtml: "Uses the larger Qwen 2B multimodal model hosted on largefiles.socialstream.ninja for better conversation quality. The first download is about 1.77 GB; later loads use the browser cache.",
+					defaultModel: LOCAL_QWEN_2B_DEFAULT_MODEL,
+					modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_2B_DEFAULT_MODEL} on ${LOCAL_QWEN_2B_DEFAULT_REMOTE_HOST})`,
+					disableCaptureSelection: false,
+					deviceNotice: getCohostSpeechToTextNotice() + " If camera or screen capture is enabled, Local Qwen attaches a meaningfully changed frame so the co-host can reference what it sees." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
 					requiresApiKey: false,
 					supportsAudioResponse: COHOST_TTS_AVAILABLE,
 					usesBrowserTts: true
@@ -9016,9 +9140,9 @@
 				localgemma: {
 					label: "Local Gemma 4 E2B (Browser, self-hosted)",
 					apiKeyPlaceholder: "No API key required",
-					apiKeyInfoHtml: "Requires Gemma 4 model files mirrored on your own asset host; the SSN largefiles host does not currently include Gemma assets. No third-party AI API key is used.",
+					apiKeyInfoHtml: "Uses the Gemma 4 model files hosted on largefiles.socialstream.ninja by default, or an optional self-hosted mirror. No third-party AI API key is used.",
 					defaultModel: LOCAL_GEMMA_DEFAULT_MODEL,
-					modelPlaceholder: `Optional model id/path (default folder ${LOCAL_GEMMA_DEFAULT_MODEL}; set host to your Gemma mirror)`,
+					modelPlaceholder: `Optional model id/path (default ${LOCAL_GEMMA_DEFAULT_MODEL} on ${LOCAL_GEMMA_DEFAULT_REMOTE_HOST})`,
 					disableCaptureSelection: false,
 					deviceNotice: getCohostSpeechToTextNotice() + " If camera or screen capture is enabled, Local Gemma attaches a frame so the co-host can reference what it sees." + (COHOST_TTS_AVAILABLE ? " Audio responses use the selected TTS engine." : ""),
 					requiresApiKey: false,
@@ -9067,8 +9191,9 @@
 			};
 			const defaultPrompts = {
 				gemini: "You are a friendly social chat assistant that can see and hear the user. Avoid describing what you see unless asked.",
-				localqwen: "You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.",
-				localgemma: "You are a concise, friendly social chat co-host. You can use visible context when it helps, but do not narrate the scene unless asked.",
+				localqwen: "You are a concise, friendly social chat co-host in an ongoing conversation. Remember recent turns, respond directly to what the user just said, and do not repeatedly greet them or ask what they want to discuss. Treat the camera as background context unless the user asks about it.",
+				localqwen2b: "You are a concise, friendly social chat co-host in an ongoing conversation. Remember recent turns, respond directly to what the user just said, and do not repeat earlier answers or repeatedly ask what they want to discuss. Treat the camera as background context unless the user asks about it.",
+				localgemma: "You are a concise, friendly social chat co-host in an ongoing conversation. Remember recent turns, respond directly to what the user just said, and do not repeatedly greet them or ask what they want to discuss. Treat the camera as background context unless the user asks about it.",
 				customopenai: "You are a concise, friendly social chat co-host. Keep answers practical and conversational.",
 				configuredllm: "You are a concise, friendly social chat co-host. Use visible context when it is attached and helpful. Keep answers practical and conversational.",
 				chatgpt: "You are a friendly and helpful social chat assistant.",
@@ -9128,6 +9253,7 @@
 							outputState: responseTypeValue === "audio" ? "Native audio response" : "Text response only"
 						};
 					case "localqwen":
+					case "localqwen2b":
 						return {
 							inputMode: getCohostVoiceInputMode(false),
 							outputState: getBrowserTtsOutputState(responseTypeValue)

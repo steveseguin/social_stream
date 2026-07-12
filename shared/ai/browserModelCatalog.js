@@ -33,10 +33,10 @@
         },
         localqwen: {
             key: 'localqwen',
-            label: 'Local Qwen 3.5 (Browser)',
-            providerLabel: 'Local Qwen 3.5 (Browser)',
+            label: 'Local Qwen 3.5 0.8B (Browser, fast)',
+            providerLabel: 'Local Qwen 3.5 0.8B (Browser, fast)',
             modelId: 'qwen3.5-0.8b-onnx-opt',
-            localPath: 'thirdparty/models/qwen3.5-0.8b-onnx',
+            localPath: 'thirdparty/models/qwen3.5-0.8b-onnx-opt',
             remoteHost: DEFAULT_REMOTE_HOST,
             remotePathTemplate: '{model}/',
             runtime: {
@@ -57,6 +57,33 @@
             prefersCaptureSelection: true,
             requiresApiKey: false,
             defaultPrompt: 'You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.'
+        },
+        localqwen2b: {
+            key: 'localqwen2b',
+            label: 'Local Qwen 3.5 2B (Browser, quality)',
+            providerLabel: 'Local Qwen 3.5 2B (Browser, quality)',
+            modelId: 'qwen3.5-2b-onnx-opt',
+            localPath: 'thirdparty/models/qwen3.5-2b-onnx-opt',
+            remoteHost: DEFAULT_REMOTE_HOST,
+            remotePathTemplate: '{model}/',
+            runtime: {
+                modelClass: 'Qwen3_5ForConditionalGeneration',
+                requiresWebGPU: true,
+                dtype: {
+                    embed_tokens: 'q4',
+                    decoder_model_merged: 'q4',
+                    model: 'q4',
+                    vision_encoder: 'q4'
+                },
+                generation: {
+                    text: { doSample: false, repetitionPenalty: 1.0, noRepeatNgramSize: 4 },
+                    vision: { doSample: false, repetitionPenalty: 1.0, noRepeatNgramSize: 4 }
+                }
+            },
+            supportsVision: true,
+            prefersCaptureSelection: true,
+            requiresApiKey: false,
+            defaultPrompt: 'You are a concise, friendly social chat co-host. Remember recent turns and respond directly without repeating yourself.'
         }
     };
 
