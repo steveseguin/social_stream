@@ -477,15 +477,18 @@ function toDataURL(url, callback) {
 					return;
 				}
 				if (typeof request === "object"){
+					var handled = false;
 					if ("state" in request){
 						isExtensionOn = request.state;
-						sendResponse(true);
-						return;
+						handled = true;
 					}
 					if ("settings" in request){
 						settings = request.settings;
 						startViewerCountInterval();
 						checkViewers();
+						handled = true;
+					}
+					if (handled){
 						sendResponse(true);
 						return;
 					}

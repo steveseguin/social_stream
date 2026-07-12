@@ -22,12 +22,22 @@ assert.equal(router.isSsappActionSupported("startSource", unavailable), false);
 
 const available = router.buildCapabilities({
 	runtime: "electron",
-	ssapp: { available: true, runtime: "electron" }
+	ssapp: {
+		available: true,
+		runtime: "electron",
+		version: "0.4.2",
+		sourceControls: { list: true, get: true, add: true, remove: true, update: true, start: true, stop: true, restart: true },
+		settings: { get: true, update: true }
+	}
 });
 
 assert.equal(available.ssapp.available, true);
+assert.equal(available.ssapp.version, "0.4.2");
+assert.equal(available.ssapp.bridgeVersion, 1);
 assert.equal(router.isSsappActionSupported("startSource", available), true);
 assert.equal(router.isSsappActionSupported("ssapp.stopSource", available), true);
+assert.equal(router.isSsappActionSupported("addSource", available), true);
+assert.equal(router.isSsappActionSupported("updateSettings", available), true);
 assert.equal(router.isSsappActionSupported("unknownSourceAction", available), false);
 
 const partial = router.buildCapabilities({

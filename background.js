@@ -4495,10 +4495,6 @@ async function processIncomingMessage(message, sender = null) {
 			return;
 		}
 
-		if (message.event === "viewer_update" && isViewerCountSourceHidden(message.type)) {
-			return;
-		}
-
 		if (settings.filtercommands && message.chatmessage && message.chatmessage.startsWith("!")) {
 			return;
 		}
@@ -5147,7 +5143,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				pushSettingChange();
 			}
 			if (request.setting == "hideViewerCountSources") {
-				pruneHiddenViewerCountMetaStore();
 				publishViewerCountsFromMetaStore();
 			}
 
@@ -6714,17 +6709,6 @@ function publishViewerCountsFromMetaStore() {
 	sendDataP2P(viewerUpdateEvent);
 	sendTargetP2P(viewerUpdateEvent, "meta");
 	sendTargetP2P(viewerUpdateEvent, "aioverlay");
-}
-
-function pruneHiddenViewerCountMetaStore() {
-	for (const [tid, metaEntry] of metaDataStore) {
-		if (metaEntry.viewer_update && isViewerCountSourceHidden(metaEntry.viewer_update.type)) {
-			delete metaEntry.viewer_update;
-		}
-		if (!Object.keys(metaEntry).length) {
-			metaDataStore.delete(tid);
-		}
-	}
 }
 
 async function sendToDestinations(message) {
@@ -9304,6 +9288,14 @@ async function getStreamDeckCapabilities() {
 			});
 			if (response && response.ok === true && response.payload && response.payload.available === true) {
 				ssapp = response.payload;
+				if (!ssapp.version && typeof ipcRenderer.sendSync === "function") {
+					try {
+						ssapp.version = ipcRenderer.sendSync("getVersion") || null;
+					} catch (error) {}
+				}
+				if (typeof ssapp.bridgeVersion !== "number") {
+					ssapp.bridgeVersion = 1;
+				}
 			}
 		} catch (error) {
 			console.warn("[StreamDeck] SSApp capability provider unavailable", error?.message || error);

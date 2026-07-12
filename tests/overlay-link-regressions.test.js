@@ -49,6 +49,34 @@ function read(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
+function extractFunction(source, name) {
+  const start = source.indexOf(`function ${name}(`);
+  assert.ok(start >= 0, `${name} was not found`);
+  const bodyStart = source.indexOf("{", start);
+  let depth = 0;
+  let quote = "";
+  let escaped = false;
+  for (let index = bodyStart; index < source.length; index += 1) {
+    const character = source[index];
+    if (quote) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === quote) quote = "";
+      continue;
+    }
+    if (character === '"' || character === "'" || character === "`") {
+      quote = character;
+      continue;
+    }
+    if (character === "{") depth += 1;
+    if (character === "}") {
+      depth -= 1;
+      if (depth === 0) return source.slice(start, index + 1);
+    }
+  }
+  throw new Error(`${name} did not have a complete body`);
+}
+
 function passwordResolver(source, relativePath) {
   const declarations = Array.from(source.matchAll(/\b(?:var|const)\s+password\s*=\s*([^;]+);/g));
   const declaration = declarations.find((match) => match[1].includes("urlParams.get"));
@@ -124,5 +152,38 @@ for (const relativePath of syntaxPages) {
     assert.doesNotThrow(() => Function(script[1]), `${relativePath} inline script ${index + 1} must parse`);
   });
 }
+
+const popupSource = read("popup.js");
+const normalizeGeneratedLinkBase = Function(`${extractFunction(popupSource, "normalizeGeneratedLinkBase")}; return normalizeGeneratedLinkBase;`)();
+assert.strictEqual(normalizeGeneratedLinkBase("https://socialstream.ninja/"), "https://socialstream.ninja/");
+assert.strictEqual(normalizeGeneratedLinkBase("https://beta.socialstream.ninja/beta/ignored"), "https://beta.socialstream.ninja/");
+assert.strictEqual(normalizeGeneratedLinkBase("file:///Applications/SSApp/featured.html"), "");
+assert.strictEqual(normalizeGeneratedLinkBase("https://example.com/featured.html"), "");
+
+const notFoundSource = read("404.html");
+const redirectScriptMatch = notFoundSource.match(/<script>([\s\S]*?)<\/script>/i);
+assert.ok(redirectScriptMatch, "404.html fallback redirect script was not found");
+function runLegacyRedirect(pathname, search = "", hash = "") {
+  let destination = "";
+  Function("window", redirectScriptMatch[1])({
+    location: {
+      pathname,
+      search,
+      hash,
+      replace(value) { destination = value; }
+    }
+  });
+  return destination;
+}
+assert.strictEqual(
+  runLegacyRedirect("/resources/social_stream_fallback/main/featured.html", "?session=test&server", "#view"),
+  "/featured.html?session=test&server#view"
+);
+assert.strictEqual(
+  runLegacyRedirect("/resources/social_stream_fallback/beta/themes/compact-clean.html", "?session=test"),
+  "/beta/themes/compact-clean.html?session=test"
+);
+assert.strictEqual(runLegacyRedirect("/resources/social_stream_fallback/main/../featured.html", "?session=test"), "");
+assert.strictEqual(runLegacyRedirect("/unrelated/missing.html", "?session=test"), "");
 
 console.log("Overlay link regression tests passed");

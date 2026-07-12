@@ -12,6 +12,9 @@
 	const SSAPP_ACTIONS = {
 		getSources: ["sourceControls", "list"],
 		getSource: ["sourceControls", "get"],
+		addSource: ["sourceControls", "add"],
+		updateSource: ["sourceControls", "update"],
+		removeSource: ["sourceControls", "remove"],
 		startSource: ["sourceControls", "start"],
 		stopSource: ["sourceControls", "stop"],
 		restartSource: ["sourceControls", "restart"],
@@ -22,12 +25,16 @@
 		toggleSourceVisibility: ["visibility", "toggle"],
 		setSourceMute: ["mute", "set"],
 		toggleSourceMute: ["mute", "toggle"],
-		setSourceConnectionMode: ["connectionMode", "set"]
+		setSourceConnectionMode: ["connectionMode", "set"],
+		getSettings: ["settings", "get"],
+		updateSettings: ["settings", "update"]
 	};
 
 	const SSN_ACTIONS = {
 		nextInQueue: true,
 		clearOverlay: true,
+		clear: true,
+		clearAll: true,
 		getQueueSize: true,
 		sendChat: true,
 		sendEncodedChat: true,
@@ -47,8 +54,23 @@
 		setwaitlistmessage: true,
 		downloadwaitlist: true,
 		selectwinner: true,
+		starttimer: true,
+		pausetimer: true,
+		toggletimer: true,
+		resettimer: true,
+		timeradd: true,
+		timersubtract: true,
+		settimer: true,
+		gettimerstate: true,
+		loadpoll: true,
+		setpollsettings: true,
+		getpollpresets: true,
+		createpoll: true,
 		resetpoll: true,
-		closepoll: true
+		closepoll: true,
+		startmap: true,
+		pausemap: true,
+		resetmap: true
 	};
 
 	const SOURCE_STATUS_VALUES = ["inactive", "activating", "active", "error"];
@@ -82,7 +104,9 @@
 				visibility: false,
 				mute: false,
 				connectionMode: false,
-				sourceStatus: false
+				sourceStatus: false,
+				settings: false,
+				platforms: {}
 			};
 		}
 
@@ -90,6 +114,9 @@
 			available: true,
 			runtime: options.runtime || "electron",
 			version: options.version || null,
+			apiVersion: options.apiVersion || null,
+			bridgeVersion: typeof options.bridgeVersion === "number" ? options.bridgeVersion : 1,
+			appControls: capabilityValue(options, "appControls", false),
 			sourceControls: capabilityValue(options, "sourceControls", {
 				list: true,
 				get: true,
@@ -121,7 +148,9 @@
 			sourceStatus: capabilityValue(options, "sourceStatus", {
 				get: true,
 				values: SOURCE_STATUS_VALUES.slice()
-			})
+			}),
+			settings: capabilityValue(options, "settings", false),
+			platforms: capabilityValue(options, "platforms", {})
 		};
 	}
 

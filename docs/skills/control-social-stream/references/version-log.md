@@ -1,0 +1,22 @@
+# SSApp Control Compatibility and Version Log
+
+Always call `get_capabilities` or `GET /api/v1/capabilities`. Its command list is authoritative, including when development builds share an application version.
+
+| Control API | Minimum SSApp | Available surface |
+| --- | --- | --- |
+| 1.1.2 / MCP 1.0.1 | 0.4.2 | Keeps username-generated URLs consistent during full-form source updates and correctly ignores MCP JSON-RPC notifications |
+| 1.1.1 | 0.4.2 | Rejects connection-mode updates that are unsupported by the selected source platform |
+| 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
+| 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
+
+## Skill revisions
+
+### 2026-07-12
+
+- Fixed full-form username/URL updates and MCP notification handling (API 1.1.2).
+- Added platform-aware validation to source connection-mode update commands (API 1.1.1).
+- Added MCP setup and runtime capability/version gating.
+- Replaced command-line token guidance with stored, environment, or token-file credentials.
+- Documented operations, authenticated status events, confirmation requirements, and API 1.1.0.
+
+When an endpoint, command, schema, MCP tool, or compatibility requirement changes, update this log and the rest of this skill in the same change.

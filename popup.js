@@ -5296,6 +5296,18 @@ function scrollToSetting(targetSection, targetSetting) {
 
 var baseURL = "https://socialstream.ninja/";
 
+function normalizeGeneratedLinkBase(value) {
+	if (!value || typeof value !== "string") return "";
+	try {
+		const parsed = new URL(value);
+		const allowedHosts = new Set(["socialstream.ninja", "beta.socialstream.ninja"]);
+		if (parsed.protocol !== "https:" || !allowedHosts.has(parsed.hostname.toLowerCase())) return "";
+		return `${parsed.protocol}//${parsed.host}/`;
+	} catch (e) {
+		return "";
+	}
+}
+
 // First check if we're on a beta URL (either subdomain or path)
 if (location.href.includes("/beta/") || location.hostname === "beta.socialstream.ninja"){
     Beta = true;
@@ -5315,6 +5327,11 @@ if (sourcemode){
 } else if (location.protocol !== "chrome-extension:" && !Beta) {
     // Only set baseURL from location if we're not already in beta mode
     baseURL = `${location.protocol}//${location.host}/`;
+}
+
+const generatedLinkBaseOverride = normalizeGeneratedLinkBase(urlParams.get("generatedlinkbase"));
+if (generatedLinkBaseOverride) {
+	baseURL = generatedLinkBaseOverride;
 }
 
 

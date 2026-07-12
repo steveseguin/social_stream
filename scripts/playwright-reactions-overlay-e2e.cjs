@@ -395,6 +395,39 @@ async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent, expect
       return !!(link && link.href && link.href.indexOf('reactions.html?session=testsession') !== -1);
     });
 
+    const fallbackPopupPage = await context.newPage();
+    await addPopupInitScript(fallbackPopupPage, `http://${HOST}:${PORT}`);
+    const localSourceBase = 'file:///Applications/Social%20Stream%20Ninja.app/Contents/Resources/social_stream_fallback/main/';
+    await fallbackPopupPage.goto(
+      `http://${HOST}:${PORT}/popup.html?sourcemode=${encodeURIComponent(localSourceBase)}&generatedlinkbase=${encodeURIComponent('https://socialstream.ninja/')}`,
+      { waitUntil: 'domcontentloaded' }
+    );
+    await fallbackPopupPage.waitForFunction(() => {
+      const link = document.getElementById('overlaylink');
+      return !!(link && link.href && link.href.includes('featured.html?session=testsession'));
+    });
+    const fallbackFeaturedUrl = new URL(await fallbackPopupPage.getAttribute('#overlaylink', 'href'));
+    const fallbackDockUrl = new URL(await fallbackPopupPage.getAttribute('#docklink', 'href'));
+    assert(fallbackFeaturedUrl.origin === 'https://socialstream.ninja', 'Packaged popup fallback exposed a local featured link.');
+    assert(fallbackDockUrl.origin === 'https://socialstream.ninja', 'Packaged popup fallback exposed a local dock link.');
+    assert(fallbackFeaturedUrl.searchParams.get('session') === 'testsession', 'Hosted fallback link lost its session ID.');
+    assert(fallbackFeaturedUrl.searchParams.get('password') === 'pw', 'Hosted fallback link lost its password.');
+    await fallbackPopupPage.close();
+
+    const developerPopupPage = await context.newPage();
+    await addPopupInitScript(developerPopupPage, `http://${HOST}:${PORT}`);
+    await developerPopupPage.goto(
+      `http://${HOST}:${PORT}/popup.html?sourcemode=${encodeURIComponent(localSourceBase)}`,
+      { waitUntil: 'domcontentloaded' }
+    );
+    await developerPopupPage.waitForFunction(() => {
+      const link = document.getElementById('overlaylink');
+      return !!(link && link.href && link.href.includes('featured.html?session=testsession'));
+    });
+    const developerFeaturedUrl = new URL(await developerPopupPage.getAttribute('#overlaylink', 'href'));
+    assert(developerFeaturedUrl.protocol === 'file:', 'Explicit developer sourcemode no longer generates local links.');
+    await developerPopupPage.close();
+
     await setCheckboxValue(popupPage, "[data-param27='align']", true);
     await setControlValue(popupPage, '#reactions-align-select', 'right', ['change']);
     await setCheckboxValue(popupPage, "[data-param27='layout']", true);

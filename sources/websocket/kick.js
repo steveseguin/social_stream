@@ -2722,7 +2722,7 @@ function updateAuthStatus() {
     const waitingForRefresh = !authed
         && !!state.tokens?.access_token
         && !!state.tokens?.refresh_token
-        && (isTokenExpired() || !!state.refreshPromise);
+        && !!state.refreshPromise;
     const identity = authed ? resolveAuthIdentity() : null;
     if (authed && identity) {
         const safeDisplay = escapeHtml(identity.displayName || identity.username || '');
@@ -4364,10 +4364,12 @@ async function refreshAccessToken() {
         updateAuthStatus();
         log('Access token refreshed.');
     })();
+    updateAuthStatus();
     try {
         return await state.refreshPromise;
     } finally {
         state.refreshPromise = null;
+        updateAuthStatus();
     }
 }
 
