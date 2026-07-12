@@ -498,6 +498,88 @@ class EventFlowEditor {
             .replace(/'/g, '&#039;');
     }
 
+    getLocalMediaApi() {
+        if (window.ninjafy && window.ninjafy.localMedia) return window.ninjafy.localMedia;
+        if (window.ssappLocalMedia) return window.ssappLocalMedia;
+        return null;
+    }
+
+    renderLocalMediaSource(node, options) {
+        const config = node.config || {};
+        const isLocal = config.sourceType === 'local' && !!config.localAssetId;
+        const label = options.label;
+        const inputId = options.inputId;
+        const configKey = options.configKey;
+        const uploadButtonId = options.uploadButtonId;
+        const localName = this.escapeHtml(config.localAssetName || 'Selected local file');
+        const localType = this.escapeHtml(config.localMediaType || options.mediaType || 'media');
+
+        if (!isLocal) {
+            return `<div class="property-group">
+                <label class="property-label">${label}</label>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <input type="url" class="property-input" id="${inputId}" value="${this.escapeHtml(config[configKey] || '')}" style="flex: 1; min-width: 160px;">
+                    <button type="button" id="${uploadButtonId}" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
+                    <button type="button" id="chooseLocalMediaBtn" style="padding: 5px 10px; border: 1px solid #667eea; border-radius: 4px; cursor: pointer;">Choose Local File</button>
+                </div>
+            </div>`;
+        }
+
+        return `<div class="property-group">
+            <label class="property-label">${label}</label>
+            <div style="border: 1px solid rgba(102,126,234,0.55); border-radius: 6px; padding: 9px;">
+                <div><strong>${localName}</strong> <span style="opacity: 0.7;">(${localType})</span></div>
+                <div id="localMediaStatus" class="property-help" style="margin: 5px 0;">Checking local file…</div>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button type="button" id="chooseLocalMediaBtn">Relink</button>
+                    <button type="button" id="previewLocalMediaBtn">Preview</button>
+                    <button type="button" id="revealLocalMediaBtn">Reveal in Folder</button>
+                    <button type="button" id="useMediaUrlBtn">Use URL Instead</button>
+                </div>
+            </div>
+            <button type="button" id="copyLocalFlowActionsUrlBtn" style="margin-top: 7px; width: 100%;">Copy Local Flow Actions URL for OBS</button>
+        </div>`;
+    }
+
+    getCurrentFlowActionsSearch() {
+        const link = document.getElementById('flowactionslink');
+        try {
+            if (link && link.href) return new URL(link.href, window.location.href).search;
+        } catch (_) { }
+        return window.location.search || '';
+    }
+
+    getCurrentSessionId() {
+        const input = document.getElementById('sessionid');
+        if (input && input.value) return input.value;
+        try {
+            if (typeof lastResponse !== 'undefined' && lastResponse && lastResponse.streamID) return lastResponse.streamID;
+        } catch (_) { }
+        return '';
+    }
+
+    async refreshLocalMediaStatus(node) {
+        const statusElement = document.getElementById('localMediaStatus');
+        if (!statusElement || !node.config || !node.config.localAssetId) return;
+        const api = this.getLocalMediaApi();
+        if (!api) {
+            statusElement.textContent = 'Local files require the Social Stream standalone app or a future Media Bridge.';
+            return;
+        }
+        try {
+            const [asset, server] = await Promise.all([api.get(node.config.localAssetId), api.status()]);
+            if (!asset || asset.status === 'missing') {
+                statusElement.textContent = 'File missing — use Relink to choose its new location.';
+            } else if (!server || !server.running) {
+                statusElement.textContent = `File available; local server is offline${server && server.lastError ? `: ${server.lastError}` : '.'}`;
+            } else {
+                statusElement.textContent = `Available — local server running on port ${server.port}.`;
+            }
+        } catch (error) {
+            statusElement.textContent = `Unable to check local media: ${error && error.message ? error.message : error}`;
+        }
+    }
+
     // Helper to render source filter for event triggers
     renderEventSourceFilter(node, eventTypes) {
         const sources = [
@@ -2054,11 +2136,17 @@ class EventFlowEditor {
                 }
                 // Media & Layer actions
                 case 'playTenorGiphy': {
+					if (node.config.sourceType === 'local' && node.config.localAssetName) {
+						return `${node.config.localAssetName} (${node.config.duration ?? 10000}ms)`;
+					}
                     const url = node.config.mediaUrl || '';
                     const duration = node.config.duration ?? 10000;
                     const shortUrl = url.length > 25 ? url.substring(0, 25) + '...' : url;
                     return `${shortUrl} (${duration}ms)`;
                 }
+				case 'playAudioClip':
+					if (node.config.sourceType === 'local' && node.config.localAssetName) return node.config.localAssetName;
+					return node.config.audioUrl || 'No audio selected';
                 case 'showAvatar': {
                     const duration = node.config.duration || 5000;
                     const pos = `${node.config.x ?? 5}%,${node.config.y ?? 5}%`;
@@ -4433,19 +4521,18 @@ class EventFlowEditor {
 				<p class="property-help">💡 <strong>Simple counter:</strong> Counts up by 1 each time a message passes. Triggers at your target number. Example: "Every 5th !hello"</p>`;
 				break;
 				case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
-					html += `<div class="property-group">
-							 <label class="property-label">Media URL (TENOR/GIPHY)</label>
-							 <div style="display: flex; gap: 5px;">
-								 <input type="url" class="property-input" id="prop-mediaUrl" value="${node.config.mediaUrl || ''}" style="flex: 1;">
-								 <button type="button" id="uploadMediaBtn" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
-							 </div>
-							 <div class="property-help">Direct URL to the GIF or video. For GIPHY, use the embed link or direct GIF link.</div>
-						 </div>
+					html += `${this.renderLocalMediaSource(node, {
+						label: 'Media URL or Local File',
+						inputId: 'prop-mediaUrl',
+						configKey: 'mediaUrl',
+						uploadButtonId: 'uploadMediaBtn'
+					})}
 						 <div class="property-group">
 							 <label class="property-label">Media Type</label>
 							 <select class="property-input" id="prop-mediaType">
 								 <option value="iframe" ${node.config.mediaType === 'iframe' ? 'selected' : ''}>Video/Embed (iframe)</option>
 								 <option value="image" ${node.config.mediaType === 'image' ? 'selected' : ''}>Image (direct GIF/image link)</option>
+								 <option value="video" ${node.config.mediaType === 'video' ? 'selected' : ''}>Local/direct video</option>
 							 </select>
 						 </div>
 						 <div class="property-group">
@@ -5364,13 +5451,13 @@ class EventFlowEditor {
 				break;
 				
 			case 'playAudioClip':
-				html += `<div class="property-group">
-							 <label class="property-label">Audio File URL</label>
-							 <div style="display: flex; gap: 5px;">
-								 <input type="url" class="property-input" id="prop-audioUrl" value="${node.config.audioUrl || ''}" style="flex: 1;">
-								 <button type="button" id="uploadAudioBtn" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
-							 </div>
-						 </div>
+				html += `${this.renderLocalMediaSource(node, {
+						label: 'Audio URL or Local File',
+						inputId: 'prop-audioUrl',
+						configKey: 'audioUrl',
+						uploadButtonId: 'uploadAudioBtn',
+						mediaType: 'audio'
+					})}
 						 <div class="property-group">
 							<label class="property-label">Volume (0.0 to 1.0)</label>
 							<input type="number" class="property-input" id="prop-volume" value="${node.config.volume ?? 1.0}" min="0" max="1" step="0.1">
@@ -6060,6 +6147,101 @@ class EventFlowEditor {
                 openNodeMediaUpload('uploadAudio', 'prop-audioUrl', 'audioUrl');
             });
         }
+
+        const localMediaApi = this.getLocalMediaApi();
+        const chooseLocalMediaBtn = document.getElementById('chooseLocalMediaBtn');
+        if (chooseLocalMediaBtn) {
+            chooseLocalMediaBtn.addEventListener('click', async () => {
+                if (!localMediaApi) {
+                    this.showNotification('Local files require the Social Stream standalone app or Media Bridge.', 'warning');
+                    return;
+                }
+                const isAudio = nodeData.actionType === 'playAudioClip';
+                try {
+                    const result = await localMediaApi.select({
+                        assetId: nodeData.config.sourceType === 'local' ? nodeData.config.localAssetId : '',
+                        mediaType: isAudio ? 'audio' : '',
+                        allowedMediaTypes: isAudio ? ['audio'] : ['image', 'video']
+                    });
+                    if (!result || !result.success || !result.asset) return;
+                    nodeData.config.sourceType = 'local';
+                    nodeData.config.localAssetId = result.asset.id;
+                    nodeData.config.localAssetName = result.asset.displayName || result.asset.fileName;
+                    nodeData.config.localMediaType = result.asset.mediaType;
+                    if (!isAudio) nodeData.config.mediaType = result.asset.mediaType;
+                    this.markUnsavedChanges(true);
+                    this.showNodeProperties(nodeData);
+                    this.renderNodeOnCanvas(nodeData.id);
+                } catch (error) {
+                    this.showNotification(`Unable to select local media: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const useMediaUrlBtn = document.getElementById('useMediaUrlBtn');
+        if (useMediaUrlBtn) {
+            useMediaUrlBtn.addEventListener('click', () => {
+                nodeData.config.sourceType = 'url';
+                delete nodeData.config.localAssetId;
+                delete nodeData.config.localAssetName;
+                delete nodeData.config.localMediaType;
+                this.markUnsavedChanges(true);
+                this.showNodeProperties(nodeData);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        const previewLocalMediaBtn = document.getElementById('previewLocalMediaBtn');
+        if (previewLocalMediaBtn) {
+            previewLocalMediaBtn.addEventListener('click', async () => {
+                if (!localMediaApi || !nodeData.config.localAssetId) return;
+                try {
+                    await localMediaApi.start();
+                    const result = await localMediaApi.getMediaUrl(nodeData.config.localAssetId);
+                    if (result && result.url) window.open(result.url, '_blank');
+                } catch (error) {
+                    this.showNotification(`Unable to preview local media: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const revealLocalMediaBtn = document.getElementById('revealLocalMediaBtn');
+        if (revealLocalMediaBtn) {
+            revealLocalMediaBtn.addEventListener('click', async () => {
+                if (!localMediaApi || !nodeData.config.localAssetId) return;
+                try {
+                    await localMediaApi.reveal(nodeData.config.localAssetId);
+                } catch (error) {
+                    this.showNotification(`Unable to reveal local media: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const copyLocalFlowActionsUrlBtn = document.getElementById('copyLocalFlowActionsUrlBtn');
+        if (copyLocalFlowActionsUrlBtn) {
+            copyLocalFlowActionsUrlBtn.addEventListener('click', async () => {
+                if (!localMediaApi) return;
+                try {
+                    await localMediaApi.start();
+                    const result = await localMediaApi.getFlowActionsUrl({
+                        sessionId: this.getCurrentSessionId(),
+                        search: this.getCurrentFlowActionsSearch(),
+                        localserver: new URLSearchParams(window.location.search).has('localserver')
+                    });
+                    if (!result || !result.url) throw new Error('The local Flow Actions URL was unavailable.');
+                    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                        await navigator.clipboard.writeText(result.url);
+                        this.showNotification('Local Flow Actions URL copied. Paste it into an OBS Browser Source.', 'success');
+                    } else {
+                        window.prompt('Copy this Local Flow Actions URL into OBS:', result.url);
+                    }
+                } catch (error) {
+                    this.showNotification(`Unable to copy the local Flow Actions URL: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        this.refreshLocalMediaStatus(nodeData);
     }
     
     renderNodeOnCanvas(nodeId) {

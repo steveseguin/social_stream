@@ -3114,11 +3114,14 @@ class EventFlowSystem {
                 break;
 				
 			case 'playTenorGiphy':
-				if (config.mediaUrl) {
+				if (config.mediaUrl || (config.sourceType === 'local' && config.localAssetId)) {
 					const actionPayload = {
 						actionType: 'play_media', // This corresponds to the 'actionType' in actions.html
-						url: config.mediaUrl,
-						mediaType: config.mediaType || 'iframe',
+						url: config.sourceType === 'local' && config.localAssetId ? '' : config.mediaUrl,
+						sourceType: config.sourceType === 'local' && config.localAssetId ? 'local' : 'url',
+						localAssetId: config.sourceType === 'local' && config.localAssetId ? config.localAssetId : undefined,
+						localAssetName: config.sourceType === 'local' && config.localAssetId ? config.localAssetName : undefined,
+						mediaType: config.sourceType === 'local' && config.localAssetId ? (config.localMediaType || config.mediaType || 'image') : (config.mediaType || 'iframe'),
 						duration: config.duration ?? 10000, // Pass duration to actions.html
 						// Positioning and sizing (percent-based)
 						width: (typeof config.width === 'number') ? config.width : undefined,
@@ -3270,10 +3273,13 @@ class EventFlowSystem {
 				break;
 
 			case 'playAudioClip':
-				if (config.audioUrl) {
+				if (config.audioUrl || (config.sourceType === 'local' && config.localAssetId)) {
 					const actionPayload = {
 						actionType: 'play_audio',
-						audioUrl: config.audioUrl,
+						audioUrl: config.sourceType === 'local' && config.localAssetId ? '' : config.audioUrl,
+						sourceType: config.sourceType === 'local' && config.localAssetId ? 'local' : 'url',
+						localAssetId: config.sourceType === 'local' && config.localAssetId ? config.localAssetId : undefined,
+						localAssetName: config.sourceType === 'local' && config.localAssetId ? config.localAssetName : undefined,
 						volume: config.volume !== undefined ? config.volume : 1.0
 					};
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {

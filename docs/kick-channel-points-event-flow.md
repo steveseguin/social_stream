@@ -107,4 +107,4 @@ If the flow has a reward name filter, the test message must include that reward 
 - Kick redemptions do not trigger: the Kick bridge page is not signed in, not connected, or was closed.
 - Only chat works: the normal Kick chatroom is open, but the bridge source is not.
 - The wrong reward triggers: set `Reward Name` in the Channel Point Redemption trigger.
-- Local media does not play: use a reachable URL or the upload button in the Event Flow action properties.
+- Local media does not play: a hosted `actions.html` page cannot read a local disk path. Use a reachable URL, or follow the [Event Flow media hosting guide](media-hosting-event-flow.html) to run both Flow Actions and the media locally.

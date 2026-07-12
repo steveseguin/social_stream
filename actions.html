@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <title>Actions Overlay - Social Stream Ninja</title>
     <script src="thirdparty/obs-websocket.min.js"></script>
     <script type="text/javascript" src="tts.js"></script>
@@ -321,6 +322,21 @@
         })(window);
 
         var urlParams = new URLSearchParams(window.location.search);
+
+        function resolveLocalMediaUrl(assetId) {
+            if (!assetId || !['127.0.0.1', 'localhost'].includes(window.location.hostname)) return '';
+            try {
+                return new URL('media/' + encodeURIComponent(assetId), new URL('.', window.location.href)).href;
+            } catch (error) {
+                console.error('[Local Media] Failed to resolve asset URL:', error);
+                return '';
+            }
+        }
+
+        function showLocalMediaDiagnostic(assetName) {
+            statusMessage.textContent = `Local media${assetName ? ` "${assetName}"` : ''} requires the Local Flow Actions URL from the Social Stream desktop app.`;
+            statusMessage.style.display = 'block';
+        }
         var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
         // Transport migration guard: only pages with full server parity may skip the legacy bridge.
         var TRANSPORT_CAPABILITIES = {
@@ -1367,7 +1383,11 @@
 
             switch (payload.actionType) {
                 case 'play_media':
-                    if (payload.url) {
+                    {
+                        const mediaUrl = payload.sourceType === 'local'
+                            ? resolveLocalMediaUrl(payload.localAssetId)
+                            : payload.url;
+                    if (mediaUrl) {
                         const opts = {
                             width: payload.width,
                             height: payload.height,
@@ -1378,10 +1398,13 @@
                             useLayer: payload.useLayer,
                             clearFirst: payload.clearFirst
                         };
-                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration ?? defaultDuration, opts);
+						playMediaFullscreen(mediaUrl, payload.mediaType || 'iframe', payload.duration ?? defaultDuration, opts);
+					} else if (payload.sourceType === 'local') {
+						showLocalMediaDiagnostic(payload.localAssetName);
                     } else {
                         console.warn("Play media action received without a URL.");
                     }
+					}
                     break;
                     
                 case 'obs_scene_change':
@@ -1401,11 +1424,18 @@
                     break;
                     
                 case 'play_audio':
-                    if (payload.audioUrl) {
-                        playAudio(payload.audioUrl, payload.volume);
+					{
+						const audioUrl = payload.sourceType === 'local'
+							? resolveLocalMediaUrl(payload.localAssetId)
+							: payload.audioUrl;
+                    if (audioUrl) {
+						playAudio(audioUrl, payload.volume);
+					} else if (payload.sourceType === 'local') {
+						showLocalMediaDiagnostic(payload.localAssetName);
                     } else {
                         console.warn("Play audio action received without an audio URL.");
                     }
+					}
                     break;
                     
                 // OBS Browser Source API Actions
@@ -1843,6 +1873,14 @@
 					mediaElement.style.maxWidth = '95%';
 					mediaElement.style.maxHeight = '95%';
 					mediaElement.style.objectFit = 'contain';
+				} else if (mediaType === 'video') {
+					mediaElement = document.createElement('video');
+					mediaElement.src = url;
+					mediaElement.autoplay = true;
+					mediaElement.playsInline = true;
+					mediaElement.style.maxWidth = '95%';
+					mediaElement.style.maxHeight = '95%';
+					mediaElement.style.objectFit = 'contain';
 				} else {
 					mediaElement = document.createElement('iframe');
 					mediaElement.src = url;
@@ -1889,7 +1927,15 @@
 				mediaElement.style.objectFit = 'contain';
 				mediaElement.style.maxWidth = '100%'; // override global css
 				mediaElement.style.maxHeight = '100%';
-			} else { // Default to iframe for videos/embeds
+			} else if (mediaType === 'video') {
+				mediaElement = document.createElement('video');
+				mediaElement.src = url;
+				mediaElement.autoplay = true;
+				mediaElement.playsInline = true;
+				mediaElement.style.width = '100%';
+				mediaElement.style.height = '100%';
+				mediaElement.style.objectFit = 'contain';
+			} else { // Default to iframe for embeds
 				mediaElement = document.createElement('iframe');
 				mediaElement.src = url;
 				mediaElement.setAttribute('allow', 'autoplay; fullscreen');
