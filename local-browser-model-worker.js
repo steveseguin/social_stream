@@ -13,8 +13,9 @@ const DEFAULT_REMOTE_HOST = 'https://largefiles.socialstream.ninja/';
 const DEFAULT_REMOTE_PATH_TEMPLATE = '{model}/';
 const DEFAULT_GENERATION = {
     maxNewTokens: 220,
-    temperature: 0.65,
-    topP: 0.92,
+    temperature: 0.6,
+    topP: 0.95,
+    topK: 20,
     maxTime: 25
 };
 const MAX_TURNS = 12;
@@ -28,18 +29,40 @@ const MODEL_CLASS_MAP = {
 };
 const LEGACY_RUNTIME_DEFAULTS = {
     Gemma4ForConditionalGeneration: {
+        requiresWebGPU: true,
         dtype: {
             model: 'q4',
             decoder_model_merged: 'q4',
             vision_encoder: 'q4',
             audio_encoder: 'q4'
+        },
+        generation: {
+            text: { temperature: 1.0, topP: 0.95, topK: 64 },
+            vision: { temperature: 1.0, topP: 0.95, topK: 64 }
         }
     },
     Qwen3_5ForCausalLM: {
+        requiresWebGPU: true,
         dtype: {
             embed_tokens: 'q4',
             decoder_model_merged: 'q4',
             model: 'q4'
+        },
+        generation: {
+            text: { temperature: 0.6, topP: 0.95, topK: 20 }
+        }
+    },
+    Qwen3_5ForConditionalGeneration: {
+        requiresWebGPU: true,
+        dtype: {
+            embed_tokens: 'q4',
+            decoder_model_merged: 'q4',
+            model: 'q4',
+            vision_encoder: 'q4'
+        },
+        generation: {
+            text: { temperature: 0.6, topP: 0.95, topK: 20 },
+            vision: { temperature: 0.7, topP: 0.8, topK: 20 }
         }
     }
 };
@@ -51,6 +74,8 @@ let initializedModelId = '';
 let initializedModelClass = '';
 let initializedDevice = '';
 let initializedSourceSignature = '';
+let initializedGenerationConfig = null;
+let initializedRequiresWebGPU = false;
 let initializingPromise = null;
 let conversation = [];
 let activeRequestId = null;
@@ -71,7 +96,7 @@ function postStatus(state, message = '') {
 
 function buildWasmPaths(modelClassName = '') {
     const base = new URL('./thirdparty/transformersjs/ort/', self.location.href).href;
-    const useJsep = modelClassName === 'Qwen3_5ForCausalLM';
+    const useJsep = modelClassName === 'Qwen3_5ForCausalLM' || modelClassName === 'Qwen3_5ForConditionalGeneration';
     return {
         wasm: `${base}ort-wasm-simd-threaded.${useJsep ? 'jsep' : 'asyncify'}.wasm`,
         mjs: `${base}ort-wasm-simd-threaded.${useJsep ? 'jsep' : 'asyncify'}.mjs`
@@ -231,18 +256,30 @@ function sanitizeGuardedText(text, guard = null) {
         .trim();
 }
 
-async function resolveRequestedDevice(requestedDevice) {
+async function resolveRequestedDevice(requestedDevice, requiresWebGPU = false) {
+    if (requiresWebGPU && requestedDevice === 'wasm') {
+        throw new Error('This local browser model requires WebGPU; its quantized operators cannot run with the WASM backend.');
+    }
+    if (requiresWebGPU && requestedDevice === 'webgpu' && !navigator.gpu?.requestAdapter) {
+        throw new Error('This local browser model requires WebGPU, which is not available in this browser or app runtime.');
+    }
     if (requestedDevice === 'webgpu' || requestedDevice === 'wasm') {
         if (requestedDevice === 'webgpu' && navigator.gpu?.requestAdapter) {
             try {
                 const adapter = await navigator.gpu.requestAdapter();
                 if (!adapter) {
+                    if (requiresWebGPU) {
+                        throw new Error('This local browser model requires WebGPU, but no WebGPU adapter is available.');
+                    }
                     return {
                         device: 'wasm',
                         reason: 'WebGPU adapter unavailable, falling back to wasm'
                     };
                 }
-            } catch (_error) {
+            } catch (error) {
+                if (requiresWebGPU) {
+                    throw error;
+                }
                 return {
                     device: 'wasm',
                     reason: 'WebGPU probe failed, falling back to wasm'
@@ -267,6 +304,10 @@ async function resolveRequestedDevice(requestedDevice) {
         } catch (_error) {
             // Ignore and fall back to wasm.
         }
+    }
+
+    if (requiresWebGPU) {
+        throw new Error('This local browser model requires WebGPU, which is not available in this browser or app runtime.');
     }
 
     return {
@@ -294,7 +335,7 @@ function inferModelClassName(message, runtime = {}) {
         return 'Gemma4ForConditionalGeneration';
     }
     if (providerKey === 'localqwen') {
-        return 'Qwen3_5ForCausalLM';
+        return 'Qwen3_5ForConditionalGeneration';
     }
 
     const modelId = String(message.modelId || initializedModelId || '').trim().toLowerCase();
@@ -302,7 +343,7 @@ function inferModelClassName(message, runtime = {}) {
         return 'Gemma4ForConditionalGeneration';
     }
     if (modelId.includes('qwen')) {
-        return 'Qwen3_5ForCausalLM';
+        return 'Qwen3_5ForConditionalGeneration';
     }
 
     return '';
@@ -313,13 +354,17 @@ function buildRuntimeDefaults(modelClassName) {
     if (!defaults) {
         return {
             modelClass: modelClassName,
-            dtype: null
+            dtype: null,
+            requiresWebGPU: false,
+            generation: null
         };
     }
 
     return {
         modelClass: modelClassName,
-        dtype: defaults.dtype ? JSON.parse(JSON.stringify(defaults.dtype)) : null
+        dtype: defaults.dtype ? JSON.parse(JSON.stringify(defaults.dtype)) : null,
+        requiresWebGPU: !!defaults.requiresWebGPU,
+        generation: defaults.generation ? JSON.parse(JSON.stringify(defaults.generation)) : null
     };
 }
 
@@ -341,6 +386,7 @@ async function initModel(message) {
     const requestedClass = resolveModelClass(requestedModelClass);
     const modelId = (message.modelId || initializedModelId || '').trim();
     const dtype = runtime.dtype || message.dtype || null;
+    const requiresWebGPU = !!runtime.requiresWebGPU;
     const requestedDevice = message.device || 'auto';
     const source = resolveModelSource(modelId, message.remoteHost, message.remotePathTemplate);
 
@@ -380,7 +426,7 @@ async function initModel(message) {
     configureEnvironment(source, runtime);
 
     initializingPromise = (async () => {
-        const resolvedDevice = await resolveRequestedDevice(requestedDevice);
+        const resolvedDevice = await resolveRequestedDevice(requestedDevice, requiresWebGPU);
         let device = resolvedDevice.device;
 
         if (resolvedDevice.reason) {
@@ -414,7 +460,7 @@ async function initModel(message) {
                 }
             });
         } catch (error) {
-            if (device !== 'webgpu') {
+            if (device !== 'webgpu' || requiresWebGPU) {
                 throw error;
             }
             postStatus('loading', 'WebGPU unavailable, falling back to wasm');
@@ -438,6 +484,8 @@ async function initModel(message) {
         initializedModelId = modelId;
         initializedDevice = device;
         initializedSourceSignature = source.sourceSignature;
+        initializedGenerationConfig = runtime.generation ? JSON.parse(JSON.stringify(runtime.generation)) : null;
+        initializedRequiresWebGPU = requiresWebGPU;
         postStatus('ready', `Loaded local model on ${device}`);
     })();
 
@@ -495,7 +543,7 @@ function shouldRetryGenerationOnWasm(error, message) {
     const partialText = String(error?.partialText || '').trim();
     const errorMessage = toErrorMessage(error).toLowerCase();
 
-    if (initializedDevice !== 'webgpu' || requestedDevice === 'wasm' || partialText) {
+    if (initializedRequiresWebGPU || initializedDevice !== 'webgpu' || requestedDevice === 'wasm' || partialText) {
         return false;
     }
 
@@ -504,6 +552,8 @@ function shouldRetryGenerationOnWasm(error, message) {
 
 async function runGenerationPass(message, prompt, stateless) {
     const rawImages = await prepareImages(message.images);
+    const generationProfiles = message.runtime?.generation || initializedGenerationConfig || {};
+    const generationDefaults = (rawImages.length ? generationProfiles.vision : generationProfiles.text) || {};
     const messages = buildMessages(message.systemPrompt, prompt, rawImages.length, !stateless);
     const promptText = processor.apply_chat_template(messages, {
         tokenize: false,
@@ -553,12 +603,13 @@ async function runGenerationPass(message, prompt, stateless) {
             do_sample: true,
             temperature: Number.isFinite(message.temperature)
                 ? message.temperature
-                : DEFAULT_GENERATION.temperature,
+                : (Number.isFinite(generationDefaults.temperature) ? generationDefaults.temperature : DEFAULT_GENERATION.temperature),
             top_p: Number.isFinite(message.topP)
                 ? message.topP
-                : DEFAULT_GENERATION.topP,
-            repetition_penalty: 1.12,
-            no_repeat_ngram_size: 4,
+                : (Number.isFinite(generationDefaults.topP) ? generationDefaults.topP : DEFAULT_GENERATION.topP),
+            top_k: Number.isFinite(message.topK)
+                ? message.topK
+                : (Number.isFinite(generationDefaults.topK) ? generationDefaults.topK : DEFAULT_GENERATION.topK),
             stopping_criteria: [interruptableStop],
             streamer
         });
@@ -660,6 +711,8 @@ async function disposeModel(options = {}) {
     initializedModelId = '';
     initializedDevice = '';
     initializedSourceSignature = '';
+    initializedGenerationConfig = null;
+    initializedRequiresWebGPU = false;
     initializingPromise = null;
     if (!suppressStatus) {
         postStatus('stopped', 'Local model worker stopped');

@@ -15,7 +15,9 @@ Expected layout:
 - `tokenizer.json`
 - `tokenizer_config.json`
 - `preprocessor_config.json`
-- `chat_template.json`
+- `chat_template.jinja`
 - `onnx/`
+
+The selected q4 decoder, embeddings, vision, and audio files total roughly 3.9 GB. They require a WebGPU-capable runtime. The largest files must be published with the R2 S3 API, a streaming R2 Worker binding, or another upload path beyond Wrangler's per-object limit.
 
 The app is configured to use self-hosted assets only. Do not point this provider at Hugging Face.

@@ -1073,7 +1073,7 @@ let tmpModelFallback = "";
 let localBrowserLLMClient = null;
 let localBrowserActiveRequestState = null;
 let localBrowserLLMQueue = Promise.resolve();
-const LOCAL_BROWSER_WORKER_VERSION = '2';
+const LOCAL_BROWSER_WORKER_VERSION = '3';
 
 function getLocalBrowserWorkerPath() {
     if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
@@ -1484,9 +1484,10 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
             const result = await client.generate(provider, {
                 prompt,
                 systemPrompt: typeof options.systemPrompt === 'string' ? options.systemPrompt : '',
-                maxNewTokens: Number.isFinite(localBrowserGeneration.maxNewTokens) ? localBrowserGeneration.maxNewTokens : 220,
-                temperature: Number.isFinite(localBrowserGeneration.temperature) ? localBrowserGeneration.temperature : 0.65,
-                topP: Number.isFinite(localBrowserGeneration.topP) ? localBrowserGeneration.topP : 0.92,
+                ...(Number.isFinite(localBrowserGeneration.maxNewTokens) ? { maxNewTokens: localBrowserGeneration.maxNewTokens } : {}),
+                ...(Number.isFinite(localBrowserGeneration.temperature) ? { temperature: localBrowserGeneration.temperature } : {}),
+                ...(Number.isFinite(localBrowserGeneration.topP) ? { topP: localBrowserGeneration.topP } : {}),
+                ...(Number.isFinite(localBrowserGeneration.topK) ? { topK: localBrowserGeneration.topK } : {}),
                 images: requestImages,
                 stateless: localBrowserStateless
             }, {

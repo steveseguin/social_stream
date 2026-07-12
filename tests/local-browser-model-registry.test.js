@@ -26,9 +26,12 @@ try {
     assert(localGemma.runtime?.modelClass === 'Gemma4ForConditionalGeneration', 'localgemma uses Gemma4 runtime');
     assert(localGemma.runtime?.dtype?.model === 'q4', 'localgemma defaults to q4 quantization');
     assert(String(localGemma.remoteHost || '').includes('socialstream.ninja'), 'localgemma default host is self-hosted');
-    assert(localQwen.supportsVision === false, 'localqwen is marked text-only');
-    assert(localQwen.runtime?.modelClass === 'Qwen3_5ForCausalLM', 'localqwen uses Qwen 3.5 runtime');
+    assert(localQwen.supportsVision === true, 'localqwen is marked vision-capable');
+    assert(localQwen.runtime?.modelClass === 'Qwen3_5ForConditionalGeneration', 'localqwen uses the multimodal Qwen 3.5 runtime');
     assert(localQwen.runtime?.dtype?.embed_tokens === 'q4', 'localqwen defaults to q4 quantization');
+    assert(localQwen.runtime?.dtype?.vision_encoder === 'q4', 'localqwen loads its q4 vision encoder');
+    assert(localQwen.runtime?.requiresWebGPU === true, 'localqwen declares its WebGPU requirement');
+    assert(localQwen.runtime?.generation?.vision?.topK === 20, 'localqwen carries vision generation defaults');
     assert(String(localQwen.remoteHost || '').includes('socialstream.ninja'), 'localqwen default host is self-hosted');
     assert(!/huggingface/i.test(JSON.stringify(catalog.MODELS)), 'catalog does not reference Hugging Face');
 
@@ -38,7 +41,7 @@ try {
     assert(workerInit.remoteHost === 'https://assets.example.com/models/', 'worker init normalizes remote host');
     assert(workerInit.runtime?.modelClass === 'Gemma4ForConditionalGeneration', 'worker init preserves Gemma4 runtime');
     const qwenInit = catalog.buildWorkerInit('localqwen', {});
-    assert(qwenInit.runtime?.modelClass === 'Qwen3_5ForCausalLM', 'worker init preserves Qwen runtime');
+    assert(qwenInit.runtime?.modelClass === 'Qwen3_5ForConditionalGeneration', 'worker init preserves Qwen runtime');
     assert(qwenInit.runtime?.dtype?.embed_tokens === 'q4', 'worker init preserves Qwen q4 defaults');
     const wasmInit = catalog.buildWorkerInit('localqwen', { device: 'wasm' });
     assert(wasmInit.device === 'wasm', 'worker init preserves explicit device override');
@@ -48,13 +51,12 @@ try {
     assert(cohostHtml.includes('value="localgemma"'), 'cohost exposes localgemma provider');
     assert(cohostHtml.includes('value="localqwen"'), 'cohost exposes localqwen provider');
     assert(fs.existsSync(path.join(__dirname, '..', 'local-browser-model-worker.js')), 'generic local browser worker exists');
-    assert(workerJs.includes("if (providerKey === 'localqwen')"), 'worker preserves localqwen legacy class inference');
-    assert(workerJs.includes("embed_tokens: 'q4'"), 'worker preserves localqwen legacy q4 defaults');
+    assert(workerJs.includes("if (providerKey === 'localqwen')"), 'worker preserves localqwen class inference');
+    assert(workerJs.includes("embed_tokens: 'q4'"), 'worker preserves localqwen q4 defaults');
     assert(workerJs.includes('function shouldRetryGenerationOnWasm(error, message)'), 'worker can detect recoverable WebGPU generation failures');
-    assert(workerJs.includes("WebGPU generation failed, retrying on wasm"), 'worker retries on wasm when WebGPU generation fails');
-    assert(workerJs.includes('preserveConversation: !stateless'), 'wasm retry preserves normal conversation state');
+    assert(workerJs.includes('initializedRequiresWebGPU'), 'worker blocks unsupported WASM fallback for WebGPU-only models');
     assert(clientJs.includes('function isRecoverableWebGPUError(error)'), 'client can detect recoverable WebGPU failures');
-    assert(clientJs.includes("device: 'wasm'"), 'client can reconnect local workers on wasm after WebGPU failure');
+    assert(clientJs.includes('configRequiresWebGPU'), 'client preserves WebGPU-only model failures');
 } catch (error) {
     console.error(error && error.stack ? error.stack : error);
     process.exit(1);

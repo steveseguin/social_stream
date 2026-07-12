@@ -200,6 +200,36 @@ function toDataURL(url, callback) {
 		} catch(e){
 		}
 	}
+
+	var lastViewerCount = null;
+
+	function checkViewerCount(){
+		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)){
+			return;
+		}
+
+		var header = document.querySelector("app-audience .audience__header button.gray-title");
+		if (!header){
+			if (lastViewerCount !== null){
+				lastViewerCount = null;
+				pushMessage({ type: "younow", event: "viewer_update", meta: 0 });
+			}
+			return;
+		}
+
+		var match = (header.textContent || "").match(/\(\s*([\d,.]+)\s*\)/);
+		if (!match){
+			return;
+		}
+
+		var viewerCount = parseInt(match[1].replace(/[^\d]/g, ""), 10);
+		if (isNaN(viewerCount) || viewerCount === lastViewerCount){
+			return;
+		}
+
+		lastViewerCount = viewerCount;
+		pushMessage({ type: "younow", event: "viewer_update", meta: viewerCount });
+	}
 	
 	var settings = {};
 	// settings.textonlymode
@@ -268,6 +298,8 @@ function toDataURL(url, callback) {
 
 	setInterval(function(){
 		try {
+			checkViewerCount();
+
 			if (document.querySelector('app-chat-list .chat-list')){
 				if (!document.querySelector('app-chat-list .chat-list').marked){
 					document.querySelector('app-chat-list .chat-list').marked=true;

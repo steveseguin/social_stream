@@ -4,7 +4,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$modelBase = "https://largefiles.socialstream.ninja/qwen3.5-0.8b-onnx"
+$modelBase = "https://largefiles.socialstream.ninja/qwen3.5-0.8b-onnx-opt"
 $requiredFiles = @(
     "config.json",
     "generation_config.json",

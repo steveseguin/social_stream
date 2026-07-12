@@ -12790,7 +12790,8 @@ async function initTransport(roomStreamID, pass = false) {
 				bindNinjaBridgeTransportTracking(ninjaBridge);
 			}
 			try {
-				// Receive overlay messages via SDK (support both event names and wrapper passthrough)
+				// NinjaBridge normalizes both SDK event shapes into one event. Listening
+				// directly to the SDK as well would process each P2P message twice.
 				const handleSDKData = ev => {
 					try {
 						const detail = ev.detail || {};
@@ -12819,8 +12820,6 @@ async function initTransport(roomStreamID, pass = false) {
 						console.warn(e);
 					}
 				};
-				ninjaBridge.vdo.addEventListener("data", handleSDKData);
-				ninjaBridge.vdo.addEventListener("dataReceived", handleSDKData);
 				ninjaBridge.addEventListener("data", handleSDKData);
 			} catch (e) {
 				console.warn(e);

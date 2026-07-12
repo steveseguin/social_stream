@@ -27,6 +27,8 @@
 
       // uuid -> label mapping (eg. 'dock', 'ticker', ...)
       this.labelsByUUID = {};
+      // Prefer labels learned from peer info/listings over connection-time fallbacks.
+      this._labelPriorityByUUID = {};
       // Track remote streams we've attempted to view
       this._viewedStreams = new Set();
     }
@@ -59,8 +61,6 @@
       await this.vdo.joinRoom({
         room,
         password: this.password || false,
-        streamID: publishStreamID,
-        push: publishStreamID,
       });
 
       // Publish a data-only stream whose streamID equals the room's ID
@@ -116,19 +116,11 @@
       // Track peers and their labels as they appear in listings/updates
       const labelHandler = (e) => {
         const { uuid, label } = e.detail || {};
-        if (!uuid) return;
-        if (label) {
-          this.labelsByUUID[uuid] = label;
-          this._syncGlobalPeers();
-          this.dispatchEvent(
-            new CustomEvent('peerLabel', { detail: { uuid, label } })
-          );
-        }
+        this._setPeerLabel(uuid, label, 2);
       };
       // Try a few likely event names for broad SDK compatibility
       this.vdo.addEventListener('peerListing', labelHandler);
       this.vdo.addEventListener('peerUpdated', labelHandler);
-      this.vdo.addEventListener('peerConnected', labelHandler);
       // Full SDK emits granular listing and info events as well
       this.vdo.addEventListener('listing', labelHandler);
       // Peer info carries label under detail.info.label
@@ -136,21 +128,16 @@
         const d = e.detail || {};
         const uuid = d.uuid;
         const label = d.info && d.info.label;
-        if (uuid && label) {
-          this.labelsByUUID[uuid] = label;
-          this._syncGlobalPeers();
-          this.dispatchEvent(new CustomEvent('peerLabel', { detail: { uuid, label } }));
-        }
+        this._setPeerLabel(uuid, label, 3);
       });
 
-      // If connection object already has a label, record it
+      // Connection-time labels are fallbacks only. They can describe the local
+      // side in dual announce/view setups, so they must not replace listings or
+      // peerInfo received for the remote UUID.
       this.vdo.addEventListener('peerConnected', (e) => {
-        const { uuid, connection } = e.detail || {};
-        if (uuid && connection && connection.info && connection.info.label) {
-          this.labelsByUUID[uuid] = connection.info.label;
-          this._syncGlobalPeers();
-          this.dispatchEvent(new CustomEvent('peerLabel', { detail: { uuid, label: connection.info.label } }));
-        }
+        const detail = e.detail || {};
+        const connectionLabel = detail.connection && detail.connection.info && detail.connection.info.label;
+        this._setPeerLabel(detail.uuid, detail.label || connectionLabel, 1);
       });
 
       // Cleanup on disconnects
@@ -158,6 +145,7 @@
         const { uuid } = e.detail || {};
         if (uuid && this.labelsByUUID[uuid]) {
           delete this.labelsByUUID[uuid];
+          delete this._labelPriorityByUUID[uuid];
           this._syncGlobalPeers();
           this.dispatchEvent(
             new CustomEvent('peerRemoved', { detail: { uuid } })
@@ -167,6 +155,10 @@
 
       this.vdo.addEventListener('disconnected', () => {
         this.connected = false;
+      });
+      this.vdo.addEventListener('reconnected', () => {
+        this.connected = true;
+        this.dispatchEvent(new CustomEvent('reconnected'));
       });
 
       // Route data payloads from peers to background.js
@@ -202,6 +194,21 @@
       // Try both event names used across SDK versions
       this.vdo.addEventListener('dataReceived', dataHandler);
       this.vdo.addEventListener('data', dataHandler);
+    }
+
+    _setPeerLabel(uuid, label, priority) {
+      if (!uuid || !label) return false;
+      const currentPriority = this._labelPriorityByUUID[uuid] || 0;
+      if (currentPriority > priority) return false;
+
+      const changed = this.labelsByUUID[uuid] !== label;
+      this.labelsByUUID[uuid] = label;
+      this._labelPriorityByUUID[uuid] = priority;
+      this._syncGlobalPeers();
+      if (changed) {
+        this.dispatchEvent(new CustomEvent('peerLabel', { detail: { uuid, label } }));
+      }
+      return changed;
     }
 
     _enableAutoView() {
@@ -318,7 +325,8 @@
       try {
         if (this.vdo) {
           try { this.vdo.stopPublishing && this.vdo.stopPublishing(); } catch(e){}
-          await this.vdo.leaveRoom();
+          try { this.vdo.leaveRoom && await this.vdo.leaveRoom(); } catch(e){}
+          try { this.vdo.disconnect && this.vdo.disconnect(); } catch(e){}
         }
       } catch (e) {
         // ignore
@@ -326,6 +334,8 @@
         this.vdo = null;
         this.connected = false;
         this.labelsByUUID = {};
+        this._labelPriorityByUUID = {};
+        this._viewedStreams.clear();
         this._syncGlobalPeers();
       }
     }

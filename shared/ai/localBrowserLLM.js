@@ -27,6 +27,10 @@
             return message.includes('webgpu') || message.includes('no available backend found');
         }
 
+        function configRequiresWebGPU(config) {
+            return !!(config && config.runtime && config.runtime.requiresWebGPU);
+        }
+
         function createWorker() {
             worker = new Worker(workerPath, { type: 'module' });
             worker.onmessage = handleMessage;
@@ -158,7 +162,7 @@
             try {
                 await request('init', initPayload, initTimeoutMs);
             } catch (error) {
-                if (String(initPayload.device || '').toLowerCase() === 'wasm' || !isRecoverableWebGPUError(error)) {
+                if (configRequiresWebGPU(initPayload) || String(initPayload.device || '').toLowerCase() === 'wasm' || !isRecoverableWebGPUError(error)) {
                     terminateWorker();
                     throw error;
                 }
@@ -186,7 +190,7 @@
                 return await request('generate', requestPayload, generateTimeoutMs);
             } catch (error) {
                 currentDevice = String((activeConfig && activeConfig.device) || requestPayload.device || requestOverrides.device || '').toLowerCase();
-                if (currentDevice === 'wasm' || !isRecoverableWebGPUError(error)) {
+                if (configRequiresWebGPU(activeConfig) || currentDevice === 'wasm' || !isRecoverableWebGPUError(error)) {
                     throw error;
                 }
 

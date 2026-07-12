@@ -350,13 +350,13 @@ function findWorkerMessages(log, type, predicate) {
 
     const qwenInit = findWorkerMessages(qwenState.workerLog, 'init', (entry) => String(entry.data.modelId || '').includes('qwen3.5-0.8b-onnx')).slice(-1)[0];
     assert(!!qwenInit, 'Local Qwen init was not sent after switching providers.');
-    assert(qwenInit.data.runtime && qwenInit.data.runtime.modelClass === 'Qwen3_5ForCausalLM', 'Local Qwen init did not use the Qwen runtime.');
+    assert(qwenInit.data.runtime && qwenInit.data.runtime.modelClass === 'Qwen3_5ForConditionalGeneration', 'Local Qwen init did not use the multimodal Qwen runtime.');
 
     const qwenManualGenerate = findWorkerMessages(qwenState.workerLog, 'generate', (entry) => entry.data.prompt === 'Confirm local qwen is active.')[0];
     assert(!!qwenManualGenerate, 'Local Qwen manual generate was not sent.');
     assert(qwenManualGenerate.data.providerKey === 'localqwen', 'Local Qwen generate did not preserve the provider key.');
     assert(String(qwenManualGenerate.data.modelId || '').includes('qwen3.5-0.8b-onnx'), 'Local Qwen generate did not preserve the model id.');
-    assert(Array.isArray(qwenManualGenerate.data.images) && qwenManualGenerate.data.images.length === 0, 'Local Qwen should not attach vision frames.');
+    assert(Array.isArray(qwenManualGenerate.data.images) && qwenManualGenerate.data.images.length === 0, 'Local Qwen should omit a frame when the mock preview is not ready.');
     assert(await page.$eval('#videoSource', (element) => !element.disabled && element.value === 'fake-camera'), 'Switching to Local Qwen should keep the selected camera available for the stream.');
     assert(qwenState.diagProvider.toLowerCase().includes('qwen'), 'Diagnostics did not report Local Qwen.');
     assert(qwenState.diagEvent.includes('generate.done'), 'Local Qwen diagnostics did not report completion.');

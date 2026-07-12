@@ -286,14 +286,14 @@ function findWorkerMessages(log, type, predicate) {
 
     const initMessage = findWorkerMessages(state.workerLog, 'init', (entry) => String(entry.data.modelId || '').includes('qwen3.5-0.8b-onnx'))[0];
     assert(!!initMessage, 'Local Qwen 0.8B init was not sent.');
-    assert(initMessage.data.runtime && initMessage.data.runtime.modelClass === 'Qwen3_5ForCausalLM', 'Local Qwen 0.8B init did not use the Qwen runtime.');
+    assert(initMessage.data.runtime && initMessage.data.runtime.modelClass === 'Qwen3_5ForConditionalGeneration', 'Local Qwen 0.8B init did not use the multimodal Qwen runtime.');
     assert(initMessage.data.runtime && initMessage.data.runtime.dtype && initMessage.data.runtime.dtype.embed_tokens === 'q4', 'Local Qwen 0.8B init did not use the q4 runtime.');
 
     const generateMessages = findWorkerMessages(state.workerLog, 'generate');
     assert(generateMessages.length >= 2, 'Local Qwen 0.8B did not generate for greeting and manual prompt.');
     assert(generateMessages.every((entry) => entry.data.providerKey === 'localqwen'), 'Local Qwen 0.8B generate calls did not preserve the provider key.');
     assert(generateMessages.every((entry) => String(entry.data.modelId || '').includes('qwen3.5-0.8b-onnx')), 'Local Qwen 0.8B generate calls did not preserve the model id.');
-    assert(generateMessages.every((entry) => Array.isArray(entry.data.images) && entry.data.images.length === 0), 'Local Qwen 0.8B should not attach vision frames.');
+    assert(generateMessages.every((entry) => Array.isArray(entry.data.images) && entry.data.images.length === 0), 'Local Qwen 0.8B should omit frames while the mock preview is not ready.');
     assert(!state.videoDisabled && !state.audioDisabled, 'Local Qwen 0.8B should leave capture selectors available.');
     assert(state.videoValue === 'fake-camera', 'Local Qwen 0.8B should preserve the selected camera for the stream.');
     assert(state.diagProvider.toLowerCase().includes('qwen'), 'Diagnostics did not report Local Qwen.');

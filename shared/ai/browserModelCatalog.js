@@ -14,11 +14,16 @@
             remotePathTemplate: '{model}/',
             runtime: {
                 modelClass: 'Gemma4ForConditionalGeneration',
+                requiresWebGPU: true,
                 dtype: {
                     model: 'q4',
                     decoder_model_merged: 'q4',
                     vision_encoder: 'q4',
                     audio_encoder: 'q4'
+                },
+                generation: {
+                    text: { temperature: 1.0, topP: 0.95, topK: 64 },
+                    vision: { temperature: 1.0, topP: 0.95, topK: 64 }
                 }
             },
             supportsVision: true,
@@ -30,20 +35,26 @@
             key: 'localqwen',
             label: 'Local Qwen 3.5 (Browser)',
             providerLabel: 'Local Qwen 3.5 (Browser)',
-            modelId: 'qwen3.5-0.8b-onnx',
+            modelId: 'qwen3.5-0.8b-onnx-opt',
             localPath: 'thirdparty/models/qwen3.5-0.8b-onnx',
             remoteHost: DEFAULT_REMOTE_HOST,
             remotePathTemplate: '{model}/',
             runtime: {
-                modelClass: 'Qwen3_5ForCausalLM',
+                modelClass: 'Qwen3_5ForConditionalGeneration',
+                requiresWebGPU: true,
                 dtype: {
                     embed_tokens: 'q4',
                     decoder_model_merged: 'q4',
-                    model: 'q4'
+                    model: 'q4',
+                    vision_encoder: 'q4'
+                },
+                generation: {
+                    text: { temperature: 0.6, topP: 0.95, topK: 20 },
+                    vision: { temperature: 0.7, topP: 0.8, topK: 20 }
                 }
             },
-            supportsVision: false,
-            prefersCaptureSelection: false,
+            supportsVision: true,
+            prefersCaptureSelection: true,
             requiresApiKey: false,
             defaultPrompt: 'You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.'
         }
