@@ -32,6 +32,7 @@ try {
     assert(localQwen.runtime?.dtype?.vision_encoder === 'q4', 'localqwen loads its q4 vision encoder');
     assert(localQwen.runtime?.requiresWebGPU === true, 'localqwen declares its WebGPU requirement');
     assert(localQwen.runtime?.generation?.vision?.topK === 20, 'localqwen carries vision generation defaults');
+    assert(localQwen.modelId === 'qwen3.5-0.8b-onnx-opt', 'localqwen defaults to the optimized self-hosted export');
     assert(String(localQwen.remoteHost || '').includes('socialstream.ninja'), 'localqwen default host is self-hosted');
     assert(!/huggingface/i.test(JSON.stringify(catalog.MODELS)), 'catalog does not reference Hugging Face');
 
