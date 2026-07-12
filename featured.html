@@ -165,6 +165,11 @@
 				margin: 0 !important;
 				z-index: 4;
 			}
+			body.square-source-icons .sourcetype[data-icon-name] {
+				border-radius: 0;
+				clip-path: inset(14.65%);
+				transform: scale(1.4142);
+			}
 			.dono .sourcetype {
 				max-width: 32px !important;
 				max-height: 32px !important;
@@ -1832,6 +1837,10 @@
 
 			if (urlParams.has("showsource")) {
 				showsource = true;
+			}
+
+			if (urlParams.has("squaresource")) {
+				document.body.classList.add("square-source-icons");
 			}
 
 			var lanonly = "";

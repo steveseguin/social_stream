@@ -2078,6 +2078,11 @@
 				margin: 4px 2px auto 1px;
 				border-radius: 50%;
 			}
+			body.square-source-icons .hl-source-type[data-icon-name] {
+				border-radius: 0;
+				clip-path: inset(14.65%);
+				transform: scale(1.4142);
+			}
 			.twoLines .icon {
 				margin: 2px 2px auto 1px;
 			}
@@ -4000,7 +4005,11 @@
 			if (urlParams.has("hidesource")) {
 				showsource = false;
 			}
-			
+
+			if (urlParams.has("squaresource")) {
+				document.body.classList.add("square-source-icons");
+			}
+
 			var showSourceName = false;
 			if (urlParams.has("showsourcename")) {
 				showSourceName = true;
