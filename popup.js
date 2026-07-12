@@ -1170,8 +1170,12 @@ function setupLazySystemVoiceDropdowns() {
     }
 }
 
+function getUsernameInput(type) {
+  return document.getElementById(type) || document.querySelector(`[data-textsetting="${type}"], [data-textparam2="${type}"]`);
+}
+
 function addUsername(username, type='blacklistusers') {
-  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  const input = getUsernameInput(type);
   if (!input) return;
   
   const usernames = input.value.split(',').map(u => u.trim()).filter(u => u);
@@ -1183,10 +1187,7 @@ function addUsername(username, type='blacklistusers') {
   
   const newEntry = sourceType ? `${username}:${sourceType}` : username;
   
-  if (!usernames.some(entry => {
-    const [name] = entry.split(':');
-    return name === username;
-  })) {
+  if (!usernames.some(entry => entry.toLowerCase() === newEntry.toLowerCase())) {
     usernames.push(newEntry);
     input.value = usernames.join(', ');
     updateUsernameList(type);
@@ -1195,7 +1196,7 @@ function addUsername(username, type='blacklistusers') {
 }
 
 function removeUsername(username, sourceType='', type='blacklistusers') {
-  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  const input = getUsernameInput(type);
   if (!input) return;
   
   const usernames = input.value.split(',').map(u => u.trim()).filter(u => u);
@@ -1216,7 +1217,7 @@ function updateUsernameList(type = 'blacklistusers') {
 	
 	if (!userTypes.includes(type)) return;
 	
-  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  const input = getUsernameInput(type);
   const list = document.getElementById(`${type}List`);
   
   if (!input || !list) return;
@@ -1233,8 +1234,8 @@ function updateUsernameList(type = 'blacklistusers') {
 
   list.innerHTML = usernames.map(({ name, sourceType }) => `
     <div class="username-tag">
-      <span>${name}${sourceType ? `<span class="source-type"><img class="icon" src="./sources/images/${sourceType}.png" /></span>` : ''}</span>
-      <button class="remove-username" data-username="${name}" data-source-type="${sourceType || ''}">×</button>
+      <span>${escapeHtml(name)}${sourceType === '*' ? '<span class="source-type">All sources</span>' : (sourceType ? `<span class="source-type"><img class="icon" src="./sources/images/${escapeHtml(sourceType)}.png" /></span>` : '')}</span>
+      <button class="remove-username" data-username="${escapeHtml(name)}" data-source-type="${escapeHtml(sourceType || '')}">×</button>
     </div>
   `).join('');
 }
@@ -1627,45 +1628,6 @@ function removeBlockedWord(word) {
         updateBlockedWordsList();
         updateSettings(input);
     }
-}
-
-function setupFeaturedUserTags() {
-    const inputId = 'filterfeaturedusers';
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    const container = input.closest('.textInputContainer');
-    if (!container || document.getElementById(inputId + 'List')) return;
-    container.classList.add('tag-input-container');
-    input.classList.add('hidden');
-    const list = document.createElement('div');
-    list.className = 'source-list-container';
-    list.id = inputId + 'List';
-    const controls = document.createElement('div');
-    controls.className = 'add-source-container';
-    controls.innerHTML = '<input type="text" id="newfilterfeaturedusersName" placeholder="Username"><select id="newfilterfeaturedusersSource"><option value="*" selected>All sources</option></select><button id="addfilterfeaturedusers">Add</button>';
-    container.parentNode.classList.add('isolate');
-    container.parentNode.insertBefore(list, container.nextSibling);
-    container.parentNode.insertBefore(controls, list.nextSibling);
-    const username = document.getElementById('newfilterfeaturedusersName');
-    const source = document.getElementById('newfilterfeaturedusersSource');
-    setupLazySourceSelect(source);
-    ensureLazySourcesLoaded(function() { appendSourceOptions(source); });
-    function addUser() {
-        const name = username.value.trim();
-        const type = source.value.trim();
-        if (!name) return;
-        addCommaTagValue(inputId, type && type !== '*' ? name + ':' + type : name);
-        username.value = '';
-        source.value = '*';
-    }
-    list.addEventListener('click', function(event) {
-        if (event.target.classList.contains('remove-source')) removeCommaTagValue(inputId, event.target.dataset.value);
-    });
-    document.getElementById('addfilterfeaturedusers').addEventListener('click', addUser);
-    username.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') { event.preventDefault(); addUser(); }
-    });
-    updateCommaTagList(inputId);
 }
 
 function setupBlockedWordsInput() {
@@ -2263,7 +2225,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const sourceSelectTagInputs = ['hideViewerCountSources'];
 const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
-const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
+const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers', 'filterfeaturedusers'];
 const sourcesList = new Set();
 var sortedSourcesListCache = null;
 var popupSourceDatalistLoaded = false;
@@ -3598,6 +3560,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 }
                 if (commaTagInputs.includes(ele.id) || commaTagInputs.includes(key)) {
                     refreshCommaTagInput(ele.id || key);
+                } else if (userTypes.includes(ele.id) || userTypes.includes(key)) {
+                    updateUsernameList(ele.id || key);
                 }
             }
         }
@@ -9852,7 +9816,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Initialize blocked words tag input
 	setupBlockedWordsInput();
 	setupViewerCountSourceTags();
-	setupFeaturedUserTags();
 	commaTagInputs.forEach((inputId) => {
 		setupCommaTagInput(inputId);
 	});
@@ -10176,16 +10139,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			const addContainer = document.createElement('div');
 			addContainer.className = 'add-username-container';
 			
+			const sourceControl = input.dataset.userSourceSelect === 'true'
+				? `<select id="new${id}Type"><option value="" selected>All sources</option></select>`
+				: `<input type="text" id="new${id}Type" placeholder="Source type (optional)" list="popupSourceTypesList">`;
 			addContainer.innerHTML = `
 				<input type="text" id="new${id}" placeholder="Add username">
-				<input type="text" id="new${id}Type" placeholder="Source type (optional)" list="popupSourceTypesList">
+				${sourceControl}
 				<button id="add${id}">Add</button>
 			`;
 			
 			container.parentNode.classList.add("isolate");
 			container.parentNode.insertBefore(listContainer, container.nextSibling);
 			container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
-			setupLazySourceInput(document.getElementById(`new${id}Type`));
+			const sourceInput = document.getElementById(`new${id}Type`);
+			if (input.dataset.userSourceSelect === 'true') {
+				setupLazySourceSelect(sourceInput);
+				ensureLazySourcesLoaded(function() { appendSourceOptions(sourceInput); });
+			} else {
+				setupLazySourceInput(sourceInput);
+			}
 		  }
 		});
 		
@@ -10213,6 +10185,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 			  }
 			});
+
+			document.getElementById(`new${type}`).addEventListener('keypress', (e) => {
+			  if (e.key === 'Enter') {
+				e.preventDefault();
+				document.getElementById(`add${type}`).click();
+			  }
+			});
+			updateUsernameList(type);
 		  } catch(e) {
 			console.error(e);
 		  }

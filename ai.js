@@ -1073,7 +1073,7 @@ let tmpModelFallback = "";
 let localBrowserLLMClient = null;
 let localBrowserActiveRequestState = null;
 let localBrowserLLMQueue = Promise.resolve();
-const LOCAL_BROWSER_WORKER_VERSION = '13';
+const LOCAL_BROWSER_WORKER_VERSION = '14';
 
 function getLocalBrowserWorkerPath() {
     if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {

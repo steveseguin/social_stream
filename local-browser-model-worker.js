@@ -11,6 +11,7 @@ import {
 
 const DEFAULT_REMOTE_HOST = 'https://largefiles.socialstream.ninja/';
 const DEFAULT_REMOTE_PATH_TEMPLATE = '{model}/';
+const OPFS_CACHE_DIRECTORY = 'ssn-transformers-cache-v1';
 const DEFAULT_GENERATION = {
     maxNewTokens: 220,
     temperature: 0.6,
@@ -24,7 +25,8 @@ const MAX_TURNS = 24;
 const MAX_HISTORY_CHARACTERS = 12000;
 const MAX_MEMORY_CHARACTERS = 3000;
 const MAX_CONVERSATION_FACTS = 32;
-const CONVERSATION_GUIDANCE = 'Treat this as one ongoing conversation. Use the recent conversation to answer the latest user message directly. Follow constraints in the latest request exactly. Do not greet the user again, restart the conversation, repeatedly ask what they want to discuss, or end every reply with a question. Never use a generic readiness response such as asking what they want to discuss. If the latest speech is short or unclear, briefly acknowledge its specific words instead of greeting or asking a generic question. Avoid repeating earlier replies. A camera image is passive background context: ignore it when it is unrelated, and only mention or describe it when the user asks about it or it is directly relevant.';
+const CONVERSATION_GUIDANCE =
+    'Treat this as one ongoing conversation. Use the recent conversation to answer the latest user message directly. Follow constraints in the latest request exactly. Do not greet the user again, restart the conversation, repeatedly ask what they want to discuss, or end every reply with a question. Never use a generic readiness response such as asking what they want to discuss. If the latest speech is short or unclear, briefly acknowledge its specific words instead of greeting or asking a generic question. Avoid repeating earlier replies. A camera image is passive background context: ignore it when it is unrelated, and only mention or describe it when the user asks about it or it is directly relevant.';
 const DEGENERATE_CHAR_RUN_LENGTH = 12;
 const DEGENERATE_TAIL_PATTERN_REPEATS = 6;
 const DEGENERATE_TAIL_PATTERN_MAX_UNIT = 4;
@@ -87,6 +89,7 @@ let conversation = [];
 let conversationMemory = '';
 let conversationFacts = [];
 let activeRequestId = null;
+let opfsCacheRootPromise = null;
 
 function toErrorMessage(error) {
     if (!error) return 'Unknown local model error';
@@ -115,6 +118,79 @@ function isExtensionRuntime() {
     return protocol === 'chrome-extension:' || protocol === 'moz-extension:';
 }
 
+function getOpfsCacheRoot() {
+    if (!opfsCacheRootPromise) {
+        opfsCacheRootPromise = navigator.storage.getDirectory().then(root => root.getDirectoryHandle(OPFS_CACHE_DIRECTORY, { create: true }));
+        navigator.storage.persist?.().catch(() => {});
+    }
+    return opfsCacheRootPromise;
+}
+
+async function getOpfsCacheNames(request) {
+    const key = String(request?.url || request || '');
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key));
+    const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+    return {
+        data: `${hash}.bin`,
+        metadata: `${hash}.json`
+    };
+}
+
+function createOpfsTransformersCache() {
+    if (!navigator?.storage?.getDirectory || !crypto?.subtle) return null;
+
+    return {
+        async match(request) {
+            try {
+                const root = await getOpfsCacheRoot();
+                const names = await getOpfsCacheNames(request);
+                const metadataHandle = await root.getFileHandle(names.metadata);
+                const dataHandle = await root.getFileHandle(names.data);
+                const metadata = JSON.parse(await (await metadataHandle.getFile()).text());
+                const file = await dataHandle.getFile();
+                if (Number(metadata.size) !== file.size) return undefined;
+                return new Response(file, {
+                    status: Number(metadata.status) || 200,
+                    statusText: metadata.statusText || '',
+                    headers: metadata.headers || {}
+                });
+            } catch (_) {
+                return undefined;
+            }
+        },
+        async put(request, response) {
+            const root = await getOpfsCacheRoot();
+            const names = await getOpfsCacheNames(request);
+            const dataHandle = await root.getFileHandle(names.data, { create: true });
+            const metadataHandle = await root.getFileHandle(names.metadata, { create: true });
+
+            try {
+                const dataWriter = await dataHandle.createWritable({ keepExistingData: false });
+                if (response.body) {
+                    await response.body.pipeTo(dataWriter);
+                } else {
+                    await dataWriter.close();
+                }
+
+                const file = await dataHandle.getFile();
+                const metadata = {
+                    size: file.size,
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries())
+                };
+                const metadataWriter = await metadataHandle.createWritable({ keepExistingData: false });
+                await metadataWriter.write(JSON.stringify(metadata));
+                await metadataWriter.close();
+            } catch (error) {
+                await root.removeEntry(names.metadata).catch(() => {});
+                await root.removeEntry(names.data).catch(() => {});
+                throw error;
+            }
+        }
+    };
+}
+
 function normalizeRemoteHost(remoteHost) {
     if (!remoteHost) return DEFAULT_REMOTE_HOST;
     return remoteHost.endsWith('/') ? remoteHost : `${remoteHost}/`;
@@ -138,13 +214,16 @@ function resolveModelSource(modelId, requestedRemoteHost = '', remotePathTemplat
 
 function configureEnvironment(source) {
     const extensionRuntime = isExtensionRuntime();
+    const opfsCache = createOpfsTransformersCache();
 
     env.allowRemoteModels = !source.isLocalModel;
     env.allowLocalModels = source.isLocalModel;
     env.localModelPath = './';
     env.remoteHost = source.remoteHost;
     env.remotePathTemplate = source.remotePathTemplate || DEFAULT_REMOTE_PATH_TEMPLATE;
-    env.useBrowserCache = typeof caches !== 'undefined';
+    env.useCustomCache = !!opfsCache;
+    env.customCache = opfsCache;
+    env.useBrowserCache = !opfsCache && typeof caches !== 'undefined';
     env.useFSCache = false;
     env.useWasmCache = !extensionRuntime;
 
@@ -194,7 +273,29 @@ function findRequestedConversationFact(prompt) {
     const text = String(prompt || '').toLowerCase();
     if (!conversationFacts.length || !/(?:what|which|recall|remember|remind|tell me)/i.test(text)) return null;
 
-    const ignoredWords = new Set(['answer', 'did', 'earlier', 'exactly', 'i', 'is', 'just', 'me', 'my', 'only', 'please', 'recall', 'remember', 'remind', 'tell', 'the', 'was', 'what', 'which', 'with', 'you']);
+    const ignoredWords = new Set([
+        'answer',
+        'did',
+        'earlier',
+        'exactly',
+        'i',
+        'is',
+        'just',
+        'me',
+        'my',
+        'only',
+        'please',
+        'recall',
+        'remember',
+        'remind',
+        'tell',
+        'the',
+        'was',
+        'what',
+        'which',
+        'with',
+        'you'
+    ]);
     let bestFact = null;
     let bestScore = 0;
     for (const fact of conversationFacts) {
@@ -210,7 +311,10 @@ function findRequestedConversationFact(prompt) {
 }
 
 function respondWithConversationFact(message, prompt, fact) {
-    const responseText = fact.value;
+    return respondWithDirectText(message, prompt, fact.value, 'memory');
+}
+
+function respondWithDirectText(message, prompt, responseText, finishReason = 'stop') {
     self.postMessage({
         type: 'token',
         requestId: message.requestId,
@@ -221,7 +325,7 @@ function respondWithConversationFact(message, prompt, fact) {
     trimConversation();
     return {
         text: responseText,
-        finishReason: 'memory',
+        finishReason,
         guardReason: ''
     };
 }
@@ -234,15 +338,14 @@ function trimConversation() {
     while (conversation.length > maxEntries || conversationCharacters() > MAX_HISTORY_CHARACTERS) {
         const removed = conversation.splice(0, Math.min(2, conversation.length));
         const userEntry = removed.find(entry => entry.role === 'user');
-        const userText = String(userEntry?.content || '').replace(/\s+/g, ' ').trim();
+        const userText = String(userEntry?.content || '')
+            .replace(/\s+/g, ' ')
+            .trim();
         if (userText) compactedUserStatements.push(userText.slice(0, 500));
     }
 
     if (compactedUserStatements.length) {
-        conversationMemory = [conversationMemory, ...compactedUserStatements.map(text => `- ${text}`)]
-            .filter(Boolean)
-            .join('\n')
-            .slice(-MAX_MEMORY_CHARACTERS);
+        conversationMemory = [conversationMemory, ...compactedUserStatements.map(text => `- ${text}`)].filter(Boolean).join('\n').slice(-MAX_MEMORY_CHARACTERS);
     }
 }
 
@@ -307,7 +410,7 @@ function detectDegenerateTail(text) {
             continue;
         }
         let matches = 1;
-        let cursor = candidate.length - (unitLength * 2);
+        let cursor = candidate.length - unitLength * 2;
         while (cursor >= 0 && candidate.slice(cursor, cursor + unitLength) === unit) {
             matches += 1;
             cursor -= unitLength;
@@ -315,7 +418,7 @@ function detectDegenerateTail(text) {
         if (matches >= DEGENERATE_TAIL_PATTERN_REPEATS) {
             return {
                 type: 'tail_pattern',
-                startIndex: candidate.length - (matches * unitLength),
+                startIndex: candidate.length - matches * unitLength,
                 reason: `repeated ${JSON.stringify(unit)} tail`
             };
         }
@@ -334,6 +437,35 @@ function sanitizeGuardedText(text, guard = null) {
         .replace(/[ \t]{2,}/g, ' ')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
+}
+
+function isOfficialMicroModelProvider(providerKey) {
+    return providerKey === 'localqwen' || providerKey === 'localqwen2b' || providerKey === 'localgemma';
+}
+
+function sanitizeOfficialMicroModelResponse(text, prompt = '') {
+    let value = String(text || '').trim();
+    const genericQuestionPatterns = [
+        /\s*(?:do|would) you (?:want|like) to (?:discuss|talk about)(?:\s+the details of)?[^?\n]{0,100}\?\s*$/i,
+        /\s*what (?:do you want|would you like) to (?:discuss|talk about)(?:\s+today)?\?\s*$/i,
+        /\s*what(?:'s| is) on your mind(?:\s+to discuss)?(?:\s+today)?(?:,?\s+[a-z][\w-]*)?\?\s*$/i,
+        /\s*what are we discussing(?:\s+today)?\?\s*$/i,
+        /\s*(?:are you )?ready to (?:keep|continue|get started|start|chat|talk|discuss|go)[^?\n]{0,80}\?\s*$/i
+    ];
+
+    let previousValue;
+    do {
+        previousValue = value;
+        for (const pattern of genericQuestionPatterns) {
+            value = value.replace(pattern, '').trim();
+        }
+    } while (value !== previousValue);
+
+    if (/(?:without asking(?: me)? (?:a|any) questions?|do not ask(?: me)? (?:a|any) questions?|don['’]t ask(?: me)? (?:a|any) questions?)/i.test(prompt)) {
+        value = value.replace(/(?:^|\s+)[^.!?\n]*\?\s*$/, '').trim();
+    }
+    value = value.replace(/\s+(?:what|what(?:'s| is)|do you|would you)\s*$/i, '').trim();
+    return value;
 }
 
 async function resolveRequestedDevice(requestedDevice, requiresWebGPU = false) {
@@ -410,7 +542,9 @@ function inferModelClassName(message, runtime = {}) {
         return explicit;
     }
 
-    const providerKey = String(message.providerKey || '').trim().toLowerCase();
+    const providerKey = String(message.providerKey || '')
+        .trim()
+        .toLowerCase();
     if (providerKey === 'localgemma') {
         return 'Gemma4ForConditionalGeneration';
     }
@@ -418,7 +552,9 @@ function inferModelClassName(message, runtime = {}) {
         return 'Qwen3_5ForConditionalGeneration';
     }
 
-    const modelId = String(message.modelId || initializedModelId || '').trim().toLowerCase();
+    const modelId = String(message.modelId || initializedModelId || '')
+        .trim()
+        .toLowerCase();
     if (modelId.includes('gemma')) {
         return 'Gemma4ForConditionalGeneration';
     }
@@ -474,13 +610,7 @@ async function initModel(message) {
         throw new Error('Model id is missing.');
     }
 
-    if (
-        model &&
-        processor &&
-        modelClass === requestedClass &&
-        initializedModelId === modelId &&
-        initializedSourceSignature === source.sourceSignature
-    ) {
+    if (model && processor && modelClass === requestedClass && initializedModelId === modelId && initializedSourceSignature === source.sourceSignature) {
         return { modelId, device: initializedDevice || 'wasm' };
     }
     if (initializingPromise) {
@@ -490,16 +620,7 @@ async function initModel(message) {
             device: initializedDevice || 'wasm'
         };
     }
-    if (
-        model &&
-        processor &&
-        initializedModelId &&
-        (
-            modelClass !== requestedClass ||
-            initializedModelId !== modelId ||
-            initializedSourceSignature !== source.sourceSignature
-        )
-    ) {
+    if (model && processor && initializedModelId && (modelClass !== requestedClass || initializedModelId !== modelId || initializedSourceSignature !== source.sourceSignature)) {
         await disposeModel();
     }
 
@@ -605,7 +726,7 @@ async function toRawImage(imageSource) {
 }
 
 async function prepareImages(images) {
-    const sources = Array.isArray(images) ? images : (images ? [images] : []);
+    const sources = Array.isArray(images) ? images : images ? [images] : [];
     const prepared = [];
 
     for (const imageSource of sources) {
@@ -619,7 +740,9 @@ async function prepareImages(images) {
 }
 
 function shouldRetryGenerationOnWasm(error, message) {
-    const requestedDevice = String(message?.device || 'auto').trim().toLowerCase();
+    const requestedDevice = String(message?.device || 'auto')
+        .trim()
+        .toLowerCase();
     const partialText = String(error?.partialText || '').trim();
     const errorMessage = toErrorMessage(error).toLowerCase();
 
@@ -638,11 +761,7 @@ function isRecoverableWebGPUExecutionError(error) {
         return false;
     }
 
-    return errorMessage.includes('ortrun') ||
-        errorMessage.includes('invalid buffer') ||
-        errorMessage.includes('mapasync') ||
-        errorMessage.includes('device lost') ||
-        errorMessage.includes('webgpu');
+    return errorMessage.includes('ortrun') || errorMessage.includes('invalid buffer') || errorMessage.includes('mapasync') || errorMessage.includes('device lost') || errorMessage.includes('webgpu');
 }
 
 async function runGenerationPass(message, prompt, stateless) {
@@ -654,9 +773,7 @@ async function runGenerationPass(message, prompt, stateless) {
         tokenize: false,
         add_generation_prompt: true
     });
-    const inputs = rawImages.length
-        ? await processor(promptText, rawImages)
-        : await processor(promptText);
+    const inputs = rawImages.length ? await processor(promptText, rawImages) : await processor(promptText);
 
     let streamedText = '';
     let guardedStop = null;
@@ -664,7 +781,7 @@ async function runGenerationPass(message, prompt, stateless) {
     const streamer = new TextStreamer(processor.tokenizer, {
         skip_prompt: true,
         skip_special_tokens: true,
-        callback_function: (chunk) => {
+        callback_function: chunk => {
             if (!chunk || message.requestId !== activeRequestId) {
                 return;
             }
@@ -677,11 +794,13 @@ async function runGenerationPass(message, prompt, stateless) {
                 return;
             }
             streamedText = nextText;
-            self.postMessage({
-                type: 'token',
-                requestId: message.requestId,
-                text: chunk
-            });
+            if (!isOfficialMicroModelProvider(message.providerKey)) {
+                self.postMessage({
+                    type: 'token',
+                    requestId: message.requestId,
+                    text: chunk
+                });
+            }
         }
     });
 
@@ -689,30 +808,22 @@ async function runGenerationPass(message, prompt, stateless) {
     try {
         output = await model.generate({
             ...inputs,
-            max_new_tokens: Number.isFinite(message.maxNewTokens)
-                ? message.maxNewTokens
-                : DEFAULT_GENERATION.maxNewTokens,
-            max_time: Number.isFinite(message.maxTime)
-                ? message.maxTime
-                : DEFAULT_GENERATION.maxTime,
-            do_sample: typeof message.doSample === 'boolean'
-                ? message.doSample
-                : (typeof generationDefaults.doSample === 'boolean' ? generationDefaults.doSample : true),
-            temperature: Number.isFinite(message.temperature)
-                ? message.temperature
-                : (Number.isFinite(generationDefaults.temperature) ? generationDefaults.temperature : DEFAULT_GENERATION.temperature),
-            top_p: Number.isFinite(message.topP)
-                ? message.topP
-                : (Number.isFinite(generationDefaults.topP) ? generationDefaults.topP : DEFAULT_GENERATION.topP),
-            top_k: Number.isFinite(message.topK)
-                ? message.topK
-                : (Number.isFinite(generationDefaults.topK) ? generationDefaults.topK : DEFAULT_GENERATION.topK),
+            max_new_tokens: Number.isFinite(message.maxNewTokens) ? message.maxNewTokens : DEFAULT_GENERATION.maxNewTokens,
+            max_time: Number.isFinite(message.maxTime) ? message.maxTime : DEFAULT_GENERATION.maxTime,
+            do_sample: typeof message.doSample === 'boolean' ? message.doSample : typeof generationDefaults.doSample === 'boolean' ? generationDefaults.doSample : true,
+            temperature: Number.isFinite(message.temperature) ? message.temperature : Number.isFinite(generationDefaults.temperature) ? generationDefaults.temperature : DEFAULT_GENERATION.temperature,
+            top_p: Number.isFinite(message.topP) ? message.topP : Number.isFinite(generationDefaults.topP) ? generationDefaults.topP : DEFAULT_GENERATION.topP,
+            top_k: Number.isFinite(message.topK) ? message.topK : Number.isFinite(generationDefaults.topK) ? generationDefaults.topK : DEFAULT_GENERATION.topK,
             repetition_penalty: Number.isFinite(message.repetitionPenalty)
                 ? message.repetitionPenalty
-                : (Number.isFinite(generationDefaults.repetitionPenalty) ? generationDefaults.repetitionPenalty : DEFAULT_GENERATION.repetitionPenalty),
+                : Number.isFinite(generationDefaults.repetitionPenalty)
+                  ? generationDefaults.repetitionPenalty
+                  : DEFAULT_GENERATION.repetitionPenalty,
             no_repeat_ngram_size: Number.isFinite(message.noRepeatNgramSize)
                 ? message.noRepeatNgramSize
-                : (Number.isFinite(generationDefaults.noRepeatNgramSize) ? generationDefaults.noRepeatNgramSize : DEFAULT_GENERATION.noRepeatNgramSize),
+                : Number.isFinite(generationDefaults.noRepeatNgramSize)
+                  ? generationDefaults.noRepeatNgramSize
+                  : DEFAULT_GENERATION.noRepeatNgramSize,
             stopping_criteria: [interruptableStop],
             streamer
         });
@@ -723,13 +834,21 @@ async function runGenerationPass(message, prompt, stateless) {
 
     let responseText = sanitizeGuardedText(streamedText, guardedStop);
     if (!responseText) {
-        const decoded = processor.batch_decode(output, {
-            skip_special_tokens: true
-        })[0] || '';
-        responseText = sanitizeGuardedText(
-            decoded.slice(promptText.length).trim() || decoded.trim(),
-            guardedStop
-        );
+        const decoded =
+            processor.batch_decode(output, {
+                skip_special_tokens: true
+            })[0] || '';
+        responseText = sanitizeGuardedText(decoded.slice(promptText.length).trim() || decoded.trim(), guardedStop);
+    }
+    if (isOfficialMicroModelProvider(message.providerKey)) {
+        responseText = sanitizeOfficialMicroModelResponse(responseText, prompt);
+        if (responseText) {
+            self.postMessage({
+                type: 'token',
+                requestId: message.requestId,
+                text: responseText
+            });
+        }
     }
 
     if (!stateless) {
@@ -760,6 +879,9 @@ async function generateReply(message) {
     try {
         if (!stateless) {
             const rememberedFact = rememberExplicitConversationFact(prompt);
+            if (rememberedFact && isOfficialMicroModelProvider(message.providerKey) && /reply\s+only\s+with\s*:?\s*remembered\b/i.test(prompt)) {
+                return respondWithDirectText(message, prompt, 'remembered', 'memory');
+            }
             const requestedFact = rememberedFact ? null : findRequestedConversationFact(prompt);
             if (requestedFact) {
                 return respondWithConversationFact(message, prompt, requestedFact);
@@ -845,7 +967,7 @@ async function disposeModel(options = {}) {
     }
 }
 
-self.addEventListener('message', async (event) => {
+self.addEventListener('message', async event => {
     const message = event.data || {};
     const requestId = message.requestId;
 
