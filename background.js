@@ -12886,9 +12886,9 @@ async function ensureNinjaSDKLoaded() {
 
 	if (typeof window.VDONinjaSDK === "undefined") {
 		if (typeof window.loadScript === "function") {
-			await window.loadScript("./sources/grabvideo.js").catch(() => window.loadScript("./thirdparty/vdoninja-sdk.js"));
+			await window.loadScript("./thirdparty/vdoninja-sdk.js");
 		} else {
-			await dynamicLoadScript("./sources/grabvideo.js").catch(() => dynamicLoadScript("./thirdparty/vdoninja-sdk.js"));
+			await dynamicLoadScript("./thirdparty/vdoninja-sdk.js");
 		}
 	}
 	if (typeof window.NinjaBridge === "undefined") {

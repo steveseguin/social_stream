@@ -29,7 +29,7 @@ const MODEL_PATH_TEMPLATE = "{model}/";
 
 		const result = await page.evaluate(
 			async ({ modelId, modelHost, modelPathTemplate }) => {
-				const worker = new Worker("/local-browser-model-worker.js?v=15", { type: "module" });
+				const worker = new Worker("/local-browser-model-worker.js?v=17", { type: "module" });
 				const pending = new Map();
 				const events = [];
 				let counter = 0;

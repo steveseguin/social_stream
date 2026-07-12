@@ -222,7 +222,7 @@ For a public setup lookup, use `docs/agents/08-platform-sources/supported-sites-
 
 ### Is this source file a normal chat parser or a helper?
 
-Check `docs/agents/08-platform-sources/manual-static-and-helper-sources.md` before answering detailed questions about `sources/static/*`, `sources/inject/*`, `sources/autoreload.js`, `sources/capturevideo.js`, or `sources/grabvideo.js`.
+Check `docs/agents/08-platform-sources/manual-static-and-helper-sources.md` before answering detailed questions about `sources/static/*`, `sources/inject/*`, `sources/autoreload.js`, or `sources/capturevideo.js`.
 
 Common examples:
 

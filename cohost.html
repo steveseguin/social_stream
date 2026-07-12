@@ -486,6 +486,8 @@
 				border-top: 1px solid #333;
 				display: flex;
 				gap: 12px;
+				position: relative;
+				z-index: 1001;
 			}
 
 			.message-input {
@@ -1465,7 +1467,7 @@
 			}
 
 			function sendCohostOverlayPayload(payload) {
-				if (!shouldMirrorCohostOverlay()) return;
+				if (!shouldMirrorCohostOverlay() || !payload) return;
 				const meta = Object.assign({
 					source: "cohost",
 					tts: false
@@ -1487,6 +1489,10 @@
 				const now = Date.now();
 				const elapsed = now - cohostOverlayLastSent;
 				if (elapsed >= waitMs) {
+					if (cohostOverlaySendTimer) {
+						clearTimeout(cohostOverlaySendTimer);
+						cohostOverlaySendTimer = null;
+					}
 					cohostOverlayLastSent = now;
 					const nextPayload = cohostOverlayPendingPayload;
 					cohostOverlayPendingPayload = null;
@@ -1499,7 +1505,7 @@
 					cohostOverlayLastSent = Date.now();
 					const nextPayload = cohostOverlayPendingPayload;
 					cohostOverlayPendingPayload = null;
-					sendCohostOverlayPayload(nextPayload);
+					if (nextPayload) sendCohostOverlayPayload(nextPayload);
 				}, waitMs - elapsed);
 			}
 
@@ -1511,6 +1517,7 @@
 					text: value,
 					emotion: window.avatar?.currentEmotion || "happy",
 					talking: !final && !!window.avatar?.isTalking,
+					tts: !!final,
 					final: !!final
 				}, final ? 0 : 350);
 			}
@@ -1765,7 +1772,7 @@
 			const GEMINI_AUDIO_TOKENS_PER_SECOND = 25;
 			const GEMINI_VIDEO_TOKENS_PER_SECOND = 258;
 			const LOCAL_BROWSER_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
-			const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js?v=15";
+			const LOCAL_BROWSER_WORKER_PATH = "local-browser-model-worker.js?v=17";
 			const CUSTOM_OPENAI_DEFAULT_ENDPOINT = "http://127.0.0.1:1234/v1";
 			const CUSTOM_OPENAI_DEFAULT_MODEL = "";
 			const CONFIGURED_LLM_BRIDGE_CHUNK_SIZE = 12000;
@@ -2915,11 +2922,9 @@
 							const fallbackEvent = `${this.providerLabel} using self-hosted ${defaultModelId} after skipping missing bundled files`;
 							this.modelOverride = "";
 							this.model = defaultModelId;
-							if (requestedLocalPath && requestedLocalPath === bundledLocalPath) {
-								saveModelOverride(this.providerKey, "");
-								if (providerSelect?.value === this.providerKey && modelOverrideInput) {
-									modelOverrideInput.value = "";
-								}
+							saveModelOverride(this.providerKey, "");
+							if (providerSelect?.value === this.providerKey && modelOverrideInput) {
+								modelOverrideInput.value = "";
 							}
 							updateDiagnostics({
 								model: defaultModelId,

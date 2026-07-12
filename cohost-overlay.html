@@ -1131,8 +1131,6 @@
 			var command;
 			if (!payload) return false;
 			if (!targetMatches(payload)) return false;
-			state.lastPayload = payload;
-			setStatus("payload received " + new Date().toLocaleTimeString());
 
 			if (payload.action === "aiOverlay" || payload.action === "cohostOverlay") {
 				meta = payload.meta || {};
@@ -1141,6 +1139,8 @@
 			} else {
 				return false;
 			}
+			state.lastPayload = payload;
+			setStatus("payload received " + new Date().toLocaleTimeString());
 
 			command = String(meta.command || (meta.text || meta.chatmessage ? "say" : "emote")).toLowerCase();
 			if (command === "say" || command === "speak") {
@@ -1167,7 +1167,7 @@
 			bridgeFrame.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&push&notmobile&label=" + encodeURIComponent(label) + "&view=" + encodeURIComponent(sessionId) + "&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + encodeURIComponent(sessionId);
 			bridgeFrame.style.cssText = "width:0;height:0;border:0;position:absolute;left:-200px;top:-200px;";
 			bridgeFrame.onload = function () {
-				setStatus("bridge ready");
+				setStatus("bridge loaded; waiting for session data");
 			};
 			document.body.appendChild(bridgeFrame);
 			window.addEventListener("message", function (event) {

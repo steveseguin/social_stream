@@ -6,7 +6,7 @@
     constructor(opts = {}) {
       super();
       if (typeof VDONinjaSDK === 'undefined') {
-        throw new Error('VDONinjaSDK not available. Ensure sources/grabvideo.js is loaded.');
+        throw new Error('VDONinjaSDK not available. Ensure thirdparty/vdoninja-sdk.js is loaded.');
       }
 
       this.opts = Object.assign(

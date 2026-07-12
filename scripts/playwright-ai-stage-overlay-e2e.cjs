@@ -25,6 +25,16 @@ function removeChromiumDebugLog() {
 async function addSpeechStub(page) {
   await page.addInitScript(() => {
     window.__spoken = [];
+	window.__mediaRequests = 0;
+	if (navigator.mediaDevices) {
+		Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+			configurable: true,
+			value: async () => {
+				window.__mediaRequests += 1;
+				throw new Error('The OBS overlay must not request media.');
+			}
+		});
+	}
     Object.defineProperty(window, 'speechSynthesis', {
       configurable: true,
       value: {
@@ -223,8 +233,8 @@ async function addPopupInitScript(page) {
   });
 }
 
-async function addCohostInitScript(page) {
-  await page.addInitScript(() => {
+async function addCohostInitScript(page, mockBridge = true) {
+  await page.addInitScript((mockBridgeEnabled) => {
     window.__aiOverlayPayloads = [];
 
     Object.defineProperty(navigator, 'mediaDevices', {
@@ -278,6 +288,8 @@ async function addCohostInitScript(page) {
         this.text = text;
       }
     });
+
+	if (!mockBridgeEnabled) return;
 
     const srcDescriptor = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src');
     Object.defineProperty(HTMLIFrameElement.prototype, 'src', {
@@ -344,7 +356,7 @@ async function addCohostInitScript(page) {
         srcDescriptor.set.call(this, value);
       }
     });
-  });
+  }, mockBridge);
 }
 
 async function runOverlayPageTest(context, baseUrl) {
@@ -361,6 +373,11 @@ async function runOverlayPageTest(context, baseUrl) {
     meta: { command: 'say', text: 'Wrong target' }
   }));
   assert(wrongTargetAccepted === false, 'Overlay accepted a command for the wrong target.');
+	const controlMessageState = await page.evaluate(() => ({
+		accepted: window.__aiStageOverlay.processPayload({ action: 'stream-id-detected', value: 'transport-control' }),
+		lastPayload: window.__aiStageOverlay.getState().lastPayload
+	}));
+	assert(controlMessageState.accepted === false && controlMessageState.lastPayload === null, 'Overlay treated a transport control message as stage content.');
 
   await page.evaluate(() => window.__aiStageOverlay.processPayload({
     action: 'aiOverlay',
@@ -392,6 +409,33 @@ async function runOverlayPageTest(context, baseUrl) {
   }));
   assert(state.avatar.indexOf('data:image/svg+xml') === 0 && state.hasImage, 'Overlay avatar image command did not apply.');
 
+	const chunkPayload = JSON.stringify({
+		action: 'aiOverlay',
+		target: 'stage',
+		meta: { command: 'say', text: 'Reassembled chunk response.', emotion: 'thinking', final: true }
+	});
+	const chunkState = await page.evaluate(({ first, second }) => {
+		const firstResult = window.__aiStageOverlay.processPayload({ action: 'ssnBridgeChunk', chunkId: 'overlay-test', index: 0, total: 2, value: first });
+		const secondResult = window.__aiStageOverlay.processPayload({ action: 'ssnBridgeChunk', chunkId: 'overlay-test', index: 1, total: 2, value: second });
+		return { firstResult, secondResult, state: window.__aiStageOverlay.getState() };
+	}, { first: chunkPayload.slice(0, 47), second: chunkPayload.slice(47) });
+	assert(chunkState.firstResult === false && chunkState.secondResult === true, 'Overlay chunk reassembly returned the wrong completion state.');
+	assert(chunkState.state.text === 'Reassembled chunk response.', 'Overlay did not render a reassembled command.');
+
+	const maliciousText = '<img src=x onerror="window.__overlayXss=true"> & unsafe-looking text';
+	const safeTextState = await page.evaluate((text) => {
+		window.__aiStageOverlay.processPayload({ action: 'aiOverlay', target: 'stage', meta: { command: 'say', text } });
+		return {
+			text: document.getElementById('speechText').textContent,
+			html: document.getElementById('speechText').innerHTML,
+			xss: window.__overlayXss === true,
+			position: document.body.getAttribute('data-position'),
+			scale: getComputedStyle(document.documentElement).getPropertyValue('--overlay-scale').trim()
+		};
+	}, maliciousText);
+	assert(safeTextState.text === maliciousText && safeTextState.html.indexOf('<img') === -1 && !safeTextState.xss, 'Overlay rendered response text as unsafe HTML.');
+	assert(safeTextState.position === 'bottom-left' && safeTextState.scale === '1.25', 'Overlay did not apply its OBS layout parameters.');
+
   await page.evaluate(() => window.__aiStageOverlay.processPayload({
     action: 'aiOverlay',
     target: 'stage',
@@ -399,6 +443,12 @@ async function runOverlayPageTest(context, baseUrl) {
   }));
   state = await page.evaluate(() => window.__aiStageOverlay.getState());
   assert(state.text === '' && state.visible === false, 'Overlay clear command did not hide idle overlay text.');
+	const unattendedState = await page.evaluate(() => ({
+		mediaRequests: window.__mediaRequests,
+		interactiveElements: document.querySelectorAll('button,input,select,textarea,video,audio').length
+	}));
+	assert(unattendedState.mediaRequests === 0, 'Overlay requested microphone or camera access.');
+	assert(unattendedState.interactiveElements === 0, 'Overlay unexpectedly exposes interactive controls or media elements.');
   assert(errors.length === 0, `Overlay page errors: ${errors.join(' | ')}`);
   await page.close();
 
@@ -409,10 +459,104 @@ async function runOverlayPageTest(context, baseUrl) {
   await ttsPage.evaluate(() => window.__aiStageOverlay.processPayload({
     action: 'aiOverlay',
     target: 'stage',
-    meta: { command: 'say', text: 'Speak this line.', tts: true }
+	meta: { command: 'say', text: 'Do not speak the partial line.', tts: false, final: false }
   }));
+	await ttsPage.waitForTimeout(50);
+	assert((await ttsPage.evaluate(() => window.__spoken.length)) === 0, 'Overlay spoke a streaming partial response.');
+	await ttsPage.evaluate(() => window.__aiStageOverlay.processPayload({
+		action: 'aiOverlay',
+		target: 'stage',
+		meta: { command: 'say', text: 'Speak this line.', tts: true, final: true }
+	}));
   await ttsPage.waitForFunction(() => window.__spoken && window.__spoken.includes('Speak this line.'));
   await ttsPage.close();
+
+	const timerPage = await context.newPage();
+	await timerPage.goto(`${baseUrl}/cohost-overlay.html?preview=1&label=stage&hideidle&hideafter=60`, { waitUntil: 'domcontentloaded' });
+	await timerPage.waitForFunction(() => !!window.__aiStageOverlay);
+	await timerPage.evaluate(() => window.__aiStageOverlay.processPayload({
+		action: 'aiOverlay',
+		target: 'stage',
+		meta: { command: 'say', text: 'Short-lived line.' }
+	}));
+	await timerPage.waitForFunction(() => window.__aiStageOverlay.getState().visible === false && window.__aiStageOverlay.getState().text === '', null, { timeout: 3000 });
+	await timerPage.close();
+}
+
+async function addBridgeRelayRedirect(page, baseUrl) {
+	await page.addInitScript((relayBaseUrl) => {
+		const srcDescriptor = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'src');
+		Object.defineProperty(HTMLIFrameElement.prototype, 'src', {
+			configurable: true,
+			get() {
+				return srcDescriptor.get.call(this);
+			},
+			set(value) {
+				const text = String(value || '');
+				if (text.indexOf('https://vdo.socialstream.ninja/') === 0) {
+					const original = new URL(text);
+					srcDescriptor.set.call(this, relayBaseUrl + '/scripts/fixtures/ai-stage-bridge-relay.html' + original.search);
+					return;
+				}
+				srcDescriptor.set.call(this, value);
+			}
+		});
+	}, baseUrl);
+}
+
+async function runPairedPageTest(context, baseUrl) {
+	const overlay = await context.newPage();
+	const cohost = await context.newPage();
+	const errors = [];
+	for (const page of [overlay, cohost]) {
+		page.on('pageerror', (error) => errors.push(error.message));
+	}
+	await addSpeechStub(overlay);
+	await addCohostInitScript(cohost, false);
+	await addBridgeRelayRedirect(overlay, baseUrl);
+	await addBridgeRelayRedirect(cohost, baseUrl);
+	await overlay.goto(`${baseUrl}/cohost-overlay.html?session=playwright-ai-stage-pair&label=paired-stage&tts&hideidle&status`, { waitUntil: 'domcontentloaded' });
+	await overlay.waitForFunction(() => !!window.__aiStageOverlay);
+	await cohost.goto(`${baseUrl}/cohost.html?session=playwright-ai-stage-pair&aioverlay=paired-stage`, { waitUntil: 'domcontentloaded' });
+	await cohost.waitForSelector('#providerSelect');
+	await cohost.selectOption('#providerSelect', 'configuredllm');
+	await cohost.selectOption('#audioSource', 'none');
+	await cohost.selectOption('#videoSource', 'fake-camera');
+	await cohost.click('#startButton');
+	try {
+		await cohost.waitForFunction(() => document.getElementById('startButton').dataset.started === 'true', null, { timeout: 30000 });
+	} catch (error) {
+		const diagnostics = await cohost.evaluate(() => ({
+			buttonText: document.getElementById('startButton')?.textContent || '',
+			started: document.getElementById('startButton')?.dataset?.started || '',
+			bridgeInfo: document.getElementById('configuredLLMInfo')?.textContent || '',
+			errorText: document.getElementById('error')?.textContent || document.querySelector('.error-message')?.textContent || '',
+			frames: Array.from(document.querySelectorAll('iframe')).map((frame) => frame.src || 'srcdoc')
+		}));
+		const frameStates = await Promise.all(cohost.frames().slice(1).map(async (frame) => {
+			try {
+				return await frame.evaluate(() => ({ url: location.href, ready: document.readyState, body: document.body?.innerText || '' }));
+			} catch (frameError) {
+				return { url: frame.url(), error: frameError.message };
+			}
+		}));
+		throw new Error(`Paired cohost did not start: ${JSON.stringify(diagnostics)} frameStates=${JSON.stringify(frameStates)} pageErrors=${errors.join(' | ')}`);
+	}
+	await overlay.waitForFunction(() => window.__aiStageOverlay.getState().text === 'Paired bridge response for the OBS stage.', null, { timeout: 120000 });
+	await overlay.waitForFunction(() => window.__spoken.includes('Paired bridge response for the OBS stage.'), null, { timeout: 30000 });
+	const state = await overlay.evaluate(() => ({
+		overlay: window.__aiStageOverlay.getState(),
+		spoken: window.__spoken.slice(),
+		mediaRequests: window.__mediaRequests,
+		visible: document.body.classList.contains('visible')
+	}));
+	assert(state.visible, 'Paired overlay did not become visible.');
+	assert(state.overlay.lastPayload && state.overlay.lastPayload.target === 'paired-stage', 'Paired overlay received the wrong target.');
+	assert(state.spoken.filter((text) => text === state.overlay.text).length === 1, 'Paired overlay did not speak the final answer exactly once.');
+	assert(state.mediaRequests === 0, 'Paired OBS overlay requested microphone or camera access.');
+	assert(errors.length === 0, `Paired page errors: ${errors.join(' | ')}`);
+	await cohost.close();
+	await overlay.close();
 }
 
 async function runPopupLinkTest(context, baseUrl) {
@@ -421,7 +565,7 @@ async function runPopupLinkTest(context, baseUrl) {
   page.on('pageerror', (error) => errors.push(error.message));
   await addPopupInitScript(page);
   await page.goto(`${baseUrl}/popup.html`, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('#aioverlaylink');
+  await page.waitForSelector('#aioverlaylink', { state: 'attached' });
   try {
     await page.waitForFunction(() => document.getElementById('aioverlaylink').href.indexOf('label=stage') >= 0);
   } catch (error) {
@@ -467,8 +611,11 @@ async function runPopupLinkTest(context, baseUrl) {
   assert(state.cohostOverlay === 'stage', 'Popup cohost link did not target the overlay label.');
   assert(state.fromChatBotChecked && state.overlayTtsChecked, 'Popup did not hydrate the AI overlay toggles.');
 
-  await page.fill('#aiOverlayLabel', 'stage-two');
-  await page.dispatchEvent('#aiOverlayLabel', 'change');
+  await page.evaluate(() => {
+    const input = document.getElementById('aiOverlayLabel');
+    input.value = 'stage-two';
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   await page.waitForFunction(() => document.getElementById('aioverlaylink').href.indexOf('label=stage-two') >= 0);
   await page.evaluate(() => {
     const input = document.getElementById('aiOverlayTts');
@@ -518,6 +665,10 @@ async function runCohostBridgeTest(context, baseUrl) {
   }));
   assert(/SSN configured LLM co-host/i.test(state.latestAssistant), 'Cohost did not render the configured LLM response.');
   assert(state.overlayPayloads.some((payload) => payload.meta && payload.meta.source === 'cohost'), 'Cohost overlay payload did not mark source=cohost.');
+	const finalPayloads = state.overlayPayloads.filter((payload) => payload.meta && payload.meta.command === 'say' && payload.meta.final === true);
+	assert(finalPayloads.length === 1, 'Cohost did not emit exactly one final overlay answer.');
+	assert(finalPayloads[0].meta.tts === true, 'Cohost final overlay answer was not marked for TTS.');
+	assert(state.overlayPayloads.every((payload) => payload.meta && payload.meta.command), 'Cohost emitted an empty overlay command.');
   assert(errors.length === 0, `Cohost page errors: ${errors.join(' | ')}`);
   await page.close();
 }
@@ -561,6 +712,7 @@ async function runCohostBridgeTest(context, baseUrl) {
     await runOverlayPageTest(context, baseUrl);
     await runPopupLinkTest(context, baseUrl);
     await runCohostBridgeTest(context, baseUrl);
+	await runPairedPageTest(context, baseUrl);
 
     assert(blockedExternalRequests.length === 0, `External requests were attempted: ${blockedExternalRequests.join(', ')}`);
     console.log('PASS ai stage overlay e2e');

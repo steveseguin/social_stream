@@ -28,6 +28,7 @@
             requiresApiKey: false,
             defaultPrompt: 'You are a concise, friendly social chat co-host. Keep answers short, natural, and relevant to the ongoing conversation.'
         },
+        // TODO(2026-07-31): Re-audit R2 and remove the legacy qwen3.5-0.8b-onnx/ prefix once older saved model overrides no longer need it.
         localqwen: {
             key: 'localqwen',
             label: 'Local Qwen 3.5 0.8B (Browser, fast)',
@@ -46,7 +47,7 @@
                     vision_encoder: 'q4'
                 },
                 generation: {
-                    text: { temperature: 0.6, topP: 0.95, topK: 20 },
+					text: { doSample: false, repetitionPenalty: 1.0, noRepeatNgramSize: 4 },
                     vision: { temperature: 0.7, topP: 0.8, topK: 20 }
                 }
             },

@@ -70,7 +70,6 @@ These are the main `sources/*.js` files. Most are normal extension/app content s
 | `sources/gala.js` | Gala Music | standard | 1 | - | quick/heavy | Gala Music rendered streaming chat capture; see `event-and-community-sources.md`. |
 | `sources/generic.js` | Rozy.tv; Instafeed | standard | 1 | - | heavy | Intense parser/event/setup validation. |
 | `sources/goodgame.js` | GoodGame.ru | popout | 1 | - | quick/heavy | GoodGame chat URL capture with badges/avatar fallback; see `popout-chat-only-sources.md`. |
-| `sources/grabvideo.js` | - | - | 0 | - | quick/heavy | Standalone VDO.Ninja SDK/helper; see `manual-static-and-helper-sources.md`. |
 | `sources/instafeed.js` | Instafeed | standard | 1 | - | heavy | Intense parser/event/setup validation. |
 | `sources/instagram.js` | Instagram Live; Instagram Post Comments | standard, toggle | 1 | - | heavy | Intense parser/event/setup validation. |
 | `sources/instagramlive.js` | Instagram Live | standard | 0 | - | heavy | Intense parser/event/setup validation. |

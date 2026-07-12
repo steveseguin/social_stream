@@ -27,7 +27,7 @@ const MAX_HISTORY_CHARACTERS = 12000;
 const MAX_MEMORY_CHARACTERS = 3000;
 const MAX_CONVERSATION_FACTS = 32;
 const CONVERSATION_GUIDANCE =
-    'Treat this as one ongoing conversation. Use the recent conversation to answer the latest user message directly. Follow constraints in the latest request exactly. Do not greet the user again, restart the conversation, repeatedly ask what they want to discuss, or end every reply with a question. Never use a generic readiness response such as asking what they want to discuss. If the latest speech is short or unclear, briefly acknowledge its specific words instead of greeting or asking a generic question. Avoid repeating earlier replies. A camera image is passive background context: ignore it when it is unrelated, and only mention or describe it when the user asks about it or it is directly relevant.';
+    'Treat this as one ongoing conversation. Use the recent conversation to answer the latest user message directly. Follow constraints in the latest request exactly. Answer concrete requests with concrete content; never reply only that you would love to help or ask what is next. Do not greet the user again, restart the conversation, repeatedly ask what they want to discuss, or end every reply with a question. Never use a generic readiness response such as asking what they want to discuss. Do not identify yourself as ChatGPT, OpenAI, or Alibaba Cloud; you are the local AI co-host. If the latest speech is short or unclear, briefly acknowledge its specific words instead of greeting or asking a generic question. Avoid repeating earlier replies. A camera image is passive background context: ignore it when it is unrelated, and only mention or describe it when the user asks about it or it is directly relevant.';
 const DEGENERATE_CHAR_RUN_LENGTH = 12;
 const DEGENERATE_TAIL_PATTERN_REPEATS = 6;
 const DEGENERATE_TAIL_PATTERN_MAX_UNIT = 4;
@@ -481,11 +481,27 @@ function isOfficialMicroModelProvider(providerKey) {
 
 function sanitizeOfficialMicroModelResponse(text, prompt = '') {
     let value = String(text || '').trim();
+    const isIntroPrompt = /\b(?:introduce yourself|say hello|welcome (?:the |people |viewers |everyone |someone ))/i.test(prompt);
+	const shortPrompt = String(prompt || '').trim().split(/\s+/).filter(Boolean).length <= 6;
+    value = value
+        .replace(/\bI(?:'m| am) ChatGPT(?:,\s*a large language model)?(?:\s+(?:developed by|from)\s+Alibaba Cloud)?/gi, "I'm your local AI co-host")
+        .replace(/\bChatGPT(?:\s+from\s+Alibaba Cloud)?\b/gi, 'the local AI co-host');
+    if (isIntroPrompt) {
+        value = value
+            .replace(/^(?:hi(?: there)?[!.]?\s*){2,}/i, 'Hi! ')
+            .replace(/,?\s*my name is (?!co-?host\b)[a-z][\w'-]*/gi, '')
+            .replace(/(?:^|\s+)[^.!?\n]*\?\s*$/, '')
+            .trim();
+    }
     const genericQuestionPatterns = [
         /\s*(?:do|would) you (?:want|like) to (?:discuss|talk about)(?:\s+the details of)?[^?\n]{0,100}\?\s*$/i,
         /\s*what (?:do you want|would you like) to (?:discuss|talk about)(?:\s+today)?\?\s*$/i,
+        /\s*what would you like to chat about(?:\s+today)?\?\s*$/i,
         /\s*what(?:'s| is) on your mind(?:\s+to discuss)?(?:\s+today)?(?:,?\s+[a-z][\w-]*)?\?\s*$/i,
         /\s*what are we discussing(?:\s+today)?\?\s*$/i,
+        /\s*how (?:about that|can I help you(?:\s+(?:today|further|with (?:that|this)))?|can I be of service(?:\s+today)?)\?\s*$/i,
+		/\s*what(?:'s| is) next(?:\s+on the (?:list|agenda))?\?\s*$/i,
+		/\s*what (?:should|would) (?:we|you) do next\?\s*$/i,
         /\s*(?:are you )?ready to (?:keep|continue|get started|start|chat|talk|discuss|go)[^?\n]{0,80}\?\s*$/i
     ];
 
@@ -500,6 +516,9 @@ function sanitizeOfficialMicroModelResponse(text, prompt = '') {
     if (/(?:without asking(?: me)? (?:a|any) questions?|do not ask(?: me)? (?:a|any) questions?|don['’]t ask(?: me)? (?:a|any) questions?)/i.test(prompt)) {
         value = value.replace(/(?:^|\s+)[^.!?\n]*\?\s*$/, '').trim();
     }
+	if (shortPrompt) {
+		value = value.replace(/(?:^|\s+)[^.!?\n]*\?\s*$/, '').trim();
+	}
     value = value.replace(/\s+(?:what|what(?:'s| is)|do you|would you)\s*$/i, '').trim();
     return value;
 }

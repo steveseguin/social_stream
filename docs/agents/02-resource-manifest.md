@@ -169,7 +169,6 @@ These are active source extraction targets. Start with the high-volume platforms
 - `sources/gala.js`
 - `sources/generic.js`
 - `sources/goodgame.js`
-- `sources/grabvideo.js`
 - `sources/instafeed.js`
 - `sources/instagram.js`
 - `sources/instagramlive.js`

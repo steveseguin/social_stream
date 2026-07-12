@@ -105,6 +105,24 @@ test('background consumes only the normalized bridge data event', () => {
   assert.doesNotMatch(source, /ninjaBridge\.vdo\.addEventListener\(["']data(?:Received)?["']/);
 });
 
+test('production loader uses the official vendored SDK', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'background.js'), 'utf8');
+  assert.match(source, /loadScript\(["']\.\/thirdparty\/vdoninja-sdk\.js["']\)/);
+  assert.doesNotMatch(source, /sources\/grabvideo\.js/);
+});
+
+test('Discord video capture uses the official vendored SDK', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'manifest.json'), 'utf8'));
+  const captureEntry = manifest.content_scripts.find((entry) =>
+    Array.isArray(entry.js) && entry.js.includes('./sources/capturevideo.js')
+  );
+  assert.deepEqual(captureEntry.js, ['./thirdparty/vdoninja-sdk.js', './sources/capturevideo.js']);
+
+  const source = fs.readFileSync(path.join(__dirname, '..', 'sources', 'capturevideo.js'), 'utf8');
+  assert.doesNotMatch(source, /class VDONinjaSDK/);
+  assert.match(source, /joinRoom\(\{ room: ROOM_ID \}\)/);
+});
+
 test('destroy closes the SDK signaling connection', async () => {
   const bridge = await createBridge();
   const sdk = bridge.vdo;

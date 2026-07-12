@@ -305,7 +305,6 @@ floatplane.js
 gala.js
 generic.js
 goodgame.js
-grabvideo.js
 instafeed.js
 instagram.js
 instagramlive.js
