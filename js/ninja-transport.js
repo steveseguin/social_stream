@@ -191,9 +191,10 @@
           if (this.opts.debug) console.warn('NinjaBridge: data handler error', e);
         }
       };
-      // Try both event names used across SDK versions
+      // The vendored SDK emits both dataReceived and the legacy data alias for
+      // WebSocket fallback packets. Listen only to the canonical event so one
+      // packet becomes one bridge event.
       this.vdo.addEventListener('dataReceived', dataHandler);
-      this.vdo.addEventListener('data', dataHandler);
     }
 
     _setPeerLabel(uuid, label, priority) {
@@ -285,8 +286,8 @@
       const payload = { overlayNinja: data };
       if (uuid) {
         try {
-          await this.vdo.sendData(payload, uuid);
-          return true;
+          const sent = await this.vdo.sendData(payload, uuid);
+          return sent !== false;
         } catch (e) {
           console.warn('NinjaBridge send error (uuid)', e);
           return false;
@@ -295,8 +296,8 @@
 
       // Default broadcast to all peers
       try {
-        await this.vdo.sendData(payload);
-        return true;
+        const sent = await this.vdo.sendData(payload);
+        return sent !== false;
       } catch (e) {
         console.warn('NinjaBridge broadcast error', e);
         return false;
@@ -312,7 +313,8 @@
       let ok = true;
       for (const uuid of targets) {
         try {
-          await this.vdo.sendData(payload, uuid);
+          const sent = await this.vdo.sendData(payload, uuid);
+          if (sent === false) ok = false;
         } catch (e) {
           console.warn('NinjaBridge sendToLabel error', label, uuid, e);
           ok = false;

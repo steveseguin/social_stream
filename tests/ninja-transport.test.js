@@ -16,6 +16,7 @@ class FakeSDK extends EventTarget {
     this.options = options;
     this.state = {};
     this.calls = [];
+    this.sendResult = true;
   }
 
   async connect() {
@@ -40,6 +41,11 @@ class FakeSDK extends EventTarget {
 
   disconnect() {
     this.calls.push(['disconnect']);
+  }
+
+  sendData(data, target) {
+    this.calls.push(['sendData', data, target]);
+    return this.sendResult;
   }
 
   emit(type, detail) {
@@ -98,6 +104,34 @@ test('normalizes one SDK data event into one bridge event', async () => {
     data: { overlayNinja: { chatmessage: 'hello' } },
   });
   assert.deepEqual(received, [{ uuid: 'peer-1', data: { chatmessage: 'hello' } }]);
+});
+
+test('does not duplicate fallback packets emitted under canonical and legacy event names', async () => {
+  const bridge = await createBridge();
+  const received = [];
+  bridge.addEventListener('data', (event) => received.push(event.detail));
+  const payload = { overlayNinja: { action: 'timer-update' } };
+
+  bridge.vdo.emit('dataReceived', { uuid: 'peer-1', data: payload, fallback: true });
+  bridge.vdo.emit('data', { UUID: 'peer-1', data: { pipe: payload } });
+
+  assert.deepEqual(received, [{ uuid: 'peer-1', data: { action: 'timer-update' } }]);
+});
+
+test('send reports an unsuccessful SDK send', async () => {
+  const bridge = await createBridge();
+  bridge.vdo.sendResult = false;
+
+  assert.equal(await bridge.send({ action: 'timer-update' }, 'peer-1'), false);
+  assert.equal(await bridge.send({ action: 'timer-update' }), false);
+});
+
+test('sendToLabel reports an unsuccessful SDK send', async () => {
+  const bridge = await createBridge();
+  bridge.vdo.emit('listing', { uuid: 'peer-1', label: 'dock' });
+  bridge.vdo.sendResult = false;
+
+  assert.equal(await bridge.sendToLabel({ action: 'waitlist-update' }, 'dock'), false);
 });
 
 test('background consumes only the normalized bridge data event', () => {
