@@ -1,6 +1,6 @@
 const { chromium } = require("playwright");
 
-const DEMO_URL = "https://webml-community-gemma-4-webgpu-kernels.hf.space/";
+const DEMO_URL = "https://webml-community-gemma-4-webgpu-kernels.static.hf.space/index.html";
 
 (async () => {
 	let browser;
@@ -34,10 +34,14 @@ const DEMO_URL = "https://webml-community-gemma-4-webgpu-kernels.hf.space/";
 		await page.fill("#input", "Reply with exactly: Gemma kernel test passed");
 		const generationStartedAt = Date.now();
 		await page.click("#sendBtn");
-		await page.waitForFunction(() => {
-			const message = document.querySelector("#thread .msg.assistant:last-child");
-			return message && message.querySelector(".meta") && !message.querySelector(".caret");
-		}, null, { timeout: 300000 });
+		await page.waitForFunction(
+			() => {
+				const message = document.querySelector("#thread .msg.assistant:last-child");
+				return message && message.querySelector(".meta") && !message.querySelector(".caret");
+			},
+			null,
+			{ timeout: 300000 }
+		);
 		const generationMs = Date.now() - generationStartedAt;
 		const result = await page.evaluate(() => {
 			const message = document.querySelector("#thread .msg.assistant:last-child");

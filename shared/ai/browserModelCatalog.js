@@ -6,30 +6,27 @@
     var LOCAL_BROWSER_MODELS = {
         localgemma: {
             key: 'localgemma',
-            label: 'Local Gemma 4 E2B (Browser, self-hosted)',
-            providerLabel: 'Local Gemma 4 (Browser, self-hosted)',
+            label: 'Local Gemma 4 E2B (Browser, text-only)',
+            providerLabel: 'Local Gemma 4 (Browser, text-only)',
             modelId: 'gemma4-e2b-it-onnx',
             localPath: 'thirdparty/models/gemma4-e2b-it-onnx',
             remoteHost: DEFAULT_REMOTE_HOST,
             remotePathTemplate: '{model}/',
             runtime: {
-                modelClass: 'Gemma4ForConditionalGeneration',
+                modelClass: 'Gemma4ForCausalLM',
                 requiresWebGPU: true,
                 dtype: {
-                    model: 'q4',
-                    decoder_model_merged: 'q4',
-                    vision_encoder: 'q4',
-                    audio_encoder: 'q4'
+                    embed_tokens: 'q4',
+                    decoder_model_merged: 'q4'
                 },
                 generation: {
-                    text: { temperature: 1.0, topP: 0.95, topK: 64 },
-                    vision: { temperature: 1.0, topP: 0.95, topK: 64 }
+                    text: { temperature: 1.0, topP: 0.95, topK: 64 }
                 }
             },
-            supportsVision: true,
-            prefersCaptureSelection: true,
+            supportsVision: false,
+            prefersCaptureSelection: false,
             requiresApiKey: false,
-            defaultPrompt: 'You are a concise, friendly social chat co-host. You can reference visible context when it helps, but do not narrate the scene unless asked.'
+            defaultPrompt: 'You are a concise, friendly social chat co-host. Keep answers short, natural, and relevant to the ongoing conversation.'
         },
         localqwen: {
             key: 'localqwen',

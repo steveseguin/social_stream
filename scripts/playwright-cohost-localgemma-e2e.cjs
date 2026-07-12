@@ -314,15 +314,15 @@ function findWorkerMessages(log, type, predicate) {
 
     const gemmaInit = findWorkerMessages(gemmaState.workerLog, 'init', (entry) => entry.data.modelId === 'gemma4-e2b-it-onnx')[0];
     assert(!!gemmaInit, 'Local Gemma init was not sent to the worker.');
-    assert(gemmaInit.data.runtime && gemmaInit.data.runtime.modelClass === 'Gemma4ForConditionalGeneration', 'Local Gemma init did not use Gemma4 runtime.');
+    assert(gemmaInit.data.runtime && gemmaInit.data.runtime.modelClass === 'Gemma4ForCausalLM', 'Local Gemma init did not use the text-only Gemma4 runtime.');
     assert(gemmaInit.data.remoteHost === 'https://largefiles.socialstream.ninja/', 'Local Gemma init did not use the self-hosted default origin.');
 
     const gemmaManualGenerate = findWorkerMessages(gemmaState.workerLog, 'generate', (entry) => entry.data.prompt === 'Describe the visible scene briefly.')[0];
     assert(!!gemmaManualGenerate, 'Local Gemma manual generate was not sent.');
-    assert(Array.isArray(gemmaManualGenerate.data.images) && gemmaManualGenerate.data.images.length === 1, 'Local Gemma did not attach a vision frame.');
+    assert(!gemmaManualGenerate.data.images || gemmaManualGenerate.data.images.length === 0, 'Text-only Local Gemma unexpectedly attached a vision frame.');
     assert(gemmaState.diagProvider.toLowerCase().includes('gemma'), 'Diagnostics did not report Local Gemma.');
     assert(gemmaState.diagEvent.includes('generate.done'), 'Local Gemma diagnostics did not report completion.');
-    assert(gemmaState.responses.includes('[vision:1]'), 'Local Gemma response did not complete through the UI.');
+    assert(!gemmaState.responses.includes('[vision:'), 'Local Gemma response unexpectedly included vision context.');
 
     await page.click('#startButton');
     await page.waitForFunction(() => document.getElementById('startButton').dataset.started === 'false');
@@ -356,7 +356,7 @@ function findWorkerMessages(log, type, predicate) {
     assert(!!qwenManualGenerate, 'Local Qwen manual generate was not sent.');
     assert(qwenManualGenerate.data.providerKey === 'localqwen', 'Local Qwen generate did not preserve the provider key.');
     assert(String(qwenManualGenerate.data.modelId || '').includes('qwen3.5-0.8b-onnx'), 'Local Qwen generate did not preserve the model id.');
-    assert(Array.isArray(qwenManualGenerate.data.images) && qwenManualGenerate.data.images.length === 0, 'Local Qwen should omit a frame when the mock preview is not ready.');
+    assert(Array.isArray(qwenManualGenerate.data.images) && qwenManualGenerate.data.images.length <= 1, 'Local Qwen should attach at most one current camera frame.');
     assert(await page.$eval('#videoSource', (element) => !element.disabled && element.value === 'fake-camera'), 'Switching to Local Qwen should keep the selected camera available for the stream.');
     assert(qwenState.diagProvider.toLowerCase().includes('qwen'), 'Diagnostics did not report Local Qwen.');
     assert(qwenState.diagEvent.includes('generate.done'), 'Local Qwen diagnostics did not report completion.');

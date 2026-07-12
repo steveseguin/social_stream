@@ -25,9 +25,9 @@ try {
 	assert(!!localGemma, "localgemma config exists");
 	assert(!!localQwen, "localqwen config exists");
 	assert(!!localQwen2b, "localqwen2b config exists");
-	assert(localGemma.supportsVision === true, "localgemma is marked vision-capable");
-	assert(localGemma.runtime?.modelClass === "Gemma4ForConditionalGeneration", "localgemma uses Gemma4 runtime");
-	assert(localGemma.runtime?.dtype?.model === "q4", "localgemma defaults to q4 quantization");
+	assert(localGemma.supportsVision === false, "localgemma is marked text-only");
+	assert(localGemma.runtime?.modelClass === "Gemma4ForCausalLM", "localgemma uses the text-only Gemma4 runtime");
+	assert(localGemma.runtime?.dtype?.embed_tokens === "q4", "localgemma defaults to q4 quantization");
 	assert(String(localGemma.remoteHost || "").includes("socialstream.ninja"), "localgemma default host is self-hosted");
 	assert(localQwen.supportsVision === true, "localqwen is marked vision-capable");
 	assert(localQwen.runtime?.modelClass === "Qwen3_5ForConditionalGeneration", "localqwen uses the multimodal Qwen 3.5 runtime");
@@ -48,7 +48,7 @@ try {
 		remoteHost: "https://assets.example.com/models"
 	});
 	assert(workerInit.remoteHost === "https://assets.example.com/models/", "worker init normalizes remote host");
-	assert(workerInit.runtime?.modelClass === "Gemma4ForConditionalGeneration", "worker init preserves Gemma4 runtime");
+	assert(workerInit.runtime?.modelClass === "Gemma4ForCausalLM", "worker init preserves the text-only Gemma4 runtime");
 	const qwenInit = catalog.buildWorkerInit("localqwen", {});
 	assert(qwenInit.runtime?.modelClass === "Qwen3_5ForConditionalGeneration", "worker init preserves Qwen runtime");
 	assert(qwenInit.runtime?.dtype?.embed_tokens === "q4", "worker init preserves Qwen q4 defaults");

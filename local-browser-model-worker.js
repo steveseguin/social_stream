@@ -1,6 +1,7 @@
 import {
     env,
     AutoProcessor,
+    Gemma4ForCausalLM,
     Gemma4ForConditionalGeneration,
     Qwen3_5ForCausalLM,
     Qwen3_5ForConditionalGeneration,
@@ -31,11 +32,22 @@ const DEGENERATE_CHAR_RUN_LENGTH = 12;
 const DEGENERATE_TAIL_PATTERN_REPEATS = 6;
 const DEGENERATE_TAIL_PATTERN_MAX_UNIT = 4;
 const MODEL_CLASS_MAP = {
+    Gemma4ForCausalLM,
     Gemma4ForConditionalGeneration,
     Qwen3_5ForCausalLM,
     Qwen3_5ForConditionalGeneration
 };
 const LEGACY_RUNTIME_DEFAULTS = {
+    Gemma4ForCausalLM: {
+        requiresWebGPU: true,
+        dtype: {
+            embed_tokens: 'q4',
+            decoder_model_merged: 'q4'
+        },
+        generation: {
+            text: { temperature: 1.0, topP: 0.95, topK: 64 }
+        }
+    },
     Gemma4ForConditionalGeneration: {
         requiresWebGPU: true,
         dtype: {
@@ -387,6 +399,30 @@ function buildMessages(systemPrompt, prompt, imageCount = 0, includeConversation
     return messages;
 }
 
+function renderGemma4Prompt(messages) {
+    let prompt = '<bos>';
+
+    for (const message of messages) {
+        const role = message.role === 'assistant' ? 'model' : message.role;
+        const parts = Array.isArray(message.content) ? message.content : [{ type: 'text', text: message.content }];
+        let content = '';
+
+        for (const part of parts) {
+            if (part?.type === 'image') {
+                content += '<|image|>';
+            } else if (part?.type === 'audio') {
+                content += '<|audio|>';
+            } else {
+                content += String(part?.text ?? part ?? '').trim();
+            }
+        }
+
+        prompt += `<|turn>${role}\n${content}<turn|>\n`;
+    }
+
+    return `${prompt}<|turn>model\n`;
+}
+
 function detectDegenerateTail(text) {
     const candidate = String(text || '');
     if (!candidate) {
@@ -546,7 +582,7 @@ function inferModelClassName(message, runtime = {}) {
         .trim()
         .toLowerCase();
     if (providerKey === 'localgemma') {
-        return 'Gemma4ForConditionalGeneration';
+        return 'Gemma4ForCausalLM';
     }
     if (providerKey.startsWith('localqwen')) {
         return 'Qwen3_5ForConditionalGeneration';
@@ -556,7 +592,7 @@ function inferModelClassName(message, runtime = {}) {
         .trim()
         .toLowerCase();
     if (modelId.includes('gemma')) {
-        return 'Gemma4ForConditionalGeneration';
+        return 'Gemma4ForCausalLM';
     }
     if (modelId.includes('qwen')) {
         return 'Qwen3_5ForConditionalGeneration';
@@ -769,10 +805,12 @@ async function runGenerationPass(message, prompt, stateless) {
     const generationProfiles = message.runtime?.generation || initializedGenerationConfig || {};
     const generationDefaults = (rawImages.length ? generationProfiles.vision : generationProfiles.text) || {};
     const messages = buildMessages(message.systemPrompt, prompt, rawImages.length, !stateless);
-    const promptText = processor.apply_chat_template(messages, {
-        tokenize: false,
-        add_generation_prompt: true
-    });
+    const promptText = initializedModelClass.startsWith('Gemma4')
+        ? renderGemma4Prompt(messages)
+        : processor.apply_chat_template(messages, {
+              tokenize: false,
+              add_generation_prompt: true
+          });
     const inputs = rawImages.length ? await processor(promptText, rawImages) : await processor(promptText);
 
     let streamedText = '';
