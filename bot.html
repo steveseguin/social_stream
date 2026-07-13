@@ -1478,6 +1478,17 @@
 				if (isNaN(timeoutDelay)) { timeoutDelay = 20000; }
 			}
 
+			var hideAfterTTS = urlParams.has("hideaftertts");
+			var autoHideByLength = urlParams.has("autohide") || urlParams.has("autotime");
+			var minimumAutoHideDelay = parseInt(urlParams.get("mintime"), 10);
+			if (isNaN(minimumAutoHideDelay) || minimumAutoHideDelay < 0) { minimumAutoHideDelay = 4000; }
+			var maximumAutoHideDelay = parseInt(urlParams.get("maxtime"), 10);
+			if (isNaN(maximumAutoHideDelay) || maximumAutoHideDelay < minimumAutoHideDelay) { maximumAutoHideDelay = 30000; }
+			var hideAfterTTSDelay = parseInt(urlParams.get("hidedelay"), 10);
+			if (isNaN(hideAfterTTSDelay) || hideAfterTTSDelay < 0) { hideAfterTTSDelay = 500; }
+			var hideAfterTTSFallback = parseInt(urlParams.get("ttstimeout"), 10);
+			if (isNaN(hideAfterTTSFallback) || hideAfterTTSFallback < 1000) { hideAfterTTSFallback = 120000; }
+
 			var borderRadius = 0;
 			if (urlParams.has("rounded")) {
 				borderRadius = parseInt(urlParams.get("rounded"), 10);
@@ -1948,7 +1959,104 @@
 			}
 
 			var iframeTimeout = null;
-			var lastMessageId = null
+			var lastMessageId = null;
+			var botDisplayToken = 0;
+			var ttsCompletionTimer = null;
+
+			function getBotMessageText(contents) {
+			  var container = document.createElement("div");
+			  container.innerHTML = contents && contents.chatmessage ? String(contents.chatmessage) : "";
+			  return (container.textContent || container.innerText || "").replace(/\s+/g, " ").trim();
+			}
+
+			function getBotAutoHideDelay(contents) {
+			  var text = getBotMessageText(contents);
+			  var wordCount = text ? text.split(/\s+/).length : 0;
+			  var estimatedDelay = 1500 + (wordCount * 350);
+			  return Math.max(minimumAutoHideDelay, Math.min(maximumAutoHideDelay, estimatedDelay));
+			}
+
+			function botTTSIsActive() {
+			  try {
+				if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) return true;
+				if (typeof TTS !== "undefined" && TTS.premiumQueueActive) return true;
+				if (typeof TTS !== "undefined" && TTS.audio && !TTS.audio.paused && !TTS.audio.ended) return true;
+			  } catch (e) {}
+			  return false;
+			}
+
+			function clearBotOverlay(options) {
+			  options = options || {};
+			  botDisplayToken += 1;
+			  lastMessageId = null;
+			  if (timeoutTimer) {
+				timeoutTimer.clear();
+				timeoutTimer = null;
+			  }
+			  if (ttsCompletionTimer) {
+				ttsCompletionTimer.clear();
+				ttsCompletionTimer = null;
+			  }
+			  if (nextComment) {
+				nextComment.clear();
+				nextComment = null;
+			  }
+			  if (options.clearQueue) {
+				queue = [];
+				if (queueTimer) {
+				  queueTimer.clear();
+				  queueTimer = null;
+				}
+			  }
+			  document.getElementById("output").classList.add(transitionType);
+			  if (options.advanceQueue) checkqueue(true);
+
+			  if (isIFrame) {
+				clearTimeout(iframeTimeout);
+				iframeTimeout = createReliableTimer(function () {
+				  parent.postMessage({ resizeWindow: { height: "0px" } }, "*");
+				}, 300);
+			  }
+			  sendToDisk(false);
+			  return true;
+			}
+
+			function hideBotOverlayForToken(displayToken, advanceQueue) {
+			  if (displayToken !== botDisplayToken) return false;
+			  clearBotOverlay({ advanceQueue: !!advanceQueue });
+			  return true;
+			}
+
+			function waitForBotTTSToFinish(displayToken, contents) {
+			  var startedAt = Date.now();
+			  var sawPlayback = botTTSIsActive();
+			  var startupGrace = 2500;
+
+			  function checkPlayback() {
+				if (displayToken !== botDisplayToken) return;
+				var active = botTTSIsActive();
+				if (active) sawPlayback = true;
+				if (sawPlayback && !active) {
+				  timeoutTimer = createReliableTimer(function () {
+					hideBotOverlayForToken(displayToken, true);
+				  }, hideAfterTTSDelay);
+				  return;
+				}
+				if (!sawPlayback && Date.now() - startedAt >= startupGrace) {
+				  timeoutTimer = createReliableTimer(function () {
+					hideBotOverlayForToken(displayToken, true);
+				  }, getBotAutoHideDelay(contents));
+				  return;
+				}
+				if (Date.now() - startedAt >= hideAfterTTSFallback) {
+				  hideBotOverlayForToken(displayToken, true);
+				  return;
+				}
+				ttsCompletionTimer = createReliableTimer(checkPlayback, 100);
+			  }
+
+			  ttsCompletionTimer = createReliableTimer(checkPlayback, 100);
+			}
 
 			function processData(data) {
 			  if (pseudodock) {
@@ -2034,31 +2142,12 @@
 				
 				return true;
 			  } else if (data && ("contents" in data)) { // clear
-				lastMessageId = null;
-				if (timeoutTimer) {
-				  timeoutTimer.clear();
-				  timeoutTimer = null;
-				}
-				document.getElementById("output").classList.add(transitionType);
-				if (nextComment) {
-				  nextComment.clear();
-				  nextComment = null;
-				}
-				
-				checkqueue(true);
-
-				if (isIFrame) {
-				  clearTimeout(iframeTimeout);
-				  iframeTimeout = createReliableTimer(function () {
-					parent.postMessage({ resizeWindow: { height: "0px" } }, "*");
-				  }, 300);
-				}
-
-				sendToDisk(data.contents);
-				return true;
+				return clearBotOverlay({ advanceQueue: true });
 			  } else if (data.action) {
 				console.log(data);
-				if (data.action === "toggleTTS" || data.action === "tts") {
+				if (data.action === "clearBotOverlay") {
+				  return clearBotOverlay({ clearQueue: true });
+				} else if (data.action === "toggleTTS" || data.action === "tts") {
 				  if ("value" in data) {
 					if (data.value == "toggle") {
 					  TTS.toggle();
@@ -2108,10 +2197,15 @@
 			
 			function showmessage(contents) {
 			  try {
+				var displayToken = ++botDisplayToken;
 				// Clear any existing timers first to prevent memory leaks
 				if (timeoutTimer) {
 				  timeoutTimer.clear();
 				  timeoutTimer = null;
+				}
+				if (ttsCompletionTimer) {
+				  ttsCompletionTimer.clear();
+				  ttsCompletionTimer = null;
 				}
 				
 				if (nextComment) {
@@ -2468,20 +2562,16 @@
 					  TTS.speechMeta(data, true); // Add true as the second parameter to force speech
 					}
 
-					if (timeoutDelay) {
+					if (hideAfterTTS && TTS.speech) {
+					  waitForBotTTSToFinish(displayToken, data);
+					} else if (autoHideByLength || timeoutDelay) {
 					  if (timeoutTimer) {
 						timeoutTimer.clear();
 						timeoutTimer = null;
 					  }
 					  timeoutTimer = createReliableTimer(function () {
-						lastMessageId = null;
-						document.getElementById("output").classList.add(transitionType);
-						if (nextComment) {
-						  nextComment.clear();
-						  nextComment = null;
-						}
-						checkqueue(true);
-					  }, timeoutDelay);
+						hideBotOverlayForToken(displayToken, true);
+					  }, autoHideByLength ? getBotAutoHideDelay(data) : timeoutDelay);
 					}
 				  },
 				  500, // give time for the previous featured message to go fade/drop away

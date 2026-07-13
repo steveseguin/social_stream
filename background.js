@@ -6117,6 +6117,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch (e) {
 				console.error(e);
 			}
+		} else if (request.cmd && request.cmd === "clearBotOverlay") {
+			sendResponse({ state: isExtensionOn });
+			try {
+				sendTargetP2P({ action: "clearBotOverlay" }, "bot");
+			} catch (e) {
+				console.error(e);
+			}
 		} else if (request.cmd && request.cmd === "uploadRAGfile") {
 			sendResponse({ state: isExtensionOn });
 			await importSettingsLLM(request.enhancedProcessing || false);
@@ -9563,6 +9570,9 @@ function setupSocket() {
 				resp = true;
 			} else if (data.action && data.action === "resettipjar") {
 				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
+				resp = true;
+			} else if (data.action && data.action === "clearBotOverlay") {
+				sendTargetP2P({ action: "clearBotOverlay" }, "bot");
 				resp = true;
 			} else if (data.action && data.action === "settipjaramount") {
 				sendTargetP2P(
@@ -13168,6 +13178,8 @@ async function processIncomingRequest(request, UUID = false) {
 	} else if ("action" in request) {
 		if (request.action === "openChat") {
 			openchat(request.value || null);
+		} else if (request.action === "clearBotOverlay") {
+			sendTargetP2P({ action: "clearBotOverlay" }, "bot");
 		} else if (request.action === "aiOverlay" || request.action === "cohostOverlay") {
 			sendAiOverlayCommand(request, {
 				meta: {

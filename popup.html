@@ -9179,6 +9179,7 @@ input:checked + .slider:before {
 								</div>
 
 								<i>The overlay page for the chat bot is optional. While it can be used to show messages from the bot, and offers TTS support, you do not need it open to have the bot respond to users in chat, for example.</i>
+								<div style="margin-top:8px;"><button type="button" id="clearBotOverlayButton">Clear bot overlay now</button></div>
 							</div>
 
 
@@ -9224,6 +9225,42 @@ input:checked + .slider:before {
 
 							<div class="options_group tts-behavior-options">
 								<h4 data-translate="bot-overlay-options">More bot overlay page options</h4>
+								<div title="Hide each bot reply after a fixed amount of time.">
+									<label class="switch">
+										<input type="checkbox" data-param10="showtime" />
+										<span class="slider round"></span>
+									</label>
+									<span>⏲️ Auto-hide after <input type="number" style="max-width: 8ch;" min="1" max="999999" value="10000" data-numbersetting10="showtime" />ms</span>
+								</div>
+								<div title="Hide the bot reply after its TTS audio finishes. If playback cannot start, a length-based fallback is used.">
+									<label class="switch">
+										<input type="checkbox" data-param10="hideaftertts" />
+										<span class="slider round"></span>
+									</label>
+									<span>🗣️ Hide after TTS finishes</span>
+								</div>
+								<div title="Estimate display time from the number of words in each bot reply.">
+									<label class="switch">
+										<input type="checkbox" data-param10="autohide" />
+										<span class="slider round"></span>
+									</label>
+									<span>📏 Auto-hide based on reply length</span>
+								</div>
+								<div title="Optional minimum for length-based auto-hide.">
+									<label class="switch">
+										<input type="checkbox" data-param10="mintime" />
+										<span class="slider round"></span>
+									</label>
+									<span>Minimum length-based time <input type="number" style="max-width: 8ch;" min="0" max="999999" value="4000" data-numbersetting10="mintime" />ms</span>
+								</div>
+								<div title="Optional maximum for length-based auto-hide.">
+									<label class="switch">
+										<input type="checkbox" data-param10="maxtime" />
+										<span class="slider round"></span>
+									</label>
+									<span>Maximum length-based time <input type="number" style="max-width: 8ch;" min="1000" max="999999" value="30000" data-numbersetting10="maxtime" />ms</span>
+								</div>
+								<i>If multiple hide modes are enabled, Hide after TTS takes priority, followed by reply length, then the fixed time.</i>
 								<div title="For the purpose of using this with neurosync. WILL NOT WORK WITH SYSTEM TTS">
 									<label class="switch">
 										<input type="checkbox" data-param10="neurosync" />

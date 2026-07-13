@@ -132,6 +132,7 @@ For controlling SSN from StreamDeck, Bitfocus Companion, or similar tools, you o
 ```
 https://io.socialstream.ninja/SESSION_ID/nextInQueue
 https://io.socialstream.ninja/SESSION_ID/clearOverlay
+https://io.socialstream.ninja/SESSION_ID/clearBotOverlay
 https://io.socialstream.ninja/SESSION_ID/sendEncodedChat/null/Hello%20World
 https://io.socialstream.ninja/SESSION_ID/drawmode/null/toggle
 ```
@@ -143,6 +144,7 @@ ws.onopen = () => {
     // Send a command
     ws.send(JSON.stringify({ action: "nextInQueue" }));
     ws.send(JSON.stringify({ action: "clearOverlay" }));
+    ws.send(JSON.stringify({ action: "clearBotOverlay" }));
     ws.send(JSON.stringify({ action: "sendChat", value: "Hello from API!" }));
 };
 ```
@@ -773,15 +775,16 @@ The dock page responds to various API actions, including:
 
 1. `clear` or `clearAll`: Clears all messages except pinned ones
 2. `clearOverlay`: Clears the overlay without affecting the dock
-3. `nextInQueue`: Moves to the next message in the queue
-4. `getQueueSize`: Returns the current queue size
-5. `autoShow`: Controls automatic message display
-6. `content`: Processes and displays new content
-7. `feature`: Features the next unfeatured message
-8. `pin`: Pins an existing dock message by `mid`, or pins a full message object.
-9. `unpin`: Unpins an existing dock message by `mid`.
-10. `nextPinned`: Features the first pinned message.
-11. `toggleTTS` or `tts`: Controls Text-to-Speech functionality
+3. `clearBotOverlay`: Clears the Primary Chat Bot's `bot.html` overlay without stopping active TTS
+4. `nextInQueue`: Moves to the next message in the queue
+5. `getQueueSize`: Returns the current queue size
+6. `autoShow`: Controls automatic message display
+7. `content`: Processes and displays new content
+8. `feature`: Features the next unfeatured message
+9. `pin`: Pins an existing dock message by `mid`, or pins a full message object.
+10. `unpin`: Unpins an existing dock message by `mid`.
+11. `nextPinned`: Features the first pinned message.
+12. `toggleTTS` or `tts`: Controls Text-to-Speech functionality
 
 ### Example API Usage
 

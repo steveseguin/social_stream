@@ -12388,4 +12388,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 		};
 	}
+
+	const clearBotOverlayButton = document.getElementById('clearBotOverlayButton');
+	if (clearBotOverlayButton) {
+		clearBotOverlayButton.onclick = function() {
+			chrome.runtime.sendMessage({ cmd: 'clearBotOverlay' }, function() {});
+		};
+	}
 });

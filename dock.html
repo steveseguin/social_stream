@@ -8094,6 +8094,9 @@
 						// or just send data=false
 						sendDataP2P(false);
 						return true;
+					} else if (data.action == "clearBotOverlay") {
+						sendDataP2P({ action: "clearBotOverlay", target: "bot" });
+						return true;
 					} else if (data.action == "nextInQueue") {
 						nextInQueue();
 						return true;
