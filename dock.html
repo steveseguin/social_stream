@@ -6507,6 +6507,24 @@
 					if (data.type && data.event == "follower_update"){
 						followers[data.type] = parseInt(data.meta) || 0;
 						return true;
+					} else if (data.type && data.event == "likes_update"){
+						let likeCount = parseInt(data.meta, 10);
+						if (isNaN(likeCount) || likeCount < 0) return true;
+						let ele = topBarElement.querySelector("[data-youtube-like-count]");
+						if (!ele){
+							ele = document.createElement("div");
+							ele.dataset.youtubeLikeCount = "true";
+							ele.classList.add("viewerIcons");
+							ele.title = "YouTube video likes";
+							ele.style.backgroundImage = "url(./sources/images/youtube.png)";
+							topBarElement.prepend(ele);
+						}
+						ele.innerText = "♥ " + likeCount;
+						clearTimeout(ele.timeout);
+						ele.timeout = setTimeout(function(ele){
+							if (ele) ele.remove();
+						}, 130000, ele);
+						return true;
 					} else if (data.type && data.event == "viewer_update"){
 						viewers[data.type] = parseInt(data.meta) || 0;
 						

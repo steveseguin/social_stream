@@ -548,6 +548,9 @@ try {
 	let recentSubscriberPollingGeneration = 0;
     let fetchTimeout; // Track fetch timeout to clear on disconnect
     let lastKnownViewers = null;
+	var lastKnownLikes = null;
+	var lastLikesEmitTime = 0;
+	const YT_LIKES_HEARTBEAT_MS = 90 * 1000;
 	var viewerCountFallbackVideoId = '';
 	var viewerCountMissingPolls = 0;
 	var viewerCountFallbackLastAttempt = 0;
@@ -5409,7 +5412,7 @@ function enableBackgroundKeepAlive() {
 						shouldEmitViewerUpdate = true;
 					}
                 }
-                if (stats.statistics && stats.statistics.likeCount) {
+                if (stats.statistics && stats.statistics.likeCount !== undefined) {
                     updateStats('likes_update', { meta: stats.statistics.likeCount });
                 }
             }
@@ -5429,8 +5432,13 @@ function enableBackgroundKeepAlive() {
         );
     }
 
+	function isYouTubeLikeCountEnabled() {
+		const currentSettings = settings && typeof settings === 'object' ? settings : {};
+		return Boolean(currentSettings.captureyoutubelikes);
+	}
+
     function shouldPollStreamStats() {
-        return isViewerTrackingEnabled();
+		return isViewerTrackingEnabled() || isYouTubeLikeCountEnabled();
     }
 
     function stopStreamStatsPolling() {
@@ -5442,7 +5450,14 @@ function enableBackgroundKeepAlive() {
 
     function syncStreamStatsPolling() {
         stopStreamStatsPolling();
-        if (!currentStream || !currentStream.id || !liveChatId || !shouldPollStreamStats()) {
+		if (!isYouTubeLikeCountEnabled()) {
+			lastKnownLikes = null;
+			lastLikesEmitTime = 0;
+		}
+        if (!currentStream || !currentStream.id || !shouldPollStreamStats()) {
+			return;
+		}
+		if (!liveChatId && !isYouTubeLikeCountEnabled()) {
             return;
         }
         getStreamStats();
@@ -5495,6 +5510,8 @@ function enableBackgroundKeepAlive() {
 		fetchTimeout = null;
 		liveChatPollingActive = false;
 		lastKnownViewers = null;
+		lastKnownLikes = null;
+		lastLikesEmitTime = 0;
 		resetViewerCountFallbackState(null);
 		
 		// Track disconnection time and video ID
@@ -5737,7 +5754,7 @@ function enableBackgroundKeepAlive() {
 					const viewerCount = document.getElementById('viewer-count');
 					if (viewerCount) viewerCount.textContent = '-';
                 }
-                if (streamInfoToUse.statistics && streamInfoToUse.statistics.likeCount) {
+                if (streamInfoToUse.statistics && streamInfoToUse.statistics.likeCount !== undefined) {
                     updateStats('likes_update', { meta: streamInfoToUse.statistics.likeCount });
                 } else {
                      document.getElementById('likes-count').textContent = 'N/A';
@@ -5788,7 +5805,7 @@ function enableBackgroundKeepAlive() {
             stopStreamStatsPolling();
             if (channelStatsInterval) clearInterval(channelStatsInterval);
             
-            // Stream stats (viewers & likes) - poll only when viewer tracking is enabled
+            // Stream stats (viewers and opt-in likes)
             syncStreamStatsPolling();
             
             // Channel stats (subscribers) - every 30 minutes
@@ -6536,8 +6553,16 @@ function enableBackgroundKeepAlive() {
 				document.getElementById('subscriber-count').textContent = data.meta;
 				break;
 			case 'likes_update':
-				document.getElementById('likes-count').textContent = data.meta;
-				//pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'likes_update', meta: data.meta });
+				var likeCount = normalizeViewerCount(data.meta);
+				document.getElementById('likes-count').textContent = likeCount !== null ? likeCount : '-';
+				if (isYouTubeLikeCountEnabled() && likeCount !== null) {
+					var now = Date.now();
+					if (likeCount !== lastKnownLikes || now - lastLikesEmitTime >= YT_LIKES_HEARTBEAT_MS) {
+						lastKnownLikes = likeCount;
+						lastLikesEmitTime = now;
+						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'likes_update', meta: likeCount }));
+					}
+				}
 				break;
 		}
 	}

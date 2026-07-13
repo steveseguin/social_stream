@@ -4460,6 +4460,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="notiktoklinks"]',
 		'[data-setting="capturejoinedevent"]',
 		'[data-setting="capturelikeevent"]',
+		'[data-setting="captureyoutubelikes"]',
 		'[data-setting="notiktokdonations"]',
 		'[data-setting="disabletiktokpoke"]',
 		'[data-setting="blockpremiumshorts"]',

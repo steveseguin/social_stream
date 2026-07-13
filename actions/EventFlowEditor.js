@@ -3424,6 +3424,7 @@ class EventFlowEditor {
 					{ value: 'stream_online', label: 'Stream Online' },
 					{ value: 'stream_offline', label: 'Stream Offline' },
 					{ value: 'viewer_update', label: 'Viewer Count Update' },
+					{ value: 'likes_update', label: 'Video Like Count Update (YouTube)' },
 					{ value: 'follower_update', label: 'Follower Count Update' },
 					{ value: 'subscriber_update', label: 'Subscriber Count Update' },
 					{ value: 'ad_break', label: 'Ad Break (Twitch)' }

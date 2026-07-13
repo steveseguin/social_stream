@@ -209,6 +209,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Allow 'liked' stream events in TikTok (high volume)"
   },
+  "captureyoutubelikes": {
+    type: "boolean",
+    category: "youtube_api",
+    description: "Send the current YouTube video like count to the dashboard (polled every 30 seconds)"
+  },
   "chatbotHistoryTotal": {
     type: "number",
     category: "chat_bot",

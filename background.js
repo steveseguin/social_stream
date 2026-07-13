@@ -5080,6 +5080,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "capturelikeevent") {
 				pushSettingChange();
 			}
+			if (request.setting == "captureyoutubelikes") {
+				pushSettingChange();
+			}
 			if (request.setting == "bttv") {
 				if (settings.bttv) {
 					clearAllWithPrefix("uid2bttv2.twitch:");
