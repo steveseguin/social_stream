@@ -1230,6 +1230,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'Seal Team Sloth',
+			icon: 'sealteamsloth.png',
+			description: 'Live streaming platform.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>URL: https://sealteamsloth.com/popout-chat/USERNAME</li>
+					<li>Open the streamer's pop-out chat while signed in</li>
+				</ul>
+			`,
+			notes: 'Captures new chat messages, emotes, avatars, name colors, user/message IDs, and optional viewer-count updates.'
+		},
+		{
 			name: 'CI.ME',
 			icon: 'cime.png',
 			description: 'Korean live streaming platform.',
