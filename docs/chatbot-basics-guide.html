@@ -163,8 +163,36 @@
                     </tbody>
                 </table>
                 <p>The custom bot name is a message prefix; it does not create a new platform account. Unless standalone-app account-role routing is configured, replies are posted through the account used by the captured source.</p>
-                <p>The bot overlay can clear replies automatically: use <code>showtime=10000</code> for a fixed 10-second display, <code>autohide</code> for a message-length estimate, or <code>hideaftertts</code> to hide after speech finishes. Length-based timing defaults to 4–30 seconds and can be adjusted with <code>mintime</code> and <code>maxtime</code>. The remote API action <code>clearBotOverlay</code> clears it manually without stopping active speech.</p>
                 <p>Standalone app users who want a separate Twitch identity can follow the <a href="twitch-bot-account-chatbot.html">Twitch Bot Account guide</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>6. Clear and Auto-Hide Bot Replies</h2>
+                <p>These controls affect the Primary Chat Bot page, <code>bot.html</code>. They do not clear the main featured-message overlay.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Option</th><th>Meaning</th><th>Example</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Option"><code>showtime</code></td><td data-label="Meaning">Uses one fixed display time in milliseconds.</td><td data-label="Example"><code>&amp;showtime=10000</code> hides after 10 seconds.</td></tr>
+                        <tr><td data-label="Option"><code>autohide</code></td><td data-label="Meaning">Estimates display time from the reply's word count. <code>autotime</code> is also accepted.</td><td data-label="Example"><code>&amp;autohide</code></td></tr>
+                        <tr><td data-label="Option"><code>mintime</code> / <code>maxtime</code></td><td data-label="Meaning">Sets the minimum and maximum length-based display time. Defaults are 4,000 and 30,000 milliseconds.</td><td data-label="Example"><code>&amp;autohide&amp;mintime=5000&amp;maxtime=20000</code></td></tr>
+                        <tr><td data-label="Option"><code>hideaftertts</code></td><td data-label="Meaning">Keeps the reply visible until TTS playback finishes, then hides it. If playback never starts, a length-based fallback is used.</td><td data-label="Example"><code>&amp;hideaftertts</code></td></tr>
+                        <tr><td data-label="Option"><code>hidedelay</code></td><td data-label="Meaning">Adds a delay after TTS finishes. The default is 500 milliseconds.</td><td data-label="Example"><code>&amp;hideaftertts&amp;hidedelay=1000</code></td></tr>
+                        <tr><td data-label="Option"><code>ttstimeout</code></td><td data-label="Meaning">Safety timeout if TTS remains active indefinitely. The default is 120,000 milliseconds.</td><td data-label="Example"><code>&amp;hideaftertts&amp;ttstimeout=60000</code></td></tr>
+                    </tbody>
+                </table>
+                <p>If multiple modes are enabled, <code>hideaftertts</code> takes priority, followed by <code>autohide</code>, then <code>showtime</code>. The generated bot-overlay settings provide the common options.</p>
+                <h3>Clear It Manually</h3>
+                <ul class="guide-list">
+                    <li>In Social Stream settings, select <strong>Clear bot overlay now</strong>.</li>
+                    <li>With Remote API Control enabled, open <code>https://io.socialstream.ninja/SESSION_ID/clearBotOverlay</code>.</li>
+                    <li>Over the API WebSocket, send <code>{"action":"clearBotOverlay"}</code>.</li>
+                </ul>
+                <p>Manual clearing removes the visible reply and pending bot-overlay display queue, but it does not stop speech already playing.</p>
+                <div class="guide-note">
+                    <p><strong>Custom styling:</strong> custom CSS used with the normal generated <code>bot.html</code> link keeps these features. A copied or modified local <code>bot.html</code> file must be updated to receive later page fixes.</p>
+                </div>
             </div>
 
             <div class="guide-card">
