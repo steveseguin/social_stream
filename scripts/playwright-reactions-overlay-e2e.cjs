@@ -356,6 +356,109 @@ async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent, expect
   await page.close();
 }
 
+async function runTikTokIncrementalChatCaptureCheck(context) {
+  const page = await context.newPage();
+
+  await addTikTokSourceInitScript(page, true);
+  await page.route('https://www.tiktok.com/@playwright-chat/live', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/html; charset=utf-8',
+      body: '<!DOCTYPE html><html><head><title>TikTok chat fixture</title></head><body><div data-e2e="chat-room"><div data-e2e="chat-message"><span data-e2e="message-owner-name">History</span><div class="Fixture-DivComment">Existing history</div></div></div></body></html>'
+    });
+  });
+
+  await page.goto('https://www.tiktok.com/@playwright-chat/live', { waitUntil: 'domcontentloaded' });
+  await page.addScriptTag({ path: path.join(ROOT, 'sources', 'tiktok.js') });
+  await page.waitForTimeout(4500);
+  await page.evaluate(async () => {
+    const chatRoom = document.querySelector('[data-e2e="chat-room"]');
+    const row = document.createElement('div');
+    const owner = document.createElement('span');
+    const comment = document.createElement('div');
+
+    row.dataset.e2e = 'chat-message';
+    owner.dataset.e2e = 'message-owner-name';
+    owner.textContent = 'Alex';
+    comment.className = 'Fixture-DivComment';
+    comment.textContent = 'Hello from TikTok';
+
+    chatRoom.appendChild(row);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    row.appendChild(owner);
+    row.appendChild(comment);
+  });
+  await page.waitForTimeout(500);
+
+  const chatMessages = await page.evaluate(() => {
+    return window.__chromeMessages
+      .filter((entry) => entry.message && entry.message.type === 'tiktok' && entry.message.chatmessage)
+      .map((entry) => entry.message);
+  });
+
+  assert(chatMessages.length === 1, `TikTok incremental chat emitted ${chatMessages.length} rows instead of one.`);
+  assert(chatMessages[0].chatname === 'Alex', 'TikTok incremental chat lost the author name.');
+  assert(chatMessages[0].chatmessage === 'Hello from TikTok', 'TikTok incremental chat changed the message text.');
+  assert(chatMessages[0].event === false, 'TikTok normal chat was incorrectly emitted as an event.');
+
+  await page.evaluate(() => {
+    const oldRoom = document.querySelector('[data-e2e="chat-room"]');
+    const replacementRoom = document.createElement('div');
+    replacementRoom.dataset.e2e = 'chat-room';
+    oldRoom.replaceWith(replacementRoom);
+  });
+  await page.waitForTimeout(4500);
+  await page.evaluate(async () => {
+    const chatRoom = document.querySelector('[data-e2e="chat-room"]');
+    for (let index = 0; index < 75; index += 1) {
+      const row = document.createElement('div');
+      const owner = document.createElement('span');
+      const comment = document.createElement('div');
+      const nestedMutation = document.createElement('span');
+
+      row.dataset.e2e = 'chat-message';
+      owner.dataset.e2e = 'message-owner-name';
+      owner.textContent = `Viewer ${index}`;
+      comment.className = 'Fixture-DivComment';
+      comment.textContent = `Soak message ${index}`;
+
+      chatRoom.appendChild(row);
+      await new Promise((resolve) => setTimeout(resolve, 15));
+      row.appendChild(owner);
+      row.appendChild(comment);
+      comment.appendChild(nestedMutation);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      if (chatRoom.children.length > 30) {
+        chatRoom.children[0].remove();
+      }
+    }
+  });
+  await page.waitForFunction(() => {
+    return window.__chromeMessages
+      .filter((entry) => entry.message && entry.message.type === 'tiktok' && entry.message.chatmessage)
+      .length >= 76;
+  }, null, { timeout: 10000 }).catch(() => {});
+
+  const soakedChatMessages = await page.evaluate(() => {
+    return window.__chromeMessages
+      .filter((entry) => entry.message && entry.message.type === 'tiktok' && entry.message.chatmessage)
+      .map((entry) => entry.message);
+  });
+  const soakedKeys = new Set(soakedChatMessages.map((message) => `${message.chatname}\n${message.chatmessage}`));
+  const expectedSoakKeys = new Set(['Alex\nHello from TikTok']);
+  for (let index = 0; index < 75; index += 1) {
+    expectedSoakKeys.add(`Viewer ${index}\nSoak message ${index}`);
+  }
+  const missingSoakKeys = Array.from(expectedSoakKeys).filter((key) => !soakedKeys.has(key));
+
+  assert(soakedChatMessages.length === 76, `TikTok soak emitted ${soakedChatMessages.length} rows instead of 76; missing: ${missingSoakKeys.join(', ') || 'none'}.`);
+  assert(soakedKeys.size === 76, 'TikTok soak emitted duplicate chat rows.');
+  assert(soakedChatMessages.every((message) => message.event === false), 'TikTok soak misclassified normal chat as events.');
+
+  await page.close();
+}
+
 (async () => {
   const server = await startStaticServer({ root: ROOT, host: HOST, port: PORT });
   const blockedExternalRequests = [];
@@ -386,6 +489,15 @@ async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent, expect
 
       await route.continue();
     });
+
+    if (process.argv.includes('--tiktok-only')) {
+      await runTikTokSourceLikeCaptureCheck(context, false, 'reactions');
+      await runTikTokSourceLikeCaptureCheck(context, true, '');
+      await runTikTokIncrementalChatCaptureCheck(context);
+      await browser.close();
+      console.log('TikTok DOM soak passed.');
+      return;
+    }
 
     const popupPage = await context.newPage();
     await addPopupInitScript(popupPage, `http://${HOST}:${PORT}`);
@@ -686,6 +798,7 @@ async function runTikTokSourceLikeCaptureCheck(context, captureLikeEvent, expect
 
     await runTikTokSourceLikeCaptureCheck(context, false, 'reactions');
     await runTikTokSourceLikeCaptureCheck(context, true, '');
+    await runTikTokIncrementalChatCaptureCheck(context);
 
     await browser.close();
 
