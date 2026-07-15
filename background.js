@@ -4805,16 +4805,19 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				return true; // Keep message channel open for async response
 			}
 
-			chrome.storage.local.set({
-				settings: settings
-			}, function () {
-				const storageError = chrome.runtime.lastError;
-				sendResponse({
-					state: isExtensionOn,
-					saved: !storageError,
-					error: storageError ? storageError.message : undefined
-				});
-			});
+			chrome.storage.local.set(
+				{
+					settings: settings
+				},
+				function () {
+					const storageError = chrome.runtime.lastError;
+					sendResponse({
+						state: isExtensionOn,
+						saved: !storageError,
+						error: storageError ? storageError.message : undefined
+					});
+				}
+			);
 
 			// If SDK setting changed, reinitialize transport if extension is ON
 			try {
