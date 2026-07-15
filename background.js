@@ -4807,8 +4807,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 
 			chrome.storage.local.set({
 				settings: settings
+			}, function () {
+				const storageError = chrome.runtime.lastError;
+				sendResponse({
+					state: isExtensionOn,
+					saved: !storageError,
+					error: storageError ? storageError.message : undefined
+				});
 			});
-			chrome.runtime.lastError;
 
 			// If SDK setting changed, reinitialize transport if extension is ON
 			try {
@@ -4818,8 +4824,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch (e) {
 				console.warn(e);
 			}
-
-			sendResponse({ state: isExtensionOn });
 
 			if (request.setting === "beepreturning" && request.value && !isSSAPP && !returningBeepHintShown) {
 				messagePopup({
