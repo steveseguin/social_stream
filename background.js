@@ -11488,9 +11488,21 @@ async function trySendTargetP2P(data, target) {
 	// function to send data to a labelled page via the VDO.Ninja API
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {
-			var sdkResult = await ninjaBridge.sendToLabel(data, target);
-			if (sdkResult !== false) {
-				return true;
+			var sdkPeers = typeof ninjaBridge.getPeers === "function" ? ninjaBridge.getPeers() : null;
+			var hasSdkTarget = !sdkPeers;
+			if (sdkPeers) {
+				for (var sdkUUID in sdkPeers) {
+					if (sdkPeers[sdkUUID] === target) {
+						hasSdkTarget = true;
+						break;
+					}
+				}
+			}
+			if (hasSdkTarget) {
+				var sdkResult = await ninjaBridge.sendToLabel(data, target);
+				if (sdkResult !== false) {
+					return true;
+				}
 			}
 		} catch (e) {
 			console.warn("SDK sendTargetP2P failed", e);
