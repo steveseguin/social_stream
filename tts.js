@@ -1662,7 +1662,7 @@ TTS.speechMeta = function(data, allow = false) {
         return;
     }
 
-    if (TTS.doNotReadEvents && data.event) {
+    if (TTS.doNotReadEvents && data.event && !isDonation) {
         //console.log("Filter: Events not allowed and this is an event");
         return;
     }
@@ -1859,9 +1859,9 @@ TTS.initKokoro = async function() {
  * ElevenLabs TTS implementation
  * @param {string} tts - Text to speak
  */
-TTS.ElevenLabsTTS = function(tts) {
+TTS.ElevenLabsTTS = async function(tts) {
+    TTS.premiumQueueActive = true;
     try {
-        TTS.premiumQueueActive = true;
         const voiceid = TTS.elevenLabsSettings.voiceName || "VR6AewLTigWG4xSOukaG";
         const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceid + "/stream?optimize_streaming_latency=" + TTS.elevenLabsSettings.latency;
 
@@ -1877,56 +1877,36 @@ TTS.ElevenLabsTTS = function(tts) {
             }
         };
 
-        const otherparam = {
+        const response = await fetch(url, {
             headers: {
                 "content-type": "application/json",
                 "xi-api-key": TTS.ElevenLabsKey,
-                accept: "*/*"
+                accept: "audio/*"
             },
             body: JSON.stringify(data),
             method: "POST"
-        };
+        });
 
-        fetch(url, otherparam)
-            .then(data => data.blob())
-            .then(async res => {
-                const newBlob = new Blob([res]);
-                
-                // Send to NeuroSync in parallel
-                if (TTS.neuroSyncEnabled) {
-                  TTS.sendToNeuroSync(newBlob).then(result => {
-                    if (result && result.blendshapes) {
-                      //console.log(`Received ${result.blendshapes.length} blendshape frames`);
-                    }
-                  }).catch(err => {
-                    console.error("NeuroSync error:", err);
-                  });
-                  return;
-                }
-                
-                const blobUrl = window.URL.createObjectURL(newBlob);
-                if (!TTS.audio) {
-                    TTS.audio = document.createElement("audio");
-                    TTS.audio.onended = TTS.finishedAudio;
-                }
-                TTS.setAudioSource(blobUrl, true);
-                TTS.applyVolume(TTS.audio);
-                
-                try {
-                    if (TTS.audioContext.state === 'suspended') {
-                        await TTS.audioContext.resume();
-                    }
-                    TTS.audio.play();
-                } catch (e) {
-                    TTS.finishedAudio();
-                    console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-                }
-            })
-            .catch(error => {
-                TTS.finishedAudio();
-                console.error(error);
-            });
-    } catch (e) {
+        if (!response.ok) {
+            throw new Error("ElevenLabs request failed with HTTP " + response.status);
+        }
+
+        const audioBlob = await response.blob();
+        if (!audioBlob || !audioBlob.size) {
+            throw new Error("ElevenLabs returned an empty audio response");
+        }
+
+        if (TTS.neuroSyncEnabled) {
+            await TTS.sendToNeuroSync(audioBlob);
+        } else {
+            const played = await TTS.playAudioBlobAndWait(audioBlob);
+            if (!played) {
+                console.warn("ElevenLabs audio could not be played.");
+            }
+        }
+    } catch (error) {
+        console.error("ElevenLabs TTS error:", error);
+    } finally {
         TTS.finishedAudio();
     }
 };

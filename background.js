@@ -11484,29 +11484,59 @@ function sendAiOverlayCommand(input = {}, defaults = {}) {
 	return payload;
 }
 
-function sendTargetP2P(data, target) {
-	// function to send data to the DOCk via the VDO.Ninja API
-	if (ninjaBridge && ninjaBridge.isReady()) {
-		try {
-			ninjaBridge.sendToLabel(data, target);
-			return;
-		} catch (e) {
-			console.warn("SDK sendTargetP2P failed", e);
-		}
-	}
+async function trySendTargetP2P(data, target) {
+    // function to send data to a labelled page via the VDO.Ninja API
+    if (ninjaBridge && ninjaBridge.isReady()) {
+        try {
+            var sdkResult = await ninjaBridge.sendToLabel(data, target);
+            if (sdkResult !== false) {
+                return true;
+            }
+        } catch (e) {
+            console.warn("SDK sendTargetP2P failed", e);
+        }
+    }
 
-	if (iframe) {
-		var keys = Object.keys(connectedPeers);
-		for (var i = 0; i < keys.length; i++) {
-			try {
-				var UUID = keys[i];
-				var label = connectedPeers[UUID];
-				if (label === target) {
-					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
-				}
-			} catch (e) {}
-		}
-	}
+    var sent = false;
+    if (iframe) {
+        var keys = Object.keys(connectedPeers);
+        for (var i = 0; i < keys.length; i++) {
+            try {
+                var UUID = keys[i];
+                var label = connectedPeers[UUID];
+                if (label === target) {
+                    iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+                    sent = true;
+                }
+            } catch (e) {}
+        }
+    }
+    return sent;
+}
+
+async function sendTargetP2P(data, target, options) {
+    options = options || {};
+    var retry = typeof options.retry === "boolean" ? options.retry : target === "actions";
+    var timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : 10000;
+    var intervalMs = Number(options.intervalMs) > 0 ? Number(options.intervalMs) : 500;
+    var expiresAt = Date.now() + timeoutMs;
+
+    do {
+        if (await trySendTargetP2P(data, target)) {
+            return true;
+        }
+        if (!retry || Date.now() >= expiresAt) {
+            break;
+        }
+        await new Promise(function(resolve) {
+            setTimeout(resolve, intervalMs);
+        });
+    } while (Date.now() < expiresAt);
+
+    if (retry) {
+        console.warn("No connected P2P target found for label:", target);
+    }
+    return false;
 }
 
 function broadcastLeaderboardReset() {
