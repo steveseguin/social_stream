@@ -9429,10 +9429,7 @@ function isDuplicateInboundWebhook(provider, webhookId) {
 	return false;
 }
 
-const STREAM_DECK_SOURCE_RESPONSE_FIELDS = [
-	"id", "target", "tabId", "username", "videoId", "connectionMode", "activeConnectionMode",
-	"status", "isVisible", "isMuted", "autoActivate", "groupId"
-];
+const STREAM_DECK_SOURCE_RESPONSE_FIELDS = ["id", "target", "tabId", "username", "videoId", "connectionMode", "activeConnectionMode", "status", "isVisible", "isMuted", "autoActivate", "groupId"];
 
 function sanitizeStreamDeckSourceResponse(source) {
 	if (!source || typeof source !== "object" || Array.isArray(source)) {
