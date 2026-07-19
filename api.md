@@ -515,12 +515,17 @@ Social Stream Ninja can receive donation events from external platforms via webh
 
 ### Prerequisites
 
-1. **Note Your Session ID**: Find it in the extension popup or in your URL after `?session=`
-2. **Choose ONE of these options** (not both):
-   - **Option A**: Add `&server` to your dock.html URL (e.g., `dock.html?session=XXXX&server`)
-   - **Option B**: Enable **"Enable remote API control of extension"** in the extension popup under `Global settings and tools` → `Mechanics`
+1. **Note Your Session ID**: Find it in the extension popup or in your URL after `?session=`.
+2. Keep Social Stream Ninja enabled.
+3. Under `Global settings and tools` → `Mechanics`, enable **remote API control of extension**. This lets `background.js` receive and normalize inbound webhooks before sending them through the normal message path.
+4. Use your normal generated dock and overlay links. Do not manually add `&server`, `&server2`, or `&server3` for donation webhooks.
+5. If the dock was already open when you enabled the setting, reload it once.
 
-> ⚠️ **Warning**: Do not enable both options. If you add `&server` to the dock AND enable remote API control in the extension, webhooks will be received by both, causing duplicate donation alerts.
+This is the only API toggle required for inbound donation webhooks. The other API transport toggles serve different workflows and can remain off.
+
+With this route, each donation is normalized once in the extension and then delivered like a regular Social Stream message to chat, alerts, Event Flow, and the Tip Jar/Goal Meter.
+
+![Enable the remote API control of extension toggle](docs/images/api/enable-remote-api-control.png)
 
 ### Supported Platforms
 
@@ -547,8 +552,10 @@ Social Stream Ninja can receive donation events from external platforms via webh
 ### Ko-Fi Setup
 
 1. Sign in to [Ko-Fi Webhook Settings](https://ko-fi.com/manage/webhooks)
-2. Add webhook URL: `https://io.socialstream.ninja/YOUR_SESSION_ID/kofi`
-3. Only public donations appear (private donations are filtered out)
+2. Paste `https://io.socialstream.ninja/YOUR_SESSION_ID/kofi` into **Webhook URL**, then click **Update**
+3. Enable **remote API control of extension** as shown above
+4. Reload an already-open dock, then click **Send single tip test** in Ko-Fi
+5. Confirm exactly one alert appears; only public donations are supported
 
 ### Buy Me A Coffee Setup
 
@@ -577,13 +584,16 @@ When a donation webhook is received, it is normalized into a standard SSN messag
   "hasDonation": "$50.00 USD",
   "type": "stripe",
   "id": "unique_id",
+  "meta": {
+    "webhookId": "provider_delivery_id"
+  },
   "chatbadges": "",
   "chatimg": "",
   "membership": ""
 }
 ```
 
-The `hasDonation` field contains the formatted amount and currency. This allows donations to be filtered, featured, and displayed using the same mechanisms as platform-native donations (Super Chats, Bits, etc.).
+The `hasDonation` field contains the formatted amount and currency. `meta.webhookId` preserves the provider's stable event identifier for retry and mixed-transport deduplication. This allows donations to be filtered, featured, and displayed using the same mechanisms as platform-native donations (Super Chats, Bits, etc.).
 
 # Featured Page (featured.html)
 

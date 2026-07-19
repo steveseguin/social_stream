@@ -27,17 +27,17 @@
                 <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Custom YouTube project active</div>
                 <div id="yt-access-selector" class="auth-method-selector">
                     <label class="auth-method-label">YouTube access:</label>
-                    <div class="auth-method-options">
-                        <label class="auth-method-option">
-                            <input type="radio" name="yt-access-level" value="readonly" checked>
-                            <span>Read only</span>
+                    <div class="auth-method-options yt-access-options">
+                        <label class="auth-method-option yt-access-option">
+                            <input type="radio" name="yt-access-level" value="admin" checked>
+                            <span class="yt-access-copy"><strong>Write</strong><small>Send chat · Moderate · Edit</small></span>
                         </label>
-                        <label class="auth-method-option">
-                            <input type="radio" name="yt-access-level" value="admin">
-                            <span>Write access</span>
+                        <label class="auth-method-option yt-access-option">
+                            <input type="radio" name="yt-access-level" value="readonly">
+                            <span class="yt-access-copy"><strong>Read only</strong><small>View chat</small></span>
                         </label>
                     </div>
-                    <div class="credentials-note" style="margin-top:8px;">Write access is needed to send chat, moderate chat, ban users, or edit stream details. Google may show broad YouTube management permissions, including video deletion, because YouTube does not provide a chat-only write scope.</div>
+                    <div class="credentials-note yt-access-note"><strong>Write recommended.</strong> Google groups it under broad YouTube management because no chat-only write scope exists.</div>
                 </div>
                 <div id="auth-method-selector" class="auth-method-selector hidden">
                     <label class="auth-method-label">Sign-in method:</label>
@@ -298,7 +298,8 @@ try {
 	}
 
 	function getYouTubeAccessLevel() {
-		return normalizeYouTubeAccessLevel(localStorage.getItem(YT_ACCESS_LEVEL_KEY));
+		const stored = localStorage.getItem(YT_ACCESS_LEVEL_KEY);
+		return stored === null ? 'admin' : normalizeYouTubeAccessLevel(stored);
 	}
 
 	function setYouTubeAccessLevel(value) {
@@ -310,11 +311,12 @@ try {
 	}
 
 	function hasYouTubeWriteAccess() {
-		return normalizeYouTubeAccessLevel(localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY) || getYouTubeAccessLevel()) === 'admin';
+		const tokenAccessLevel = localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY);
+		return tokenAccessLevel !== null && normalizeYouTubeAccessLevel(tokenAccessLevel) === 'admin';
 	}
 
 	function getWriteAccessRequiredMessage() {
-		return 'Sign out and sign in with Write access to send chat, moderate chat, or edit stream details.';
+		return 'Write access required — sign in again to chat, moderate, or edit.';
 	}
 
 	function setPendingYouTubeTokenAccessLevel(value) {
@@ -3231,7 +3233,11 @@ function enableBackgroundKeepAlive() {
 		if (refresh) {
 			localStorage.setItem('youtubeRefreshToken', refresh);
 		}
-		localStorage.setItem(YT_TOKEN_ACCESS_LEVEL_KEY, normalizeYouTubeAccessLevel(tokenAccessLevel || localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY) || getYouTubeAccessLevel()));
+		if (tokenAccessLevel === null || typeof tokenAccessLevel === 'undefined' || tokenAccessLevel === '') {
+			localStorage.removeItem(YT_TOKEN_ACCESS_LEVEL_KEY);
+		} else {
+			localStorage.setItem(YT_TOKEN_ACCESS_LEVEL_KEY, normalizeYouTubeAccessLevel(tokenAccessLevel));
+		}
 		setStoredAuthSource(authSource || YT_AUTH_SOURCE_HOSTED);
 	}function clearStoredToken() {
 		localStorage.removeItem('youtubeOAuthToken');
@@ -4748,7 +4754,7 @@ function enableBackgroundKeepAlive() {
 			if (!data || !data.access_token) {
 				throw new Error('Token refresh response did not include access_token.');
 			}
-			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue, authSource);
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue, authSource, localStorage.getItem(YT_TOKEN_ACCESS_LEVEL_KEY));
 			setTimeout(() => { verifyAndUseToken(data.access_token); }, 500);
 			return true;
 		} catch (error) {

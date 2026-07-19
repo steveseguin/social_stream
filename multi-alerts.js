@@ -613,6 +613,10 @@ function pickDonationLabel(payload = {}) {
 
 function buildRecentPayloadSignature(payload = {}) {
   const eventKey = pickEventKey(payload);
+  const webhookId = normalizeText(payload.meta?.webhookId);
+  if (webhookId) {
+    return ['webhook', pickSourceKey(payload), webhookId].join('|');
+  }
   if (isGiftEventKey(eventKey)) {
     return [
       'gift',

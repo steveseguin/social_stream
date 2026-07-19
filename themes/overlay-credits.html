@@ -577,6 +577,33 @@ body, html {
         return false;
     }
 
+    // ── Local output escaping ─────────────────────────────────────────────────
+    // The normal relay path sanitizes these fields in background.js, but this overlay
+    // can also receive payloads pushed directly into the session transport. Escape every
+    // interpolated field locally (defense-in-depth), matching dock.html / featured.html.
+    function escapeHtml(unsafe) {
+        if (unsafe == null) { return ""; }
+        return String(unsafe)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+    function escapeAttributeValue(value) {
+        return escapeHtml(value == null ? "" : String(value));
+    }
+    function cssAttributeValue(value) {
+        return String(value == null ? "" : value)
+            .replace(/\\/g, "\\\\")
+            .replace(/"/g, '\\"')
+            .replace(/'/g, "\\'")
+            .replace(/\r/g, "\\D ")
+            .replace(/\n/g, "\\A ")
+            .replace(/\f/g, "\\C ")
+            .replace(/[<>]/g, "");
+    }
+
     function addMessageToOverlay(data) {
         if (handleControlPayload(data)) {
             return;
@@ -615,25 +642,31 @@ body, html {
             data.chatbadges.forEach(badge => {
                 if (typeof badge === "object") {
                     if (badge.type === "img" && badge.src) {
-                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;
+                        chatbadgesHtml += `<img class='badge' src='${escapeAttributeValue(badge.src)}' alt='badge'>`;
                     } else if (badge.type === "svg" && badge.html) {
+                        // Trusted SVG badge markup, sanitized upstream (matches dock.html / featured.html).
                         chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
                     }
                 } else {
-                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;
+                    chatbadgesHtml += `<img class='badge' src='${escapeAttributeValue(badge)}' alt='badge'>`;
                 }
             });
         }
 
-        const sourceIconHtml = (!hideSource && data.type) ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
+        // Text-only chatmessage is deliberately left un-escaped upstream (see background.js), so it must be
+        // rendered as literal text here; HTML mode keeps the sanitized markup (emotes, etc.). chatname is
+        // filterXSS'd upstream, matching the trusted-upstream contract used by dock.html / featured.html.
+        const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage;
+
+        const sourceIconHtml = (!hideSource && data.type) ? `<img src="https://socialstream.ninja/sources/images/${escapeAttributeValue(data.type)}.png" alt="Source" class="source-icon">` : '';
         const avatarHtml = (!hideAvatars && data.chatimg) ?
-            `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
-        const nameHtml = (!hideNames && data.chatname) ? `<div class="name" ${data.nameColor ? `style="color: ${data.nameColor}"` : ''}>${data.chatname}</div>` : '';
-        const membershipHtml = data.membership ? `<div class="membership-status">${data.membership}</div>` : '';
-        const messageTextHtml = data.chatmessage ? `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage}</div>` : '';
-        const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
+            `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${cssAttributeValue(data.chatimg)}');"></div></div>` : '';
+        const nameHtml = (!hideNames && data.chatname) ? `<div class="name" ${data.nameColor ? `style="color: ${escapeAttributeValue(data.nameColor)}"` : ''}>${data.chatname}</div>` : '';
+        const membershipHtml = data.membership ? `<div class="membership-status">${escapeHtml(data.membership)}</div>` : '';
+        const messageTextHtml = data.chatmessage ? `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${renderedChatMessage}</div>` : '';
+        const donationHtml = data.hasDonation ? `<div class="donation">${escapeHtml(data.hasDonation)}</div>` : '';
         const contentImgHtml = data.contentimg ?
-            `<img src="${data.contentimg}" alt="" class="large-image" onerror="this.style.display='none';">` : '';
+            `<img src="${escapeAttributeValue(data.contentimg)}" alt="" class="large-image" onerror="this.style.display='none';">` : '';
 
         const headerHtml = (avatarHtml || nameHtml || sourceIconHtml || chatbadgesHtml) ?
             `<div class="credit-header">${avatarHtml}${nameHtml}${sourceIconHtml}${chatbadgesHtml}</div>` : '';

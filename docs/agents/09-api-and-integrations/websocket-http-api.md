@@ -339,7 +339,9 @@ Supported webhook paths in `api.md`:
 
 Security rule: keep session IDs and webhook URLs private. The API docs say webhook URLs do not use signature verification.
 
-Duplication warning from `api.md`: do not enable both `&server` dock behavior and remote API control for webhook display unless the workflow intentionally handles duplicate donation alerts.
+Normal webhook path from `api.md`: enable remote API control so `background.js` normalizes the webhook, then use normal generated dock/overlay links. The `server`, `server2`, and `server3` link toggles are not required for donation webhooks.
+
+Stripe, Ko-Fi, Buy Me a Coffee, and Fourthwall normalization preserves the provider's event identifier as `meta.webhookId`. The background suppresses repeated normalized processing by provider and ID. Old and unversioned Dock links keep immediate raw parsing; modern direct-server links briefly wait for the normalized background message, then use raw parsing only as a compatibility fallback when that message does not arrive.
 
 ## StreamDeck And Companion
 

@@ -2383,7 +2383,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="showbitrate" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span>📊 Show bitrate metadata if available; top-right <a href="./docs/video-stats-bitrate.html" target="_blank" rel="noopener" class="lightblue" title="Open the video stats and bitrate guide" aria-label="Open the video stats and bitrate guide">[?]</a></span>
+                                    <span>📊 Show bitrate metadata if available; top-right <a href="https://socialstream.ninja/beta/docs/video-stats-bitrate.html" target="_blank" rel="noopener" class="lightblue" title="Open the video stats and bitrate guide" aria-label="Open the video stats and bitrate guide">[?]</a></span>
                                 </div>
 								<div title="Set the top-right viewer count bar background color. Supports hex, rgba, and named colors." data-keywords="viewer bar topbar background color theme dock style">
                                     <label class="switch">
@@ -3459,7 +3459,7 @@ input:checked + .slider:before {
 						<div class="tts-provider-options options_group hidden" id="openaiTTS">
 							<h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
 							<div style="margin: -4px 0 12px 0; font-size: 0.9em;">
-								<a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+								<a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/local-tts.html">Local TTS setup guide</a>
 							</div>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="openaiAPIKey" class="textInput instant" autocomplete="off"
@@ -5441,7 +5441,7 @@ input:checked + .slider:before {
                         <div class="tts-provider-options options_group hidden" id="openaiTTS2">
                             <h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
                             <div style="margin: -4px 0 12px 0; font-size: 0.9em;">
-                                <a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+                                <a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/local-tts.html">Local TTS setup guide</a>
                             </div>
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="password" id="openaiAPIKey2" class="textInput instant" autocomplete="off"
@@ -6887,7 +6887,7 @@ input:checked + .slider:before {
                                     <span>🔔👋 Beep for new or returning chatters (8h+ quiet)</span>
                                 </div>
                                 <div title="Open the first-time chatter setup guide.">
-                                    <span><a href="./docs/first-time-chatters.html" target="_blank" class="lightblue">Open the First-Time Chatters guide</a></span>
+                                    <span><a href="https://socialstream.ninja/docs/first-time-chatters.html" target="_blank" class="lightblue">Open the First-Time Chatters guide</a></span>
                                 </div>
 								<div title="Override's the database 30-day storage limits">
                                     <label class="switch">
@@ -7090,16 +7090,17 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="disable-host-chat">🚫🗨️ Disable the host chat and block functions </span>
                                 </div>
-								 <div title="Allows external apps (Python, Node, StreamDeck, etc.) to control SSN via HTTP/WebSocket API. Enable this to send commands like sendChat, blockUser, etc. to the extension.">
+								 <div title="Required for inbound Ko-Fi and other webhook alerts. Also allows external apps (Python, Node, StreamDeck, etc.) to control SSN via HTTP/WebSocket API.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="socketserver" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="enable"> Enable </span>
-                                    <a target="_blank" class="options-link rounded_area" id="remote_control_url" href="https://socialstream.ninja/sampleapi.html">
-                                        <span data-translate="remote-httpwss-api-control-extension">remote API control of extension</span>
-                                    </a>
-                                </div>
+									<a target="_blank" class="options-link rounded_area" id="remote_control_url" href="https://socialstream.ninja/sampleapi.html">
+										<span data-translate="remote-httpwss-api-control-extension">remote API control of extension</span>
+									</a>
+									<span> (required for inbound donation webhooks)</span>
+								</div>
                                 <div title="Connects the Dock/Featured pages to the API server for remote control. Needed if you want to send commands (clear, feature, nextInQueue, etc.) directly to the Dock via HTTP/WebSocket.">
                                     <label class="switch">
                                         <input type="checkbox" id="server" data-both="server" />
@@ -7128,6 +7129,9 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="dock-sends-its-commands-to-extension-via-server">Dock sends its commands to Extension via server</span>
                                 </div>
+								<small style="display:block; opacity:0.78; margin:6px 0 10px;">
+									Changing the three Dock/API transport toggles updates generated links only. Reopen active links and replace saved OBS Browser Source URLs after changing them.
+								</small>
 								<div title="Only others on the same network/computer as yours can connect to this via p2p">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="lanonly" />
@@ -9621,7 +9625,7 @@ input:checked + .slider:before {
 						<div class="tts-provider-options options_group hidden" id="openaiTTS10">
 							<h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
 							<div style="margin: -4px 0 12px 0; font-size: 0.9em;">
-								<a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+								<a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/local-tts.html">Local TTS setup guide</a>
 							</div>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="openaiAPIKey10" class="textInput instant" autocomplete="off"
@@ -9919,7 +9923,7 @@ input:checked + .slider:before {
 								<p class="ai-tool-copy"><strong>Voice input:</strong> SSN Desktop uses local Whisper with the selected microphone (about a 42 MB first-use download, then offline). The Chrome extension link opens the hosted co-host page, where Chrome Speech Recognition uses the system-default microphone and may require internet. Other browsers can still use typed chat when voice recognition is unavailable.</p>
 								<p class="ai-tool-copy">With a session link, it can also receive the SSN live chat feed; it defaults to monitor-only, and the Live Chat panel can opt into answering questions.</p>
 								<p class="ai-tool-copy">For the SSN Configured LLM provider, enable the <a href="#wrapper-chatbot-private-options">private chat bot option</a> above.</p>
-								<p class="ai-tool-copy"><a href="./docs/ai-cohost-guide.html" target="_blank">AI co-host guide</a></p>
+								<p class="ai-tool-copy"><a href="https://socialstream.ninja/docs/ai-cohost-guide.html" target="_blank">AI co-host guide</a></p>
 								<p class="ai-tool-copy">Future tool permissions can add live chat, OBS, stream events, games, and other interactive controls.</p>
 								<div class="cohost-tool-panel">
 									<h4>Co-host tool permissions</h4>
@@ -9957,7 +9961,7 @@ input:checked + .slider:before {
 									</div>
 								</div>
 								<p class="ai-tool-copy">Shows an AI avatar and speech bubble on stream. Co-host and chat bot services can send commands to it.</p>
-								<p class="ai-tool-copy"><a href="./docs/ai-cohost-guide.html" target="_blank">AI co-host and stage overlay guide</a></p>
+								<p class="ai-tool-copy"><a href="https://socialstream.ninja/docs/ai-cohost-guide.html" target="_blank">AI co-host and stage overlay guide</a></p>
 								<div style="display: inline-block;" title="Optional: also send primary chat bot replies to the AI stage overlay. This is not needed for dock right-click co-host actions.">
 									<label class="switch">
 										<input type="checkbox" id="aiOverlayFromChatBot" data-setting="aiOverlayFromChatBot" />
@@ -10674,7 +10678,7 @@ input:checked + .slider:before {
 									<div id="hypetrain" data-raw="" class="streaming_chat"><a href="" id="hypetrainlink"></a></div>
 								</div>
 								<p class="ai-tool-copy">Shows Twitch Hype Train and Treasure Train progress as a top bar using <code>meta.html?hype</code>.</p>
-								<p class="ai-tool-copy"><a href="./docs/hype-train-top-bar.html" target="_blank">Hype Train Top Bar guide</a></p>
+								<p class="ai-tool-copy"><a href="https://socialstream.ninja/docs/hype-train-top-bar.html" target="_blank">Hype Train Top Bar guide</a></p>
 								<div class="sticky-action-row top-67">
 									<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="hype" title="Send a fake hype_train meta event">
 										<span>Fake Hype Train</span>
@@ -11315,7 +11319,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 			<div style="text-align: center; margin: 10px 0 22px;">
-				<small><a class="lightblue" target="_blank" href="./docs/tip-jar-goal-meter.html">Tip Jar and Goal Meter guide</a></small>
+				<small><a class="lightblue" target="_blank" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">Tip Jar and Goal Meter guide</a></small>
 			</div>
 
             <div class="link" title="This link shows a list of names representing users in a waiting list">
@@ -12099,7 +12103,7 @@ input:checked + .slider:before {
                         <div class="tts-provider-options options_group hidden" id="openaiTTS18">
                             <h4 data-translate="tts-openai-options">OpenAI / Custom TTS Endpoint Options</h4>
                             <div style="margin: -4px 0 12px 0; font-size: 0.9em;">
-                                <a class="lightblue" target="_blank" href="./docs/local-tts.html">Local TTS setup guide</a>
+                                <a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/local-tts.html">Local TTS setup guide</a>
                             </div>
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="password" id="openaiAPIKey18" class="textInput instant" autocomplete="off" placeholder="Your OpenAI API Key" data-textparam18="openaikey" />

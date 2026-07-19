@@ -642,15 +642,17 @@
 					<h4>Prerequisites:</h4>
 					<ol class="guide-steps">
 						<li>Note your Session ID from the extension popup</li>
-						<li><strong>Choose ONE of these options</strong> (not both):
-							<ul>
-								<li><strong>Option A:</strong> Add <code>&server</code> to your dock.html URL (e.g., <code>dock.html?session=XXXX&server</code>)</li>
-								<li><strong>Option B:</strong> Enable <strong>"Enable remote API control of extension"</strong> in the extension popup under <code>Global settings and tools</code> &rarr; <code>Mechanics</code></li>
-							</ul>
-						</li>
+						<li>Keep Social Stream Ninja enabled</li>
+						<li>Under <code>Global settings and tools</code> &rarr; <code>Mechanics</code>, enable <strong>remote API control of extension</strong></li>
+						<li>Use your normal generated dock and overlay links; do not add <code>&server</code>, <code>&server2</code>, or <code>&server3</code> for donation webhooks</li>
+						<li>Reload the dock once if it was already open</li>
 					</ol>
-					<div class="warning-note">
-						<strong>Warning:</strong> Do not enable both options. If you add <code>&server</code> to the dock AND enable remote API control in the extension, webhooks will be received by both, causing duplicate donation alerts.
+					<div class="guide-note">
+						<strong>Only one API toggle is needed:</strong> remote API control lets the background script normalize donation webhooks and deliver them like normal messages. The other API transport toggles can remain off.
+						<p style="margin: 8px 0 0;">The normalized donation is shared with chat, alerts, Event Flow, and the Tip Jar/Goal Meter.</p>
+						<div style="margin-top: 12px;">
+							<img src="images/api/enable-remote-api-control.png" alt="Remote API control enabled while the other API transport toggles remain off" style="display: block; width: 260px; max-width: 100%; height: auto; border-radius: 6px;">
+						</div>
 					</div>
 
 					<h4>Supported Platforms:</h4>
@@ -705,7 +707,9 @@
 					<h4>Ko-Fi Setup:</h4>
 					<ol class="guide-steps">
 						<li>Sign in to <a href="https://ko-fi.com/manage/webhooks" target="_blank">Ko-Fi Webhook Settings</a></li>
-						<li>Add webhook URL: <code>https://io.socialstream.ninja/YOUR_SESSION_ID/kofi</code></li>
+						<li>Paste <code>https://io.socialstream.ninja/YOUR_SESSION_ID/kofi</code> into <strong>Webhook URL</strong>, then click <strong>Update</strong></li>
+						<li>Enable <strong>remote API control of extension</strong>, then reload an already-open dock</li>
+						<li>Click <strong>Send single tip test</strong> and confirm exactly one alert appears</li>
 						<li>Only public donations will appear (private donations are filtered out)</li>
 					</ol>
 

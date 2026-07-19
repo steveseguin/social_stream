@@ -120,6 +120,8 @@ const state = {
     sseRequest: null,
     sseReadOffset: 0,
     sseBuffer: '',
+    sseAuthRetries: 0,
+    sseAuthRefreshInFlight: false,
     socketConnectTimer: null,
     eventsConnected: false,
     eventTransport: '',
@@ -298,8 +300,37 @@ function normalizeAuthBase(value) {
     return raw.replace(/\/+$/, '');
 }
 
+// Only honour an authBase/auth_base override that points at the production SSO host, a
+// socialstream.ninja domain, or a local dev server. Without this, a crafted link
+// (?authBase=https://evil.tld) would redirect the OAuth code + PKCE verifier + refresh-token
+// exchange — and the trusted postMessage origin — to an attacker. See getExpectedAuthMessageOrigin.
+function isAllowedVeloraAuthBase(value) {
+    try {
+        const url = new URL(value);
+        const host = (url.hostname || '').toLowerCase();
+        const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]';
+        if (isLocal) {
+            return url.protocol === 'https:' || url.protocol === 'http:';
+        }
+        if (url.protocol !== 'https:') {
+            return false;
+        }
+        return host === 'socialstream.ninja' || host.endsWith('.socialstream.ninja');
+    } catch (e) {
+        return false;
+    }
+}
+
 function getVeloraAuthBase() {
-    return normalizeAuthBase(getRuntimeParam('authBase') || getRuntimeParam('auth_base') || DEFAULT_VELORA_AUTH_BASE);
+    const override = getRuntimeParam('authBase') || getRuntimeParam('auth_base');
+    if (override) {
+        const normalized = normalizeAuthBase(override);
+        if (isAllowedVeloraAuthBase(normalized)) {
+            return normalized;
+        }
+        try { console.warn('[Velora] Ignoring untrusted authBase override:', override); } catch (e) {}
+    }
+    return DEFAULT_VELORA_AUTH_BASE;
 }
 
 function getExpectedAuthMessageOrigin() {
@@ -1425,6 +1456,38 @@ function processSseChunk(chunk) {
     });
 }
 
+function handleSseAuthFailure(status) {
+    // A 401/403 means the access token was rejected. Tear this request down and attempt a SINGLE token
+    // refresh, rather than letting onload/scheduleSseReconnect hot-loop every few seconds on the same
+    // dead token (which happens when the token expires while the machine is asleep). refreshAccessToken()
+    // clears auth on failure, so the scheduleSseReconnect guard then stops retrying on its own.
+    const xhr = state.sseRequest;
+    state.sseRequest = null;
+    state.sseReadOffset = 0;
+    state.sseBuffer = '';
+    clearSseReconnectTimer();
+    try { if (xhr) xhr.abort(); } catch (e) {}
+
+    if (state.sseAuthRefreshInFlight) return;
+    if (state.sseAuthRetries >= 1) {
+        setSocketStatus('error', 'Velora sign-in required.');
+        addEventLogEntry(`Velora SSE auth still failing (HTTP ${status}) after refresh. Please sign in again.`, 'error');
+        return;
+    }
+    state.sseAuthRetries += 1;
+    state.sseAuthRefreshInFlight = true;
+    setSocketStatus('connecting', 'Velora session expired. Refreshing token…');
+    addEventLogEntry(`Velora SSE auth failed (HTTP ${status}). Refreshing token…`, 'warn');
+    Promise.resolve(refreshAccessToken()).then(function () {
+        state.sseAuthRefreshInFlight = false;
+        if (state.tokens?.access_token) {
+            connectSse('Reconnecting Velora SSE after token refresh.');
+        }
+    }).catch(function () {
+        state.sseAuthRefreshInFlight = false;
+    });
+}
+
 function connectSse(reason) {
     if (!state.tokens?.access_token) return;
 
@@ -1448,10 +1511,13 @@ function connectSse(reason) {
 
     xhr.onreadystatechange = function () {
         if (xhr !== state.sseRequest) return;
-        if (xhr.readyState === 2 && xhr.status && xhr.status !== 200) {
+        if (xhr.readyState === 2 && (xhr.status === 401 || xhr.status === 403)) {
+            handleSseAuthFailure(xhr.status);
+        } else if (xhr.readyState === 2 && xhr.status && xhr.status !== 200) {
             setSocketStatus('error', `Velora SSE error: HTTP ${xhr.status}`);
             addEventLogEntry(`SSE connection failed: HTTP ${xhr.status}`, 'error');
         } else if (xhr.readyState === 2 && xhr.status === 200 && !state.eventsConnected) {
+            state.sseAuthRetries = 0;
             applyConnectedChannelInfo(null, 'SSE');
         }
     };
@@ -2042,6 +2108,21 @@ function wireExtensionBridge() {
     } catch (e) {}
 }
 
+// The SEND_MESSAGE bridge is only used by the SSApp/Electron preload-mock, which posts a
+// { __ssappSendToTab: { type: 'SEND_MESSAGE', message } } payload to this same window and origin
+// (the normal extension path uses chrome.runtime, handled separately). Require a trusted same-window,
+// same-origin source so a cross-origin window — notably the OAuth popup we open, via window.opener —
+// can't post chat as the signed-in user. Mirrors isTrustedTabBridgeEvent in the other websocket sources.
+function isTrustedTabBridgeEvent(event) {
+    if (!event || event.source !== window) {
+        return false;
+    }
+    if (event.origin && typeof window !== 'undefined' && window.location && event.origin !== window.location.origin) {
+        return false;
+    }
+    return true;
+}
+
 function wirePostMessageBridge() {
     window.addEventListener('message', function (event) {
         const expectedOrigin = getExpectedAuthMessageOrigin();
@@ -2055,14 +2136,16 @@ function wirePostMessageBridge() {
                 }
                 state.authPopup = null;
             }).catch(function () {});
-        }
-        let request = event && event.data;
-        if (!request || typeof request !== 'object') {
             return;
         }
-        if (request.__ssappSendToTab) {
-            request = request.__ssappSendToTab;
+        if (!isTrustedTabBridgeEvent(event)) {
+            return;
         }
+        let request = event && event.data;
+        if (!request || typeof request !== 'object' || !request.__ssappSendToTab) {
+            return;
+        }
+        request = request.__ssappSendToTab;
         if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
             sendChatBridgeMessage(request.message).catch(function () {});
         }

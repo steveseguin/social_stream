@@ -465,6 +465,7 @@ TTS.playAudioBlobAndWait = async function(audioBlob) {
         TTS.audio.onended = TTS.finishedAudio;
     }
 
+    const previousOnEnded = TTS.audio.onended;
     TTS.audio.onended = null;
     const audioUrl = URL.createObjectURL(audioBlob);
     TTS.setAudioSource(audioUrl, true);
@@ -489,6 +490,11 @@ TTS.playAudioBlobAndWait = async function(audioBlob) {
                 audio.removeEventListener("error", onError);
                 audio.removeEventListener("pause", onPause);
                 audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+                // Restore the previous completion handler. This element is reused across providers, and the
+                // onended-driven ones (google/gemini/openai/speechify/kitten/espeak) only set onended when
+                // first creating it -- so without this, switching providers after ElevenLabs (e.g. in
+                // cohost.html) would leave onended null and stall the premium queue.
+                audio.onended = previousOnEnded || TTS.finishedAudio;
             } catch (e) {}
             resolve(!!success);
         }
@@ -1495,9 +1501,13 @@ TTS.skipCurrent = function() {
             }
             TTS.audio.pause();
             TTS.audio.currentTime = 0;
-            if (waitForBrowserKokoro && typeof TTS.resolveCurrentAudioPlayback === "function") {
+            if (typeof TTS.resolveCurrentAudioPlayback === "function") {
+                // Promise-based playback (browser Kokoro or ElevenLabs via playAudioBlobAndWait):
+                // resolving runs the provider's own completion path (its finally -> finishedAudio), and
+                // the pause we just triggered would resolve it anyway. Calling finishedAudio() here too
+                // would advance the queue twice (overlapping or skipped speech).
                 TTS.resolveCurrentAudioPlayback(false);
-            } else if (!waitForBrowserKokoro) {
+            } else {
                 TTS.finishedAudio(); // This will play the next item in queue
             }
         } catch (e) {

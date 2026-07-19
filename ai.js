@@ -3473,6 +3473,7 @@ async function processSummary(data){
 		
 		sendTargetP2P({
 			chatmessage: summary,
+			textonly: true,
 			chatname: botname,
 			chatimg: "./icons/bot.png",
 			type: "socialstream",
@@ -3626,6 +3627,7 @@ async function processMessageWithOllama(data, idx=null) {
 	  // Send to overlay if enabled
 	  sendTargetP2P({
 		chatmessage: response,
+		textonly: true,
         chatname: botname,
         chatimg: "./icons/bot.png",
         type: "socialstream",

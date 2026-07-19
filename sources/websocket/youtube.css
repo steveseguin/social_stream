@@ -116,6 +116,46 @@ body {
 .auth-method-option span {
     user-select: none;
 }
+.yt-access-options {
+    gap: 0;
+    flex-wrap: wrap;
+    margin-right: -8px;
+    margin-bottom: -8px;
+}
+.yt-access-option {
+    align-items: flex-start;
+    min-width: 132px;
+    margin: 0 8px 8px 0;
+    padding: 8px 10px;
+    border: 1px solid #dadce0;
+    border-radius: 7px;
+    background: #fff;
+}
+.yt-access-option input[type="radio"] {
+    margin-top: 2px;
+}
+.yt-access-copy {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+.yt-access-copy strong {
+    font-size: 13px;
+}
+.yt-access-copy small {
+    margin-top: 2px;
+    color: #5f6368;
+    font-size: 11px;
+    white-space: nowrap;
+}
+.yt-access-option input[type="radio"]:checked + .yt-access-copy strong {
+    color: #d93025;
+}
+.yt-access-note {
+    max-width: 330px;
+    margin-top: 8px;
+    line-height: 1.35;
+}
 .external-auth-note {
     margin: 12px auto 0;
     padding: 10px 12px;
@@ -926,6 +966,13 @@ body:has(.auth:not(.hidden)) {
     }
     .auth-method-option {
         color: #f1f1f1;
+    }
+    .yt-access-option {
+        background: #292929;
+        border-color: #4a4a4a;
+    }
+    .yt-access-copy small {
+        color: #aaaaaa;
     }
     .header-item span:last-child,
     #current-user,

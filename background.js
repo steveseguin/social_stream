@@ -4622,7 +4622,7 @@ async function processIncomingMessage(message, sender = null) {
 	return message;
 }
 
-chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
+async function handleRuntimeMessage(request, sender, sendResponseReal) {
 	var response = {};
 	var alreadySet = false;
 
@@ -6574,7 +6574,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	} catch (e) {
 		console.warn(e);
 	}
-	return true; // Keep message channel open for async responses
+	return true;
+}
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponseReal) {
+	handleRuntimeMessage(request, sender, sendResponseReal).catch(error => console.warn(error));
+	return true; // Keep message channel open for async responses on Chrome 80+
 });
 
 const randomDigits = () => {
@@ -6726,6 +6731,19 @@ function publishViewerCountsFromMetaStore() {
 	sendDataP2P(viewerUpdateEvent);
 	sendTargetP2P(viewerUpdateEvent, "meta");
 	sendTargetP2P(viewerUpdateEvent, "aioverlay");
+}
+
+function hasTargetedMetaPayload(message) {
+	if (!message || typeof message !== "object" || !Object.prototype.hasOwnProperty.call(message, "meta")) {
+		return false;
+	}
+	if (message.meta && typeof message.meta === "object" && !Array.isArray(message.meta)) {
+		const metaKeys = Object.keys(message.meta);
+		if (metaKeys.length === 1 && metaKeys[0] === "webhookId") {
+			return false;
+		}
+	}
+	return true;
 }
 
 async function sendToDestinations(message) {
@@ -6900,7 +6918,7 @@ async function sendToDestinations(message) {
 		console.error(e);
 	}
 	try {
-		if (message && typeof message === "object" && Object.prototype.hasOwnProperty.call(message, "meta")) {
+		if (hasTargetedMetaPayload(message)) {
 			sendTargetP2P(message, "meta");
 			sendTargetP2P(message, "aioverlay");
 		}
@@ -9357,6 +9375,98 @@ function sendStreamDeckCommandResult(socket, request, result) {
 	return true;
 }
 
+const recentInboundWebhookDeliveries = new Map();
+function normalizeInboundWebhookId(value) {
+	if (value === undefined || value === null || value === "") {
+		return "";
+	}
+	return String(value).trim();
+}
+
+function getInboundWebhookDeliveryId(provider, payload) {
+	if (!payload || typeof payload !== "object") {
+		return "";
+	}
+	if (provider === "stripe") {
+		return normalizeInboundWebhookId(payload.id || (payload.data && payload.data.object && payload.data.object.id));
+	}
+	if (provider === "kofi") {
+		return normalizeInboundWebhookId(payload.message_id);
+	}
+	if (provider === "bmac") {
+		return normalizeInboundWebhookId(payload.event_id || payload.id || (payload.data && (payload.data.id || payload.data.transaction_id || payload.data.support_id)));
+	}
+	if (provider === "fourthwall") {
+		return normalizeInboundWebhookId(payload.id || (payload.data && payload.data.id));
+	}
+	return "";
+}
+
+function setInboundWebhookMeta(message, webhookId) {
+	if (!message || !webhookId) {
+		return message;
+	}
+	message.meta = Object.assign({}, message.meta || {}, { webhookId: String(webhookId) });
+	return message;
+}
+
+function isDuplicateInboundWebhook(provider, webhookId) {
+	if (!webhookId) {
+		return false;
+	}
+	const now = Date.now();
+	const maxAge = 15 * 60 * 1000;
+	const key = String(provider || "webhook") + ":" + String(webhookId);
+	recentInboundWebhookDeliveries.forEach((seenAt, seenKey) => {
+		if (now - seenAt > maxAge) {
+			recentInboundWebhookDeliveries.delete(seenKey);
+		}
+	});
+	if (recentInboundWebhookDeliveries.has(key)) {
+		return true;
+	}
+	recentInboundWebhookDeliveries.set(key, now);
+	return false;
+}
+
+const STREAM_DECK_SOURCE_RESPONSE_FIELDS = [
+	"id", "target", "tabId", "username", "videoId", "connectionMode", "activeConnectionMode",
+	"status", "isVisible", "isMuted", "autoActivate", "groupId"
+];
+
+function sanitizeStreamDeckSourceResponse(source) {
+	if (!source || typeof source !== "object" || Array.isArray(source)) {
+		return source;
+	}
+	const sanitized = {};
+	for (const field of STREAM_DECK_SOURCE_RESPONSE_FIELDS) {
+		if (Object.prototype.hasOwnProperty.call(source, field)) {
+			sanitized[field] = source[field];
+		}
+	}
+	return sanitized;
+}
+
+function sanitizeStreamDeckSsappPayload(value, parentKey = "") {
+	if (Array.isArray(value)) {
+		if (parentKey === "sources") {
+			return value.map(sanitizeStreamDeckSourceResponse);
+		}
+		return value.map(item => sanitizeStreamDeckSsappPayload(item));
+	}
+	if (!value || typeof value !== "object") {
+		return value;
+	}
+	if (parentKey === "source") {
+		return sanitizeStreamDeckSourceResponse(value);
+	}
+	const sanitized = {};
+	for (const [key, child] of Object.entries(value)) {
+		sanitized[key] = sanitizeStreamDeckSsappPayload(child, key);
+	}
+	return sanitized;
+}
+
 async function handleStreamDeckSsappRequest(request) {
 	const router = getStreamDeckRemoteControlRouter();
 	if (!router) {
@@ -9393,7 +9503,8 @@ async function handleStreamDeckSsappRequest(request) {
 			return router.makeError(request, error.code || response.code || "UNSUPPORTED_ACTION", error.message || response.message || "SSApp command failed.");
 		}
 
-		return router.makeResponse(request, response && "payload" in response ? response.payload : response);
+		const payload = response && "payload" in response ? response.payload : response;
+		return router.makeResponse(request, sanitizeStreamDeckSsappPayload(payload));
 	} catch (error) {
 		return router.makeError(request, "SSAPP_UNAVAILABLE", error?.message || "SSApp command bridge failed.");
 	}
@@ -9516,6 +9627,11 @@ function setupSocket() {
 				if (data.target) {
 					outgoingMessage.destination = data.target;
 				}
+				const requestedTabId = "tabId" in data ? data.tabId : data.tid;
+				const normalizedTabId = normalizeRelayTabId(requestedTabId);
+				if (normalizedTabId !== null) {
+					outgoingMessage.tid = normalizedTabId;
+				}
 				outgoingMessage.outgoingOrigin = "host";
 				resp = sendMessageToTabs(outgoingMessage, false, null, false, false, false);
 			} else if (data.action && data.action === "sendEncodedChat" && data.value) {
@@ -9523,6 +9639,11 @@ function setupSocket() {
 				outgoingMessage.response = decodeURIComponent(data.value);
 				if (data.target) {
 					outgoingMessage.destination = decodeURIComponent(data.target);
+				}
+				const requestedTabId = "tabId" in data ? data.tabId : data.tid;
+				const normalizedTabId = normalizeRelayTabId(requestedTabId);
+				if (normalizedTabId !== null) {
+					outgoingMessage.tid = normalizedTabId;
 				}
 				outgoingMessage.outgoingOrigin = "host";
 				resp = sendMessageToTabs(outgoingMessage, false, null, false, false, false);
@@ -9777,6 +9898,10 @@ function setupSocket() {
 					console.log(data.stripe);
 
 					relayIncomingWebhook("stripe", data.stripe);
+					const stripeWebhookId = getInboundWebhookDeliveryId("stripe", data.stripe);
+					if (isDuplicateInboundWebhook("stripe", stripeWebhookId)) {
+						return false;
+					}
 
 					var message = {};
 					message.chatname = "";
@@ -9900,6 +10025,7 @@ function setupSocket() {
 					message.membership = "";
 					message.contentimg = "";
 					message.type = "stripe";
+					setInboundWebhookMeta(message, stripeWebhookId);
 
 					data = message; // replace inbound stripe message with new message
 
@@ -9914,6 +10040,7 @@ function setupSocket() {
 							}
 
 							if (data) {
+								setInboundWebhookMeta(data, stripeWebhookId);
 								resp = await sendToDestinations(data);
 							}
 						}
@@ -9941,6 +10068,10 @@ function setupSocket() {
 					if (kofi.type !== "Donation") {
 						return false;
 					} else if (!kofi.is_public) {
+						return false;
+					}
+					const kofiWebhookId = getInboundWebhookDeliveryId("kofi", kofi);
+					if (isDuplicateInboundWebhook("kofi", kofiWebhookId)) {
 						return false;
 					}
 
@@ -9972,6 +10103,7 @@ function setupSocket() {
 					kofiMessage.membership = "";
 					kofiMessage.contentimg = "";
 					kofiMessage.type = "kofi";
+					setInboundWebhookMeta(kofiMessage, kofiWebhookId);
 
 					data = kofiMessage; // replace inbound stripe message with new message
 
@@ -9986,6 +10118,7 @@ function setupSocket() {
 							}
 
 							if (data) {
+								setInboundWebhookMeta(data, kofiWebhookId);
 								resp = await sendToDestinations(data);
 							}
 						}
@@ -10004,6 +10137,10 @@ function setupSocket() {
 					} else {
 						const bmac = data.bmac;
 						relayIncomingWebhook("bmac", data.bmac);
+						const bmacWebhookId = getInboundWebhookDeliveryId("bmac", bmac);
+						if (isDuplicateInboundWebhook("bmac", bmacWebhookId)) {
+							return false;
+						}
 						const bmacMessage = {};
 						if (bmac.type === "membership.started") {
 							bmacMessage.chatname = bmac.data.supporter_name || "Anonymous";
@@ -10042,6 +10179,7 @@ function setupSocket() {
 						bmacMessage.chatimg = "";
 						bmacMessage.membership = "";
 						bmacMessage.type = "bmac";
+						setInboundWebhookMeta(bmacMessage, bmacWebhookId);
 						data = bmacMessage; // replace inbound stripe message with new message
 
 						try {
@@ -10055,6 +10193,7 @@ function setupSocket() {
 								}
 
 								if (data) {
+									setInboundWebhookMeta(data, bmacWebhookId);
 									resp = await sendToDestinations(data);
 								}
 							}
@@ -10073,6 +10212,10 @@ function setupSocket() {
 					}
 
 					relayIncomingWebhook("fourthwall", data.fourthwall);
+					const fourthwallWebhookId = getInboundWebhookDeliveryId("fourthwall", data.fourthwall);
+					if (isDuplicateInboundWebhook("fourthwall", fourthwallWebhookId)) {
+						return false;
+					}
 
 					const fourthwallData = data.fourthwall.data;
 
@@ -10120,6 +10263,7 @@ function setupSocket() {
 					fourthwallMessage.membership = "";
 					fourthwallMessage.contentimg = "";
 					fourthwallMessage.type = "fourthwall";
+					setInboundWebhookMeta(fourthwallMessage, fourthwallWebhookId);
 
 					data = fourthwallMessage; // replace inbound fourthwall message with new message
 
@@ -10134,6 +10278,7 @@ function setupSocket() {
 							}
 
 							if (data) {
+								setInboundWebhookMeta(data, fourthwallWebhookId);
 								resp = await sendToDestinations(data);
 							}
 						}

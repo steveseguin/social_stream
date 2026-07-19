@@ -196,6 +196,19 @@ async function waitForPreviewFrame(page) {
     return !!(frame && frame.src && frame.src.indexOf('multi-alerts.html') !== -1);
   });
 
+  await page.locator('#multi-alerts-preview-frame').evaluate((frame) => {
+    frame.loading = 'eager';
+    frame.scrollIntoView({ block: 'center' });
+  });
+  await page.waitForFunction(() => {
+    const frame = document.getElementById('multi-alerts-preview-frame');
+    try {
+      return !!(frame && frame.contentWindow && frame.contentWindow.location.href.indexOf('multi-alerts.html') !== -1);
+    } catch (error) {
+      return false;
+    }
+  });
+
   const handle = await page.$('#multi-alerts-preview-frame');
   let frame = null;
   let attempts = 0;
@@ -209,7 +222,18 @@ async function waitForPreviewFrame(page) {
   }
 
   assert(frame, 'Preview iframe did not attach.');
-  await frame.waitForFunction(() => !!(window.__multiAlertsOverlay && window.__multiAlertsOverlay.getSettings));
+  try {
+    await frame.waitForFunction(() => !!(window.__multiAlertsOverlay && window.__multiAlertsOverlay.getSettings));
+  } catch (error) {
+    console.error('Preview iframe diagnostic:', await frame.evaluate(() => ({
+      url: window.location.href,
+      readyState: document.readyState,
+      hasOverlayApi: !!window.__multiAlertsOverlay,
+      scripts: Array.from(document.scripts).map((script) => script.src || '[inline]'),
+      bodyText: String(document.body && document.body.textContent || '').trim().slice(0, 300)
+    })));
+    throw error;
+  }
   return frame;
 }
 
@@ -305,6 +329,12 @@ async function getOverlaySnapshot(page, descriptor, waitMs = 160, options) {
     });
 
     const popupPage = await context.newPage();
+    popupPage.on('pageerror', (error) => console.error('Popup preview page error:', error.message));
+    popupPage.on('console', (message) => {
+      if (message.type() === 'error' && !message.text().startsWith('Failed to load resource')) {
+        console.error('Popup preview console error:', message.text());
+      }
+    });
     await addPopupInitScript(popupPage, `http://${HOST}:${PORT}`);
     await popupPage.goto(`http://${HOST}:${PORT}/popup.html`, { waitUntil: 'domcontentloaded' });
     await popupPage.waitForFunction(() => {

@@ -4180,12 +4180,12 @@ class EventFlowEditor {
                         </div>
                         <div class="property-group" id="pin-message-id-group" style="${pinMode === 'nextPinned' ? 'display:none;' : ''}">
                             <label class="property-label">Message ID</label>
-                            <input type="text" class="property-input" id="prop-messageId" value="${pinConfig.messageId || '{id}'}">
+                            <input type="text" class="property-input" id="prop-messageId" value="${this.escapeHtml(pinConfig.messageId || '{id}')}">
                             <div class="property-help">Use <code>{id}</code> for the triggering message, or a template/custom ID for delayed actions.</div>
                         </div>
                         <div class="property-group">
                             <label class="property-label">Dock Label (optional)</label>
-                            <input type="text" class="property-input" id="prop-target" value="${pinConfig.target || ''}" placeholder="moderator-dock">
+                            <input type="text" class="property-input" id="prop-target" value="${this.escapeHtml(pinConfig.target || '')}" placeholder="moderator-dock">
                             <div class="property-help">Leave blank for all docks. Set this only for a custom-labeled dock.</div>
                         </div>`;
                 break;

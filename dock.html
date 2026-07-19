@@ -3279,6 +3279,83 @@
 
 			var urlParams = new URLSearchParams(window.location.search);
 			var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+			var LEGACY_PAGE_WEBHOOK_MAX_VERSION = "3.21.10";
+			function isRawDonationWebhook(data) {
+				return !!(data && typeof data === "object" && (
+					"stripe" in data ||
+					"kofi" in data ||
+					"bmac" in data ||
+					"fourthwall" in data
+				));
+			}
+			function shouldDeferRawDonationWebhook(data) {
+				var urlVersion = urlParams.get("v");
+				return isRawDonationWebhook(data) &&
+					!!socketserver &&
+					!!urlVersion &&
+					compareVersions(urlVersion, LEGACY_PAGE_WEBHOOK_MAX_VERSION) > 0;
+			}
+			function normalizeWebhookDeliveryId(value) {
+				if (value === undefined || value === null || value === "") {
+					return "";
+				}
+				return String(value).trim();
+			}
+			function getRawDonationWebhookIdentity(data) {
+				if (!isRawDonationWebhook(data)) {
+					return null;
+				}
+				if ("stripe" in data) {
+					var stripePayload = data.stripe || {};
+					return {
+						provider: "stripe",
+						webhookId: normalizeWebhookDeliveryId(stripePayload.id || (stripePayload.data && stripePayload.data.object && stripePayload.data.object.id))
+					};
+				}
+				if ("kofi" in data) {
+					var kofiWrapper = data.kofi || {};
+					var kofiPayload = null;
+					try {
+						kofiPayload = JSON.parse(decodeURIComponent(kofiWrapper.data || "").replace(/\+/g, " "));
+					} catch (e) {}
+					return {
+						provider: "kofi",
+						webhookId: normalizeWebhookDeliveryId(kofiPayload && kofiPayload.message_id)
+					};
+				}
+				if ("bmac" in data) {
+					var bmacPayload = data.bmac || {};
+					return {
+						provider: "bmac",
+						webhookId: normalizeWebhookDeliveryId(bmacPayload.event_id || bmacPayload.id || (bmacPayload.data && (bmacPayload.data.id || bmacPayload.data.transaction_id || bmacPayload.data.support_id)))
+					};
+				}
+				var fourthwallPayload = data.fourthwall || {};
+				return {
+					provider: "fourthwall",
+					webhookId: normalizeWebhookDeliveryId(fourthwallPayload.id || (fourthwallPayload.data && fourthwallPayload.data.id))
+				};
+			}
+			function getNormalizedDonationWebhookIdentity(data) {
+				var providers = { stripe: true, kofi: true, bmac: true, fourthwall: true };
+				if (!data || !providers[data.type]) {
+					return null;
+				}
+				return {
+					provider: data.type,
+					webhookId: normalizeWebhookDeliveryId(data.meta && data.meta.webhookId)
+				};
+			}
+			function getWebhookDeliveryKey(provider, idType, idValue) {
+				return String(provider || "webhook") + ":" + idType + ":" + String(idValue);
+			}
+			function setRawWebhookMeta(message, webhookId) {
+				webhookId = normalizeWebhookDeliveryId(webhookId);
+				if (message && webhookId) {
+					message.meta = Object.assign({}, message.meta || {}, { webhookId: webhookId });
+				}
+				return message;
+			}
 			// Transport migration guard: only pages with full server parity may skip the legacy bridge.
 			var TRANSPORT_CAPABILITIES = {
 				serverFeed: true,
@@ -7243,9 +7320,109 @@
 				return false;
 			}
 
-			function processInput(data, force=false) {
+			var WEBHOOK_BACKGROUND_GRACE_MS = 1500;
+			var recentWebhookDeliveries = new Map();
+			var pendingRawWebhookFallbacks = new Map();
+			var pendingRawWebhookSequence = 0;
+			function pruneRecentWebhookDeliveries(now) {
+				var maxAge = 15 * 60 * 1000;
+				recentWebhookDeliveries.forEach(function (seenAt, seenKey) {
+					if (now - seenAt > maxAge) {
+						recentWebhookDeliveries.delete(seenKey);
+					}
+				});
+			}
+			function clearPendingRawWebhookFallback(key) {
+				var pending = pendingRawWebhookFallbacks.get(key);
+				if (!pending) {
+					return false;
+				}
+				clearTimeout(pending.timer);
+				pendingRawWebhookFallbacks.delete(key);
+				return true;
+			}
+			function cancelPendingRawWebhookFallback(data) {
+				var identity = getNormalizedDonationWebhookIdentity(data);
+				if (!identity) {
+					return;
+				}
+				if (identity.webhookId) {
+					var exactKey = getWebhookDeliveryKey(identity.provider, "webhook", identity.webhookId);
+					if (clearPendingRawWebhookFallback(exactKey)) {
+						return;
+					}
+				}
+				var fallbackKey = "";
+				pendingRawWebhookFallbacks.forEach(function (pending, key) {
+					if (!fallbackKey && pending.provider === identity.provider) {
+						fallbackKey = key;
+					}
+				});
+				if (fallbackKey) {
+					clearPendingRawWebhookFallback(fallbackKey);
+				}
+			}
+			function queueRawDonationWebhookFallback(data) {
+				var identity = getRawDonationWebhookIdentity(data);
+				if (!identity) {
+					return;
+				}
+				var now = Date.now();
+				pruneRecentWebhookDeliveries(now);
+				var key = identity.webhookId
+					? getWebhookDeliveryKey(identity.provider, "webhook", identity.webhookId)
+					: getWebhookDeliveryKey(identity.provider, "pending", ++pendingRawWebhookSequence);
+				if (recentWebhookDeliveries.has(key) || pendingRawWebhookFallbacks.has(key)) {
+					return;
+				}
+				var pending = {
+					provider: identity.provider,
+					webhookId: identity.webhookId,
+					timer: null
+				};
+				pending.timer = setTimeout(function () {
+					if (pendingRawWebhookFallbacks.get(key) !== pending) {
+						return;
+					}
+					pendingRawWebhookFallbacks.delete(key);
+					processInput(data, false, true);
+				}, WEBHOOK_BACKGROUND_GRACE_MS);
+				pendingRawWebhookFallbacks.set(key, pending);
+			}
+			function isDuplicateWebhookDelivery(data) {
+				if (!data || typeof data !== "object") {
+					return false;
+				}
+				var webhookId = normalizeWebhookDeliveryId(data.meta && data.meta.webhookId);
+				var legacyWebhookTypes = { stripe: true, kofi: true, bmac: true, fourthwall: true };
+				var legacyMessageId = !webhookId && legacyWebhookTypes[data.type] && data.id !== undefined && data.id !== null
+					? normalizeWebhookDeliveryId(data.id)
+					: "";
+				if (!webhookId && !legacyMessageId) {
+					return false;
+				}
+				var now = Date.now();
+				var key = getWebhookDeliveryKey(data.type, webhookId ? "webhook" : "message", webhookId || legacyMessageId);
+				pruneRecentWebhookDeliveries(now);
+				if (recentWebhookDeliveries.has(key)) {
+					return true;
+				}
+				recentWebhookDeliveries.set(key, now);
+				return false;
+			}
+
+			function processInput(data, force=false, allowRawDonationFallback=false) {
 				if (!data) {
 					return featuredMode ? true : false;
+				}
+				// Prefer background.js normalization, but retain a delayed direct-server fallback for
+				// users whose saved Dock URL predates the remote API requirement.
+				if (!allowRawDonationFallback && shouldDeferRawDonationWebhook(data)) {
+					queueRawDonationWebhookFallback(data);
+					return false;
+				}
+				if (!isRawDonationWebhook(data)) {
+					cancelPendingRawWebhookFallback(data);
 				}
 				if (data.chatbotChunk && handleCohostLLMChunk(data.chatbotChunk)) {
 					return true;
@@ -7898,6 +8075,7 @@
 						message.membership = "";
 						message.contentimg = "";
 						message.type = "stripe";
+						setRawWebhookMeta(message, data.stripe.id || (data.stripe.data && data.stripe.data.object && data.stripe.data.object.id));
 
 						data = message; // replace inbound stripe message with new message
 					} catch (e) {
@@ -7951,6 +8129,7 @@
 						message.membership = "";
 						message.contentimg = "";
 						message.type = "kofi";
+						setRawWebhookMeta(message, kofi.message_id);
 
 						data = message; // replace inbound stripe message with new message
 					} catch (e) {
@@ -7998,7 +8177,8 @@
 							message.chatimg = "";
 							message.membership = "";
 							message.type = "bmac";
-							data = message; 
+							setRawWebhookMeta(message, bmac.event_id || bmac.id || (bmac.data && (bmac.data.id || bmac.data.transaction_id || bmac.data.support_id)));
+							data = message;
 
 					} 
 					} catch (e) {
@@ -8062,7 +8242,8 @@
 					message.membership = "";
 					message.contentimg = "";
 					message.type = "fourthwall";
-					
+					setRawWebhookMeta(message, data.fourthwall.id || (data.fourthwall.data && data.fourthwall.data.id));
+
 					data = message; // replace inbound fourthwall message with new message
 				  } catch (e) {
 					errorlog(e);
@@ -8083,6 +8264,10 @@
 						}
 					}
 					return;
+				}
+
+				if (isDuplicateWebhookDelivery(data)) {
+					return false;
 				}
 
 				if (data.action) {

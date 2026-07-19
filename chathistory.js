@@ -402,7 +402,9 @@ function renderMessages() {
         return;
     }
 
-    // Stored relay HTML comes from the background.js path where chat fields are sanitized before persistence.
+    // Stored relay HTML comes from the background.js path where non-text-only chat fields are sanitized
+    // before persistence. Text-only messages are deliberately stored raw (see background.js), so their
+    // chatmessage must be escaped here — matching how the live overlays (featured/dock) render text-only.
     const html = messages.map(message => `
         <div class="message-wrapper" id="message-${message.id}">
             <div class="message">
@@ -413,7 +415,7 @@ function renderMessages() {
                         ${message.type ? `<img src="https://socialstream.ninja/sources/images/${message.type}.png" alt="${message.type}" class="type-image" data-error-hide="self">` : ''}
                         <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
                     </div>
-                    <p class="message-text">${message.chatmessage || ''}</p>
+                    <p class="message-text">${message.textonly ? escapeHtml(message.chatmessage || '') : (message.chatmessage || '')}</p>
                     ${message.contentimg ? `<img src="${message.contentimg}" alt="Content" class="content-image" data-error-hide="self">` : ''}
                     ${message.hasDonation ? `<p class="donation">Donation: ${safePlainText(message.hasDonation)}</p>` : ''}
                     ${(message.membership || message.hasMembership) ? `<p class="membership">Membership: ${safePlainText(message.membership || message.hasMembership)}</p>` : ''}

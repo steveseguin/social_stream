@@ -1983,7 +1983,7 @@
             return null;
         }
 
-        function isDuplicateContribution(data, contribution) {
+        function isDuplicateContribution(data, contribution, requireExplicitId) {
             if (!dedupeWindowMs) return false;
             const now = Date.now();
             Object.keys(processedContributions).forEach(function(key) {
@@ -1993,9 +1993,11 @@
             });
 
             const meta = getMeta(data);
-            const explicitId = data.id || meta.messageId || meta.id || meta.eventId || '';
-            const key = explicitId
-                ? `id:${explicitId}`
+            const webhookId = meta.webhookId || '';
+            const explicitId = webhookId || data.id || meta.messageId || meta.id || meta.eventId || '';
+            if (requireExplicitId && !explicitId) return false;
+			const key = explicitId
+				? (webhookId ? `webhook:${contribution.source}:${webhookId}` : `id:${contribution.source}:${explicitId}`)
                 : [
                     'sig',
                     contribution.kind,
@@ -2159,7 +2161,17 @@
             const donationString = getDonationRaw(data);
             if (donationString) {
                 const sourceType = data.type ? String(data.type).toLowerCase() : '';
-                processTip(donationString, data.chatname || 'Anonymous', sourceType, data);
+                const contribution = {
+                    kind: 'donation',
+                    donator: data.chatname || 'Anonymous',
+                    recipient: '',
+                    source: sourceType,
+                    event: getEventName(data),
+                    count: 1,
+                    raw: String(donationString)
+                };
+                if (isDuplicateContribution(data, contribution, true)) return;
+				processTip(donationString, contribution.donator, sourceType, data);
             }
         }
         

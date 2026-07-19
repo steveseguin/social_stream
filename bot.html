@@ -1964,9 +1964,23 @@
 			var ttsCompletionTimer = null;
 
 			function getBotMessageText(contents) {
-			  var container = document.createElement("div");
-			  container.innerHTML = contents && contents.chatmessage ? String(contents.chatmessage) : "";
-			  return (container.textContent || container.innerText || "").replace(/\s+/g, " ").trim();
+			  var raw = contents && contents.chatmessage ? String(contents.chatmessage) : "";
+			  if (!raw) return "";
+			  // Text-only messages are literal text (deliberately left un-escaped upstream); never parse them as HTML.
+			  if (contents && contents.textonly) {
+				return raw.replace(/\s+/g, " ").trim();
+			  }
+			  // HTML mode: strip tags for the word-count estimate using an inert <template> so no
+			  // <img>/<script> in the (sanitized) markup can load resources or run on a live element.
+			  var text = "";
+			  try {
+				var tpl = document.createElement("template");
+				tpl.innerHTML = raw;
+				text = (tpl.content && tpl.content.textContent) || "";
+			  } catch (e) {
+				text = raw.replace(/<[^>]*>/g, " ");
+			  }
+			  return text.replace(/\s+/g, " ").trim();
 			}
 
 			function getBotAutoHideDelay(contents) {
