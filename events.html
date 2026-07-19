@@ -2055,8 +2055,12 @@ body.light-mode .meta-value.badge {
 
 		const textNode = document.createElement('div');
 		textNode.className = 'text';
-		// Trusted relay HTML: event chatmessage is sanitized upstream in background.js before rendering here.
-		textNode.innerHTML = display.message || '';
+		if (data.textonly === true) {
+			textNode.textContent = display.message || '';
+		} else {
+			// Renderable HTML mode is sanitized upstream in background.js.
+			textNode.innerHTML = display.message || '';
+		}
 		messageDiv.appendChild(textNode);
 
 		if (data.hasDonation) {

@@ -126,6 +126,8 @@ function adjustColorForOverlay(hexColor) {
 }
 
 function getColorFromName(str, settings) {
+	settings = settings || {};
+	str = String(str || "");
 	var out = 0,
 		len = str.length;
 	if (len > 6) {
@@ -205,6 +207,7 @@ function getColorFromName(str, settings) {
 
 
 function getColorFromType(source) {
+	source = String(source || "");
     switch (source.toLowerCase()) {
         // Well-known, established brand colors
         case "youtube":
@@ -426,9 +429,9 @@ function getColorFromType(source) {
 		case "":
 		case undefined:
 		case null:
-			"#CCCCCC";
+			return "#CCCCCC";
         default:
             // Fallback for unknown sources
-            return getColorFromName(source)
+            return getColorFromName(source, {});
     }
 }

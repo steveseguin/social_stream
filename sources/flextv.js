@@ -7,7 +7,6 @@
 	var recentlySeenMessages = new Map();
 	var DUPLICATE_WINDOW_MS = 1500;
 
-	var CHAT_CONTAINER_SELECTOR = "#chat-feed, .chat-list, .chat-content";
 	var CHAT_ITEM_SELECTOR = ".chat-item";
 
 	function hasChromeRuntime() {
@@ -411,11 +410,15 @@
 		if (direct) {
 			return direct;
 		}
+		var container = document.querySelector(".chat-list, .chat-content");
+		if (container) {
+			return container;
+		}
 		var item = document.querySelector(CHAT_ITEM_SELECTOR);
 		if (item && item.parentElement) {
 			return item.parentElement;
 		}
-		return document.querySelector(CHAT_CONTAINER_SELECTOR);
+		return null;
 	}
 
 	function findFocusableChatInput() {

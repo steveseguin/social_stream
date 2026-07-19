@@ -445,7 +445,8 @@ You can't handle the truth</textarea>
         // Process incoming data
         function processData(data) {
             if (!data || !gameState.isActive) return;
-            
+            if (data.content && typeof data.content === 'object') data = data.content;
+
             // Check if it's a chat message
             if (data.chatmessage && data.chatname) {
                 // Skip bot messages

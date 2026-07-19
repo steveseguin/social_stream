@@ -33,6 +33,21 @@
         .sign-out-button:hover {
             background-color: #d32f2f;
         }
+        .auth {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            min-height: 55vh;
+            text-align: center;
+        }
+        .auth .auth-button {
+            padding: 12px 28px;
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 500;
+        }
         .auth-method-selector {
             margin-top: 12px;
             padding: 10px 14px;
@@ -72,6 +87,10 @@
             display: grid;
             grid-template-columns: 1fr 300px;
             gap: 20px;
+        }
+        /* Signed out (no visible .socket): collapse the empty sidebar column */
+        body:not(:has(.socket:not(.hidden))) .container {
+            grid-template-columns: 1fr;
         }
         .main-content {
             display: flex;

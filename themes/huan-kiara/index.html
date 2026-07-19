@@ -270,6 +270,15 @@
 			});
 			observer.observe(chatContainer, { childList: true, subtree: true });
 
+			function escapeHtml(value) {
+				return String(value == null ? "" : value)
+					.replace(/&/g, "&amp;")
+					.replace(/</g, "&lt;")
+					.replace(/>/g, "&gt;")
+					.replace(/"/g, "&quot;")
+					.replace(/'/g, "&#039;");
+			}
+
 			function addEventToOverlay(data) {
 				const eventDiv = document.createElement("div");
 				eventDiv.classList.add("event-message");
@@ -284,7 +293,7 @@
 					eventText = `${data.chatname} donated ${data.amount || data.hasDonation || ""}!`;
 				}
 
-				eventDiv.innerHTML = `<div>${eventText}</div>`;
+				eventDiv.textContent = eventText;
 				chatContainer.appendChild(eventDiv);
 			}
 
@@ -327,9 +336,11 @@
 				let chatbadges = "";
 				if (data.chatbadges) {
 					data.chatbadges.forEach(badge => {
-						if (typeof badge === "object" && badge.type === "img" && badge.src) {
-							chatbadges += `<img class='badge' src='${badge.src}' />`;
-						} else if (badge.type === "svg" && badge.html) {
+						if (typeof badge === "string") {
+							chatbadges += `<img class='badge' src='${escapeHtml(badge)}' />`;
+						} else if (badge && typeof badge === "object" && badge.type === "img" && badge.src) {
+							chatbadges += `<img class='badge' src='${escapeHtml(badge.src)}' />`;
+						} else if (badge && badge.type === "svg" && badge.html) {
 							chatbadges += `<span class='badge svg'>${badge.html}</span>`;
 						}
 					});
@@ -343,7 +354,7 @@
 				usernameBox.innerHTML = `
             ${data.chatimg ? `<img src="${data.chatimg}" class="avatar" alt="${data.chatname}'s avatar">` : ""}
             ${sourceIcon}
-            <span class="username">${data.chatname}</span>
+            <span class="username">${escapeHtml(data.chatname)}</span>
             <span class="badges">${chatbadges}</span>
         `;
 
@@ -362,9 +373,10 @@
 						textStyle = `style="color:${data.textColor}"`;
 					}
 
+					const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage) : data.chatmessage;
 					messageDiv.innerHTML = `
-				<div class="text" ${textStyle}>${data.chatmessage}</div>
-				${data.donation || data.hasDonation ? `<div class="donation">${data.donation || data.hasDonation}</div>` : ""}
+				<div class="text" ${textStyle}>${renderedChatMessage}</div>
+				${data.donation || data.hasDonation ? `<div class="donation">${escapeHtml(data.donation || data.hasDonation)}</div>` : ""}
 			`;
 
 					messageContainer.appendChild(messageDiv);

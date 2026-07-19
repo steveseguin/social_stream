@@ -26,7 +26,7 @@
                 <a id="auth-link" class="auth-button">Sign in with YouTube</a>
                 <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Custom YouTube project active</div>
                 <div id="yt-access-selector" class="auth-method-selector">
-                    <label class="auth-method-label">YouTube access:</label>
+                    <label class="auth-method-label">YouTube access</label>
                     <div class="auth-method-options yt-access-options">
                         <label class="auth-method-option yt-access-option">
                             <input type="radio" name="yt-access-level" value="admin" checked>
@@ -37,10 +37,10 @@
                             <span class="yt-access-copy"><strong>Read only</strong><small>View chat</small></span>
                         </label>
                     </div>
-                    <div class="credentials-note yt-access-note"><strong>Write recommended.</strong> Google groups it under broad YouTube management because no chat-only write scope exists.</div>
+                    <div class="credentials-note yt-access-note"><strong>Write</strong> is recommended. Google's consent screen will show broad YouTube permissions, as no chat-only scope exists.</div>
                 </div>
                 <div id="auth-method-selector" class="auth-method-selector hidden">
-                    <label class="auth-method-label">Sign-in method:</label>
+                    <label class="auth-method-label">Sign-in method</label>
                     <div class="auth-method-options">
                         <label class="auth-method-option">
                             <input type="radio" name="yt-auth-method" value="external" checked>
@@ -5742,7 +5742,10 @@ function enableBackgroundKeepAlive() {
 				}
 				if (stats.viewCount) {
 					if (isViewerTrackingEnabled()) {
-						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount }));
+						const viewCount = Number.parseInt(stats.viewCount, 10);
+						if (Number.isFinite(viewCount) && viewCount >= 0) {
+							pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: viewCount }));
+						}
 					}
 				}
 			}

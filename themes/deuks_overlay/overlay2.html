@@ -204,6 +204,15 @@
 	// Use showtime=30000 to auto-hide messages after 30 seconds
 	var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 0;
 
+	function escapeHtml(value) {
+		return String(value == null ? '' : value)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	}
+
 	// --- Common overlay tweaks (shared across themes) ---
 	var hideBots = urlParams.has("hidebots");
 	if (urlParams.has("chroma")) {
@@ -326,12 +335,14 @@
 			return;
 		}
 
-		if (lastSender === data.chatname && lastMessageDiv) {
+		const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage || '') : (data.chatmessage || '');
+		if (lastSender === data.chatname && lastMessageDiv && lastMessageDiv.isConnected && !lastMessageDiv.classList.contains('fading')) {
 			// Append new message to the existing message container
 			const textDiv = document.createElement('div');
 			textDiv.classList.add('text');
-			textDiv.innerHTML = data.chatmessage || '';
+			textDiv.innerHTML = renderedChatMessage;
 			lastMessageDiv.querySelector('.message').appendChild(textDiv);
+			messageTimestamps.set(lastMessageDiv.id, Date.now());
 		} else {
 			// Create a new message container
 			const messageContainer = document.createElement('div');
@@ -366,11 +377,11 @@
 			messageDiv.innerHTML = `
 				<div class="username-box">
 					${sourceIcon}
-					<span>${data.chatname}</span>
+					<span>${escapeHtml(data.chatname)}</span>
 					<span class="badges">${chatbadges}</span>
 				</div>
-				<div class="text">${data.chatmessage || ''}</div>
-				${(data.donation || data.hasDonation) ? `<div class="donation">${(data.donation || data.hasDonation)}</div>` : ''}
+				<div class="text">${renderedChatMessage}</div>
+				${(data.donation || data.hasDonation) ? `<div class="donation">${escapeHtml(data.donation || data.hasDonation)}</div>` : ''}
 			`;
 
 			messageContainer.appendChild(messageDiv);

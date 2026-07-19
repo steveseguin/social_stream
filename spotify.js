@@ -532,7 +532,7 @@ class SpotifyIntegration {
             try {
 	                const success = await this.handleAuthCallback(
 	                    result.code,
-	                    result.state || state,
+	                    result.state,
 	                    this.normalizeLoopbackRedirectUri(result.redirectUri || redirectUri)
 	                );
 

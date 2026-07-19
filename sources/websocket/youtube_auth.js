@@ -19,6 +19,7 @@
 		refreshToken: "youtubeRefreshToken",
 		expiry: "youtubeOAuthExpiry",
 		accessLevel: "youtubeOAuthAccessLevel",
+		tokenAccessLevel: "youtubeOAuthTokenAccessLevel",
 		authSource: "youtubeOAuthSource",
 		oauthState: "youtubeOAuthState",
 		channel: "youtubeChannel",
@@ -107,6 +108,7 @@
 		localStorage.removeItem(STORAGE_KEYS.expiry);
 		localStorage.removeItem(STORAGE_KEYS.refreshToken);
 		localStorage.removeItem(STORAGE_KEYS.accessLevel);
+		localStorage.removeItem(STORAGE_KEYS.tokenAccessLevel);
 		localStorage.removeItem(STORAGE_KEYS.authSource);
 		localStorage.removeItem(STORAGE_KEYS.channel);
 		localStorage.removeItem(STORAGE_KEYS.videoId);
@@ -134,6 +136,7 @@
 			localStorage.setItem(STORAGE_KEYS.refreshToken, refreshToken);
 		}
 		localStorage.setItem(STORAGE_KEYS.accessLevel, accessLevel);
+		localStorage.setItem(STORAGE_KEYS.tokenAccessLevel, accessLevel);
 		localStorage.setItem(STORAGE_KEYS.authSource, authSource);
 
 		var state = getState();

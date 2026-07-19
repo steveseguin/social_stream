@@ -97,8 +97,8 @@
             chatmessage: chatMessage,
             textonly: settings.textonlymode || false,
             type: "chaturbate",
-            event: event,
-            private: private
+            event: event ? "notice" : "",
+            private: !!private
         };
 
         console.log("Processed chat data:", data);

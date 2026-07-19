@@ -14143,6 +14143,9 @@ function checkIfAllowed(sitename) {
 			if (sitename.startsWith("https://chat.openai.com/")) {
 				return false;
 			}
+			if (sitename.startsWith("https://chatgpt.com/")) {
+				return false;
+			}
 		} catch (e) {}
 	}
 	if (!settings.chime) {

@@ -205,6 +205,15 @@
         return isNaN(v) ? 30000 : v;
     })();
 
+	function escapeHtml(value) {
+		return String(value == null ? '' : value)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	}
+
 	function addMessageToOverlay(data) {
 		if (hideBots && data.bot) { return; }
 		// Skip meta-only messages (follower/viewer data without actual content)
@@ -234,15 +243,16 @@
 				}
 			});
 		}
+		const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage || '') : (data.chatmessage || '');
 
 		messageDiv.innerHTML = `
 			${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
 			<div class="username-box">
-				<span>${data.chatname}</span>
+				<span>${escapeHtml(data.chatname)}</span>
 				<span class="badges">${chatbadges}</span>
 			</div>
-			<div class="text">${data.chatmessage || ''}</div>
-			${(data.donation||data.hasDonation) ? `<div class="donation">${(data.donation||data.hasDonation)}</div>` : ''}
+			<div class="text">${renderedChatMessage}</div>
+			${(data.donation||data.hasDonation) ? `<div class="donation">${escapeHtml(data.donation||data.hasDonation)}</div>` : ''}
 		`;
 
 		messageContainer.appendChild(messageDiv);

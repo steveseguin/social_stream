@@ -77,7 +77,11 @@ For all modifications, ensure the critical components above remain functional.
     function processEmotes(data) {
         // Parse message content
         const tmp = document.createElement("div");
-        tmp.innerHTML = data.chatmessage;
+        if (data.textonly === true) {
+            tmp.textContent = data.chatmessage;
+        } else {
+            tmp.innerHTML = data.chatmessage;
+        }
 
         // Extract emotes, images, and SVGs
         const svgs = [...tmp.querySelectorAll("svg")];

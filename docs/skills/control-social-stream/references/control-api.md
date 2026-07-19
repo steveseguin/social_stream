@@ -27,7 +27,7 @@ GET /api/v1/events
 GET /api/v1/operations/OPERATION_ID
 ```
 
-Status includes app version, session, headless/visibility state, local-media server state, and normalized sources.
+Status includes app version, session, headless/visibility state, local-media server state, and normalized sources. As of API 1.1.3, normalized sources deliberately omit the stored `url` because it may contain credentials; use the numeric `tabId` to address an active source window.
 
 The events endpoint is an authenticated Server-Sent Events stream. It emits bounded, resumable status and operation events and accepts the standard `Last-Event-ID` header. Mutation responses include an operation ID that can be inspected independently.
 

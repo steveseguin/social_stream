@@ -12,6 +12,97 @@
     font-size: 1.7rem;
 }
 
+.guide-flow-section {
+    padding: 0.4rem 0 1.6rem;
+    background-color: var(--background-light);
+}
+
+.guide-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1.15fr auto 1fr;
+    gap: 1rem;
+    align-items: stretch;
+    max-width: 112rem;
+    margin: 0 auto;
+}
+
+.guide-flow-step {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 1.4rem 1.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--background-card);
+    text-align: center;
+}
+
+.guide-flow-icons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+.guide-flow-icons i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: rgba(157, 70, 255, 0.1);
+    color: var(--primary-color);
+    font-size: 1.4rem;
+}
+
+.guide-flow-step strong {
+    font-size: 1.6rem;
+}
+
+.guide-flow-step small {
+    color: var(--text-secondary);
+    font-size: 1.35rem;
+    line-height: 1.4;
+}
+
+.guide-flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.8rem;
+}
+
+.guide-flow-outputs {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.guide-flow-step-mini {
+    padding: 1rem 1.2rem;
+}
+
+.guide-flow-caption {
+    max-width: 112rem;
+    margin: 1rem auto 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.4rem;
+}
+
+@media (max-width: 768px) {
+    .guide-flow {
+        grid-template-columns: 1fr;
+    }
+
+    .guide-flow-arrow i {
+        transform: rotate(90deg);
+    }
+}
+
 .guide-directory {
     padding: 1.2rem 0 1.6rem;
     background-color: var(--background-light);

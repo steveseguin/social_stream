@@ -134,8 +134,9 @@ function toDataURL(url, callback) {
 
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
-			if ( mutations[0] && mutations[0].addedNodes){
-				var nodes = mutations[0].addedNodes;
+			for (var mutationIndex = 0; mutationIndex < mutations.length; mutationIndex++) {
+				if (!mutations[mutationIndex] || !mutations[mutationIndex].addedNodes) continue;
+				var nodes = mutations[mutationIndex].addedNodes;
 				for (var i=0;i<nodes.length;i++){
 					try {
 						var ele = nodes[i];

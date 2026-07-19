@@ -8,8 +8,6 @@
 	var recentlySeenMessages = new Map();
 	var lastViewerCount = null;
 	var DUPLICATE_WINDOW_MS = 1500;
-	var INITIAL_BACKLOG_SUPPRESS_MS = 4000;
-	var startupSuppressUntil = Date.now() + INITIAL_BACKLOG_SUPPRESS_MS;
 
 	var CHAT_LIST_SELECTOR = "[data-rune='MessageListView']";
 	var CHAT_ITEM_SELECTOR = "[data-rune='MessageItemView']";
@@ -365,11 +363,6 @@
 		if (!force && ele.dataset && ele.dataset.ssnProcessed === "1") {
 			return;
 		}
-		if (Date.now() < startupSuppressUntil) {
-			markProcessed(ele);
-			return;
-		}
-
 		var data = buildMessageData(ele);
 		if (!data) {
 			markProcessed(ele);
@@ -495,7 +488,6 @@
 
 	function resetStateForNavigation() {
 		didInitialBacklogSkip = false;
-		startupSuppressUntil = Date.now() + INITIAL_BACKLOG_SUPPRESS_MS;
 		recentlySeenMessages.clear();
 		lastViewerCount = null;
 		observedTarget = null;

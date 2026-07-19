@@ -4,12 +4,17 @@ Always call `get_capabilities` or `GET /api/v1/capabilities`. Its command list i
 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
+| 1.1.3 / MCP 1.0.1 | 0.4.4 | Omits stored source URLs, which may contain access tokens, from normalized source/status responses and exposes the active numeric `tabId` instead |
 | 1.1.2 / MCP 1.0.1 | 0.4.2 | Keeps username-generated URLs consistent during full-form source updates and correctly ignores MCP JSON-RPC notifications |
 | 1.1.1 | 0.4.2 | Rejects connection-mode updates that are unsupported by the selected source platform |
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
 ## Skill revisions
+
+### 2026-07-19
+
+- Documented credential-safe normalized source responses and the `tabId` replacement (API 1.1.3, minimum SSApp 0.4.4).
 
 ### 2026-07-12
 

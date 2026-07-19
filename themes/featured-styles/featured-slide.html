@@ -562,7 +562,7 @@
                 if (content.chatname) {
                     const name = document.createElement('span');
                     name.className = 'username';
-                    name.innerHTML = content.chatname;
+                    name.textContent = content.chatname;
                     if (content.nameColor) {
                         name.style.color = content.nameColor;
                     }
@@ -604,7 +604,8 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
-                    text.innerHTML = content.chatmessage;
+                    if (content.textonly === true) text.textContent = content.chatmessage;
+                    else text.innerHTML = content.chatmessage;
                     if (content.textColor) {
                         text.style.color = content.textColor;
                     }

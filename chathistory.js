@@ -139,6 +139,11 @@ function escapeHtml(value) {
         .replace(/'/g, '&#039;');
 }
 
+function formatTsvField(value) {
+    const normalized = String(value || '').replace(/\t/g, ' ').replace(/\r?\n/g, ' ');
+    return /^\s*[=+\-@]/.test(normalized) ? `'${normalized}` : normalized;
+}
+
 function safePlainText(value) {
     return escapeHtml(stripHtmlToPlainText(value));
 }
@@ -614,7 +619,15 @@ function exportMessages(format) {
                     break;
                 case 'tsv':
                     content = 'ID\tTimestamp\tUsername\tUserID\tType\tMessage\tDonation\n' +
-                        sorted.map(m => `${m.id}\t${m.timestamp}\t${m.chatname}\t${m.userid || ''}\t${m.type}\t${m.chatmessage}\t${m.hasDonation || ''}`).join('\n');
+                        sorted.map(m => [
+                            formatTsvField(m.id),
+                            formatTsvField(m.timestamp),
+                            formatTsvField(m.chatname),
+                            formatTsvField(m.userid),
+                            formatTsvField(m.type),
+                            formatTsvField(m.chatmessage),
+                            formatTsvField(m.hasDonation)
+                        ].join('\t')).join('\n');
                     break;
                 case 'html':
                     content = `

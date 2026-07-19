@@ -764,7 +764,7 @@
             
             const username = document.createElement('span');
             username.className = 'username';
-            username.innerHTML = content.chatname || 'Anonymous';
+            username.textContent = content.chatname || 'Anonymous';
             header.appendChild(username);
 
             if (content.chatbadges && Array.isArray(content.chatbadges)) {
@@ -786,7 +786,8 @@
             if (content.chatmessage) {
                 const text = document.createElement('div');
                 text.className = 'text';
-                text.innerHTML = content.chatmessage;
+                if (content.textonly === true) text.textContent = content.chatmessage;
+                else text.innerHTML = content.chatmessage;
                 div.appendChild(text);
             }
 

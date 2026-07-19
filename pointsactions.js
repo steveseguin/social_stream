@@ -264,7 +264,11 @@ class PointsActions {
         
         // Handle special case for !spend meta-command
         if (commandName === '!spend') {
-            return this.handleSpendCommand(message, args);
+            const result = await this.handleSpendCommand(message, args);
+            if (result && result.success) {
+                this.setCooldown(message.chatname, message.type, commandName, command.cooldown);
+            }
+            return result;
         }
         
         // Process standard commands

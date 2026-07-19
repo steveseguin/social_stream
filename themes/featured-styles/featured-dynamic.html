@@ -703,10 +703,7 @@
                     const name = document.createElement('span');
                     name.className = 'username';
                     
-                    // Decode HTML entities before splitting
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = content.chatname;
-                    const decodedName = tempDiv.textContent || tempDiv.innerText || '';
+                    const decodedName = String(content.chatname);
                     
                     // Split username into individual letters for wave animation
                     decodedName.split('').forEach((letter, index) => {
@@ -754,7 +751,8 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
-                    text.innerHTML = content.chatmessage;
+                    if (content.textonly === true) text.textContent = content.chatmessage;
+                    else text.innerHTML = content.chatmessage;
                     contentDiv.appendChild(text);
                 }
 

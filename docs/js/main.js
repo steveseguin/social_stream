@@ -79,10 +79,8 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('scroll', () => {
             if (window.scrollY > 100) {
                 header.style.boxShadow = 'var(--shadow-md)';
-                header.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
             } else {
                 header.style.boxShadow = 'var(--shadow-sm)';
-                header.style.backgroundColor = 'var(--background-light)';
             }
         });
     }

@@ -793,11 +793,8 @@
                 if (content.chatname) {
                     const name = document.createElement('span');
                     name.className = 'username';
-                    name.innerHTML = content.chatname;
-                    // Decode HTML entities for data-text attribute
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = content.chatname;
-                    const decodedName = tempDiv.textContent || tempDiv.innerText || '';
+                    name.textContent = content.chatname;
+                    const decodedName = String(content.chatname);
                     name.setAttribute('data-text', decodedName);
                     header.appendChild(name);
                 }
@@ -837,7 +834,8 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
-                    text.innerHTML = content.chatmessage;
+                    if (content.textonly === true) text.textContent = content.chatmessage;
+                    else text.innerHTML = content.chatmessage;
                     contentDiv.appendChild(text);
                 }
 
