@@ -1395,18 +1395,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Also works with loco.com domains'
 		},
 		{
-			name: 'ON24',
-			icon: 'on24.png',
-			description: 'Webinar and virtual event platform.',
-			type: 'standard',
-			instructions: `
-				<ul>
-					<li>URL: https://*.on24.com/view/*</li>
-					<li>Q&A questions supported</li>
-				</ul>
-			`
-		},
-		{
 			name: 'Arena Social',
 			icon: 'arenasocial.png',
 			description: 'Social streaming platform.',
@@ -1753,7 +1741,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Open site modal
     function openSiteModal(site) {
         // Set modal content
-        document.getElementById('modalIcon').src = `../sources/images/${site.icon}`;
+        const modalIcon = document.getElementById('modalIcon');
+        modalIcon.onerror = function() { this.onerror = null; this.src = '../sources/images/generic.png'; };
+        modalIcon.src = `../sources/images/${site.icon}`;
         document.getElementById('modalTitle').textContent = site.name;
         document.getElementById('modalDescription').textContent = site.description;
         document.getElementById('modalInstructions').innerHTML = site.instructions;

@@ -6752,6 +6752,11 @@ async function sendToDestinations(message) {
 			return true;
 		}
 
+		const isTwitchAdEvent = message.type === 'twitch' && ['ad_break', 'ad_request', 'ad_schedule'].includes(message.event);
+		if (isTwitchAdEvent && !settings.twichadannounce) {
+			return true;
+		}
+
 		if (message.chatname) {
 			message.chatname = filterXSS(message.chatname); // I do escapeHtml at the point of capture instead
 		}

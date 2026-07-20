@@ -3828,9 +3828,6 @@ async function cleanupCurrentConnection() {
 				break;
 
 			case 'channel.ad_break.begin':
-				if (!settings.twichadannounce) {
-					break;
-				}
 				pushMessage({
 					type: 'twitch',
 					event: 'ad_break',
@@ -4077,9 +4074,7 @@ async function cleanupCurrentConnection() {
 			const data = await res.json().catch(()=>({}));
 			if (res.ok) {
 				addEvent(`Ad Break requested: ${duration}s`);
-				if (settings.twichadannounce) {
-					pushMessage({ type: 'twitch', event: 'ad_request', meta: data?.data?.[0] || { length: duration } });
-				}
+				pushMessage({ type: 'twitch', event: 'ad_request', meta: data?.data?.[0] || { length: duration } });
 				return true;
 			}
 			console.error('startAdBreak failed', data);
@@ -4097,9 +4092,7 @@ async function cleanupCurrentConnection() {
 			const data = await res.json();
 			if (res.ok) {
 				addEvent('Ad Schedule updated');
-				if (settings.twichadannounce) {
-					pushMessage({ type: 'twitch', event: 'ad_schedule', meta: data?.data?.[0] || data });
-				}
+				pushMessage({ type: 'twitch', event: 'ad_schedule', meta: data?.data?.[0] || data });
 				return data;
 			}
 			console.error('fetchAdSchedule failed', data);

@@ -1,56 +1,71 @@
+/* Event Reference page styles.
+   Uses the shared theme variables from styles.css (light + dark), and the site rem scale (1rem = 10px). */
+
 body {
-    background-color: var(--page-bg, #0e1724);
+    background-color: var(--background-light);
 }
 
 .events-container {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 2.5rem 1.5rem 3.5rem;
-    color: var(--text-color, #f3f6fb);
+    padding: 12rem 2rem 6rem;
+    color: var(--text-primary);
 }
 
 .events-container h1 {
-    font-size: 2.25rem;
-    margin-bottom: 0.5rem;
+    font-size: 3.6rem;
+    margin-bottom: 1.2rem;
 }
 
 .events-container h2 {
-    font-size: 1.75rem;
-    margin: 2.5rem 0 1rem;
+    font-size: 2.6rem;
+    margin: 4.8rem 0 1.6rem;
 }
 
 .events-container h3 {
-    font-size: 1.35rem;
-    margin-bottom: 0.75rem;
+    font-size: 2rem;
+    margin: 2.4rem 0 1.2rem;
+}
+
+.events-container code {
+    background: rgba(128, 128, 128, 0.16);
+    border: none;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.92em;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .section-intro p,
 .meta-guidance p,
 .usage-notes p {
-    margin: 0.5rem 0;
-    line-height: 1.6;
+    margin: 1rem 0;
+    line-height: 1.65;
 }
 
 .alert-note {
-    background: rgba(255, 200, 80, 0.1);
-    border: 1px solid rgba(255, 200, 80, 0.4);
-    border-left: 4px solid rgba(255, 200, 80, 0.8);
+    background: rgba(255, 200, 80, 0.12);
+    border: 1px solid rgba(230, 165, 40, 0.45);
+    border-left: 4px solid rgba(230, 165, 40, 0.85);
     border-radius: 10px;
-    padding: 0.9rem 1.1rem;
-    margin: 1rem 0 1.5rem;
-    font-size: 0.95rem;
+    padding: 1.4rem 1.8rem;
+    margin: 1.6rem 0;
+    font-size: 1.45rem;
+    line-height: 1.65;
 }
 
 .alert-note.alert-info {
     background: rgba(64, 140, 255, 0.1);
-    border-color: rgba(64, 140, 255, 0.4);
-    border-left-color: rgba(64, 140, 255, 0.8);
+    border-color: rgba(64, 140, 255, 0.45);
+    border-left-color: rgba(64, 140, 255, 0.85);
 }
 
 .alert-note.alert-tip {
     background: rgba(157, 70, 255, 0.1);
-    border-color: rgba(157, 70, 255, 0.4);
-    border-left-color: rgba(157, 70, 255, 0.8);
+    border-color: rgba(157, 70, 255, 0.45);
+    border-left-color: rgba(157, 70, 255, 0.85);
 }
 
 .field-table,
@@ -59,24 +74,26 @@ body {
     max-width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
-    margin: 1rem 0 1.5rem;
-    font-size: 0.95rem;
-    background: rgba(10, 16, 28, 0.35);
+    margin: 1.6rem 0 2.8rem;
+    font-size: 1.45rem;
+    line-height: 1.55;
+    background: var(--background-card);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     overflow: hidden;
 }
 
 .field-table thead,
 .event-table thead {
-    background: rgba(64, 119, 255, 0.08);
+    background: rgba(157, 70, 255, 0.08);
 }
 
 .field-table th,
 .field-table td,
 .event-table th,
 .event-table td {
-    padding: 0.85rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.1rem 1.4rem;
+    border-bottom: 1px solid var(--border-color);
     vertical-align: top;
     overflow-wrap: anywhere;
     word-break: normal;
@@ -94,109 +111,127 @@ body {
     border-bottom: none;
 }
 
-.field-table code,
-.event-table code,
-.platform-card code {
-    background: rgba(255, 255, 255, 0.08);
-    padding: 0.15rem 0.35rem;
-    border-radius: 6px;
-    font-size: 0.92rem;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+.platform-card {
+    background: var(--background-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2.4rem 2.4rem 2.8rem;
+    margin: 2.4rem 0;
+    box-shadow: var(--shadow-sm);
 }
 
-.platform-card {
-    background: rgba(8, 14, 26, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    padding: 1.75rem 1.5rem 2rem;
-    margin: 1.5rem 0;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+.platform-card > h3:first-child {
+    margin-top: 0;
 }
 
 .platform-card .source-note {
-    font-size: 0.9rem;
-    color: rgba(225, 232, 255, 0.72);
-    margin-bottom: 0.65rem;
+    font-size: 1.4rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
 }
 
 .platform-card .requirements {
-    margin: 0 0 0.75rem;
-    padding-left: 1.2rem;
+    list-style: disc;
+    margin: 0 0 1.2rem;
+    padding-left: 2.2rem;
     line-height: 1.6;
 }
 
 .platform-card .requirements li {
-    margin: 0.2rem 0;
+    margin: 0.35rem 0;
 }
 
 .platform-card .field-highlights {
-    margin: 0.75rem 0 0;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: rgba(225, 232, 255, 0.78);
+    margin: 1.2rem 0 0;
+    font-size: 1.4rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
 }
 
 .event-table .status-event {
-    color: #4ec1ff;
+    color: #0b6bcb;
     font-weight: 600;
 }
 
 .event-table .donation-event {
-    color: #ff8bb5;
+    color: #c2185b;
     font-weight: 600;
 }
 
 .event-table .membership-event {
-    color: #8fffb8;
+    color: #1b873f;
     font-weight: 600;
+}
+
+.dark-mode .event-table .status-event {
+    color: #4ec1ff;
+}
+
+.dark-mode .event-table .donation-event {
+    color: #ff8bb5;
+}
+
+.dark-mode .event-table .membership-event {
+    color: #8fffb8;
 }
 
 .meta-guidance ul,
 .usage-notes ul {
-    margin: 0.75rem 0 0;
-    padding-left: 1.25rem;
+    list-style: disc;
+    margin: 1rem 0 0;
+    padding-left: 2.2rem;
     line-height: 1.6;
 }
 
 .meta-guidance li,
 .usage-notes li {
-    margin: 0.35rem 0;
+    margin: 0.45rem 0;
 }
 
 @media (max-width: 900px) {
     .events-container {
-        padding: 2rem 1rem 3rem;
+        padding: 10rem 1.6rem 4rem;
     }
 
     .field-table th,
     .field-table td,
     .event-table th,
     .event-table td {
-        padding: 0.75rem 0.8rem;
+        padding: 0.9rem 1rem;
     }
 
     .platform-card {
-        padding: 1.5rem;
+        padding: 1.8rem 1.6rem 2rem;
     }
 }
 
 @media (max-width: 640px) {
     .events-container h1 {
-        font-size: 1.9rem;
+        font-size: 2.8rem;
     }
 
     .events-container h2 {
-        font-size: 1.4rem;
+        font-size: 2.2rem;
+        margin-top: 3.6rem;
     }
 
     .events-container h3 {
-        font-size: 1.15rem;
+        font-size: 1.8rem;
     }
 
     .event-table,
     .field-table {
-        font-size: 0.88rem;
+        font-size: 1.32rem;
+        display: block;
+        table-layout: auto;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .event-table th,
+    .event-table td,
+    .field-table th,
+    .field-table td {
+        min-width: 13rem;
     }
 }

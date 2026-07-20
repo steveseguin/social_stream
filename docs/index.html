@@ -6,6 +6,17 @@
   <title>Social Stream Ninja Docs</title>
   <meta name="description" content="Social Stream Ninja documentation, guides, knowledge base, support workflows, and AI agent notes.">
   <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+  <script>
+    // Honor the sitewide theme toggle stored by the other docs pages.
+    (function() {
+      var saved = localStorage.getItem('darkMode');
+      if (saved === 'true') {
+        document.documentElement.classList.add('dark-mode');
+      } else if (saved === 'false') {
+        document.documentElement.classList.add('light-mode');
+      }
+    })();
+  </script>
   <script defer src="../thirdparty/marked.umd.min.js"></script>
   <style>
     :root {
@@ -36,6 +47,32 @@
         --code-bg: #0f172a;
         --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
       }
+    }
+
+    :root.dark-mode {
+      --bg: #10141b;
+      --panel: #171d26;
+      --panel-soft: #202938;
+      --text: #edf2f7;
+      --muted: #a8b4c4;
+      --line: #2d3748;
+      --accent: #2dd4bf;
+      --accent-strong: #5eead4;
+      --code-bg: #0f172a;
+      --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    :root.light-mode {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #eef3f8;
+      --text: #18212f;
+      --muted: #59687c;
+      --line: #d8e0ea;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --code-bg: #eef2f7;
+      --shadow: 0 12px 30px rgba(22, 34, 51, 0.12);
     }
 
     * {

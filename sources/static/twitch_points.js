@@ -86,7 +86,7 @@
 							
                             if (!settings.twichadmute) {
                                 // Still trigger callbacks even if muting is disabled
-                                if (adVideo && adCallbacks.onAdStart && settings.twichadannounce) {
+                                if (adVideo && adCallbacks.onAdStart) {
                                     adCallbacks.onAdStart();
                                 }
 								
@@ -103,7 +103,7 @@
                                         adVideo.muted = true;
                                         
                                         // Trigger ad start callback
-                                        if (adCallbacks.onAdStart && settings.twichadannounce) {
+                                        if (adCallbacks.onAdStart) {
                                             adCallbacks.onAdStart();
                                         }
                                     }
@@ -114,7 +114,7 @@
 							
                             if (!settings.twichadmute) {
                                 // Still trigger callbacks even if muting is disabled
-                                if (mainVideo && adCallbacks.onAdEnd && settings.twichadannounce) {
+                                if (mainVideo && adCallbacks.onAdEnd) {
                                     adCallbacks.onAdEnd();
                                 }
                                 return;
@@ -127,7 +127,7 @@
                                 }
                                 
                                 // Trigger ad end callback
-                                if (adCallbacks.onAdEnd && settings.twichadannounce) {
+                                if (adCallbacks.onAdEnd) {
                                     adCallbacks.onAdEnd();
                                 }
                             }
