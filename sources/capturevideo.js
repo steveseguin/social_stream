@@ -7,7 +7,7 @@
         console.error('VDONinjaSDK not found! Ensure thirdparty/vdoninja-sdk.js loads before capturevideo.js.');
         return;
     }
-    
+
     // Early initialization: Hook RTCPeerConnection to capture audio streams
     (function setupRTCHook() {
         if (window._rtcHookInstalled) return;
@@ -82,39 +82,43 @@
     // Settings from background script
     let settings = {};
     
-    // Check initial state
-    chrome.storage.local.get(['vdoninjadiscord'], function(result) {
-        vdoNinjaEnabled = result.vdoninjadiscord === true;
-        if (vdoNinjaEnabled) {
-            console.log('VDO.Ninja Direct WebRTC Auto-Publisher initialized');
-            console.log('Room ID:', ROOM_ID);
-            console.log(`View URL: ${VDO_NINJA_URL}/?room=${ROOM_ID}&scene`);
-            // Process any videos that loaded before we got the setting
-            processExistingVideos();
-        } else {
-            console.log('VDO.Ninja Discord integration is disabled');
-        }
-    });
-    
-    // Listen for changes to the setting
-    chrome.storage.onChanged.addListener((changes, namespace) => {
-        if (namespace === 'local' && changes.vdoninjadiscord) {
-            const wasEnabled = vdoNinjaEnabled;
-            vdoNinjaEnabled = changes.vdoninjadiscord.newValue === true;
-            
-            console.log('VDO.Ninja Discord setting changed:', vdoNinjaEnabled);
-            
-            if (!wasEnabled && vdoNinjaEnabled) {
-                // Just enabled - start processing videos
-                console.log('VDO.Ninja enabled, starting video processing');
+    // Chrome exposes storage directly; Electron supplies settings through chrome.runtime below.
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local && typeof chrome.storage.local.get === 'function') {
+        chrome.storage.local.get(['vdoninjadiscord'], function(result) {
+            vdoNinjaEnabled = result.vdoninjadiscord === true;
+            if (vdoNinjaEnabled) {
+                console.log('VDO.Ninja Direct WebRTC Auto-Publisher initialized');
+                console.log('Room ID:', ROOM_ID);
+                console.log(`View URL: ${VDO_NINJA_URL}/?room=${ROOM_ID}&scene`);
+                // Process any videos that loaded before we got the setting
                 processExistingVideos();
-            } else if (wasEnabled && !vdoNinjaEnabled) {
-                // Just disabled - clean up everything
-                console.log('VDO.Ninja disabled, cleaning up');
-                cleanupAllVideos();
+            } else {
+                console.log('VDO.Ninja Discord integration is disabled');
             }
-        }
-    });
+        });
+    }
+
+    // Listen for Chrome storage changes when the API is available.
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged && typeof chrome.storage.onChanged.addListener === 'function') {
+        chrome.storage.onChanged.addListener((changes, namespace) => {
+            if (namespace === 'local' && changes.vdoninjadiscord) {
+                const wasEnabled = vdoNinjaEnabled;
+                vdoNinjaEnabled = changes.vdoninjadiscord.newValue === true;
+
+                console.log('VDO.Ninja Discord setting changed:', vdoNinjaEnabled);
+
+                if (!wasEnabled && vdoNinjaEnabled) {
+                    // Just enabled - start processing videos
+                    console.log('VDO.Ninja enabled, starting video processing');
+                    processExistingVideos();
+                } else if (wasEnabled && !vdoNinjaEnabled) {
+                    // Just disabled - clean up everything
+                    console.log('VDO.Ninja disabled, cleaning up');
+                    cleanupAllVideos();
+                }
+            }
+        });
+    }
     
     function generateStreamId() {
         return 'video_' + Date.now() + '_' + Math.random().toString(36).substring(7);

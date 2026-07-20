@@ -16,7 +16,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Reference - Social Stream Ninja</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/events.css">
+    <link rel="stylesheet" href="css/event-reference.css">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <meta name="description" content="Canonical reference for Social Stream Ninja event payloads across YouTube, Twitch, TikTok, Kick, Facebook, and Rumble.">
 </head>
@@ -68,11 +68,59 @@
         </div>
     </header>
 
-    <main>
+    <main id="event-reference">
         <div class="events-container">
             <section class="section-intro">
                 <h1>Live Event Reference</h1>
                 <p>This page documents the canonical event payloads that Social Stream Ninja emits for major platforms. Use it as a shared source of truth when wiring new sources, troubleshooting integrations, or aligning UI labels.</p>
+                <div class="reference-index" role="navigation" aria-labelledby="reference-index-title">
+                    <h2 id="reference-index-title">On This Page</h2>
+                    <p>Jump to the shared field rules, a platform implementation, or the compatibility notes near the end.</p>
+                    <div class="reference-index-groups">
+                        <div class="reference-index-group">
+                            <h3>Reference</h3>
+                            <ul>
+                                <li><a href="#quick-availability">Quick availability</a></li>
+                                <li><a href="#field-overview">Field overview</a></li>
+                                <li><a href="#meta-conventions">Meta conventions</a></li>
+                                <li><a href="#platform-coverage">Platform coverage</a></li>
+                                <li><a href="#cross-platform">Cross-platform alignment</a></li>
+                                <li><a href="#repository-audit">Repository audit</a></li>
+                                <li><a href="#deprecated-events">Deprecated names</a></li>
+                                <li><a href="#using-reference">Using this reference</a></li>
+                            </ul>
+                        </div>
+                        <div class="reference-index-group">
+                            <h3>Platforms and Sources</h3>
+                            <ul>
+                                <li><a href="#youtube-dom">YouTube DOM</a></li>
+                                <li><a href="#youtube-ws">YouTube API</a></li>
+                                <li><a href="#twitch-dom">Twitch DOM</a></li>
+                                <li><a href="#twitch-ws">Twitch EventSub</a></li>
+                                <li><a href="#obs-flow-actions">OBS</a></li>
+                                <li><a href="#streamlabs-alertbox">Streamlabs</a></li>
+                                <li><a href="#tiktok">TikTok</a></li>
+                                <li><a href="#whatnot">Whatnot</a></li>
+                                <li><a href="#ebay">eBay Live</a></li>
+                                <li><a href="#kick-dom">Kick DOM</a></li>
+                                <li><a href="#kick-ws">Kick WebSocket</a></li>
+                                <li><a href="#vpzone-ws">VPZone</a></li>
+                                <li><a href="#joystick-ws">Joystick</a></li>
+                                <li><a href="#facebook">Facebook</a></li>
+                                <li><a href="#onlinechurch">Online Church</a></li>
+                                <li><a href="#shareplay">SharePlay</a></li>
+                                <li><a href="#streamplace">Streamplace</a></li>
+                                <li><a href="#flextv">FLEX TV</a></li>
+                                <li><a href="#meetme-dom">MeetMe</a></li>
+                                <li><a href="#velora">Velora</a></li>
+                                <li><a href="#parti">Parti</a></li>
+                                <li><a href="#chzzk">CHZZK</a></li>
+                                <li><a href="#rumble-dom">Rumble DOM</a></li>
+                                <li><a href="#rumble-ws">Rumble API</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
                 <div class="alert-note">
                     <strong>Important:</strong> Stream events (follows, memberships, milestones, viewer counts, etc.) are always captured and forwarded. To hide all events in dock or featured overlays, add <code>&amp;hideevents</code> (dock also accepts <code>&amp;hideallevents</code>). To hide selected events, use <code>&amp;filterevents=subscription_gift,new_follower,gifted</code>. Donation-style items always pass through the dock filter regardless of settings.
                 </div>
@@ -87,7 +135,7 @@
                 </div>
             </section>
 
-            <section class="section-summary">
+            <section class="section-summary" id="quick-availability">
                 <h2>Quick Feature Availability</h2>
                 <p>Use this table to see which alert types each capture method currently delivers. Detailed payload notes follow below.</p>
                 <p class="field-highlights">The dedicated Multi-Stream Alert Box groups live events into five shared alert categories: <code>Follow</code>, <code>Subscription/Member</code>, <code>Donation</code>, <code>Bits/Cheers</code>, and <code>Raid/Host</code>. It derives those categories from the existing <code>event</code>, <code>membership</code>, <code>subtitle</code>, <code>hasDonation</code>, and <code>meta</code> fields documented here; no separate payload format is required.</p>
@@ -247,7 +295,7 @@
                 <p class="field-highlights">*YouTube subscriber alerts have a 4-hour API delay and only show subscribers with public subscription lists. This is a YouTube API limitation that also affects Streamlabs and other apps.</p>
             </section>
 
-            <section class="field-overview">
+            <section class="field-overview" id="field-overview">
                 <h2>Field Overview</h2>
                 <table class="field-table">
                     <thead>
@@ -312,7 +360,7 @@
                 </table>
             </section>
 
-            <section class="meta-guidance">
+            <section class="meta-guidance" id="meta-conventions">
                 <h2>Meta Conventions</h2>
                 <p>To keep dashboards and automations aligned, follow these conventions when extending <code>data.meta</code>:</p>
                 <ul>
@@ -333,7 +381,7 @@
                 </ul>
             </section>
 
-            <section class="platforms">
+            <section class="platforms" id="platform-coverage">
                 <h2>Platform Coverage</h2>
 
                 <article class="platform-card" id="youtube-dom">
@@ -815,8 +863,6 @@
                     </table>
                 </article>
 
-                <article class="platform-card" id="tiktok">
-                    
                 <article class="platform-card" id="streamlabs-alertbox">
                     <h3>Streamlabs Alert Box</h3>
                     <p class="source-note">Implementation: <code>sources/streamlabs.js</code> (alert-box DOM); optional socket bridge at <code>sources/websocket/streamlabs.html</code></p>
@@ -889,8 +935,8 @@
                     </table>
                 </article>
 
-
-<h3>TikTok Live &ndash; DOM Capture and TikFinity Feed</h3>
+                <article class="platform-card" id="tiktok">
+                    <h3>TikTok Live &ndash; DOM Capture and TikFinity Feed</h3>
                     <p class="source-note">Implementation: <code>sources/tiktok.js</code> for native TikTok pages and <code>sources/tikfinity.js</code> for TikFinity's activity-feed widget/iframe. SSApp still has a native TikTok integration with the widest event coverage (see SSApp docs).</p>
                     <ul class="requirements">
                         <li>Works on the broadcaster's live page. Gift/like/follow banners only populate when the session is authenticated.</li>
@@ -1910,7 +1956,7 @@
                 </table>
             </section>
 
-            <section class="deprecated-events">
+            <section class="deprecated-events" id="deprecated-events">
                 <h2>Deprecated Event Names</h2>
                 <p>The following event names were replaced during the event-naming unification. Sources no longer emit them, but downstream pages (dock, featured, events, leaderboard, multi-alerts) still accept them for backward compatibility with older extension versions. <strong>Do not use these in new code.</strong></p>
                 <table class="field-table">
@@ -1946,7 +1992,7 @@
                 </table>
             </section>
 
-            <section class="usage-notes">
+            <section class="usage-notes" id="using-reference">
                 <h2>Using This Reference</h2>
                 <ul>
                     <li>When adding a new event, reuse existing vocabulary (<code>subscription_gift</code>, <code>viewer_update</code>, etc.) whenever possible. If a deviation is unavoidable, document it here along with the rationale.</li>
@@ -1956,6 +2002,7 @@
                     <li>Stream events are always captured. To hide all events in dock or featured overlays, add <code>&amp;hideevents</code> (dock also accepts <code>&amp;hideallevents</code>). To hide selected events, use <code>&amp;filterevents=subscription_gift,new_follower,gifted</code>.</li>
                     <li>For YouTube, Twitch, and Kick, enable <strong>WebSocket mode</strong> in extension settings for full event support (followers, subscriptions, raids, etc.). Gift/donation capture for YouTube (including gifts and super chats) is available in both Standard and WebSocket modes; websocket adds additional event types.</li>
                 </ul>
+                <p class="back-to-top"><a href="#event-reference">Back to top</a></p>
             </section>
         </div>
     </main>

@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const vm = require('node:vm');
 
 class TestCustomEvent extends Event {
   constructor(type, options) {
@@ -155,6 +156,46 @@ test('Discord video capture uses the official vendored SDK', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'sources', 'capturevideo.js'), 'utf8');
   assert.doesNotMatch(source, /class VDONinjaSDK/);
   assert.match(source, /joinRoom\(\{ room: ROOM_ID \}\)/);
+});
+
+test('Discord video capture uses runtime settings when chrome.storage is unavailable', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'sources', 'capturevideo.js'), 'utf8');
+  let settingsRequested = false;
+  let messageListenerRegistered = false;
+
+  function FakePeerConnection() {}
+  FakePeerConnection.prototype.addEventListener = function () {};
+
+  const context = {
+    VDONinjaSDK: FakeSDK,
+    chrome: {
+      runtime: {
+        id: 1,
+        sendMessage(_id, message, callback) {
+          settingsRequested = message && message.getSettings === true;
+          callback({ settings: { vdoninjadiscord: false } });
+        },
+        onMessage: {
+          addListener() {
+            messageListenerRegistered = true;
+          },
+        },
+      },
+    },
+    console: { log() {}, warn() {}, error() {} },
+    document: {
+      readyState: 'loading',
+      addEventListener() {},
+    },
+  };
+  context.window = context;
+  context.window.RTCPeerConnection = FakePeerConnection;
+  context.window.addEventListener = function () {};
+
+  vm.runInNewContext(source, context);
+
+  assert.equal(settingsRequested, true);
+  assert.equal(messageListenerRegistered, true);
 });
 
 test('destroy closes the SDK signaling connection', async () => {
