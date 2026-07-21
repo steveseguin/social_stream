@@ -22,7 +22,7 @@ file:///C:/path/to/your/theme.html?session=YOUR_SESSION_ID
 
 > **Important**:
  - Always append the session parameter correctly, regardless of hosting method.
- - If Local Hosting, you may need to use &server mode if using this with OBS +v31
+ - If using Local Hosting with OBS v31+, you may need to use `&server` mode
 
 ## Available Themes
 
@@ -83,7 +83,7 @@ Make your own custom theme. It's super easy when using an LLM AI service like Cl
 
 ### Theme-less Code-Only Examples
 
-If you want as little code needed, to help you Vibe Code something for Social Stream Ninjafrom scratch, please see the [Bare Template](https://github.com/steveseguin/social_stream/blob/main/baretempate.html). I don't have anything more basic than this, but it should be enough to copy/paste into a half-decent LLM service and get something that works with Social Stream Ninja.
+If you want the least amount of starter code possible to help you vibe-code something for Social Stream Ninja from scratch, please see the [Bare Template](https://github.com/steveseguin/social_stream/blob/main/baretempate.html). I don't have anything more basic than this, but it should be enough to copy/paste into a half-decent LLM service and get something that works with Social Stream Ninja.
 
 If you're still not having luck with your vibe coding efforts, let me know, however I do not offer help with debugging of code that I did not write.
 
@@ -112,9 +112,9 @@ Starting with OBS v31, there are important considerations for custom themes:
 
 2. **WebSocket API Alternative**
    - For cases where iframes aren't suitable, use the WebSocket API
-   - Enable with the `&server` parameter or such, as the code requires to trigger. You may need to enable it in the extension/menu as well.
-   - When using the Standalone app with local server option, use `&localserver&server` to utilize the local WebSocket server
-   - May require additional setup if the websocket listening code is not already configured in sample code to be used; see dock.html for reference in that case.
+   - Enable it with the `&server` parameter. You may need to enable it in the extension/menu as well.
+   - When using the Standalone app with the local server option, use `&localserver&server` to utilize the local WebSocket server
+   - May require additional setup if the sample code you are using does not already include the WebSocket listening code; see dock.html for reference in that case.
 
 ## Contributing
 
@@ -134,7 +134,7 @@ Benefits of contributing to the official repository:
 - Included in any granted access permissions
 - The P2P IFRAMES mode will work in OBS v31
 
-Alternatively, you can self-host using local files, just ensure proper session parameter usage.
+Alternatively, you can self-host using local files; just ensure proper session parameter usage.
 
 For support or questions, check the [official documentation](https://socialstream.ninja/landing).
 

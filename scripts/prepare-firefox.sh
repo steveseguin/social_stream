@@ -21,7 +21,14 @@ rsync -a \
     --exclude='.agents/' \
     --exclude='.claude/' \
     --exclude='.codex*/' \
-    --exclude='docs/' \
+    --include='docs/' \
+    --include='docs/css/' \
+    --include='docs/js/' \
+    --include='docs/event-reference.html' \
+    --include='docs/css/event-reference.css' \
+    --include='docs/css/styles.css' \
+    --include='docs/js/main.js' \
+    --exclude='docs/***' \
     --exclude='lite/' \
     --exclude='tests/' \
     --exclude='scripts/' \

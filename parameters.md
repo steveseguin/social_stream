@@ -1,6 +1,6 @@
 # All URL Parameters for Social Stream Ninja
 
-This completes the comprehensive list of URL parameters available for your live streaming chat overlay system. Each parameter can be added to the URL using standard query string format:
+This is a comprehensive list of the URL parameters available for your live streaming chat overlay system. Each parameter can be added to the URL using standard query string format:
 
 ```
 ?parameter1=value&parameter2=value

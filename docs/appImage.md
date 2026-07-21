@@ -11,7 +11,7 @@ FATAL:setuid_sandbox_host.cc(163): The SUID sandbox helper binary was found, but
 ## Solution
 Create an AppArmor profile to allow the application to run with unprivileged namespaces:
 
-1. Create a file at `/etc/apparmor.d/obsidianappimage` (or appropriate name for your app) with:
+1. Create a file at `/etc/apparmor.d/socialstreamappimage` (or another appropriate name) with:
 ```
 # This profile allows everything and only exists to give the
 # application a name instead of having the label "unconfined"
@@ -19,15 +19,15 @@ Create an AppArmor profile to allow the application to run with unprivileged nam
 abi <abi/4.0>,
 include <tunables/global>
 
-profile obsidianappimage /path/to/YourAppImage flags=(default_allow) {
+profile socialstreamappimage /path/to/YourAppImage flags=(default_allow) {
   userns,
   
   # Site-specific additions and overrides. See local/README for details.
-  include if exists <local/obsidianappimage>
+  include if exists <local/socialstreamappimage>
 }
 ```
 
-2. Replace `/path/to/YourAppImage` with the actual path to your AppImage file
+2. Replace `/path/to/YourAppImage` with the actual path to your AppImage file.
 
 3. Save the file and run:
 ```

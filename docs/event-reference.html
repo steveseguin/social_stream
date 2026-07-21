@@ -516,7 +516,7 @@
                             <tr>
                                 <td class="membership-event"><code>membermilestone</code></td>
                                 <td>Milestone chats (<code>memberMonth</code> or <code>displayMessage</code> present).</td>
-                                <td><code>membership</code> <code>member_milestone</code>; <code>subtitle</code> summarises months + tier; <code>meta</code> captures the raw milestone mapping.</td>
+                                <td><code>membership</code> <code>member_milestone</code>; <code>subtitle</code> summarizes months + tier; <code>meta</code> captures the raw milestone mapping.</td>
                             </tr>
                             <tr>
                                 <td class="status-event"><code>viewer_update</code></td>
@@ -697,7 +697,7 @@
                             <tr>
                                 <td class="membership-event"><code>subscription_gift</code></td>
                                 <td><code>channel.subscription.gift</code> or USERNOTICE <code>msg-id=subgift</code>.</td>
-                                <td><code>meta</code> exposes gifted total and tier; <code>chatmessage</code> summarises the action.</td>
+                                <td><code>meta</code> exposes gifted total and tier; <code>chatmessage</code> summarizes the action.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>reward</code></td>
@@ -751,7 +751,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe logic uses message IDs; ensure downstream consumers honour <code>data.id</code>.</p>
+                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe logic uses message IDs; ensure downstream consumers honor <code>data.id</code>.</p>
 
                     <h4>Twitch Hype Train Metadata</h4>
                     <p class="field-highlights"><code>hype_train</code> is metadata-only and does not include <code>chatname</code> or <code>chatmessage</code>. Dashboards should update an existing train display by <code>meta.id</code> instead of appending each progress update as chat. The Meta Data Bar (<code>meta.html</code>) renders these events as a top progress bar.</p>
@@ -1179,7 +1179,7 @@
                             <tr>
                                 <td class="membership-event"><code>resub</code></td>
                                 <td><code>channel.subscription.renewal</code>.</td>
-                                <td><code>meta.duration</code> (months) and <code>meta.plan</code> available; <code>subtitle</code> summarises streak.</td>
+                                <td><code>meta.duration</code> (months) and <code>meta.plan</code> available; <code>subtitle</code> summarizes streak.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>subscription_gift</code></td>

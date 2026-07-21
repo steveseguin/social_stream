@@ -271,7 +271,7 @@ The channel system allows for more granular control over message routing:
 
 When specifying channels, you're defining which channels to receive messages from (IN_CHANNEL) and which to send messages to (OUT_CHANNEL). This allows different components of your setup to communicate on separate channels, reducing noise and improving organization.
 
-When a message is sent, it goes to the specified output channel. Those who have that channel set as their input channel will recieve the message.
+When a message is sent, it goes to the specified output channel. Those who have that channel set as their input channel will receive the message.
 
 ### Available Commands
 
@@ -334,7 +334,7 @@ When a message is sent, it goes to the specified output channel. Those who have 
 15. **Emote-only Filter**
    - Toggle or set the global emote-only mode that keeps only emotes/emoji from chat messages. Messages that become empty (and have no donation/content image) after filtering are dropped.
    - Examples:
-     - `{"action": "emoteonly", "value": "toggle"}`
+      - `{"action": "emoteonly", "value": "toggle"}`
       - `{"action": "emoteonly", "value": true}`
       - `{"action": "emoteonly", "value": false}`
 
@@ -658,7 +658,7 @@ When sending content to be displayed, the content object should have the followi
 ```
 `chatname`, `chatmessage`, and `type` tend to be the most important.
 
-A full break down of different keys though used in SSN are the following:
+A full breakdown of different keys though used in SSN are the following:
 
 key name | value type | description
 --- | --- | ---
@@ -828,8 +828,6 @@ socketserver.send(JSON.stringify({ action: "toggleTTS", value: "toggle" }));
 
 # Social Stream Ninja API Documentation
 
-[Previous content remains the same]
-
 # Extension
 
 The extension is a critical component of the Social Stream Ninja system, acting as the primary source of messages and managing communication between different parts of the system.
@@ -875,7 +873,7 @@ The extension processes various API actions, including:
 13. `selectwinner`: Selects one or more random winners from the waitlist.
 14. `drawmode`: Toggles draw mode for giveaways/waitlists.
 
-.. and most actions that targets the dock can be sent via the extension API or other overlays.
+.. and most actions that target the dock can be sent via the extension API or other overlays.
 
 The logic in the app lets you target non-Dock overlays via the extension API using the `target` value, where target is the label name of the connected P2P IFRAME.
 
@@ -1158,11 +1156,11 @@ ws.send(JSON.stringify({
 }));
 ```
 
-Just to touch on the Battle Royal game though,
+Just to touch on the Battle Royale game though,
 
 ## Battle Page (battle.html)
 
-The battle.html page is an interactive game-like features. Currently it doesn't use a WebSocket connection but instead communicates directly with the extension via WebRTC.
+The battle.html page is an interactive game-like feature. Currently it doesn't use a WebSocket connection but instead communicates directly with the extension via WebRTC.
 
 ### Communication Method
 
@@ -1215,8 +1213,6 @@ The battle page relies on the extension for receiving data:
 1. The extension uses `sendDataP2P()` to send data to the battle page
 2. Data can be sent via WebRTC or fallback to WebSocket if available
 3. The extension can trigger game actions like starting the game
-
-I'll create a guide focused on integrating Social Stream Ninja with StreamDeck, specifically for sending custom messages.
 
 
 # StreamDeck Integration Guide for Social Stream Ninja
@@ -1297,8 +1293,6 @@ Channels:
 - 2: Dock
 - 3: Featured content
 - 4-7: Custom channels
-
-I'll add a section about Bitfocus Companion integration with what we can confirm from the provided information:
 
 # Using Bitfocus Companion with Social Stream Ninja
 

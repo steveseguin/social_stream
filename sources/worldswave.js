@@ -1,4 +1,9 @@
 (function () {
+	if (window.__SSN_WORLDSWAVE_SOURCE_ACTIVE__) {
+		return;
+	}
+	window.__SSN_WORLDSWAVE_SOURCE_ACTIVE__ = true;
+
 	var settings = {};
 	var isExtensionOn = true;
 	var observer = null;
@@ -6,7 +11,7 @@
 	var lastURL = location.href;
 	var lastViewerCount = null;
 	var recentlySeenMessages = new Map();
-	var DUPLICATE_WINDOW_MS = 1500;
+	var DUPLICATE_WINDOW_MS = 10000;
 	var ROW_SELECTOR = "#vylveelement_commentsv2river > [class*='StyledChatMessageItem'], #vylveelement_commentsv2river > [class*='vy_lv_comm_uid_'], #vy_lv_comments_section > .vy_lv_comment";
 
 	function hasChromeRuntime() {
@@ -216,12 +221,8 @@
 	}
 
 	function hasSeenRecently(signature) {
-		var previous = recentlySeenMessages.get(signature);
-		return !!previous && Date.now() - previous < DUPLICATE_WINDOW_MS;
-	}
-
-	function rememberMessage(signature) {
 		var now = Date.now();
+		var previous = recentlySeenMessages.get(signature);
 		recentlySeenMessages.set(signature, now);
 		if (recentlySeenMessages.size > 250) {
 			recentlySeenMessages.forEach(function (timestamp, key) {
@@ -230,6 +231,7 @@
 				}
 			});
 		}
+		return !!previous && now - previous < DUPLICATE_WINDOW_MS;
 	}
 
 	function markRow(row, signature) {
@@ -257,8 +259,6 @@
 		if (hasSeenRecently(signature)) {
 			return;
 		}
-		rememberMessage(signature);
-
 		if (isExtensionOn) {
 			sendToApp({ message: data });
 		}

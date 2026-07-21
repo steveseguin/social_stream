@@ -3906,6 +3906,11 @@
 				stripEmojis = true;
 			}
 
+			var stripNameEmojis = false;
+			if (urlParams.has("stripnameemoji")) {
+				stripNameEmojis = true;
+			}
+
 			var disolveEvents = false;
 			if (urlParams.has("dissolve")) {
 				disolveEvents = true;
@@ -10156,15 +10161,15 @@
 			
 			
 			
-			function isEmojiOnly(str) {
-				function stripEmojis(text) {
-					return text
-						.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "")
-						.replace(/[\u200D\uFE0F]/g, "")
-						.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "");
-				}
+			function stripEmojisFromText(text) {
+				return text
+					.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "")
+					.replace(/[\u200D\uFE0F]/g, "")
+					.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "");
+			}
 
-				let strippedStr = stripEmojis(str);
+			function isEmojiOnly(str) {
+				let strippedStr = stripEmojisFromText(str);
 				strippedStr = strippedStr.replace(/\s+/g, '');
 				if (strippedStr.length === 0) {
 					return true; // Contains only emojis and/or spaces
@@ -10917,6 +10922,12 @@
 						if (stripHTML) {
 							data.chatname = stripHtmlFunction(data.chatname);
 						}
+						if (stripNameEmojis) {
+							data.chatname = stripEmojisFromText(data.chatname);
+							if (!data.chatname.trim()) {
+								data.chatname = rawName;
+							}
+						}
 						data.chatname = data.chatname.trim();
 
 						if (localBlockUserList) {
@@ -11051,8 +11062,7 @@
 					}
 
 					if (data.chatmessage && stripEmojis) {
-						data.chatmessage = data.chatmessage.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "").replace(/[\u200D\uFE0F]/g, ""); // Remove zero-width joiner and variation selector
-						data.chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, ""); // fail safe?
+						data.chatmessage = stripEmojisFromText(data.chatmessage);
 					}
 
 					if (data.chatmessage) {
