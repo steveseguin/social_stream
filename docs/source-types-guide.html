@@ -179,14 +179,15 @@
 				<div class="guide-card" id="youtube-shorts-event-flow">
 					<h2>YouTube Shorts and Event Flow</h2>
 					<p><strong>Incoming matching is exact:</strong> use <code>youtubeshorts</code> in a From Source trigger for Shorts messages, and <code>youtube</code> for regular YouTube live chat.</p>
-					<p><strong>Outgoing relay matching is also exact:</strong> Relay Chat uses the source window's Shorts URL context to distinguish <code>youtube</code> from <code>youtubeshorts</code>, without changing shared YouTube controls that intentionally support both.</p>
+					<p><strong>Outgoing matching is also exact:</strong> Relay Chat treats them as separate destinations.</p>
 					<ul class="guide-list">
-						<li>A TikTok → <code>youtube</code> Relay Chat action sends only to regular YouTube live-chat windows.</li>
-						<li>A TikTok → <code>youtubeshorts</code> Relay Chat action sends only to YouTube Shorts live-chat windows.</li>
-						<li>Use both actions when the same message should reach both variants, or use Relay to all platforms excluding the source.</li>
-						<li>Older versions grouped both destinations and could send twice to each window when both actions were present. Update Social Stream Ninja if you see that behavior.</li>
+						<li>Destination <code>youtube</code> sends only to regular YouTube live-chat windows.</li>
+						<li>Destination <code>youtubeshorts</code> sends only to YouTube Shorts live-chat windows.</li>
+						<li>To reach both, add one action for each destination or relay to all platforms excluding the source.</li>
 					</ul>
-					<p>A Reflection Filter still prevents relayed messages from returning through a loop, but it is not required to separate the two YouTube destinations.</p>
+					<p>Other YouTube-wide controls may intentionally handle both types as one platform family. This does not change the exact Event Flow matching above.</p>
+					<h3>Troubleshooting Older Versions</h3>
+					<p>Older versions grouped both relay destinations, so two actions could send twice to each YouTube window. Update Social Stream Ninja if that happens. A Reflection Filter prevents relay loops, but it does not correct overlapping destination matching in those older versions.</p>
 					<figure class="guide-figure">
 						<img src="images/guides/guide-event-flow-overview.png" alt="Social Stream Ninja Event Flow editor with connected trigger, filter, and action nodes" class="guide-image" />
 						<figcaption>From Source reads the incoming payload type; Relay Chat selects outbound source windows.</figcaption>
