@@ -107,6 +107,12 @@
 	<h1>Social Stream Test Source</h1>
 	<div class="grid">
 		<div class="panel">
+			<label for="platformType">Platform</label>
+			<select id="platformType">
+				<option value="testsource">Test Source</option>
+				<option value="kick">Kick</option>
+			</select>
+
 			<label for="chatname">Name</label>
 			<input id="chatname" value="Test User">
 
@@ -130,6 +136,7 @@
 			</div>
 
 			<button id="sendCustom">Send Custom</button>
+			<button id="sendKickDonation" class="secondary">Send 1,000 KICKs</button>
 			<button id="sendBurst" class="secondary">Send All Cases</button>
 			<div id="status" class="status"></div>
 		</div>
@@ -247,9 +254,10 @@
 			function buildPayload(message, textonly, title) {
 				var eventType = getById("eventType").value;
 				var donation = getById("donation").value;
+				var platformType = getById("platformType").value || "testsource";
 				var payload = {
-					type: "testsource",
-					platform: "testsource",
+					type: platformType,
+					platform: platformType,
 					chatname: getById("chatname").value || "Test User",
 					chatmessage: message,
 					chatimg: "",
@@ -267,6 +275,14 @@
 				};
 				if (eventType) {
 					payload.event = eventType;
+				}
+				if (platformType === "kick" && eventType === "donation") {
+					var kickAmount = Number(String(donation).replace(/[^0-9.]/g, ""));
+					payload.meta.amount = isNaN(kickAmount) ? null : kickAmount;
+					payload.meta.currency = "KICKs";
+					payload.meta.supporter = payload.chatname;
+					payload.meta.message = message;
+					payload.meta.giftName = "";
 				}
 				return payload;
 			}
@@ -310,6 +326,14 @@
 
 			getById("sendCustom").onclick = function () {
 				dispatchPayload(buildPayload(getById("messageInput").value, getById("textonly").checked, "custom"));
+			};
+
+			getById("sendKickDonation").onclick = function () {
+				getById("platformType").value = "kick";
+				getById("eventType").value = "donation";
+				getById("donation").value = "1,000 KICKs";
+				getById("messageInput").value = "Thanks for the stream!";
+				dispatchPayload(buildPayload(getById("messageInput").value, getById("textonly").checked, "1,000 KICKs donation"));
 			};
 
 			getById("sendBurst").onclick = function () {
