@@ -5206,7 +5206,9 @@
 					if (event.data && server2) {
 						try {
 							var data = JSON.parse(event.data);
-							processInput(data);
+							if (!isDuplicateTransportDelivery(data)) {
+								processInput(data);
+							}
 						} catch (e) {
 							console.error(e);
 						}
@@ -7416,6 +7418,46 @@
 				return false;
 			}
 
+			// In server2 mode the extension may deliver the same feed message over both the
+			// websocket and the VDO.Ninja bridge (additive delivery); drop the second copy.
+			var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+			var recentTransportDeliveries = new Map();
+			function isDuplicateTransportDelivery(data) {
+				if (!server2) {
+					return false;
+				}
+				if (!data || typeof data !== "object") {
+					return false;
+				}
+				if (data.id === undefined || data.id === null) {
+					return false;
+				}
+				if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+					return false;
+				}
+				if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
+					return false;
+				}
+				var key =
+					String(data.id) +
+					"|" + (data.type || "") +
+					"|" + (data.chatname || "") +
+					"|" + String(data.chatmessage || "").slice(0, 100) +
+					"|" + (data.hasDonation || "") +
+					"|" + (data.event || "");
+				var now = Date.now();
+				recentTransportDeliveries.forEach(function (seenAt, seenKey) {
+					if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+						recentTransportDeliveries.delete(seenKey);
+					}
+				});
+				if (recentTransportDeliveries.has(key)) {
+					return true;
+				}
+				recentTransportDeliveries.set(key, now);
+				return false;
+			}
+
 			function processInput(data, force=false, allowRawDonationFallback=false) {
 				if (!data) {
 					return featuredMode ? true : false;
@@ -8640,7 +8682,9 @@
 					if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
 						// raw data
 						if ("overlayNinja" in e.data.dataReceived) {
-							processInput(e.data.dataReceived.overlayNinja);
+							if (!isDuplicateTransportDelivery(e.data.dataReceived.overlayNinja)) {
+								processInput(e.data.dataReceived.overlayNinja);
+							}
 						}
 					}
 				});
