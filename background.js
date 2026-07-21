@@ -14555,6 +14555,30 @@ function claimPublishedUrl(published, url) {
 	return true;
 }
 
+function isYouTubeShortsRelayUrl(url) {
+	if (!url) {
+		return false;
+	}
+	try {
+		const parsedUrl = new URL(url);
+		return parsedUrl.pathname.toLowerCase().includes("/shorts") || parsedUrl.searchParams.has("shorts");
+	} catch (e) {
+		const normalizedUrl = String(url).toLowerCase();
+		return normalizedUrl.includes("/shorts") || /[?&]shorts(?:[=&]|$)/.test(normalizedUrl);
+	}
+}
+
+function getExactYouTubeRelaySourceType(tab, sourceType) {
+	const exactSourceType = String(sourceType || "").toLowerCase();
+	if (exactSourceType === "youtubeshorts") {
+		return "youtubeshorts";
+	}
+	if (normalizeSourceControlPlatform(exactSourceType) !== "youtube") {
+		return exactSourceType;
+	}
+	return isYouTubeShortsRelayUrl(tab && tab.url) ? "youtubeshorts" : "youtube";
+}
+
 async function matchesRelayDestination(tab, destination, mode = "sourceType", sourceType = false) {
 	if (!destination) {
 		return true;
@@ -14565,7 +14589,8 @@ async function matchesRelayDestination(tab, destination, mode = "sourceType", so
 	if (mode === "url") {
 		return urlMatchesDestination(tab.url, destination);
 	}
-	const normalizedDestination = normalizeSourceControlPlatform(destination.toLowerCase());
+	const exactDestination = String(destination).toLowerCase();
+	const normalizedDestination = normalizeSourceControlPlatform(exactDestination);
 	if (!sourceType) {
 		if (!tab.id) {
 			return false;
@@ -14574,6 +14599,10 @@ async function matchesRelayDestination(tab, destination, mode = "sourceType", so
 		if (!sourceType) {
 			return false;
 		}
+	}
+
+	if (exactDestination === "youtube" || exactDestination === "youtubeshorts") {
+		return getExactYouTubeRelaySourceType(tab, sourceType) === exactDestination;
 	}
 
 	return normalizeSourceControlPlatform(sourceType) === normalizedDestination;

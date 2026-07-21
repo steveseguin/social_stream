@@ -144,7 +144,7 @@
 							<tr>
 								<td data-label="Capture or UI Name">YouTube Shorts live chat</td>
 								<td data-label="Payload Type"><code>youtubeshorts</code></td>
-								<td data-label="Why It May Be Surprising">It is distinct for incoming filters, but currently shares the YouTube outbound send family.</td>
+								<td data-label="Why It May Be Surprising">It is distinct for incoming filters and Event Flow relay destinations, while shared YouTube controls still treat both variants as one family where needed.</td>
 							</tr>
 							<tr>
 								<td data-label="Capture or UI Name">Instagram Live / InstaFeed live</td>
@@ -179,14 +179,14 @@
 				<div class="guide-card" id="youtube-shorts-event-flow">
 					<h2>YouTube Shorts and Event Flow</h2>
 					<p><strong>Incoming matching is exact:</strong> use <code>youtubeshorts</code> in a From Source trigger for Shorts messages, and <code>youtube</code> for regular YouTube live chat.</p>
-					<p><strong>Outgoing relay matching is currently broader:</strong> <code>youtube</code> and <code>youtubeshorts</code> are treated as the same YouTube send family. This preserves features that should reach all YouTube chat windows, but two separate Relay Chat actions can overlap.</p>
+					<p><strong>Outgoing relay matching is also exact:</strong> Relay Chat uses the source window's Shorts URL context to distinguish <code>youtube</code> from <code>youtubeshorts</code>, without changing shared YouTube controls that intentionally support both.</p>
 					<ul class="guide-list">
-						<li>A TikTok → <code>youtube</code> Relay Chat action can send to both an open YouTube window and an open YouTube Shorts window.</li>
-						<li>A second TikTok → <code>youtubeshorts</code> action can target those same two windows again.</li>
-						<li>The result is two copies in each destination even though the TikTok payload entered Event Flow only once.</li>
-						<li>Use one Relay Chat action for the YouTube family when the same text should reach both. Do not add separate YouTube and Shorts actions unless exact destination routing is available in your version.</li>
+						<li>A TikTok → <code>youtube</code> Relay Chat action sends only to regular YouTube live-chat windows.</li>
+						<li>A TikTok → <code>youtubeshorts</code> Relay Chat action sends only to YouTube Shorts live-chat windows.</li>
+						<li>Use both actions when the same message should reach both variants, or use Relay to all platforms excluding the source.</li>
+						<li>Older versions grouped both destinations and could send twice to each window when both actions were present. Update Social Stream Ninja if you see that behavior.</li>
 					</ul>
-					<p>A Reflection Filter prevents a relayed message from returning through a loop. It does not merge two overlapping Relay Chat actions.</p>
+					<p>A Reflection Filter still prevents relayed messages from returning through a loop, but it is not required to separate the two YouTube destinations.</p>
 					<figure class="guide-figure">
 						<img src="images/guides/guide-event-flow-overview.png" alt="Social Stream Ninja Event Flow editor with connected trigger, filter, and action nodes" class="guide-image" />
 						<figcaption>From Source reads the incoming payload type; Relay Chat selects outbound source windows.</figcaption>
@@ -255,7 +255,7 @@
 							<tr>
 								<td data-label="Action">Relay to a platform</td>
 								<td data-label="How It Chooses">Asks open sources whether they support that outbound destination.</td>
-								<td data-label="Common Failure">Two names belong to one outbound family and both actions hit the same windows.</td>
+								<td data-label="Common Failure">The selected variant has no matching open source window, or the source cannot send chat.</td>
 							</tr>
 							<tr>
 								<td data-label="Action">Relay to all except source</td>
@@ -265,7 +265,7 @@
 						</tbody>
 					</table>
 					<ul class="guide-list">
-						<li>A source script's <code>getSource</code> response is an outbound-routeability signal. It may intentionally group variants such as YouTube and YouTube Shorts.</li>
+						<li>A source script's <code>getSource</code> response is an outbound-routeability signal. Shared YouTube controls may group both variants, while Relay Chat adds exact Shorts URL context for destination matching.</li>
 						<li>Generic capture can find and focus likely inputs, but that does not guarantee the site will accept an automated send.</li>
 						<li>API/WebSocket modes may send through platform APIs instead of typing into the visible page.</li>
 						<li>In the desktop app, <em>Bot reply-only (no capture)</em> keeps a source available for replies/status while suppressing its normal captured messages.</li>
