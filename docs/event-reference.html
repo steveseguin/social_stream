@@ -110,6 +110,7 @@
                                 <li><a href="#onlinechurch">Online Church</a></li>
                                 <li><a href="#shareplay">SharePlay</a></li>
                                 <li><a href="#streamplace">Streamplace</a></li>
+                                <li><a href="#worldswave">WorldsWave</a></li>
                                 <li><a href="#flextv">FLEX TV</a></li>
                                 <li><a href="#meetme-dom">MeetMe</a></li>
                                 <li><a href="#velora">Velora</a></li>
@@ -263,6 +264,13 @@
                             <td>Viewer count plus chat names, colors, badges, replies, and links</td>
                         </tr>
                         <tr>
+                            <td><strong>WorldsWave</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Rendered live chat plus opt-in viewer count updates</td>
+                        </tr>
+                        <tr>
                             <td><strong>CHZZK</strong></td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
@@ -309,7 +317,7 @@
                         <tr>
                             <td><code>data.type</code></td>
                             <td>string</td>
-                            <td>Source identifier used by overlays, filters, and Event Flow. Instagram keeps live chat as <code>instagramlive</code> and non-live comments as <code>instagram</code>.</td>
+                            <td>Source identifier used by overlays, filters, and Event Flow. Instagram keeps live chat as <code>instagramlive</code> and non-live comments as <code>instagram</code>. See the <a href="source-types-guide.html">Source Types Guide</a> for variants, generic sources, and outbound routing.</td>
                         </tr>
                         <tr>
                             <td><code>data.event</code></td>
@@ -1470,6 +1478,37 @@
                                 <td class="status-event"><code>viewer_update</code></td>
                                 <td>The header viewer badge changes while viewer-count capture or hype mode is enabled.</td>
                                 <td><code>meta</code> integer viewer count.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="worldswave">
+                    <h3>WorldsWave</h3>
+                    <p class="source-note">Implementation: <code>sources/worldswave.js</code></p>
+                    <ul class="requirements">
+                        <li>Supports WorldsWave live pages and chat-only URLs such as <code>https://worldswave.com/kn_livecmd.php?cmd=viewStream&amp;streamId=STREAM_ID&amp;chatonly=1</code>.</li>
+                        <li>Existing chat history is skipped when capture attaches; test with a new message.</li>
+                        <li>Viewer counts require <strong>Show viewer count</strong> or hype mode. Gifts, tips, and send-back are not normalized by this source yet.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>A new rendered WorldsWave chat row appears.</td>
+                                <td>Standard chat payload with <code>type: "worldswave"</code>, sender name, avatar, optional user ID and name color, plus sanitized inline message images when text-only mode is disabled.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>The visible live viewer total changes while viewer-count capture or hype mode is enabled.</td>
+                                <td><code>meta</code> is the integer viewer count; compact values such as <code>1.2K</code> are normalized.</td>
                             </tr>
                         </tbody>
                     </table>

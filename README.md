@@ -192,6 +192,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - chzzk.naver.com (pop out the chat)
 - demo.openstreamingplatform.com (pop out chat)
 - wave.video
+- worldswave.com (open the live stream page or the chat-only popout URL)
 - verticalpixelzone.com (no pop out; open the page with chat)
 - beamstream.gg (open https://beamstream.gg/USERNAME/chat to user. *note the /chat added at the end)
 - zap.stream (no pop out)

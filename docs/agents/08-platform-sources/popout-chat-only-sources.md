@@ -1,6 +1,6 @@
 # Popout And Chat-Only Sources
 
-Status: heavy grouped source pass from current source files, manifest rows, and public site metadata on 2026-06-24.
+Status: heavy grouped source pass from current source files, manifest rows, and public site metadata on 2026-06-24; WorldsWave added 2026-07-20.
 
 Use this page for smaller supported platforms where the required setup is a popout, chat-only, or platform-specific chat URL. These are rendered DOM chat captures unless noted otherwise.
 
@@ -20,6 +20,7 @@ Use this page for smaller supported platforms where the required setup is a popo
 - `sources/rokfin.js`
 - `sources/rutube.js`
 - `sources/sooplive.js`
+- `sources/worldswave.js`
 - `sources/vkvideo.js`
 - `sources/vkplay.js`
 - `manifest.json`
@@ -54,11 +55,12 @@ That source is a chat-only/popout capture. Open the exact supported chat URL, ke
 | RokFin | `https://*.rokfin.com/popout/chat/*`, `https://rokfin.com/popout/chat/*` | Ant Design comment rows, author, badges, avatar, message body | Tip rows using `.ant-space-item mark` can set `hasDonation` | Requires popout chat URL; badges can be image or SVG descriptors. |
 | Rutube | `https://rutube.ru/live/chat/*/` | `.bull-chat-module__messages`, author, message, avatar | Can look inside an iframe body for chat messages | No donation/rich-event path in inspected source. |
 | SoopLive | `https://www.sooplive.com/chat/*`, `https://play.sooplive.com/*?vtype=chat`, `https://dashboard.sooplive.com/popup.php?streamerId=*` | `.channel-text` or `.username [user_nick]`, name color, message text | Uses extension state to start/stop scanning | Platform has several supported chat URL shapes; no rich-event path in inspected source. |
+| WorldsWave | `https://worldswave.com/*`, including `kn_livecmd.php?cmd=viewStream&streamId=...&chatonly=1` | New rendered chat rows, author, avatar, optional author ID/color | Skips existing history; supports text-only mode, focus, Electron-safe forwarding, and opt-in viewer counts | Gifts, tips, and send-back are not normalized yet; test with a new row on the live page or popout. |
 | VK Video / VK Play chat-only | `https://live.vkplay.ru/*/only-chat?*`, `https://vkplay.live/*/only-chat?*`, `https://live.vkvideo.ru/*/only-chat` | `vkvideo.js` reads chat root rows, author, badges, message text | Viewer count update when `showviewercount` or `hypemode` is enabled | Current manifest loads `vkvideo.js`; `vkplay.js` is an older/unreferenced chat parser in this pass. |
 
 ## Common Behavior
 
-- Payload `type` is usually the source id: `beamstream`, `boltplus`, `chzzk`, `floatplane`, `goodgame`, `mixcloud`, `nimo`, `odysee`, `parti`, `picarto`, `piczel`, `rokfin`, `rutube`, `sooplive`, `vkvideo`, or `vkplay`.
+- Payload `type` is usually the source id: `beamstream`, `boltplus`, `chzzk`, `floatplane`, `goodgame`, `mixcloud`, `nimo`, `odysee`, `parti`, `picarto`, `piczel`, `rokfin`, `rutube`, `sooplive`, `worldswave`, `vkvideo`, or `vkplay`.
 - Most sources expose `getSource` and `focusChat`.
 - No inspected file in this group implements a source-level `SEND_MESSAGE` handler.
 - Most sources send ordinary chat fields: `chatname`, `chatmessage`, `chatimg` where available, `chatbadges` where available, `hasDonation` when parsed, and `textonly` from `settings.textonlymode`.
@@ -76,7 +78,7 @@ That source is a chat-only/popout capture. Open the exact supported chat URL, ke
 ## Do Not Promise
 
 - Send-back support for this group without current source-control validation.
-- Viewer counts except where explicitly documented for Chzzk, Parti, and VK Video, and still only when the relevant settings and page data are available.
+- Viewer counts except where explicitly documented for Chzzk, Parti, WorldsWave, and VK Video, and still only when the relevant settings and page data are available.
 - Donation/tip support except where the inspected source parses it: Chzzk, Parti, RokFin, Mixcloud subscription rows, and similar source-specific paths.
 - Normal watch/profile page capture when the public setup requires popout or chat-only URLs.
 - Current support for `vkplay.js` as a manifest-loaded parser; current chat-only manifest rows use `vkvideo.js`.

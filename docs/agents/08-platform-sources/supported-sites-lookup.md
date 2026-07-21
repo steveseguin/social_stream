@@ -88,6 +88,7 @@ It is listed as a [setup type] source. Start by [setup instruction]. If that doe
 | Parti | Use `https://parti.com/USERNAME` or `https://parti.com/popout-chat?id=USER_ID`. |
 | SoopLive | Use `https://www.sooplive.com/chat/*` or `https://play.sooplive.com/*?vtype=chat`. |
 | Beamstream | Open `https://beamstream.gg/USERNAME/chat`. |
+| WorldsWave | Open the live page or `https://worldswave.com/kn_livecmd.php?cmd=viewStream&streamId=STREAM_ID&chatonly=1`; test with a new message. |
 | BoltPlus.tv | Use `https://boltplus.tv/chatpopout*`. |
 | RokFin | Use `https://rokfin.com/popout/chat/*`. |
 

@@ -69,7 +69,7 @@
 		}
 
 		if (node.nodeType === 3) {
-			return settings.textonlymode ? (node.textContent || "") : escapeHtml(node.textContent || "");
+			return settings.textonlymode ? node.textContent || "" : escapeHtml(node.textContent || "");
 		}
 
 		if (node.nodeType !== 1) {
@@ -117,7 +117,7 @@
 	function getAuthorName(row) {
 		try {
 			var hiddenName = row.querySelector(".js__comment_author_name");
-			var value = hiddenName ? (hiddenName.value || hiddenName.getAttribute("value") || "") : "";
+			var value = hiddenName ? hiddenName.value || hiddenName.getAttribute("value") || "" : "";
 			if (value.trim()) {
 				return value.trim();
 			}
@@ -217,7 +217,7 @@
 
 	function hasSeenRecently(signature) {
 		var previous = recentlySeenMessages.get(signature);
-		return !!previous && (Date.now() - previous) < DUPLICATE_WINDOW_MS;
+		return !!previous && Date.now() - previous < DUPLICATE_WINDOW_MS;
 	}
 
 	function rememberMessage(signature) {
@@ -225,7 +225,7 @@
 		recentlySeenMessages.set(signature, now);
 		if (recentlySeenMessages.size > 250) {
 			recentlySeenMessages.forEach(function (timestamp, key) {
-				if ((now - timestamp) > (DUPLICATE_WINDOW_MS * 2)) {
+				if (now - timestamp > DUPLICATE_WINDOW_MS * 2) {
 					recentlySeenMessages.delete(key);
 				}
 			});
@@ -348,7 +348,9 @@
 	}
 
 	function parseViewerCount(value) {
-		var normalized = String(value || "").replace(/,/g, "").trim();
+		var normalized = String(value || "")
+			.replace(/,/g, "")
+			.trim();
 		var match = normalized.match(/([0-9]+(?:\.[0-9]+)?)\s*([KMB])?/i);
 		if (!match) {
 			return null;

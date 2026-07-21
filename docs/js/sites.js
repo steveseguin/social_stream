@@ -1146,6 +1146,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'WorldsWave',
+			icon: 'worldswave.png',
+			description: 'Social media and live streaming platform.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>Open the live stream page with chat visible, or use the chat-only popout</li>
+					<li>Popout URL: https://worldswave.com/kn_livecmd.php?cmd=viewStream&amp;streamId=STREAM_ID&amp;chatonly=1</li>
+				</ul>
+			`,
+			notes: 'Captures new rendered chat messages. Viewer counts require Show viewer count or Hype Mode.'
+		},
+		{
 			name: 'WebinarGeek',
 			icon: 'webinargeek.png',
 			description: 'Webinar platform.',

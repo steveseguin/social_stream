@@ -443,6 +443,10 @@ Event Payload ─▶ State Check (isAlertMuted)
             <section>
                 <h2>4. Preventing Echoes, Loops, and Relay Feedback</h2>
                 <p>Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:</p>
+                <div class="callout tip">
+                    <strong>YouTube Shorts destination note:</strong><br>
+                    Incoming <code>youtube</code> and <code>youtubeshorts</code> types match separately, but outbound Relay Chat currently treats them as one YouTube send family. Two separate relay actions can therefore overlap. See <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts and Event Flow</a>.
+                </div>
                 <div class="callout.danger">
                     <strong>Turn on "No Reflections" in Relay Chat.</strong><br>
                     When you use the Relay Chat action node, enable the <em>No Reflections</em> (sometimes labeled <em>No Echo</em>) filter. That flag marks outgoing messages so the relay ignores anything it previously injected. Without it, each relayed line re-enters the flow and triggers new relays.
