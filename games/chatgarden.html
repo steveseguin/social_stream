@@ -453,11 +453,11 @@
                     foundPlants.push(word);
                 }
                 // Plant variations
-                else if (word.includes('flower') && !foundPlants.includes('flower')) foundPlants.push('flower');
-                else if (word.includes('tree') && !foundPlants.includes('tree')) foundPlants.push('tree');
-                else if (word.includes('rose') && !foundPlants.includes('rose')) foundPlants.push('rose');
-                else if (word.includes('grass') && !foundPlants.includes('grass')) foundPlants.push('grass');
-                else if (word.includes('plant')) foundPlants.push('flower'); // Generic plant becomes flower
+                else if (/^flowers?$/.test(word) && !foundPlants.includes('flower')) foundPlants.push('flower');
+                else if (/^trees?$/.test(word) && !foundPlants.includes('tree')) foundPlants.push('tree');
+                else if (/^roses?$/.test(word) && !foundPlants.includes('rose')) foundPlants.push('rose');
+                else if (/^grass(es)?$/.test(word) && !foundPlants.includes('grass')) foundPlants.push('grass');
+                else if (/^plants?$/.test(word)) foundPlants.push('flower'); // Generic plant becomes flower
             });
             
             return foundPlants;
@@ -543,7 +543,6 @@
                     const sparkle = document.createElement('div');
                     sparkle.className = 'sparkle';
                     sparkle.textContent = '✨';
-                    sparkle.style.left = plantElement.style.left;
                     sparkle.style.bottom = (parseInt(plantElement.style.bottom) + 30) + '%';
                     sparkle.style.left = (parseFloat(plantElement.style.left) + (Math.random() * 10 - 5)) + '%';
                     
@@ -619,6 +618,8 @@
 
         // Update display
         function updateDisplay() {
+            updateGardenMetrics();
+            
             document.getElementById('plant-count').textContent = gameState.totalPlants;
             document.getElementById('flower-count').textContent = gameState.flowerCount;
             document.getElementById('tree-count').textContent = gameState.treeCount;
@@ -628,8 +629,6 @@
             // Update progress bars
             document.getElementById('biodiversity-fill').style.width = gameState.biodiversity + '%';
             document.getElementById('growth-fill').style.width = Math.min(gameState.growthRate, 100) + '%';
-            
-            updateGardenMetrics();
         }
 
         function stripHtml(html) {
@@ -656,6 +655,9 @@
             
             if (foundPlants.length === 0) return;
 
+            if (gameState.gardeners.size >= 500) {
+                gameState.gardeners = new Set(Array.from(gameState.gardeners).slice(-250));
+            }
             gameState.gardeners.add(username);
             gameState.lastPlantTime = Date.now();
             
@@ -673,7 +675,7 @@
 
         // Setup iframe communication
         const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";

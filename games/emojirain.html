@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emoji Rain - Social Stream Ninja</title>
-    <link rel="icon" href="./favicon.ico" />
+    <link rel="icon" href="../favicon.ico" />
     <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
     <style>
         /* Hide scrollbars */
@@ -394,18 +394,15 @@
             
             // If textonly is not set, we need to extract text from HTML
             if (!data.textonly) {
-                const tmp = document.createElement('div');
-                tmp.innerHTML = data.chatmessage;
-                text = tmp.textContent || tmp.innerText || '';
+                text = new DOMParser().parseFromString(String(data.chatmessage), 'text/html').body.textContent || '';
             }
             
             const emojis = extractEmojis(text);
             if (emojis.length === 0) return;
 
-            // Track emoji activity
-            gameState.emojiTimestamps.push(Date.now());
-            
             emojis.forEach((emoji, index) => {
+                // Track emoji activity per emoji dropped
+                gameState.emojiTimestamps.push(Date.now());
                 gameState.totalDrops++;
                 gameState.recentEmojis.push(emoji);
                 
@@ -442,7 +439,7 @@
 
         // Setup iframe communication
         const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";
@@ -507,7 +504,7 @@
         if (urlParams.has('demo')) {
             const demoEmojis = ['😀', '😍', '🤔', '😂', '👍', '❤️', '🔥', '💯', '🎉', '⚡', '🌟', '💫'];
             
-            setInterval(() => {
+            function demoDrop() {
                 const emoji = demoEmojis[Math.floor(Math.random() * demoEmojis.length)];
                 const shouldCombo = Math.random() < 0.3; // 30% chance for combo
                 
@@ -515,7 +512,10 @@
                     chatname: 'DemoUser',
                     chatmessage: shouldCombo && gameState.lastComboEmoji ? gameState.lastComboEmoji : emoji
                 });
-            }, 500 + Math.random() * 1000);
+                
+                setTimeout(demoDrop, 500 + Math.random() * 1000);
+            }
+            setTimeout(demoDrop, 500 + Math.random() * 1000);
         }
         
         // Update emoji rate periodically

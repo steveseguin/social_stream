@@ -146,7 +146,7 @@
         .message {
             margin: 5px 0;
             padding: 5px;
-            border-left: 3px solid #4CAF50;
+            border: 1px solid #666;
             padding-left: 10px;
         }
 
@@ -282,6 +282,8 @@ You can't handle the truth</textarea>
         let socketserver = null;
         let iframe = null;
         let connectedPeers = {};
+        let pendingRoundTimeout = null;
+        let intentionalClose = false;
 
         // Save settings to localStorage
         function saveSettings() {
@@ -437,6 +439,7 @@ You can't handle the truth</textarea>
 
             socketserver.onclose = function() {
                 updateStatus('Disconnected');
+                if (intentionalClose) return;
                 // Try to reconnect after 5 seconds
                 setTimeout(connectWebSocket, 5000);
             };
@@ -573,7 +576,7 @@ You can't handle the truth</textarea>
             gameState.phrases = input
                 .split('\n')
                 .map(line => line.trim())
-                .filter(line => line.length > 0);
+                .filter(line => line.length > 0 && normalizeText(line).length > 0);
             
             addMessage(`Loaded ${gameState.phrases.length} phrases`);
         }
@@ -610,8 +613,9 @@ You can't handle the truth</textarea>
 
         // Calculate match percentage
         function calculateMatch(guess, target) {
-            const guessWords = guess.split(/\s+/);
-            const targetWords = target.split(/\s+/);
+            const guessWords = guess.split(/\s+/).filter(word => word.length > 0);
+            const targetWords = target.split(/\s+/).filter(word => word.length > 0);
+            if (guessWords.length === 0 || targetWords.length === 0) return 0;
             let matches = 0;
 
             for (const gWord of guessWords) {
@@ -659,6 +663,8 @@ You can't handle the truth</textarea>
 
         // Start new round
         function startRound() {
+            if (!gameState.isActive) return;
+
             const phrase = getNextPhrase();
             if (!phrase) {
                 updateStatus('No phrases available!');
@@ -667,6 +673,10 @@ You can't handle the truth</textarea>
 
             gameState.currentPhrase = phrase;
             gameState.normalizedPhrase = normalizeText(phrase);
+            if (!gameState.normalizedPhrase) {
+                startRound();
+                return;
+            }
             gameState.maskPercent = config.initialMask;
             gameState.winner = null;
             gameState.roundStartTime = Date.now();

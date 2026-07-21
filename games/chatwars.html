@@ -152,17 +152,10 @@
         .log-entry {
             margin: 5px 0;
             padding: 5px;
-            border-left: 3px solid #666;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
             font-size: 14px;
             opacity: 0.9;
-        }
-        
-        .log-entry.capture {
-            border-left-color: #00ff88;
-        }
-        
-        .log-entry.battle {
-            border-left-color: #ff6b7a;
         }
         
         #instructions {
@@ -335,7 +328,6 @@
 
         // Calculate team power based on recent activity
         function updateTeamPower() {
-            const now = Date.now();
             Object.values(gameState.teams).forEach(team => {
                 // Decay power over time
                 team.power *= 0.99;
@@ -499,8 +491,9 @@
             Object.values(gameState.teams).forEach(team => {
                 const players = Array.from(team.players);
                 team.players.clear();
-                // Keep 30% of players for next battle
-                players.slice(0, Math.ceil(players.length * 0.3)).forEach(player => {
+                // Keep 30% of most recent players (max 200) for next battle
+                const keep = Math.min(200, Math.ceil(players.length * 0.3));
+                players.slice(-keep).forEach(player => {
                     team.players.add(player);
                 });
             });
@@ -544,7 +537,10 @@
                     team.players.delete(username);
                 });
 
-                // Add to new team
+                // Add to new team (cap roster at 200, keeping most recent)
+                if (gameState.teams[newTeam].players.size >= 200) {
+                    gameState.teams[newTeam].players = new Set(Array.from(gameState.teams[newTeam].players).slice(-100));
+                }
                 gameState.teams[newTeam].players.add(username);
 
                 // Log team join
@@ -575,7 +571,7 @@
 
         // Setup iframe communication
         const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";
