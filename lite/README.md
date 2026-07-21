@@ -37,13 +37,12 @@ Twitch returns an access token to this page, while YouTube now uses the hosted `
 
 ### TikTok LIVE via proxy
 
-The TikTok plugin relies on a small Socket.IO proxy that speaks the TikTok Chat Reader wire format. A ready-to-run implementation lives in `lite/tiktok-proxy/`:
+The TikTok plugin relies on a small Socket.IO proxy that speaks the TikTok Chat Reader wire format. To use it:
 
-1. Install dependencies with `npm install` while inside that folder.
-2. Start the service (`npm start`) and note the port (defaults to `http://localhost:8089`).
-3. In the TikTok card inside Web-only mode, paste the proxy URL into **Proxy server URL** and click **Connect**.
+1. Run a TikTok Chat Reader–compatible proxy yourself (any Node.js 18 environment works: local machine, VPS, Docker, etc.), or use the hosted default at `https://tiktok.socialstream.ninja:8089`.
+2. In the TikTok card inside Web-only mode, paste the proxy URL into **Proxy server URL** and click **Connect**.
 
-You can deploy the proxy anywhere Node.js 18 is available (local machine, VPS, Docker, etc.). Harden CORS or authentication as needed if exposing it publicly.
+Harden CORS or authentication as needed if exposing your own proxy publicly.
 
 ## Directory Overview
 
@@ -54,8 +53,10 @@ lite/
 |-- app.js               # Core controller (sessions, plugins, activity)
 |-- utils/
 |   |-- dockMessenger.js # Dock iframe bridge helper
+|   |-- emoteManager.js  # Emote loading/parsing helpers
 |   |-- helpers.js       # Common helpers (IDs, formatting)
 |   `-- storage.js       # Namespaced localStorage helpers
+|-- vendor/              # Bundled client libraries (tmi.js, Socket.IO, TikTok connector)
 `-- plugins/
     |-- basePlugin.js             # Shared card + lifecycle logic
     |-- youtubePlugin.js          # YouTube Data API integration

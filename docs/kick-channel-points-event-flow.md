@@ -4,7 +4,7 @@ Use the Event Flow Editor to listen for Kick reward redemptions, and keep the Fl
 
 ## Overview
 
-Kick calls these channel rewards/redemptions. In Social Stream Ninja they come through as a reward event, so the Event Flow trigger to use is Channel Point Redemption.
+Kick calls these channel rewards/redemptions. In Social Stream Ninja they come through as a reward event, so the Event Flow trigger to use is `Channel Point Redemption`.
 
 This is not configured in the Points System page unless you want SSN's own loyalty points commands. Kick reward redemptions should be handled in Event Flow.
 

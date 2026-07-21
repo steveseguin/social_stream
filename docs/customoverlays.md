@@ -161,7 +161,7 @@ function processIncomingSSNMessage(data) {
 }
 ```
 
-This method is more common for tools that interact with SSN rather than purely visual overlays, but it's an option. The `dock.html` uses a similar WebSocket connection for its primary communication.
+This method is more common for tools that interact with SSN rather than purely visual overlays, but it's an option. `dock.html` uses a similar WebSocket connection for its primary communication.
 
 ## 5\. Receiving and Processing Messages
 
@@ -471,7 +471,7 @@ The `background.js` listens for messages from the VDO.Ninja iframe. When it rece
 
 Remember that SSN overlays are highly customizable via URL parameters. Your custom page can also implement its own URL parameters for styling and behavior.
 
-\*\*Common SSN URL Parameters your custom page might want to *respect* or *replicate*: \*\*
+**Common SSN URL Parameters your custom page might want to *respect* or *replicate*:**
 
   - `&session=STREAM_ID`: **Required** for connection.
   - `&password=PASSWORD`: Optional.
