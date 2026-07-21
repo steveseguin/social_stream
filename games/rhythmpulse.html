@@ -980,7 +980,7 @@
 
         // Setup iframe communication
         const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";
@@ -1064,7 +1064,9 @@
                     chatname: musician,
                     chatmessage: messages[Math.floor(Math.random() * messages.length)]
                 });
-            }, 600 + Math.random() * 800);
+                setTimeout(demoBeat, 600 + Math.random() * 800);
+            }
+            setTimeout(demoBeat, 600 + Math.random() * 800);
         }
         
         // Drum pad click handlers
@@ -1087,6 +1089,9 @@
         initFrequencyBars();
         updateDisplay();
         initAudio();
+        
+        // Keep decaying BPM/sync display even when chat goes idle
+        setInterval(updateDisplay, 1000);
         
         // Fade out instructions after 30 seconds
         setTimeout(() => {

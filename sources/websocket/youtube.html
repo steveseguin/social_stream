@@ -4592,7 +4592,7 @@ function enableBackgroundKeepAlive() {
 		});
 		if (tokens.access_token) {
 			const expiresIn = tokens.expires_in ? parseInt(tokens.expires_in) : 3600;
-			setStoredToken(tokens.access_token, expiresIn, null, null, consumePendingYouTubeTokenAccessLevel());
+			setStoredToken(tokens.access_token, expiresIn, null, null, consumePendingYouTubeTokenAccessLevel() || getYouTubeAccessLevel());
 			clearExpectedOAuthState();
             window.history.replaceState({}, document.title, getPostAuthRedirectUrl());
 			verifyAndUseToken(tokens.access_token);

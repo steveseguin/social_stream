@@ -1,9 +1,9 @@
 (function () {
 	var settings = {};
+	var isExtensionOn = true;
 	var observer = null;
 	var observedTarget = null;
 	var lastURL = location.href;
-	var didInitialBacklogSkip = false;
 	var recentlySeenMessages = new Map();
 	var DUPLICATE_WINDOW_MS = 1500;
 
@@ -305,7 +305,9 @@
 
 		rememberMessage(signature);
 		markProcessed(item, signature);
-		sendToApp({ message: data });
+		if (isExtensionOn) {
+			sendToApp({ message: data });
+		}
 	}
 
 	function findMessageNode(node) {
@@ -446,7 +448,6 @@
 	}
 
 	function resetForNavigation() {
-		didInitialBacklogSkip = false;
 		observedTarget = null;
 		recentlySeenMessages.clear();
 		disconnectObserver();
@@ -460,6 +461,9 @@
 			response = response || {};
 			if ("settings" in response) {
 				settings = response.settings;
+			}
+			if ("state" in response) {
+				isExtensionOn = response.state;
 			}
 		});
 
@@ -477,11 +481,21 @@
 						return;
 					}
 				}
-				if (typeof request === "object" && request && "settings" in request) {
+			if (typeof request === "object" && request) {
+				var handled = false;
+				if ("settings" in request) {
 					settings = request.settings;
+					handled = true;
+				}
+				if ("state" in request) {
+					isExtensionOn = request.state;
+					handled = true;
+				}
+				if (handled) {
 					sendResponse(true);
 					return;
 				}
+			}
 			} catch (e) {}
 			sendResponse(false);
 		});
@@ -504,10 +518,7 @@
 			if (observedTarget !== container) {
 				disconnectObserver();
 				observedTarget = container;
-				if (!didInitialBacklogSkip) {
-					markExistingMessages(container);
-					didInitialBacklogSkip = true;
-				}
+				markExistingMessages(container);
 				onElementInserted(container);
 			}
 

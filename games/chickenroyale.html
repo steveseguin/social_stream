@@ -705,6 +705,7 @@
             this.chute = null;
             this.lastDamaged = -99;
             this.lastShownHp = CHICKEN_MAX_HP;
+            this.disposed = false;
 
             this.buildBody();
             this.buildLabel();
@@ -1039,6 +1040,8 @@
         }
 
         dispose() {
+            if (this.disposed) return;
+            this.disposed = true;
             scene.remove(this.group);
             this.labelTex.dispose();
             this.label.material.dispose();
@@ -1460,12 +1463,15 @@
             },
             cleanup() {
                 scene.remove(group);
+                group.traverse(obj => { if (obj.isMesh) obj.geometry.dispose(); });
                 chute.material.dispose();
                 aura.material.dispose();
             }
         };
         G.activeEvents.push(ev);
     }
+
+    let activeLightningStrikes = 0;
 
     function spawnLightning() {
         const a = rand(0, Math.PI * 2), r = rand(0, Math.max(3, G.zone.radius * 0.85));
@@ -1504,6 +1510,7 @@
                 }
                 if (!this.struck) {
                     this.struck = true;
+                    activeLightningStrikes++;
                     bolt.visible = true;
                     hemiLight.intensity = THEME.hemi[2] * 2.6;
                     for (const p of aliveChickens()) {
@@ -1520,9 +1527,17 @@
             cleanup() {
                 scene.remove(warn);
                 scene.remove(bolt);
+                warn.geometry.dispose();
                 warn.material.dispose();
+                bolt.children.forEach(seg => seg.geometry.dispose());
                 boltMat.dispose();
-                hemiLight.intensity = THEME.hemi[2];
+                if (this.struck) {
+                    activeLightningStrikes--;
+                    if (activeLightningStrikes <= 0) {
+                        activeLightningStrikes = 0;
+                        hemiLight.intensity = THEME.hemi[2];
+                    }
+                }
             }
         };
         G.activeEvents.push(ev);
@@ -1684,7 +1699,7 @@
                 c.goalTimer -= tickDt;
                 const dGoal = Math.hypot(c.goal.x - c.position.x, c.goal.z - c.position.z);
                 if (c.goalTimer <= 0 || dGoal < 0.5) {
-                    if (G.mode === 'battle') c.pickWanderGoal(); else c.pickLobbyGoal();
+                    c.pickWanderGoal();
                 }
             }
         }
@@ -1960,12 +1975,11 @@
         }
     }
     window.processData = processData; // exposed for integrations & testing
-    window.__cr = { G, aliveChickens }; // debug handle
 
     // Setup iframe communication (same as petrace.html / games.html)
     if (!useServerOnlyTransport()) {
         const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}${lanonly}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}${lanonly}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";
@@ -1986,14 +2000,20 @@
 
     // Optional direct WebSocket (?server=wss://...)
     if (urlParams.has('server')) {
-        const socketserver = new WebSocket(urlParams.get('server') || 'wss://io.socialstream.ninja');
-        socketserver.onopen = function () {
-            socketserver.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 }));
-        };
-        socketserver.onmessage = function (event) {
-            if (!event.data) return;
-            try { processData(JSON.parse(event.data)); } catch (e) {}
-        };
+        const serverURL = urlParams.get('server') || 'wss://io.socialstream.ninja';
+        let socket = null; let attempts = 1;
+        function connect() {
+            if (socket) { socket.onclose = null; try { socket.close(); } catch (e) {} }
+            socket = new WebSocket(serverURL);
+            socket.onopen = function () { attempts = 1; socket.send(JSON.stringify({ join: sessionId.split(",")[0], out: 2, in: 1 })); };
+            socket.onclose = function () { setTimeout(connect, 100 * attempts++); };
+            socket.onerror = function () { try { socket.close(); } catch (e) {} };
+            socket.onmessage = function (event) {
+                if (!event.data) return;
+                try { processData(JSON.parse(event.data)); } catch (e) {}
+            };
+        }
+        connect();
     }
 
     // Optional extension relay (?server2 / ?server3)

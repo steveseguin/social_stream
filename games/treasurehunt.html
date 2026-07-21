@@ -284,7 +284,7 @@
     let scores = new Map();
     let revealedCells = new Set();
     let currentHint = '';
-    let recentDigs = [];
+    let lastDig = null;
     
     // Treasure types with different values
     const treasureTypes = [
@@ -444,11 +444,8 @@
         cell.appendChild(digEffect);
         setTimeout(() => digEffect.remove(), 500);
         
-        // Update recent digs for compass
-        recentDigs.push({ row, col, time: Date.now() });
-        if (recentDigs.length > 1) {
-            recentDigs.shift();
-        }
+        // Update last dig for compass
+        lastDig = { row, col, time: Date.now() };
         updateCompass();
         
         // Check if treasure found
@@ -527,9 +524,8 @@
     }
     
     function updateCompass() {
-        if (recentDigs.length === 0) return;
+        if (!lastDig) return;
         
-        const lastDig = recentDigs[recentDigs.length - 1];
         let nearestTreasure = null;
         let minDistance = Infinity;
         
@@ -551,7 +547,7 @@
             const angle = Math.atan2(
                 nearestTreasure.row - lastDig.row,
                 nearestTreasure.col - lastDig.col
-            ) * 180 / Math.PI + 90;
+            ) * 180 / Math.PI;
             
             document.getElementById('compass-needle').style.transform = `rotate(${angle}deg)`;
         }
@@ -565,8 +561,8 @@
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5);
         
+        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
         sortedScores.forEach(([username, score], index) => {
-            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
             const entry = document.createElement('div');
             entry.className = 'score-entry';
             entry.innerHTML = `
@@ -587,7 +583,7 @@
         round++;
         initGrid();
         placeTreasures();
-        recentDigs = [];
+        lastDig = null;
         sendResponse(`🗺️ Round ${round} begins! New treasures have been hidden!`);
     }
     
@@ -610,11 +606,11 @@
     }
     
     function processData(data) {
-        if (data.content) {
+        if (data && data.content) {
             data = data.content;
         }
         
-        if (!data.chatmessage || !data.chatname) return;
+        if (!data || !data.chatmessage || !data.chatname) return;
 
         let rawMessage = data.chatmessage;
         if (!data.textonly) {
@@ -634,7 +630,7 @@
     
     // Setup iframe communication
     const iframe = document.createElement("iframe");
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
     iframe.style.width = "0px";
     iframe.style.height = "0px";
     iframe.style.position = "fixed";
