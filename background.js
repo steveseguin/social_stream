@@ -9899,11 +9899,11 @@ function setupSocket() {
 
 					console.log(data.stripe);
 
-				const stripeWebhookId = getInboundWebhookDeliveryId("stripe", data.stripe);
-				if (isDuplicateInboundWebhook("stripe", stripeWebhookId)) {
-					return false;
-				}
-				relayIncomingWebhook("stripe", data.stripe);
+					const stripeWebhookId = getInboundWebhookDeliveryId("stripe", data.stripe);
+					if (isDuplicateInboundWebhook("stripe", stripeWebhookId)) {
+						return false;
+					}
+					relayIncomingWebhook("stripe", data.stripe);
 
 					var message = {};
 					message.chatname = "";
@@ -10059,24 +10059,24 @@ function setupSocket() {
 						return false;
 					}
 
-				try {
-					var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
-				} catch (e) {
-					console.error(e);
-					return;
-				}
+					try {
+						var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
+					} catch (e) {
+						console.error(e);
+						return;
+					}
 
-				const kofiWebhookId = getInboundWebhookDeliveryId("kofi", kofi);
-				if (isDuplicateInboundWebhook("kofi", kofiWebhookId)) {
-					return false;
-				}
-				relayIncomingWebhook("kofi", data.kofi);
+					const kofiWebhookId = getInboundWebhookDeliveryId("kofi", kofi);
+					if (isDuplicateInboundWebhook("kofi", kofiWebhookId)) {
+						return false;
+					}
+					relayIncomingWebhook("kofi", data.kofi);
 
-				if (kofi.type !== "Donation") {
-					return false;
-				} else if (!kofi.is_public) {
-					return false;
-				}
+					if (kofi.type !== "Donation") {
+						return false;
+					} else if (!kofi.is_public) {
+						return false;
+					}
 
 					const kofiMessage = {};
 					kofiMessage.chatname = decodeURIComponent(kofi.from_name) || "Anonymous";
@@ -10138,12 +10138,12 @@ function setupSocket() {
 					if (!data.bmac) {
 						return false;
 					} else {
-					const bmac = data.bmac;
-					const bmacWebhookId = getInboundWebhookDeliveryId("bmac", bmac);
-					if (isDuplicateInboundWebhook("bmac", bmacWebhookId)) {
-						return false;
-					}
-					relayIncomingWebhook("bmac", data.bmac);
+						const bmac = data.bmac;
+						const bmacWebhookId = getInboundWebhookDeliveryId("bmac", bmac);
+						if (isDuplicateInboundWebhook("bmac", bmacWebhookId)) {
+							return false;
+						}
+						relayIncomingWebhook("bmac", data.bmac);
 						const bmacMessage = {};
 						if (bmac.type === "membership.started") {
 							bmacMessage.chatname = bmac.data.supporter_name || "Anonymous";
@@ -10214,11 +10214,11 @@ function setupSocket() {
 						return false;
 					}
 
-				const fourthwallWebhookId = getInboundWebhookDeliveryId("fourthwall", data.fourthwall);
-				if (isDuplicateInboundWebhook("fourthwall", fourthwallWebhookId)) {
-					return false;
-				}
-				relayIncomingWebhook("fourthwall", data.fourthwall);
+					const fourthwallWebhookId = getInboundWebhookDeliveryId("fourthwall", data.fourthwall);
+					if (isDuplicateInboundWebhook("fourthwall", fourthwallWebhookId)) {
+						return false;
+					}
+					relayIncomingWebhook("fourthwall", data.fourthwall);
 
 					const fourthwallData = data.fourthwall.data;
 
